@@ -15,6 +15,7 @@ class ParseEvent;
 
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
 #define X_FOREACH_GMCP_MESSAGE_TYPE(X) \
+    X(CHAR_VITALS, CharVitals, "char.vitals", "Char.Vitals") \
     X(CORE_GOODBYE, CoreGoodbye, "core.goodbye", "Core.Goodbye") \
     X(CORE_HELLO, CoreHello, "core.hello", "Core.Hello") \
     X(CORE_SUPPORTS_ADD, CoreSupportsAdd, "core.supports.add", "Core.Supports.Add") \
@@ -33,10 +34,9 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 6u;
+static constexpr const size_t NUM_GMCP_MESSAGES = 7u;
 static_assert(NUM_GMCP_MESSAGES
               == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL) + 1);
-DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {
 struct NODISCARD GmcpMessageNameTag final
@@ -60,6 +60,7 @@ private:
     GmcpMessageTypeEnum type = GmcpMessageTypeEnum::UNKNOWN;
 
 public:
+    explicit GmcpMessage();
     explicit GmcpMessage(const std::string &package);
     explicit GmcpMessage(const std::string &package, const std::string &json);
     explicit GmcpMessage(const GmcpMessageTypeEnum type);

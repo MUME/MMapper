@@ -17,6 +17,7 @@
 #include "GroupManagerApi.h"
 #include "mmapper2character.h"
 
+class GmcpMessage;
 class GroupAuthority;
 class CGroupCommunicator;
 class CGroup;
@@ -100,6 +101,7 @@ public slots:
 
     void slot_setPath(CommandQueue);
     void slot_reset();
+    void slot_parseGmcpInput(const GmcpMessage &msg);
 
 protected slots:
     // Communicator
@@ -130,6 +132,12 @@ private:
 
     bool init();
     void issueLocalCharUpdate();
+    void updateCharacterScore(const int hp,
+                              const int maxhp,
+                              const int mana,
+                              const int maxmana,
+                              const int mp,
+                              const int maxmp);
 
     QMutex networkLock{QMutex::Recursive};
     std::unique_ptr<QThread> thread;

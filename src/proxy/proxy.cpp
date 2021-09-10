@@ -161,6 +161,10 @@ void Proxy::slot_start()
     connect(mudTelnet, &MudTelnet::sig_sendToSocket, this, &Proxy::slot_onSendToMudSocket);
     connect(mudTelnet, &MudTelnet::sig_relayEchoMode, userTelnet, &UserTelnet::slot_onRelayEchoMode);
     connect(mudTelnet, &MudTelnet::sig_relayGmcp, userTelnet, &UserTelnet::slot_onGmcpToUser);
+    connect(mudTelnet,
+            &MudTelnet::sig_relayGmcp,
+            &m_groupManager,
+            &Mmapper2Group::slot_parseGmcpInput);
 
     connect(this, &Proxy::sig_analyzeUserStream, userTelnet, &UserTelnet::slot_onAnalyzeUserStream);
 

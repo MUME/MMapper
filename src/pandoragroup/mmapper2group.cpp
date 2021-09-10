@@ -18,6 +18,7 @@
 #include "../global/AnsiColor.h"
 #include "../global/roomid.h"
 #include "../parser/CommandQueue.h"
+#include "../proxy/GmcpMessage.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "GroupClient.h"
@@ -46,6 +47,7 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
 {
     qRegisterMetaType<CharacterPositionEnum>("CharacterPositionEnum");
     qRegisterMetaType<CharacterAffectEnum>("CharacterAffectEnum");
+    qRegisterMetaType<GmcpMessage>("GmcpMessage");
 
     connect(this,
             &Mmapper2Group::sig_invokeStopInternal,
@@ -299,6 +301,16 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
     const int moves = match.captured(5).toInt();
     const int maxmoves = match.captured(6).toInt();
 
+    updateCharacterScore(hp, maxhp, mana, maxmana, moves, maxmoves);
+}
+
+void Mmapper2Group::updateCharacterScore(const int hp,
+                                         const int maxhp,
+                                         const int mana,
+                                         const int maxmana,
+                                         const int moves,
+                                         const int maxmoves)
+{
     const SharedGroupChar &self = getGroup()->getSelf();
     if (self->hp == hp && self->maxhp == maxhp && self->mana == mana && self->maxmana == maxmana
         && self->moves == moves && self->maxmoves == maxmoves)
@@ -543,6 +555,30 @@ void Mmapper2Group::slot_reset()
     deref(getGroup()->getSelf()).reset();
 
     issueLocalCharUpdate();
+}
+
+void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
+{
+    if (!group)
+        return;
+
+    if (msg.isCharVitals()) {
+        // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
+        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
+        if (!doc.isObject())
+            return;
+        const auto &obj = doc.object();
+
+        const SharedGroupChar &self = getGroup()->getSelf();
+        const int hp = obj.value("hp").toInt(self->hp);
+        const int maxhp = obj.value("maxhp").toInt(self->maxhp);
+        const int mana = obj.value("mana").toInt(self->mana);
+        const int maxmana = obj.value("maxmana").toInt(self->maxmana);
+        const int mp = obj.value("mp").toInt(self->moves);
+        const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
+
+        updateCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp);
+    }
 }
 
 void Mmapper2Group::slot_sendLog(const QString &text)

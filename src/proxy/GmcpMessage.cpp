@@ -44,6 +44,11 @@ NODISCARD static GmcpMessageTypeEnum toGmcpMessageType(const std::string &str)
     return GmcpMessageTypeEnum::UNKNOWN;
 }
 
+GmcpMessage::GmcpMessage()
+    : name("")
+    , type(GmcpMessageTypeEnum::UNKNOWN)
+{}
+
 GmcpMessage::GmcpMessage(const std::string &package)
     : name(package)
     , type(toGmcpMessageType(package))
