@@ -49,7 +49,7 @@ void TestProxy::gmcpModuleTest()
     GmcpModule module1(QString("Char 1"));
     QCOMPARE(::toQByteArrayLatin1(module1.getNormalizedName()), QByteArray("char"));
     QCOMPARE(module1.getVersion().asUint32(), 1u);
-    QVERIFY(!module1.isSupported());
+    QVERIFY(module1.isSupported());
 
     GmcpModule module2(QString("Char.Skills 1"));
     QCOMPARE(::toQByteArrayLatin1(module2.getNormalizedName()), QByteArray("char.skills"));

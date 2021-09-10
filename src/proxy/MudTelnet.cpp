@@ -184,6 +184,9 @@ void MudTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
 void MudTelnet::resetGmcpModules()
 {
     gmcp.clear();
+
+    // Following modules are enabled by default
+    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::CHAR, GmcpModuleVersion{1}}, true);
 }
 
 void MudTelnet::sendCoreSupports()

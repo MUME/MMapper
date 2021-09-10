@@ -15,6 +15,7 @@
 
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
 #define X_FOREACH_GMCP_MODULE_TYPE(X) \
+    X(CHAR, Char, "char", "Char") \
     X(MMAPPER_COMM, MmapperComm, "mmapper.comm", "MMapper.Comm") \
     /* define gmcp module types above */
 
@@ -25,8 +26,7 @@ enum class NODISCARD GmcpModuleTypeEnum {
 #undef X_DECL_GMCP_MODULE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MODULES = 1u;
-static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::MMAPPER_COMM) + 1);
+static constexpr const size_t NUM_GMCP_MODULES = 2u;
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 struct NODISCARD GmcpModuleVersion final
