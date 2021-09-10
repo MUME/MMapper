@@ -46,7 +46,6 @@ const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
-const Abbrev cmdTrollExit{"trollexit", 2};
 const Abbrev cmdVote{"vote", 2};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
@@ -806,15 +805,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Displays the current MUME time."));
-    add(
-        cmdTrollExit,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->toggleTrollMapping();
-            return true;
-        },
-        makeSimpleHelp("Toggles troll-only exit mapping for direct sunlight."));
     add(
         cmdVote,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {

@@ -152,10 +152,6 @@ AbstractParser::~AbstractParser() = default;
 
 void AbstractParser::slot_reset()
 {
-    if (m_trollExitMapping) {
-        log("Parser", "Disabling troll exit mapping");
-        m_trollExitMapping = false;
-    }
     m_lastPrompt = "";
     m_queue.clear();
 }
@@ -327,10 +323,6 @@ void AbstractParser::parseExits(std::ostream &os)
             break;
         case '^': // outdoors room (troll only)
             directSun = true;
-            if (!m_trollExitMapping) {
-                log("Parser", "Autoenabling troll exit mapping mode.");
-            }
-            m_trollExitMapping = true;
             break;
         default:
             return false;
@@ -817,13 +809,6 @@ void AbstractParser::showNote()
     printRoomInfo(RoomFieldEnum::NOTE);
 }
 
-void AbstractParser::toggleTrollMapping()
-{
-    m_trollExitMapping = !m_trollExitMapping;
-    QString toggleText = enabledString(m_trollExitMapping);
-    sendToUser("Troll exit mapping is now " + toggleText + ".\n");
-}
-
 void AbstractParser::doSearchCommand(StringView view)
 {
     if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(view.getStdStringView())) {
@@ -936,7 +921,6 @@ void AbstractParser::showMiscHelp()
     showHeader("Miscellaneous commands");
     sendToUser(QString("  %1back        - delete prespammed commands from queue\n"
                        "  %1time        - display current MUME time\n"
-                       "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\n"
                        "  %1vote        - vote for MUME on TMC!\n")
                    .arg(prefixChar));
 }

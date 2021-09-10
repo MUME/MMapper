@@ -16,6 +16,7 @@ class ParseEvent;
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
 #define X_FOREACH_GMCP_MESSAGE_TYPE(X) \
     X(CHAR_NAME, CharName, "char.name", "Char.Name") \
+    X(CHAR_STATUSVARS, CharStatusVars, "char.statusvars", "Char.StatusVars") \
     X(CHAR_VITALS, CharVitals, "char.vitals", "Char.Vitals") \
     X(CORE_GOODBYE, CoreGoodbye, "core.goodbye", "Core.Goodbye") \
     X(CORE_HELLO, CoreHello, "core.hello", "Core.Hello") \
@@ -35,7 +36,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 8u;
+static constexpr const size_t NUM_GMCP_MESSAGES = 9u;
 static_assert(NUM_GMCP_MESSAGES
               == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL) + 1);
 

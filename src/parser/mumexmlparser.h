@@ -17,6 +17,7 @@
 #include "LineFlags.h"
 #include "abstractparser.h"
 
+class GmcpMessage;
 class GroupManagerApi;
 class MapData;
 class MumeClock;
@@ -89,6 +90,7 @@ private:
 
 public:
     void slot_parseNewMudInput(const TelnetData &data);
+    void slot_parseGmcpInput(const GmcpMessage &msg);
 
 private:
     void parseMudCommands(const QString &str);

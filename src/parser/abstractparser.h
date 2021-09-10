@@ -100,9 +100,9 @@ protected:
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
     CommandQueue m_queue;
+    bool m_trollExitMapping = false;
 
 private:
-    bool m_trollExitMapping = false;
     QTimer m_offlineCommandTimer;
 
 public:
@@ -222,7 +222,6 @@ private:
     void doRemoveDoorNamesCommand();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
-    void toggleTrollMapping();
 
     void initActionMap();
 

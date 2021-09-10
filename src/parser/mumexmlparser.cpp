@@ -16,6 +16,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../global/TextUtils.h"
 #include "../pandoragroup/mmapper2group.h"
+#include "../proxy/GmcpMessage.h"
 #include "../proxy/telnetfilter.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
@@ -97,6 +98,23 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
         (*debugStream) << "***S***";
         (*debugStream) << data.line;
         (*debugStream) << "***E***";
+    }
+}
+
+void MumeXmlParser::slot_parseGmcpInput(const GmcpMessage &msg)
+{
+    if (msg.isCharStatusVars()) {
+        // "Char.StatusVars {\"race\":\"Troll\",\"subrace\":\"Cave Troll\"}"
+        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
+        if (!doc.isObject())
+            return;
+        const auto &obj = doc.object();
+        const auto &race = obj.value("race");
+        if (race.isString()) {
+            m_trollExitMapping = (race.toString().compare("Troll", Qt::CaseInsensitive) == 0);
+            log("Parser",
+                QString("%1 troll exit mapping").arg(m_trollExitMapping ? "Enabling" : "Disabling"));
+        }
     }
 }
 
