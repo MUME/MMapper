@@ -388,7 +388,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             // Build Context menu
             auto &settings = getConfig().groupManager;
             const bool isServer = settings.state == GroupManagerStateEnum::Server;
-            const bool selectedSelf = settings.charName == selectedCharacter;
+            const bool selectedSelf = (index.row() == 0);
             if (isServer && !selectedSelf) {
                 // All context menu actions are only actionable by the server right now
                 m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));

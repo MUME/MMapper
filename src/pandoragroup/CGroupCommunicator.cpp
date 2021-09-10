@@ -260,7 +260,7 @@ void CGroupCommunicator::slot_sendGroupTell(const QByteArray &tell)
     // form the gtell QVariantMap first.
     QVariantMap root;
     root["text"] = QString::fromLatin1(tell);
-    root["from"] = QString::fromLatin1(getConfig().groupManager.charName);
+    root["from"] = QString::fromLatin1(getGroup()->getSelf()->getName());
     // depending on the type of this communicator either send to
     // server or send to everyone
     slot_sendGroupTellMessage(root);

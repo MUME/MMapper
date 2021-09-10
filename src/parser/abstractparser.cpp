@@ -1575,14 +1575,13 @@ void AbstractParser::slot_sendGTellToUser(const QString &color,
                                           const QString &from,
                                           const QString &text)
 {
-    const QString tell
-        = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(from).arg(text);
+    const QString tell = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color, from, text);
 
     if (m_proxy.isGmcpModuleEnabled(GmcpModuleTypeEnum::MMAPPER_COMM)) {
         m_proxy.gmcpToUser(GmcpMessage(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL,
                                        QString(R"({ "name": "%1", "text": "%2" })")
-                                           .arg(GmcpUtils::escapeGmcpStringData(from))
-                                           .arg(GmcpUtils::escapeGmcpStringData(tell))));
+                                           .arg(GmcpUtils::escapeGmcpStringData(from),
+                                                GmcpUtils::escapeGmcpStringData(tell))));
         return;
     }
 

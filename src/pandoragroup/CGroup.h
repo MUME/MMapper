@@ -45,8 +45,8 @@ public:
         releaseCharacters(s);
         delete s;
     }
-    std::unique_ptr<GroupSelection> selectAll();
-    std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
+    NODISCARD std::unique_ptr<GroupSelection> selectAll();
+    NODISCARD std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 
 private:
     void log(const QString &msg) { emit sig_log(msg); }

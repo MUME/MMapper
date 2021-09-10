@@ -246,7 +246,7 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
         auto character = selection->at(0);
         color = rgbToAnsi256String(character->getColor(), false);
     }
-    log(QString("GTell from %1 arrived: %2").arg(from).arg(text));
+    log(QString("GTell from %1 arrived: %2").arg(from, text));
 
     emit sig_displayGroupTellEvent(color, from, text);
 }
