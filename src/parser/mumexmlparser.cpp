@@ -15,7 +15,6 @@
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/TextUtils.h"
-#include "../global/entities.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "../proxy/telnetfilter.h"
 #include "ExitsFlags.h"
@@ -310,55 +309,59 @@ bool MumeXmlParser::element(const QByteArray &line)
                             continue;
                         switch (pair.first.at(0)) {
                         case 't':
-                            if (pair.first == "t") {
-                                // Decode terrain type attribute
-                                const auto in = entities::EncodedLatin1{
-                                    ::toQByteArrayLatin1(pair.second)};
-                                const auto out = entities::decode(in).toLatin1();
-                                switch (out.at(0)) {
-                                case '[':
-                                    m_terrain = RoomTerrainEnum::INDOORS;
+                            if (pair.first == "terrain") {
+                                switch (pair.second.at(0)) {
+                                case 'b':
+                                    if (pair.second == "brush")
+                                        m_terrain = RoomTerrainEnum::BRUSH;
+                                    else // building
+                                        m_terrain = RoomTerrainEnum::INDOORS;
                                     break;
-                                case '#':
-                                    m_terrain = RoomTerrainEnum::CITY;
-                                    break;
-                                case '.':
-                                    m_terrain = RoomTerrainEnum::FIELD;
+                                case 'c':
+                                    if (pair.second == "cavern")
+                                        m_terrain = RoomTerrainEnum::CAVERN;
+                                    else // city
+                                        m_terrain = RoomTerrainEnum::CITY;
                                     break;
                                 case 'f':
-                                    m_terrain = RoomTerrainEnum::FOREST;
+                                    if (pair.second == "field")
+                                        m_terrain = RoomTerrainEnum::FIELD;
+                                    else // forest
+                                        m_terrain = RoomTerrainEnum::FOREST;
                                     break;
-                                case '(':
+                                case 'h':
+                                    // hills
                                     m_terrain = RoomTerrainEnum::HILLS;
                                     break;
-                                case '<':
+                                case 'm':
+                                    // mountains
                                     m_terrain = RoomTerrainEnum::MOUNTAINS;
                                     break;
-                                case '%':
+                                case 'r':
+                                    if (pair.second == "rapids")
+                                        m_terrain = RoomTerrainEnum::RAPIDS;
+                                    else // road
+                                        m_terrain = RoomTerrainEnum::ROAD;
+                                    break;
+                                case 's':
+                                    // shallows
                                     m_terrain = RoomTerrainEnum::SHALLOW;
                                     break;
-                                case '~':
-                                    m_terrain = RoomTerrainEnum::WATER;
-                                    break;
-                                case 'W':
-                                    m_terrain = RoomTerrainEnum::RAPIDS;
-                                    break;
-                                case 'U':
-                                    m_terrain = RoomTerrainEnum::UNDERWATER;
-                                    break;
-                                case '+':
-                                    m_terrain = RoomTerrainEnum::ROAD;
-                                    break;
-                                case '=':
+                                case 't':
+                                    // tunnel
                                     m_terrain = RoomTerrainEnum::TUNNEL;
                                     break;
-                                case 'O':
-                                    m_terrain = RoomTerrainEnum::CAVERN;
+                                case 'u':
+                                    // underwater
+                                    m_terrain = RoomTerrainEnum::UNDERWATER;
                                     break;
-                                case ':':
-                                    m_terrain = RoomTerrainEnum::BRUSH;
+                                case 'w':
+                                    // water
+                                    m_terrain = RoomTerrainEnum::WATER;
                                     break;
                                 default:
+                                    qWarning() << "Unknown terrain type"
+                                               << ::toQByteArrayLatin1(pair.second);
                                     break;
                                 }
                             }
