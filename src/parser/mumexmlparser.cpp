@@ -67,12 +67,10 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
-    case TelnetDataEnum::MENU_PROMPT:
-    case TelnetDataEnum::LOGIN:
-    case TelnetDataEnum::LOGIN_PASSWORD:
+    case TelnetDataEnum::PROMPT:
         m_lastPrompt = data.line;
         stripXmlEntities(m_lastPrompt);
-        parse(data);
+        parse(data, true);
         break;
     case TelnetDataEnum::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
@@ -80,11 +78,9 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
             (*debugStream) << "OTHER";
             (*debugStream) << "***ETYPE***";
         }
-        // Login prompt and IAC-GA
-        parse(data);
+        parse(data, false);
         break;
 
-    case TelnetDataEnum::PROMPT:
     case TelnetDataEnum::LF:
     case TelnetDataEnum::CRLF:
         if (XPS_DEBUG_TO_FILE) {
@@ -93,7 +89,7 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
             (*debugStream) << "***ETYPE***";
         }
         // XML and prompts
-        parse(data);
+        parse(data, false);
         break;
     }
     if (XPS_DEBUG_TO_FILE) {
@@ -103,7 +99,7 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
     }
 }
 
-void MumeXmlParser::parse(const TelnetData &data)
+void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
 {
     const QByteArray &line = data.line;
     m_lineToUser.clear();
@@ -144,22 +140,7 @@ void MumeXmlParser::parse(const TelnetData &data)
         m_tempCharacters.clear();
     }
     if (!m_lineToUser.isEmpty()) {
-        const auto isGoAhead = [](const TelnetDataEnum type) -> bool {
-            switch (type) {
-            case TelnetDataEnum::DELAY:
-            case TelnetDataEnum::LOGIN:
-            case TelnetDataEnum::LOGIN_PASSWORD:
-            case TelnetDataEnum::MENU_PROMPT:
-            case TelnetDataEnum::PROMPT:
-                return true;
-            case TelnetDataEnum::CRLF:
-            case TelnetDataEnum::LF:
-            case TelnetDataEnum::UNKNOWN:
-                return false;
-            }
-            return false;
-        };
-        sendToUser(m_lineToUser, isGoAhead(data.type));
+        sendToUser(m_lineToUser, isGoAhead);
 
         {
             // Simplify the output and run actions

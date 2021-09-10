@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <cstdint>
 #include <QByteArray>
 #include <QObject>
 #include <QQueue>
@@ -13,16 +14,7 @@
 
 #include "../global/macros.h"
 
-enum class NODISCARD TelnetDataEnum {
-    UNKNOWN,
-    PROMPT,
-    MENU_PROMPT,
-    LOGIN,
-    LOGIN_PASSWORD,
-    CRLF,
-    LF,
-    DELAY
-};
+enum class NODISCARD TelnetDataEnum : uint8_t { UNKNOWN, PROMPT, CRLF, LF, DELAY };
 
 struct NODISCARD TelnetData final
 {

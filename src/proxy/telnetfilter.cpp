@@ -6,11 +6,8 @@
 
 #include "telnetfilter.h"
 
-#include <cstdint>
 #include <QByteArray>
 #include <QObject>
-
-#include "../parser/patterns.h"
 
 static constexpr const char ASCII_DEL = '\x08';
 static constexpr const char ASCII_CR = '\r';
@@ -100,25 +97,12 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
     if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::UNKNOWN)) {
         {
             if (goAhead) {
-                const auto get_type = [&buffer]() {
-                    if (Patterns::matchPasswordPatterns(buffer.line))
-                        return TelnetDataEnum::LOGIN_PASSWORD;
-                    else if (Patterns::matchMenuPromptPatterns(buffer.line))
-                        return TelnetDataEnum::MENU_PROMPT;
-                    return TelnetDataEnum::PROMPT;
-                };
-                buffer.type = get_type();
+                buffer.type = TelnetDataEnum::PROMPT;
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataEnum::UNKNOWN;
             } else if (buffer.line.endsWith(ASCII_LF)) {
                 buffer.type = TelnetDataEnum::LF;
-                que.enqueue(buffer);
-                buffer.line.clear();
-                buffer.type = TelnetDataEnum::UNKNOWN;
-            } else if (Patterns::matchLoginPatterns(buffer.line)) {
-                // IAC-GA usually take effect after the login screen
-                buffer.type = TelnetDataEnum::LOGIN;
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataEnum::UNKNOWN;

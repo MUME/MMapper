@@ -14,8 +14,5 @@ class QString;
 namespace Patterns {
 NODISCARD extern bool matchScore(const QString &str);
 NODISCARD extern bool matchNoDescriptionPatterns(const QString &);
-NODISCARD extern bool matchPasswordPatterns(const QByteArray &);
-NODISCARD extern bool matchLoginPatterns(const QByteArray &);
-NODISCARD extern bool matchMenuPromptPatterns(const QByteArray &);
 NODISCARD extern bool matchPattern(const QString &pattern, const QString &str);
 } // namespace Patterns

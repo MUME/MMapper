@@ -60,7 +60,7 @@ public:
     ~MumeXmlParser() final;
 
 private:
-    void parse(const TelnetData &);
+    void parse(const TelnetData &, const bool isGoAhead);
 
 public:
     void slot_parseNewMudInput(const TelnetData &data);

@@ -55,21 +55,3 @@ bool Patterns::matchNoDescriptionPatterns(const QString &str)
     }
     return false;
 }
-
-bool Patterns::matchPasswordPatterns(const QByteArray &str)
-{
-    static const QRegularExpression re(R"(^Account pass phrase:? $)");
-    return re.match(str).hasMatch();
-}
-
-bool Patterns::matchLoginPatterns(const QByteArray &str)
-{
-    static const QRegularExpression re(R"(^By what name do you wish to be known\?? $)");
-    return re.match(str).hasMatch();
-}
-
-bool Patterns::matchMenuPromptPatterns(const QByteArray &str)
-{
-    static const QRegularExpression re(R"(^Account(>|&gt;)? $)");
-    return re.match(str).hasMatch();
-}

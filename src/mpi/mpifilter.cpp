@@ -19,9 +19,6 @@ NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
     case TelnetDataEnum::CRLF:
         return true;
     case TelnetDataEnum::PROMPT:
-    case TelnetDataEnum::MENU_PROMPT:
-    case TelnetDataEnum::LOGIN:
-    case TelnetDataEnum::LOGIN_PASSWORD:
     case TelnetDataEnum::DELAY:
     case TelnetDataEnum::UNKNOWN:
     default:

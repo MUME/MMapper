@@ -650,9 +650,6 @@ void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
     switch (data.type) {
     case TelnetDataEnum::DELAY:
     case TelnetDataEnum::PROMPT:
-    case TelnetDataEnum::MENU_PROMPT:
-    case TelnetDataEnum::LOGIN:
-    case TelnetDataEnum::LOGIN_PASSWORD:
     case TelnetDataEnum::UNKNOWN:
         sendToMud(data.line);
         break;
