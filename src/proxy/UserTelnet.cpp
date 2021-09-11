@@ -13,10 +13,11 @@
 // REVISIT: Does this belong somewhere else?
 static void normalizeForUser(std::ostream &os,
                              const CharacterEncodingEnum encoding,
+                             const bool goAhead,
                              const std::string_view &sv)
 {
     // REVISIT: perform ANSI normalization in this function, too?
-    foreachLine(sv, [&os, encoding](std::string_view sv) {
+    foreachLine(sv, [&os, encoding, &goAhead](std::string_view sv) {
         if (sv.empty())
             return;
 
@@ -30,8 +31,8 @@ static void normalizeForUser(std::ostream &os,
         }
 
         if (!sv.empty()) {
-            foreachChar(sv, C_CARRIAGE_RETURN, [&os, encoding](std::string_view txt) {
-                if (!txt.empty() && txt.front() != C_CARRIAGE_RETURN) {
+            foreachChar(sv, C_CARRIAGE_RETURN, [&os, encoding, &goAhead](std::string_view txt) {
+                if (!txt.empty() && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
                     convertFromLatin1(os, encoding, txt);
                 }
             });
@@ -45,10 +46,11 @@ static void normalizeForUser(std::ostream &os,
 }
 
 NODISCARD static std::string encodeForUser(const CharacterEncodingEnum encoding,
-                                           const QByteArray &ba)
+                                           const QByteArray &ba,
+                                           const bool goAhead)
 {
     std::ostringstream oss;
-    normalizeForUser(oss, encoding, ::toStdStringViewLatin1(ba));
+    normalizeForUser(oss, encoding, goAhead, ::toStdStringViewLatin1(ba));
     return oss.str();
 }
 
@@ -78,7 +80,7 @@ void UserTelnet::slot_onAnalyzeUserStream(const QByteArray &data)
 void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 {
     // NOTE: We could avoid some overhead by sending one line at a time with a custom ostream.
-    auto outdata = encodeForUser(getTextCodec().getEncoding(), ba);
+    auto outdata = encodeForUser(getEncoding(), ba, goAhead);
     submitOverTelnet(outdata, goAhead);
 }
 
