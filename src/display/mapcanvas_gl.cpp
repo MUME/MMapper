@@ -260,6 +260,12 @@ void MapCanvas::slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message)
     }
 
     qCritical() << message;
+
+    QMessageBox box;
+    box.setWindowTitle("Fatal OpenGL error");
+    box.setText(message.message());
+    box.exec();
+
     std::abort();
 }
 

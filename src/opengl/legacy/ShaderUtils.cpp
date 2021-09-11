@@ -11,6 +11,7 @@
 #include <string_view>
 #include <vector>
 #include <QDebug>
+#include <QMessageBox>
 
 #include "../../global/Debug.h"
 #include "../../global/TextUtils.h"
@@ -89,15 +90,37 @@ NODISCARD static const char *shaderTypeName(const GLenum type)
     return "*ERROR*";
 }
 
+#define LOG_AND_POPUP(msg) logAndPopup(__FILE__, __LINE__, __FUNCTION__, (msg))
+
+static void logAndPopup(const char *const file,
+                        const int line,
+                        const char *const func,
+                        const std::string &str)
+{
+    // NOTE: braces ensure side effects take place before the QMessageBox is displayed.
+    {
+        // NOTE: this is like calling qWarning();
+        auto &&warn = QMessageLogger(file, line, func).warning();
+        warn.noquote();
+        warn.nospace();
+        warn << str.c_str();
+    }
+
+    QMessageBox box;
+    box.setWindowTitle("Message from OpenGL");
+    box.setText(str.c_str());
+    box.exec();
+}
+
 static void checkProgramInfo(Functions &gl, const GLuint programID)
 {
     GLint result = GL_FALSE;
     gl.glGetProgramiv(programID, GL_LINK_STATUS, &result);
     if (result != GL_TRUE) {
-        qWarning() << "Failed to link program";
+        qWarning() << "ERROR: Failed to link program";
     }
 
-    const int infoLogLength = [&gl, &programID]() {
+    {
         int infoLogLength = 0;
         gl.glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
         if (infoLogLength > 0) {
@@ -111,14 +134,13 @@ static void checkProgramInfo(Functions &gl, const GLuint programID)
                 std::ostringstream os;
                 os << "Program info log:" << std::endl;
                 os << &programErrorMessage[0] << std::endl;
-                qWarning() << os.str().c_str();
+                LOG_AND_POPUP(os.str());
             }
-            return static_cast<int>(ba.size());
         }
-        return 0;
-    }();
+    }
 
-    assert(result == GL_TRUE && infoLogLength == 0);
+    if (result != GL_TRUE)
+        std::abort();
 }
 
 static void checkShaderInfo(Functions &gl, const GLuint shaderId)
@@ -129,10 +151,10 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
     GLint result = GL_FALSE;
     gl.glGetShaderiv(shaderId, GL_COMPILE_STATUS, &result);
     if (result != GL_TRUE) {
-        qWarning() << "Failed to compile shader.";
+        qWarning() << "ERROR: Failed to compile shader.";
     }
 
-    const int infoLogLength = [&gl, &shaderId]() {
+    {
         GLint infoLogLength = 0;
         gl.glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
         if (infoLogLength > 0) {
@@ -146,14 +168,13 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
                 std::ostringstream os;
                 os << "Shader info log:" << std::endl;
                 os << &shaderErrorMessage[0] << std::endl;
-                qWarning() << os.str().c_str();
+                LOG_AND_POPUP(os.str());
             }
-            return static_cast<int>(ba.size());
         }
-        return 0;
-    }();
+    }
 
-    assert(result == GL_TRUE && infoLogLength == 0);
+    if (result != GL_TRUE)
+        std::abort();
 }
 
 NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
