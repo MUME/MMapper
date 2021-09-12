@@ -203,6 +203,7 @@ void AbstractTelnet::reset()
     hisOptionState.fill(false);
     announcedState.fill(false);
     heAnnouncedState.fill(false);
+    triedToEnable.fill(false);
 
     // reset telnet status
     termType = m_defaultTermType;
@@ -280,6 +281,12 @@ void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 
 void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 {
+    // Do not respond if we initiated this request
+    if (triedToEnable[option]) {
+        triedToEnable[option] = false;
+        return;
+    }
+
     if (debug)
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
@@ -292,30 +299,21 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
 {
-    // Set my option state correctly
-    if (type == TN_DO || type == TN_DONT) {
-        // He already announced or accepted this option so ignore
-        if (heAnnouncedState[option] || hisOptionState[option])
-            return;
+    // Set his option state correctly
+    if (type == TN_DO || type == TN_DONT)
+        hisOptionState[option] = (type == TN_DO);
 
-        myOptionState[option] = (type == TN_DO);
-    }
-
-    // Remember if we are annnouncing this
-    if (type == TN_WILL || type == TN_WONT) {
-        // I already announced or accepted this option so ignore
-        if (announcedState[option] || myOptionState[option])
-            return;
-
-        announcedState[option] = true;
-    }
     sendTelnetOption(type, option);
+
+    triedToEnable[option] = true;
 }
 
 void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
 {
+    // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
+
     if (debug)
-        qDebug() << "Requesting charsets" << myCharacterSets;
+        qDebug() << "Sending Charset request" << myCharacterSets;
 
     static constexpr const auto delimeter = ";";
 
@@ -433,8 +431,6 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
     unsigned char option;
 
     switch (command.length()) {
-    case 1:
-        break;
     case 2:
         if (ch != TN_GA && ch != TN_EOR && debug)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
@@ -451,115 +447,101 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
         break;
 
     case 3:
+        option = command.unsigned_at(2);
+
         if (debug)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
-                     << telnetOptionName(command.unsigned_at(2));
+                     << telnetOptionName(option);
 
         switch (ch) {
         case TN_WILL:
-            // server wants to enable some option (or he sends a timing-mark)...
-            option = command.unsigned_at(2);
-
-            heAnnouncedState[option] = true;
-            if (!hisOptionState[option])
-            // only if this is not set; if it's set, something's wrong wth the server
-            // (according to telnet specification, option announcement may not be
-            // unless explicitly requested)
-            {
-                if (!myOptionState[option])
+            // peer wants to enable some option (or he sends a timing-mark)...
+            if (!hisOptionState[option] || !heAnnouncedState[option]) {
                 // only if the option is currently disabled
+                if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) || (option == OPT_ECHO)
+                    || (option == OPT_CHARSET) || (option == OPT_COMPRESS2 && !NO_ZLIB)
+                    || (option == OPT_GMCP) || (option == OPT_MSSP) || (option == OPT_LINEMODE)
+                    || (option == OPT_EOR))
+                // these options are supported
                 {
-                    if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
-                        || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                        || (option == OPT_ECHO) || (option == OPT_CHARSET)
-                        || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP)
-                        || (option == OPT_MSSP) || (option == OPT_LINEMODE) || (option == OPT_EOR))
-                    // these options are supported
-                    {
-                        sendTelnetOption(TN_DO, option);
-                        hisOptionState[option] = true;
-                        if (option == OPT_ECHO) {
-                            receiveEchoMode(false);
-                        } else if (option == OPT_LINEMODE) {
-                            sendLineModeEdit();
-                        } else if (option == OPT_GMCP) {
-                            onGmcpEnabled();
-                        }
-                    } else {
-                        sendTelnetOption(TN_DONT, option);
-                        hisOptionState[option] = false;
+                    sendTelnetOption(TN_DO, option);
+                    hisOptionState[option] = true;
+
+                    if (option == OPT_ECHO) {
+                        receiveEchoMode(false);
+                    } else if (option == OPT_LINEMODE) {
+                        sendLineModeEdit();
+                    } else if (option == OPT_GMCP) {
+                        onGmcpEnabled();
+                    } else if (option == OPT_TERMINAL_TYPE) {
+                        sendTerminalTypeRequest();
+                    } else if (option == OPT_CHARSET) {
+                        sendCharsetRequest();
                     }
-                } else if (myOptionState[option] && option == OPT_TERMINAL_TYPE) {
-                    sendTerminalTypeRequest();
-                }
-            } else if (debug) {
-                qDebug() << "His option" << telnetOptionName(option) << "was already enabled";
-            }
-            break;
-        case TN_WONT:
-            // server refuses to enable some option...
-            option = command.unsigned_at(2);
-            if (!myOptionState[option])
-            // only if the option is currently disabled
-            {
-                // send DONT if needed (see RFC 854 for details)
-                if (hisOptionState[option] || (!heAnnouncedState[option])) {
+                } else {
                     sendTelnetOption(TN_DONT, option);
                     hisOptionState[option] = false;
-                    if (option == OPT_ECHO) {
-                        receiveEchoMode(true);
-                    }
                 }
             }
             heAnnouncedState[option] = true;
             break;
+        case TN_WONT:
+            // peer refuses to enable some option...
+            if (hisOptionState[option] || !heAnnouncedState[option]) {
+                // send DONT if needed (see RFC 854 for details)
+                sendTelnetOption(TN_DONT, option);
+                heAnnouncedState[option] = true;
+            }
+            hisOptionState[option] = false;
+            if (option == OPT_ECHO)
+                receiveEchoMode(true);
+            break;
         case TN_DO:
-            // server wants us to enable some option
-            option = command.unsigned_at(2);
+            // peer allows us to enable some option
             if (option == OPT_TIMING_MARK) {
                 // send WILL TIMING_MARK
                 sendTelnetOption(TN_WILL, option);
-            } else if (!myOptionState[option])
-            // only if the option is currently disabled
-            {
-                // Ignore attempts to enable OPT_ECHO
+                break;
+            }
+
+            // Ignore attempts to enable OPT_ECHO
+            if (option == OPT_ECHO)
+                break;
+
+            // only respond if value changed or if this option has not been announced yet
+            if (!myOptionState[option] || !announcedState[option]) {
+                // only if the option is currently disabled
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                     || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
                     || (option == OPT_CHARSET) || (option == OPT_GMCP) || (option == OPT_LINEMODE)
                     || (option == OPT_EOR)) {
                     sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
-                    announcedState[option] = true;
+                    if (option == OPT_NAWS) {
+                        // NAWS here - window size info must be sent
+                        // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
+                        // messages per second when the user adjusts the window size?
+                        sendWindowSizeChanged(current.x, current.y);
+                    } else if (option == OPT_GMCP) {
+                        onGmcpEnabled();
+                    } else if (option == OPT_LINEMODE) {
+                        sendLineModeEdit();
+                    } else if (option == OPT_COMPRESS2 && !NO_ZLIB) {
+                        // REVISIT: Start deflating after sending IAC SB COMPRESS2 IAC SE
+                    } else if (option == OPT_CHARSET && heAnnouncedState[option]) {
+                        sendCharsetRequest();
+                    }
                 } else {
                     sendTelnetOption(TN_WONT, option);
                     myOptionState[option] = false;
-                    announcedState[option] = true;
                 }
-            } else if (debug) {
-                qDebug() << "My option" << telnetOptionName(option) << "was already enabled";
-            }
-            if (myOptionState[OPT_NAWS] && option == OPT_NAWS) {
-                // NAWS here - window size info must be sent
-                // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
-                // messages per second when the user adjusts the window size?
-                sendWindowSizeChanged(current.x, current.y);
-
-            } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
-                sendCharsetRequest(textCodec.supportedEncodings());
-                // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
-            } else if (myOptionState[OPT_COMPRESS2] && option == OPT_COMPRESS2 && !NO_ZLIB) {
-                // REVISIT: Start deflating after sending IAC SB COMPRESS2 IAC SE
-
-            } else if (myOptionState[OPT_GMCP] && option == OPT_GMCP) {
-                onGmcpEnabled();
-            } else if (myOptionState[OPT_LINEMODE] && option == OPT_LINEMODE) {
-                sendLineModeEdit();
+                announcedState[option] = true;
             }
             break;
         case TN_DONT:
             // only respond if value changed or if this option has not been announced yet
-            option = command.unsigned_at(2);
-            if (myOptionState[option] || (!announcedState[option])) {
+            if (myOptionState[option] || !announcedState[option]) {
                 sendTelnetOption(TN_WONT, option);
                 announcedState[option] = true;
             }
@@ -622,7 +604,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         break;
 
     case OPT_CHARSET:
-        if (myOptionState[OPT_CHARSET]) {
+        if (hisOptionState[OPT_CHARSET] || myOptionState[OPT_CHARSET]) {
             switch (payload[1]) {
             case TNSB_REQUEST:
                 // MMapper does not support [TTABLE]
@@ -717,7 +699,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         break;
 
     case OPT_NAWS:
-        if (myOptionState[OPT_NAWS]) {
+        if (myOptionState[OPT_NAWS] || hisOptionState[OPT_NAWS]) {
             // NAWS <16-bit value> <16-bit value>
             if (payload.length() == 5) {
                 const auto x1 = static_cast<uint8_t>(payload[1]);

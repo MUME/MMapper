@@ -178,6 +178,8 @@ protected:
     OptionArray announcedState;
     /** whether the server has already announced his WILL/WON'T */
     OptionArray heAnnouncedState;
+    /** whether we tried to request */
+    OptionArray triedToEnable;
 
     /** current dimensions for NAWS */
     struct
