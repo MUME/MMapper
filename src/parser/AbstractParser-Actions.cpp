@@ -102,6 +102,8 @@ void AbstractParser::initActionMap()
     addEndsWith("whips its tail around, and sends you sprawling!", bashOn);
     // various trees
     addEndsWith("sends you sprawling.", bashOn);
+    // Balrog
+    addEndsWith("entangles you in its whip and hurls you out of the room!", bashOn);
 
     /// Blind
     auto blindOff = [this](StringView /*view*/) {
