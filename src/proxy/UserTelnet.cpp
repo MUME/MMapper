@@ -54,6 +54,31 @@ NODISCARD static std::string encodeForUser(const CharacterEncodingEnum encoding,
     return oss.str();
 }
 
+NODISCARD static QByteArray decodeFromUser(const CharacterEncodingEnum encoding,
+                                           const QByteArray &ba)
+{
+    switch (encoding) {
+    case CharacterEncodingEnum::ASCII:
+        return ba;
+    case CharacterEncodingEnum::LATIN1:
+        return ba;
+    case CharacterEncodingEnum::UTF8: {
+        std::ostringstream oss;
+        for (const QChar qc : ba) {
+            const auto codepoint = qc.unicode();
+            if (codepoint < 256) {
+                oss << static_cast<char>(codepoint & 0xFF);
+            } else
+                oss << "?";
+        }
+        return ::toQByteArrayLatin1(oss.str());
+    }
+    default:
+        break;
+    }
+    abort();
+}
+
 UserTelnet::UserTelnet(QObject *const parent)
     : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "unknown")
 {}
@@ -62,6 +87,7 @@ void UserTelnet::slot_onConnected()
 {
     reset();
     resetGmcpModules();
+
     // Negotiate options
     requestTelnetOption(TN_DO, OPT_TERMINAL_TYPE);
     requestTelnetOption(TN_DO, OPT_NAWS);
@@ -80,7 +106,7 @@ void UserTelnet::slot_onAnalyzeUserStream(const QByteArray &data)
 void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 {
     // NOTE: We could avoid some overhead by sending one line at a time with a custom ostream.
-    auto outdata = encodeForUser(getTextCodec().getEncoding(), ba, goAhead);
+    auto outdata = encodeForUser(getEncoding(), ba, goAhead);
     submitOverTelnet(outdata, goAhead);
 }
 
@@ -105,8 +131,8 @@ void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
 {
     // MMapper requires all data to be Latin-1 internally
     // REVISIT: This will break things if the client is handling MPI itself
-    QByteArray outdata = getTextCodec().toUnicode(data).toLatin1();
-    emit sig_analyzeUserStream(outdata, goAhead);
+    auto indata = decodeFromUser(getEncoding(), data);
+    emit sig_analyzeUserStream(indata, goAhead);
 }
 
 void UserTelnet::slot_onRelayEchoMode(const bool isDisabled)

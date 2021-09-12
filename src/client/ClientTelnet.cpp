@@ -19,7 +19,7 @@
 #include "../proxy/TextCodec.h"
 
 ClientTelnet::ClientTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "MMapper")
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, "MMapper")
 {
     connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
     connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);
@@ -80,9 +80,7 @@ void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
 
 void ClientTelnet::slot_sendToMud(const QString &data)
 {
-    // MMapper will later convert to Latin-1 within UserTelnet
-    const QByteArray ba = getTextCodec().fromUnicode(data);
-    submitOverTelnet(::toStdStringViewLatin1(ba), false);
+    submitOverTelnet(::toStdStringLatin1(data), false);
 }
 
 void ClientTelnet::virt_sendRawData(const std::string_view &data)
@@ -119,7 +117,7 @@ void ClientTelnet::slot_onReadyRead()
 
 void ClientTelnet::virt_sendToMapper(const QByteArray &data, bool /*goAhead*/)
 {
-    QString out = getTextCodec().toUnicode(data);
+    QString out = QString::fromLatin1(data);
 
     // Replace BEL character with an application beep
     static constexpr const QChar BEL{'\a'};

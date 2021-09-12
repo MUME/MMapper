@@ -308,10 +308,13 @@ void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char optio
     triedToEnable[option] = true;
 }
 
-void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
+void AbstractTelnet::sendCharsetRequest()
 {
     // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
 
+    QStringList myCharacterSets;
+    for (const auto &encoding : textCodec.supportedEncodings())
+        myCharacterSets << ::toQByteArrayLatin1(encoding);
     if (debug)
         qDebug() << "Sending Charset request" << myCharacterSets;
 
@@ -320,9 +323,9 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_REQUEST);
-    for (QString characterSet : myCharacterSets) {
+    for (const auto &characterSet : myCharacterSets) {
         s.addEscapedBytes(delimeter);
-        s.addEscapedBytes(characterSet.toLocal8Bit());
+        s.addEscapedBytes(characterSet.toLatin1());
     }
     s.addSubnegEnd();
 }
@@ -617,33 +620,37 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     if (debug)
                         qDebug() << "Received encoding options" << characterSets;
                     for (const auto &characterSet : characterSets) {
-                        if (textCodec.supports(characterSet)) {
+                        const auto name = ::toStdStringLatin1(characterSet);
+                        if (textCodec.supports(name)) {
                             accepted = true;
-                            textCodec.setEncodingForName(characterSet);
+                            textCodec.setEncodingForName(name);
 
                             // Reply to server that we accepted this encoding
                             sendCharsetAccepted(characterSet);
                             break;
                         }
                     }
-                    if (accepted) {
+                    if (accepted)
                         break;
-                    } else if (debug) {
-                        qDebug() << "Rejected all encodings";
-                    }
                 }
                 // Reject invalid requests or if we did not find any supported codecs
+                if (debug)
+                    qDebug() << "Rejected all encodings";
                 sendCharsetRejected();
                 break;
             case TNSB_ACCEPTED:
                 if (payload.length() > 3) {
                     // CHARSET ACCEPTED <charset>
-                    auto characterSet = payload.mid(2);
-                    textCodec.setEncodingForName(characterSet);
+                    const auto characterSet = payload.mid(2);
+                    textCodec.setEncodingForName(::toStdStringLatin1(characterSet));
+                    if (debug)
+                        qDebug() << "He accepted charset" << characterSet;
                     // TODO: RFC 2066 states to stop queueing data
                 }
                 break;
             case TNSB_REJECTED:
+                if (debug)
+                    qDebug() << "He rejected charset";
                 // TODO: RFC 2066 states to stop queueing data
                 break;
             case TNSB_TTABLE_IS:
@@ -905,20 +912,6 @@ void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
         commandBuffer.clear();
         break;
     }
-}
-
-TextCodec &AbstractTelnet::getTextCodec()
-{
-    // Switch codec if RFC 2066 was not negotiated and the configuration was altered
-    if (!hisOptionState[OPT_CHARSET]) {
-        const CharacterEncodingEnum configEncoding = getConfig().general.characterEncoding;
-        if (configEncoding != textCodec.getEncoding()) {
-            textCodec.setEncoding(configEncoding);
-            if (debug)
-                qDebug() << "Switching to" << textCodec.getName() << "character encoding";
-        }
-    }
-    return textCodec;
 }
 
 int AbstractTelnet::onReadInternalInflate(const char *data,

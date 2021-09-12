@@ -113,7 +113,7 @@ public:
     }
 
 protected:
-    void sendCharsetRequest(const QStringList &myCharacterSet);
+    void sendCharsetRequest();
     void sendTerminalType(const QByteArray &terminalType);
     void sendCharsetRejected();
     void sendCharsetAccepted(const QByteArray &characterSet);
@@ -163,7 +163,7 @@ protected:
     void onReadInternal(const QByteArray &);
     void setTerminalType(const QByteArray &terminalType) { termType = terminalType; }
 
-    NODISCARD TextCodec &getTextCodec();
+    NODISCARD CharacterEncodingEnum getEncoding() const { return textCodec.getEncoding(); }
 
 protected:
     static constexpr const size_t NUM_OPTS = 256;
