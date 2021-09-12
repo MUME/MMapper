@@ -80,7 +80,7 @@ void UserTelnet::slot_onAnalyzeUserStream(const QByteArray &data)
 void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 {
     // NOTE: We could avoid some overhead by sending one line at a time with a custom ostream.
-    auto outdata = encodeForUser(getEncoding(), ba, goAhead);
+    auto outdata = encodeForUser(getTextCodec().getEncoding(), ba, goAhead);
     submitOverTelnet(outdata, goAhead);
 }
 
