@@ -676,13 +676,12 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     case OPT_COMPRESS2:
         assert(!NO_ZLIB);
         if (hisOptionState[OPT_COMPRESS2]) {
-            if (debug) {
-                if (inflateTelnet) {
-                    qDebug() << "Compression was already enabled";
-                    break;
-                }
-                qDebug() << "Starting compression";
+            if (inflateTelnet) {
+                qWarning() << "Compression was already enabled";
+                break;
             }
+            if (debug)
+                qDebug() << "Starting compression";
             recvdCompress = true;
         }
         break;
