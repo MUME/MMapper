@@ -93,6 +93,9 @@ void ClientTelnet::virt_sendRawData(const std::string_view &data)
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
 {
+    if (current.x == x && current.y == y)
+        return;
+
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
     // we won't be called again when connecting
