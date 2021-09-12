@@ -278,8 +278,9 @@ void AbstractParser::initActionMap()
                 [this](StringView view) { m_mumeClock.parseMumeTime(view.toQString()); });
 
     /// Score
-    addRegex(R"(^(You have )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",
-             [this](StringView view) { sendScoreLineEvent(view.toQByteArray()); });
+    addRegex(
+        R"(^(You (have|report) )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",
+        [this](StringView view) { sendScoreLineEvent(view.toQByteArray()); });
 
     /// Search, reveal, and flush
     addStartsWith("You begin to search...", [this](StringView /*view*/) {

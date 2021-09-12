@@ -284,7 +284,7 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
 {
     if (!group)
         return;
-    static const QRegularExpression sRx(R"(^(?:You have )?)"            // 'info' support
+    static const QRegularExpression sRx(R"(^(?:You (?:have|report) )?)" // 'info' support
                                         R"((\d+)\/(\d+) hits?)"         // Group 1/2 hits
                                         R"(,?(?: (\d+)\/(\d+) mana,)?)" // Group 3/4 mana
                                         R"( and (\d+)\/(\d+) move)"     // Group 5/6 moves
