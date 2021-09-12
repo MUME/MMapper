@@ -328,27 +328,27 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     QByteArray textMoves;
     CharacterAffectFlags &affects = self->affects;
 
-    static const QRegularExpression pRx(R"(^(?:\+ )?)"              //          Valar mudlle
-                                        R"(([\*@\!\)o])"            // Group 1: light
-                                        R"([\[#\.f\(<%~WU\+:=O]?))" //          terrain
-                                        R"(([~'"]?[-=]?)"           // Group 2: weather
-                                        R"( ?[Cc]?[Rr]?[Ss]?W?)"    //          movement
-                                        R"((?: i[^ >]+)?)"          //          wizinvis
-                                        R"((?: NN)?(?: NS)?)"       //          no narrate / no song
-                                        R"((?: \d+\[\d+:\d+\])?)?)" //          god zone / room info
-                                        R"((?: HP:([^ >]+))?)"      // Group 3: HP
-                                        R"((?: Mana:([^ >]+))?)"    // Group 4: Mana
-                                        R"((?: Move:([^ >]+))?)"    // Group 5: Move
-                                        R"((?: Mount:([^ >]+))?)"   // Group 6: Mount
-                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 7/8: Target / health
-                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 9/10: Buffer / health
+    static const QRegularExpression pRx(R"(^(?:\+ )?)"               //          Valar mudlle
+                                        R"([\*@\!\)o]?)"             //          light
+                                        R"([\[#\.f\(<%~WU\+:=O]?)"   //          terrain
+                                        R"([~'"]?[-=]?)"             //          weather
+                                        R"(( ?[Cc]?[Rr]?[Ss]?W?)?)"  // Group 1: movement
+                                        R"((?: i[^ >]+)?)"           //          wizinvis
+                                        R"((?: NN)?(?: NS)?)"        //          no narrate/song
+                                        R"((?: \d+\[\d+:\d+\])?)"    //          room number
+                                        R"((?: HP:([^ >]+))?)"       // Group 2: HP
+                                        R"((?: Mana:([^ >]+))?)"     // Group 3: Mana
+                                        R"((?: Move:([^ >]+))?)"     // Group 4: Move
+                                        R"((?: Mount:([^ >]+))?)"    // Group 5: Mount
+                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 6/7: Target / health
+                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 8/9: Buffer / health
                                         R"(>)");
     QRegularExpressionMatch match = pRx.match(prompt);
     if (!match.hasMatch())
         return;
 
     const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
-    const bool isRiding = match.captured(2).contains("R");
+    const bool isRiding = match.captured(1).contains("R");
     if (!wasRiding && isRiding) {
         affects.insert(CharacterAffectEnum::RIDING);
         affectLastSeen.insert(CharacterAffectEnum::RIDING,
@@ -363,10 +363,10 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         affects.remove(CharacterAffectEnum::SEARCH);
 
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
-    textHP = match.captured(3).toLatin1();
-    textMana = match.captured(4).toLatin1();
-    textMoves = match.captured(5).toLatin1();
-    bool inCombat = !match.captured(7).isEmpty();
+    textHP = match.captured(2).toLatin1();
+    textMana = match.captured(3).toLatin1();
+    textMoves = match.captured(4).toLatin1();
+    bool inCombat = !match.captured(6).isEmpty();
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
         && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat
