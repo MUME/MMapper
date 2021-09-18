@@ -243,6 +243,7 @@ void GroupManagerPage::slot_charNameTextChanged()
         ui->charName->setText(newNameStr);
     }
 
+    // REVISIT: Rename this and other functions to charLabel
     setConfig().groupManager.charName = newNameStr.toLatin1();
     emit sig_updatedSelf();
 }

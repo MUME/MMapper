@@ -32,7 +32,7 @@
    <item>
     <widget class="QGroupBox" name="identitiesGroupBox">
      <property name="title">
-      <string>Your Character</string>
+      <string>Your Profile</string>
      </property>
      <layout class="QGridLayout">
       <item row="6" column="0" colspan="3">
@@ -64,7 +64,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Name:</string>
+         <string>Label:</string>
         </property>
         <property name="buddy">
          <cstring>charName</cstring>

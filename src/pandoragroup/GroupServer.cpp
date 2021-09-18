@@ -400,6 +400,10 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         kickConnection(socket, "Your name must not include any whitespace");
         return;
     }
+    if (simplifiedName.isEmpty()) {
+        kickConnection(socket, "Your name cannot be empty");
+        return;
+    }
     if (getGroup()->isNamePresent(nameStr.toLatin1())) {
         kickConnection(socket, "The name you picked is already present!");
         return;
@@ -527,7 +531,7 @@ void GroupServer::kickConnection(GroupSocket *const socket, const QString &messa
         // Protocol 102 does not support kicking outside of AwaitingLogin so we fake it with a group tell
         QVariantMap root;
         root["text"] = message;
-        root["from"] = QString::fromLatin1(getConfig().groupManager.charName);
+        root["from"] = QString::fromLatin1(getGroup()->getSelf()->getName());
         sendMessage(socket, MessagesEnum::GTELL, root);
 
     } else {

@@ -46,6 +46,7 @@ private:
     struct NODISCARD Internal final
     {
         QByteArray name;
+        QByteArray label;
         QColor color;
     };
     Internal m_internal;
@@ -76,6 +77,8 @@ public:
 public:
     NODISCARD const QByteArray &getName() const { return m_internal.name; }
     void setName(QByteArray name) { m_internal.name = name; }
+    NODISCARD const QByteArray &getLabel() const { return m_internal.label; }
+    void setLabel(QByteArray label) { m_internal.label = label; }
     void setColor(QColor col) { m_internal.color = col; }
     NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD const QVariantMap toVariantMap() const;

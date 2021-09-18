@@ -153,28 +153,14 @@ void Mmapper2Group::slot_updateSelf()
         return;
     }
 
-    const Configuration::GroupManagerSettings &groupManagerSettings = getConfig().groupManager;
-    if (group->getSelf()->getName() != groupManagerSettings.charName) {
-        QByteArray oldname = group->getSelf()->getName();
-        QByteArray newname = groupManagerSettings.charName;
-
-        if (getGroup()->isNamePresent(newname)) {
-            messageBox("You cannot take a name that is already present.");
-            setConfig().groupManager.charName = oldname;
-            return;
-        }
-
-        if (network) {
-            emit sig_sendSelfRename(oldname, newname);
-        }
-        group->getSelf()->setName(newname);
-
-    } else if (group->getSelf()->getColor() != groupManagerSettings.color) {
-        group->getSelf()->setColor(groupManagerSettings.color);
-
-    } else {
+    auto &self = group->getSelf();
+    const Configuration::GroupManagerSettings &conf = getConfig().groupManager;
+    if (conf.charName != self->getLabel())
+        self->setLabel(conf.charName);
+    else if (self->getColor() != conf.color)
+        self->setColor(conf.color);
+    else
         return;
-    }
 
     issueLocalCharUpdate();
 }
@@ -242,15 +228,21 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
     }
     const QString &text = node["text"].toString();
 
+    auto name = from;
     auto color = getConfig().groupManager.groupTellColor;
     auto selection = getGroup()->selectByName(from.toLatin1());
-    if (getConfig().groupManager.useGroupTellAnsi256Color && !selection->empty()) {
-        auto character = selection->at(0);
-        color = rgbToAnsi256String(character->getColor(), false);
+    if (!selection->empty()) {
+        const auto &character = selection->at(0);
+        if (!character->getLabel().isEmpty() && character->getLabel() != character->getName())
+            name = QString("%1 (%2)")
+                       .arg(character->getName().constData())
+                       .arg(character->getLabel().constData());
+        if (getConfig().groupManager.useGroupTellAnsi256Color)
+            color = rgbToAnsi256String(character->getColor(), false);
     }
     log(QString("GTell from %1 arrived: %2").arg(from, text));
 
-    emit sig_displayGroupTellEvent(color, from, text);
+    emit sig_displayGroupTellEvent(color, name, text);
 }
 
 void Mmapper2Group::kickCharacter(const QByteArray &character)
@@ -578,6 +570,28 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
         const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
 
         updateCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp);
+    }
+
+    if (group && msg.isCharName()) {
+        // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
+        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
+        if (!doc.isObject())
+            return;
+        const auto &obj = doc.object();
+        const auto &name = obj.value("name");
+        if (!name.isString())
+            return;
+
+        const QByteArray &oldname = group->getSelf()->getName();
+        const QByteArray newname = name.toString().toLatin1();
+        if (oldname != newname && !getGroup()->isNamePresent(newname)) {
+            QMutexLocker locker(&networkLock);
+            // Inform the server that we're renaming ourselves
+            if (network)
+                emit sig_sendSelfRename(oldname, newname);
+            group->getSelf()->setName(newname);
+            issueLocalCharUpdate();
+        }
     }
 }
 

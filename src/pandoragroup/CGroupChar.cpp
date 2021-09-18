@@ -15,6 +15,7 @@
 KEY playerDataKey = "playerData";
 
 KEY nameKey = "name";
+KEY labelKey = "label";
 KEY roomKey = "room";
 KEY colorKey = "color";
 KEY stateKey = "state";
@@ -31,6 +32,7 @@ const QVariantMap CGroupChar::toVariantMap() const
     QVariantMap playerData;
 
     playerData[nameKey] = m_internal.name;
+    playerData[labelKey] = m_internal.label;
     playerData[colorKey] = m_internal.color.name();
     playerData["hp"] = hp;
     playerData["maxhp"] = maxhp;
@@ -113,6 +115,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
 #define TRY_UPDATE_STRING(s) tryUpdateString(#s, (m_internal.s))
     TRY_UPDATE_STRING(name);
+    TRY_UPDATE_STRING(label);
 #undef TRY_UPDATE_STRING
 
     if (playerData.contains(prespamKey) && playerData[prespamKey].canConvert(QMetaType::QString)) {

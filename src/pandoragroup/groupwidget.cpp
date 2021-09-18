@@ -193,7 +193,12 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
     case Qt::DisplayRole:
         switch (column) {
         case ColumnTypeEnum::NAME:
-            return character->getName();
+            if (character->getLabel().isEmpty() || character->getName() == character->getLabel())
+                return character->getName();
+            else
+                return QString("%1 (%2)")
+                    .arg(character->getName().constData())
+                    .arg(character->getLabel().constData());
         case ColumnTypeEnum::HP_PERCENT:
             return calculatePercentage(character->hp, character->maxhp);
         case ColumnTypeEnum::MANA_PERCENT:
