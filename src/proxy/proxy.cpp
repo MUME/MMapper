@@ -278,21 +278,15 @@ void Proxy::slot_onMudConnected()
 
     log("Connection to server established ...");
 
-    // send IAC-GA prompt request
-    QByteArray idPrompt("~$#EP2\nG\n");
-    log("Sent MUME Protocol Initiator IAC-GA prompt request");
-    sendToMud(idPrompt);
-
-    // send Remote Editing request
-    if (settings.remoteEditing) {
-        QByteArray idRemoteEditing("~$#EI\n");
-        log("Sent MUME Protocol Initiator remote editing request");
-        sendToMud(idRemoteEditing);
-    }
-
     // send gratuitous XML request
     sendToMud(QByteArray("~$#EX2\n3G\n"));
     log("Sent MUME Protocol Initiator XML request");
+
+    // send Remote Editing request
+    if (settings.remoteEditing) {
+        sendToMud(QByteArray("~$#EI\n"));
+        log("Sent MUME Protocol Initiator remote editing request");
+    }
 }
 
 void Proxy::slot_onMudError(const QString &errorStr)

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>359</width>
+    <width>405</width>
     <height>305</height>
    </rect>
   </property>
@@ -62,22 +62,6 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="xmlSupportCheckBox">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Gratuitous XML</string>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QCheckBox" name="remoteEditCheckBox">
         <property name="text">
@@ -86,12 +70,12 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QCheckBox" name="IACPromptCheckBox">
+       <widget class="QCheckBox" name="xmlSupportCheckBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Telnet IAC-GA prompts</string>
+         <string>Gratuitous XML</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -160,7 +144,6 @@
  </widget>
  <tabstops>
   <tabstop>remoteEditCheckBox</tabstop>
-  <tabstop>IACPromptCheckBox</tabstop>
   <tabstop>xmlSupportCheckBox</tabstop>
   <tabstop>internalEditorRadioButton</tabstop>
   <tabstop>externalEditorRadioButton</tabstop>
