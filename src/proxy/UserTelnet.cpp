@@ -189,6 +189,11 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
             comma = true;
         }
         oss << " ]";
+        if (!comma) {
+            if (debug)
+                qDebug() << "All modules were supported or nothing was requested";
+            return;
+        }
         GmcpMessage filteredMsg(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, oss.str());
         emit sig_relayGmcp(filteredMsg);
         return;
