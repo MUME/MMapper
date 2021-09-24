@@ -1,4 +1,26 @@
 ================================
+MMapper 21.09.0 (September 24, 2021)
+================================
+
+New features:
+ - Balrog's whip entangle "bash" is now detected in the Group Manager
+ - "score report" output is now captured for the Group Manager
+ - Add the ability to search using a regex in the Find Rooms dialog
+ - [Beta] Use Char.Vitals GMCP messages to populate the Group Manager when
+   MUME adds support for GMCP Char module
+
+Changes:
+ - Rename MMapper.GroupTell to MMapper.Comm.GroupTell
+ - Stopped sending the IAC-GA prompt request MPI to MUME
+
+Bug fixes:
+ - Prompt rewriting works
+ - Light and terrain characters in the prompt are now optional since we now
+   parse the terrain type from <room terrain=...> XML attribute
+ - Fixed RFC 2066 Charset negotation
+ - Refactor telnet option handling to be less spammy
+
+================================
 MMapper 21.08.0 (August 9, 2021)
 ================================
 
