@@ -14,6 +14,7 @@ class MudTelnet final : public AbstractTelnet
 private:
     /** modules for GMCP */
     GmcpModuleSet gmcp;
+    bool receivedExternalDiscordHello = false;
 
 public:
     explicit MudTelnet(QObject *parent);

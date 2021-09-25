@@ -99,6 +99,9 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         return;
     }
 
+    if (msg.isExternalDiscordHello())
+        receivedExternalDiscordHello = true;
+
     if (!hisOptionState[OPT_GMCP]) {
         qDebug() << "MUME did not request GMCP yet";
         return;
@@ -159,6 +162,9 @@ void MudTelnet::virt_onGmcpEnabled()
 
     // Request GMCP modules that might have already been sent by the local client
     sendCoreSupports();
+
+    if (receivedExternalDiscordHello)
+        sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::EXTERNAL_DISCORD_HELLO});
 }
 
 /** Send out the data. Does not double IACs, this must be done
@@ -184,6 +190,7 @@ void MudTelnet::resetGmcpModules()
 
     // Following modules are enabled by default
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::CHAR, GmcpModuleVersion{1}}, true);
+    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EXTERNAL_DISCORD, GmcpModuleVersion{1}}, true);
 }
 
 void MudTelnet::sendCoreSupports()
