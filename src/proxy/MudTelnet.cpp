@@ -44,15 +44,12 @@ MudTelnet::MudTelnet(QObject *const parent)
 {
     // RFC 2066 states we can provide many character sets but we force Latin-1 when
     // communicating with MUME
-}
-
-void MudTelnet::slot_onConnected()
-{
     resetGmcpModules();
 }
 
 void MudTelnet::slot_onDisconnected()
 {
+    // Reset Telnet options but retain GMCP modules
     reset();
 }
 

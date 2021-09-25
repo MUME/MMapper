@@ -245,7 +245,6 @@ void Proxy::slot_start()
     sendToUser(ba);
 
     connect(mudSocket, &MumeSocket::sig_connected, userTelnet, &UserTelnet::slot_onConnected);
-    connect(mudSocket, &MumeSocket::sig_connected, mudTelnet, &MudTelnet::slot_onConnected);
     connect(mudSocket, &MumeSocket::sig_connected, this, &Proxy::slot_onMudConnected);
     connect(mudSocket, &MumeSocket::sig_socketError, parserXml, &AbstractParser::slot_reset);
     connect(mudSocket, &MumeSocket::sig_socketError, &m_groupManager, &Mmapper2Group::slot_reset);
