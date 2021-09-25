@@ -339,6 +339,8 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
                                         R"(( ?[Cc]?[Rr]?[Ss]?W?)?)"  // Group 1: movement
                                         R"((?: i[^ >]+)?)"           //          wizinvis
                                         R"((?: NN)?(?: NS)?)"        //          no narrate/song
+                                        R"((?: XP:\d+)?)"            //          xp tnl
+                                        R"((?: TP:\d+)?)"            //          tp tnl
                                         R"((?: \d+\[\d+:\d+\])?)"    //          room number
                                         R"((?: HP:([^ >]+))?)"       // Group 2: HP
                                         R"((?: Mana:([^ >]+))?)"     // Group 3: Mana
