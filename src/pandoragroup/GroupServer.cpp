@@ -56,8 +56,7 @@ void GroupServer::slot_errorInConnection(GroupSocket *const socket, const QStrin
     if (getGroup()->isNamePresent(name)) {
         sendRemoveUserNotification(socket, name);
         emit sig_sendLog(QString("'%1' encountered an error: %2")
-                             .arg(QString::fromLatin1(socket->getName()))
-                             .arg(errorMessage));
+                             .arg(QString::fromLatin1(socket->getName()), errorMessage));
         emit sig_scheduleAction(std::make_shared<RemoveCharacter>(name));
     }
     closeOne(socket);
@@ -187,6 +186,11 @@ void GroupServer::slot_connectionEstablished(GroupSocket *const socket)
     sendMessage(socket, MessagesEnum::REQ_HANDSHAKE, handshake);
 }
 
+static bool isEqualsCaseInsensitive(const QString &a, const QString &b)
+{
+    return a.compare(b, Qt::CaseInsensitive) == 0;
+}
+
 void GroupServer::virt_retrieveData(GroupSocket *const socket,
                                     const MessagesEnum message,
                                     const QVariantMap &data)
@@ -239,9 +243,8 @@ void GroupServer::virt_retrieveData(GroupSocket *const socket,
         // usual update situation. receive update, unpack, apply.
         if (message == MessagesEnum::UPDATE_CHAR) {
             const QString &updateName = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
-            if (updateName.compare(nameStr, Qt::CaseInsensitive) != 0) {
-                emit sig_sendLog(
-                    QString("WARNING: '%1' spoofed as '%2'").arg(nameStr).arg(updateName));
+            if (!isEqualsCaseInsensitive(updateName, nameStr)) {
+                emit sig_sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr, updateName));
                 return;
             }
             emit sig_scheduleAction(std::make_shared<UpdateCharacter>(data));
@@ -249,9 +252,8 @@ void GroupServer::virt_retrieveData(GroupSocket *const socket,
 
         } else if (message == MessagesEnum::GTELL) {
             const auto &fromName = QString::fromLatin1(data["from"].toByteArray()).simplified();
-            if (fromName.compare(nameStr, Qt::CaseInsensitive) != 0) {
-                emit sig_sendLog(
-                    QString("WARNING: '%1' spoofed as '%2'").arg(nameStr).arg(fromName));
+            if (!isEqualsCaseInsensitive(fromName, nameStr)) {
+                emit sig_sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr, fromName));
                 return;
             }
             emit sig_gTellArrived(data);
@@ -262,22 +264,22 @@ void GroupServer::virt_retrieveData(GroupSocket *const socket,
 
         } else if (message == MessagesEnum::RENAME_CHAR) {
             const QString oldName = QString::fromLatin1(data["oldname"].toByteArray()).simplified();
-            if (oldName.compare(nameStr, Qt::CaseInsensitive) != 0) {
+            if (!isEqualsCaseInsensitive(oldName, nameStr)) {
                 kickConnection(socket,
-                               QString("Name spoof detected: %1 != %2").arg(oldName).arg(nameStr));
+                               QString("Name spoof detected: %1 != %2").arg(oldName, nameStr));
                 return;
             }
-            const QString &newName = QString::fromLatin1(data["newname"].toByteArray()).simplified();
-            if (newName.compare(data["newname"].toByteArray(), Qt::CaseInsensitive) != 0) {
+            const QString &newName = QString::fromLatin1(data["newname"].toByteArray());
+            if (!isEqualsCaseInsensitive(newName, newName.simplified())) {
                 kickConnection(socket, "Your name must not include any whitespace");
                 return;
             }
             for (const auto &target : clientsList) {
                 if (socket == target)
                     continue;
-                if (newName.compare(QString::fromLatin1(target->getName()), Qt::CaseInsensitive)
-                    != 0) {
-                    kickConnection(socket, "Someone was already using that name");
+                if (isEqualsCaseInsensitive(newName, QString::fromLatin1(target->getName()))) {
+                    kickConnection(socket,
+                                   QString("Someone was already using the name '%1'").arg(newName));
                     return;
                 }
             }
@@ -350,8 +352,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     const QString &nameStr = playerData["name"].toString();
     const QString tempName = QString("%1-%2").arg(nameStr).arg(getRandom(1000));
     socket->setName(tempName.toLatin1());
-    emit sig_sendLog(
-        QString("'%1' is trying to join the group as '%2'.").arg(tempName).arg(nameStr));
+    emit sig_sendLog(QString("'%1' is trying to join the group as '%2'.").arg(tempName, nameStr));
 
     // Check credentials
     const auto secret = socket->getSecret();
@@ -362,7 +363,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     const bool validCert = getAuthority()->validCertificate(socket);
     bool reconnect = false;
     if (isEncrypted) {
-        emit sig_sendLog(QString("'%1's secret: %2").arg(tempName).arg(secret.constData()));
+        emit sig_sendLog(QString("'%1's secret: %2").arg(tempName, secret.constData()));
 
         // Verify only one secret can be connected at once
         for (const auto &target : clientsList) {
@@ -380,7 +381,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
             QString("<b>WARNING:</b> '%1' has no secret and their connection is not encrypted.")
                 .arg(tempName));
     }
-    emit sig_sendLog(QString("'%1's IP address: %2").arg(tempName).arg(socket->getPeerName()));
+    emit sig_sendLog(QString("'%1's IP address: %2").arg(tempName, socket->getPeerName()));
     emit sig_sendLog(
         QString("'%1's protocol version: %2").arg(tempName).arg(socket->getProtocolVersion()));
     if (requireAuth && !validSecret) {
@@ -395,8 +396,8 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         kickConnection(socket, "Host does not trust your compromised secret.");
         return;
     }
-    QString simplifiedName = nameStr.simplified();
-    if (simplifiedName.compare(nameStr, Qt::CaseInsensitive) != 0) {
+    const QString simplifiedName = nameStr.simplified();
+    if (!isEqualsCaseInsensitive(simplifiedName, nameStr)) {
         kickConnection(socket, "Your name must not include any whitespace");
         return;
     }
@@ -409,7 +410,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         return;
     } else {
         // Allow this name to now take effect
-        emit sig_sendLog(QString("'%1' will now be known as '%2'").arg(tempName).arg(nameStr));
+        emit sig_sendLog(QString("'%1' will now be known as '%2'").arg(tempName, nameStr));
         socket->setName(nameStr.toLatin1());
     }
 
@@ -540,7 +541,7 @@ void GroupServer::kickConnection(GroupSocket *const socket, const QString &messa
     const QString nameStr = QString::fromLatin1(socket->getName());
     const QString identifier = nameStr.isEmpty() ? socket->getPeerName() : nameStr;
     qDebug() << "Kicking" << identifier << "for" << message;
-    emit sig_sendLog(QString("'%1' was kicked: %2").arg(identifier).arg(message));
+    emit sig_sendLog(QString("'%1' was kicked: %2").arg(identifier, message));
 
     const auto &name = socket->getName();
     if (getGroup()->isNamePresent(name)) {
@@ -554,7 +555,7 @@ void GroupServer::slot_onRevokeWhitelist(const QByteArray &secret)
 {
     if (getConfig().groupManager.requireAuth) {
         for (auto &connection : clientsList) {
-            if (QString(secret).compare(connection->getSecret(), Qt::CaseInsensitive) == 0) {
+            if (isEqualsCaseInsensitive(secret, connection->getSecret())) {
                 kickConnection(connection, "You have been removed from the host's contacts!");
             }
         }
