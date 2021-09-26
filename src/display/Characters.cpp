@@ -412,19 +412,17 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     for (const auto &character : *selection) {
         const RoomId id = character->getRoomId();
         // Do not draw the character if they're in an "Unknown" room
-        if (id == INVALID_ROOMID || id > m_data.getMaxId())
+        if (id == INVALID_ROOMID || id > m_data.getMaxId() || character == group->getSelf())
             continue;
-        if (character->getName() != getConfig().groupManager.charName) {
-            auto roomSelection = RoomSelection(m_data);
-            if (const Room *const r = roomSelection.getRoom(id)) {
-                const auto pos = r->getPosition();
-                const auto color = Color{character->getColor()};
-                const bool fill = !drawnRoomIds.contains(r->getId());
-                batch.drawCharacter(pos, color, fill);
-                const auto prespam = m_data.getPath(pos, character->prespam);
-                batch.drawPreSpammedPath(pos, prespam, color);
-                drawnRoomIds.insert(r->getId());
-            }
+        auto roomSelection = RoomSelection(m_data);
+        if (const Room *const r = roomSelection.getRoom(id)) {
+            const auto pos = r->getPosition();
+            const auto color = Color{character->getColor()};
+            const bool fill = !drawnRoomIds.contains(r->getId());
+            batch.drawCharacter(pos, color, fill);
+            const auto prespam = m_data.getPath(pos, character->prespam);
+            batch.drawPreSpammedPath(pos, prespam, color);
+            drawnRoomIds.insert(r->getId());
         }
     }
 }
