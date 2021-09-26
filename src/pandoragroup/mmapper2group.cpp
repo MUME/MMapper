@@ -587,8 +587,17 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
             return;
 
         const QByteArray &oldname = group->getSelf()->getName();
-        const QByteArray newname = name.toString().toLatin1();
-        if (oldname != newname && !getGroup()->isNamePresent(newname)) {
+        const QByteArray &newname = [this, &oldname](const QByteArray &name) {
+            if (getGroup()->isNamePresent(name)) {
+                const auto &fallback = getConfig().groupManager.charName;
+                if (getGroup()->isNamePresent(fallback))
+                    return oldname;
+                else
+                    return fallback;
+            } else
+                return name;
+        }(name.toString().toLatin1());
+        if (oldname != newname) {
             QMutexLocker locker(&networkLock);
             // Inform the server that we're renaming ourselves
             if (network)
