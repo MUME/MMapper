@@ -546,7 +546,9 @@ void Mmapper2Group::slot_reset()
     lastPrompt.reset();
 
     // Reset character
-    deref(getGroup()->getSelf()).reset();
+    auto &self = deref(getGroup()->getSelf());
+    self.reset();
+    self.setName(getConfig().groupManager.charName);
 
     issueLocalCharUpdate();
 }
