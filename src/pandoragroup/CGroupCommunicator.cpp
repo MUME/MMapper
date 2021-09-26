@@ -61,6 +61,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
         xml.writeAttribute("mana", playerData["mana"].toString());
         xml.writeAttribute("maxmana", playerData["maxmana"].toString());
         xml.writeAttribute("name", playerData["name"].toString());
+        xml.writeAttribute("label", playerData["label"].toString());
         xml.writeAttribute("color", playerData["color"].toString());
         xml.writeAttribute("hp", playerData["hp"].toString());
         xml.writeAttribute("maxmoves", playerData["maxmoves"].toString());
@@ -219,6 +220,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
                 playerData["maxmana"] = attributes.value("maxmana").toInt();
                 playerData["state"] = attributes.value("state").toUInt();
                 playerData["name"] = attributes.value("name").toString();
+                playerData["label"] = attributes.value("label").toString();
                 playerData["color"] = attributes.value("color").toString();
                 playerData["room"] = attributes.value("room").toUInt();
                 playerData["prespam"] = attributes.value("prespam").toString();
