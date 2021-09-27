@@ -1,4 +1,18 @@
 ================================
+MMapper 21.09.1 (September 26, 2021)
+================================
+
+New features:
+ - Use Char.Name GMCP module to populate the Group Manager
+ - Use Char.StatusVars GMCP module to detect sundeath exits
+
+Bug fixes:
+ - Prevent renaming from kicking players in the Group Manager
+ - Update prompt parsing to support XP and TP TNL
+ - Retain GMCP modules between reconnects
+ - Fix race condition when proxying External.Discord.Hello
+
+================================
 MMapper 21.09.0 (September 24, 2021)
 ================================
 
