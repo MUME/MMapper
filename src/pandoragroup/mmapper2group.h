@@ -138,6 +138,7 @@ private:
                               const int maxmana,
                               const int mp,
                               const int maxmp);
+    void renameCharacter(QByteArray newname);
 
     QMutex networkLock{QMutex::Recursive};
     std::unique_ptr<QThread> thread;

@@ -547,7 +547,9 @@ void Mmapper2Group::slot_reset()
     // Reset character
     auto &self = deref(getGroup()->getSelf());
     self.reset();
-    self.setName(getConfig().groupManager.charName);
+
+    // Reset name to label
+    renameCharacter(getConfig().groupManager.charName);
 
     issueLocalCharUpdate();
 }
@@ -585,25 +587,28 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
         if (!name.isString())
             return;
 
-        const QByteArray &oldname = group->getSelf()->getName();
-        const QByteArray &newname = [this, &oldname](const QByteArray &name) {
-            if (getGroup()->isNamePresent(name)) {
-                const auto &fallback = getConfig().groupManager.charName;
-                if (getGroup()->isNamePresent(fallback))
-                    return oldname;
-                else
-                    return fallback;
-            } else
-                return name;
-        }(name.toString().toLatin1());
-        if (oldname != newname) {
-            QMutexLocker locker(&networkLock);
-            // Inform the server that we're renaming ourselves
-            if (network)
-                emit sig_sendSelfRename(oldname, newname);
-            group->getSelf()->setName(newname);
-            issueLocalCharUpdate();
-        }
+        renameCharacter(name.toString().toLatin1());
+        issueLocalCharUpdate();
+    }
+}
+
+void Mmapper2Group::renameCharacter(QByteArray newname)
+{
+    const auto &oldname = getGroup()->getSelf()->getName();
+    if (getGroup()->isNamePresent(newname)) {
+        const auto &fallback = getConfig().groupManager.charName;
+        if (getGroup()->isNamePresent(fallback))
+            newname = oldname;
+        else
+            newname = fallback;
+    }
+    if (oldname != newname) {
+        QMutexLocker locker(&networkLock);
+
+        // Inform the server that we're renaming ourselves
+        if (network)
+            emit sig_sendSelfRename(oldname, newname);
+        group->getSelf()->setName(newname);
     }
 }
 

@@ -228,10 +228,10 @@ QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
     }
 
     const QVariantMap &playerData = data[playerDataKey].toMap();
-    if (!playerData.contains(nameKey) || !playerData[nameKey].canConvert(QMetaType::QByteArray)) {
+    if (!playerData.contains(nameKey) || !playerData[nameKey].canConvert(QMetaType::QString)) {
         qWarning() << "Unable to find" << QuotedQString(nameKey) << "in map" << playerData;
         return "";
     }
 
-    return playerData[nameKey].toByteArray();
+    return playerData[nameKey].toString().toLatin1();
 }
