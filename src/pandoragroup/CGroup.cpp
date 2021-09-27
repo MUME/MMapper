@@ -113,10 +113,10 @@ bool CGroup::addChar(const QVariantMap &map)
     newChar->updateFromVariantMap(map);
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         log(QString("'%1' could not join the group because the name already existed.")
-                .arg(newChar->getName().constData()));
+                .arg(QString::fromLatin1(newChar->getName())));
         return false;
     }
-    log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
+    log(QString("'%1' joined the group.").arg(QString::fromLatin1(newChar->getName())));
     charIndex.push_back(newChar);
     characterChanged(true);
     return true;
@@ -133,7 +133,8 @@ void CGroup::removeChar(const QByteArray &name)
     for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
         SharedGroupChar character = *it;
         if (character->getName() == name) {
-            log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
+            log(QString("Removing '%1' from the group.")
+                    .arg(QString::fromLatin1(character->getName())));
             charIndex.erase(it);
             characterChanged(true);
             return;

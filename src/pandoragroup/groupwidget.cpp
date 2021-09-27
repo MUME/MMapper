@@ -196,9 +196,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
             if (character->getLabel().isEmpty() || character->getName() == character->getLabel())
                 return character->getName();
             else
-                return QString("%1 (%2)")
-                    .arg(character->getName().constData())
-                    .arg(character->getLabel().constData());
+                return QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
+                                              QString::fromLatin1(character->getLabel()));
         case ColumnTypeEnum::HP_PERCENT:
             return calculatePercentage(character->hp, character->maxhp);
         case ColumnTypeEnum::MANA_PERCENT:
@@ -396,7 +395,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             const bool selectedSelf = (index.row() == 0);
             if (isServer && !selectedSelf) {
                 // All context menu actions are only actionable by the server right now
-                m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
+                m_kick->setText(QString("&Kick %1").arg(QString::fromLatin1(selectedCharacter)));
                 QMenu contextMenu(tr("Context menu"), this);
                 contextMenu.addAction(m_kick);
                 contextMenu.exec(QCursor::pos());

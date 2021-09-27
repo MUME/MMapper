@@ -31,8 +31,8 @@ const QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
 
-    playerData[nameKey] = m_internal.name;
-    playerData[labelKey] = m_internal.label;
+    playerData[nameKey] = QString::fromLatin1(m_internal.name);
+    playerData[labelKey] = QString::fromLatin1(m_internal.label);
     playerData[colorKey] = m_internal.color.name();
     playerData["hp"] = hp;
     playerData["maxhp"] = maxhp;
@@ -42,7 +42,7 @@ const QVariantMap CGroupChar::toVariantMap() const
     playerData["maxmoves"] = maxmoves;
     playerData[stateKey] = static_cast<int>(position);
     playerData[roomKey] = roomId.asUint32();
-    playerData[prespamKey] = prespam.toByteArray();
+    playerData[prespamKey] = QString::fromLatin1(prespam.toByteArray());
     playerData[affectsKey] = affects.asUint32();
 
     QVariantMap root;

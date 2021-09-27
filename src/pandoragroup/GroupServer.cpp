@@ -251,7 +251,7 @@ void GroupServer::virt_retrieveData(GroupSocket *const socket,
             slot_relayMessage(socket, MessagesEnum::UPDATE_CHAR, data);
 
         } else if (message == MessagesEnum::GTELL) {
-            const auto &fromName = QString::fromLatin1(data["from"].toByteArray()).simplified();
+            const auto &fromName = data["from"].toString().simplified();
             if (!isEqualsCaseInsensitive(fromName, nameStr)) {
                 emit sig_sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr, fromName));
                 return;
@@ -263,13 +263,13 @@ void GroupServer::virt_retrieveData(GroupSocket *const socket,
             sendMessage(socket, MessagesEnum::ACK);
 
         } else if (message == MessagesEnum::RENAME_CHAR) {
-            const QString oldName = QString::fromLatin1(data["oldname"].toByteArray()).simplified();
+            const QString oldName = data["oldname"].toString().simplified();
             if (!isEqualsCaseInsensitive(oldName, nameStr)) {
                 kickConnection(socket,
                                QString("Name spoof detected: %1 != %2").arg(oldName, nameStr));
                 return;
             }
-            const QString &newName = QString::fromLatin1(data["newname"].toByteArray());
+            const QString &newName = data["newname"].toString();
             if (!isEqualsCaseInsensitive(newName, newName.simplified())) {
                 kickConnection(socket, "Your name must not include any whitespace");
                 return;
@@ -363,7 +363,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     const bool validCert = getAuthority()->validCertificate(socket);
     bool reconnect = false;
     if (isEncrypted) {
-        emit sig_sendLog(QString("'%1's secret: %2").arg(tempName, secret.constData()));
+        emit sig_sendLog(QString("'%1's secret: %2").arg(tempName, QString::fromLatin1(secret)));
 
         // Verify only one secret can be connected at once
         for (const auto &target : clientsList) {

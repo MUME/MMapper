@@ -234,9 +234,8 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
     if (!selection->empty()) {
         const auto &character = selection->at(0);
         if (!character->getLabel().isEmpty() && character->getLabel() != character->getName())
-            name = QString("%1 (%2)")
-                       .arg(character->getName().constData())
-                       .arg(character->getLabel().constData());
+            name = QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
+                                          QString::fromLatin1(character->getLabel()));
         if (getConfig().groupManager.useGroupTellAnsi256Color)
             color = rgbToAnsi256String(character->getColor(), false);
     }
