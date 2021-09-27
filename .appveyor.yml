@@ -118,7 +118,7 @@ for:
       - sh: sudo apt install -y qt515base libgl1-mesa-dev build-essential git zlib1g-dev libssl-dev wget fuse zsync cmake libminiupnpc-dev
       - sh: source /opt/qt*/bin/qt*-env.sh
       - sh: sudo apt-get install -y ppa-purge aptitude
-      - sh: sudo ppa-purge ppa:ubuntu-toolchain-r/test
+      - sh: sudo ppa-purge -y ppa:ubuntu-toolchain-r/test
 
     build_script:
       - sh: mkdir build
