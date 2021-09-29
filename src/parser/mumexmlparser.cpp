@@ -391,47 +391,49 @@ bool MumeXmlParser::element(const QByteArray &line)
                 }
                 break;
             case 'm':
-                if (m_descriptionReady) {
-                    // We are most likely in a fall room where the prompt is not shown
-                    move();
-                }
-                if (attributes.empty()) {
-                    // movement/
-                    m_move = CommandEnum::NONE;
-                    break;
-                }
-                for (const auto &pair : attributes) {
-                    if (pair.first.empty() || pair.second.empty())
-                        continue;
-                    switch (pair.first.at(0)) {
-                    case 'd':
-                        if (pair.first == "dir") {
-                            switch (pair.second.at(0)) {
-                            case 'n':
-                                m_move = CommandEnum::NORTH;
-                                break;
-                            case 's':
-                                m_move = CommandEnum::SOUTH;
-                                break;
-                            case 'e':
-                                m_move = CommandEnum::EAST;
-                                break;
-                            case 'w':
-                                m_move = CommandEnum::WEST;
-                                break;
-                            case 'u':
-                                m_move = CommandEnum::UP;
-                                break;
-                            case 'd':
-                                m_move = CommandEnum::DOWN;
-                                break;
-                            default:
-                                qWarning()
-                                    << "Unknown movement dir" << ::toQByteArrayLatin1(pair.second);
-                                break;
-                            }
-                        }
+                if (line.startsWith("movement")) {
+                    if (m_descriptionReady) {
+                        // We are most likely in a fall room where the prompt is not shown
+                        move();
+                    }
+                    if (attributes.empty()) {
+                        // movement/
+                        m_move = CommandEnum::NONE;
                         break;
+                    }
+                    for (const auto &pair : attributes) {
+                        if (pair.first.empty() || pair.second.empty())
+                            continue;
+                        switch (pair.first.at(0)) {
+                        case 'd':
+                            if (pair.first == "dir") {
+                                switch (pair.second.at(0)) {
+                                case 'n':
+                                    m_move = CommandEnum::NORTH;
+                                    break;
+                                case 's':
+                                    m_move = CommandEnum::SOUTH;
+                                    break;
+                                case 'e':
+                                    m_move = CommandEnum::EAST;
+                                    break;
+                                case 'w':
+                                    m_move = CommandEnum::WEST;
+                                    break;
+                                case 'u':
+                                    m_move = CommandEnum::UP;
+                                    break;
+                                case 'd':
+                                    m_move = CommandEnum::DOWN;
+                                    break;
+                                default:
+                                    qWarning() << "Unknown movement dir"
+                                               << ::toQByteArrayLatin1(pair.second);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
                     }
                 }
                 break;
