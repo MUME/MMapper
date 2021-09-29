@@ -1,4 +1,13 @@
 ================================
+MMapper 21.09.2 (September 29, 2021)
+================================
+
+Bug fixes:
+ - Prevent reconnecting from kicking players in Group Manager
+ - Fix Latin-1 character mojibake in Group Manager names
+ - Prevent scouting from occassionally triggering movement
+
+================================
 MMapper 21.09.1 (September 26, 2021)
 ================================
 
