@@ -291,7 +291,7 @@ void AbstractParser::parseExits(std::ostream &os)
         };
 
     const auto parse_exit_flag =
-        [this, &doors, &closed, &road, &climb, &portal, &directSun](const char sign) -> bool {
+        [&doors, &closed, &road, &climb, &portal, &directSun](const char sign) -> bool {
         switch (sign) {
         case '(': // open door
             doors = true;
