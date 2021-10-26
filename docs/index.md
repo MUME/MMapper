@@ -24,7 +24,7 @@ data in real time and show player's position on a map.
 {% endfor %}
 ### Linux
 {% for asset in site.github.latest_release.assets %}
-{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
+{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' or asset.name contains 'zsync' %}
 {% elsif asset.name contains 'AppImage' or asset.name contains 'deb' %}
 [![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
 {% else %}
