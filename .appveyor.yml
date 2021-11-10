@@ -218,7 +218,7 @@ for:
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
     before_build:
-      - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
+      - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
       - cmd: echo PATH=%PATH%
 
     build_script:
@@ -325,7 +325,6 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       - brew install qt5 openssl@1.1
-      - brew link qt5 --force
       - export PATH=/usr/local/opt/qt5/bin:$PATH
 
     build_script:
