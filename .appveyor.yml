@@ -201,7 +201,7 @@ for:
     init:
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x86 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x64 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="Ninja"
+      - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="NMake Makefiles"
       - cmd: if %ARCH%==x86 set OPENSSLDIR=C:\OpenSSL-v111-Win32
       - cmd: if %ARCH%==x64 set OPENSSLDIR=C:\OpenSSL-v111-Win64
       - cmd: git config --global core.autocrlf input
@@ -324,6 +324,8 @@ for:
     install:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
+      - brew install cmake || true
+      - brew link cmake --force
       - brew install openssl@1.1
       - export PATH=$HOME/Qt/5.15.2/clang_64/bin:$PATH
 
