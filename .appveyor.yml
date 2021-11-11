@@ -72,11 +72,11 @@ matrix:
       COMPILER: MinGW
     - image: Ubuntu2004
       COMPILER: VS2019
-    - image: macos-mojave
+    - image: macos
       COMPILER: GCC
-    - image: macos-mojave
+    - image: macos
       COMPILER: MinGW
-    - image: macos-mojave
+    - image: macos
       COMPILER: VS2019
     # Following builds are disabled to prevent build timeouts
     - image: Ubuntu1804
