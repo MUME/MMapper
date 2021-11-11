@@ -314,7 +314,7 @@ for:
   -
     matrix:
       only:
-        - image: macos-mojave
+        - image: macos
 
     clone_folder: ~/mmapper
 
