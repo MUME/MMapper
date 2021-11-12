@@ -44,7 +44,7 @@ environment:
 image:
   # AppVeyor builds are ordered by the image list:
   - Visual Studio 2019
-  - macos-mojave
+  - macos
   - Ubuntu1804
   - Ubuntu2004
   - Previous Visual Studio 2019
@@ -72,11 +72,11 @@ matrix:
       COMPILER: MinGW
     - image: Ubuntu2004
       COMPILER: VS2019
-    - image: macos-mojave
+    - image: macos
       COMPILER: GCC
-    - image: macos-mojave
+    - image: macos
       COMPILER: MinGW
-    - image: macos-mojave
+    - image: macos
       COMPILER: VS2019
     # Following builds are disabled to prevent build timeouts
     - image: Ubuntu1804
@@ -201,7 +201,7 @@ for:
     init:
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x86 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x64 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="NMake Makefiles JOM"
+      - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="NMake Makefiles"
       - cmd: if %ARCH%==x86 set OPENSSLDIR=C:\OpenSSL-v111-Win32
       - cmd: if %ARCH%==x64 set OPENSSLDIR=C:\OpenSSL-v111-Win64
       - cmd: git config --global core.autocrlf input
@@ -314,7 +314,7 @@ for:
   -
     matrix:
       only:
-        - image: macos-mojave
+        - image: macos
 
     clone_folder: ~/mmapper
 
@@ -324,14 +324,13 @@ for:
     install:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - brew install qt5 openssl@1.1
-      - brew link qt5 --force
-      - export PATH=/usr/local/opt/qt5/bin:$PATH
+      - brew install openssl@1.1
+      - export PATH=$HOME/Qt/5.15.2/clang_64/bin:$PATH
 
     build_script:
       - mkdir build
       - cd build
-      - cmake .. -DCMAKE_PREFIX_PATH=/usr/local/opt/qt5/bin/ -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1
+      - cmake .. -DCMAKE_PREFIX_PATH=$HOME/Qt/5.15.2/clang_64/bin -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1
       - make -j$(getconf _NPROCESSORS_ONLN)
       - cpack
       - mv *.dmg* ../
