@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <memory>
+#include <QDateTime>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QString>
@@ -33,7 +34,10 @@ MumeClockWidget::~MumeClockWidget() = default;
 
 void MumeClockWidget::mousePressEvent(QMouseEvent *event)
 {
+    // Force precision to minute and reset last sync to current timestamp
     m_clock->setPrecision(MumeClockPrecisionEnum::MINUTE);
+    m_clock->setLastSyncEpoch(QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
+
     slot_updateLabel();
 }
 

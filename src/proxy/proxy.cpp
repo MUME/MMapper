@@ -293,6 +293,7 @@ void Proxy::slot_onMudConnected()
         log("Sent MUME Protocol Initiator remote editing request");
     }
 
+    // Reset clock precision to its lowest level
     m_mumeClock.setPrecision(MumeClockPrecisionEnum::UNSET);
 }
 
