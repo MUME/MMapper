@@ -7,6 +7,7 @@
 #include <cassert>
 #include <memory>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QString>
 
 #include "../configuration/configuration.h"
@@ -29,6 +30,12 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
 }
 
 MumeClockWidget::~MumeClockWidget() = default;
+
+void MumeClockWidget::mousePressEvent(QMouseEvent *event)
+{
+    m_clock->setPrecision(MumeClockPrecisionEnum::MINUTE);
+    slot_updateLabel();
+}
 
 void MumeClockWidget::slot_updateLabel()
 {
@@ -126,7 +133,10 @@ void MumeClockWidget::slot_updateLabel()
         // The current time is 12:15 am.
         QString styleSheet = "";
         QString statusTip = "";
-        if (time == MumeTimeEnum::DAWN) {
+        if (precision <= MumeClockPrecisionEnum::UNSET) {
+            styleSheet = "color:white;background:grey";
+            statusTip = "The clock has not synced with MUME! Click to override at your own risk.";
+        } else if (time == MumeTimeEnum::DAWN) {
             styleSheet = "color:white;background:red";
             statusTip = "Ticks left until day";
         } else if (time >= MumeTimeEnum::DUSK) {
@@ -135,9 +145,6 @@ void MumeClockWidget::slot_updateLabel()
         } else {
             styleSheet = "color:black;background:yellow";
             statusTip = "Ticks left until night";
-        }
-        if (precision <= MumeClockPrecisionEnum::DAY) {
-            statusTip = "Please be patient... the clock is still syncing with MUME!";
         }
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);

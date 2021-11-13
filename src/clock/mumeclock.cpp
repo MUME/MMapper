@@ -334,6 +334,14 @@ NODISCARD static const char *getOrdinalSuffix(const int day)
     }
 }
 
+void MumeClock::setPrecision(const MumeClockPrecisionEnum precision)
+{
+    m_precision = precision;
+
+    // Reset last sync to current timestamp
+    m_lastSyncEpoch = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+}
+
 MumeClockPrecisionEnum MumeClock::getPrecision()
 {
     const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();

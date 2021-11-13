@@ -12,6 +12,7 @@
 #include "mumemoment.h"
 #include "ui_mumeclockwidget.h"
 
+class QMouseEvent;
 class QObject;
 class QTimer;
 
@@ -24,6 +25,9 @@ public:
 
 public slots:
     void slot_updateLabel();
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
 
 private:
     MumeClock *m_clock = nullptr;

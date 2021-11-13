@@ -51,6 +51,8 @@ public:
 
     NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
 
+    NODISCARD int64_t getLastSyncEpoch() const { return m_lastSyncEpoch; }
+
     enum class WestronMonthNamesEnum {
         UnknownWestronMonth = -1,
         Afteryule,
@@ -134,9 +136,10 @@ public slots:
 
     void parseWeather(const QString &str);
 
-protected:
-    void setPrecision(MumeClockPrecisionEnum state) { m_precision = state; }
+public:
+    void setPrecision(const MumeClockPrecisionEnum state);
 
+protected:
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
 
     void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);

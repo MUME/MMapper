@@ -15,6 +15,7 @@
 #include <QScopedPointer>
 #include <QTcpSocket>
 
+#include "../clock/mumeclock.h"
 #include "../configuration/configuration.h"
 #include "../display/mapcanvas.h"
 #include "../display/prespammedpath.h"
@@ -291,6 +292,8 @@ void Proxy::slot_onMudConnected()
         sendToMud(QByteArray("~$#EI\n"));
         log("Sent MUME Protocol Initiator remote editing request");
     }
+
+    m_mumeClock.setPrecision(MumeClockPrecisionEnum::UNSET);
 }
 
 void Proxy::slot_onMudError(const QString &errorStr)
