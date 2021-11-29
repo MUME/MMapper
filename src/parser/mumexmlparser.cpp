@@ -637,9 +637,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::ROOM: // dynamic line
-        m_roomContents = RoomContents{
-            m_roomContents.value_or(RoomContents{}).toQString()
-            + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
+        m_roomContents = RoomContents{m_roomContents.value_or(RoomContents{}).toQString()
+                                      + normalizeStringCopy(m_stringBuffer)};
         toUser.append(ch);
         break;
 
