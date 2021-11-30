@@ -420,6 +420,8 @@ void AbstractTelnet::sendAreYouThere()
 
 void AbstractTelnet::sendTerminalTypeRequest()
 {
+    if (debug)
+        qDebug() << "Requesting Terminal Type";
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     s.addEscaped(TNSB_SEND);
@@ -591,7 +593,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         break;
 
     case OPT_TERMINAL_TYPE:
-        if (myOptionState[OPT_TERMINAL_TYPE]) {
+        if (myOptionState[OPT_TERMINAL_TYPE] || hisOptionState[OPT_TERMINAL_TYPE]) {
             switch (payload[1]) {
             case TNSB_SEND:
                 // server wants us to send terminal type

@@ -204,6 +204,8 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
 void UserTelnet::virt_receiveTerminalType(const QByteArray &data)
 {
+    if (debug)
+        qDebug() << "Received Terminal Type" << data;
     emit sig_relayTermType(data);
 }
 
