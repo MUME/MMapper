@@ -8,6 +8,9 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <QClipboard>
+#include <QFileDialog>
+#include <QGuiApplication>
 #include <QMessageLogContext>
 #include <QString>
 
@@ -55,7 +58,7 @@ void RemoteEdit::removeSession(const uint sessionId)
 void RemoteEdit::cancel(const RemoteEditSession *session)
 {
     assert(session != nullptr);
-    if (session->isEditSession()) {
+    if (session->isEditSession() && session->isConnected()) {
         const QString &keystr = QString("C%1\n").arg(session->getKey());
         const QByteArray &buffer
             = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
@@ -71,13 +74,17 @@ void RemoteEdit::cancel(const RemoteEditSession *session)
 void RemoteEdit::save(const RemoteEditSession *session)
 {
     assert(session != nullptr);
-    if (session->isEditSession()) {
-        QString content = session->getContent();
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-            content.replace(s_lineFeedNewlineRx, S_NEWLINE);
-        }
+    if (!session->isEditSession()) {
+        qWarning() << "Session" << session->getId()
+                   << "was not an edit session and could not be saved";
+        assert(false);
+        return;
+    }
 
+    // Submit the edit session if we are still connected
+    if (session->isConnected()) {
         // The body contents have to be followed by a LF if they are not empty
+        QString content = session->getContent();
         if (!content.isEmpty() && !content.endsWith(C_NEWLINE)) {
             content.append(C_NEWLINE);
         }
@@ -93,10 +100,38 @@ void RemoteEdit::save(const RemoteEditSession *session)
         // MPI is always Latin1
         qDebug() << "Saving session" << session->getKey();
         emit sig_sendToSocket(buffer);
-    } else {
-        qWarning() << "Session" << session->getId()
-                   << "was not an edit session and could not be saved";
+
+        removeSession(session->getId());
+        return;
     }
 
+    // Prompt the user to save the file somewhere since we disconnected
+    const QString name
+        = QFileDialog::getSaveFileName(checked_dynamic_downcast<QWidget *>(parent()), // MainWindow
+                                       "MUME disconnected and you need to save the file locally",
+                                       getConfig().autoLoad.lastMapDirectory + QDir::separator()
+                                           + QString("MMapper-Edit-%1.txt").arg(session->getKey()),
+                                       "Text files (*.txt)");
+    QFile file(name);
+    if (!name.isEmpty() && file.open(QFile::WriteOnly | QFile::Text)) {
+        qDebug() << "Session" << session->getId() << "was was saved to" << name;
+        file.write(session->getContent().toLocal8Bit());
+        file.close();
+    } else {
+        QGuiApplication::clipboard()->setText(session->getContent());
+        qWarning() << "Session" << session->getId() << "was copied to the clipboard";
+    }
     removeSession(session->getId());
+}
+
+void RemoteEdit::slot_onDisconnected()
+{
+    for (const auto &pair : m_sessions) {
+        const auto &id = pair.first;
+        const auto &session = pair.second;
+        if (session->isEditSession()) {
+            qWarning() << "Session" << id << "marked as disconnected";
+            session->setDisconnected();
+        }
+    }
 }

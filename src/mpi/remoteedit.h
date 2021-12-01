@@ -31,6 +31,7 @@ public:
 public slots:
     void slot_remoteView(const QString &, const QString &);
     void slot_remoteEdit(int, const QString &, const QString &);
+    void slot_onDisconnected();
 
 signals:
     void sig_sendToSocket(const QByteArray &);

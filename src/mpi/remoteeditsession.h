@@ -37,6 +37,10 @@ public:
     void cancel();
     void save();
 
+public:
+    NODISCARD const bool isConnected() const { return m_connected; }
+    void setDisconnected() { m_connected = false; }
+
 protected slots:
     void slot_onCancel() { cancel(); }
     void slot_onSave(const QString &content)
@@ -46,6 +50,7 @@ protected slots:
     }
 
 private:
+    bool m_connected = true;
     const uint m_sessionId = 0;
     const int m_key = REMOTE_EDIT_VIEW_KEY;
     RemoteEdit *m_manager = nullptr;

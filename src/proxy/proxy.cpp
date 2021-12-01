@@ -255,6 +255,10 @@ void Proxy::slot_start()
     connect(mudSocket, &MumeSocket::sig_disconnected, &m_groupManager, &Mmapper2Group::slot_reset);
     connect(mudSocket, &MumeSocket::sig_disconnected, this, &Proxy::slot_mudTerminatedConnection);
     connect(mudSocket,
+            &MumeSocket::sig_disconnected,
+            m_remoteEdit,
+            &RemoteEdit::slot_onDisconnected);
+    connect(mudSocket,
             &MumeSocket::sig_processMudStream,
             mudTelnet,
             &MudTelnet::slot_onAnalyzeMudStream);
