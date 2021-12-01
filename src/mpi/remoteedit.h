@@ -30,7 +30,7 @@ public:
 
 public slots:
     void slot_remoteView(const QString &, const QString &);
-    void slot_remoteEdit(int, const QString &, const QString &);
+    void slot_remoteEdit(const RemoteSession &, const QString &, const QString &);
     void slot_onDisconnected();
 
 signals:
@@ -41,9 +41,12 @@ protected:
     void save(const RemoteEditSession *);
 
 private:
-    NODISCARD uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
-    void addSession(uint, const QString &, QString);
-    void removeSession(uint);
+    NODISCARD uint getInternalIdCount()
+    {
+        return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1;
+    }
+    void addSession(const RemoteSession &, const QString &, const QString &);
+    void removeSession(const RemoteEditSession *session);
 
     uint greatestUsedId = 0;
     std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;

@@ -15,10 +15,12 @@
 #include "remoteeditprocess.h"
 #include "remoteeditwidget.h"
 
-RemoteEditSession::RemoteEditSession(uint sessionId, int key, RemoteEdit *const remoteEdit)
+RemoteEditSession::RemoteEditSession(const uint internalId,
+                                     const RemoteSession &sessionId,
+                                     RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
+    , m_internalId(internalId)
     , m_sessionId(sessionId)
-    , m_key(key)
     , m_manager(remoteEdit)
 {
     assert(m_manager != nullptr);
@@ -34,9 +36,12 @@ void RemoteEditSession::cancel()
     m_manager->cancel(this);
 }
 
-RemoteEditInternalSession::RemoteEditInternalSession(
-    uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *parent)
-    : RemoteEditSession(sessionId, key, parent)
+RemoteEditInternalSession::RemoteEditInternalSession(const uint internalId,
+                                                     const RemoteSession &sessionId,
+                                                     const QString &title,
+                                                     const QString &body,
+                                                     RemoteEdit *const parent)
+    : RemoteEditSession(internalId, sessionId, parent)
     , m_widget(
           new RemoteEditWidget(isEditSession(),
                                title,
@@ -51,14 +56,18 @@ RemoteEditInternalSession::RemoteEditInternalSession(
 
 RemoteEditInternalSession::~RemoteEditInternalSession()
 {
-    qDebug() << "Destructed RemoteEditInternalSession" << getId() << getKey();
+    qDebug() << "Destructed RemoteEditInternalSession" << getInternalId()
+             << getSessionId().toQString();
     if (auto notLeaked = m_widget.take())
         notLeaked->deleteLater();
 }
 
-RemoteEditExternalSession::RemoteEditExternalSession(
-    uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *parent)
-    : RemoteEditSession(sessionId, key, parent)
+RemoteEditExternalSession::RemoteEditExternalSession(const uint internalId,
+                                                     const RemoteSession &sessionId,
+                                                     const QString &title,
+                                                     const QString &body,
+                                                     RemoteEdit *const parent)
+    : RemoteEditSession(internalId, sessionId, parent)
     , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
 {
     const auto proc = m_process.data();
@@ -68,7 +77,8 @@ RemoteEditExternalSession::RemoteEditExternalSession(
 
 RemoteEditExternalSession::~RemoteEditExternalSession()
 {
-    qDebug() << "Destructed RemoteEditExternalSession" << getId() << getKey();
+    qDebug() << "Destructed RemoteEditExternalSession" << getInternalId()
+             << getSessionId().toQString();
     if (auto notLeaked = m_process.take())
         notLeaked->deleteLater();
 }

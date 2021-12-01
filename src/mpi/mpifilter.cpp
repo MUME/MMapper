@@ -68,7 +68,7 @@ void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
     m_previousType = data.type;
 }
 
-void MpiFilter::parseMessage(char command, const QByteArray &buffer)
+void MpiFilter::parseMessage(const char command, const QByteArray &buffer)
 {
     switch (command) {
     case 'E':
@@ -95,7 +95,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
         qWarning() << "Unable to detect remote editing session end";
         return;
     }
-    int sessionId = buffer.mid(1, sessionEnd - 1).toInt();
+    const RemoteSession sessionId = RemoteSession(buffer.mid(1, sessionEnd - 1).toStdString());
     int descriptionEnd = buffer.indexOf('\n', sessionEnd + 1);
     if (descriptionEnd == -1) {
         qWarning() << "Unable to detect remote editing description end";
@@ -108,7 +108,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
     QString title = QString::fromLatin1(description);
     QString body = QString::fromLatin1(payload);
 
-    qDebug() << "Edit" << sessionId << title << "body.length=" << body.length();
+    qDebug() << "Edit" << sessionId.toQString() << title << "body.length=" << body.length();
     emit sig_editMessage(sessionId, title, body);
 }
 
