@@ -9,14 +9,11 @@
 #include <type_traits>
 #include <utility>
 #include <QMessageLogContext>
-#include <QRegularExpression>
 #include <QString>
 
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "remoteeditsession.h"
-
-static const QRegularExpression s_lineFeedNewlineRx(R"((?!\r)\n)");
 
 void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {
@@ -28,13 +25,8 @@ void RemoteEdit::slot_remoteEdit(const int key, const QString &title, const QStr
     addSession(key, title, body);
 }
 
-void RemoteEdit::addSession(const int key, const QString &title, QString body)
+void RemoteEdit::addSession(const uint key, const QString &title, QString body)
 {
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-        // REVISIT: This can actually be handled by opening a file in text mode.
-        body.replace(s_lineFeedNewlineRx, "\r\n");
-    }
-
     uint sessionId = getSessionCount();
     std::unique_ptr<RemoteEditSession> session;
 

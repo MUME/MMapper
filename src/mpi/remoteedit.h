@@ -41,7 +41,7 @@ protected:
 
 private:
     NODISCARD uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
-    void addSession(int, const QString &, QString);
+    void addSession(uint, const QString &, QString);
     void removeSession(uint);
 
     uint greatestUsedId = 0;

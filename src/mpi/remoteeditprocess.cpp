@@ -60,7 +60,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
     QFile file(fileTemplate);
 
     // Try opening up the temporary file
-    if (!file.open(QFile::WriteOnly)) {
+    if (!file.open(QFile::WriteOnly | QFile::Text)) {
         qCritical() << "View session was unable to create a temporary file";
         throw std::runtime_error("failed to start");
     }
