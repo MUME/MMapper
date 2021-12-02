@@ -29,11 +29,17 @@ else()
         message(FATAL_ERROR "MiniUPnPc NOT found: use `-DWITH_MINIUPNPC=OFF` to build without UPnP group manager port forwarding")
     endif()
 
+    if(WIN32)
+        set(MINIUPNPC_STATIC_LIBRARY_NAME libminiupnpc)
+    else()
+        set(MINIUPNPC_STATIC_LIBRARY_NAME miniupnpc)
+    endif()
+
     include(ExternalProject)
     ExternalProject_Add(miniupnpc
-        URL "http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.1.tar.gz"
-        URL "https://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-2.1.tar.gz"
-        URL_HASH SHA1=7abef19a5460afad704814d8db0d998781799825
+        URL "http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.2.3.tar.gz"
+        URL "https://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-2.2.3.tar.gz"
+        URL_HASH SHA1=0806a7524b9436b5875acd1c0f040b717ddf9d14
 
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/miniupnpc"
         BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/miniupnpc-build"
@@ -45,24 +51,24 @@ else()
                          -DUPNPC_BUILD_TESTS:BOOL=OFF
                          -DUPNPC_BUILD_SHARED:BOOL=ON
                          -DUPNPC_BUILD_STATIC:BOOL=ON
+                         -DCMAKE_UNITY_BUILD:BOOL=ON
 
         UPDATE_COMMAND ""
         ALWAYS 0
 
         BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}${MINIUPNPC_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
         )
     ExternalProject_Get_Property(miniupnpc SOURCE_DIR)
     ExternalProject_Get_Property(miniupnpc BINARY_DIR)
     set(MINIUPNPC_SHARED_LIBRARY ${BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(MINIUPNPC_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(MINIUPNPC_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${MINIUPNPC_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(MINIUPNPC_LIBRARIES ${MINIUPNPC_SHARED_LIBRARY} ${MINIUPNPC_STATIC_LIBRARY})
     if(APPLE OR MINIUPNPC_PREFER_STATIC_LIB)
         set(MINIUPNPC_LIBRARY ${MINIUPNPC_STATIC_LIBRARY})
     else()
         if(MSVC)
-            # Remove this hack once we upgrade to miniUPnPC 2.2
-            set(MINIUPNPC_LIBRARY ${MINIUPNPC_STATIC_LIBRARY})
+            set(MINIUPNPC_LIBRARY ${BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX})
         else()
             set(MINIUPNPC_LIBRARY ${MINIUPNPC_SHARED_LIBRARY})
         endif()
@@ -77,10 +83,19 @@ else()
         endif()
     endif()
 
+    # Copy header files from "include/" to the "include/miniupnpc/" directory
+    add_custom_command(
+        TARGET miniupnpc
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SOURCE_DIR}/include/miniupnpc/
+        COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_DIR}/include/miniupnpc.h ${SOURCE_DIR}/include/miniupnpc/
+        COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_DIR}/include/upnpcommands.h ${SOURCE_DIR}/include/miniupnpc/
+        )
+
     message(STATUS "MiniUPnPc library: ${MINIUPNPC_LIBRARY}")
     set(MINIUPNPC_LIBRARIES ${MINIUPNPC_LIBRARIES} PARENT_SCOPE)
     set(MINIUPNPC_LIBRARY ${MINIUPNPC_LIBRARY} PARENT_SCOPE)
-    set(MINIUPNPC_INCLUDE_DIR ${SOURCE_DIR}/../ PARENT_SCOPE)
+    set(MINIUPNPC_INCLUDE_DIR ${SOURCE_DIR}/include PARENT_SCOPE)
     set(MINIUPNPC_API_VERSION 17 PARENT_SCOPE)
-    set(MINIUPNPC_VERSION 2.1 PARENT_SCOPE)
+    set(MINIUPNPC_VERSION 2.2.3 PARENT_SCOPE)
 endif()
