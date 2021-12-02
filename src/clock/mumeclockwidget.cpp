@@ -32,7 +32,7 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
 
 MumeClockWidget::~MumeClockWidget() = default;
 
-void MumeClockWidget::mousePressEvent(QMouseEvent *event)
+void MumeClockWidget::mousePressEvent(QMouseEvent * /*event*/)
 {
     // Force precision to minute and reset last sync to current timestamp
     m_clock->setPrecision(MumeClockPrecisionEnum::MINUTE);
