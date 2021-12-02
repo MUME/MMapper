@@ -39,8 +39,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 if(Qt5Core_FOUND)
-    if(Qt5Core_VERSION VERSION_LESS 5.11.0)
-        message(FATAL_ERROR "Minimum supported Qt version is 5.11")
+    if(Qt5Core_VERSION VERSION_LESS 5.12.4)
+        message(FATAL_ERROR "Minimum supported Qt version is 5.12")
     endif()
     file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES20.cpp
         "#include <QOpenGLFunctions_ES2>
