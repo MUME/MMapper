@@ -116,7 +116,7 @@ set(MINIUPNPC_LIBRARIES ${MINIUPNPC_LIBRARY})
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(MINIUPNPC
+find_package_handle_standard_args(MiniUPnPc
     REQUIRED_VARS
         MINIUPNPC_LIBRARY
         MINIUPNPC_INCLUDE_DIR
