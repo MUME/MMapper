@@ -1,4 +1,26 @@
 ================================
+MMapper 21.12.0 (December 2, 2021)
+================================
+
+New features:
+ - MMapper will try to reduce sundeaths by resetting the clock to lowest
+   precision when re-connecting. Users can override this by clicking the clock
+   manually at their own risk.
+ - Live remote edits will now prompt to have their contents saved if the
+   connection to MUME is disrupted rather than disappearing into the Void.
+
+Changes:
+ - Mac builds now require Mac OS X 10.15 Catalina at a minimum.
+ - Deb packages are now Ubuntu 20.04 (amd64) or Debian Bullseye (arm64).
+ - Minimum supported Qt and CMake are now 5.12.4 and 3.16 respectively.
+ - Cotire has been replaced with Unity Builds decreasing builds times by 30%.
+
+Bug fixes:
+ - Powtty now provides the Terminal Type to MMapper as "XTERM".
+ - Eliminated newlines that were added for each XML tag (i.e. <character> or
+   <magic>) in the saved room contents.
+
+================================
 MMapper 21.09.2 (September 29, 2021)
 ================================
 
