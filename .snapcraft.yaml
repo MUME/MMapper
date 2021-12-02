@@ -58,7 +58,6 @@ parts:
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/usr/local
       - -DWITH_UPDATER=false
-      - -DUSE_COTIRE=true
     build-packages:
       - build-essential
       - libssl-dev

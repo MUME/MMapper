@@ -14,6 +14,14 @@ set(clock_SRCS
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
 target_link_libraries(TestClock Qt5::Test coverage_config)
+set_target_properties(
+  TestClock PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
@@ -40,6 +48,14 @@ set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
 add_dependencies(TestExpandoraCommon glm)
 target_link_libraries(TestExpandoraCommon Qt5::Test coverage_config)
+set_target_properties(
+  TestExpandoraCommon PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
@@ -64,6 +80,14 @@ set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
 add_dependencies(TestParser glm)
 target_link_libraries(TestParser Qt5::Test coverage_config)
+set_target_properties(
+  TestParser PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestParser COMMAND TestParser)
 
 # Proxy
@@ -81,6 +105,14 @@ set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
 add_dependencies(TestProxy glm)
 target_link_libraries(TestProxy Qt5::Test coverage_config)
+set_target_properties(
+  TestProxy PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestProxy COMMAND TestProxy)
 
 # MainWindow
@@ -93,6 +125,14 @@ set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
 add_dependencies(TestMainWindow glm)
 target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+set_target_properties(
+  TestMainWindow PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
 # Global
@@ -109,4 +149,12 @@ set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
 add_dependencies(TestGlobal glm)
 target_link_libraries(TestGlobal Qt5::Widgets Qt5::Test coverage_config)
+set_target_properties(
+  TestGlobal PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+  UNITY_BUILD ON
+)
 add_test(NAME TestGlobal COMMAND TestGlobal)
