@@ -18,6 +18,12 @@
 #include "../global/TextUtils.h"
 #include "remoteeditsession.h"
 
+RemoteEdit::RemoteEdit(QObject *const parent)
+    : QObject(parent)
+{
+    qRegisterMetaType<RemoteSession>("RemoteSession");
+}
+
 void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {
     addSession(REMOTE_VIEW_SESSION_ID, title, body);
