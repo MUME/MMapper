@@ -371,6 +371,9 @@ void TestExpandoraCommon::roomCompareTest_data()
         PromptFlagsType promptFlags;
         promptFlags.setLit();
         promptFlags.setValid();
+        ConnectedRoomFlagsType connectedFlags;
+        connectedFlags.setValid();
+        connectedFlags.setTrollMode();
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
@@ -380,7 +383,7 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          room->getTerrainType(),
                                                          get_exit_flags(room),
                                                          promptFlags,
-                                                         ConnectedRoomFlagsType{});
+                                                         connectedFlags);
         QTest::newRow("lit") << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
@@ -393,6 +396,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         ConnectedRoomFlagsType connectedFlags;
         connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
+        connectedFlags.setTrollMode();
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,

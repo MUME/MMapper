@@ -430,7 +430,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
     const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
     const PromptFlagsType pFlags = event.getPromptFlags();
-    if (pFlags.isValid()) {
+    if (pFlags.isValid() && connectedRoomFlags.isValid() && connectedRoomFlags.isTrollMode()) {
         const RoomLightEnum lightType = room->getLightType();
         const RoomSundeathEnum sunType = room->getSundeathType();
         if (pFlags.isLit() && lightType != RoomLightEnum::LIT
@@ -441,8 +441,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
             tolerance = true;
 
         } else if (pFlags.isDark() && lightType != RoomLightEnum::DARK
-                   && sunType == RoomSundeathEnum::NO_SUNDEATH && connectedRoomFlags.isValid()
-                   && connectedRoomFlags.hasAnyDirectSunlight()) {
+                   && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             // Allow prompt sunlight to override rooms without DARK flag if we know the room
             // has at least one sunlit exit and the room is troll safe
             qDebug() << "Updating room to be DARK";
@@ -600,12 +599,11 @@ void Room::update(Room &room, const ParseEvent &event)
     }
 
     const PromptFlagsType pFlags = event.getPromptFlags();
-    if (pFlags.isValid()) {
+    if (pFlags.isValid() && connectedRoomFlags.isValid() && connectedRoomFlags.isTrollMode()) {
         const RoomSundeathEnum sunType = room.getSundeathType();
         if (pFlags.isLit() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             room.setLightType(RoomLightEnum::LIT);
-        } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH
-                   && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
+        } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             room.setLightType(RoomLightEnum::DARK);
         }
     }

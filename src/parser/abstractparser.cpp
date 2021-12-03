@@ -409,8 +409,12 @@ void AbstractParser::parseExits(std::ostream &os)
     if (!portal) {
         m_exitsFlags.setValid();
 
-        // Trolls can detect exits with direct sunlight
-        if (m_trollExitMapping) {
+        if (m_trollExitMapping)
+            m_connectedRoomFlags.setTrollMode();
+
+        // Orcs and trolls can detect exits with direct sunlight
+        const bool foundDirectSunlight = m_connectedRoomFlags.hasAnyDirectSunlight();
+        if (foundDirectSunlight || m_trollExitMapping) {
             m_connectedRoomFlags.setValid();
             for (const ExitDirEnum alt_dir : ALL_EXITS_NESWUD) {
                 const auto eThisExit = m_exitsFlags.get(alt_dir);

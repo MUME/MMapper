@@ -248,7 +248,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 
     // Update rooms behind exits now that we are certain about our current location
     const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
-    if (bFlags.isValid()) {
+    if (bFlags.isValid() && (bFlags.hasAnyDirectSunlight() || bFlags.isTrollMode())) {
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             // guaranteed to succeed, since it's set above.
             const Exit &e = getMostLikelyRoom()->exit(dir);
@@ -257,11 +257,13 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             }
             const RoomId connectedRoomId = e.outFirst();
             if (bFlags.hasDirectSunlight(dir)) {
+                // Allow orcs to set Sundeath
                 scheduleAction(std::make_shared<SingleRoomAction>(
                     std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::SUNDEATH,
                                                       FlagModifyModeEnum::SET),
                     connectedRoomId));
-            } else if (bFlags.hasNoDirectSunlight(dir)) {
+            } else if (bFlags.isTrollMode() && bFlags.hasNoDirectSunlight(dir)) {
+                // Only trust troll mode to set No-Sundeath
                 scheduleAction(std::make_shared<SingleRoomAction>(
                     std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::NO_SUNDEATH,
                                                       FlagModifyModeEnum::SET),

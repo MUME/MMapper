@@ -29,6 +29,7 @@ NODISCARD inline constexpr DirectSunlightEnum operator&(const DirectSunlightEnum
 
 static constexpr const auto SAW_ANY_DIRECT_SUNLIGHT = 0b10101010101u;
 static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = 1u << 14;
+static constexpr const auto CONNECTED_ROOM_FLAGS_TROLL_MODE = 1u << 15;
 
 // every other bit for all 6 directions.
 static_assert(SAW_ANY_DIRECT_SUNLIGHT == ((1u << (2 * 6)) - 1u) / 3u);
@@ -62,6 +63,10 @@ public:
     {
         return (m_flags & SAW_ANY_DIRECT_SUNLIGHT) != 0u;
     }
+
+public:
+    NODISCARD bool isTrollMode() const { return (m_flags & CONNECTED_ROOM_FLAGS_TROLL_MODE) != 0u; }
+    void setTrollMode() { m_flags |= CONNECTED_ROOM_FLAGS_TROLL_MODE; }
 
 public:
     void reset() { *this = ConnectedRoomFlagsType(); }
