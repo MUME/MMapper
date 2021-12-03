@@ -160,50 +160,52 @@ void AbstractParser::parsePrompt(const QString &prompt)
 {
     m_promptFlags.reset();
 
-    if (prompt.length() < 2)
-        return;
-
     int index = 0;
-    if (prompt[index] == '+') {
-        // susceptible to mudlle (Valar only)
+    if (index < prompt.length() && prompt[index] == '+') {
+        // susceptible to mudlle (muddling Maiar only)
         index += 2;
     }
-    switch (prompt[index++].toLatin1()) {
-    case '*': // indoor/sun (direct and indirect)
-        m_promptFlags.setLit();
-        break;
-    case '!': // artifical light
-        break;
-    case ')': // moon (direct and indirect)
-        m_promptFlags.setLit();
-        break;
-    case 'o': // darkness
-        m_promptFlags.setDark();
-        break;
-    default:
-        index--;
+
+    if (index < prompt.length()) {
+        switch (prompt[index++].toLatin1()) {
+        case '*': // indoor/sun (direct and indirect)
+            m_promptFlags.setLit();
+            break;
+        case '!': // artifical light
+            break;
+        case ')': // moon (direct and indirect)
+            m_promptFlags.setLit();
+            break;
+        case 'o': // darkness
+            m_promptFlags.setDark();
+            break;
+        default:
+            index--;
+        }
     }
 
-    // Terrain type
-    switch (prompt[index++].toLatin1()) {
-    case '[':
-    case '#':
-    case '.':
-    case 'f':
-    case '(':
-    case '<':
-    case '%':
-    case '~':
-    case 'W':
-    case 'U':
-    case '+':
-    case '=':
-    case 'O':
-    case ':':
-        break;
-    default:
-        index--;
-        break;
+    if (index < prompt.length()) {
+        // Terrain type
+        switch (prompt[index++].toLatin1()) {
+        case '[':
+        case '#':
+        case '.':
+        case 'f':
+        case '(':
+        case '<':
+        case '%':
+        case '~':
+        case 'W':
+        case 'U':
+        case '+':
+        case '=':
+        case 'O':
+        case ':':
+            break;
+        default:
+            index--;
+            break;
+        }
     }
 
     if (index < prompt.length()) {
