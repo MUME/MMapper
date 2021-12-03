@@ -14,7 +14,6 @@ confinement: strict
 base: core20
 
 architectures:
-  - build-on: armhf
   - build-on: arm64
   - build-on: amd64
 
