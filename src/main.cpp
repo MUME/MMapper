@@ -157,7 +157,6 @@ static void setSurfaceFormat()
 
     QSurfaceFormat fmt;
     fmt.setRenderableType(QSurfaceFormat::OpenGL);
-    fmt.setVersion(4, 6);
     QSurfaceFormat::FormatOptions options = QSurfaceFormat::DebugContext
                                             | QSurfaceFormat::DeprecatedFunctions;
     fmt.setOptions(options);
