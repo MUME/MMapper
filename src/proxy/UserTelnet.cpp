@@ -64,7 +64,7 @@ NODISCARD static QByteArray decodeFromUser(const CharacterEncodingEnum encoding,
         return ba;
     case CharacterEncodingEnum::UTF8: {
         std::ostringstream oss;
-        for (const QChar qc : ba) {
+        for (const QChar qc : QString::fromUtf8(ba)) {
             const auto codepoint = qc.unicode();
             if (codepoint < 256) {
                 oss << static_cast<char>(codepoint & 0xFF);
