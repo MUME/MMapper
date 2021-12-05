@@ -622,7 +622,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     if (debug)
                         qDebug() << "Received encoding options" << characterSets;
                     for (const auto &characterSet : characterSets) {
-                        const auto name = ::toStdStringLatin1(characterSet);
+                        const auto name = ::toStdStringLatin1(characterSet.simplified());
                         if (textCodec.supports(name)) {
                             accepted = true;
                             textCodec.setEncodingForName(name);
@@ -643,7 +643,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             case TNSB_ACCEPTED:
                 if (payload.length() > 3) {
                     // CHARSET ACCEPTED <charset>
-                    const auto characterSet = payload.mid(2);
+                    const auto characterSet = payload.mid(2).simplified();
                     textCodec.setEncodingForName(::toStdStringLatin1(characterSet));
                     if (debug)
                         qDebug() << "He accepted charset" << characterSet;
