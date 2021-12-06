@@ -1,4 +1,20 @@
 ================================
+MMapper 21.12.1 (December 6, 2021)
+================================
+
+Changes:
+ - Mapping only trusts Orc-mode to set room SUNDEATH
+ - Mapping only trusts Troll-mode to set room NO_SUNDEATH, LIT, DARK
+ - Removed OpenGL ES support because the Raspberry Pi 4 supports OpenGL 2.1
+
+Bug fixes:
+ - Room syncing works now for Orcs when exits are sunny
+ - Short prompts without the light and terrain are now correctly parsed
+ - Fixed UTF-8 to Latin-1 encoding bug where special characters showed up as ??
+ - Mac build works again by switching to brew miniupnc and qt5
+ - Added work-around for TinTin++ character encoding negotation
+
+================================
 MMapper 21.12.0 (December 2, 2021)
 ================================
 
