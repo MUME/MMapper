@@ -349,6 +349,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 if(MSVC)
     add_definitions(-DNOMINMAX)
+    # modernize the __cplusplus value
+    add_compile_options(/Zc:__cplusplus)
 endif()
 
 # Download arda.mm2
