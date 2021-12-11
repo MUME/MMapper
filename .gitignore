@@ -13,6 +13,7 @@ Makefile
 **/.DS_Store
 .idea
 .vs
+.vscode
 CMakeSettings.json
 
 # snapcraft
