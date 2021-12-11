@@ -1,6 +1,7 @@
 #pragma once
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (C) 2019 The MMapper Authors
+// Copyright (C) 2021 The MMapper Authors
+// Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <QString>
