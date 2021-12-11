@@ -63,7 +63,7 @@ public:
     ~MainWindow() final;
 
     enum class NODISCARD SaveModeEnum { FULL, BASEMAP };
-    enum class NODISCARD SaveFormatEnum { MM2, WEB, MMP };
+    enum class NODISCARD SaveFormatEnum { MM2, MM2XML, WEB, MMP };
     bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
@@ -81,6 +81,7 @@ public slots:
     bool slot_save();
     bool slot_saveAs();
     bool slot_exportBaseMap();
+    bool slot_exportMm2xmlMap();
     bool slot_exportWebMap();
     bool slot_exportMmpMap();
     void slot_about();
@@ -209,6 +210,7 @@ private:
     QAction *saveAct = nullptr;
     QAction *saveAsAct = nullptr;
     QAction *exportBaseMapAct = nullptr;
+    QAction *exportMm2xmlMapAct = nullptr;
     QAction *exportWebMapAct = nullptr;
     QAction *exportMmpMapAct = nullptr;
     QAction *exitAct = nullptr;
