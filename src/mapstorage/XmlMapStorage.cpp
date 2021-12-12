@@ -115,6 +115,9 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeStartElement("room");
     stream.writeAttribute("id", QString("%1").arg(room.getId().asUint32()));
     stream.writeAttribute("name", room.getName().toQString());
+    if (!room.isUpToDate()) {
+        stream.writeAttribute("uptodate", "false");
+    }
     saveXmlElement(stream, "align", alignName(room.getAlignType()));
     saveXmlElement(stream, "light", lightName(room.getLightType()));
     saveXmlElement(stream, "portable", portableName(room.getPortableType()));
@@ -132,7 +135,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeEndElement(); // end coord
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        saveRoomExit(stream, room.exit(dir), dir);
+        saveExit(stream, room.exit(dir), dir);
     }
     saveXmlElement(stream, "description", room.getDescription().toQString());
     saveXmlElement(stream, "contents", room.getContents().toQString());
@@ -141,22 +144,23 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeEndElement(); // end room
 }
 
-void XmlMapStorage::saveRoomExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
+void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
 {
     if (!e.exitIsExit() || e.outIsEmpty()) {
         return;
     }
     stream.writeStartElement("exit");
     stream.writeAttribute("dir", lowercaseDirection(dir));
-    saveRoomExitTo(stream, e);
-    saveRoomExitFlags(stream, e.getExitFlags());
+    saveExitTo(stream, e);
+    saveExitFlags(stream, e.getExitFlags());
+    saveDoorFlags(stream, e.getDoorFlags());
     if (e.hasDoorName()) {
         stream.writeAttribute("doorname", e.getDoorName().toQString());
     }
     stream.writeEndElement(); // end exit
 }
 
-void XmlMapStorage::saveRoomExitTo(QXmlStreamWriter &stream, const Exit &e)
+void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const Exit &e)
 {
     QString idlist;
     const char *separator = nullptr;
@@ -200,6 +204,9 @@ void XmlMapStorage::log(const QString &msg)
 static const char *const alignNames[] = {
     X_FOREACH_RoomAlignEnum(DECL) //
 };
+static const char *const doorFlagNames[] = {
+    X_FOREACH_DOOR_FLAG(DECL) //
+};
 static const char *const exitFlagNames[] = {
     X_FOREACH_EXIT_FLAG(DECL) //
 };
@@ -226,7 +233,24 @@ static const char *const terrainNames[] = {
 };
 #undef DECL
 
-void XmlMapStorage::saveRoomExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
+void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
+{
+    if (fl.isEmpty()) {
+        return;
+    }
+    QString list;
+    const char *separator = "";
+    for (uint x = 0; x < sizeof(doorFlagNames) / sizeof(doorFlagNames[0]); x++) {
+        if (fl.contains(DoorFlagEnum(x))) {
+            list += separator;
+            separator = ",";
+            list += doorFlagNames[x];
+        }
+    }
+    saveXmlAttribute(stream, "doorflags", list);
+}
+
+void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
 {
     fl.remove(ExitFlagEnum::EXIT); // always set, do not save it
     if (fl.isEmpty()) {

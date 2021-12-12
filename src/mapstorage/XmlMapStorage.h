@@ -38,11 +38,13 @@ private:
 
 private:
     static void saveRoom(QXmlStreamWriter &stream, const Room &room);
-    static void saveRoomExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir);
-    static void saveRoomExitTo(QXmlStreamWriter &stream, const Exit &e);
-    static void saveRoomExitFlags(QXmlStreamWriter &stream, ExitFlags fl);
     static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
     static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);
+
+    static void saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir);
+    static void saveExitTo(QXmlStreamWriter &stream, const Exit &e);
+    static void saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl);
+    static void saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl);
 
     static void saveXmlElement(QXmlStreamWriter &stream, const QString &name, const QString &value);
     static void saveXmlAttribute(QXmlStreamWriter &stream,
