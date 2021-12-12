@@ -71,7 +71,7 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(roomsCount + 3);
+    progressCounter.increaseTotalStepsBy(roomsCount + 2);
 
     BaseMapSaveFilter filter;
     if (baseMapOnly) {
@@ -90,14 +90,12 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     stream.writeAttribute("version", "1");
 
     // save rooms
-    stream.writeStartElement("rooms");
     auto saveOne = [&stream](const Room &room) { saveRoom(stream, room); };
 
     for (const auto &pRoom : roomList) {
         filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
         progressCounter.step();
     }
-    stream.writeEndElement(); // end rooms
 
     progressCounter.step();
 
@@ -117,12 +115,14 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeStartElement("room");
     stream.writeAttribute("id", QString("%1").arg(room.getId().asUint32()));
     stream.writeAttribute("name", room.getName().toQString());
-    saveXmlElement(stream, "terrain", terrainName(room.getTerrainType()));
+    saveXmlElement(stream, "align", alignName(room.getAlignType()));
     saveXmlElement(stream, "light", lightName(room.getLightType()));
+    saveXmlElement(stream, "portable", portableName(room.getPortableType()));
     saveXmlElement(stream, "ridable", ridableName(room.getRidableType()));
     saveXmlElement(stream, "sundeath", sundeathName(room.getSundeathType()));
-    saveXmlElement(stream, "align", alignName(room.getAlignType()));
-    saveRoomFlags(stream, room.getLoadFlags());
+    saveXmlElement(stream, "terrain", terrainName(room.getTerrainType()));
+    saveRoomLoadFlags(stream, room.getLoadFlags());
+    saveRoomMobFlags(stream, room.getMobFlags());
 
     stream.writeStartElement("coord");
     const Coordinate &pos = room.getPosition();
@@ -132,19 +132,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeEndElement(); // end coord
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const Exit &e = room.exit(dir);
-        if (e.exitIsExit() && !e.outIsEmpty()) {
-            stream.writeStartElement("exit");
-            stream.writeAttribute("direction", lowercaseDirection(dir));
-            // REVISIT: Can MMP handle multiple exits in the same direction?
-            stream.writeAttribute("target", QString("%1").arg(e.outFirst().asUint32()));
-            if (e.isHiddenExit())
-                stream.writeAttribute("hidden", "true");
-            if (e.exitIsDoor()) {
-                stream.writeAttribute("door", "true");
-            }
-            stream.writeEndElement(); // end exit
-        }
+        saveRoomExit(stream, room.exit(dir), dir);
     }
     saveXmlElement(stream, "description", room.getDescription().toQString());
     saveXmlElement(stream, "contents", room.getContents().toQString());
@@ -153,13 +141,34 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeEndElement(); // end room
 }
 
-void XmlMapStorage::saveXmlAttribute(QXmlStreamWriter &stream,
-                                     const QString &name,
-                                     const QString &value)
+void XmlMapStorage::saveRoomExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
 {
-    if (!value.isEmpty()) {
-        stream.writeAttribute(name, value);
+    if (!e.exitIsExit() || e.outIsEmpty()) {
+        return;
     }
+    stream.writeStartElement("exit");
+    stream.writeAttribute("dir", lowercaseDirection(dir));
+    saveRoomExitTo(stream, e);
+    saveRoomExitFlags(stream, e.getExitFlags());
+    if (e.hasDoorName()) {
+        stream.writeAttribute("doorname", e.getDoorName().toQString());
+    }
+    stream.writeEndElement(); // end exit
+}
+
+void XmlMapStorage::saveRoomExitTo(QXmlStreamWriter &stream, const Exit &e)
+{
+    QString idlist;
+    const char *separator = nullptr;
+    for (const RoomId id : e.outRange()) {
+        if (separator == nullptr) {
+            separator = ",";
+        } else {
+            idlist += separator;
+        }
+        idlist += QString("%1").arg(id.asUint32());
+    }
+    stream.writeAttribute("to", idlist);
 }
 
 void XmlMapStorage::saveXmlElement(QXmlStreamWriter &stream,
@@ -173,15 +182,35 @@ void XmlMapStorage::saveXmlElement(QXmlStreamWriter &stream,
     }
 }
 
-#define DECL(X) #X,
-static const char *const flagNames[] = {
-    X_FOREACH_ROOM_LOAD_FLAG(DECL) //
+void XmlMapStorage::saveXmlAttribute(QXmlStreamWriter &stream,
+                                     const QString &name,
+                                     const QString &value)
+{
+    if (!value.isEmpty()) {
+        stream.writeAttribute(name, value);
+    }
+}
+
+void XmlMapStorage::log(const QString &msg)
+{
+    emit sig_log("XmlMapStorage", msg);
+}
+
+#define DECL(X, ...) #X,
+static const char *const alignNames[] = {
+    X_FOREACH_RoomAlignEnum(DECL) //
 };
-static const char *const terrainNames[] = {
-    X_FOREACH_RoomTerrainEnum(DECL) //
+static const char *const exitFlagNames[] = {
+    X_FOREACH_EXIT_FLAG(DECL) //
 };
 static const char *const lightNames[] = {
     X_FOREACH_RoomLightEnum(DECL) //
+};
+static const char *const loadFlagNames[] = {
+    X_FOREACH_ROOM_LOAD_FLAG(DECL) //
+};
+static const char *const mobFlagNames[] = {
+    X_FOREACH_ROOM_MOB_FLAG(DECL) //
 };
 static const char *const portableNames[] = {
     X_FOREACH_RoomPortableEnum(DECL) //
@@ -192,82 +221,106 @@ static const char *const ridableNames[] = {
 static const char *const sundeathNames[] = {
     X_FOREACH_RoomSundeathEnum(DECL) //
 };
-static const char *const alignNames[] = {
-    X_FOREACH_RoomAlignEnum(DECL) //
+static const char *const terrainNames[] = {
+    X_FOREACH_RoomTerrainEnum(DECL) //
 };
-
 #undef DECL
 
-void XmlMapStorage::saveRoomFlags(QXmlStreamWriter &stream, RoomLoadFlags fl)
+void XmlMapStorage::saveRoomExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
+{
+    fl.remove(ExitFlagEnum::EXIT); // always set, do not save it
+    if (fl.isEmpty()) {
+        return;
+    }
+    QString list;
+    const char *separator = "";
+    for (uint x = 0; x < sizeof(exitFlagNames) / sizeof(exitFlagNames[0]); x++) {
+        if (fl.contains(ExitFlagEnum(x))) {
+            list += separator;
+            separator = ",";
+            list += exitFlagNames[x];
+        }
+    }
+    saveXmlAttribute(stream, "flags", list);
+}
+
+void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl)
 {
     if (fl.isEmpty()) {
         return;
     }
     stream.writeStartElement("flags");
     QString separator;
-    for (uint x = 0; x < sizeof(flagNames) / sizeof(flagNames[0]); x++) {
+    for (uint x = 0; x < sizeof(loadFlagNames) / sizeof(loadFlagNames[0]); x++) {
         if (fl.contains(RoomLoadFlagEnum(x))) {
             stream.writeCharacters(separator);
             if (separator.isEmpty()) {
                 separator = ",";
             }
-            stream.writeCharacters(flagNames[x]);
+            stream.writeCharacters(loadFlagNames[x]);
         }
     }
     stream.writeEndElement();
 }
 
-NODISCARD QString XmlMapStorage::terrainName(const RoomTerrainEnum x)
+void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
 {
-    if (x == RoomTerrainEnum::UNDEFINED) {
-        return QString();
+    if (fl.isEmpty()) {
+        return;
     }
-    if (uint(x) > 0 && uint(x) < sizeof(terrainNames) / sizeof(terrainNames[0])) {
-        return QString{terrainNames[uint(x)]};
+    stream.writeStartElement("mobflags");
+    QString separator;
+    for (uint x = 0; x < sizeof(mobFlagNames) / sizeof(mobFlagNames[0]); x++) {
+        if (fl.contains(RoomMobFlagEnum(x))) {
+            stream.writeCharacters(separator);
+            if (separator.isEmpty()) {
+                separator = ",";
+            }
+            stream.writeCharacters(mobFlagNames[x]);
+        }
     }
-    return QString("%1").arg(uint(x));
-}
-
-NODISCARD QString XmlMapStorage::lightName(const RoomLightEnum x)
-{
-    if (x == RoomLightEnum::UNDEFINED) {
-        return QString();
-    }
-    if (uint(x) > 0 && uint(x) < sizeof(lightNames) / sizeof(lightNames[0])) {
-        return QString{lightNames[uint(x)]};
-    }
-    return QString("%1").arg(uint(x));
-}
-
-NODISCARD QString XmlMapStorage::ridableName(const RoomRidableEnum x)
-{
-    if (x == RoomRidableEnum::UNDEFINED) {
-        return QString();
-    }
-    if (uint(x) > 0 && uint(x) < sizeof(ridableNames) / sizeof(ridableNames[0])) {
-        return QString{ridableNames[uint(x)]};
-    }
-    return QString("%1").arg(uint(x));
-}
-
-NODISCARD QString XmlMapStorage::sundeathName(const RoomSundeathEnum x)
-{
-    if (x == RoomSundeathEnum::UNDEFINED) {
-        return QString();
-    }
-    if (uint(x) > 0 && uint(x) < sizeof(sundeathNames) / sizeof(sundeathNames[0])) {
-        return QString{sundeathNames[uint(x)]};
-    }
-    return QString("%1").arg(uint(x));
+    stream.writeEndElement();
 }
 
 NODISCARD QString XmlMapStorage::alignName(const RoomAlignEnum x)
 {
-    if (x == RoomAlignEnum::UNDEFINED) {
+    return enumName(uint(x), alignNames, sizeof(alignNames) / sizeof(alignNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::lightName(const RoomLightEnum x)
+{
+    return enumName(uint(x), lightNames, sizeof(lightNames) / sizeof(lightNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::portableName(const RoomPortableEnum x)
+{
+    return enumName(uint(x), portableNames, sizeof(portableNames) / sizeof(portableNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::ridableName(const RoomRidableEnum x)
+{
+    return enumName(uint(x), ridableNames, sizeof(ridableNames) / sizeof(ridableNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::sundeathName(const RoomSundeathEnum x)
+{
+    return enumName(uint(x), sundeathNames, sizeof(sundeathNames) / sizeof(sundeathNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::terrainName(const RoomTerrainEnum x)
+{
+    return enumName(uint(x), terrainNames, sizeof(terrainNames) / sizeof(terrainNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::enumName(const uint x,
+                                          const char *const names[],
+                                          const size_t count)
+{
+    if (x == 0) {
         return QString();
+    } else if (x < count) {
+        return QString(names[x]);
+    } else {
+        return QString("%1").arg(x);
     }
-    if (uint(x) > 0 && uint(x) < sizeof(alignNames) / sizeof(alignNames[0])) {
-        return QString{alignNames[uint(x)]};
-    }
-    return QString("%1").arg(uint(x));
 }

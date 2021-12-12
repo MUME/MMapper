@@ -545,11 +545,11 @@ void MainWindow::createActions()
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, &QAction::triggered, this, &MainWindow::slot_saveAs);
 
-    exportBaseMapAct = new QAction(tr("Export &Base Map As..."), this);
+    exportBaseMapAct = new QAction(tr("Export MMapper2 &Base Map As..."), this);
     exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
     connect(exportBaseMapAct, &QAction::triggered, this, &MainWindow::slot_exportBaseMap);
 
-    exportMm2xmlMapAct = new QAction(tr("Export MM2&XML Map As..."), this);
+    exportMm2xmlMapAct = new QAction(tr("Export MMapper2 &XML Map As..."), this);
     exportMm2xmlMapAct->setStatusTip(tr("Save a copy of the map in the MM2XML format"));
     connect(exportMm2xmlMapAct, &QAction::triggered, this, &MainWindow::slot_exportMm2xmlMap);
 
