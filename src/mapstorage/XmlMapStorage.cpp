@@ -79,7 +79,7 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
 
     stream.writeStartElement("map");
     stream.writeAttribute("type", "mmapper2xml");
-    stream.writeAttribute("version", "1");
+    stream.writeAttribute("version", "1.0.0");
 
     saveRooms(stream, baseMapOnly, roomList);
     saveMarkers(stream, markerList);
