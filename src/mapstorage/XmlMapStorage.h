@@ -8,9 +8,9 @@
 #include <QtCore>
 
 #include "../global/macros.h"
+#include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
 
-class MapData;
 class QObject;
 class QXmlStreamWriter;
 
