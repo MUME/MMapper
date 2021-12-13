@@ -63,44 +63,30 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     roomList.reserve(m_mapData.getRoomsCount());
 
     RoomSaver saver(m_mapData, roomList);
-    for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
+    for (uint i = 0, n = m_mapData.getRoomsCount(); i < n; ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
+    const MarkerList &markerList = m_mapData.getMarkersList();
 
-    uint roomsCount = saver.getRoomsCount();
-
-    auto &progressCounter = getProgressCounter();
+    ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(roomsCount + 2);
-
-    BaseMapSaveFilter filter;
-    if (baseMapOnly) {
-        filter.setMapData(&m_mapData);
-        progressCounter.increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(progressCounter);
-    }
+    progressCounter.increaseTotalStepsBy(saver.getRoomsCount()
+                                         + static_cast<quint32>(markerList.size()));
 
     QXmlStreamWriter stream(m_file);
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
 
-    // save map
     stream.writeStartElement("map");
     stream.writeAttribute("type", "mmapper2xml");
     stream.writeAttribute("version", "1");
 
-    // save rooms
-    auto saveOne = [&stream](const Room &room) { saveRoom(stream, room); };
-
-    for (const auto &pRoom : roomList) {
-        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
-        progressCounter.step();
-    }
-
-    progressCounter.step();
+    saveRooms(stream, baseMapOnly, roomList);
+    saveMarkers(stream, markerList);
+    // write selected room x,y,z
+    saveCoordinate(stream, "position", m_mapData.getPosition());
 
     stream.writeEndElement(); // end map
-    progressCounter.step();
 
     log("Writing data finished.");
 
@@ -110,9 +96,28 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     return true;
 }
 
+void XmlMapStorage::saveRooms(QXmlStreamWriter &stream,
+                              bool baseMapOnly,
+                              const ConstRoomList &roomList)
+{
+    ProgressCounter &progressCounter = getProgressCounter();
+    BaseMapSaveFilter filter;
+    if (baseMapOnly) {
+        filter.setMapData(&m_mapData);
+        progressCounter.increaseTotalStepsBy(filter.prepareCount());
+        filter.prepare(progressCounter);
+    }
+    auto saveOne = [&stream](const Room &room) { saveRoom(stream, room); };
+    for (const auto &pRoom : roomList) {
+        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
+        progressCounter.step();
+    }
+}
+
 void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
 {
     stream.writeStartElement("room");
+
     stream.writeAttribute("id", QString("%1").arg(room.getId().asUint32()));
     stream.writeAttribute("name", room.getName().toQString());
     if (!room.isUpToDate()) {
@@ -126,13 +131,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     saveXmlElement(stream, "terrain", terrainName(room.getTerrainType()));
     saveRoomLoadFlags(stream, room.getLoadFlags());
     saveRoomMobFlags(stream, room.getMobFlags());
-
-    stream.writeStartElement("coord");
-    const Coordinate &pos = room.getPosition();
-    stream.writeAttribute("x", QString("%1").arg(pos.x));
-    stream.writeAttribute("y", QString("%1").arg(pos.y));
-    stream.writeAttribute("z", QString("%1").arg(pos.z));
-    stream.writeEndElement(); // end coord
+    saveCoordinate(stream, "coord", room.getPosition());
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         saveExit(stream, room.exit(dir), dir);
@@ -142,6 +141,17 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     saveXmlElement(stream, "note", room.getNote().toQString());
 
     stream.writeEndElement(); // end room
+}
+
+void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
+                                   const QString &name,
+                                   const Coordinate &pos)
+{
+    stream.writeStartElement(name);
+    stream.writeAttribute("x", QString("%1").arg(pos.x));
+    stream.writeAttribute("y", QString("%1").arg(pos.y));
+    stream.writeAttribute("z", QString("%1").arg(pos.z));
+    stream.writeEndElement(); // end coord
 }
 
 void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
@@ -173,6 +183,38 @@ void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const Exit &e)
         idlist += QString("%1").arg(id.asUint32());
     }
     stream.writeAttribute("to", idlist);
+}
+
+void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList)
+{
+    ProgressCounter &progressCounter = getProgressCounter();
+    for (const auto &marker : markerList) {
+        saveMarker(stream, deref(marker));
+        progressCounter.step();
+    }
+}
+
+void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
+{
+    const InfoMarkTypeEnum type = marker.getType();
+    stream.writeStartElement("marker");
+    stream.writeAttribute("type", markTypeName(type));
+    stream.writeAttribute("class", markClassName(marker.getClass()));
+    // REVISIT: round to 45 degrees?
+    if (marker.getRotationAngle() != 0) {
+        stream.writeAttribute("angle",
+                              QString("%1").arg(static_cast<qint32>(marker.getRotationAngle())));
+    }
+    saveCoordinate(stream, "pos1", marker.getPosition1());
+    saveCoordinate(stream, "pos2", marker.getPosition2());
+
+    if (type == InfoMarkTypeEnum::TEXT) {
+        stream.writeStartElement("text");
+        stream.writeCharacters(marker.getText().toQString());
+        stream.writeEndElement(); // end text
+    }
+
+    stream.writeEndElement(); // end marker
 }
 
 void XmlMapStorage::saveXmlElement(QXmlStreamWriter &stream,
@@ -215,6 +257,12 @@ static const char *const lightNames[] = {
 };
 static const char *const loadFlagNames[] = {
     X_FOREACH_ROOM_LOAD_FLAG(DECL) //
+};
+static const char *const markClassNames[] = {
+    X_FOREACH_INFOMARK_CLASS(DECL) //
+};
+static const char *const markTypeNames[] = {
+    X_FOREACH_INFOMARK_TYPE(DECL) //
 };
 static const char *const mobFlagNames[] = {
     X_FOREACH_ROOM_MOB_FLAG(DECL) //
@@ -314,6 +362,28 @@ NODISCARD QString XmlMapStorage::alignName(const RoomAlignEnum x)
 NODISCARD QString XmlMapStorage::lightName(const RoomLightEnum x)
 {
     return enumName(uint(x), lightNames, sizeof(lightNames) / sizeof(lightNames[0]));
+}
+
+NODISCARD QString XmlMapStorage::markClassName(const InfoMarkClassEnum e)
+{
+    const uint x = uint(e);
+    const uint count = sizeof(markClassNames) / sizeof(markClassNames[0]);
+    if (x < count) {
+        return QString(markClassNames[x]);
+    } else {
+        return QString("%1").arg(x);
+    }
+}
+
+NODISCARD QString XmlMapStorage::markTypeName(const InfoMarkTypeEnum e)
+{
+    const uint x = uint(e);
+    const uint count = sizeof(markTypeNames) / sizeof(markTypeNames[0]);
+    if (x < count) {
+        return QString(markTypeNames[x]);
+    } else {
+        return QString("%1").arg(x);
+    }
 }
 
 NODISCARD QString XmlMapStorage::portableName(const RoomPortableEnum x)
