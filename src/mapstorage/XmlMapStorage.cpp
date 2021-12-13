@@ -129,11 +129,11 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     saveXmlElement(stream, "ridable", ridableName(room.getRidableType()));
     saveXmlElement(stream, "sundeath", sundeathName(room.getSundeathType()));
     saveXmlElement(stream, "terrain", terrainName(room.getTerrainType()));
+    saveCoordinate(stream, "coord", room.getPosition());
     saveRoomLoadFlags(stream, room.getLoadFlags());
     saveRoomMobFlags(stream, room.getMobFlags());
-    saveCoordinate(stream, "coord", room.getPosition());
 
-    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS7) {
         saveExit(stream, room.exit(dir), dir);
     }
     saveXmlElement(stream, "description", room.getDescription().toQString());
@@ -162,11 +162,9 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
     stream.writeStartElement("exit");
     stream.writeAttribute("dir", lowercaseDirection(dir));
     saveExitTo(stream, e);
-    saveExitFlags(stream, e.getExitFlags());
+    saveXmlAttribute("doorname", e.getDoorName().toQString());
     saveDoorFlags(stream, e.getDoorFlags());
-    if (e.hasDoorName()) {
-        stream.writeAttribute("doorname", e.getDoorName().toQString());
-    }
+    saveExitFlags(stream, e.getExitFlags());
     stream.writeEndElement(); // end exit
 }
 
@@ -247,16 +245,12 @@ void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    QString list;
-    const char *separator = "";
     for (uint x = 0; x < NUM_DOOR_FLAGS; x++) {
-        if (fl.contains(DoorFlagEnum(x))) {
-            list += separator;
-            separator = ",";
-            list += doorFlagName(DoorFlagEnum(x));
+        const DoorFlagEnum e = DoorFlagEnum(x);
+        if (fl.contains(e)) {
+            saveXmlElement(stream, "doorflag", doorFlagName(e));
         }
     }
-    saveXmlAttribute(stream, "doorflags", list);
 }
 
 void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
@@ -265,16 +259,12 @@ void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    QString list;
-    const char *separator = "";
     for (uint x = 0; x < NUM_EXIT_FLAGS; x++) {
-        if (fl.contains(ExitFlagEnum(x))) {
-            list += separator;
-            separator = ",";
-            list += exitFlagName(ExitFlagEnum(x));
+        const ExitFlagEnum e = ExitFlagEnum(x);
+        if (fl.contains(e)) {
+            saveXmlElement(stream, "exitflag", exitFlagName(e));
         }
     }
-    saveXmlAttribute(stream, "flags", list);
 }
 
 void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl)
@@ -282,18 +272,12 @@ void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl
     if (fl.isEmpty()) {
         return;
     }
-    stream.writeStartElement("flags");
-    QString separator;
     for (uint x = 0; x < NUM_ROOM_LOAD_FLAGS; x++) {
-        if (fl.contains(RoomLoadFlagEnum(x))) {
-            stream.writeCharacters(separator);
-            if (separator.isEmpty()) {
-                separator = ",";
-            }
-            stream.writeCharacters(loadFlagName(RoomLoadFlagEnum(x)));
+        const RoomLoadFlagEnum e = RoomLoadFlagEnum(x);
+        if (fl.contains(e)) {
+            saveXmlElement(stream, "loadflag", loadFlagName(e));
         }
     }
-    stream.writeEndElement();
 }
 
 void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
@@ -301,18 +285,12 @@ void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    stream.writeStartElement("mobflags");
-    QString separator;
-    for (uint x = 0; x < NUM_ROOM_MOB_FLAGS; x++) {
-        if (fl.contains(RoomMobFlagEnum(x))) {
-            stream.writeCharacters(separator);
-            if (separator.isEmpty()) {
-                separator = ",";
-            }
-            stream.writeCharacters(mobFlagName(RoomMobFlagEnum(x)));
+    for (uint x = 0; x < NUM_ROOM_LOAD_FLAGS; x++) {
+        const RoomMobFlagEnum e = RoomMobFlagEnum(x);
+        if (fl.contains(e)) {
+            saveXmlElement(stream, "mobflag", mobFlagName(e));
         }
     }
-    stream.writeEndElement();
 }
 
 NODISCARD const char *XmlMapStorage::alignName(const RoomAlignEnum e)
