@@ -56,15 +56,18 @@ private:
                                  const QString &name,
                                  const QString &value);
 
-    NODISCARD static QString alignName(const RoomAlignEnum x);
-    NODISCARD static QString lightName(const RoomLightEnum x);
-    NODISCARD static QString markClassName(const InfoMarkClassEnum x);
-    NODISCARD static QString markTypeName(const InfoMarkTypeEnum x);
-    NODISCARD static QString portableName(const RoomPortableEnum x);
-    NODISCARD static QString ridableName(const RoomRidableEnum x);
-    NODISCARD static QString sundeathName(const RoomSundeathEnum x);
-    NODISCARD static QString terrainName(const RoomTerrainEnum x);
-    NODISCARD static QString enumName(const uint x, const char *const names[], const size_t count);
+    NODISCARD static const char *alignName(const RoomAlignEnum e);
+    NODISCARD static const char *doorFlagName(const DoorFlagEnum e);
+    NODISCARD static const char *exitFlagName(const ExitFlagEnum e);
+    NODISCARD static const char *lightName(const RoomLightEnum e);
+    NODISCARD static const char *loadFlagName(const RoomLoadFlagEnum e);
+    NODISCARD static const char *markClassName(const InfoMarkClassEnum e);
+    NODISCARD static const char *markTypeName(const InfoMarkTypeEnum e);
+    NODISCARD static const char *mobFlagName(const RoomMobFlagEnum e);
+    NODISCARD static const char *portableName(const RoomPortableEnum e);
+    NODISCARD static const char *ridableName(const RoomRidableEnum e);
+    NODISCARD static const char *sundeathName(const RoomSundeathEnum e);
+    NODISCARD static const char *terrainName(const RoomTerrainEnum e);
 
     void log(const QString &msg);
 };

@@ -242,45 +242,6 @@ void XmlMapStorage::log(const QString &msg)
     emit sig_log("XmlMapStorage", msg);
 }
 
-#define DECL(X, ...) #X,
-static const char *const alignNames[] = {
-    X_FOREACH_RoomAlignEnum(DECL) //
-};
-static const char *const doorFlagNames[] = {
-    X_FOREACH_DOOR_FLAG(DECL) //
-};
-static const char *const exitFlagNames[] = {
-    X_FOREACH_EXIT_FLAG(DECL) //
-};
-static const char *const lightNames[] = {
-    X_FOREACH_RoomLightEnum(DECL) //
-};
-static const char *const loadFlagNames[] = {
-    X_FOREACH_ROOM_LOAD_FLAG(DECL) //
-};
-static const char *const markClassNames[] = {
-    X_FOREACH_INFOMARK_CLASS(DECL) //
-};
-static const char *const markTypeNames[] = {
-    X_FOREACH_INFOMARK_TYPE(DECL) //
-};
-static const char *const mobFlagNames[] = {
-    X_FOREACH_ROOM_MOB_FLAG(DECL) //
-};
-static const char *const portableNames[] = {
-    X_FOREACH_RoomPortableEnum(DECL) //
-};
-static const char *const ridableNames[] = {
-    X_FOREACH_RoomRidableEnum(DECL) //
-};
-static const char *const sundeathNames[] = {
-    X_FOREACH_RoomSundeathEnum(DECL) //
-};
-static const char *const terrainNames[] = {
-    X_FOREACH_RoomTerrainEnum(DECL) //
-};
-#undef DECL
-
 void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
 {
     if (fl.isEmpty()) {
@@ -288,11 +249,11 @@ void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
     }
     QString list;
     const char *separator = "";
-    for (uint x = 0; x < sizeof(doorFlagNames) / sizeof(doorFlagNames[0]); x++) {
+    for (uint x = 0; x < NUM_DOOR_FLAGS; x++) {
         if (fl.contains(DoorFlagEnum(x))) {
             list += separator;
             separator = ",";
-            list += doorFlagNames[x];
+            list += doorFlagName(DoorFlagEnum(x));
         }
     }
     saveXmlAttribute(stream, "doorflags", list);
@@ -306,11 +267,11 @@ void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
     }
     QString list;
     const char *separator = "";
-    for (uint x = 0; x < sizeof(exitFlagNames) / sizeof(exitFlagNames[0]); x++) {
+    for (uint x = 0; x < NUM_EXIT_FLAGS; x++) {
         if (fl.contains(ExitFlagEnum(x))) {
             list += separator;
             separator = ",";
-            list += exitFlagNames[x];
+            list += exitFlagName(ExitFlagEnum(x));
         }
     }
     saveXmlAttribute(stream, "flags", list);
@@ -323,13 +284,13 @@ void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl
     }
     stream.writeStartElement("flags");
     QString separator;
-    for (uint x = 0; x < sizeof(loadFlagNames) / sizeof(loadFlagNames[0]); x++) {
+    for (uint x = 0; x < NUM_ROOM_LOAD_FLAGS; x++) {
         if (fl.contains(RoomLoadFlagEnum(x))) {
             stream.writeCharacters(separator);
             if (separator.isEmpty()) {
                 separator = ",";
             }
-            stream.writeCharacters(loadFlagNames[x]);
+            stream.writeCharacters(loadFlagName(RoomLoadFlagEnum(x)));
         }
     }
     stream.writeEndElement();
@@ -342,79 +303,182 @@ void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
     }
     stream.writeStartElement("mobflags");
     QString separator;
-    for (uint x = 0; x < sizeof(mobFlagNames) / sizeof(mobFlagNames[0]); x++) {
+    for (uint x = 0; x < NUM_ROOM_MOB_FLAGS; x++) {
         if (fl.contains(RoomMobFlagEnum(x))) {
             stream.writeCharacters(separator);
             if (separator.isEmpty()) {
                 separator = ",";
             }
-            stream.writeCharacters(mobFlagNames[x]);
+            stream.writeCharacters(mobFlagName(RoomMobFlagEnum(x)));
         }
     }
     stream.writeEndElement();
 }
 
-NODISCARD QString XmlMapStorage::alignName(const RoomAlignEnum x)
+NODISCARD const char *XmlMapStorage::alignName(const RoomAlignEnum e)
 {
-    return enumName(uint(x), alignNames, sizeof(alignNames) / sizeof(alignNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::lightName(const RoomLightEnum x)
-{
-    return enumName(uint(x), lightNames, sizeof(lightNames) / sizeof(lightNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::markClassName(const InfoMarkClassEnum e)
-{
-    const uint x = uint(e);
-    const uint count = sizeof(markClassNames) / sizeof(markClassNames[0]);
-    if (x < count) {
-        return QString(markClassNames[x]);
-    } else {
-        return QString("%1").arg(x);
+    if (e != RoomAlignEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomAlignEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomAlignEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomAlignEnum
     }
+    return "";
 }
 
-NODISCARD QString XmlMapStorage::markTypeName(const InfoMarkTypeEnum e)
+NODISCARD const char *XmlMapStorage::doorFlagName(const DoorFlagEnum e)
 {
-    const uint x = uint(e);
-    const uint count = sizeof(markTypeNames) / sizeof(markTypeNames[0]);
-    if (x < count) {
-        return QString(markTypeNames[x]);
-    } else {
-        return QString("%1").arg(x);
+#define CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
+    case DoorFlagEnum::UPPER_CASE: \
+        return #UPPER_CASE;
+    switch (e) {
+        X_FOREACH_DOOR_FLAG(CASE)
     }
+#undef CASE
+    assert(false); // reachable only on invalid DoorFlagEnum
+    return "";
 }
 
-NODISCARD QString XmlMapStorage::portableName(const RoomPortableEnum x)
+NODISCARD const char *XmlMapStorage::exitFlagName(const ExitFlagEnum e)
 {
-    return enumName(uint(x), portableNames, sizeof(portableNames) / sizeof(portableNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::ridableName(const RoomRidableEnum x)
-{
-    return enumName(uint(x), ridableNames, sizeof(ridableNames) / sizeof(ridableNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::sundeathName(const RoomSundeathEnum x)
-{
-    return enumName(uint(x), sundeathNames, sizeof(sundeathNames) / sizeof(sundeathNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::terrainName(const RoomTerrainEnum x)
-{
-    return enumName(uint(x), terrainNames, sizeof(terrainNames) / sizeof(terrainNames[0]));
-}
-
-NODISCARD QString XmlMapStorage::enumName(const uint x,
-                                          const char *const names[],
-                                          const size_t count)
-{
-    if (x == 0) {
-        return QString();
-    } else if (x < count) {
-        return QString(names[x]);
-    } else {
-        return QString("%1").arg(x);
+#define CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
+    case ExitFlagEnum::UPPER_CASE: \
+        return #UPPER_CASE;
+    switch (e) {
+        X_FOREACH_EXIT_FLAG(CASE)
     }
+#undef CASE
+    assert(false); // reachable only on invalid DoorFlagEnum
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::lightName(const RoomLightEnum e)
+{
+    if (e != RoomLightEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomLightEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomLightEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomLightEnum
+    }
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::loadFlagName(const RoomLoadFlagEnum e)
+{
+#define CASE(X) \
+    case RoomLoadFlagEnum::X: \
+        return #X;
+    switch (e) {
+        X_FOREACH_ROOM_LOAD_FLAG(CASE)
+    }
+#undef CASE
+    assert(false); // reachable only on invalid RoomLoadFlagEnum
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::markClassName(const InfoMarkClassEnum e)
+{
+#define CASE(X) \
+    case InfoMarkClassEnum::X: \
+        return #X;
+    switch (e) {
+        X_FOREACH_INFOMARK_CLASS(CASE)
+    }
+#undef CASE
+    assert(false); // reachable only on invalid InfoMarkClassEnum
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::markTypeName(const InfoMarkTypeEnum e)
+{
+#define CASE(X) \
+    case InfoMarkTypeEnum::X: \
+        return #X;
+    switch (e) {
+        X_FOREACH_INFOMARK_TYPE(CASE)
+    }
+#undef CASE
+    assert(false); // reachable only on invalid InfoMarkTypeEnum
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::mobFlagName(const RoomMobFlagEnum e)
+{
+#define CASE(X) \
+    case RoomMobFlagEnum::X: \
+        return #X;
+    switch (e) {
+        X_FOREACH_ROOM_MOB_FLAG(CASE)
+    }
+#undef CASE
+    assert(false); // reachable only on invalid RoomMobFlagEnum
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::portableName(const RoomPortableEnum e)
+{
+    if (e != RoomPortableEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomPortableEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomPortableEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomPortableEnum
+    }
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::ridableName(const RoomRidableEnum e)
+{
+    if (e != RoomRidableEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomRidableEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomRidableEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomRidableEnum
+    }
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::sundeathName(const RoomSundeathEnum e)
+{
+    if (e != RoomSundeathEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomSundeathEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomSundeathEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomSundeathEnum
+    }
+    return "";
+}
+
+NODISCARD const char *XmlMapStorage::terrainName(const RoomTerrainEnum e)
+{
+    if (e != RoomTerrainEnum::UNDEFINED) {
+#define CASE(X) \
+    case RoomTerrainEnum::X: \
+        return #X;
+        switch (e) {
+            X_FOREACH_RoomTerrainEnum(CASE)
+        }
+#undef CASE
+        assert(false); // reachable only on invalid RoomTerrainEnum
+    }
+    return "";
 }
