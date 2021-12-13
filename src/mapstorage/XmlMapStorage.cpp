@@ -162,7 +162,7 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
     stream.writeStartElement("exit");
     stream.writeAttribute("dir", lowercaseDirection(dir));
     saveExitTo(stream, e);
-    saveXmlAttribute("doorname", e.getDoorName().toQString());
+    saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
     saveDoorFlags(stream, e.getDoorFlags());
     saveExitFlags(stream, e.getExitFlags());
     stream.writeEndElement(); // end exit
