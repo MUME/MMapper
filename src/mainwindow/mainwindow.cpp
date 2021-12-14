@@ -50,6 +50,7 @@
 #include "../mapfrontend/mapfrontend.h"
 #include "../mapstorage/MmpMapStorage.h"
 #include "../mapstorage/PandoraMapStorage.h"
+#include "../mapstorage/XmlMapStorage.h"
 #include "../mapstorage/abstractmapstorage.h"
 #include "../mapstorage/filesaver.h"
 #include "../mapstorage/jsonmapstorage.h"
@@ -544,9 +545,13 @@ void MainWindow::createActions()
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, &QAction::triggered, this, &MainWindow::slot_saveAs);
 
-    exportBaseMapAct = new QAction(tr("Export &Base Map As..."), this);
+    exportBaseMapAct = new QAction(tr("Export MMapper2 &Base Map As..."), this);
     exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
     connect(exportBaseMapAct, &QAction::triggered, this, &MainWindow::slot_exportBaseMap);
+
+    exportMm2xmlMapAct = new QAction(tr("Export MMapper2 &XML Map As..."), this);
+    exportMm2xmlMapAct->setStatusTip(tr("Save a copy of the map in the MM2XML format"));
+    connect(exportMm2xmlMapAct, &QAction::triggered, this, &MainWindow::slot_exportMm2xmlMap);
 
     exportWebMapAct = new QAction(tr("Export &Web Map As..."), this);
     exportWebMapAct->setStatusTip(tr("Save a copy of the map for webclients"));
@@ -1062,6 +1067,7 @@ void MainWindow::disableActions(bool value)
     reloadAct->setDisabled(value);
     saveAsAct->setDisabled(value);
     exportBaseMapAct->setDisabled(value);
+    exportMm2xmlMapAct->setDisabled(value);
     exportWebMapAct->setDisabled(value);
     exportMmpMapAct->setDisabled(value);
     exitAct->setDisabled(value);
@@ -1111,6 +1117,7 @@ void MainWindow::setupMenuBar()
     fileMenu->addSeparator();
     QMenu *exportMenu = fileMenu->addMenu(QIcon::fromTheme("document-send"), tr("&Export"));
     exportMenu->addAction(exportBaseMapAct);
+    exportMenu->addAction(exportMm2xmlMapAct);
     exportMenu->addAction(exportWebMapAct);
     exportMenu->addAction(exportMmpMapAct);
     fileMenu->addAction(mergeAct);
@@ -1662,6 +1669,33 @@ bool MainWindow::slot_exportBaseMap()
     return saveFile(fileNames[0], SaveModeEnum::BASEMAP, SaveFormatEnum::MM2);
 }
 
+bool MainWindow::slot_exportMm2xmlMap()
+{
+    const auto makeSaveDialog = [this]() {
+        // FIXME: code duplication
+        auto save = std::make_unique<QFileDialog>(this,
+                                                  "Choose map file name ...",
+                                                  QDir::current().absolutePath());
+        save->setFileMode(QFileDialog::AnyFile);
+        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
+        save->setNameFilter("MM2XML Maps (*.mm2xml)");
+        save->setDefaultSuffix("mm2xml");
+        save->setAcceptMode(QFileDialog::AcceptSave);
+        save->selectFile(QFileInfo(m_mapData->getFileName())
+                             .fileName()
+                             .replace(QRegularExpression(R"(\.mm2$)"), ".mm2xml"));
+
+        return save;
+    };
+
+    const auto fileNames = getSaveFileNames(makeSaveDialog());
+    if (fileNames.isEmpty()) {
+        statusBar()->showMessage(tr("No filename provided"), 2000);
+        return false;
+    }
+    return saveFile(fileNames[0], SaveModeEnum::FULL, SaveFormatEnum::MM2XML);
+}
+
 bool MainWindow::slot_exportWebMap()
 {
     const auto makeSaveDialog = [this]() {
@@ -1861,6 +1895,8 @@ bool MainWindow::saveFile(const QString &fileName,
         switch (format) {
         case SaveFormatEnum::MM2:
             return std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
+        case SaveFormatEnum::MM2XML:
+            return std::make_unique<XmlMapStorage>(*m_mapData, fileName, &saver.file(), this);
         case SaveFormatEnum::MMP:
             return std::make_unique<MmpMapStorage>(*m_mapData, fileName, &saver.file(), this);
         case SaveFormatEnum::WEB:
