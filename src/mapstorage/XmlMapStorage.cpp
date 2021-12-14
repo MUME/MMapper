@@ -153,7 +153,7 @@ void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
     stream.writeAttribute("x", QString("%1").arg(pos.x));
     stream.writeAttribute("y", QString("%1").arg(pos.y));
     stream.writeAttribute("z", QString("%1").arg(pos.z));
-    stream.writeEndElement(); // end coord
+    stream.writeEndElement(); // end coordinate
 }
 
 void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
@@ -163,8 +163,8 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
     }
     stream.writeStartElement("exit");
     stream.writeAttribute("dir", lowercaseDirection(dir));
-    saveExitTo(stream, e);
     saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
+    saveExitTo(stream, e);
     saveDoorFlags(stream, e.getDoorFlags());
     saveExitFlags(stream, e.getExitFlags());
     stream.writeEndElement(); // end exit
@@ -172,17 +172,9 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
 
 void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const Exit &e)
 {
-    QString idlist;
-    const char *separator = nullptr;
     for (const RoomId id : e.outRange()) {
-        if (separator == nullptr) {
-            separator = ",";
-        } else {
-            idlist += separator;
-        }
-        idlist += QString("%1").arg(id.asUint32());
+        stream.writeTextElement("to", QString("%1").arg(id.asUint32()));
     }
-    stream.writeAttribute("to", idlist);
 }
 
 void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList)
@@ -209,9 +201,7 @@ void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
     saveCoordinate(stream, "pos2", marker.getPosition2());
 
     if (type == InfoMarkTypeEnum::TEXT) {
-        stream.writeStartElement("text");
-        stream.writeCharacters(marker.getText().toQString());
-        stream.writeEndElement(); // end text
+        stream.writeTextElement("text", marker.getText().toQString());
     }
 
     stream.writeEndElement(); // end marker
@@ -222,9 +212,7 @@ void XmlMapStorage::saveXmlElement(QXmlStreamWriter &stream,
                                    const QString &value)
 {
     if (!value.isEmpty()) {
-        stream.writeStartElement(name);
-        stream.writeCharacters(value);
-        stream.writeEndElement(); // end description
+        stream.writeTextElement(name, value);
     }
 }
 
