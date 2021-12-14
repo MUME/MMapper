@@ -4,12 +4,14 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <unordered_set>
 #include <QString>
 #include <QtCore>
 
 #include "../global/macros.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
+#include "mapstorage.h" // MapFrontendBlocker
 
 class QObject;
 class QXmlStreamWriter;
@@ -28,7 +30,7 @@ public:
     XmlMapStorage() = delete;
 
 private:
-    NODISCARD bool canLoad() const override { return false; }
+    NODISCARD bool canLoad() const override { return true; }
     NODISCARD bool canSave() const override { return true; }
 
     void newData() override;
@@ -37,6 +39,23 @@ private:
     NODISCARD bool mergeData() override;
 
 private:
+    void loadWorld(QXmlStreamReader &stream);
+    void loadMap(QXmlStreamReader &stream);
+    void loadRoom(QXmlStreamReader &stream);
+
+    static void throwError(const QString &msg);
+
+    template<typename... Args>
+    static void throwErrorFmt(const QString &format, Args &&... args)
+    {
+        throwError(format.arg(std::forward<Args>(args)...));
+    }
+
+    std::unordered_set<RoomId> roomIds;   // RoomId of loaded rooms
+    std::unordered_set<RoomId> toRoomIds; // RoomId of exits
+
+private:
+    void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);
     void saveRooms(QXmlStreamWriter &stream, bool baseMapOnly, const ConstRoomList &roomList);
     static void saveRoom(QXmlStreamWriter &stream, const Room &room);
     static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);

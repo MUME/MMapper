@@ -24,6 +24,10 @@ public:
     bool operator>(const CompareVersion &other) const;
     bool operator==(const CompareVersion &other) const;
 
+    int major() const { return parts[0]; }
+    int minor() const { return parts[1]; }
+    int patch() const { return parts[2]; }
+
 public:
     NODISCARD QString toQString() const;
     explicit operator QString() const { return toQString(); }

@@ -8,7 +8,9 @@
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>
+#include <QMessageBox>
 #include <QString>
+#include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
 #include "../expandoracommon/coordinate.h"
@@ -16,6 +18,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"
+#include "../mainwindow/UpdateDialog.h" // CompareVersion
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
@@ -32,6 +35,8 @@ XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              QFile *const file,
                              QObject *parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
+    , roomIds()
+    , toRoomIds()
 {}
 
 XmlMapStorage::~XmlMapStorage() = default;
@@ -41,20 +46,122 @@ void XmlMapStorage::newData()
     qWarning() << "XmlMapStorage does not implement newData()";
 }
 
-bool XmlMapStorage::loadData()
-{
-    return false;
-}
-
 bool XmlMapStorage::mergeData()
 {
     return false;
 }
 
+// --------------------------- loadData ----------------------------------------
+bool XmlMapStorage::loadData()
+{
+    // clear previous map
+    m_mapData.clear();
+    try {
+        log("Loading data ...");
+        QXmlStreamReader stream(m_file);
+        loadWorld(stream);
+        log("Finished loading.");
+
+        m_mapData.checkSize();
+        emit sig_onDataLoaded();
+        return true;
+    } catch (const std::exception &ex) {
+        const auto msg = QString::asprintf("Exception: %s", ex.what());
+        log(msg);
+        qWarning().noquote() << msg;
+
+        QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
+                              tr("XmlMapStorage Error"),
+                              msg);
+
+        m_mapData.clear();
+        return false;
+    }
+}
+
+void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
+{
+    ProgressCounter &progressCounter = getProgressCounter();
+    progressCounter.reset();
+
+    MapFrontendBlocker blocker(m_mapData);
+    m_mapData.setDataChanged();
+
+    roomIds.clear();
+    toRoomIds.clear();
+
+    while (stream.readNextStartElement()) {
+        if (stream.name() == "map") {
+            loadMap(stream);
+        } else {
+            stream.skipCurrentElement();
+        }
+    }
+}
+
+// load current <map> element
+void XmlMapStorage::loadMap(QXmlStreamReader &stream)
+{
+    {
+        const QXmlStreamAttributes attrs = stream.attributes();
+        const QString type = attrs.value("type").toString();
+        if (type != "mmapper2xml") {
+            throwErrorFmt("This mm2xml map has type=\"%1\", expecting type=\"mmapper2xml\"", type);
+        }
+        const QString version = attrs.value("version").toString();
+        const CompareVersion cmp(version);
+        if (cmp.major() != 1) {
+            throwErrorFmt("This mm2xml map has version=\"%1\", expecting version=\"1.x.y\"",
+                          version);
+        }
+    }
+    ProgressCounter &progressCounter = getProgressCounter();
+
+    while (stream.readNextStartElement()) {
+        if (stream.name() == "room") {
+            loadRoom(stream);
+            progressCounter.step();
+        } else {
+            log(QString("skipping <%1>").arg(stream.name()));
+            stream.skipCurrentElement();
+        }
+    }
+}
+
+// load current <room> element
+void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
+{
+    const QXmlStreamAttributes attrs = stream.attributes();
+    const QString idstr = attrs.value("id").toString();
+    const RoomId roomId(idstr.toUInt());
+    if (idstr != QString("%1").arg(roomId.asUint32())) {
+        throwErrorFmt("invalid room id=\"%1\"", idstr);
+    } else if (!roomIds.insert(roomId).second) {
+        throwErrorFmt("duplicated room id=\"%1\"", idstr);
+    }
+    const QString name = attrs.value("name").toString();
+    const bool upToDate = attrs.value("uptodate") != "false";
+
+    log(QString("loading room id=\"%1\" name=\"%2\"").arg(roomId.asUint32()).arg(name));
+
+    stream.skipCurrentElement();
+}
+
+// --------------------------- saveData ----------------------------------------
 bool XmlMapStorage::saveData(bool baseMapOnly)
 {
     log("Writing data to file ...");
+    QXmlStreamWriter stream(m_file);
+    saveWorld(stream, baseMapOnly);
+    log("Writing data finished.");
 
+    m_mapData.unsetDataChanged();
+    emit sig_onDataSaved();
+    return true;
+}
+
+void XmlMapStorage::saveWorld(QXmlStreamWriter &stream, bool baseMapOnly)
+{
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
@@ -75,7 +182,6 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     progressCounter.increaseTotalStepsBy(saver.getRoomsCount()
                                          + static_cast<quint32>(markerList.size()));
 
-    QXmlStreamWriter stream(m_file);
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
 
@@ -89,13 +195,6 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     saveCoordinate(stream, "position", m_mapData.getPosition());
 
     stream.writeEndElement(); // end map
-
-    log("Writing data finished.");
-
-    m_mapData.unsetDataChanged();
-    emit sig_onDataSaved();
-
-    return true;
 }
 
 void XmlMapStorage::saveRooms(QXmlStreamWriter &stream,
@@ -228,7 +327,11 @@ void XmlMapStorage::saveXmlAttribute(QXmlStreamWriter &stream,
 
 void XmlMapStorage::log(const QString &msg)
 {
+#if 1
+    std::cout << msg.toUtf8().toStdString() << std::endl;
+#else
     emit sig_log("XmlMapStorage", msg);
+#endif
 }
 
 void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
@@ -446,4 +549,9 @@ NODISCARD const char *XmlMapStorage::terrainName(const RoomTerrainEnum e)
         assert(false); // reachable only on invalid RoomTerrainEnum
     }
     return "";
+}
+
+void XmlMapStorage::throwError(const QString &msg)
+{
+    throw std::runtime_error(msg.toUtf8().toStdString());
 }
