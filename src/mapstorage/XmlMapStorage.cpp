@@ -63,6 +63,8 @@ bool XmlMapStorage::loadData()
         log("Finished loading.");
 
         m_mapData.checkSize();
+        m_mapData.setFileName(m_fileName, true);
+
         emit sig_onDataLoaded();
         return true;
     } catch (const std::exception &ex) {
@@ -83,6 +85,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
 {
     ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
+    progressCounter.increaseTotalStepsBy(32728); // just a guess
 
     MapFrontendBlocker blocker(m_mapData);
     m_mapData.setDataChanged();
@@ -90,10 +93,11 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     roomIds.clear();
     toRoomIds.clear();
 
-    while (stream.readNextStartElement()) {
+    while (stream.readNextStartElement() && !stream.hasError()) {
         if (stream.name() == "map") {
             loadMap(stream);
-        } else {
+        }
+        if (stream.tokenType() != QXmlStreamReader::EndElement) {
             stream.skipCurrentElement();
         }
     }
@@ -117,12 +121,12 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
     }
     ProgressCounter &progressCounter = getProgressCounter();
 
-    while (stream.readNextStartElement()) {
+    while (stream.readNextStartElement() && !stream.hasError()) {
         if (stream.name() == "room") {
             loadRoom(stream);
             progressCounter.step();
-        } else {
-            log(QString("skipping <%1>").arg(stream.name()));
+        }
+        if (stream.tokenType() != QXmlStreamReader::EndElement) {
             stream.skipCurrentElement();
         }
     }
@@ -131,20 +135,134 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 // load current <room> element
 void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
 {
+    const SharedRoom room = Room::createPermanentRoom(m_mapData);
+
     const QXmlStreamAttributes attrs = stream.attributes();
-    const QString idstr = attrs.value("id").toString();
+    const QStringRef idstr = attrs.value("id");
     const RoomId roomId(idstr.toUInt());
     if (idstr != QString("%1").arg(roomId.asUint32())) {
         throwErrorFmt("invalid room id=\"%1\"", idstr);
     } else if (!roomIds.insert(roomId).second) {
         throwErrorFmt("duplicated room id=\"%1\"", idstr);
     }
-    const QString name = attrs.value("name").toString();
-    const bool upToDate = attrs.value("uptodate") != "false";
+    room->setId(roomId);
+    if (attrs.value("uptodate") == "false") {
+        room->setOutDated();
+    } else {
+        room->setUpToDate();
+    }
+    room->setName(RoomName{attrs.value("name").toString()});
 
-    log(QString("loading room id=\"%1\" name=\"%2\"").arg(roomId.asUint32()).arg(name));
+    while (stream.readNextStartElement() && !stream.hasError()) {
+        const QStringRef name = stream.name();
+        qDebug() << "loadRoom: found " << name;
+        if (name == "align") {
+            room->setAlignType(loadAlign(stream));
+        } else if (name == "coord") {
+            room->setPosition(loadCoordinate(stream));
+        } else if (name == "light") {
+        } else if (name == "loadflag") {
+        } else if (name == "mobflag") {
+        } else if (name == "portable") {
+        } else if (name == "ridable") {
+        } else if (name == "sundeath") {
+        } else if (name == "terrain") {
+        } else {
+        }
+        if (stream.tokenType() != QXmlStreamReader::EndElement) {
+            stream.skipCurrentElement();
+        }
+    }
+    m_mapData.insertPredefinedRoom(room);
+}
 
-    stream.skipCurrentElement();
+// load current <align> element
+RoomAlignEnum XmlMapStorage::loadAlign(QXmlStreamReader &stream)
+{
+    QStringRef align;
+    RoomAlignEnum e = RoomAlignEnum::UNDEFINED;
+    bool fail = stream.readNext() != QXmlStreamReader::Characters;
+    if (!fail) {
+        align = stream.text();
+        qDebug() << "loadAlign: found " << align;
+        e = toEnum<RoomAlignEnum>(align, fail);
+    }
+    if (fail) {
+        throwErrorFmt("invalid <align>%1</align>", align);
+    }
+    return e;
+}
+
+// load current <coord> element
+Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
+{
+    const QXmlStreamAttributes attrs = stream.attributes();
+    bool fail = false;
+    const int x = toNumber<int>(attrs.value("x"), fail);
+    const int y = toNumber<int>(attrs.value("y"), fail);
+    const int z = toNumber<int>(attrs.value("z"), fail);
+    if (fail) {
+        throwErrorFmt("invalid coordinate x=\"%1\" y=\"%2\" z=\"%3\"",
+                      attrs.value("x"),
+                      attrs.value("y"),
+                      attrs.value("z"));
+    }
+    return Coordinate(x, y, z);
+}
+
+// currently leaks memory due to new QString(...) - not a big issue since it's a static member
+const std::vector<std::unordered_map<QStringRef, uint>> XmlMapStorage::stringToEnumMap{
+#define DECL(X) {new QString(#X), uint(RoomAlignEnum::X)},
+    {X_FOREACH_RoomAlignEnum(DECL)},
+#undef DECL
+#define DECL(X, ...) {new QString(#X), uint(DoorFlagEnum::X)},
+    {X_FOREACH_DOOR_FLAG(DECL)},
+#undef DECL
+#define DECL(X, ...) {new QString(#X), uint(ExitFlagEnum::X)},
+    {X_FOREACH_EXIT_FLAG(DECL)},
+#undef DECL
+#define DECL(X, ...) {new QString(#X), uint(ExitFlagEnum::X)},
+    {X_FOREACH_EXIT_FLAG(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomLightEnum::X)},
+    {X_FOREACH_RoomLightEnum(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomLoadFlagEnum::X)},
+    {X_FOREACH_ROOM_LOAD_FLAG(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(InfoMarkClassEnum::X)},
+    {X_FOREACH_INFOMARK_CLASS(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(InfoMarkTypeEnum::X)},
+    {X_FOREACH_INFOMARK_TYPE(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomMobFlagEnum::X)},
+    {X_FOREACH_ROOM_MOB_FLAG(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomPortableEnum::X)},
+    {X_FOREACH_RoomPortableEnum(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomRidableEnum::X)},
+    {X_FOREACH_RoomRidableEnum(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomSundeathEnum::X)},
+    {X_FOREACH_RoomSundeathEnum(DECL)},
+#undef DECL
+#define DECL(X) {new QString(#X), uint(RoomTerrainEnum::X)},
+    {X_FOREACH_RoomTerrainEnum(DECL)},
+#undef DECL
+};
+
+uint XmlMapStorage::stringToEnum(uint index, const QStringRef &str, bool &fail)
+{
+    if (index < stringToEnumMap.size()) {
+        auto iter = stringToEnumMap[index].find(str);
+        if (iter != stringToEnumMap[index].end()) {
+            return iter->second;
+        }
+    }
+    fail = true;
+    return 0;
 }
 
 // --------------------------- saveData ----------------------------------------
@@ -327,11 +445,7 @@ void XmlMapStorage::saveXmlAttribute(QXmlStreamWriter &stream,
 
 void XmlMapStorage::log(const QString &msg)
 {
-#if 1
-    std::cout << msg.toUtf8().toStdString() << std::endl;
-#else
     emit sig_log("XmlMapStorage", msg);
-#endif
 }
 
 void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)

@@ -42,14 +42,65 @@ private:
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
+    RoomAlignEnum loadAlign(QXmlStreamReader &stream);
+    Coordinate loadCoordinate(QXmlStreamReader &stream);
 
     static void throwError(const QString &msg);
 
     template<typename... Args>
-    static void throwErrorFmt(const QString &format, Args &&... args)
+    static void throwErrorFmt(const QString &format, Args &&...args)
     {
         throwError(format.arg(std::forward<Args>(args)...));
     }
+
+    // parse string containing an integer number (signed or unsigned).
+    // sets fail = true only in case of errors, otherwise fail is not modified
+    template<typename T>
+    static T toNumber(const QStringRef &str, bool &fail)
+    {
+        bool ok = false;
+        if (std::is_unsigned<T>::value) {
+            const ulong tmp = str.toULong(&ok);
+            const T ret = static_cast<T>(tmp);
+            if (!ok || static_cast<ulong>(ret) != tmp) {
+                fail = true;
+            }
+            return ret;
+        } else {
+            const long tmp = str.toLong(&ok);
+            const T ret = static_cast<T>(tmp);
+            if (!ok || static_cast<long>(ret) != tmp) {
+                fail = true;
+            }
+            return ret;
+        }
+    }
+
+    // parse string containing the name of an enum.
+    // sets fail = true only in case of errors, otherwise fail is not modified
+    template<typename ENUM>
+    static ENUM toEnum(const QStringRef &str, bool &fail)
+    {
+        return ENUM(stringToEnum(enumIndex(ENUM(0)), str, fail));
+    }
+
+    // convert ENUM type to index in enumNames[]
+    static constexpr uint enumIndex(RoomAlignEnum) { return 0; }
+    static constexpr uint enumIndex(DoorFlagEnum) { return 1; }
+    static constexpr uint enumIndex(ExitFlagEnum) { return 2; }
+    static constexpr uint enumIndex(RoomLightEnum) { return 3; }
+    static constexpr uint enumIndex(RoomLoadFlagEnum) { return 4; }
+    static constexpr uint enumIndex(InfoMarkClassEnum) { return 5; }
+    static constexpr uint enumIndex(InfoMarkTypeEnum) { return 6; }
+    static constexpr uint enumIndex(RoomMobFlagEnum) { return 7; }
+    static constexpr uint enumIndex(RoomPortableEnum) { return 8; }
+    static constexpr uint enumIndex(RoomRidableEnum) { return 9; }
+    static constexpr uint enumIndex(RoomSundeathEnum) { return 10; }
+    static constexpr uint enumIndex(RoomTerrainEnum) { return 11; }
+
+    static uint stringToEnum(uint index, const QStringRef &str, bool &fail);
+
+    static const std::vector<std::unordered_map<QStringRef, uint>> stringToEnumMap;
 
     std::unordered_set<RoomId> roomIds;   // RoomId of loaded rooms
     std::unordered_set<RoomId> toRoomIds; // RoomId of exits
