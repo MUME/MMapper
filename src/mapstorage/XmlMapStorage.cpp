@@ -235,8 +235,7 @@ void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    for (uint x = 0; x < NUM_DOOR_FLAGS; x++) {
-        const DoorFlagEnum e = DoorFlagEnum(x);
+    for (const DoorFlagEnum e : ALL_DOOR_FLAGS) {
         if (fl.contains(e)) {
             saveXmlElement(stream, "doorflag", doorFlagName(e));
         }
@@ -249,8 +248,7 @@ void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    for (uint x = 0; x < NUM_EXIT_FLAGS; x++) {
-        const ExitFlagEnum e = ExitFlagEnum(x);
+    for (const ExitFlagEnum e : ALL_EXIT_FLAGS) {
         if (fl.contains(e)) {
             saveXmlElement(stream, "exitflag", exitFlagName(e));
         }
@@ -262,8 +260,7 @@ void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl
     if (fl.isEmpty()) {
         return;
     }
-    for (uint x = 0; x < NUM_ROOM_LOAD_FLAGS; x++) {
-        const RoomLoadFlagEnum e = RoomLoadFlagEnum(x);
+    for (const RoomLoadFlagEnum e : ALL_LOAD_FLAGS) {
         if (fl.contains(e)) {
             saveXmlElement(stream, "loadflag", loadFlagName(e));
         }
@@ -275,8 +272,7 @@ void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
     if (fl.isEmpty()) {
         return;
     }
-    for (uint x = 0; x < NUM_ROOM_LOAD_FLAGS; x++) {
-        const RoomMobFlagEnum e = RoomMobFlagEnum(x);
+    for (const RoomMobFlagEnum e : ALL_MOB_FLAGS) {
         if (fl.contains(e)) {
             saveXmlElement(stream, "mobflag", mobFlagName(e));
         }
