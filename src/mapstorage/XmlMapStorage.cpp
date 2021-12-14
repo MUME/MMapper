@@ -59,11 +59,13 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
+    const quint32 roomsCount = m_mapData.getRoomsCount();
+
     ConstRoomList roomList;
-    roomList.reserve(m_mapData.getRoomsCount());
+    roomList.reserve(roomsCount);
 
     RoomSaver saver(m_mapData, roomList);
-    for (uint i = 0, n = m_mapData.getRoomsCount(); i < n; ++i) {
+    for (quint32 i = 0; i < roomsCount; ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
     const MarkerList &markerList = m_mapData.getMarkersList();
