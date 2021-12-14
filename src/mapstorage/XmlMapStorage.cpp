@@ -80,8 +80,8 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     stream.writeStartDocument();
 
     stream.writeStartElement("map");
-    stream.writeAttribute("type", "mmapper2xml");
-    stream.writeAttribute("version", "1.0.0");
+    saveXmlAttribute(stream, "type", "mmapper2xml");
+    saveXmlAttribute(stream, "version", "1.0.0");
 
     saveRooms(stream, baseMapOnly, roomList);
     saveMarkers(stream, markerList);
@@ -120,10 +120,10 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
 {
     stream.writeStartElement("room");
 
-    stream.writeAttribute("id", QString("%1").arg(room.getId().asUint32()));
-    stream.writeAttribute("name", room.getName().toQString());
+    saveXmlAttribute(stream, "id", QString("%1").arg(room.getId().asUint32()));
+    saveXmlAttribute(stream, "name", room.getName().toQString());
     if (!room.isUpToDate()) {
-        stream.writeAttribute("uptodate", "false");
+        saveXmlAttribute(stream, "uptodate", "false");
     }
     saveXmlElement(stream, "align", alignName(room.getAlignType()));
     saveXmlElement(stream, "light", lightName(room.getLightType()));
@@ -150,9 +150,9 @@ void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
                                    const Coordinate &pos)
 {
     stream.writeStartElement(name);
-    stream.writeAttribute("x", QString("%1").arg(pos.x));
-    stream.writeAttribute("y", QString("%1").arg(pos.y));
-    stream.writeAttribute("z", QString("%1").arg(pos.z));
+    saveXmlAttribute(stream, "x", QString("%1").arg(pos.x));
+    saveXmlAttribute(stream, "y", QString("%1").arg(pos.y));
+    saveXmlAttribute(stream, "z", QString("%1").arg(pos.z));
     stream.writeEndElement(); // end coordinate
 }
 
@@ -162,7 +162,7 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
         return;
     }
     stream.writeStartElement("exit");
-    stream.writeAttribute("dir", lowercaseDirection(dir));
+    saveXmlAttribute(stream, "dir", lowercaseDirection(dir));
     saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
     saveExitTo(stream, e);
     saveDoorFlags(stream, e.getDoorFlags());
@@ -173,7 +173,7 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
 void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const Exit &e)
 {
     for (const RoomId id : e.outRange()) {
-        stream.writeTextElement("to", QString("%1").arg(id.asUint32()));
+        saveXmlElement(stream, "to", QString("%1").arg(id.asUint32()));
     }
 }
 
@@ -190,18 +190,19 @@ void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
 {
     const InfoMarkTypeEnum type = marker.getType();
     stream.writeStartElement("marker");
-    stream.writeAttribute("type", markTypeName(type));
-    stream.writeAttribute("class", markClassName(marker.getClass()));
+    saveXmlAttribute(stream, "type", markTypeName(type));
+    saveXmlAttribute(stream, "class", markClassName(marker.getClass()));
     // REVISIT: round to 45 degrees?
     if (marker.getRotationAngle() != 0) {
-        stream.writeAttribute("angle",
-                              QString("%1").arg(static_cast<qint32>(marker.getRotationAngle())));
+        saveXmlAttribute(stream,
+                         "angle",
+                         QString("%1").arg(static_cast<qint32>(marker.getRotationAngle())));
     }
     saveCoordinate(stream, "pos1", marker.getPosition1());
     saveCoordinate(stream, "pos2", marker.getPosition2());
 
     if (type == InfoMarkTypeEnum::TEXT) {
-        stream.writeTextElement("text", marker.getText().toQString());
+        saveXmlElement(stream, "text", marker.getText().toQString());
     }
 
     stream.writeEndElement(); // end marker
