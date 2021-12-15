@@ -158,13 +158,14 @@ XmlMapStorage::Converter::Converter()
     for (std::vector<QString> &vec : enumToStrings) {
         stringToEnums.emplace_back();
         QHash<QStringRef, uint> &map = stringToEnums.back();
-        for (uint val = 0, n = vec.size(); val < n; val++) {
-            if (vec[val] == "UNDEFINED") {
-                // we never save or load the string "UNDEFINED"
-                vec[val].clear();
+        uint val = 0;
+        for (QString &str : vec) {
+            if (str == "UNDEFINED") {
+                str.clear(); // we never save or load the string "UNDEFINED"
             } else {
-                map[QStringRef(&vec[val])] = val;
+                map[QStringRef(&str)] = val;
             }
+            val++;
         }
     }
 }
