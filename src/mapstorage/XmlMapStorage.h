@@ -4,6 +4,7 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <unordered_set>
 #include <QString>
 #include <QtCore>
 
@@ -52,11 +53,13 @@ private:
 
     static void throwError(const QString &msg);
 
+    // clang-format off
     template<typename... Args>
-    static void throwErrorFmt(const QString &format, Args &&...args)
+    static void throwErrorFmt(const QString &format, Args &&... args)
     {
         throwError(format.arg(std::forward<Args>(args)...));
     }
+    // clang-format on
 
     std::unordered_set<RoomId> roomIds;   // RoomId of loaded rooms
     std::unordered_set<RoomId> toRoomIds; // RoomId of exits

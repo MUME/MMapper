@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_set>
+#include <QHash>
 #include <QMessageBox>
 #include <QString>
 #include <QXmlStreamReader>
@@ -127,7 +127,7 @@ private:
     const QString &enumToString(Type type, uint val) const;
 
     std::vector<std::vector<QString>> enumToStrings;
-    std::vector<std::unordered_map<QStringRef, uint>> stringToEnums;
+    std::vector<QHash<QStringRef, uint>> stringToEnums;
     QString empty;
 };
 
@@ -157,7 +157,7 @@ XmlMapStorage::Converter::Converter()
     // create the maps string -> enum value for each enum type listed above
     for (std::vector<QString> &vec : enumToStrings) {
         stringToEnums.emplace_back();
-        std::unordered_map<QStringRef, uint> &map = stringToEnums.back();
+        QHash<QStringRef, uint> &map = stringToEnums.back();
         for (uint val = 0, n = vec.size(); val < n; val++) {
             if (vec[val] == "UNDEFINED") {
                 // we never save or load the string "UNDEFINED"
@@ -187,7 +187,7 @@ uint XmlMapStorage::Converter::stringToEnum(Type type, const QStringRef &str, bo
     if (index < stringToEnums.size()) {
         auto iter = stringToEnums[index].find(str);
         if (iter != stringToEnums[index].end()) {
-            return iter->second;
+            return iter.value();
         }
     }
     fail = true;
