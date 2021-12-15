@@ -32,6 +32,29 @@
 #include "progresscounter.h"
 #include "roomsaver.h"
 
+// ---------------------------- XmlMapStorage::Type ------------------------
+// list know enum types
+#define X_FOREACH_TYPE_ENUM(X) \
+    X(RoomAlignEnum) \
+    X(DoorFlagEnum) \
+    X(ExitFlagEnum) \
+    X(RoomLightEnum) \
+    X(RoomLoadFlagEnum) \
+    X(InfoMarkClassEnum) \
+    X(InfoMarkTypeEnum) \
+    X(RoomMobFlagEnum) \
+    X(RoomPortableEnum) \
+    X(RoomRidableEnum) \
+    X(RoomSundeathEnum) \
+    X(RoomTerrainEnum) \
+    X(Type)
+
+enum class XmlMapStorage::Type : uint {
+#define DECL(X) X,
+    X_FOREACH_TYPE_ENUM(DECL)
+#undef DECL
+};
+
 // ---------------------------- XmlMapStorage::Converter -----------------------
 class XmlMapStorage::Converter
 {
@@ -73,34 +96,35 @@ public:
     template<typename ENUM>
     ENUM toEnum(const QStringRef &str, bool &fail) const
     {
-        static_assert(std::is_enum<ENUM>::value, "type ENUM must be an enumeration");
-        return ENUM(stringToEnum(enumIndex(ENUM(0)), str, fail));
+        static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
+        return ENUM(stringToEnum(enumToType(ENUM(0)), str, fail));
     }
 
     template<typename ENUM>
     const QString &toString(ENUM val) const
     {
-        static_assert(std::is_enum<ENUM>::value, "type ENUM must be an enumeration");
-        return enumToString(enumIndex(val), uint(val));
+        static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
+        return enumToString(enumToType(val), uint(val));
     }
 
 private:
-    // convert ENUM type to index in enumToString[] and stringToEnum
-    static constexpr uint enumIndex(RoomAlignEnum) { return 0; }
-    static constexpr uint enumIndex(DoorFlagEnum) { return 1; }
-    static constexpr uint enumIndex(ExitFlagEnum) { return 2; }
-    static constexpr uint enumIndex(RoomLightEnum) { return 3; }
-    static constexpr uint enumIndex(RoomLoadFlagEnum) { return 4; }
-    static constexpr uint enumIndex(InfoMarkClassEnum) { return 5; }
-    static constexpr uint enumIndex(InfoMarkTypeEnum) { return 6; }
-    static constexpr uint enumIndex(RoomMobFlagEnum) { return 7; }
-    static constexpr uint enumIndex(RoomPortableEnum) { return 8; }
-    static constexpr uint enumIndex(RoomRidableEnum) { return 9; }
-    static constexpr uint enumIndex(RoomSundeathEnum) { return 10; }
-    static constexpr uint enumIndex(RoomTerrainEnum) { return 11; }
+    // convert an enumeration type to Type value, also used as index in enumToString[] and stringToEnum[]
+    static constexpr Type enumToType(RoomAlignEnum) { return Type::RoomAlignEnum; }
+    static constexpr Type enumToType(DoorFlagEnum) { return Type::DoorFlagEnum; }
+    static constexpr Type enumToType(ExitFlagEnum) { return Type::ExitFlagEnum; }
+    static constexpr Type enumToType(RoomLightEnum) { return Type::RoomLightEnum; }
+    static constexpr Type enumToType(RoomLoadFlagEnum) { return Type::RoomLoadFlagEnum; }
+    static constexpr Type enumToType(InfoMarkClassEnum) { return Type::InfoMarkClassEnum; }
+    static constexpr Type enumToType(InfoMarkTypeEnum) { return Type::InfoMarkTypeEnum; }
+    static constexpr Type enumToType(RoomMobFlagEnum) { return Type::RoomMobFlagEnum; }
+    static constexpr Type enumToType(RoomPortableEnum) { return Type::RoomPortableEnum; }
+    static constexpr Type enumToType(RoomRidableEnum) { return Type::RoomRidableEnum; }
+    static constexpr Type enumToType(RoomSundeathEnum) { return Type::RoomSundeathEnum; }
+    static constexpr Type enumToType(RoomTerrainEnum) { return Type::RoomTerrainEnum; }
+    static constexpr Type enumToType(Type) { return Type::Type; }
 
-    uint stringToEnum(uint type, const QStringRef &str, bool &fail) const;
-    const QString &enumToString(uint type, uint val) const;
+    uint stringToEnum(Type type, const QStringRef &str, bool &fail) const;
+    const QString &enumToString(Type type, uint val) const;
 
     std::vector<std::vector<QString>> enumToStrings;
     std::vector<std::unordered_map<QStringRef, uint>> stringToEnums;
@@ -123,6 +147,7 @@ XmlMapStorage::Converter::Converter()
         {X_FOREACH_RoomRidableEnum(DECL)},
         {X_FOREACH_RoomSundeathEnum(DECL)},
         {X_FOREACH_RoomTerrainEnum(DECL)},
+        {X_FOREACH_TYPE_ENUM(DECL)},
 #undef DECL
 #undef DECL_
     }
@@ -144,21 +169,24 @@ XmlMapStorage::Converter::Converter()
     }
 }
 
-const QString &XmlMapStorage::Converter::enumToString(uint type, uint val) const
+const QString &XmlMapStorage::Converter::enumToString(Type type, uint val) const
 {
-    if (type < enumToStrings.size() && val < enumToStrings[type].size()) {
-        return enumToStrings[type][val];
+    const uint index = uint(type);
+    if (index < enumToStrings.size() && val < enumToStrings[index].size()) {
+        return enumToStrings[index][val];
     }
-    qWarning() << "Attempt to save an invalid enum (type =" << type << ", value =" << val
-               << "). Either the current map is corrupted, or there is a bug";
+    qWarning().noquote() << "Attempt to save an invalid enum type =" << toString(type)
+                         << ", value =" << val
+                         << ". Either the current map is damaged, or there is a bug";
     return empty;
 }
 
-uint XmlMapStorage::Converter::stringToEnum(uint type, const QStringRef &str, bool &fail) const
+uint XmlMapStorage::Converter::stringToEnum(Type type, const QStringRef &str, bool &fail) const
 {
-    if (type < stringToEnums.size()) {
-        auto iter = stringToEnums[type].find(str);
-        if (iter != stringToEnums[type].end()) {
+    const uint index = uint(type);
+    if (index < stringToEnums.size()) {
+        auto iter = stringToEnums[index].find(str);
+        if (iter != stringToEnums[index].end()) {
             return iter->second;
         }
     }
@@ -202,7 +230,7 @@ bool XmlMapStorage::loadData()
         log("Finished loading.");
 
         m_mapData.checkSize();
-        m_mapData.setFileName(m_fileName, true);
+        m_mapData.setFileName(QString(), false);
 
         emit sig_onDataLoaded();
         return true;
@@ -235,10 +263,9 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     while (stream.readNextStartElement() && !stream.hasError()) {
         if (stream.name() == "map") {
             loadMap(stream);
+            break; // expecting only one <map>
         }
-        if (stream.tokenType() != QXmlStreamReader::EndElement) {
-            stream.skipCurrentElement();
-        }
+        skipXmlElement(stream);
     }
 }
 
@@ -261,13 +288,19 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
     ProgressCounter &progressCounter = getProgressCounter();
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        if (stream.name() == "room") {
+        const QStringRef name = stream.name();
+        if (name == "room") {
             loadRoom(stream);
-            progressCounter.step();
+        } else if (name == "marker") {
+            loadMarker(stream);
+        } else if (name == "position") {
+            m_mapData.setPosition(loadCoordinate(stream));
+        } else {
+            qWarning().noquote().nospace()
+                << "Ignoring unexpected XML element <" << name << "> inside <map>";
         }
-        if (stream.tokenType() != QXmlStreamReader::EndElement) {
-            stream.skipCurrentElement();
-        }
+        progressCounter.step();
+        skipXmlElement(stream);
     }
 }
 
@@ -292,44 +325,45 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     }
     room->setName(RoomName{attrs.value("name").toString()});
 
+    ExitsList exitList;
+
     while (stream.readNextStartElement() && !stream.hasError()) {
         const QStringRef name = stream.name();
-        qDebug() << "loadRoom: found " << name;
         if (name == "align") {
-            room->setAlignType(loadAlign(stream));
+            room->setAlignType(loadEnum<RoomAlignEnum>(stream));
+        } else if (name == "contents") {
+            room->setContents(RoomContents{loadString(stream)});
         } else if (name == "coord") {
             room->setPosition(loadCoordinate(stream));
+        } else if (name == "description") {
+            room->setDescription(RoomDesc{loadString(stream)});
+        } else if (name == "exit") {
+            loadExit(stream, exitList);
         } else if (name == "light") {
+            room->setLightType(loadEnum<RoomLightEnum>(stream));
         } else if (name == "loadflag") {
+            room->setLoadFlags(room->getLoadFlags() | loadEnum<RoomLoadFlagEnum>(stream));
         } else if (name == "mobflag") {
+            room->setMobFlags(room->getMobFlags() | loadEnum<RoomMobFlagEnum>(stream));
+        } else if (name == "note") {
+            room->setNote(RoomNote{loadString(stream)});
         } else if (name == "portable") {
+            room->setPortableType(loadEnum<RoomPortableEnum>(stream));
         } else if (name == "ridable") {
+            room->setRidableType(loadEnum<RoomRidableEnum>(stream));
         } else if (name == "sundeath") {
+            room->setSundeathType(loadEnum<RoomSundeathEnum>(stream));
         } else if (name == "terrain") {
+            room->setTerrainType(loadEnum<RoomTerrainEnum>(stream));
         } else {
+            qWarning().noquote().nospace()
+                << "Ignoring unexpected XML element <" << name << "> inside <room>";
         }
-        if (stream.tokenType() != QXmlStreamReader::EndElement) {
-            stream.skipCurrentElement();
-        }
+        skipXmlElement(stream);
     }
-    m_mapData.insertPredefinedRoom(room);
-}
+    room->setExitsList(exitList);
 
-// load current <align> element
-RoomAlignEnum XmlMapStorage::loadAlign(QXmlStreamReader &stream)
-{
-    QStringRef align;
-    RoomAlignEnum e = RoomAlignEnum::UNDEFINED;
-    bool fail = stream.readNext() != QXmlStreamReader::Characters;
-    if (!fail) {
-        align = stream.text();
-        qDebug() << "loadAlign: found " << align;
-        e = conv.toEnum<RoomAlignEnum>(align, fail);
-    }
-    if (fail) {
-        throwErrorFmt("invalid <align>%1</align>", align);
-    }
-    return e;
+    m_mapData.insertPredefinedRoom(room);
 }
 
 // load current <coord> element
@@ -347,6 +381,59 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
                       attrs.value("z"));
     }
     return Coordinate(x, y, z);
+}
+
+// load current <exit> element
+void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
+{
+    /// TODO: implement
+    (void) stream;
+    (void) exitList;
+}
+
+void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
+{
+    /// TODO: implement
+    (void) stream;
+}
+
+// load current element, which is expected to contain ONLY the name of an enum value
+template<typename ENUM>
+ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
+{
+    static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
+
+    const QStringRef name = stream.name();
+    const QStringRef text = loadStringRef(stream);
+    bool fail = false;
+    const ENUM e = conv.toEnum<ENUM>(text, fail);
+    if (fail) {
+        throwErrorFmt("invalid <%1>%2</%1>", name, text);
+    }
+    return e;
+}
+
+// load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
+QString XmlMapStorage::loadString(QXmlStreamReader &stream)
+{
+    return loadStringRef(stream).toString();
+}
+
+// load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
+QStringRef XmlMapStorage::loadStringRef(QXmlStreamReader &stream)
+{
+    const QStringRef name = stream.name();
+    if (stream.readNext() != QXmlStreamReader::Characters) {
+        throwErrorFmt("invalid <%1>...</%1>", name);
+    }
+    return stream.text();
+}
+
+void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
+{
+    if (stream.tokenType() != QXmlStreamReader::EndElement) {
+        stream.skipCurrentElement();
+    }
 }
 
 // ---------------------------- XmlMapStorage::saveData() ----------------------

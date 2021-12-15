@@ -39,8 +39,16 @@ private:
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
-    RoomAlignEnum loadAlign(QXmlStreamReader &stream);
     Coordinate loadCoordinate(QXmlStreamReader &stream);
+    void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
+    void loadMarker(QXmlStreamReader &stream);
+
+    template<typename ENUM>
+    ENUM loadEnum(QXmlStreamReader &stream);
+    QString loadString(QXmlStreamReader &stream);
+    QStringRef loadStringRef(QXmlStreamReader &stream);
+
+    static void skipXmlElement(QXmlStreamReader &stream);
 
     static void throwError(const QString &msg);
 
@@ -77,6 +85,7 @@ private:
     // ---------------- misc -------------------
     void log(const QString &msg);
 
+    enum class NODISCARD Type : uint;
     class Converter;
     static const Converter conv;
 };
