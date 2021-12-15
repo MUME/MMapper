@@ -314,9 +314,9 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     const QStringRef idstr = attrs.value("id");
     const RoomId roomId(idstr.toUInt());
     if (idstr != QString("%1").arg(roomId.asUint32())) {
-        throwErrorFmt("invalid room id=\"%1\"", idstr);
+        throwErrorFmt("invalid room id=\"%1\"", idstr.toString());
     } else if (!roomIds.insert(roomId).second) {
-        throwErrorFmt("duplicated room id=\"%1\"", idstr);
+        throwErrorFmt("duplicated room id=\"%1\"", idstr.toString());
     }
     room->setId(roomId);
     if (attrs.value("uptodate") == "false") {
@@ -377,9 +377,9 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
     const int z = conv.toNumber<int>(attrs.value("z"), fail);
     if (fail) {
         throwErrorFmt("invalid coordinate x=\"%1\" y=\"%2\" z=\"%3\"",
-                      attrs.value("x"),
-                      attrs.value("y"),
-                      attrs.value("z"));
+                      attrs.value("x").toString(),
+                      attrs.value("y").toString(),
+                      attrs.value("z").toString());
     }
     return Coordinate(x, y, z);
 }
@@ -409,7 +409,7 @@ ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
     bool fail = false;
     const ENUM e = conv.toEnum<ENUM>(text, fail);
     if (fail) {
-        throwErrorFmt("invalid <%1>%2</%1>", name, text);
+        throwErrorFmt("invalid <%1>%2</%1>", name.toString(), text.toString());
     }
     return e;
 }
@@ -425,7 +425,7 @@ QStringRef XmlMapStorage::loadStringRef(QXmlStreamReader &stream)
 {
     const QStringRef name = stream.name();
     if (stream.readNext() != QXmlStreamReader::Characters) {
-        throwErrorFmt("invalid <%1>...</%1>", name);
+        throwErrorFmt("invalid <%1>...</%1>", name.toString());
     }
     return stream.text();
 }
