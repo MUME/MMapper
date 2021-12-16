@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <cstdint>
+#include <QString>
 
 #include "../global/Array.h"
 #include "ExitFlags.h"
