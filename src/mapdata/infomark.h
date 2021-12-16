@@ -92,6 +92,9 @@ DEFINE_ENUM_COUNT(InfoMarkClassEnum, NUM_INFOMARK_CLASSES)
     X(Coordinate, Position2, ) \
     X(int, RotationAngle, = 0)
 
+class InfoMark;
+using SharedInfoMark = std::shared_ptr<InfoMark>;
+
 class NODISCARD InfoMark final : public std::enable_shared_from_this<InfoMark>
 {
 private:

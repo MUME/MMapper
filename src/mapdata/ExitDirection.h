@@ -33,6 +33,7 @@ NODISCARD extern bool isUpDown(ExitDirEnum dir);
 NODISCARD extern bool isNESWUD(ExitDirEnum dir);
 NODISCARD extern ExitDirEnum opposite(ExitDirEnum in);
 NODISCARD extern const char *lowercaseDirection(ExitDirEnum dir);
+NODISCARD extern ExitDirEnum directionForLowercase(const QStringRef &lowcase);
 
 struct NODISCARD ExitDirFlags final
     : enums::Flags<ExitDirFlags, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>

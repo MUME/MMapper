@@ -120,6 +120,20 @@ const char *lowercaseDirection(const ExitDirEnum dir)
 #undef CASE
 }
 
+ExitDirEnum directionForLowercase(const QStringRef &lowcase)
+{
+    if (!lowcase.isEmpty()) {
+        // convert only the first char to dir.
+        const ExitDirEnum dir = Mmapper2Exit::dirForChar(lowcase[0].toLatin1());
+        // convert back dir to lowercase string, and compare against the whole string
+        // we received: faster than an if-else string comparison waterfall
+        if (lowcase == lowercaseDirection(dir)) {
+            return dir;
+        }
+    }
+    return ExitDirEnum::UNKNOWN;
+}
+
 namespace Mmapper2Exit {
 
 ExitDirEnum dirForChar(const char dir)

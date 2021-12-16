@@ -4,6 +4,7 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <unordered_map>
 #include <unordered_set>
 #include <QString>
 #include <QtCore>
@@ -40,29 +41,35 @@ private:
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
+    RoomId loadRoomId(QXmlStreamReader &stream, const QStringRef &idstr);
     Coordinate loadCoordinate(QXmlStreamReader &stream);
     void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
     void loadMarker(QXmlStreamReader &stream);
+
+    void connectRoomsExitFrom(QXmlStreamReader &stream);
+    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, ExitDirEnum dir);
+    void moveRoomsToMapData();
 
     template<typename ENUM>
     ENUM loadEnum(QXmlStreamReader &stream);
     QString loadString(QXmlStreamReader &stream);
     QStringRef loadStringRef(QXmlStreamReader &stream);
 
+    static QString roomIdToString(RoomId id);
+
     static void skipXmlElement(QXmlStreamReader &stream);
 
-    static void throwError(const QString &msg);
+    static void throwError(QXmlStreamReader &stream, const QString &msg);
 
     // clang-format off
     template<typename... Args>
-    static void throwErrorFmt(const QString &format, Args &&... args)
-    {
-        throwError(format.arg(std::forward<Args>(args)...));
-    }
+    static void throwErrorFmt(QXmlStreamReader &stream, const QString &format, Args &&... args)
     // clang-format on
+    {
+        throwError(stream, format.arg(std::forward<Args>(args)...));
+    }
 
-    std::unordered_set<RoomId> roomIds;   // RoomId of loaded rooms
-    std::unordered_set<RoomId> toRoomIds; // RoomId of exits
+    std::unordered_map<RoomId, SharedRoom> loadedRooms; // loaded rooms
 
     // ---------------- save map -------------------
     void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);
