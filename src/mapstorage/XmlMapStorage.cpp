@@ -464,7 +464,7 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
         auto iter = loadedRooms.find(toId);
         if (iter == loadedRooms.end()) {
             throwErrorFmt(stream,
-                          "room id %1 contains exit %2 to %3, but no such room was loaded",
+                          "room %1 has exit %2 to non-existing room %3",
                           roomIdToString(fromId),
                           lowercaseDirection(dir),
                           roomIdToString(toId));
@@ -594,6 +594,7 @@ bool XmlMapStorage::saveData(bool baseMapOnly)
     log("Writing data to file ...");
     QXmlStreamWriter stream(m_file);
     saveWorld(stream, baseMapOnly);
+    stream.writeEndDocument();
     log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
