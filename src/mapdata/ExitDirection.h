@@ -4,7 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <cstdint>
-#include <QString>
+#include <string_view>
 
 #include "../global/Array.h"
 #include "ExitFlags.h"
@@ -33,8 +33,12 @@ NODISCARD extern bool isNESW(ExitDirEnum dir);
 NODISCARD extern bool isUpDown(ExitDirEnum dir);
 NODISCARD extern bool isNESWUD(ExitDirEnum dir);
 NODISCARD extern ExitDirEnum opposite(ExitDirEnum in);
-NODISCARD extern const char *lowercaseDirection(ExitDirEnum dir);
-NODISCARD extern ExitDirEnum directionForLowercase(const QStringRef &lowcase);
+NODISCARD extern std::string_view lowercaseDirection(ExitDirEnum dir);
+NODISCARD inline const char *lowercaseDirectionC(ExitDirEnum dir)
+{
+    return lowercaseDirection(dir).data();
+}
+NODISCARD extern ExitDirEnum directionForLowercase(const std::u16string_view lowcase);
 
 struct NODISCARD ExitDirFlags final
     : enums::Flags<ExitDirFlags, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>

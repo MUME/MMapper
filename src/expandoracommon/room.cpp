@@ -493,55 +493,55 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
                         // No exit exists on the map so we probably found a secret door
-                        qDebug() << "Secret door likely found to the" << lowercaseDirection(dir)
+                        qDebug() << "Secret door likely found to the" << lowercaseDirectionC(dir)
                                  << event;
                         tolerance = true;
 
                     } else if (roomExit.isHiddenExit() && !eventExitFlags.isDoor()) {
-                        qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
+                        qDebug() << "Secret exit hidden to the" << lowercaseDirectionC(dir);
 
                     } else if (roomExitFlags.isExit() && roomExitFlags.isDoor()
                                && !eventExitFlags.isExit()) {
-                        qDebug() << "Door to the" << lowercaseDirection(dir)
+                        qDebug() << "Door to the" << lowercaseDirectionC(dir)
                                  << "is likely a secret";
                         tolerance = true;
 
                     } else {
                         qWarning() << "Unknown exit/door tolerance condition to the"
-                                   << lowercaseDirection(dir) << event << *room;
+                                   << lowercaseDirectionC(dir) << event << *room;
                         return ComparisonResultEnum::DIFFERENT;
                     }
                 }
             } else if (diff.isRoad()) {
                 if (roomExitFlags.isRoad() && hasLight) {
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
-                    qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
+                    qDebug() << "Orc/troll could not see trail to the" << lowercaseDirectionC(dir);
 
                 } else if (roomExitFlags.isRoad() && !eventExitFlags.isRoad()
                            && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
                     // A closed door is hiding the road that we know is there
-                    qDebug() << "Closed door masking road/trail to the" << lowercaseDirection(dir);
+                    qDebug() << "Closed door masking road/trail to the" << lowercaseDirectionC(dir);
 
                 } else if (!roomExitFlags.isRoad() && eventExitFlags.isRoad()
                            && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
                     // A known door was previously mapped closed and a new road exit flag was found
                     qDebug() << "Previously closed door was hiding road to the"
-                             << lowercaseDirection(dir);
+                             << lowercaseDirectionC(dir);
                     tolerance = true;
 
                 } else {
                     qWarning() << "Unknown road tolerance condition to the"
-                               << lowercaseDirection(dir) << event << *room;
+                               << lowercaseDirectionC(dir) << event << *room;
                     tolerance = true;
                 }
             } else if (diff.isClimb()) {
                 if (roomExitFlags.isDoor() && roomExitFlags.isClimb()) {
                     // A closed door is hiding the climb that we know is there
-                    qDebug() << "Door masking climb to the" << lowercaseDirection(dir);
+                    qDebug() << "Door masking climb to the" << lowercaseDirectionC(dir);
 
                 } else {
                     qWarning() << "Unknown climb tolerance condition to the"
-                               << lowercaseDirection(dir) << event << *room;
+                               << lowercaseDirectionC(dir) << event << *room;
                     tolerance = true;
                 }
             }
@@ -734,7 +734,7 @@ std::string Room::toStdString() const
         bool door = exit(j).isDoor();
         if (door)
             ss << "(";
-        ss << lowercaseDirection(j);
+        ss << lowercaseDirectionC(j);
         if (door) {
             const auto doorName = exit(j).getDoorName();
             if (!doorName.isEmpty()) {

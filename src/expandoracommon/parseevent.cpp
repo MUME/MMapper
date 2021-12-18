@@ -65,7 +65,7 @@ QString ParseEvent::toQString() const
             const ExitFlags exitFlags = m_exitsFlags.get(dir);
             if (exitFlags.isExit()) {
                 exitsStr.append("[");
-                exitsStr.append(lowercaseDirection(dir));
+                exitsStr.append(lowercaseDirectionC(dir));
                 if (exitFlags.isClimb())
                     exitsStr.append("/");
                 if (exitFlags.isRoad())

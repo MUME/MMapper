@@ -35,6 +35,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/TextUtils.h
     ../src/global/random.cpp
     ../src/global/random.h
+    ../src/global/string_view_utils.cpp
+    ../src/global/string_view_utils.h
     ../src/global/utils.cpp
     ../src/global/utils.h
     ../src/mapdata/ExitDirection.cpp
@@ -70,6 +72,8 @@ set(parser_SRCS
     ../src/global/TextUtils.h
     ../src/global/random.cpp
     ../src/global/random.h
+    ../src/global/string_view_utils.cpp
+    ../src/global/string_view_utils.h
     ../src/mapdata/ExitDirection.cpp
     ../src/mapdata/ExitDirection.h
     ../src/parser/CommandId.cpp

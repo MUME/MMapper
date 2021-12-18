@@ -20,6 +20,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/TextUtils.h"
 #include "../global/roomid.h"
+#include "../global/string_view_utils.h"
 #include "../global/utils.h"
 #include "../mainwindow/UpdateDialog.h" // CompareVersion
 #include "../mapdata/DoorFlags.h"
@@ -413,7 +414,7 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    const ExitDirEnum dir = directionForLowercase(attrs.value("dir"));
+    const ExitDirEnum dir = directionForLowercase(to_u16string_view(attrs.value("dir")));
     DoorFlags doorFlags;
     ExitFlags exitFlags;
     Exit &exit = exitList[dir];
@@ -466,7 +467,7 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
             throwErrorFmt(stream,
                           "room %1 has exit %2 to non-existing room %3",
                           roomIdToString(fromId),
-                          lowercaseDirection(dir),
+                          lowercaseDirectionC(dir),
                           roomIdToString(toId));
         }
         Room &toRoom = deref(iter->second);
@@ -704,7 +705,7 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnu
         return;
     }
     stream.writeStartElement("exit");
-    saveXmlAttribute(stream, "dir", lowercaseDirection(dir));
+    saveXmlAttribute(stream, "dir", lowercaseDirectionC(dir));
     saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
     saveExitTo(stream, e);
     saveDoorFlags(stream, e.getDoorFlags());

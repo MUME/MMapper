@@ -84,7 +84,7 @@ NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::st
     }
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        if (isAbbrev(input, lowercaseDirection(dir))) {
+        if (isAbbrev(input, lowercaseDirectionC(dir))) {
             return dir;
         }
     }
@@ -154,7 +154,7 @@ syntax::MatchResult ArgDirection::virt_match(const syntax::ParserInput &input,
 
     if (const auto optDir = findLowercaseDirAbbrev(arg)) {
         const ExitDirEnum &dir = optDir.value();
-        const auto s = lowercaseDirection(dir);
+        const auto s = lowercaseDirectionC(dir);
         const char c = s[0];
         return syntax::MatchResult::success(1, input, Value{c});
     }
