@@ -822,3 +822,5 @@ void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
         }
     }
 }
+
+#undef X_FOREACH_TYPE_ENUM
