@@ -110,20 +110,16 @@ public:
     }
 
 private:
-    // convert an enumeration type to Type value, also used as index in enumToString[] and stringToEnum[]
-    static constexpr Type enumToType(RoomAlignEnum) { return Type::RoomAlignEnum; }
-    static constexpr Type enumToType(DoorFlagEnum) { return Type::DoorFlagEnum; }
-    static constexpr Type enumToType(ExitFlagEnum) { return Type::ExitFlagEnum; }
-    static constexpr Type enumToType(RoomLightEnum) { return Type::RoomLightEnum; }
-    static constexpr Type enumToType(RoomLoadFlagEnum) { return Type::RoomLoadFlagEnum; }
-    static constexpr Type enumToType(InfoMarkClassEnum) { return Type::InfoMarkClassEnum; }
-    static constexpr Type enumToType(InfoMarkTypeEnum) { return Type::InfoMarkTypeEnum; }
-    static constexpr Type enumToType(RoomMobFlagEnum) { return Type::RoomMobFlagEnum; }
-    static constexpr Type enumToType(RoomPortableEnum) { return Type::RoomPortableEnum; }
-    static constexpr Type enumToType(RoomRidableEnum) { return Type::RoomRidableEnum; }
-    static constexpr Type enumToType(RoomSundeathEnum) { return Type::RoomSundeathEnum; }
-    static constexpr Type enumToType(RoomTerrainEnum) { return Type::RoomTerrainEnum; }
-    static constexpr Type enumToType(Type) { return Type::Type; }
+    // define a bunch of methods
+    //   static constexpr Type enumToType(RoomAlignEnum) { return Type::RoomAlignEnum; }
+    //   static constexpr Type enumToType(DoorFlagEnum)  { return Type::DoorFlagEnum;  }
+    //   ...
+    // converting an enumeration type to its corresponding Type value,
+    // which can be used as argument in enumToString() and stringToEnum()
+#define DECL(X) \
+    static constexpr Type enumToType(X) { return Type::X; }
+    X_FOREACH_TYPE_ENUM(DECL)
+#undef DECL
 
     uint stringToEnum(Type type, const QStringRef &str, bool &fail) const;
     const QString &enumToString(Type type, uint val) const;
