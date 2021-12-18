@@ -38,11 +38,11 @@ uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok)
         return 0;
     }
     constexpr const uint64_t max_div_10 = ~uint64_t(0) / 10;
-    constexpr const uint8_t max_mod_10 = static_cast<uint8_t>(~uint64_t(0) % 10);
+    constexpr const uint max_mod_10 = static_cast<uint>(~uint64_t(0) % 10);
     uint64_t ret = 0;
     for (const char16_t ch : str) {
         if (ch >= '0' && ch <= '9') {
-            const uint8_t digit = ch - '0';
+            const uint digit = static_cast<uint>(ch - '0');
             if (ret > max_div_10 || (ret == max_div_10 && digit > max_mod_10)) {
                 // overflow
                 ok = false;
