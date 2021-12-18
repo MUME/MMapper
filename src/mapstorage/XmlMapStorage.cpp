@@ -210,7 +210,8 @@ bool XmlMapStorage::loadData()
     try {
         log("Loading data ...");
         QXmlStreamReader stream(m_file);
-        m_loadProgressDivisor = std::max<uint64_t>(1, m_file->size() / LOAD_PROGRESS_MAX);
+        m_loadProgressDivisor = std::max<uint64_t> //
+            (1, static_cast<uint64_t>(m_file->size()) / LOAD_PROGRESS_MAX);
         loadWorld(stream);
         log("Finished loading.");
 
@@ -565,8 +566,8 @@ void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
 
 void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
 {
-    uint32_t loadProgressNew = static_cast<uint32_t>(stream.characterOffset()
-                                                     / m_loadProgressDivisor);
+    uint32_t loadProgressNew = static_cast<uint32_t> //
+        (static_cast<uint64_t>(stream.characterOffset()) / m_loadProgressDivisor);
     if (loadProgressNew <= m_loadProgress) {
         return;
     }
