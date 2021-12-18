@@ -45,6 +45,7 @@ private:
     Coordinate loadCoordinate(QXmlStreamReader &stream);
     void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
     void loadMarker(QXmlStreamReader &stream);
+    void loadNotifyProgress(QXmlStreamReader &stream);
 
     void connectRoomsExitFrom(QXmlStreamReader &stream);
     void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, ExitDirEnum dir);
@@ -70,6 +71,9 @@ private:
     }
 
     std::unordered_map<RoomId, SharedRoom> loadedRooms; // loaded rooms
+    quint64 loadFileSize;
+    quint32 loadCurrProgress;
+    static constexpr const quint32 LOAD_MAX_PROGRESS = 65536;
 
     // ---------------- save map -------------------
     void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);

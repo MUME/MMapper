@@ -186,6 +186,8 @@ XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              QObject *parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
     , loadedRooms()
+    , loadFileSize(0)
+    , loadCurrProgress(0)
 {}
 
 XmlMapStorage::~XmlMapStorage() = default;
@@ -207,6 +209,7 @@ bool XmlMapStorage::loadData()
     m_mapData.clear();
     try {
         log("Loading data ...");
+        loadFileSize = m_file->size();
         QXmlStreamReader stream(m_file);
         loadWorld(stream);
         log("Finished loading.");
@@ -234,7 +237,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
 {
     ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(32728); // just a guess
+    progressCounter.increaseTotalStepsBy(LOAD_MAX_PROGRESS);
 
     MapFrontendBlocker blocker(m_mapData);
     m_mapData.setDataChanged();
@@ -246,6 +249,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
         }
         skipXmlElement(stream);
     }
+    loadNotifyProgress(stream);
 }
 
 // load current <map> element
@@ -268,7 +272,6 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
                           version);
         }
     }
-    ProgressCounter &progressCounter = getProgressCounter();
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const std::u16string_view name = as_u16string_view(stream.name());
@@ -283,15 +286,11 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
                 << stream.name() << "> inside <map>";
         }
-        progressCounter.step();
         skipXmlElement(stream);
+        loadNotifyProgress(stream);
     }
-
     connectRoomsExitFrom(stream);
-    progressCounter.step();
-
     moveRoomsToMapData();
-    progressCounter.step();
 }
 
 // load current <room> element
@@ -562,6 +561,16 @@ void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
     if (stream.tokenType() != QXmlStreamReader::EndElement) {
         stream.skipCurrentElement();
     }
+}
+
+void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
+{
+    quint32 loadNewProgress = stream.characterOffset() / (1 + loadFileSize / LOAD_MAX_PROGRESS);
+    if (loadNewProgress <= loadCurrProgress) {
+        return;
+    }
+    getProgressCounter().step(loadNewProgress - loadCurrProgress);
+    loadCurrProgress = loadNewProgress;
 }
 
 void XmlMapStorage::throwError(QXmlStreamReader &stream, const QString &msg)
