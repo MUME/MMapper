@@ -37,18 +37,19 @@ uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok)
         ok = false;
         return 0;
     }
-    constexpr const uint64_t max_div_10 = ~uint64_t(0) / 10;
-    constexpr const uint max_mod_10 = static_cast<uint>(~uint64_t(0) % 10);
     uint64_t ret = 0;
     for (const char16_t ch : str) {
         if (ch >= '0' && ch <= '9') {
             const uint digit = static_cast<uint>(ch - '0');
-            if (ret > max_div_10 || (ret == max_div_10 && digit > max_mod_10)) {
-                // overflow
+            const uint64_t next = ret * 10 + digit;
+            // on overflow we lose at least the top bit => next is less than half the value it should be,
+            // so divided by 8 will be less than the original (non multiplied by 10) value
+            if (next / 8 >= ret) {
+                ret = next;
+            } else {
                 ok = false;
                 return 0;
             }
-            ret = ret * 10 + digit;
         } else {
             ok = false;
             return ret;

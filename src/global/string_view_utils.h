@@ -26,9 +26,10 @@ inline std::u16string_view as_u16string_view(const QStringView str) noexcept
 // convert a UTF-16 string_view to integer number. String view must contain only decimal digits
 // or (for signed numbers) start with the minus character '-'
 template<typename T>
-inline std::enable_if_t<std::is_integral<T>::value, T> //
-to_integer(std::u16string_view str, bool &ok)
+inline T to_integer(std::u16string_view str, bool &ok)
 {
+    static_assert(std::is_integral<T>::value, "to_integer() template type T must be integral");
+
     using MAXT = std::conditional_t<std::is_unsigned<T>::value, uint64_t, int64_t>;
     const MAXT maxval = to_integer<MAXT>(str, ok);
     const T val = static_cast<T>(maxval);

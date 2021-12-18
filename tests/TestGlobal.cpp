@@ -9,6 +9,7 @@
 #include "../src/global/AnsiColor.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
+#include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
 
 TestGlobal::TestGlobal() = default;
@@ -96,6 +97,29 @@ void TestGlobal::toLowerLatin1Test()
     QCOMPARE(toLowerLatin1('A'), 'a');
     QCOMPARE(toLowerLatin1('Z'), 'z');
     QCOMPARE(toLowerLatin1('-'), '-');
+}
+
+void TestGlobal::to_numberTest()
+{
+    bool ok = false;
+    QCOMPARE(to_integer<uint64_t>(u"0", ok), 0);
+    QCOMPARE(ok, true);
+    QCOMPARE(to_integer<uint64_t>(u"1", ok), 1);
+    QCOMPARE(ok, true);
+    QCOMPARE(to_integer<uint64_t>(u"1234567890", ok), 1234567890);
+    QCOMPARE(ok, true);
+    QCOMPARE(to_integer<uint64_t>(u"12345678901234567890", ok), 12345678901234567890ull);
+    QCOMPARE(ok, true);
+    QCOMPARE(to_integer<uint64_t>(u"18446744073709551615", ok), 18446744073709551615ull);
+    QCOMPARE(ok, true);
+    QCOMPARE(to_integer<uint64_t>(u"18446744073709551616", ok), 0);
+    QCOMPARE(ok, false);
+    QCOMPARE(to_integer<uint64_t>(u"36893488147419103231", ok), 0);
+    QCOMPARE(ok, false);
+    QCOMPARE(to_integer<uint64_t>(u"92233720368547758079", ok), 0);
+    QCOMPARE(ok, false);
+    QCOMPARE(to_integer<uint64_t>(u"110680464442257309695", ok), 0);
+    QCOMPARE(ok, false);
 }
 
 QTEST_MAIN(TestGlobal)

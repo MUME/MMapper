@@ -146,6 +146,8 @@ set(global_SRCS
     ../src/global/StringView.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/string_view_utils.cpp
+    ../src/global/string_view_utils.h
     ../src/global/unquote.cpp
     ../src/global/unquote.h
     )
