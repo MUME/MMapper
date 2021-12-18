@@ -4,7 +4,9 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
 #include <cstddef> // size_t
+#include <cstdint> // int64_t, uint64_t
 #include <string_view>
+#include <type_traits>
 #include <QStringView>
 
 // Convert a QStringView to std::u16string_view.
@@ -21,8 +23,26 @@ inline std::u16string_view as_u16string_view(const QStringView str) noexcept
                                static_cast<size_t>(str.size())};
 }
 
-namespace std {
+// convert a UTF-16 string_view to integer number. String view must contain only decimal digits
+// or (for signed numbers) start with the minus character '-'
+template<typename T>
+inline std::enable_if_t<std::is_integral<T>::value, T> //
+to_integer(std::u16string_view str, bool &ok)
+{
+    using MAXT = std::conditional_t<std::is_unsigned<T>::value, uint64_t, int64_t>;
+    const MAXT maxval = to_integer<MAXT>(str, ok);
+    const T val = static_cast<T>(maxval);
+    ok = ok && (maxval == static_cast<MAXT>(val));
+    return val;
+}
 
+template<>
+int64_t to_integer<int64_t>(std::u16string_view str, bool &ok);
+
+template<>
+uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok);
+
+namespace std {
 /// \return true if UTF-16 and Latin1 string_views have the same contents, without allocating
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept;
 

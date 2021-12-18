@@ -64,31 +64,14 @@ class XmlMapStorage::Converter
 public:
     Converter();
 
-    // parse string containing an unsigned number.
+    // parse string containing a signed or unsigned number.
     // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename T>
-    static std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, T> //
-    toNumber(const QStringView str, bool &fail)
+    static T toInteger(const QStringView str, bool &fail)
     {
         bool ok = false;
-        const ulong tmp = str.toULong(&ok);
-        const T ret = static_cast<T>(tmp);
-        if (!ok || static_cast<ulong>(ret) != tmp) {
-            fail = true;
-        }
-        return ret;
-    }
-
-    // parse string containing a signed number.
-    // sets fail = true only in case of errors, otherwise fail is not modified
-    template<typename T>
-    static std::enable_if_t<std::is_integral<T>::value && !std::is_unsigned<T>::value, T> //
-    toNumber(const QStringView str, bool &fail)
-    {
-        bool ok = false;
-        const long tmp = str.toLong(&ok);
-        const T ret = static_cast<T>(tmp);
-        if (!ok || static_cast<long>(ret) != tmp) {
+        const T ret = to_integer<T>(as_u16string_view(str), ok);
+        if (!ok) {
             fail = true;
         }
         return ret;
@@ -380,11 +363,12 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
 // convert string to RoomId
 RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringView idstr)
 {
-    const RoomId id{idstr.toUInt()};
+    bool fail = false;
+    const RoomId id{conv.toInteger<uint32_t>(idstr, fail)};
     // convert number back to string, and compare the two:
     // if they differ, room ID is invalid.
-    if (idstr != roomIdToString(id)) {
-        throwErrorFmt(stream, "invalid room id \"%1\"", idstr);
+    if (fail || idstr != roomIdToString(id)) {
+        throwErrorFmt(stream, "invalid room id \"%1\"", idstr.toString());
     }
     return id;
 }
@@ -394,9 +378,9 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
     bool fail = false;
-    const int x = conv.toNumber<int>(attrs.value("x"), fail);
-    const int y = conv.toNumber<int>(attrs.value("y"), fail);
-    const int z = conv.toNumber<int>(attrs.value("z"), fail);
+    const int x = conv.toInteger<int>(attrs.value("x"), fail);
+    const int y = conv.toInteger<int>(attrs.value("y"), fail);
+    const int z = conv.toInteger<int>(attrs.value("z"), fail);
     if (fail) {
         throwErrorFmt(stream,
                       "invalid coordinate values x=\"%1\" y=\"%2\" z=\"%3\"",
@@ -496,7 +480,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
     QStringView anglestr = attrs.value("angle");
     int angle = 0;
     if (!anglestr.isNull()) {
-        angle = conv.toNumber<int>(anglestr, fail);
+        angle = conv.toInteger<int>(anglestr, fail);
         if (fail) {
             throwErrorFmt(stream, "invalid marker attribute angle=\"%1\"", anglestr.toString());
         }
