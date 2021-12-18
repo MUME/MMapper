@@ -3,21 +3,22 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
+#include <cstddef> // size_t
 #include <string_view>
-#include <QString>
+#include <QStringView>
 
-// Convert a QStringRef to std::u16string_view.
+// Convert a QStringView to std::u16string_view.
 // This function does not allocate, it simply creates an u16string_view pointing to the same data
-// as the QStringRef.
+// as the QStringView.
 //
 // For this reason, caller must take care that pointed data outlives the u16string_view
-// (as it also happens when using a QStringRef).
-inline std::u16string_view to_u16string_view(const QStringRef ref) noexcept
+// (as it also happens when using a QStringView).
+inline std::u16string_view as_u16string_view(const QStringView str) noexcept
 {
     static_assert(sizeof(QChar) == sizeof(char16_t),
                   "QChar and char16_t must have the same sizeof()");
-    return std::u16string_view{reinterpret_cast<const char16_t *>(ref.data()),
-                               static_cast<size_t>(ref.size())};
+    return std::u16string_view{reinterpret_cast<const char16_t *>(str.data()),
+                               static_cast<size_t>(str.size())};
 }
 
 namespace std {
@@ -29,6 +30,13 @@ bool operator==(const std::u16string_view left, const std::string_view right) no
 inline bool operator==(const std::string_view left, const std::u16string_view right) noexcept
 {
     return right == left;
+}
+
+/// \return true if UTF-16 string_view and Latin1 string literal have the same contents, without allocating
+template<size_t N>
+bool operator==(const std::u16string_view left, const char (&right)[N]) noexcept
+{
+    return left == std::string_view{right, N - 1};
 }
 
 } // namespace std

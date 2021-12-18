@@ -41,7 +41,7 @@ private:
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
-    RoomId loadRoomId(QXmlStreamReader &stream, const QStringRef &idstr);
+    RoomId loadRoomId(QXmlStreamReader &stream, const QStringView idstr);
     Coordinate loadCoordinate(QXmlStreamReader &stream);
     void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
     void loadMarker(QXmlStreamReader &stream);
@@ -53,7 +53,7 @@ private:
     template<typename ENUM>
     ENUM loadEnum(QXmlStreamReader &stream);
     QString loadString(QXmlStreamReader &stream);
-    QStringRef loadStringRef(QXmlStreamReader &stream);
+    QStringView loadStringView(QXmlStreamReader &stream);
 
     static QString roomIdToString(RoomId id);
 

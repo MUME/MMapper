@@ -12,6 +12,7 @@
 #include <QHash>
 #include <QMessageBox>
 #include <QString>
+#include <QStringView>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
@@ -67,7 +68,7 @@ public:
     // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename T>
     static std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, T> //
-    toNumber(const QStringRef &str, bool &fail)
+    toNumber(const QStringView str, bool &fail)
     {
         bool ok = false;
         const ulong tmp = str.toULong(&ok);
@@ -82,7 +83,7 @@ public:
     // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename T>
     static std::enable_if_t<std::is_integral<T>::value && !std::is_unsigned<T>::value, T> //
-    toNumber(const QStringRef &str, bool &fail)
+    toNumber(const QStringView str, bool &fail)
     {
         bool ok = false;
         const long tmp = str.toLong(&ok);
@@ -96,7 +97,7 @@ public:
     // parse string containing the name of an enum.
     // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename ENUM>
-    ENUM toEnum(const QStringRef &str, bool &fail) const
+    ENUM toEnum(const QStringView str, bool &fail) const
     {
         static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
         return ENUM(stringToEnum(enumToType(ENUM(0)), str, fail));
@@ -121,11 +122,11 @@ private:
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 
-    uint stringToEnum(Type type, const QStringRef &str, bool &fail) const;
+    uint stringToEnum(Type type, const QStringView str, bool &fail) const;
     const QString &enumToString(Type type, uint val) const;
 
     std::vector<std::vector<QString>> enumToStrings;
-    std::vector<QHash<QStringRef, uint>> stringToEnums;
+    std::vector<QHash<QStringView, uint>> stringToEnums;
     QString empty;
 };
 
@@ -155,13 +156,13 @@ XmlMapStorage::Converter::Converter()
     // create the maps string -> enum value for each enum type listed above
     for (std::vector<QString> &vec : enumToStrings) {
         stringToEnums.emplace_back();
-        QHash<QStringRef, uint> &map = stringToEnums.back();
+        QHash<QStringView, uint> &map = stringToEnums.back();
         uint val = 0;
         for (QString &str : vec) {
             if (str == "UNDEFINED") {
                 str.clear(); // we never save or load the string "UNDEFINED"
             } else {
-                map[QStringRef(&str)] = val;
+                map[QStringView(str)] = val;
             }
             val++;
         }
@@ -180,7 +181,7 @@ const QString &XmlMapStorage::Converter::enumToString(Type type, uint val) const
     return empty;
 }
 
-uint XmlMapStorage::Converter::stringToEnum(Type type, const QStringRef &str, bool &fail) const
+uint XmlMapStorage::Converter::stringToEnum(Type type, const QStringView str, bool &fail) const
 {
     const uint index = uint(type);
     if (index < stringToEnums.size()) {
@@ -256,7 +257,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     m_mapData.setDataChanged();
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        if (stream.name() == "map") {
+        if (as_u16string_view(stream.name()) == "map") {
             loadMap(stream);
             break; // expecting only one <map>
         }
@@ -287,7 +288,7 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
     ProgressCounter &progressCounter = getProgressCounter();
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const QStringRef name = stream.name();
+        const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "room") {
             loadRoom(stream);
         } else if (name == "marker") {
@@ -297,7 +298,7 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
-                << name << "> inside <map>";
+                << stream.name() << "> inside <map>";
         }
         progressCounter.step();
         skipXmlElement(stream);
@@ -317,7 +318,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     Room &room = deref(sharedroom);
 
     const QXmlStreamAttributes attrs = stream.attributes();
-    const QStringRef idstr = attrs.value("id");
+    const QStringView idstr = attrs.value("id");
     const RoomId roomId = loadRoomId(stream, idstr);
     if (loadedRooms.count(roomId) != 0) {
         throwErrorFmt(stream, "duplicated room id \"%1\"", idstr.toString());
@@ -335,7 +336,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     RoomMobFlags mobFlags;
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const QStringRef name = stream.name();
+        const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "align") {
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
         } else if (name == "contents") {
@@ -365,7 +366,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
-                << name << "> inside <room id=\"" << idstr << "\">";
+                << stream.name() << "> inside <room id=\"" << idstr << "\">";
         }
         skipXmlElement(stream);
     }
@@ -377,7 +378,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
 }
 
 // convert string to RoomId
-RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringRef &idstr)
+RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringView idstr)
 {
     const RoomId id{idstr.toUInt()};
     // convert number back to string, and compare the two:
@@ -410,16 +411,16 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    const ExitDirEnum dir = directionForLowercase(to_u16string_view(attrs.value("dir")));
+    const ExitDirEnum dir = directionForLowercase(as_u16string_view(attrs.value("dir")));
     DoorFlags doorFlags;
     ExitFlags exitFlags;
     Exit &exit = exitList[dir];
     exit.setDoorName(DoorName{attrs.value("doorname").toString()});
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const QStringRef name = stream.name();
+        const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "to") {
-            exit.addOut(loadRoomId(stream, loadStringRef(stream)));
+            exit.addOut(loadRoomId(stream, loadStringView(stream)));
         } else if (name == "doorflag") {
             doorFlags |= loadEnum<DoorFlagEnum>(stream);
         } else if (name == "exitflag") {
@@ -427,7 +428,7 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
-                << name << "> inside <exit>";
+                << stream.name() << "> inside <exit>";
         }
         skipXmlElement(stream);
     }
@@ -492,7 +493,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
                       attrs.value("type").toString(),
                       attrs.value("class").toString());
     }
-    QStringRef anglestr = attrs.value("angle");
+    QStringView anglestr = attrs.value("angle");
     int angle = 0;
     if (!anglestr.isNull()) {
         angle = conv.toNumber<int>(anglestr, fail);
@@ -509,7 +510,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
     marker.setRotationAngle(angle);
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const QStringRef name = stream.name();
+        const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "pos1") {
             marker.setPosition1(loadCoordinate(stream));
         } else if (name == "pos2") {
@@ -522,7 +523,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
-                << name << "> inside <marker>";
+                << stream.name() << "> inside <marker>";
         }
         skipXmlElement(stream);
     }
@@ -541,8 +542,8 @@ ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
 {
     static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
 
-    const QStringRef name = stream.name();
-    const QStringRef text = loadStringRef(stream);
+    const QStringView name = stream.name();
+    const QStringView text = loadStringView(stream);
     bool fail = false;
     const ENUM e = conv.toEnum<ENUM>(text, fail);
     if (fail) {
@@ -554,13 +555,13 @@ ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
 // load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
 QString XmlMapStorage::loadString(QXmlStreamReader &stream)
 {
-    return loadStringRef(stream).toString();
+    return loadStringView(stream).toString();
 }
 
 // load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
-QStringRef XmlMapStorage::loadStringRef(QXmlStreamReader &stream)
+QStringView XmlMapStorage::loadStringView(QXmlStreamReader &stream)
 {
-    const QStringRef name = stream.name();
+    const QStringView name = stream.name();
     if (stream.readNext() != QXmlStreamReader::Characters) {
         throwErrorFmt(stream, "invalid <%1>...</%1>", name.toString());
     }
