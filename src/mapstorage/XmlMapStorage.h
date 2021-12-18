@@ -70,10 +70,10 @@ private:
         throwError(stream, format.arg(std::forward<Args>(args)...));
     }
 
-    std::unordered_map<RoomId, SharedRoom> loadedRooms; // loaded rooms
-    quint64 loadFileSize;
-    quint32 loadCurrProgress;
-    static constexpr const quint32 LOAD_MAX_PROGRESS = 65536;
+    std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
+    uint64_t m_loadProgressDivisor;
+    uint32_t m_loadProgress;
+    static constexpr const uint32_t LOAD_PROGRESS_MAX = 100;
 
     // ---------------- save map -------------------
     void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);

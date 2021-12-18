@@ -185,9 +185,9 @@ XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              QFile *const file,
                              QObject *parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
-    , loadedRooms()
-    , loadFileSize(0)
-    , loadCurrProgress(0)
+    , m_loadedRooms()
+    , m_loadProgressDivisor(1) // avoid division by zero
+    , m_loadProgress(0)
 {}
 
 XmlMapStorage::~XmlMapStorage() = default;
@@ -209,8 +209,8 @@ bool XmlMapStorage::loadData()
     m_mapData.clear();
     try {
         log("Loading data ...");
-        loadFileSize = m_file->size();
         QXmlStreamReader stream(m_file);
+        m_loadProgressDivisor = std::max<uint64_t>(1, m_file->size() / LOAD_PROGRESS_MAX);
         loadWorld(stream);
         log("Finished loading.");
 
@@ -237,7 +237,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
 {
     ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(LOAD_MAX_PROGRESS);
+    progressCounter.increaseTotalStepsBy(LOAD_PROGRESS_MAX);
 
     MapFrontendBlocker blocker(m_mapData);
     m_mapData.setDataChanged();
@@ -255,7 +255,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
 // load current <map> element
 void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 {
-    loadedRooms.clear();
+    m_loadedRooms.clear();
     {
         const QXmlStreamAttributes attrs = stream.attributes();
         const QString type = attrs.value("type").toString();
@@ -302,7 +302,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     const QXmlStreamAttributes attrs = stream.attributes();
     const QStringView idstr = attrs.value("id");
     const RoomId roomId = loadRoomId(stream, idstr);
-    if (loadedRooms.count(roomId) != 0) {
+    if (m_loadedRooms.count(roomId) != 0) {
         throwErrorFmt(stream, "duplicated room id \"%1\"", idstr.toString());
     }
     room.setId(roomId);
@@ -356,7 +356,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     room.setLoadFlags(loadFlags);
     room.setMobFlags(mobFlags);
 
-    loadedRooms.emplace(std::move(roomId), std::move(sharedroom));
+    m_loadedRooms.emplace(std::move(roomId), std::move(sharedroom));
 }
 
 // convert string to RoomId
@@ -424,7 +424,7 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 // and add matching exits "from"
 void XmlMapStorage::connectRoomsExitFrom(QXmlStreamReader &stream)
 {
-    for (auto &elem : loadedRooms) {
+    for (auto &elem : m_loadedRooms) {
         Room &room = deref(elem.second);
         for (const ExitDirEnum dir : ALL_EXITS7) {
             connectRoomExitFrom(stream, room, dir);
@@ -442,8 +442,8 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
     }
     const RoomId fromId = fromRoom.getId();
     for (const RoomId toId : fromE.outRange()) {
-        auto iter = loadedRooms.find(toId);
-        if (iter == loadedRooms.end()) {
+        auto iter = m_loadedRooms.find(toId);
+        if (iter == m_loadedRooms.end()) {
             throwErrorFmt(stream,
                           "room %1 has exit %2 to non-existing room %3",
                           roomIdToString(fromId),
@@ -458,10 +458,10 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
 // add all loaded rooms to m_mapData
 void XmlMapStorage::moveRoomsToMapData()
 {
-    for (auto &elem : loadedRooms) {
+    for (auto &elem : m_loadedRooms) {
         m_mapData.insertPredefinedRoom(elem.second);
     }
-    loadedRooms.clear();
+    m_loadedRooms.clear();
 }
 
 void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
@@ -565,12 +565,13 @@ void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
 
 void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
 {
-    quint32 loadNewProgress = stream.characterOffset() / (1 + loadFileSize / LOAD_MAX_PROGRESS);
-    if (loadNewProgress <= loadCurrProgress) {
+    uint32_t loadProgressNew = static_cast<uint32_t>(stream.characterOffset()
+                                                     / m_loadProgressDivisor);
+    if (loadProgressNew <= m_loadProgress) {
         return;
     }
-    getProgressCounter().step(loadNewProgress - loadCurrProgress);
-    loadCurrProgress = loadNewProgress;
+    getProgressCounter().step(loadProgressNew - m_loadProgress);
+    m_loadProgress = loadProgressNew;
 }
 
 void XmlMapStorage::throwError(QXmlStreamReader &stream, const QString &msg)
@@ -599,13 +600,13 @@ void XmlMapStorage::saveWorld(QXmlStreamWriter &stream, bool baseMapOnly)
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
-    const quint32 roomsCount = m_mapData.getRoomsCount();
+    const uint32_t roomsCount = m_mapData.getRoomsCount();
 
     ConstRoomList roomList;
     roomList.reserve(roomsCount);
 
     RoomSaver saver(m_mapData, roomList);
-    for (quint32 i = 0; i < roomsCount; ++i) {
+    for (uint32_t i = 0; i < roomsCount; ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
     const MarkerList &markerList = m_mapData.getMarkersList();
@@ -613,7 +614,7 @@ void XmlMapStorage::saveWorld(QXmlStreamWriter &stream, bool baseMapOnly)
     ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
     progressCounter.increaseTotalStepsBy(saver.getRoomsCount()
-                                         + static_cast<quint32>(markerList.size()));
+                                         + static_cast<uint32_t>(markerList.size()));
 
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
@@ -729,7 +730,7 @@ void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
     if (marker.getRotationAngle() != 0) {
         saveXmlAttribute(stream,
                          "angle",
-                         QString("%1").arg(static_cast<qint32>(marker.getRotationAngle())));
+                         QString("%1").arg(static_cast<int32_t>(marker.getRotationAngle())));
     }
     saveCoordinate(stream, "pos1", marker.getPosition1());
     saveCoordinate(stream, "pos2", marker.getPosition2());
