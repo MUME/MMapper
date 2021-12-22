@@ -179,23 +179,23 @@ public:
     }
 
 public:
-    NODISCARD inline bool contains(const Flag flag) const noexcept
+    NODISCARD inline constexpr bool contains(const Flag flag) const noexcept
     {
         return (m_flags & CRTP{flag}.m_flags) != 0u;
     }
-    NODISCARD inline bool containsAny(const CRTP rhs) const noexcept
+    NODISCARD inline constexpr bool containsAny(const CRTP rhs) const noexcept
     {
         return (m_flags & rhs.m_flags) != 0u;
     }
-    NODISCARD inline bool containsAll(const CRTP rhs) const noexcept
+    NODISCARD inline constexpr bool containsAll(const CRTP rhs) const noexcept
     {
         return (m_flags & rhs.m_flags) == rhs.m_flags;
     }
     inline void insert(const Flag flag) noexcept { crtp_self() |= flag; }
     inline void remove(const Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
     inline void clear() noexcept { m_flags = 0; }
-    NODISCARD inline bool isEmpty() const { return m_flags == 0; }
-    NODISCARD inline bool empty() const { return isEmpty(); }
+    NODISCARD inline constexpr bool isEmpty() const { return m_flags == 0; }
+    NODISCARD inline constexpr bool empty() const { return isEmpty(); }
     NODISCARD inline size_t count() const { return static_cast<size_t>(bits::bitCount(m_flags)); }
     NODISCARD inline size_t size() const { return count(); }
 
