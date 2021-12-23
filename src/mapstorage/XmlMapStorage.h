@@ -48,7 +48,7 @@ private:
     void loadNotifyProgress(QXmlStreamReader &stream);
 
     void connectRoomsExitFrom(QXmlStreamReader &stream);
-    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, ExitDirEnum dir);
+    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, const ExitDirEnum dir);
     void moveRoomsToMapData();
 
     template<typename ENUM>
@@ -56,7 +56,7 @@ private:
     QString loadString(QXmlStreamReader &stream);
     QStringView loadStringView(QXmlStreamReader &stream);
 
-    static QString roomIdToString(RoomId id);
+    static QString roomIdToString(const RoomId id);
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
@@ -79,14 +79,14 @@ private:
     void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);
     void saveRooms(QXmlStreamWriter &stream, bool baseMapOnly, const ConstRoomList &roomList);
     static void saveRoom(QXmlStreamWriter &stream, const Room &room);
-    static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
-    static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);
+    static void saveRoomLoadFlags(QXmlStreamWriter &stream, const RoomLoadFlags fl);
+    static void saveRoomMobFlags(QXmlStreamWriter &stream, const RoomMobFlags fl);
 
     static void saveCoordinate(QXmlStreamWriter &stream, const QString &name, const Coordinate &pos);
-    static void saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir);
+    static void saveExit(QXmlStreamWriter &stream, const Exit &e, const ExitDirEnum dir);
     static void saveExitTo(QXmlStreamWriter &stream, const Exit &e);
-    static void saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl);
-    static void saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl);
+    static void saveExitFlags(QXmlStreamWriter &stream, const ExitFlags fl);
+    static void saveDoorFlags(QXmlStreamWriter &stream, const DoorFlags fl);
 
     void saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList);
     static void saveMarker(QXmlStreamWriter &stream, const InfoMark &marker);

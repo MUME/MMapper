@@ -184,7 +184,7 @@ const XmlMapStorage::Converter XmlMapStorage::conv;
 XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              const QString &filename,
                              QFile *const file,
-                             QObject *parent)
+                             QObject *const parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
     , m_loadedRooms()
     , m_loadProgressDivisor(1) // avoid division by zero
@@ -427,7 +427,7 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 void XmlMapStorage::connectRoomsExitFrom(QXmlStreamReader &stream)
 {
     for (auto &elem : m_loadedRooms) {
-        Room &room = deref(elem.second);
+        const Room &room = deref(elem.second);
         for (const ExitDirEnum dir : ALL_EXITS7) {
             connectRoomExitFrom(stream, room, dir);
         }
@@ -436,7 +436,7 @@ void XmlMapStorage::connectRoomsExitFrom(QXmlStreamReader &stream)
 
 void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
                                         const Room &fromRoom,
-                                        ExitDirEnum dir)
+                                        const ExitDirEnum dir)
 {
     const Exit &fromE = fromRoom.exit(dir);
     if (fromE.outIsEmpty()) {
@@ -444,7 +444,7 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
     }
     const RoomId fromId = fromRoom.getId();
     for (const RoomId toId : fromE.outRange()) {
-        auto iter = m_loadedRooms.find(toId);
+        const auto iter = m_loadedRooms.find(toId);
         if (iter == m_loadedRooms.end()) {
             throwErrorFmt(stream,
                           "room %1 has exit %2 to non-existing room %3",
@@ -460,7 +460,7 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
 // add all loaded rooms to m_mapData
 void XmlMapStorage::moveRoomsToMapData()
 {
-    for (auto &elem : m_loadedRooms) {
+    for (const auto &elem : m_loadedRooms) {
         m_mapData.insertPredefinedRoom(elem.second);
     }
     m_loadedRooms.clear();
@@ -553,7 +553,7 @@ QStringView XmlMapStorage::loadStringView(QXmlStreamReader &stream)
     return stream.text();
 }
 
-QString XmlMapStorage::roomIdToString(RoomId id)
+QString XmlMapStorage::roomIdToString(const RoomId id)
 {
     return QString("%1").arg(id.asUint32());
 }
@@ -691,7 +691,7 @@ void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
     stream.writeEndElement(); // end coordinate
 }
 
-void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir)
+void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, const ExitDirEnum dir)
 {
     if (e.getDoorFlags().isEmpty() && e.getExitFlags().isEmpty() && e.outIsEmpty()
         && e.getDoorName().isEmpty()) {
@@ -767,7 +767,7 @@ void XmlMapStorage::log(const QString &msg)
     emit sig_log("XmlMapStorage", msg);
 }
 
-void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
+void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, const DoorFlags fl)
 {
     if (fl.isEmpty()) {
         return;
@@ -779,7 +779,7 @@ void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
     }
 }
 
-void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
+void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, const ExitFlags fl)
 {
     ExitFlags copy = fl;
     copy ^= ExitFlagEnum::EXIT; // almost always set, save it inverted
@@ -793,7 +793,7 @@ void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
     }
 }
 
-void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl)
+void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, const RoomLoadFlags fl)
 {
     if (fl.isEmpty()) {
         return;
@@ -805,7 +805,7 @@ void XmlMapStorage::saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl
     }
 }
 
-void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl)
+void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, const RoomMobFlags fl)
 {
     if (fl.isEmpty()) {
         return;
