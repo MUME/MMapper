@@ -124,7 +124,7 @@ XmlMapStorage::Converter::Converter()
         {X_FOREACH_RoomLightEnum(DECL)},
         {X_FOREACH_ROOM_LOAD_FLAG(DECL)},
         {X_FOREACH_INFOMARK_CLASS(DECL)},
-        {X_FOREACH_INFOMARK_CLASS(DECL)},
+        {X_FOREACH_INFOMARK_TYPE(DECL)},
         {X_FOREACH_ROOM_MOB_FLAG(DECL)},
         {X_FOREACH_RoomPortableEnum(DECL)},
         {X_FOREACH_RoomRidableEnum(DECL)},
@@ -489,6 +489,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
 
     SharedInfoMark sharedmarker = InfoMark::alloc(m_mapData);
     InfoMark &marker = deref(sharedmarker);
+    size_t foundPos1 = 0;
 
     marker.setType(type);
     marker.setClass(clas);
@@ -498,6 +499,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "pos1") {
             marker.setPosition1(loadCoordinate(stream));
+            ++foundPos1;
         } else if (name == "pos2") {
             marker.setPosition2(loadCoordinate(stream));
         } else if (name == "text") {
@@ -511,6 +513,14 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
                 << stream.name() << "> inside <marker>";
         }
         skipXmlElement(stream);
+    }
+
+    if (foundPos1 == 0) {
+        throwError(stream,
+                   "invalid marker: missing mandatory element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
+    } else if (foundPos1 > 1) {
+        throwError(stream,
+                   "invalid marker: duplicated element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
     }
 
     // REVISIT: Just discard empty text markers?
