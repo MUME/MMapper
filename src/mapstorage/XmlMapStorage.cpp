@@ -59,10 +59,11 @@ enum class XmlMapStorage::Type : uint {
 };
 
 // ---------------------------- XmlMapStorage::Converter -----------------------
-class XmlMapStorage::Converter
+class XmlMapStorage::Converter final
 {
 public:
     Converter();
+    ~Converter() = default;
 
     // parse string containing a signed or unsigned number.
     // sets fail = true only in case of errors, otherwise fail is not modified
