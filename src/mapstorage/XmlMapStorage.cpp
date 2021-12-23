@@ -490,6 +490,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
     SharedInfoMark sharedmarker = InfoMark::alloc(m_mapData);
     InfoMark &marker = deref(sharedmarker);
     size_t foundPos1 = 0;
+    size_t foundPos2 = 0;
 
     marker.setType(type);
     marker.setClass(clas);
@@ -502,6 +503,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
             ++foundPos1;
         } else if (name == "pos2") {
             marker.setPosition2(loadCoordinate(stream));
+            ++foundPos1;
         } else if (name == "text") {
             // load text only if type == TEXT
             if (type == InfoMarkTypeEnum::TEXT) {
@@ -521,6 +523,14 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
     } else if (foundPos1 > 1) {
         throwError(stream,
                    "invalid marker: duplicated element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
+    }
+
+    if (foundPos2 == 0) {
+        // saveMarker() omits pos2 when it's equal to pos1
+        marker.setPosition2(marker.getPosition1());
+    } else if (foundPos2 > 1) {
+        throwError(stream,
+                   "invalid marker: duplicated element <pos2 x=\"...\" y=\"...\" z=\"...\"/>");
     }
 
     // REVISIT: Just discard empty text markers?
@@ -745,7 +755,9 @@ void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
                          QString("%1").arg(static_cast<int32_t>(marker.getRotationAngle())));
     }
     saveCoordinate(stream, "pos1", marker.getPosition1());
-    saveCoordinate(stream, "pos2", marker.getPosition2());
+    if (marker.getPosition1() != marker.getPosition2()) {
+        saveCoordinate(stream, "pos2", marker.getPosition2());
+    }
 
     if (type == InfoMarkTypeEnum::TEXT) {
         saveXmlElement(stream, "text", marker.getText().toQString());
