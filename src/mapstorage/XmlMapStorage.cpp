@@ -780,12 +780,13 @@ void XmlMapStorage::saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl)
 
 void XmlMapStorage::saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl)
 {
-    fl ^= ExitFlagEnum::EXIT; // almost always set, save it inverted
-    if (fl.isEmpty()) {
+    ExitFlags copy = fl;
+    copy ^= ExitFlagEnum::EXIT; // almost always set, save it inverted
+    if (copy.isEmpty()) {
         return;
     }
     for (const ExitFlagEnum e : ALL_EXIT_FLAGS) {
-        if (fl.contains(e)) {
+        if (copy.contains(e)) {
             saveXmlElement(stream, "exitflag", conv.toString(e));
         }
     }
