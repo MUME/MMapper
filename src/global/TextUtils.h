@@ -22,7 +22,7 @@ NODISCARD bool containsAnsi(const QString &str);
 // Callback = void(string_view);
 // callback is either a span excluding c, or a span of contiguous c's.
 template<typename Callback>
-void foreachChar(const std::string_view &input, const char c, Callback &&callback)
+void foreachChar(const std::string_view input, const char c, Callback &&callback)
 {
     std::string_view sv = input;
     while (!sv.empty()) {
@@ -46,7 +46,7 @@ void foreachChar(const std::string_view &input, const char c, Callback &&callbac
 
 // Callback = void(string_view);
 template<typename Callback>
-void foreachLine(const std::string_view &input, Callback &&callback)
+void foreachLine(const std::string_view input, Callback &&callback)
 {
     constexpr char C_NEWLINE = '\n';
     const size_t len = input.size();
@@ -517,16 +517,16 @@ static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
 
 NODISCARD extern char toLowerLatin1(char c);
-NODISCARD extern std::string toLowerLatin1(const std::string_view &str);
+NODISCARD extern std::string toLowerLatin1(const std::string_view str);
 NODISCARD extern char toUpperLatin1(char c);
-NODISCARD extern std::string toUpperLatin1(const std::string_view &str);
-NODISCARD extern bool isAbbrev(const std::string_view &abbr, const std::string_view &fullText);
+NODISCARD extern std::string toUpperLatin1(const std::string_view str);
+NODISCARD extern bool isAbbrev(const std::string_view abbr, const std::string_view fullText);
 NODISCARD extern bool isPrintLatin1(char c);
-NODISCARD extern bool requiresQuote(const std::string_view &str);
+NODISCARD extern bool requiresQuote(const std::string_view str);
 std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);
 std::ostream &print_char_quoted(std::ostream &os, char c);
-std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv);
-std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv);
+std::ostream &print_string_quoted(std::ostream &os, const std::string_view sv);
+std::ostream &print_string_smartquote(std::ostream &os, const std::string_view sv);
 
 struct NODISCARD QuotedChar final
 {
@@ -578,10 +578,10 @@ public:
     }
 };
 
-NODISCARD extern QString toQStringLatin1(const std::string_view &sv);
-NODISCARD extern QString toQStringUtf8(const std::string_view &sv);
-NODISCARD extern QByteArray toQByteArrayLatin1(const std::string_view &sv);
-NODISCARD extern QByteArray toQByteArrayUtf8(const std::string_view &sv);
+NODISCARD extern QString toQStringLatin1(const std::string_view sv);
+NODISCARD extern QString toQStringUtf8(const std::string_view sv);
+NODISCARD extern QByteArray toQByteArrayLatin1(const std::string_view sv);
+NODISCARD extern QByteArray toQByteArrayUtf8(const std::string_view sv);
 NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);

@@ -83,7 +83,7 @@ void ClientTelnet::slot_sendToMud(const QString &data)
     submitOverTelnet(::toStdStringLatin1(data), false);
 }
 
-void ClientTelnet::virt_sendRawData(const std::string_view &data)
+void ClientTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
     socket.write(::toQByteArrayLatin1(data));

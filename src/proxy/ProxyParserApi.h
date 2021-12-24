@@ -35,8 +35,8 @@ public:
     void sendToUser(const QByteArray &msg) const;
 
 public:
-    void sendToMud(const std::string_view &msg) const;
-    void sendToUser(const std::string_view &msg) const;
+    void sendToMud(const std::string_view msg) const;
+    void sendToUser(const std::string_view msg) const;
 
 public:
     void gmcpToMud(const GmcpMessage &msg) const;

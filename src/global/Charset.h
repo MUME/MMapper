@@ -8,9 +8,9 @@
 #include "../configuration/configuration.h" // TODO: move CharacterEncodingEnum somewhere
 
 void latin1ToUtf8(std::ostream &os, char c);
-void latin1ToUtf8(std::ostream &os, const std::string_view &sv);
+void latin1ToUtf8(std::ostream &os, const std::string_view sv);
 // Converts input string_view sv from latin1 to the specified encoding
 // by writing "raw bytes" to the output stream os.
 void convertFromLatin1(std::ostream &os,
                        const CharacterEncodingEnum encoding,
-                       const std::string_view &sv);
+                       const std::string_view sv);

@@ -746,7 +746,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         return;
 }
 
-std::string MumeXmlParser::snoopToUser(const std::string_view &str)
+std::string MumeXmlParser::snoopToUser(const std::string_view str)
 {
     std::ostringstream os;
     bool snoopPrefix = m_snoopChar.has_value();

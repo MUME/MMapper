@@ -16,20 +16,20 @@ struct NODISCARD TextCodec::Pimpl
     virtual ~Pimpl();
 
 private:
-    virtual void virt_setEncodingForName(const std::string_view &encodingName) = 0;
+    virtual void virt_setEncodingForName(const std::string_view encodingName) = 0;
 
 private:
     NODISCARD virtual CharacterEncodingEnum virt_getEncoding() const = 0;
-    NODISCARD virtual bool virt_supports(const std::string_view &encodingName) const = 0;
+    NODISCARD virtual bool virt_supports(const std::string_view encodingName) const = 0;
     NODISCARD virtual std::list<std::string_view> virt_supportedEncodings() const = 0;
     NODISCARD virtual std::string_view virt_getName() const = 0;
 
 public:
-    void setEncodingForName(const std::string_view &sv) { virt_setEncodingForName(sv); }
+    void setEncodingForName(const std::string_view sv) { virt_setEncodingForName(sv); }
 
 public:
     NODISCARD CharacterEncodingEnum getEncoding() const { return virt_getEncoding(); }
-    NODISCARD bool supports(const std::string_view &sv) const { return virt_supports(sv); }
+    NODISCARD bool supports(const std::string_view sv) const { return virt_supports(sv); }
     NODISCARD std::list<std::string_view> supportedEncodings() const
     {
         return virt_supportedEncodings();
@@ -49,7 +49,7 @@ public:
     ~AutoSelectTextCodec() final;
 
 private:
-    void virt_setEncodingForName(const std::string_view &sv) final
+    void virt_setEncodingForName(const std::string_view sv) final
     {
         const auto upper = ::toUpperLatin1(sv);
         if (ENCODING_LATIN_1 == upper)
@@ -68,7 +68,7 @@ private:
     {
         return opt.value_or(getConfig().general.characterEncoding);
     }
-    NODISCARD bool virt_supports(const std::string_view &sv) const final
+    NODISCARD bool virt_supports(const std::string_view sv) const final
     {
         const auto upper = ::toUpperLatin1(sv);
         for (const auto &supported : supportedEncodings()) {
@@ -113,7 +113,7 @@ public:
     ~ForcedTextCodec() final;
 
 private:
-    void virt_setEncodingForName(const std::string_view &sv) final
+    void virt_setEncodingForName(const std::string_view sv) final
     {
         const auto upper = ::toUpperLatin1(sv);
         if (getName() != upper)
@@ -122,7 +122,7 @@ private:
 
 private:
     NODISCARD CharacterEncodingEnum virt_getEncoding() const final { return encoding; }
-    NODISCARD bool virt_supports(const std::string_view &sv) const final
+    NODISCARD bool virt_supports(const std::string_view sv) const final
     {
         return name == ::toUpperLatin1(sv);
     }
@@ -154,7 +154,7 @@ TextCodec::TextCodec(const TextCodecStrategyEnum strategy)
 
 TextCodec::~TextCodec() = default;
 
-void TextCodec::setEncodingForName(const std::string_view &sv)
+void TextCodec::setEncodingForName(const std::string_view sv)
 {
     m_pimpl->setEncodingForName(sv);
 }
@@ -164,7 +164,7 @@ CharacterEncodingEnum TextCodec::getEncoding() const
     return m_pimpl->getEncoding();
 }
 
-bool TextCodec::supports(const std::string_view &sv) const
+bool TextCodec::supports(const std::string_view sv) const
 {
     return m_pimpl->supports(sv);
 }

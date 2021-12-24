@@ -241,10 +241,10 @@ private:
 
 public:
     inline void sendToUser(const QByteArray &arr) { sendToUser(arr, false); }
-    inline void sendToUser(const std::string_view &s) { sendToUser(::toQByteArrayLatin1(s)); }
+    inline void sendToUser(const std::string_view s) { sendToUser(::toQByteArrayLatin1(s)); }
     inline void sendToUser(const char *const s) { sendToUser(std::string_view{s}); }
     inline void sendToUser(const QString &s) { sendToUser(s.toLatin1()); }
-    friend AbstractParser &operator<<(AbstractParser &self, const std::string_view &s)
+    friend AbstractParser &operator<<(AbstractParser &self, const std::string_view s)
     {
         self.sendToUser(s);
         return self;

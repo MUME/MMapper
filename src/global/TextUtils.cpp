@@ -1019,7 +1019,7 @@ char toLowerLatin1(const char c)
     return static_cast<char>(std::tolower(c));
 }
 
-std::string toLowerLatin1(const std::string_view &str)
+std::string toLowerLatin1(const std::string_view str)
 {
     std::ostringstream oss;
     for (char c : str) {
@@ -1038,7 +1038,7 @@ char toUpperLatin1(const char c)
     return static_cast<char>(std::toupper(c));
 }
 
-std::string toUpperLatin1(const std::string_view &str)
+std::string toUpperLatin1(const std::string_view str)
 {
     std::ostringstream oss;
     for (char c : str) {
@@ -1047,7 +1047,7 @@ std::string toUpperLatin1(const std::string_view &str)
     return oss.str();
 }
 
-bool isAbbrev(const std::string_view &abbr, const std::string_view &fullText)
+bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 {
     return !abbr.empty()                               //
            && abbr.size() <= fullText.size()           //
@@ -1061,7 +1061,7 @@ bool isPrintLatin1(char c)
     return uc >= ((uc < 0x7f) ? 0x20 : 0xa0);
 }
 
-bool requiresQuote(const std::string_view &str)
+bool requiresQuote(const std::string_view str)
 {
     for (const char c : str) {
         if (std::isspace(c) || !isPrintLatin1(c))
@@ -1128,7 +1128,7 @@ std::ostream &print_char_quoted(std::ostream &os, const char c)
     return os << C_SQUOTE;
 }
 
-std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv)
+std::ostream &print_string_quoted(std::ostream &os, const std::string_view sv)
 {
     static constexpr const char C_DQUOTE = '"';
     os << C_DQUOTE;
@@ -1138,7 +1138,7 @@ std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv)
     return os << C_DQUOTE;
 }
 
-std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv)
+std::ostream &print_string_smartquote(std::ostream &os, const std::string_view sv)
 {
     if (!requiresQuote(sv)) {
         return os << sv;
@@ -1146,22 +1146,22 @@ std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &
     return print_string_quoted(os, sv);
 }
 
-QString toQStringLatin1(const std::string_view &sv)
+QString toQStringLatin1(const std::string_view sv)
 {
     return QString::fromLatin1(sv.data(), static_cast<int>(sv.size()));
 }
 
-QString toQStringUtf8(const std::string_view &sv)
+QString toQStringUtf8(const std::string_view sv)
 {
     return QString::fromUtf8(sv.data(), static_cast<int>(sv.size()));
 }
 
-QByteArray toQByteArrayLatin1(const std::string_view &sv)
+QByteArray toQByteArrayLatin1(const std::string_view sv)
 {
     return QByteArray(sv.data(), static_cast<int>(sv.size()));
 }
 
-QByteArray toQByteArrayUtf8(const std::string_view &sv)
+QByteArray toQByteArrayUtf8(const std::string_view sv)
 {
     return toQStringUtf8(sv).toUtf8();
 }

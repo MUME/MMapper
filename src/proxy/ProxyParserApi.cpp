@@ -40,7 +40,7 @@ void ProxyParserApi::sendToUser(const QByteArray &msg) const
     m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.sendToUser(msg); });
 }
 
-void ProxyParserApi::sendToMud(const std::string_view &msg) const
+void ProxyParserApi::sendToMud(const std::string_view msg) const
 {
     if (msg.empty())
         return;
@@ -48,7 +48,7 @@ void ProxyParserApi::sendToMud(const std::string_view &msg) const
     sendToMud(QByteArray{msg.data(), static_cast<int>(msg.length())});
 }
 
-void ProxyParserApi::sendToUser(const std::string_view &msg) const
+void ProxyParserApi::sendToUser(const std::string_view msg) const
 {
     if (msg.empty())
         return;

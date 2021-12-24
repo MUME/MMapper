@@ -51,7 +51,7 @@ NODISCARD static std::optional<uint32_t> try_decode_hex(char c) noexcept
         return std::nullopt;
 }
 
-NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view &input,
+NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view input,
                                                          const bool allowUnbalancedQuotes)
 {
     const auto foreach_char = [allowUnbalancedQuotes, &input](auto &&visit) -> void {
@@ -283,7 +283,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
     return result;
 }
 
-NODISCARD UnquoteResult unquote(const std::string_view &input,
+NODISCARD UnquoteResult unquote(const std::string_view input,
                                 const bool allowUnbalancedQuotes,
                                 const bool allowEmbeddedNull)
 {
@@ -323,15 +323,15 @@ namespace test {
 void test_unquote() noexcept /* will crash the program if it throws */
 {
     {
-        static const auto expectString2 = [](const std::string_view &input,
-                                             const std::string_view &expected,
+        static const auto expectString2 = [](const std::string_view input,
+                                             const std::string_view expected,
                                              const bool allowUnbalancedQuotes) {
             auto result = unquote_unsafe(input, allowUnbalancedQuotes);
             assert(result == std::vector<std::string>{std::string{expected}});
         };
 
-        static const auto expectString = [](const std::string_view &input,
-                                            const std::string_view &expected) {
+        static const auto expectString = [](const std::string_view input,
+                                            const std::string_view expected) {
             expectString2(input, expected, false);
         };
 
@@ -371,7 +371,7 @@ void test_unquote() noexcept /* will crash the program if it throws */
         expectString(R"("\o377")", "\377"); // '\xff'
     }
     {
-        static const auto expectUnquoteException = [](const std::string_view &input,
+        static const auto expectUnquoteException = [](const std::string_view input,
                                                       const ReasonEnum expectedReason) {
             try {
                 MAYBE_UNUSED const auto ignored = //

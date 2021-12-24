@@ -87,7 +87,7 @@ NODISCARD static QString telnetSubnegName(uint8_t opt)
 #undef CASE
 }
 
-NODISCARD static bool containsIAC(const std::string_view &arr)
+NODISCARD static bool containsIAC(const std::string_view arr)
 {
     return arr.find(char(TN_IAC)) != std::string_view::npos;
 }
@@ -215,7 +215,7 @@ void AbstractTelnet::reset()
     resetCompress();
 }
 
-static void doubleIacs(std::ostream &os, const std::string_view &input)
+static void doubleIacs(std::ostream &os, const std::string_view input)
 {
     // IAC byte must be doubled
     static constexpr const auto IAC = static_cast<char>(TN_IAC);
@@ -235,7 +235,7 @@ static void doubleIacs(std::ostream &os, const std::string_view &input)
     });
 }
 
-void AbstractTelnet::submitOverTelnet(const std::string_view &data, const bool goAhead)
+void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool goAhead)
 {
     auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
         if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {

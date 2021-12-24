@@ -24,11 +24,11 @@ class NODISCARD RoomFilter final
 {
 public:
     static const char *const parse_help;
-    NODISCARD static std::optional<RoomFilter> parseRoomFilter(const std::string_view &line);
+    NODISCARD static std::optional<RoomFilter> parseRoomFilter(const std::string_view line);
 
 public:
     RoomFilter() = delete;
-    explicit RoomFilter(const std::string_view &str,
+    explicit RoomFilter(const std::string_view str,
                         Qt::CaseSensitivity cs,
                         bool regex,
                         PatternKindsEnum kind);
@@ -38,7 +38,7 @@ public:
     NODISCARD PatternKindsEnum patternKind() const { return m_kind; }
 
 private:
-    NODISCARD bool matches(const std::string_view &s) const
+    NODISCARD bool matches(const std::string_view s) const
     {
         return std::regex_match(s.begin(), s.end(), m_regex);
     }

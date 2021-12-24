@@ -18,7 +18,7 @@ NODISCARD static bool is_space(char c)
     return std::isspace(static_cast<uint8_t>(c) & 0xff);
 }
 
-StringView::StringView(const std::string_view &sv) noexcept
+StringView::StringView(const std::string_view sv) noexcept
     : m_sv{sv}
 {}
 
@@ -232,7 +232,7 @@ StringView StringView::right(const size_t len) const
     return substr(m_sv.size() - len);
 }
 
-bool StringView::startsWith(const std::string_view &other) const
+bool StringView::startsWith(const std::string_view other) const
 {
     if (m_sv.size() < other.size())
         return false;
@@ -240,7 +240,7 @@ bool StringView::startsWith(const std::string_view &other) const
     return left(other.size()) == other;
 }
 
-bool StringView::endsWith(const std::string_view &other) const
+bool StringView::endsWith(const std::string_view other) const
 {
     if (m_sv.size() < other.size())
         return false;

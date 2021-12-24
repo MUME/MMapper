@@ -604,7 +604,7 @@ void AbstractParser::parseHelp(StringView words)
 {
     using namespace syntax;
     static const auto abb = syntax::abbrevToken;
-    auto simpleSyntax = [](const std::string_view &name, auto &&fn) -> SharedConstSublist {
+    auto simpleSyntax = [](const std::string_view name, auto &&fn) -> SharedConstSublist {
         auto abbrev = abb(std::string(name));
         auto helpstr = std::string("help for ") + std::string(name);
         return buildSyntax(std::move(abbrev), Accept(fn, std::move(helpstr)));

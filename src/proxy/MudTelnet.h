@@ -39,7 +39,7 @@ private:
     void virt_receiveEchoMode(bool toggle) final;
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
     void virt_onGmcpEnabled() final;
-    void virt_sendRawData(const std::string_view &data) final;
+    void virt_sendRawData(const std::string_view data) final;
 
 private:
     void receiveGmcpModule(const GmcpModule &, bool);

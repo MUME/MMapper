@@ -40,7 +40,7 @@ public:
     }
 };
 
-NODISCARD extern UnquoteResult unquote(const std::string_view &input,
+NODISCARD extern UnquoteResult unquote(const std::string_view input,
                                        bool allowUnbalancedQuotes,
                                        bool allowEmbeddedNull);
 

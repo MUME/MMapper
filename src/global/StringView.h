@@ -28,7 +28,7 @@ private:
 
 public:
     StringView() noexcept = default;
-    explicit StringView(const std::string_view &sv) noexcept;
+    explicit StringView(const std::string_view sv) noexcept;
     explicit StringView(const std::string &s) noexcept;
     explicit StringView(std::string &&) = delete;
     explicit StringView(const QString &) = delete;
@@ -78,8 +78,8 @@ public:
 public:
     bool operator==(const char *s) const noexcept = delete;
 
-    bool operator==(const std::string_view &sv) const noexcept { return m_sv == sv; }
-    bool operator!=(const std::string_view &sv) const noexcept { return !(*this == sv); }
+    bool operator==(const std::string_view sv) const noexcept { return m_sv == sv; }
+    bool operator!=(const std::string_view sv) const noexcept { return !(*this == sv); }
 
     bool operator==(const StringView &rhs) const noexcept { return m_sv == rhs.m_sv; }
     bool operator!=(const StringView &rhs) const noexcept { return !(*this == rhs); }
@@ -105,8 +105,8 @@ public:
     StringView &operator++();
     void operator++(int) = delete;
     char operator[](size_t pos) const;
-    NODISCARD bool startsWith(const std::string_view &other) const;
-    NODISCARD bool endsWith(const std::string_view &other) const;
+    NODISCARD bool startsWith(const std::string_view other) const;
+    NODISCARD bool endsWith(const std::string_view other) const;
     void remove_suffix(size_t n);
 
 public:

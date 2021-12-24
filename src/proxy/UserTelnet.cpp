@@ -14,7 +14,7 @@
 static void normalizeForUser(std::ostream &os,
                              const CharacterEncodingEnum encoding,
                              const bool goAhead,
-                             const std::string_view &sv)
+                             const std::string_view sv)
 {
     // REVISIT: perform ANSI normalization in this function, too?
     foreachLine(sv, [&os, encoding, &goAhead](std::string_view sv) {
@@ -217,7 +217,7 @@ void UserTelnet::virt_receiveWindowSize(const int x, const int y)
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void UserTelnet::virt_sendRawData(const std::string_view &data)
+void UserTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
     emit sig_sendToSocket(::toQByteArrayLatin1(data));

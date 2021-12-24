@@ -32,7 +32,7 @@ void latin1ToUtf8(std::ostream &os, const char c)
     os.write(buf, 2);
 }
 
-void latin1ToUtf8(std::ostream &os, const std::string_view &sv)
+void latin1ToUtf8(std::ostream &os, const std::string_view sv)
 {
     for (char c : sv) {
         latin1ToUtf8(os, c);
@@ -41,7 +41,7 @@ void latin1ToUtf8(std::ostream &os, const std::string_view &sv)
 
 void convertFromLatin1(std::ostream &os,
                        const CharacterEncodingEnum encoding,
-                       const std::string_view &sv)
+                       const std::string_view sv)
 {
     switch (encoding) {
     case CharacterEncodingEnum::ASCII:

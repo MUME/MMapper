@@ -77,7 +77,7 @@ NODISCARD static const char *getFlagName(const DoorFlagEnum flag)
 #undef CASE
 }
 
-NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::string_view &input)
+NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::string_view input)
 {
     if (input.empty()) {
         return std::nullopt;
@@ -92,7 +92,7 @@ NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::st
     return std::nullopt;
 }
 
-NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string_view &args)
+NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string_view args)
 {
     using ParserRoomFieldMap = std::map<std::string, RoomFieldVariant>;
     static const auto map = []() -> ParserRoomFieldMap {

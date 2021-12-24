@@ -26,7 +26,7 @@ bool TreeParser::parse(const ParserInput &input)
         return true;
 
     bool isFull = false;
-    const auto isHelpRequest = [&isFull](const std::string_view &s) -> bool {
+    const auto isHelpRequest = [&isFull](const std::string_view s) -> bool {
         if (s == "??") {
             isFull = true;
             return true;
@@ -191,7 +191,7 @@ void HelpFrame::flush()
         os << str;
 
         // TODO: convert QString ansi stuff to std::string_view instead of QStringView
-        static const auto getLengthAnsiAware = [](const std::string_view &sv) -> size_t {
+        static const auto getLengthAnsiAware = [](const std::string_view sv) -> size_t {
             size_t len = 0;
             bool inEsc = false;
             for (char c : sv) {

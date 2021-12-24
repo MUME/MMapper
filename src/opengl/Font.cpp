@@ -291,7 +291,7 @@ struct NODISCARD FontMetrics
     }
 
     template<typename EmitGlyph>
-    void foreach_glyph(const std::string_view &msg, EmitGlyph &&emitGlyph) const
+    void foreach_glyph(const std::string_view msg, EmitGlyph &&emitGlyph) const
     {
         const Glyph *prev = nullptr;
         for (const char &c : msg) {
@@ -309,7 +309,7 @@ struct NODISCARD FontMetrics
         }
     }
 
-    NODISCARD int measureWidth(const std::string_view &msg) const
+    NODISCARD int measureWidth(const std::string_view msg) const
     {
         int width = 0;
         foreach_glyph(msg, [&width](const Glyph *const g, const Kerning *const k) {

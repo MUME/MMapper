@@ -16,7 +16,7 @@
 #include "../global/Version.h"
 #include "GmcpUtils.h"
 
-NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view &prefix)
+NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
 {
     const auto get_os_string = []() {
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
@@ -170,7 +170,7 @@ void MudTelnet::virt_onGmcpEnabled()
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void MudTelnet::virt_sendRawData(const std::string_view &data)
+void MudTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
     emit sig_sendToSocket(::toQByteArrayLatin1(data));

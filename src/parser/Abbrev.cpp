@@ -14,7 +14,7 @@
 #include "../global/StringView.h"
 #include "../global/utils.h"
 
-bool isAbbrev(StringView input, const std::string_view &command, const int minAbbrev)
+bool isAbbrev(StringView input, const std::string_view command, const int minAbbrev)
 {
     const auto cmdLen = static_cast<int>(command.length());
     assert(minAbbrev == -1 || minAbbrev >= 1);

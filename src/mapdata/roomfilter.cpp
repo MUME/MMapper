@@ -48,7 +48,7 @@ NODISCARD static std::regex createRegex(const std::string &input,
     return std::regex(pattern, options);
 }
 
-RoomFilter::RoomFilter(const std::string_view &sv,
+RoomFilter::RoomFilter(const std::string_view sv,
                        const Qt::CaseSensitivity cs,
                        const bool regex,
                        const PatternKindsEnum kind)
@@ -59,7 +59,7 @@ RoomFilter::RoomFilter(const std::string_view &sv,
 const char *const RoomFilter::parse_help
     = "Parse error; format is: [-(name|desc|contents|note|exits|all|clear)] pattern\n";
 
-std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &line)
+std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view line)
 {
     // REVISIT: rewrite this using the new syntax tree model.
     auto view = StringView{line}.trim();

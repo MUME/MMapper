@@ -126,7 +126,7 @@ protected:
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void submitOverTelnet(const std::string_view &data, bool goAhead);
+    void submitOverTelnet(const std::string_view data, bool goAhead);
 
 private:
     NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
@@ -138,7 +138,7 @@ private:
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    virtual void virt_sendRawData(const std::string_view &data) = 0;
+    virtual void virt_sendRawData(const std::string_view data) = 0;
     virtual void virt_sendToMapper(const QByteArray &, bool goAhead) = 0;
 
 protected:
@@ -151,7 +151,7 @@ protected:
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    void sendRawData(const std::string_view &ba) { virt_sendRawData(ba); }
+    void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
 
 protected:
     void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }

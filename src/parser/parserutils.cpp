@@ -92,14 +92,14 @@ std::string &latin1ToAsciiInPlace(std::string &str)
     return str;
 }
 
-std::string latin1ToAscii(const std::string_view &sv)
+std::string latin1ToAscii(const std::string_view sv)
 {
     std::string tmp{sv};
     latin1ToAsciiInPlace(tmp);
     return tmp;
 }
 
-void latin1ToAscii(std::ostream &os, const std::string_view &sv)
+void latin1ToAscii(std::ostream &os, const std::string_view sv)
 {
     for (const char c : sv) {
         os << latin1ToAscii(c);

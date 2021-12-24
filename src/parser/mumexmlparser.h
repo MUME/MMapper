@@ -97,7 +97,7 @@ private:
     NODISCARD QByteArray characters(QByteArray &ch);
     NODISCARD bool element(const QByteArray &);
     void move();
-    NODISCARD std::string snoopToUser(const std::string_view &str);
+    NODISCARD std::string snoopToUser(const std::string_view str);
 
 private:
     static void stripXmlEntities(QByteArray &ch);
