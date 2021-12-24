@@ -58,7 +58,7 @@ enum class XmlMapStorage::Type : uint {
 #undef DECL
 };
 
-#define ADD(EnumType, ...) +1
+#define ADD(X) +1
 static constexpr const uint NUM_XMLMAPSTORAGE_TYPE = (X_FOREACH_TYPE_ENUM(ADD));
 #undef ADD
 
