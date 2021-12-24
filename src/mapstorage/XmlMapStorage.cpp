@@ -53,7 +53,7 @@
     X(Type)
 
 enum class XmlMapStorage::Type : uint {
-#define DECL(X, ...) X,
+#define DECL(X) X,
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 };
@@ -115,7 +115,7 @@ private:
 
     std::vector<std::vector<QString>> enumToStrings;
     std::vector<QHash<QStringView, uint>> stringToEnums;
-    QString empty;
+    const QString empty;
 };
 
 XmlMapStorage::Converter::Converter()
