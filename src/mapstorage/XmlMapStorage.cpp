@@ -53,10 +53,14 @@
     X(Type)
 
 enum class XmlMapStorage::Type : uint {
-#define DECL(X) X,
+#define DECL(X, ...) X,
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 };
+
+#define ADD(EnumType, ...) +1
+static constexpr const uint NUM_XMLMAPSTORAGE_TYPE = (X_FOREACH_TYPE_ENUM(ADD));
+#undef ADD
 
 // ---------------------------- XmlMapStorage::Converter -----------------------
 class XmlMapStorage::Converter final
@@ -118,6 +122,7 @@ XmlMapStorage::Converter::Converter()
     : enumToStrings{
 #define DECL(X) /* */ {#X},
 #define DECL_(X, ...) {#X},
+        /* these must match the enum types listed in X_FOREACH_TYPE_ENUM above */
         {X_FOREACH_RoomAlignEnum(DECL)},
         {X_FOREACH_DOOR_FLAG(DECL_)},
         {X_FOREACH_EXIT_FLAG(DECL_)},
@@ -137,6 +142,10 @@ XmlMapStorage::Converter::Converter()
     , stringToEnums{}
     , empty{}
 {
+    if (enumToStrings.size() != NUM_XMLMAPSTORAGE_TYPE) {
+        throw std::runtime_error("XmlMapStorage internal error: enum names do not match enum types");
+    }
+
     // create the maps string -> enum value for each enum type listed above
     for (std::vector<QString> &vec : enumToStrings) {
         stringToEnums.emplace_back();
