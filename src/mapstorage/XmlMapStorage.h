@@ -5,7 +5,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <unordered_map>
-#include <unordered_set>
 #include <QString>
 #include <QtCore>
 
