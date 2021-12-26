@@ -6,7 +6,6 @@
 
 #include "../global/Array.h"
 #include "../global/enums.h"
-#include "../global/string_view_utils.h"
 
 namespace enums {
 const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()
@@ -102,11 +101,11 @@ ExitDirEnum opposite(const ExitDirEnum in)
 #undef PAIR
 }
 
-std::string_view lowercaseDirection(const ExitDirEnum dir)
+const char *lowercaseDirection(const ExitDirEnum dir)
 {
 #define CASE(UPPER, lower) \
     case ExitDirEnum::UPPER: \
-        return { #lower, sizeof(#lower) - 1 }
+        return #lower
     switch (dir) {
         CASE(NORTH, north);
         CASE(SOUTH, south);
@@ -119,22 +118,6 @@ std::string_view lowercaseDirection(const ExitDirEnum dir)
         CASE(NONE, none);
     }
 #undef CASE
-}
-
-ExitDirEnum directionForLowercase(const std::u16string_view lowcase)
-{
-    if (!lowcase.empty()) {
-        // convert only the first char to dir.
-        const ExitDirEnum dir = Mmapper2Exit::dirForChar(static_cast<char>(lowcase[0]));
-        // convert back dir to lowercase string, and compare against the whole string
-        // we received: faster than an if-else string comparison waterfall.
-        //
-        // uses mixed-encoding string_view comparison declared in global/string_view_utils.h
-        if (lowcase == lowercaseDirection(dir)) {
-            return dir;
-        }
-    }
-    return ExitDirEnum::UNKNOWN;
 }
 
 namespace Mmapper2Exit {

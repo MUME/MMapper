@@ -780,7 +780,7 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 
     auto word = view.takeFirstWord();
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        auto lower = lowercaseDirectionC(dir);
+        auto lower = lowercaseDirection(dir);
         if (lower != nullptr && Abbrev{lower, 1}.matches(word))
             return dir;
     }
@@ -1026,7 +1026,7 @@ void AbstractParser::showDoorVariableHelp()
 {
     showHeader("Door variables");
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        auto lower = lowercaseDirectionC(dir);
+        auto lower = lowercaseDirection(dir);
         if (lower == nullptr)
             continue;
         auto upper = static_cast<char>(toupper(lower[0]));
@@ -1332,7 +1332,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
                 etmp += "|";
             }
 
-            etmp += lowercaseDirectionC(direction);
+            etmp += lowercaseDirection(direction);
         }
 
         if (door) {

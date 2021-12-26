@@ -401,6 +401,43 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
     return Coordinate(x, y, z);
 }
 
+static ExitDirEnum directionForLowercase(const std::u16string_view lowcase)
+{
+    if (lowcase.empty())
+        return ExitDirEnum::UNKNOWN;
+
+    switch (lowcase[0]) {
+    case 'n':
+        if (lowcase == "north")
+            return ExitDirEnum::NORTH;
+        break;
+    case 's':
+        if (lowcase == "south")
+            return ExitDirEnum::SOUTH;
+        break;
+    case 'e':
+        if (lowcase == "east")
+            return ExitDirEnum::EAST;
+        break;
+    case 'w':
+        if (lowcase == "west")
+            return ExitDirEnum::WEST;
+        break;
+    case 'u':
+        if (lowcase == "up")
+            return ExitDirEnum::UP;
+        break;
+    case 'd':
+        if (lowcase == "down")
+            return ExitDirEnum::DOWN;
+        break;
+    default:
+        break;
+    };
+
+    return ExitDirEnum::UNKNOWN;
+}
+
 // load current <exit> element
 void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 {
@@ -458,7 +495,7 @@ void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
             throwErrorFmt(stream,
                           "room %1 has exit %2 to non-existing room %3",
                           roomIdToString(fromId),
-                          lowercaseDirectionC(dir),
+                          lowercaseDirection(dir),
                           roomIdToString(toId));
         }
         Room &toRoom = deref(iter->second);
@@ -727,7 +764,7 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, const Exit
         return;
     }
     stream.writeStartElement("exit");
-    saveXmlAttribute(stream, "dir", lowercaseDirectionC(dir));
+    saveXmlAttribute(stream, "dir", lowercaseDirection(dir));
     saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
     saveExitTo(stream, e);
     saveDoorFlags(stream, e.getDoorFlags());
