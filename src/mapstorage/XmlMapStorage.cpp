@@ -549,7 +549,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
             ++foundPos1;
         } else if (name == "pos2") {
             marker.setPosition2(loadCoordinate(stream));
-            ++foundPos1;
+            ++foundPos2;
         } else if (name == "text") {
             // load text only if type == TEXT
             if (type == InfoMarkTypeEnum::TEXT) {
