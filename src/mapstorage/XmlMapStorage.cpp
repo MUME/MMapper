@@ -314,7 +314,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     const QStringView idstr = attrs.value("id");
     const RoomId roomId = loadRoomId(stream, idstr);
     if (m_loadedRooms.count(roomId) != 0) {
-        throwErrorFmt(stream, "duplicated room id \"%1\"", idstr.toString());
+        throwErrorFmt(stream, "duplicate room id \"%1\"", idstr.toString());
     }
     room.setId(roomId);
     if (attrs.value("uptodate") == "false") {
@@ -327,34 +327,45 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     ExitsList exitList;
     RoomLoadFlags loadFlags;
     RoomMobFlags mobFlags;
+    RoomElementEnum found = RoomElementEnum::NONE;
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const std::u16string_view name = as_u16string_view(stream.name());
         if (name == "align") {
+            throwIfDuplicate(stream, found, RoomElementEnum::ALIGN);
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
         } else if (name == "contents") {
+            throwIfDuplicate(stream, found, RoomElementEnum::CONTENTS);
             room.setContents(RoomContents{loadString(stream)});
         } else if (name == "coord") {
+            throwIfDuplicate(stream, found, RoomElementEnum::POSITION);
             room.setPosition(loadCoordinate(stream));
         } else if (name == "description") {
+            throwIfDuplicate(stream, found, RoomElementEnum::DESCRIPTION);
             room.setDescription(RoomDesc{loadString(stream)});
         } else if (name == "exit") {
             loadExit(stream, exitList);
         } else if (name == "light") {
+            throwIfDuplicate(stream, found, RoomElementEnum::LIGHT);
             room.setLightType(loadEnum<RoomLightEnum>(stream));
         } else if (name == "loadflag") {
             loadFlags |= loadEnum<RoomLoadFlagEnum>(stream);
         } else if (name == "mobflag") {
             mobFlags |= loadEnum<RoomMobFlagEnum>(stream);
         } else if (name == "note") {
+            throwIfDuplicate(stream, found, RoomElementEnum::NOTE);
             room.setNote(RoomNote{loadString(stream)});
         } else if (name == "portable") {
+            throwIfDuplicate(stream, found, RoomElementEnum::PORTABLE);
             room.setPortableType(loadEnum<RoomPortableEnum>(stream));
         } else if (name == "ridable") {
+            throwIfDuplicate(stream, found, RoomElementEnum::RIDABLE);
             room.setRidableType(loadEnum<RoomRidableEnum>(stream));
         } else if (name == "sundeath") {
+            throwIfDuplicate(stream, found, RoomElementEnum::SUNDEATH);
             room.setSundeathType(loadEnum<RoomSundeathEnum>(stream));
         } else if (name == "terrain") {
+            throwIfDuplicate(stream, found, RoomElementEnum::TERRAIN);
             room.setTerrainType(loadEnum<RoomTerrainEnum>(stream));
         } else {
             qWarning().noquote().nospace()
@@ -568,7 +579,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
                    "invalid marker: missing mandatory element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
     } else if (foundPos1 > 1) {
         throwError(stream,
-                   "invalid marker: duplicated element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
+                   "invalid marker: duplicate element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
     }
 
     if (foundPos2 == 0) {
@@ -576,7 +587,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         marker.setPosition2(marker.getPosition1());
     } else if (foundPos2 > 1) {
         throwError(stream,
-                   "invalid marker: duplicated element <pos2 x=\"...\" y=\"...\" z=\"...\"/>");
+                   "invalid marker: duplicate element <pos2 x=\"...\" y=\"...\" z=\"...\"/>");
     }
 
     // REVISIT: Just discard empty text markers?
@@ -646,6 +657,16 @@ void XmlMapStorage::throwError(QXmlStreamReader &stream, const QString &msg)
 {
     QString errmsg = QString("Error at line %1:\n%2").arg(stream.lineNumber()).arg(msg);
     throw std::runtime_error(::toStdStringUtf8(errmsg));
+}
+
+void XmlMapStorage::throwIfDuplicate(QXmlStreamReader &stream,
+                                     RoomElementEnum &set,
+                                     RoomElementEnum curr)
+{
+    if ((uint32_t(set) & uint32_t(curr)) != 0) {
+        throwErrorFmt(stream, "invalid room: duplicate element <%1>", stream.name().toString());
+    }
+    set = RoomElementEnum(uint32_t(set) | uint32_t(curr));
 }
 
 // ---------------------------- XmlMapStorage::saveData() ----------------------

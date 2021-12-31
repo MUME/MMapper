@@ -4,6 +4,7 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <string_view>
 #include <unordered_map>
 #include <QString>
 #include <QtCore>
@@ -50,6 +51,20 @@ private:
     void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, const ExitDirEnum dir);
     void moveRoomsToMapData();
 
+    enum class RoomElementEnum : uint32_t {
+        NONE /*  */ = 0,
+        ALIGN /*   */ = 1 << 0,
+        CONTENTS /**/ = 1 << 1,
+        POSITION /**/ = 1 << 2,
+        DESCRIPTION = 1 << 3,
+        LIGHT /*   */ = 1 << 4,
+        NOTE /*    */ = 1 << 5,
+        PORTABLE /**/ = 1 << 6,
+        RIDABLE /* */ = 1 << 7,
+        SUNDEATH /**/ = 1 << 8,
+        TERRAIN /* */ = 1 << 9,
+    };
+
     template<typename ENUM>
     ENUM loadEnum(QXmlStreamReader &stream);
     QString loadString(QXmlStreamReader &stream);
@@ -68,6 +83,10 @@ private:
     {
         throwError(stream, format.arg(std::forward<Args>(args)...));
     }
+
+    static void throwIfDuplicate(QXmlStreamReader &stream,
+                                 RoomElementEnum &set,
+                                 RoomElementEnum curr);
 
     std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
     uint64_t m_loadProgressDivisor;
