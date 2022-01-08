@@ -155,6 +155,10 @@ XmlMapStorage::Converter::Converter()
             if (str == "UNDEFINED") {
                 str.clear(); // we never save or load the string "UNDEFINED"
             } else {
+                if (str == "EXIT") {
+                    // we save the EXIT flag inverted => invert the name too
+                    str = "NO_EXIT";
+                }
                 map[QStringView(str)] = val;
             }
             val++;
