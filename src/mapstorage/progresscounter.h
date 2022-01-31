@@ -4,8 +4,6 @@
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
 #include <QObject>
-#include <QString>
-#include <QtCore>
 #include <QtGlobal>
 
 class ProgressCounter final : public QObject

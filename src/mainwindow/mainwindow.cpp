@@ -1550,11 +1550,11 @@ void MainWindow::slot_open()
 
     // FIXME: code duplication
     auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    const QString fileName
-        = QFileDialog::getOpenFileName(this,
-                                       "Choose map file ...",
-                                       savedLastMapDir,
-                                       "MMapper Maps (*.mm2);;Pandora Maps (*.xml)");
+    const QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Choose map file ...",
+        savedLastMapDir,
+        "MMapper2 Maps (*.mm2);;MMapper2 XML Maps (*.mm2xml);;Pandora Maps (*.xml)");
     if (fileName.isEmpty()) {
         statusBar()->showMessage(tr("No filename provided"), 2000);
         return;
@@ -1816,10 +1816,15 @@ void MainWindow::loadFile(const QString &fileName)
     auto progressDlg = createNewProgressDialog("Loading map...");
 
     const auto storage = [this, &fileName, &file]() -> std::unique_ptr<AbstractMapStorage> {
-        const bool isPandoraMap = fileName.toLower().endsWith(".xml");
-        if (isPandoraMap) {
+        const QString fileNameLower = fileName.toLower();
+        if (fileNameLower.endsWith(".xml")) {
+            // Pandora map
             return std::make_unique<PandoraMapStorage>(*m_mapData, fileName, &file, this);
+        } else if (fileNameLower.endsWith(".mm2xml")) {
+            // MMapper2 XML map
+            return std::make_unique<XmlMapStorage>(*m_mapData, fileName, &file, this);
         } else {
+            // MMapper2 binary map
             return std::make_unique<MapStorage>(*m_mapData, fileName, &file, this);
         }
     }();
