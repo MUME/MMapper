@@ -7,6 +7,6 @@
 
 #define DEPRECATED [[deprecated]]
 #define DEPRECATED_MSG(_msg) [[deprecated(_msg)]]
-#define FALLTHRU [[fallthrough]]
+#define FALLTHROUGH [[fallthrough]]
 #define NODISCARD [[nodiscard]]
 #define MAYBE_UNUSED [[maybe_unused]]

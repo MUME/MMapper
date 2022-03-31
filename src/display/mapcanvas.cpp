@@ -1077,7 +1077,7 @@ void MapCanvas::userPressedEscape(bool /*pressed*/)
 
     case CanvasMouseModeEnum::MOVE:
         // special case for move: right click selects infomarks
-        FALLTHRU;
+        FALLTHROUGH;
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
         m_infoMarkSelectionMove.reset();
