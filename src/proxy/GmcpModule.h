@@ -18,6 +18,7 @@
     X(CHAR, Char, "char", "Char") \
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
     X(MMAPPER_COMM, MmapperComm, "mmapper.comm", "MMapper.Comm") \
+    X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
     /* define gmcp module types above */
 
 enum class NODISCARD GmcpModuleTypeEnum {
@@ -27,8 +28,8 @@ enum class NODISCARD GmcpModuleTypeEnum {
 #undef X_DECL_GMCP_MODULE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MODULES = 3u;
-static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::MMAPPER_COMM) + 1);
+static constexpr const size_t NUM_GMCP_MODULES = 4u;
+static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::ROOM_CHARS) + 1);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 struct NODISCARD GmcpModuleVersion final

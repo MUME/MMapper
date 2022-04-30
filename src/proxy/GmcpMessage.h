@@ -31,6 +31,10 @@ class ParseEvent;
       MmapperCommGroupTell, \
       "mmapper.comm.grouptell", \
       "MMapper.Comm.GroupTell") \
+    X(ROOM_CHARS_ADD, RoomCharsAdd, "room.chars.add", "Room.Chars.Add") \
+    X(ROOM_CHARS_REMOVE, RoomCharsRemove, "room.chars.remove", "Room.Chars.Remove") \
+    X(ROOM_CHARS_SET, RoomCharsSet, "room.chars.set", "Room.Chars.Set") \
+    X(ROOM_CHARS_UPDATE, RoomCharsUpdate, "room.chars.update", "Room.Chars.Update") \
     /* define gmcp message types above */
 
 enum class NODISCARD GmcpMessageTypeEnum {
@@ -40,9 +44,8 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 10u;
-static_assert(NUM_GMCP_MESSAGES
-              == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL) + 1);
+static constexpr const size_t NUM_GMCP_MESSAGES = 14u;
+static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE) + 1);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {
