@@ -73,6 +73,7 @@ private:
     using base = TaggedString<T>;
 
 public:
+    TaggedStringUtf8() = default;
     explicit TaggedStringUtf8(std::string s)
         : TaggedString<T>(std::move(s))
     {}
@@ -98,7 +99,13 @@ public:
 
 public:
     using base::getStdString;
-    NODISCARD QByteArray toQByteArray() const { return ::toQByteArrayUtf8(getStdString()); }
+    // return QByteArray containing UTF-8 encoded data
+    NODISCARD QByteArray toQByteArray() const
+    {
+        // easy, getStdString() already contains UTF-8
+        const std::string &str = getStdString();
+        return QByteArray(str.data(), static_cast<int>(str.size()));
+    }
     NODISCARD QString toQString() const { return ::toQStringUtf8(getStdString()); }
 
 public:
