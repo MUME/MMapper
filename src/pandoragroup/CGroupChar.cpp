@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QMessageLogContext>
 
+#include "../global/QuotedQString.h"
 #include "../global/roomid.h"
 #include "../parser/abstractparser.h"
 
@@ -49,25 +50,6 @@ const QVariantMap CGroupChar::toVariantMap() const
     root[playerDataKey] = playerData;
     return root;
 }
-
-// TODO: move this somewhere more appropriate
-struct NODISCARD QuotedQString final
-{
-private:
-    QString str;
-
-public:
-    explicit QuotedQString(QString input)
-        : str{std::move(input)}
-    {}
-    friend QDebug &operator<<(QDebug &debug, const QuotedQString &q)
-    {
-        debug.quote();
-        debug << q.str;
-        debug.noquote();
-        return debug;
-    }
-};
 
 bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 {
