@@ -354,6 +354,14 @@ set(mmapper_SRCS
     proxy/proxy.h
     proxy/telnetfilter.cpp
     proxy/telnetfilter.h
+    roompanel/RoomManager.cpp
+    roompanel/RoomManager.h
+    roompanel/RoomMob.cpp
+    roompanel/RoomMob.h
+    roompanel/RoomMobs.cpp
+    roompanel/RoomMobs.h
+    roompanel/RoomWidget.cpp
+    roompanel/RoomWidget.h
     syntax/Accept.cpp
     syntax/Accept.h
     syntax/IArgument.cpp

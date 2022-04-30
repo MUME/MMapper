@@ -188,6 +188,7 @@ ConstString GRP_MUME_CLOCK = "Mume Clock";
 ConstString GRP_MUME_NATIVE = "Mume native";
 ConstString GRP_PARSER = "Parser";
 ConstString GRP_PATH_MACHINE = "Path Machine";
+ConstString GRP_ROOM_PANEL = "Room Panel";
 ConstString GRP_ROOMEDIT_DIALOG = "RoomEdit Dialog";
 
 ConstString KEY_ABSOLUTE_PATH_ACCEPTANCE = "absolute path acceptance";
@@ -454,6 +455,7 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
         GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infoMarksDialog); \
         GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
+        GROUP_CALLBACK(callback, GRP_ROOM_PANEL, roomPanel); \
         GROUP_CALLBACK(callback, GRP_FINDROOMS_DIALOG, findRoomsDialog); \
     } while (false)
 
@@ -726,6 +728,11 @@ void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
     autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, false).toBool();
 }
 
+void Configuration::RoomPanelSettings::read(QSettings &conf)
+{
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+}
+
 void Configuration::InfoMarksDialog::read(QSettings &conf)
 {
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
@@ -887,6 +894,11 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_TAB_COMPLETION_DICTIONARY_SIZE, tabCompletionDictionarySize);
     conf.setValue(KEY_CLEAR_INPUT_ON_ENTER, clearInputOnEnter);
     conf.setValue(KEY_AUTO_RESIZE_TERMINAL, autoResizeTerminal);
+}
+
+void Configuration::RoomPanelSettings::write(QSettings &conf) const
+{
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
 void Configuration::InfoMarksDialog::write(QSettings &conf) const

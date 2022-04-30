@@ -345,6 +345,14 @@ public:
         SUBGROUP();
     } integratedClient;
 
+    struct NODISCARD RoomPanelSettings final
+    {
+        QByteArray geometry;
+
+    private:
+        SUBGROUP();
+    } roomPanel;
+
     struct NODISCARD InfoMarksDialog final
     {
         QByteArray geometry;

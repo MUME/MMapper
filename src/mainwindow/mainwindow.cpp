@@ -65,6 +65,8 @@
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
 #include "../proxy/telnetfilter.h"
+#include "../roompanel/RoomManager.h"
+#include "../roompanel/RoomWidget.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
@@ -240,6 +242,18 @@ MainWindow::MainWindow()
     m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
+    m_roomManager = new RoomManager(this);
+    m_roomManager->setObjectName("RoomManager");
+    m_roomWidget = new RoomWidget(deref(m_roomManager), this);
+    m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
+    m_dockDialogRoom->setObjectName("DockWidgetRoom");
+    m_dockDialogRoom->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+    m_dockDialogRoom->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                  | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogRoom);
+    m_dockDialogRoom->setWidget(m_roomWidget);
+    m_dockDialogRoom->hide();
+
     m_findRoomsDlg = new FindRoomsDlg(mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
@@ -263,6 +277,7 @@ MainWindow::MainWindow()
                                         deref(m_pathMachine),
                                         deref(m_prespammedPath),
                                         deref(m_groupManager),
+                                        deref(m_roomManager),
                                         deref(m_mumeClock),
                                         deref(m_logger),
                                         deref(getCanvas()),
@@ -1179,6 +1194,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogLog->toggleViewAction());
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
+    sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);

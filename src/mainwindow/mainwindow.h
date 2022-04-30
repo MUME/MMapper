@@ -51,8 +51,10 @@ class QShowEvent;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
-class UpdateDialog;
+class RoomManager;
 class RoomSelection;
+class RoomWidget;
+class UpdateDialog;
 
 class MainWindow final : public QMainWindow
 {
@@ -155,6 +157,7 @@ private:
     MapWindow *m_mapWindow = nullptr;
     QTextBrowser *logWindow = nullptr;
 
+    QDockWidget *m_dockDialogRoom = nullptr;
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
@@ -170,6 +173,9 @@ private:
     FindRoomsDlg *m_findRoomsDlg = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     GroupWidget *m_groupWidget = nullptr;
+
+    RoomWidget *m_roomWidget = nullptr;
+    RoomManager *m_roomManager = nullptr;
 
     ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;
