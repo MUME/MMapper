@@ -84,8 +84,8 @@ public:
 #undef DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD GmcpMessageName getName() const { return name; }
-    NODISCARD std::optional<GmcpJson> getJson() const { return json; }
+    NODISCARD const GmcpMessageName &getName() const { return name; }
+    NODISCARD const std::optional<GmcpJson> &getJson() const { return json; }
 
 public:
     NODISCARD QByteArray toRawBytes() const;
