@@ -225,6 +225,7 @@ set(mmapper_SRCS
     opengl/legacy/SimpleMesh.h
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
+    opengl/legacy/impl_gl20.cpp
     pandoragroup/CGroup.cpp
     pandoragroup/CGroup.h
     pandoragroup/CGroupChar.cpp
@@ -422,12 +423,6 @@ set(mmapper_UIS
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
 )
-
-if(QT_HAS_OPENGL)
-    list(APPEND mmapper_SRCS "opengl/legacy/impl_gl20.cpp")
-else()
-    message(FATAL_ERROR "MMapper requires OpenGL")
-endif()
 
 if(MMAPPER_IS_DEBUG)
     if(NOT DEFINED CHECK_ODR)
