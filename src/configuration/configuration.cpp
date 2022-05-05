@@ -13,6 +13,7 @@
 #include <QChar>
 #include <QDir>
 #include <QHostInfo>
+#include <QSslSocket>
 #include <QString>
 #include <QStringList>
 
@@ -558,7 +559,8 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
                                 static_cast<uint16_t>(DEFAULT_PORT));
     localPort = sanitizeUint16(conf.value(KEY_PROXY_LOCAL_PORT, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
-    tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
+    tlsEncryption = QSslSocket::supportsSsl() ? conf.value(KEY_TLS_ENCRYPTION, true).toBool()
+                                              : false;
     proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
     proxyListensOnAnyInterface = conf.value(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, false).toBool();

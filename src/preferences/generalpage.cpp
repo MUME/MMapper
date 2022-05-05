@@ -6,6 +6,7 @@
 
 #include "generalpage.h"
 
+#include <QSslSocket>
 #include <QString>
 #include <QtWidgets>
 
@@ -123,7 +124,7 @@ void GeneralPage::slot_loadConfig()
     ui->remoteName->setText(connection.remoteServerName);
     ui->remotePort->setValue(connection.remotePort);
     ui->localPort->setValue(connection.localPort);
-    if (NO_OPEN_SSL) {
+    if (!QSslSocket::supportsSsl()) {
         ui->tlsEncryptionCheckBox->setEnabled(false);
         ui->tlsEncryptionCheckBox->setChecked(false);
     } else {

@@ -12,6 +12,7 @@
 #include <QList>
 #include <QMessageLogContext>
 #include <QObject>
+#include <QSslSocket>
 #include <QString>
 #include <QVariantMap>
 
@@ -331,7 +332,7 @@ void GroupServer::parseHandshake(GroupSocket *const socket, const QVariantMap &d
         socket->setProtocolVersion(clientProtocolVersion);
         parseLoginInformation(socket, data);
     } else {
-        assert(!NO_OPEN_SSL);
+        assert(QSslSocket::supportsSsl());
         sendMessage(socket, MessagesEnum::REQ_LOGIN);
         socket->setProtocolVersion(clientProtocolVersion);
         socket->startServerEncrypted();

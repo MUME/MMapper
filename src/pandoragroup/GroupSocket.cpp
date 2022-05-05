@@ -34,8 +34,10 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     const auto get_ssl_config = [this, authority]() {
         auto config = socket.sslConfiguration();
         config.setCaCertificates({});
-        config.setLocalCertificate(authority->getLocalCertificate());
-        config.setPrivateKey(authority->getPrivateKey());
+        if (!NO_OPEN_SSL) {
+            config.setLocalCertificate(authority->getLocalCertificate());
+            config.setPrivateKey(authority->getPrivateKey());
+        }
         config.setPeerVerifyMode(QSslSocket::QueryPeer);
 
         // CVE-2012-4929 forced the below option to be enabled by default but we can disable it because

@@ -10,6 +10,7 @@
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QObject>
+#include <QSslSocket>
 #include <QString>
 #include <QVariantMap>
 
@@ -155,7 +156,7 @@ void GroupClient::virt_retrieveData(GroupSocket *const /* socket */,
         if (message == MessagesEnum::REQ_HANDSHAKE) {
             sendHandshake(data);
         } else if (message == MessagesEnum::REQ_LOGIN) {
-            assert(!NO_OPEN_SSL);
+            assert(QSslSocket::supportsSsl());
             socket.setProtocolVersion(proposedProtocolVersion);
             socket.startClientEncrypted();
         } else if (message == MessagesEnum::ACK) {
@@ -219,7 +220,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
     emit sig_sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
     const auto get_proposed_protocol_version = [](const auto serverProtocolVersion) {
         // Ensure we only pick a protocol within the bounds we understand
-        if (NO_OPEN_SSL) {
+        if (!QSslSocket::supportsSsl()) {
             return PROTOCOL_VERSION_102;
         } else if (serverProtocolVersion >= PROTOCOL_VERSION_103) {
             return PROTOCOL_VERSION_103;
@@ -232,7 +233,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
 
     if (serverProtocolVersion == PROTOCOL_VERSION_102
         || proposedProtocolVersion == PROTOCOL_VERSION_102) {
-        if (!NO_OPEN_SSL && getConfig().groupManager.requireAuth) {
+        if (QSslSocket::supportsSsl() && getConfig().groupManager.requireAuth) {
             emit sig_messageBox(
                 "Host does not support encryption.\n"
                 "Consider disabling \"Require authorization\" under the Group Manager settings "
@@ -242,7 +243,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
         } else {
             // MMapper 2.0.3 through MMapper 2.6 Protocol 102 does not do a version handshake
             // and goes directly to login
-            if (!NO_OPEN_SSL)
+            if (QSslSocket::supportsSsl())
                 emit sig_sendLog(
                     "<b>WARNING:</b> "
                     "Host does not support encryption and your connection is insecure.");

@@ -249,7 +249,7 @@ void MumeTcpSocket::virt_onConnect()
         proxy_log("Tuned TCP keep alive parameters for socket");
     }
 
-    if (!NO_OPEN_SSL) {
+    if (QSslSocket::supportsSsl()) {
         // Warn user of the insecure connection
         QByteArray byteArray = QByteArray(
             "\n"

@@ -13,6 +13,7 @@
 #include <QMessageLogContext>
 #include <QObject>
 #include <QScopedPointer>
+#include <QSslSocket>
 #include <QTcpSocket>
 
 #include "../clock/mumeclock.h"
@@ -128,7 +129,7 @@ void Proxy::slot_start()
                                               m_groupManager.getGroupManagerApi(),
                                               this);
 
-    m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
+    m_mudSocket = (!QSslSocket::supportsSsl() || !getConfig().connection.tlsEncryption)
                       ? QPointer<MumeSocket>(makeQPointer<MumeTcpSocket>(this))
                       : QPointer<MumeSocket>(makeQPointer<MumeSslSocket>(this));
 

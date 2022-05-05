@@ -386,7 +386,7 @@ message("") # blank line
 include(FeatureSummary)
 add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 saves")
 add_feature_info("WITH_UPDATER" WITH_UPDATER "check GitHub for new releases")
-add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
+add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connections with TLS")
 add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group manager with UPnP IGD")
 add_feature_info("WITH_MAP" WITH_MAP "include default map as a resource")
 add_feature_info("WITH_TESTS" WITH_TESTS "compile unit tests")
