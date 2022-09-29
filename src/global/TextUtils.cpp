@@ -176,22 +176,6 @@ int measureExpandedTabsOneLine(const QString &line, const int startingColumn)
     return measureExpandedTabsOneLine(line.midRef(0), startingColumn);
 }
 
-int measureExpandedTabsMultiline(const QStringRef &stringRef)
-{
-    int len = 0;
-    foreachLine(stringRef, [&len](const QStringRef &line, bool hasNewline) {
-        len += measureExpandedTabsOneLine(line, 0);
-        if (hasNewline)
-            len += 1;
-    });
-    return len;
-}
-
-int measureExpandedTabsMultiline(const QString &string)
-{
-    return measureExpandedTabsMultiline(string.midRef(0));
-}
-
 int findTrailingWhitespace(const QStringRef &line)
 {
     auto m = trailingWhitespaceRegex.match(line);
@@ -764,44 +748,6 @@ void TextBuffer::appendExpandedTabs(const QStringRef &line, const int start_at)
             col += 1;
             append(c);
         }
-    }
-}
-
-void TextBuffer::appendWithoutTrailingWhitespace(QStringRef line)
-{
-    auto m = trailingWhitespaceRegex.match(line);
-    if (m.hasMatch()) {
-        line = line.mid(0, m.capturedStart());
-    }
-    append(line);
-}
-
-void TextBuffer::appendWithoutDuplicateSpaces(QStringRef line)
-{
-    /* Step 1: ignore any indendation the user applied */
-    {
-        auto m = leadingWhitespaceRegex.match(line);
-        if (m.hasMatch()) {
-            const int len = m.capturedLength();
-            append(line.left(len));
-            line = line.mid(len);
-        }
-    }
-    /* Step 2: turn all other duplicate spaces into single spaces */
-    {
-        int pos = 0;
-        auto it = twoOrMoreSpaceCharsRegex.globalMatch(line);
-        while (it.hasNext()) {
-            auto m = it.next();
-            const auto matchStart = m.capturedStart();
-            if (matchStart > pos) {
-                append(line.mid(pos, matchStart - pos));
-            }
-            append(' ');
-            pos = m.capturedEnd();
-        }
-        if (pos != line.length())
-            append(line.mid(pos, line.length() - pos));
     }
 }
 

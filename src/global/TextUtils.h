@@ -210,8 +210,6 @@ NODISCARD extern int countLines(const QStringRef &input);
 
 NODISCARD extern int measureExpandedTabsOneLine(const QStringRef &line, int starting_at);
 NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);
-NODISCARD extern int measureExpandedTabsMultiline(const QStringRef &old);
-NODISCARD extern int measureExpandedTabsMultiline(const QString &old);
 
 NODISCARD extern int findTrailingWhitespace(const QStringRef &line);
 NODISCARD extern int findTrailingWhitespace(const QString &line);
@@ -235,8 +233,6 @@ public:
 public:
     void appendJustified(QStringRef line, int maxLen);
     void appendExpandedTabs(const QStringRef &line, int start_at = 0);
-    void appendWithoutTrailingWhitespace(QStringRef line);
-    void appendWithoutDuplicateSpaces(QStringRef line);
 
 public:
     NODISCARD bool isEmpty() const;
