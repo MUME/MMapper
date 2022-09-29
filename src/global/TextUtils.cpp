@@ -603,10 +603,10 @@ struct NODISCARD Prefix final
 {
 private:
     int prefixLen = 0;
-    QStringRef quotePrefix;
+    QString quotePrefix;
     bool hasPrefix2 = false;
     int bulletLength = 0;
-    QStringRef prefix2;
+    QString prefix2;
     bool valid_ = false;
 
 public:
@@ -626,7 +626,7 @@ public:
 
 public:
     template<typename Appender>
-    QStringRef init(QStringRef line, const int maxLen, Appender &&append)
+    NODISCARD QString init(QString line, const int maxLen, Appender &&append)
     {
         // quotePrefix = prefix2 = line.left(0);
 
@@ -667,7 +667,7 @@ public:
         if (hasPrefix2) {
             auto m = leadingWhitespaceRegex.match(line);
             if (m.hasMatch()) {
-                prefix2 = m.capturedRef();
+                prefix2 = m.captured();
                 prefixLen = measureExpandedTabsOneLine(prefix2, prefixLen);
                 line = line.mid(prefix2.length());
                 append(prefix2);
@@ -679,8 +679,9 @@ public:
     }
 };
 
-void TextBuffer::appendJustified(QStringRef line, const int maxLen)
+void TextBuffer::appendJustified(QStringRef input_line, const int maxLen)
 {
+    QString line = input_line.toString();
     constexpr const bool preserveTrailingWhitespace = true;
 
     // REVISIT: consider ignoring the entire message if it contains ANSI!
@@ -704,11 +705,11 @@ void TextBuffer::appendJustified(QStringRef line, const int maxLen)
     int col = prefix.length();
     while (!line.isEmpty()) {
         // identify any leading whitespace (there won't be on 1st pass)
-        QStringRef leadingSpace = line.left(0);
+        QString leadingSpace = line.left(0);
         {
             auto m = leadingWhitespaceRegex.match(line);
             if (m.hasMatch()) {
-                leadingSpace = m.capturedRef();
+                leadingSpace = m.captured();
                 line = line.mid(m.capturedLength());
             }
         }
