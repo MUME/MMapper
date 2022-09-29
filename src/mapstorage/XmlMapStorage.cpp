@@ -448,7 +448,7 @@ static ExitDirEnum directionForLowercase(const std::u16string_view lowcase)
         break;
     default:
         break;
-    };
+    }
 
     return ExitDirEnum::UNKNOWN;
 }
