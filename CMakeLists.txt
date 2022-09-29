@@ -211,8 +211,7 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Building with GCC (${CMAKE_CXX_COMPILER})")
     if(MMAPPER_IS_DEBUG)
-        if(FALSE)
-            # This doesn't work on my machine. All the __asan_xxx symbols are undefined.
+        if(TRUE)
             message("-- Building with GCC address sanitizer")
             add_compile_options(-fsanitize=address)
             add_link_options(-fsanitize=address)
@@ -274,7 +273,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     endif()
 
     if(MMAPPER_IS_DEBUG)
-        if(FALSE)
+        if(TRUE)
             # segfaults in ASAN initializer on 32-bit Ubuntu 18.04.1 with clang 6.0
             # note: apparently -fsanitize=address can't be used with gnu libc 2.25+
             # Ubuntu 18.04.1 has libc 2.27.
