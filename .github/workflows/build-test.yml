@@ -97,14 +97,15 @@ jobs:
       #
       # Run tests
       #
-    - if: env.COVERAGE == 'true'
+    - if: contains( matrix.os, 'mac' ) && env.COVERAGE == 'true'
       name: Prepare lcov counters
       run: cd build && lcov --zerocounters --directory .
-    - name: Run unit tests
+    - if: contains( matrix.os, 'mac' )
+      name: Run unit tests
       run: cd build && ctest -V
       env:
         QT_QPA_PLATFORM: offscreen
-    - if: env.COVERAGE == 'true'
+    - if: contains( matrix.os, 'mac' ) && env.COVERAGE == 'true'
       name: Run lcov
       run: |
         cd build
