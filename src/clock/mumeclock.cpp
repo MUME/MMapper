@@ -43,8 +43,10 @@ const QMetaEnum MumeClock::s_sindarinWeekDayNames
 
 const QHash<QString, MumeTimeEnum> MumeClock::m_stringTimeHash{
     // Generic Outdoors
+    {"The sun rises in the east.", MumeTimeEnum::DAWN},
     {"The day has begun.", MumeTimeEnum::DAY},
     {"The day has begun. You feel so weak under the cruel light!", MumeTimeEnum::DAY},
+    {"The sun sinks slowly below the western horizon.", MumeTimeEnum::DUSK},
     {"The night has begun.", MumeTimeEnum::NIGHT},
     {"The night has begun. You feel stronger in the dark!", MumeTimeEnum::NIGHT},
 
@@ -61,7 +63,7 @@ const QHash<QString, MumeTimeEnum> MumeClock::m_stringTimeHash{
     {"The evil power begins to regress...", MumeTimeEnum::UNKNOWN},
 
     // Bree
-    {"The sun rises slowly above Bree Hill.", MumeTimeEnum::DAWN},
+    {"The sun rises slowly above Bree-hill.", MumeTimeEnum::DAWN},
     {"The sun sets on Bree-land.", MumeTimeEnum::DUSK},
 
     // GH
@@ -69,13 +71,17 @@ const QHash<QString, MumeTimeEnum> MumeClock::m_stringTimeHash{
     {"Rays of sunshine pierce the darkness as the sun begins its gradual ascent to the middle of the sky.",
      MumeTimeEnum::DAWN},
 
-    // Warrens
-    {"The sun sinks slowly below the western horizon.", MumeTimeEnum::DUSK},
-
     // Fornost
-    {"The sun rises in the east.", MumeTimeEnum::DAWN},
     {"The sun slowly rises over the rooftops in the east.", MumeTimeEnum::DAWN},
     {"The sun slowly disappears in the west.", MumeTimeEnum::DUSK},
+
+    // Rivendell
+    {"Light gradually fills the valley of Rivendell, as the sun rises in the east.", MumeTimeEnum::DAWN},
+    {"The shadows lengthen in the valley, as the sun slowly sets.", MumeTimeEnum::DUSK},
+
+    // NOC Wolf-gate
+    {"The sun slowly climbs from the vale of Anduin in the east.", MumeTimeEnum::DAWN},
+    {"Shadows surround you as the sun disappears behind the peaks of the Hithaeglir.", MumeTimeEnum::DUSK},
 };
 
 MumeClock::MumeClock(int64_t mumeEpoch, QObject *parent)
