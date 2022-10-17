@@ -76,12 +76,14 @@ const QHash<QString, MumeTimeEnum> MumeClock::m_stringTimeHash{
     {"The sun slowly disappears in the west.", MumeTimeEnum::DUSK},
 
     // Rivendell
-    {"Light gradually fills the valley of Rivendell, as the sun rises in the east.", MumeTimeEnum::DAWN},
+    {"Light gradually fills the valley of Rivendell, as the sun rises in the east.",
+     MumeTimeEnum::DAWN},
     {"The shadows lengthen in the valley, as the sun slowly sets.", MumeTimeEnum::DUSK},
 
     // NOC Wolf-gate
     {"The sun slowly climbs from the vale of Anduin in the east.", MumeTimeEnum::DAWN},
-    {"Shadows surround you as the sun disappears behind the peaks of the Hithaeglir.", MumeTimeEnum::DUSK},
+    {"Shadows surround you as the sun disappears behind the peaks of the Hithaeglir.",
+     MumeTimeEnum::DUSK},
 };
 
 MumeClock::MumeClock(int64_t mumeEpoch, QObject *parent)
