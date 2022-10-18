@@ -54,6 +54,7 @@ parts:
   mmapper:
     plugin: cmake
     source: .
+    cmake-generator: Ninja
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/usr/local
       - -DWITH_UPDATER=false
