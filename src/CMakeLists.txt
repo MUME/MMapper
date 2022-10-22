@@ -780,7 +780,8 @@ if(APPLE)
     add_custom_command(
         TARGET mmapper
         POST_BUILD
-        COMMAND ${CODESIGN_APP} --deep --continue -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        COMMAND ${CODESIGN_APP} --remove-signature ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        COMMAND ${CODESIGN_APP} --deep -f -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -o runtime --entitlements ${CMAKE_CURRENT_SOURCE_DIR}/entitlements.plist
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Code signing the bundle"
         )
