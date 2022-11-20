@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This file describes the syntax of MMapper2 Xml Map files. Their extension usually is .mm2xml -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="map" type="map" />
+
+    <xs:complexType name="map">
+        <xs:sequence>
+            <xs:element name="room" type="room" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="marker" type="marker" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="position" type="point3d" />
+        </xs:sequence>
+        <xs:attribute name="type" fixed="mmapper2xml" />
+        <xs:attribute name="version" type="map_version" />
+    </xs:complexType>
+
+    <xs:simpleType name="map_version">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]+\.[0-9]+\.[0-9]+" />
+        </xs:restriction>
+    </xs:simpleType>
+
+
+    <!-- ________________________________ room ________________________________ -->
+
+    <xs:complexType name="room">
+        <xs:sequence>
+            <xs:element name="align" type="room_align" minOccurs="0" />
+            <xs:element name="light" type="room_light" minOccurs="0" />
+            <xs:element name="portable" type="room_portable" minOccurs="0" />
+            <xs:element name="ridable" type="room_ridable" minOccurs="0" />
+            <xs:element name="sundeath" type="room_sundeath" minOccurs="0" />
+            <xs:element name="terrain" type="room_terrain" minOccurs="0" />
+            <xs:element name="coord" type="point3d" />
+            <xs:element name="loadflag" type="room_loadflag" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="mobflag" type="room_mobflag" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="exit" type="room_exit" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="description" type="xs:string" minOccurs="0" />
+            <xs:element name="contents" type="xs:string" minOccurs="0" />
+            <xs:element name="note" type="xs:string" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="id" type="room_id" use="required" />
+        <xs:attribute name="name" type="xs:string" use="optional" />
+        <!-- attribute uptodate can only be "false" or not present -->
+        <xs:attribute name="uptodate" fixed="false" use="optional" />
+    </xs:complexType>
+
+
+    <xs:simpleType name="room_loadflag">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="TREASURE|ARMOUR|WEAPON|WATER|FOOD|HERB|KEY|MULE|HORSE|PACK_HORSE|TRAINED_HORSE|ROHIRRIM|WARG|BOAT|ATTENTION|TOWER|CLOCK|MAIL|STABLE|WHITE_WORD|DARK_WORD|EQUIPMENT|COACH|FERRY" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_mobflag">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="RENT|SHOP|WEAPON_SHOP|ARMOUR_SHOP|FOOD_SHOP|PET_SHOP|GUILD|SCOUT_GUILD|MAGE_GUILD|CLERIC_GUILD|WARRIOR_GUILD|RANGER_GUILD|AGGRESSIVE_MOB|QUEST_MOB|PASSIVE_MOB|ELITE_MOB|SUPER_MOB|MILKABLE" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_id">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0" />
+            <xs:maxInclusive value="4294967295" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_align">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="GOOD|NEUTRAL|EVIL" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_light">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="DARK|LIT" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_portable">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="PORTABLE|NOT_PORTABLE" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_ridable">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="RIDABLE|NOT_RIDABLE" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_sundeath">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="SUNDEATH|NO_SUNDEATH" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_terrain">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="INDOORS|CITY|FIELD|FOREST|HILLS|MOUNTAINS|SHALLOW|WATER|RAPIDS|UNDERWATER|ROAD|BRUSH|TUNNEL|CAVERN|DEATHTRAP" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- ____________________________ room_exit _______________________________ -->
+
+    <xs:complexType name="room_exit">
+        <xs:sequence>
+            <xs:element name="to" type="room_id" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="doorflag" type="room_exit_doorflag" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="exitflag" type="room_exit_exitflag" minOccurs="0" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="dir" type="room_exit_dir" use="required" />
+        <xs:attribute name="doorname" type="xs:string" use="optional" />
+    </xs:complexType>
+
+    <xs:simpleType name="room_exit_dir">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="north|south|east|west|up|down|unknown|none" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_exit_doorflag">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="HIDDEN|NEED_KEY|NO_BLOCK|NO_BREAK|NO_PICK|DELAYED|CALLABLE|KNOCKABLE|MAGIC|ACTION|NO_BASH" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="room_exit_exitflag">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="NO_EXIT|DOOR|ROAD|CLIMB|RANDOM|SPECIAL|NO_MATCH|FLOW|NO_FLEE|DAMAGE|FALL|GUARDED" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- _______________________________ marker _______________________________ -->
+
+    <xs:complexType name="marker">
+        <xs:sequence>
+            <xs:element name="pos1" type="point3d" />
+            <xs:element name="pos2" type="point3d" minOccurs="0" />
+            <!-- MMapper2 GUI actually shows text only for markers with type="TEXT" -->
+            <xs:element name="text" type="xs:string" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute name="type" type="marker_type" use="required" />
+        <xs:attribute name="class" type="marker_class" use="required" />
+        <xs:attribute name="angle" type="marker_angle" use="optional" />
+    </xs:complexType>
+
+    <xs:simpleType name="marker_type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="TEXT|LINE|ARROW" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="marker_class">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="GENERIC|HERB|RIVER|PLACE|MOB|COMMENT|ROAD|OBJECT|ACTION|LOCALITY" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="marker_angle">
+        <!-- MMapper2 GUI currently can only create multiples of 45 degrees -->
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="-360" />
+            <xs:maxInclusive value="360" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- _______________________________ base types _______________________________ -->
+
+    <xs:complexType name="point3d">
+        <xs:attribute name="x" type="point1d" use="required" />
+        <xs:attribute name="y" type="point1d" use="required" />
+        <xs:attribute name="z" type="point1d" use="required" />
+    </xs:complexType>
+
+    <xs:simpleType name="point1d">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="-2147483648" />
+            <xs:maxInclusive value="2147483647" />
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
