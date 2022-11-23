@@ -613,7 +613,7 @@ void MainWindow::createActions()
     connect(mumeForumAct, &QAction::triggered, this, &MainWindow::slot_openMumeForum);
     mumeWikiAct = new QAction(tr("W&iki"), this);
     connect(mumeWikiAct, &QAction::triggered, this, &MainWindow::slot_openMumeWiki);
-    settingUpMmapperAct = new QAction(tr("&Setting up MMapper"), this);
+    settingUpMmapperAct = new QAction(QIcon::fromTheme("help-faq"), tr("Get &Help"), this);
     connect(settingUpMmapperAct, &QAction::triggered, this, &MainWindow::slot_openSettingUpMmapper);
     newbieAct = new QAction(tr("&Information for Newcomers"), this);
     newbieAct->setStatusTip("Newbie help on the MUME website");
@@ -1227,17 +1227,16 @@ void MainWindow::setupMenuBar()
     pathMachineMenu->addAction(releaseAllPathsAct);
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(voteAct);
-    helpMenu->addSeparator();
+    helpMenu->addAction(settingUpMmapperAct);
     if constexpr (!NO_UPDATER)
         helpMenu->addAction(mmapperCheckForUpdateAct);
+    helpMenu->addSeparator();
     mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
+    mumeMenu->addAction(voteAct);
+    mumeMenu->addAction(newbieAct);
     mumeMenu->addAction(mumeWebsiteAct);
     mumeMenu->addAction(mumeForumAct);
     mumeMenu->addAction(mumeWikiAct);
-    onlineTutorialsMenu = helpMenu->addMenu(QIcon::fromTheme("help-faq"), tr("Online &Tutorials"));
-    onlineTutorialsMenu->addAction(newbieAct);
-    onlineTutorialsMenu->addAction(settingUpMmapperAct);
     helpMenu->addSeparator();
     helpMenu->addAction(aboutAct);
     helpMenu->addAction(aboutQtAct);
