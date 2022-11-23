@@ -35,7 +35,7 @@ public:
 
 public:
     template<typename First, typename... Types>
-    constexpr Array(First &&first, Types &&... args)
+    constexpr Array(First &&first, Types &&...args)
         : std::array<T, N>{std::forward<First>(first), std::forward<Types>(args)...}
     {}
 };

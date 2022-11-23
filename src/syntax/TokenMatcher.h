@@ -50,7 +50,7 @@ public:
     NODISCARD static TokenMatcher alloc(T &&x) = delete;
 
     template<typename T, typename... Args>
-    NODISCARD static TokenMatcher alloc(Args &&... args)
+    NODISCARD static TokenMatcher alloc(Args &&...args)
     {
         auto ptr = std::make_shared<const T>(std::forward<Args>(args)...);
         return TokenMatcher{std::move(ptr)};
