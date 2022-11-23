@@ -43,10 +43,10 @@ jobs:
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
       run: |
-        sudo apt install -y clang-11 clang-format-11 binutils
+        sudo apt install -y clang-13 clang-format-11 binutils
         echo "QMAKESPEC=linux-clang" >> $GITHUB_ENV
-        echo "CC=clang-11" >> $GITHUB_ENV
-        echo "CXX=clang++-11" >> $GITHUB_ENV
+        echo "CC=clang-13" >> $GITHUB_ENV
+        echo "CXX=clang++-13" >> $GITHUB_ENV
         echo "CLANG_FORMAT=clang-format-11" >> $GITHUB_ENV
         echo "STYLE=true" >> $GITHUB_ENV
 
