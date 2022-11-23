@@ -27,7 +27,7 @@ std::optional<GLenum> Functions::toGLenum(const DrawModeEnum mode)
 
 const char *Functions::getShaderVersion()
 {
-    return "#version 110 // OpenGL 2.0\n\n";
+    return "#version 110\n\n";
 }
 
 void Functions::enableProgramPointSize(const bool enable)
