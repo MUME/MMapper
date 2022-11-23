@@ -84,7 +84,7 @@ NODISCARD SharedConstSublist buildSyntax(First &&first, SharedConstSublist secon
 }
 
 template<typename First, typename Second, typename... Rest>
-NODISCARD SharedConstSublist buildSyntax(First &&first, Second &&second, Rest &&... rest)
+NODISCARD SharedConstSublist buildSyntax(First &&first, Second &&second, Rest &&...rest)
 {
     SharedConstSublist cdr = buildSyntax(std::forward<Second>(second), std::forward<Rest>(rest)...);
     return std::make_shared<const Sublist>(std::forward<First>(first), std::move(cdr));

@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-11.0]
+        os: [ubuntu-22.04, macos-11.0]
         compiler: ['clang', 'gcc']
         exclude:
         - os: macos-11.0
@@ -34,20 +34,20 @@ jobs:
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
-        sudo apt install -y gcc-10 g++-10 lcov
+        sudo apt install -y gcc-11 g++-11 lcov
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
-        echo "CC=gcc-10" >> $GITHUB_ENV
-        echo "CXX=g++-10" >> $GITHUB_ENV
+        echo "CC=gcc-11" >> $GITHUB_ENV
+        echo "CXX=g++-11" >> $GITHUB_ENV
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
       run: |
-        sudo apt install -y clang-10 clang-format-10 binutils
+        sudo apt install -y clang-11 clang-format-11 binutils
         echo "QMAKESPEC=linux-clang" >> $GITHUB_ENV
-        echo "CC=clang-10" >> $GITHUB_ENV
-        echo "CXX=clang++-10" >> $GITHUB_ENV
-        echo "CLANG_FORMAT=clang-format-10" >> $GITHUB_ENV
+        echo "CC=clang-11" >> $GITHUB_ENV
+        echo "CXX=clang++-11" >> $GITHUB_ENV
+        echo "CLANG_FORMAT=clang-format-11" >> $GITHUB_ENV
         echo "STYLE=true" >> $GITHUB_ENV
 
 

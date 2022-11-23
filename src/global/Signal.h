@@ -154,7 +154,7 @@ public:
             });
     }
 
-    void operator()(Args &&... args) { invoke(std::forward<Args>(args)...); }
+    void operator()(Args &&...args) { invoke(std::forward<Args>(args)...); }
 
 public:
     NODISCARD SharedConnection connect(Function function)
