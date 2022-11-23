@@ -860,7 +860,6 @@ void AbstractParser::openVoteURL()
 {
     QDesktopServices::openUrl(QUrl(
         "https://www.mudconnect.com/cgi-bin/search.cgi?mode=mud_listing&mud=MUME+-+Multi+Users+In+Middle+Earth"));
-    QDesktopServices::openUrl(QUrl("http://www.topmudsites.com/vote-MUME.html"));
     sendToUser("--->Thank you kindly for voting!\n");
 }
 
