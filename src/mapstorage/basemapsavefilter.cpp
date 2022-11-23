@@ -85,12 +85,12 @@ void BaseMapSaveFilter::prepare(ProgressCounter &counter)
 
     std::set<RoomId> considered{};
 
-    // Seed room
-    m_impl->mapData->genericSearch(this,
-                                   RoomFilter("The Fountain Square",
-                                              Qt::CaseSensitive,
-                                              false,
-                                              PatternKindsEnum::NAME));
+    // Seed rooms
+    static const char *seeds[] = {"The Fountain Square", "Cosy Room"};
+    for (const auto &name : seeds) {
+        const auto filter = RoomFilter(name, Qt::CaseSensitive, false, PatternKindsEnum::NAME);
+        m_impl->mapData->genericSearch(this, filter);
+    }
 
     // Walk the whole map through non-hidden exits without recursing
     while (!m_impl->roomsTodo.empty()) {
