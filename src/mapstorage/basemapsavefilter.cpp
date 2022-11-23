@@ -115,7 +115,7 @@ void BaseMapSaveFilter::virt_receiveRoom(RoomAdmin * /*admin*/, const Room *room
 {
     for (const auto &exit : room->getExitsList()) {
         for (auto to : exit.outRange()) {
-            if (exit.isHiddenExit()) {
+            if (exit.isHiddenExit() || exit.exitIsNoMatch()) {
                 m_impl->secretLinks.emplace(RoomLink(room->getId(), to));
             } else {
                 m_impl->baseRooms.emplace(to);
