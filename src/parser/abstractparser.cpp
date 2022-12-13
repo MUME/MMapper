@@ -1514,6 +1514,12 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         command = command.replace("$$DOOR$$", cn);
     }
 
+    if (command.startsWith("--[door:")) {
+        sendToUser(command);
+        m_overrideSendPrompt = true;
+        return;
+    }
+
     if (isOnline()) { // online mode
         sendToMud(command.toLatin1());
         sendToUser("--->" + command);
