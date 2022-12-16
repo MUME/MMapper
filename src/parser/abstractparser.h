@@ -150,6 +150,7 @@ public slots:
 
     void slot_reset();
     void slot_sendGTellToUser(const QString &, const QString &, const QString &);
+    void slot_timersUpdate(const QString &text);
 
 protected slots:
     void slot_doOfflineCharacterMove();

@@ -183,7 +183,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
                 static QRegExp lvl100statExp("Gold: *. Alert: *.", Qt::CaseSensitive, QRegExp::Wildcard);
                 if (statExp.exactMatch(tempStr) || lvl100statExp.exactMatch(tempStr) || statExpCond.exactMatch(tempStr)) {
                     //spells_print_mode = true;   // print the spells data
-                    sendToUser( m_timers.checkTimersLine(), isGoAhead );
+                    sendToUser( m_timers.getStatCommandEntry(), isGoAhead );
                 }
             }
 
