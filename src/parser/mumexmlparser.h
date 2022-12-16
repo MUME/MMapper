@@ -59,6 +59,7 @@ private:
     bool m_gratuitous = false;
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
+    bool m_spells_print_mode = false;
 
     // REVISIT: Is there any point to having a distinction between null and empty?
     std::optional<RoomName> m_roomName;
