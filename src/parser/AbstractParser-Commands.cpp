@@ -47,6 +47,7 @@ const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdVote{"vote", 2};
+const Abbrev cmdTimer{"timer", 5};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -841,6 +842,33 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Perform actions on the group manager."));
+
+    /* Port of the mtimer command from pandora */
+    add(
+        cmdTimer,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseTimer(rest);
+            return true;
+        },
+        [this](const std::string &name) {
+            const char help[]
+                = "Setup and addon timer, additional simple timers and countdown timers\r\n"
+                  "    Usage: mtimer addon <start|stop> <timers-name>\r\n\r\n"
+                  "    mtimer countdown <name> <timeout_in_seconds> <desc>\r\n\r\n"
+                  "    mtimer timer <name> <desc>\r\n"
+                  "    mtimer timer remove <name>\r\n\r\n"
+                  "    mtimer clear\r\n\r\n"
+                  "    Examples: \r\n"
+                  "    mtimer countdown blinded 90 *Stolb the Tarkhnarb Orc*\r\n"
+                  "    mtimer timer repop Vt zone\r\n";
+
+            sendToUser(QString("Help for %1%2:\n"
+                               "%3\n"
+                               "\n")
+                           .arg(prefixChar)
+                           .arg(::toQStringLatin1(name))
+                           .arg(::toQStringLatin1(help)));
+        });
 
     qInfo() << "Total commands + abbreviations: " << map.size();
 }

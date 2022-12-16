@@ -127,12 +127,13 @@ NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
 }
 
 AbstractParser::AbstractParser(
-    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *const parent)
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, CTimers &timers, QObject *const parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
     , m_proxy(std::move(proxy))
     , m_group(std::move(group))
+    , m_timers(timers)
     , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer,

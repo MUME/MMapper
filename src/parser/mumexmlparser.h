@@ -82,7 +82,7 @@ private:
     };
 
 public:
-    explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
+    explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, QObject *parent);
     ~MumeXmlParser() final;
 
 private:

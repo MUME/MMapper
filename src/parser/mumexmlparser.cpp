@@ -43,8 +43,8 @@ static const QByteArray ampersand("&");
 static const QByteArray ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(
-    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
-    : AbstractParser(md, mc, proxy, group, parent)
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, CTimers &timers, QObject *parent)
+    : AbstractParser(md, mc, proxy, group, timers, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";
@@ -161,6 +161,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
     if (!m_lineToUser.isEmpty()) {
         sendToUser(m_lineToUser, isGoAhead);
 
+
         {
             // Simplify the output and run actions
             QByteArray temp = m_lineToUser;
@@ -174,6 +175,18 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
                 // Remove snoop prefix (i.e. "&J Exits: north.")
                 tempStr = tempStr.mid(3);
             }
+
+            {
+                // "Needed: 312 xp, 0 tp. Gold: 0. Alert: normal. Condition(s)??"
+                static QRegExp statExp("Needed: * Alert: *.", Qt::CaseSensitive, QRegExp::Wildcard);
+                static QRegExp statExpCond("Needed: * Alert: *. Cond*", Qt::CaseSensitive, QRegExp::Wildcard);
+                static QRegExp lvl100statExp("Gold: *. Alert: *.", Qt::CaseSensitive, QRegExp::Wildcard);
+                if (statExp.exactMatch(tempStr) || lvl100statExp.exactMatch(tempStr) || statExpCond.exactMatch(tempStr)) {
+                    //spells_print_mode = true;   // print the spells data
+                    sendToUser( m_timers.checkTimersLine(), isGoAhead );
+                }
+            }
+
             parseMudCommands(tempStr);
         }
     }
@@ -633,6 +646,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);
         }
+
+
         toUser.append(ch);
         break;
 
