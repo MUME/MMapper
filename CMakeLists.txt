@@ -164,7 +164,7 @@ if(WITH_DRMINGW)
 endif()
 
 # Code Coverage Configuration
-add_library(coverage_config INTERFACE)
+add_library(coverage_config INTERFACE src/timers/CTimers.h src/timers/CTimers.cpp)
 if(USE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     message(STATUS "Enabling code coverage reporting")
     # Add required flags (GCC & LLVM/Clang)

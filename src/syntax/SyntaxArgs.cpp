@@ -237,6 +237,7 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         result = -result;
     }
 
+    const std::string &name = input.front();
     if (fail) {
         return MatchResult::failure(input);
     }

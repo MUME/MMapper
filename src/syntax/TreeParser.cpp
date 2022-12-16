@@ -6,8 +6,8 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <vector>
+
 
 #include "../global/unquote.h"
 #include "SyntaxArgs.h"
@@ -22,8 +22,9 @@ TreeParser::TreeParser(SharedConstSublist syntaxRoot, User &user)
 
 bool TreeParser::parse(const ParserInput &input)
 {
-    if (syntaxOnly(input))
+    if (syntaxOnly(input)) {
         return true;
+    }
 
     bool isFull = false;
     const auto isHelpRequest = [&isFull](const std::string_view s) -> bool {
@@ -409,7 +410,6 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
     if (!v) {
         throw std::runtime_error("input error: " + v.getUnquoteFailureReason());
     }
-
     const auto shared_vec = std::make_shared<const std::vector<std::string>>(v.getVectorOfStrings());
 
     const ParserInput input(shared_vec);
