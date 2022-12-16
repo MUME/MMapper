@@ -33,6 +33,8 @@ class CTimers : public QObject {
     QByteArray getTimers();
     QByteArray getCountdowns();
 
+signals:
+    void sig_sendTimersUpdateToUser(const QString str);
 
 public:
     CTimers(QObject *parent = 0);
@@ -66,8 +68,6 @@ public:
 
     // for stat command representation
     QByteArray getStatCommandEntry();
-
-    QByteArray checkTimersLine();
 
     void clear();
 

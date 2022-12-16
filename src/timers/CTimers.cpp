@@ -94,7 +94,10 @@ void CTimers::finishCountdownTimer()
         int diff = s->duration - s->timer.elapsed();
 
         if (diff <= 0) {
-            // Fixme: restore this functionality
+            emit sig_sendTimersUpdateToUser(
+                        QString("--[ Countdown timer %s < %s > finished.\r\n")
+                            .arg(s->name, s->desc)
+                        );
             // send_to_user("--[ Countdown timer %s < %s > finished.\r\n\r\n", (const char *) s->name, (const char *) s->desc);
             // send_prompt();
             m_countdowns.removeAt(i);
@@ -111,15 +114,6 @@ void CTimers::finishCountdownTimer()
         // in this case, refire the event in at least 1ms
         QTimer::singleShot(delta, this, SLOT(finishCountdownTimer()));
     }
-}
-
-QByteArray CTimers::checkTimersLine()
-{
-    QString s = getStatCommandEntry();
-
-    //    if (s != "")
-    //    	s+= "Normal spells:\r\n";
-    return qPrintable(s);
 }
 
 QByteArray CTimers::getTimers()

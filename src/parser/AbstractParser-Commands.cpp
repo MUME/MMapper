@@ -852,15 +852,10 @@ void AbstractParser::initSpecialCommandMap()
         },
         [this](const std::string &name) {
             const char help[]
-                = "Setup and addon timer, additional simple timers and countdown timers\r\n"
-                  "    Usage: mtimer addon <start|stop> <timers-name>\r\n\r\n"
-                  "    mtimer countdown <name> <timeout_in_seconds> <desc>\r\n\r\n"
-                  "    mtimer timer <name> <desc>\r\n"
-                  "    mtimer timer remove <name>\r\n\r\n"
-                  "    mtimer clear\r\n\r\n"
+                = "Setup countdown timer\r\n"
+                  "    _timer countdown <name> <timeout_in_seconds> <desc>\r\n\r\n"
                   "    Examples: \r\n"
-                  "    mtimer countdown blinded 90 *Stolb the Tarkhnarb Orc*\r\n"
-                  "    mtimer timer repop Vt zone\r\n";
+                  "    _timer countdown blinded 90 *Stolb the Tarkhnarb Orc*\r\n";
 
             sendToUser(QString("Help for %1%2:\n"
                                "%3\n"

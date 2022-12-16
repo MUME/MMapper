@@ -236,6 +236,12 @@ void Proxy::slot_start()
             &Mmapper2Group::sig_displayGroupTellEvent,
             parserXml,
             &AbstractParser::slot_sendGTellToUser);
+    connect(m_timers,
+            &CTimers::sig_sendTimersUpdateToUser,
+            parserXml,
+            &AbstractParser::slot_timersUpdate);
+
+
 
     log("Connection to client established ...");
 

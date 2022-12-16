@@ -1586,6 +1586,13 @@ void AbstractParser::slot_sendGTellToUser(const QString &color,
     sendPromptToUser();
 }
 
+void AbstractParser::slot_timersUpdate(const QString &text)
+{
+    sendToUser(text + "\n");
+    sendPromptToUser();
+}
+
+
 void AbstractParser::printRoomInfo(const RoomFieldEnum field)
 {
     printRoomInfo(RoomFieldFlags{field});
