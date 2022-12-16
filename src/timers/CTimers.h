@@ -20,6 +20,19 @@ struct TTimer
     QElapsedTimer timer;
 };
 
+typedef struct
+{
+    QByteArray name;        /* spells name */
+    QByteArray up_mes;      /* up message/pattern */
+    QByteArray down_mes;    /* down message */
+    QByteArray refresh_mes; /* refresh message */
+    QElapsedTimer timer;    /* timer */
+    bool addon;             /* if this spell has to be added after the "Affected by:" line */
+    bool up;                /* is this spell currently up ? */
+    bool silently_up;       /* this spell is up, but time wasn't set for ome reason (reconnect) */
+                            /* this option is required for better GroupManager functioning */
+} TSpell;
+
 class CTimers : public QObject {
     Q_OBJECT
 
@@ -29,6 +42,8 @@ class CTimers : public QObject {
     QList<TTimer *> m_timers;
     QList<TTimer *> m_countdowns;
 
+    std::vector<TSpell>  spells;
+
 
     QByteArray getTimers();
     QByteArray getCountdowns();
@@ -37,7 +52,7 @@ signals:
     void sig_sendTimersUpdateToUser(const QString str);
 
 public:
-    CTimers(QObject *parent = 0);
+    CTimers(QObject *parent);
     virtual ~CTimers();
 
     static QString msToMinSec(int ms)
@@ -70,6 +85,15 @@ public:
     QByteArray getStatCommandEntry();
 
     void clear();
+
+    // spells
+    void addSpell(QByteArray spellname, QByteArray up, QByteArray down, QByteArray refresh, bool addon);
+    void addSpell(const TSpell &s);
+    QString spellUpFor(unsigned int p);
+    void resetSpells();
+
+    void updateSpellsState(QByteArray line);
+    QByteArray checkAffectedByLine(QByteArray line);
 
 public slots:
     void finishCountdownTimer();

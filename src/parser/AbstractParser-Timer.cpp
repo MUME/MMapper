@@ -46,20 +46,6 @@ std::ostream &ArgTimerName::virt_to_stream(std::ostream &os) const
     return os << "<timers name>";
 }
 
-/*
- * {"mtimer",              usercmd_mtimer,        0,      0,
-"Setup and addon timer, additional simple timers and countdown timers",
-"    Usage:
-"    mtimer addon <start|stop> <timers-name>\r\n\r\n"
-"    mtimer countdown <name> <timeout_in_seconds> <desc>\r\n\r\n"
-"    mtimer timer <name> <desc>\r\n"
-"    mtimer timer remove <name>\r\n\r\n"
-"    mtimer clear\r\n\r\n"
-"    Examples: \r\n"
-"    mtimer countdown blinded 90 *Stolb the Tarkhnarb Orc*\r\n"
-"    mtimer timer repop Vt zone\r\n"
- *
- */
 void AbstractParser::parseTimer(StringView input)
 {
     using namespace ::syntax;
@@ -90,26 +76,11 @@ void AbstractParser::parseTimer(StringView input)
         },
         "configure countdown timer");
 
-    auto simpleTimer = Accept(
-        [this](User &user, const Pair *const args) {
-            auto &os = user.getOstream();
-            send_ok(os);
-        },
-        "configure simple timer");
-
     auto countdownTimerSyntax =
         buildSyntax(
         stringToken("countdown"),
         buildSyntax(TokenMatcher::alloc<ArgTimerName>(), TokenMatcher::alloc<ArgInt>(), TokenMatcher::alloc<ArgRest>(), countdownTimer)
     );
 
-    auto simpleTimerSyntax = buildSyntax(
-        abb("simple"),
-        TokenMatcher::alloc<ArgString>(),
-        simpleTimer
-    );
-
-    auto timerSyntax = buildSyntax(countdownTimerSyntax, simpleTimerSyntax);
-
-    eval("timer", timerSyntax, input);
+    eval("timer", countdownTimerSyntax, input);
 }
