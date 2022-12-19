@@ -11,7 +11,8 @@ description: |
 
 grade: stable
 confinement: strict
-base: core20
+base: core22
+compression: lzo
 
 architectures:
   - build-on: arm64
@@ -33,9 +34,12 @@ plugs:
 
 apps:
   mmapper-desktop:
-    command: bin/desktop-launch $SNAP/usr/local/bin/mmapper
-    desktop: usr/local/share/applications/org.mume.MMapper.desktop
-    plugs:
+    command-chain: &command-chain
+      - bin/desktop-launch
+    command: usr/bin/mmapper
+    common-id: org.mume.MMapper
+    desktop: usr/share/applications/org.mume.MMapper.desktop
+    plugs: &plugs
       - home
       - gsettings
       - network
@@ -44,7 +48,7 @@ apps:
       - x11
       - desktop
       - desktop-legacy
-      - unity7
+      - wayland
     environment:
       HOME: "$SNAP_USER_COMMON"
       DISABLE_WAYLAND: 1
@@ -53,10 +57,11 @@ apps:
 parts:
   mmapper:
     plugin: cmake
+    after: [desktop-qt5]
     source: .
     cmake-generator: Ninja
     cmake-parameters:
-      - -DCMAKE_INSTALL_PREFIX=/usr/local
+      - -DCMAKE_INSTALL_PREFIX=/usr
       - -DWITH_UPDATER=false
     build-packages:
       - build-essential
@@ -66,26 +71,11 @@ parts:
       - qtbase5-dev
       - qttools5-dev-tools
       - zlib1g-dev
+      - dpkg-dev
     stage-packages:
       - libminiupnpc17
-      - libssl1.1
+      - libssl3
       - zlib1g
-    override-pull: |
-      snapcraftctl pull
-      snapcraftctl set-version "$(git describe --tags --always --long)"
-    override-build: |
-      snapcraftctl build
-      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/local/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/local/share/applications/org.mume.MMapper.desktop
-    after: [desktop-qt5]
-  desktop-qt5:
-    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
-    source-subdir: qt
-    plugin: make
-    make-parameters: ["FLAVOR=qt5"]
-    build-packages:
-      - dpkg-dev
-      - qtbase5-dev
-    stage-packages:
       - adwaita-icon-theme
       - dmz-cursor-theme
       - gnome-themes-standard
@@ -98,16 +88,24 @@ parts:
       - light-themes
       - locales-all
       - shared-mime-info
-      - ttf-ubuntu-font-family
+      - fonts-ubuntu
       - qt5-gtk-platformtheme
       - qtwayland5
       - xdg-user-dirs
+    override-pull: |
+      craftctl default
+      craftctl set version=$(git describe --tags --always --long)
+    override-build: |
+      craftctl default
+      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $CRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
     override-prime: |
-      snapcraftctl prime
-      sed -i 's|XDG_DATA_HOME=$SNAP_USER_DATA|XDG_DATA_HOME=$SNAP_USER_COMMON|' $SNAPCRAFT_PRIME/bin/desktop-launch
-      sed -i 's|XDG_CONFIG_HOME=$SNAP_USER_DATA|XDG_CONFIG_HOME=$SNAP_USER_COMMON|' $SNAPCRAFT_PRIME/bin/desktop-launch
+      craftctl default
+      sed -i 's|XDG_DATA_HOME=$SNAP_USER_DATA|XDG_DATA_HOME=$SNAP_USER_COMMON|' $CRAFT_PRIME/bin/desktop-launch
+      sed -i 's|XDG_CONFIG_HOME=$SNAP_USER_DATA|XDG_CONFIG_HOME=$SNAP_USER_COMMON|' $CRAFT_PRIME/bin/desktop-launch
+
   desktop-settings-packages:
     plugin: nil
+    after: [desktop-qt5]
     build-packages:
       - libglib2.0-bin
     stage-packages:
@@ -115,24 +113,37 @@ parts:
       - ubuntu-settings
     prime:
       - usr/share/glib-2.0/schemas/*
-    after: [desktop-qt5]
+
   desktop-settings-build:
     plugin: nil
     after: [desktop-settings-packages]
     override-prime: |
       set -eux
       glib-compile-schemas usr/share/glib-2.0/schemas
+
+  desktop-qt5:
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: qt
+    plugin: make
+
+  # This part removes all the files in this snap which already exist in
+  # connected content and base snaps. Since these files will be available
+  # at runtime from the content and base snaps, they do not need to be
+  # included in this snap itself.
+  # More info: https://snapcraft-utils-library.readthedocs.io/en/latest/lib/cleanup.html
   cleanup:
     after: # Make this part run last; list all your other parts here
       - mmapper
-      - desktop-qt5
-      - desktop-settings-build
     plugin: nil
     build-snaps: # List all content-snaps and base snaps you're using here
-      - core20
+      - core22
     override-prime: |
       set -eux
-      for snap in "core20"; do  # List all content-snaps and base snaps you're using here
-        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
+      for snap in "core22"; do  # List all content-snaps and base snaps you're using here
+        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$CRAFT_PRIME/{}" "$CRAFT_PRIME/usr/{}" \;
       done
-
+      for CRUFT in bug lintian man; do
+        rm -rf $CRAFT_PRIME/usr/share/$CRUFT
+      done
+      find $CRAFT_PRIME/usr/share/doc/ -type f -not -name 'copyright' -delete
+      find $CRAFT_PRIME/usr/share -type d -empty -delete
