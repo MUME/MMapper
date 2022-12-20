@@ -30,9 +30,9 @@ environment:
 image:
   # AppVeyor builds are ordered by the image list:
   - Visual Studio 2019
+  - macos-bigsur
   - Ubuntu1804
   - Ubuntu2004
-  - macos-bigsur
   - Previous Ubuntu2004
   - Previous Visual Studio 2019
 
@@ -81,7 +81,7 @@ matrix:
     - image: Previous Ubuntu2004
       ARCH: arm64
     # x64 .deb is either Ubuntu or Debian stable
-    - image: Previous Ubuntu2004
+    - image: Ubuntu2004
       ARCH: x64
     # Following builds are not supported by AppImage
     - image: Ubuntu1804
