@@ -74,7 +74,7 @@ public:
     NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
 
 private:
-    mutable QMutex characterLock{QMutex::Recursive};
+    mutable QRecursiveMutex characterLock;
     std::set<GroupRecipient *> locks;
     std::queue<std::shared_ptr<GroupAction>> actionSchedule;
     GroupVector charIndex;

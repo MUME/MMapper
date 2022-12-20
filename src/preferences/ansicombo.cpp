@@ -134,7 +134,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
     tmpStr.chop(1);
     tmpStr.remove(0, 1);
 
-    for (const auto &s : tmpStr.split(";", QString::SkipEmptyParts)) {
+    for (const auto &s : tmpStr.split(";", Qt::SkipEmptyParts)) {
         switch (const auto n = s.toInt()) {
         case 0:
             /* Ansi reset will never happen, but it doesn't hurt to have it. */

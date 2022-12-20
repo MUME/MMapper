@@ -688,13 +688,6 @@ if(WIN32)
     )
 
     # Bundle Library Files
-    if (Qt5Core_VERSION VERSION_LESS 5.14.0)
-       if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
-          set(WINDEPLOYQT_ARGS --debug)
-       else()
-          set(WINDEPLOYQT_ARGS --release)
-        endif()
-    endif()
     set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
     find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")

@@ -38,8 +38,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 if(Qt5Core_FOUND)
-    if(Qt5Core_VERSION VERSION_LESS 5.12.4)
-        message(FATAL_ERROR "Minimum supported Qt version is 5.12")
+    if(Qt5Core_VERSION VERSION_LESS 5.15.0)
+        message(FATAL_ERROR "Minimum supported Qt version is 5.15")
     endif()
 endif()
 
@@ -183,8 +183,8 @@ endif()
 if(MMAPPER_IS_DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE true)
 
-    # disable all the deprecated APIs in Qt <= 5.11
-    add_compile_options(-DQT_DISABLE_DEPRECATED_BEFORE=0x050b00)
+    # disable all the deprecated APIs in Qt <= 5.15
+    add_compile_options(-DQT_DISABLE_DEPRECATED_BEFORE=0x050F00)
 
     if(NOT MSVC)
         # common options for gcc and clang
