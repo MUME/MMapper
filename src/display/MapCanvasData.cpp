@@ -92,8 +92,8 @@ glm::vec2 MapCanvasViewport::getMouseCoords(const QInputEvent *const event) cons
         const auto y = static_cast<float>(height() - mouse->pos().y());
         return glm::vec2{x, y};
     } else if (const auto *const wheel = dynamic_cast<const QWheelEvent *>(event)) {
-        const auto x = static_cast<float>(wheel->pos().x());
-        const auto y = static_cast<float>(height() - wheel->pos().y());
+        const auto x = static_cast<float>(wheel->position().x());
+        const auto y = static_cast<float>(height() - wheel->position().y());
         return glm::vec2{x, y};
     } else {
         throw std::invalid_argument("event");

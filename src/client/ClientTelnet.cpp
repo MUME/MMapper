@@ -25,7 +25,7 @@ ClientTelnet::ClientTelnet(QObject *const parent)
     connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);
     connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::slot_onReadyRead);
     connect(&socket,
-            QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error),
+            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this,
             &ClientTelnet::slot_onError);
 }

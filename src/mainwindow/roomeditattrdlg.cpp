@@ -478,12 +478,11 @@ const Room *RoomEditAttrDlg::getSelectedRoom()
     if (m_roomSelection->size() == 1) {
         return m_roomSelection->getFirstRoom();
     }
-    if (auto it = m_roomSelection->find(
-            RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
-        it != m_roomSelection->end()) {
-        return it->second;
-    }
-    return nullptr;
+    auto it = m_roomSelection->find(
+        RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
+    if (it != m_roomSelection->end())
+        return nullptr;
+    return it->second;
 }
 
 ExitDirEnum RoomEditAttrDlg::getSelectedExit()

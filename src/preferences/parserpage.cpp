@@ -73,7 +73,7 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(validPattern, &QAbstractButton::clicked, this, &ParserPage::slot_validPatternClicked);
 
     connect(endDescPatternsList,
-            QOverload<const QString &>::of(&QComboBox::activated),
+            QOverload<const QString &>::of(&QComboBox::textActivated),
             this,
             &ParserPage::slot_endDescPatternsListActivated);
 

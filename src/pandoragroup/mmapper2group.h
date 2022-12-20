@@ -140,7 +140,7 @@ private:
                               const int maxmp);
     void renameCharacter(QByteArray newname);
 
-    QMutex networkLock{QMutex::Recursive};
+    QRecursiveMutex networkLock;
     std::unique_ptr<QThread> thread;
     std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;
