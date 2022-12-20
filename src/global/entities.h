@@ -71,6 +71,6 @@ public:
         virt_decodedEntity(start, len, decoded);
     }
 };
-void foreachEntity(const QStringRef &line, EntityCallback &callback);
+void foreachEntity(const QStringView line, EntityCallback &callback);
 
 } // namespace entities
