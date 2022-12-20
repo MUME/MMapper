@@ -80,12 +80,10 @@ static void useHighDpi()
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 }
 
-static void trySetHighDpiScaleFactorRoundingPolicy()
+static void setHighDpiScaleFactorRoundingPolicy()
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     QApplication::setHighDpiScaleFactorRoundingPolicy(
         Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
-#endif
 }
 
 static void tryInitDrMingw()
@@ -168,7 +166,7 @@ static void setSurfaceFormat()
 int main(int argc, char **argv)
 {
     useHighDpi();
-    trySetHighDpiScaleFactorRoundingPolicy();
+    setHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {
         // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern

@@ -222,7 +222,7 @@ void InputHistory::addInputLine(const QString &string)
 
 void TabHistory::addInputLine(const QString &string)
 {
-    QStringList list = string.split(s_whitespaceRx, QString::SkipEmptyParts);
+    QStringList list = string.split(s_whitespaceRx, Qt::SkipEmptyParts);
     for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary

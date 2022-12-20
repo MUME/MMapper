@@ -47,7 +47,7 @@ protected:
     RoomLocks locks;
 
     RoomId greatestUsedId = INVALID_ROOMID;
-    QMutex mapLock{QMutex::Recursive};
+    QRecursiveMutex mapLock;
 
     struct Bounds final
     {

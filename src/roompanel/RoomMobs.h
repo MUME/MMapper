@@ -51,6 +51,6 @@ private:
     std::unordered_map<RoomMob::Id, SharedRoomMobAndIndex> m_mobs;
     // mobs ordered as they should be shown
     std::map<size_t, SharedRoomMob> m_mobsByIndex;
-    mutable QMutex mutex{QMutex::Recursive};
+    mutable QRecursiveMutex mutex;
     size_t m_nextIndex;
 };

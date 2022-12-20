@@ -88,7 +88,7 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     connect(&m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::slot_onDisconnect);
     connect(&m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::slot_onEncrypted);
     connect(&m_socket,
-            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
+            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this,
             &MumeSslSocket::slot_onError);
     connect(&m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::slot_onPeerVerifyError);
