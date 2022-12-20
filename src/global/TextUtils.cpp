@@ -37,7 +37,7 @@ const QRegularExpression weakAnsiRegex(R"(\x1b\[?[[:digit:];]*[[:alpha:]]?)");
 
 static constexpr const char C_ANSI_ESCAPE = C_ESC;
 
-bool containsAnsi(const QStringRef &str)
+bool containsAnsi(const QStringView str)
 {
     return str.contains(C_ANSI_ESCAPE);
 }
@@ -47,7 +47,7 @@ bool containsAnsi(const QString &str)
     return str.contains(C_ANSI_ESCAPE);
 }
 
-bool isAnsiColor(QStringRef ansi)
+bool isAnsiColor(QStringView ansi)
 {
     if (ansi.length() < 3 || ansi.at(0) != C_ANSI_ESCAPE || ansi.at(1) != C_OPEN_BRACKET
         || ansi.at(ansi.length() - 1) != 'm') {
@@ -66,10 +66,10 @@ bool isAnsiColor(QStringRef ansi)
 
 bool isAnsiColor(const QString &ansi)
 {
-    return isAnsiColor(ansi.midRef(0));
+    return isAnsiColor(QStringView{ansi});
 }
 
-NODISCARD static int parsePositiveInt(const QStringRef &number)
+NODISCARD static int parsePositiveInt(const QStringView number)
 {
     static constexpr int MAX = std::numeric_limits<int>::max();
     static_assert(MAX == 2147483647);
@@ -106,7 +106,7 @@ NODISCARD static int parsePositiveInt(const QStringRef &number)
     return n;
 }
 
-void AnsiColorParser::for_each(QStringRef ansi) const
+void AnsiColorParser::for_each(QStringView ansi) const
 {
     if (!isAnsiColor(ansi)) {
         // It's okay for this to be something that's not an ansi color.
@@ -126,7 +126,7 @@ void AnsiColorParser::for_each(QStringRef ansi) const
     const int len = ansi.length();
     int pos = 0;
 
-    const auto try_report = [this, &ansi, &pos](const int idx) -> void {
+    const auto try_report = [this, &ansi, &pos](const auto idx) -> void {
         if (idx <= pos)
             report(0);
         else
@@ -134,30 +134,30 @@ void AnsiColorParser::for_each(QStringRef ansi) const
     };
 
     while (pos < len) {
-        const int idx = ansi.indexOf(C_SEMICOLON, pos);
+        const auto idx = ansi.indexOf(C_SEMICOLON, pos);
         if (idx < 0)
             break;
 
         try_report(idx);
-        pos = idx + 1;
+        pos = static_cast<int>(idx + 1);
     }
 
     try_report(len);
 }
 
-int countLines(const QStringRef &input)
+int countLines(const QStringView input)
 {
     int count = 0;
-    foreachLine(input, [&count](const QStringRef &, bool) { ++count; });
+    foreachLine(input, [&count](const QStringView, bool) { ++count; });
     return count;
 }
 
 int countLines(const QString &input)
 {
-    return countLines(input.midRef(0));
+    return countLines(QStringView{input});
 }
 
-int measureExpandedTabsOneLine(const QStringRef &line, const int startingColumn)
+int measureExpandedTabsOneLine(const QStringView line, const int startingColumn)
 {
     int col = startingColumn;
     for (const auto &c : line) {
@@ -173,10 +173,10 @@ int measureExpandedTabsOneLine(const QStringRef &line, const int startingColumn)
 
 int measureExpandedTabsOneLine(const QString &line, const int startingColumn)
 {
-    return measureExpandedTabsOneLine(line.midRef(0), startingColumn);
+    return measureExpandedTabsOneLine(QStringView{line}, startingColumn);
 }
 
-int findTrailingWhitespace(const QStringRef &line)
+int findTrailingWhitespace(const QStringView line)
 {
     auto m = trailingWhitespaceRegex.match(line);
     if (!m.hasMatch())
@@ -186,7 +186,7 @@ int findTrailingWhitespace(const QStringRef &line)
 
 int findTrailingWhitespace(const QString &line)
 {
-    return findTrailingWhitespace(line.midRef(0));
+    return findTrailingWhitespace(QStringView{line});
 }
 
 static constexpr const int ANSI_RESET = 0;
@@ -565,7 +565,7 @@ NODISCARD static bool isValidAnsiCode(const int n)
     // 60-65: ideograms (rarely supported)
 }
 
-bool isValidAnsiColor(const QStringRef &ansi)
+bool isValidAnsiColor(const QStringView ansi)
 {
     if (!isAnsiColor(ansi))
         return false;
@@ -580,7 +580,7 @@ bool isValidAnsiColor(const QStringRef &ansi)
 
 bool isValidAnsiColor(const QString &ansi)
 {
-    return isValidAnsiColor(ansi.midRef(0));
+    return isValidAnsiColor(QStringView{ansi});
 }
 
 struct NODISCARD Prefix final
@@ -637,13 +637,13 @@ public:
         {
             auto m = bulletPrefixRegex.match(line);
             if (m.hasMatch()) {
-                const QStringRef &ref = m.capturedRef();
+                const QStringView sv = m.capturedView();
                 /* this could fail if someone breaks the regex pattern for the escaped asterisk */
-                bulletLength = ref.length();
-                prefixLen = measureExpandedTabsOneLine(ref, prefixLen);
+                bulletLength = sv.length();
+                prefixLen = measureExpandedTabsOneLine(sv, prefixLen);
                 hasPrefix2 = true;
-                append(ref);
-                line = line.mid(ref.length());
+                append(sv);
+                line = line.mid(sv.length());
             }
         }
 
@@ -663,7 +663,7 @@ public:
     }
 };
 
-void TextBuffer::appendJustified(QStringRef input_line, const int maxLen)
+void TextBuffer::appendJustified(QStringView input_line, const int maxLen)
 {
     QString line = input_line.toString();
     constexpr const bool preserveTrailingWhitespace = true;
@@ -705,7 +705,7 @@ void TextBuffer::appendJustified(QStringRef input_line, const int maxLen)
             auto m = leadingNonSpaceRegex.match(line);
             if (m.hasMatch()) {
                 line = line.mid(m.capturedLength());
-                const auto word = m.capturedRef();
+                const auto word = m.capturedView();
                 const int spaceCol = measureExpandedTabsOneLine(leadingSpace, col);
 
                 if (spaceCol + word.length() > maxLen) {
@@ -734,7 +734,7 @@ void TextBuffer::appendJustified(QStringRef input_line, const int maxLen)
     }
 }
 
-void TextBuffer::appendExpandedTabs(const QStringRef &line, const int start_at)
+void TextBuffer::appendExpandedTabs(const QStringView line, const int start_at)
 {
     int col = start_at;
     for (const QChar c : line) {
@@ -761,7 +761,7 @@ bool TextBuffer::hasTrailingNewline() const
     return !isEmpty() && text_.at(text_.length() - 1) == '\n';
 }
 
-TextBuffer normalizeAnsi(const QStringRef &old)
+TextBuffer normalizeAnsi(const QStringView old)
 {
     if (!containsAnsi(old)) {
         assert(false);
@@ -777,7 +777,7 @@ TextBuffer normalizeAnsi(const QStringRef &old)
 
     Ansi ansi;
 
-    foreachLine(old, [&ansi, &reset, &output](const QStringRef &line, bool hasNewline) {
+    foreachLine(old, [&ansi, &reset, &output](const QStringView line, bool hasNewline) {
         if (ansi != Ansi())
             output.append(ansi.get_raw().asAnsiString().c_str());
 
@@ -792,13 +792,13 @@ TextBuffer normalizeAnsi(const QStringRef &old)
             current = next;
         };
 
-        const auto print = [&transition, &output](const QStringRef &ref) {
+        const auto print = [&transition, &output](const QStringView sv) {
             transition();
-            output.append(ref);
+            output.append(sv);
         };
 
         int pos = 0;
-        foreachAnsi(line, [&next, &line, &pos, &print](const int begin, const QStringRef &ansiStr) {
+        foreachAnsi(line, [&next, &line, &pos, &print](const auto begin, const QStringView ansiStr) {
             assert(line.at(begin) == '\x1b');
             if (begin > pos) {
                 print(line.mid(pos, begin - pos));
@@ -826,7 +826,7 @@ TextBuffer normalizeAnsi(const QStringRef &old)
 
 TextBuffer normalizeAnsi(const QString &str)
 {
-    return normalizeAnsi(str.midRef(0));
+    return normalizeAnsi(QStringView{str});
 }
 
 AnsiStringToken::AnsiStringToken(AnsiStringToken::TokenTypeEnum _type,
@@ -834,7 +834,7 @@ AnsiStringToken::AnsiStringToken(AnsiStringToken::TokenTypeEnum _type,
                                  const AnsiStringToken::size_type _offset,
                                  const AnsiStringToken::size_type _length)
     : type{_type}
-    , text_{&_text}
+    , text_{_text}
     , offset_{_offset}
     , length_{_length}
 {
@@ -844,9 +844,9 @@ AnsiStringToken::AnsiStringToken(AnsiStringToken::TokenTypeEnum _type,
     assert(isClamped(end_offset(), 0, maxlen));
 }
 
-QStringRef AnsiStringToken::getQStringRef() const
+QStringView AnsiStringToken::getQStringView() const
 {
-    return QStringRef{text_, offset_, length_};
+    return text_.mid(offset_, length_);
 }
 
 bool AnsiStringToken::isAnsiCsi() const

@@ -676,7 +676,7 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
 
 // TODO: test with strings like "", "&;", "&&", "&&;", "&lt", "&lt;" "&lt&lt;",
 // "&foo;", "&1114111;", "&1114112;", "&x10FFFF;", "&x110000;", etc
-void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
+void entities::foreachEntity(const QStringView input, EntityCallback &callback)
 {
     const auto &tab = getEntityTable();
 
@@ -803,7 +803,7 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
     const QString &tmp = QString(input);
     assert(tmp.size() == input.size());
 
-    foreachEntity(tmp.midRef(0), callback);
+    foreachEntity(QStringView{tmp}, callback);
     callback.skipto(input.size());
 
     return std::move(callback.out);
