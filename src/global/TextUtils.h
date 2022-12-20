@@ -16,7 +16,7 @@
 
 #include "utils.h"
 
-NODISCARD bool containsAnsi(const QStringRef &str);
+NODISCARD bool containsAnsi(const QStringView str);
 NODISCARD bool containsAnsi(const QString &str);
 
 // Callback = void(string_view);
@@ -66,43 +66,43 @@ void foreachLine(const std::string_view input, Callback &&callback)
 
 // Callback is void(int pos)
 template<typename Callback>
-void foreachChar(const QStringRef &input, char c, Callback &&callback)
+void foreachChar(const QStringView input, char c, Callback &&callback)
 {
-    const int len = input.size();
+    const auto len = input.size();
     int pos = 0;
     while (pos < len) {
-        const int next = input.indexOf(c, pos);
+        const auto next = input.indexOf(c, pos);
         if (next < 0)
             break;
         assert(next >= pos);
         assert(input[next] == c);
         callback(next);
-        pos = next + 1;
+        pos = static_cast<int>(next + 1);
     }
 }
 
 template<typename Callback>
 inline void foreachChar(const QString &input, const char c, Callback &&callback)
 {
-    foreachChar(input.midRef(0), c, std::forward<Callback>(callback));
+    foreachChar(QStringView{input}, c, std::forward<Callback>(callback));
 }
 
 // Callback can be:
-// void(const QStringRef& line, bool hasNewline), or
-// void(QStringRef line, bool hasNewline)
+// void(const QStringView line, bool hasNewline), or
+// void(QStringView line, bool hasNewline)
 template<typename Callback>
-void foreachLine(const QStringRef &input, Callback &&callback)
+void foreachLine(const QStringView input, Callback &&callback)
 {
-    const int len = input.size();
+    const auto len = input.size();
     int pos = 0;
     while (pos < len) {
-        const int next = input.indexOf('\n', pos);
+        const auto next = input.indexOf('\n', pos);
         if (next < 0)
             break;
         assert(next >= pos);
         assert(input[next] == '\n');
         callback(input.mid(pos, next - pos), true);
-        pos = next + 1;
+        pos = static_cast<int>(next + 1);
     }
     if (pos < len)
         callback(input.mid(pos, len - pos), false);
@@ -111,7 +111,7 @@ void foreachLine(const QStringRef &input, Callback &&callback)
 template<typename Callback>
 inline void foreachLine(const QString &input, Callback &&callback)
 {
-    foreachLine(input.midRef(0), std::forward<Callback>(callback));
+    foreachLine(QStringView{input}, std::forward<Callback>(callback));
 }
 
 extern const QRegularExpression weakAnsiRegex;
@@ -120,21 +120,21 @@ extern const QRegularExpression weakAnsiRegex;
 // Use isAnsiColor(ref) to verify if the value reported is a color.
 //
 // Callback:
-// void(int start, QStringRef ref)
+// void(int start, QStringView sv)
 //
 // NOTE: This version only reports callback(start, length),
 // because the intended caller needs the start position,
-// but QStringRef can't expose the start position.
+// but QStringView can't expose the start position.
 template<typename Callback>
-void foreachAnsi(const QStringRef &line, Callback &&callback)
+void foreachAnsi(const QStringView line, Callback &&callback)
 {
-    const int len = line.size();
+    const auto len = line.size();
     int pos = 0;
     while (pos < len) {
         auto m = weakAnsiRegex.match(line, pos);
         if (!m.hasMatch())
             break;
-        callback(m.capturedStart(), m.capturedRef());
+        callback(m.capturedStart(), m.capturedView());
         pos = m.capturedEnd();
     }
 }
@@ -142,10 +142,10 @@ void foreachAnsi(const QStringRef &line, Callback &&callback)
 template<typename Callback>
 void foreachAnsi(const QString &line, Callback &&callback)
 {
-    foreachAnsi(line.midRef(0), std::forward<Callback>(callback));
+    foreachAnsi(QStringView{line}, std::forward<Callback>(callback));
 }
 
-NODISCARD extern bool isAnsiColor(QStringRef ansi);
+NODISCARD extern bool isAnsiColor(QStringView ansi);
 NODISCARD extern bool isAnsiColor(const QString &ansi);
 
 class NODISCARD AnsiColorParser final
@@ -158,7 +158,7 @@ private:
         , callback_{_callback}
     {}
 
-    void for_each(QStringRef ansi) const;
+    void for_each(QStringView ansi) const;
     void report(int n) const { callback_(data_, n); }
 
 public:
@@ -172,7 +172,7 @@ public:
     // NOTE: Values too large to fit in a signed integer
     // (e.g. "ESC[2147483648m" -> callback(-1).
     template<typename Callback>
-    static void for_each_code(const QStringRef &ansi, Callback &&callback)
+    static void for_each_code(const QStringView ansi, Callback &&callback)
     {
         auto ptr = &callback;
         using ptr_type = decltype(ptr);
@@ -191,7 +191,7 @@ public:
 // Callback:
 // void(int csi)
 template<typename Callback>
-void ansiForeachColorCode(const QStringRef &ansi, Callback &&callback)
+void ansiForeachColorCode(const QStringView ansi, Callback &&callback)
 {
     AnsiColorParser::for_each_code(ansi, std::forward<Callback>(callback));
 }
@@ -199,19 +199,19 @@ void ansiForeachColorCode(const QStringRef &ansi, Callback &&callback)
 template<typename Callback>
 void ansiForeachColorCode(const QString &ansi, Callback &&callback)
 {
-    ansiForeachColorCode(ansi.midRef(0), std::forward<Callback>(callback));
+    ansiForeachColorCode(QStringView{ansi}, std::forward<Callback>(callback));
 }
 
-NODISCARD extern bool isValidAnsiColor(const QStringRef &ansi);
+NODISCARD extern bool isValidAnsiColor(const QStringView ansi);
 NODISCARD extern bool isValidAnsiColor(const QString &ansi);
 
 NODISCARD extern int countLines(const QString &input);
-NODISCARD extern int countLines(const QStringRef &input);
+NODISCARD extern int countLines(const QStringView input);
 
-NODISCARD extern int measureExpandedTabsOneLine(const QStringRef &line, int starting_at);
+NODISCARD extern int measureExpandedTabsOneLine(const QStringView line, int starting_at);
 NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);
 
-NODISCARD extern int findTrailingWhitespace(const QStringRef &line);
+NODISCARD extern int findTrailingWhitespace(const QStringView line);
 NODISCARD extern int findTrailingWhitespace(const QString &line);
 
 class NODISCARD TextBuffer final
@@ -228,11 +228,11 @@ public:
     void append(char c) { text_.append(c); }
     void append(QChar c) { text_.append(c); }
     void append(const QString &line) { text_.append(line); }
-    void append(const QStringRef &line) { text_.append(line); }
+    void append(const QStringView line) { text_.append(line); }
 
 public:
-    void appendJustified(QStringRef line, int maxLen);
-    void appendExpandedTabs(const QStringRef &line, int start_at = 0);
+    void appendJustified(QStringView line, int maxLen);
+    void appendExpandedTabs(const QStringView line, int start_at = 0);
 
 public:
     NODISCARD bool isEmpty() const;
@@ -340,7 +340,7 @@ public:
  *    the function doesn't return a "current" ansi color.
  * 6. Assumes UNIX-style newlines (LF only, not CRLF).
  */
-NODISCARD TextBuffer normalizeAnsi(const QStringRef &);
+NODISCARD TextBuffer normalizeAnsi(const QStringView);
 NODISCARD TextBuffer normalizeAnsi(const QString &str);
 
 #define DEFINE_CHAR_CONST(NAME, val) \
@@ -373,8 +373,7 @@ public:
     TokenTypeEnum type = TokenTypeEnum::ANSI; // There is no good default value.
 
 private:
-    /* TODO: convert to QStringRef? */
-    const QString *text_;
+    const QStringView text_;
     const size_type offset_;
     const size_type length_;
 
@@ -391,16 +390,16 @@ public:
     NODISCARD QChar at(const size_type pos) const
     {
         assert(isClamped(pos, 0, length_));
-        return text_->at(offset_ + pos);
+        return text_.at(offset_ + pos);
     }
     NODISCARD QChar operator[](const size_type pos) const { return at(pos); }
 
 public:
-    NODISCARD auto begin() const { return text_->begin() + offset_; }
+    NODISCARD auto begin() const { return text_.begin() + offset_; }
     NODISCARD auto end() const { return begin() + length_; }
 
 public:
-    NODISCARD QStringRef getQStringRef() const;
+    NODISCARD QStringView getQStringView() const;
     NODISCARD bool isAnsiCsi() const;
 };
 

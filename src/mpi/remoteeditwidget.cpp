@@ -50,7 +50,7 @@ NODISCARD static int measureTabAndAnsiAware(const QString &s)
         case Type::SPACE:
         case Type::CONTROL:
         case Type::WORD:
-            col = measureExpandedTabsOneLine(token.getQStringRef(), col);
+            col = measureExpandedTabsOneLine(token.getQStringView(), col);
             break;
         }
     }
@@ -109,7 +109,9 @@ public:
             return;
 
         const auto fmt = getBackgroundFormat(Qt::yellow);
-        foreachChar(line, '\t', [this, &fmt](const int at) { setFormat(at, 1, fmt); });
+        foreachChar(line, '\t', [this, &fmt](const auto at) {
+            setFormat(static_cast<int>(at), 1, fmt);
+        });
     }
 
     void highlightOverflow(const QString &line)
@@ -147,8 +149,10 @@ public:
         const auto red = getBackgroundFormat(Qt::red);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        foreachAnsi(line, [this, &red, &cyan](const int start, const QStringRef &ref) {
-            setFormat(start, ref.length(), isValidAnsiColor(ref) ? cyan : red);
+        foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
+            setFormat(static_cast<int>(start),
+                      static_cast<int>(sv.length()),
+                      isValidAnsiColor(sv) ? cyan : red);
         });
     }
 
@@ -190,7 +194,7 @@ public:
                 m_self.setFormat(start, len, get_fmt());
             }
         } callback{*this, red, darkOrange, yellow};
-        entities::foreachEntity(line.midRef(0), callback);
+        entities::foreachEntity(QStringView{line}, callback);
     }
 
     void highlightEncodingErrors(const QString &line)
@@ -353,9 +357,10 @@ NODISCARD static bool lineHasTabs(const QTextCursor &line)
 static void expandTabs(QTextCursor line)
 {
     const QTextBlock &block = line.block();
+    const QString &s = block.text();
 
     TextBuffer prefix;
-    prefix.appendExpandedTabs(block.text().midRef(0), 0);
+    prefix.appendExpandedTabs(QStringView{s}, 0);
 
     line.setPosition(block.position());
     line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -502,10 +507,10 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
 
     cur.insertText(S_TAB);
 
-    const auto block = cur.block();
     const int col_before = cur.positionInBlock();
-    const QStringRef &ref = block.text().leftRef(col_before);
-    const int col_after = measureExpandedTabsOneLine(ref, 0);
+    const auto &block = cur.block();
+    const QString &s = block.text().left(col_before);
+    const int col_after = measureExpandedTabsOneLine(s, 0);
     expandTabs(cur);
 
     cur.setPosition(block.position() + col_after);
@@ -549,7 +554,7 @@ void RemoteTextEdit::joinLines()
             return;
         if (!buffer.isEmpty())
             buffer.append(C_SPACE);
-        buffer.appendExpandedTabs(text.midRef(0));
+        buffer.appendExpandedTabs(QStringView{text});
     });
 
     /* adjust the selection to cover select everything in the blocks */
@@ -587,7 +592,7 @@ void RemoteTextEdit::justifyLines(const int maxLen)
             continue;
         if (!buffer.isEmpty())
             buffer.append(C_SPACE);
-        buffer.appendJustified(text.midRef(0), maxLen);
+        buffer.appendJustified(QStringView{text}, maxLen);
     }
 
     cur.setPosition(a);
@@ -974,18 +979,18 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 
     CursorAnsiInfo result;
     const auto &line = cursor.block().text();
-    foreachAnsi(line, [pos, &result](int start, const QStringRef &ref) {
-        if (result || pos < start || pos >= start + ref.length())
+    foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
+        if (result || pos < start || pos >= start + sv.length())
             return;
 
-        if (!isValidAnsiColor(ref)) {
+        if (!isValidAnsiColor(sv)) {
             result.buffer.append("*invalid*");
             return;
         }
 
         bool first = true;
         Ansi ansi;
-        AnsiColorParser::for_each_code(ref, [&ansi, &first, &result](int code) {
+        AnsiColorParser::for_each_code(sv, [&ansi, &first, &result](int code) {
             ansi.process_code(code);
             if (first)
                 first = false;
@@ -1088,7 +1093,7 @@ void RemoteEditWidget::slot_justifyText()
     const QString &old = m_textEdit->toPlainText();
     TextBuffer text;
     text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
-    foreachLine(old, [&text, maxLen = MAX_LENGTH](const QStringRef &line, bool /*hasNewline*/) {
+    foreachLine(old, [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
         text.appendJustified(line, maxLen);
         text.append('\n');
     });
