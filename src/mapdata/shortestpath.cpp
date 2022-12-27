@@ -137,6 +137,12 @@ void MapData::shortestPathSearch(const Room *origin,
                 continue;
             }
             const SharedConstRoom &nextr = roomIndex[e.outFirst()];
+            if (!nextr) {
+                qWarning() << "Source room" << thisr->getId().asUint32() << "("
+                           << thisr->getName().toQString() << ") has target room"
+                           << e.outFirst().asUint32() << "which does not exist!";
+                continue;
+            }
             if (visited.contains(nextr->getId())) {
                 continue;
             }
