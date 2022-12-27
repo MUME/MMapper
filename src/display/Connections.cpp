@@ -241,7 +241,8 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
             for (const auto &outTargetId : sourceExit.outRange()) {
                 const SharedConstRoom &sharedTargetRoom = rooms[outTargetId];
                 if (!sharedTargetRoom) {
-                    qWarning() << "Source room" << sourceId.asUint32() << "has target room"
+                    qWarning() << "Source room" << sourceId.asUint32() << "("
+                               << room->getName().toQString() << ") has target room"
                                << outTargetId.asUint32() << "which does not exist!";
                     continue;
                 }
@@ -288,7 +289,8 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
         for (const auto &inTargetId : sourceExit.inRange()) {
             const SharedConstRoom &sharedTargetRoom = rooms[inTargetId];
             if (!sharedTargetRoom) {
-                qWarning() << "Source room" << sourceId.asUint32() << "has target room"
+                qWarning() << "Source room" << sourceId.asUint32() << "("
+                           << room->getName().toQString() << ") has target room"
                            << inTargetId.asUint32() << "which does not exist!";
                 continue;
             }
