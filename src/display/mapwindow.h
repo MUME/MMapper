@@ -56,6 +56,7 @@ public slots:
     void slot_graphicsSettingsChanged();
 
 public:
+    void setScrollBarsVisible(const bool visible);
     void updateScrollBars();
     void setZoom(float zoom);
     float getZoom() const;
@@ -73,6 +74,7 @@ protected:
 private:
     QPoint mousePressPos;
     QPoint scrollBarValuesOnMousePress;
+    bool m_scrollBarsVisible;
     struct NODISCARD KnownMapSize final
     {
         glm::ivec3 min{0};

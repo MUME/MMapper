@@ -650,6 +650,11 @@ void MainWindow::createActions()
     showStatusBarAct->setChecked(true);
     connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
 
+    showScrollBarsAct = new QAction(tr("Scroll Bars"), this);
+    showScrollBarsAct->setCheckable(true);
+    showScrollBarsAct->setChecked(true);
+    connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
+
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
@@ -1201,6 +1206,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
     viewMenu->addAction(showStatusBarAct);
+    viewMenu->addAction(showScrollBarsAct);
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1306,9 +1312,18 @@ void MainWindow::slot_alwaysOnTop()
 void MainWindow::slot_setShowStatusBar()
 {
     const bool showStatusBar = this->showStatusBarAct->isChecked();
-    qInfo() << "Setting showStatusBar to" << showStatusBar;
+    qInfo() << "Setting showStatusBar to " << showStatusBar;
     statusBar()->setVisible(showStatusBar);
     // TODO CONFIGsetConfig().general.alwaysOnTop = alwaysOnTop;
+    show();
+}
+
+void MainWindow::slot_setShowScrollBars()
+{
+    const bool showScrollBars = this->showScrollBarsAct->isChecked();
+    qInfo() << "Setting showScrollBars to " << showScrollBars;
+    m_mapWindow->setScrollBarsVisible(showScrollBars);
+    // TODO Config
     show();
 }
 
