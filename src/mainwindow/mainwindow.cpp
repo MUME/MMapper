@@ -645,6 +645,11 @@ void MainWindow::createActions()
     alwaysOnTopAct->setCheckable(true);
     connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::slot_alwaysOnTop);
 
+    showStatusBarAct = new QAction(tr("Status Bar"), this);
+    showStatusBarAct->setCheckable(true);
+    showStatusBarAct->setChecked(true);
+    connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
+
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
@@ -1195,6 +1200,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
+    viewMenu->addAction(showStatusBarAct);
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1294,6 +1300,15 @@ void MainWindow::slot_alwaysOnTop()
     qInfo() << "Setting AlwaysOnTop flag to " << alwaysOnTop;
     setWindowFlag(Qt::WindowStaysOnTopHint, alwaysOnTop);
     setConfig().general.alwaysOnTop = alwaysOnTop;
+    show();
+}
+
+void MainWindow::slot_setShowStatusBar()
+{
+    const bool showStatusBar = this->showStatusBarAct->isChecked();
+    qInfo() << "Setting showStatusBar to" << showStatusBar;
+    statusBar()->setVisible(showStatusBar);
+    // TODO CONFIGsetConfig().general.alwaysOnTop = alwaysOnTop;
     show();
 }
 
