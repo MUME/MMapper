@@ -470,6 +470,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_exits = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
                     m_lineFlags.insert(LineFlagEnum::EXITS);
+                    m_descriptionReady = true;
                 }
                 break;
             case 'n':
@@ -496,6 +497,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("header")) {
                     m_xmlMode = XmlModeEnum::HEADER;
                     m_lineFlags.insert(LineFlagEnum::HEADER);
+                    m_descriptionReady = true;
                 }
                 break;
             case '/':
@@ -602,10 +604,8 @@ void MumeXmlParser::stripXmlEntities(QByteArray &ch)
 
 QByteArray MumeXmlParser::characters(QByteArray &ch)
 {
-    QByteArray toUser;
-
     if (ch.isEmpty()) {
-        return toUser;
+        return ch;
     }
 
     // replace > and < chars
@@ -620,9 +620,11 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         m_stringBuffer = m_stringBuffer.mid(3);
     }
 
+    QByteArray toUser;
+
     switch (m_xmlMode) {
     case XmlModeEnum::NONE: // non room info
-        m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
+        m_stringBuffer = normalizeStringCopy(m_stringBuffer);
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_descriptionReady && !m_exitsReady && config.mumeNative.emulatedExits) {
                 m_exitsReady = true;
@@ -637,8 +639,10 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::ROOM: // dynamic line
-        m_roomContents = RoomContents{m_roomContents.value_or(RoomContents{}).toQString()
-                                      + normalizeStringCopy(m_stringBuffer)};
+        if (!m_descriptionReady && m_roomDesc.has_value()) {
+            m_roomContents = RoomContents{m_roomContents.value_or(RoomContents{}).toQString()
+                                          + normalizeStringCopy(m_stringBuffer)};
+        }
         toUser.append(ch);
         break;
 
@@ -648,8 +652,10 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::DESCRIPTION: // static line
-        m_roomDesc = RoomDesc{m_roomDesc.value_or(RoomDesc{}).toQString()
-                              + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
+        if (!m_descriptionReady) {
+            m_roomDesc = RoomDesc{m_roomDesc.value_or(RoomDesc{}).toQString()
+                                  + normalizeStringCopy(m_stringBuffer)};
+        }
         if (!m_gratuitous) {
             toUser.append(ch);
         }
