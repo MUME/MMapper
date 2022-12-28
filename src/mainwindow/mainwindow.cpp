@@ -650,7 +650,7 @@ void MainWindow::createActions()
     showStatusBarAct->setChecked(true);
     connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
 
-    showScrollBarsAct = new QAction(tr("Scroll Bars"), this);
+    showScrollBarsAct = new QAction(tr("Scrollbars"), this);
     showScrollBarsAct->setCheckable(true);
     showScrollBarsAct->setChecked(true);
     connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
@@ -1205,8 +1205,6 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
-    viewMenu->addAction(showStatusBarAct);
-    viewMenu->addAction(showScrollBarsAct);
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1218,6 +1216,8 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(rebuildMeshesAct);
     viewMenu->addSeparator();
+    viewMenu->addAction(showStatusBarAct);
+    viewMenu->addAction(showScrollBarsAct);
     viewMenu->addAction(alwaysOnTopAct);
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
