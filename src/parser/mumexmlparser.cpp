@@ -616,6 +616,28 @@ bool MumeXmlParser::element(const QByteArray &line)
                         move();
                     }
                     m_spells_print_mode = false;
+
+                    const QString copy = normalizeStringCopy(m_lastPrompt);
+                    sendPromptLineEvent(copy.toLatin1());
+                    parsePrompt(copy);
+
+                    const auto &config = getConfig();
+                    if (!config.parser.removeXmlTags) {
+                        m_lastPrompt.replace(ampersand, ampersandTemplate);
+                        m_lastPrompt.replace(greaterThanChar, greaterThanTemplate);
+                        m_lastPrompt.replace(lessThanChar, lessThanTemplate);
+                        m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
+                    }
+
+                    if (m_descriptionReady) {
+                        if (!m_exitsReady && config.mumeNative.emulatedExits) {
+                            m_exitsReady = true;
+                            std::ostringstream os;
+                            emulateExits(os, m_move);
+                            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                        }
+                        move();
+                    }
                 }
                 break;
             }
