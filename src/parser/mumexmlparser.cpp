@@ -69,9 +69,9 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
-    case TelnetDataEnum::PROMPT:
         m_lastPrompt = data.line;
-        stripXmlEntities(m_lastPrompt);
+        if (getConfig().parser.removeXmlTags)
+            stripXmlEntities(m_lastPrompt);
         parse(data, true);
         break;
     case TelnetDataEnum::UNKNOWN:
@@ -85,6 +85,7 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 
     case TelnetDataEnum::LF:
     case TelnetDataEnum::CRLF:
+    case TelnetDataEnum::PROMPT:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
             (*debugStream) << "CRLF";
@@ -298,6 +299,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("prompt")) {
                     m_xmlMode = XmlModeEnum::PROMPT;
                     m_lineFlags.insert(LineFlagEnum::PROMPT);
+                    m_lastPrompt = emptyByteArray;
                 }
                 break;
             case 'e':
@@ -460,6 +462,12 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::ROOM:
         if (length > 0) {
             switch (line.at(0)) {
+            case 'c':
+                if (line.startsWith("character")) {
+                    m_xmlMode = XmlModeEnum::CHARACTER;
+                    m_lineFlags.insert(LineFlagEnum::CHARACTER);
+                }
+                break;
             case 'g':
                 if (line.startsWith("gratuitous") && getConfig().parser.removeXmlTags) {
                     m_gratuitous = true;
@@ -552,11 +560,39 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::PROMPT:
         if (length > 0) {
             switch (line.at(0)) {
+            case 'c':
+                if (line.startsWith("character")) {
+                    m_xmlMode = XmlModeEnum::CHARACTER;
+                    m_lineFlags.insert(LineFlagEnum::CHARACTER);
+                }
+                break;
             case '/':
                 if (line.startsWith("/prompt")) {
                     m_xmlMode = XmlModeEnum::NONE;
                     m_lineFlags.remove(LineFlagEnum::PROMPT);
                     m_overrideSendPrompt = false;
+
+                    const QString copy = normalizeStringCopy(m_lastPrompt);
+                    sendPromptLineEvent(copy.toLatin1());
+                    parsePrompt(copy);
+
+                    const auto &config = getConfig();
+                    if (!config.parser.removeXmlTags) {
+                        m_lastPrompt.replace(ampersand, ampersandTemplate);
+                        m_lastPrompt.replace(greaterThanChar, greaterThanTemplate);
+                        m_lastPrompt.replace(lessThanChar, lessThanTemplate);
+                        m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
+                    }
+
+                    if (m_descriptionReady) {
+                        if (!m_exitsReady && config.mumeNative.emulatedExits) {
+                            m_exitsReady = true;
+                            std::ostringstream os;
+                            emulateExits(os, m_move);
+                            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                        }
+                        move();
+                    }
                 }
                 break;
             }
@@ -581,6 +617,21 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("/header")) {
                     m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::HEADER);
+                }
+                break;
+            }
+        }
+        break;
+    case XmlModeEnum::CHARACTER:
+        if (length > 0) {
+            switch (line.at(0)) {
+            case '/':
+                if (line.startsWith("/character")) {
+                    if (m_lineFlags.isPrompt())
+                        m_xmlMode = XmlModeEnum::PROMPT;
+                    else
+                        m_xmlMode = XmlModeEnum::ROOM;
+                    m_lineFlags.remove(LineFlagEnum::CHARACTER);
                 }
                 break;
             }
@@ -622,7 +673,21 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     QByteArray toUser;
 
-    switch (m_xmlMode) {
+    const XmlModeEnum mode = [this]() -> XmlModeEnum {
+        if (m_lineFlags.isPrompt())
+            return XmlModeEnum::PROMPT;
+        else if (m_lineFlags.isExits())
+            return XmlModeEnum::EXITS;
+        else if (m_lineFlags.isName())
+            return XmlModeEnum::NAME;
+        else if (m_lineFlags.isDescription())
+            return XmlModeEnum::DESCRIPTION;
+        else if (m_lineFlags.isRoom())
+            return XmlModeEnum::ROOM;
+        return m_xmlMode;
+    }();
+
+    switch (mode) {
     case XmlModeEnum::NONE: // non room info
         m_stringBuffer = normalizeStringCopy(m_stringBuffer);
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
@@ -667,27 +732,11 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     case XmlModeEnum::PROMPT:
         // Store prompts in case an internal command is executed
-        m_lastPrompt = m_stringBuffer.toLatin1();
-        if (!getConfig().parser.removeXmlTags) {
-            m_lastPrompt.replace(ampersand, ampersandTemplate);
-            m_lastPrompt.replace(greaterThanChar, greaterThanTemplate);
-            m_lastPrompt.replace(lessThanChar, lessThanTemplate);
-            m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
-        }
-        sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
-        if (m_descriptionReady) {
-            if (!m_exitsReady && config.mumeNative.emulatedExits) {
-                m_exitsReady = true;
-                std::ostringstream os;
-                emulateExits(os, m_move);
-                sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
-            }
-            parsePrompt(normalizeStringCopy(m_stringBuffer));
-            move();
-        }
+        m_lastPrompt += m_stringBuffer.toLatin1();
         toUser.append(ch);
         break;
 
+    case XmlModeEnum::CHARACTER:
     case XmlModeEnum::HEADER:
     case XmlModeEnum::TERRAIN:
     default:

@@ -37,7 +37,8 @@ enum class NODISCARD XmlModeEnum : uint8_t {
     EXITS,
     PROMPT,
     TERRAIN,
-    HEADER
+    HEADER,
+    CHARACTER
 };
 
 class MumeXmlParser final : public AbstractParser
