@@ -465,6 +465,7 @@ QString AbstractParser::normalizeStringCopy(QString string)
     // transliterations to accidentally count as ANSI.
     ParserUtils::removeAnsiMarksInPlace(string);
     ParserUtils::toAsciiInPlace(string);
+    string.remove(C_CARRIAGE_RETURN);
     return string;
 }
 
