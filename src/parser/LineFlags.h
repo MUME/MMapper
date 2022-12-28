@@ -20,6 +20,7 @@
     X(WEATHER, weather, Weather, "Weather") \
     X(STATUS, status, Status, "Status") \
     X(SNOOP, snoop, Snoop, "Snoop") \
+    X(CHARACTER, character, Character, "Character") \
     /* define line flags above */
 
 enum class NODISCARD LineFlagEnum : uint32_t {
