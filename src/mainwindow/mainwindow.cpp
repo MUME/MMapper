@@ -309,6 +309,12 @@ MainWindow::MainWindow()
         alwaysOnTopAct->setChecked(true);
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
+
+    showStatusBarAct->setChecked(getConfig().general.showStatusBar);
+    slot_setShowStatusBar();
+
+    showScrollBarsAct->setChecked(getConfig().general.showScrollBars);
+    slot_setShowScrollBars();
 }
 
 // depth-first recursively disconnect all children
@@ -647,12 +653,10 @@ void MainWindow::createActions()
 
     showStatusBarAct = new QAction(tr("Status Bar"), this);
     showStatusBarAct->setCheckable(true);
-    showStatusBarAct->setChecked(true);
     connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
 
     showScrollBarsAct = new QAction(tr("Scrollbars"), this);
     showScrollBarsAct->setCheckable(true);
-    showScrollBarsAct->setChecked(true);
     connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
 
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
@@ -1314,7 +1318,7 @@ void MainWindow::slot_setShowStatusBar()
     const bool showStatusBar = this->showStatusBarAct->isChecked();
     qInfo() << "Setting showStatusBar to " << showStatusBar;
     statusBar()->setVisible(showStatusBar);
-    // TODO CONFIGsetConfig().general.alwaysOnTop = alwaysOnTop;
+    setConfig().general.showStatusBar= showStatusBar;
     show();
 }
 
@@ -1323,7 +1327,7 @@ void MainWindow::slot_setShowScrollBars()
     const bool showScrollBars = this->showScrollBarsAct->isChecked();
     qInfo() << "Setting showScrollBars to " << showScrollBars;
     m_mapWindow->setScrollBarsVisible(showScrollBars);
-    // TODO Config
+    setConfig().general.showScrollBars = showScrollBars;
     show();
 }
 
