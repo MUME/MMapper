@@ -77,8 +77,8 @@ if(OPENSSL_FOUND)
 elseif(WIN32 AND PERL_FOUND AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
     message(STATUS "Could not find a local OpenSSL; building from local source tree")
     include(ExternalProject)
-    set(OPENSSL_VERSION 1.1.1d)
-    set(OPENSSL_URL_HASH 056057782325134b76d1931c48f2c7e6595d7ef4)
+    set(OPENSSL_VERSION 1.1.1s)
+    set(OPENSSL_URL_HASH d316e1523a609bbfc4ddd3abfa9861db99f17044)
     # Build the shared library
     set(OPENSSL_CONFIGURATION no-tests no-unit-test shared)
     # Improve security by disabling weak ciphers
