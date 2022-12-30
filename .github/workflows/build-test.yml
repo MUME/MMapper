@@ -43,11 +43,10 @@ jobs:
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
       run: |
-        sudo apt install -y clang-13 clang-format-11 binutils
+        sudo apt install -y clang-13 binutils
         echo "QMAKESPEC=linux-clang" >> $GITHUB_ENV
         echo "CC=clang-13" >> $GITHUB_ENV
         echo "CXX=clang++-13" >> $GITHUB_ENV
-        echo "CLANG_FORMAT=clang-format-11" >> $GITHUB_ENV
         echo "STYLE=true" >> $GITHUB_ENV
 
 
@@ -62,24 +61,6 @@ jobs:
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
-
-
-       #
-       # Code Style
-       #
-    - if: env.STYLE == 'true'
-      name: Check Code Style
-      run: |
-        $CLANG_FORMAT -version
-        find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P $(getconf _NPROCESSORS_ONLN) $CLANG_FORMAT -style=file -i -fallback-style=none
-        if  [[ -n $(git diff) ]]; then
-          echo
-          git diff
-          echo
-          echo "Please fix your code style:"
-          echo "find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P \$(getconf _NPROCESSORS_ONLN) clang-format -style=file -i -fallback-style=none"
-          exit -1
-        fi
 
 
        #
