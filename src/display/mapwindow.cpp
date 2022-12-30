@@ -192,16 +192,16 @@ void MapWindow::slot_setScrollBars(const Coordinate &min, const Coordinate &max)
 void MapWindow::updateScrollBars()
 {
     const auto dims = m_knownMapSize.size() * MapCanvas::SCROLL_SCALE;
-
+    const auto showScrollBars = getConfig().general.showScrollBars;
     m_horizontalScrollBar->setRange(0, dims.x);
-    if (dims.x > 0) {
+    if (dims.x > 0 && showScrollBars) {
         m_horizontalScrollBar->show();
     } else {
         m_horizontalScrollBar->hide();
     }
 
     m_verticalScrollBar->setRange(0, dims.y);
-    if (dims.y > 0) {
+    if (dims.y > 0 && showScrollBars) {
         m_verticalScrollBar->show();
     } else {
         m_verticalScrollBar->hide();

@@ -13,7 +13,6 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
-#include "../global/utils.h"
 #include "mapcanvas.h"
 
 class MapCanvas;
