@@ -1316,7 +1316,6 @@ void MainWindow::slot_alwaysOnTop()
 void MainWindow::slot_setShowStatusBar()
 {
     const bool showStatusBar = this->showStatusBarAct->isChecked();
-    qInfo() << "Setting showStatusBar to " << showStatusBar;
     statusBar()->setVisible(showStatusBar);
     setConfig().general.showStatusBar= showStatusBar;
     show();
@@ -1325,7 +1324,6 @@ void MainWindow::slot_setShowStatusBar()
 void MainWindow::slot_setShowScrollBars()
 {
     const bool showScrollBars = this->showScrollBarsAct->isChecked();
-    qInfo() << "Setting showScrollBars to " << showScrollBars;
     m_mapWindow->setShowScrollBars(showScrollBars);
     setConfig().general.showScrollBars = showScrollBars;
     show();
