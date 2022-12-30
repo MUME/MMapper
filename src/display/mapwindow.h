@@ -56,7 +56,7 @@ public slots:
     void slot_graphicsSettingsChanged();
 
 public:
-    void setScrollBarsVisible(const bool visible);
+    void setShowScrollBars(const bool show);
     void updateScrollBars();
     void setZoom(float zoom);
     float getZoom() const;
@@ -69,7 +69,7 @@ protected:
     std::unique_ptr<QGridLayout> m_gridLayout;
     std::unique_ptr<QScrollBar> m_horizontalScrollBar;
     std::unique_ptr<QScrollBar> m_verticalScrollBar;
-    std::optional<bool> m_scrollBarsVisible;
+    std::optional<bool> m_showScrollBars;
     std::unique_ptr<MapCanvas> m_canvas;
 
 private:

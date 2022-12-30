@@ -1326,7 +1326,7 @@ void MainWindow::slot_setShowScrollBars()
 {
     const bool showScrollBars = this->showScrollBarsAct->isChecked();
     qInfo() << "Setting showScrollBars to " << showScrollBars;
-    m_mapWindow->setScrollBarsVisible(showScrollBars);
+    m_mapWindow->setShowScrollBars(showScrollBars);
     setConfig().general.showScrollBars = showScrollBars;
     show();
 }
