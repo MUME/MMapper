@@ -297,8 +297,8 @@ for:
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       # Install MingW
       - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
-      - cmd: if %COMPILER%==MinGW pacman -Syu --noconfirm --noprogressbar
-      - cmd: if %COMPILER%==MinGW pacman -Syu --noconfirm --noprogressbar
+      - cmd: if %COMPILER%==MinGW pacman -Syuu --noconfirm --noprogressbar
+      - cmd: if %COMPILER%==MinGW pacman -Syuu --noconfirm --noprogressbar
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
 
         before_build:
