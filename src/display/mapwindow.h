@@ -13,7 +13,6 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
-#include "../global/utils.h"
 #include "mapcanvas.h"
 
 class MapCanvas;
@@ -56,7 +55,6 @@ public slots:
     void slot_graphicsSettingsChanged();
 
 public:
-    void setShowScrollBars(const bool show);
     void updateScrollBars();
     void setZoom(float zoom);
     float getZoom() const;
@@ -69,7 +67,6 @@ protected:
     std::unique_ptr<QGridLayout> m_gridLayout;
     std::unique_ptr<QScrollBar> m_horizontalScrollBar;
     std::unique_ptr<QScrollBar> m_verticalScrollBar;
-    std::optional<bool> m_showScrollBars;
     std::unique_ptr<MapCanvas> m_canvas;
 
 private:

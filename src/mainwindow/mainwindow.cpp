@@ -1324,8 +1324,8 @@ void MainWindow::slot_setShowStatusBar()
 void MainWindow::slot_setShowScrollBars()
 {
     const bool showScrollBars = this->showScrollBarsAct->isChecked();
-    m_mapWindow->setShowScrollBars(showScrollBars);
     setConfig().general.showScrollBars = showScrollBars;
+    m_mapWindow->updateScrollBars();
     show();
 }
 

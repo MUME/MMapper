@@ -38,8 +38,6 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
 
     m_gridLayout->addWidget(m_horizontalScrollBar.get(), 1, 0, 1, 1);
 
-    m_showScrollBars = std::nullopt;
-
     m_canvas = std::make_unique<MapCanvas>(mapData, pp, gm, this);
     MapCanvas *const canvas = m_canvas.get();
 
@@ -191,25 +189,19 @@ void MapWindow::slot_setScrollBars(const Coordinate &min, const Coordinate &max)
     updateScrollBars();
 }
 
-void MapWindow::setShowScrollBars(const bool show)
-{
-    m_showScrollBars = show;
-    updateScrollBars();
-}
-
 void MapWindow::updateScrollBars()
 {
     const auto dims = m_knownMapSize.size() * MapCanvas::SCROLL_SCALE;
-
+    const auto showScrollBars = getConfig().general.showScrollBars;
     m_horizontalScrollBar->setRange(0, dims.x);
-    if (dims.x > 0 && m_showScrollBars.value_or(true)) {
+    if (dims.x > 0 && showScrollBars) {
         m_horizontalScrollBar->show();
     } else {
         m_horizontalScrollBar->hide();
     }
 
     m_verticalScrollBar->setRange(0, dims.y);
-    if (dims.y > 0 && m_showScrollBars.value_or(true)) {
+    if (dims.y > 0 && showScrollBars) {
         m_verticalScrollBar->show();
     } else {
         m_verticalScrollBar->hide();
