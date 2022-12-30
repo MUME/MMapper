@@ -1317,7 +1317,7 @@ void MainWindow::slot_setShowStatusBar()
 {
     const bool showStatusBar = this->showStatusBarAct->isChecked();
     statusBar()->setVisible(showStatusBar);
-    setConfig().general.showStatusBar= showStatusBar;
+    setConfig().general.showStatusBar = showStatusBar;
     show();
 }
 
