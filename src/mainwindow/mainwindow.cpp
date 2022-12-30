@@ -309,6 +309,12 @@ MainWindow::MainWindow()
         alwaysOnTopAct->setChecked(true);
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
+
+    showStatusBarAct->setChecked(getConfig().general.showStatusBar);
+    slot_setShowStatusBar();
+
+    showScrollBarsAct->setChecked(getConfig().general.showScrollBars);
+    slot_setShowScrollBars();
 }
 
 // depth-first recursively disconnect all children
@@ -641,9 +647,17 @@ void MainWindow::createActions()
     zoomResetAct->setShortcut(tr("Ctrl+0"));
     zoomResetAct->setStatusTip(tr("Zoom to original size"));
 
-    alwaysOnTopAct = new QAction(tr("Always on top"), this);
+    alwaysOnTopAct = new QAction(tr("Always On Top"), this);
     alwaysOnTopAct->setCheckable(true);
     connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::slot_alwaysOnTop);
+
+    showStatusBarAct = new QAction(tr("Always Show Status Bar"), this);
+    showStatusBarAct->setCheckable(true);
+    connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
+
+    showScrollBarsAct = new QAction(tr("Always Show Scrollbars"), this);
+    showScrollBarsAct->setCheckable(true);
+    connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
 
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
@@ -1002,7 +1016,7 @@ void MainWindow::createActions()
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStartAct);
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStopAct);
 
-    rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild world"), this);
+    rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild World"), this);
     rebuildMeshesAct->setStatusTip(tr("Reconstruct the world mesh to fix graphical rendering bugs"));
     rebuildMeshesAct->setCheckable(false);
     connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::mapAndInfomarksChanged);
@@ -1206,6 +1220,8 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(rebuildMeshesAct);
     viewMenu->addSeparator();
+    viewMenu->addAction(showStatusBarAct);
+    viewMenu->addAction(showScrollBarsAct);
     viewMenu->addAction(alwaysOnTopAct);
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
@@ -1294,6 +1310,22 @@ void MainWindow::slot_alwaysOnTop()
     qInfo() << "Setting AlwaysOnTop flag to " << alwaysOnTop;
     setWindowFlag(Qt::WindowStaysOnTopHint, alwaysOnTop);
     setConfig().general.alwaysOnTop = alwaysOnTop;
+    show();
+}
+
+void MainWindow::slot_setShowStatusBar()
+{
+    const bool showStatusBar = this->showStatusBarAct->isChecked();
+    statusBar()->setVisible(showStatusBar);
+    setConfig().general.showStatusBar = showStatusBar;
+    show();
+}
+
+void MainWindow::slot_setShowScrollBars()
+{
+    const bool showScrollBars = this->showScrollBarsAct->isChecked();
+    setConfig().general.showScrollBars = showScrollBars;
+    m_mapWindow->updateScrollBars();
     show();
 }
 

@@ -123,6 +123,8 @@ public slots:
     void slot_onOfflineMode();
     void slot_setMode(MapModeEnum mode);
     void slot_alwaysOnTop();
+    void slot_setShowStatusBar();
+    void slot_setShowScrollBars();
 
     void slot_newRoomSelection(const SigRoomSelection &);
     void slot_newConnectionSelection(ConnectionSelection *);
@@ -233,6 +235,8 @@ private:
     QAction *zoomOutAct = nullptr;
     QAction *zoomResetAct = nullptr;
     QAction *alwaysOnTopAct = nullptr;
+    QAction *showStatusBarAct = nullptr;
+    QAction *showScrollBarsAct = nullptr;
     QAction *preferencesAct = nullptr;
 
     QAction *layerUpAct = nullptr;

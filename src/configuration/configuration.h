@@ -102,6 +102,8 @@ public:
         QByteArray windowGeometry;
         QByteArray windowState;
         bool alwaysOnTop = false;
+        bool showStatusBar = true;
+        bool showScrollBars = true;
         MapModeEnum mapMode = MapModeEnum::PLAY;
         bool noSplash = false;
         bool noClientPanel = false;
