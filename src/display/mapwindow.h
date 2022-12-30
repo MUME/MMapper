@@ -69,12 +69,12 @@ protected:
     std::unique_ptr<QGridLayout> m_gridLayout;
     std::unique_ptr<QScrollBar> m_horizontalScrollBar;
     std::unique_ptr<QScrollBar> m_verticalScrollBar;
+    std::optional<bool> m_scrollBarsVisible;
     std::unique_ptr<MapCanvas> m_canvas;
 
 private:
     QPoint mousePressPos;
     QPoint scrollBarValuesOnMousePress;
-    bool m_scrollBarsVisible;
     struct NODISCARD KnownMapSize final
     {
         glm::ivec3 min{0};
