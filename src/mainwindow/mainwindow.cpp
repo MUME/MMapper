@@ -647,15 +647,15 @@ void MainWindow::createActions()
     zoomResetAct->setShortcut(tr("Ctrl+0"));
     zoomResetAct->setStatusTip(tr("Zoom to original size"));
 
-    alwaysOnTopAct = new QAction(tr("Always on top"), this);
+    alwaysOnTopAct = new QAction(tr("Always On Top"), this);
     alwaysOnTopAct->setCheckable(true);
     connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::slot_alwaysOnTop);
 
-    showStatusBarAct = new QAction(tr("Status Bar"), this);
+    showStatusBarAct = new QAction(tr("Always Show Status Bar"), this);
     showStatusBarAct->setCheckable(true);
     connect(showStatusBarAct, &QAction::triggered, this, &MainWindow::slot_setShowStatusBar);
 
-    showScrollBarsAct = new QAction(tr("Scrollbars"), this);
+    showScrollBarsAct = new QAction(tr("Always Show Scrollbars"), this);
     showScrollBarsAct->setCheckable(true);
     connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
 
@@ -1016,7 +1016,7 @@ void MainWindow::createActions()
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStartAct);
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStopAct);
 
-    rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild world"), this);
+    rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild World"), this);
     rebuildMeshesAct->setStatusTip(tr("Reconstruct the world mesh to fix graphical rendering bugs"));
     rebuildMeshesAct->setCheckable(false);
     connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::mapAndInfomarksChanged);
