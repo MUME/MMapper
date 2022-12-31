@@ -21,6 +21,7 @@
 #include "ProxyParserApi.h"
 
 class AutoLogger;
+class AdventureJournal;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -51,6 +52,7 @@ public:
                    RoomManager &,
                    MumeClock &,
                    AutoLogger &,
+                   AdventureJournal &,
                    MapCanvas &,
                    qintptr &,
                    ConnectionListener &);
@@ -105,6 +107,7 @@ private:
     RoomManager &m_roomManager;
     MumeClock &m_mumeClock;
     AutoLogger &m_logger;
+    AdventureJournal &m_adventureJournal;
     MapCanvas &m_mapCanvas;
     ConnectionListener &m_listener;
     const qintptr m_socketDescriptor;

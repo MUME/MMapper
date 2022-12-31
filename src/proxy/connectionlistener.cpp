@@ -32,6 +32,7 @@ ConnectionListener::ConnectionListener(MapData &md,
                                        RoomManager &rm,
                                        MumeClock &mc,
                                        AutoLogger &al,
+                                       AdventureJournal &aj,
                                        MapCanvas &mca,
                                        QObject *const parent)
     : QObject(parent)
@@ -42,6 +43,7 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_roomManager{rm}
     , m_mumeClock{mc}
     , m_autoLogger{al}
+    , m_adventureJournal{aj}
     , m_mapCanvas{mca}
 {}
 
@@ -106,6 +108,7 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                           m_roomManager,
                                           m_mumeClock,
                                           m_autoLogger,
+                                          m_adventureJournal,
                                           m_mapCanvas,
                                           socketDescriptor,
                                           *this);

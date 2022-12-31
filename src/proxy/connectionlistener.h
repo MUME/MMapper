@@ -15,6 +15,7 @@
 #include <QtGlobal>
 
 class AutoLogger;
+class AdventureJournal;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -52,6 +53,7 @@ public:
                                 RoomManager &,
                                 MumeClock &,
                                 AutoLogger &,
+                                AdventureJournal &,
                                 MapCanvas &,
                                 QObject *parent);
     ~ConnectionListener() final;
@@ -80,6 +82,7 @@ private:
     RoomManager &m_roomManager;
     MumeClock &m_mumeClock;
     AutoLogger &m_autoLogger;
+    AdventureJournal &m_adventureJournal;
     MapCanvas &m_mapCanvas;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;

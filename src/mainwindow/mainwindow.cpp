@@ -69,6 +69,7 @@
 #include "../roompanel/RoomWidget.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
+#include "adventure/adventurejournal.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
 #include "roomeditattrdlg.h"
@@ -272,6 +273,7 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
+    m_adventureJournal = new AdventureJournal(this);
 
     m_listener = new ConnectionListener(mapData,
                                         deref(m_pathMachine),
@@ -280,6 +282,7 @@ MainWindow::MainWindow()
                                         deref(m_roomManager),
                                         deref(m_mumeClock),
                                         deref(m_logger),
+                                        deref(m_adventureJournal),
                                         deref(getCanvas()),
                                         this);
 

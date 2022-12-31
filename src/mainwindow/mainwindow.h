@@ -25,6 +25,7 @@
 
 class AutoLogger;
 class AbstractAction;
+class AdventureJournal;
 class ClientWidget;
 class ConfigDialog;
 class ConnectionListener;
@@ -165,6 +166,7 @@ private:
     QDockWidget *m_dockDialogClient = nullptr;
 
     AutoLogger *m_logger = nullptr;
+    AdventureJournal *m_adventureJournal = nullptr;
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
     MapData *m_mapData = nullptr;

@@ -34,6 +34,7 @@
 #include "GmcpUtils.h"
 #include "MudTelnet.h"
 #include "UserTelnet.h"
+#include "adventure/adventurejournal.h"
 #include "connectionlistener.h"
 #include "mumesocket.h"
 #include "telnetfilter.h"
@@ -57,6 +58,7 @@ Proxy::Proxy(MapData &md,
              RoomManager &rm,
              MumeClock &mc,
              AutoLogger &al,
+             AdventureJournal &aj,
              MapCanvas &mca,
              qintptr &socketDescriptor,
              ConnectionListener &listener)
@@ -68,6 +70,7 @@ Proxy::Proxy(MapData &md,
     , m_roomManager(rm)
     , m_mumeClock(mc)
     , m_logger(al)
+    , m_adventureJournal(aj)
     , m_mapCanvas(mca)
     , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
@@ -201,6 +204,9 @@ void Proxy::slot_start()
     connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_logger, &AutoLogger::slot_writeToLog);
     connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_logger, &AutoLogger::slot_shouldLog);
     connect(mudSocket, &MumeSocket::sig_connected, &m_logger, &AutoLogger::slot_onConnected);
+
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_adventureJournal, &AdventureJournal::slot_updateJournal);
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_adventureJournal, &AdventureJournal::slot_updateJournal);
 
     connect(parserXml,
             &MumeXmlParser::sig_handleParseEvent,
