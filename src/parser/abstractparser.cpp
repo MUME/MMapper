@@ -1047,7 +1047,7 @@ void AbstractParser::doMove(const CommandEnum cmd)
         offlineCharacterMove(cmd);
 }
 
-bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
+bool AbstractParser::tryParseGenericDoorCommand(const QString &str, bool locally)
 {
     if (!str.contains("$$DOOR"))
         return false;
@@ -1058,7 +1058,7 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
         auto buf = makeCharBuffer(pattern);
         buf.replaceAll('X', c);
         if (str.contains(buf.getBuffer())) {
-            genericDoorCommand(str, dir);
+            genericDoorCommand(str, dir, locally);
             return true;
         }
     }
@@ -1483,7 +1483,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
     }
 }
 
-void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direction)
+void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direction, bool locally)
 {
     QByteArray cn = emptyByteArray;
     Coordinate c = getTailPosition();
@@ -1515,13 +1515,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         command = command.replace("$$DOOR$$", cn);
     }
 
-    if (command.startsWith("--[door:")) {
-        sendToUser(command);
-        m_overrideSendPrompt = true;
-        return;
-    }
-
-    if (isOnline()) { // online mode
+    if (!locally) { // online mode
         sendToMud(command.toLatin1());
         sendToUser("--->" + command);
         m_overrideSendPrompt = true;

@@ -170,7 +170,7 @@ protected:
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
-    void genericDoorCommand(QString command, ExitDirEnum direction);
+    void genericDoorCommand(QString command, ExitDirEnum direction, bool locally);
 
 public:
     void setExitFlags(ExitFlags flag, ExitDirEnum dir);
@@ -194,7 +194,7 @@ public:
 
 private:
     void setMode(MapModeEnum mode);
-    NODISCARD bool tryParseGenericDoorCommand(const QString &str);
+    NODISCARD bool tryParseGenericDoorCommand(const QString &str, bool locally);
     void parseSpecialCommand(StringView);
     NODISCARD bool parseSimpleCommand(const QString &str);
 

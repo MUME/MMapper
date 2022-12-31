@@ -48,6 +48,7 @@ const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdVote{"vote", 2};
 const Abbrev cmdTimer{"timer", 5};
+const Abbrev cmdLocal{"local", 5};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -407,7 +408,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         return false;
     }
 
-    if (tryParseGenericDoorCommand(input))
+    if (tryParseGenericDoorCommand(input, isOffline()))
         return false;
 
     return parseSimpleCommand(input);
@@ -842,6 +843,15 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Perform actions on the group manager."));
+
+    /* handle special door command only locally, between client and the mapper */
+    add(
+        cmdLocal,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            return tryParseGenericDoorCommand(rest.toQString(), true);
+        },
+        makeSimpleHelp("Perform special door command only locally between the mapper and the client."));
+
 
     /* Port of the mtimer command from pandora */
     add(
