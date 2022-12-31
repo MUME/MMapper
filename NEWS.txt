@@ -1,4 +1,20 @@
 ================================
+MMapper 22.12.1 (December 31, 2022)
+================================
+
+New features:
+ - Scroll bars and the status bar can now be hidden under the View menu. (Taryn)
+
+Bug fixes:
+ - Fixed crash in _dirs command (Elval)
+ - Prompt is now drawn correctly by supporting nested XML tags
+
+Changes:
+ - Mapped rooms don't have dangling newlines anymore
+ - MMapper now requires MacOS 11 Big Sur
+ - .deb Linux package is now built on Debian Bullseye
+
+================================
 MMapper 22.12.0 (December 4, 2022)
 ================================
 
