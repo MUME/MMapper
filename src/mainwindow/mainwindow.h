@@ -27,6 +27,7 @@ class AutoLogger;
 class AbstractAction;
 class AdventureJournal;
 class ClientWidget;
+class CommsWidget;
 class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
@@ -164,6 +165,7 @@ private:
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
+    QDockWidget *m_dockDialogComms = nullptr;
 
     AutoLogger *m_logger = nullptr;
     AdventureJournal *m_adventureJournal = nullptr;
@@ -180,6 +182,8 @@ private:
 
     RoomWidget *m_roomWidget = nullptr;
     RoomManager *m_roomManager = nullptr;
+
+    CommsWidget *m_commsWidget = nullptr;
 
     ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;

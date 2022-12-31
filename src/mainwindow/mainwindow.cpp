@@ -70,6 +70,7 @@
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
 #include "adventure/adventurejournal.h"
+#include "adventure/commswidget.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
 #include "roomeditattrdlg.h"
@@ -254,6 +255,18 @@ MainWindow::MainWindow()
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogRoom);
     m_dockDialogRoom->setWidget(m_roomWidget);
     m_dockDialogRoom->hide();
+
+    m_commsWidget = new CommsWidget(this);
+    m_dockDialogComms = new QDockWidget(tr("Comms"), this);
+    m_dockDialogComms->setObjectName("DockWidgetComms");
+    m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea
+                                       | Qt::TopDockWidgetArea);
+    m_dockDialogComms->setFeatures(QDockWidget::DockWidgetClosable
+                                   | QDockWidget::DockWidgetFloatable
+                                   | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogComms);
+    m_dockDialogComms->setWidget(m_commsWidget);
+    m_dockDialogComms->show();
 
     m_findRoomsDlg = new FindRoomsDlg(mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
