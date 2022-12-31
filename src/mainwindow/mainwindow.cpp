@@ -256,7 +256,8 @@ MainWindow::MainWindow()
     m_dockDialogRoom->setWidget(m_roomWidget);
     m_dockDialogRoom->hide();
 
-    m_commsWidget = new CommsWidget(this);
+    m_adventureJournal = new AdventureJournal(this);
+    m_commsWidget = new CommsWidget(deref(m_adventureJournal), this);
     m_dockDialogComms = new QDockWidget(tr("Comms"), this);
     m_dockDialogComms->setObjectName("DockWidgetComms");
     m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea
@@ -286,7 +287,6 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
-    m_adventureJournal = new AdventureJournal(this);
 
     m_listener = new ConnectionListener(mapData,
                                         deref(m_pathMachine),

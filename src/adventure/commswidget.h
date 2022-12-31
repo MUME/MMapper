@@ -1,16 +1,19 @@
-#ifndef COMMSWINDOW_H
-#define COMMSWINDOW_H
+#pragma once
 
+#include "adventure/adventurejournal.h"
+#include <QtWidgets>
 #include <QWidget>
 
 class CommsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CommsWidget(QWidget *parent = nullptr);
+    explicit CommsWidget(AdventureJournal &aj, QWidget *parent = nullptr);
 
-signals:
+public slots:
+    void slot_onCommReceived(const QString &data);
 
+private:
+    AdventureJournal &m_adventureJournal;
+    QTextEdit *m_commsTextEdit = nullptr;
 };
-
-#endif // COMMSWINDOW_H

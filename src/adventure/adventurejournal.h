@@ -10,6 +10,9 @@ public:
     explicit AdventureJournal(QObject * const parent = nullptr);
     ~AdventureJournal() final;
 
+signals:
+    void sig_receivedComm(const QString &comm);
+
 public slots:
     void slot_updateJournal(const QByteArray &ba);
 
