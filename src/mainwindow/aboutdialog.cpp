@@ -67,7 +67,7 @@ AboutDialog::AboutDialog(QWidget *parent)
         "Caligor for starting the mmapper project<br>"
         "Azazello for creating the group manager</p>"
         "<p><u>Contributors:</u><br>"
-        "Arfang, Cuantar, Elval, Kalev, Korir, Kovis, Krush, Mirnir, Teoli, and Waba"
+        "Arfang, Cosmos, Cuantar, Elval, Kalev, Korir, Kovis, Krush, Mirnir, Taryn, Teoli, and Waba"
         "</p>"));
 
     /* Licenses tab */
