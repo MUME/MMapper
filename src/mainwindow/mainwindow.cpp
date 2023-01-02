@@ -206,6 +206,8 @@ MainWindow::MainWindow()
     m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
+    m_gameObserver = new GameObserver(this);
+
     m_clientWidget = new ClientWidget(this);
     m_clientWidget->setObjectName("InternalMudClientWidget");
     m_dockDialogClient = new QDockWidget("Client Panel", this);
@@ -281,6 +283,7 @@ MainWindow::MainWindow()
                                         deref(m_mumeClock),
                                         deref(m_logger),
                                         deref(getCanvas()),
+                                        deref(m_gameObserver),
                                         this);
 
     // update connections

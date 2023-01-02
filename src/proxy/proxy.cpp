@@ -58,6 +58,7 @@ Proxy::Proxy(MapData &md,
              MumeClock &mc,
              AutoLogger &al,
              MapCanvas &mca,
+             GameObserver &go,
              qintptr &socketDescriptor,
              ConnectionListener &listener)
     : QObject(nullptr)
@@ -69,6 +70,7 @@ Proxy::Proxy(MapData &md,
     , m_mumeClock(mc)
     , m_logger(al)
     , m_mapCanvas(mca)
+    , m_gameObserver(go)
     , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
     // TODO: pass this in as a non-owning pointer.

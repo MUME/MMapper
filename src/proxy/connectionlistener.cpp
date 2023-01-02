@@ -33,6 +33,7 @@ ConnectionListener::ConnectionListener(MapData &md,
                                        MumeClock &mc,
                                        AutoLogger &al,
                                        MapCanvas &mca,
+                                       GameObserver &go,
                                        QObject *const parent)
     : QObject(parent)
     , m_mapData{md}
@@ -43,6 +44,7 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_mumeClock{mc}
     , m_autoLogger{al}
     , m_mapCanvas{mca}
+    , m_gameOberver{go}
 {}
 
 ConnectionListener::~ConnectionListener()
@@ -107,6 +109,7 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                           m_mumeClock,
                                           m_autoLogger,
                                           m_mapCanvas,
+                                          m_gameOberver,
                                           socketDescriptor,
                                           *this);
 

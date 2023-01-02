@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "observer/gameobserver.h"
 #include <memory>
 #include <vector>
 #include <QHostAddress>
@@ -53,6 +54,7 @@ public:
                                 MumeClock &,
                                 AutoLogger &,
                                 MapCanvas &,
+                                GameObserver &,
                                 QObject *parent);
     ~ConnectionListener() final;
 
@@ -81,6 +83,7 @@ private:
     MumeClock &m_mumeClock;
     AutoLogger &m_autoLogger;
     MapCanvas &m_mapCanvas;
+    GameObserver &m_gameOberver;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;
     std::unique_ptr<Proxy> m_proxy;

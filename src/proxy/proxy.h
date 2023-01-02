@@ -19,6 +19,7 @@
 #include "../pandoragroup/GroupManagerApi.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
+#include "observer/gameobserver.h"
 
 class AutoLogger;
 class ConnectionListener;
@@ -52,6 +53,7 @@ public:
                    MumeClock &,
                    AutoLogger &,
                    MapCanvas &,
+                   GameObserver &,
                    qintptr &,
                    ConnectionListener &);
     ~Proxy() final;
@@ -106,6 +108,7 @@ private:
     MumeClock &m_mumeClock;
     AutoLogger &m_logger;
     MapCanvas &m_mapCanvas;
+    GameObserver &m_gameObserver;
     ConnectionListener &m_listener;
     const qintptr m_socketDescriptor;
 
