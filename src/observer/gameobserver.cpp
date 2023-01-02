@@ -4,24 +4,24 @@ GameObserver::GameObserver(QObject *parent)
     : QObject{parent}
 {}
 
-void GameObserver::slot_sendtoMud(const QByteArray &ba)
+void GameObserver::slot_observeSentToMudText(const QByteArray &ba)
 {
-    emit sig_sendToMud(ba);
+    emit sig_sentToMudText(ba);
 }
 
-void GameObserver::slot_sendToUser(const QByteArray &ba, bool goAhead)
+void GameObserver::slot_observeSentToUserText(const QByteArray &ba, bool goAhead)
 {
-    emit sig_sendToUser(ba, goAhead);
+    emit sig_sentToUserText(ba, goAhead);
 }
 
-void GameObserver::slot_sendGmcpToMud(const GmcpMessage &m)
+void GameObserver::slot_observeSentToMudGmcp(const GmcpMessage &m)
 {
-    emit sig_sendGmcpToMud(m);
+    emit sig_sentToMudGmcp(m);
 }
 
-void GameObserver::slot_sendGmcpToUser(const GmcpMessage &m)
+void GameObserver::slot_observeSentToUserGmcp(const GmcpMessage &m)
 {
-    emit sig_sendGmcpToUser(m);
+    emit sig_sentToUserGmcp(m);
 }
 
 void GameObserver::slot_log(const QString &ba, const QString &s)

@@ -11,11 +11,12 @@ public:
     explicit GameObserver(QObject *parent = nullptr);
 
 signals:
-    void sig_sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &, bool goAhead);
+    void sig_sentToMudText(const QByteArray &);
+    void sig_sentToUserText(const QByteArray &, bool goAhead);
 
-    void sig_sendGmcpToMud(const GmcpMessage &);
-    void sig_sendGmcpToUser(const GmcpMessage &);
+    void sig_sentToMudGmcp(const GmcpMessage &);
+    void sig_sentToUserGmcp(const GmcpMessage &);
+
     //void sig_mapChanged();
     //void sig_graphicsSettingsChanged();
     //void sig_releaseAllPaths();
@@ -24,10 +25,12 @@ signals:
     void sig_log(const QString &, const QString &);
 
 public slots:
-    void slot_sendtoMud(const QByteArray &ba);
-    void slot_sendToUser(const QByteArray &ba, bool goAhead);
-    void slot_sendGmcpToMud(const GmcpMessage &m);
-    void slot_sendGmcpToUser(const GmcpMessage &m);
+    void slot_observeSentToMudText(const QByteArray &ba);
+    void slot_observeSentToUserText(const QByteArray &ba, bool goAhead);
+
+    void slot_observeSentToMudGmcp(const GmcpMessage &m);
+    void slot_observeSentToUserGmcp(const GmcpMessage &m);
+
     void slot_log(const QString &ba, const QString &);
 };
 
