@@ -231,11 +231,17 @@ void Proxy::slot_start()
 
     // Group Manager Support
     connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
+
     // Group Tell
     connect(&m_groupManager,
             &Mmapper2Group::sig_displayGroupTellEvent,
             parserXml,
             &AbstractParser::slot_sendGTellToUser);
+
+    // Game Observer (re-broadcasts text and gmcp updates to downstream consumers)
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_gameObserver, &GameObserver::slot_observeSentToMudText);
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_gameObserver, &GameObserver::slot_observeSentToUserText);
+    connect(mudTelnet, &MudTelnet::sig_relayGmcp, &m_gameObserver, &GameObserver::slot_observeSentToUserGmcp);
 
     log("Connection to client established ...");
 
