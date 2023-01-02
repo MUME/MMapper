@@ -246,6 +246,8 @@ MainWindow::MainWindow()
 
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
+    connect(m_gameObserver, &GameObserver::sig_sentToUserGmcp, m_roomManager, &RoomManager::slot_parseGmcpInput);
+
     m_roomWidget = new RoomWidget(deref(m_roomManager), this);
     m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
     m_dockDialogRoom->setObjectName("DockWidgetRoom");
@@ -279,7 +281,6 @@ MainWindow::MainWindow()
                                         deref(m_pathMachine),
                                         deref(m_prespammedPath),
                                         deref(m_groupManager),
-                                        deref(m_roomManager),
                                         deref(m_mumeClock),
                                         deref(m_logger),
                                         deref(getCanvas()),

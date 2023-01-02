@@ -29,7 +29,6 @@ ConnectionListener::ConnectionListener(MapData &md,
                                        Mmapper2PathMachine &pm,
                                        PrespammedPath &pp,
                                        Mmapper2Group &gm,
-                                       RoomManager &rm,
                                        MumeClock &mc,
                                        AutoLogger &al,
                                        MapCanvas &mca,
@@ -40,7 +39,6 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_pathMachine{pm}
     , m_prespammedPath{pp}
     , m_groupManager{gm}
-    , m_roomManager{rm}
     , m_mumeClock{mc}
     , m_autoLogger{al}
     , m_mapCanvas{mca}
@@ -105,7 +103,6 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                           m_pathMachine,
                                           m_prespammedPath,
                                           m_groupManager,
-                                          m_roomManager,
                                           m_mumeClock,
                                           m_autoLogger,
                                           m_mapCanvas,

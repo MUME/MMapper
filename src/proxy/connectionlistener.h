@@ -50,7 +50,6 @@ public:
                                 Mmapper2PathMachine &,
                                 PrespammedPath &,
                                 Mmapper2Group &,
-                                RoomManager &,
                                 MumeClock &,
                                 AutoLogger &,
                                 MapCanvas &,
@@ -79,7 +78,6 @@ private:
     Mmapper2PathMachine &m_pathMachine;
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
-    RoomManager &m_roomManager;
     MumeClock &m_mumeClock;
     AutoLogger &m_autoLogger;
     MapCanvas &m_mapCanvas;
