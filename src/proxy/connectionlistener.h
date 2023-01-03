@@ -15,7 +15,6 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;

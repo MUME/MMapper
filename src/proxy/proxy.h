@@ -21,7 +21,6 @@
 #include "ProxyParserApi.h"
 #include "observer/gameobserver.h"
 
-class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
