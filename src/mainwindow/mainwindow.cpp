@@ -247,7 +247,6 @@ MainWindow::MainWindow()
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
     connect(m_gameObserver, &GameObserver::sig_sentToUserGmcp, m_roomManager, &RoomManager::slot_parseGmcpInput);
-
     m_roomWidget = new RoomWidget(deref(m_roomManager), this);
     m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
     m_dockDialogRoom->setObjectName("DockWidgetRoom");
@@ -276,13 +275,16 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
+    connect(m_gameObserver, &GameObserver::sig_connected, m_logger, &AutoLogger::slot_onConnected);
+    connect(m_gameObserver, &GameObserver::sig_toggledEchoMode, m_logger, &AutoLogger::slot_shouldLog);
+    connect(m_gameObserver, &GameObserver::sig_sentToMudText, m_logger, &AutoLogger::slot_writeToLog);
+    connect(m_gameObserver, &GameObserver::sig_sentToUserText, m_logger, &AutoLogger::slot_writeToLog);
 
     m_listener = new ConnectionListener(mapData,
                                         deref(m_pathMachine),
                                         deref(m_prespammedPath),
                                         deref(m_groupManager),
                                         deref(m_mumeClock),
-                                        deref(m_logger),
                                         deref(getCanvas()),
                                         deref(m_gameObserver),
                                         this);

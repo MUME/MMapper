@@ -55,7 +55,6 @@ Proxy::Proxy(MapData &md,
              PrespammedPath &pp,
              Mmapper2Group &gm,
              MumeClock &mc,
-             AutoLogger &al,
              MapCanvas &mca,
              GameObserver &go,
              qintptr &socketDescriptor,
@@ -66,11 +65,10 @@ Proxy::Proxy(MapData &md,
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)
-    , m_logger(al)
     , m_mapCanvas(mca)
     , m_gameObserver(go)
-    , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
+    , m_listener(listener)
     // TODO: pass this in as a non-owning pointer.
     , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener.parent())}
 {
@@ -195,11 +193,6 @@ void Proxy::slot_start()
     connect(parserXml, &MumeXmlParser::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
     connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::slot_onSendToUser);
 
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_logger, &AutoLogger::slot_writeToLog);
-    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_logger, &AutoLogger::slot_writeToLog);
-    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_logger, &AutoLogger::slot_shouldLog);
-    connect(mudSocket, &MumeSocket::sig_connected, &m_logger, &AutoLogger::slot_onConnected);
-
     connect(parserXml,
             &MumeXmlParser::sig_handleParseEvent,
             &m_pathMachine,
@@ -235,9 +228,14 @@ void Proxy::slot_start()
             &AbstractParser::slot_sendGTellToUser);
 
     // Game Observer (re-broadcasts text and gmcp updates to downstream consumers)
+    connect(mudSocket, &MumeSocket::sig_connected, &m_gameObserver, &GameObserver::slot_observeConnected);
     connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_gameObserver, &GameObserver::slot_observeSentToMudText);
     connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_gameObserver, &GameObserver::slot_observeSentToUserText);
+
+    // note the polarity, unlike above: MudTelnet::relay is SentToUser, UserTelnet::relay is SentToMud
     connect(mudTelnet, &MudTelnet::sig_relayGmcp, &m_gameObserver, &GameObserver::slot_observeSentToUserGmcp);
+    connect(userTelnet, &UserTelnet::sig_relayGmcp, &m_gameObserver, &GameObserver::slot_observeSentToMudGmcp);
+    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_gameObserver, &GameObserver::slot_observeToggledEchoMode);
 
     log("Connection to client established ...");
 

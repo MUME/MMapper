@@ -50,7 +50,6 @@ public:
                    PrespammedPath &,
                    Mmapper2Group &,
                    MumeClock &,
-                   AutoLogger &,
                    MapCanvas &,
                    GameObserver &,
                    qintptr &,
@@ -104,7 +103,6 @@ private:
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
     MumeClock &m_mumeClock;
-    AutoLogger &m_logger;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
     ConnectionListener &m_listener;

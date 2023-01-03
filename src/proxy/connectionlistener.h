@@ -51,7 +51,6 @@ public:
                                 PrespammedPath &,
                                 Mmapper2Group &,
                                 MumeClock &,
-                                AutoLogger &,
                                 MapCanvas &,
                                 GameObserver &,
                                 QObject *parent);
@@ -79,7 +78,6 @@ private:
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
     MumeClock &m_mumeClock;
-    AutoLogger &m_autoLogger;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameOberver;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
