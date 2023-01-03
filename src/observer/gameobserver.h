@@ -1,5 +1,4 @@
-#ifndef GAMEOBSERVER_H
-#define GAMEOBSERVER_H
+#pragma once
 
 #include "proxy/GmcpMessage.h"
 #include <QObject>
@@ -39,5 +38,3 @@ public slots:
 
     void slot_log(const QString &ba, const QString &);
 };
-
-#endif // GAMEOBSERVER_H
