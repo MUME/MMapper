@@ -104,8 +104,8 @@ private:
     MumeClock &m_mumeClock;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
-    ConnectionListener &m_listener;
     const qintptr m_socketDescriptor;
+    ConnectionListener &m_listener;
 
     // initialized in ctor
     QPointer<RemoteEdit> m_remoteEdit;
