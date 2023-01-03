@@ -228,13 +228,31 @@ void Proxy::slot_start()
             &AbstractParser::slot_sendGTellToUser);
 
     // Game Observer (re-broadcasts text and gmcp updates to downstream consumers)
-    connect(mudSocket, &MumeSocket::sig_connected, &m_gameObserver, &GameObserver::slot_observeConnected);
-    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_gameObserver, &GameObserver::slot_observeSentToMudText);
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_gameObserver, &GameObserver::slot_observeSentToUserText);
+    connect(mudSocket,
+            &MumeSocket::sig_connected,
+            &m_gameObserver,
+            &GameObserver::slot_observeConnected);
+    connect(parserXml,
+            &MumeXmlParser::sig_sendToMud,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToMudText);
+    connect(parserXml,
+            &MumeXmlParser::sig_sendToUser,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToUserText);
     // note the polarity, unlike above: MudTelnet::relay is SentToUser, UserTelnet::relay is SentToMud
-    connect(mudTelnet, &MudTelnet::sig_relayGmcp, &m_gameObserver, &GameObserver::slot_observeSentToUserGmcp);
-    connect(userTelnet, &UserTelnet::sig_relayGmcp, &m_gameObserver, &GameObserver::slot_observeSentToMudGmcp);
-    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_gameObserver, &GameObserver::slot_observeToggledEchoMode);
+    connect(mudTelnet,
+            &MudTelnet::sig_relayGmcp,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToUserGmcp);
+    connect(userTelnet,
+            &UserTelnet::sig_relayGmcp,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToMudGmcp);
+    connect(mudTelnet,
+            &MudTelnet::sig_relayEchoMode,
+            &m_gameObserver,
+            &GameObserver::slot_observeToggledEchoMode);
 
     log("Connection to client established ...");
 
