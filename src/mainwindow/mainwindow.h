@@ -70,7 +70,7 @@ public:
     bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
-
+    
 signals:
     void sig_setGroupMode(GroupManagerStateEnum);
     void sig_startGroupNetwork();
@@ -316,6 +316,7 @@ private:
 
     void wireConnections();
 
+    void setupChildWidgets();
     void createActions();
     void setupMenuBar();
     void setupToolBars();
