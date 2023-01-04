@@ -537,7 +537,7 @@ void MainWindow::setupChildWidgets()
     m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
-    // View -> Side Panels -> Room Panel
+    // View -> Side Panels -> Room Panel (Mobs)
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
     connect(m_gameObserver,
@@ -568,7 +568,7 @@ void MainWindow::setupChildWidgets()
                                    | QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogComms);
     m_dockDialogComms->setWidget(m_commsWidget);
-    m_dockDialogComms->show();
+    m_dockDialogComms->hide();
 }
 
 // TODO: clean up all this copy/paste by using helper functions and X-macros
@@ -1249,6 +1249,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
+    sidepanels->addAction(m_dockDialogComms->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
