@@ -54,10 +54,9 @@ Proxy::Proxy(MapData &md,
              Mmapper2PathMachine &pm,
              PrespammedPath &pp,
              Mmapper2Group &gm,
-             RoomManager &rm,
              MumeClock &mc,
-             AutoLogger &al,
              MapCanvas &mca,
+             GameObserver &go,
              qintptr &socketDescriptor,
              ConnectionListener &listener)
     : QObject(nullptr)
@@ -65,12 +64,11 @@ Proxy::Proxy(MapData &md,
     , m_pathMachine(pm)
     , m_prespammedPath(pp)
     , m_groupManager(gm)
-    , m_roomManager(rm)
     , m_mumeClock(mc)
-    , m_logger(al)
     , m_mapCanvas(mca)
-    , m_listener(listener)
+    , m_gameObserver(go)
     , m_socketDescriptor(socketDescriptor)
+    , m_listener(listener)
     // TODO: pass this in as a non-owning pointer.
     , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener.parent())}
 {
@@ -172,8 +170,6 @@ void Proxy::slot_start()
             &Mmapper2Group::slot_parseGmcpInput);
     connect(mudTelnet, &MudTelnet::sig_relayGmcp, m_parserXml, &MumeXmlParser::slot_parseGmcpInput);
 
-    connect(mudTelnet, &MudTelnet::sig_relayGmcp, &m_roomManager, &RoomManager::slot_parseGmcpInput);
-
     connect(this, &Proxy::sig_analyzeUserStream, userTelnet, &UserTelnet::slot_onAnalyzeUserStream);
 
     connect(telnetFilter,
@@ -196,11 +192,6 @@ void Proxy::slot_start()
 
     connect(parserXml, &MumeXmlParser::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
     connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::slot_onSendToUser);
-
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_logger, &AutoLogger::slot_writeToLog);
-    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_logger, &AutoLogger::slot_writeToLog);
-    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_logger, &AutoLogger::slot_shouldLog);
-    connect(mudSocket, &MumeSocket::sig_connected, &m_logger, &AutoLogger::slot_onConnected);
 
     connect(parserXml,
             &MumeXmlParser::sig_handleParseEvent,
@@ -229,11 +220,39 @@ void Proxy::slot_start()
 
     // Group Manager Support
     connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
+
     // Group Tell
     connect(&m_groupManager,
             &Mmapper2Group::sig_displayGroupTellEvent,
             parserXml,
             &AbstractParser::slot_sendGTellToUser);
+
+    // Game Observer (re-broadcasts text and gmcp updates to downstream consumers)
+    connect(mudSocket,
+            &MumeSocket::sig_connected,
+            &m_gameObserver,
+            &GameObserver::slot_observeConnected);
+    connect(parserXml,
+            &MumeXmlParser::sig_sendToMud,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToMudText);
+    connect(parserXml,
+            &MumeXmlParser::sig_sendToUser,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToUserText);
+    // note the polarity, unlike above: MudTelnet::relay is SentToUser, UserTelnet::relay is SentToMud
+    connect(mudTelnet,
+            &MudTelnet::sig_relayGmcp,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToUserGmcp);
+    connect(userTelnet,
+            &UserTelnet::sig_relayGmcp,
+            &m_gameObserver,
+            &GameObserver::slot_observeSentToMudGmcp);
+    connect(mudTelnet,
+            &MudTelnet::sig_relayEchoMode,
+            &m_gameObserver,
+            &GameObserver::slot_observeToggledEchoMode);
 
     log("Connection to client established ...");
 

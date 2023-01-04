@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "observer/gameobserver.h"
 #include <memory>
 #include <vector>
 #include <QHostAddress>
@@ -14,7 +15,6 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -49,10 +49,9 @@ public:
                                 Mmapper2PathMachine &,
                                 PrespammedPath &,
                                 Mmapper2Group &,
-                                RoomManager &,
                                 MumeClock &,
-                                AutoLogger &,
                                 MapCanvas &,
+                                GameObserver &,
                                 QObject *parent);
     ~ConnectionListener() final;
 
@@ -77,10 +76,9 @@ private:
     Mmapper2PathMachine &m_pathMachine;
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
-    RoomManager &m_roomManager;
     MumeClock &m_mumeClock;
-    AutoLogger &m_autoLogger;
     MapCanvas &m_mapCanvas;
+    GameObserver &m_gameOberver;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;
     std::unique_ptr<Proxy> m_proxy;

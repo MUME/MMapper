@@ -22,6 +22,7 @@
 #include "../display/CanvasMouseModeEnum.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
+#include "observer/gameobserver.h"
 
 class AutoLogger;
 class AbstractAction;
@@ -164,6 +165,7 @@ private:
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
 
+    GameObserver *m_gameObserver = nullptr;
     AutoLogger *m_logger = nullptr;
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
