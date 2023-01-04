@@ -23,6 +23,8 @@
 #include <QTextBrowser>
 #include <QtWidgets>
 
+#include "../adventure/adventurejournal.h"
+#include "../adventure/commswidget.h"
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
@@ -206,6 +208,7 @@ MainWindow::MainWindow()
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = new GameObserver(this);
+    m_adventureJournal = new AdventureJournal(this);
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
     if constexpr (!NO_UPDATER)
@@ -550,8 +553,18 @@ void MainWindow::setupChildWidgets()
 
     m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
-}
 
+    m_commsWidget = new CommsWidget(*m_adventureJournal, this);
+    m_dockDialogComms = new QDockWidget(tr("Comms"), this);
+    m_dockDialogComms->setObjectName("DockWidgetComms");
+    m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogComms->setFeatures(QDockWidget::DockWidgetClosable
+                                   | QDockWidget::DockWidgetFloatable
+                                   | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogComms);
+    m_dockDialogComms->setWidget(m_commsWidget);
+    m_dockDialogComms->show();
+}
 
 // TODO: clean up all this copy/paste by using helper functions and X-macros
 void MainWindow::createActions()
