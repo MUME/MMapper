@@ -226,6 +226,7 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
+    // TODO move this connect() wiring into AutoLogger::ctor
     connect(m_gameObserver, &GameObserver::sig_connected, m_logger, &AutoLogger::slot_onConnected);
     connect(m_gameObserver,
             &GameObserver::sig_toggledEchoMode,

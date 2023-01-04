@@ -14,7 +14,7 @@ CommsWidget::CommsWidget(AdventureJournal &aj, QWidget *parent)
     layout->setSpacing(0);
 
     m_commsTextEdit = new QTextEdit(this);
-    m_commsTextEdit->setPlainText("comms will go here");
+    m_commsTextEdit->setPlainText("Narrates and Tells will appear here...");
 
     layout->addWidget(m_commsTextEdit);
 
@@ -22,11 +22,11 @@ CommsWidget::CommsWidget(AdventureJournal &aj, QWidget *parent)
             &AdventureJournal::sig_receivedComm,
             this,
             &CommsWidget::slot_onCommReceived,
-            Qt::QueuedConnection);
+            Qt::QueuedConnection); // REVISIT does using QueuedConnection matter? any benefit?
 }
 
 void CommsWidget::slot_onCommReceived(const QString &data)
 {
+    //qDebug() << "CommsWidget::slot_onCommReceived" << data;
     m_commsTextEdit->append(data);
-    qDebug() << "CommsWidget::slot_onCommReceived" << data;
 }
