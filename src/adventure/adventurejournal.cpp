@@ -4,9 +4,15 @@
 
 #include <QDebug>
 
-AdventureJournal::AdventureJournal(QObject *const parent)
-    : QObject{parent}
-{}
+AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent)
+    : m_observer{observer}
+    , QObject{parent}
+{
+    connect(&m_observer,
+            &GameObserver::sig_sentToUserText,
+            this,
+            &AdventureJournal::slot_updateJournal);
+}
 
 AdventureJournal::~AdventureJournal()
 {
@@ -33,7 +39,7 @@ void AdventureJournal::slot_updateJournal(const QByteArray &ba)
     }
 
     if(str.contains("tells you") or str.contains("narrates")) {
-        qDebug().noquote() << "Adventure Journal: comm received: " << str;
+        //qDebug().noquote() << "Adventure Journal: comm received: " << str;
         m_commsList.append(str);
         emit sig_receivedComm(str);
     }

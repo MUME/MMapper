@@ -5,8 +5,8 @@
 #include "commswidget.h"
 
 CommsWidget::CommsWidget(AdventureJournal &aj, QWidget *parent)
-    : QWidget{parent},
-      m_adventureJournal{aj}
+    : m_adventureJournal{aj}
+    , QWidget{parent}
 {
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -28,4 +28,5 @@ CommsWidget::CommsWidget(AdventureJournal &aj, QWidget *parent)
 void CommsWidget::slot_onCommReceived(const QString &data)
 {
     m_commsTextEdit->append(data);
+    qDebug() << "CommsWidget::slot_onCommReceived" << data;
 }

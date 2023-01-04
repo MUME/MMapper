@@ -208,7 +208,7 @@ MainWindow::MainWindow()
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = new GameObserver(this);
-    m_adventureJournal = new AdventureJournal(this);
+    m_adventureJournal = new AdventureJournal(deref(m_gameObserver), this);
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
     if constexpr (!NO_UPDATER)
@@ -499,6 +499,7 @@ void MainWindow::slot_log(const QString &module, const QString &message)
 
 void MainWindow::setupChildWidgets()
 {
+    // View -> Side Panels -> Client Panel
     m_clientWidget = new ClientWidget(this);
     m_clientWidget->setObjectName("InternalMudClientWidget");
     m_dockDialogClient = new QDockWidget("Client Panel", this);
@@ -510,6 +511,7 @@ void MainWindow::setupChildWidgets()
     addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
     m_dockDialogClient->setWidget(m_clientWidget);
 
+    // View -> Side Panels -> Log Panel
     m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
@@ -517,13 +519,13 @@ void MainWindow::setupChildWidgets()
                                  | QDockWidget::DockWidgetClosable);
     m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
 
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
-
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog); 
     logWindow = new QTextBrowser(m_dockDialogLog);
     logWindow->setObjectName("LogWindow");
     m_dockDialogLog->setWidget(logWindow);
     m_dockDialogLog->hide();
 
+    // Tools -> Group Manager
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
     m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
@@ -535,6 +537,7 @@ void MainWindow::setupChildWidgets()
     m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
+    // View -> Side Panels -> Room Panel
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
     connect(m_gameObserver,
@@ -551,12 +554,14 @@ void MainWindow::setupChildWidgets()
     m_dockDialogRoom->setWidget(m_roomWidget);
     m_dockDialogRoom->hide();
 
+    // Find Room Dialog
     m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    m_commsWidget = new CommsWidget(*m_adventureJournal, this);
-    m_dockDialogComms = new QDockWidget(tr("Comms"), this);
-    m_dockDialogComms->setObjectName("DockWidgetComms");
+    // View -> Side Panels -> Game Communication (Narrates, Tells)
+    m_commsWidget = new CommsWidget(deref(m_adventureJournal), this);
+    m_dockDialogComms = new QDockWidget(tr("Game Communication"), this);
+    m_dockDialogComms->setObjectName("DockWidgetGameComms");
     m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
     m_dockDialogComms->setFeatures(QDockWidget::DockWidgetClosable
                                    | QDockWidget::DockWidgetFloatable
