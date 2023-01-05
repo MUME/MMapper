@@ -15,11 +15,12 @@ public:
     explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
 
 public slots:
-    void slot_onNarrateReceived(const QString &data);
-    void slot_onTellReceived(const QString &data);
+    void slot_onKilledMob(const QString &mobName);
+    void slot_onNarrateReceived(const QString &narr);
+    void slot_onTellReceived(const QString &tell);
 
 private:
-    void processMessage(const QString &data);
+    void addConsoleMessage(const QString &msg);
 
     AdventureJournal &m_adventureJournal;
 

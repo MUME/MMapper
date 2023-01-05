@@ -14,6 +14,7 @@ public:
 signals:
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
+    void sig_killedMob(const QString &mobName);
 
 public slots:
     void slot_onUserText(const QByteArray &ba);

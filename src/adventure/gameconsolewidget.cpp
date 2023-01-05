@@ -20,6 +20,11 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     layout->addWidget(m_commsTextEdit);
 
     connect(&m_adventureJournal,
+            &AdventureJournal::sig_killedMob,
+            this,
+            &GameConsoleWidget::slot_onKilledMob);
+
+    connect(&m_adventureJournal,
             &AdventureJournal::sig_receivedNarrate,
             this,
             &GameConsoleWidget::slot_onNarrateReceived);
@@ -30,17 +35,22 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
             &GameConsoleWidget::slot_onTellReceived);
 }
 
-void GameConsoleWidget::slot_onNarrateReceived(const QString &data)
+void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 {
-    processMessage(data);
+    addConsoleMessage("Killed mob: " + mobName);
 }
 
-void GameConsoleWidget::slot_onTellReceived(const QString &data)
+void GameConsoleWidget::slot_onNarrateReceived(const QString &narr)
 {
-    processMessage(data);
+    addConsoleMessage(narr);
 }
 
-void GameConsoleWidget::processMessage(const QString &msg)
+void GameConsoleWidget::slot_onTellReceived(const QString &tell)
+{
+    addConsoleMessage(tell);
+}
+
+void GameConsoleWidget::addConsoleMessage(const QString &msg)
 {
     // If first message, clear the placeholder text
     auto prepend = "\n";

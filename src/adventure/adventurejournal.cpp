@@ -36,7 +36,7 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
 
     auto idx_isdead = str.indexOf(" is dead! R.I.P.");
     if (idx_isdead > 0) {
-        qDebug().noquote() << "AdventureJournal: player killed mob: " << str.left(idx_isdead);
+        emit sig_killedMob(str.left(idx_isdead));
     }
 
     if (str.contains("You gain a level!")) {
