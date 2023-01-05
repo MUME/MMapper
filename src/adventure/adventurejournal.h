@@ -19,8 +19,6 @@ public slots:
 
 private:
     GameObserver &m_observer;
-    std::fstream m_debugFile;
-    QList<QString> m_commsList;
 };
 
 

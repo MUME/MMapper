@@ -4,8 +4,8 @@
 #include "commswidget.h"
 
 CommsWidget::CommsWidget(AdventureJournal &aj, QWidget *parent)
-    : m_adventureJournal{aj}
-    , QWidget{parent}
+    : QWidget{parent}
+    , m_adventureJournal{aj}
 {
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);

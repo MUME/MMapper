@@ -24,5 +24,5 @@ private:
     QTextCursor *m_commsCursor = nullptr;
     QTextEdit *m_commsTextEdit = nullptr;
 
-    int m_numMessagesReceived = 0;
+    int m_numMessagesReceived;
 };

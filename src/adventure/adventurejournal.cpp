@@ -5,8 +5,8 @@
 #include <QDebug>
 
 AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent)
-    : m_observer{observer}
-    , QObject{parent}
+    : QObject{parent}
+    , m_observer{observer}
 {
     connect(&m_observer,
             &GameObserver::sig_sentToUserText,
@@ -15,10 +15,7 @@ AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent
 }
 
 AdventureJournal::~AdventureJournal()
-{
-    //m_debugFile.flush();
-    //m_debugFile.close();
-}
+{}
 
 void AdventureJournal::slot_updateJournal(const QByteArray &ba)
 {
@@ -39,7 +36,6 @@ void AdventureJournal::slot_updateJournal(const QByteArray &ba)
     }
 
     if(str.contains("tells you") or str.contains("narrates")) {
-        m_commsList.append(str);
         emit sig_receivedComm(str);
     }
 }
