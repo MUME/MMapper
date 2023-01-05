@@ -16,17 +16,17 @@ public:
 
 public slots:
     void slot_onKilledMob(const QString &mobName);
-    void slot_onNarrateReceived(const QString &narr);
-    void slot_onTellReceived(const QString &tell);
+    void slot_onReceivedNarrate(const QString &narr);
+    void slot_onReceivedTell(const QString &tell);
 
 private:
     void addConsoleMessage(const QString &msg);
 
     AdventureJournal &m_adventureJournal;
 
-    QTextDocument *m_commsTextDocument = nullptr;
-    QTextCursor *m_commsCursor = nullptr;
-    QTextEdit *m_commsTextEdit = nullptr;
+    QTextDocument *m_consoleTextDoc = nullptr;
+    QTextCursor *m_consoleCursor = nullptr;
+    QTextEdit *m_consoleTextEdit = nullptr;
 
     int m_numMessagesReceived = 0;
 };

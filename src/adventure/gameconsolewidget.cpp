@@ -12,12 +12,12 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    m_commsTextDocument = new QTextDocument(GameConsoleWidget::DEFAULT_CONTENT);
-    m_commsCursor = new QTextCursor(m_commsTextDocument);
-    m_commsTextEdit = new QTextEdit(this);
-    m_commsTextEdit->setDocument(m_commsTextDocument);
+    m_consoleTextDoc = new QTextDocument(GameConsoleWidget::DEFAULT_CONTENT);
+    m_consoleCursor = new QTextCursor(m_consoleTextDoc);
+    m_consoleTextEdit = new QTextEdit(this);
+    m_consoleTextEdit->setDocument(m_consoleTextDoc);
 
-    layout->addWidget(m_commsTextEdit);
+    layout->addWidget(m_consoleTextEdit);
 
     connect(&m_adventureJournal,
             &AdventureJournal::sig_killedMob,
@@ -27,25 +27,25 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     connect(&m_adventureJournal,
             &AdventureJournal::sig_receivedNarrate,
             this,
-            &GameConsoleWidget::slot_onNarrateReceived);
+            &GameConsoleWidget::slot_onReceivedNarrate);
 
     connect(&m_adventureJournal,
             &AdventureJournal::sig_receivedTell,
             this,
-            &GameConsoleWidget::slot_onTellReceived);
+            &GameConsoleWidget::slot_onReceivedTell);
 }
 
 void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 {
-    addConsoleMessage("Killed mob: " + mobName);
+    addConsoleMessage("Killed: " + mobName);
 }
 
-void GameConsoleWidget::slot_onNarrateReceived(const QString &narr)
+void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
 {
     addConsoleMessage(narr);
 }
 
-void GameConsoleWidget::slot_onTellReceived(const QString &tell)
+void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
 {
     addConsoleMessage(tell);
 }
@@ -55,23 +55,23 @@ void GameConsoleWidget::addConsoleMessage(const QString &msg)
     // If first message, clear the placeholder text
     auto prepend = "\n";
     if (m_numMessagesReceived == 0) {
-        m_commsTextDocument->clear();
+        m_consoleTextDoc->clear();
         prepend = "";
     }
     m_numMessagesReceived++;
 
-    m_commsCursor->movePosition(QTextCursor::End);
-    m_commsCursor->insertText(prepend + msg);
+    m_consoleCursor->movePosition(QTextCursor::End);
+    m_consoleCursor->insertText(prepend + msg);
 
     // If more than MAX_LINES, preserve by deleting from the start
-    auto lines_over = m_commsTextDocument->lineCount() - GameConsoleWidget::MAX_LINES;
+    auto lines_over = m_consoleTextDoc->lineCount() - GameConsoleWidget::MAX_LINES;
     if (lines_over > 0) {
-        m_commsCursor->movePosition(QTextCursor::Start);
-        m_commsCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
-        m_commsCursor->removeSelectedText();
-        m_commsCursor->movePosition(QTextCursor::End);
+        m_consoleCursor->movePosition(QTextCursor::Start);
+        m_consoleCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
+        m_consoleCursor->removeSelectedText();
+        m_consoleCursor->movePosition(QTextCursor::End);
     }
 
-    auto scrollBar = m_commsTextEdit->verticalScrollBar();
+    auto scrollBar = m_consoleTextEdit->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());
 }
