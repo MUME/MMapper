@@ -11,13 +11,13 @@ AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent
     connect(&m_observer,
             &GameObserver::sig_sentToUserText,
             this,
-            &AdventureJournal::slot_updateJournal);
+            &AdventureJournal::slot_onUserText);
 }
 
 AdventureJournal::~AdventureJournal()
 {}
 
-void AdventureJournal::slot_updateJournal(const QByteArray &ba)
+void AdventureJournal::slot_onUserText(const QByteArray &ba)
 {
     //qDebug() << "AdventureJournal::slot_updateJournal called";
 
@@ -26,16 +26,20 @@ void AdventureJournal::slot_updateJournal(const QByteArray &ba)
     ParserUtils::removeAnsiMarksInPlace(str);
     //QString line = ::toStdStringUtf8(str);
 
+    if (str.contains("narrates '")) {
+        emit sig_receivedNarrate(str);
+    }
+
+    if (str.contains("tells you '")) {
+        emit sig_receivedTell(str);
+    }
+
     auto idx_isdead = str.indexOf(" is dead! R.I.P.");
     if (idx_isdead > 0) {
-        qDebug().noquote() << "AdventureJournal: player killed: " << str.left(idx_isdead);
+        qDebug().noquote() << "AdventureJournal: player killed mob: " << str.left(idx_isdead);
     }
 
-    if(str.contains("You gain a level!")) {
+    if (str.contains("You gain a level!")) {
         qDebug().noquote() << "AdventureJournal: player gained a level!";
-    }
-
-    if(str.contains("tells you") or str.contains("narrates")) {
-        emit sig_receivedComm(str);
     }
 }

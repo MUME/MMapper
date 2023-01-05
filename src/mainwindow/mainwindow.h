@@ -27,7 +27,7 @@ class AutoLogger;
 class AbstractAction;
 class AdventureJournal;
 class ClientWidget;
-class CommsWidget;
+class GameConsoleWidget;
 class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
@@ -188,7 +188,7 @@ private:
     UpdateDialog *m_updateDialog = nullptr;
 
     AdventureJournal *m_adventureJournal = nullptr;
-    CommsWidget *m_commsWidget = nullptr;
+    GameConsoleWidget *m_commsWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;

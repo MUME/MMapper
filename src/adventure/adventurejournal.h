@@ -12,10 +12,11 @@ public:
     ~AdventureJournal() final;
 
 signals:
-    void sig_receivedComm(const QString &comm);
+    void sig_receivedNarrate(const QString &msg);
+    void sig_receivedTell(const QString &msg);
 
 public slots:
-    void slot_updateJournal(const QByteArray &ba);
+    void slot_onUserText(const QByteArray &ba);
 
 private:
     GameObserver &m_observer;

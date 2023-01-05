@@ -24,7 +24,7 @@
 #include <QtWidgets>
 
 #include "../adventure/adventurejournal.h"
-#include "../adventure/commswidget.h"
+#include "../adventure/gameconsolewidget.h"
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
@@ -560,7 +560,7 @@ void MainWindow::setupChildWidgets()
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     // View -> Side Panels -> Game Communication (Narrates, Tells)
-    m_commsWidget = new CommsWidget(deref(m_adventureJournal), this);
+    m_commsWidget = new GameConsoleWidget(deref(m_adventureJournal), this);
     m_dockDialogComms = new QDockWidget(tr("Game Communication"), this);
     m_dockDialogComms->setObjectName("DockWidgetGameComms");
     m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
