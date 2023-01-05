@@ -526,7 +526,7 @@ void MainWindow::setupChildWidgets()
     m_dockDialogLog->setWidget(logWindow);
     m_dockDialogLog->hide();
 
-    // Tools -> Group Manager
+    // View -> Side Panels -> Group Panel and Tools -> Group Manager
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
     m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
@@ -559,17 +559,17 @@ void MainWindow::setupChildWidgets()
     m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    // View -> Side Panels -> Game Communication (Narrates, Tells)
-    m_commsWidget = new GameConsoleWidget(deref(m_adventureJournal), this);
-    m_dockDialogComms = new QDockWidget(tr("Game Communication"), this);
-    m_dockDialogComms->setObjectName("DockWidgetGameComms");
-    m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
-    m_dockDialogComms->setFeatures(QDockWidget::DockWidgetClosable
-                                   | QDockWidget::DockWidgetFloatable
-                                   | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogComms);
-    m_dockDialogComms->setWidget(m_commsWidget);
-    m_dockDialogComms->hide();
+    // View -> Side Panels -> Game Console (Narrates, Tells, Mob Kill XP)
+    m_gameConsoleWidget = new GameConsoleWidget(deref(m_adventureJournal), this);
+    m_dockDialogGameConsole = new QDockWidget(tr("Game Console"), this);
+    m_dockDialogGameConsole->setObjectName("DockWidgetGameConsole");
+    m_dockDialogGameConsole->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogGameConsole->setFeatures(QDockWidget::DockWidgetClosable
+                                         | QDockWidget::DockWidgetFloatable
+                                         | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogGameConsole);
+    m_dockDialogGameConsole->setWidget(m_gameConsoleWidget);
+    m_dockDialogGameConsole->hide();
 }
 
 // TODO: clean up all this copy/paste by using helper functions and X-macros
@@ -1250,7 +1250,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
-    sidepanels->addAction(m_dockDialogComms->toggleViewAction());
+    sidepanels->addAction(m_dockDialogGameConsole->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);

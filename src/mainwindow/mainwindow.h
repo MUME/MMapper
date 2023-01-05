@@ -166,7 +166,7 @@ private:
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
-    QDockWidget *m_dockDialogComms = nullptr;
+    QDockWidget *m_dockDialogGameConsole = nullptr;
 
     GameObserver *m_gameObserver = nullptr;
     AutoLogger *m_logger = nullptr;
@@ -188,7 +188,7 @@ private:
     UpdateDialog *m_updateDialog = nullptr;
 
     AdventureJournal *m_adventureJournal = nullptr;
-    GameConsoleWidget *m_commsWidget = nullptr;
+    GameConsoleWidget *m_gameConsoleWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
