@@ -69,9 +69,22 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
+        if (XPS_DEBUG_TO_FILE) {
+            (*debugStream) << "***STYPE***";
+            (*debugStream) << "DELAY";
+            (*debugStream) << "***ETYPE***";
+        }
         m_lastPrompt = data.line;
         if (getConfig().parser.removeXmlTags)
             stripXmlEntities(m_lastPrompt);
+        parse(data, true);
+        break;
+    case TelnetDataEnum::PROMPT:
+        if (XPS_DEBUG_TO_FILE) {
+            (*debugStream) << "***STYPE***";
+            (*debugStream) << "PROMPT";
+            (*debugStream) << "***ETYPE***";
+        }
         parse(data, true);
         break;
     case TelnetDataEnum::UNKNOWN:
@@ -85,7 +98,6 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 
     case TelnetDataEnum::LF:
     case TelnetDataEnum::CRLF:
-    case TelnetDataEnum::PROMPT:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
             (*debugStream) << "CRLF";

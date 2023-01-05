@@ -480,7 +480,7 @@ const Room *RoomEditAttrDlg::getSelectedRoom()
     }
     auto it = m_roomSelection->find(
         RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
-    if (it != m_roomSelection->end())
+    if (it == m_roomSelection->end())
         return nullptr;
     return it->second;
 }

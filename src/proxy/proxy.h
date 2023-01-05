@@ -20,8 +20,8 @@
 #include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
+#include "observer/gameobserver.h"
 
-class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -50,10 +50,9 @@ public:
                    Mmapper2PathMachine &,
                    PrespammedPath &,
                    Mmapper2Group &,
-                   RoomManager &,
                    MumeClock &,
-                   AutoLogger &,
                    MapCanvas &,
+                   GameObserver &,
                    qintptr &,
                    ConnectionListener &);
     ~Proxy() final;
@@ -104,12 +103,11 @@ private:
     Mmapper2PathMachine &m_pathMachine;
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
-    RoomManager &m_roomManager;
     MumeClock &m_mumeClock;
-    AutoLogger &m_logger;
     MapCanvas &m_mapCanvas;
-    ConnectionListener &m_listener;
+    GameObserver &m_gameObserver;
     const qintptr m_socketDescriptor;
+    ConnectionListener &m_listener;
 
     // initialized in ctor
     QPointer<RemoteEdit> m_remoteEdit;

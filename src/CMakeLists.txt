@@ -200,6 +200,8 @@ set(mmapper_SRCS
     mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
+    observer/gameobserver.cpp
+    observer/gameobserver.h
     opengl/Font.cpp
     opengl/Font.h
     opengl/FontFormatFlags.h
@@ -663,7 +665,7 @@ if(UNIX AND NOT APPLE)
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.12.4), libqt5gui5 (>= 5.12.4), libqt5opengl5 (>= 5.12.4), libqt5network5 (>= 5.12.4)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.15.0), libqt5gui5 (>= 5.15.0), libqt5opengl5 (>= 5.15.0), libqt5network5 (>= 5.15.0)")
     if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
