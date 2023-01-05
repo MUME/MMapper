@@ -2,8 +2,7 @@
 // Created by Azazello on 16.12.22.
 //
 
-#ifndef MMAPPER_CTIMERS_H
-#define MMAPPER_CTIMERS_H
+#pragma once
 
 #include <QByteArray>
 #include <QElapsedTimer>
@@ -87,7 +86,7 @@ public:
     void clear();
 
     // spells
-    void addSpell(QByteArray spellname, QByteArray up, QByteArray down, QByteArray refresh, bool addon);
+    void addSpell(QByteArray spellName, QByteArray up, QByteArray refresh, QByteArray down, bool addon);
     void addSpell(const TSpell &s);
     QString spellUpFor(unsigned int p);
     void resetSpells();
@@ -99,6 +98,3 @@ public slots:
     void finishCountdownTimer();
 
 };
-
-
-#endif //MMAPPER_CTIMERS_H

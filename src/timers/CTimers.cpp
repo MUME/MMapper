@@ -15,30 +15,108 @@ CTimers::CTimers(QObject *parent)
 {
     m_nextId = 1;
 
-    QSettings conf("spells.ini", QSettings::IniFormat);
-
-    auto size = conf.beginReadArray("Spells");
-    for (int i = 0; i < size; ++i) {
-        conf.setArrayIndex(i);
-        TSpell spell;
-
-        spell.up = false;
-        spell.silently_up = false;
-        spell.addon = conf.value("addon", 0).toBool();
-        spell.name = conf.value("name").toByteArray();
-        spell.up_mes = conf.value("upMessage").toByteArray();
-        spell.refresh_mes = conf.value("refreshMessage").toByteArray();
-        spell.down_mes = conf.value("downMessage").toByteArray();
-
-        std::cout << "Added spell " << spell.name.data() << "\n";
-        addSpell(spell);
-    }
-    conf.endArray();
+    addSpell(
+        "armour",
+        "A blue transparent wall slowly appears around you.",
+        "Your magic armour is revitalised.",
+        "You feel less protected.",
+        false
+    );
+    addSpell(
+        "shield",
+        "You feel protected.",
+        "Your protection is revitalised.",
+        "Your magical shield wears off.",
+        false
+    );
+    addSpell(
+        "strength",
+        "You feel stronger.",
+        "The duration of the strength spell has been improved.",
+        "You feel weaker.",
+        false
+    );
+    addSpell(
+        "bless",
+        "You begin to feel the light of Aman shine upon you.",
+        "You feel a renewed light shine upon you.",
+        "The light of Aman fades away from you.",
+        false
+    );
+    addSpell(
+        "sense life",
+        "You feel your awareness improve.",
+        "Your awareness is refreshed.",
+        "You feel less aware of your surroundings.",
+        false
+    );
+    addSpell(
+        "sanctuary",
+        "You start glowing.",
+        "Your aura glows more intensely.",
+        "The white aura around your body fades.",
+        false
+    );
+    addSpell(
+        "detect magic",
+        "You become sensitive of magical auras.",
+        "Your awareness of magical auras is renewed.",
+        "Your perception of magical auras wears off.",
+        false
+    );
+    addSpell(
+        "tiredness",
+        "You feel your muscles relax and your pulse slow as the strength that welled within you subsides.",
+        "",
+        "You feel your muscles regain some of their former energy.",
+        false
+    );
+    addSpell(
+        "haggardness",
+        "You feel a sudden flash of dizziness causing you to pause before getting your directional bearings back.",
+        "",
+        "You feel steadier now.",
+        false
+    );
+    addSpell(
+        "lethargy",
+        "You feel a sudden loss of energy as the power that once mingled with your own has now vanished.",
+        "",
+        "You feel your magic energy coming back to you.",
+        false
+    );
+    addSpell(
+        "blindness",
+        "You have been blinded!",
+        "",
+        "You feel a cloak of blindness dissolve.",
+        false
+    );
+    addSpell(
+        "nightvision",
+        "Your eyes tingle.",
+        "",
+        "Your vision blurs.",
+        false
+    );
+    addSpell(
+        "battleglory",
+        "Hearing the horn blow, you feel your urge to battle increase!",
+        "",
+        "You feel your newfound strength leaving you again.",
+        false
+    );
+    addSpell(
+        "breath of briskness",
+        "An energy begins to flow within your legs as your body becomes lighter.",
+        "The energy in your legs is refreshed.",
+        "Your legs feel heavier.",
+        false
+    );
 }
 
 CTimers::~CTimers()
 {
-    // TODO Auto-generated destructor stub
 }
 
 void CTimers::addTimer(QByteArray name, QByteArray desc)
@@ -96,7 +174,6 @@ void CTimers::addCountdown(QByteArray name, QByteArray desc, int time)
     l_timer->duration = time;
 
     // append the shot-down event pending
-
     QTimer::singleShot(time, this, SLOT(finishCountdownTimer()));
 
     m_countdowns.append(l_timer);
@@ -192,11 +269,11 @@ void CTimers::clear()
 
 // -----
 
-void CTimers::addSpell(QByteArray spellname, QByteArray up, QByteArray down, QByteArray refresh, bool addon)
+void CTimers::addSpell(QByteArray spellName, QByteArray up, QByteArray refresh, QByteArray down, bool addon)
 {
     TSpell spell;
 
-    spell.name = spellname;
+    spell.name = spellName;
     spell.up_mes = up;
     spell.down_mes = down;
     spell.refresh_mes = refresh;
@@ -205,13 +282,11 @@ void CTimers::addSpell(QByteArray spellname, QByteArray up, QByteArray down, QBy
     spell.silently_up = false;
 
     spells.push_back(spell);
-    // setConfigModified(true);
 }
 
 void CTimers::addSpell(const TSpell &spell)
 {
     spells.push_back(spell);
-    // setConfigModified(true);
 }
 
 QString CTimers::spellUpFor(unsigned int p)
