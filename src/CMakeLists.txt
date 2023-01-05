@@ -389,6 +389,8 @@ set(mmapper_SRCS
     syntax/Value.h
     timers/CTimers.cpp
     timers/CTimers.h
+    timers/Spells.cpp
+    timers/Spells.h
 )
 
 set(mmapper_RCS

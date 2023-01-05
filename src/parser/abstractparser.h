@@ -31,6 +31,7 @@
 #include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
 #include "../timers/CTimers.h"
+#include "../timers/Spells.h"
 #include "AbstractParser-Utils.h"
 #include "Action.h"
 #include "CommandId.h"
@@ -65,6 +66,7 @@ private:
 protected:
     MumeClock &m_mumeClock;
     CTimers &m_timers;
+    Spells &m_spells;
 
 private:
     MapData &m_mapData;
@@ -109,7 +111,7 @@ private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, QObject *parent);
+    explicit AbstractParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, Spells &spells, QObject *parent);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);

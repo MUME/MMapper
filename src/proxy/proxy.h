@@ -18,6 +18,7 @@
 #include "../global/io.h"
 #include "../pandoragroup/GroupManagerApi.h"
 #include "../timers/CTimers.h"
+#include "../timers/Spells.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 #include "observer/gameobserver.h"
@@ -121,6 +122,7 @@ private:
     QPointer<MumeXmlParser> m_parserXml;
     QPointer<MumeSocket> m_mudSocket;
     QPointer<CTimers> m_timers;
+    QPointer<Spells> m_spells;
 
     enum class NODISCARD ServerStateEnum {
         INITIALIZED,

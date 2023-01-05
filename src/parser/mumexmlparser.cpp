@@ -43,8 +43,8 @@ static const QByteArray ampersand("&");
 static const QByteArray ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(
-    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, CTimers &timers, QObject *parent)
-    : AbstractParser(md, mc, proxy, group, timers, parent)
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, CTimers &timers, Spells &spells, QObject *parent)
+    : AbstractParser(md, mc, proxy, group, timers, spells, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";
@@ -189,9 +189,9 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         }
 
         auto m_line_bytearray = tempStr.toLatin1();
-        m_timers.updateSpellsState(m_line_bytearray);
+        m_spells.updateSpellsState(m_line_bytearray);
         if (m_spells_print_mode) {
-            QByteArray patchedString = m_timers.checkAffectedByLine(m_line_bytearray);
+            QByteArray patchedString = m_spells.checkAffectedByLine(m_line_bytearray);
             if (patchedString != m_line_bytearray) {
                 m_lineToUser.replace(m_line_bytearray, patchedString);
             }

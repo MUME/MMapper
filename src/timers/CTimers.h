@@ -1,12 +1,10 @@
+#pragma once
 //
 // Created by Azazello on 16.12.22.
 //
 
-#pragma once
-
 #include <QByteArray>
 #include <QElapsedTimer>
-#include <QList>
 #include <QMutex>
 #include <QObject>
 
@@ -19,60 +17,39 @@ struct TTimer
     QElapsedTimer timer;
 };
 
-typedef struct
+class CTimers : public QObject
 {
-    QByteArray name;        /* spells name */
-    QByteArray up_mes;      /* up message/pattern */
-    QByteArray down_mes;    /* down message */
-    QByteArray refresh_mes; /* refresh message */
-    QElapsedTimer timer;    /* timer */
-    bool addon;             /* if this spell has to be added after the "Affected by:" line */
-    bool up;                /* is this spell currently up ? */
-    bool silently_up;       /* this spell is up, but time wasn't set for ome reason (reconnect) */
-                            /* this option is required for better GroupManager functioning */
-} TSpell;
-
-class CTimers : public QObject {
     Q_OBJECT
 
-    QMutex	m_lock;
+    QMutex m_lock;
 
-    int 	m_nextId;
-    QList<TTimer *> m_timers;
-    QList<TTimer *> m_countdowns;
-
-    std::vector<TSpell>  spells;
-
+    int m_nextId;
+    std::list<TTimer> m_timers;
+    std::list<TTimer> m_countdowns;
 
     QByteArray getTimers();
     QByteArray getCountdowns();
-
 signals:
     void sig_sendTimersUpdateToUser(const QString str);
 
 public:
-    CTimers(QObject *parent);
+    explicit CTimers(QObject *parent);
     virtual ~CTimers();
 
-    static QString msToMinSec(int ms)
+    static QString msToMinSec(qint64 ms)
     {
         QString s;
         int min;
-        int sec;
+        qint64 sec;
 
         sec = ms / 1000;
-        min = sec / 60;
+        min = static_cast<int>(sec / 60);
         sec = sec % 60;
 
-        s = QString("%1%2:%3%4")
-                .arg( min / 10 )
-                .arg( min % 10 )
-                .arg( sec / 10 )
-                .arg( sec % 10 );
+        s = QString("%1%2:%3%4").arg(min / 10).arg(min % 10).arg(sec / 10).arg(sec % 10);
 
         return s;
     }
-
 
     void addTimer(QByteArray name, QByteArray desc);
     void addCountdown(QByteArray name, QByteArray desc, int time);
@@ -85,16 +62,6 @@ public:
 
     void clear();
 
-    // spells
-    void addSpell(QByteArray spellName, QByteArray up, QByteArray refresh, QByteArray down, bool addon);
-    void addSpell(const TSpell &s);
-    QString spellUpFor(unsigned int p);
-    void resetSpells();
-
-    void updateSpellsState(QByteArray line);
-    QByteArray checkAffectedByLine(QByteArray line);
-
 public slots:
     void finishCountdownTimer();
-
 };

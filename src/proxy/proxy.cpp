@@ -122,11 +122,14 @@ void Proxy::slot_start()
     m_telnetFilter = makeQPointer<TelnetFilter>(this);
     m_mpiFilter = makeQPointer<MpiFilter>(this);
     m_timers = makeQPointer<CTimers>(this);
+    m_spells = makeQPointer<Spells>(this);
+
     m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
                                               m_mumeClock,
                                               m_proxyParserApi,
                                               m_groupManager.getGroupManagerApi(),
                                               *m_timers,
+                                              *m_spells,
                                               this);
 
     m_mudSocket = (!QSslSocket::supportsSsl() || !getConfig().connection.tlsEncryption)
