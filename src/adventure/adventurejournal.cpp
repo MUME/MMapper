@@ -1,3 +1,6 @@
+#include <QJsonDocument>
+#include <QJsonObject>
+
 #include "adventurejournal.h"
 #include "global/TextUtils.h"
 #include "parser/parserutils.h"
@@ -12,6 +15,11 @@ AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent
             &GameObserver::sig_sentToUserText,
             this,
             &AdventureJournal::slot_onUserText);
+
+    connect(&m_observer,
+            &GameObserver::sig_sentToUserGmcp,
+            this,
+            &AdventureJournal::slot_onUserGmcp);
 }
 
 AdventureJournal::~AdventureJournal()
@@ -21,7 +29,7 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
 {
     //qDebug() << "AdventureJournal::slot_updateJournal called";
 
-    // Remove ANSI and convert to UTF-8
+    // Remove ANSI
     QString str = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(str);
     //QString line = ::toStdStringUtf8(str);
@@ -41,5 +49,26 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
 
     if (str.contains("You gain a level!")) {
         qDebug().noquote() << "AdventureJournal: player gained a level!";
+    }
+}
+
+void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
+{
+    if (!gmcpMessage.isCharVitals())
+        return;
+
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
+
+    if (!jsonDoc.isObject()) {
+        qDebug() << "Received GMCP: " << gmcpMessage.getName().toQString()
+                 << "containing invalid Json: expecting object, got: "
+                 << gmcpMessage.getJson()->toQString();
+        return;
+    }
+
+    QJsonObject jsonObj = jsonDoc.object();
+
+    if (jsonObj.contains("xp")) {
+        emit sig_updatedXP(jsonObj["xp"].toDouble());
     }
 }

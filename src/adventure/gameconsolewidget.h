@@ -10,7 +10,8 @@ class GameConsoleWidget : public QWidget
 
 public:
     static const constexpr int MAX_LINES = 512;
-    static const constexpr auto DEFAULT_CONTENT = "Narrates and Tells will appear here...";
+    static const constexpr auto DEFAULT_CONTENT
+        = "This window will show player communication (narrates, tells) and XP gained from kills.";
 
     explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
 
@@ -18,6 +19,7 @@ public slots:
     void slot_onKilledMob(const QString &mobName);
     void slot_onReceivedNarrate(const QString &narr);
     void slot_onReceivedTell(const QString &tell);
+    void slot_onUpdatedXP(const double currentXP);
 
 private:
     void addConsoleMessage(const QString &msg);

@@ -12,12 +12,14 @@ public:
     ~AdventureJournal() final;
 
 signals:
+    void sig_killedMob(const QString &mobName);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
-    void sig_killedMob(const QString &mobName);
+    void sig_updatedXP(const double currentXP);
 
 public slots:
     void slot_onUserText(const QByteArray &ba);
+    void slot_onUserGmcp(const GmcpMessage &gmcpMessage);
 
 private:
     GameObserver &m_observer;

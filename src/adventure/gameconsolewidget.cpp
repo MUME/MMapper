@@ -33,6 +33,11 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
             &AdventureJournal::sig_receivedTell,
             this,
             &GameConsoleWidget::slot_onReceivedTell);
+
+    connect(&m_adventureJournal,
+            &AdventureJournal::sig_updatedXP,
+            this,
+            &GameConsoleWidget::slot_onUpdatedXP);
 }
 
 void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
@@ -48,6 +53,11 @@ void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
 void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
 {
     addConsoleMessage(tell);
+}
+
+void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
+{
+    addConsoleMessage("Char XP updated: " + QString::number(currentXP));
 }
 
 void GameConsoleWidget::addConsoleMessage(const QString &msg)
