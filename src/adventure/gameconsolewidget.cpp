@@ -7,16 +7,25 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     : QWidget{parent}
     , m_adventureJournal{aj}
 {
+    m_consoleTextDoc = new QTextDocument();
+    m_consoleCursor = new QTextCursor(m_consoleTextDoc);
+
+    m_consoleTextEdit = new QTextEdit(this);
+    m_consoleTextEdit->setDocument(m_consoleTextDoc);
+
+    m_consoleTextEdit->setReadOnly(true);
+    m_consoleTextEdit->setOverwriteMode(true);
+    m_consoleTextEdit->setUndoRedoEnabled(false);
+    m_consoleTextEdit->setDocumentTitle("Game Console Text");
+    m_consoleTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_consoleTextEdit->setTabChangesFocus(false);
+
+    addConsoleMessage(DEFAULT_CONTENT);
+
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-
-    m_consoleTextDoc = new QTextDocument(GameConsoleWidget::DEFAULT_CONTENT);
-    m_consoleCursor = new QTextCursor(m_consoleTextDoc);
-    m_consoleTextEdit = new QTextEdit(this);
-    m_consoleTextEdit->setDocument(m_consoleTextDoc);
-
     layout->addWidget(m_consoleTextEdit);
 
     connect(&m_adventureJournal,
