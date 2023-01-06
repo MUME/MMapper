@@ -11,7 +11,8 @@ public:
     static const constexpr int MAX_LINES = 1024;
     static const constexpr auto DEFAULT_CONTENT
         = "*BETA* This window will show player communication (tells)"
-          " and XP gained from kills.";
+          " and XP gained from kills. In the future, quests and other"
+          " important updates will be included.";
 
     explicit GameConsoleWidget(AdventureJournal& aj, QWidget* parent = nullptr);
 
