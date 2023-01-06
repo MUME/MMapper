@@ -54,6 +54,8 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
 
 void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 {
+    // REVISIT what is the cost of all this json parsing? How to optimize?
+
     //if (!gmcpMessage.isCharVitals())
     //    return;
 

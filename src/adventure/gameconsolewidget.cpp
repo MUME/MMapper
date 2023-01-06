@@ -63,14 +63,16 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
 void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 {
     // TODO protect this with a mutex
+    // BUG if multiple mobs killed before next XP update, this
+    // only saves the last one and attributes all XP to that.
     m_freshKill = true;
     m_freshKillMobName = mobName;
 }
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
 {
-    // Drop narrates for now since it can get spammy. Need to evaluate
-    // whether they are worth it.
+    // Drop narrates for now since they can get spammy.
+    // Need to evaluate whether they are worth it.
     //addConsoleMessage(narr);
 }
 
@@ -81,11 +83,12 @@ void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
 
 void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 {
-    qDebug() << "XP updated: " + QString::number(currentXP);
+    //qDebug() << "XP updated: " + QString::number(currentXP);
 
     if (!m_xpCheckpoint.has_value()) {
-        addConsoleMessage("Setting XP checkpoint: " + QString::number(currentXP));
-        m_xpCheckpoint = currentXP; // first value of the session
+        // first value of the session
+        addConsoleMessage("Initial XP checkpoint: " + QString::number(currentXP));
+        m_xpCheckpoint = currentXP;
     }
 
     // TODO protect this with a mutex
@@ -102,7 +105,7 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 
 void GameConsoleWidget::addConsoleMessage(const QString &msg)
 {
-    // TODO If first message, clear the placeholder text?
+    // TODO maybe clear the default/placeholder text?
     auto prepend = "\n";
     if (m_numMessagesReceived == 0) {
         prepend = "";
