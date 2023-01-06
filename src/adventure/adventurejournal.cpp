@@ -7,32 +7,33 @@
 
 #include <QDebug>
 
-AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent)
-    : QObject{parent}
-    , m_observer{observer}
+AdventureJournal::AdventureJournal(GameObserver& observer, QObject* const parent)
+    : QObject { parent }
+    , m_observer { observer }
 {
     connect(&m_observer,
-            &GameObserver::sig_sentToUserText,
-            this,
-            &AdventureJournal::slot_onUserText);
+        &GameObserver::sig_sentToUserText,
+        this,
+        &AdventureJournal::slot_onUserText);
 
     connect(&m_observer,
-            &GameObserver::sig_sentToUserGmcp,
-            this,
-            &AdventureJournal::slot_onUserGmcp);
+        &GameObserver::sig_sentToUserGmcp,
+        this,
+        &AdventureJournal::slot_onUserGmcp);
 }
 
 AdventureJournal::~AdventureJournal()
-{}
-
-void AdventureJournal::slot_onUserText(const QByteArray &ba)
 {
-    //qDebug() << "AdventureJournal::slot_updateJournal called";
+}
+
+void AdventureJournal::slot_onUserText(const QByteArray& ba)
+{
+    // qDebug() << "AdventureJournal::slot_updateJournal called";
 
     // Remove ANSI
     QString str = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(str);
-    //QString line = ::toStdStringUtf8(str);
+    // QString line = ::toStdStringUtf8(str);
 
     if (str.contains("narrates '")) {
         emit sig_receivedNarrate(str);
@@ -52,12 +53,12 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
     }
 }
 
-void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
+void AdventureJournal::slot_onUserGmcp(const GmcpMessage& gmcpMessage)
 {
     // REVISIT what is the cost of all this json parsing? How to optimize?
 
-    //if (!gmcpMessage.isCharVitals())
-    //    return;
+    // if (!gmcpMessage.isCharVitals())
+    //     return;
 
     QJsonDocument jsonDoc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
 

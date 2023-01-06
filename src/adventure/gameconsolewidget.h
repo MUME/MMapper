@@ -1,11 +1,10 @@
 #pragma once
 
 #include "adventure/adventurejournal.h"
-#include <QtWidgets>
 #include <QWidget>
+#include <QtWidgets>
 
-class GameConsoleWidget : public QWidget
-{
+class GameConsoleWidget : public QWidget {
     Q_OBJECT
 
 public:
@@ -14,21 +13,21 @@ public:
         = "*BETA* This window will show player communication (tells)"
           " and XP gained from kills.";
 
-    explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
+    explicit GameConsoleWidget(AdventureJournal& aj, QWidget* parent = nullptr);
 
 public slots:
-    void slot_onKilledMob(const QString &mobName);
-    void slot_onReceivedNarrate(const QString &narr);
-    void slot_onReceivedTell(const QString &tell);
+    void slot_onKilledMob(const QString& mobName);
+    void slot_onReceivedNarrate(const QString& narr);
+    void slot_onReceivedTell(const QString& tell);
     void slot_onUpdatedXP(const double currentXP);
 
 private:
-    void addConsoleMessage(const QString &msg);
+    void addConsoleMessage(const QString& msg);
 
-    AdventureJournal &m_adventureJournal;
+    AdventureJournal& m_adventureJournal;
 
-    QTextEdit *m_consoleTextEdit = nullptr;
-    QTextCursor *m_consoleTextCursor = nullptr;
+    QTextEdit* m_consoleTextEdit = nullptr;
+    QTextCursor* m_consoleTextCursor = nullptr;
 
     int m_numMessagesReceived = 0;
 

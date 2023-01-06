@@ -4,9 +4,9 @@
 #include "configuration/configuration.h"
 #include "gameconsolewidget.h"
 
-GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
-    : QWidget{parent}
-    , m_adventureJournal{aj}
+GameConsoleWidget::GameConsoleWidget(AdventureJournal& aj, QWidget* parent)
+    : QWidget { parent }
+    , m_adventureJournal { aj }
 {
     m_consoleTextEdit = new QTextEdit(this);
     m_consoleTextCursor = new QTextCursor(m_consoleTextEdit->document());
@@ -18,7 +18,7 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     m_consoleTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_consoleTextEdit->setTabChangesFocus(false);
 
-    const auto &settings = getConfig().integratedClient;
+    const auto& settings = getConfig().integratedClient;
 
     QTextFrameFormat frameFormat = m_consoleTextEdit->document()->rootFrame()->frameFormat();
     frameFormat.setBackground(settings.backgroundColor);
@@ -33,34 +33,34 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
 
     addConsoleMessage(DEFAULT_CONTENT);
 
-    auto *layout = new QVBoxLayout(this);
+    auto* layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(m_consoleTextEdit);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_killedMob,
-            this,
-            &GameConsoleWidget::slot_onKilledMob);
+        &AdventureJournal::sig_killedMob,
+        this,
+        &GameConsoleWidget::slot_onKilledMob);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_receivedNarrate,
-            this,
-            &GameConsoleWidget::slot_onReceivedNarrate);
+        &AdventureJournal::sig_receivedNarrate,
+        this,
+        &GameConsoleWidget::slot_onReceivedNarrate);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_receivedTell,
-            this,
-            &GameConsoleWidget::slot_onReceivedTell);
+        &AdventureJournal::sig_receivedTell,
+        this,
+        &GameConsoleWidget::slot_onReceivedTell);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_updatedXP,
-            this,
-            &GameConsoleWidget::slot_onUpdatedXP);
+        &AdventureJournal::sig_updatedXP,
+        this,
+        &GameConsoleWidget::slot_onUpdatedXP);
 }
 
-void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
+void GameConsoleWidget::slot_onKilledMob(const QString& mobName)
 {
     // TODO protect this with a mutex
     // BUG if multiple mobs killed before next XP update, this
@@ -69,21 +69,21 @@ void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
     m_freshKillMobName = mobName;
 }
 
-void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
+void GameConsoleWidget::slot_onReceivedNarrate(const QString& narr)
 {
     // Drop narrates for now since they can get spammy.
     // Need to evaluate whether they are worth it.
-    //addConsoleMessage(narr);
+    // addConsoleMessage(narr);
 }
 
-void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
+void GameConsoleWidget::slot_onReceivedTell(const QString& tell)
 {
     addConsoleMessage(tell);
 }
 
 void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 {
-    //qDebug() << "XP updated: " + QString::number(currentXP);
+    // qDebug() << "XP updated: " + QString::number(currentXP);
 
     if (!m_xpCheckpoint.has_value()) {
         // first value of the session
@@ -95,7 +95,7 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
     if (m_freshKill) {
         double gainedXP = currentXP - m_xpCheckpoint.value();
         addConsoleMessage("Killed: " + m_freshKillMobName + " (" + QString::number(gainedXP)
-                          + " xp)");
+            + " xp)");
 
         m_xpCheckpoint.emplace(currentXP);
         m_freshKill = false;
@@ -103,7 +103,7 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
     }
 }
 
-void GameConsoleWidget::addConsoleMessage(const QString &msg)
+void GameConsoleWidget::addConsoleMessage(const QString& msg)
 {
     // TODO maybe clear the default/placeholder text?
     auto prepend = "\n";
