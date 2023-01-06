@@ -1,17 +1,15 @@
 #include <QtCore>
 #include <QtWidgets>
 
+#include "configuration/configuration.h"
 #include "gameconsolewidget.h"
 
 GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     : QWidget{parent}
     , m_adventureJournal{aj}
 {
-    m_consoleTextDoc = new QTextDocument();
-    m_consoleCursor = new QTextCursor(m_consoleTextDoc);
-
     m_consoleTextEdit = new QTextEdit(this);
-    m_consoleTextEdit->setDocument(m_consoleTextDoc);
+    m_consoleTextCursor = new QTextCursor(m_consoleTextEdit->document());
 
     m_consoleTextEdit->setReadOnly(true);
     m_consoleTextEdit->setOverwriteMode(true);
@@ -19,6 +17,19 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     m_consoleTextEdit->setDocumentTitle("Game Console Text");
     m_consoleTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_consoleTextEdit->setTabChangesFocus(false);
+
+    const auto &settings = getConfig().integratedClient;
+
+    QTextFrameFormat frameFormat = m_consoleTextEdit->document()->rootFrame()->frameFormat();
+    frameFormat.setBackground(settings.backgroundColor);
+    m_consoleTextEdit->document()->rootFrame()->setFrameFormat(frameFormat);
+
+    QTextCharFormat blockCharFormat = m_consoleTextCursor->blockCharFormat();
+    blockCharFormat.setForeground(settings.foregroundColor);
+    auto font = new QFont();
+    font->fromString(settings.font); // needed fromString() to extract PointSize
+    blockCharFormat.setFont(*font);
+    m_consoleTextCursor->setBlockCharFormat(blockCharFormat);
 
     addConsoleMessage(DEFAULT_CONTENT);
 
@@ -71,26 +82,26 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 
 void GameConsoleWidget::addConsoleMessage(const QString &msg)
 {
-    // If first message, clear the placeholder text
+    // TODO If first message, clear the placeholder text
     auto prepend = "\n";
     if (m_numMessagesReceived == 0) {
-        m_consoleTextDoc->clear();
         prepend = "";
     }
+
+    m_consoleTextCursor->movePosition(QTextCursor::End);
+    m_consoleTextCursor->insertText(prepend + msg);
     m_numMessagesReceived++;
 
-    m_consoleCursor->movePosition(QTextCursor::End);
-    m_consoleCursor->insertText(prepend + msg);
-
     // If more than MAX_LINES, preserve by deleting from the start
-    auto lines_over = m_consoleTextDoc->lineCount() - GameConsoleWidget::MAX_LINES;
+    auto lines_over = m_consoleTextEdit->document()->lineCount() - GameConsoleWidget::MAX_LINES;
     if (lines_over > 0) {
-        m_consoleCursor->movePosition(QTextCursor::Start);
-        m_consoleCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
-        m_consoleCursor->removeSelectedText();
-        m_consoleCursor->movePosition(QTextCursor::End);
+        m_consoleTextCursor->movePosition(QTextCursor::Start);
+        m_consoleTextCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
+        m_consoleTextCursor->removeSelectedText();
+        m_consoleTextCursor->movePosition(QTextCursor::End);
     }
 
+    // force scroll to bottom upon new message
     auto scrollBar = m_consoleTextEdit->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());
 }

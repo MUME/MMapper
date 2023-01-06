@@ -26,9 +26,8 @@ private:
 
     AdventureJournal &m_adventureJournal;
 
-    QTextDocument *m_consoleTextDoc = nullptr;
-    QTextCursor *m_consoleCursor = nullptr;
     QTextEdit *m_consoleTextEdit = nullptr;
+    QTextCursor *m_consoleTextCursor = nullptr;
 
     int m_numMessagesReceived = 0;
 };
