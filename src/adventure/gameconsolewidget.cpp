@@ -62,7 +62,9 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
 
 void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 {
-    addConsoleMessage("Killed: " + mobName);
+    // TODO protect this with a mutex
+    m_freshKill = true;
+    m_freshKillMobName = mobName;
 }
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
@@ -77,12 +79,28 @@ void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
 
 void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 {
-    addConsoleMessage("Char XP updated: " + QString::number(currentXP));
+    qDebug() << "XP updated: " + QString::number(currentXP);
+
+    if (!m_xpCheckpoint.has_value()) {
+        addConsoleMessage("Setting XP checkpoint: " + QString::number(currentXP));
+        m_xpCheckpoint = currentXP; // first value of the session
+    }
+
+    // TODO protect this with a mutex
+    if (m_freshKill) {
+        double gainedXP = currentXP - m_xpCheckpoint.value();
+        addConsoleMessage("Killed: " + m_freshKillMobName + " (" + QString::number(gainedXP)
+                          + " xp)");
+
+        m_xpCheckpoint.emplace(currentXP);
+        m_freshKill = false;
+        m_freshKillMobName.clear();
+    }
 }
 
 void GameConsoleWidget::addConsoleMessage(const QString &msg)
 {
-    // TODO If first message, clear the placeholder text
+    // TODO If first message, clear the placeholder text?
     auto prepend = "\n";
     if (m_numMessagesReceived == 0) {
         prepend = "";

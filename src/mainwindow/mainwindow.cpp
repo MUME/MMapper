@@ -561,7 +561,7 @@ void MainWindow::setupChildWidgets()
 
     // View -> Side Panels -> Game Console (Narrates, Tells, Mob Kill XP)
     m_gameConsoleWidget = new GameConsoleWidget(deref(m_adventureJournal), this);
-    m_dockDialogGameConsole = new QDockWidget(tr("Game Console"), this);
+    m_dockDialogGameConsole = new QDockWidget(tr("Game Console *BETA*"), this);
     m_dockDialogGameConsole->setObjectName("DockWidgetGameConsole");
     m_dockDialogGameConsole->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
     m_dockDialogGameConsole->setFeatures(QDockWidget::DockWidgetClosable

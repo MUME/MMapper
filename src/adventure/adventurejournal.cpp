@@ -54,15 +54,17 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
 
 void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 {
-    if (!gmcpMessage.isCharVitals())
-        return;
+    //if (!gmcpMessage.isCharVitals())
+    //    return;
 
     QJsonDocument jsonDoc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
 
     if (!jsonDoc.isObject()) {
+        /*
         qDebug() << "Received GMCP: " << gmcpMessage.getName().toQString()
                  << "containing invalid Json: expecting object, got: "
                  << gmcpMessage.getJson()->toQString();
+        */
         return;
     }
 

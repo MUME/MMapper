@@ -9,9 +9,10 @@ class GameConsoleWidget : public QWidget
     Q_OBJECT
 
 public:
-    static const constexpr int MAX_LINES = 512;
+    static const constexpr int MAX_LINES = 1024;
     static const constexpr auto DEFAULT_CONTENT
-        = "This window will show player communication (narrates, tells) and XP gained from kills.";
+        = "*BETA* This window will show player communication (narrates, tells)"
+          " and XP gained from kills.";
 
     explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
 
@@ -30,4 +31,8 @@ private:
     QTextCursor *m_consoleTextCursor = nullptr;
 
     int m_numMessagesReceived = 0;
+
+    std::optional<double> m_xpCheckpoint;
+    bool m_freshKill = false;
+    QString m_freshKillMobName;
 };
