@@ -189,6 +189,7 @@ private:
 struct NODISCARD MapCanvasInputState
 {
     CanvasMouseModeEnum m_canvasMouseMode = CanvasMouseModeEnum::MOVE;
+    CanvasMouseModeEnum m_previousMouseMode = CanvasMouseModeEnum::MOVE;
 
     bool m_mouseRightPressed = false;
     bool m_mouseLeftPressed = false;

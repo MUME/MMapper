@@ -2324,6 +2324,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         m_mapWindow->keyPressEvent(event);
         return;
     }
+    if (event->key() == Qt::Key_Shift) {
+        if (MapCanvas *const canvas = getCanvas())
+            canvas->slot_setCanvasMouseMode(CanvasMouseModeEnum::MOVE, true, false);
+        return;
+    }
     QWidget::keyPressEvent(event);
 }
 
@@ -2331,6 +2336,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Escape) {
         m_mapWindow->keyReleaseEvent(event);
+        return;
+    }
+    if (event->key() == Qt::Key_Shift) {
+        if (MapCanvas *const canvas = getCanvas())
+            canvas->slot_setPreviousCanvasMouseMode(false);
         return;
     }
     QWidget::keyReleaseEvent(event);
@@ -2350,7 +2360,7 @@ void MainWindow::mapChanged() const
 void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)
 {
     if (MapCanvas *const canvas = getCanvas())
-        canvas->slot_setCanvasMouseMode(mode);
+        canvas->slot_setCanvasMouseMode(mode, false, true);
 }
 
 void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> input_action)

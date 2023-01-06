@@ -105,7 +105,11 @@ void MapCanvas::slot_layerReset()
     layerChanged();
 }
 
-void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
+void MapCanvas::slot_setPreviousCanvasMouseMode(bool resetSelection) {
+    slot_setCanvasMouseMode(m_previousMouseMode, false, resetSelection);
+}
+
+void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode, bool isTemporarySelection, bool resetSelection)
 {
     // FIXME: This probably isn't what you actually want here,
     // since it clears selections when re-choosing the same mode,
@@ -115,7 +119,9 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     // or if you're trying to use MOVE to pan to reach more rooms
     // (granted, the latter isn't "necessary" because you can use
     // scrollbars or use the new zoom-recenter feature).
-    slot_clearAllSelections();
+    if (resetSelection) {
+        slot_clearAllSelections();
+    }
 
     switch (mode) {
     case CanvasMouseModeEnum::MOVE:
@@ -139,9 +145,16 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
         break;
     }
 
-    m_canvasMouseMode = mode;
-    m_selectedArea = false;
-    selectionChanged();
+    if (mode != m_canvasMouseMode) {
+        if (isTemporarySelection) {
+            m_previousMouseMode = m_canvasMouseMode;
+        }
+        m_canvasMouseMode = mode;
+        if (resetSelection) {
+            m_selectedArea = false;
+            selectionChanged();
+        }
+    }
 }
 
 void MapCanvas::slot_setRoomSelection(const SigRoomSelection &selection)

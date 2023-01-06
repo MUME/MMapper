@@ -108,7 +108,8 @@ public slots:
     void slot_forceMapperToRoom();
     void slot_createRoom();
 
-    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
+    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode, bool isTemporarySelection, bool resetSelection);
+    void slot_setPreviousCanvasMouseMode(bool resetSelection);
 
     void slot_setScroll(const glm::vec2 &worldPos);
     // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
