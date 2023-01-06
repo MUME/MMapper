@@ -11,7 +11,7 @@ class GameConsoleWidget : public QWidget
 public:
     static const constexpr int MAX_LINES = 1024;
     static const constexpr auto DEFAULT_CONTENT
-        = "*BETA* This window will show player communication (narrates, tells)"
+        = "*BETA* This window will show player communication (tells)"
           " and XP gained from kills.";
 
     explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
