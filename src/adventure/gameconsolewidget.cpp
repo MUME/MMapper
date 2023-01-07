@@ -31,7 +31,7 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal& aj, QWidget* parent)
     blockCharFormat.setFont(*font);
     m_consoleTextCursor->setBlockCharFormat(blockCharFormat);
 
-    addConsoleMessage(DEFAULT_CONTENT);
+    addConsoleMessage(DEFAULT_MSG);
 
     auto* layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -66,7 +66,7 @@ void GameConsoleWidget::slot_onKilledMob(const QString& mobName)
     // BUG if multiple mobs killed before next XP update, this
     // only saves the last one and attributes all XP to that.
     m_freshKill = true;
-    m_freshKillMobName = mobName;
+    m_freshKillMob = mobName;
 }
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString& narr)
@@ -93,14 +93,31 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 
     // TODO protect this with a mutex
     if (m_freshKill) {
-        double gainedXP = currentXP - m_xpCheckpoint.value();
-        addConsoleMessage("Killed: " + m_freshKillMobName + " (" + QString::number(gainedXP)
-            + " xp)");
+        double xpGained = currentXP - m_xpCheckpoint.value();
+        auto msg = QString(TROPHY_MESSAGE)
+                       .arg(m_freshKillMob)
+                       .arg(formatXPGained(xpGained));
+        addConsoleMessage(msg);
 
         m_xpCheckpoint.emplace(currentXP);
         m_freshKill = false;
-        m_freshKillMobName.clear();
+        m_freshKillMob.clear();
     }
+}
+
+const QString GameConsoleWidget::formatXPGained(const double xpGained)
+{
+    qDebug() << "formatting xpGained: " << xpGained;
+
+    if (xpGained < 1000) {
+        return QString::number(xpGained);
+    }
+
+    if (xpGained < (10 * 1000)) {
+        return QString::number(xpGained / 1000, 'f', 1) + "k";
+    }
+
+    return QString::number(xpGained / 1000, 'f', 0) + "k";
 }
 
 void GameConsoleWidget::addConsoleMessage(const QString& msg)

@@ -1,20 +1,27 @@
 #pragma once
 
 #include "adventure/adventurejournal.h"
+#include <QString>
 #include <QWidget>
+#include <QtCore>
 #include <QtWidgets>
 
 class GameConsoleWidget : public QWidget {
     Q_OBJECT
 
 public:
-    static const constexpr int MAX_LINES = 1024;
-    static const constexpr auto DEFAULT_CONTENT
-        = "*BETA* This window will show player communication (tells)"
-          " and XP gained from kills. In the future, quests and other"
-          " important updates will be included.";
+    static constexpr const int MAX_LINES = 1024;
+    static constexpr const auto DEFAULT_MSG
+        = "Your progress in Middle Earth will be tracked here! *BETA*\n"
+          "For now, just XP gained from kills and player Tells. But"
+          " more to come!";
+
+    static constexpr const auto TROPHY_MESSAGE
+        = "Trophy: %1 (%2 xp)";
 
     explicit GameConsoleWidget(AdventureJournal& aj, QWidget* parent = nullptr);
+
+    static const QString formatXPGained(const double xpGained);
 
 public slots:
     void slot_onKilledMob(const QString& mobName);
@@ -34,5 +41,5 @@ private:
 
     std::optional<double> m_xpCheckpoint;
     bool m_freshKill = false;
-    QString m_freshKillMobName;
+    QString m_freshKillMob;
 };
