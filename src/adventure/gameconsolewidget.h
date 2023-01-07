@@ -6,7 +6,8 @@
 #include <QtCore>
 #include <QtWidgets>
 
-class GameConsoleWidget : public QWidget {
+class GameConsoleWidget : public QWidget
+{
     Q_OBJECT
 
 public:
@@ -16,26 +17,25 @@ public:
           "For now, just XP gained from kills and player Tells. But"
           " more to come!";
 
-    static constexpr const auto TROPHY_MESSAGE
-        = "Trophy: %1 (%2 xp)";
+    static constexpr const auto TROPHY_MESSAGE = "Trophy: %1 (%2 xp)";
 
-    explicit GameConsoleWidget(AdventureJournal& aj, QWidget* parent = nullptr);
+    explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
 
     static const QString formatXPGained(const double xpGained);
 
 public slots:
-    void slot_onKilledMob(const QString& mobName);
-    void slot_onReceivedNarrate(const QString& narr);
-    void slot_onReceivedTell(const QString& tell);
+    void slot_onKilledMob(const QString &mobName);
+    void slot_onReceivedNarrate(const QString &narr);
+    void slot_onReceivedTell(const QString &tell);
     void slot_onUpdatedXP(const double currentXP);
 
 private:
-    void addConsoleMessage(const QString& msg);
+    void addConsoleMessage(const QString &msg);
 
-    AdventureJournal& m_adventureJournal;
+    AdventureJournal &m_adventureJournal;
 
-    QTextEdit* m_consoleTextEdit = nullptr;
-    QTextCursor* m_consoleTextCursor = nullptr;
+    QTextEdit *m_consoleTextEdit = nullptr;
+    QTextCursor *m_consoleTextCursor = nullptr;
 
     int m_numMessagesReceived = 0;
 

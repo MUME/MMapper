@@ -7,26 +7,24 @@
 
 #include <QDebug>
 
-AdventureJournal::AdventureJournal(GameObserver& observer, QObject* const parent)
-    : QObject { parent }
-    , m_observer { observer }
+AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent)
+    : QObject{parent}
+    , m_observer{observer}
 {
     connect(&m_observer,
-        &GameObserver::sig_sentToUserText,
-        this,
-        &AdventureJournal::slot_onUserText);
+            &GameObserver::sig_sentToUserText,
+            this,
+            &AdventureJournal::slot_onUserText);
 
     connect(&m_observer,
-        &GameObserver::sig_sentToUserGmcp,
-        this,
-        &AdventureJournal::slot_onUserGmcp);
+            &GameObserver::sig_sentToUserGmcp,
+            this,
+            &AdventureJournal::slot_onUserGmcp);
 }
 
-AdventureJournal::~AdventureJournal()
-{
-}
+AdventureJournal::~AdventureJournal() {}
 
-void AdventureJournal::slot_onUserText(const QByteArray& ba)
+void AdventureJournal::slot_onUserText(const QByteArray &ba)
 {
     // qDebug() << "AdventureJournal::slot_updateJournal called";
 
@@ -53,7 +51,7 @@ void AdventureJournal::slot_onUserText(const QByteArray& ba)
     }
 }
 
-void AdventureJournal::slot_onUserGmcp(const GmcpMessage& gmcpMessage)
+void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 {
     // REVISIT what is the cost of all this json parsing? How to optimize?
 
