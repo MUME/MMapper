@@ -105,7 +105,7 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 
 const QString GameConsoleWidget::formatXPGained(const double xpGained)
 {
-    qDebug() << "formatting xpGained: " << xpGained;
+    //qDebug() << "formatting xpGained: " << xpGained;
 
     if (xpGained < 1000) {
         return QString::number(xpGained);
