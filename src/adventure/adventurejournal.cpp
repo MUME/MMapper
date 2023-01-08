@@ -72,6 +72,11 @@ void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     QJsonObject jsonObj = jsonDoc.object();
 
     if (jsonObj.contains("xp")) {
+        qDebug() << "xp: " << jsonObj["xp"].toDouble();
         emit sig_updatedXP(jsonObj["xp"].toDouble());
+    }
+
+    if (jsonObj.contains("next-level-xp")) {
+        qDebug() << "next-level-xp" << jsonObj["next-level-xp"].toDouble();
     }
 }

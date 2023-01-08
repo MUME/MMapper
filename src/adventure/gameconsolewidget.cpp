@@ -65,8 +65,12 @@ void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
     // TODO protect this with a mutex
     // BUG if multiple mobs killed before next XP update, this
     // only saves the last one and attributes all XP to that.
-    m_freshKill = true;
-    m_freshKillMob = mobName;
+    if (m_freshKill) {
+        qDebug() << "Already have freshKillMob, discarding additional uncleared kill: " << mobName;
+    } else {
+        m_freshKill = true;
+        m_freshKillMob = mobName;
+    }
 }
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
