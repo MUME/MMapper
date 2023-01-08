@@ -13,9 +13,7 @@ class GameConsoleWidget : public QWidget
 public:
     static constexpr const int MAX_LINES = 1024;
     static constexpr const auto DEFAULT_MSG
-        = "Your progress in Middle Earth will be tracked here! *BETA*\n"
-          "For now, just XP gained from kills and player Tells. But"
-          " more to come!";
+        = "Your progress in Middle Earth will be tracked here! *BETA*";
 
     static constexpr const auto TROPHY_MESSAGE = "Trophy: %1 (%2 xp)";
 
