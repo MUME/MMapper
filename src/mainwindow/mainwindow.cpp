@@ -520,7 +520,7 @@ void MainWindow::setupChildWidgets()
                                  | QDockWidget::DockWidgetClosable);
     m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
 
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog); 
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
     logWindow = new QTextBrowser(m_dockDialogLog);
     logWindow->setObjectName("LogWindow");
     m_dockDialogLog->setWidget(logWindow);
