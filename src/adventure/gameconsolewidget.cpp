@@ -77,7 +77,7 @@ void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
 {
     // Drop narrates for now since they can get spammy.
     // Need to evaluate whether they are worth it.
-    // addConsoleMessage(narr);
+    addConsoleMessage(narr);
 }
 
 void GameConsoleWidget::slot_onReceivedTell(const QString &tell)

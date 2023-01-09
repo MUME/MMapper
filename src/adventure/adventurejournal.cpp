@@ -31,14 +31,6 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
     ParserUtils::removeAnsiMarksInPlace(str);
     // QString line = ::toStdStringUtf8(str);
 
-    if (str.contains("narrates '")) {
-        emit sig_receivedNarrate(str);
-    }
-
-    if (str.contains("tells you '")) {
-        emit sig_receivedTell(str);
-    }
-
     auto idx_isdead = str.indexOf(" is dead! R.I.P.");
     if (idx_isdead > 0) {
         emit sig_killedMob(str.left(idx_isdead));
@@ -55,26 +47,34 @@ void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 
     qDebug() << "GMCP received: " << gmcpMessage.getName().toQString();
 
-    if (!(gmcpMessage.isCharName() or gmcpMessage.isCharStatusVars() or gmcpMessage.isCharVitals()))
+    if (!(gmcpMessage.isCharName() or gmcpMessage.isCharStatusVars() or gmcpMessage.isCharVitals()
+          or gmcpMessage.isCommChannelText()))
         return;
 
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
+    QJsonDocument doc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
 
-    if (!jsonDoc.isObject()) {
+    if (!doc.isObject()) {
         qInfo() << "Received GMCP: " << gmcpMessage.getName().toQString()
                 << "containing invalid Json: expecting object, got: "
                 << gmcpMessage.getJson()->toQString();
         return;
     }
 
-    QJsonObject jsonObj = jsonDoc.object();
+    QJsonObject obj = doc.object();
 
-    if (jsonObj.contains("xp")) {
-        qInfo() << "GMCP xp: " << jsonObj["xp"].toDouble();
-        emit sig_updatedXP(jsonObj["xp"].toDouble());
+    if (gmcpMessage.isCommChannelText() && obj.contains("channel") && obj.contains("text")) {
+        if (obj["channel"].toString() == "tells")
+            emit sig_receivedTell(obj["text"].toString());
+        else if (obj["channel"].toString() == "narrates")
+            emit sig_receivedNarrate(obj["text"].toString());
     }
 
-    if (jsonObj.contains("next-level-xp")) {
-        qInfo() << "GMCP next-level-xp" << jsonObj["next-level-xp"].toDouble();
+    if (obj.contains("xp")) {
+        qInfo() << "GMCP xp: " << obj["xp"].toDouble();
+        emit sig_updatedXP(obj["xp"].toDouble());
+    }
+
+    if (obj.contains("next-level-xp")) {
+        qInfo() << "GMCP next-level-xp" << obj["next-level-xp"].toDouble();
     }
 }
