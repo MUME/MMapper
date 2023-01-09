@@ -37,7 +37,5 @@ private:
 
     int m_numMessagesReceived = 0;
 
-    std::optional<double> m_xpCheckpoint;
-    bool m_freshKill = false;
-    QString m_freshKillMob;
+    std::optional<double> m_xpCheckpoint, m_xpCurrent;
 };

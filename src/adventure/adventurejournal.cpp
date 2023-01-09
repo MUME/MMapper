@@ -31,9 +31,13 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
     ParserUtils::removeAnsiMarksInPlace(str);
     // QString line = ::toStdStringUtf8(str);
 
-    auto idx_isdead = str.indexOf(" is dead! R.I.P.");
-    if (idx_isdead > 0) {
-        emit sig_killedMob(str.left(idx_isdead));
+    auto idx_dead = str.indexOf(" is dead! R.I.P.");
+    if (idx_dead == 0)
+        idx_dead = str.indexOf(" disappears into nothing.");
+
+    if (idx_dead > 0) {
+        qDebug() << "Killed: " << str.left(idx_dead);
+        emit sig_killedMob(str.left(idx_dead));
     }
 
     if (str.contains("You gain a level!")) {
@@ -45,10 +49,7 @@ void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 
-    qDebug() << "GMCP received: " << gmcpMessage.getName().toQString();
-
-    if (!(gmcpMessage.isCharName() or gmcpMessage.isCharStatusVars() or gmcpMessage.isCharVitals()
-          or gmcpMessage.isCommChannelText()))
+    if (!(gmcpMessage.isCharName() or gmcpMessage.isCharVitals() or gmcpMessage.isCommChannelText()))
         return;
 
     QJsonDocument doc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
@@ -70,11 +71,7 @@ void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     }
 
     if (obj.contains("xp")) {
-        qInfo() << "GMCP xp: " << obj["xp"].toDouble();
+        qInfo() << "GMCP xp: " << QString::number(obj["xp"].toDouble(), 'f', 0);
         emit sig_updatedXP(obj["xp"].toDouble());
-    }
-
-    if (obj.contains("next-level-xp")) {
-        qInfo() << "GMCP next-level-xp" << obj["next-level-xp"].toDouble();
     }
 }

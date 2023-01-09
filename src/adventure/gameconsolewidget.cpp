@@ -62,15 +62,11 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
 
 void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 {
-    // TODO protect this with a mutex
-    // BUG if multiple mobs killed before next XP update, this
-    // only saves the last one and attributes all XP to that.
-    if (m_freshKill) {
-        qDebug() << "Already have freshKillMob, discarding additional uncleared kill: " << mobName;
-    } else {
-        m_freshKill = true;
-        m_freshKillMob = mobName;
-    }
+    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
+    auto msg = QString(TROPHY_MESSAGE).arg(mobName).arg(formatXPGained(xpGained));
+    addConsoleMessage(msg);
+
+    m_xpCheckpoint.emplace(m_xpCurrent.value());
 }
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
@@ -87,30 +83,17 @@ void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
 
 void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
 {
-    // qDebug() << "XP updated: " + QString::number(currentXP);
-
     if (!m_xpCheckpoint.has_value()) {
         // first value of the session
-        addConsoleMessage("Initial XP checkpoint: " + QString::number(currentXP));
+        qDebug() << "Initial XP checkpoint: " + QString::number(currentXP, 'f', 0);
         m_xpCheckpoint = currentXP;
     }
 
-    // TODO protect this with a mutex
-    if (m_freshKill) {
-        double xpGained = currentXP - m_xpCheckpoint.value();
-        auto msg = QString(TROPHY_MESSAGE).arg(m_freshKillMob).arg(formatXPGained(xpGained));
-        addConsoleMessage(msg);
-
-        m_xpCheckpoint.emplace(currentXP);
-        m_freshKill = false;
-        m_freshKillMob.clear();
-    }
+    m_xpCurrent = currentXP;
 }
 
 const QString GameConsoleWidget::formatXPGained(const double xpGained)
 {
-    //qDebug() << "formatting xpGained: " << xpGained;
-
     if (xpGained < 1000) {
         return QString::number(xpGained);
     }
