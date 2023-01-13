@@ -47,6 +47,7 @@ const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdVote{"vote", 2};
+const Abbrev cmdTimer{"timer", 5};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -841,6 +842,15 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Perform actions on the group manager."));
+
+    /* timers command */
+    add(
+        cmdTimer,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseTimer(rest);
+            return true;
+        },
+        makeSimpleHelp("Add or remove simple timers and countdown timers."));
 
     qInfo() << "Total commands + abbreviations: " << map.size();
 }

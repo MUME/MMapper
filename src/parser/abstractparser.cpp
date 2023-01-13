@@ -126,10 +126,15 @@ NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
     return '?';
 }
 
-AbstractParser::AbstractParser(
-    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *const parent)
+AbstractParser::AbstractParser(MapData &md,
+                               MumeClock &mc,
+                               ProxyParserApi proxy,
+                               GroupManagerApi group,
+                               CTimers &timers,
+                               QObject *const parent)
     : QObject(parent)
     , m_mumeClock(mc)
+    , m_timers(timers)
     , m_mapData(md)
     , m_proxy(std::move(proxy))
     , m_group(std::move(group))
@@ -941,9 +946,10 @@ void AbstractParser::showHelp()
                      "  %1room        - (see \"%1room ??\" for syntax help)\n"
                      "  %1mark        - (see \"%1mark ??\" for syntax help)\n"
                      "\n"
-                     "Group commands:\n"
-                     "  %1group       - (see \"%1group ??\" for syntax help)\n"
+                     "Utility commands:\n"
                      "  %1gtell       - send group tell\n"
+                     "  %1group       - (see \"%1group ??\" for syntax help)\n"
+                     "  %1timer       - (see \"%timers ??\" for syntax help)\n"
                      "\n"
                      "Config commands:\n"
                      "  %1config      - (see \"%1config ??\" for syntax help)\n"
@@ -1592,4 +1598,10 @@ void AbstractParser::eval(const std::string &name,
     const auto thisCommand = std::string(1, prefixChar) + name;
     const auto completeSyntax = buildSyntax(stringToken(thisCommand), syntax);
     sendToUser(processSyntax(completeSyntax, thisCommand, input));
+}
+
+void AbstractParser::slot_timersUpdate(const std::string &text)
+{
+    sendToUser(text);
+    sendPromptToUser();
 }

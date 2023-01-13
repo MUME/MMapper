@@ -121,10 +121,12 @@ void Proxy::slot_start()
     m_mudTelnet = makeQPointer<MudTelnet>(this);
     m_telnetFilter = makeQPointer<TelnetFilter>(this);
     m_mpiFilter = makeQPointer<MpiFilter>(this);
+    m_timers = makeQPointer<CTimers>(this);
     m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
                                               m_mumeClock,
                                               m_proxyParserApi,
                                               m_groupManager.getGroupManagerApi(),
+                                              *m_timers,
                                               this);
 
     m_mudSocket = (!QSslSocket::supportsSsl() || !getConfig().connection.tlsEncryption)
@@ -220,6 +222,12 @@ void Proxy::slot_start()
 
     // Group Manager Support
     connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
+
+    // timers
+    connect(m_timers,
+            &CTimers::sig_sendTimersUpdateToUser,
+            parserXml,
+            &AbstractParser::slot_timersUpdate);
 
     // Group Tell
     connect(&m_groupManager,
