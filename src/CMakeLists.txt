@@ -268,6 +268,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
+    parser/AbstractParser-Timer.cpp
     parser/Action.cpp
     parser/Action.h
     parser/CommandId.cpp
@@ -386,6 +387,8 @@ set(mmapper_SRCS
     syntax/User.h
     syntax/Value.cpp
     syntax/Value.h
+    timers/CTimers.cpp
+    timers/CTimers.h
 )
 
 set(mmapper_RCS

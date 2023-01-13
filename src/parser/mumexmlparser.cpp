@@ -42,9 +42,13 @@ static const QByteArray lessThanTemplate("&lt;");
 static const QByteArray ampersand("&");
 static const QByteArray ampersandTemplate("&amp;");
 
-MumeXmlParser::MumeXmlParser(
-    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
-    : AbstractParser(md, mc, proxy, group, parent)
+MumeXmlParser::MumeXmlParser(MapData &md,
+                             MumeClock &mc,
+                             ProxyParserApi proxy,
+                             GroupManagerApi group,
+                             CTimers &timers,
+                             QObject *parent)
+    : AbstractParser(md, mc, proxy, group, timers, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";
@@ -172,21 +176,19 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
     if (!m_lineToUser.isEmpty()) {
         sendToUser(m_lineToUser, isGoAhead);
 
-        {
-            // Simplify the output and run actions
-            QByteArray temp = m_lineToUser;
-            if (!getConfig().parser.removeXmlTags) {
-                stripXmlEntities(temp);
-            }
-            QString tempStr = temp;
-            tempStr = normalizeStringCopy(tempStr.trimmed());
-            if (m_snoopChar.has_value() && tempStr.length() > 3 && tempStr.at(0) == '&'
-                && tempStr.at(1) == m_snoopChar.value() && tempStr.at(2) == ' ') {
-                // Remove snoop prefix (i.e. "&J Exits: north.")
-                tempStr = tempStr.mid(3);
-            }
-            parseMudCommands(tempStr);
+        // Simplify the output and run actions
+        QByteArray temp = m_lineToUser;
+        if (!getConfig().parser.removeXmlTags) {
+            stripXmlEntities(temp);
         }
+        QString tempStr = temp;
+        tempStr = normalizeStringCopy(tempStr.trimmed());
+        if (m_snoopChar.has_value() && tempStr.length() > 3 && tempStr.at(0) == '&'
+            && tempStr.at(1) == m_snoopChar.value() && tempStr.at(2) == ' ') {
+            // Remove snoop prefix (i.e. "&J Exits: north.")
+            tempStr = tempStr.mid(3);
+        }
+        parseMudCommands(tempStr);
     }
 }
 

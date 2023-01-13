@@ -277,6 +277,19 @@ void AbstractParser::initActionMap()
     addEndsWith("of the Third Age.",
                 [this](StringView view) { m_mumeClock.parseMumeTime(view.toQString()); });
 
+    /// Stat
+    addRegex(R"(^)"
+             R"((?:Needed:(?: [\d,]+ xp)?(?:,? [\d,]+ tp)\. )?)" // Needed
+             R"(Gold: [\d,]+\.)"                                 // Gold
+             R"((?: Iv: [^.]+\.)?)"                              // God Invis Level
+             R"( Alert: \w+\.)"                                  // Alertness
+             R"((?: Condition: [^.]+\.)?)",                      // Hunger or Thirst
+             [this](StringView /*view*/) {
+                 const auto list = m_timers.getStatCommandEntry();
+                 if (!list.empty())
+                     sendToUser(list);
+             });
+
     /// Score
     addRegex(
         R"(^(You (have|report) )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",

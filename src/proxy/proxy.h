@@ -17,6 +17,7 @@
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
 #include "../pandoragroup/GroupManagerApi.h"
+#include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 #include "observer/gameobserver.h"
@@ -37,6 +38,7 @@ class RemoteEdit;
 class RoomManager;
 class TelnetFilter;
 class UserTelnet;
+class CTimers;
 
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
@@ -118,6 +120,7 @@ private:
     QPointer<MpiFilter> m_mpiFilter;
     QPointer<MumeXmlParser> m_parserXml;
     QPointer<MumeSocket> m_mudSocket;
+    QPointer<CTimers> m_timers;
 
     enum class NODISCARD ServerStateEnum {
         INITIALIZED,

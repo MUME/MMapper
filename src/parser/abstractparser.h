@@ -30,6 +30,7 @@
 #include "../pandoragroup/mmapper2character.h"
 #include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
+#include "../timers/CTimers.h"
 #include "AbstractParser-Utils.h"
 #include "Action.h"
 #include "CommandId.h"
@@ -46,6 +47,7 @@ class ParseEvent;
 class Room;
 class RoomFieldVariant;
 class RoomFilter;
+class CTimers;
 
 namespace syntax {
 class Sublist;
@@ -62,6 +64,7 @@ private:
 
 protected:
     MumeClock &m_mumeClock;
+    CTimers &m_timers;
 
 private:
     MapData &m_mapData;
@@ -106,7 +109,8 @@ private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
+    explicit AbstractParser(
+        MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, QObject *parent);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
@@ -147,6 +151,7 @@ public slots:
 
     void slot_reset();
     void slot_sendGTellToUser(const QString &, const QString &, const QString &);
+    void slot_timersUpdate(const std::string &text);
 
 protected slots:
     void slot_doOfflineCharacterMove();
@@ -236,6 +241,7 @@ private:
     void parseMark(StringView input);
     void parseRoom(StringView input);
     void parseGroup(StringView input);
+    void parseTimer(StringView input);
 
     NODISCARD bool parseDoorAction(DoorActionEnum dat, StringView words);
 
