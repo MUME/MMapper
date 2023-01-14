@@ -86,10 +86,7 @@ public:
 
 public:
 #define DECL_GETTERS_AND_SETTERS(UPPER_CASE, CamelCase, normalized, friendly) \
-    inline bool is##CamelCase() const \
-    { \
-        return type == GmcpMessageTypeEnum::UPPER_CASE; \
-    }
+    inline bool is##CamelCase() const { return type == GmcpMessageTypeEnum::UPPER_CASE; }
     X_FOREACH_GMCP_MESSAGE_TYPE(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
 
