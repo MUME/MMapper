@@ -1,12 +1,12 @@
 #pragma once
 
-#include "adventure/adventurejournal.h"
+#include "adventure/adventuretracker.h"
 #include <QString>
 #include <QWidget>
 #include <QtCore>
 #include <QtWidgets>
 
-class GameConsoleWidget : public QWidget
+class AdventureWidget : public QWidget
 {
     Q_OBJECT
 
@@ -17,7 +17,7 @@ public:
 
     static constexpr const auto TROPHY_MESSAGE = "Trophy: %1 (%2 xp)";
 
-    explicit GameConsoleWidget(AdventureJournal &aj, QWidget *parent = nullptr);
+    explicit AdventureWidget(AdventureTracker &aj, QWidget *parent = nullptr);
 
     static const QString formatXPGained(const double xpGained);
 
@@ -30,7 +30,7 @@ public slots:
 private:
     void addConsoleMessage(const QString &msg);
 
-    AdventureJournal &m_adventureJournal;
+    AdventureTracker &m_adventureJournal;
 
     QTextEdit *m_consoleTextEdit = nullptr;
     QTextCursor *m_consoleTextCursor = nullptr;

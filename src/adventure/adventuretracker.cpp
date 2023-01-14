@@ -1,35 +1,34 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "adventurejournal.h"
+#include "adventuretracker.h"
 #include "global/TextUtils.h"
 #include "parser/parserutils.h"
 
 #include <QDebug>
 
-AdventureJournal::AdventureJournal(GameObserver &observer, QObject *const parent)
+AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent)
     : QObject{parent}
     , m_observer{observer}
 {
     connect(&m_observer,
             &GameObserver::sig_sentToUserText,
             this,
-            &AdventureJournal::slot_onUserText);
+            &AdventureTracker::slot_onUserText);
 
     connect(&m_observer,
             &GameObserver::sig_sentToUserGmcp,
             this,
-            &AdventureJournal::slot_onUserGmcp);
+            &AdventureTracker::slot_onUserGmcp);
 }
 
-AdventureJournal::~AdventureJournal() {}
+AdventureTracker::~AdventureTracker() {}
 
-void AdventureJournal::slot_onUserText(const QByteArray &ba)
+void AdventureTracker::slot_onUserText(const QByteArray &ba)
 {
     // Remove ANSI
     QString str = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(str);
-    // QString line = ::toStdStringUtf8(str);
 
     auto idx_dead = str.indexOf(" is dead! R.I.P.");
     if (idx_dead == 0)
@@ -45,7 +44,7 @@ void AdventureJournal::slot_onUserText(const QByteArray &ba)
     }
 }
 
-void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
+void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 

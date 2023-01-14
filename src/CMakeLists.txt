@@ -1,9 +1,9 @@
 set(mmapper_SRCS
     main.cpp
-    adventure/adventurejournal.cpp
-    adventure/adventurejournal.h
-    adventure/gameconsolewidget.cpp
-    adventure/gameconsolewidget.h
+    adventure/adventuretracker.cpp
+    adventure/adventuretracker.h
+    adventure/adventurewidget.cpp
+    adventure/adventurewidget.h
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/ClientWidget.cpp

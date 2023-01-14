@@ -1,10 +1,10 @@
 #include <QtCore>
 #include <QtWidgets>
 
+#include "adventurewidget.h"
 #include "configuration/configuration.h"
-#include "gameconsolewidget.h"
 
-GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
+AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
     : QWidget{parent}
     , m_adventureJournal{aj}
 {
@@ -40,27 +40,27 @@ GameConsoleWidget::GameConsoleWidget(AdventureJournal &aj, QWidget *parent)
     layout->addWidget(m_consoleTextEdit);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_killedMob,
+            &AdventureTracker::sig_killedMob,
             this,
-            &GameConsoleWidget::slot_onKilledMob);
+            &AdventureWidget::slot_onKilledMob);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_receivedNarrate,
+            &AdventureTracker::sig_receivedNarrate,
             this,
-            &GameConsoleWidget::slot_onReceivedNarrate);
+            &AdventureWidget::slot_onReceivedNarrate);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_receivedTell,
+            &AdventureTracker::sig_receivedTell,
             this,
-            &GameConsoleWidget::slot_onReceivedTell);
+            &AdventureWidget::slot_onReceivedTell);
 
     connect(&m_adventureJournal,
-            &AdventureJournal::sig_updatedXP,
+            &AdventureTracker::sig_updatedXP,
             this,
-            &GameConsoleWidget::slot_onUpdatedXP);
+            &AdventureWidget::slot_onUpdatedXP);
 }
 
-void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
+void AdventureWidget::slot_onKilledMob(const QString &mobName)
 {
     double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
     auto msg = QString(TROPHY_MESSAGE).arg(mobName).arg(formatXPGained(xpGained));
@@ -69,17 +69,17 @@ void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
     m_xpCheckpoint.emplace(m_xpCurrent.value());
 }
 
-void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
+void AdventureWidget::slot_onReceivedNarrate(const QString &narr)
 {
     addConsoleMessage(narr);
 }
 
-void GameConsoleWidget::slot_onReceivedTell(const QString &tell)
+void AdventureWidget::slot_onReceivedTell(const QString &tell)
 {
     addConsoleMessage(tell);
 }
 
-void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
+void AdventureWidget::slot_onUpdatedXP(const double currentXP)
 {
     if (!m_xpCheckpoint.has_value()) {
         // first value of the session
@@ -90,7 +90,7 @@ void GameConsoleWidget::slot_onUpdatedXP(const double currentXP)
     m_xpCurrent = currentXP;
 }
 
-const QString GameConsoleWidget::formatXPGained(const double xpGained)
+const QString AdventureWidget::formatXPGained(const double xpGained)
 {
     if (xpGained < 1000) {
         return QString::number(xpGained);
@@ -103,7 +103,7 @@ const QString GameConsoleWidget::formatXPGained(const double xpGained)
     return QString::number(xpGained / 1000, 'f', 0) + "k";
 }
 
-void GameConsoleWidget::addConsoleMessage(const QString &msg)
+void AdventureWidget::addConsoleMessage(const QString &msg)
 {
     // TODO maybe clear the default/placeholder text?
     auto prepend = "\n";
@@ -116,7 +116,7 @@ void GameConsoleWidget::addConsoleMessage(const QString &msg)
     m_numMessagesReceived++;
 
     // If more than MAX_LINES, preserve by deleting from the start
-    auto lines_over = m_consoleTextEdit->document()->lineCount() - GameConsoleWidget::MAX_LINES;
+    auto lines_over = m_consoleTextEdit->document()->lineCount() - AdventureWidget::MAX_LINES;
     if (lines_over > 0) {
         m_consoleTextCursor->movePosition(QTextCursor::Start);
         m_consoleTextCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);

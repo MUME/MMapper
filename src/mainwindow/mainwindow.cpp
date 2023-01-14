@@ -23,8 +23,8 @@
 #include <QTextBrowser>
 #include <QtWidgets>
 
-#include "../adventure/adventurejournal.h"
-#include "../adventure/gameconsolewidget.h"
+#include "../adventure/adventuretracker.h"
+#include "../adventure/adventurewidget.h"
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
@@ -208,7 +208,7 @@ MainWindow::MainWindow()
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = new GameObserver(this);
-    m_adventureJournal = new AdventureJournal(deref(m_gameObserver), this);
+    m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
     if constexpr (!NO_UPDATER)
@@ -560,15 +560,15 @@ void MainWindow::setupChildWidgets()
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     // View -> Side Panels -> Game Console (Narrates, Tells, Mob Kill XP)
-    m_gameConsoleWidget = new GameConsoleWidget(deref(m_adventureJournal), this);
-    m_dockDialogGameConsole = new QDockWidget(tr("Game Console *BETA*"), this);
+    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
+    m_dockDialogGameConsole = new QDockWidget(tr("Adventure Journal *BETA*"), this);
     m_dockDialogGameConsole->setObjectName("DockWidgetGameConsole");
     m_dockDialogGameConsole->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
     m_dockDialogGameConsole->setFeatures(QDockWidget::DockWidgetClosable
                                          | QDockWidget::DockWidgetFloatable
                                          | QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogGameConsole);
-    m_dockDialogGameConsole->setWidget(m_gameConsoleWidget);
+    m_dockDialogGameConsole->setWidget(m_adventureWidget);
     m_dockDialogGameConsole->hide();
 }
 

@@ -4,12 +4,12 @@
 #include <fstream>
 #include <QObject>
 
-class AdventureJournal final : public QObject
+class AdventureTracker final : public QObject
 {
     Q_OBJECT
 public:
-    explicit AdventureJournal(GameObserver &observer, QObject *const parent = nullptr);
-    ~AdventureJournal() final;
+    explicit AdventureTracker(GameObserver &observer, QObject *const parent = nullptr);
+    ~AdventureTracker() final;
 
 signals:
     void sig_killedMob(const QString &mobName);

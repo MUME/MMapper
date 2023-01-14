@@ -25,9 +25,9 @@
 
 class AutoLogger;
 class AbstractAction;
-class AdventureJournal;
+class AdventureTracker;
+class AdventureWidget;
 class ClientWidget;
-class GameConsoleWidget;
 class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
@@ -187,8 +187,8 @@ private:
     ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;
 
-    AdventureJournal *m_adventureJournal = nullptr;
-    GameConsoleWidget *m_gameConsoleWidget = nullptr;
+    AdventureTracker *m_adventureTracker = nullptr;
+    AdventureWidget *m_adventureWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
