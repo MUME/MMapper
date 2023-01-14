@@ -64,14 +64,15 @@ void AdventureJournal::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     QJsonObject obj = doc.object();
 
     if (gmcpMessage.isCommChannelText() && obj.contains("channel") && obj.contains("text")) {
-        if (obj["channel"].toString() == "tells")
+        if (obj["channel"].toString() == "tells") {
             emit sig_receivedTell(obj["text"].toString());
-        else if (obj["channel"].toString() == "narrates")
+
+        } else if (obj["channel"].toString() == "tales") {
             emit sig_receivedNarrate(obj["text"].toString());
+        }
     }
 
     if (obj.contains("xp")) {
-        qInfo() << "GMCP xp: " << QString::number(obj["xp"].toDouble(), 'f', 0);
         emit sig_updatedXP(obj["xp"].toDouble());
     }
 }

@@ -71,8 +71,6 @@ void GameConsoleWidget::slot_onKilledMob(const QString &mobName)
 
 void GameConsoleWidget::slot_onReceivedNarrate(const QString &narr)
 {
-    // Drop narrates for now since they can get spammy.
-    // Need to evaluate whether they are worth it.
     addConsoleMessage(narr);
 }
 

@@ -163,7 +163,7 @@ void MudTelnet::virt_onGmcpEnabled()
 
     // Request that Narrates and Tells be emitted via GMCP
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::COMM_CHANNEL_ENABLE, QString(R"("tells")")));
-    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::COMM_CHANNEL_ENABLE, QString(R"("narrates")")));
+    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::COMM_CHANNEL_ENABLE, QString(R"("tales")")));
 
     if (receivedExternalDiscordHello)
         sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::EXTERNAL_DISCORD_HELLO});
