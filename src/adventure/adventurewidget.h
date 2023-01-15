@@ -22,20 +22,18 @@ public:
     static const QString formatXPGained(const double xpGained);
 
 public slots:
-    void slot_onKilledMob(const QString &mobName);
+    void slot_onKilledMob(const QString &mobName, const double xpGained);
     void slot_onReceivedNarrate(const QString &narr);
     void slot_onReceivedTell(const QString &tell);
     void slot_onUpdatedXP(const double currentXP);
 
 private:
-    void addJournalMsg(const QString &msg);
+    void addJournalEntry(const QString &msg);
 
-    AdventureTracker &m_adventureJournal;
+    AdventureTracker &m_adventureTracker;
 
-    QTextEdit *m_consoleTextEdit = nullptr;
-    QTextCursor *m_consoleTextCursor = nullptr;
+    QTextEdit *m_journalTextEdit = nullptr;
+    QTextCursor *m_journalTextCursor = nullptr;
 
     int m_numMessagesReceived = 0;
-
-    std::optional<double> m_xpCheckpoint, m_xpCurrent;
 };

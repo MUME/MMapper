@@ -38,7 +38,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     }
     m_lastLines[0] = new QString(str);
 
-    checkIfKillAndXP();
+    parseIfKillAndXP();
 
     if (str.contains("You gain a level!")) {
         qDebug().noquote() << "AdventureJournal: player gained a level!";
@@ -73,11 +73,12 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     }
 
     if (obj.contains("xp")) {
+        updateXP(obj["xp"].toDouble());
         emit sig_updatedXP(obj["xp"].toDouble());
     }
 }
 
-void AdventureTracker::checkIfKillAndXP()
+void AdventureTracker::parseIfKillAndXP()
 {
     // We define a "kill with XP earned" event as:
     //   - The last line received contains "is dead! R.I.P." or "disappears into nothing."
@@ -107,6 +108,29 @@ void AdventureTracker::checkIfKillAndXP()
     });
 
     if (earnedXP) {
-        emit sig_killedMob(mobName);
+        double xpGained = checkpointXP();
+        emit sig_killedMob(mobName, xpGained);
     }
+}
+
+void AdventureTracker::updateXP(double currentXP)
+{
+    if (!m_xpInitial.has_value()) {
+        qDebug().noquote() << "Initial XP checkpoint: " + QString::number(currentXP, 'f', 0);
+        m_xpInitial = currentXP;
+    }
+
+    if (!m_xpCheckpoint.has_value()) {
+        m_xpCheckpoint = currentXP;
+    }
+
+    m_xpCurrent = currentXP;
+}
+
+double AdventureTracker::checkpointXP()
+{
+    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
+    m_xpCheckpoint.emplace(m_xpCurrent.value());
+
+    return xpGained;
 }
