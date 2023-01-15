@@ -33,7 +33,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     // so [0] is the last line received, [1] is the second-to-last, etc.
     // Must create our own QString copy for this, since the `ba` passed above
     // is reused. So shfit the array and add a copy.
-    for (int i = m_lastLines.size(); i > 0; i--) {
+    for (size_t i = m_lastLines.size(); i > 0; i--) {
         m_lastLines[i] = m_lastLines[i - 1];
     }
     m_lastLines[0] = new QString(str);
