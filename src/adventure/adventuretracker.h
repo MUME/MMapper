@@ -22,5 +22,10 @@ public slots:
     void slot_onUserGmcp(const GmcpMessage &gmcpMessage);
 
 private:
+    void checkIfKillAndXP();
+
     GameObserver &m_observer;
+
+    // indexing is backwords, so [0] is most recent, [1] is prev, [2] is prev2, etc
+    std::array<QString *, 5> m_lastLines;
 };

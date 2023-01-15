@@ -31,7 +31,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
     blockCharFormat.setFont(*font);
     m_consoleTextCursor->setBlockCharFormat(blockCharFormat);
 
-    addConsoleMessage(DEFAULT_MSG);
+    addJournalMsg(DEFAULT_MSG);
 
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -64,19 +64,19 @@ void AdventureWidget::slot_onKilledMob(const QString &mobName)
 {
     double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
     auto msg = QString(TROPHY_MESSAGE).arg(mobName).arg(formatXPGained(xpGained));
-    addConsoleMessage(msg);
+    addJournalMsg(msg);
 
     m_xpCheckpoint.emplace(m_xpCurrent.value());
 }
 
 void AdventureWidget::slot_onReceivedNarrate(const QString &narr)
 {
-    addConsoleMessage(narr);
+    addJournalMsg(narr);
 }
 
 void AdventureWidget::slot_onReceivedTell(const QString &tell)
 {
-    addConsoleMessage(tell);
+    addJournalMsg(tell);
 }
 
 void AdventureWidget::slot_onUpdatedXP(const double currentXP)
@@ -103,7 +103,7 @@ const QString AdventureWidget::formatXPGained(const double xpGained)
     return QString::number(xpGained / 1000, 'f', 0) + "k";
 }
 
-void AdventureWidget::addConsoleMessage(const QString &msg)
+void AdventureWidget::addJournalMsg(const QString &msg)
 {
     // TODO maybe clear the default/placeholder text?
     auto prepend = "\n";

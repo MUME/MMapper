@@ -28,7 +28,7 @@ public slots:
     void slot_onUpdatedXP(const double currentXP);
 
 private:
-    void addConsoleMessage(const QString &msg);
+    void addJournalMsg(const QString &msg);
 
     AdventureTracker &m_adventureJournal;
 

@@ -2,7 +2,6 @@
 #include <QJsonObject>
 
 #include "adventuretracker.h"
-#include "global/TextUtils.h"
 #include "parser/parserutils.h"
 
 #include <QDebug>
@@ -26,18 +25,20 @@ AdventureTracker::~AdventureTracker() {}
 
 void AdventureTracker::slot_onUserText(const QByteArray &ba)
 {
-    // Remove ANSI
     QString str = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(str);
 
-    auto idx_dead = str.indexOf(" is dead! R.I.P.");
-    if (idx_dead == 0)
-        idx_dead = str.indexOf(" disappears into nothing.");
-
-    if (idx_dead > 0) {
-        qDebug() << "Killed: " << str.left(idx_dead);
-        emit sig_killedMob(str.left(idx_dead));
+    // We keep track of the N most recent lines so that we can parse with the
+    // context of a sliding window. Array indices are interpeted backwards,
+    // so [0] is the last line received, [1] is the second-to-last, etc.
+    // Must create our own QString copy for this, since the `ba` passed above
+    // is reused. So shfit the array and add a copy.
+    for (int i = m_lastLines.size(); i > 0; i--) {
+        m_lastLines[i] = m_lastLines[i - 1];
     }
+    m_lastLines[0] = new QString(str);
+
+    checkIfKillAndXP();
 
     if (str.contains("You gain a level!")) {
         qDebug().noquote() << "AdventureJournal: player gained a level!";
@@ -73,5 +74,44 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
 
     if (obj.contains("xp")) {
         emit sig_updatedXP(obj["xp"].toDouble());
+    }
+}
+
+void AdventureTracker::checkIfKillAndXP()
+{
+    // We define a "kill with XP earned" event as:
+    //   - The last line received contains "is dead! R.I.P." or "disappears into nothing."
+    //   - AND among the K most recent lines previously received, at least one contains:
+    //     -  "You receive your share of experience."
+    //     -  "You gain a level!
+    //     -  "You feel revitalized as the dark power within" (Dark Oath)
+
+    auto lastLine = m_lastLines[0];
+
+    if (lastLine == nullptr)
+        return;
+
+    auto idx_dead = lastLine->indexOf(" is dead! R.I.P.");
+    if (idx_dead == -1)
+        lastLine->indexOf(" disappears into nothing.");
+    if (idx_dead == -1)
+        return;
+
+    // A kill has occurred, but did the player earn xp?
+    auto mobName = lastLine->left(idx_dead);
+    bool earnedXP = false;
+
+    for (auto l : m_lastLines) {
+        earnedXP = l != nullptr
+                   and (l->contains("You receive your share of experience.")
+                        or l->contains("You gain a level!")
+                        or l->contains("You feel revitalized as the dark power within"));
+
+        if (earnedXP)
+            break;
+    }
+
+    if (earnedXP) {
+        emit sig_killedMob(mobName);
     }
 }
