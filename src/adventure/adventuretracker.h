@@ -24,7 +24,7 @@ public slots:
 private:
     void parseIfKillAndXP();
 
-    void updateXP(double currentXP);
+    void updateXPfromMud(double currentXP);
     double checkpointXP();
 
     GameObserver &m_observer;

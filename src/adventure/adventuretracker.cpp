@@ -73,8 +73,7 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     }
 
     if (obj.contains("xp")) {
-        updateXP(obj["xp"].toDouble());
-        emit sig_updatedXP(obj["xp"].toDouble());
+        updateXPfromMud(obj["xp"].toDouble());
     }
 }
 
@@ -113,7 +112,7 @@ void AdventureTracker::parseIfKillAndXP()
     }
 }
 
-void AdventureTracker::updateXP(double currentXP)
+void AdventureTracker::updateXPfromMud(double currentXP)
 {
     if (!m_xpInitial.has_value()) {
         qDebug().noquote() << "Initial XP checkpoint: " + QString::number(currentXP, 'f', 0);
@@ -125,10 +124,16 @@ void AdventureTracker::updateXP(double currentXP)
     }
 
     m_xpCurrent = currentXP;
+    emit sig_updatedXP(m_xpCurrent.value());
 }
 
 double AdventureTracker::checkpointXP()
 {
+    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.value()) {
+        qDebug() << "Attempting to checkpointXP() without valid state.";
+        return 0;
+    }
+
     double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
     m_xpCheckpoint.emplace(m_xpCurrent.value());
 

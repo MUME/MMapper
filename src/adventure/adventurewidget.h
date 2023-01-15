@@ -25,7 +25,6 @@ public slots:
     void slot_onKilledMob(const QString &mobName, const double xpGained);
     void slot_onReceivedNarrate(const QString &narr);
     void slot_onReceivedTell(const QString &tell);
-    void slot_onUpdatedXP(const double currentXP);
 
 private:
     void addJournalEntry(const QString &msg);

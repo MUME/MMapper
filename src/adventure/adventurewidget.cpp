@@ -53,11 +53,6 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
             &AdventureTracker::sig_receivedTell,
             this,
             &AdventureWidget::slot_onReceivedTell);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_updatedXP,
-            this,
-            &AdventureWidget::slot_onUpdatedXP);
 }
 
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
@@ -74,8 +69,6 @@ void AdventureWidget::slot_onReceivedTell(const QString &tell)
 {
     addJournalEntry(tell);
 }
-
-void AdventureWidget::slot_onUpdatedXP(const double currentXP) {}
 
 const QString AdventureWidget::formatXPGained(const double xpGained)
 {
