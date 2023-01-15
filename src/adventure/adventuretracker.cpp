@@ -99,17 +99,12 @@ void AdventureTracker::checkIfKillAndXP()
 
     // A kill has occurred, but did the player earn xp?
     auto mobName = lastLine->left(idx_dead);
-    bool earnedXP = false;
-
-    for (auto l : m_lastLines) {
-        earnedXP = l != nullptr
-                   and (l->contains("You receive your share of experience.")
-                        or l->contains("You gain a level!")
-                        or l->contains("You feel revitalized as the dark power within"));
-
-        if (earnedXP)
-            break;
-    }
+    bool earnedXP = std::any_of(m_lastLines.begin(), m_lastLines.end(), [](QString *l) {
+        return l != nullptr
+               and (l->contains("You receive your share of experience.")
+                    or l->contains("You gain a level!")
+                    or l->contains("You feel revitalized as the dark power within"));
+    });
 
     if (earnedXP) {
         emit sig_killedMob(mobName);
