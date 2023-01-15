@@ -129,7 +129,7 @@ void AdventureTracker::updateXPfromMud(double currentXP)
 
 double AdventureTracker::checkpointXP()
 {
-    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.value()) {
+    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
         qDebug() << "Attempting to checkpointXP() without valid state.";
         return 0;
     }
