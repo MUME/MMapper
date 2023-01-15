@@ -40,6 +40,8 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
 
     parseIfKillAndXP();
 
+    parseIfAchievedSomething();
+
     if (str.contains("You gain a level!")) {
         qDebug().noquote() << "AdventureJournal: player gained a level!";
     }
@@ -106,10 +108,31 @@ void AdventureTracker::parseIfKillAndXP()
                     or l->contains("You feel revitalized as the dark power within"));
     });
 
-    if (earnedXP) {
-        double xpGained = checkpointXP();
-        emit sig_killedMob(mobName, xpGained);
-    }
+    if (!earnedXP)
+        return;
+
+    double xpGained = checkpointXP();
+    emit sig_killedMob(mobName, xpGained);
+}
+
+void AdventureTracker::parseIfAchievedSomething()
+{
+    // If second-to-last line starts with "You achieved something new!" then
+    // we interpet the last line as an achivement. Hopefully this will be
+    // replaced with GMCP at some point.
+    auto line2 = m_lastLines[1];
+    if (line2 == nullptr)
+        return;
+
+    auto idx_achieved = line2->indexOf("You achieved something new!");
+
+    if (idx_achieved != 0)
+        return;
+
+    // Line starts with You achieved...
+    auto achievement = m_lastLines[0];
+    double xpGained = checkpointXP();
+    emit sig_achievedSomething(*achievement, xpGained);
 }
 
 void AdventureTracker::updateXPfromMud(double currentXP)

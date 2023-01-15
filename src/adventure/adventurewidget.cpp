@@ -45,6 +45,11 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
             &AdventureWidget::slot_onKilledMob);
 
     connect(&m_adventureTracker,
+            &AdventureTracker::sig_achievedSomething,
+            this,
+            &AdventureWidget::slot_onAchieved);
+
+    connect(&m_adventureTracker,
             &AdventureTracker::sig_receivedNarrate,
             this,
             &AdventureWidget::slot_onReceivedNarrate);
@@ -55,19 +60,24 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
             &AdventureWidget::slot_onReceivedTell);
 }
 
+void AdventureWidget::slot_onAchieved(const QString &achivement, const double xpGained)
+{
+    addJournalEntry(QString(ACHIEVE_MSG).arg(achivement).arg(formatXPGained(xpGained)));
+}
+
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
 {
-    addJournalEntry(QString(TROPHY_MESSAGE).arg(mobName).arg(formatXPGained(xpGained)));
+    addJournalEntry(QString(TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));
 }
 
 void AdventureWidget::slot_onReceivedNarrate(const QString &narr)
 {
-    addJournalEntry(narr);
+    //addJournalEntry(narr);
 }
 
 void AdventureWidget::slot_onReceivedTell(const QString &tell)
 {
-    addJournalEntry(tell);
+    //addJournalEntry(tell);
 }
 
 const QString AdventureWidget::formatXPGained(const double xpGained)

@@ -12,6 +12,7 @@ public:
     ~AdventureTracker() final;
 
 signals:
+    void sig_achievedSomething(const QString &achievement, const double xpGained);
     void sig_killedMob(const QString &mobName, const double xpGained);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
@@ -23,6 +24,7 @@ public slots:
 
 private:
     void parseIfKillAndXP();
+    void parseIfAchievedSomething();
 
     void updateXPfromMud(double currentXP);
     double checkpointXP();
