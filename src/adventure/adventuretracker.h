@@ -29,10 +29,10 @@ private:
     void parseIfAchievedSomething();
     void parseIfGainedALevel();
     void parseIfKillAndXP();
-    void parseIfReceivedComm();
+    void parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc);
     void parseIfReceivedHint();
-    void parseIfUpdatedChar();
-    void parseIfUpdatedXP();
+    void parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc);
+    void parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc);
 
     void updateCharfromMud(QString charName);
     void updateXPfromMud(double currentXP);
@@ -42,9 +42,6 @@ private:
 
     // indexing is backwards, so [0] is most recent, [1] is prev, [2] is prev2, etc
     std::array<QString *, 5> m_lastLines = {nullptr, nullptr, nullptr, nullptr, nullptr};
-
-    GmcpMessage *m_lastGmcpMessage = nullptr;
-    QJsonDocument *m_lastGmcpJsonDoc = nullptr;
 
     std::optional<QString> m_currentCharName;
 

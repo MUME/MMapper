@@ -56,19 +56,19 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
 
     auto s = msg.getJson()->toQString().toUtf8();
-    m_lastGmcpJsonDoc = new QJsonDocument(QJsonDocument::fromJson(s));
+    QJsonDocument doc = QJsonDocument::fromJson(s);
 
-    if (!m_lastGmcpJsonDoc->isObject()) {
+    if (!doc.isObject()) {
         qInfo() << "Received GMCP: " << msg.getName().toQString()
                 << "containing invalid Json: expecting object, got: " << s;
         return;
     }
 
-    parseIfReceivedComm();
+    parseIfReceivedComm(msg, doc);
 
-    parseIfUpdatedXP();
+    parseIfUpdatedXP(msg, doc);
 
-    parseIfUpdatedChar();
+    parseIfUpdatedChar(msg, doc);
 }
 
 void AdventureTracker::parseIfAchievedSomething()
@@ -135,11 +135,11 @@ void AdventureTracker::parseIfKillAndXP()
     emit sig_killedMob(mobName, xpGained);
 }
 
-void AdventureTracker::parseIfReceivedComm()
+void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
 {
-    QJsonObject obj = m_lastGmcpJsonDoc->object();
+    QJsonObject obj = doc.object();
 
-    if (!m_lastGmcpMessage->isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
+    if (!msg.isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
         return;
 
     if (obj["channel"].toString() == "tells") {
@@ -163,18 +163,18 @@ void AdventureTracker::parseIfReceivedHint()
     emit sig_receivedHint(hint);
 }
 
-void AdventureTracker::parseIfUpdatedChar()
+void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
 {
-    QJsonObject obj = m_lastGmcpJsonDoc->object();
+    QJsonObject obj = doc.object();
 
     if (obj.contains("name")) {
         updateCharfromMud(obj["name"].toString());
     }
 }
 
-void AdventureTracker::parseIfUpdatedXP()
+void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
 {
-    QJsonObject obj = m_lastGmcpJsonDoc->object();
+    QJsonObject obj = doc.object();
 
     if (obj.contains("xp")) {
         updateXPfromMud(obj["xp"].toDouble());
