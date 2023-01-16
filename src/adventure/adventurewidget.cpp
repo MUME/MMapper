@@ -65,6 +65,11 @@ void AdventureWidget::slot_onAchieved(const QString &achivement, const double xp
     addJournalEntry(QString(ACHIEVE_MSG).arg(achivement).arg(formatXPGained(xpGained)));
 }
 
+void AdventureWidget::slot_onGainedALevel()
+{
+    addJournalEntry(QString(LEVEL_MSG));
+}
+
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
 {
     addJournalEntry(QString(TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));

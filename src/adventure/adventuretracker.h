@@ -13,6 +13,7 @@ public:
 
 signals:
     void sig_achievedSomething(const QString &achievement, const double xpGained);
+    void sig_gainedALevel();
     void sig_killedMob(const QString &mobName, const double xpGained);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
@@ -23,16 +24,22 @@ public slots:
     void slot_onUserGmcp(const GmcpMessage &gmcpMessage);
 
 private:
-    void parseIfKillAndXP();
     void parseIfAchievedSomething();
+    void parseIfComm();
+    void parseIfGainedALevel();
+    void parseIfKillAndXP();
+    void parseIfUpdatedXP();
 
-    void updateXPfromMud(double currentXP);
     double checkpointXP();
+    void updateXPfromMud(double currentXP);
 
     GameObserver &m_observer;
 
     // indexing is backwords, so [0] is most recent, [1] is prev, [2] is prev2, etc
     std::array<QString *, 5> m_lastLines;
+
+    GmcpMessage *m_lastGmcpMessage = nullptr;
+    QJsonDocument *m_lastGmcpJsonDoc = nullptr;
 
     std::optional<double> m_xpInitial, m_xpCheckpoint, m_xpCurrent;
 };

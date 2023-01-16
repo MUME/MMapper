@@ -32,19 +32,17 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     // context of a sliding window. Array indices are interpeted backwards,
     // so [0] is the last line received, [1] is the second-to-last, etc.
     // Must create our own QString copy for this, since the `ba` passed above
-    // is reused. So shfit the array and add a copy.
+    // is reused.
     for (size_t i = m_lastLines.size(); i > 0; i--) {
-        m_lastLines[i] = m_lastLines[i - 1];
+        m_lastLines[i] = m_lastLines[i - 1]; // shift the array
     }
-    m_lastLines[0] = new QString(str);
+    m_lastLines[0] = new QString(str); // add a copy of the new line
 
     parseIfKillAndXP();
 
     parseIfAchievedSomething();
 
-    if (str.contains("You gain a level!")) {
-        qDebug().noquote() << "AdventureJournal: player gained a level!";
-    }
+    parseIfGainedALevel();
 }
 
 void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
@@ -54,29 +52,57 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
     if (!(gmcpMessage.isCharName() or gmcpMessage.isCharVitals() or gmcpMessage.isCommChannelText()))
         return;
 
-    QJsonDocument doc = QJsonDocument::fromJson(gmcpMessage.getJson()->toQString().toUtf8());
+    auto s = gmcpMessage.getJson()->toQString().toUtf8();
+    m_lastGmcpJsonDoc = new QJsonDocument(QJsonDocument::fromJson(s));
 
-    if (!doc.isObject()) {
+    if (!m_lastGmcpJsonDoc->isObject()) {
         qInfo() << "Received GMCP: " << gmcpMessage.getName().toQString()
-                << "containing invalid Json: expecting object, got: "
-                << gmcpMessage.getJson()->toQString();
+                << "containing invalid Json: expecting object, got: " << s;
         return;
     }
 
-    QJsonObject obj = doc.object();
+    parseIfComm();
 
-    if (gmcpMessage.isCommChannelText() && obj.contains("channel") && obj.contains("text")) {
-        if (obj["channel"].toString() == "tells") {
-            emit sig_receivedTell(obj["text"].toString());
+    parseIfUpdatedXP();
+}
 
-        } else if (obj["channel"].toString() == "tales") {
-            emit sig_receivedNarrate(obj["text"].toString());
-        }
+void AdventureTracker::parseIfAchievedSomething()
+{
+    // If second most recent line starts with "You achieved something new!" then
+    // we interpet the most recent line as an achivement. Hopefully this will be
+    // replaced with GMCP at some point.
+    auto line2 = m_lastLines[1];
+    if (line2 == nullptr or line2->indexOf("You achieved something new!") != 0)
+        return;
+
+    // So, 2nd-to-last line starts with You achieved, achievement is last line
+    auto achievement = m_lastLines[0];
+    double xpGained = checkpointXP();
+    emit sig_achievedSomething(*achievement, xpGained);
+}
+
+void AdventureTracker::parseIfComm()
+{
+    QJsonObject obj = m_lastGmcpJsonDoc->object();
+
+    if (!m_lastGmcpMessage->isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
+        return;
+
+    if (obj["channel"].toString() == "tells") {
+        emit sig_receivedTell(obj["text"].toString());
+
+    } else if (obj["channel"].toString() == "tales") {
+        emit sig_receivedNarrate(obj["text"].toString());
     }
+}
 
-    if (obj.contains("xp")) {
-        updateXPfromMud(obj["xp"].toDouble());
-    }
+void AdventureTracker::parseIfGainedALevel()
+{
+    auto lastLine = m_lastLines[0];
+    if (lastLine == nullptr or lastLine->indexOf("You gain a level!") != 0)
+        return;
+
+    emit sig_gainedALevel();
 }
 
 void AdventureTracker::parseIfKillAndXP()
@@ -115,24 +141,26 @@ void AdventureTracker::parseIfKillAndXP()
     emit sig_killedMob(mobName, xpGained);
 }
 
-void AdventureTracker::parseIfAchievedSomething()
+void AdventureTracker::parseIfUpdatedXP()
 {
-    // If second-to-last line starts with "You achieved something new!" then
-    // we interpet the last line as an achivement. Hopefully this will be
-    // replaced with GMCP at some point.
-    auto line2 = m_lastLines[1];
-    if (line2 == nullptr)
-        return;
+    QJsonObject obj = m_lastGmcpJsonDoc->object();
 
-    auto idx_achieved = line2->indexOf("You achieved something new!");
+    if (obj.contains("xp")) {
+        updateXPfromMud(obj["xp"].toDouble());
+    }
+}
 
-    if (idx_achieved != 0)
-        return;
+double AdventureTracker::checkpointXP()
+{
+    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
+        qDebug() << "Attempting to checkpointXP() without valid state.";
+        return 0;
+    }
 
-    // Line starts with You achieved...
-    auto achievement = m_lastLines[0];
-    double xpGained = checkpointXP();
-    emit sig_achievedSomething(*achievement, xpGained);
+    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
+    m_xpCheckpoint.emplace(m_xpCurrent.value());
+
+    return xpGained;
 }
 
 void AdventureTracker::updateXPfromMud(double currentXP)
@@ -148,17 +176,4 @@ void AdventureTracker::updateXPfromMud(double currentXP)
 
     m_xpCurrent = currentXP;
     emit sig_updatedXP(m_xpCurrent.value());
-}
-
-double AdventureTracker::checkpointXP()
-{
-    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
-        qDebug() << "Attempting to checkpointXP() without valid state.";
-        return 0;
-    }
-
-    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
-    m_xpCheckpoint.emplace(m_xpCurrent.value());
-
-    return xpGained;
 }
