@@ -38,7 +38,7 @@ jobs:
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-11" >> $GITHUB_ENV
         echo "CXX=g++-11" >> $GITHUB_ENV
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_UNITY_BUILD=false -DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
@@ -59,7 +59,7 @@ jobs:
         brew install qt5 cmake openssl\@1.1 lcov miniupnpc ninja
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_UNITY_BUILD=false -DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
 
 
