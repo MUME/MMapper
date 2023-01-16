@@ -23,18 +23,20 @@ signals:
 
 public slots:
     void slot_onUserText(const QByteArray &ba);
-    void slot_onUserGmcp(const GmcpMessage &gmcpMessage);
+    void slot_onUserGmcp(const GmcpMessage &msg);
 
 private:
     void parseIfAchievedSomething();
-    void parseIfComm();
     void parseIfGainedALevel();
     void parseIfKillAndXP();
+    void parseIfReceivedComm();
     void parseIfReceivedHint();
+    void parseIfUpdatedChar();
     void parseIfUpdatedXP();
 
-    double checkpointXP();
+    void updateCharfromMud(QString charName);
     void updateXPfromMud(double currentXP);
+    double checkpointXP();
 
     GameObserver &m_observer;
 
@@ -43,6 +45,8 @@ private:
 
     GmcpMessage *m_lastGmcpMessage = nullptr;
     QJsonDocument *m_lastGmcpJsonDoc = nullptr;
+
+    std::optional<QString> m_currentCharName;
 
     std::optional<double> m_xpInitial, m_xpCheckpoint, m_xpCurrent;
 };

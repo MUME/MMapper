@@ -47,25 +47,28 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     parseIfGainedALevel();
 }
 
-void AdventureTracker::slot_onUserGmcp(const GmcpMessage &gmcpMessage)
+void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 
-    if (!(gmcpMessage.isCharName() or gmcpMessage.isCharVitals() or gmcpMessage.isCommChannelText()))
+    if (!(msg.isCharName() or msg.isCharStatusVars() or msg.isCharVitals()
+          or msg.isCommChannelText()))
         return;
 
-    auto s = gmcpMessage.getJson()->toQString().toUtf8();
+    auto s = msg.getJson()->toQString().toUtf8();
     m_lastGmcpJsonDoc = new QJsonDocument(QJsonDocument::fromJson(s));
 
     if (!m_lastGmcpJsonDoc->isObject()) {
-        qInfo() << "Received GMCP: " << gmcpMessage.getName().toQString()
+        qInfo() << "Received GMCP: " << msg.getName().toQString()
                 << "containing invalid Json: expecting object, got: " << s;
         return;
     }
 
-    parseIfComm();
+    parseIfReceivedComm();
 
     parseIfUpdatedXP();
+
+    parseIfUpdatedChar();
 }
 
 void AdventureTracker::parseIfAchievedSomething()
@@ -85,21 +88,6 @@ void AdventureTracker::parseIfAchievedSomething()
 
     double xpGained = checkpointXP();
     emit sig_achievedSomething(*achievement, xpGained);
-}
-
-void AdventureTracker::parseIfComm()
-{
-    QJsonObject obj = m_lastGmcpJsonDoc->object();
-
-    if (!m_lastGmcpMessage->isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
-        return;
-
-    if (obj["channel"].toString() == "tells") {
-        emit sig_receivedTell(obj["text"].toString());
-
-    } else if (obj["channel"].toString() == "tales") {
-        emit sig_receivedNarrate(obj["text"].toString());
-    }
 }
 
 void AdventureTracker::parseIfGainedALevel()
@@ -147,6 +135,21 @@ void AdventureTracker::parseIfKillAndXP()
     emit sig_killedMob(mobName, xpGained);
 }
 
+void AdventureTracker::parseIfReceivedComm()
+{
+    QJsonObject obj = m_lastGmcpJsonDoc->object();
+
+    if (!m_lastGmcpMessage->isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
+        return;
+
+    if (obj["channel"].toString() == "tells") {
+        emit sig_receivedTell(obj["text"].toString());
+
+    } else if (obj["channel"].toString() == "tales") {
+        emit sig_receivedNarrate(obj["text"].toString());
+    }
+}
+
 void AdventureTracker::parseIfReceivedHint()
 {
     // If second most recent line starts with "# Hint:" then we interpet the
@@ -160,6 +163,15 @@ void AdventureTracker::parseIfReceivedHint()
     emit sig_receivedHint(hint);
 }
 
+void AdventureTracker::parseIfUpdatedChar()
+{
+    QJsonObject obj = m_lastGmcpJsonDoc->object();
+
+    if (obj.contains("name")) {
+        updateCharfromMud(obj["name"].toString());
+    }
+}
+
 void AdventureTracker::parseIfUpdatedXP()
 {
     QJsonObject obj = m_lastGmcpJsonDoc->object();
@@ -169,23 +181,34 @@ void AdventureTracker::parseIfUpdatedXP()
     }
 }
 
-double AdventureTracker::checkpointXP()
+void AdventureTracker::updateCharfromMud(QString charName)
 {
-    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
-        qDebug() << "Attempting to checkpointXP() without valid state.";
-        return 0;
+    if (!m_currentCharName.has_value()) {
+        qDebug().noquote() << QString("Adventure: new session for char %1").arg(charName);
+        m_currentCharName = charName;
+        return;
     }
 
-    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
-    m_xpCheckpoint.emplace(m_xpCurrent.value());
+    if (charName == m_currentCharName.value()) {
+        // nothing to do here, same character
+        return;
+    }
 
-    return xpGained;
+    // So a new character has logged in, need to wipe the old state
+    qDebug().noquote() << QString("Adventure: char change, %1 replacing %2")
+                              .arg(charName)
+                              .arg(m_currentCharName.value());
+
+    m_currentCharName = charName;
+    m_xpInitial.reset();
+    m_xpCheckpoint.reset();
+    m_xpCurrent.reset();
 }
 
 void AdventureTracker::updateXPfromMud(double currentXP)
 {
     if (!m_xpInitial.has_value()) {
-        qDebug().noquote() << "Initial XP checkpoint: " + QString::number(currentXP, 'f', 0);
+        qDebug().noquote() << "Adventure: initial XP: " + QString::number(currentXP, 'f', 0);
         m_xpInitial = currentXP;
     }
 
@@ -195,4 +218,17 @@ void AdventureTracker::updateXPfromMud(double currentXP)
 
     m_xpCurrent = currentXP;
     emit sig_updatedXP(m_xpCurrent.value());
+}
+
+double AdventureTracker::checkpointXP()
+{
+    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
+        qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
+        return 0;
+    }
+
+    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
+    m_xpCheckpoint.emplace(m_xpCurrent.value());
+
+    return xpGained;
 }
