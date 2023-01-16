@@ -14,7 +14,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
     m_journalTextEdit->setReadOnly(true);
     m_journalTextEdit->setOverwriteMode(true);
     m_journalTextEdit->setUndoRedoEnabled(false);
-    m_journalTextEdit->setDocumentTitle("Game Console Text");
+    m_journalTextEdit->setDocumentTitle("Adventure Journal Text");
     m_journalTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_journalTextEdit->setTabChangesFocus(false);
 
@@ -40,14 +40,24 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
     layout->addWidget(m_journalTextEdit);
 
     connect(&m_adventureTracker,
+            &AdventureTracker::sig_achievedSomething,
+            this,
+            &AdventureWidget::slot_onAchieved);
+
+    connect(&m_adventureTracker,
+            &AdventureTracker::sig_gainedLevel,
+            this,
+            &AdventureWidget::slot_onGainedLevel);
+
+    connect(&m_adventureTracker,
             &AdventureTracker::sig_killedMob,
             this,
             &AdventureWidget::slot_onKilledMob);
 
     connect(&m_adventureTracker,
-            &AdventureTracker::sig_achievedSomething,
+            &AdventureTracker::sig_receivedHint,
             this,
-            &AdventureWidget::slot_onAchieved);
+            &AdventureWidget::slot_onReceivedHint);
 
     connect(&m_adventureTracker,
             &AdventureTracker::sig_receivedNarrate,
@@ -65,7 +75,7 @@ void AdventureWidget::slot_onAchieved(const QString &achivement, const double xp
     addJournalEntry(QString(ACHIEVE_MSG).arg(achivement).arg(formatXPGained(xpGained)));
 }
 
-void AdventureWidget::slot_onGainedALevel()
+void AdventureWidget::slot_onGainedLevel()
 {
     addJournalEntry(QString(LEVEL_MSG));
 }
@@ -73,6 +83,11 @@ void AdventureWidget::slot_onGainedALevel()
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
 {
     addJournalEntry(QString(TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));
+}
+
+void AdventureWidget::slot_onReceivedHint(const QString &hint)
+{
+    addJournalEntry(QString(HINT_MSG).arg(hint));
 }
 
 void AdventureWidget::slot_onReceivedNarrate(const QString &narr)

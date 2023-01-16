@@ -13,8 +13,9 @@ public:
 
 signals:
     void sig_achievedSomething(const QString &achievement, const double xpGained);
-    void sig_gainedALevel();
+    void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, const double xpGained);
+    void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
     void sig_updatedXP(const double currentXP);
@@ -28,6 +29,7 @@ private:
     void parseIfComm();
     void parseIfGainedALevel();
     void parseIfKillAndXP();
+    void parseIfReceivedHint();
     void parseIfUpdatedXP();
 
     double checkpointXP();
@@ -35,8 +37,8 @@ private:
 
     GameObserver &m_observer;
 
-    // indexing is backwords, so [0] is most recent, [1] is prev, [2] is prev2, etc
-    std::array<QString *, 5> m_lastLines;
+    // indexing is backwards, so [0] is most recent, [1] is prev, [2] is prev2, etc
+    std::array<QString *, 5> m_lastLines = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
     GmcpMessage *m_lastGmcpMessage = nullptr;
     QJsonDocument *m_lastGmcpJsonDoc = nullptr;

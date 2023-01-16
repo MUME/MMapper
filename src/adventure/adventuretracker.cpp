@@ -42,6 +42,8 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
 
     parseIfAchievedSomething();
 
+    parseIfReceivedHint();
+
     parseIfGainedALevel();
 }
 
@@ -72,11 +74,15 @@ void AdventureTracker::parseIfAchievedSomething()
     // we interpet the most recent line as an achivement. Hopefully this will be
     // replaced with GMCP at some point.
     auto line2 = m_lastLines[1];
+
     if (line2 == nullptr or line2->indexOf("You achieved something new!") != 0)
         return;
 
     // So, 2nd-to-last line starts with You achieved, achievement is last line
     auto achievement = m_lastLines[0];
+    if (achievement == nullptr)
+        return;
+
     double xpGained = checkpointXP();
     emit sig_achievedSomething(*achievement, xpGained);
 }
@@ -102,7 +108,7 @@ void AdventureTracker::parseIfGainedALevel()
     if (lastLine == nullptr or lastLine->indexOf("You gain a level!") != 0)
         return;
 
-    emit sig_gainedALevel();
+    emit sig_gainedLevel();
 }
 
 void AdventureTracker::parseIfKillAndXP()
@@ -139,6 +145,19 @@ void AdventureTracker::parseIfKillAndXP()
 
     double xpGained = checkpointXP();
     emit sig_killedMob(mobName, xpGained);
+}
+
+void AdventureTracker::parseIfReceivedHint()
+{
+    // If second most recent line starts with "# Hint:" then we interpet the
+    // most recent line as an achivement.
+    auto line2 = m_lastLines[1];
+    if (line2 == nullptr or line2->indexOf("# Hint:") != 0)
+        return;
+
+    // So most recent line is hint text. Skip the leading "#  "
+    auto hint = m_lastLines[0]->mid(4);
+    emit sig_receivedHint(hint);
 }
 
 void AdventureTracker::parseIfUpdatedXP()

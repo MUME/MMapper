@@ -17,7 +17,8 @@ public:
 
     static constexpr const auto TROPHY_MSG = "Trophy: %1 (%2 xp)";
     static constexpr const auto ACHIEVE_MSG = "Achievement: %1 (%2 xp)";
-    static constexpr const auto LEVEL_MSG = "You gain a level! Congrats!";
+    static constexpr const auto LEVEL_MSG = "You gained a level! Congrats!";
+    static constexpr const auto HINT_MSG = "🧙 Gandalf tells you '%1'";
 
     explicit AdventureWidget(AdventureTracker &aj, QWidget *parent = nullptr);
 
@@ -25,8 +26,9 @@ public:
 
 public slots:
     void slot_onAchieved(const QString &achivement, const double xpGained);
-    void slot_onGainedALevel();
+    void slot_onGainedLevel();
     void slot_onKilledMob(const QString &mobName, const double xpGained);
+    void slot_onReceivedHint(const QString &hint);
     void slot_onReceivedNarrate(const QString &narr);
     void slot_onReceivedTell(const QString &tell);
 
