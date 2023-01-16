@@ -1,6 +1,7 @@
 #pragma once
 
 #include "observer/gameobserver.h"
+#include <array>
 #include <fstream>
 #include <QObject>
 
