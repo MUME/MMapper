@@ -33,7 +33,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     // so [0] is the last line received, [1] is the second-to-last, etc.
     // Must create our own QString copy for this, since the `ba` passed above
     // is reused.
-    for (size_t i = m_lastLines.size(); i > 0; i--) {
+    for (size_t i = m_lastLines.size() - 1; i > 0; i--) {
         m_lastLines[i] = m_lastLines[i - 1]; // shift the array
     }
     m_lastLines[0] = new QString(str); // add a copy of the new line
@@ -64,11 +64,11 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
     }
 
-    parseIfReceivedComm(msg, doc);
+    parseIfUpdatedChar(msg, doc);
 
     parseIfUpdatedXP(msg, doc);
 
-    parseIfUpdatedChar(msg, doc);
+    parseIfReceivedComm(msg, doc);
 }
 
 void AdventureTracker::parseIfAchievedSomething()
@@ -183,21 +183,21 @@ void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
 
 void AdventureTracker::updateCharfromMud(QString charName)
 {
-    if (!m_currentCharName.has_value()) {
+    if (m_currentCharName.isEmpty()) {
         qDebug().noquote() << QString("Adventure: new session for char %1").arg(charName);
         m_currentCharName = charName;
         return;
     }
 
-    if (charName == m_currentCharName.value()) {
+    if (m_currentCharName == charName) {
         // nothing to do here, same character
         return;
     }
 
     // So a new character has logged in, need to wipe the old state
-    qDebug().noquote() << QString("Adventure: char change, %1 replacing %2")
+    qDebug().noquote() << QString("Adventure: char change, new %1 replacing %2")
                               .arg(charName)
-                              .arg(m_currentCharName.value());
+                              .arg(m_currentCharName);
 
     m_currentCharName = charName;
     m_xpInitial.reset();
@@ -208,7 +208,8 @@ void AdventureTracker::updateCharfromMud(QString charName)
 void AdventureTracker::updateXPfromMud(double currentXP)
 {
     if (!m_xpInitial.has_value()) {
-        qDebug().noquote() << "Adventure: initial XP: " + QString::number(currentXP, 'f', 0);
+        qDebug().noquote() << QString("Adventure: initial XP: %1")
+                                  .arg(QString::number(currentXP, 'f', 0));
         m_xpInitial = currentXP;
     }
 

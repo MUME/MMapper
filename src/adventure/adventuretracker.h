@@ -43,7 +43,7 @@ private:
     // indexing is backwards, so [0] is most recent, [1] is prev, [2] is prev2, etc
     std::array<QString *, 5> m_lastLines = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
-    std::optional<QString> m_currentCharName;
+    QString m_currentCharName;
 
     std::optional<double> m_xpInitial, m_xpCheckpoint, m_xpCurrent;
 };
