@@ -1,5 +1,10 @@
 #include "lineparsers.h"
 
+QString AbstractStatefulLineParser::getLastSuccessVal()
+{
+    return m_lastSuccessVal;
+}
+
 bool AchievementParser::parse(QString line)
 {
     // An achivement event is:

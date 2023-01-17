@@ -6,7 +6,7 @@ class AbstractStatefulLineParser
 {
 public:
     virtual bool parse(QString line) = 0;
-    QString getLastSuccessVal() const { return m_lastSuccessVal; }
+    QString getLastSuccessVal();
 
 protected:
     bool m_pending = false;
