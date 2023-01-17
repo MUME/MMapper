@@ -5,6 +5,7 @@
 class AbstractStatefulLineParser
 {
 public:
+    virtual ~AbstractStatefulLineParser();
     virtual bool parse(QString line) = 0;
     virtual QString getLastSuccessVal();
 

@@ -1,5 +1,7 @@
 #include "lineparsers.h"
 
+AbstractStatefulLineParser::~AbstractStatefulLineParser() {}
+
 QString AbstractStatefulLineParser::getLastSuccessVal()
 {
     return m_lastSuccessVal;
