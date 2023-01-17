@@ -5,8 +5,8 @@
 class AbstractStatefulLineParser
 {
 public:
-    QString getLastSuccessVal();
     virtual bool parse(QString line) = 0;
+    virtual QString getLastSuccessVal();
 
 protected:
     bool m_pending = false;
