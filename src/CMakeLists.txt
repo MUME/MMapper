@@ -4,6 +4,8 @@ set(mmapper_SRCS
     adventure/adventuretracker.h
     adventure/adventurewidget.cpp
     adventure/adventurewidget.h
+    adventure/lineparsers.h
+    adventure/lineparsers.cpp
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/ClientWidget.cpp

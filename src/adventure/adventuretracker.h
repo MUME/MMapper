@@ -1,7 +1,7 @@
 #pragma once
 
+#include "adventure/lineparsers.h"
 #include "observer/gameobserver.h"
-#include <array>
 #include <fstream>
 #include <QObject>
 
@@ -26,11 +26,7 @@ public slots:
     void slot_onUserGmcp(const GmcpMessage &msg);
 
 private:
-    void parseIfAchievedSomething();
-    void parseIfGainedALevel();
-    void parseIfKillAndXP();
     void parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc);
-    void parseIfReceivedHint();
     void parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc);
     void parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc);
 
@@ -40,8 +36,10 @@ private:
 
     GameObserver &m_observer;
 
-    // indexing is backwards, so [0] is most recent, [1] is prev, [2] is prev2, etc
-    std::array<QString *, 5> m_lastLines = {nullptr, nullptr, nullptr, nullptr, nullptr};
+    AchievementParser m_achievementParser;
+    GainedLevelParser m_gainedLevelParser;
+    HintParser m_hintParser;
+    KillAndXPParser m_killParser;
 
     QString m_currentCharName;
 
