@@ -71,9 +71,9 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
     }
 
-    parseIfUpdatedChar(msg, doc);
+    parseIfUpdatedChar(doc);
 
-    parseIfUpdatedXP(msg, doc);
+    parseIfUpdatedXP(doc);
 
     parseIfReceivedComm(msg, doc);
 }
@@ -93,7 +93,7 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
     }
 }
 
-void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedChar(QJsonDocument doc)
 {
     QJsonObject obj = doc.object();
 
@@ -102,7 +102,7 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
     }
 }
 
-void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedXP(QJsonDocument doc)
 {
     QJsonObject obj = doc.object();
 

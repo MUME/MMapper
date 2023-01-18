@@ -559,17 +559,17 @@ void MainWindow::setupChildWidgets()
     m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    // View -> Side Panels -> Game Console (Narrates, Tells, Mob Kill XP)
+    // View -> Side Panels -> Adventure Journal (Trophy XP, Achievements, Hints, etc)
     m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
-    m_dockDialogGameConsole = new QDockWidget(tr("Adventure Journal *BETA*"), this);
-    m_dockDialogGameConsole->setObjectName("DockWidgetGameConsole");
-    m_dockDialogGameConsole->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
-    m_dockDialogGameConsole->setFeatures(QDockWidget::DockWidgetClosable
-                                         | QDockWidget::DockWidgetFloatable
-                                         | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogGameConsole);
-    m_dockDialogGameConsole->setWidget(m_adventureWidget);
-    m_dockDialogGameConsole->hide();
+    m_dockDialogAdventure = new QDockWidget(tr("Adventure Journal *BETA*"), this);
+    m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
+    m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
+                                       | QDockWidget::DockWidgetFloatable
+                                       | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
+    m_dockDialogAdventure->setWidget(m_adventureWidget);
+    m_dockDialogAdventure->hide();
 }
 
 // TODO: clean up all this copy/paste by using helper functions and X-macros
@@ -1250,7 +1250,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
-    sidepanels->addAction(m_dockDialogGameConsole->toggleViewAction());
+    sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);

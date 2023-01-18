@@ -166,7 +166,7 @@ private:
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
-    QDockWidget *m_dockDialogGameConsole = nullptr;
+    QDockWidget *m_dockDialogAdventure = nullptr;
 
     GameObserver *m_gameObserver = nullptr;
     AutoLogger *m_logger = nullptr;

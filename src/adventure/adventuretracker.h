@@ -27,8 +27,8 @@ public slots:
 
 private:
     void parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc);
-    void parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc);
-    void parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc);
+    void parseIfUpdatedChar(QJsonDocument doc);
+    void parseIfUpdatedXP(QJsonDocument doc);
 
     void updateCharfromMud(QString charName);
     void updateXPfromMud(double currentXP);
