@@ -6,6 +6,8 @@ set(mmapper_SRCS
     adventure/adventurewidget.h
     adventure/lineparsers.h
     adventure/lineparsers.cpp
+    adventure/xpstatuswidget.cpp
+    adventure/xpstatuswidget.h
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/ClientWidget.cpp
