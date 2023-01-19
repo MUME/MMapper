@@ -82,11 +82,11 @@ void AdventureWidget::slot_onReceivedHint(const QString &hint)
 
 const QString AdventureWidget::formatXPGained(const double xpGained)
 {
-    if (xpGained < 1000) {
+    if (abs(xpGained) < 1000) {
         return QString::number(xpGained);
     }
 
-    if (xpGained < (10 * 1000)) {
+    if (abs(xpGained) < (10 * 1000)) {
         return QString::number(xpGained / 1000, 'f', 1) + "k";
     }
 

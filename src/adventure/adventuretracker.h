@@ -19,7 +19,8 @@ signals:
     void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
-    void sig_updatedXP(const double currentXP);
+    void sig_updatedXP(const double initialXP, const double currentXP);
+    void sig_updatedChar(const QString &charName);
 
 public slots:
     void slot_onUserText(const QByteArray &ba);

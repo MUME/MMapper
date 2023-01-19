@@ -9,8 +9,13 @@ public:
     XPStatusWidget(AdventureTracker &at);
 
 public slots:
-    void slot_updatedXP(const double currentXP);
+    void slot_updatedChar(const QString charName);
+    void slot_updatedXP(const double initialXP, const double currentXP);
 
 private:
+    void update();
+
     AdventureTracker &m_adventureTracker;
+
+    QString m_charName, m_xpSessionSummary;
 };

@@ -113,26 +113,28 @@ void AdventureTracker::parseIfUpdatedXP(QJsonDocument doc)
 
 void AdventureTracker::updateCharfromMud(QString charName)
 {
-    if (m_currentCharName.isEmpty()) {
-        qDebug().noquote() << QString("Adventure: new session for char %1").arg(charName);
-        m_currentCharName = charName;
-        return;
-    }
-
     if (m_currentCharName == charName) {
         // nothing to do here, same character
         return;
     }
 
-    // So a new character has logged in, need to wipe the old state
-    qDebug().noquote() << QString("Adventure: char change, %1 replacing %2")
-                              .arg(charName)
-                              .arg(m_currentCharName);
+    // First time we are seeing this char
 
-    m_currentCharName = charName;
+    if (m_currentCharName.isEmpty()) {
+        qDebug().noquote() << QString("Adventure: new session for char %1").arg(charName);
+    } else {
+        // New character logging in
+        qDebug().noquote() << QString("Adventure: char change, %1 replacing %2")
+                                  .arg(charName)
+                                  .arg(m_currentCharName);
+    }
+
     m_xpInitial.reset();
     m_xpCheckpoint.reset();
     m_xpCurrent.reset();
+
+    m_currentCharName = charName;
+    emit sig_updatedChar(m_currentCharName);
 }
 
 void AdventureTracker::updateXPfromMud(double currentXP)
@@ -141,14 +143,11 @@ void AdventureTracker::updateXPfromMud(double currentXP)
         qDebug().noquote() << QString("Adventure: initial XP: %1")
                                   .arg(QString::number(currentXP, 'f', 0));
         m_xpInitial = currentXP;
-    }
-
-    if (!m_xpCheckpoint.has_value()) {
         m_xpCheckpoint = currentXP;
     }
 
     m_xpCurrent = currentXP;
-    emit sig_updatedXP(m_xpCurrent.value());
+    emit sig_updatedXP(m_xpInitial.value(), m_xpCurrent.value());
 }
 
 double AdventureTracker::checkpointXP()
@@ -159,7 +158,7 @@ double AdventureTracker::checkpointXP()
     }
 
     double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
-    m_xpCheckpoint.emplace(m_xpCurrent.value());
+    m_xpCheckpoint = m_xpCurrent;
 
     return xpGained;
 }

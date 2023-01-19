@@ -1,5 +1,6 @@
 #include "xpstatuswidget.h"
-#include "QtCore/qdebug.h"
+#include "adventuretracker.h"
+#include "adventurewidget.h"
 
 XPStatusWidget::XPStatusWidget(AdventureTracker &at)
     : m_adventureTracker{at}
@@ -8,12 +9,27 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at)
             &AdventureTracker::sig_updatedXP,
             this,
             &XPStatusWidget::slot_updatedXP);
+
+    connect(&m_adventureTracker,
+            &AdventureTracker::sig_updatedChar,
+            this,
+            &XPStatusWidget::slot_updatedChar);
 }
 
-void XPStatusWidget::slot_updatedXP(const double currentXP)
+void XPStatusWidget::slot_updatedChar(const QString charName)
 {
-    qDebug() << "XPStatusWidget::slot_updatedXP called";
+    m_charName = charName;
+    update();
+}
 
-    setText(QString("Gained XP: %1").arg(currentXP));
+void XPStatusWidget::slot_updatedXP(const double initialXP, const double currentXP)
+{
+    m_xpSessionSummary = AdventureWidget::formatXPGained(currentXP - initialXP);
+    update();
+}
+
+void XPStatusWidget::update()
+{
+    setText(QString("%1 Session: %2 XP").arg(m_charName).arg(m_xpSessionSummary));
     repaint();
 }
