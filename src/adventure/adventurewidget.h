@@ -20,12 +20,12 @@ public:
     static constexpr const auto LEVEL_MSG = "You gained a level! Congrats!";
     static constexpr const auto HINT_MSG = "🧙 Gandalf tells you '%1'";
 
-    explicit AdventureWidget(AdventureTracker &aj, QWidget *parent = nullptr);
+    explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
 
     static const QString formatXPGained(const double xpGained);
 
 public slots:
-    void slot_onAchieved(const QString &achivement, const double xpGained);
+    void slot_onAchievedSomething(const QString &achivement, const double xpGained);
     void slot_onGainedLevel();
     void slot_onKilledMob(const QString &mobName, const double xpGained);
     void slot_onReceivedHint(const QString &hint);

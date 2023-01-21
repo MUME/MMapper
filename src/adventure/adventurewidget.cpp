@@ -4,9 +4,9 @@
 #include "adventurewidget.h"
 #include "configuration/configuration.h"
 
-AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
+AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     : QWidget{parent}
-    , m_adventureTracker{aj}
+    , m_adventureTracker{at}
 {
     m_journalTextEdit = new QTextEdit(this);
     m_journalTextCursor = new QTextCursor(m_journalTextEdit->document());
@@ -42,7 +42,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
     connect(&m_adventureTracker,
             &AdventureTracker::sig_achievedSomething,
             this,
-            &AdventureWidget::slot_onAchieved);
+            &AdventureWidget::slot_onAchievedSomething);
 
     connect(&m_adventureTracker,
             &AdventureTracker::sig_gainedLevel,
@@ -60,7 +60,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &aj, QWidget *parent)
             &AdventureWidget::slot_onReceivedHint);
 }
 
-void AdventureWidget::slot_onAchieved(const QString &achivement, const double xpGained)
+void AdventureWidget::slot_onAchievedSomething(const QString &achivement, const double xpGained)
 {
     addJournalEntry(QString(ACHIEVE_MSG).arg(achivement).arg(formatXPGained(xpGained)));
 }
@@ -86,7 +86,7 @@ const QString AdventureWidget::formatXPGained(const double xpGained)
         return QString::number(xpGained);
     }
 
-    if (abs(xpGained) < (10 * 1000)) {
+    if (abs(xpGained) < (20 * 1000)) {
         return QString::number(xpGained / 1000, 'f', 1) + "k";
     }
 
@@ -95,7 +95,6 @@ const QString AdventureWidget::formatXPGained(const double xpGained)
 
 void AdventureWidget::addJournalEntry(const QString &msg)
 {
-    // TODO maybe clear the default/placeholder text?
     auto prepend = "\n";
     if (m_numMessagesReceived == 0) {
         prepend = "";

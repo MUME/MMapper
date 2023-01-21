@@ -137,16 +137,16 @@ void AdventureTracker::updateCharfromMud(QString charName)
     emit sig_updatedChar(m_currentCharName);
 }
 
-void AdventureTracker::updateXPfromMud(double currentXP)
+void AdventureTracker::updateXPfromMud(double xpCurrent)
 {
     if (!m_xpInitial.has_value()) {
         qDebug().noquote() << QString("Adventure: initial XP: %1")
-                                  .arg(QString::number(currentXP, 'f', 0));
-        m_xpInitial = currentXP;
-        m_xpCheckpoint = currentXP;
+                                  .arg(QString::number(xpCurrent, 'f', 0));
+        m_xpInitial = xpCurrent;
+        m_xpCheckpoint = xpCurrent;
     }
 
-    m_xpCurrent = currentXP;
+    m_xpCurrent = xpCurrent;
     emit sig_updatedXP(m_xpInitial.value(), m_xpCurrent.value());
 }
 

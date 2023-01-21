@@ -19,7 +19,7 @@ signals:
     void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
-    void sig_updatedXP(const double initialXP, const double currentXP);
+    void sig_updatedXP(const double xpInitial, const double xpCurrent);
     void sig_updatedChar(const QString &charName);
 
 public slots:
@@ -32,7 +32,7 @@ private:
     void parseIfUpdatedXP(QJsonDocument doc);
 
     void updateCharfromMud(QString charName);
-    void updateXPfromMud(double currentXP);
+    void updateXPfromMud(double xpCurrent);
     double checkpointXP();
 
     GameObserver &m_observer;
