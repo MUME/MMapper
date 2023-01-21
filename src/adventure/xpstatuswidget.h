@@ -11,14 +11,16 @@ public:
     XPStatusWidget(AdventureTracker &at, QWidget *parent = nullptr);
 
 public slots:
+    void slot_endedSession(const QString charName);
     void slot_updatedChar(const QString charName);
-    void slot_updatedXP(const double initialXP, const double currentXP);
+    void slot_updatedXP(const double xpInitial, const double xpCurrent);
 
 private:
+    void resetSession();
     void update();
 
     AdventureTracker &m_adventureTracker;
 
-    QString m_charName = "";
-    double m_xpInitial = 0.0, m_xpCurrent = 0.0;
+    QString m_charName;
+    double m_xpInitial, m_xpCurrent;
 };

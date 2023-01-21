@@ -58,9 +58,20 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 
-    if (!(msg.isCharName() or msg.isCharStatusVars() or msg.isCharVitals()
-          or msg.isCommChannelText() or msg.isCoreGoodbye()))
+    // REVISIT handle Goodbye() specially due to malloc bug in GmcpMessage
+    // when trying to extract the string via toQString() on that message
+    // type, needs more investigation.
+    if (msg.isCoreGoodbye() and m_charStatus.has_value()) {
+        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_charStatus->name());
+        emit sig_endedSession(m_charStatus->name());
+        m_charStatus.reset();
         return;
+    }
+
+    if (!(msg.isCharName() or msg.isCharStatusVars() or msg.isCharVitals()
+          or msg.isCommChannelText()))
+        return;
+
     auto s = msg.getJson()->toQString().toUtf8();
 
     QJsonDocument doc = QJsonDocument::fromJson(s);
@@ -71,18 +82,21 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
     }
 
+    parseIfReceivedComm(msg, doc);
+
     parseIfUpdatedChar(msg, doc);
 
-    parseIfUpdatedXP(doc);
-
-    parseIfReceivedComm(msg, doc);
+    parseIfUpdatedXP(msg, doc);
 }
 
 void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
 {
+    if (!msg.isCommChannelText())
+        return;
+
     QJsonObject obj = doc.object();
 
-    if (!msg.isCommChannelText() or !obj.contains("channel") or !obj.contains("text"))
+    if (!(obj.contains("channel") and obj.contains("text")))
         return;
 
     if (obj["channel"].toString() == "tells") {
@@ -100,68 +114,53 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
 
     QJsonObject obj = doc.object();
 
-    if (obj.contains("name")) {
-        updateCharfromMud(obj["name"].toString());
+    if (!obj.contains("name"))
+        return;
+
+    auto charName = obj["name"].toString();
+
+    if (!m_charStatus.has_value()) {
+        qDebug().noquote() << QString("Adventure: new adventure for char %1").arg(charName);
+
+        m_charStatus.emplace(charName);
+        emit sig_updatedChar(m_charStatus->name());
+    }
+
+    if (m_charStatus.has_value() and m_charStatus->name() != charName) {
+        qDebug().noquote() << QString("Adventure: adventure ending for %1, new adventure for %2")
+                                  .arg(m_charStatus->name())
+                                  .arg(charName);
+
+        emit sig_endedSession(m_charStatus->name());
+        m_charStatus.emplace(charName);
+        emit sig_updatedChar(m_charStatus->name());
     }
 }
 
-void AdventureTracker::parseIfUpdatedXP(QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
 {
+    if (!msg.isCharVitals())
+        return;
+
     QJsonObject obj = doc.object();
 
-    if (obj.contains("xp")) {
-        updateXPfromMud(obj["xp"].toDouble());
-    }
-}
-
-void AdventureTracker::updateCharfromMud(QString charName)
-{
-    if (m_currentCharName == charName) {
-        // nothing to do here, same character
+    if (!obj.contains("xp"))
         return;
+
+    auto xpCurrent = obj["xp"].toDouble();
+
+    if (m_charStatus.has_value()) {
+        m_charStatus->updateXP(xpCurrent);
+        emit sig_updatedXP(m_charStatus->xpInitial(), m_charStatus->xpCurrent());
     }
-
-    // First time we are seeing this char
-
-    if (m_currentCharName.isEmpty()) {
-        qDebug().noquote() << QString("Adventure: new session for char %1").arg(charName);
-    } else {
-        // New character logging in
-        qDebug().noquote() << QString("Adventure: char change, %1 replacing %2")
-                                  .arg(charName)
-                                  .arg(m_currentCharName);
-    }
-
-    m_xpInitial.reset();
-    m_xpCheckpoint.reset();
-    m_xpCurrent.reset();
-
-    m_currentCharName = charName;
-    emit sig_updatedChar(m_currentCharName);
-}
-
-void AdventureTracker::updateXPfromMud(double xpCurrent)
-{
-    if (!m_xpInitial.has_value()) {
-        qDebug().noquote() << QString("Adventure: initial XP: %1")
-                                  .arg(QString::number(xpCurrent, 'f', 0));
-        m_xpInitial = xpCurrent;
-        m_xpCheckpoint = xpCurrent;
-    }
-
-    m_xpCurrent = xpCurrent;
-    emit sig_updatedXP(m_xpInitial.value(), m_xpCurrent.value());
 }
 
 double AdventureTracker::checkpointXP()
 {
-    if (!m_xpCurrent.has_value() or !m_xpCheckpoint.has_value()) {
+    if (m_charStatus.has_value()) {
+        return m_charStatus->checkpointXP();
+    } else {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
         return 0;
     }
-
-    double xpGained = m_xpCurrent.value() - m_xpCheckpoint.value();
-    m_xpCheckpoint = m_xpCurrent;
-
-    return xpGained;
 }

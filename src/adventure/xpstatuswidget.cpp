@@ -10,6 +10,14 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QWidget *parent)
     setMaximumHeight(22);
     setToolTip("Click to open the Adventure Journal");
 
+    resetSession();
+    update();
+
+    connect(&m_adventureTracker,
+            &AdventureTracker::sig_endedSession,
+            this,
+            &XPStatusWidget::slot_endedSession);
+
     connect(&m_adventureTracker,
             &AdventureTracker::sig_updatedXP,
             this,
@@ -19,8 +27,19 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QWidget *parent)
             &AdventureTracker::sig_updatedChar,
             this,
             &XPStatusWidget::slot_updatedChar);
+}
 
-    update();
+void XPStatusWidget::resetSession()
+{
+    m_charName = "";
+    m_xpInitial = 0.0;
+    m_xpCurrent = 0.0;
+}
+
+void XPStatusWidget::slot_endedSession(const QString charName)
+{
+    resetSession();
+    // we do NOT call update() here to leave the last session info visible
 }
 
 void XPStatusWidget::slot_updatedChar(const QString charName)
