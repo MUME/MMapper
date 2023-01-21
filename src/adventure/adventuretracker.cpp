@@ -59,10 +59,10 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
     // https://mume.org/help/generic_mud_communication_protocol
 
     if (!(msg.isCharName() or msg.isCharStatusVars() or msg.isCharVitals()
-          or msg.isCommChannelText()))
+          or msg.isCommChannelText() or msg.isCoreGoodbye()))
         return;
-
     auto s = msg.getJson()->toQString().toUtf8();
+
     QJsonDocument doc = QJsonDocument::fromJson(s);
 
     if (!doc.isObject()) {
@@ -71,7 +71,7 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
     }
 
-    parseIfUpdatedChar(doc);
+    parseIfUpdatedChar(msg, doc);
 
     parseIfUpdatedXP(doc);
 
@@ -93,8 +93,11 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
     }
 }
 
-void AdventureTracker::parseIfUpdatedChar(QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
 {
+    if (!(msg.isCharName() or msg.isCharStatusVars()))
+        return;
+
     QJsonObject obj = doc.object();
 
     if (obj.contains("name")) {
