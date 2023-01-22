@@ -331,51 +331,30 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     QByteArray textMoves;
     CharacterAffectFlags &affects = self->affects;
 
-    static const QRegularExpression pRx(R"(^(?:\+ )?)"               //          Valar mudlle
-                                        R"([\*@\!\)o]?)"             //          light
-                                        R"([\[#\.f\(<%~WU\+:=O]?)"   //          terrain
-                                        R"([~'"]?[-=]?)"             //          weather
-                                        R"(( ?[Cc]?[Rr]?[Ss]?W?)?)"  // Group 1: movement
-                                        R"((?: i[^ >]+)?)"           //          wizinvis
-                                        R"((?: NN)?(?: NS)?)"        //          no narrate/song
-                                        R"((?: XP:\d+)?)"            //          xp tnl
-                                        R"((?: TP:\d+)?)"            //          tp tnl
-                                        R"((?: \d+\[\d+:\d+\])?)"    //          room number
-                                        R"((?: HP:([^ >]+))?)"       // Group 2: HP
-                                        R"((?: Mana:([^ >]+))?)"     // Group 3: Mana
-                                        R"((?: Move:([^ >]+))?)"     // Group 4: Move
-                                        R"((?: Mount:([^ >]+))?)"    // Group 5: Mount
-                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 6/7: Target / health
-                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 8/9: Buffer / health
-                                        R"(>)");
+    static const QRegularExpression pRx(
+        R"((?: HP:([^ >]+))?)"           // Group 1: HP
+        R"((?: Mana:([^ >]+))?)"         // Group 2: Mana
+        R"((?: Move:([^ >]+))?)"         // Group 3: Move
+        R"((?: Mount:([^ >]+))?)"        // Group 4: Mount
+        R"((?: ([^>\[:]+):([^ \]>]+))?)" // Group 5/6: Target / health
+        R"((?: ([^>\[:]+):([^ \]>]+))?)" // Group 7/8: Target|Buffer / health
+        R"(>$)");
     QRegularExpressionMatch match = pRx.match(prompt);
     if (!match.hasMatch())
         return;
-
-    const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
-    const bool isRiding = match.captured(1).contains("R");
-    if (!wasRiding && isRiding) {
-        affects.insert(CharacterAffectEnum::RIDING);
-        affectLastSeen.insert(CharacterAffectEnum::RIDING,
-                              QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
-
-    } else if (wasRiding && !isRiding) {
-        affects.remove(CharacterAffectEnum::RIDING);
-    }
 
     const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
     if (wasSearching)
         affects.remove(CharacterAffectEnum::SEARCH);
 
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
-    textHP = match.captured(2).toLatin1();
-    textMana = match.captured(3).toLatin1();
-    textMoves = match.captured(4).toLatin1();
-    bool inCombat = !match.captured(6).isEmpty();
+    textHP = match.captured(1).toLatin1();
+    textMana = match.captured(2).toLatin1();
+    textMoves = match.captured(3).toLatin1();
+    bool inCombat = !match.captured(5).isEmpty() || !match.captured(7).isEmpty();
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
-        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat
-        && wasRiding == isRiding && !wasSearching) {
+        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat && !wasSearching) {
         return; // No update needed
     }
 
@@ -567,14 +546,28 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
         const auto &obj = doc.object();
 
         const SharedGroupChar &self = getGroup()->getSelf();
+        CharacterAffectFlags &affects = self->affects;
         const int hp = obj.value("hp").toInt(self->hp);
         const int maxhp = obj.value("maxhp").toInt(self->maxhp);
         const int mana = obj.value("mana").toInt(self->mana);
         const int maxmana = obj.value("maxmana").toInt(self->maxmana);
         const int mp = obj.value("mp").toInt(self->moves);
         const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
-
         updateCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp);
+
+        if (obj.contains("ride")) {
+            const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
+            const bool isRiding = obj.value("ride").toBool(wasRiding);
+            if (isRiding) {
+                affects.insert(CharacterAffectEnum::RIDING);
+                affectLastSeen.insert(CharacterAffectEnum::RIDING,
+                                      QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
+            } else {
+                affects.remove(CharacterAffectEnum::RIDING);
+            }
+            if (isRiding != wasRiding)
+                issueLocalCharUpdate();
+        }
     }
 
     if (group && msg.isCharName()) {
