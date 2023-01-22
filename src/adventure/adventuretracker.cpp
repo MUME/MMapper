@@ -28,6 +28,8 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     QString line = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(line);
 
+    // Try to order these by frequency to minimize unneccessary parsing
+
     if (m_killParser.parse(line)) {
         auto killName = m_killParser.getLastSuccessVal();
         double xpGained = checkpointXP();
@@ -42,14 +44,26 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_hintParser.parse(line)) {
-        auto hint = m_hintParser.getLastSuccessVal();
-        emit sig_receivedHint(hint);
+    if (m_gainedLevelParser.parse(line)) {
+        emit sig_gainedLevel();
         return;
     }
 
-    if (m_gainedLevelParser.parse(line)) {
-        emit sig_gainedLevel();
+    if (m_diedParser.parse(line)) {
+        double xpLost = checkpointXP();
+        emit sig_died(xpLost);
+        return;
+    }
+
+    if (m_lostLevelParser.parse(line)) {
+        double xpLost = checkpointXP();
+        emit sig_lostLevel(xpLost);
+        return;
+    }
+
+    if (m_hintParser.parse(line)) {
+        auto hint = m_hintParser.getLastSuccessVal();
+        emit sig_receivedHint(hint);
         return;
     }
 }

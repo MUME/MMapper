@@ -20,6 +20,12 @@ public:
     bool parse(QString line) override;
 };
 
+class DiedParser : public AbstractStatefulLineParser
+{
+public:
+    bool parse(QString line) override;
+};
+
 class GainedLevelParser : public AbstractStatefulLineParser
 {
 public:
@@ -39,4 +45,10 @@ public:
 
 private:
     int m_linesSinceShareExp = 0;
+};
+
+class LostLevelParser : public AbstractStatefulLineParser
+{
+public:
+    bool parse(QString line) override;
 };

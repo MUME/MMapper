@@ -39,7 +39,8 @@ void XPStatusWidget::resetSession()
 void XPStatusWidget::slot_endedSession(const QString charName)
 {
     resetSession();
-    // we do NOT call update() here to leave the last session info visible
+    // We do NOT call update() after resetSession() here, so that info stays
+    // visible for player to check later. Will be update()'d when new session
 }
 
 void XPStatusWidget::slot_updatedChar(const QString charName)
@@ -59,14 +60,15 @@ void XPStatusWidget::update()
 {
     double xpGained = m_xpCurrent - m_xpInitial;
 
-    if (xpGained > 0.0) {
-        auto s = AdventureWidget::formatXPGained(xpGained);
-        setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
-        show();
-        repaint();
-
-    } else {
+    if (xpGained == 0.0) {
+        // newly initialized state
         setText("");
         hide();
+        return;
     }
+
+    auto s = AdventureWidget::formatXPGained(xpGained);
+    setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
+    show();
+    repaint();
 }

@@ -24,6 +24,11 @@ bool AchievementParser::parse(QString line)
     return false;
 }
 
+bool DiedParser::parse(QString line)
+{
+    return (line.indexOf("You are dead! Sorry...") == 0);
+}
+
 bool GainedLevelParser::parse(QString line)
 {
     return (line.indexOf("You gain a level!") == 0);
@@ -82,4 +87,9 @@ bool KillAndXPParser::parse(QString line)
 
         return false;
     }
+}
+
+bool LostLevelParser::parse(QString line)
+{
+    return (line.indexOf("Ouch! You lose a level!") == 0);
 }

@@ -15,9 +15,11 @@ public:
 
 signals:
     void sig_achievedSomething(const QString &achievement, const double xpGained);
+    void sig_died(const double xpLost);
     void sig_endedSession(const QString charName);
     void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, const double xpGained);
+    void sig_lostLevel(const double xpLost);
     void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
@@ -38,9 +40,11 @@ private:
     GameObserver &m_observer;
 
     AchievementParser m_achievementParser;
+    DiedParser m_diedParser;
     GainedLevelParser m_gainedLevelParser;
     HintParser m_hintParser;
     KillAndXPParser m_killParser;
+    LostLevelParser m_lostLevelParser;
 
     std::optional<CharStatus> m_charStatus;
 };
