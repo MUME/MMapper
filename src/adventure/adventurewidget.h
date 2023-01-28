@@ -20,7 +20,7 @@ public:
     static constexpr const auto DIED_MSG = "You are dead! Sorry... (%1 xp)";
     static constexpr const auto GAINED_LEVEL_MSG = "You gain a level! Congrats!";
     static constexpr const auto LOST_LEVEL_MSG = "Ouch! You lose a level! (%1 xp)";
-    static constexpr const auto HINT_MSG = "🧙 Gandalf tells you '%1'";
+    static constexpr const auto HINT_MSG = "Hint: %1";
 
     explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
 

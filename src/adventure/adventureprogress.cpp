@@ -36,15 +36,14 @@ double AdventureProgress::peekXPGained()
     return m_xpCurrent - m_xpCheckpoint;
 }
 
-void AdventureProgress::updateXP(double xpCurrent)
+void AdventureProgress::updateXP(double xp)
 {
     if (m_xpInitial == 0.0) {
-        qDebug().noquote() << QString("Adventure: initial XP: %1")
-                                  .arg(QString::number(xpCurrent, 'f', 0));
+        qDebug().noquote() << QString("Adventure: initial XP: %1").arg(QString::number(xp, 'f', 0));
 
-        m_xpInitial = xpCurrent;
-        m_xpCheckpoint = xpCurrent;
+        m_xpInitial = xp;
+        m_xpCheckpoint = xp;
     }
 
-    m_xpCurrent = xpCurrent;
+    m_xpCurrent = xp;
 }

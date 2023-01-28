@@ -11,8 +11,9 @@ public:
     double xpInitial() const;
     double xpCurrent() const;
 
-    double checkpointXP();
-    void updateXP(double xpCurrent);
+    double checkpointXPGained();
+    double peekXPGained();
+    void updateXP(double xp);
 
 private:
     QString m_CharName;
