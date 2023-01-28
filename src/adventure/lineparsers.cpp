@@ -88,3 +88,12 @@ bool KillAndXPParser::parse(QString line)
         return false;
     }
 }
+
+bool TaskCompleteParser::parse(QString line)
+{
+    // REVISIT: there are at least three different versions of this
+    //   accomplished
+    //   knowledgeable (xp?)
+    //   travelled (tp?)
+    return line.indexOf("With the task complete, you feel more") == 0;
+}

@@ -37,15 +37,21 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_achievementParser.parse(line) and m_Progress->peekXPGained() > 0.0) {
+    if (m_gainedLevelParser.parse(line)) {
+        emit sig_gainedLevel();
+        return;
+    }
+
+    if (m_achievementParser.parse(line)) {
         auto achievement = m_achievementParser.getLastSuccessVal();
         auto xpGained = checkpointXP();
         emit sig_achievedSomething(achievement, xpGained);
         return;
     }
 
-    if (m_gainedLevelParser.parse(line)) {
-        emit sig_gainedLevel();
+    if (m_taskCompleteParser.parse(line) and m_Progress->peekXPGained() > 0.0) {
+        auto xpGained = checkpointXP();
+        emit sig_accomplishedTask(xpGained);
         return;
     }
 

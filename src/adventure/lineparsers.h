@@ -46,3 +46,9 @@ public:
 private:
     int m_linesSinceShareExp = 0;
 };
+
+class TaskCompleteParser : public AbstractStatefulLineParser
+{
+public:
+    bool parse(QString line) override;
+};

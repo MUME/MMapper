@@ -57,14 +57,14 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
             &AdventureWidget::slot_onKilledMob);
 
     connect(&m_adventureTracker,
-            &AdventureTracker::sig_lostLevel,
-            this,
-            &AdventureWidget::slot_onLostLevel);
-
-    connect(&m_adventureTracker,
             &AdventureTracker::sig_receivedHint,
             this,
             &AdventureWidget::slot_onReceivedHint);
+}
+
+void AdventureWidget::slot_onAccomplishedTask(const double xpGained)
+{
+    addJournalEntry(QString(ACCOMPLISH_MSG).arg(formatXPGained(xpGained)));
 }
 
 void AdventureWidget::slot_onAchievedSomething(const QString &achivement, const double xpGained)
@@ -84,12 +84,7 @@ void AdventureWidget::slot_onGainedLevel()
 
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
 {
-    addJournalEntry(QString(TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));
-}
-
-void AdventureWidget::slot_onLostLevel(const double xpLost)
-{
-    addJournalEntry(QString(LOST_LEVEL_MSG).arg(formatXPGained(xpLost)));
+    addJournalEntry(QString(KILL_TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));
 }
 
 void AdventureWidget::slot_onReceivedHint(const QString &hint)
