@@ -2,17 +2,17 @@
 
 #include <QString>
 
-class CharStatus
+class AdventureProgress
 {
 public:
-    CharStatus(QString charName);
+    AdventureProgress(QString charName);
 
     QString name() const;
     double xpInitial() const;
     double xpCurrent() const;
 
-    void updateXP(double xpCurrent);
     double checkpointXP();
+    void updateXP(double xpCurrent);
 
 private:
     QString m_CharName;

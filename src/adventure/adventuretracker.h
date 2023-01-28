@@ -39,12 +39,12 @@ private:
 
     GameObserver &m_observer;
 
+    std::optional<AdventureProgress> m_Progress;
+
     AchievementParser m_achievementParser;
     DiedParser m_diedParser;
     GainedLevelParser m_gainedLevelParser;
     HintParser m_hintParser;
     KillAndXPParser m_killParser;
     LostLevelParser m_lostLevelParser;
-
-    std::optional<CharStatus> m_charStatus;
 };
