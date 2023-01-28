@@ -55,12 +55,6 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_lostLevelParser.parse(line)) {
-        auto xpLost = checkpointXP();
-        emit sig_lostLevel(xpLost);
-        return;
-    }
-
     if (m_hintParser.parse(line)) {
         auto hint = m_hintParser.getLastSuccessVal();
         emit sig_receivedHint(hint);

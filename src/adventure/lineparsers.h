@@ -46,9 +46,3 @@ public:
 private:
     int m_linesSinceShareExp = 0;
 };
-
-class LostLevelParser : public AbstractStatefulLineParser
-{
-public:
-    bool parse(QString line) override;
-};

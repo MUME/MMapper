@@ -88,8 +88,3 @@ bool KillAndXPParser::parse(QString line)
         return false;
     }
 }
-
-bool LostLevelParser::parse(QString line)
-{
-    return (line.indexOf("Ouch! You lose a level!") == 0);
-}

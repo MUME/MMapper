@@ -47,5 +47,4 @@ private:
     GainedLevelParser m_gainedLevelParser;
     HintParser m_hintParser;
     KillAndXPParser m_killParser;
-    LostLevelParser m_lostLevelParser;
 };
