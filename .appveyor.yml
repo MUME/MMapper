@@ -300,7 +300,7 @@ for:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set "PATH=C:\Qt\6.4.0\mingw_64\bin;%PATH%"
       - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
-      - cmd: if %COMPILER%==MinGW set CXX=C:\Qt\6.4.0\mingw_64\bin\g++.exe
+      - cmd: if %COMPILER%==MinGW set CXX=C:\Qt\6.4.0\mingw_64\bin\x86_64-w64-mingw32-g++.exe
       - cmd: echo PATH=%PATH%
 
     build_script:
