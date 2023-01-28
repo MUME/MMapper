@@ -282,7 +282,7 @@ for:
     clone_folder: c:\Build\MMapper
 
     init:
-      - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="Ninja"
+      - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MinGW Makefiles"
       - cmd: if %ARCH%==x64 set OPENSSLDIR=C:\OpenSSL-v111-Win64
       - cmd: git config --global core.autocrlf input
       - cmd: echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
