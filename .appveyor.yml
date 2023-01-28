@@ -300,13 +300,14 @@ for:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set "PATH=C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\bin;%PATH%"
       - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+      - cmd: if %COMPILER%==MinGW set CXX=C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\bin\g++.exe
       - cmd: echo PATH=%PATH%
 
     build_script:
       - cmd: cd c:\Build\MMapper
       - cmd: md winbuild
       - cmd: cd winbuild
-      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%"
+      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%" "-DCMAKE_CXX_COMPILER=%CXX%"
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
       - ps: move *.exe* ../
