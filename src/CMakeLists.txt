@@ -1,11 +1,11 @@
 set(mmapper_SRCS
     main.cpp
+    adventure/adventureprogress.cpp
+    adventure/adventureprogress.h
     adventure/adventuretracker.cpp
     adventure/adventuretracker.h
     adventure/adventurewidget.cpp
     adventure/adventurewidget.h
-    adventure/charstatus.cpp
-    adventure/charstatus.h
     adventure/lineparsers.h
     adventure/lineparsers.cpp
     adventure/xpstatuswidget.cpp

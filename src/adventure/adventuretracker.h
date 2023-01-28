@@ -1,6 +1,6 @@
 #pragma once
 
-#include "adventure/charstatus.h"
+#include "adventure/adventureprogress.h"
 #include "adventure/lineparsers.h"
 #include "observer/gameobserver.h"
 #include <fstream>
@@ -31,9 +31,10 @@ public slots:
     void slot_onUserGmcp(const GmcpMessage &msg);
 
 private:
-    void parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc);
-    void parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc);
-    void parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc);
+    void parseIfGoodbye(GmcpMessage msg);
+    void parseIfReceivedComm(GmcpMessage msg);
+    void parseIfUpdatedChar(GmcpMessage msg);
+    void parseIfUpdatedXP(GmcpMessage msg);
 
     double checkpointXP();
 

@@ -1,4 +1,4 @@
-#include "charstatus.h"
+#include "adventureprogress.h"
 #include "QtCore/qdebug.h"
 
 AdventureProgress::AdventureProgress(QString charName)
@@ -23,12 +23,17 @@ double AdventureProgress::xpCurrent() const
     return m_xpCurrent;
 }
 
-double AdventureProgress::checkpointXP()
+double AdventureProgress::checkpointXPGained()
 {
     double xpGained = m_xpCurrent - m_xpCheckpoint;
     m_xpCheckpoint = m_xpCurrent;
 
     return xpGained;
+}
+
+double AdventureProgress::peekXPGained()
+{
+    return m_xpCurrent - m_xpCheckpoint;
 }
 
 void AdventureProgress::updateXP(double xpCurrent)

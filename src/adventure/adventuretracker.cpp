@@ -37,9 +37,9 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_achievementParser.parse(line)) {
+    if (m_achievementParser.parse(line) and m_Progress->peekXPGained() > 0.0) {
         auto achievement = m_achievementParser.getLastSuccessVal();
-        double xpGained = checkpointXP();
+        auto xpGained = checkpointXP();
         emit sig_achievedSomething(achievement, xpGained);
         return;
     }
@@ -49,14 +49,14 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_diedParser.parse(line)) {
-        double xpLost = checkpointXP();
+    if (m_diedParser.parse(line) and m_Progress->peekXPGained() < 0.0) {
+        auto xpLost = checkpointXP();
         emit sig_died(xpLost);
         return;
     }
 
     if (m_lostLevelParser.parse(line)) {
-        double xpLost = checkpointXP();
+        auto xpLost = checkpointXP();
         emit sig_lostLevel(xpLost);
         return;
     }
@@ -72,43 +72,41 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 
-    // REVISIT handle Goodbye() specially due to malloc bug in GmcpMessage
-    // when trying to extract the string via toQString() on that message
-    // type, needs more investigation.
-    if (msg.isCoreGoodbye() and m_Progress.has_value()) {
-        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_Progress->name());
-        emit sig_endedSession(m_Progress->name());
-        m_Progress.reset();
-        return;
+    if (msg.isCoreGoodbye()) {
+        parseIfGoodbye(msg);
     }
 
-    if (!(msg.isCharName() or msg.isCharStatusVars() or msg.isCharVitals()
-          or msg.isCommChannelText()))
-        return;
-
-    auto s = msg.getJson()->toQString().toUtf8();
-
-    QJsonDocument doc = QJsonDocument::fromJson(s);
-
-    if (!doc.isObject()) {
-        qInfo() << "Received GMCP: " << msg.getName().toQString()
-                << "containing invalid Json: expecting object, got: " << s;
-        return;
+    if (msg.isCommChannelText()) {
+        parseIfReceivedComm(msg);
     }
 
-    parseIfReceivedComm(msg, doc);
+    if (msg.isCharName() or msg.isCharStatusVars()) {
+        parseIfUpdatedChar(msg);
+    }
 
-    parseIfUpdatedChar(msg, doc);
-
-    parseIfUpdatedXP(msg, doc);
+    if (msg.isCharVitals()) {
+        parseIfUpdatedXP(msg);
+    }
 }
 
-void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
+void AdventureTracker::parseIfGoodbye(GmcpMessage msg)
 {
-    if (!msg.isCommChannelText())
+    // REVISIT If you try to call msg.getJson()->toQString().toUtf8() on a
+    // CoreGoodbye message, the GmcpMessage code crashes, trying to malloc a
+    // huge 0xffffffff chunk of memory. Needs investigation.
+
+    if (!m_Progress.has_value())
         return;
 
-    QJsonObject obj = doc.object();
+    qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_Progress->name());
+    emit sig_endedSession(m_Progress->name());
+    m_Progress.reset();
+}
+
+void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
+{
+    auto s = msg.getJson()->toQString().toUtf8();
+    QJsonObject obj = QJsonDocument::fromJson(s).object();
 
     if (!(obj.contains("channel") and obj.contains("text")))
         return;
@@ -121,12 +119,10 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg, QJsonDocument doc)
     }
 }
 
-void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
 {
-    if (!(msg.isCharName() or msg.isCharStatusVars()))
-        return;
-
-    QJsonObject obj = doc.object();
+    auto s = msg.getJson()->toQString().toUtf8();
+    QJsonObject obj = QJsonDocument::fromJson(s).object();
 
     if (!obj.contains("name"))
         return;
@@ -134,16 +130,16 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
     auto charName = obj["name"].toString();
 
     if (!m_Progress.has_value()) {
-        qDebug().noquote() << QString("Adventure: new adventure for char %1").arg(charName);
+        qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
         m_Progress.emplace(charName);
         emit sig_updatedChar(m_Progress->name());
     }
 
     if (m_Progress.has_value() and m_Progress->name() != charName) {
-        qDebug().noquote() << QString("Adventure: adventure ending for %1, new adventure for %2")
-                                  .arg(m_Progress->name())
-                                  .arg(charName);
+        qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
+                                  .arg(charName)
+                                  .arg(m_Progress->name());
 
         emit sig_endedSession(m_Progress->name());
         m_Progress.emplace(charName);
@@ -151,12 +147,10 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg, QJsonDocument doc)
     }
 }
 
-void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
+void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg)
 {
-    if (!msg.isCharVitals())
-        return;
-
-    QJsonObject obj = doc.object();
+    auto s = msg.getJson()->toQString().toUtf8();
+    QJsonObject obj = QJsonDocument::fromJson(s).object();
 
     if (!obj.contains("xp"))
         return;
@@ -172,7 +166,7 @@ void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg, QJsonDocument doc)
 double AdventureTracker::checkpointXP()
 {
     if (m_Progress.has_value()) {
-        return m_Progress->checkpointXP();
+        return m_Progress->checkpointXPGained();
     } else {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
         return 0;
