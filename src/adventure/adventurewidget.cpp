@@ -64,17 +64,32 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
 
 void AdventureWidget::slot_onAccomplishedTask(const double xpGained)
 {
-    addJournalEntry(QString(ACCOMPLISH_MSG).arg(formatXPGained(xpGained)));
+    // Only record accomplishedTask if actually gained xp to avoid spam, since
+    // sometimes it co-triggers with achievemnt and can be redundant.
+    if (xpGained > 0.0) {
+        auto msg = QString(ACCOMPLISH_MSG) + QString(XP_SUFFIX).arg(formatXPGained(xpGained));
+        addJournalEntry(msg);
+    }
 }
 
-void AdventureWidget::slot_onAchievedSomething(const QString &achivement, const double xpGained)
+void AdventureWidget::slot_onAchievedSomething(const QString &achievement, const double xpGained)
 {
-    addJournalEntry(QString(ACHIEVE_MSG).arg(achivement).arg(formatXPGained(xpGained)));
+    auto msg = QString(ACHIEVE_MSG).arg(achievement);
+
+    if (xpGained > 0.0)
+        msg = msg + QString(XP_SUFFIX).arg(formatXPGained(xpGained));
+
+    addJournalEntry(msg);
 }
 
 void AdventureWidget::slot_onDied(const double xpLost)
 {
-    addJournalEntry(QString(DIED_MSG).arg(formatXPGained(xpLost)));
+    auto msg = QString(DIED_MSG);
+
+    if (xpLost < 0.0)
+        msg = msg + QString(XP_SUFFIX).arg(formatXPGained(xpLost));
+
+    addJournalEntry(msg);
 }
 
 void AdventureWidget::slot_onGainedLevel()
@@ -84,12 +99,19 @@ void AdventureWidget::slot_onGainedLevel()
 
 void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
 {
-    addJournalEntry(QString(KILL_TROPHY_MSG).arg(mobName).arg(formatXPGained(xpGained)));
+    auto msg = QString(KILL_TROPHY_MSG).arg(mobName);
+
+    if (xpGained > 0.0)
+        msg = msg + QString(XP_SUFFIX).arg(formatXPGained(xpGained));
+
+    addJournalEntry(msg);
 }
 
 void AdventureWidget::slot_onReceivedHint(const QString &hint)
 {
-    addJournalEntry(QString(HINT_MSG).arg(hint));
+    auto msg = QString(HINT_MSG).arg(hint);
+
+    addJournalEntry(msg);
 }
 
 const QString AdventureWidget::formatXPGained(const double xpGained)

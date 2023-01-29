@@ -49,13 +49,13 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_taskCompleteParser.parse(line) and m_Progress->peekXPGained() > 0.0) {
+    if (m_taskCompleteParser.parse(line)) {
         auto xpGained = checkpointXP();
         emit sig_accomplishedTask(xpGained);
         return;
     }
 
-    if (m_diedParser.parse(line) and m_Progress->peekXPGained() < 0.0) {
+    if (m_diedParser.parse(line)) {
         auto xpLost = checkpointXP();
         emit sig_died(xpLost);
         return;
@@ -72,20 +72,24 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 
-    if (msg.isCoreGoodbye()) {
-        parseIfGoodbye(msg);
+    if (msg.isCharName()) {
+        parseIfUpdatedChar(msg);
+    }
+
+    if (msg.isCharStatusVars()) {
+        parseIfUpdatedChar(msg);
+    }
+
+    if (msg.isCharVitals()) {
+        parseIfUpdatedXP(msg);
     }
 
     if (msg.isCommChannelText()) {
         parseIfReceivedComm(msg);
     }
 
-    if (msg.isCharName() or msg.isCharStatusVars()) {
-        parseIfUpdatedChar(msg);
-    }
-
-    if (msg.isCharVitals()) {
-        parseIfUpdatedXP(msg);
+    if (msg.isCoreGoodbye()) {
+        parseIfGoodbye(msg);
     }
 }
 
