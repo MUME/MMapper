@@ -7,6 +7,15 @@ QString AbstractStatefulLineParser::getLastSuccessVal()
     return m_lastSuccessVal;
 }
 
+bool AccomplishedTaskParser::parse(QString line)
+{
+    // REVISIT: there are at least three different versions of this
+    //   accomplished
+    //   knowledgeable (xp?)
+    //   travelled (tp?)
+    return line.indexOf("With the task complete, you feel more") == 0;
+}
+
 bool AchievementParser::parse(QString line)
 {
     // An achivement event is:
@@ -87,13 +96,4 @@ bool KillAndXPParser::parse(QString line)
 
         return false;
     }
-}
-
-bool TaskCompleteParser::parse(QString line)
-{
-    // REVISIT: there are at least three different versions of this
-    //   accomplished
-    //   knowledgeable (xp?)
-    //   travelled (tp?)
-    return line.indexOf("With the task complete, you feel more") == 0;
 }

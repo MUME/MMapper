@@ -14,6 +14,12 @@ protected:
     QString m_lastSuccessVal;
 };
 
+class AccomplishedTaskParser : public AbstractStatefulLineParser
+{
+public:
+    bool parse(QString line) override;
+};
+
 class AchievementParser : public AbstractStatefulLineParser
 {
 public:
@@ -45,10 +51,4 @@ public:
 
 private:
     int m_linesSinceShareExp = 0;
-};
-
-class TaskCompleteParser : public AbstractStatefulLineParser
-{
-public:
-    bool parse(QString line) override;
 };

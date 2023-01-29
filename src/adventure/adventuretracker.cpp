@@ -49,7 +49,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
         return;
     }
 
-    if (m_taskCompleteParser.parse(line)) {
+    if (m_accomplishedTaskParser.parse(line)) {
         auto xpGained = checkpointXP();
         emit sig_accomplishedTask(xpGained);
         return;

@@ -40,6 +40,11 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     layout->addWidget(m_journalTextEdit);
 
     connect(&m_adventureTracker,
+            &AdventureTracker::sig_accomplishedTask,
+            this,
+            &AdventureWidget::slot_onAccomplishedTask);
+
+    connect(&m_adventureTracker,
             &AdventureTracker::sig_achievedSomething,
             this,
             &AdventureWidget::slot_onAchievedSomething);
