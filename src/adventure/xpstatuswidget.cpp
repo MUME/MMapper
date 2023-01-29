@@ -58,8 +58,6 @@ void XPStatusWidget::slot_updatedXP(const double xpInitial, const double xpCurre
 
 void XPStatusWidget::update()
 {
-    double xpGained = m_xpCurrent - m_xpInitial;
-
     if (m_charName.isEmpty()) {
         // newly initialized state
         setText("");
@@ -67,6 +65,7 @@ void XPStatusWidget::update()
         return;
     }
 
+    double xpGained = m_xpCurrent - m_xpInitial;
     auto s = AdventureWidget::formatXPGained(xpGained);
     setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
     show();
