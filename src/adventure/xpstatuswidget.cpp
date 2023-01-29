@@ -60,7 +60,7 @@ void XPStatusWidget::update()
 {
     double xpGained = m_xpCurrent - m_xpInitial;
 
-    if (xpGained == 0.0) {
+    if (m_charName.isEmpty()) {
         // newly initialized state
         setText("");
         hide();

@@ -69,8 +69,8 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
 
 void AdventureWidget::slot_onAccomplishedTask(const double xpGained)
 {
-    // Only record accomplishedTask if actually gained xp to avoid spam, since
-    // sometimes it co-triggers with achievemnt and can be redundant.
+    // Only record accomplishedTask if it actually has associated xp to avoid
+    // spam, since sometimes it co-triggers with achievemnt and can be redundant.
     if (xpGained > 0.0) {
         auto msg = QString(ACCOMPLISH_MSG) + QString(XP_SUFFIX).arg(formatXPGained(xpGained));
         addJournalEntry(msg);
