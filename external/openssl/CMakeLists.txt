@@ -98,7 +98,8 @@ elseif(WIN32 AND PERL_FOUND AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
             INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-bin"
             CONFIGURE_COMMAND ${PERL_EXECUTABLE} Configure --prefix=<INSTALL_DIR> --openssldir=<INSTALL_DIR> ${OPENSSL_CONFIGURATION}
 
-            BUILD_COMMAND make depend COMMAND make
+            BUILD_COMMAND make depends
+            COMMAND make
             INSTALL_COMMAND make install_sw
 
             UPDATE_COMMAND ""

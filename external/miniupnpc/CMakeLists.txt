@@ -29,12 +29,6 @@ else()
         message(FATAL_ERROR "MiniUPnPc NOT found: use `-DWITH_MINIUPNPC=OFF` to build without UPnP group manager port forwarding")
     endif()
 
-    if(WIN32)
-        set(MINIUPNPC_STATIC_LIBRARY_NAME libminiupnpc)
-    else()
-        set(MINIUPNPC_STATIC_LIBRARY_NAME miniupnpc)
-    endif()
-
     include(ExternalProject)
     ExternalProject_Add(miniupnpc
         URL "http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.2.3.tar.gz"
@@ -57,12 +51,12 @@ else()
         ALWAYS 0
 
         BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}${MINIUPNPC_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX}"
         )
     ExternalProject_Get_Property(miniupnpc SOURCE_DIR)
     ExternalProject_Get_Property(miniupnpc BINARY_DIR)
     set(MINIUPNPC_SHARED_LIBRARY ${BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(MINIUPNPC_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${MINIUPNPC_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(MINIUPNPC_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(MINIUPNPC_LIBRARIES ${MINIUPNPC_SHARED_LIBRARY} ${MINIUPNPC_STATIC_LIBRARY})
     if(MINIUPNPC_PREFER_STATIC_LIB)
         set(MINIUPNPC_LIBRARY ${MINIUPNPC_STATIC_LIBRARY})
