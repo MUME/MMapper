@@ -10,7 +10,6 @@
 #include <QDebug>
 
 #include "../configuration/configuration.h"
-#include "../global/enums.h"
 #include "../global/utils.h"
 #include "GroupSocket.h"
 #include "enums.h"
@@ -21,8 +20,11 @@
 #include <openssl/pem.h>
 #include <openssl/x509.h>
 
+#if OPENSSL_VERSION_NUMBER > 0x30000000L /* 3.0.x */
+#include <openssl/encoder.h>
+#endif
+
 using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&::EVP_PKEY_free)>;
-using BIGNUM_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
 using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
 using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 
@@ -31,29 +33,29 @@ NODISCARD static EVP_PKEY_ptr generatePrivateKey()
 {
     /* Allocate memory for the EVP_PKEY and BIGNUM structures. */
     EVP_PKEY_ptr pkey(EVP_PKEY_new(), ::EVP_PKEY_free);
-    if (!pkey) {
-        std::cerr << "Unable to create EVP_PKEY structure." << std::endl;
-        throw std::runtime_error("");
-    }
+    if (!pkey)
+        throw std::runtime_error("Unable to create EVP_PKEY structure.");
 
+    using BIGNUM_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
     BIGNUM_ptr bn(BN_new(), ::BN_free);
-    if (!bn) {
-        std::cerr << "Unable to create BIGNUM structure." << std::endl;
-        throw std::runtime_error("");
-    }
+    if (!bn)
+        throw std::runtime_error("Unable to create BIGNUM structure.");
     BN_set_word(bn.get(), RSA_F4);
 
-    /* Generate the RSA key and assign it to pkey. */
-    RSA *rsa = RSA_new(); // RSA object is freed with EVP_PKEY_free
-    if (RSA_generate_key_ex(rsa, 2048, bn.get(), nullptr) != 1) {
-        std::cerr << "Unable to generate 2048-bit RSA key." << std::endl;
-        throw std::runtime_error("");
-    }
+    using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&::EVP_PKEY_CTX_free)>;
+    EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr), ::EVP_PKEY_CTX_free);
+    if (!ctx)
+        throw std::runtime_error("Unable to allocate public key algorithm contex.");
 
-    if (!EVP_PKEY_assign_RSA(pkey.get(), rsa)) {
-        std::cerr << "Unable to assign 2048-bit RSA to private key." << std::endl;
-        throw std::runtime_error("");
-    }
+    if (EVP_PKEY_keygen_init(ctx.get()) <= 0)
+        throw std::runtime_error("Unable to initialize a public key algorithm.");
+
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), 2048) <= 0)
+        throw std::runtime_error("Unable to generate 2048-bit RSA key.");
+
+    auto key = pkey.get();
+    if (EVP_PKEY_keygen(ctx.get(), &key) <= 0)
+        throw std::runtime_error("Unable to write generated key to private key.");
 
     /* The key has been generated, return it. */
     return pkey;
@@ -64,10 +66,8 @@ NODISCARD static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
 {
     /* Allocate memory for the X509 structure. */
     X509_ptr x509(X509_new(), ::X509_free);
-    if (!x509) {
-        std::cerr << "Unable to create X509 structure." << std::endl;
-        throw std::runtime_error("");
-    }
+    if (!x509)
+        throw std::runtime_error("Unable to create X509 structure.");
 
     /* Set the serial number. */
     ASN1_INTEGER_set(X509_get_serialNumber(x509.get()), 1);
@@ -109,10 +109,8 @@ NODISCARD static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
     X509_set_issuer_name(x509.get(), name);
 
     /* Actually sign the certificate with our key. */
-    if (!X509_sign(x509.get(), pkey.get(), EVP_sha1())) {
-        std::cerr << "Error signing certificate." << std::endl;
-        throw std::runtime_error("");
-    }
+    if (!X509_sign(x509.get(), pkey.get(), EVP_sha1()))
+        throw std::runtime_error("Error signing certificate.");
 
     return x509;
 }
@@ -127,7 +125,7 @@ NODISCARD static QSslCertificate toSslCertificate(const X509_ptr &x509)
     if (rc != 1) {
         std::cerr << "PEM_write_bio_X509 failed, error " << err << ", ";
         std::cerr << std::hex << "0x" << err;
-        throw std::runtime_error("");
+        throw std::runtime_error("Encoding certificate failed.");
     }
 
     BUF_MEM *mem = nullptr;
@@ -137,27 +135,47 @@ NODISCARD static QSslCertificate toSslCertificate(const X509_ptr &x509)
     if (!mem || !mem->data || !mem->length) {
         std::cerr << "BIO_get_mem_ptr failed, error " << err << ", ";
         std::cerr << std::hex << "0x" << err;
-        throw std::runtime_error("");
+        throw std::runtime_error("Fetching certificate failed.");
     }
 
     QByteArray ba(mem->data, static_cast<int>(mem->length));
     setConfig().groupManager.certificate = ba;
-    return QSslCertificate(ba);
+    return QSslCertificate(ba, QSsl::EncodingFormat::Pem);
 }
 
 NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
 {
     BIO_MEM_ptr bio(BIO_new(BIO_s_mem()), ::BIO_free);
+    unsigned long err = ERR_get_error();
 
+#if OPENSSL_VERSION_NUMBER > 0x30000000L /* 3.0.x */
+    if (EVP_PKEY_get_base_id(pkey.get()) != EVP_PKEY_RSA)
+        throw std::runtime_error("Public key of x509 is not of type RSA.");
+
+    using OSSL_ENCODER_CTX_ptr
+        = std::unique_ptr<OSSL_ENCODER_CTX, decltype(&::OSSL_ENCODER_CTX_free)>;
+
+    static constexpr const auto selection = OSSL_KEYMGMT_SELECT_PRIVATE_KEY;
+    static constexpr const char *const format = "PEM";
+    static constexpr const char *const structure = "rsa";
+    OSSL_ENCODER_CTX_ptr
+        ectx(OSSL_ENCODER_CTX_new_for_pkey(pkey.get(), selection, format, structure, nullptr),
+             ::OSSL_ENCODER_CTX_free);
+    if (!ectx)
+        throw std::runtime_error("No suitable potential encoders found,");
+
+    if (!OSSL_ENCODER_to_bio(ectx.get(), bio.get()))
+        throw std::runtime_error("Encoding PEM failed.");
+#else
     RSA *const rsa = EVP_PKEY_get1_RSA(pkey.get()); // Get the underlying RSA key
     int rc = PEM_write_bio_RSAPrivateKey(bio.get(), rsa, nullptr, nullptr, 0, nullptr, nullptr);
-    unsigned long err = ERR_get_error();
 
     if (rc != 1) {
         std::cerr << "PEM_write_bio_RSAPrivateKey failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err;
+        std::cerr << std::hex << "0x" << err << std::endl;
         throw std::runtime_error("");
     }
+#endif
 
     BUF_MEM *mem = nullptr;
     BIO_get_mem_ptr(bio.get(), &mem);
@@ -165,8 +183,8 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
 
     if (!mem || !mem->data || !mem->length) {
         std::cerr << "BIO_get_mem_ptr failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err;
-        throw std::runtime_error("");
+        std::cerr << std::hex << "0x" << err << std::endl;
+        throw std::runtime_error("Fetching encoded key failed.");
     }
 
     QByteArray ba(mem->data, static_cast<int>(mem->length));
@@ -178,17 +196,21 @@ void GroupAuthority::refresh()
 {
     // https://gist.github.com/nathan-osman/5041136
     // https://forum.qt.io/topic/45728/generating-cert-key-during-run-time-for-qsslsocket/7
-    const auto pkey = generatePrivateKey();
-    const auto x509 = generateX509(pkey);
-    certificate = toSslCertificate(x509);
-    if (certificate.isNull()) {
-        qWarning() << "Unable to generate a valid certificate" << certificate;
+    try {
+        const auto pkey = generatePrivateKey();
+        const auto x509 = generateX509(pkey);
+        certificate = toSslCertificate(x509);
+        if (certificate.isNull()) {
+            qWarning() << "Unable to generate a valid certificate" << certificate;
+        }
+        key = toSslKey(pkey);
+        if (key.isNull()) {
+            qWarning() << "Unable to generate a valid private key" << key;
+        }
+        emit sig_secretRefreshed(getSecret());
+    } catch (const std::exception &ex) {
+        qWarning() << "Refresh error because:" << ex.what();
     }
-    key = toSslKey(pkey);
-    if (key.isNull()) {
-        qWarning() << "Unable to generate a valid private key" << key;
-    }
-    emit sig_secretRefreshed(getSecret());
 }
 #else
 void GroupAuthority::refresh()
