@@ -138,6 +138,7 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
 
         m_Progress.emplace(charName);
         emit sig_updatedChar(m_Progress->name());
+        return;
     }
 
     if (m_Progress.has_value() and m_Progress->name() != charName) {
