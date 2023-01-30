@@ -2,13 +2,16 @@
 #include "adventuretracker.h"
 #include "adventurewidget.h"
 
-XPStatusWidget::XPStatusWidget(AdventureTracker &at, QWidget *parent)
+XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent)
     : QPushButton(parent)
+    , m_statusBar{sb}
     , m_adventureTracker{at}
 {
     setFlat(true);
     setMaximumHeight(22);
     setToolTip("Click to open the Adventure Journal");
+
+    setMouseTracking(true);
 
     resetSession();
     update();
@@ -32,8 +35,43 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QWidget *parent)
 void XPStatusWidget::resetSession()
 {
     m_charName = "";
+    m_startTimePoint = std::chrono::steady_clock::now();
     m_xpInitial = 0.0;
     m_xpCurrent = 0.0;
+}
+
+void XPStatusWidget::update()
+{
+    if (m_charName.isEmpty()) {
+        // newly initialized state
+        setText("");
+        hide();
+        return;
+    }
+
+    double xpGained = m_xpCurrent - m_xpInitial;
+    auto s = AdventureWidget::formatXPGained(xpGained);
+    setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
+    show();
+    repaint();
+}
+
+void XPStatusWidget::enterEvent(QEvent *event)
+{
+    if (m_statusBar != nullptr) {
+        auto xpHourly = calculateXPHourlyRate();
+        auto msg = QString("Hourly rate: %1 XP").arg(AdventureWidget::formatXPGained(xpHourly));
+        m_statusBar->showMessage(msg);
+    }
+    QWidget::enterEvent(event);
+}
+
+void XPStatusWidget::leaveEvent(QEvent *event)
+{
+    if (m_statusBar != nullptr) {
+        m_statusBar->clearMessage();
+    }
+    QWidget::leaveEvent(event);
 }
 
 void XPStatusWidget::slot_endedSession(const QString charName)
@@ -53,21 +91,17 @@ void XPStatusWidget::slot_updatedXP(const double xpInitial, const double xpCurre
 {
     m_xpInitial = xpInitial;
     m_xpCurrent = xpCurrent;
+
     update();
 }
 
-void XPStatusWidget::update()
+double XPStatusWidget::calculateXPHourlyRate()
 {
-    if (m_charName.isEmpty()) {
-        // newly initialized state
-        setText("");
-        hide();
-        return;
-    }
+    auto n = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(n - m_startTimePoint);
 
-    double xpGained = m_xpCurrent - m_xpInitial;
-    auto s = AdventureWidget::formatXPGained(xpGained);
-    setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
-    show();
-    repaint();
+    double xpAllSessionPerSecond = (m_xpCurrent - m_xpInitial)
+                                   / static_cast<double>(elapsed.count());
+
+    return xpAllSessionPerSecond * 3600;
 }
