@@ -5,7 +5,8 @@
 XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent)
     : QPushButton(parent)
     , m_statusBar{sb}
-    , m_adventureTracker{at}
+    , m_tracker{at}
+    , m_session{}
 {
     setFlat(true);
     setMaximumHeight(22);
@@ -13,53 +14,37 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
 
     setMouseTracking(true);
 
-    resetSession();
     update();
 
-    connect(&m_adventureTracker,
+    connect(&m_tracker,
+            &AdventureTracker::sig_updatedSession,
+            this,
+            &XPStatusWidget::slot_updatedSession);
+
+    connect(&m_tracker,
             &AdventureTracker::sig_endedSession,
             this,
-            &XPStatusWidget::slot_endedSession);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_updatedXP,
-            this,
-            &XPStatusWidget::slot_updatedXP);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_updatedChar,
-            this,
-            &XPStatusWidget::slot_updatedChar);
-}
-
-void XPStatusWidget::resetSession()
-{
-    m_charName = "";
-    m_startTimePoint = std::chrono::steady_clock::now();
-    m_xpInitial = 0.0;
-    m_xpCurrent = 0.0;
+            &XPStatusWidget::slot_updatedSession);
 }
 
 void XPStatusWidget::update()
 {
-    if (m_charName.isEmpty()) {
-        // newly initialized state
+    if (m_session.has_value()) {
+        double xpGained = m_session->xpCurrent() - m_session->xpInitial();
+        auto s = AdventureWidget::formatXPGained(xpGained);
+        setText(QString("%1 Session: %2 XP").arg(m_session->name()).arg(s));
+        show();
+        repaint();
+    } else {
         setText("");
         hide();
-        return;
     }
-
-    double xpGained = m_xpCurrent - m_xpInitial;
-    auto s = AdventureWidget::formatXPGained(xpGained);
-    setText(QString("%1 Session: %2 XP").arg(m_charName).arg(s));
-    show();
-    repaint();
 }
 
 void XPStatusWidget::enterEvent(QEvent *event)
 {
     if (m_statusBar != nullptr) {
-        auto xpHourly = calculateXPHourlyRate();
+        auto xpHourly = calculateHourlyRateXP();
         auto msg = QString("Hourly rate: %1 XP").arg(AdventureWidget::formatXPGained(xpHourly));
         m_statusBar->showMessage(msg);
     }
@@ -74,34 +59,29 @@ void XPStatusWidget::leaveEvent(QEvent *event)
     QWidget::leaveEvent(event);
 }
 
-void XPStatusWidget::slot_endedSession(const QString charName)
+void XPStatusWidget::slot_updatedSession(AdventureSession session)
 {
-    resetSession();
-    // We do NOT call update() after resetSession() here, so that info stays
-    // visible for player to check later. Will be update()'d when new session
-}
-
-void XPStatusWidget::slot_updatedChar(const QString charName)
-{
-    m_charName = charName;
+    m_session = session;
     update();
 }
 
-void XPStatusWidget::slot_updatedXP(const double xpInitial, const double xpCurrent)
+double XPStatusWidget::calculateHourlyRateXP()
 {
-    m_xpInitial = xpInitial;
-    m_xpCurrent = xpCurrent;
+    if (m_session.has_value()) {
+        auto start = m_session->startTime();
+        auto end = std::chrono::steady_clock::now();
+        if (m_session->isEnded())
+            end = m_session->endTime();
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-    update();
-}
+        double xpAllSession = m_session->xpCurrent() - m_session->xpInitial();
+        double xpAllSessionPerSecond = xpAllSession / static_cast<double>(elapsed.count());
 
-double XPStatusWidget::calculateXPHourlyRate()
-{
-    auto n = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(n - m_startTimePoint);
+        qDebug().noquote() << QString("seconds %1 xp %2").arg(elapsed.count()).arg(xpAllSession);
 
-    double xpAllSessionPerSecond = (m_xpCurrent - m_xpInitial)
-                                   / static_cast<double>(elapsed.count());
+        return xpAllSessionPerSecond * 3600;
 
-    return xpAllSessionPerSecond * 3600;
+    } else {
+        return 0.0;
+    }
 }

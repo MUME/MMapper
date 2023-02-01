@@ -67,7 +67,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
             &AdventureWidget::slot_onReceivedHint);
 }
 
-void AdventureWidget::slot_onAccomplishedTask(const double xpGained)
+void AdventureWidget::slot_onAccomplishedTask(double xpGained)
 {
     // Only record accomplishedTask if it actually has associated xp to avoid
     // spam, since sometimes it co-triggers with achievemnt and can be redundant.
@@ -77,7 +77,7 @@ void AdventureWidget::slot_onAccomplishedTask(const double xpGained)
     }
 }
 
-void AdventureWidget::slot_onAchievedSomething(const QString &achievement, const double xpGained)
+void AdventureWidget::slot_onAchievedSomething(const QString &achievement, double xpGained)
 {
     auto msg = QString(ACHIEVE_MSG).arg(achievement);
 
@@ -87,7 +87,7 @@ void AdventureWidget::slot_onAchievedSomething(const QString &achievement, const
     addJournalEntry(msg);
 }
 
-void AdventureWidget::slot_onDied(const double xpLost)
+void AdventureWidget::slot_onDied(double xpLost)
 {
     auto msg = QString(DIED_MSG);
 
@@ -102,7 +102,7 @@ void AdventureWidget::slot_onGainedLevel()
     addJournalEntry(QString(GAINED_LEVEL_MSG));
 }
 
-void AdventureWidget::slot_onKilledMob(const QString &mobName, const double xpGained)
+void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
 {
     auto msg = QString(KILL_TROPHY_MSG).arg(mobName);
 
@@ -126,7 +126,7 @@ void AdventureWidget::slot_onReceivedHint(const QString &hint)
     addJournalEntry(msg);
 }
 
-const QString AdventureWidget::formatXPGained(const double xpGained)
+const QString AdventureWidget::formatXPGained(double xpGained)
 {
     if (abs(xpGained) < 1000) {
         return QString::number(xpGained);

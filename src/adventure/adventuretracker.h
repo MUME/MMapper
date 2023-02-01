@@ -1,6 +1,6 @@
 #pragma once
 
-#include "adventure/adventureprogress.h"
+#include "adventure/adventuresession.h"
 #include "adventure/lineparsers.h"
 #include "observer/gameobserver.h"
 #include <fstream>
@@ -11,20 +11,19 @@ class AdventureTracker final : public QObject
     Q_OBJECT
 public:
     explicit AdventureTracker(GameObserver &observer, QObject *const parent = nullptr);
-    ~AdventureTracker() final;
+    ~AdventureTracker() override;
 
 signals:
-    void sig_accomplishedTask(const double xpGained);
-    void sig_achievedSomething(const QString &achievement, const double xpGained);
-    void sig_died(const double xpLost);
-    void sig_endedSession(const QString charName);
+    void sig_accomplishedTask(double xpGained);
+    void sig_achievedSomething(const QString &achievement, double xpGained);
+    void sig_died(double xpLost);
+    void sig_endedSession(AdventureSession session);
     void sig_gainedLevel();
-    void sig_killedMob(const QString &mobName, const double xpGained);
+    void sig_killedMob(const QString &mobName, double xpGained);
     void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
-    void sig_updatedXP(const double xpInitial, const double xpCurrent);
-    void sig_updatedChar(const QString charName);
+    void sig_updatedSession(AdventureSession session);
 
 public slots:
     void slot_onUserText(const QByteArray &ba);
@@ -40,7 +39,7 @@ private:
 
     GameObserver &m_observer;
 
-    std::optional<AdventureProgress> m_Progress;
+    std::optional<AdventureSession> m_Session;
 
     AchievementParser m_achievementParser;
     DiedParser m_diedParser;

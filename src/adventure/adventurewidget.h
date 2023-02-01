@@ -25,14 +25,14 @@ public:
 
     explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
 
-    static const QString formatXPGained(const double xpGained);
+    static const QString formatXPGained(double xpGained);
 
 public slots:
-    void slot_onAccomplishedTask(const double xpGained);
-    void slot_onAchievedSomething(const QString &achivement, const double xpGained);
-    void slot_onDied(const double xpLost);
+    void slot_onAccomplishedTask(double xpGained);
+    void slot_onAchievedSomething(const QString &achivement, double xpGained);
+    void slot_onDied(double xpLost);
     void slot_onGainedLevel();
-    void slot_onKilledMob(const QString &mobName, const double xpGained);
+    void slot_onKilledMob(const QString &mobName, double xpGained);
     void slot_onReceivedHint(const QString &hint);
 
 private:

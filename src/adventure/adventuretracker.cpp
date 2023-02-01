@@ -93,18 +93,18 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
     }
 }
 
-void AdventureTracker::parseIfGoodbye(GmcpMessage msg)
+void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
 {
     // REVISIT If you try to call msg.getJson()->toQString().toUtf8() on a
     // CoreGoodbye message, the GmcpMessage code crashes, trying to malloc a
     // huge 0xffffffff chunk of memory. Needs investigation.
 
-    if (!m_Progress.has_value())
-        return;
-
-    qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_Progress->name());
-    emit sig_endedSession(m_Progress->name());
-    m_Progress.reset();
+    if (m_Session.has_value()) {
+        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_Session->name());
+        m_Session->endSession();
+        emit sig_endedSession(m_Session.value());
+        m_Session.reset();
+    }
 }
 
 void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
@@ -133,22 +133,23 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
 
     auto charName = obj["name"].toString();
 
-    if (!m_Progress.has_value()) {
+    if (!m_Session.has_value()) {
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
-        m_Progress.emplace(charName);
-        emit sig_updatedChar(m_Progress->name());
+        m_Session.emplace(charName);
+        emit sig_updatedSession(m_Session.value());
         return;
     }
 
-    if (m_Progress.has_value() and m_Progress->name() != charName) {
+    if (m_Session.has_value() and m_Session->name() != charName) {
         qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
                                   .arg(charName)
-                                  .arg(m_Progress->name());
+                                  .arg(m_Session->name());
 
-        emit sig_endedSession(m_Progress->name());
-        m_Progress.emplace(charName);
-        emit sig_updatedChar(m_Progress->name());
+        m_Session->endSession();
+        emit sig_endedSession(m_Session.value());
+        m_Session.emplace(charName);
+        emit sig_updatedSession(m_Session.value());
     }
 }
 
@@ -162,16 +163,16 @@ void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg)
 
     auto xpCurrent = obj["xp"].toDouble();
 
-    if (m_Progress.has_value()) {
-        m_Progress->updateXP(xpCurrent);
-        emit sig_updatedXP(m_Progress->xpInitial(), m_Progress->xpCurrent());
+    if (m_Session.has_value()) {
+        m_Session->updateXP(xpCurrent);
+        emit sig_updatedSession(m_Session.value());
     }
 }
 
 double AdventureTracker::checkpointXP()
 {
-    if (m_Progress.has_value()) {
-        return m_Progress->checkpointXPGained();
+    if (m_Session.has_value()) {
+        return m_Session->checkpointXPGained();
     } else {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
         return 0;

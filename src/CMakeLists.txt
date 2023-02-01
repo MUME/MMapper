@@ -1,7 +1,7 @@
 set(mmapper_SRCS
     main.cpp
-    adventure/adventureprogress.cpp
-    adventure/adventureprogress.h
+    adventure/adventuresession.cpp
+    adventure/adventuresession.h
     adventure/adventuretracker.cpp
     adventure/adventuretracker.h
     adventure/adventurewidget.cpp
