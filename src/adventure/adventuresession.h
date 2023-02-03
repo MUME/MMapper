@@ -12,6 +12,8 @@ public:
 
     ~AdventureSession() = default;
 
+    double checkpointXPGained();
+    void updateXP(double xp);
     void endSession();
 
     QString name() const;
@@ -20,9 +22,7 @@ public:
     bool isEnded() const;
     double xpInitial() const;
     double xpCurrent() const;
-
-    double checkpointXPGained();
-    void updateXP(double xp);
+    double calculateHourlyRateXP() const;
 
 private:
     QString m_charName;

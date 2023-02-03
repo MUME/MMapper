@@ -1,5 +1,8 @@
 #include "adventuresession.h"
 #include "QtCore/qdebug.h"
+#include "adventuretracker.h"
+#include "adventurewidget.h"
+#include "xpstatuswidget.h"
 
 AdventureSession::AdventureSession(QString charName)
     : m_charName{charName}
@@ -25,7 +28,7 @@ AdventureSession &AdventureSession::operator=(const AdventureSession &src)
 {
     m_charName = src.m_charName;
     m_startTimePoint = src.m_startTimePoint;
-    m_endTimePoint = src.m_startTimePoint;
+    m_endTimePoint = src.m_endTimePoint;
     m_isEnded = src.m_isEnded;
     m_xpInitial = src.m_xpInitial;
     m_xpCheckpoint = src.m_xpCheckpoint;
@@ -88,4 +91,20 @@ void AdventureSession::updateXP(double xp)
     }
 
     m_xpCurrent = xp;
+}
+
+double AdventureSession::calculateHourlyRateXP() const
+{
+    auto start = m_startTimePoint;
+    auto end = std::chrono::steady_clock::now();
+    if (m_isEnded)
+        end = m_endTimePoint;
+    auto elapsed = std::__1::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+    double xpAllSession = m_xpCurrent - m_xpInitial;
+    double xpAllSessionPerSecond = xpAllSession / static_cast<double>(elapsed.count());
+
+    qDebug().noquote() << QString("seconds %1 xp %2").arg(elapsed.count()).arg(xpAllSession);
+
+    return xpAllSessionPerSecond * 3600;
 }

@@ -1,8 +1,9 @@
 #include "xpstatuswidget.h"
+#include "adventuresession.h"
 #include "adventuretracker.h"
 #include "adventurewidget.h"
 
-XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent)
+XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar &sb, QWidget *parent)
     : QPushButton(parent)
     , m_statusBar{sb}
     , m_tracker{at}
@@ -43,19 +44,19 @@ void XPStatusWidget::updateContent()
 
 void XPStatusWidget::enterEvent(QEvent *event)
 {
-    if (m_statusBar != nullptr) {
-        auto xpHourly = calculateHourlyRateXP();
+    if (m_session.has_value()) {
+        auto xpHourly = m_session->calculateHourlyRateXP();
         auto msg = QString("Hourly rate: %1 XP").arg(AdventureWidget::formatXPGained(xpHourly));
-        m_statusBar->showMessage(msg);
+        m_statusBar.showMessage(msg);
     }
+
     QWidget::enterEvent(event);
 }
 
 void XPStatusWidget::leaveEvent(QEvent *event)
 {
-    if (m_statusBar != nullptr) {
-        m_statusBar->clearMessage();
-    }
+    m_statusBar.clearMessage();
+
     QWidget::leaveEvent(event);
 }
 
@@ -63,25 +64,4 @@ void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
 {
     m_session = session;
     updateContent();
-}
-
-double XPStatusWidget::calculateHourlyRateXP()
-{
-    if (m_session.has_value()) {
-        auto start = m_session->startTime();
-        auto end = std::chrono::steady_clock::now();
-        if (m_session->isEnded())
-            end = m_session->endTime();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-
-        double xpAllSession = m_session->xpCurrent() - m_session->xpInitial();
-        double xpAllSessionPerSecond = xpAllSession / static_cast<double>(elapsed.count());
-
-        qDebug().noquote() << QString("seconds %1 xp %2").arg(elapsed.count()).arg(xpAllSession);
-
-        return xpAllSessionPerSecond * 3600;
-
-    } else {
-        return 0.0;
-    }
 }

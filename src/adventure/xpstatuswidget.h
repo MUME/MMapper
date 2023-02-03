@@ -9,7 +9,7 @@ class XPStatusWidget : public QPushButton
 {
     Q_OBJECT
 public:
-    XPStatusWidget(AdventureTracker &at, QStatusBar *sb = nullptr, QWidget *parent = nullptr);
+    XPStatusWidget(AdventureTracker &at, QStatusBar &sb, QWidget *parent = nullptr);
 
 public slots:
     void slot_updatedSession(const AdventureSession &session);
@@ -19,10 +19,10 @@ protected:
     void leaveEvent(QEvent *event) override;
 
 private:
-    double calculateHourlyRateXP();
+
     void updateContent();
 
-    QStatusBar *m_statusBar;
+    QStatusBar &m_statusBar;
 
     AdventureTracker &m_tracker;
 
