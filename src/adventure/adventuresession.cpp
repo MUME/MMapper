@@ -99,12 +99,10 @@ double AdventureSession::calculateHourlyRateXP() const
     auto end = std::chrono::steady_clock::now();
     if (m_isEnded)
         end = m_endTimePoint;
-    auto elapsed = std::__1::chrono::duration_cast<std::chrono::seconds>(end - start);
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
     double xpAllSession = m_xpCurrent - m_xpInitial;
     double xpAllSessionPerSecond = xpAllSession / static_cast<double>(elapsed.count());
-
-    qDebug().noquote() << QString("seconds %1 xp %2").arg(elapsed.count()).arg(xpAllSession);
 
     return xpAllSessionPerSecond * 3600;
 }

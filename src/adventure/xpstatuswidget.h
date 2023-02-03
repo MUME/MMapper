@@ -19,7 +19,6 @@ protected:
     void leaveEvent(QEvent *event) override;
 
 private:
-
     void updateContent();
 
     QStatusBar &m_statusBar;

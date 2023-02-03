@@ -103,7 +103,7 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
     if (m_session != nullptr) {
         qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
         m_session->endSession();
-        emit sig_endedSession(deref(m_session));
+        emit sig_endedSession(*m_session);
         m_session.reset();
     }
 }
@@ -138,7 +138,7 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
         m_session = std::make_unique<AdventureSession>(charName);
-        emit sig_updatedSession(deref(m_session));
+        emit sig_updatedSession(*m_session);
         return;
     }
 
@@ -148,9 +148,9 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
                                   .arg(m_session->name());
 
         m_session->endSession();
-        emit sig_endedSession(deref(m_session));
+        emit sig_endedSession(*m_session);
         m_session = std::make_unique<AdventureSession>(charName);
-        emit sig_updatedSession(deref(m_session));
+        emit sig_updatedSession(*m_session);
     }
 }
 
@@ -166,7 +166,7 @@ void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg)
 
     if (m_session != nullptr) {
         m_session->updateXP(xpCurrent);
-        emit sig_updatedSession(deref(m_session));
+        emit sig_updatedSession(*m_session);
     }
 }
 
@@ -175,7 +175,7 @@ double AdventureTracker::checkpointXP()
     if (m_session != nullptr) {
         return m_session->checkpointXPGained();
     } else {
-        qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
+        qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid session.";
         return 0;
     }
 }

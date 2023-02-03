@@ -112,7 +112,7 @@ void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
         // When player gets XP from multiple kills on the same heartbeat, like
         // frequently happens with quake xp, then the first mob gets all the XP
         // attributed and the others are zero. No way to solve this given
-        // given current "protocol" of how MUME exposes information.
+        // current "protocol" of how MUME exposes information.
         msg = msg + QString(XP_SUFFIX).arg("?");
     }
 
