@@ -14,7 +14,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
 
     setMouseTracking(true);
 
-    update();
+    updateContent();
 
     connect(&m_tracker,
             &AdventureTracker::sig_updatedSession,
@@ -27,7 +27,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
             &XPStatusWidget::slot_updatedSession);
 }
 
-void XPStatusWidget::update()
+void XPStatusWidget::updateContent()
 {
     if (m_session.has_value()) {
         double xpGained = m_session->xpCurrent() - m_session->xpInitial();
@@ -61,10 +61,8 @@ void XPStatusWidget::leaveEvent(QEvent *event)
 
 void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
 {
-    qDebug() << "adventuremem: function param " << &session;
     m_session = session;
-    qDebug() << "adventuremem: member var " << &m_session;
-    update();
+    updateContent();
 }
 
 double XPStatusWidget::calculateHourlyRateXP()

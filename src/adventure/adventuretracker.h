@@ -17,7 +17,7 @@ signals:
     void sig_accomplishedTask(double xpGained);
     void sig_achievedSomething(const QString &achievement, double xpGained);
     void sig_died(double xpLost);
-    void sig_endedSession(AdventureSession session);
+    void sig_endedSession(const AdventureSession &session);
     void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, double xpGained);
     void sig_receivedHint(const QString &hint);
@@ -39,7 +39,7 @@ private:
 
     GameObserver &m_observer;
 
-    std::optional<AdventureSession> m_Session;
+    std::unique_ptr<AdventureSession> m_session;
 
     AchievementParser m_achievementParser;
     DiedParser m_diedParser;

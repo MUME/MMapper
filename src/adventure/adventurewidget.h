@@ -29,7 +29,7 @@ public:
 
 public slots:
     void slot_onAccomplishedTask(double xpGained);
-    void slot_onAchievedSomething(const QString &achivement, double xpGained);
+    void slot_onAchievedSomething(const QString &achievement, double xpGained);
     void slot_onDied(double xpLost);
     void slot_onGainedLevel();
     void slot_onKilledMob(const QString &mobName, double xpGained);

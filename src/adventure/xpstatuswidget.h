@@ -20,7 +20,7 @@ protected:
 
 private:
     double calculateHourlyRateXP();
-    void update();
+    void updateContent();
 
     QStatusBar *m_statusBar;
 

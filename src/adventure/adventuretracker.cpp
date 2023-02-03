@@ -9,6 +9,7 @@
 AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent)
     : QObject{parent}
     , m_observer{observer}
+    , m_session{nullptr}
 {
     connect(&m_observer,
             &GameObserver::sig_sentToUserText,
@@ -28,7 +29,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
     QString line = QString::fromLatin1(ba).trimmed();
     ParserUtils::removeAnsiMarksInPlace(line);
 
-    // Try to order these by frequency to minimize unneccessary parsing
+    // Try to order these by frequency to minimize unnecessary parsing
 
     if (m_killParser.parse(line)) {
         auto killName = m_killParser.getLastSuccessVal();
@@ -99,11 +100,11 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
     // CoreGoodbye message, the GmcpMessage code crashes, trying to malloc a
     // huge 0xffffffff chunk of memory. Needs investigation.
 
-    if (m_Session.has_value()) {
-        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_Session->name());
-        m_Session->endSession();
-        emit sig_endedSession(m_Session.value());
-        m_Session.reset();
+    if (m_session != nullptr) {
+        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
+        m_session->endSession();
+        emit sig_endedSession(deref(m_session));
+        m_session.reset();
     }
 }
 
@@ -133,23 +134,23 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
 
     auto charName = obj["name"].toString();
 
-    if (!m_Session.has_value()) {
+    if (m_session == nullptr) {
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
-        m_Session.emplace(charName);
-        emit sig_updatedSession(m_Session.value());
+        m_session = std::make_unique<AdventureSession>(charName);
+        emit sig_updatedSession(deref(m_session));
         return;
     }
 
-    if (m_Session.has_value() and m_Session->name() != charName) {
+    if (m_session != nullptr and m_session->name() != charName) {
         qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
                                   .arg(charName)
-                                  .arg(m_Session->name());
+                                  .arg(m_session->name());
 
-        m_Session->endSession();
-        emit sig_endedSession(m_Session.value());
-        m_Session.emplace(charName);
-        emit sig_updatedSession(m_Session.value());
+        m_session->endSession();
+        emit sig_endedSession(deref(m_session));
+        m_session = std::make_unique<AdventureSession>(charName);
+        emit sig_updatedSession(deref(m_session));
     }
 }
 
@@ -163,16 +164,16 @@ void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg)
 
     auto xpCurrent = obj["xp"].toDouble();
 
-    if (m_Session.has_value()) {
-        m_Session->updateXP(xpCurrent);
-        emit sig_updatedSession(m_Session.value());
+    if (m_session != nullptr) {
+        m_session->updateXP(xpCurrent);
+        emit sig_updatedSession(deref(m_session));
     }
 }
 
 double AdventureTracker::checkpointXP()
 {
-    if (m_Session.has_value()) {
-        return m_Session->checkpointXPGained();
+    if (m_session != nullptr) {
+        return m_session->checkpointXPGained();
     } else {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid state.";
         return 0;
