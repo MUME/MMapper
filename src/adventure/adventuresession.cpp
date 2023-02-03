@@ -9,7 +9,9 @@ AdventureSession::AdventureSession(QString charName)
     , m_xpInitial{0.0}
     , m_xpCheckpoint{0.0}
     , m_xpCurrent{0.0}
-{}
+{
+    qDebug() << "adventuremem: default constructor";
+}
 
 AdventureSession::AdventureSession(const AdventureSession &src)
     : m_charName{src.m_charName}
@@ -19,7 +21,9 @@ AdventureSession::AdventureSession(const AdventureSession &src)
     , m_xpInitial{src.m_xpInitial}
     , m_xpCheckpoint{src.m_xpCheckpoint}
     , m_xpCurrent{src.m_xpCurrent}
-{}
+{
+    qDebug() << "adventuremem: copy constructor";
+}
 
 AdventureSession &AdventureSession::operator=(const AdventureSession &src)
 {
@@ -30,6 +34,8 @@ AdventureSession &AdventureSession::operator=(const AdventureSession &src)
     m_xpInitial = src.m_xpInitial;
     m_xpCheckpoint = src.m_xpCheckpoint;
     m_xpCurrent = src.m_xpCurrent;
+
+    qDebug() << "adventuremem: assignment operator";
 
     return *this;
 }

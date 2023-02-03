@@ -59,9 +59,11 @@ void XPStatusWidget::leaveEvent(QEvent *event)
     QWidget::leaveEvent(event);
 }
 
-void XPStatusWidget::slot_updatedSession(AdventureSession session)
+void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
 {
+    qDebug() << "adventuremem: function param " << &session;
     m_session = session;
+    qDebug() << "adventuremem: member var " << &m_session;
     update();
 }
 

@@ -12,7 +12,7 @@ public:
     XPStatusWidget(AdventureTracker &at, QStatusBar *sb = nullptr, QWidget *parent = nullptr);
 
 public slots:
-    void slot_updatedSession(AdventureSession session);
+    void slot_updatedSession(const AdventureSession &session);
 
 protected:
     void enterEvent(QEvent *event) override;

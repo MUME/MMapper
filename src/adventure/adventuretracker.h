@@ -23,7 +23,7 @@ signals:
     void sig_receivedHint(const QString &hint);
     void sig_receivedNarrate(const QString &msg);
     void sig_receivedTell(const QString &msg);
-    void sig_updatedSession(AdventureSession session);
+    void sig_updatedSession(const AdventureSession &session);
 
 public slots:
     void slot_onUserText(const QByteArray &ba);
