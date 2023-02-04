@@ -84,16 +84,22 @@ jobs:
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
-    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
-      name: Prepare Environment for Windows
-      run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 
        #
        # Build
        #
-    - if: runner.os == 'Linux' || runner.os == 'macOS' || runner.os == 'Windows'
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Build MMapper for Windows
+      shell: pwsh
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+        mkdir -p build
+        cd build
+        cmake --version
+        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -S .. || exit -1
+        cmake --build .
+    - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
       run: |
         mkdir -p build
