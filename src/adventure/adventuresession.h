@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <QDebug>
 #include <QString>
 
 class AdventureSession
@@ -8,33 +9,28 @@ class AdventureSession
     template<typename T>
     struct Counter
     {
-        virtual ~Counter() = default;
-        virtual bool uninitialized() = 0;
+        T start, current;
+
         void update(T val)
         {
-            if (uninitialized()) {
-                initial = val;
-                checkpoint = val;
+            if (!initialized) {
+                start = val;
+                lastCheckpoint = val;
+                initialized = true;
             }
             current = val;
         }
-        T checkpointGained()
+        T checkpoint()
         {
-            T gained = checkpoint - current;
-            checkpoint = current;
+            T gained = current - lastCheckpoint;
+            lastCheckpoint = current;
             return gained;
         }
-
-        T initial, current;
+        T gainedSession() const { return current - start; }
 
     private:
-        T checkpoint;
-    };
-
-    struct PointCounter : Counter<double>
-    {
-        virtual ~PointCounter() override = default;
-        bool uninitialized() override;
+        bool initialized = false;
+        T lastCheckpoint;
     };
 
 public:
@@ -53,8 +49,8 @@ public:
     std::chrono::steady_clock::time_point startTime() const;
     std::chrono::steady_clock::time_point endTime() const;
     bool isEnded() const;
-    PointCounter tp() const;
-    PointCounter xp() const;
+    Counter<double> tp() const;
+    Counter<double> xp() const;
     double calculateHourlyRateTP() const;
     double calculateHourlyRateXP() const;
 
@@ -64,5 +60,5 @@ private:
     QString m_charName;
     std::chrono::steady_clock::time_point m_startTimePoint, m_endTimePoint;
     bool m_isEnded;
-    PointCounter m_xp, m_tp;
+    Counter<double> m_tp, m_xp;
 };

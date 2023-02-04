@@ -25,7 +25,7 @@ public:
 
     explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
 
-    static const QString formatXPGained(double xpGained);
+    static const QString formatPointsGained(double points);
 
 public slots:
     void slot_onAccomplishedTask(double xpGained);

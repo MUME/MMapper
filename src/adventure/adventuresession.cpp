@@ -4,19 +4,12 @@
 #include "adventurewidget.h"
 #include "xpstatuswidget.h"
 
-bool AdventureSession::PointCounter::uninitialized()
-{
-    // A class with virtuals needs at least one non-inline (i.e. source file defined) method
-    // to avoid clang -Wweak-vtables, which seems to be a controversial warning in general.
-    // https://stackoverflow.com/q/28786473/614880
-    return initial == 0.0;
-}
-
 AdventureSession::AdventureSession(QString charName)
     : m_charName{charName}
     , m_startTimePoint{std::chrono::steady_clock::now()}
     , m_endTimePoint{}
     , m_isEnded{false}
+    , m_tp{}
     , m_xp{}
 {}
 
@@ -25,6 +18,7 @@ AdventureSession::AdventureSession(const AdventureSession &src)
     , m_startTimePoint{src.m_startTimePoint}
     , m_endTimePoint{src.m_endTimePoint}
     , m_isEnded{src.m_isEnded}
+    , m_tp{src.m_tp}
     , m_xp{src.m_xp}
 {}
 
@@ -34,6 +28,7 @@ AdventureSession &AdventureSession::operator=(const AdventureSession &src)
     m_startTimePoint = src.m_startTimePoint;
     m_endTimePoint = src.m_endTimePoint;
     m_isEnded = src.m_isEnded;
+    m_tp = src.m_tp;
     m_xp = src.m_xp;
 
     return *this;
@@ -65,24 +60,24 @@ bool AdventureSession::isEnded() const
     return m_isEnded;
 }
 
-AdventureSession::PointCounter AdventureSession::tp() const
+AdventureSession::Counter<double> AdventureSession::tp() const
 {
     return m_tp;
 }
 
-AdventureSession::PointCounter AdventureSession::xp() const
+AdventureSession::Counter<double> AdventureSession::xp() const
 {
     return m_xp;
 }
 
 double AdventureSession::checkpointTPGained()
 {
-    return m_tp.checkpointGained();
+    return m_tp.checkpoint();
 }
 
 double AdventureSession::checkpointXPGained()
 {
-    return m_xp.checkpointGained();
+    return m_xp.checkpoint();
 }
 
 void AdventureSession::updateTP(double tp)
@@ -97,13 +92,13 @@ void AdventureSession::updateXP(double xp)
 
 double AdventureSession::calculateHourlyRateTP() const
 {
-    auto tpSessionPerSecond = (m_tp.current - m_tp.initial) / elapsedSeconds();
+    auto tpSessionPerSecond = (m_tp.current - m_tp.start) / elapsedSeconds();
     return tpSessionPerSecond * 3600;
 }
 
 double AdventureSession::calculateHourlyRateXP() const
 {
-    auto xpSessionPerSecond = (m_xp.current - m_xp.initial) / elapsedSeconds();
+    auto xpSessionPerSecond = (m_xp.current - m_xp.start) / elapsedSeconds();
     return xpSessionPerSecond * 3600;
 }
 

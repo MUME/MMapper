@@ -30,9 +30,12 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
 void XPStatusWidget::updateContent()
 {
     if (m_session.has_value()) {
-        double xpGained = m_session->xp().current - m_session->xp().initial;
-        auto s = AdventureWidget::formatXPGained(xpGained);
-        setText(QString("%1 Session: %2 XP").arg(m_session->name()).arg(s));
+        auto xpSession = m_session->xp().gainedSession();
+        auto tpSession = m_session->tp().gainedSession();
+        auto xpf = AdventureWidget::formatPointsGained(xpSession);
+        auto tpf = AdventureWidget::formatPointsGained(tpSession);
+        auto msg = QString("%1 Session: %2 XP %3 TP").arg(m_session->name()).arg(xpf).arg(tpf);
+        setText(msg);
         show();
         repaint();
     } else {
@@ -45,7 +48,10 @@ void XPStatusWidget::enterEvent(QEvent *event)
 {
     if (m_session.has_value()) {
         auto xpHourly = m_session->calculateHourlyRateXP();
-        auto msg = QString("Hourly rate: %1 XP").arg(AdventureWidget::formatXPGained(xpHourly));
+        auto tpHourly = m_session->calculateHourlyRateTP();
+        auto xpf = AdventureWidget::formatPointsGained(xpHourly);
+        auto tpf = AdventureWidget::formatPointsGained(tpHourly);
+        auto msg = QString("Hourly rate: %1 XP %2 TP").arg(xpf).arg(tpf);
         m_statusBar->showMessage(msg);
     }
 

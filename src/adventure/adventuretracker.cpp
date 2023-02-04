@@ -72,15 +72,15 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
     // https://mume.org/help/generic_mud_communication_protocol
 
     if (msg.isCharName()) {
-        parseIfUpdatedChar(msg);
+        parseIfUpdatedCharName(msg);
     }
 
     if (msg.isCharStatusVars()) {
-        parseIfUpdatedChar(msg);
+        parseIfUpdatedCharName(msg);
     }
 
     if (msg.isCharVitals()) {
-        parseIfUpdatedXP(msg);
+        parseIfUpdatedVitals(msg);
     }
 
     if (msg.isCommChannelText()) {
@@ -122,13 +122,15 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
     }
 }
 
-void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
+void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 {
     auto s = msg.getJson()->toQString().toUtf8();
     QJsonObject obj = QJsonDocument::fromJson(s).object();
 
-    if (!obj.contains("name"))
+    if (!obj.contains("name")) {
+        qDebug().noquote() << "Expected name key missing from Gmcp Json: " + s;
         return;
+    }
 
     auto charName = obj["name"].toString();
 
@@ -152,28 +154,37 @@ void AdventureTracker::parseIfUpdatedChar(GmcpMessage msg)
     }
 }
 
-void AdventureTracker::parseIfUpdatedXP(GmcpMessage msg)
+void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
 {
+    if (m_session == nullptr) {
+        qDebug().noquote() << "Adventure: can't update vitals without session.";
+        return;
+    }
+
     auto s = msg.getJson()->toQString().toUtf8();
     QJsonObject obj = QJsonDocument::fromJson(s).object();
 
-    if (!obj.contains("xp"))
-        return;
+    bool updated = false;
 
-    auto xpCurrent = obj["xp"].toDouble();
-
-    if (m_session != nullptr) {
-        m_session->updateXP(xpCurrent);
-        emit sig_updatedSession(*m_session);
+    if (obj.contains("xp")) {
+        m_session->updateXP(obj["xp"].toDouble());
+        updated = true;
     }
+
+    if (obj.contains("tp")) {
+        m_session->updateTP(obj["tp"].toDouble());
+        updated = true;
+    }
+
+    if (updated)
+        emit sig_updatedSession(*m_session);
 }
 
 double AdventureTracker::checkpointXP()
 {
-    if (m_session != nullptr) {
-        return m_session->checkpointXPGained();
-    } else {
+    if (m_session == nullptr) {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid session.";
         return 0;
     }
+    return m_session->checkpointXPGained();
 }

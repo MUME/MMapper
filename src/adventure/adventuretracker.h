@@ -32,8 +32,8 @@ public slots:
 private:
     void parseIfGoodbye(GmcpMessage msg);
     void parseIfReceivedComm(GmcpMessage msg);
-    void parseIfUpdatedChar(GmcpMessage msg);
-    void parseIfUpdatedXP(GmcpMessage msg);
+    void parseIfUpdatedCharName(GmcpMessage msg);
+    void parseIfUpdatedVitals(GmcpMessage msg);
 
     double checkpointXP();
 
