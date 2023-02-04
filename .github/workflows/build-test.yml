@@ -91,6 +91,7 @@ jobs:
        #
     - if: runner.os == 'Linux' || runner.os == 'macOS' || runner.os == 'Windows'
       name: Build MMapper for Linux and Mac
+      shell: bash
       run: |
         if [ "$OS" == "Windows_NT" ]; then
           call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
