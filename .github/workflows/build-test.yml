@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, macos-11.0, ubuntu-22.04]
+        os: [windows-2022, macos-11.0, ubuntu-22.04]
         compiler: ['clang', 'gcc', 'msvc']
         exclude:
         - os: ubuntu-22.04
@@ -23,9 +23,9 @@ jobs:
           compiler: 'gcc'
         - os: macos-11.0
           compiler: 'msvc'
-        - os: windows-2019
+        - os: windows-2022
           compiler: 'clang'
-        - os: windows-2019
+        - os: windows-2022
           compiler: 'gcc'
     steps:
     - uses: actions/checkout@v3
@@ -80,7 +80,7 @@ jobs:
       name: Install Packages for Windows
       uses: jurplel/install-qt-action@v3
       with:
-        version: ${{matrix.qt}}
+        version: 5.15.2
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
@@ -93,7 +93,7 @@ jobs:
       name: Build MMapper for Linux and Mac
       run: |
         if [ "$OS" == "Windows_NT" ]; then
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
         fi
         mkdir -p build
         cd build
