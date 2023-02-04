@@ -40,7 +40,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev libminiupnpc-dev
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -66,7 +66,7 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5 cmake openssl\@1.1 lcov miniupnpc ninja
+        brew install qt5 openssl\@1.1 lcov miniupnpc
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_UNITY_BUILD=false -DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
@@ -84,14 +84,17 @@ jobs:
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
-    - if: runner.os == 'Windows'
-      name: Setup MSVC for Windows
-      uses: ilammy/msvc-dev-cmd@v1
+    - uses: ilammy/msvc-dev-cmd@v1
+
+      #
+      # Install latest CMake and Ninja
+      #
+    - uses: lukka/get-cmake@latest
 
 
-       #
-       # Build
-       #
+      #
+      # Build
+      #
     - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
       name: Build MMapper for Windows
       shell: cmd
