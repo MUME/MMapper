@@ -102,7 +102,7 @@ jobs:
         mkdir -p build
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -S .. || exit -1
         cmake --build .
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
