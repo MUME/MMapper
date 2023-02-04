@@ -167,20 +167,20 @@ jobs:
       # 
     - name: Package MMapper
       run: cd build && cpack
-    - if: runner.os == 'Mac'
-      name: Upload Mac Package
+    - if: runner.os == 'macOS'
+      name: Upload Package for Mac
       uses: actions/upload-artifact@v3
       with:
         name: build-test Mac ${{ matrix.os }}
         path: ${{ github.workspace }}/artifact/*.dmg
     - if: contains( matrix.os, 'ubuntu' )
-      name: Upload Ubuntu Package
+      name: Upload Package for Ubuntu
       uses: actions/upload-artifact@v3
       with:
         name: build-test Linux ${{ matrix.os }}
         path: ${{ github.workspace }}/artifact/*.deb
     - if: runner.os == 'Windows'
-      name: Upload Windows Package
+      name: Upload Package for Windows
       uses: actions/upload-artifact@v3
       with:
         name: build-test Windows ${{ matrix.os }}
