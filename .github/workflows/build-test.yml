@@ -28,10 +28,10 @@ jobs:
         - os: windows-2022
           compiler: 'gcc'
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
+    - uses: lukka/get-cmake@latest
 
+    - if: matrix.compiler == 'msvc'
+      uses: ilammy/msvc-dev-cmd@v1
 
       #
       # Install Packages (Ubuntu)
@@ -84,13 +84,16 @@ jobs:
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
-        tools: 'tools_openssl_x64,1.1.1-10,qt.tools.openssl.win_x64'
-    - uses: ilammy/msvc-dev-cmd@v1
+        tools: 'tools_openssl_x64'
+
+
 
       #
-      # Install latest CMake and Ninja
+      # Checkout Source Tree
       #
-    - uses: lukka/get-cmake@latest
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
 
 
       #
