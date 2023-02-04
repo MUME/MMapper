@@ -79,7 +79,6 @@ jobs:
       # Install Packages (Windows)
       #
     - if: runner.os == 'Windows'
-      name: Install Packages for Windows
       uses: jurplel/install-qt-action@v3
       with:
         version: 5.15.2
@@ -101,7 +100,7 @@ jobs:
         mkdir -p build
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
         cmake --build .
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
