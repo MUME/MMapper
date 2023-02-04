@@ -2,9 +2,9 @@ name: Build MMapper
 
 on:
   push:
-  pull_request:
     branches:
     - master
+  pull_request:
   workflow_dispatch:
 
 jobs:
