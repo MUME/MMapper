@@ -89,7 +89,6 @@ jobs:
 
 
 
-
       #
       # Build
       #
@@ -97,7 +96,8 @@ jobs:
       name: Build MMapper for Windows
       shell: cmd
       run: |
-        mkdir -p build ${{ github.workspace }}/artifact
+        mkdir -p ${{ github.workspace }}/artifact
+        mkdir -p build
         cd build
         cmake --version
         cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
@@ -123,6 +123,18 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
         ASAN_OPTIONS: detect_leaks=0
+    - if: env.COVERAGE == 'true'
+      name: Transform test results from ctest to junit format
+      shell: pwsh
+      run: |
+        $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
+        $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
+        $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+    - if: env.COVERAGE == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results ${{ matrix.os }}
+        path: ctest-to-junit-results.xml
     - if: env.COVERAGE == 'true'
       name: Run lcov
       run: |
@@ -154,7 +166,18 @@ jobs:
       # 
     - name: Package MMapper
       run: cd build && cpack
-    - uses: actions/upload-artifact@v3
+    - if: runner.os == 'Mac'
+      uses: actions/upload-artifact@v3
       with:
-        name: build-test ${{ matrix.os }}
-        path: ${{ github.workspace }}/artifact
+        name: build-test Mac ${{ matrix.os }}
+        path: ${{ github.workspace }}/artifact/*.dmg
+    - if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-test Linux ${{ matrix.os }}
+        path: ${{ github.workspace }}/artifact/*.deb
+    - if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-test Windows ${{ matrix.os }}
+        path: ${{ github.workspace }}/artifact/*.exe
