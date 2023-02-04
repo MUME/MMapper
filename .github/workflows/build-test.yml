@@ -84,6 +84,9 @@ jobs:
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
+    - if: runner.os == 'Windows'
+      name: Setup MSVC for Windows
+      uses: ilammy/msvc-dev-cmd@v1
 
 
        #
@@ -93,7 +96,6 @@ jobs:
       name: Build MMapper for Windows
       shell: cmd
       run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
         mkdir -p build
         cd build
         cmake --version
