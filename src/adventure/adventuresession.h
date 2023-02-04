@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <QString>
 
 class AdventureSession
