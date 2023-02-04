@@ -119,7 +119,7 @@ jobs:
       name: Prepare lcov counters
       run: cd build && lcov --zerocounters --directory .
     - name: Run unit tests
-      run: cd build && ctest -V
+      run: cd build && ctest -V --no-compress-output -T test
       env:
         QT_QPA_PLATFORM: offscreen
         ASAN_OPTIONS: detect_leaks=0
@@ -131,6 +131,7 @@ jobs:
         $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
         $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
     - if: env.COVERAGE == 'true'
+      name: Upload test results
       uses: actions/upload-artifact@v3
       with:
         name: test-results ${{ matrix.os }}
@@ -167,16 +168,19 @@ jobs:
     - name: Package MMapper
       run: cd build && cpack
     - if: runner.os == 'Mac'
+      name: Upload Mac Package
       uses: actions/upload-artifact@v3
       with:
         name: build-test Mac ${{ matrix.os }}
         path: ${{ github.workspace }}/artifact/*.dmg
-    - if: runner.os == 'Linux'
+    - if: contains( matrix.os, 'ubuntu' )
+      name: Upload Ubuntu Package
       uses: actions/upload-artifact@v3
       with:
         name: build-test Linux ${{ matrix.os }}
         path: ${{ github.workspace }}/artifact/*.deb
     - if: runner.os == 'Windows'
+      name: Upload Windows Package
       uses: actions/upload-artifact@v3
       with:
         name: build-test Windows ${{ matrix.os }}
