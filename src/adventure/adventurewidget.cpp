@@ -1,6 +1,7 @@
 #include <QtCore>
 #include <QtWidgets>
 
+#include "adventuresession.h"
 #include "adventurewidget.h"
 #include "configuration/configuration.h"
 
@@ -72,7 +73,8 @@ void AdventureWidget::slot_onAccomplishedTask(double xpGained)
     // Only record accomplishedTask if it actually has associated xp to avoid
     // spam, since sometimes it co-triggers with achievemnt and can be redundant.
     if (xpGained > 0.0) {
-        auto msg = QString(ACCOMPLISH_MSG) + QString(XP_SUFFIX).arg(formatPointsGained(xpGained));
+        auto msg = QString(ACCOMPLISH_MSG)
+                   + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
         addJournalEntry(msg);
     }
 }
@@ -82,7 +84,7 @@ void AdventureWidget::slot_onAchievedSomething(const QString &achievement, doubl
     auto msg = QString(ACHIEVE_MSG).arg(achievement);
 
     if (xpGained > 0.0)
-        msg = msg + QString(XP_SUFFIX).arg(formatPointsGained(xpGained));
+        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
 
     addJournalEntry(msg);
 }
@@ -92,7 +94,7 @@ void AdventureWidget::slot_onDied(double xpLost)
     auto msg = QString(DIED_MSG);
 
     if (xpLost < 0.0)
-        msg = msg + QString(XP_SUFFIX).arg(formatPointsGained(xpLost));
+        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpLost));
 
     addJournalEntry(msg);
 }
@@ -107,7 +109,7 @@ void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
     auto msg = QString(KILL_TROPHY_MSG).arg(mobName);
 
     if (xpGained > 0.0) {
-        msg = msg + QString(XP_SUFFIX).arg(formatPointsGained(xpGained));
+        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
     } else {
         // When player gets XP from multiple kills on the same heartbeat, like
         // frequently happens with quake xp, then the first mob gets all the XP
@@ -124,19 +126,6 @@ void AdventureWidget::slot_onReceivedHint(const QString &hint)
     auto msg = QString(HINT_MSG).arg(hint);
 
     addJournalEntry(msg);
-}
-
-const QString AdventureWidget::formatPointsGained(double points)
-{
-    if (abs(points) < 1000) {
-        return QString::number(points);
-    }
-
-    if (abs(points) < (20 * 1000)) {
-        return QString::number(points / 1000, 'f', 1) + "k";
-    }
-
-    return QString::number(points / 1000, 'f', 0) + "k";
 }
 
 void AdventureWidget::addJournalEntry(const QString &msg)

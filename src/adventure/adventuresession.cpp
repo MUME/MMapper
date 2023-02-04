@@ -2,7 +2,10 @@
 #include "QtCore/qdebug.h"
 #include "adventuretracker.h"
 #include "adventurewidget.h"
+#include "configuration/configuration.h"
 #include "xpstatuswidget.h"
+#include <QtCore>
+#include <QtWidgets>
 
 AdventureSession::AdventureSession(QString charName)
     : m_charName{charName}
@@ -111,4 +114,17 @@ double AdventureSession::elapsedSeconds() const
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
     return static_cast<double>(elapsed.count());
+}
+
+const QString AdventureSession::formatPoints(double points)
+{
+    if (abs(points) < 1000) {
+        return QString::number(points, 'f', 0);
+    }
+
+    if (abs(points) < (20 * 1000)) {
+        return QString::number(points / 1000, 'f', 1) + "k";
+    }
+
+    return QString::number(points / 1000, 'f', 0) + "k";
 }

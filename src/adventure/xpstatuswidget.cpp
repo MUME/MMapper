@@ -32,8 +32,8 @@ void XPStatusWidget::updateContent()
     if (m_session.has_value()) {
         auto xpSession = m_session->xp().gainedSession();
         auto tpSession = m_session->tp().gainedSession();
-        auto xpf = AdventureWidget::formatPointsGained(xpSession);
-        auto tpf = AdventureWidget::formatPointsGained(tpSession);
+        auto xpf = AdventureSession::formatPoints(xpSession);
+        auto tpf = AdventureSession::formatPoints(tpSession);
         auto msg = QString("%1 Session: %2 XP %3 TP").arg(m_session->name()).arg(xpf).arg(tpf);
         setText(msg);
         show();
@@ -49,8 +49,8 @@ void XPStatusWidget::enterEvent(QEvent *event)
     if (m_session.has_value()) {
         auto xpHourly = m_session->calculateHourlyRateXP();
         auto tpHourly = m_session->calculateHourlyRateTP();
-        auto xpf = AdventureWidget::formatPointsGained(xpHourly);
-        auto tpf = AdventureWidget::formatPointsGained(tpHourly);
+        auto xpf = AdventureSession::formatPoints(xpHourly);
+        auto tpf = AdventureSession::formatPoints(tpHourly);
         auto msg = QString("Hourly rate: %1 XP %2 TP").arg(xpf).arg(tpf);
         m_statusBar->showMessage(msg);
     }

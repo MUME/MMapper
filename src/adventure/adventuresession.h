@@ -1,8 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <QDebug>
 #include <QString>
+#include <QtCore>
 
 class AdventureSession
 {
@@ -53,6 +53,8 @@ public:
     Counter<double> xp() const;
     double calculateHourlyRateTP() const;
     double calculateHourlyRateXP() const;
+
+    static const QString formatPoints(double points);
 
 private:
     double elapsedSeconds() const;
