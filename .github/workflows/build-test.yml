@@ -1,4 +1,4 @@
-name: Build MMapper
+name: build-test
 
 on:
   push:
@@ -50,7 +50,7 @@ jobs:
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-11" >> $GITHUB_ENV
         echo "CXX=g++-11" >> $GITHUB_ENV
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_UNITY_BUILD=false -DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
@@ -71,7 +71,7 @@ jobs:
         brew install qt5 openssl\@1.1 lcov miniupnpc
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_UNITY_BUILD=false -DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
 
 
@@ -97,18 +97,18 @@ jobs:
       name: Build MMapper for Windows
       shell: cmd
       run: |
-        mkdir -p build
+        mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
         cmake --build . -j %NUMBER_OF_PROCESSORS%
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
       run: |
-        mkdir -p build
+        mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' $MMAPPER_CMAKE_EXTRA -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DUSE_UNITY_BUILD=false -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -S .. || exit -1
         cmake --build .
 
 
@@ -154,3 +154,7 @@ jobs:
       # 
     - name: Package MMapper
       run: cd build && cpack
+    - uses: actions/upload-artifact@v3
+      with:
+        name: build-test ${{ matrix.os }}
+        path: ${{ github.workspace }}/artifact
