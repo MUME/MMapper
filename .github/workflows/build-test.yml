@@ -84,6 +84,10 @@ jobs:
         dir: ${{runner.workspace}}
         arch: win64_msvc2019_64
         cache: true
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Prepare Environment for Windows
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 
        #
@@ -91,11 +95,7 @@ jobs:
        #
     - if: runner.os == 'Linux' || runner.os == 'macOS' || runner.os == 'Windows'
       name: Build MMapper for Linux and Mac
-      shell: bash
       run: |
-        if [ "$OS" == "Windows_NT" ]; then
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-        fi
         mkdir -p build
         cd build
         cmake --version
