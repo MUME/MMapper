@@ -11,7 +11,6 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar &sb, QWidget *pa
 {
     setFlat(true);
     setMaximumHeight(22);
-    setToolTip("Click to open the Adventure Journal");
 
     setMouseTracking(true);
 
