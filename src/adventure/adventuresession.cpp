@@ -4,14 +4,20 @@
 #include "adventurewidget.h"
 #include "xpstatuswidget.h"
 
+bool AdventureSession::PointCounter::uninitialized()
+{
+    // A class with virtuals needs at least one non-inline (i.e. source file defined) method
+    // to avoid clang -Wweak-vtables, which seems to be a controversial warning in general.
+    // https://stackoverflow.com/q/28786473/614880
+    return initial == 0.0;
+}
+
 AdventureSession::AdventureSession(QString charName)
     : m_charName{charName}
     , m_startTimePoint{std::chrono::steady_clock::now()}
     , m_endTimePoint{}
     , m_isEnded{false}
-    , m_xpInitial{0.0}
-    , m_xpCheckpoint{0.0}
-    , m_xpCurrent{0.0}
+    , m_xp{}
 {}
 
 AdventureSession::AdventureSession(const AdventureSession &src)
@@ -19,9 +25,7 @@ AdventureSession::AdventureSession(const AdventureSession &src)
     , m_startTimePoint{src.m_startTimePoint}
     , m_endTimePoint{src.m_endTimePoint}
     , m_isEnded{src.m_isEnded}
-    , m_xpInitial{src.m_xpInitial}
-    , m_xpCheckpoint{src.m_xpCheckpoint}
-    , m_xpCurrent{src.m_xpCurrent}
+    , m_xp{src.m_xp}
 {}
 
 AdventureSession &AdventureSession::operator=(const AdventureSession &src)
@@ -30,9 +34,7 @@ AdventureSession &AdventureSession::operator=(const AdventureSession &src)
     m_startTimePoint = src.m_startTimePoint;
     m_endTimePoint = src.m_endTimePoint;
     m_isEnded = src.m_isEnded;
-    m_xpInitial = src.m_xpInitial;
-    m_xpCheckpoint = src.m_xpCheckpoint;
-    m_xpCurrent = src.m_xpCurrent;
+    m_xp = src.m_xp;
 
     return *this;
 }
@@ -63,37 +65,49 @@ bool AdventureSession::isEnded() const
     return m_isEnded;
 }
 
-double AdventureSession::xpInitial() const
+AdventureSession::PointCounter AdventureSession::tp() const
 {
-    return m_xpInitial;
+    return m_tp;
 }
 
-double AdventureSession::xpCurrent() const
+AdventureSession::PointCounter AdventureSession::xp() const
 {
-    return m_xpCurrent;
+    return m_xp;
+}
+
+double AdventureSession::checkpointTPGained()
+{
+    return m_tp.checkpointGained();
 }
 
 double AdventureSession::checkpointXPGained()
 {
-    double xpGained = m_xpCurrent - m_xpCheckpoint;
-    m_xpCheckpoint = m_xpCurrent;
+    return m_xp.checkpointGained();
+}
 
-    return xpGained;
+void AdventureSession::updateTP(double tp)
+{
+    m_tp.update(tp);
 }
 
 void AdventureSession::updateXP(double xp)
 {
-    if (m_xpInitial == 0.0) {
-        qDebug().noquote() << QString("Adventure: initial XP: %1").arg(QString::number(xp, 'f', 0));
+    m_xp.update(xp);
+}
 
-        m_xpInitial = xp;
-        m_xpCheckpoint = xp;
-    }
-
-    m_xpCurrent = xp;
+double AdventureSession::calculateHourlyRateTP() const
+{
+    auto tpSessionPerSecond = (m_tp.current - m_tp.initial) / elapsedSeconds();
+    return tpSessionPerSecond * 3600;
 }
 
 double AdventureSession::calculateHourlyRateXP() const
+{
+    auto xpSessionPerSecond = (m_xp.current - m_xp.initial) / elapsedSeconds();
+    return xpSessionPerSecond * 3600;
+}
+
+double AdventureSession::elapsedSeconds() const
 {
     auto start = m_startTimePoint;
     auto end = std::chrono::steady_clock::now();
@@ -101,8 +115,5 @@ double AdventureSession::calculateHourlyRateXP() const
         end = m_endTimePoint;
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-    double xpAllSession = m_xpCurrent - m_xpInitial;
-    double xpAllSessionPerSecond = xpAllSession / static_cast<double>(elapsed.count());
-
-    return xpAllSessionPerSecond * 3600;
+    return static_cast<double>(elapsed.count());
 }

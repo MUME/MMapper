@@ -30,7 +30,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
 void XPStatusWidget::updateContent()
 {
     if (m_session.has_value()) {
-        double xpGained = m_session->xpCurrent() - m_session->xpInitial();
+        double xpGained = m_session->xp().current - m_session->xp().initial;
         auto s = AdventureWidget::formatXPGained(xpGained);
         setText(QString("%1 Session: %2 XP").arg(m_session->name()).arg(s));
         show();
