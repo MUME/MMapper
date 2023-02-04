@@ -91,7 +91,7 @@ jobs:
        #
     - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
       name: Build MMapper for Windows
-      shell: pwsh
+      shell: cmd
       run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
         mkdir -p build
