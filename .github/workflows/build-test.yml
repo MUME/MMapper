@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-11.0, windows-server-2022]
+        os: [windows-server-2022, macos-11.0, ubuntu-22.04]
         compiler: ['clang', 'gcc', 'msvc']
         exclude:
         - os: ubuntu-22.04
@@ -90,6 +90,9 @@ jobs:
     - if: runner.os == 'Linux' || runner.os == 'macOS' || runner.os == 'Windows'
       name: Build MMapper for Linux and Mac
       run: |
+        if [ "$OS" == "Windows_NT" ]; then
+          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+        fi
         mkdir -p build
         cd build
         cmake --version
