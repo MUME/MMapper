@@ -10,7 +10,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
     , m_session{}
 {
     setFlat(true);
-    setMaximumHeight(22);
+    setStyleSheet("QPushButton { border: none; outline: none; }");
 
     setMouseTracking(true);
 
