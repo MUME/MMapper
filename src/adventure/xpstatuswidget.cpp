@@ -3,7 +3,7 @@
 #include "adventuretracker.h"
 #include "adventurewidget.h"
 
-XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar &sb, QWidget *parent)
+XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent)
     : QPushButton(parent)
     , m_statusBar{sb}
     , m_tracker{at}
@@ -46,7 +46,7 @@ void XPStatusWidget::enterEvent(QEvent *event)
     if (m_session.has_value()) {
         auto xpHourly = m_session->calculateHourlyRateXP();
         auto msg = QString("Hourly rate: %1 XP").arg(AdventureWidget::formatXPGained(xpHourly));
-        m_statusBar.showMessage(msg);
+        m_statusBar->showMessage(msg);
     }
 
     QWidget::enterEvent(event);
@@ -54,7 +54,7 @@ void XPStatusWidget::enterEvent(QEvent *event)
 
 void XPStatusWidget::leaveEvent(QEvent *event)
 {
-    m_statusBar.clearMessage();
+    m_statusBar->clearMessage();
 
     QWidget::leaveEvent(event);
 }
