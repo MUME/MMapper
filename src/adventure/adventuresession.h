@@ -10,8 +10,6 @@ public:
     AdventureSession(const AdventureSession &src);
     AdventureSession &operator=(const AdventureSession &src);
 
-    ~AdventureSession() = default;
-
     double checkpointXPGained();
     void updateXP(double xp);
     void endSession();

@@ -22,8 +22,6 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
             &AdventureTracker::slot_onUserGmcp);
 }
 
-AdventureTracker::~AdventureTracker() {}
-
 void AdventureTracker::slot_onUserText(const QByteArray &ba)
 {
     QString line = QString::fromLatin1(ba).trimmed();
