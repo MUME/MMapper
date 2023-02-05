@@ -142,7 +142,10 @@ jobs:
         lcov --directory . --capture --output-file coverage.info
         lcov --list coverage.info
         lcov --remove coverage.info '/usr/*' --output-file filtered.info
-        bash <(curl -s https://codecov.io/bash) -f filtered.info || echo "codecov.io did not collect coverage reports" 
+    - if: env.COVERAGE == 'true'
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./build/filtered.info
     - if: env.STYLE == 'true'
       name: Text Encoding Sanity Check
       run: |
