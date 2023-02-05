@@ -1,10 +1,6 @@
 #include "adventuresession.h"
 #include "QtCore/qdebug.h"
-#include "adventuretracker.h"
-#include "adventurewidget.h"
-#include "configuration/configuration.h"
 #include "xpstatuswidget.h"
-#include <QtCore>
 #include <QtWidgets>
 
 AdventureSession::AdventureSession(QString charName)
@@ -97,25 +93,24 @@ void AdventureSession::updateXP(double xp)
 
 double AdventureSession::calculateHourlyRateTP() const
 {
-    auto tpSessionPerSecond = (m_tp.current - m_tp.start) / elapsedSeconds();
-    return tpSessionPerSecond * 3600;
+    return calculateHourlyRate(m_tp.gainedSession());
 }
 
 double AdventureSession::calculateHourlyRateXP() const
 {
-    auto xpSessionPerSecond = (m_xp.current - m_xp.start) / elapsedSeconds();
-    return xpSessionPerSecond * 3600; // TODO fix with std::chrono::hour
+    return calculateHourlyRate(m_xp.gainedSession());
 }
 
-double AdventureSession::elapsedSeconds() const
+double AdventureSession::calculateHourlyRate(double points) const
 {
-    auto start = m_startTimePoint;
-    auto end = std::chrono::steady_clock::now();
-    if (m_isEnded)
-        end = m_endTimePoint;
-    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+    return points / static_cast<double>(elapsed().count())
+           * std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours(1)).count();
+}
 
-    return static_cast<double>(elapsed.count());
+std::chrono::seconds AdventureSession::elapsed() const
+{
+    auto end = m_isEnded ? m_endTimePoint : std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::seconds>(end - m_startTimePoint);
 }
 
 const QString AdventureSession::formatPoints(double points)

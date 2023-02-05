@@ -11,6 +11,13 @@ class AdventureSession
     {
         T start, current;
 
+        T checkpoint()
+        {
+            T gained = current - lastCheckpoint;
+            lastCheckpoint = current;
+            return gained;
+        }
+        T gainedSession() const { return current - start; }
         void update(T val)
         {
             if (!initialized) {
@@ -20,13 +27,6 @@ class AdventureSession
             }
             current = val;
         }
-        T checkpoint()
-        {
-            T gained = current - lastCheckpoint;
-            lastCheckpoint = current;
-            return gained;
-        }
-        T gainedSession() const { return current - start; }
 
     private:
         bool initialized = false;
@@ -53,11 +53,11 @@ public:
     Counter<double> xp() const;
     double calculateHourlyRateTP() const;
     double calculateHourlyRateXP() const;
-
     static const QString formatPoints(double points);
 
 private:
-    double elapsedSeconds() const;
+    double calculateHourlyRate(double points) const;
+    std::chrono::seconds elapsed() const;
 
     QString m_charName;
     std::chrono::steady_clock::time_point m_startTimePoint, m_endTimePoint;
