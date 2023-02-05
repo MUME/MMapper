@@ -132,7 +132,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
-        name: test-results ${{ matrix.os }}
+        name: test-results ${{ matrix.os }} ${{ matrix.compiler }}
         path: ctest-to-junit-results.xml
     - if: env.COVERAGE == 'true'
       name: Run lcov
@@ -169,17 +169,17 @@ jobs:
       name: Upload Package for Mac
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Mac ${{ matrix.os }}
+        name: build-test Mac ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.dmg
     - if: contains( matrix.os, 'ubuntu' )
       name: Upload Package for Ubuntu
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Linux ${{ matrix.os }}
+        name: build-test Linux ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.deb
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Windows ${{ matrix.os }}
+        name: build-test Windows ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.exe
