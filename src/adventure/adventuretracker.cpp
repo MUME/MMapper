@@ -111,7 +111,7 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
     auto s = msg.getJson()->toQString().toUtf8();
     QJsonObject obj = QJsonDocument::fromJson(s).object();
 
-    if (!(obj.contains("channel") and obj.contains("text")))
+    if (!(obj.contains("channel") && obj.contains("text")))
         return;
 
     if (obj["channel"].toString() == "tells") {
@@ -142,7 +142,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
         return;
     }
 
-    if (m_session != nullptr and m_session->name() != charName) {
+    if (m_session != nullptr && m_session->name() != charName) {
         qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
                                   .arg(charName)
                                   .arg(m_session->name());
