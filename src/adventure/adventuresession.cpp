@@ -39,11 +39,13 @@ AdventureSession &AdventureSession::operator=(const AdventureSession &src)
 
 void AdventureSession::endSession()
 {
-    m_isEnded = true;
-    m_endTimePoint = std::chrono::steady_clock::now();
+    if (!m_isEnded) {
+        m_endTimePoint = std::chrono::steady_clock::now();
+        m_isEnded = true;
+    }
 }
 
-QString AdventureSession::name() const
+const QString &AdventureSession::name() const
 {
     return m_charName;
 }
@@ -102,7 +104,7 @@ double AdventureSession::calculateHourlyRateTP() const
 double AdventureSession::calculateHourlyRateXP() const
 {
     auto xpSessionPerSecond = (m_xp.current - m_xp.start) / elapsedSeconds();
-    return xpSessionPerSecond * 3600;
+    return xpSessionPerSecond * 3600; // TODO fix with std::chrono::hour
 }
 
 double AdventureSession::elapsedSeconds() const

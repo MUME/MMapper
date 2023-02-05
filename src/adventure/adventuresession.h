@@ -45,7 +45,7 @@ public:
     void updateXP(double xp);
     void endSession();
 
-    QString name() const;
+    const QString &name() const;
     std::chrono::steady_clock::time_point startTime() const;
     std::chrono::steady_clock::time_point endTime() const;
     bool isEnded() const;

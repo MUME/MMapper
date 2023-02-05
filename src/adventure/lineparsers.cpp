@@ -13,12 +13,12 @@ bool AccomplishedTaskParser::parse(QString line)
     //   accomplished
     //   knowledgeable (xp?)
     //   travelled (tp?)
-    return line.indexOf("With the task complete, you feel more") == 0;
+    return line.startsWith("With the task complete, you feel more");
 }
 
 bool AchievementParser::parse(QString line)
 {
-    // An achivement event is:
+    // An achievement event is:
     //   (1) A line matching exactly "You achieved something new!"
     //   (2) The next line is interpreted as the achievement text.
 
@@ -28,19 +28,19 @@ bool AchievementParser::parse(QString line)
         return true;
     }
 
-    m_pending = (line.indexOf("You achieved something new!") == 0);
+    m_pending = line.startsWith("You achieved something new!");
 
     return false;
 }
 
 bool DiedParser::parse(QString line)
 {
-    return (line.indexOf("You are dead! Sorry...") == 0);
+    return line.startsWith("You are dead! Sorry...");
 }
 
 bool GainedLevelParser::parse(QString line)
 {
-    return (line.indexOf("You gain a level!") == 0);
+    return line.startsWith("You gain a level!");
 }
 
 bool HintParser::parse(QString line)
@@ -54,7 +54,7 @@ bool HintParser::parse(QString line)
         return true;
     }
 
-    m_pending = (line.indexOf("# Hint:") == 0);
+    m_pending = line.startsWith("# Hint:");
     return false;
 }
 
@@ -66,7 +66,7 @@ bool KillAndXPParser::parse(QString line)
     //   (2a) matching " is dead! R.I.P."
     //   (2b) OR matching " disappears into nothing."
 
-    if (line.indexOf("You receive your share of experience.") == 0) {
+    if (line.startsWith("You receive your share of experience.")) {
         m_pending = true;
         m_linesSinceShareExp = 0;
         return false;

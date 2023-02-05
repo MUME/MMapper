@@ -130,10 +130,7 @@ void AdventureWidget::slot_onReceivedHint(const QString &hint)
 
 void AdventureWidget::addJournalEntry(const QString &msg)
 {
-    auto prepend = "\n";
-    if (m_numMessagesReceived == 0) {
-        prepend = "";
-    }
+    const auto prepend = (m_numMessagesReceived == 0) ? "" : "\n";
 
     m_journalTextCursor->movePosition(QTextCursor::End);
     m_journalTextCursor->insertText(prepend + msg);
