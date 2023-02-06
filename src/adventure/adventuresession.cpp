@@ -4,7 +4,7 @@
 #include <QtWidgets>
 
 AdventureSession::AdventureSession(QString charName)
-    : m_charName{charName}
+    : m_charName{std::move(charName)}
     , m_startTimePoint{std::chrono::steady_clock::now()}
     , m_endTimePoint{}
     , m_isEnded{false}
