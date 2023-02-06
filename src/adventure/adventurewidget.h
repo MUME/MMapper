@@ -13,15 +13,15 @@ class AdventureWidget : public QWidget
 public:
     static constexpr const int MAX_LINES = 1024;
     static constexpr const auto DEFAULT_MSG
-        = "Your progress in Middle Earth will be tracked here! *BETA*";
+        = "Your progress in Middle Earth will be tracked here! *BETA*\n";
 
-    static constexpr const auto ACCOMPLISH_MSG = "Task accomplished!";
-    static constexpr const auto ACHIEVE_MSG = "Achievement: %1";
-    static constexpr const auto DIED_MSG = "You are dead! Sorry... (%1 xp)";
-    static constexpr const auto GAINED_LEVEL_MSG = "You gain a level! Congrats!";
-    static constexpr const auto HINT_MSG = "Hint: %1";
-    static constexpr const auto KILL_TROPHY_MSG = "Trophy: %1";
-    static constexpr const auto XP_SUFFIX = " (%1 xp)";
+    static constexpr const auto ACCOMPLISH_MSG = "Task accomplished! (%1 xp)\n";
+    static constexpr const auto ACHIEVE_MSG = "Achievement: %1\n";
+    static constexpr const auto ACHIEVE_MSG_XP = "Achievement: %1 (%2 xp)\n";
+    static constexpr const auto DIED_MSG = "You are dead! Sorry... (%1 xp)\n";
+    static constexpr const auto GAINED_LEVEL_MSG = "You gain a level! Congrats!\n";
+    static constexpr const auto HINT_MSG = "Hint: %1\n";
+    static constexpr const auto KILL_TROPHY_MSG = "Trophy: %1 (%2 xp)\n";
 
     explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
 
@@ -33,13 +33,17 @@ public slots:
     void slot_onKilledMob(const QString &mobName, double xpGained);
     void slot_onReceivedHint(const QString &hint);
 
+private slots:
+    void slot_contextMenuRequested(const QPoint &pos);
+    void slot_actionClearContent(bool checked = false);
+
 private:
+    void addDefaultContent();
     void addJournalEntry(const QString &msg);
 
     AdventureTracker &m_adventureTracker;
 
     QTextEdit *m_journalTextEdit = nullptr;
     QTextCursor *m_journalTextCursor = nullptr;
-
-    int m_numMessagesReceived = 0;
+    QAction *m_clearJournalAction = nullptr;
 };

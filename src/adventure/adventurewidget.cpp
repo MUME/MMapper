@@ -32,13 +32,23 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     blockCharFormat.setFont(*font);
     m_journalTextCursor->setBlockCharFormat(blockCharFormat);
 
-    addJournalEntry(DEFAULT_MSG);
-
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(m_journalTextEdit);
+
+    m_clearJournalAction = new QAction("Clear Content");
+    connect(m_clearJournalAction,
+            &QAction::triggered,
+            this,
+            &AdventureWidget::slot_actionClearContent);
+
+    m_journalTextEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_journalTextEdit,
+            &QTextEdit::customContextMenuRequested,
+            this,
+            &AdventureWidget::slot_contextMenuRequested);
 
     connect(&m_adventureTracker,
             &AdventureTracker::sig_accomplishedTask,
@@ -66,37 +76,40 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
             &AdventureTracker::sig_receivedHint,
             this,
             &AdventureWidget::slot_onReceivedHint);
+
+    addDefaultContent();
 }
 
 void AdventureWidget::slot_onAccomplishedTask(double xpGained)
 {
     // Only record accomplishedTask if it actually has associated xp to avoid
-    // spam, since sometimes it co-triggers with achievemnt and can be redundant.
+    // spam, since sometimes it co-triggers with achievement and can be redundant.
     if (xpGained > 0.0) {
-        auto msg = QString(ACCOMPLISH_MSG)
-                   + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
+        auto msg = QString(ACCOMPLISH_MSG).arg(AdventureSession::formatPoints(xpGained));
         addJournalEntry(msg);
     }
 }
 
 void AdventureWidget::slot_onAchievedSomething(const QString &achievement, double xpGained)
 {
-    auto msg = QString(ACHIEVE_MSG).arg(achievement);
+    QString msg;
 
-    if (xpGained > 0.0)
-        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
+    if (xpGained > 0.0) {
+        msg = QString(ACHIEVE_MSG_XP).arg(achievement, AdventureSession::formatPoints(xpGained));
+    } else {
+        msg = QString(ACHIEVE_MSG).arg(achievement);
+    }
 
     addJournalEntry(msg);
 }
 
 void AdventureWidget::slot_onDied(double xpLost)
 {
-    auto msg = QString(DIED_MSG);
-
-    if (xpLost < 0.0)
-        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpLost));
-
-    addJournalEntry(msg);
+    // Ignore Died messages that don't have an accompanying XP loss (to avoid whois spam, etc.)
+    if (xpLost < 0.0) {
+        auto msg = QString(DIED_MSG).arg(AdventureSession::formatPoints(xpLost));
+        addJournalEntry(msg);
+    }
 }
 
 void AdventureWidget::slot_onGainedLevel()
@@ -106,17 +119,12 @@ void AdventureWidget::slot_onGainedLevel()
 
 void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
 {
-    auto msg = QString(KILL_TROPHY_MSG).arg(mobName);
-
-    if (xpGained > 0.0) {
-        msg = msg + QString(XP_SUFFIX).arg(AdventureSession::formatPoints(xpGained));
-    } else {
-        // When player gets XP from multiple kills on the same heartbeat, like
-        // frequently happens with quake xp, then the first mob gets all the XP
-        // attributed and the others are zero. No way to solve this given
-        // current "protocol" of how MUME exposes information.
-        msg = msg + QString(XP_SUFFIX).arg("?");
-    }
+    // When player gets XP from multiple kills on the same heartbeat, as
+    // frequently happens with quake xp, then the first mob gets all the XP
+    // attributed and the others are zero. No way to solve this given
+    // current MUME "protocol".
+    auto xpf = (xpGained > 0.0) ? AdventureSession::formatPoints(xpGained) : "?";
+    auto msg = QString(KILL_TROPHY_MSG).arg(mobName, xpf);
 
     addJournalEntry(msg);
 }
@@ -128,13 +136,32 @@ void AdventureWidget::slot_onReceivedHint(const QString &hint)
     addJournalEntry(msg);
 }
 
+void AdventureWidget::slot_contextMenuRequested(const QPoint &pos)
+{
+    QMenu *contextMenu = m_journalTextEdit->createStandardContextMenu();
+    contextMenu->addSeparator();
+    contextMenu->addAction(m_clearJournalAction);
+    contextMenu->exec(m_journalTextEdit->mapToGlobal(pos));
+    delete contextMenu;
+}
+
+void AdventureWidget::slot_actionClearContent([[maybe_unused]] bool checked)
+{
+    m_journalTextCursor->movePosition(QTextCursor::Start);
+    m_journalTextCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, QTextCursor::End);
+    m_journalTextCursor->removeSelectedText();
+    addDefaultContent();
+}
+
+void AdventureWidget::addDefaultContent()
+{
+    addJournalEntry(DEFAULT_MSG);
+}
+
 void AdventureWidget::addJournalEntry(const QString &msg)
 {
-    const auto prepend = (m_numMessagesReceived == 0) ? "" : "\n";
-
     m_journalTextCursor->movePosition(QTextCursor::End);
-    m_journalTextCursor->insertText(prepend + msg);
-    m_numMessagesReceived++;
+    m_journalTextCursor->insertText(msg);
 
     // If more than MAX_LINES, preserve by deleting from the start
     auto lines_over = m_journalTextEdit->document()->lineCount() - AdventureWidget::MAX_LINES;
