@@ -84,6 +84,11 @@ const QHash<QString, MumeTimeEnum> MumeClock::m_stringTimeHash{
     {"The sun slowly climbs from the vale of Anduin in the east.", MumeTimeEnum::DAWN},
     {"Shadows surround you as the sun disappears behind the peaks of the Hithaeglir.",
      MumeTimeEnum::DUSK},
+
+    // Outside Warrens
+    {"Light gradually filters in, proclaiming a new sunrise.", MumeTimeEnum::DAWN},
+    {"The deepening gloom announces another sunset.", MumeTimeEnum::DUSK},
+    {"The rising sun illuminates the landscape.", MumeTimeEnum::DAWN},
 };
 
 MumeClock::MumeClock(int64_t mumeEpoch, QObject *parent)
