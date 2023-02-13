@@ -45,8 +45,3 @@ void GameObserver::slot_observeToggledEchoMode(bool echo)
 {
     emit sig_toggledEchoMode(echo);
 }
-
-void GameObserver::slot_log(const QString &ba, const QString &s)
-{
-    emit sig_log(ba, s);
-}

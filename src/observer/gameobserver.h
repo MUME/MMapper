@@ -25,9 +25,6 @@ signals:
 
     void sig_toggledEchoMode(bool echo);
 
-    // used to log
-    void sig_log(const QString &, const QString &);
-
 public slots:
     void slot_observeConnected();
     void slot_observeDisconnected();
@@ -39,6 +36,4 @@ public slots:
     void slot_observeSentToUserGmcp(const GmcpMessage &m);
 
     void slot_observeToggledEchoMode(bool echo);
-
-    void slot_log(const QString &ba, const QString &);
 };
