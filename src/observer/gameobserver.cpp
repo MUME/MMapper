@@ -1,4 +1,5 @@
 #include "gameobserver.h"
+#include "parser/parserutils.h"
 
 GameObserver::GameObserver(QObject *parent)
     : QObject{parent}
@@ -14,14 +15,20 @@ void GameObserver::slot_observeDisconnected()
     emit sig_disconnected();
 }
 
-void GameObserver::slot_observeSentToMudText(const QByteArray &ba)
+void GameObserver::slot_observeSentToMud(const QByteArray &ba)
 {
-    emit sig_sentToMudText(ba);
+    emit sig_sentToMudBytes(ba);
+    QString str = QString::fromLatin1(ba);
+    ParserUtils::removeAnsiMarksInPlace(str);
+    emit sig_sentToMudString(str);
 }
 
-void GameObserver::slot_observeSentToUserText(const QByteArray &ba, bool goAhead)
+void GameObserver::slot_observeSentToUser(const QByteArray &ba, bool goAhead)
 {
-    emit sig_sentToUserText(ba, goAhead);
+    emit sig_sentToUserBytes(ba, goAhead);
+    QString str = QString::fromLatin1(ba);
+    ParserUtils::removeAnsiMarksInPlace(str);
+    emit sig_sentToUserString(str);
 }
 
 void GameObserver::slot_observeSentToMudGmcp(const GmcpMessage &m)

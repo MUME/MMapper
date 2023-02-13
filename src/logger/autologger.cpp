@@ -66,7 +66,7 @@ bool AutoLogger::createFile()
     return true;
 }
 
-bool AutoLogger::writeLine(const QByteArray &ba)
+bool AutoLogger::writeLine(const QString &str)
 {
     if (!m_shouldLog || !getConfig().autoLog.autoLog)
         return false;
@@ -87,9 +87,7 @@ bool AutoLogger::writeLine(const QByteArray &ba)
         return false;
     }
 
-    // Remove ANSI and convert to UTF-8
-    QString str = QString::fromLatin1(ba);
-    ParserUtils::removeAnsiMarksInPlace(str);
+    // ANSI marks removed upstream by GameObserver
     const auto &line = ::toStdStringUtf8(str);
 
     m_logFile << line;
@@ -187,10 +185,9 @@ bool AutoLogger::showDeleteDialog(QString message)
     return result == QMessageBox::Yes;
 }
 
-void AutoLogger::slot_writeToLog(const QByteArray &ba)
+void AutoLogger::slot_writeToLog(const QString &str)
 {
-    MAYBE_UNUSED const auto igored = //
-        writeLine(ba);
+    MAYBE_UNUSED const auto ignored = writeLine(str);
 }
 
 void AutoLogger::slot_shouldLog(bool echo)

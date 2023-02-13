@@ -13,8 +13,12 @@ signals:
     void sig_connected();
     void sig_disconnected();
 
-    void sig_sentToMudText(const QByteArray &);
-    void sig_sentToUserText(const QByteArray &, bool goAhead);
+    void sig_sentToMudBytes(const QByteArray &);
+    void sig_sentToUserBytes(const QByteArray &, bool goAhead);
+
+    // Helper versions of the above, which remove ANSI in place and create QString
+    void sig_sentToMudString(const QString &);
+    void sig_sentToUserString(const QString &);
 
     void sig_sentToMudGmcp(const GmcpMessage &);
     void sig_sentToUserGmcp(const GmcpMessage &);
@@ -28,8 +32,8 @@ public slots:
     void slot_observeConnected();
     void slot_observeDisconnected();
 
-    void slot_observeSentToMudText(const QByteArray &ba);
-    void slot_observeSentToUserText(const QByteArray &ba, bool goAhead);
+    void slot_observeSentToMud(const QByteArray &ba);
+    void slot_observeSentToUser(const QByteArray &ba, bool goAhead);
 
     void slot_observeSentToMudGmcp(const GmcpMessage &m);
     void slot_observeSentToUserGmcp(const GmcpMessage &m);
