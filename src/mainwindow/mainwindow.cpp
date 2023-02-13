@@ -284,11 +284,11 @@ MainWindow::MainWindow()
             m_logger,
             &AutoLogger::slot_shouldLog);
     connect(m_gameObserver,
-            &GameObserver::sig_sentToMudText,
+            &GameObserver::sig_sentToMudString,
             m_logger,
             &AutoLogger::slot_writeToLog);
     connect(m_gameObserver,
-            &GameObserver::sig_sentToUserText,
+            &GameObserver::sig_sentToUserString,
             m_logger,
             &AutoLogger::slot_writeToLog);
 

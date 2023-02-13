@@ -235,11 +235,11 @@ void Proxy::slot_start()
     connect(parserXml,
             &MumeXmlParser::sig_sendToMud,
             &m_gameObserver,
-            &GameObserver::slot_observeSentToMudText);
+            &GameObserver::slot_observeSentToMud);
     connect(parserXml,
             &MumeXmlParser::sig_sendToUser,
             &m_gameObserver,
-            &GameObserver::slot_observeSentToUserText);
+            &GameObserver::slot_observeSentToUser);
     // note the polarity, unlike above: MudTelnet::relay is SentToUser, UserTelnet::relay is SentToMud
     connect(mudTelnet,
             &MudTelnet::sig_relayGmcp,

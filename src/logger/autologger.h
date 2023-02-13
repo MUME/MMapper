@@ -18,12 +18,12 @@ public:
     ~AutoLogger() final;
 
 public slots:
-    void slot_writeToLog(const QByteArray &ba);
+    void slot_writeToLog(const QString &str);
     void slot_shouldLog(bool echo);
     void slot_onConnected();
 
 private:
-    NODISCARD bool writeLine(const QByteArray &ba);
+    NODISCARD bool writeLine(const QString &str);
     void deleteOldLogs();
     void deleteLogs(const QFileInfoList &files);
     NODISCARD bool showDeleteDialog(QString message);
