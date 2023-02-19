@@ -14,7 +14,6 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiColor.h"
-#include "../mapdata/mapdata.h"
 #include "RoomManager.h"
 
 static constexpr const uint8_t ROOM_COLUMN_COUNT = 7;
@@ -95,13 +94,16 @@ QVariant RoomModel::data(const QModelIndex &index, int role) const
                 // REVISIT: Ideally, this could be configurable.
                 return QColor(Qt::yellow);
             }
-            return QColor(Qt::white);
+            break;
         case Qt::ForegroundRole:
             if (isFightingYOU(row, column)) {
                 // highlight "YOU" in fighting column
                 return QColor(Qt::red);
+            } else if (isEnemy(row, column)) {
+                // highlight enemy players
+                return textColor(Qt::yellow);
             }
-            return QColor(Qt::black);
+            break;
         default:
             break;
         }
