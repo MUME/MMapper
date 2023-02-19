@@ -150,14 +150,10 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
     // Eat Core.Supports.[Add|Set|Remove] and proxy a MMapper filtered subset
     if (msg.getJson()
-        && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())) {
-        // Deserialize the payload
-        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQByteArray());
-        if (!doc.isArray())
-            return;
-        const auto &array = doc.array();
-
+        && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())
+        && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isArray()) {
         // Handle the various messages
+        const auto &array = msg.getJsonDocument()->array();
         if (msg.isCoreSupportsSet())
             resetGmcpModules();
         for (const auto &e : array) {

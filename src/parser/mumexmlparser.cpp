@@ -116,12 +116,10 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 
 void MumeXmlParser::slot_parseGmcpInput(const GmcpMessage &msg)
 {
-    if (msg.isCharStatusVars()) {
+    if (msg.isCharStatusVars() && msg.getJsonDocument().has_value()
+        && msg.getJsonDocument()->isObject()) {
         // "Char.StatusVars {\"race\":\"Troll\",\"subrace\":\"Cave Troll\"}"
-        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
-        if (!doc.isObject())
-            return;
-        const auto &obj = doc.object();
+        const auto &obj = msg.getJsonDocument()->object();
         const auto &race = obj.value("race");
         if (race.isString()) {
             m_trollExitMapping = (race.toString().compare("Troll", Qt::CaseInsensitive) == 0);

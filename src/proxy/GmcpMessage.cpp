@@ -57,17 +57,21 @@ GmcpMessage::GmcpMessage(const std::string &package)
 GmcpMessage::GmcpMessage(const std::string &package, const std::string &json)
     : name(package)
     , json(GmcpJson{json})
+    , document(GmcpJsonDocument::fromJson(::toQByteArrayUtf8(json)))
     , type(toGmcpMessageType(package))
-
 {}
 
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, const QString &json)
-    : GmcpMessage(type, ::toStdStringUtf8(json))
+    : name(toGmcpMessageName(type))
+    , json(::toStdStringUtf8(json))
+    , document(GmcpJsonDocument::fromJson(json.toUtf8()))
+    , type(type)
 {}
 
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, const std::string &json)
     : name(toGmcpMessageName(type))
     , json(GmcpJson{json})
+    , document(GmcpJsonDocument::fromJson(::toQByteArrayUtf8(json)))
     , type(type)
 {}
 
