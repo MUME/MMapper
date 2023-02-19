@@ -21,7 +21,7 @@
     X(DEAD, dead, Dead, "Dead") \
     /* define character positions above */
 
-enum class NODISCARD CharacterPositionEnum {
+enum class NODISCARD CharacterPositionEnum : uint8_t {
 #define X_DECL_CHARACTER_POSITION(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
 #undef X_DECL_CHARACTER_POSITION

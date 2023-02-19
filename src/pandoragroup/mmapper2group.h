@@ -118,7 +118,6 @@ private:
         QByteArray textHP;
         QByteArray textMoves;
         QByteArray textMana;
-        bool inCombat = false;
 
         void reset() { *this = LastPrompt{}; }
     };
@@ -132,12 +131,13 @@ private:
 
     bool init();
     void issueLocalCharUpdate();
-    void updateCharacterScore(const int hp,
-                              const int maxhp,
-                              const int mana,
-                              const int maxmana,
-                              const int mp,
-                              const int maxmp);
+    bool setCharacterPosition(const CharacterPositionEnum pos);
+    bool setCharacterScore(const int hp,
+                           const int maxhp,
+                           const int mana,
+                           const int maxmana,
+                           const int mp,
+                           const int maxmp);
     void renameCharacter(QByteArray newname);
 
     QRecursiveMutex networkLock;
