@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <QByteArray>
+#include <QJsonDocument>
 #include <QString>
 
 #include "../global/Flags.h"
@@ -62,11 +63,14 @@ struct NODISCARD GmcpJsonTag final
 
 using GmcpJson = TaggedStringUtf8<tags::GmcpJsonTag>;
 
+using GmcpJsonDocument = QJsonDocument;
+
 class GmcpMessage final
 {
 private:
     GmcpMessageName name;
     std::optional<GmcpJson> json;
+    std::optional<GmcpJsonDocument> document;
     GmcpMessageTypeEnum type = GmcpMessageTypeEnum::UNKNOWN;
 
 public:
@@ -86,6 +90,7 @@ public:
 public:
     NODISCARD const GmcpMessageName &getName() const { return name; }
     NODISCARD const std::optional<GmcpJson> &getJson() const { return json; }
+    NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const { return document; }
 
 public:
     NODISCARD QByteArray toRawBytes() const;

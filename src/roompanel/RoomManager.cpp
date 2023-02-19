@@ -45,8 +45,7 @@ void RoomManager::slot_parseGmcpInput(const GmcpMessage &msg)
 void RoomManager::parseGmcpAdd(const GmcpMessage &msg)
 {
     showGmcp(msg);
-    QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
-    if (!doc.isObject()) {
+    if (!msg.getJsonDocument().has_value() || !msg.getJsonDocument()->isObject()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                                  << "containing invalid Json: expecting object, got"
@@ -54,7 +53,7 @@ void RoomManager::parseGmcpAdd(const GmcpMessage &msg)
         }
         return;
     }
-    addMob(doc.object());
+    addMob(msg.getJsonDocument()->object());
 }
 
 void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
@@ -92,7 +91,7 @@ void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
 void RoomManager::parseGmcpSet(const GmcpMessage &msg)
 {
     showGmcp(msg);
-    QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
+    const auto &doc = msg.getJsonDocument().value();
     if (!doc.isArray()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
@@ -120,7 +119,7 @@ void RoomManager::parseGmcpSet(const GmcpMessage &msg)
 void RoomManager::parseGmcpUpdate(const GmcpMessage &msg)
 {
     showGmcp(msg);
-    QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
+    const auto &doc = msg.getJsonDocument().value();
     if (!doc.isObject()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()

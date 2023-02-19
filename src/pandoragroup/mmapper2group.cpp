@@ -538,11 +538,10 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
     if (!group)
         return;
 
-    if (msg.isCharVitals()) {
+    if (msg.isCharVitals() && msg.getJsonDocument().has_value()
+        && msg.getJsonDocument()->isObject()) {
         // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
-        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
-        if (!doc.isObject())
-            return;
+        const GmcpJsonDocument &doc = msg.getJsonDocument().value();
         const auto &obj = doc.object();
 
         const SharedGroupChar &self = getGroup()->getSelf();
@@ -568,13 +567,12 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
             if (isRiding != wasRiding)
                 issueLocalCharUpdate();
         }
+        return;
     }
 
-    if (group && msg.isCharName()) {
+    if (msg.isCharName() && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isObject()) {
         // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
-        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQString().toUtf8());
-        if (!doc.isObject())
-            return;
+        const QJsonDocument &doc = msg.getJsonDocument().value();
         const auto &obj = doc.object();
         const auto &name = obj.value("name");
         if (!name.isString())
@@ -582,6 +580,7 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
 
         renameCharacter(name.toString().toLatin1());
         issueLocalCharUpdate();
+        return;
     }
 }
 

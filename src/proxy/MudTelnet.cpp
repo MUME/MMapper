@@ -68,14 +68,10 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
 {
     // Remember Core.Supports.[Add|Set|Remove] modules
     if (msg.getJson()
-        && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())) {
-        // Deserialize the payload
-        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQByteArray());
-        if (!doc.isArray())
-            return;
-        const auto &array = doc.array();
-
+        && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())
+        && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isArray()) {
         // Handle the various messages
+        const auto &array = msg.getJsonDocument()->array();
         if (msg.isCoreSupportsSet())
             resetGmcpModules();
         for (const auto &e : array) {
