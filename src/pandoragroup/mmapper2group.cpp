@@ -292,20 +292,21 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
     const int moves = match.captured(5).toInt();
     const int maxmoves = match.captured(6).toInt();
 
-    updateCharacterScore(hp, maxhp, mana, maxmana, moves, maxmoves);
+    if (setCharacterScore(hp, maxhp, mana, maxmana, moves, maxmoves))
+        issueLocalCharUpdate();
 }
 
-void Mmapper2Group::updateCharacterScore(const int hp,
-                                         const int maxhp,
-                                         const int mana,
-                                         const int maxmana,
-                                         const int moves,
-                                         const int maxmoves)
+bool Mmapper2Group::setCharacterScore(const int hp,
+                                      const int maxhp,
+                                      const int mana,
+                                      const int maxmana,
+                                      const int moves,
+                                      const int maxmoves)
 {
     const SharedGroupChar &self = getGroup()->getSelf();
     if (self->hp == hp && self->maxhp == maxhp && self->mana == mana && self->maxmana == maxmana
         && self->moves == moves && self->maxmoves == maxmoves)
-        return; // No update needed
+        return false; // No update needed
 
     log(QString("Updated score: %1/%2 hits, %3/%4 mana, and %5/%6 moves.")
             .arg(hp)
@@ -316,8 +317,7 @@ void Mmapper2Group::updateCharacterScore(const int hp,
             .arg(maxmoves));
 
     self->setScore(hp, maxhp, mana, maxmana, moves, maxmoves);
-
-    issueLocalCharUpdate();
+    return true;
 }
 
 void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
@@ -325,23 +325,18 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!group)
         return;
 
+    static const QRegularExpression pRx(R"((?: HP:([^ >]+))?)"     // Group 1: HP
+                                        R"((?: Mana:([^ >]+))?)"   // Group 2: Mana
+                                        R"((?: Move:([^ >]+))?)"); // Group 3: Move
+    QRegularExpressionMatch match = pRx.match(prompt);
+    if (!match.hasMatch())
+        return;
+
     SharedGroupChar self = getGroup()->getSelf();
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
     CharacterAffectFlags &affects = self->affects;
-
-    static const QRegularExpression pRx(
-        R"((?: HP:([^ >]+))?)"           // Group 1: HP
-        R"((?: Mana:([^ >]+))?)"         // Group 2: Mana
-        R"((?: Move:([^ >]+))?)"         // Group 3: Move
-        R"((?: Mount:([^ >]+))?)"        // Group 4: Mount
-        R"((?: ([^>\[:]+):([^ \]>]+))?)" // Group 5/6: Target / health
-        R"((?: ([^>\[:]+):([^ \]>]+))?)" // Group 7/8: Target|Buffer / health
-        R"(>$)");
-    QRegularExpressionMatch match = pRx.match(prompt);
-    if (!match.hasMatch())
-        return;
 
     const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
     if (wasSearching)
@@ -351,32 +346,16 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     textHP = match.captured(1).toLatin1();
     textMana = match.captured(2).toLatin1();
     textMoves = match.captured(3).toLatin1();
-    bool inCombat = !match.captured(5).isEmpty() || !match.captured(7).isEmpty();
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
-        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat && !wasSearching) {
+        && textMoves == lastPrompt.textMoves && !wasSearching) {
         return; // No update needed
-    }
-
-    if (textHP == "Dying") {
-        // Incapacitated state overrides fighting state
-        self->position = CharacterPositionEnum::INCAPACITATED;
-
-    } else if (inCombat) {
-        self->position = CharacterPositionEnum::FIGHTING;
-
-    } else if (self->position != CharacterPositionEnum::DEAD) {
-        // Recover standing state if we're done fighting (unless we died because we're dead)
-        if (lastPrompt.inCombat) {
-            self->position = CharacterPositionEnum::STANDING;
-        }
     }
 
     // Update last prompt values
     lastPrompt.textHP = textHP;
     lastPrompt.textMana = textMana;
     lastPrompt.textMoves = textMoves;
-    lastPrompt.inCombat = inCombat;
 
 #define X_SCORE(target, lower, upper) \
     do { \
@@ -441,27 +420,32 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     issueLocalCharUpdate();
 }
 
+bool Mmapper2Group::setCharacterPosition(const CharacterPositionEnum position)
+{
+    const SharedGroupChar &self = getGroup()->getSelf();
+    const CharacterPositionEnum oldPosition = self->position;
+
+    if (oldPosition == position)
+        return false; // No update needed
+
+    // Reset affects on death
+    if (position == CharacterPositionEnum::DEAD)
+        self->affects = CharacterAffectFlags{};
+
+    if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
+        return false; // Prefer dead state until we finish recovering some hp (i.e. stand)
+
+    self->position = position;
+    return true;
+}
+
 void Mmapper2Group::updateCharacterPosition(const CharacterPositionEnum position)
 {
     if (!group)
         return;
 
-    // This naming convention for a reference is an anti-pattern;
-    // the name implies it's a const value, but then we modify it.
-    CharacterPositionEnum &oldPosition = group->getSelf()->position;
-
-    if (oldPosition == position)
-        return; // No update needed
-
-    // Reset affects on death
-    if (position == CharacterPositionEnum::DEAD)
-        group->getSelf()->affects = CharacterAffectFlags{};
-
-    if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
-        return; // Prefer dead state until we finish recovering some hp (i.e. stand)
-
-    oldPosition = position;
-    issueLocalCharUpdate();
+    if (setCharacterPosition(position))
+        issueLocalCharUpdate();
 }
 
 void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, const bool enable)
@@ -533,6 +517,18 @@ void Mmapper2Group::slot_reset()
     issueLocalCharUpdate();
 }
 
+NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
+{
+#define CASE2(UPPER_CASE, lower_case, CamelCase, friendly) \
+    do { \
+        if (str == #lower_case) \
+            return CharacterPositionEnum::UPPER_CASE; \
+    } while (false);
+    X_FOREACH_CHARACTER_POSITION(CASE2)
+#undef CASE2
+    return CharacterPositionEnum::UNDEFINED;
+}
+
 void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
 {
     if (!group)
@@ -546,17 +542,24 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
 
         const SharedGroupChar &self = getGroup()->getSelf();
         CharacterAffectFlags &affects = self->affects;
-        const int hp = obj.value("hp").toInt(self->hp);
-        const int maxhp = obj.value("maxhp").toInt(self->maxhp);
-        const int mana = obj.value("mana").toInt(self->mana);
-        const int maxmana = obj.value("maxmana").toInt(self->maxmana);
-        const int mp = obj.value("mp").toInt(self->moves);
-        const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
-        updateCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp);
 
-        if (obj.contains("ride")) {
+        bool update = false;
+
+        if (obj.contains("hp") || obj.contains("maxhp") || obj.contains("mana")
+            || obj.contains("maxmana") || obj.contains("mp") || obj.contains("maxmp")) {
+            const int hp = obj.value("hp").toInt(self->hp);
+            const int maxhp = obj.value("maxhp").toInt(self->maxhp);
+            const int mana = obj.value("mana").toInt(self->mana);
+            const int maxmana = obj.value("maxmana").toInt(self->maxmana);
+            const int mp = obj.value("mp").toInt(self->moves);
+            const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
+            if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp))
+                update = true;
+        }
+
+        if (obj.contains("ride") && obj.value("ride").isBool()) {
             const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
-            const bool isRiding = obj.value("ride").toBool(wasRiding);
+            const bool isRiding = obj.value("ride").toBool();
             if (isRiding) {
                 affects.insert(CharacterAffectEnum::RIDING);
                 affectLastSeen.insert(CharacterAffectEnum::RIDING,
@@ -565,8 +568,17 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
                 affects.remove(CharacterAffectEnum::RIDING);
             }
             if (isRiding != wasRiding)
-                issueLocalCharUpdate();
+                update = true;
         }
+
+        if (obj.contains("position") && obj.value("position").isString()) {
+            const auto position = toCharacterPosition(obj.value("position").toString());
+            if (setCharacterPosition(position))
+                update = true;
+        }
+
+        if (update)
+            issueLocalCharUpdate();
         return;
     }
 

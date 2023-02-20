@@ -42,35 +42,33 @@ void AbstractParser::initActionMap()
     auto sleeping = [this](StringView /*view*/) {
         m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
-    addStartsWith("You go to sleep.", sleeping);
+    addStartsWith("In your dreams, or what?", sleeping);
     addStartsWith("You are already sound asleep.", sleeping);
     auto sitting = [this](StringView /*view*/) {
         m_group.sendEvent(CharacterPositionEnum::SITTING);
     };
-    addStartsWith("You wake, and sit up.", sitting);
-    addStartsWith("You sit down.", sitting);
-    addStartsWith("You stop resting and sit up.", sitting);
+    addStartsWith("Maybe you should get on your feet first?", sitting);
     addStartsWith("You're sitting already.", sitting);
-    addStartsWith("You feel better and sit up.", sitting); // incap -> sitting
     auto resting = [this](StringView /*view*/) {
         m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
-    addStartsWith("You rest your tired bones.", resting);
-    addStartsWith("You sit down and rest your tired bones.", resting);
+
+    addStartsWith("Nah... You feel too relaxed to do that.", resting);
     addStartsWith("You are already resting.", resting);
     auto standing = [this](StringView /*view*/) {
         m_group.sendEvent(CharacterPositionEnum::STANDING);
     };
-    addStartsWith("You stop resting and stand up.", standing);
-    addStartsWith("You stand up.", standing);
+    addStartsWith("You can't do this standing.", standing);
     addStartsWith("You are already standing.", standing);
+    auto fighting = [this](StringView /*view*/) {
+        m_group.sendEvent(CharacterPositionEnum::FIGHTING);
+    };
+    addStartsWith("No way! You are fighting for your life!", fighting);
     auto incap = [this](StringView /*view*/) {
         m_group.sendEvent(CharacterPositionEnum::INCAPACITATED);
     };
-    addStartsWith("You are incapacitated and will slowly die, if not aided.", incap);
     addStartsWith("You are in a pretty bad shape, unable to do anything!", incap);
-    addStartsWith("You're stunned and will probably die soon if no-one helps you.", incap);
-    addStartsWith("You are mortally wounded and will die soon if not aided.", incap);
+    addStartsWith("All you can do right now, is think about the stars!", incap);
     auto dead = [this](StringView /*view*/) {
         m_queue.clear();
         pathChanged();
