@@ -73,43 +73,47 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 
     if (msg.isCharName()) {
         parseIfUpdatedCharName(msg);
+        return;
     }
 
     if (msg.isCharStatusVars()) {
         parseIfUpdatedCharName(msg);
+        return;
     }
 
     if (msg.isCharVitals()) {
         parseIfUpdatedVitals(msg);
+        return;
     }
 
     if (msg.isCommChannelText()) {
         parseIfReceivedComm(msg);
+        return;
     }
 
     if (msg.isCoreGoodbye()) {
         parseIfGoodbye(msg);
+        return;
     }
 }
 
 void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
 {
-    // REVISIT If you try to call msg.getJson()->toQString().toUtf8() on a
-    // CoreGoodbye message, the GmcpMessage code crashes, trying to malloc a
-    // huge 0xffffffff chunk of memory. Needs investigation.
+    if (m_session == nullptr)
+        return;
 
-    if (m_session != nullptr) {
-        qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
-        m_session->endSession();
-        emit sig_endedSession(*m_session);
-        m_session.reset();
-    }
+    qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
+    m_session->endSession();
+    emit sig_endedSession(*m_session);
+    m_session.reset();
 }
 
 void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
 {
-    auto s = msg.getJson()->toQString().toUtf8();
-    QJsonObject obj = QJsonDocument::fromJson(s).object();
+    std::optional<QJsonDocument> doc = msg.getJsonDocument();
+    if (!doc.has_value())
+        return;
+    QJsonObject obj = doc->object();
 
     if (!(obj.contains("channel") && obj.contains("text")))
         return;
@@ -124,11 +128,12 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
 
 void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 {
-    auto s = msg.getJson()->toQString().toUtf8();
-    QJsonObject obj = QJsonDocument::fromJson(s).object();
+    std::optional<QJsonDocument> doc = msg.getJsonDocument();
+    if (!doc.has_value())
+        return;
+    QJsonObject obj = doc->object();
 
     if (!obj.contains("name")) {
-        qDebug().noquote() << "Expected name key missing from Gmcp Json: " + s;
         return;
     }
 
@@ -144,8 +149,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 
     if (m_session != nullptr && m_session->name() != charName) {
         qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
-                                  .arg(charName)
-                                  .arg(m_session->name());
+                                  .arg(charName, m_session->name());
 
         m_session->endSession();
         emit sig_endedSession(*m_session);
@@ -161,8 +165,10 @@ void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
         return;
     }
 
-    auto s = msg.getJson()->toQString().toUtf8();
-    QJsonObject obj = QJsonDocument::fromJson(s).object();
+    std::optional<QJsonDocument> doc = msg.getJsonDocument();
+    if (!doc.has_value())
+        return;
+    QJsonObject obj = doc->object();
 
     bool updated = false;
 
