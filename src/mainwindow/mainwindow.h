@@ -322,7 +322,6 @@ private:
 
     void wireConnections();
 
-    void setupChildWidgets();
     void createActions();
     void setupMenuBar();
     void setupToolBars();

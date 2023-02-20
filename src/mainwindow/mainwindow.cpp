@@ -211,11 +211,81 @@ MainWindow::MainWindow()
     m_gameObserver = new GameObserver(this);
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
 
+    // View -> Side Panels -> Client Panel
+    m_clientWidget = new ClientWidget(this);
+    m_clientWidget->setObjectName("InternalMudClientWidget");
+    m_dockDialogClient = new QDockWidget("Client Panel", this);
+    m_dockDialogClient->setObjectName("DockWidgetClient");
+    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
+                                    | QDockWidget::DockWidgetFloatable
+                                    | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
+    m_dockDialogClient->setWidget(m_clientWidget);
+
+    // View -> Side Panels -> Log Panel
+    m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
+    m_dockDialogLog->setObjectName("DockWidgetLog");
+    m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+    m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                 | QDockWidget::DockWidgetClosable);
+    m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
+
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
+    logWindow = new QTextBrowser(m_dockDialogLog);
+    logWindow->setObjectName("LogWindow");
+    m_dockDialogLog->setWidget(logWindow);
+    m_dockDialogLog->hide();
+
+    // View -> Side Panels -> Group Panel and Tools -> Group Manager
+    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
+    m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
+    m_dockDialogGroup->setObjectName("DockWidgetGroup");
+    m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                   | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
+    m_dockDialogGroup->setWidget(m_groupWidget);
+    m_dockDialogGroup->hide();
+    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
+
+    // View -> Side Panels -> Room Panel (Mobs)
+    m_roomManager = new RoomManager(this);
+    m_roomManager->setObjectName("RoomManager");
+    connect(m_gameObserver,
+            &GameObserver::sig_sentToUserGmcp,
+            m_roomManager,
+            &RoomManager::slot_parseGmcpInput);
+    m_roomWidget = new RoomWidget(deref(m_roomManager), this);
+    m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
+    m_dockDialogRoom->setObjectName("DockWidgetRoom");
+    m_dockDialogRoom->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+    m_dockDialogRoom->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                  | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogRoom);
+    m_dockDialogRoom->setWidget(m_roomWidget);
+    m_dockDialogRoom->hide();
+
+    // Find Room Dialog
+    m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
+    m_findRoomsDlg->setObjectName("FindRoomsDlg");
+
+    // View -> Side Panels -> Adventure Journal (Trophy XP, Achievements, Hints, etc)
+    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
+    m_dockDialogAdventure = new QDockWidget(tr("Adventure Journal *BETA*"), this);
+    m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
+    m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
+                                       | QDockWidget::DockWidgetFloatable
+                                       | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
+    m_dockDialogAdventure->setWidget(m_adventureWidget);
+    m_dockDialogAdventure->hide();
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
     if constexpr (!NO_UPDATER)
         m_updateDialog = new UpdateDialog(this);
 
-    setupChildWidgets();
     createActions();
     setupToolBars();
     setupMenuBar();
@@ -497,80 +567,6 @@ void MainWindow::slot_log(const QString &module, const QString &message)
     logWindow->moveCursor(QTextCursor::MoveOperation::End);
     logWindow->ensureCursorVisible();
     logWindow->update();
-}
-
-void MainWindow::setupChildWidgets()
-{
-    // View -> Side Panels -> Client Panel
-    m_clientWidget = new ClientWidget(this);
-    m_clientWidget->setObjectName("InternalMudClientWidget");
-    m_dockDialogClient = new QDockWidget("Client Panel", this);
-    m_dockDialogClient->setObjectName("DockWidgetClient");
-    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
-    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
-                                    | QDockWidget::DockWidgetFloatable
-                                    | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
-    m_dockDialogClient->setWidget(m_clientWidget);
-
-    // View -> Side Panels -> Log Panel
-    m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
-    m_dockDialogLog->setObjectName("DockWidgetLog");
-    m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                 | QDockWidget::DockWidgetClosable);
-    m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
-
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
-    logWindow = new QTextBrowser(m_dockDialogLog);
-    logWindow->setObjectName("LogWindow");
-    m_dockDialogLog->setWidget(logWindow);
-    m_dockDialogLog->hide();
-
-    // View -> Side Panels -> Group Panel and Tools -> Group Manager
-    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
-    m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
-    m_dockDialogGroup->setObjectName("DockWidgetGroup");
-    m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                   | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
-    m_dockDialogGroup->setWidget(m_groupWidget);
-    m_dockDialogGroup->hide();
-    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
-
-    // View -> Side Panels -> Room Panel (Mobs)
-    m_roomManager = new RoomManager(this);
-    m_roomManager->setObjectName("RoomManager");
-    connect(m_gameObserver,
-            &GameObserver::sig_sentToUserGmcp,
-            m_roomManager,
-            &RoomManager::slot_parseGmcpInput);
-    m_roomWidget = new RoomWidget(deref(m_roomManager), this);
-    m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
-    m_dockDialogRoom->setObjectName("DockWidgetRoom");
-    m_dockDialogRoom->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogRoom->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                  | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogRoom);
-    m_dockDialogRoom->setWidget(m_roomWidget);
-    m_dockDialogRoom->hide();
-
-    // Find Room Dialog
-    m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
-    m_findRoomsDlg->setObjectName("FindRoomsDlg");
-
-    // View -> Side Panels -> Adventure Journal (Trophy XP, Achievements, Hints, etc)
-    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
-    m_dockDialogAdventure = new QDockWidget(tr("Adventure Journal *BETA*"), this);
-    m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
-    m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
-    m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
-                                       | QDockWidget::DockWidgetFloatable
-                                       | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
-    m_dockDialogAdventure->setWidget(m_adventureWidget);
-    m_dockDialogAdventure->hide();
 }
 
 // TODO: clean up all this copy/paste by using helper functions and X-macros
