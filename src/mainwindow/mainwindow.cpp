@@ -230,8 +230,8 @@ MainWindow::MainWindow()
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
                                  | QDockWidget::DockWidgetClosable);
     m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
-
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
+
     logWindow = new QTextBrowser(m_dockDialogLog);
     logWindow->setObjectName("LogWindow");
     m_dockDialogLog->setWidget(logWindow);
@@ -271,7 +271,6 @@ MainWindow::MainWindow()
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     // View -> Side Panels -> Adventure Journal (Trophy XP, Achievements, Hints, etc)
-    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
     m_dockDialogAdventure = new QDockWidget(tr("Adventure Journal *BETA*"), this);
     m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
     m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
@@ -279,6 +278,7 @@ MainWindow::MainWindow()
                                        | QDockWidget::DockWidgetFloatable
                                        | QDockWidget::DockWidgetMovable);
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
+    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
     m_dockDialogAdventure->setWidget(m_adventureWidget);
     m_dockDialogAdventure->hide();
 
