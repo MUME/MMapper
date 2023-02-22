@@ -388,7 +388,7 @@ void AbstractParser::parseRoom(StringView input)
                                        rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
-                os << "--->" << getFlagName(flag) << " door " << toggle << std::endl;
+                os << getFlagName(flag) << " door " << toggle << std::endl;
             }
             send_ok(os);
         },
@@ -502,7 +502,7 @@ void AbstractParser::parseRoom(StringView input)
                                        rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
-                os << "--->" << getFlagName(flag) << " exit " << toggle << std::endl;
+                os << getFlagName(flag) << " exit " << toggle << std::endl;
             }
             send_ok(os);
         },
@@ -543,7 +543,7 @@ void AbstractParser::parseRoom(StringView input)
                                        rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
-                os << "--->Room flag " << toggle << std::endl;
+                os << "Room flag " << toggle << std::endl;
             }
             send_ok(os);
         },
@@ -566,7 +566,7 @@ void AbstractParser::parseRoom(StringView input)
 
             const std::string note = concatenate_unquoted(v[2].getVector());
             if (note.empty()) {
-                os << "What do you want to append to the note?\n";
+                os << "What do you want to append to the note?" << std::endl;
                 return;
             }
 
@@ -585,7 +585,7 @@ void AbstractParser::parseRoom(StringView input)
                                        roomId),
                                    rs))
                 throw std::runtime_error("execute failed");
-            os << "--->Note: " << roomNote.getStdString() << std::endl;
+            os << "Note: " << roomNote.getStdString() << std::endl;
             send_ok(os);
         },
         "append room note");
@@ -623,7 +623,7 @@ void AbstractParser::parseRoom(StringView input)
 
             const std::string note = concatenate_unquoted(v[2].getVector());
             if (note.empty()) {
-                os << "What do you want to set the note to?\n";
+                os << "What do you want to set the note to?" << std::endl;
                 return;
             }
 
@@ -641,7 +641,7 @@ void AbstractParser::parseRoom(StringView input)
                                        roomId),
                                    rs))
                 throw std::runtime_error("execute failed");
-            os << "--->Note: " << note << std::endl;
+            os << "Note: " << note << std::endl;
             send_ok(os);
         },
         "set room note");
@@ -657,7 +657,7 @@ void AbstractParser::parseRoom(StringView input)
             auto &os = user.getOstream();
             const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
             emit sig_newRoomSelection(SigRoomSelection{tmpSel});
-            os << "--->Current room marked temporarily on the map." << std::endl;
+            os << "Current room marked temporarily on the map." << std::endl;
             send_ok(os);
         },
         "select room");

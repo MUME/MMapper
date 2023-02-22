@@ -199,7 +199,7 @@ void AbstractParser::parseMark(StringView input)
 
             const std::string text = concatenate_unquoted(v[1].getVector());
             if (text.empty()) {
-                os << "What do you want to set the mark to?\n";
+                os << "What do you want to set the mark to?" << std::endl;
                 return;
             }
 
@@ -248,7 +248,7 @@ void AbstractParser::parseMark(StringView input)
             // update text of the first existing text infomark in this room
             const std::string text = concatenate_unquoted(v[3].getVector());
             if (text.empty()) {
-                os << "What do you want to set the mark's text to?\n";
+                os << "What do you want to set the mark's text to?" << std::endl;
                 return;
             }
             mark->setText(InfoMarkText{text});

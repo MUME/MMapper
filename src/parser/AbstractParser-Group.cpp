@@ -61,7 +61,7 @@ void AbstractParser::parseGroup(StringView input)
                 const auto name = simplify(v[1].getString());
 
                 if (name.isEmpty()) {
-                    os << "Who do you want to kick?\n";
+                    os << "Who do you want to kick?" << std::endl;
                     return;
                 }
 
@@ -82,12 +82,12 @@ void AbstractParser::parseGroup(StringView input)
                 const auto msg = (value ? "locked" : "unlocked");
                 bool &lockGroup = setConfig().groupManager.lockGroup;
                 if (value == lockGroup) {
-                    os << "--->Group was already " << msg << std::endl;
+                    os << "Group was already " << msg << std::endl;
                     return;
                 }
 
                 lockGroup = value;
-                os << "--->Group has been " << msg << std::endl;
+                os << "Group has been " << msg << std::endl;
             },
             "modify group lock");
         return buildSyntax(abb("lock"), argBool, acceptLock);
@@ -107,7 +107,7 @@ void AbstractParser::parseGroup(StringView input)
 
                 const auto message = simplify(concatenate_unquoted(v[1].getVector()));
                 if (message.isEmpty()) {
-                    os << "What do you want to tell the group?\n";
+                    os << "What do you want to tell the group?" << std::endl;
                     return;
                 }
 
