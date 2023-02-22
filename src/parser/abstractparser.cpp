@@ -861,7 +861,7 @@ void AbstractParser::openVoteURL()
 {
     QDesktopServices::openUrl(QUrl(
         "https://www.mudconnect.com/cgi-bin/search.cgi?mode=mud_listing&mud=MUME+-+Multi+Users+In+Middle+Earth"));
-    sendToUser("--->Thank you kindly for voting!\n");
+    sendToUser("Thank you kindly for voting!\n");
 }
 
 void AbstractParser::showHelpCommands(const bool showAbbreviations)
@@ -1474,10 +1474,10 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
 
     if (isOnline()) { // online mode
         sendToMud(cn);
-        sendToUser("--->" + cn);
+        sendToUser("[" + cn + "]");
         m_overrideSendPrompt = true;
     } else {
-        sendToUser("--->" + cn);
+        sendToUser("[" + cn + "]");
         sendOkToUser();
     }
 }
@@ -1516,10 +1516,10 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
 
     if (isOnline()) { // online mode
         sendToMud(command.toLatin1());
-        sendToUser("--->" + command);
+        sendToUser("[" + command + "]");
         m_overrideSendPrompt = true;
     } else {
-        sendToUser("--->" + command);
+        sendToUser("[" + command + "]");
         sendOkToUser();
     }
 }
