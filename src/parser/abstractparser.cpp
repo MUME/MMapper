@@ -1476,14 +1476,13 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         cn += " ";
         cn += Mmapper2Exit::charForDir(direction);
     }
-    cn += "\n";
 
-    if (isOnline()) { // online mode
-        sendToMud(cn);
-        sendToUser("[" + cn + "]");
+    sendToUser("[" + cn + "]\n");
+
+    if (isOnline()) {
+        sendToMud(cn + "\n");
         m_overrideSendPrompt = true;
     } else {
-        sendToUser("[" + cn + "]");
         sendOkToUser();
     }
 }
@@ -1513,19 +1512,18 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
             cn += " ";
             cn += dirChar.toLatin1();
         }
-        cn += "\n";
         command = command.replace(QString("$$DOOR_%1$$").arg(dirChar.toUpper()), cn);
     } else if (direction == ExitDirEnum::UNKNOWN) {
-        cn += dn + "\n";
+        cn += dn;
         command = command.replace("$$DOOR$$", cn);
     }
 
-    if (isOnline()) { // online mode
-        sendToMud(command.toLatin1());
-        sendToUser("[" + command + "]");
+    sendToUser("[" + command + "]\n");
+
+    if (isOnline()) {
+        sendToMud(command.toLatin1() + "\n");
         m_overrideSendPrompt = true;
     } else {
-        sendToUser("[" + command + "]");
         sendOkToUser();
     }
 }
