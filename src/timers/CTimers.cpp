@@ -44,11 +44,16 @@ CTimers::CTimers(QObject *const parent)
 
 static std::string msToMinSec(const int64_t ms)
 {
-    const auto min = ms / 1000 / 60;
+    const auto hour = ms / 1000 / 60 / 60;
+    const auto min = ms / 1000 / 60 % 60;
     const auto sec = ms / 1000 % 60;
 
     std::ostringstream ostr;
-    ostr << std::setfill('0') << std::setw(2) << min << ":" << std::setw(2) << sec;
+    ostr << std::setfill('0');
+    if (hour) {
+        ostr << hour << ":" << std::setw(2);
+    }
+    ostr << min << ":" << std::setw(2) << sec;
     return ostr.str();
 }
 
