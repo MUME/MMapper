@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2023 The MMapper Authors
+// Author: Mike Repass <mike.repass@gmail.com> (Taryn)
+
 #include "adventuresession.h"
 #include "QtCore/qdebug.h"
 #include "xpstatuswidget.h"
