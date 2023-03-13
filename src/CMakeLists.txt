@@ -29,6 +29,7 @@ set(mmapper_SRCS
     configuration/NamedConfig.h
     configuration/configuration.cpp
     configuration/configuration.h
+    configuration/configobserver.h
     display/CanvasMouseModeEnum.h
     display/Characters.cpp
     display/Characters.h

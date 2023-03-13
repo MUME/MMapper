@@ -11,10 +11,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
 {
     setFlat(true);
     setStyleSheet("QPushButton { border: none; outline: none; }");
-
     setMouseTracking(true);
-
-    updateContent();
 
     connect(&m_tracker,
             &AdventureTracker::sig_updatedSession,
@@ -25,11 +22,14 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
             &AdventureTracker::sig_endedSession,
             this,
             &XPStatusWidget::slot_updatedSession);
+
+    readConfig();
+    updateContent();
 }
 
 void XPStatusWidget::updateContent()
 {
-    if (m_session.has_value()) {
+    if (m_showPreference && m_session.has_value()) {
         auto xpSession = m_session->xp().gainedSession();
         auto tpSession = m_session->tp().gainedSession();
         auto xpf = AdventureSession::formatPoints(xpSession);
@@ -42,6 +42,23 @@ void XPStatusWidget::updateContent()
         setText("");
         hide();
     }
+}
+
+void XPStatusWidget::readConfig()
+{
+    m_showPreference = getConfig().adventurePanel.getDisplayXPStatus();
+}
+
+void XPStatusWidget::slot_configChanged()
+{
+    readConfig();
+    updateContent();
+}
+
+void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
+{
+    m_session = session;
+    updateContent();
 }
 
 void XPStatusWidget::enterEvent(QEvent *event)
@@ -63,10 +80,4 @@ void XPStatusWidget::leaveEvent(QEvent *event)
     m_statusBar->clearMessage();
 
     QWidget::leaveEvent(event);
-}
-
-void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
-{
-    m_session = session;
-    updateContent();
 }

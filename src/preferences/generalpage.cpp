@@ -153,7 +153,7 @@ void GeneralPage::slot_loadConfig()
 
     ui->displayMumeClockCheckBox->setChecked(config.mumeClock.display);
 
-    ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.displayXPStatus);
+    ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
 
     ui->proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
@@ -230,5 +230,5 @@ void GeneralPage::slot_displayMumeClockStateChanged(int /*unused*/)
 
 void GeneralPage::slot_displayXPStatusStateChanged([[maybe_unused]] int)
 {
-    setConfig().adventurePanel.displayXPStatus = ui->displayXPStatusCheckBox->isChecked();
+    setConfig().adventurePanel.setDisplayXPStatus(ui->displayXPStatusCheckBox->isChecked());
 }
