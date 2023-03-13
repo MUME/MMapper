@@ -5,7 +5,7 @@
 class AbstractStatefulLineParser
 {
 public:
-    virtual ~AbstractStatefulLineParser();
+    virtual ~AbstractStatefulLineParser(); // required for warning -W non-virtual-dtor
     virtual bool parse(QString line) = 0;
     virtual QString getLastSuccessVal();
 

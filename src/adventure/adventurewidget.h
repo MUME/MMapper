@@ -13,7 +13,7 @@ class AdventureWidget : public QWidget
 public:
     static constexpr const int MAX_LINES = 1024;
     static constexpr const auto DEFAULT_MSG
-        = "Your progress in Middle Earth will be tracked here! *BETA*\n";
+        = "Your adventures in Middle Earth will be tracked here! *BETA*\n";
 
     static constexpr const auto ACCOMPLISH_MSG = "Task accomplished! (%1 xp)\n";
     static constexpr const auto ACHIEVE_MSG = "Achievement: %1\n";

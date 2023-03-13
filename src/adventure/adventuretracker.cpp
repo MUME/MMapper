@@ -111,11 +111,11 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
 void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
 {
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc.has_value())
+    if (!doc || !doc->isObject())
         return;
     QJsonObject obj = doc->object();
 
-    if (!(obj.contains("channel") && obj.contains("text")))
+    if (!obj.contains("channel") || !obj.contains("text"))
         return;
 
     if (obj["channel"].toString() == "tells") {
@@ -129,7 +129,7 @@ void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
 void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 {
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc.has_value())
+    if (!doc || !doc->isObject())
         return;
     QJsonObject obj = doc->object();
 
@@ -166,7 +166,7 @@ void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
     }
 
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc.has_value())
+    if (!doc || !doc->isObject())
         return;
     QJsonObject obj = doc->object();
 

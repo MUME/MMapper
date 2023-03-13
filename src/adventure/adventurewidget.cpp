@@ -19,7 +19,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     m_journalTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_journalTextEdit->setTabChangesFocus(false);
 
-    const auto &settings = getConfig().integratedClient;
+    const auto settings = getConfig().integratedClient;
 
     QTextFrameFormat frameFormat = m_journalTextEdit->document()->rootFrame()->frameFormat();
     frameFormat.setBackground(settings.backgroundColor);
@@ -32,7 +32,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     blockCharFormat.setFont(*font);
     m_journalTextCursor->setBlockCharFormat(blockCharFormat);
 
-    auto *layout = new QVBoxLayout(this);
+    auto layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
