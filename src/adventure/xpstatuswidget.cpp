@@ -54,8 +54,11 @@ void XPStatusWidget::readConfig()
     m_showPreference = getConfig().adventurePanel.getDisplayXPStatus();
 }
 
-void XPStatusWidget::slot_configChanged()
+void XPStatusWidget::slot_configChanged(const std::type_info &configGroup)
 {
+    if (configGroup != typeid(Configuration::AdventurePanelSettings))
+        return;
+
     readConfig();
     updateContent();
 }

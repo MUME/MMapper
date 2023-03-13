@@ -338,7 +338,8 @@ public:
         void setDisplayXPStatus(bool display)
         {
             displayXPStatus = display;
-            emit ConfigObserver::get().sig_configChanged();
+            emit ConfigObserver::get().sig_configChanged(
+                typeid(Configuration::AdventurePanelSettings));
         }
 
     private:
