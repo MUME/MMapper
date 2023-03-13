@@ -330,6 +330,14 @@ public:
         SUBGROUP();
     } mumeClock;
 
+    struct NODISCARD AdventurePanelSettings final
+    {
+        bool displayXPStatus = false;
+
+    private:
+        SUBGROUP();
+    } adventurePanel;
+
     struct NODISCARD IntegratedMudClientSettings final
     {
         QString font;
