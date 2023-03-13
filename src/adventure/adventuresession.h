@@ -39,7 +39,6 @@ public:
     AdventureSession(const AdventureSession &src);
     AdventureSession &operator=(const AdventureSession &src);
 
-    double checkpointTPGained();
     double checkpointXPGained();
     void updateTP(double tp);
     void updateXP(double xp);

@@ -71,11 +71,6 @@ AdventureSession::Counter<double> AdventureSession::xp() const
     return m_xp;
 }
 
-double AdventureSession::checkpointTPGained()
-{
-    return m_tp.checkpoint();
-}
-
 double AdventureSession::checkpointXPGained()
 {
     return m_xp.checkpoint();

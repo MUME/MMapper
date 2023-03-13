@@ -99,7 +99,7 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 
 void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
 {
-    if (m_session == nullptr)
+    if (!m_session)
         return;
 
     qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
@@ -139,7 +139,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 
     auto charName = obj["name"].toString();
 
-    if (m_session == nullptr) {
+    if (!m_session) {
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
         m_session = std::make_unique<AdventureSession>(charName);
@@ -147,7 +147,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
         return;
     }
 
-    if (m_session != nullptr && m_session->name() != charName) {
+    if (m_session && m_session->name() != charName) {
         qDebug().noquote() << QString("Adventure: new adventure for %1 replacing %2")
                                   .arg(charName, m_session->name());
 
@@ -160,7 +160,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
 
 void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
 {
-    if (m_session == nullptr) {
+    if (!m_session) {
         qDebug().noquote() << "Adventure: can't update vitals without session.";
         return;
     }
@@ -188,7 +188,7 @@ void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
 
 double AdventureTracker::checkpointXP()
 {
-    if (m_session == nullptr) {
+    if (!m_session) {
         qDebug().noquote() << "Adventure: attempting to checkpointXP() without valid session.";
         return 0;
     }
