@@ -5,10 +5,10 @@
 
 #include <QString>
 
-class AbstractStatefulLineParser
+class AbstractLineParser
 {
 public:
-    virtual ~AbstractStatefulLineParser(); // required for warning -W non-virtual-dtor
+    virtual ~AbstractLineParser(); // required for warning -W non-virtual-dtor
     virtual bool parse(QString line) = 0;
     virtual QString getLastSuccessVal();
 
@@ -17,37 +17,37 @@ protected:
     QString m_lastSuccessVal;
 };
 
-class AccomplishedTaskParser : public AbstractStatefulLineParser
+class AccomplishedTaskParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class AchievementParser : public AbstractStatefulLineParser
+class AchievementParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class DiedParser : public AbstractStatefulLineParser
+class DiedParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class GainedLevelParser : public AbstractStatefulLineParser
+class GainedLevelParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class HintParser : public AbstractStatefulLineParser
+class HintParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class KillAndXPParser : public AbstractStatefulLineParser
+class KillAndXPParser : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;

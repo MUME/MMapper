@@ -13,43 +13,45 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
     : QWidget{parent}
     , m_adventureTracker{at}
 {
-    m_journalTextEdit = new QTextEdit(this);
-    m_journalTextCursor = new QTextCursor(m_journalTextEdit->document());
+    m_textEdit = new QTextEdit(this);
+    m_textCursor = new QTextCursor(m_textEdit->document());
 
-    m_journalTextEdit->setReadOnly(true);
-    m_journalTextEdit->setOverwriteMode(true);
-    m_journalTextEdit->setUndoRedoEnabled(false);
-    m_journalTextEdit->setDocumentTitle("Adventure Journal Text");
-    m_journalTextEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    m_journalTextEdit->setTabChangesFocus(false);
+    m_textEdit->setReadOnly(true);
+    m_textEdit->setOverwriteMode(true);
+    m_textEdit->setUndoRedoEnabled(false);
+    m_textEdit->setDocumentTitle("Adventure Panel Text");
+    m_textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_textEdit->setTabChangesFocus(false);
 
     const auto settings = getConfig().integratedClient;
 
-    QTextFrameFormat frameFormat = m_journalTextEdit->document()->rootFrame()->frameFormat();
+    QTextFrameFormat frameFormat = m_textEdit->document()->rootFrame()->frameFormat();
     frameFormat.setBackground(settings.backgroundColor);
-    m_journalTextEdit->document()->rootFrame()->setFrameFormat(frameFormat);
+    m_textEdit->document()->rootFrame()->setFrameFormat(frameFormat);
 
-    QTextCharFormat blockCharFormat = m_journalTextCursor->blockCharFormat();
+    QTextCharFormat blockCharFormat = m_textCursor->blockCharFormat();
     blockCharFormat.setForeground(settings.foregroundColor);
     auto font = new QFont();
-    font->fromString(settings.font); // needed fromString() to extract PointSize
+    font->fromString(settings.font); // need fromString() to extract PointSize
     blockCharFormat.setFont(*font);
-    m_journalTextCursor->setBlockCharFormat(blockCharFormat);
+    m_textCursor->setBlockCharFormat(blockCharFormat);
 
     auto layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(m_journalTextEdit);
+    layout->addWidget(m_textEdit);
 
-    m_clearJournalAction = new QAction("Clear Content");
-    connect(m_clearJournalAction,
+    addDefaultContent();
+
+    m_clearContentAction = new QAction("Clear Content");
+    connect(m_clearContentAction,
             &QAction::triggered,
             this,
             &AdventureWidget::slot_actionClearContent);
 
-    m_journalTextEdit->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_journalTextEdit,
+    m_textEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_textEdit,
             &QTextEdit::customContextMenuRequested,
             this,
             &AdventureWidget::slot_contextMenuRequested);
@@ -64,7 +66,10 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
             this,
             &AdventureWidget::slot_onAchievedSomething);
 
-    connect(&m_adventureTracker, &AdventureTracker::sig_died, this, &AdventureWidget::slot_onDied);
+    connect(&m_adventureTracker,
+            &AdventureTracker::sig_diedInGame,
+            this,
+            &AdventureWidget::slot_onDied);
 
     connect(&m_adventureTracker,
             &AdventureTracker::sig_gainedLevel,
@@ -80,8 +85,6 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
             &AdventureTracker::sig_receivedHint,
             this,
             &AdventureWidget::slot_onReceivedHint);
-
-    addDefaultContent();
 }
 
 void AdventureWidget::slot_onAccomplishedTask(double xpGained)
@@ -90,7 +93,7 @@ void AdventureWidget::slot_onAccomplishedTask(double xpGained)
     // spam, since sometimes it co-triggers with achievement and can be redundant.
     if (xpGained > 0.0) {
         auto msg = QString(ACCOMPLISH_MSG).arg(AdventureSession::formatPoints(xpGained));
-        addJournalEntry(msg);
+        addAdventureUpdate(msg);
     }
 }
 
@@ -104,7 +107,7 @@ void AdventureWidget::slot_onAchievedSomething(const QString &achievement, doubl
         msg = QString(ACHIEVE_MSG).arg(achievement);
     }
 
-    addJournalEntry(msg);
+    addAdventureUpdate(msg);
 }
 
 void AdventureWidget::slot_onDied(double xpLost)
@@ -112,13 +115,13 @@ void AdventureWidget::slot_onDied(double xpLost)
     // Ignore Died messages that don't have an accompanying XP loss (to avoid whois spam, etc.)
     if (xpLost < 0.0) {
         auto msg = QString(DIED_MSG).arg(AdventureSession::formatPoints(xpLost));
-        addJournalEntry(msg);
+        addAdventureUpdate(msg);
     }
 }
 
 void AdventureWidget::slot_onGainedLevel()
 {
-    addJournalEntry(QString(GAINED_LEVEL_MSG));
+    addAdventureUpdate(QString(GAINED_LEVEL_MSG));
 }
 
 void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
@@ -130,53 +133,54 @@ void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
     auto xpf = (xpGained > 0.0) ? AdventureSession::formatPoints(xpGained) : "?";
     auto msg = QString(KILL_TROPHY_MSG).arg(mobName, xpf);
 
-    addJournalEntry(msg);
+    addAdventureUpdate(msg);
 }
 
 void AdventureWidget::slot_onReceivedHint(const QString &hint)
 {
     auto msg = QString(HINT_MSG).arg(hint);
 
-    addJournalEntry(msg);
+    addAdventureUpdate(msg);
 }
 
 void AdventureWidget::slot_contextMenuRequested(const QPoint &pos)
 {
-    QMenu *contextMenu = m_journalTextEdit->createStandardContextMenu();
+    QMenu *contextMenu = m_textEdit->createStandardContextMenu();
     contextMenu->addSeparator();
-    contextMenu->addAction(m_clearJournalAction);
-    contextMenu->exec(m_journalTextEdit->mapToGlobal(pos));
+    contextMenu->addAction(m_clearContentAction);
+    contextMenu->exec(m_textEdit->mapToGlobal(pos));
     delete contextMenu;
 }
 
 void AdventureWidget::slot_actionClearContent([[maybe_unused]] bool checked)
 {
-    m_journalTextCursor->movePosition(QTextCursor::Start);
-    m_journalTextCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, QTextCursor::End);
-    m_journalTextCursor->removeSelectedText();
+    // REVISIT should use m_textCursor->document()->clear() instead?
+    m_textCursor->movePosition(QTextCursor::Start);
+    m_textCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, QTextCursor::End);
+    m_textCursor->removeSelectedText();
     addDefaultContent();
 }
 
 void AdventureWidget::addDefaultContent()
 {
-    addJournalEntry(DEFAULT_MSG);
+    addAdventureUpdate(DEFAULT_MSG);
 }
 
-void AdventureWidget::addJournalEntry(const QString &msg)
+void AdventureWidget::addAdventureUpdate(const QString &msg)
 {
-    m_journalTextCursor->movePosition(QTextCursor::End);
-    m_journalTextCursor->insertText(msg);
+    m_textCursor->movePosition(QTextCursor::End);
+    m_textCursor->insertText(msg);
 
     // If more than MAX_LINES, preserve by deleting from the start
-    auto lines_over = m_journalTextEdit->document()->lineCount() - AdventureWidget::MAX_LINES;
+    auto lines_over = m_textEdit->document()->lineCount() - AdventureWidget::MAX_LINES;
     if (lines_over > 0) {
-        m_journalTextCursor->movePosition(QTextCursor::Start);
-        m_journalTextCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
-        m_journalTextCursor->removeSelectedText();
-        m_journalTextCursor->movePosition(QTextCursor::End);
+        m_textCursor->movePosition(QTextCursor::Start);
+        m_textCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
+        m_textCursor->removeSelectedText();
+        m_textCursor->movePosition(QTextCursor::End);
     }
 
     // force scroll to bottom upon new message
-    auto scrollBar = m_journalTextEdit->verticalScrollBar();
+    auto scrollBar = m_textEdit->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());
 }

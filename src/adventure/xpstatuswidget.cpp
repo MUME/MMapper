@@ -18,6 +18,9 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
     setStyleSheet("QPushButton { border: none; outline: none; }");
     setMouseTracking(true);
 
+    readConfig();
+    updateContent();
+
     connect(&m_tracker,
             &AdventureTracker::sig_updatedSession,
             this,
@@ -27,9 +30,11 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *pa
             &AdventureTracker::sig_endedSession,
             this,
             &XPStatusWidget::slot_updatedSession);
+}
 
-    readConfig();
-    updateContent();
+void XPStatusWidget::readConfig()
+{
+    m_showPreference = getConfig().adventurePanel.getDisplayXPStatus();
 }
 
 void XPStatusWidget::updateContent()
@@ -39,7 +44,7 @@ void XPStatusWidget::updateContent()
         auto tpSession = m_session->tp().gainedSession();
         auto xpf = AdventureSession::formatPoints(xpSession);
         auto tpf = AdventureSession::formatPoints(tpSession);
-        auto msg = QString("%1 Session: %2 XP %3 TP").arg(m_session->name()).arg(xpf).arg(tpf);
+        auto msg = QString("%1 Session: %2 XP %3 TP").arg(m_session->name(), xpf, tpf);
         setText(msg);
         show();
         repaint();
@@ -47,11 +52,6 @@ void XPStatusWidget::updateContent()
         setText("");
         hide();
     }
-}
-
-void XPStatusWidget::readConfig()
-{
-    m_showPreference = getConfig().adventurePanel.getDisplayXPStatus();
 }
 
 void XPStatusWidget::slot_configChanged(const std::type_info &configGroup)
@@ -76,7 +76,7 @@ void XPStatusWidget::enterEvent(QEvent *event)
         auto tpHourly = m_session->calculateHourlyRateTP();
         auto xpf = AdventureSession::formatPoints(xpHourly);
         auto tpf = AdventureSession::formatPoints(tpHourly);
-        auto msg = QString("Hourly rate: %1 XP %2 TP").arg(xpf).arg(tpf);
+        auto msg = QString("Hourly rate: %1 XP %2 TP").arg(xpf, tpf);
         m_statusBar->showMessage(msg);
     }
 

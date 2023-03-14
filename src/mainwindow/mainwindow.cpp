@@ -1453,7 +1453,7 @@ void MainWindow::setupStatusBar()
     statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock, this));
 
     XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
-    xpStatus->setToolTip("Click to toggle the Adventure Journal.");
+    xpStatus->setToolTip("Click to toggle the Adventure Panel.");
     connect(&ConfigObserver::get(),
             &ConfigObserver::sig_configChanged,
             xpStatus,

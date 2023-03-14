@@ -42,11 +42,11 @@ private slots:
 
 private:
     void addDefaultContent();
-    void addJournalEntry(const QString &msg);
+    void addAdventureUpdate(const QString &msg);
 
     AdventureTracker &m_adventureTracker;
 
-    QTextEdit *m_journalTextEdit = nullptr;
-    QTextCursor *m_journalTextCursor = nullptr;
-    QAction *m_clearJournalAction = nullptr;
+    QTextEdit *m_textEdit = nullptr;
+    QTextCursor *m_textCursor = nullptr;
+    QAction *m_clearContentAction = nullptr;
 };

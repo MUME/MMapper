@@ -37,7 +37,7 @@ class AdventureSession
     };
 
 public:
-    AdventureSession(QString charName);
+    explicit AdventureSession(QString charName);
 
     AdventureSession(const AdventureSession &src);
     AdventureSession &operator=(const AdventureSession &src);

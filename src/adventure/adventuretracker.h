@@ -18,7 +18,7 @@ public:
 signals:
     void sig_accomplishedTask(double xpGained);
     void sig_achievedSomething(const QString &achievement, double xpGained);
-    void sig_died(double xpLost);
+    void sig_diedInGame(double xpLost);
     void sig_endedSession(const AdventureSession &session);
     void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, double xpGained);

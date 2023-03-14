@@ -60,7 +60,7 @@ void AdventureTracker::slot_onUserText(const QByteArray &ba)
 
     if (m_diedParser.parse(line)) {
         auto xpLost = checkpointXP();
-        emit sig_died(xpLost);
+        emit sig_diedInGame(xpLost);
         return;
     }
 

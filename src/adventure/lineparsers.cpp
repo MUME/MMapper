@@ -5,9 +5,9 @@
 #include "lineparsers.h"
 
 // required for warning -W non-virtual-dtor
-AbstractStatefulLineParser::~AbstractStatefulLineParser() {}
+AbstractLineParser::~AbstractLineParser() {}
 
-QString AbstractStatefulLineParser::getLastSuccessVal()
+QString AbstractLineParser::getLastSuccessVal()
 {
     return m_lastSuccessVal;
 }

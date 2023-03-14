@@ -12,7 +12,9 @@ class XPStatusWidget : public QPushButton
 {
     Q_OBJECT
 public:
-    XPStatusWidget(AdventureTracker &at, QStatusBar *sb = nullptr, QWidget *parent = nullptr);
+    explicit XPStatusWidget(AdventureTracker &at,
+                            QStatusBar *sb = nullptr,
+                            QWidget *parent = nullptr);
 
 public slots:
     void slot_configChanged(const std::type_info &configGroup);
@@ -29,8 +31,6 @@ private:
     bool m_showPreference = true;
 
     QStatusBar *m_statusBar;
-
     AdventureTracker &m_tracker;
-
     std::optional<AdventureSession> m_session;
 };
