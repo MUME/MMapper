@@ -138,16 +138,16 @@ void MumeClockWidget::slot_updateLabel()
         QString styleSheet = "";
         QString statusTip = "";
         if (precision <= MumeClockPrecisionEnum::UNSET) {
-            styleSheet = "color:white;background:grey";
+            styleSheet = "padding-left:1px;padding-right:1px;color:white;background:grey";
             statusTip = "The clock has not synced with MUME! Click to override at your own risk.";
         } else if (time == MumeTimeEnum::DAWN) {
-            styleSheet = "color:white;background:red";
+            styleSheet = "padding-left:1px;padding-right:1px;color:white;background:red";
             statusTip = "Ticks left until day";
         } else if (time >= MumeTimeEnum::DUSK) {
-            styleSheet = "color:white;background:blue";
+            styleSheet = "padding-left:1px;padding-right:1px;color:white;background:blue";
             statusTip = "Ticks left until day";
         } else {
-            styleSheet = "color:black;background:yellow";
+            styleSheet = "padding-left:1px;padding-right:1px;color:black;background:yellow";
             statusTip = "Ticks left until night";
         }
         timeLabel->setStyleSheet(styleSheet);
