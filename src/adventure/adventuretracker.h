@@ -6,7 +6,6 @@
 #include "adventure/adventuresession.h"
 #include "adventure/lineparsers.h"
 #include "observer/gameobserver.h"
-#include <fstream>
 #include <QObject>
 
 class AdventureTracker final : public QObject

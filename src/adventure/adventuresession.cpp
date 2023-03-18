@@ -3,8 +3,8 @@
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
 #include "adventuresession.h"
-#include "QtCore/qdebug.h"
 #include "xpstatuswidget.h"
+#include <QDebug>
 #include <QtWidgets>
 
 AdventureSession::AdventureSession(QString charName)
