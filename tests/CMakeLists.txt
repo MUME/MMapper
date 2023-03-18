@@ -164,3 +164,42 @@ set_target_properties(
   UNITY_BUILD ON
 )
 add_test(NAME TestGlobal COMMAND TestGlobal)
+
+# Adventure
+set(adventure_SRCS
+        ../src/adventure/adventuresession.cpp
+        ../src/adventure/adventuresession.h
+        ../src/adventure/adventuretracker.cpp
+        ../src/adventure/adventuretracker.h
+        ../src/adventure/adventurewidget.cpp
+        ../src/adventure/adventurewidget.h
+        ../src/adventure/lineparsers.cpp
+        ../src/adventure/lineparsers.h
+        ../src/adventure/xpstatuswidget.cpp
+        ../src/adventure/xpstatuswidget.h
+        ../src/configuration/configobserver.h
+        ../src/configuration/configuration.cpp
+        ../src/configuration/configuration.h
+        ../src/global/Color.cpp
+        ../src/global/Color.h
+        ../src/global/NamedColors.cpp
+        ../src/global/NamedColors.h
+        ../src/global/utils.cpp
+        ../src/global/utils.h
+        ../src/observer/gameobserver.cpp
+        ../src/observer/gameobserver.h
+        ../src/parser/parserutils.cpp
+        ../src/parser/parserutils.h
+        )
+set(TestAdventure_SRCS testadventure.cpp testadventure.h)
+add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
+target_link_libraries(TestAdventure Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+set_target_properties(
+        TestAdventure PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+        UNITY_BUILD ON
+)
+add_test(NAME TestAdventure COMMAND TestAdventure)
