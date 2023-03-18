@@ -87,11 +87,6 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
         return;
     }
 
-    if (msg.isCommChannelText()) {
-        parseIfReceivedComm(msg);
-        return;
-    }
-
     if (msg.isCoreGoodbye()) {
         parseIfGoodbye(msg);
         return;
@@ -107,24 +102,6 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
     m_session->endSession();
     emit sig_endedSession(*m_session);
     m_session.reset();
-}
-
-void AdventureTracker::parseIfReceivedComm(GmcpMessage msg)
-{
-    std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc || !doc->isObject())
-        return;
-    QJsonObject obj = doc->object();
-
-    if (!obj.contains("channel") || !obj.contains("text"))
-        return;
-
-    if (obj["channel"].toString() == "tells") {
-        emit sig_receivedTell(obj["text"].toString());
-
-    } else if (obj["channel"].toString() == "tales") {
-        emit sig_receivedNarrate(obj["text"].toString());
-    }
 }
 
 void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)

@@ -19,9 +19,6 @@ class ParseEvent;
     X(CHAR_NAME, CharName, "char.name", "Char.Name") \
     X(CHAR_STATUSVARS, CharStatusVars, "char.statusvars", "Char.StatusVars") \
     X(CHAR_VITALS, CharVitals, "char.vitals", "Char.Vitals") \
-    X(COMM_CHANNEL_ENABLE, CommChannelEnable, "comm.channel.enable", "Comm.Channel.Enable") \
-    X(COMM_CHANNEL_LIST, CommChannelList, "comm.channel.list", "Comm.Channel.List") \
-    X(COMM_CHANNEL_TEXT, CommChannelText, "comm.channel.text", "Comm.Channel.Text") \
     X(CORE_GOODBYE, CoreGoodbye, "core.goodbye", "Core.Goodbye") \
     X(CORE_HELLO, CoreHello, "core.hello", "Core.Hello") \
     X(CORE_SUPPORTS_ADD, CoreSupportsAdd, "core.supports.add", "Core.Supports.Add") \
@@ -48,7 +45,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 17u;
+static constexpr const size_t NUM_GMCP_MESSAGES = 14u;
 static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE) + 1);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 

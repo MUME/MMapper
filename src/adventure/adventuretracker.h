@@ -23,8 +23,6 @@ signals:
     void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, double xpGained);
     void sig_receivedHint(const QString &hint);
-    void sig_receivedNarrate(const QString &msg);
-    void sig_receivedTell(const QString &msg);
     void sig_updatedSession(const AdventureSession &session);
 
 public slots:
@@ -33,7 +31,6 @@ public slots:
 
 private:
     void parseIfGoodbye(GmcpMessage msg);
-    void parseIfReceivedComm(GmcpMessage msg);
     void parseIfUpdatedCharName(GmcpMessage msg);
     void parseIfUpdatedVitals(GmcpMessage msg);
 

@@ -152,18 +152,12 @@ void MudTelnet::virt_onGmcpEnabled()
     if (debug)
         qDebug() << "Requesting GMCP from MUME";
 
-    // Per MUME documentation, this must be the very first client GMCP message
-    // https://mume.org/help/generic_mud_communication_protocol
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
                                 QString(R"({ "client": "MMapper", "version": "%1" })")
                                     .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))));
 
     // Request GMCP modules that might have already been sent by the local client
     sendCoreSupports();
-
-    // Request that Narrates and Tells be emitted via GMCP
-    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::COMM_CHANNEL_ENABLE, QString(R"("tells")")));
-    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::COMM_CHANNEL_ENABLE, QString(R"("tales")")));
 
     if (receivedExternalDiscordHello)
         sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::EXTERNAL_DISCORD_HELLO});
@@ -192,7 +186,6 @@ void MudTelnet::resetGmcpModules()
 
     // Following modules are enabled by default
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::CHAR, GmcpModuleVersion{1}}, true);
-    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::COMM_CHANNEL, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EXTERNAL_DISCORD, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM_CHARS, GmcpModuleVersion{1}}, true);
 }
