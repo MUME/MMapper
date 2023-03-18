@@ -28,7 +28,7 @@ signals:
     void sig_updatedSession(const AdventureSession &session);
 
 public slots:
-    void slot_onUserText(const QByteArray &ba);
+    void slot_onUserText(const QString &line);
     void slot_onUserGmcp(const GmcpMessage &msg);
 
 private:

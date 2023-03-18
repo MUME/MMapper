@@ -16,7 +16,7 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
     , m_session{nullptr}
 {
     connect(&m_observer,
-            &GameObserver::sig_sentToUserText,
+            &GameObserver::sig_sentToUserString,
             this,
             &AdventureTracker::slot_onUserText);
 
@@ -26,11 +26,8 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
             &AdventureTracker::slot_onUserGmcp);
 }
 
-void AdventureTracker::slot_onUserText(const QByteArray &ba)
+void AdventureTracker::slot_onUserText(const QString &line)
 {
-    QString line = QString::fromLatin1(ba).trimmed();
-    ParserUtils::removeAnsiMarksInPlace(line);
-
     // Try to order these by frequency to minimize unnecessary parsing
 
     if (m_killParser.parse(line)) {
