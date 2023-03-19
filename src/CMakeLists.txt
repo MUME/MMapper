@@ -1,5 +1,15 @@
 set(mmapper_SRCS
     main.cpp
+    adventure/adventuresession.cpp
+    adventure/adventuresession.h
+    adventure/adventuretracker.cpp
+    adventure/adventuretracker.h
+    adventure/adventurewidget.cpp
+    adventure/adventurewidget.h
+    adventure/lineparsers.h
+    adventure/lineparsers.cpp
+    adventure/xpstatuswidget.cpp
+    adventure/xpstatuswidget.h
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/ClientWidget.cpp
@@ -19,6 +29,7 @@ set(mmapper_SRCS
     configuration/NamedConfig.h
     configuration/configuration.cpp
     configuration/configuration.h
+    configuration/configobserver.h
     display/CanvasMouseModeEnum.h
     display/Characters.cpp
     display/Characters.h

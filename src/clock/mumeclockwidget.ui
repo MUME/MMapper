@@ -10,6 +10,9 @@
     <height>22</height>
    </rect>
   </property>
+  <property name="minimumWidth">
+   <number>113</number>
+  </property>
   <property name="windowTitle">
    <string>Mume Clock</string>
   </property>
@@ -20,6 +23,9 @@
    <string>Current time in Mume</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="alignment">
+    <enum>Qt::AlignLeft</enum>
+   </property>
    <property name="spacing">
     <number>0</number>
    </property>
@@ -41,10 +47,10 @@
       <number>0</number>
      </property>
      <property name="leftMargin">
-      <number>6</number>
+      <number>4</number>
      </property>
      <property name="rightMargin">
-      <number>6</number>
+      <number>2</number>
      </property>
      <item>
       <widget class="QLabel" name="moonPhaseLabel">
@@ -64,6 +70,9 @@
       <widget class="QLabel" name="timeLabel">
        <property name="text">
         <string>Clock not set</string>
+       </property>
+       <property name="minimumWidth">
+        <number>40</number>
        </property>
       </widget>
      </item>

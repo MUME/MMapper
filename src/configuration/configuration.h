@@ -9,6 +9,7 @@
 #include <QByteArray>
 #include <QColor>
 #include <QMap>
+#include <QObject>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
@@ -21,6 +22,7 @@
 #include "../global/RuleOf5.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "NamedConfig.h"
+#include "configobserver.h"
 
 #undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 
@@ -329,6 +331,21 @@ public:
     private:
         SUBGROUP();
     } mumeClock;
+
+    struct NODISCARD AdventurePanelSettings final
+    {
+        bool getDisplayXPStatus() const { return displayXPStatus; }
+        void setDisplayXPStatus(bool display)
+        {
+            displayXPStatus = display;
+            emit ConfigObserver::get().sig_configChanged(
+                typeid(Configuration::AdventurePanelSettings));
+        }
+
+    private:
+        bool displayXPStatus = false;
+        SUBGROUP();
+    } adventurePanel;
 
     struct NODISCARD IntegratedMudClientSettings final
     {

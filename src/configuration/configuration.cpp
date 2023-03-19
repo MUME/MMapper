@@ -175,6 +175,7 @@ void Settings::initSettings()
     Settings settings; \
     QSettings &conf = static_cast<QSettings &>(settings)
 
+ConstString GRP_ADVENTURE_PANEL = "Adventure Panel";
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
 ConstString GRP_CANVAS = "Canvas";
@@ -212,6 +213,7 @@ ConstString KEY_COLUMNS = "Columns";
 ConstString KEY_COMMAND_PREFIX_CHAR = "Command prefix character";
 ConstString KEY_CONNECTION_NORMAL_COLOR = "Connection normal color";
 ConstString KEY_CORRECT_POSITION_BONUS = "correct position bonus";
+ConstString KEY_DISPLAY_XP_STATUS = "Display XP status bar widget";
 ConstString KEY_DISPLAY_CLOCK = "Display clock";
 ConstString KEY_DRAW_DOOR_NAMES = "Draw door names";
 ConstString KEY_DRAW_NOT_MAPPED_EXITS = "Draw not mapped exits";
@@ -455,6 +457,7 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_PATH_MACHINE, pathMachine); \
         GROUP_CALLBACK(callback, GRP_GROUP_MANAGER, groupManager); \
         GROUP_CALLBACK(callback, GRP_MUME_CLOCK, mumeClock); \
+        GROUP_CALLBACK(callback, GRP_ADVENTURE_PANEL, adventurePanel); \
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
         GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infoMarksDialog); \
         GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
@@ -720,6 +723,11 @@ void Configuration::MumeClockSettings::read(QSettings &conf)
     display = conf.value(KEY_DISPLAY_CLOCK, true).toBool();
 }
 
+void Configuration::AdventurePanelSettings::read(QSettings &conf)
+{
+    displayXPStatus = conf.value(KEY_DISPLAY_XP_STATUS, true).toBool();
+}
+
 void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
 {
     font = conf.value(KEY_FONT, "").toString();
@@ -888,6 +896,11 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
     // Note: There's no QVariant(int64_t) constructor.
     conf.setValue(KEY_MUME_START_EPOCH, static_cast<qlonglong>(startEpoch));
     conf.setValue(KEY_DISPLAY_CLOCK, display);
+}
+
+void Configuration::AdventurePanelSettings::write(QSettings &conf) const
+{
+    conf.setValue(KEY_DISPLAY_XP_STATUS, displayXPStatus);
 }
 
 void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const

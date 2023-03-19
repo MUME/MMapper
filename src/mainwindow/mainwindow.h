@@ -22,15 +22,17 @@
 #include "../display/CanvasMouseModeEnum.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
-#include "observer/gameobserver.h"
 
 class AutoLogger;
 class AbstractAction;
+class AdventureTracker;
+class AdventureWidget;
 class ClientWidget;
 class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
 class FindRoomsDlg;
+class GameObserver;
 class GroupWidget;
 class InfoMarkSelection;
 class MapCanvas;
@@ -164,6 +166,7 @@ private:
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
+    QDockWidget *m_dockDialogAdventure = nullptr;
 
     GameObserver *m_gameObserver = nullptr;
     AutoLogger *m_logger = nullptr;
@@ -183,6 +186,9 @@ private:
 
     ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;
+
+    AdventureTracker *m_adventureTracker = nullptr;
+    AdventureWidget *m_adventureWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;

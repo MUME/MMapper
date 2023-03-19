@@ -23,9 +23,13 @@
 #include <QTextBrowser>
 #include <QtWidgets>
 
+#include "../adventure/adventuretracker.h"
+#include "../adventure/adventurewidget.h"
+#include "../adventure/xpstatuswidget.h"
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
+#include "../configuration/configobserver.h"
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../display/MapCanvasData.h"
@@ -206,7 +210,9 @@ MainWindow::MainWindow()
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = new GameObserver(this);
+    m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
 
+    // View -> Side Panels -> Client Panel
     m_clientWidget = new ClientWidget(this);
     m_clientWidget->setObjectName("InternalMudClientWidget");
     m_dockDialogClient = new QDockWidget("Client Panel", this);
@@ -218,13 +224,13 @@ MainWindow::MainWindow()
     addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
     m_dockDialogClient->setWidget(m_clientWidget);
 
+    // View -> Side Panels -> Log Panel
     m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
                                  | QDockWidget::DockWidgetClosable);
     m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
-
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
     logWindow = new QTextBrowser(m_dockDialogLog);
@@ -232,6 +238,7 @@ MainWindow::MainWindow()
     m_dockDialogLog->setWidget(logWindow);
     m_dockDialogLog->hide();
 
+    // View -> Side Panels -> Group Panel and Tools -> Group Manager
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
     m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
@@ -243,6 +250,7 @@ MainWindow::MainWindow()
     m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
+    // View -> Side Panels -> Room Panel (Mobs)
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
     connect(m_gameObserver,
@@ -259,8 +267,21 @@ MainWindow::MainWindow()
     m_dockDialogRoom->setWidget(m_roomWidget);
     m_dockDialogRoom->hide();
 
-    m_findRoomsDlg = new FindRoomsDlg(mapData, this);
+    // Find Room Dialog
+    m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
+
+    // View -> Side Panels -> Adventure Panel (Trophy XP, Achievements, Hints, etc)
+    m_dockDialogAdventure = new QDockWidget(tr("Adventure Panel *BETA*"), this);
+    m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
+    m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
+                                       | QDockWidget::DockWidgetFloatable
+                                       | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
+    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
+    m_dockDialogAdventure->setWidget(m_adventureWidget);
+    m_dockDialogAdventure->hide();
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
     if constexpr (!NO_UPDATER)
@@ -277,6 +298,7 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
+    // TODO move this connect() wiring into AutoLogger::ctor
     connect(m_gameObserver, &GameObserver::sig_connected, m_logger, &AutoLogger::slot_onConnected);
     connect(m_gameObserver,
             &GameObserver::sig_toggledEchoMode,
@@ -1226,6 +1248,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
+    sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1428,6 +1451,17 @@ void MainWindow::setupStatusBar()
 {
     statusBar()->showMessage(tr("Say friend and enter..."));
     statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock, this));
+
+    XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
+    xpStatus->setToolTip("Click to toggle the Adventure Panel.");
+    connect(&ConfigObserver::get(),
+            &ConfigObserver::sig_configChanged,
+            xpStatus,
+            &XPStatusWidget::slot_configChanged);
+    connect(xpStatus, &QPushButton::clicked, [this]() {
+        m_dockDialogAdventure->setVisible(!m_dockDialogAdventure->isVisible());
+    });
+    statusBar()->insertPermanentWidget(0, xpStatus);
 }
 
 void MainWindow::slot_onPreferences()

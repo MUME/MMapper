@@ -39,6 +39,7 @@ public slots:
     void slot_selectWorldFileButtonClicked(bool);
 
     void slot_displayMumeClockStateChanged(int);
+    void slot_displayXPStatusStateChanged(int);
 
 signals:
     void sig_factoryReset();

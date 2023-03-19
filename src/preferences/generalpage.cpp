@@ -88,6 +88,11 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::slot_displayMumeClockStateChanged);
 
+    connect(ui->displayXPStatusCheckBox,
+            &QCheckBox::stateChanged,
+            this,
+            &GeneralPage::slot_displayXPStatusStateChanged);
+
     connect(ui->proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyThreaded = ui->proxyThreadedCheckBox->isChecked();
     });
@@ -147,6 +152,8 @@ void GeneralPage::slot_loadConfig()
     ui->selectWorldFileButton->setEnabled(autoLoad.autoLoadMap);
 
     ui->displayMumeClockCheckBox->setChecked(config.mumeClock.display);
+
+    ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
 
     ui->proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
@@ -219,4 +226,9 @@ void GeneralPage::slot_autoLoadCheckStateChanged(int /*unused*/)
 void GeneralPage::slot_displayMumeClockStateChanged(int /*unused*/)
 {
     setConfig().mumeClock.display = ui->displayMumeClockCheckBox->isChecked();
+}
+
+void GeneralPage::slot_displayXPStatusStateChanged([[maybe_unused]] int)
+{
+    setConfig().adventurePanel.setDisplayXPStatus(ui->displayXPStatusCheckBox->isChecked());
 }
