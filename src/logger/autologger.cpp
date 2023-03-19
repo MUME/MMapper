@@ -7,7 +7,6 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/random.h"
-#include "../parser/parserutils.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -201,7 +200,7 @@ void AutoLogger::slot_onConnected()
         deleteOldLogs();
 
     if (getConfig().autoLog.autoLog) {
-        MAYBE_UNUSED const auto igored = //
-            createFile();
+        if (!createFile())
+            qWarning() << "Unable to create log file for autologger.";
     }
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "proxy/GmcpMessage.h"
 #include <QObject>
+
+#include "proxy/GmcpMessage.h"
 
 class GameObserver : public QObject
 {

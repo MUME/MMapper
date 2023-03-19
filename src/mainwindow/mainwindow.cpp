@@ -36,7 +36,6 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
-#include "../global/Debug.h"
 #include "../global/NullPointerException.h"
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
