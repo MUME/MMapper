@@ -1,4 +1,27 @@
 ================================
+MMapper 23.03.0 (March 18, 2023)
+================================
+
+New features:
+ - Added the Adventure Panel that helps players track, organize, and
+   understand their adventures such as hints, XP, and achievements (Taryn)
+ - Added the _timers command for players to track things (Azazello)
+
+Bug fixes:
+ - Fixed crash when editing multiple rooms
+ - Fixed Warrens' dawn and dusk messages (Troth)
+ - RoomPanel now supports dark mode on macOS and Linux
+ - Use Char.Vitals GMCP to set riding or position state rather than from the
+   prompt using regular expressions
+
+Changes:
+ - Internal commands don't have weird output like "--->" anymore
+ - Github Actions is now used very extensively for continuous build by the
+   MMapper developers
+ - Windows build has stopped using MSYS2 because it upgraded to OpenSSL3 which
+   is not supportted by the Qt5 framework
+
+================================
 MMapper 23.01.0 (January 1, 2023)
 ================================
 
