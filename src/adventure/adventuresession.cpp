@@ -3,9 +3,8 @@
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
 #include "adventuresession.h"
-#include "xpstatuswidget.h"
+
 #include <QDebug>
-#include <QtWidgets>
 
 AdventureSession::AdventureSession(QString charName)
     : m_charName{std::move(charName)}

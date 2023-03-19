@@ -3,10 +3,11 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
-#include "adventure/adventuretracker.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>
+
+#include "adventure/adventuretracker.h"
 
 class XPStatusWidget : public QPushButton
 {

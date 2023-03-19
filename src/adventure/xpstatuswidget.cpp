@@ -3,12 +3,12 @@
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
 #include "xpstatuswidget.h"
+
 #include "../configuration/configuration.h"
 #include "adventuresession.h"
 #include "adventuretracker.h"
-#include "adventurewidget.h"
 
-XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent)
+XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidget *const parent)
     : QPushButton(parent)
     , m_statusBar{sb}
     , m_tracker{at}

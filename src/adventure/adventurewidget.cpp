@@ -2,14 +2,15 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "adventurewidget.h"
+
 #include <QtCore>
 #include <QtWidgets>
 
+#include "../configuration/configuration.h"
 #include "adventuresession.h"
-#include "adventurewidget.h"
-#include "configuration/configuration.h"
 
-AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *parent)
+AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     : QWidget{parent}
     , m_adventureTracker{at}
 {

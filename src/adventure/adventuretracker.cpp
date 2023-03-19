@@ -2,13 +2,11 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
-#include <QJsonDocument>
-#include <QJsonObject>
-
 #include "adventuretracker.h"
-#include "parser/parserutils.h"
 
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent)
     : QObject{parent}
@@ -93,7 +91,7 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
     }
 }
 
-void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
+void AdventureTracker::parseIfGoodbye([[maybe_unused]] const GmcpMessage &msg)
 {
     if (!m_session)
         return;
@@ -104,7 +102,7 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
     m_session.reset();
 }
 
-void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
+void AdventureTracker::parseIfUpdatedCharName(const GmcpMessage &msg)
 {
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
     if (!doc || !doc->isObject())
@@ -136,7 +134,7 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
     }
 }
 
-void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
+void AdventureTracker::parseIfUpdatedVitals(const GmcpMessage &msg)
 {
     if (!m_session) {
         qDebug().noquote() << "Adventure: can't update vitals without session.";

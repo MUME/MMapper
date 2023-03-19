@@ -17,37 +17,37 @@ protected:
     QString m_lastSuccessVal;
 };
 
-class AccomplishedTaskParser : public AbstractLineParser
+class AccomplishedTaskParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class AchievementParser : public AbstractLineParser
+class AchievementParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class DiedParser : public AbstractLineParser
+class DiedParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class GainedLevelParser : public AbstractLineParser
+class GainedLevelParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class HintParser : public AbstractLineParser
+class HintParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;
 };
 
-class KillAndXPParser : public AbstractLineParser
+class KillAndXPParser final : public AbstractLineParser
 {
 public:
     bool parse(QString line) override;

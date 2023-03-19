@@ -3,10 +3,11 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include <QObject>
+
 #include "adventure/adventuresession.h"
 #include "adventure/lineparsers.h"
 #include "observer/gameobserver.h"
-#include <QObject>
 
 class AdventureTracker final : public QObject
 {
@@ -29,9 +30,9 @@ public slots:
     void slot_onUserGmcp(const GmcpMessage &msg);
 
 private:
-    void parseIfGoodbye(GmcpMessage msg);
-    void parseIfUpdatedCharName(GmcpMessage msg);
-    void parseIfUpdatedVitals(GmcpMessage msg);
+    void parseIfGoodbye(const GmcpMessage &msg);
+    void parseIfUpdatedCharName(const GmcpMessage &msg);
+    void parseIfUpdatedVitals(const GmcpMessage &msg);
 
     double checkpointXP();
 

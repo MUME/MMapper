@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <QString>
-#include <QtCore>
 
 class AdventureSession
 {
