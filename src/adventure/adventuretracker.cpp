@@ -100,7 +100,7 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] GmcpMessage msg)
 
     qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
     m_session->endSession();
-    emit sig_endedSession(*m_session);
+    emit sig_endedSession(m_session);
     m_session.reset();
 }
 
@@ -120,8 +120,8 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
     if (!m_session) {
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
 
-        m_session = std::make_unique<AdventureSession>(charName);
-        emit sig_updatedSession(*m_session);
+        m_session = std::make_shared<AdventureSession>(charName);
+        emit sig_updatedSession(m_session);
         return;
     }
 
@@ -130,9 +130,9 @@ void AdventureTracker::parseIfUpdatedCharName(GmcpMessage msg)
                                   .arg(charName, m_session->name());
 
         m_session->endSession();
-        emit sig_endedSession(*m_session);
-        m_session = std::make_unique<AdventureSession>(charName);
-        emit sig_updatedSession(*m_session);
+        emit sig_endedSession(m_session);
+        m_session = std::make_shared<AdventureSession>(charName);
+        emit sig_updatedSession(m_session);
     }
 }
 
@@ -161,7 +161,7 @@ void AdventureTracker::parseIfUpdatedVitals(GmcpMessage msg)
     }
 
     if (updated)
-        emit sig_updatedSession(*m_session);
+        emit sig_updatedSession(m_session);
 }
 
 double AdventureTracker::checkpointXP()

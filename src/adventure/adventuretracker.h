@@ -18,11 +18,11 @@ signals:
     void sig_accomplishedTask(double xpGained);
     void sig_achievedSomething(const QString &achievement, double xpGained);
     void sig_diedInGame(double xpLost);
-    void sig_endedSession(const AdventureSession &session);
+    void sig_endedSession(const std::shared_ptr<AdventureSession> &session);
     void sig_gainedLevel();
     void sig_killedMob(const QString &mobName, double xpGained);
     void sig_receivedHint(const QString &hint);
-    void sig_updatedSession(const AdventureSession &session);
+    void sig_updatedSession(const std::shared_ptr<AdventureSession> &session);
 
 public slots:
     void slot_onUserText(const QString &line);
@@ -37,7 +37,7 @@ private:
 
     GameObserver &m_observer;
 
-    std::unique_ptr<AdventureSession> m_session;
+    std::shared_ptr<AdventureSession> m_session;
 
     AchievementParser m_achievementParser;
     DiedParser m_diedParser;

@@ -18,7 +18,7 @@ public:
 
 public slots:
     void slot_configChanged(const std::type_info &configGroup);
-    void slot_updatedSession(const AdventureSession &session);
+    void slot_updatedSession(const std::shared_ptr<AdventureSession> &session);
 
 protected:
     void enterEvent(QEvent *event) override;
@@ -32,5 +32,5 @@ private:
 
     QStatusBar *m_statusBar;
     AdventureTracker &m_tracker;
-    std::optional<AdventureSession> m_session;
+    std::shared_ptr<AdventureSession> m_session;
 };

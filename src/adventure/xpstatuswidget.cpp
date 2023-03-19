@@ -39,7 +39,7 @@ void XPStatusWidget::readConfig()
 
 void XPStatusWidget::updateContent()
 {
-    if (m_showPreference && m_session.has_value()) {
+    if (m_showPreference && m_session) {
         auto xpSession = m_session->xp().gainedSession();
         auto tpSession = m_session->tp().gainedSession();
         auto xpf = AdventureSession::formatPoints(xpSession);
@@ -63,7 +63,7 @@ void XPStatusWidget::slot_configChanged(const std::type_info &configGroup)
     updateContent();
 }
 
-void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
+void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession> &session)
 {
     m_session = session;
     updateContent();
@@ -71,7 +71,7 @@ void XPStatusWidget::slot_updatedSession(const AdventureSession &session)
 
 void XPStatusWidget::enterEvent(QEvent *event)
 {
-    if (m_session.has_value()) {
+    if (m_session) {
         auto xpHourly = m_session->calculateHourlyRateXP();
         auto tpHourly = m_session->calculateHourlyRateTP();
         auto xpf = AdventureSession::formatPoints(xpHourly);
