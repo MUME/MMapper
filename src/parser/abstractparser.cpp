@@ -26,7 +26,6 @@
 
 #include "../clock/mumeclock.h"
 #include "../clock/mumemoment.h"
-#include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -42,8 +41,6 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
-#include "../mapdata/RoomFieldVariant.h"
-#include "../mapdata/enums.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomfilter.h"
@@ -592,6 +589,19 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                     if (hasNoFlee && exitCount == 1) {
                         // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
                         add_exit_keyword("hasnoflee");
+                    }
+
+                    const auto loadFlags = targetRoom->getLoadFlags();
+                    if (loadFlags.contains(RoomLoadFlagEnum::ATTENTION)) {
+                        add_exit_keyword("attention");
+                    }
+
+                    const auto mobFlags = targetRoom->getMobFlags();
+                    if (mobFlags.contains(RoomMobFlagEnum::SUPER_MOB)) {
+                        add_exit_keyword("smob");
+                    }
+                    if (mobFlags.contains(RoomMobFlagEnum::RATTLESNAKE)) {
+                        add_exit_keyword("rattlesnake");
                     }
 
                     // Terrain type exit modifiers
