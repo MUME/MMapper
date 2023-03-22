@@ -106,6 +106,7 @@ public:
         bool alwaysOnTop = false;
         bool showStatusBar = true;
         bool showScrollBars = true;
+        bool showMenuBar = true;
         MapModeEnum mapMode = MapModeEnum::PLAY;
         bool noSplash = false;
         bool noClientPanel = false;
