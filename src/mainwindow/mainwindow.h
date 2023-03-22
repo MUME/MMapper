@@ -128,6 +128,7 @@ public slots:
     void slot_alwaysOnTop();
     void slot_setShowStatusBar();
     void slot_setShowScrollBars();
+    void slot_setShowMenuBar();
 
     void slot_newRoomSelection(const SigRoomSelection &);
     void slot_newConnectionSelection(ConnectionSelection *);
@@ -152,6 +153,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     void startServices();
@@ -245,6 +247,7 @@ private:
     QAction *alwaysOnTopAct = nullptr;
     QAction *showStatusBarAct = nullptr;
     QAction *showScrollBarsAct = nullptr;
+    QAction *showMenuBarAct = nullptr;
     QAction *preferencesAct = nullptr;
 
     QAction *layerUpAct = nullptr;

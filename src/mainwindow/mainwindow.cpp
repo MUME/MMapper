@@ -354,6 +354,11 @@ MainWindow::MainWindow()
 
     showScrollBarsAct->setChecked(getConfig().general.showScrollBars);
     slot_setShowScrollBars();
+
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
+        showMenuBarAct->setChecked(getConfig().general.showMenuBar);
+        slot_setShowMenuBar();
+    }
 }
 
 // depth-first recursively disconnect all children
@@ -697,6 +702,12 @@ void MainWindow::createActions()
     showScrollBarsAct = new QAction(tr("Always Show Scrollbars"), this);
     showScrollBarsAct->setCheckable(true);
     connect(showScrollBarsAct, &QAction::triggered, this, &MainWindow::slot_setShowScrollBars);
+
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
+        showMenuBarAct = new QAction(tr("Always Show Menubar"), this);
+        showMenuBarAct->setCheckable(true);
+        connect(showMenuBarAct, &QAction::triggered, this, &MainWindow::slot_setShowMenuBar);
+    }
 
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
@@ -1262,6 +1273,8 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(showStatusBarAct);
     viewMenu->addAction(showScrollBarsAct);
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac)
+        viewMenu->addAction(showMenuBarAct);
     viewMenu->addAction(alwaysOnTopAct);
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
@@ -1367,6 +1380,37 @@ void MainWindow::slot_setShowScrollBars()
     setConfig().general.showScrollBars = showScrollBars;
     m_mapWindow->updateScrollBars();
     show();
+}
+
+void MainWindow::slot_setShowMenuBar()
+{
+    const bool showMenuBar = this->showMenuBarAct->isChecked();
+    setConfig().general.showMenuBar = showMenuBar;
+    show();
+
+    m_dockDialogAdventure->setMouseTracking(!showMenuBar);
+    m_dockDialogClient->setMouseTracking(!showMenuBar);
+    m_dockDialogGroup->setMouseTracking(!showMenuBar);
+    m_dockDialogLog->setMouseTracking(!showMenuBar);
+    m_dockDialogRoom->setMouseTracking(!showMenuBar);
+    getCanvas()->setMouseTracking(!showMenuBar);
+
+    if (showMenuBar) {
+        menuBar()->show();
+        m_dockDialogAdventure->removeEventFilter(this);
+        m_dockDialogClient->removeEventFilter(this);
+        m_dockDialogGroup->removeEventFilter(this);
+        m_dockDialogLog->removeEventFilter(this);
+        m_dockDialogRoom->removeEventFilter(this);
+        getCanvas()->removeEventFilter(this);
+    } else {
+        m_dockDialogAdventure->installEventFilter(this);
+        m_dockDialogClient->installEventFilter(this);
+        m_dockDialogGroup->installEventFilter(this);
+        m_dockDialogLog->installEventFilter(this);
+        m_dockDialogRoom->installEventFilter(this);
+        getCanvas()->installEventFilter(this);
+    }
 }
 
 void MainWindow::setupToolBars()
@@ -1520,6 +1564,22 @@ void MainWindow::slot_newInfoMarkSelection(InfoMarkSelection *const is)
             slot_onEditInfoMarkSelection();
         }
     }
+}
+
+bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
+{
+    if (QApplication::activeWindow() == this && event->type() == QEvent::MouseMove) {
+        if (const auto *const mouseEvent = dynamic_cast<QMouseEvent *>(event)) {
+            QRect rect = geometry();
+            rect.setHeight(menuBar()->sizeHint().height());
+            if (rect.contains(mouseEvent->globalPos())) {
+                menuBar()->show();
+            } else {
+                menuBar()->hide();
+            }
+        }
+    }
+    return QObject::eventFilter(obj, event);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
