@@ -24,7 +24,6 @@
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitFieldVariant.h"
-#include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/customaction.h"
 #include "../mapdata/enums.h"
 #include "../mapdata/mapdata.h"
@@ -85,6 +84,7 @@ NODISCARD static QString getName(const RoomMobFlagEnum flag)
         CASE2(ELITE_MOB, "Elite mob");
         CASE2(SUPER_MOB, "Super mob");
         CASE2(MILKABLE, "Milkable mob");
+        CASE2(RATTLESNAKE, "Rattlesnake mob");
     }
     return QString::asprintf("(RoomMobFlagEnum)%d", static_cast<int>(flag));
 #undef CASE2
@@ -185,7 +185,8 @@ NODISCARD static int getPriority(const RoomMobFlagEnum flag)
     X_POS(AGGRESSIVE_MOB, 1);
     X_POS(ELITE_MOB, 2);
     X_POS(SUPER_MOB, 3);
-    X_POS(QUEST_MOB, 4);
+    X_POS(RATTLESNAKE, 4);
+    X_POS(QUEST_MOB, 5);
 #undef X_POS
     return static_cast<int>(flag);
 }
