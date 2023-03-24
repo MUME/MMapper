@@ -13,6 +13,9 @@ public:
     ~TestAdventure() final;
 
 private Q_SLOTS:
+
+    void testSessionHourlyRateXP();
+
     void testAccomplishedTaskParser();
     void testAchievementParser();
     void testDiedParser();
