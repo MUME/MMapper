@@ -28,7 +28,7 @@ bool AchievementParser::parse(QString line)
     //   (2) The next line is interpreted as the achievement text.
 
     if (m_pending) {
-        m_lastSuccessVal = line;
+        m_lastSuccessVal = line.trimmed();
         m_pending = false;
         return true;
     }
@@ -54,7 +54,7 @@ bool HintParser::parse(QString line)
     //   (1) A line matching exactly "# Hint:"
     //   (2) The next line is interpreted as the hint text.
     if (m_pending) {
-        m_lastSuccessVal = line.mid(4); // Chomp the leading "#  "
+        m_lastSuccessVal = line.mid(4).trimmed(); // mid(4) is to chomp the leading "#  "
         m_pending = false;
         return true;
     }
