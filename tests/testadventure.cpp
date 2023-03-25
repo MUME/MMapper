@@ -68,6 +68,17 @@ struct
            {true, "*a Half-Elf* has drawn her last breath! R.I.P."}};
     const char *killPlayer2Success = "*a Half-Elf*";
 
+    std::vector<TestLine> killPlayer3
+        = {{false, "You pierce *Gaer the Dúnadan Man*'s body extremely hard and shatter it."},
+           {false, "Your victim is shocked by your hit!"},
+           {false, "You feel more experienced."},
+           {false, "Congratulations! This is the first time you've killed it!"},
+           {false, "You gained some renown in this battle!"},
+           {false, "You hear *Gaer the Dúnadan Man*'s death cry as he collapses."},
+           {true, "*Gaer the Dúnadan Man* has drawn his last breath! R.I.P."},
+           {false, "A shadow slowly rises above the corpse of *Gaer the Dúnadan Man*."}};
+    const char *killPlayer3Success = "*Gaer the Dúnadan Man*";
+
 } TestLines;
 
 void TestAdventure::testSessionHourlyRateXP()
@@ -144,6 +155,9 @@ void TestAdventure::testKillAndXPParser()
 
     testParser(parser, TestLines.killPlayer2);
     QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer2Success);
+
+    testParser(parser, TestLines.killPlayer3);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer3Success);
 }
 
 void TestAdventure::testE2E()
@@ -178,10 +192,11 @@ void TestAdventure::testE2E()
     pump(TestLines.killMob3);
     pump(TestLines.killPlayer1);
     pump(TestLines.killPlayer2);
+    pump(TestLines.killPlayer3);
 
     QCOMPARE(achievements->size(), 1u);
     QCOMPARE(hints->size(), 1u);
-    QCOMPARE(killedMobs->size(), 5u);
+    QCOMPARE(killedMobs->size(), 6u);
 }
 
 QTEST_MAIN(TestAdventure)
