@@ -171,12 +171,8 @@ set(adventure_SRCS
         ../src/adventure/adventuresession.h
         ../src/adventure/adventuretracker.cpp
         ../src/adventure/adventuretracker.h
-        ../src/adventure/adventurewidget.cpp
-        ../src/adventure/adventurewidget.h
         ../src/adventure/lineparsers.cpp
         ../src/adventure/lineparsers.h
-        ../src/adventure/xpstatuswidget.cpp
-        ../src/adventure/xpstatuswidget.h
         ../src/configuration/configobserver.h
         ../src/configuration/configuration.cpp
         ../src/configuration/configuration.h

@@ -26,8 +26,9 @@ private slots:
 
     void testSessionHourlyRateXP();
 
-    void testAccomplishedTaskParser();
     void testAchievementParser();
     void testHintParser();
     void testKillAndXPParser();
+
+    void testE2E();
 };

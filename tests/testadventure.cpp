@@ -3,8 +3,51 @@
 
 #include "testadventure.h"
 #include "../src/adventure/adventuresession.h"
+#include "adventure/adventuretracker.h"
+#include "observer/gameobserver.h"
 
+#include <algorithm>
 #include <QtTest/QtTest>
+
+struct
+{
+    std::vector<TestLine> achievement1
+        = {{false, "An accomplished hunter says 'Good job, Gomgâl! One more to go!'"},
+           {false, "You achieved something new!"},
+           {true, "You aided the hunter in the Tower Hills by cleaning out a rat infestation."}};
+    const char *achievement1Success
+        = "You aided the hunter in the Tower Hills by cleaning out a rat infestation.";
+
+    std::vector<TestLine> hint1 = {{false, "It seems to be latched."},
+                                   {false, ""},
+                                   {false, "# Hint:"},
+                                   {true, "#   Type unlock hatch to unlatch the hatch."}};
+    const char *hint1Success = "Type unlock hatch to unlatch the hatch.";
+
+    std::vector<TestLine> killMob1
+        = {{false, "You cleave a husky smuggler's right leg extremely hard and shatter it."},
+           {false, "You receive your share of experience."},
+           {false, "Congratulations! This is the first time you've killed it!"},
+           {true, "A husky smuggler is dead! R.I.P."}};
+    const char *killMob1Success = "A husky smuggler";
+
+    std::vector<TestLine> killMob2
+        = {{false, "You cleave a wild bull (x)'s body extremely hard and shatter it."},
+           {false, "Your victim is shocked by your hit!"},
+           {false, "You receive your share of experience."},
+           {false, "Congratulations! This is the first time you've killed it!"},
+           {true, "A wild bull (x) is dead! R.I.P."}};
+    const char *killMob2Success = "A wild bull (x)"; // TODO FIXME remove the (label) when parsing
+
+    std::vector<TestLine> killMob3
+        = {{false, "You cleave a tree-snake's body extremely hard and shatter it."},
+           {false, "Your victim is shocked by your hit!"},
+           {false, "You receive your share of experience."},
+           {false, "Yes! You're beginning to get the idea."},
+           {true, "A tree-snake is dead! R.I.P."}};
+    const char *killMob3Success = "A tree-snake";
+
+} TestLines;
 
 void TestAdventure::testSessionHourlyRateXP()
 {
@@ -48,38 +91,68 @@ void TestAdventure::testParser(AbstractLineParser &parser, std::vector<TestLine>
     }
 }
 
-void TestAdventure::testAccomplishedTaskParser() {}
+void TestAdventure::testAchievementParser()
+{
+    AchievementParser parser{};
+    testParser(parser, TestLines.achievement1);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.achievement1Success);
+}
 
-void TestAdventure::testAchievementParser() {}
-
-void TestAdventure::testHintParser() {}
+void TestAdventure::testHintParser()
+{
+    HintParser parser{};
+    testParser(parser, TestLines.hint1);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.hint1Success);
+}
 
 void TestAdventure::testKillAndXPParser()
 {
     KillAndXPParser parser{};
 
-    testParser(parser,
-               {{false, "You cleave a husky smuggler's right leg extremely hard and shatter it."},
-                {false, "You receive your share of experience."},
-                {false, "Congratulations! This is the first time you've killed it!"},
-                {true, "A husky smuggler is dead! R.I.P."}});
-    QCOMPARE(parser.getLastSuccessVal(), "A husky smuggler");
+    testParser(parser, TestLines.killMob1);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob1Success);
 
-    testParser(parser,
-               {{false, "You cleave a wild bull (x)'s body extremely hard and shatter it."},
-                {false, "Your victim is shocked by your hit!"},
-                {false, "You receive your share of experience."},
-                {false, "Congratulations! This is the first time you've killed it!"},
-                {true, "A wild bull (x) is dead! R.I.P."}});
-    QCOMPARE(parser.getLastSuccessVal(), "A wild bull (x)"); // TODO FIXME remove the (label)
+    testParser(parser, TestLines.killMob2);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob2Success);
 
-    testParser(parser,
-               {{false, "You cleave a tree-snake's body extremely hard and shatter it."},
-                {false, "Your victim is shocked by your hit!"},
-                {false, "You receive your share of experience."},
-                {false, "Yes! You're beginning to get the idea."},
-                {true, "A tree-snake is dead! R.I.P."}});
-    QCOMPARE(parser.getLastSuccessVal(), "A tree-snake");
+    testParser(parser, TestLines.killMob3);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob3Success);
+}
+
+void TestAdventure::testE2E()
+{
+    GameObserver *observer = new GameObserver();
+    AdventureTracker *tracker = new AdventureTracker(*observer);
+
+    std::vector<QString> achievements;
+    std::vector<QString> hints;
+    std::vector<QString> killedMobs;
+
+    connect(tracker, &AdventureTracker::sig_achievedSomething, [&achievements](QString x) {
+        achievements.push_back(x);
+    });
+    connect(tracker, &AdventureTracker::sig_receivedHint, [&hints](QString x) {
+        hints.push_back(x);
+    });
+    connect(tracker, &AdventureTracker::sig_killedMob, [&killedMobs](QString x) {
+        killedMobs.push_back(x);
+    });
+
+    auto pump = [observer](std::vector<TestLine> lines) {
+        for (auto tl : lines) {
+            observer->slot_observeSentToUser(qPrintable(tl.line), true);
+        }
+    };
+
+    pump(TestLines.achievement1);
+    pump(TestLines.hint1);
+    pump(TestLines.killMob1);
+    pump(TestLines.killMob2);
+    pump(TestLines.killMob3);
+
+    QCOMPARE(achievements.size(), 1u);
+    QCOMPARE(hints.size(), 1u);
+    QCOMPARE(killedMobs.size(), 3u);
 }
 
 QTEST_MAIN(TestAdventure)
