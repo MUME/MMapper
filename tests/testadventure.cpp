@@ -47,6 +47,13 @@ struct
            {true, "A tree-snake is dead! R.I.P."}};
     const char *killMob3Success = "A tree-snake";
 
+    std::vector<TestLine> killMob4 = {{false,
+                                       "You cleave a spirit's body extremely hard and shatter it."},
+                                      {false, "You receive your share of experience."},
+                                      {false, "**Yawn** Boring kill, wasn't it?"},
+                                      {true, "A spirit disappears into nothing.}"}};
+    const char *killMob4Success = "A spirit";
+
     std::vector<TestLine> killPlayer1 = {
         {false, "You pierce *an Elf* (k)'s right hand extremely hard and shatter it."},
         {false, "You feel more experienced."},
@@ -150,6 +157,9 @@ void TestAdventure::testKillAndXPParser()
     testParser(parser, TestLines.killMob3);
     QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob3Success);
 
+    testParser(parser, TestLines.killMob4);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob4Success);
+
     testParser(parser, TestLines.killPlayer1);
     QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer1Success);
 
@@ -190,13 +200,14 @@ void TestAdventure::testE2E()
     pump(TestLines.killMob1);
     pump(TestLines.killMob2);
     pump(TestLines.killMob3);
+    pump(TestLines.killMob4);
     pump(TestLines.killPlayer1);
     pump(TestLines.killPlayer2);
     pump(TestLines.killPlayer3);
 
     QCOMPARE(achievements->size(), 1u);
     QCOMPARE(hints->size(), 1u);
-    QCOMPARE(killedMobs->size(), 6u);
+    QCOMPARE(killedMobs->size(), 7u);
 }
 
 QTEST_MAIN(TestAdventure)

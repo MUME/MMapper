@@ -98,7 +98,7 @@ bool KillAndXPParser::parse(QString line)
         // We're in a pending share of experience, let's see if a kill
         auto idx_dead = line.indexOf(" is dead! R.I.P.");
         if (idx_dead == -1)
-            line.indexOf(" disappears into nothing.");
+            idx_dead = line.indexOf(" disappears into nothing.");
 
         if (idx_dead > -1) {
             // Kill, extract the mob/enemy name and reset pending
