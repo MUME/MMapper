@@ -121,21 +121,21 @@ void TestAdventure::testKillAndXPParser()
 
 void TestAdventure::testE2E()
 {
-    GameObserver *observer = new GameObserver();
-    AdventureTracker *tracker = new AdventureTracker(*observer);
+    GameObserver *observer{};
+    AdventureTracker *tracker{};
 
-    std::vector<QString> achievements;
-    std::vector<QString> hints;
-    std::vector<QString> killedMobs;
+    std::vector<QString> *achievements{};
+    std::vector<QString> *hints{};
+    std::vector<QString> *killedMobs{};
 
-    connect(tracker, &AdventureTracker::sig_achievedSomething, [&achievements](QString x) {
-        achievements.push_back(x);
+    connect(tracker, &AdventureTracker::sig_achievedSomething, [achievements](QString x) {
+        achievements->push_back(x);
     });
-    connect(tracker, &AdventureTracker::sig_receivedHint, [&hints](QString x) {
-        hints.push_back(x);
+    connect(tracker, &AdventureTracker::sig_receivedHint, [hints](QString x) {
+        hints->push_back(x);
     });
-    connect(tracker, &AdventureTracker::sig_killedMob, [&killedMobs](QString x) {
-        killedMobs.push_back(x);
+    connect(tracker, &AdventureTracker::sig_killedMob, [killedMobs](QString x) {
+        killedMobs->push_back(x);
     });
 
     auto pump = [observer](std::vector<TestLine> lines) {
@@ -150,9 +150,9 @@ void TestAdventure::testE2E()
     pump(TestLines.killMob2);
     pump(TestLines.killMob3);
 
-    QCOMPARE(achievements.size(), 1u);
-    QCOMPARE(hints.size(), 1u);
-    QCOMPARE(killedMobs.size(), 3u);
+    QCOMPARE(achievements->size(), 1u);
+    QCOMPARE(hints->size(), 1u);
+    QCOMPARE(killedMobs->size(), 3u);
 }
 
 QTEST_MAIN(TestAdventure)
