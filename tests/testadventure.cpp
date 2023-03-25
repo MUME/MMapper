@@ -3,13 +3,8 @@
 
 #include "testadventure.h"
 #include "../src/adventure/adventuresession.h"
-#include "../src/adventure/lineparsers.h"
 
 #include <QtTest/QtTest>
-
-TestAdventure::TestAdventure() = default;
-
-TestAdventure::~TestAdventure() = default;
 
 void TestAdventure::testSessionHourlyRateXP()
 {
@@ -46,24 +41,45 @@ void TestAdventure::testSessionHourlyRateXP()
     QCOMPARE(session.calculateHourlyRateXP(), 6000.0);
 }
 
+void TestAdventure::testParser(AbstractLineParser &parser, std::vector<TestLine> testLines)
+{
+    for (auto &tl : testLines) {
+        QVERIFY2(parser.parse(tl.line) == tl.expected, qPrintable(tl.errorMsg()));
+    }
+}
+
 void TestAdventure::testAccomplishedTaskParser() {}
 
 void TestAdventure::testAchievementParser() {}
-
-void TestAdventure::testDiedParser() {}
-
-void TestAdventure::testGainedLevelParser() {}
 
 void TestAdventure::testHintParser() {}
 
 void TestAdventure::testKillAndXPParser()
 {
-    std::vector<QString> lines = {"foo", "bar", "baz"};
-    std::vector<bool> parseResults{};
-
     KillAndXPParser parser{};
 
-    //std::for_each(lines.begin(), lines.end(), [parser, parseResults](QString l){parseResults.insert(parser.parse(l))})
+    testParser(parser,
+               {{false, "You cleave a husky smuggler's right leg extremely hard and shatter it."},
+                {false, "You receive your share of experience."},
+                {false, "Congratulations! This is the first time you've killed it!"},
+                {true, "A husky smuggler is dead! R.I.P."}});
+    QCOMPARE(parser.getLastSuccessVal(), "A husky smuggler");
+
+    testParser(parser,
+               {{false, "You cleave a wild bull (x)'s body extremely hard and shatter it."},
+                {false, "Your victim is shocked by your hit!"},
+                {false, "You receive your share of experience."},
+                {false, "Congratulations! This is the first time you've killed it!"},
+                {true, "A wild bull (x) is dead! R.I.P."}});
+    QCOMPARE(parser.getLastSuccessVal(), "A wild bull (x)"); // TODO FIXME remove the (label)
+
+    testParser(parser,
+               {{false, "You cleave a tree-snake's body extremely hard and shatter it."},
+                {false, "Your victim is shocked by your hit!"},
+                {false, "You receive your share of experience."},
+                {false, "Yes! You're beginning to get the idea."},
+                {true, "A tree-snake is dead! R.I.P."}});
+    QCOMPARE(parser.getLastSuccessVal(), "A tree-snake");
 }
 
 QTEST_MAIN(TestAdventure)
