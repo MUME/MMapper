@@ -47,6 +47,27 @@ struct
            {true, "A tree-snake is dead! R.I.P."}};
     const char *killMob3Success = "A tree-snake";
 
+    std::vector<TestLine> killPlayer1 = {
+        {false, "You pierce *an Elf* (k)'s right hand extremely hard and shatter it."},
+        {false, "You feel more experienced."},
+        {false, "Congratulations! This is the first time you've killed it!"},
+        {false,
+         "You feel revitalized as the dark power within you drains the last bit of life from *an Elf* (k)."},
+        {false, "You are surrounded by a misty shroud."},
+        {false, "You hear *an Elf* (k)'s death cry as he collapses."},
+        {true, "*an Elf* (k) has drawn his last breath! R.I.P."},
+        {false, "A shadow slowly rises above the corpse of *an Elf* (k)."}};
+    const char *killPlayer1Success = "*an Elf* (k)";
+
+    std::vector<TestLine> killPlayer2
+        = {{false, "You slash *a Half-Elf*'s right hand extremely hard and shatter it."},
+           {false, "Your victim is shocked by your hit!"},
+           {false, "You feel more experienced."},
+           {false, "Yes! You're beginning to get the idea."},
+           {false, "You hear *a Half-Elf*'s death cry as she collapses."},
+           {true, "*a Half-Elf* has drawn her last breath! R.I.P."}};
+    const char *killPlayer2Success = "*a Half-Elf*";
+
 } TestLines;
 
 void TestAdventure::testSessionHourlyRateXP()
@@ -117,16 +138,22 @@ void TestAdventure::testKillAndXPParser()
 
     testParser(parser, TestLines.killMob3);
     QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob3Success);
+
+    testParser(parser, TestLines.killPlayer1);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer1Success);
+
+    testParser(parser, TestLines.killPlayer2);
+    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer2Success);
 }
 
 void TestAdventure::testE2E()
 {
-    GameObserver *observer{};
-    AdventureTracker *tracker{};
+    GameObserver *observer = new GameObserver();
+    AdventureTracker *tracker = new AdventureTracker(*observer);
 
-    std::vector<QString> *achievements{};
-    std::vector<QString> *hints{};
-    std::vector<QString> *killedMobs{};
+    std::vector<QString> *achievements = new std::vector<QString>();
+    std::vector<QString> *hints = new std::vector<QString>();
+    std::vector<QString> *killedMobs = new std::vector<QString>();
 
     connect(tracker, &AdventureTracker::sig_achievedSomething, [achievements](QString x) {
         achievements->push_back(x);
@@ -149,10 +176,12 @@ void TestAdventure::testE2E()
     pump(TestLines.killMob1);
     pump(TestLines.killMob2);
     pump(TestLines.killMob3);
+    pump(TestLines.killPlayer1);
+    pump(TestLines.killPlayer2);
 
     QCOMPARE(achievements->size(), 1u);
     QCOMPARE(hints->size(), 1u);
-    QCOMPARE(killedMobs->size(), 3u);
+    QCOMPARE(killedMobs->size(), 5u);
 }
 
 QTEST_MAIN(TestAdventure)
