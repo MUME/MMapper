@@ -6,7 +6,6 @@
 #include "adventure/adventuretracker.h"
 #include "observer/gameobserver.h"
 
-#include <algorithm>
 #include <QtTest/QtTest>
 
 struct
@@ -85,7 +84,6 @@ struct
            {true, "*Gaer the Dúnadan Man* has drawn his last breath! R.I.P."},
            {false, "A shadow slowly rises above the corpse of *Gaer the Dúnadan Man*."}};
     const char *killPlayer3Success = "*Gaer the Dúnadan Man*";
-
 } TestLines;
 
 void TestAdventure::testSessionHourlyRateXP()
