@@ -6,6 +6,8 @@
 #include <chrono>
 #include <QString>
 
+#include "../../tests/testadventure.h"
+
 class AdventureSession
 {
     template<typename T>
@@ -55,6 +57,8 @@ public:
     double calculateHourlyRateTP() const;
     double calculateHourlyRateXP() const;
     static const QString formatPoints(double points);
+
+    friend TestAdventure;
 
 private:
     double calculateHourlyRate(double points) const;

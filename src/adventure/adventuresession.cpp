@@ -101,7 +101,9 @@ double AdventureSession::calculateHourlyRateXP() const
 
 double AdventureSession::calculateHourlyRate(double points) const
 {
-    return points / static_cast<double>(std::chrono::hours(1) / elapsed());
+    auto seconds = elapsed().count();
+
+    return points / static_cast<double>(seconds) * 3600.0;
 }
 
 std::chrono::seconds AdventureSession::elapsed() const
