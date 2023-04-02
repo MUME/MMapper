@@ -106,10 +106,7 @@ private:
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define DECL(X) \
-    static constexpr Type enumToType(X) \
-    { \
-        return Type::X; \
-    }
+    static constexpr Type enumToType(X) { return Type::X; }
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 
