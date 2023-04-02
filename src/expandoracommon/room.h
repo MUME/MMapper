@@ -189,10 +189,10 @@ public:
 
 public:
     void setId(RoomId id);
-    void setServerId(const RoomServerId& id);
+    void setServerId(const RoomServerId &id);
     void setPosition(const Coordinate &c);
     NODISCARD RoomId getId() const { return m_id; }
-    NODISCARD const RoomServerId& getServerId() const { return m_serverid; }
+    NODISCARD const RoomServerId &getServerId() const { return m_serverid; }
     NODISCARD const Coordinate &getPosition() const { return m_position; }
     // Temporary rooms are created by the path machine during experimentation.
     // It's not clear why it can't track their "temporary" status itself.
