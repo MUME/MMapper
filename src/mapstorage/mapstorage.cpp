@@ -316,11 +316,11 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
 
         e.setDoorName(static_cast<DoorName>(helper.read_string()));
 
-        for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
+        for (uint32_t connection = helper.read_u32(); connection != uint32_t(-1);
              connection = helper.read_u32()) {
             e.addIn(RoomId{connection + baseId});
         }
-        for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
+        for (uint32_t connection = helper.read_u32(); connection != uint32_t(-1);
              connection = helper.read_u32()) {
             e.addOut(RoomId{connection + baseId});
         }
@@ -585,13 +585,13 @@ void MapStorage::saveExits(const Room &room, QDataStream &stream)
         stream << static_cast<uint16_t>(e.getDoorFlags());
         stream << e.getDoorName().toQString();
         for (auto idx : e.inRange()) {
-            stream << static_cast<quint32>(idx);
+            stream << idx.asUint32();
         }
-        stream << UINT_MAX;
+        stream << INVALID_ROOMID.asUint32();
         for (auto idx : e.outRange()) {
-            stream << static_cast<quint32>(idx);
+            stream << idx.asUint32();
         }
-        stream << UINT_MAX;
+        stream << INVALID_ROOMID.asUint32();
     }
 }
 
