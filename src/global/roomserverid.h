@@ -8,6 +8,8 @@
 
 #include "hash.h"
 
+class QDataStream;
+
 /**
  * Room id provided by MUME server.
  * Although it serves the same purpose as MMapper's RoomId, it is a separate type for two reasons:
