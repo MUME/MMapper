@@ -21,8 +21,6 @@
 #include "coordinate.h"
 #include "exit.h"
 
-// clang-format off
-
 class ExitFieldVariant;
 class ParseEvent;
 

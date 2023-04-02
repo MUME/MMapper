@@ -35,8 +35,6 @@
 #include "progresscounter.h"
 #include "roomsaver.h"
 
-// clang-format false
-
 // ---------------------------- XmlMapStorage::Type ------------------------
 // list know enum types
 #define X_FOREACH_TYPE_ENUM(X) \
