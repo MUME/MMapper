@@ -322,6 +322,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'r':
                 if (line.startsWith("room")) {
                     m_xmlMode = XmlModeEnum::ROOM;
+                    m_roomServerId = RoomServerId{};
                     m_roomName = RoomName{}; // 'name' tag will not show up when blinded
                     m_descriptionReady = false;
                     m_exitsReady = false;
@@ -338,6 +339,17 @@ bool MumeXmlParser::element(const QByteArray &line)
                         if (pair.first.empty() || pair.second.empty())
                             continue;
                         switch (pair.first.at(0)) {
+                        case 'i':
+                            std::cout << "XML room attribute " << pair.first << '=' << pair.second
+                                      << std::endl;
+                            if (pair.first == "id" and !pair.second.empty()) {
+                                const uint64_t id = std::stoull(pair.second);
+                                if (std::to_string(id) == pair.second) {
+                                    // MUME's room id parsed successfully
+                                    m_roomServerId = RoomServerId{id};
+                                }
+                            }
+                            break;
                         case 't':
                             if (pair.first == "terrain") {
                                 switch (pair.second.at(0)) {
@@ -777,6 +789,7 @@ void MumeXmlParser::move()
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
+                                          m_roomServerId,
                                           m_roomName.value_or(RoomName{}),
                                           m_roomDesc.value_or(RoomDesc{}),
                                           m_roomContents.value_or(RoomContents{}),

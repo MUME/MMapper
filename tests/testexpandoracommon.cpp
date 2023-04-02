@@ -112,6 +112,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         RoomServerId{},
                                                          RoomName(""),
                                                          RoomDesc(""),
                                                          RoomContents(""),
@@ -126,6 +127,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         RoomServerId{},
                                                          name,
                                                          RoomDesc(""),
                                                          contents,
@@ -140,6 +142,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         RoomServerId{},
                                                          name,
                                                          RoomDesc(desc.toQString().simplified()),
                                                          contents,
@@ -155,6 +158,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         SharedParseEvent event
             = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                      RoomServerId{},
                                       name,
                                       RoomDesc(desc.toQString().replace("difficult", "easy")),
                                       contents,
@@ -169,6 +173,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         RoomServerId{},
                                                          RoomName("Riverbank"),
                                                          desc,
                                                          contents,
@@ -183,6 +188,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -199,6 +205,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::WEST, ExitFlags{}); // Remove door and exit flag to the west
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -216,6 +223,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         exitFlags.set(ExitDirEnum::DOWN,
                       ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -239,6 +247,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         connectedFlags.setDirectSunlight(ExitDirEnum::DOWN, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -258,6 +267,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getExitFlags(ExitDirEnum::SOUTH).isDoor());
         QVERIFY(!room->getDoorFlags(ExitDirEnum::SOUTH).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -277,6 +287,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(room->getExitFlags(ExitDirEnum::DOWN).isDoor());
         QVERIFY(!room->getDoorFlags(ExitDirEnum::DOWN).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -296,6 +307,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isExit());
         QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isClimb()); // Room has climb e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -316,6 +328,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isExit());
         QVERIFY(!room->getExitFlags(ExitDirEnum::EAST).isRoad()); // Room has no road e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -337,6 +350,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(room->getExitFlags(ExitDirEnum::WEST).isDoor());
         QVERIFY(!room->getDoorFlags(ExitDirEnum::WEST).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -355,6 +369,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         room->setExitsList(ExitsList{});
         QVERIFY(!room->getExitFlags(ExitDirEnum::SOUTH).isExit());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -377,6 +392,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,
@@ -400,6 +416,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                         RoomServerId{},
                                                          name,
                                                          desc,
                                                          contents,

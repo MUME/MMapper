@@ -1195,6 +1195,7 @@ void AbstractParser::slot_doOfflineCharacterMove()
 
         // Create character move event for main move/search algorithm
         auto ev = ParseEvent::createEvent(direction,
+                                          otherRoom->getServerId(),
                                           otherRoom->getName(),
                                           otherRoom->getDescription(),
                                           otherRoom->getContents(),

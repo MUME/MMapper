@@ -313,6 +313,7 @@ SharedParseEvent Room::getEvent(const Room *const room)
     exitFlags.setValid();
 
     return ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                   room->getServerId(),
                                    room->getName(),
                                    room->getDescription(),
                                    room->getContents(),
@@ -617,6 +618,13 @@ void Room::update(Room &room, const ParseEvent &event)
         }
     }
 
+    const auto &serverId = event.getRoomServerId();
+    if (!serverId.isSet()) {
+        isUpToDate = false;
+    } else {
+        room.setServerId(serverId);
+    }
+
     const auto &terrain = event.getTerrainType();
     if (terrain == RoomTerrainEnum::UNDEFINED) {
         isUpToDate = false;
@@ -646,6 +654,10 @@ void Room::update(Room &room, const ParseEvent &event)
 
 void Room::update(Room *const target, const Room *const source)
 {
+    const auto &serverId = source->getServerId();
+    if (serverId.isSet()) {
+        target->setServerId(serverId);
+    }
     const auto &name = source->getName();
     if (!name.isEmpty()) {
         target->setName(name);

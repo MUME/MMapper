@@ -15,6 +15,7 @@
 #include <QString>
 #include <QtGlobal>
 
+#include "../global/roomserverid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../parser/CommandId.h"
 #include "../parser/ConnectedRoomFlags.h"
@@ -55,6 +56,7 @@ private:
 
 private:
     ArrayOfProperties m_properties;
+    RoomServerId m_roomServerId;
     RoomName m_roomName;
     RoomDesc m_roomDesc;
     RoomContents m_roomContents;
@@ -95,6 +97,7 @@ private:
     void countSkipped();
 
 public:
+    NODISCARD const RoomServerId &getRoomServerId() const { return m_roomServerId; }
     NODISCARD const RoomName &getRoomName() const { return m_roomName; }
     NODISCARD const RoomDesc &getRoomDesc() const { return m_roomDesc; }
     NODISCARD const RoomContents &getRoomContents() const { return m_roomContents; }
@@ -108,6 +111,7 @@ public:
 
 public:
     static SharedParseEvent createEvent(CommandEnum c,
+                                        RoomServerId roomServerId,
                                         RoomName roomName,
                                         RoomDesc roomDesc,
                                         RoomContents roomContents,
