@@ -278,10 +278,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                                                           getMostLikelyRoomId()));
     }
 
+    const Room *mostLikelyRoom = getMostLikelyRoom();
+
     // Send updates
-    emit sig_playerMoved(getMostLikelyRoomPosition());
+    emit sig_playerMoved(getRoomPosition(mostLikelyRoom));
     // GroupManager
-    emit sig_setCharPosition(getMostLikelyRoomId());
+    emit sig_setCharPosition(getRoomId(mostLikelyRoom));
 }
 
 void PathMachine::syncing(const SigParseEvent &sigParseEvent)
@@ -358,8 +360,10 @@ void PathMachine::evaluatePaths()
         } else {
             state = PathStateEnum::EXPERIMENTING;
         }
-        emit sig_playerMoved(getMostLikelyRoomPosition());
-        emit sig_setCharPosition(getMostLikelyRoomId());
+        const Room *mostLikelyRoom = getMostLikelyRoom();
+
+        emit sig_playerMoved(getRoomPosition(mostLikelyRoom));
+        emit sig_setCharPosition(getRoomId(mostLikelyRoom));
     }
 }
 
@@ -380,16 +384,26 @@ const Room *PathMachine::getMostLikelyRoom() const
 
 RoomId PathMachine::getMostLikelyRoomId() const
 {
-    if (const Room *const room = getMostLikelyRoom())
-        return room->getId();
-
-    return INVALID_ROOMID;
+    return getRoomId(getMostLikelyRoom());
 }
 
 const Coordinate &PathMachine::getMostLikelyRoomPosition() const
 {
-    if (const Room *const room = getMostLikelyRoom())
-        return room->getPosition();
+    return getRoomPosition(getMostLikelyRoom());
+}
+
+RoomId PathMachine::getRoomId(const Room *mostLikelyRoom)
+{
+    if (mostLikelyRoom)
+        return mostLikelyRoom->getId();
+
+    return INVALID_ROOMID;
+}
+
+const Coordinate &PathMachine::getRoomPosition(const Room *mostLikelyRoom)
+{
+    if (mostLikelyRoom)
+        return mostLikelyRoom->getPosition();
 
     static const Coordinate fake;
     return fake;

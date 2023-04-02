@@ -94,4 +94,7 @@ protected:
     NODISCARD const Room *getMostLikelyRoom() const;
     NODISCARD RoomId getMostLikelyRoomId() const;
     NODISCARD const Coordinate &getMostLikelyRoomPosition() const;
+
+    NODISCARD static RoomId getRoomId(const Room *mostLikelyRoom);
+    NODISCARD static const Coordinate &getRoomPosition(const Room *mostLikelyRoom);
 };
