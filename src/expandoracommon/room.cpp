@@ -232,6 +232,15 @@ void Room::setId(const RoomId id)
     setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
 }
 
+void Room::setServerId(const ServerRoomId &id)
+{
+    if (m_serverid == id)
+        return;
+
+    m_serverid = id;
+    setModified(RoomUpdateFlags{RoomUpdateEnum::ServerId});
+}
+
 void Room::setPosition(const Coordinate &c)
 {
     if (c == m_position)
@@ -786,6 +795,7 @@ std::shared_ptr<Room> Room::clone(RoomModificationTracker &tracker) const
     COPY(m_fields);
     COPY(m_exits);
     COPY(m_id);
+    COPY(m_serverid);
     COPY(m_status);
     COPY(m_borked);
 #undef COPY

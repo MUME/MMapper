@@ -15,10 +15,13 @@
 #include "../global/RuleOf5.h"
 #include "../global/TextUtils.h"
 #include "../global/roomid.h"
+#include "../global/serverroomid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
 #include "coordinate.h"
 #include "exit.h"
+
+// clang-format off
 
 class ExitFieldVariant;
 class ParseEvent;
@@ -47,6 +50,7 @@ class Room;
 
 enum class NODISCARD RoomUpdateEnum {
     Id,
+    ServerId,
     Coord,
     NodeLookupKey,
 
@@ -69,7 +73,7 @@ enum class NODISCARD RoomUpdateEnum {
     Borked,
 };
 
-static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 17;
+static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 18;
 static_assert(NUM_ROOM_UPDATE_TYPES == static_cast<int>(RoomUpdateEnum::Borked) + 1);
 DEFINE_ENUM_COUNT(RoomUpdateEnum, NUM_ROOM_UPDATE_TYPES)
 
@@ -143,6 +147,7 @@ private:
     RoomFields m_fields;
     ExitsList m_exits;
     RoomId m_id = INVALID_ROOMID;
+    ServerRoomId m_serverid = UNKNOWN_SERVERROOMID;
     RoomStatusEnum m_status = RoomStatusEnum::Zombie;
     bool m_borked = true;
 
@@ -186,8 +191,10 @@ public:
 
 public:
     void setId(RoomId id);
+    void setServerId(const ServerRoomId& id);
     void setPosition(const Coordinate &c);
     NODISCARD RoomId getId() const { return m_id; }
+    NODISCARD const ServerRoomId& getServerId() const { return m_serverid; }
     NODISCARD const Coordinate &getPosition() const { return m_position; }
     // Temporary rooms are created by the path machine during experimentation.
     // It's not clear why it can't track their "temporary" status itself.

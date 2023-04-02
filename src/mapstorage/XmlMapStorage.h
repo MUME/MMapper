@@ -6,6 +6,7 @@
 
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <QString>
 #include <QtCore>
 
@@ -42,6 +43,7 @@ private:
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
     RoomId loadRoomId(QXmlStreamReader &stream, const QStringView idstr);
+    ServerRoomId loadServerRoomId(QXmlStreamReader &stream, const QStringView idstr);
     Coordinate loadCoordinate(QXmlStreamReader &stream);
     void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
     void loadMarker(QXmlStreamReader &stream);
@@ -71,6 +73,7 @@ private:
     QStringView loadStringView(QXmlStreamReader &stream);
 
     static QString roomIdToString(const RoomId id);
+    static QString serverRoomIdToString(const ServerRoomId &id);
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
@@ -89,6 +92,7 @@ private:
                                  RoomElementEnum curr);
 
     std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
+    std::unordered_set<ServerRoomId> m_loadedServerRoomIds;
     uint64_t m_loadProgressDivisor;
     uint32_t m_loadProgress;
     static constexpr const uint32_t LOAD_PROGRESS_MAX = 100;
