@@ -60,7 +60,10 @@ public:
     explicit ExitFieldVariant(CamelCase val) \
         : m_data{std::move(val)} \
     {} \
-    const CamelCase &get##CamelCase() const { return std::get<CamelCase>(m_data); }
+    const CamelCase &get##CamelCase() const \
+    { \
+        return std::get<CamelCase>(m_data); \
+    }
     X_FOREACH_EXIT_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
 #undef DEFINE_CTOR_AND_GETTER
 #undef NOP
@@ -77,7 +80,7 @@ public:
                            CamelCase>); \
         return ExitFieldEnum::UPPER_CASE; \
     }
-        switch (const auto index = m_data.index()) {
+        switch (m_data.index()) {
             X_FOREACH_EXIT_FIELD(CASE, NOP)
         }
 #undef CASE
@@ -98,5 +101,8 @@ public:
     {
         return m_data == other.m_data;
     }
-    NODISCARD bool operator!=(const ExitFieldVariant &other) const { return !operator==(other); }
+    NODISCARD bool operator!=(const ExitFieldVariant &other) const
+    {
+        return !operator==(other);
+    }
 };

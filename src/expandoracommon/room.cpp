@@ -232,7 +232,7 @@ void Room::setId(const RoomId id)
     setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
 }
 
-void Room::setServerId(const RoomServerId &id)
+void Room::setServerId(const RoomServerId id)
 {
     if (m_serverid == id)
         return;
@@ -332,6 +332,14 @@ NODISCARD static int wordDifference(StringView a, StringView b)
     return static_cast<int>(diff + a.size() + b.size());
 }
 
+ComparisonResultEnum Room::compareServerIds(const RoomServerId room, const RoomServerId event)
+{
+    if (room.isSet() != event.isSet()) {
+        return ComparisonResultEnum::TOLERANCE;
+    }
+    return room == event ? ComparisonResultEnum::EQUAL : ComparisonResultEnum::DIFFERENT;
+}
+
 ComparisonResultEnum Room::compareStrings(const std::string &room,
                                           const std::string &event,
                                           int prevTolerance,
@@ -384,6 +392,19 @@ ComparisonResultEnum Room::compare(const Room *const room,
     //    if (event == nullptr) {
     //        return ComparisonResultEnum::EQUAL;
     //    }
+
+    switch (compareServerIds(room->getServerId(), event.getRoomServerId())) {
+    case ComparisonResultEnum::TOLERANCE:
+        updated = false;
+        break;
+    case ComparisonResultEnum::DIFFERENT:
+        return ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        // roomServerId is fully trusted: if it matches, ignore all other room fields
+        return ComparisonResultEnum::EQUAL;
+    default:
+        break;
+    }
 
     if (name.isEmpty() && desc.isEmpty() && (!updated)) {
         // user-created

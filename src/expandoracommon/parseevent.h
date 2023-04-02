@@ -97,7 +97,7 @@ private:
     void countSkipped();
 
 public:
-    NODISCARD const RoomServerId &getRoomServerId() const { return m_roomServerId; }
+    NODISCARD RoomServerId getRoomServerId() const { return m_roomServerId; }
     NODISCARD const RoomName &getRoomName() const { return m_roomName; }
     NODISCARD const RoomDesc &getRoomDesc() const { return m_roomDesc; }
     NODISCARD const RoomContents &getRoomContents() const { return m_roomContents; }

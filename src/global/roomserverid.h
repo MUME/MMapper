@@ -4,7 +4,6 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
 #include <cstdint>
-#include <optional>
 
 #include "hash.h"
 
@@ -20,34 +19,43 @@ class QDataStream;
 struct NODISCARD RoomServerId final
 {
 private:
-    std::optional<uint64_t> value;
+    /**
+     * The command "help xml" in MUME states:
+     *
+     * room    room section; has the following attributes:
+     *   terrain="<terrain>" [...]
+     *   area="<area>"   [...]
+     *   id=<id> (optional) room number (an integer in [1..0x7fffffff]);
+     *           all rooms do not have numbers.
+     *
+     * Thus we can use 0 as "unknown RoomServerId"
+     */
+    uint32_t value;
 
 public:
-    RoomServerId() = default;
-    constexpr explicit RoomServerId(uint64_t value) noexcept
+    constexpr RoomServerId() noexcept
+        : value{0}
+    {}
+    constexpr explicit RoomServerId(uint32_t value) noexcept
         : value{value}
     {}
-    inline constexpr bool isSet() const { return bool(value); }
-    /// @throws std::bad_optional_access if !isSet()
-    inline uint64_t asUint64() const { return value.value(); }
+    inline constexpr bool isSet() const { return value != 0; }
+    inline uint32_t asUint32() const { return value; }
 
-    inline constexpr bool operator<(const RoomServerId &rhs) const { return value < rhs.value; }
-    inline constexpr bool operator>(const RoomServerId &rhs) const { return value > rhs.value; }
-    inline constexpr bool operator<=(const RoomServerId &rhs) const { return value <= rhs.value; }
-    inline constexpr bool operator>=(const RoomServerId &rhs) const { return value >= rhs.value; }
-    inline constexpr bool operator==(const RoomServerId &rhs) const { return value == rhs.value; }
-    inline constexpr bool operator!=(const RoomServerId &rhs) const { return value != rhs.value; }
+    inline constexpr bool operator<(RoomServerId rhs) const { return value < rhs.value; }
+    inline constexpr bool operator>(RoomServerId rhs) const { return value > rhs.value; }
+    inline constexpr bool operator<=(RoomServerId rhs) const { return value <= rhs.value; }
+    inline constexpr bool operator>=(RoomServerId rhs) const { return value >= rhs.value; }
+    inline constexpr bool operator==(RoomServerId rhs) const { return value == rhs.value; }
+    inline constexpr bool operator!=(RoomServerId rhs) const { return value != rhs.value; }
 };
 static constexpr const RoomServerId UNKNOWN_ROOMSERVERID{};
 
 template<>
 struct std::hash<RoomServerId>
 {
-    std::size_t operator()(const RoomServerId &id) const noexcept
-    {
-        return numeric_hash(id.isSet() ? id.asUint64() : uint64_t(-1));
-    }
+    std::size_t operator()(RoomServerId id) const noexcept { return numeric_hash(id.asUint32()); }
 };
 
-QDataStream &operator<<(QDataStream &os, const RoomServerId &id);
+QDataStream &operator<<(QDataStream &os, RoomServerId id);
 QDataStream &operator>>(QDataStream &os, RoomServerId &id);

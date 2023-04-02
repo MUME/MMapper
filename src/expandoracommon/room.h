@@ -150,11 +150,20 @@ private:
     bool m_borked = true;
 
 private:
-    NODISCARD Exit &exit(ExitDirEnum dir) { return m_exits[dir]; }
+    NODISCARD Exit &exit(ExitDirEnum dir)
+    {
+        return m_exits[dir];
+    }
 
 public:
-    NODISCARD const Exit &exit(ExitDirEnum dir) const { return m_exits[dir]; }
-    NODISCARD const ExitsList &getExitsList() const { return m_exits; }
+    NODISCARD const Exit &exit(ExitDirEnum dir) const
+    {
+        return m_exits[dir];
+    }
+    NODISCARD const ExitsList &getExitsList() const
+    {
+        return m_exits;
+    }
 
 public:
     void setExitsList(const ExitsList &newExits);
@@ -189,20 +198,35 @@ public:
 
 public:
     void setId(RoomId id);
-    void setServerId(const RoomServerId &id);
+    void setServerId(RoomServerId id);
     void setPosition(const Coordinate &c);
-    NODISCARD RoomId getId() const { return m_id; }
-    NODISCARD const RoomServerId &getServerId() const { return m_serverid; }
-    NODISCARD const Coordinate &getPosition() const { return m_position; }
+    NODISCARD RoomId getId() const
+    {
+        return m_id;
+    }
+    NODISCARD RoomServerId getServerId() const
+    {
+        return m_serverid;
+    }
+    NODISCARD const Coordinate &getPosition() const
+    {
+        return m_position;
+    }
     // Temporary rooms are created by the path machine during experimentation.
     // It's not clear why it can't track their "temporary" status itself.
-    NODISCARD bool isTemporary() const { return m_status == RoomStatusEnum::Temporary; }
+    NODISCARD bool isTemporary() const
+    {
+        return m_status == RoomStatusEnum::Temporary;
+    }
     void setPermanent();
 
     void setAboutToDie();
 
     // "isn't suspected of being borked?"
-    NODISCARD bool isUpToDate() const { return !m_borked; }
+    NODISCARD bool isUpToDate() const
+    {
+        return !m_borked;
+    }
     // "setNotProbablyBorked"
     void setUpToDate();
     // "setProbablyBorked"
@@ -212,7 +236,10 @@ public:
 
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
-    NODISCARD inline const _Type &get##_Prop() const { return m_fields._Prop; } \
+    NODISCARD inline const _Type &get##_Prop() const \
+    { \
+        return m_fields._Prop; \
+    } \
     void set##_Prop(_Type value);
     XFOREACH_ROOM_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
@@ -230,9 +257,18 @@ public:
 
 public:
     NODISCARD std::string toStdString() const;
-    NODISCARD QString toQString() const { return ::toQStringLatin1(toStdString()); }
-    explicit operator QString() const { return toQString(); }
-    friend QDebug operator<<(QDebug os, const Room &r) { return os << r.toQString(); }
+    NODISCARD QString toQString() const
+    {
+        return ::toQStringLatin1(toStdString());
+    }
+    explicit operator QString() const
+    {
+        return toQString();
+    }
+    friend QDebug operator<<(QDebug os, const Room &r)
+    {
+        return os << r.toQString();
+    }
 
 public:
     NODISCARD static std::shared_ptr<Room> createPermanentRoom(RoomModificationTracker &tracker);
@@ -250,6 +286,9 @@ public:
     NODISCARD static const Coordinate &exitDir(ExitDirEnum dir);
 
 private:
+    NODISCARD static ComparisonResultEnum compareServerIds(const RoomServerId room,
+                                                           const RoomServerId event);
+
     NODISCARD static ComparisonResultEnum compareStrings(const std::string &room,
                                                          const std::string &event,
                                                          int prevTolerance,

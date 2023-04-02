@@ -415,7 +415,7 @@ RoomServerId XmlMapStorage::loadRoomServerId(QXmlStreamReader &stream, const QSt
     RoomServerId id;
     if (!idstr.empty()) {
         bool fail = false;
-        id = RoomServerId{conv.toInteger<uint64_t>(idstr, fail)};
+        id = RoomServerId{conv.toInteger<uint32_t>(idstr, fail)};
         // convert number back to string, and compare the two:
         // if they differ, server room ID is invalid.
         if (fail || idstr != roomServerIdToString(id)) {
@@ -666,10 +666,10 @@ QString XmlMapStorage::roomIdToString(const RoomId id)
     return QString("%1").arg(id.asUint32());
 }
 
-QString XmlMapStorage::roomServerIdToString(const RoomServerId &id)
+QString XmlMapStorage::roomServerIdToString(const RoomServerId id)
 {
     if (id.isSet()) {
-        return QString(std::to_string(id.asUint64()).c_str());
+        return QString("%1").arg(id.asUint32());
     } else {
         return QString();
     }

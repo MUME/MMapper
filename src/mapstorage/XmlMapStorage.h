@@ -73,7 +73,7 @@ private:
     QStringView loadStringView(QXmlStreamReader &stream);
 
     static QString roomIdToString(const RoomId id);
-    static QString roomServerIdToString(const RoomServerId &id);
+    static QString roomServerIdToString(const RoomServerId id);
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
