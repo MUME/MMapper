@@ -232,7 +232,7 @@ void Room::setId(const RoomId id)
     setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
 }
 
-void Room::setServerId(const ServerRoomId &id)
+void Room::setServerId(const RoomServerId &id)
 {
     if (m_serverid == id)
         return;

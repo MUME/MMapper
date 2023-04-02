@@ -205,7 +205,7 @@ XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              QObject *const parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
     , m_loadedRooms()
-    , m_loadedServerRoomIds()
+    , m_loadedRoomServerIds()
     , m_loadProgressDivisor(1) // avoid division by zero
     , m_loadProgress(0)
 {}
@@ -277,7 +277,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
 void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 {
     m_loadedRooms.clear();
-    m_loadedServerRoomIds.clear();
+    m_loadedRoomServerIds.clear();
     {
         const QXmlStreamAttributes attrs = stream.attributes();
         const QString type = attrs.value("type").toString();
@@ -328,12 +328,12 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
         throwErrorFmt(stream, "duplicate room id \"%1\"", idstr.toString());
     }
     const QStringView serveridstr = attrs.value("server_id");
-    const ServerRoomId serverRoomId = loadServerRoomId(stream, serveridstr);
-    if (serverRoomId.isSet() && m_loadedServerRoomIds.count(serverRoomId) != 0) {
+    const RoomServerId roomServerId = loadRoomServerId(stream, serveridstr);
+    if (roomServerId.isSet() && m_loadedRoomServerIds.count(roomServerId) != 0) {
         throwErrorFmt(stream, "duplicate room server_id \"%1\"", serveridstr.toString());
     }
     room.setId(roomId);
-    room.setServerId(serverRoomId);
+    room.setServerId(roomServerId);
     if (attrs.value("uptodate") == "false") {
         room.setOutDated();
     } else {
@@ -396,8 +396,8 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     room.setMobFlags(mobFlags);
 
     m_loadedRooms.emplace(std::move(roomId), std::move(sharedroom));
-    if (serverRoomId.isSet()) {
-        m_loadedServerRoomIds.insert(serverRoomId);
+    if (roomServerId.isSet()) {
+        m_loadedRoomServerIds.insert(roomServerId);
     }
 }
 
@@ -414,16 +414,16 @@ RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringView ids
     return id;
 }
 
-// convert string to ServerRoomId
-ServerRoomId XmlMapStorage::loadServerRoomId(QXmlStreamReader &stream, const QStringView idstr)
+// convert string to RoomServerId
+RoomServerId XmlMapStorage::loadRoomServerId(QXmlStreamReader &stream, const QStringView idstr)
 {
-    ServerRoomId id;
+    RoomServerId id;
     if (!idstr.empty()) {
         bool fail = false;
-        id = ServerRoomId{conv.toInteger<uint64_t>(idstr, fail)};
+        id = RoomServerId{conv.toInteger<uint64_t>(idstr, fail)};
         // convert number back to string, and compare the two:
         // if they differ, server room ID is invalid.
-        if (fail || idstr != serverRoomIdToString(id)) {
+        if (fail || idstr != roomServerIdToString(id)) {
             throwErrorFmt(stream, "invalid room server_id \"%1\"", idstr.toString());
         }
     }
@@ -671,7 +671,7 @@ QString XmlMapStorage::roomIdToString(const RoomId id)
     return QString("%1").arg(id.asUint32());
 }
 
-QString XmlMapStorage::serverRoomIdToString(const ServerRoomId &id)
+QString XmlMapStorage::roomServerIdToString(const RoomServerId &id)
 {
     if (id.isSet()) {
         return QString(std::to_string(id.asUint64()).c_str());
@@ -788,7 +788,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     stream.writeStartElement("room");
 
     saveXmlAttribute(stream, "id", roomIdToString(room.getId()));
-    saveXmlAttribute(stream, "server_id", serverRoomIdToString(room.getServerId()));
+    saveXmlAttribute(stream, "server_id", roomServerIdToString(room.getServerId()));
     saveXmlAttribute(stream, "name", room.getName().toQString());
     if (!room.isUpToDate()) {
         saveXmlAttribute(stream, "uptodate", "false");

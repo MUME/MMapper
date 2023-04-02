@@ -121,7 +121,7 @@ set(mmapper_SRCS
     global/random.h
     global/range.h
     global/roomid.h
-    global/serverroomid.cpp
+    global/roomserverid.cpp
     global/string_view_utils.cpp
     global/string_view_utils.h
     global/unquote.cpp

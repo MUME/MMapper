@@ -4,9 +4,9 @@
 
 #include <QDataStream>
 
-#include "serverroomid.h"
+#include "roomserverid.h"
 
-QDataStream &operator<<(QDataStream &os, const ServerRoomId &id)
+QDataStream &operator<<(QDataStream &os, const RoomServerId &id)
 {
     const bool is_set = id.isSet();
     os << is_set;
@@ -16,16 +16,16 @@ QDataStream &operator<<(QDataStream &os, const ServerRoomId &id)
     return os;
 }
 
-QDataStream &operator>>(QDataStream &os, ServerRoomId &id)
+QDataStream &operator>>(QDataStream &os, RoomServerId &id)
 {
     bool is_set = false;
     os >> is_set;
     if (is_set) {
         quint64 value = 0;
         os >> value;
-        id = ServerRoomId{static_cast<uint64_t>(value)};
+        id = RoomServerId{static_cast<uint64_t>(value)};
     } else {
-        id = ServerRoomId{};
+        id = RoomServerId{};
     }
     return os;
 }
