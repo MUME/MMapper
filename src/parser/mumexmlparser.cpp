@@ -342,7 +342,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                         case 'i':
                             std::cout << "XML room attribute " << pair.first << '=' << pair.second
                                       << std::endl;
-                            if (pair.first == "id" and !pair.second.empty()) {
+                            if (pair.first == "id" && !pair.second.empty()) {
                                 const uint64_t id = std::stoull(pair.second);
                                 if (std::to_string(id) == pair.second) {
                                     // MUME's room id parsed successfully
