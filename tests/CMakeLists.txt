@@ -189,6 +189,7 @@ set(adventure_SRCS
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
+add_dependencies(TestAdventure glm)
 target_link_libraries(TestAdventure Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
