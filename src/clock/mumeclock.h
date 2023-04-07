@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QHash>
+#include <cstdint>
 #include <QList>
 #include <QMetaEnum>
 #include <QObject>
@@ -13,9 +13,10 @@
 #include "../global/macros.h"
 #include "mumemoment.h"
 
+class GmcpMessage;
 class QMetaEnum;
 
-enum class NODISCARD MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
+enum class NODISCARD MumeClockPrecisionEnum : int8_t { UNSET = -1, DAY, HOUR, MINUTE };
 
 class MumeClock final : public QObject
 {
@@ -53,7 +54,7 @@ public:
 
     NODISCARD int64_t getLastSyncEpoch() const { return m_lastSyncEpoch; }
 
-    enum class WestronMonthNamesEnum {
+    enum class WestronMonthNamesEnum : int8_t {
         UnknownWestronMonth = -1,
         Afteryule,
         Solmath,
@@ -71,7 +72,7 @@ public:
 
     Q_ENUM(WestronMonthNamesEnum)
 
-    enum class SindarinMonthNamesEnum {
+    enum class SindarinMonthNamesEnum : int8_t {
         UnknownSindarinMonth = -1,
         Narwain,
         Ninui,
@@ -89,7 +90,7 @@ public:
 
     Q_ENUM(SindarinMonthNamesEnum)
 
-    enum class WestronWeekDayNamesEnum {
+    enum class WestronWeekDayNamesEnum : int8_t {
         UnknownWestronWeekDay = -1,
         Sunday,
         Monday,
@@ -102,7 +103,7 @@ public:
 
     Q_ENUM(WestronWeekDayNamesEnum)
 
-    enum class SindarinWeekDayNamesEnum {
+    enum class SindarinWeekDayNamesEnum : int8_t {
         UnknownSindarinWeekDay = -1,
         Oranor,
         Orithil,
@@ -120,7 +121,6 @@ public:
     static const QMetaEnum s_sindarinMonthNames;
     static const QMetaEnum s_westronWeekDayNames;
     static const QMetaEnum s_sindarinWeekDayNames;
-    static const QHash<QString, MumeTimeEnum> m_stringTimeHash;
 
 private:
     void log(const QString &msg) { emit sig_log("MumeClock", msg); }
@@ -129,12 +129,11 @@ signals:
     void sig_log(const QString &, const QString &);
 
 public slots:
-
     void parseMumeTime(const QString &mumeTime);
 
     void parseClockTime(const QString &clockTime);
 
-    void parseWeather(const QString &str);
+    void slot_parseGmcpInput(const GmcpMessage &msg);
 
 public:
     void setPrecision(const MumeClockPrecisionEnum state);
@@ -146,11 +145,9 @@ protected:
 
     void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);
 
-    void parseWeather(const QString &str, int64_t secsSinceEpoch);
+    void parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch);
 
 private:
-    MumeMoment &unknownTimeTick(MumeMoment &moment);
-
     int64_t m_lastSyncEpoch = 0;
     int64_t m_mumeStartEpoch = 0;
     MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;

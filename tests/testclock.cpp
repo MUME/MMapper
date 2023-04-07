@@ -7,6 +7,7 @@
 #include <QtTest/QtTest>
 
 #include "../src/clock/mumeclock.h"
+#include "../src/proxy/GmcpMessage.h"
 
 TestClock::TestClock() = default;
 
@@ -120,32 +121,32 @@ void TestClock::parseWeatherClockSkewTest()
 
     // First sync
     int timeOccuredAt = 1;
-    QString expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The day has begun.", realTime1 + timeOccuredAt);
+    QString expectedTime = "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    clock.parseWeather(MumeTimeEnum::DAWN, realTime1 + timeOccuredAt);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+
+    // Mume running fast (but "day" event type synchronizes)
+    timeOccuredAt = 1 + 58;
+    expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    clock.parseWeather(MumeTimeEnum::DAY, realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running on time
-    timeOccuredAt = 1 + 60;
-    expectedTime = "7:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
-
-    // Mume running fast
     timeOccuredAt = 1 + 60 + 58;
-    expectedTime = "8:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
+    expectedTime = "7:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running on time
     timeOccuredAt = 1 + 60 + 58 + 60;
-    expectedTime = "9:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
+    expectedTime = "8:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running slow
     timeOccuredAt = 1 + 60 + 58 + 60 + 65;
-    expectedTime = "10:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
+    expectedTime = "9:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 }
 
@@ -159,19 +160,25 @@ void TestClock::parseWeatherTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("Light gradually filters in, proclaiming a new sunrise outside.");
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"rise"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("It seems as if the day has begun.");
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"light"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "9:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("The deepening gloom announces another sunset outside.");
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"set"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "10:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseWeather("It seems as if the night has begun.");
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"dark"})"));
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Darkness {"what":"start"})"));
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+
+    clock.slot_parseGmcpInput(GmcpMessage::fromRawBytes(R"(Event.Moon {"what":"rise"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 }
 

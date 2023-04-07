@@ -11,7 +11,6 @@
 #include <QByteArray>
 #include <QString>
 
-#include "../clock/mumeclock.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/TextUtils.h"
@@ -299,7 +298,6 @@ bool MumeXmlParser::element(const QByteArray &line)
                 } else if (line.startsWith("/weather")) {
                     m_lineFlags.remove(LineFlagEnum::WEATHER);
                     // Certain weather events happen on ticks
-                    m_mumeClock.parseWeather(m_stringBuffer);
 
                 } else if (line.startsWith("/xml")) {
                     sendToUser("[MMapper] Mapper cannot function without XML mode\n");

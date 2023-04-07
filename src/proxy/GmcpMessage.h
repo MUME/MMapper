@@ -24,6 +24,9 @@ class ParseEvent;
     X(CORE_SUPPORTS_ADD, CoreSupportsAdd, "core.supports.add", "Core.Supports.Add") \
     X(CORE_SUPPORTS_REMOVE, CoreSupportsRemove, "core.supports.remove", "Core.Supports.Remove") \
     X(CORE_SUPPORTS_SET, CoreSupportsSet, "core.supports.set", "Core.Supports.Set") \
+    X(EVENT_DARKNESS, EventDarkness, "event.darkness", "Event.Darkness") \
+    X(EVENT_MOON, EventMoon, "event.moon", "Event.Moon") \
+    X(EVENT_SUN, EventSun, "event.sun", "Event.Sun") \
     X(EXTERNAL_DISCORD_HELLO, \
       ExternalDiscordHello, \
       "external.discord.hello", \
@@ -45,7 +48,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 14u;
+static constexpr const size_t NUM_GMCP_MESSAGES = 17u;
 static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE) + 1);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 

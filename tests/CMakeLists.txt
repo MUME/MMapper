@@ -10,6 +10,10 @@ set(clock_SRCS
     ../src/clock/mumeclock.h
     ../src/clock/mumemoment.cpp
     ../src/clock/mumemoment.h
+    ../src/global/TextUtils.cpp
+    ../src/global/TextUtils.h
+    ../src/proxy/GmcpMessage.cpp
+    ../src/proxy/GmcpMessage.h
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
