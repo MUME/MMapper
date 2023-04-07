@@ -17,6 +17,7 @@ set(clock_SRCS
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
+add_dependencies(TestClock glm)
 target_link_libraries(TestClock Qt5::Test coverage_config)
 set_target_properties(
   TestClock PROPERTIES
