@@ -20,7 +20,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestClock COMMAND TestClock)
 
@@ -56,7 +56,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
@@ -90,7 +90,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestParser COMMAND TestParser)
 
@@ -115,7 +115,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestProxy COMMAND TestProxy)
 
@@ -135,7 +135,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
@@ -161,7 +161,7 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ON
+  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestGlobal COMMAND TestGlobal)
 
@@ -189,6 +189,7 @@ set(adventure_SRCS
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
+add_dependencies(TestAdventure glm)
 target_link_libraries(TestAdventure Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
@@ -196,6 +197,6 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ON
+        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestAdventure COMMAND TestAdventure)
