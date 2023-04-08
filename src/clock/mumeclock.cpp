@@ -48,13 +48,13 @@ MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const p
     , m_precision(MumeClockPrecisionEnum::UNSET)
     , m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
     , m_observer{observer}
-{}
-
-MumeClock::MumeClock(GameObserver &observer)
-    : MumeClock(DEFAULT_MUME_START_EPOCH, observer, nullptr)
 {
     connect(&m_observer, &GameObserver::sig_sentToUserGmcp, this, &MumeClock::slot_onUserGmcp);
 }
+
+MumeClock::MumeClock(GameObserver &observer)
+    : MumeClock(DEFAULT_MUME_START_EPOCH, observer, nullptr)
+{}
 
 MumeMoment MumeClock::getMumeMoment() const
 {
@@ -205,7 +205,7 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
     // Update last sync timestamp
     setLastSyncEpoch(secsSinceEpoch);
 
-    // Set minute to zero
+    // Set minute to zero since all weather events happen on ticks
     auto moment = MumeMoment::sinceMumeEpoch(secsSinceEpoch - m_mumeStartEpoch);
     moment.minute = 0;
 
@@ -240,15 +240,18 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
 
     // Update epoch
     m_mumeStartEpoch = secsSinceEpoch - moment.toSeconds();
+
     if (time == MumeTimeEnum::UNKNOWN && moment.minute != 0) {
         m_precision = MumeClockPrecisionEnum::DAY;
         log(QString("Unsychronized tick detected using %1 (off by %2 seconds)")
                 .arg(reason)
                 .arg(moment.minute));
-    } else {
-        m_precision = MumeClockPrecisionEnum::MINUTE;
-        log(QString("Synchronized tick using %1").arg(reason));
+        return;
     }
+
+    log(QString("Synchronized tick using %1").arg(reason));
+    if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR)
+        m_precision = MumeClockPrecisionEnum::MINUTE;
 }
 
 void MumeClock::parseClockTime(const QString &clockTime)
