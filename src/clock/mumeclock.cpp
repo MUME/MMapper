@@ -5,6 +5,7 @@
 #include "mumeclock.h"
 
 #include <cassert>
+#include <QDebug>
 #include <QMetaEnum>
 #include <QObject>
 #include <QRegularExpression>
@@ -41,16 +42,19 @@ const QMetaEnum MumeClock::s_westronWeekDayNames
 const QMetaEnum MumeClock::s_sindarinWeekDayNames
     = QMetaEnum::fromType<MumeClock::SindarinWeekDayNamesEnum>();
 
-MumeClock::MumeClock(int64_t mumeEpoch, QObject *const parent)
+MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const parent)
     : QObject(parent)
     , m_mumeStartEpoch(mumeEpoch)
     , m_precision(MumeClockPrecisionEnum::UNSET)
     , m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
+    , m_observer{observer}
 {}
 
-MumeClock::MumeClock()
-    : MumeClock(DEFAULT_MUME_START_EPOCH, nullptr)
-{}
+MumeClock::MumeClock(GameObserver &observer)
+    : MumeClock(DEFAULT_MUME_START_EPOCH, observer, nullptr)
+{
+    connect(&m_observer, &GameObserver::sig_sentToUserGmcp, this, &MumeClock::slot_onUserGmcp);
+}
 
 MumeMoment MumeClock::getMumeMoment() const
 {
@@ -157,7 +161,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     m_mumeStartEpoch = newStartEpoch;
 }
 
-void MumeClock::slot_parseGmcpInput(const GmcpMessage &msg)
+void MumeClock::slot_onUserGmcp(const GmcpMessage &msg)
 {
     if (!(msg.isEventMoon() || msg.isEventDarkness() || msg.isEventSun())
         || !msg.getJsonDocument().has_value() || !msg.getJsonDocument()->isObject())
@@ -167,13 +171,13 @@ void MumeClock::slot_parseGmcpInput(const GmcpMessage &msg)
     if (!obj.contains("what") || !obj.value("what").isString())
         return;
 
-    const auto type = obj["what"].toString();
-    if (type.isEmpty())
+    const auto what = obj["what"].toString();
+    if (what.isEmpty())
         return;
 
     MumeTimeEnum time = MumeTimeEnum::UNKNOWN;
     if (msg.isEventSun()) {
-        switch (type.at(0).toLatin1()) {
+        switch (what.at(0).toLatin1()) {
         case 'l': // light
             time = MumeTimeEnum::DAY;
             break;
@@ -187,6 +191,7 @@ void MumeClock::slot_parseGmcpInput(const GmcpMessage &msg)
             time = MumeTimeEnum::DUSK;
             break;
         default:
+            qWarning() << "Unknown 'what' payload" << msg.toRawBytes();
             assert(false);
             break;
         }
@@ -209,26 +214,27 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
     const int dawn = dawnDusk.dawnHour;
     const int dusk = dawnDusk.duskHour;
 
-    const char *type;
+    const char *reason;
     switch (time) {
     case MumeTimeEnum::DAWN:
         moment.hour = dawn;
-        type = "sunrise";
+        reason = "sunrise";
         break;
     case MumeTimeEnum::DAY:
         moment.hour = dawn + 1;
-        type = "day";
+        reason = "day";
         break;
     case MumeTimeEnum::DUSK:
         moment.hour = dusk;
-        type = "sunset";
+        reason = "sunset";
         break;
     case MumeTimeEnum::NIGHT:
         moment.hour = dusk + 1;
-        type = "night";
+        reason = "night";
         break;
     case MumeTimeEnum::UNKNOWN:
-        type = "weather";
+        // non-descriptive catch all reason
+        reason = "weather";
         break;
     }
 
@@ -237,11 +243,11 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
     if (time == MumeTimeEnum::UNKNOWN && moment.minute != 0) {
         m_precision = MumeClockPrecisionEnum::DAY;
         log(QString("Unsychronized tick detected using %1 (off by %2 seconds)")
-                .arg(type)
+                .arg(reason)
                 .arg(moment.minute));
     } else {
         m_precision = MumeClockPrecisionEnum::MINUTE;
-        log(QString("Synchronized tick using %1").arg(type));
+        log(QString("Synchronized tick using %1").arg(reason));
     }
 }
 

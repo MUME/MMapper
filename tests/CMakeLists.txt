@@ -12,6 +12,9 @@ set(clock_SRCS
     ../src/clock/mumemoment.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/observer/gameobserver.cpp
+    ../src/observer/gameobserver.h
+    ../src/parser/parserutils.cpp
     ../src/proxy/GmcpMessage.cpp
     ../src/proxy/GmcpMessage.h
     )

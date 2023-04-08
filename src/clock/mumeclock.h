@@ -12,6 +12,7 @@
 
 #include "../global/macros.h"
 #include "mumemoment.h"
+#include "observer/gameobserver.h"
 
 class GmcpMessage;
 class QMetaEnum;
@@ -34,10 +35,10 @@ public:
     NODISCARD static DawnDusk getDawnDusk(int month);
 
 public:
-    explicit MumeClock(int64_t mumeEpoch, QObject *parent);
+    explicit MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *parent);
 
     // For use only in test cases.
-    explicit MumeClock();
+    explicit MumeClock(GameObserver &observer);
 
     NODISCARD MumeMoment getMumeMoment() const;
 
@@ -133,7 +134,7 @@ public slots:
 
     void parseClockTime(const QString &clockTime);
 
-    void slot_parseGmcpInput(const GmcpMessage &msg);
+    void slot_onUserGmcp(const GmcpMessage &msg);
 
 public:
     void setPrecision(const MumeClockPrecisionEnum state);
@@ -152,4 +153,5 @@ private:
     int64_t m_mumeStartEpoch = 0;
     MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
     int m_clockTolerance = 0;
+    GameObserver &m_observer;
 };
