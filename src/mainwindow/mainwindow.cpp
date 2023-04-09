@@ -283,7 +283,7 @@ MainWindow::MainWindow()
     m_dockDialogAdventure->setWidget(m_adventureWidget);
     m_dockDialogAdventure->hide();
 
-    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
+    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER)
         m_updateDialog = new UpdateDialog(this);
 

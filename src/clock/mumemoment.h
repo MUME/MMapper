@@ -10,10 +10,10 @@
 
 static constexpr const int MUME_START_YEAR = 2850;
 
-enum class NODISCARD MumeTimeEnum { UNKNOWN = 0, DAWN, DAY, DUSK, NIGHT };
-enum class NODISCARD MumeSeasonEnum { UNKNOWN = 0, WINTER, SPRING, SUMMER, AUTUMN };
+enum class NODISCARD MumeTimeEnum : uint8_t { UNKNOWN = 0, DAWN, DAY, DUSK, NIGHT };
+enum class NODISCARD MumeSeasonEnum : uint8_t { UNKNOWN = 0, WINTER, SPRING, SUMMER, AUTUMN };
 
-enum class NODISCARD MumeMoonPhaseEnum {
+enum class NODISCARD MumeMoonPhaseEnum : int8_t {
     UNKNOWN = -1,    // Illumination Levels
     WAXING_CRESCENT, //  1,  2,  3
     FIRST_QUARTER,   //  4,  5,  6
@@ -24,7 +24,13 @@ enum class NODISCARD MumeMoonPhaseEnum {
     WANING_CRESCENT, //  5,  4,  3
     NEW_MOON         //  2,  1,  0
 };
-enum class NODISCARD MumeMoonVisibilityEnum { POSITION_UNKNOWN = -1, HIDDEN, RISE, VISIBLE, SET };
+enum class NODISCARD MumeMoonVisibilityEnum : int8_t {
+    POSITION_UNKNOWN = -1,
+    HIDDEN,
+    RISE,
+    VISIBLE,
+    SET
+};
 
 class NODISCARD MumeMoment
 {
