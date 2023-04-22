@@ -1000,19 +1000,23 @@ void AbstractParser::showMumeTime()
 
         // Moon data
         data += moment.toMumeMoonTime().toLatin1() + "\n";
-        data += "The moon ";
-        switch (moment.toMoonVisibility()) {
-        case MumeMoonVisibilityEnum::HIDDEN:
-        case MumeMoonVisibilityEnum::POSITION_UNKNOWN:
-            data += "will rise in";
-            break;
-        case MumeMoonVisibilityEnum::RISE:
-        case MumeMoonVisibilityEnum::SET:
-        case MumeMoonVisibilityEnum::VISIBLE:
-            data += "will set in";
-            break;
+        if (precision == MumeClockPrecisionEnum::MINUTE) {
+            data += "The moon ";
+            switch (moment.moonPosition()) {
+            case MumeMoonPositionEnum::UNKNOWN:
+            case MumeMoonPositionEnum::INVISIBLE:
+                data += "will rise in";
+                break;
+            case MumeMoonPositionEnum::EAST:
+            case MumeMoonPositionEnum::SOUTHEAST:
+            case MumeMoonPositionEnum::SOUTH:
+            case MumeMoonPositionEnum::SOUTHWEST:
+            case MumeMoonPositionEnum::WEST:
+                data += "will set in";
+                break;
+            }
+            data += " " + moment.toMoonVisibilityCountDown().toLatin1() + " more ticks.\n";
         }
-        data += " " + moment.toMoonCountDown().toLatin1() + " more ticks.\n";
     }
     sendToUser(data);
 }

@@ -6,24 +6,8 @@
 
 #include <iostream>
 
-#include "../global/Array.h"
 #include "../global/Debug.h"
 #include "mumeclock.h"
-
-static constexpr const int MUME_MINUTES_PER_HOUR = 60;
-static constexpr const int MUME_HOURS_PER_DAY = 24;
-static constexpr const int MUME_DAYS_PER_MONTH = 30;
-static constexpr const int MUME_MONTHS_PER_YEAR = 12;
-
-static constexpr const int MUME_DAYS_PER_MOON_CYCLE = 24;
-static constexpr const int MUME_HOURS_PER_MOON_POSITION = 24;
-
-static constexpr const int MUME_MINUTES_PER_DAY = MUME_HOURS_PER_DAY * MUME_MINUTES_PER_HOUR;
-static constexpr const int MUME_MINUTES_PER_MONTH = MUME_DAYS_PER_MONTH * MUME_MINUTES_PER_DAY;
-static constexpr const int MUME_MINUTES_PER_YEAR = MUME_MONTHS_PER_YEAR * MUME_MINUTES_PER_MONTH;
-
-static constexpr const int MUME_DAYS_PER_YEAR = MUME_MONTHS_PER_YEAR * MUME_DAYS_PER_MONTH;
-static_assert(MUME_DAYS_PER_YEAR == 360);
 
 static void maybe_warn_if_not_clamped(
     const char *const name, bool &warned, const int val, const int lo, const int hi)
@@ -98,7 +82,7 @@ int MumeMoment::weekDay() const
     return dayOfYear() % 7;
 }
 
-int MumeMoment::toSeconds() const
+int64_t MumeMoment::toSeconds() const
 {
     return minute + hour * MUME_MINUTES_PER_HOUR + day * MUME_MINUTES_PER_DAY
            + month * MUME_MINUTES_PER_MONTH + (year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
@@ -146,133 +130,132 @@ MumeTimeEnum MumeMoment::toTimeOfDay() const
     return MumeTimeEnum::DAY;
 }
 
-int MumeMoment::moonCycle() const
+int MumeMoment::moonZenithMinutes() const
 {
-    // Moon cycle is 24 days long and starts with the ending of the new moon
-    return (year * MUME_DAYS_PER_YEAR + month * MUME_DAYS_PER_MONTH + day)
-           % MUME_DAYS_PER_MOON_CYCLE;
+    // At what minute of day the moon is at its highest point in the sky
+    const auto count = toSeconds() * MUME_MINUTES_PER_DAY;
+    return static_cast<int>((count / MUME_MINUTES_PER_MOON_CYCLE) % MUME_MINUTES_PER_DAY);
 }
 
-int MumeMoment::moonRise() const
+MumeMoonPositionEnum MumeMoment::moonPosition() const
 {
-    return (moonCycle() + 6) % MUME_DAYS_PER_MOON_CYCLE;
-}
-
-int MumeMoment::moonSet() const
-{
-    return (moonCycle() + 18) % MUME_DAYS_PER_MOON_CYCLE;
-}
-
-int MumeMoment::moonPosition() const
-{
-    // Position of moon in the sky out of 24
-    // Below horizon is position >= 12
-    return (hour - moonRise() + MUME_HOURS_PER_MOON_POSITION) % MUME_HOURS_PER_MOON_POSITION;
+    // Position of moon in the sky
+    int rise = moonZenithMinutes() + MUME_MINUTES_PER_DAY * 3 / 4;
+    if (rise >= MUME_MINUTES_PER_DAY)
+        rise -= MUME_MINUTES_PER_DAY;
+    int now = minute + hour * MUME_MINUTES_PER_HOUR;
+    if (now < rise)
+        now += MUME_MINUTES_PER_DAY;
+    /* dir 0-15: 0: east, 1/2: southeast, 3/4: south, 5/6: southwest; 7: west;
+           8-15: under the horizon*/
+    int dir = (now - rise) * 16 / MUME_MINUTES_PER_DAY;
+    if (dir < 0 || dir > 15)
+        qWarning() << "Moon position dir is out of whack" << dir;
+    if (dir < 8) {
+        static const constexpr int EAST = static_cast<int>(MumeMoonPositionEnum::EAST);
+        static const constexpr int MIN = static_cast<int>(MumeMoonPositionEnum::INVISIBLE);
+        static const constexpr int MAX = static_cast<int>(MumeMoonPositionEnum::WEST);
+        return static_cast<MumeMoonPositionEnum>(std::clamp(EAST + (dir + 1) / 2, MIN, MAX));
+    }
+    return MumeMoonPositionEnum::INVISIBLE;
 }
 
 int MumeMoment::moonLevel() const
 {
     // Illumination level seems to be between 0-12
+    // 0 is new moon, 12 is full moon
     // Levels > 4 make the moon show up in the prompt as ')'
-    const int dayOfCycle = moonCycle();
-    if (dayOfCycle <= 12)
-        return dayOfCycle; // Increasing illumination
-    else
-        return MUME_DAYS_PER_MOON_CYCLE - dayOfCycle; // Decreasing illumination
+    int level = (moonZenithMinutes() + MUME_MINUTES_PER_HOUR / 2) / MUME_MINUTES_PER_HOUR;
+    return abs(12 - level);
 }
 
-MumeMoonPhaseEnum MumeMoment::toMoonPhase() const
+MumeMoonPhaseEnum MumeMoment::moonPhase() const
 {
-    const int dayOfCycle = moonCycle();
-    if (dayOfCycle <= 2)
-        return MumeMoonPhaseEnum::NEW_MOON;
-    else if (dayOfCycle >= 3 && dayOfCycle <= 5)
-        return MumeMoonPhaseEnum::WAXING_CRESCENT;
-    else if (dayOfCycle >= 6 && dayOfCycle <= 8)
-        return MumeMoonPhaseEnum::FIRST_QUARTER;
-    else if (dayOfCycle >= 9 && dayOfCycle <= 11)
-        return MumeMoonPhaseEnum::WAXING_GIBBOUS;
-    else if (dayOfCycle == 12)
-        return MumeMoonPhaseEnum::FULL_MOON;
-    else if (dayOfCycle >= 13 && dayOfCycle <= 15)
-        return MumeMoonPhaseEnum::WANING_GIBBOUS;
-    else if (dayOfCycle >= 16 && dayOfCycle <= 18)
-        return MumeMoonPhaseEnum::THIRD_QUARTER;
-    else if (dayOfCycle >= 19 && dayOfCycle <= 21)
-        return MumeMoonPhaseEnum::WANING_CRESCENT;
-    else
-        return MumeMoonPhaseEnum::NEW_MOON;
-}
-
-MumeMoonVisibilityEnum MumeMoment::toMoonVisibility() const
-{
-    // Moon is not visible because of its position in the sky
-    if (moonPosition() >= 12)
-        return MumeMoonVisibilityEnum::HIDDEN;
-
-    if (hour == moonRise())
-        return MumeMoonVisibilityEnum::RISE;
-    else if (hour == moonSet())
-        return MumeMoonVisibilityEnum::SET;
-    else
-        return MumeMoonVisibilityEnum::VISIBLE;
+    // Moon starts off as full phase at the start epoch
+    // Divide level by three for phase (new, 1/4, 1/2, 3/4, full)
+    const int cycle = std::clamp(moonLevel() / 3, 0, 4);
+    static const constexpr MumeMoonPhaseEnum WAXING[] = {MumeMoonPhaseEnum::NEW_MOON,
+                                                         MumeMoonPhaseEnum::WAXING_CRESCENT,
+                                                         MumeMoonPhaseEnum::FIRST_QUARTER,
+                                                         MumeMoonPhaseEnum::WAXING_GIBBOUS,
+                                                         MumeMoonPhaseEnum::FULL_MOON};
+    static const constexpr MumeMoonPhaseEnum WANING[] = {MumeMoonPhaseEnum::NEW_MOON,
+                                                         MumeMoonPhaseEnum::WANING_CRESCENT,
+                                                         MumeMoonPhaseEnum::THIRD_QUARTER,
+                                                         MumeMoonPhaseEnum::WANING_GIBBOUS,
+                                                         MumeMoonPhaseEnum::FULL_MOON};
+    return isMoonWaxing() ? WAXING[cycle] : WANING[cycle];
 }
 
 QString MumeMoment::toMumeMoonTime() const
 {
-    const int pos = moonPosition();
-    QString visibility = pos < 12 ? "can" : "can not";
+    const int lvl = std::clamp(moonLevel() / 3, 0, 4);
+    static const constexpr char *const PHASE_MESSAGES[] = {"new",
+                                                           "quarter",
+                                                           "half",
+                                                           "three-quarter",
+                                                           "full"};
 
-    QString phase = "Moon";
-    switch (toMoonPhase()) {
-    case MumeMoonPhaseEnum::WAXING_CRESCENT:
-    case MumeMoonPhaseEnum::WANING_CRESCENT:
-        phase = "Quarter Moon";
+    auto positionInSky = "";
+    switch (moonPosition()) {
+    case MumeMoonPositionEnum::UNKNOWN:
         break;
-    case MumeMoonPhaseEnum::FIRST_QUARTER:
-    case MumeMoonPhaseEnum::THIRD_QUARTER:
-        phase = "Half Moon";
+    case MumeMoonPositionEnum::INVISIBLE:
+        positionInSky = "is below the horizon";
         break;
-    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
-    case MumeMoonPhaseEnum::WANING_GIBBOUS:
-        phase = "Three-Quarter Moon";
+    case MumeMoonPositionEnum::EAST:
+        positionInSky = "to the east";
         break;
-    case MumeMoonPhaseEnum::FULL_MOON:
-        phase = "Full Moon";
+    case MumeMoonPositionEnum::SOUTHEAST:
+        positionInSky = "to the southeast";
         break;
-    case MumeMoonPhaseEnum::NEW_MOON:
-        phase = "New Moon";
+    case MumeMoonPositionEnum::SOUTH:
+        positionInSky = "to the south";
         break;
-    case MumeMoonPhaseEnum::UNKNOWN:
-    default:
+    case MumeMoonPositionEnum::SOUTHWEST:
+        positionInSky = "to the southwest";
+        break;
+    case MumeMoonPositionEnum::WEST:
+        positionInSky = "to the west";
         break;
     }
-    phase.append((moonCycle() < 12) ? " (waxing)" : " (waning)");
-
-    QString positionInSky = "sky";
-    if (pos < 12) {
-        if (pos <= 3) {
-            positionInSky = "eastern part of the sky";
-        } else if (pos >= 8) {
-            positionInSky = "western part of the sky";
-        } else {
-            positionInSky = "southern part of the sky";
-        }
-    }
-    return QString("You %1 see a %2 in the %3.").arg(visibility).arg(phase).arg(positionInSky);
+    return QString("%1 %2%3 moon %4.")
+        .arg(!isMoonVisible() ? "The"
+             : isMoonBright() ? "You can see a"
+                              : "You can not see a")
+        .arg((lvl < 1 || lvl > 3 ? ""
+              : isMoonWaxing()   ? "waxing "
+                                 : "waning "))
+        .arg(PHASE_MESSAGES[lvl])
+        .arg(positionInSky);
 }
 
-QString MumeMoment::toMoonCountDown() const
+QString MumeMoment::toMoonVisibilityCountDown() const
 {
-    int secondsToCountdown = 60 - minute;
-    const int pos = moonPosition();
-    if (pos < 12) {
-        // Moon visible
-        secondsToCountdown += (12 - pos - 1) * 60;
-    } else {
-        secondsToCountdown += (24 - pos - 1) * 60;
-    }
+    int rise = moonZenithMinutes() + MUME_MINUTES_PER_DAY * 3 / 4;
+    if (rise >= MUME_MINUTES_PER_DAY)
+        rise -= MUME_MINUTES_PER_DAY;
+    int now = minute + hour * MUME_MINUTES_PER_HOUR;
+    if (now < rise)
+        now += MUME_MINUTES_PER_DAY;
+    int set = rise + MUME_MINUTES_PER_DAY / 2;
+
+    int secondsToCountdown = 0;
+    if (now < rise)
+        secondsToCountdown = rise - now;
+    else if (now < set)
+        secondsToCountdown = set - now;
+    else
+        secondsToCountdown = MUME_MINUTES_PER_MOON_REVOLUTION - now + rise;
+
+    // TODO: What about when the moon is below level 4?
+
     return QString("%1:%2")
         .arg(secondsToCountdown / 60)
         .arg(secondsToCountdown % 60, 2, 10, QChar('0'));
+}
+
+bool MumeMoment::isMoonWaxing() const
+{
+    return moonZenithMinutes() >= MUME_MINUTES_PER_DAY / 2;
 }

@@ -63,7 +63,7 @@ void MumeClockWidget::slot_updateLabel()
     const MumeClockPrecisionEnum precision = m_clock->getPrecision();
 
     bool updateMoonText = false;
-    const MumeMoonPhaseEnum phase = moment.toMoonPhase();
+    const MumeMoonPhaseEnum phase = moment.moonPhase();
     if (phase != m_lastPhase) {
         m_lastPhase = phase;
         switch (phase) {
@@ -160,10 +160,10 @@ void MumeClockWidget::slot_updateLabel()
     } else
         timeLabel->setText(m_clock->toCountdown(moment));
 
-    const MumeMoonVisibilityEnum moonVisibility = moment.toMoonVisibility();
+    const MumeMoonPositionEnum moonVisibility = moment.moonPosition();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
         m_lastVisibility = moonVisibility;
-        const QString moonStyleSheet = (moonVisibility == MumeMoonVisibilityEnum::HIDDEN)
+        const QString moonStyleSheet = (!moment.isMoonVisible())
                                            ? "color:black;background:grey"
                                            : ((moment.isMoonBright() && time >= MumeTimeEnum::DUSK)
                                                   ? "color:black;background:yellow"
