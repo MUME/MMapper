@@ -191,7 +191,7 @@ MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
         return MumeMoonVisibilityEnum::INVISIBLE;
 
     const auto time = toTimeOfDay();
-    if (!isMoonBright() || (time >= MumeTimeEnum::DAY && time <= MumeTimeEnum::NIGHT))
+    if (!isMoonBright() || (time > MumeTimeEnum::DAWN && time < MumeTimeEnum::DUSK))
         return MumeMoonVisibilityEnum::DIM;
 
     return MumeMoonVisibilityEnum::BRIGHT;
