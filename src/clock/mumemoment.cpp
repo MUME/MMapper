@@ -187,14 +187,15 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
 
 MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
 {
-    if (!isMoonVisible() || moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
+    if (isMoonBelowHorizon() || moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
         return MumeMoonVisibilityEnum::INVISIBLE;
 
+    const auto isBright = isMoonBright();
     const auto time = toTimeOfDay();
-    if (!isMoonBright() || (time > MumeTimeEnum::DAWN && time < MumeTimeEnum::DUSK))
-        return MumeMoonVisibilityEnum::DIM;
+    if (!isBright && (time > MumeTimeEnum::DAWN && time < MumeTimeEnum::DUSK))
+        return MumeMoonVisibilityEnum::INVISIBLE;
 
-    return MumeMoonVisibilityEnum::BRIGHT;
+    return isBright ? MumeMoonVisibilityEnum::BRIGHT : MumeMoonVisibilityEnum::DIM;
 }
 
 QString MumeMoment::toMumeMoonTime() const
@@ -206,8 +207,9 @@ QString MumeMoment::toMumeMoonTime() const
                                                            "three-quarter",
                                                            "full"};
 
+    const auto pos = moonPosition();
     auto positionInSky = "";
-    switch (moonPosition()) {
+    switch (pos) {
     case MumeMoonPositionEnum::UNKNOWN:
         break;
     case MumeMoonPositionEnum::INVISIBLE:
@@ -230,9 +232,9 @@ QString MumeMoment::toMumeMoonTime() const
         break;
     }
     return QString("%1 %2%3 moon %4.")
-        .arg(!isMoonVisible() ? "The"
-             : isMoonBright() ? "You can see a"
-                              : "You can not see a")
+        .arg(pos == MumeMoonPositionEnum::INVISIBLE                  ? "The"
+             : moonVisibility() != MumeMoonVisibilityEnum::INVISIBLE ? "You can see a"
+                                                                     : "You can not see a")
         .arg((phase < 1 || phase > 3 ? ""
               : isMoonWaxing()       ? "waxing "
                                      : "waning "))

@@ -88,9 +88,9 @@ public:
     NODISCARD QString toMumeMoonTime() const;
     NODISCARD QString toMoonVisibilityCountDown() const;
     NODISCARD bool isMoonWaxing() const;
-    NODISCARD bool isMoonVisible() const
+    NODISCARD bool isMoonBelowHorizon() const
     {
-        return moonPosition() != MumeMoonPositionEnum::INVISIBLE;
+        return moonPosition() == MumeMoonPositionEnum::INVISIBLE;
     }
     NODISCARD bool isMoonBright() const { return moonLevel() > 4; }
 };
