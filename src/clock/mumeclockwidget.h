@@ -36,6 +36,6 @@ private:
     MumeTimeEnum m_lastTime = MumeTimeEnum::UNKNOWN;
     MumeSeasonEnum m_lastSeason = MumeSeasonEnum::UNKNOWN;
     MumeMoonPhaseEnum m_lastPhase = MumeMoonPhaseEnum::UNKNOWN;
-    MumeMoonPositionEnum m_lastVisibility = MumeMoonPositionEnum::UNKNOWN;
+    MumeMoonVisibilityEnum m_lastVisibility = MumeMoonVisibilityEnum::UNKNOWN;
     MumeClockPrecisionEnum m_lastPrecision = MumeClockPrecisionEnum::UNSET;
 };

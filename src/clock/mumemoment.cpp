@@ -173,7 +173,7 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
 {
     // Moon starts off as full phase at the start epoch
     // Divide level by three for phase (new, 1/4, 1/2, 3/4, full)
-    const int cycle = std::clamp(moonLevel() / 3, 0, 4);
+    const int phase = std::clamp(moonLevel() / 3, 0, 4);
     static const constexpr MumeMoonPhaseEnum WAXING[] = {MumeMoonPhaseEnum::NEW_MOON,
                                                          MumeMoonPhaseEnum::WAXING_CRESCENT,
                                                          MumeMoonPhaseEnum::FIRST_QUARTER,
@@ -184,12 +184,21 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
                                                          MumeMoonPhaseEnum::THIRD_QUARTER,
                                                          MumeMoonPhaseEnum::WANING_GIBBOUS,
                                                          MumeMoonPhaseEnum::FULL_MOON};
-    return isMoonWaxing() ? WAXING[cycle] : WANING[cycle];
+    return isMoonWaxing() ? WAXING[phase] : WANING[phase];
+}
+
+MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
+{
+    if (!isMoonVisible())
+        return MumeMoonVisibilityEnum::BELOW_HORIZON;
+
+    return (isMoonBright() && toTimeOfDay() >= MumeTimeEnum::DUSK) ? MumeMoonVisibilityEnum::BRIGHT
+                                                                   : MumeMoonVisibilityEnum::DIM;
 }
 
 QString MumeMoment::toMumeMoonTime() const
 {
-    const int lvl = std::clamp(moonLevel() / 3, 0, 4);
+    const int phase = std::clamp(moonLevel() / 3, 0, 4);
     static const constexpr char *const PHASE_MESSAGES[] = {"new",
                                                            "quarter",
                                                            "half",
@@ -223,10 +232,10 @@ QString MumeMoment::toMumeMoonTime() const
         .arg(!isMoonVisible() ? "The"
              : isMoonBright() ? "You can see a"
                               : "You can not see a")
-        .arg((lvl < 1 || lvl > 3 ? ""
-              : isMoonWaxing()   ? "waxing "
-                                 : "waning "))
-        .arg(PHASE_MESSAGES[lvl])
+        .arg((phase < 1 || phase > 3 ? ""
+              : isMoonWaxing()       ? "waxing "
+                                     : "waning "))
+        .arg(PHASE_MESSAGES[phase])
         .arg(positionInSky);
 }
 

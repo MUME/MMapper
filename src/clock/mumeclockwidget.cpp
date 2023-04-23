@@ -160,14 +160,14 @@ void MumeClockWidget::slot_updateLabel()
     } else
         timeLabel->setText(m_clock->toCountdown(moment));
 
-    const MumeMoonPositionEnum moonVisibility = moment.moonPosition();
+    const MumeMoonVisibilityEnum moonVisibility = moment.moonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
         m_lastVisibility = moonVisibility;
-        const QString moonStyleSheet = (!moment.isMoonVisible())
+        const QString moonStyleSheet = (moonVisibility <= MumeMoonVisibilityEnum::BELOW_HORIZON)
                                            ? "color:black;background:grey"
-                                           : ((moment.isMoonBright() && time >= MumeTimeEnum::DUSK)
-                                                  ? "color:black;background:yellow"
-                                                  : "color:black;background:white");
+                                       : (moonVisibility == MumeMoonVisibilityEnum::BRIGHT)
+                                           ? "color:black;background:yellow"
+                                           : "color:black;background:white";
         moonPhaseLabel->setStyleSheet(moonStyleSheet);
         updateMoonText = true;
     }

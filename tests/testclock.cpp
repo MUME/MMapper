@@ -116,42 +116,41 @@ void TestClock::parseWeatherClockSkewTest()
     GameObserver observer;
     MumeClock clock(observer);
 
-    QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    QString expected1 = snapShot1;
+    const QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
-    int realTime1 = 1513753407;
+    auto realTime1 = 1513753407;
     clock.parseMumeTime(snapShot1, realTime1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1)), expected1);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1)), snapShot1);
 
     // First sync
-    int timeOccuredAt = 1;
-    QString expectedTime = "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
+    auto timeOccuredAt = 1;
     clock.parseWeather(MumeTimeEnum::DAWN, realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)),
+             "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Mume running fast (but "day" event type synchronizes)
     timeOccuredAt = 1 + 58;
-    expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     clock.parseWeather(MumeTimeEnum::DAY, realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)),
+             "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Mume running on time
     timeOccuredAt = 1 + 60 + 58;
-    expectedTime = "7:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)),
+             "7:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Mume running on time
     timeOccuredAt = 1 + 60 + 58 + 60;
-    expectedTime = "8:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)),
+             "8:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Mume running slow
     timeOccuredAt = 1 + 60 + 58 + 60 + 65;
-    expectedTime = "9:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     clock.parseWeather(MumeTimeEnum::UNKNOWN, realTime1 + timeOccuredAt);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)),
+             "9:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 }
 
 void TestClock::parseWeatherTest()

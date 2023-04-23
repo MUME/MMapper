@@ -1002,16 +1002,13 @@ void AbstractParser::showMumeTime()
         data += moment.toMumeMoonTime().toLatin1() + "\n";
         if (precision == MumeClockPrecisionEnum::MINUTE) {
             data += "The moon ";
-            switch (moment.moonPosition()) {
-            case MumeMoonPositionEnum::UNKNOWN:
-            case MumeMoonPositionEnum::INVISIBLE:
+            switch (moment.moonVisibility()) {
+            case MumeMoonVisibilityEnum::UNKNOWN:
+            case MumeMoonVisibilityEnum::BELOW_HORIZON:
                 data += "will rise in";
                 break;
-            case MumeMoonPositionEnum::EAST:
-            case MumeMoonPositionEnum::SOUTHEAST:
-            case MumeMoonPositionEnum::SOUTH:
-            case MumeMoonPositionEnum::SOUTHWEST:
-            case MumeMoonPositionEnum::WEST:
+            case MumeMoonVisibilityEnum::DIM:
+            case MumeMoonVisibilityEnum::BRIGHT:
                 data += "will set in";
                 break;
             }

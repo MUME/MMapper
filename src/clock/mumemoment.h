@@ -43,11 +43,12 @@ enum class NODISCARD MumeMoonPhaseEnum : int8_t {
     FIRST_QUARTER,   //  6,  7,  8
     WAXING_GIBBOUS,  //  9,  10, 11
     FULL_MOON,       //  12
-    WANING_GIBBOUS,  //  11, 10,  9
+    WANING_GIBBOUS,  //  11, 10, 9
     THIRD_QUARTER,   //  8,  7,  6
     WANING_CRESCENT, //  5,  4,  3
-    NEW_MOON         //  0,  1
+    NEW_MOON         //  0,  1,  2
 };
+enum class MumeMoonVisibilityEnum : uint8_t { UNKNOWN, BELOW_HORIZON, DIM, BRIGHT };
 enum class NODISCARD MumeMoonPositionEnum : int8_t {
     UNKNOWN = -1,
     INVISIBLE,
@@ -82,6 +83,7 @@ public:
     NODISCARD int moonZenithMinutes() const;
     NODISCARD int moonLevel() const;
     NODISCARD MumeMoonPhaseEnum moonPhase() const;
+    NODISCARD MumeMoonVisibilityEnum moonVisibility() const;
     NODISCARD MumeMoonPositionEnum moonPosition() const;
     NODISCARD QString toMumeMoonTime() const;
     NODISCARD QString toMoonVisibilityCountDown() const;
