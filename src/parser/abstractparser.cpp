@@ -1004,7 +1004,7 @@ void AbstractParser::showMumeTime()
             data += "The moon ";
             switch (moment.moonVisibility()) {
             case MumeMoonVisibilityEnum::UNKNOWN:
-            case MumeMoonVisibilityEnum::BELOW_HORIZON:
+            case MumeMoonVisibilityEnum::INVISIBLE:
                 data += "will rise in";
                 break;
             case MumeMoonVisibilityEnum::DIM:

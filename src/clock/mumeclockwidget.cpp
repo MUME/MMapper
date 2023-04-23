@@ -163,7 +163,7 @@ void MumeClockWidget::slot_updateLabel()
     const MumeMoonVisibilityEnum moonVisibility = moment.moonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
         m_lastVisibility = moonVisibility;
-        const QString moonStyleSheet = (moonVisibility <= MumeMoonVisibilityEnum::BELOW_HORIZON)
+        const QString moonStyleSheet = (moonVisibility <= MumeMoonVisibilityEnum::INVISIBLE)
                                            ? "color:black;background:grey"
                                        : (moonVisibility == MumeMoonVisibilityEnum::BRIGHT)
                                            ? "color:black;background:yellow"

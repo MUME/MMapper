@@ -190,7 +190,7 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
 MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
 {
     if (!isMoonVisible())
-        return MumeMoonVisibilityEnum::BELOW_HORIZON;
+        return MumeMoonVisibilityEnum::INVISIBLE;
 
     return (isMoonBright() && toTimeOfDay() >= MumeTimeEnum::DUSK) ? MumeMoonVisibilityEnum::BRIGHT
                                                                    : MumeMoonVisibilityEnum::DIM;
