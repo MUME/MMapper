@@ -236,7 +236,7 @@ void TestClock::moonClockTest()
     QCOMPARE(moment.moonLevel(), 12);
     QCOMPARE(static_cast<int>(moment.moonPosition()), static_cast<int>(MumeMoonPositionEnum::SOUTH));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
-    QCOMPARE("6:00", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "6:00");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 4 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a full moon to the southwest.");
@@ -245,7 +245,7 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPosition()),
              static_cast<int>(MumeMoonPositionEnum::SOUTHWEST));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
-    QCOMPARE("2:08", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "2:08");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 6 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a full moon to the west.");
@@ -253,7 +253,8 @@ void TestClock::moonClockTest()
     QCOMPARE(moment.moonLevel(), 12);
     QCOMPARE(static_cast<int>(moment.moonPosition()), static_cast<int>(MumeMoonPositionEnum::WEST));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
-    QCOMPARE("0:12", moment.toMoonVisibilityCountDown()); // REVISIT: The moon should have set
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "0:12");
+    // REVISIT: The moon should have set according to the first test but we're at 0:12 instead
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 10 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "The full moon is below the horizon.");
@@ -262,7 +263,7 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPosition()),
              static_cast<int>(MumeMoonPositionEnum::INVISIBLE));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
-    QCOMPARE("9:10", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "9:10");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 20 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waning three-quarter moon to the east.");
@@ -271,7 +272,7 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPosition()), static_cast<int>(MumeMoonPositionEnum::EAST));
     QCOMPARE(static_cast<int>(moment.moonPhase()),
              static_cast<int>(MumeMoonPhaseEnum::WANING_GIBBOUS));
-    QCOMPARE("10:40", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:40");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + MUME_MINUTES_PER_MOON_CYCLE / 2);
     QCOMPARE(moment.toMumeMoonTime(), "The new moon is below the horizon.");
@@ -280,7 +281,7 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPosition()),
              static_cast<int>(MumeMoonPositionEnum::INVISIBLE));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::NEW_MOON));
-    QCOMPARE("12:28", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "12:28");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + MUME_MINUTES_PER_MOON_CYCLE / 2
                                  + 14 * MUME_MINUTES_PER_HOUR);
@@ -290,7 +291,7 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPosition()),
              static_cast<int>(MumeMoonPositionEnum::SOUTHEAST));
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::NEW_MOON));
-    QCOMPARE("10:06", moment.toMoonVisibilityCountDown());
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:06");
 
     clock.parseMumeTime("2:00 am on Sunday, the 19th of Forelithe, year 2997 of the Third Age.");
     moment = clock.getMumeMoment();
