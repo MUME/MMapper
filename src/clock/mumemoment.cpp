@@ -148,9 +148,7 @@ MumeMoonPositionEnum MumeMoment::moonPosition() const
         now += MUME_MINUTES_PER_DAY;
     /* dir 0-15: 0: east, 1/2: southeast, 3/4: south, 5/6: southwest; 7: west;
            8-15: under the horizon*/
-    int dir = (now - rise) * 16 / MUME_MINUTES_PER_DAY;
-    if (dir < 0 || dir > 15)
-        qWarning() << "Moon position dir is out of whack" << dir;
+    const int dir = std::clamp((now - rise) * 16 / MUME_MINUTES_PER_DAY, 0, 15);
     if (dir < 8) {
         static const constexpr int EAST = static_cast<int>(MumeMoonPositionEnum::EAST);
         static const constexpr int MIN = static_cast<int>(MumeMoonPositionEnum::INVISIBLE);
@@ -189,11 +187,14 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
 
 MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
 {
-    if (!isMoonVisible())
+    if (!isMoonVisible() || moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
         return MumeMoonVisibilityEnum::INVISIBLE;
 
-    return (isMoonBright() && toTimeOfDay() >= MumeTimeEnum::DUSK) ? MumeMoonVisibilityEnum::BRIGHT
-                                                                   : MumeMoonVisibilityEnum::DIM;
+    const auto time = toTimeOfDay();
+    if (!isMoonBright() || (time >= MumeTimeEnum::DAY && time <= MumeTimeEnum::NIGHT))
+        return MumeMoonVisibilityEnum::DIM;
+
+    return MumeMoonVisibilityEnum::BRIGHT;
 }
 
 QString MumeMoment::toMumeMoonTime() const
