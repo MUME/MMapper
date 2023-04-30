@@ -1002,7 +1002,9 @@ void AbstractParser::showMumeTime()
         data += moment.toMumeMoonTime().toLatin1() + "\n";
         if (precision == MumeClockPrecisionEnum::MINUTE) {
             data += "The moon ";
-            if (moment.isMoonBelowHorizon())
+            if (moment.moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
+                data += "will change phases in";
+            else if (moment.isMoonBelowHorizon())
                 data += "will rise in";
             else
                 data += "will set in";
