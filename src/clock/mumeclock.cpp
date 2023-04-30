@@ -147,7 +147,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
     // Calculate start of Mume epoch
     auto capturedMoment = MumeMoment(year, month, day, hour, minute);
-    const int mumeSecsSinceEpoch = capturedMoment.toSeconds();
+    const int64_t mumeSecsSinceEpoch = capturedMoment.toSeconds();
     const int64_t newStartEpoch = secsSinceEpoch - mumeSecsSinceEpoch;
     if (newStartEpoch != m_mumeStartEpoch) {
         log("Detected new Mume start epoch " + QString::number(newStartEpoch) + " ("
@@ -163,8 +163,8 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
 void MumeClock::slot_onUserGmcp(const GmcpMessage &msg)
 {
-    if (!(msg.isEventMoon() || msg.isEventDarkness() || msg.isEventSun())
-        || !msg.getJsonDocument().has_value() || !msg.getJsonDocument()->isObject())
+    if (!(msg.isEventDarkness() || msg.isEventSun()) || !msg.getJsonDocument().has_value()
+        || !msg.getJsonDocument()->isObject())
         return;
 
     const QJsonObject obj = msg.getJsonDocument()->object();

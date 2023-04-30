@@ -1000,19 +1000,16 @@ void AbstractParser::showMumeTime()
 
         // Moon data
         data += moment.toMumeMoonTime().toLatin1() + "\n";
-        data += "The moon ";
-        switch (moment.toMoonVisibility()) {
-        case MumeMoonVisibilityEnum::HIDDEN:
-        case MumeMoonVisibilityEnum::POSITION_UNKNOWN:
-            data += "will rise in";
-            break;
-        case MumeMoonVisibilityEnum::RISE:
-        case MumeMoonVisibilityEnum::SET:
-        case MumeMoonVisibilityEnum::VISIBLE:
-            data += "will set in";
-            break;
+        if (precision == MumeClockPrecisionEnum::MINUTE) {
+            data += "The moon ";
+            if (moment.moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
+                data += "will change phases in";
+            else if (moment.isMoonBelowHorizon())
+                data += "will rise in";
+            else
+                data += "will set in";
+            data += " " + moment.toMoonVisibilityCountDown().toLatin1() + " more ticks.\n";
         }
-        data += " " + moment.toMoonCountDown().toLatin1() + " more ticks.\n";
     }
     sendToUser(data);
 }
@@ -1422,12 +1419,10 @@ void AbstractParser::sendPromptToUser(const Room &r)
 void AbstractParser::sendPromptToUser(const RoomLightEnum lightType,
                                       const RoomTerrainEnum terrainType)
 {
-    char light = getLightSymbol(lightType);
-    MumeMoment moment = m_mumeClock.getMumeMoment();
-    if (light == 'o' && moment.isMoonBright() && moment.isMoonVisible()) {
-        // Moon is out
-        light = ')';
-    }
+    const char light = m_mumeClock.getMumeMoment().moonVisibility()
+                               == MumeMoonVisibilityEnum::BRIGHT
+                           ? ')' // Moon is out
+                           : getLightSymbol(lightType);
     const char terrain = getTerrainSymbol(terrainType);
     sendPromptToUser(light, terrain);
 }

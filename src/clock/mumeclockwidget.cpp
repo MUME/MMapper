@@ -15,7 +15,7 @@
 #include "mumeclock.h"
 #include "mumemoment.h"
 
-MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
+MumeClockWidget::MumeClockWidget(MumeClock *const clock, QWidget *const parent)
     : QWidget(parent)
     , m_clock(clock)
 {
@@ -63,7 +63,7 @@ void MumeClockWidget::slot_updateLabel()
     const MumeClockPrecisionEnum precision = m_clock->getPrecision();
 
     bool updateMoonText = false;
-    const MumeMoonPhaseEnum phase = moment.toMoonPhase();
+    const MumeMoonPhaseEnum phase = moment.moonPhase();
     if (phase != m_lastPhase) {
         m_lastPhase = phase;
         switch (phase) {
@@ -160,14 +160,15 @@ void MumeClockWidget::slot_updateLabel()
     } else
         timeLabel->setText(m_clock->toCountdown(moment));
 
-    const MumeMoonVisibilityEnum moonVisibility = moment.toMoonVisibility();
+    const MumeMoonVisibilityEnum moonVisibility = moment.moonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
         m_lastVisibility = moonVisibility;
-        const QString moonStyleSheet = (moonVisibility == MumeMoonVisibilityEnum::HIDDEN)
+        const QString moonStyleSheet = (moonVisibility == MumeMoonVisibilityEnum::INVISIBLE
+                                        || moonVisibility == MumeMoonVisibilityEnum::UNKNOWN)
                                            ? "color:black;background:grey"
-                                           : ((moment.isMoonBright() && time >= MumeTimeEnum::DUSK)
-                                                  ? "color:black;background:yellow"
-                                                  : "color:black;background:white");
+                                       : (moonVisibility == MumeMoonVisibilityEnum::BRIGHT)
+                                           ? "color:black;background:yellow"
+                                           : "color:black;background:white";
         moonPhaseLabel->setStyleSheet(moonStyleSheet);
         updateMoonText = true;
     }
