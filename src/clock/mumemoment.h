@@ -76,7 +76,7 @@ public:
 
     NODISCARD int dayOfYear() const;
     NODISCARD int weekDay() const;
-    NODISCARD int64_t toSeconds() const;
+    NODISCARD int toSeconds() const;
     NODISCARD MumeSeasonEnum toSeason() const;
     NODISCARD MumeTimeEnum toTimeOfDay() const;
 
@@ -85,6 +85,8 @@ public:
     NODISCARD MumeMoonPhaseEnum moonPhase() const;
     NODISCARD MumeMoonVisibilityEnum moonVisibility() const;
     NODISCARD MumeMoonPositionEnum moonPosition() const;
+    NODISCARD int untilMoonPosition(MumeMoonPositionEnum pos) const;
+    NODISCARD int untilMoonPhase(MumeMoonPhaseEnum phase) const;
     NODISCARD QString toMumeMoonTime() const;
     NODISCARD QString toMoonVisibilityCountDown() const;
     NODISCARD bool isMoonWaxing() const;

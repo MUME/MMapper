@@ -238,7 +238,9 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "6:00");
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 372);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 1118);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "6:12");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 4 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a full moon to the southwest.");
@@ -249,7 +251,9 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "2:08");
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 132);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 878);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "2:12");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 6 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a full moon to the west.");
@@ -259,8 +263,22 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 12);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 758);
     QCOMPARE(moment.toMoonVisibilityCountDown(), "0:12");
-    // REVISIT: The moon should have set according to the first test but we're at 0:12 instead
+
+    moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 7 * MUME_MINUTES_PER_HOUR);
+    QCOMPARE(moment.toMumeMoonTime(), "The full moon is below the horizon.");
+    QCOMPARE(moment.moonZenithMinutes(), 14);
+    QCOMPARE(moment.moonLevel(), 12);
+    QCOMPARE(static_cast<int>(moment.moonPosition()),
+             static_cast<int>(MumeMoonPositionEnum::INVISIBLE));
+    QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
+    QCOMPARE(static_cast<int>(moment.moonVisibility()),
+             static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 1443);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 698);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "11:38");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 10 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "The full moon is below the horizon.");
@@ -271,7 +289,22 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "9:10");
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 1263);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 518);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "8:38");
+
+    moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 11 * MUME_MINUTES_PER_HOUR);
+    QCOMPARE(moment.toMumeMoonTime(), "The full moon is below the horizon.");
+    QCOMPARE(moment.moonZenithMinutes(), 22);
+    QCOMPARE(moment.moonLevel(), 12);
+    QCOMPARE(static_cast<int>(moment.moonPosition()),
+             static_cast<int>(MumeMoonPositionEnum::INVISIBLE));
+    QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::FULL_MOON));
+    QCOMPARE(static_cast<int>(moment.moonVisibility()),
+             static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 1203);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 458);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "7:38");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + 20 * MUME_MINUTES_PER_HOUR);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waning three-quarter moon to the east.");
@@ -282,7 +315,9 @@ void TestClock::moonClockTest()
              static_cast<int>(MumeMoonPhaseEnum::WANING_GIBBOUS));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:40");
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::INVISIBLE), 663);
+    QCOMPARE(moment.untilMoonPosition(MumeMoonPositionEnum::EAST), 1408);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "11:03");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + MUME_MINUTES_PER_MOON_CYCLE / 2);
     QCOMPARE(moment.toMumeMoonTime(), "The new moon is below the horizon.");
@@ -293,7 +328,9 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::NEW_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "12:28");
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::WAXING_CRESCENT), 4429);
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::FULL_MOON), 20376);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "1:13:49");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + MUME_MINUTES_PER_MOON_CYCLE / 2
                                  + 14 * MUME_MINUTES_PER_HOUR);
@@ -305,7 +342,11 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonPhase()), static_cast<int>(MumeMoonPhaseEnum::NEW_MOON));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:06");
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::WAXING_CRESCENT),
+             4429 - 14 * MUME_MINUTES_PER_HOUR);
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::FULL_MOON),
+             20376 - 14 * MUME_MINUTES_PER_HOUR);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "59:49");
 
     moment = clock.getMumeMoment(clock.getMumeStartEpoch() + MUME_MINUTES_PER_MOON_CYCLE / 2
                                  + MUME_MINUTES_PER_MOON_PHASE);
@@ -318,7 +359,11 @@ void TestClock::moonClockTest()
              static_cast<int>(MumeMoonPhaseEnum::WAXING_CRESCENT));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
-    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:02");
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::WAXING_CRESCENT),
+             4429 - MUME_MINUTES_PER_MOON_PHASE + MUME_MINUTES_PER_MOON_CYCLE);
+    QCOMPARE(moment.untilMoonPhase(MumeMoonPhaseEnum::FULL_MOON),
+             20376 - MUME_MINUTES_PER_MOON_PHASE);
+    QCOMPARE(moment.toMoonVisibilityCountDown(), "10:24");
 
     clock.parseMumeTime("2:00 am on Sunday, the 19th of Forelithe, year 2997 of the Third Age.");
     moment = clock.getMumeMoment();

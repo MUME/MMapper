@@ -15,7 +15,7 @@
 #include "mumeclock.h"
 #include "mumemoment.h"
 
-MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
+MumeClockWidget::MumeClockWidget(MumeClock *const clock, QWidget *const parent)
     : QWidget(parent)
     , m_clock(clock)
 {
@@ -163,7 +163,8 @@ void MumeClockWidget::slot_updateLabel()
     const MumeMoonVisibilityEnum moonVisibility = moment.moonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
         m_lastVisibility = moonVisibility;
-        const QString moonStyleSheet = (moonVisibility <= MumeMoonVisibilityEnum::INVISIBLE)
+        const QString moonStyleSheet = (moonVisibility == MumeMoonVisibilityEnum::INVISIBLE
+                                        || moonVisibility == MumeMoonVisibilityEnum::UNKNOWN)
                                            ? "color:black;background:grey"
                                        : (moonVisibility == MumeMoonVisibilityEnum::BRIGHT)
                                            ? "color:black;background:yellow"

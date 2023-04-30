@@ -82,7 +82,7 @@ int MumeMoment::weekDay() const
     return dayOfYear() % 7;
 }
 
-int64_t MumeMoment::toSeconds() const
+int MumeMoment::toSeconds() const
 {
     return minute + hour * MUME_MINUTES_PER_HOUR + day * MUME_MINUTES_PER_DAY
            + month * MUME_MINUTES_PER_MONTH + (year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
@@ -133,13 +133,12 @@ MumeTimeEnum MumeMoment::toTimeOfDay() const
 int MumeMoment::moonZenithMinutes() const
 {
     // At what minute of day the moon is at its highest point in the sky
-    const auto count = toSeconds() * MUME_MINUTES_PER_DAY;
-    return static_cast<int>((count / MUME_MINUTES_PER_MOON_CYCLE) % MUME_MINUTES_PER_DAY);
+    const auto count = static_cast<int64_t>(toSeconds()) * MUME_MINUTES_PER_DAY;
+    return (count / MUME_MINUTES_PER_MOON_CYCLE) % MUME_MINUTES_PER_DAY;
 }
 
 MumeMoonPositionEnum MumeMoment::moonPosition() const
 {
-    // Position of moon in the sky
     int rise = moonZenithMinutes() + MUME_MINUTES_PER_DAY * 3 / 4;
     if (rise >= MUME_MINUTES_PER_DAY)
         rise -= MUME_MINUTES_PER_DAY;
@@ -198,6 +197,48 @@ MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
     return isBright ? MumeMoonVisibilityEnum::BRIGHT : MumeMoonVisibilityEnum::DIM;
 }
 
+int MumeMoment::untilMoonPosition(MumeMoonPositionEnum pos) const
+{
+    if (pos == MumeMoonPositionEnum::UNKNOWN)
+        return -1;
+
+    static const constexpr int MINUTES[] = {4 * MUME_MINUTES_PER_DAY / 16,  // Invisible
+                                            -4 * MUME_MINUTES_PER_DAY / 16, // East
+                                            -3 * MUME_MINUTES_PER_DAY / 16, // Southeast
+                                            -1 * MUME_MINUTES_PER_DAY / 16, // South
+                                            1 * MUME_MINUTES_PER_DAY / 16,  // Southwest
+                                            3 * MUME_MINUTES_PER_DAY / 16}; // West
+    static_assert(MINUTES[static_cast<int>(MumeMoonPositionEnum::INVISIBLE)] == 360);
+    static_assert(MINUTES[static_cast<int>(MumeMoonPositionEnum::EAST)] == -360);
+
+    const auto target = MINUTES[static_cast<int>(pos)] * MUME_MINUTES_PER_MOON_CYCLE;
+    const auto now = static_cast<int64_t>(toSeconds())
+                     * (MUME_MINUTES_PER_MOON_CYCLE - MUME_MINUTES_PER_DAY);
+    const auto delta = (target - now) % (MUME_MINUTES_PER_MOON_CYCLE * MUME_MINUTES_PER_DAY);
+    const auto result = static_cast<int>(delta)
+                        / (MUME_MINUTES_PER_MOON_CYCLE - MUME_MINUTES_PER_DAY);
+    return (target > now) ? result : MUME_MINUTES_PER_MOON_REVOLUTION + result;
+}
+
+int MumeMoment::untilMoonPhase(MumeMoonPhaseEnum phase) const
+{
+    if (phase == MumeMoonPhaseEnum::UNKNOWN)
+        return -1;
+
+    static const constexpr int PHASE_OFFSET[] = {15,  // Waxing Crescent
+                                                 18,  // First Quarter
+                                                 21,  // Waxing Gibbous
+                                                 0,   // Full Moon
+                                                 1,   // Waning Gibbous
+                                                 4,   // Third Quarter
+                                                 7,   // Waning Crescent
+                                                 12}; // New Moon
+    const auto cycle = static_cast<int64_t>(toSeconds()) % MUME_MINUTES_PER_MOON_CYCLE;
+    const auto target = MUME_MINUTES_PER_MOON_CYCLE
+                        * (2 * PHASE_OFFSET[static_cast<int>(phase)] + 47) / 48;
+    return (target - cycle) % MUME_MINUTES_PER_MOON_CYCLE;
+}
+
 QString MumeMoment::toMumeMoonTime() const
 {
     const int phase = std::clamp(moonLevel() / 3, 0, 4);
@@ -244,27 +285,17 @@ QString MumeMoment::toMumeMoonTime() const
 
 QString MumeMoment::toMoonVisibilityCountDown() const
 {
-    int rise = moonZenithMinutes() + MUME_MINUTES_PER_DAY * 3 / 4;
-    if (rise >= MUME_MINUTES_PER_DAY)
-        rise -= MUME_MINUTES_PER_DAY;
-    int now = minute + hour * MUME_MINUTES_PER_HOUR;
-    if (now < rise)
-        now += MUME_MINUTES_PER_DAY;
-    int set = rise + MUME_MINUTES_PER_DAY / 2;
+    const int secondsToCountdown = moonPhase() == MumeMoonPhaseEnum::NEW_MOON
+                                       ? untilMoonPhase(MumeMoonPhaseEnum::WAXING_CRESCENT)
+                                   : isMoonBelowHorizon()
+                                       ? untilMoonPosition(MumeMoonPositionEnum::EAST)
+                                       : untilMoonPosition(MumeMoonPositionEnum::INVISIBLE);
 
-    int secondsToCountdown = 0;
-    if (now < rise)
-        secondsToCountdown = rise - now;
-    else if (now < set)
-        secondsToCountdown = set - now;
-    else
-        secondsToCountdown = MUME_MINUTES_PER_MOON_REVOLUTION - now + rise;
-
-    // TODO: What about when the moon is below level 4?
-
-    return QString("%1:%2")
-        .arg(secondsToCountdown / 60)
-        .arg(secondsToCountdown % 60, 2, 10, QChar('0'));
+    const auto h = secondsToCountdown / 60 / 60;
+    const auto m = secondsToCountdown / 60 % 60;
+    const auto s = secondsToCountdown % 60;
+    return h ? QString("%1:%2:%3").arg(h).arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'))
+             : QString("%1:%2").arg(m).arg(s, 2, 10, QChar('0'));
 }
 
 bool MumeMoment::isMoonWaxing() const
