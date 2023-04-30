@@ -1,4 +1,25 @@
 ================================
+MMapper 23.05.0 (May 1, 2023)
+================================
+
+New features:
+ - Added support for a rattlesnake mob flag to differentiate between the
+   attention flag
+ - The menu bar can now be intelligently hidden until mouseover for a more
+   minimal experience
+ - Rattlesnake, attention, and smob hints are now displayed in the
+   emulated exits
+
+Bug fixes:
+ - The adventurer panel has a corrected XP and TP hourly rate
+ - Undead kills are now tracked in the adventure panel
+ - The moon has been fixed follow the game's adjusted synodic month
+
+Changes:
+ - Time is now synchronized using GMCP Event.Darkness and Event.Sun
+ - Moon phases are now considered as part of the visibility counter
+
+================================
 MMapper 23.03.0 (March 18, 2023)
 ================================
 
