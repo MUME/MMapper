@@ -363,7 +363,7 @@ struct NODISCARD EntityTable final
 {
     struct NODISCARD MyHash final
     {
-        uint32_t operator()(const QString &qs) const { return qHash(qs); }
+        uint32_t operator()(const QString &qs) const { return static_cast<uint32_t>(qHash(qs)); }
     };
 
     std::unordered_map<QString, XmlEntity, MyHash> by_short_name;
@@ -671,7 +671,7 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
         if (val > MAX_UNICODE_CODEPOINT)
             return OptQChar{};
     }
-    return OptQChar{val};
+    return OptQChar{std::clamp<char16_t>(static_cast<char16_t>(val), 0x0, 0xffff)};
 }
 
 // TODO: test with strings like "", "&;", "&&", "&&;", "&lt", "&lt;" "&lt&lt;",
@@ -763,7 +763,7 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
     public:
         const EncodedLatin1 &input;
         DecodedUnicode out;
-        int pos = 0;
+        qsizetype pos = 0;
 
     public:
         explicit MyEntityCallback(const EncodedLatin1 &_input)
@@ -784,7 +784,7 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
         }
 
     public:
-        void skipto(int start)
+        void skipto(qsizetype start)
         {
             assert(start >= this->pos);
             if (start == this->pos)

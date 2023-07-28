@@ -69,7 +69,11 @@ void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession>
     updateContent();
 }
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
 void XPStatusWidget::enterEvent(QEvent *event)
+#else
+void XPStatusWidget::enterEvent(QEnterEvent *event)
+#endif
 {
     if (m_session) {
         auto xpHourly = m_session->calculateHourlyRateXP();

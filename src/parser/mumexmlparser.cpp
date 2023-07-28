@@ -193,7 +193,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
 
 bool MumeXmlParser::element(const QByteArray &line)
 {
-    const int length = line.length();
+    const auto length = line.length();
 
     // REVISIT: Merge this logic with the state machine in parse()
     const auto attributes = [&line]() {

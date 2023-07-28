@@ -359,7 +359,7 @@ void AbstractParser::parseExits(std::ostream &os)
         }
     } else {
         // Player exits
-        const int length = str.length();
+        const int length = static_cast<int>(str.length());
         for (int i = 7; i < length; i++) {
             const char c = str.at(i).toLatin1();
             if (!parse_exit_flag(c)) {
@@ -440,7 +440,7 @@ void AbstractParser::parseExits(std::ostream &os)
     if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
         const auto right_trim = [](const QString &str) -> QString {
-            for (int n = str.size() - 1; n >= 0; --n) {
+            for (int n = static_cast<int>(str.size()) - 1; n >= 0; --n) {
                 if (!str.at(n).isSpace()) {
                     return str.left(n + 1);
                 }

@@ -129,10 +129,10 @@ void DisplayWidget::slot_displayText(const QString &str)
     QRegularExpressionMatchIterator it = ansiRx.globalMatch(str);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        ansiIndex = match.capturedStart(0);
+        ansiIndex = static_cast<int>(match.capturedStart(0));
         textList << str.mid(textIndex, ansiIndex - textIndex);
         ansiList << match.captured(1);
-        textIndex = match.capturedEnd(0);
+        textIndex = static_cast<int>(match.capturedEnd(0));
     }
     if (textIndex < str.length()) {
         textList << str.mid(textIndex);
@@ -149,7 +149,7 @@ void DisplayWidget::slot_displayText(const QString &str)
                 m_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 1);
                 m_backspace = false;
             }
-            int backspaceIndex = textStr.indexOf('\10');
+            auto backspaceIndex = textStr.indexOf('\10');
             if (backspaceIndex == -1) {
                 // No backspace
                 m_cursor.insertText(textStr, m_format);

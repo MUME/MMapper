@@ -499,6 +499,13 @@ target_link_libraries(mmapper PUBLIC
     Qt${QT_VERSION_MAJOR}::OpenGL
 )
 
+if (QT_VERSION_MAJOR MATCHES 6)
+    target_link_libraries(mmapper PUBLIC
+        Qt::OpenGLWidgets
+        Qt::Core5Compat
+    )
+endif()
+
 set_target_properties(
   mmapper PROPERTIES
   CXX_STANDARD 17
@@ -676,12 +683,20 @@ if(UNIX AND NOT APPLE)
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.15.0), libqt5gui5 (>= 5.15.0), libqt5opengl5 (>= 5.15.0), libqt5network5 (>= 5.15.0)")
+    if (QT_VERSION_MAJOR MATCHES 5)
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.15.0), libqt5gui5 (>= 5.15.0), libqt5opengl5 (>= 5.15.0), libqt5network5 (>= 5.15.0)")
+    else()
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6opengl6, libqt6network6, libqt6core5compat6")
+    endif()
     if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
     if(WITH_OPENSSL)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
+        if (QT_VERSION_MAJOR MATCHES 5)
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
+        else()
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl3")
+        endif()
     endif()
     if(WITH_MINIUPNPC)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libminiupnpc${MINIUPNPC_API_VERSION}")
@@ -701,7 +716,10 @@ if(WIN32)
     )
 
     # Bundle Library Files
-    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
+    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime)
+    if (QT_VERSION_MAJOR MATCHES 5)
+        set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --no-angle)
+    endif()
     find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
     message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")

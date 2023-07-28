@@ -674,7 +674,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     log(QString("Map compressed (compression ratio of %1:1)")
             .arg(QString::number(compressionRatio, 'f', 1)));
 
-    fileStream.writeRawData(compressedData.data(), compressedData.size());
+    fileStream.writeRawData(compressedData.data(), static_cast<int>(compressedData.size()));
     log("Writing data finished.");
 
     m_mapData.unsetDataChanged();

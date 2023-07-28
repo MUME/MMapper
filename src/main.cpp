@@ -74,10 +74,12 @@ private:
 
 Splash::~Splash() = default;
 
-static void useHighDpi()
+static void tryUseHighDpi()
 {
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 }
 
 static void setHighDpiScaleFactorRoundingPolicy()
@@ -165,7 +167,7 @@ static void setSurfaceFormat()
 
 int main(int argc, char **argv)
 {
-    useHighDpi();
+    tryUseHighDpi();
     setHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {

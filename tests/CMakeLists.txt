@@ -100,6 +100,9 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
   UNITY_BUILD ${USE_UNITY_BUILD}
 )
+if (QT_VERSION_MAJOR MATCHES 6)
+    target_link_libraries(TestParser PUBLIC Qt::Core5Compat)
+endif()
 add_test(NAME TestParser COMMAND TestParser)
 
 # Proxy
@@ -163,6 +166,9 @@ set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
 add_dependencies(TestGlobal glm)
 target_link_libraries(TestGlobal PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Test coverage_config)
+if (QT_VERSION_MAJOR MATCHES 6)
+    target_link_libraries(TestGlobal PUBLIC Qt::Core5Compat)
+endif()
 set_target_properties(
   TestGlobal PROPERTIES
   CXX_STANDARD 17
