@@ -493,10 +493,10 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(mmapper PUBLIC
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::OpenGL
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::OpenGL
 )
 
 set_target_properties(

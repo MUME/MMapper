@@ -14,19 +14,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-11.0, ubuntu-22.04]
-        compiler: ['clang', 'gcc', 'msvc']
-        exclude:
+        include:
         - os: ubuntu-22.04
-          compiler: 'msvc'
-        - os: macos-11.0
           compiler: 'gcc'
+        - os: ubuntu-22.04
+          compiler: 'clang'
         - os: macos-11.0
-          compiler: 'msvc'
-        - os: windows-2022
           compiler: 'clang'
         - os: windows-2022
-          compiler: 'gcc'
+          compiler: msvc
     steps:
     - uses: actions/checkout@v3
       with:

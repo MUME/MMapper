@@ -21,7 +21,7 @@ set(clock_SRCS
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
 add_dependencies(TestClock glm)
-target_link_libraries(TestClock Qt5::Test coverage_config)
+target_link_libraries(TestClock PRIVATE Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestClock PROPERTIES
   CXX_STANDARD 17
@@ -57,7 +57,7 @@ file(GLOB_RECURSE expandoracommon_SRCS
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
 add_dependencies(TestExpandoraCommon glm)
-target_link_libraries(TestExpandoraCommon Qt5::Test coverage_config)
+target_link_libraries(TestExpandoraCommon PRIVATE Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestExpandoraCommon PROPERTIES
   CXX_STANDARD 17
@@ -91,7 +91,7 @@ set(parser_SRCS
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
 add_dependencies(TestParser glm)
-target_link_libraries(TestParser Qt5::Test coverage_config)
+target_link_libraries(TestParser PRIVATE Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestParser PROPERTIES
   CXX_STANDARD 17
@@ -116,7 +116,7 @@ set(proxy_SRCS
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
 add_dependencies(TestProxy glm)
-target_link_libraries(TestProxy Qt5::Test coverage_config)
+target_link_libraries(TestProxy Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
   CXX_STANDARD 17
@@ -136,7 +136,7 @@ set(mainwindow_SRCS
 set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
 add_dependencies(TestMainWindow glm)
-target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+target_link_libraries(TestMainWindow PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestMainWindow PROPERTIES
   CXX_STANDARD 17
@@ -162,7 +162,7 @@ set(global_SRCS
 set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
 add_dependencies(TestGlobal glm)
-target_link_libraries(TestGlobal Qt5::Widgets Qt5::Test coverage_config)
+target_link_libraries(TestGlobal PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
   TestGlobal PROPERTIES
   CXX_STANDARD 17
@@ -190,15 +190,19 @@ set(adventure_SRCS
         ../src/global/NamedColors.h
         ../src/global/utils.cpp
         ../src/global/utils.h
+        ../src/global/TextUtils.cpp
+        ../src/global/TextUtils.h
         ../src/observer/gameobserver.cpp
         ../src/observer/gameobserver.h
         ../src/parser/parserutils.cpp
         ../src/parser/parserutils.h
+        ../src/proxy/GmcpMessage.cpp
+        ../src/proxy/GmcpMessage.h
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
 add_dependencies(TestAdventure glm)
-target_link_libraries(TestAdventure Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+target_link_libraries(TestAdventure PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
         CXX_STANDARD 17

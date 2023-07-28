@@ -321,7 +321,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
         throwErrorFmt(stream, "duplicate room id \"%1\"", idstr.toString());
     }
     room.setId(roomId);
-    if (attrs.value("uptodate") == "false") {
+    if (attrs.value("uptodate") == QStringLiteral("false")) {
         room.setOutDated();
     } else {
         room.setUpToDate();

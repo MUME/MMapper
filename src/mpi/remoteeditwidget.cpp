@@ -25,7 +25,6 @@
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
-#include "../global/RAII.h"
 #include "../global/TextUtils.h"
 #include "../global/entities.h"
 #include "../global/utils.h"
@@ -247,7 +246,7 @@ public:
                 default:
                     if (hasLast
                         && (isClamped<int>(static_cast<unsigned char>(c), 0x80, 0xbf)
-                            && (last == 0xc2 || last == 0xc3))) {
+                            && (last.unicode() == 0xc2 || last.unicode() == 0xc3))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
