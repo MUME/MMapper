@@ -16,19 +16,25 @@ jobs:
       matrix:
         include:
         - os: ubuntu-22.04
-          compiler: 'gcc'
+          compiler: gcc
           qt: qt5
         - os: ubuntu-22.04
-          compiler: 'clang'
+          compiler: clang
           qt: qt5
         - os: macos-11.0
-          compiler: 'clang'
+          compiler: clang
+          qt: qt5
+        - os: windows-2022
+          compiler: gcc
           qt: qt5
         - os: windows-2022
           compiler: msvc
           qt: qt5
+        - os: windows-2022
+          compiler: gcc
+          qt: qt6
         - os: macos-11.0
-          compiler: 'clang'
+          compiler: clang
           qt: qt6
     steps:
     - uses: actions/checkout@v3
@@ -100,7 +106,8 @@ jobs:
       #
       # Install Packages (Windows)
       #
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Install Qt5 MSVC for Windows
       uses: jurplel/install-qt-action@v3
       with:
         version: 5.15.2
@@ -108,26 +115,47 @@ jobs:
         arch: win64_msvc2019_64
         cache: true
         tools: 'tools_ninja tools_openssl_x64'
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Setup Qt5 MSVC for Windows
+      run: |
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=C:\Qt\5.12.2\msvc2019_64 -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64" >> $GITHUB_ENV
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc' && matrix.qt == 'qt5'
+      name: Install Qt5 GCC for Windows
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: 5.15.2
+        dir: 'C:\'
+        arch: win64_mingw81
+        cache: true
+        tools: 'tools_ninja tools_openssl_x64 tools_mingw90 tools_vcredist,qt.tools.vcredist_msvc2019_x64'
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc' && matrix.qt == 'qt5'
+      name: Setup Qt5 GCC for Windows
+      run: |
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=C:\Qt\5.12.2\win64_mingw81 -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64" >> $GITHUB_ENV
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc' && matrix.qt == 'qt6'
+      name: Install Qt6 GCC for Windows
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: 6.5.2
+        dir: 'C:\'
+        arch: win64_mingw
+        cache: true
+        modules: 'qt5compat'
+        tools: 'tools_ninja tools_opensslv3_x64 tools_vcredist,qt.tools.vcredist_msvc2019_x64'
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc' && matrix.qt == 'qt6'
+      name: Setup Qt6 GCC for Windows
+      run: |
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=C:\Qt\6.5.2\win64_mingw -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64" >> $GITHUB_ENV
 
 
 
       #
       # Build
       #
-    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
-      name: Build MMapper for Windows
-      shell: cmd
+    - name: Build MMapper
       run: |
         mkdir -p ${{ github.workspace }}/artifact
         mkdir -p build
-        cd build
-        cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "Ninja" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
-        cmake --build . -j %NUMBER_OF_PROCESSORS%
-    - if: runner.os == 'Linux' || runner.os == 'macOS'
-      name: Build MMapper for Linux and Mac
-      run: |
-        mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
         cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DUSE_UNITY_BUILD=false -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -S .. || exit -1
