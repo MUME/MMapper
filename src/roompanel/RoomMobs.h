@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <QMutex>
 #include <QObject>
+#include <QRecursiveMutex>
 #include <QtCore>
 
 #include "../global/RuleOf5.h"

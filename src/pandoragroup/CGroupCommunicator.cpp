@@ -42,7 +42,6 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
 {
     QByteArray block;
     QXmlStreamWriter xml(&block);
-    xml.setCodec("ISO 8859-1");
     xml.setAutoFormatting(LOG_MESSAGE_INFO);
     xml.writeStartDocument();
     xml.writeStartElement("datagram");

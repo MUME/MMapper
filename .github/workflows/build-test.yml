@@ -14,19 +14,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-11.0, ubuntu-22.04]
-        compiler: ['clang', 'gcc', 'msvc']
-        exclude:
+        include:
         - os: ubuntu-22.04
-          compiler: 'msvc'
+          compiler: gcc
+          qt: qt5
+        - os: ubuntu-22.04
+          compiler: clang
+          qt: qt5
         - os: macos-11.0
-          compiler: 'gcc'
+          compiler: clang
+          qt: qt5
+        - os: windows-2022
+          compiler: gcc
+          qt: qt5
+        - os: windows-2022
+          compiler: msvc
+          qt: qt5
         - os: macos-11.0
-          compiler: 'msvc'
-        - os: windows-2022
-          compiler: 'clang'
-        - os: windows-2022
-          compiler: 'gcc'
+          compiler: clang
+          qt: qt6
     steps:
     - uses: actions/checkout@v3
       with:
@@ -43,7 +49,15 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev libminiupnpc-dev
+        sudo apt install -y build-essential git zlib1g-dev libssl-dev libminiupnpc-dev
+    - if: contains( matrix.os, 'ubuntu' ) && matrix.qt == 'qt5'
+      name: Install Qt5 for Ubuntu
+      run: |
+        sudo apt install -y qt5-qmake libqt5opengl5-dev
+    - if: contains( matrix.os, 'ubuntu' ) && matrix.qt == 'qt6'
+      name: Install Qt6 for Ubuntu
+      run: |
+        sudo apt install -y qmake6 libqt6opengl6-dev libqt6core5compat6-dev
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -69,44 +83,60 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5 openssl\@1.1 lcov miniupnpc
+        brew install lcov miniupnpc
+    - if: runner.os == 'macOS' && matrix.qt == 'qt5'
+      name: Install Qt5 for Mac
+      run: |
+        brew install qt5 openssl\@1.1
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
-        echo "COVERAGE=true" >> $GITHUB_ENV 
+        echo "MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
+    - if: runner.os == 'macOS' && matrix.qt == 'qt6'
+      name: Install Qt6 for Mac
+      run: |
+        brew install qt6 openssl\@3
+        brew link qt6 --force
+        echo "$(brew --prefix qt6)/bin" >> $GITHUB_PATH
+        echo "MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
 
 
       #
       # Install Packages (Windows)
       #
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Install Qt for Windows MSVC
       uses: jurplel/install-qt-action@v3
       with:
         version: 5.15.2
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-        tools: 'tools_openssl_x64'
+    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+      name: Add MSVC to PATH for Windows
+      run: |
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=C:\Qt\5.12.2\msvc2019_64" >> $GITHUB_ENV
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
+      name: Install Qt for Windows GCC
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: 5.15.2
+        dir: 'C:\'
+        arch: win64_mingw81
+        cache: true
+    - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
+      name: Add GCC to PATH for Windows
+      run: |
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=C:\Qt\5.12.2\win64_mingw81" >> $GITHUB_ENV
 
 
 
       #
       # Build
       #
-    - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
-      name: Build MMapper for Windows
-      shell: cmd
+    - name: Build MMapper
       run: |
         mkdir -p ${{ github.workspace }}/artifact
         mkdir -p build
-        cd build
-        cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
-        cmake --build . -j %NUMBER_OF_PROCESSORS%
-    - if: runner.os == 'Linux' || runner.os == 'macOS'
-      name: Build MMapper for Linux and Mac
-      run: |
-        mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
         cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DUSE_UNITY_BUILD=false -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -S .. || exit -1
@@ -173,17 +203,17 @@ jobs:
       name: Upload Package for Mac
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Mac ${{ matrix.os }} ${{ matrix.compiler }}
+        name: build-test Mac ${{ matrix.os }} ${{ matrix.compiler }} ${{ matrix.qt }}
         path: ${{ github.workspace }}/artifact/*.dmg
     - if: contains( matrix.os, 'ubuntu' )
       name: Upload Package for Ubuntu
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Linux ${{ matrix.os }} ${{ matrix.compiler }}
+        name: build-test Linux ${{ matrix.os }} ${{ matrix.compiler }} ${{ matrix.qt }}
         path: ${{ github.workspace }}/artifact/*.deb
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
       uses: actions/upload-artifact@v3
       with:
-        name: build-test Windows ${{ matrix.os }} ${{ matrix.compiler }}
+        name: build-test Windows ${{ matrix.os }} ${{ matrix.compiler }} ${{ matrix.qt }}
         path: ${{ github.workspace }}/artifact/*.exe

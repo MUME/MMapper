@@ -123,8 +123,8 @@ void AnsiColorParser::for_each(QStringView ansi) const
     // ESC[...m -> ...
     ansi = ansi.mid(2, ansi.length() - 3);
 
-    const int len = ansi.length();
-    int pos = 0;
+    const auto len = ansi.length();
+    qsizetype pos = 0;
 
     const auto try_report = [this, &ansi, &pos](const auto idx) -> void {
         if (idx <= pos)
@@ -181,7 +181,7 @@ int findTrailingWhitespace(const QStringView line)
     auto m = trailingWhitespaceRegex.match(line);
     if (!m.hasMatch())
         return -1;
-    return m.capturedStart();
+    return static_cast<int>(m.capturedStart());
 }
 
 int findTrailingWhitespace(const QString &line)
@@ -618,7 +618,7 @@ public:
         {
             auto m = quotePrefixRegex.match(line);
             if (m.hasMatch()) {
-                const int len = m.capturedLength(0);
+                const auto len = m.capturedLength(0);
                 quotePrefix = line.left(len);
                 prefixLen = measureExpandedTabsOneLine(quotePrefix, 0);
 
@@ -639,7 +639,7 @@ public:
             if (m.hasMatch()) {
                 const QStringView sv = m.capturedView();
                 /* this could fail if someone breaks the regex pattern for the escaped asterisk */
-                bulletLength = sv.length();
+                bulletLength = static_cast<int>(sv.length());
                 prefixLen = measureExpandedTabsOneLine(sv, prefixLen);
                 hasPrefix2 = true;
                 append(sv);
@@ -771,7 +771,7 @@ TextBuffer normalizeAnsi(const QStringView old)
     }
 
     TextBuffer output;
-    output.reserve(2 * old.length()); /* no idea */
+    output.reserve(2 * static_cast<int>(old.length())); /* no idea */
 
     const auto reset = AnsiString::get_reset_string();
 
@@ -797,15 +797,15 @@ TextBuffer normalizeAnsi(const QStringView old)
             output.append(sv);
         };
 
-        int pos = 0;
+        auto pos = 0;
         foreachAnsi(line, [&next, &line, &pos, &print](const auto begin, const QStringView ansiStr) {
             assert(line.at(begin) == '\x1b');
             if (begin > pos) {
                 print(line.mid(pos, begin - pos));
             }
 
-            pos = begin + ansiStr.length();
-            ansiForeachColorCode(ansiStr, [&next](int code) { next.process_code(code); });
+            pos = static_cast<int>(begin + ansiStr.length());
+            ansiForeachColorCode(ansiStr, [&next](auto code) { next.process_code(code); });
         });
 
         if (pos < line.length()) {
@@ -839,9 +839,9 @@ AnsiStringToken::AnsiStringToken(AnsiStringToken::TokenTypeEnum _type,
     , length_{_length}
 {
     const auto maxlen = _text.length();
-    assert(isClamped(start_offset(), 0, maxlen));
-    assert(isClamped(length(), 0, maxlen));
-    assert(isClamped(end_offset(), 0, maxlen));
+    assert(isClamped(start_offset(), static_cast<size_type>(0), maxlen));
+    assert(isClamped(length(), static_cast<size_type>(0), maxlen));
+    assert(isClamped(end_offset(), static_cast<size_type>(0), maxlen));
 }
 
 QStringView AnsiStringToken::getQStringView() const
@@ -859,7 +859,7 @@ AnsiTokenizer::Iterator::Iterator(const QString &_str, AnsiTokenizer::Iterator::
     : str_{_str}
     , pos_{_pos}
 {
-    assert(isClamped(pos_, 0, str_.size()));
+    assert(isClamped(pos_, static_cast<size_type>(0), str_.size()));
 }
 
 AnsiStringToken AnsiTokenizer::Iterator::next()
@@ -867,9 +867,9 @@ AnsiStringToken AnsiTokenizer::Iterator::next()
     assert(hasNext());
     const auto len = str_.size();
     const auto token = getCurrent();
-    assert(isClamped(pos_, 0, len));
+    assert(isClamped(pos_, static_cast<size_type>(0), len));
     assert(token.start_offset() == pos_);
-    assert(isClamped(token.length(), 1, len - pos_));
+    assert(isClamped(token.length(), static_cast<size_type>(1), len - pos_));
     pos_ = token.end_offset();
     return token;
 }

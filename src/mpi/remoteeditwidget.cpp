@@ -25,7 +25,6 @@
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
-#include "../global/RAII.h"
 #include "../global/TextUtils.h"
 #include "../global/entities.h"
 #include "../global/utils.h"
@@ -129,7 +128,7 @@ public:
             return fmt;
         };
 
-        const auto length = line.length() - breakPos;
+        const int length = static_cast<int>(line.length()) - breakPos;
         setFormat(breakPos, length, getFmt());
     }
 
@@ -140,7 +139,7 @@ public:
             return;
         }
 
-        const auto length = line.length() - breakPos;
+        const int length = static_cast<int>(line.length()) - breakPos;
         setFormat(breakPos, length, getBackgroundFormat(Qt::red));
     }
 
@@ -247,7 +246,7 @@ public:
                 default:
                     if (hasLast
                         && (isClamped<int>(static_cast<unsigned char>(c), 0x80, 0xbf)
-                            && (last == 0xc2 || last == 0xc3))) {
+                            && (last.unicode() == 0xc2 || last.unicode() == 0xc3))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -379,7 +378,7 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
         return;
 
     const int to_remove = [&text, max_spaces]() -> int {
-        const int len = std::min(max_spaces, text.length());
+        const int len = std::min(max_spaces, static_cast<int>(text.length()));
         int n = 0;
         while (n < len && text.at(n) == C_SPACE)
             ++n;
@@ -1043,8 +1042,9 @@ void RemoteEditWidget::slot_updateStatusBar()
         const auto plural = [](auto n) { return (n == 1) ? "" : "s"; };
 
         const QString selection = cur.selection().toPlainText();
-        const int selectionLength = selection.length();
-        const int selectionLines = selection.count('\n') + (selection.endsWith('\n') ? 0 : 1);
+        const int selectionLength = static_cast<int>(selection.length());
+        const int selectionLines = static_cast<int>(selection.count('\n')
+                                                    + (selection.endsWith('\n') ? 0 : 1));
 
         status.append(QString(", Selection: %1 char%2 on %3 line%4")
                           .arg(selectionLength)
@@ -1092,7 +1092,8 @@ void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
     TextBuffer text;
-    text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
+    text.reserve(
+        2 * static_cast<int>(old.length())); // Just a wild guess in case there's a lot of wrapping.
     foreachLine(old, [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
         text.appendJustified(line, maxLen);
         text.append('\n');

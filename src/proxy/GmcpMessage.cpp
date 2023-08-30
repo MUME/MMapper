@@ -86,7 +86,7 @@ QByteArray GmcpMessage::toRawBytes() const
 
 GmcpMessage GmcpMessage::fromRawBytes(const QByteArray &ba)
 {
-    const int pos = ba.indexOf(' ');
+    const auto pos = ba.indexOf(' ');
     // <data> is optional
     if (pos == -1)
         return GmcpMessage(ba.toStdString());

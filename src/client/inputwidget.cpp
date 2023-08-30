@@ -303,7 +303,9 @@ void InputWidget::tabComplete()
         // Found a previous word to complete to
         current.insertText(word);
         if (current.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor)) {
-            current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, m_tabFragment.size());
+            current.movePosition(QTextCursor::Right,
+                                 QTextCursor::KeepAnchor,
+                                 static_cast<int>(m_tabFragment.size()));
             setTextCursor(current);
         }
         m_tabHistory.forward();

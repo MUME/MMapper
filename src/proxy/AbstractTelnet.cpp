@@ -742,11 +742,13 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     AppendBuffer cleanData;
     cleanData.reserve(data.size());
 
-    int pos = 0;
+    auto pos = 0;
     while (pos < data.size()) {
         if (inflateTelnet) {
-            int remaining = onReadInternalInflate(data.data() + pos, data.size() - pos, cleanData);
-            pos = data.length() - remaining;
+            int remaining = onReadInternalInflate(data.data() + pos,
+                                                  static_cast<int>(data.size()) - pos,
+                                                  cleanData);
+            pos = static_cast<int>(data.length()) - remaining;
             // Continue because there might be additional chunks left to inflate
             continue;
         }

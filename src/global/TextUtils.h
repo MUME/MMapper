@@ -77,7 +77,7 @@ void foreachChar(const QStringView input, char c, Callback &&callback)
         assert(next >= pos);
         assert(input[next] == c);
         callback(next);
-        pos = static_cast<int>(next + 1);
+        pos = static_cast<int>(next) + 1;
     }
 }
 
@@ -102,7 +102,7 @@ void foreachLine(const QStringView input, Callback &&callback)
         assert(next >= pos);
         assert(input[next] == '\n');
         callback(input.mid(pos, next - pos), true);
-        pos = static_cast<int>(next + 1);
+        pos = static_cast<int>(next) + 1;
     }
     if (pos < len)
         callback(input.mid(pos, len - pos), false);
@@ -129,13 +129,13 @@ template<typename Callback>
 void foreachAnsi(const QStringView line, Callback &&callback)
 {
     const auto len = line.size();
-    int pos = 0;
+    auto pos = 0;
     while (pos < len) {
         auto m = weakAnsiRegex.match(line, pos);
         if (!m.hasMatch())
             break;
         callback(m.capturedStart(), m.capturedView());
-        pos = m.capturedEnd();
+        pos = static_cast<int>(m.capturedEnd());
     }
 }
 
@@ -389,7 +389,7 @@ public:
 public:
     NODISCARD QChar at(const size_type pos) const
     {
-        assert(isClamped(pos, 0, length_));
+        assert(isClamped(pos, static_cast<size_type>(0), length_));
         return text_.at(offset_ + pos);
     }
     NODISCARD QChar operator[](const size_type pos) const { return at(pos); }
@@ -467,7 +467,7 @@ struct NODISCARD AnsiTokenizer final
         {
             const auto len = str_.size();
             const auto start = pos_;
-            assert(isClamped(start, 0, len));
+            assert(isClamped(start, static_cast<size_type>(0), len));
             auto it = start + 1;
             for (; it < len; ++it)
                 if (check(str_[it]) == ResultEnum::STOP)
