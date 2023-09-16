@@ -73,7 +73,7 @@ jobs:
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
-        echo "COVERAGE=true" >> $GITHUB_ENV 
+        echo "COVERAGE=false" >> $GITHUB_ENV 
 
 
       #
