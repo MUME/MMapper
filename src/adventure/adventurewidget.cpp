@@ -15,7 +15,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     , m_adventureTracker{at}
 {
     m_textEdit = new QTextEdit(this);
-    m_textCursor = new QTextCursor(m_textEdit->document());
+    m_textCursor = std::make_unique<QTextCursor>(m_textEdit->document());
 
     m_textEdit->setReadOnly(true);
     m_textEdit->setOverwriteMode(true);
@@ -32,9 +32,11 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
 
     QTextCharFormat blockCharFormat = m_textCursor->blockCharFormat();
     blockCharFormat.setForeground(settings.foregroundColor);
-    auto font = new QFont();
-    font->fromString(settings.font); // need fromString() to extract PointSize
-    blockCharFormat.setFont(*font);
+    {
+        QFont font;
+        font.fromString(settings.font); // need fromString() to extract PointSize
+        blockCharFormat.setFont(font);
+    }
     m_textCursor->setBlockCharFormat(blockCharFormat);
 
     auto layout = new QVBoxLayout(this);
@@ -45,7 +47,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
 
     addDefaultContent();
 
-    m_clearContentAction = new QAction("Clear Content");
+    m_clearContentAction = new QAction("Clear Content", this);
     connect(m_clearContentAction,
             &QAction::triggered,
             this,
