@@ -86,7 +86,7 @@ jobs:
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-        tools: 'tools_openssl_x64'
+        tools: 'tools_opensslv3_x64'
 
 
 
