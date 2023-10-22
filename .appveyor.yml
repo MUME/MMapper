@@ -30,7 +30,7 @@ environment:
 image:
   # AppVeyor builds are ordered by the image list:
   - Visual Studio 2019
-  - macos-bigsur
+  - macos-monterey
   - Ubuntu1804
   - Ubuntu2004
   - Previous Ubuntu2004
@@ -63,11 +63,11 @@ matrix:
       COMPILER: MinGW
     - image: Previous Ubuntu2004
       COMPILER: MSVC
-    - image: macos-bigsur
+    - image: macos-monterey
       COMPILER: GCC
-    - image: macos-bigsur
+    - image: macos-monterey
       COMPILER: MinGW
-    - image: macos-bigsur
+    - image: macos-monterey
       COMPILER: MSVC
     # Following builds are disabled to prevent build timeouts
     - image: Ubuntu1804
@@ -78,6 +78,8 @@ matrix:
       COMPILER: Clang
     - image: Ubuntu2004
       ARCH: arm64 
+    - image: Previous Ubuntu2004
+      ARCH: arm64
     - image: Visual Studio 2022
       COMPILER: MSVC
     # x64 .deb is either Ubuntu or Debian stable
@@ -335,7 +337,7 @@ for:
   -
     matrix:
       only:
-        - image: macos-bigsur
+        - image: macos-monterey
 
     clone_folder: ~/mmapper
 
