@@ -48,6 +48,6 @@ private:
     AdventureTracker &m_adventureTracker;
 
     QTextEdit *m_textEdit = nullptr;
-    QTextCursor *m_textCursor = nullptr;
+    std::unique_ptr<QTextCursor> m_textCursor;
     QAction *m_clearContentAction = nullptr;
 };
