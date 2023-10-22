@@ -86,7 +86,7 @@ jobs:
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-        tools: 'tools_openssl_x64'
+        tools: 'tools_opensslv3_x64'
 
 
 
@@ -101,7 +101,7 @@ jobs:
         mkdir -p build
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSL/Win_x64 -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR=C:/Qt/Tools/OpenSSLv3/Win_x64 -S .. || exit -1
         cmake --build . -j %NUMBER_OF_PROCESSORS%
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
