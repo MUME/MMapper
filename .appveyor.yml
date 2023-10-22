@@ -335,7 +335,7 @@ for:
   -
     matrix:
       only:
-        - image: macos-bigsur
+        - image: macos-monterey
 
     clone_folder: ~/mmapper
 
