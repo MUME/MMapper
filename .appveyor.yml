@@ -78,6 +78,8 @@ matrix:
       COMPILER: Clang
     - image: Ubuntu2004
       ARCH: arm64 
+    - image: Previous Ubuntu2004
+      ARCH: arm64
     - image: Visual Studio 2022
       COMPILER: MSVC
     # x64 .deb is either Ubuntu or Debian stable
