@@ -131,7 +131,7 @@ jobs:
         $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
         $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results ${{ matrix.os }} ${{ matrix.compiler }}
         path: ctest-to-junit-results.xml
@@ -171,19 +171,19 @@ jobs:
       run: cd build && cpack
     - if: runner.os == 'macOS'
       name: Upload Package for Mac
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-test Mac ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.dmg
     - if: contains( matrix.os, 'ubuntu' )
       name: Upload Package for Ubuntu
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-test Linux ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.deb
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-test Windows ${{ matrix.os }} ${{ matrix.compiler }}
         path: ${{ github.workspace }}/artifact/*.exe
