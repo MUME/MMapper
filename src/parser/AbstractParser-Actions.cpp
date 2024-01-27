@@ -217,6 +217,7 @@ void AbstractParser::initActionMap()
     addStartsWith("Your mount refuses to follow your orders!", failedMovement);
     addStartsWith("You failed swimming there.", failedMovement);
     addStartsWith("You can't go into deep water!", failedMovement);
+    addStartsWith("You cannot ride into deep water!", failedMovement);
     addStartsWith("You unsuccessfully try to break through the ice.", failedMovement);
     addStartsWith("Your boat cannot enter this place.", failedMovement);
     addStartsWith("Alas, you cannot go that way...", failedMovement);
