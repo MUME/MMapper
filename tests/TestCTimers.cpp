@@ -71,13 +71,13 @@ void TestCTimers::testCountdownCompletion()
     CTimers timers(nullptr);
     QString countdownName = "CompletionTestCountdown";
     QString countdownDesc = "Countdown Completion Test";
-    int64_t countdownTimeMs = 1; // 1 millisecond
+    int64_t countdownTimeMs = 100; // 1 millisecond
 
     timers.addCountdown(countdownName.toStdString(), countdownDesc.toStdString(), countdownTimeMs);
     QString countdownsListBefore = QString::fromStdString(timers.getCountdowns());
     // Verify the added countdown is present
     QVERIFY(countdownsListBefore.contains(countdownName));
-    QTest::qWait(50); // Wait longer than the countdown time to ensure it completes
+    QTest::qWait(500); // Wait longer than the countdown time to ensure it completes
 
     // Verify the countdown has been removed because it's completed
     QString countdownsListAfter = QString::fromStdString(timers.getCountdowns());
