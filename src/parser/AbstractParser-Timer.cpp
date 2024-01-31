@@ -58,10 +58,10 @@ void AbstractParser::parseTimer(StringView input)
             const std::string desc = concatenate_unquoted(v[4].getVector());
 
             m_timers.addCountdown(name, desc, delay * 1000);
-            os << "Added countdown timer" << name;
+            os << "Added countdown timer " << name;
             if (!desc.empty())
                 os << " <" << desc << ">";
-            os << " for duration of " << delay << " seconds." << std::endl;
+            os << " for the duration of " << delay << " seconds." << std::endl;
             send_ok(os);
         },
         "add countdown timer");
@@ -80,7 +80,7 @@ void AbstractParser::parseTimer(StringView input)
             const std::string desc = concatenate_unquoted(v[3].getVector());
 
             m_timers.addTimer(name, desc);
-            os << "Added simple timer" << name;
+            os << "Added simple timer " << name;
             if (!desc.empty())
                 os << " <" << desc << ">";
             os << "." << std::endl;

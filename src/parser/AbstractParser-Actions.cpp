@@ -281,7 +281,7 @@ void AbstractParser::initActionMap()
     /// Stat
     addRegex(R"(^)"
              R"((?:Needed:(?: [\d,]+ xp)?(?:,? [\d,]+ tp)\. )?)" // Needed
-             R"(Gold: [\d,]+\.)"                                 // Gold
+             R"((Gold|Lauren): [\d,]+\.)"                        // Gold
              R"((?: Iv: [^.]+\.)?)"                              // God Invis Level
              R"( Alert: \w+\.)"                                  // Alertness
              R"((?: Condition: [^.]+\.)?)",                      // Hunger or Thirst
