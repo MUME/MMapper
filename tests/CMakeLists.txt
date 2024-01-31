@@ -208,3 +208,22 @@ set_target_properties(
         UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestAdventure COMMAND TestAdventure)
+
+# Timer
+set(timer_qq
+        ../src/timers/CTimers.cpp
+        ../src/timers/CTimers.h
+)
+set(TestTimerQQ TestCTimers.cpp)
+add_executable(TestTimer ${timer_qq} ${TestTimerQQ})
+add_dependencies(TestTimer glm)
+target_link_libraries(TestTimer Qt5::Test coverage_config)
+set_target_properties(
+        TestTimer PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+        UNITY_BUILD ${USE_UNITY_BUILD}
+)
+add_test(NAME TestTimer COMMAND TestTimer)

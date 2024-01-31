@@ -40,7 +40,7 @@ private:
     std::list<TTimer> m_countdowns;
     QTimer m_timer;
 
-private:
+public:
     std::string getTimers();
     std::string getCountdowns();
 
