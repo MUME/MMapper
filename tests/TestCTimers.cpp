@@ -60,8 +60,6 @@ void TestCTimers::testElapsedTime()
 
     timers.addTimer(timerName.toStdString(), timerDesc.toStdString());
 
-//    QTest::qWait(1100); // Wait 1.1 seconds
-
     QString timersList = QString::fromStdString(timers.getTimers());
     QVERIFY(timersList.contains("up for - 0:00"));
 
