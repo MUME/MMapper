@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2023 The MMapper Authors
+
 #include "TestCTimers.h"
 
-#include <QDebug>
 #include <QtTest/QtTest>
 
 #include "../src/timers/CTimers.h"
@@ -77,7 +79,6 @@ void TestCTimers::testCountdownCompletion()
     QString countdownsListBefore = QString::fromStdString(timers.getCountdowns());
     QVERIFY(countdownsListBefore.contains(countdownName)); // Verify the added countdown is present
     QString countdownsList = QString::fromStdString(timers.getCountdowns());
-    qDebug() << "Timers List:" << countdownsList;
     QVERIFY(countdownsList.contains("(up for - 0:00, left - 0:10)"));
 }
 
