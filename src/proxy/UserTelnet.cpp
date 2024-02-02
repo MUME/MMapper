@@ -127,6 +127,11 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     }
 }
 
+void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
+{
+    sendMudServerStatus(data);
+}
+
 void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
 {
     // MMapper requires all data to be Latin-1 internally

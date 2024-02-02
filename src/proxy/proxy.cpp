@@ -165,6 +165,15 @@ void Proxy::slot_start()
     connect(mudTelnet, &MudTelnet::sig_relayEchoMode, userTelnet, &UserTelnet::slot_onRelayEchoMode);
     connect(mudTelnet, &MudTelnet::sig_relayGmcp, userTelnet, &UserTelnet::slot_onGmcpToUser);
     connect(mudTelnet,
+            &MudTelnet::sig_sendGameTimeToClock,
+            this,
+            &Proxy::slot_onSendGameTimeToClock);
+    connect(mudTelnet,
+            &MudTelnet::sig_sendMSSPToUser,
+            userTelnet,
+            &UserTelnet::slot_onSendMSSPToUser);
+
+    connect(mudTelnet,
             &MudTelnet::sig_relayGmcp,
             &m_groupManager,
             &Mmapper2Group::slot_parseGmcpInput);
@@ -564,4 +573,14 @@ void Proxy::disconnectFromMud()
 bool Proxy::isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const
 {
     return m_userTelnet->isGmcpModuleEnabled(module);
+}
+
+void Proxy::slot_onSendGameTimeToClock(const int year,
+                                       const std::string &monthStr,
+                                       const int day,
+                                       const int hour)
+{
+    // Month from MSSP comes as a string, so fetch the month index.
+    const int month = m_mumeClock.getMumeMonth(::toQStringLatin1(monthStr));
+    m_mumeClock.parseMSSP(year, month, day, hour);
 }

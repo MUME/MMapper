@@ -111,6 +111,60 @@ void TestClock::parseMumeTimeTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected6);
 }
 
+void TestClock::getMumeMonthTest()
+{
+    GameObserver observer;
+    MumeClock clock(observer);
+
+    int month0 = clock.getMumeMonth("Narwain");
+    int expected0 = 0;
+    QCOMPARE(month0, expected0);
+
+    int month1 = clock.getMumeMonth("Solmath");
+    int expected1 = 1;
+    QCOMPARE(month1, expected1);
+
+    int month2 = clock.getMumeMonth("Gwaeron");
+    int expected2 = 2;
+    QCOMPARE(month2, expected2);
+
+    int month3 = clock.getMumeMonth("Astron");
+    int expected3 = 3;
+    QCOMPARE(month3, expected3);
+
+    int month4 = clock.getMumeMonth("Lothron");
+    int expected4 = 4;
+    QCOMPARE(month4, expected4);
+
+    int month5 = clock.getMumeMonth("Forelithe");
+    int expected5 = 5;
+    QCOMPARE(month5, expected5);
+
+    int month6 = clock.getMumeMonth("Cerveth");
+    int expected6 = 6;
+    QCOMPARE(month6, expected6);
+
+    int month7 = clock.getMumeMonth("Wedmath");
+    int expected7 = 7;
+    QCOMPARE(month7, expected7);
+
+    int month8 = clock.getMumeMonth("Ivanneth");
+    int expected8 = 8;
+    QCOMPARE(month8, expected8);
+
+    int month9 = clock.getMumeMonth("Winterfilth");
+    int expected9 = 9;
+    QCOMPARE(month9, expected9);
+
+    int month10 = clock.getMumeMonth("Hithui");
+    int expected10 = 10;
+    QCOMPARE(month10, expected10);
+
+    int month11 = clock.getMumeMonth("Foreyule");
+    int expected11 = 11;
+    QCOMPARE(month11, expected11);
+}
+
 void TestClock::parseWeatherClockSkewTest()
 {
     GameObserver observer;

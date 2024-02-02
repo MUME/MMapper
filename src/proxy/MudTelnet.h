@@ -33,17 +33,24 @@ signals:
     void sig_sendToSocket(const QByteArray &);
     void sig_relayEchoMode(bool);
     void sig_relayGmcp(const GmcpMessage &);
+    void sig_sendMSSPToUser(const QByteArray &);
+    void sig_sendGameTimeToClock(const int year,
+                                 const std::string &month,
+                                 const int day,
+                                 const int hour);
 
 private:
     void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
     void virt_receiveEchoMode(bool toggle) final;
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
+    void virt_receiveMudServerStatus(const QByteArray &) final;
     void virt_onGmcpEnabled() final;
     void virt_sendRawData(const std::string_view data) final;
 
 private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
+    void parseMudServerStatus(const QByteArray &);
 
 private:
     void sendCoreSupports();

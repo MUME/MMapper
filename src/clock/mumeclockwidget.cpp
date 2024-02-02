@@ -139,7 +139,6 @@ void MumeClockWidget::slot_updateLabel()
         QString statusTip = "";
         if (precision <= MumeClockPrecisionEnum::UNSET) {
             styleSheet = "padding-left:1px;padding-right:1px;color:white;background:grey";
-            statusTip = "The clock has not synced with MUME! Click to override at your own risk.";
         } else if (time == MumeTimeEnum::DAWN) {
             styleSheet = "padding-left:1px;padding-right:1px;color:white;background:red";
             statusTip = "Ticks left until day";
@@ -150,11 +149,13 @@ void MumeClockWidget::slot_updateLabel()
             styleSheet = "padding-left:1px;padding-right:1px;color:black;background:yellow";
             statusTip = "Ticks left until night";
         }
+        if (precision != MumeClockPrecisionEnum::MINUTE)
+            statusTip = "The clock has not synced with MUME! Click to override at your own risk.";
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);
         updateMoonStyleSheet = true;
     }
-    if (precision <= MumeClockPrecisionEnum::DAY) {
+    if (precision <= MumeClockPrecisionEnum::HOUR) {
         // Prepend warning emoji to countdown
         timeLabel->setText(QString::fromUtf8("\xe2\x9a\xa0").append(m_clock->toCountdown(moment)));
     } else
