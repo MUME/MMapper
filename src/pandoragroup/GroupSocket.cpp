@@ -31,6 +31,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, &GroupSocket::slot_onTimeout);
 
+#ifndef Q_OS_WASM
     const auto get_ssl_config = [this, authority]() {
         auto config = socket.sslConfiguration();
         config.setCaCertificates({});
@@ -47,6 +48,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     };
     socket.setSslConfiguration(get_ssl_config());
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
+#endif
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() {
         emit sig_sendLog("Host found...");
     });
@@ -60,6 +62,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
         emit sig_sendLog("Connection established...");
         emit sig_connectionEstablished(this);
     });
+#ifndef Q_OS_WASM
     connect(&socket, &QSslSocket::encrypted, this, [this]() {
         timer.stop();
         secret
@@ -67,6 +70,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
         emit sig_sendLog("Connection successfully encrypted...");
         emit sig_connectionEncrypted(this);
     });
+#endif
     connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
         timer.stop();
         emit sig_connectionClosed(this);
@@ -76,7 +80,9 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
             QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this,
             &GroupSocket::slot_onError);
+#ifndef Q_OS_WASM
     connect(&socket, &QSslSocket::peerVerifyError, this, &GroupSocket::slot_onPeerVerifyError);
+#endif
 }
 
 GroupSocket::~GroupSocket()
@@ -175,6 +181,7 @@ void GroupSocket::slot_onError(QAbstractSocket::SocketError e)
     }
 }
 
+#ifndef Q_OS_WASM
 void GroupSocket::slot_onPeerVerifyError(const QSslError &error)
 {
     // Ignore expected warnings
@@ -185,6 +192,7 @@ void GroupSocket::slot_onPeerVerifyError(const QSslError &error)
     qWarning() << "onPeerVerifyError" << static_cast<int>(socket.error()) << socket.errorString()
                << error.errorString();
 }
+#endif
 
 void GroupSocket::slot_onTimeout()
 {
@@ -193,6 +201,7 @@ void GroupSocket::slot_onTimeout()
         switch (protocolState) {
         case ProtocolStateEnum::Unconnected:
         case ProtocolStateEnum::AwaitingLogin:
+#ifndef Q_OS_WASM
             if (!socket.isEncrypted()) {
                 const QString msg = socket.isEncrypted() ? socket.errorString()
                                                          : "Connection not successfully encrypted";
@@ -202,6 +211,7 @@ void GroupSocket::slot_onTimeout()
             goto continue_common_timeout;
 
         continue_common_timeout:
+#endif
         case ProtocolStateEnum::AwaitingInfo:
             emit sig_errorInConnection(this, "Login timed out");
             break;

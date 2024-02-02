@@ -318,9 +318,11 @@ void GroupClient::slot_connectionEncrypted()
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
+#ifndef Q_OS_WASM
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::CERTIFICATE,
                                     socket.getPeerCertificate().toPem());
+#endif
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::PORT,
                                     QString("%1").arg(socket.getPeerPort()));

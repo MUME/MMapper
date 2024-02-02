@@ -182,7 +182,7 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
         tex.create();
         tex.setSize(SIZE, SIZE, 1);
         tex.setMipLevels(tex.maximumMipLevels());
-        tex.setFormat(QOpenGLTexture::TextureFormat::RGBA8_UNorm);
+        tex.setFormat(QOpenGLTexture::TextureFormat::RGBAFormat);
         tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA, QOpenGLTexture::PixelType::UInt8);
 
         tex.setData(QOpenGLTexture::PixelFormat::RGBA,
