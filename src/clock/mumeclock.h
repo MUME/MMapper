@@ -138,8 +138,10 @@ public slots:
 
 public:
     void setPrecision(const MumeClockPrecisionEnum state);
-
     void setLastSyncEpoch(int64_t epoch) { m_lastSyncEpoch = epoch; }
+
+    int getMumeMonth(const QString &monthName);
+    void parseMSSP(const int year, const int month, const int day, const int hour);
 
 protected:
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);

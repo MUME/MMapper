@@ -342,6 +342,17 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
     s.addSubnegEnd();
 }
 
+void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
+{
+    if (debug)
+        qDebug() << "Sending MSSP:" << data;
+
+    TelnetFormatter s{*this};
+    s.addSubnegBegin(OPT_MSSP);
+    s.addEscapedBytes(data);
+    s.addSubnegEnd();
+}
+
 void AbstractTelnet::sendLineModeEdit()
 {
     if (debug)
@@ -704,6 +715,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         if (hisOptionState[OPT_MSSP]) {
             if (debug)
                 qDebug() << "Received MSSP message" << payload;
+
+            receiveMudServerStatus(payload);
         }
         break;
 

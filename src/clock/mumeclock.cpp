@@ -291,6 +291,31 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
     m_mumeStartEpoch = newStartEpoch;
 }
 
+void MumeClock::parseMSSP(const int year, const int month, const int day, const int hour)
+{
+    // We should not parse the fuzzy MSSP time if we already have a greater precision.
+    if (getPrecision() > MumeClockPrecisionEnum::DAY)
+        return;
+
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+
+    auto moment = getMumeMoment();
+    moment.year = year;
+    moment.month = month;
+    moment.day = day;
+    moment.hour = hour;
+    // Don't override minute, since we don't get the from the MSSP time.
+
+    const int64_t newStartEpoch = secsSinceEpoch - moment.toSeconds();
+    m_mumeStartEpoch = newStartEpoch;
+
+    // Update last sync timestamp
+    setLastSyncEpoch(secsSinceEpoch);
+
+    setPrecision(MumeClockPrecisionEnum::HOUR);
+    log("Synchronized clock using MSSP");
+}
+
 // TODO: move this somewhere useful?
 NODISCARD static const char *getOrdinalSuffix(const int day)
 {
@@ -409,4 +434,13 @@ MumeClock::DawnDusk MumeClock::getDawnDusk(const int month)
     assert(month >= 0 && month < NUM_MONTHS);
     const auto m = static_cast<uint32_t>(month);
     return DawnDusk{s_dawnHour.at(m), s_duskHour.at(m)};
+}
+
+int MumeClock::getMumeMonth(const QString &monthName)
+{
+    const int month = s_westronMonthNames.keyToValue(monthName.toLatin1().data());
+    if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
+        return s_sindarinMonthNames.keysToValue(monthName.toLatin1().data());
+    }
+    return month;
 }

@@ -211,6 +211,8 @@ private:
 
     void showHeader(const QString &s);
 
+    void receiveMudServerStatus(const QByteArray &);
+
     NODISCARD ExitDirEnum tryGetDir(StringView &words);
 
     void parseSetCommand(StringView view);

@@ -59,6 +59,8 @@ static constexpr const uint8_t TNSB_SEND = 1;
 static constexpr const uint8_t TNSB_REQUEST = 1;
 static constexpr const uint8_t TNSB_MODE = 1;
 static constexpr const uint8_t TNSB_EDIT = 1;
+static constexpr const uint8_t TNSB_MSSP_VAR = 1;
+static constexpr const uint8_t TNSB_MSSP_VAL = 2;
 static constexpr const uint8_t TNSB_ACCEPTED = 2;
 static constexpr const uint8_t TNSB_REJECTED = 3;
 static constexpr const uint8_t TNSB_TTABLE_IS = 4;
@@ -122,6 +124,7 @@ protected:
     void sendWindowSizeChanged(int, int);
     void sendTerminalTypeRequest();
     void sendGmcpMessage(const GmcpMessage &msg);
+    void sendMudServerStatus(const QByteArray &);
     void sendLineModeEdit();
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
@@ -134,6 +137,7 @@ private:
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
     virtual void virt_receiveTerminalType(const QByteArray &) {}
+    virtual void virt_receiveMudServerStatus(const QByteArray &) {}
     virtual void virt_receiveWindowSize(int, int) {}
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
@@ -146,6 +150,7 @@ protected:
     void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
     void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
     void receiveTerminalType(const QByteArray &ba) { virt_receiveTerminalType(ba); }
+    void receiveMudServerStatus(const QByteArray &ba) { virt_receiveMudServerStatus(ba); }
     void receiveWindowSize(int x, int y) { virt_receiveWindowSize(x, y); }
 
     /// Send out the data. Does not double IACs, this must be done

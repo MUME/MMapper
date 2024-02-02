@@ -31,6 +31,7 @@ public slots:
     void slot_onConnected();
     void slot_onRelayEchoMode(bool);
     void slot_onGmcpToUser(const GmcpMessage &);
+    void slot_onSendMSSPToUser(const QByteArray &);
 
 signals:
     void sig_analyzeUserStream(const QByteArray &, bool goAhead);
