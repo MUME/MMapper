@@ -143,7 +143,7 @@ jobs:
         lcov --list coverage.info
         lcov --remove coverage.info '/usr/*' --output-file filtered.info
     - if: env.COVERAGE == 'true'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         files: ./build/filtered.info
     - if: env.STYLE == 'true'
