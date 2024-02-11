@@ -348,12 +348,12 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       - brew install openssl@1.1 qt5 miniupnpc
-      - export PATH=/usr/local/opt/qt5/bin:$PATH
+      - export PATH=/usr/local/opt/qt@5/bin:$PATH
 
     build_script:
       - mkdir build
       - cd build
-      - cmake .. -DCMAKE_PREFIX_PATH=/usr/local/opt/qt5/bin -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1 -DCPACK_PACKAGE_DIRECTORY=~/package
+      - cmake .. -DCMAKE_PREFIX_PATH=/usr/local/opt/qt@5/bin -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1 -DCPACK_PACKAGE_DIRECTORY=~/package
       - make -j$(getconf _NPROCESSORS_ONLN)
       - cpack
       - mv ~/package/*.dmg* ../
