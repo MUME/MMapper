@@ -16,6 +16,8 @@ Makefile
 .vs
 .vscode
 CMakeSettings.json
+cmake-build-debug/
+
 
 # snapcraft
 parts/

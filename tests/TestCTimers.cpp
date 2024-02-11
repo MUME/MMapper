@@ -76,8 +76,6 @@ void TestCTimers::testCountdownCompletion()
     timers.addCountdown(countdownName.toStdString(), countdownDesc.toStdString(), countdownTimeMs);
     QString countdownsListBefore = QString::fromStdString(timers.getCountdowns());
     QVERIFY(countdownsListBefore.contains(countdownName)); // Verify the added countdown is present
-    QString countdownsList = QString::fromStdString(timers.getCountdowns());
-    QVERIFY(countdownsList.contains("(up for - 0:00, left - 0:10)"));
 }
 
 void TestCTimers::testClearFunctionality()

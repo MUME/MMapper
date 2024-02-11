@@ -210,12 +210,12 @@ set_target_properties(
 add_test(NAME TestAdventure COMMAND TestAdventure)
 
 # Timer
-set(timer_qq
+set(timer_test
         ../src/timers/CTimers.cpp
         ../src/timers/CTimers.h
 )
-set(TestTimerQQ TestCTimers.cpp)
-add_executable(TestTimer ${timer_qq} ${TestTimerQQ})
+set(TestTimer TestCTimers.cpp)
+add_executable(TestTimer ${timer_test} ${TestTimer})
 add_dependencies(TestTimer glm)
 target_link_libraries(TestTimer Qt5::Test coverage_config)
 set_target_properties(
@@ -227,3 +227,69 @@ set_target_properties(
         UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestTimer COMMAND TestTimer)
+
+# Room panel mob
+set(room_mob
+        ../src/roompanel/RoomMob.h
+        ../src/roompanel/RoomMob.cpp
+)
+set(RoomMob roompanel/TestRoomMob.cpp)
+add_executable(TestRoomMob ${room_mob} ${RoomMob})
+add_dependencies(TestRoomMob glm)
+target_link_libraries(TestRoomMob Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+set_target_properties(
+        TestRoomMob PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+        UNITY_BUILD ${USE_UNITY_BUILD}
+)
+add_test(NAME TestRoomMob COMMAND TestRoomMob)
+
+
+# Room panel mobs
+set(room_mobs
+        ../src/roompanel/RoomMobs.h
+        ../src/roompanel/RoomMobs.cpp
+        ../src/roompanel/RoomMob.h
+        ../src/roompanel/RoomMob.cpp
+)
+set(RoomMobs roompanel/TestRoomMobs.cpp)
+add_executable(TestRoomMobs ${room_mobs} ${RoomMobs})
+add_dependencies(TestRoomMobs glm)
+target_link_libraries(TestRoomMobs Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+set_target_properties(
+        TestRoomMobs PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+        UNITY_BUILD ${USE_UNITY_BUILD}
+)
+add_test(NAME TestRoomMobs COMMAND TestRoomMobs)
+
+# Room panel manager
+set(room_manager
+        ../src/roompanel/RoomMobs.h
+        ../src/roompanel/RoomMobs.cpp
+        ../src/roompanel/RoomMob.h
+        ../src/roompanel/RoomMob.cpp
+        ../src/roompanel/RoomManager.cpp
+        ../src/roompanel/RoomManager.h
+        ../src/global/TextUtils.cpp
+        ../src/proxy/GmcpMessage.cpp
+)
+set(RoomManager roompanel/TestRoomManager.cpp)
+add_executable(TestRoomManager ${room_manager} ${RoomManager})
+add_dependencies(TestRoomManager glm)
+target_link_libraries(TestRoomManager Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+set_target_properties(
+        TestRoomManager PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+        UNITY_BUILD ${USE_UNITY_BUILD}
+)
+add_test(NAME TestRoomManager COMMAND TestRoomManager)
