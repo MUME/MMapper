@@ -31,7 +31,7 @@ static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 2.f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;
 static constexpr float INFOMARK_POINT_SIZE = 6.f;
 
-#define LOOKUP_COLOR(X) (getConfig().colorSettings.X.getColor())
+#define LOOKUP_COLOR_INFOMARK(X) (getConfig().colorSettings.X.getColor())
 
 // NOTE: This currently requires rebuilding the infomark meshes if a color changes.
 NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
@@ -41,17 +41,17 @@ NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
                                                                         : Colors::white;
     switch (infoMarkClass) {
     case InfoMarkClassEnum::HERB:
-        return LOOKUP_COLOR(INFOMARK_HERB);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_HERB);
     case InfoMarkClassEnum::RIVER:
-        return LOOKUP_COLOR(INFOMARK_RIVER);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_RIVER);
     case InfoMarkClassEnum::MOB:
-        return LOOKUP_COLOR(INFOMARK_MOB);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_MOB);
     case InfoMarkClassEnum::COMMENT:
-        return LOOKUP_COLOR(INFOMARK_COMMENT);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_COMMENT);
     case InfoMarkClassEnum::ROAD:
-        return LOOKUP_COLOR(INFOMARK_ROAD);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_ROAD);
     case InfoMarkClassEnum::OBJECT:
-        return LOOKUP_COLOR(INFOMARK_OBJECT);
+        return LOOKUP_COLOR_INFOMARK(INFOMARK_OBJECT);
 
     case InfoMarkClassEnum::GENERIC:
     case InfoMarkClassEnum::PLACE:
