@@ -11,7 +11,10 @@
 #include <QMessageLogContext>
 #include <QSslSocket>
 #include <QString>
+
+#ifndef NO_MMAPPER_WEBSOCKETS
 #include <QtNetwork>
+#endif
 
 #include "../configuration/configuration.h"
 #include "../global/io.h"
@@ -271,3 +274,84 @@ void MumeTcpSocket::virt_onConnect()
     // would end up recursively calling this function!
     emit sig_connected();
 }
+
+#ifdef NO_MMAPPER_WEBSOCKETS
+MumeWebSocket::MumeWebSocket(QObject *parent)
+    : MumeSocket(parent)
+{}
+
+void MumeWebSocket::virt_connectToHost()
+{
+    std::abort();
+}
+
+void MumeWebSocket::virt_disconnectFromHost()
+{
+    std::abort();
+}
+
+void MumeWebSocket::slot_onBinaryMessageReceived(const QByteArray &ba)
+{
+    std::abort();
+}
+
+void MumeWebSocket::virt_sendToMud(const QByteArray &ba)
+{
+    std::abort();
+}
+#else
+MumeWebSocket::MumeWebSocket(QObject *parent)
+    : MumeSocket(parent)
+    , m_socket("", QWebSocketProtocol::VersionLatest, this)
+{
+    connect(&m_socket,
+            SIGNAL(binaryMessageReceived(const QByteArray &)),
+            this,
+            SLOT(slot_onBinaryMessageReceived(const QByteArray &)));
+    connect(&m_socket, SIGNAL(disconnected()), this, SLOT(slot_onDisconnect()));
+    connect(&m_socket, SIGNAL(connected()), this, SLOT(slot_onConnect()));
+    connect(&m_socket,
+            SIGNAL(error(QAbstractSocket::SocketError)),
+            this,
+            SLOT(slot_onError(QAbstractSocket::SocketError)));
+}
+
+void MumeWebSocket::virt_connectToHost()
+{
+    const auto &conf = getConfig().connection;
+    QUrl url;
+    url.setScheme("wss");
+    url.setHost(conf.remoteServerName);
+    url.setPort(443);
+    url.setPath("/ws-play/");
+
+    QNetworkRequest req(url);
+    req.setRawHeader("Sec-WebSocket-Protocol", "binary");
+    m_socket.open(req);
+
+    // TODO: What about a timer?
+}
+
+void MumeWebSocket::virt_disconnectFromHost()
+{
+    m_socket.close();
+}
+
+void MumeWebSocket::slot_onBinaryMessageReceived(const QByteArray &ba)
+{
+    emit sig_processMudStream(ba);
+}
+
+void MumeWebSocket::virt_sendToMud(const QByteArray &ba)
+{
+    m_socket.sendBinaryMessage(ba);
+}
+
+void MumeWebSocket::virt_onError(QAbstractSocket::SocketError e)
+{
+    // MUME disconnecting is not an error
+    if (e != QAbstractSocket::RemoteHostClosedError) {
+        slot_onError2(e, m_socket.errorString());
+    }
+}
+#endif

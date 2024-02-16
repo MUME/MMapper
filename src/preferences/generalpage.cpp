@@ -33,10 +33,28 @@ GeneralPage::GeneralPage(QWidget *parent)
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GeneralPage::slot_localPortValueChanged);
-    connect(ui->tlsEncryptionCheckBox,
-            &QCheckBox::stateChanged,
-            this,
-            &GeneralPage::slot_tlsEncryptionCheckBoxStateChanged);
+    connect(ui->secureCheckBox, &QCheckBox::clicked, this, [](const bool checked) {
+        setConfig().connection.tlsEncryption = checked;
+    });
+    connect(ui->webProxyCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+        ui->remotePort->setEnabled(!checked);
+        if (checked) {
+            // WebSockets Secure is secure
+            ui->secureCheckBox->setEnabled(false);
+            ui->secureCheckBox->setChecked(true);
+        } else {
+            if (QSslSocket::supportsSsl()) {
+                ui->secureCheckBox->setEnabled(true);
+                ui->secureCheckBox->setChecked(getConfig().connection.tlsEncryption);
+            } else {
+                ui->secureCheckBox->setEnabled(false);
+                ui->secureCheckBox->setChecked(false);
+            }
+        }
+    });
+    connect(ui->webProxyCheckBox, &QCheckBox::clicked, this, [](const bool checked) {
+        setConfig().connection.webSocket = checked;
+    });
     connect(ui->proxyListensOnAnyInterfaceCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyListensOnAnyInterface = ui->proxyListensOnAnyInterfaceCheckBox
                                                                 ->isChecked();
@@ -130,10 +148,16 @@ void GeneralPage::slot_loadConfig()
     ui->remotePort->setValue(connection.remotePort);
     ui->localPort->setValue(connection.localPort);
     if (!QSslSocket::supportsSsl()) {
-        ui->tlsEncryptionCheckBox->setEnabled(false);
-        ui->tlsEncryptionCheckBox->setChecked(false);
+        ui->secureCheckBox->setEnabled(false);
+        ui->secureCheckBox->setChecked(false);
     } else {
-        ui->tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
+        ui->secureCheckBox->setChecked(connection.tlsEncryption);
+    }
+    if (NO_WEBSOCKETS) {
+        ui->webProxyCheckBox->setEnabled(false);
+        ui->webProxyCheckBox->setChecked(false);
+    } else {
+        ui->webProxyCheckBox->setChecked(connection.webSocket);
     }
     ui->proxyListensOnAnyInterfaceCheckBox->setChecked(connection.proxyListensOnAnyInterface);
     ui->charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
@@ -189,11 +213,6 @@ void GeneralPage::slot_remotePortValueChanged(int /*unused*/)
 void GeneralPage::slot_localPortValueChanged(int /*unused*/)
 {
     setConfig().connection.localPort = static_cast<quint16>(ui->localPort->value());
-}
-
-void GeneralPage::slot_tlsEncryptionCheckBoxStateChanged(int /*unused*/)
-{
-    setConfig().connection.tlsEncryption = ui->tlsEncryptionCheckBox->isChecked();
 }
 
 void GeneralPage::slot_emulatedExitsStateChanged(int /*unused*/)
