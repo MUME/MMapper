@@ -18,4 +18,6 @@ QString &toAsciiInPlace(QString &str);
 std::string &latin1ToAsciiInPlace(std::string &str);
 NODISCARD std::string latin1ToAscii(const std::string_view sv);
 void latin1ToAscii(std::ostream &, const std::string_view sv);
+NODISCARD std::string normalizeWhitespace(const std::string &str);
+
 } // namespace ParserUtils

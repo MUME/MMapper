@@ -53,6 +53,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/mapdata/ExitFieldVariant.h
     ../src/parser/CommandId.cpp
     ../src/parser/CommandId.h
+    ../src/parser/parserutils.cpp
+    ../src/parser/parserutils.h
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
@@ -87,6 +89,7 @@ set(parser_SRCS
     ../src/parser/CommandId.cpp
     ../src/parser/CommandId.h
     ../src/parser/parserutils.cpp
+    ../src/parser/parserutils.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})

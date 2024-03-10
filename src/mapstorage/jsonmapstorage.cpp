@@ -49,21 +49,22 @@ public:
         : m_hash(QCryptographicHash::Md5)
     {}
 
-    void add(QString str)
+    void add(const RoomName &roomName, const RoomDesc &roomDesc)
     {
+        auto name = roomName.toQString();
         // This is most likely unnecessary because the parser did it for us...
         // We need plain ASCII so that accentuation changes do not affect the
         // hashes and because MD5 is defined on bytes, not encoded chars.
-        ParserUtils::toAsciiInPlace(str);
+        ParserUtils::toAsciiInPlace(name);
         // Roomdescs may see whitespacing fixes over the years (ex: removing double
         // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces makes the hash more resilient.
-        str.replace(QRegularExpression(" +"), " ");
-        str.replace(QRegularExpression(" *\r?\n"), "\n");
+        auto desc = ::toQStringLatin1(ParserUtils::normalizeWhitespace(roomDesc.getStdString()));
+        ParserUtils::toAsciiInPlace(desc);
 
         // REVISIT: should this be latin1 or utf8?
-        m_hash.addData(str.toLatin1());
+        m_hash.addData(name.toLatin1() + "\n" + desc.toLatin1());
     }
 
     QByteArray result() const { return m_hash.result(); }
@@ -85,8 +86,7 @@ private:
 public:
     void addRoom(const Room &room)
     {
-        m_hasher.add(room.getName().toQString() + "\n");
-        m_hasher.add(room.getDescription().toQString());
+        m_hasher.add(room.getName(), room.getDescription());
         m_index.insert(m_hasher.result().toHex(), room.getPosition());
         m_hasher.reset();
     }

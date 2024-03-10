@@ -8,7 +8,6 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
-#include <regex>
 
 #include "../global/TextUtils.h"
 #include "../mapdata/ExitDirection.h"
@@ -16,6 +15,7 @@
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
+#include "../parser/parserutils.h"
 #include "property.h"
 
 ParseEvent::ArrayOfProperties::ArrayOfProperties() = default;
@@ -109,12 +109,9 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
     auto result = std::make_shared<ParseEvent>(c);
     ParseEvent *const event = result.get();
 
-    static const std::regex normalizeWhitespacePattern(R"(\s+)", std::regex::optimize);
-
     // the moved strings are used by const ref here before they're moved.
     event->setProperty(moved_roomName);
-    event->setProperty(RoomDesc{
-        std::regex_replace(moved_roomDesc.getStdString(), normalizeWhitespacePattern, " ")});
+    event->setProperty(RoomDesc{ParserUtils::normalizeWhitespace(moved_roomDesc.getStdString())});
     event->setProperty(terrain);
 
     // After this block, the moved values are gone.

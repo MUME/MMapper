@@ -7,9 +7,8 @@
 #include "parserutils.h"
 
 #include <array>
-#include <cassert>
 #include <iostream>
-#include <stdexcept>
+#include <regex>
 #include <QRegularExpression>
 #include <QtCore>
 
@@ -104,6 +103,12 @@ void latin1ToAscii(std::ostream &os, const std::string_view sv)
     for (const char c : sv) {
         os << latin1ToAscii(c);
     }
+}
+
+std::string normalizeWhitespace(const std::string &str)
+{
+    static const std::regex pattern(R"(\s+)", std::regex::optimize);
+    return std::regex_replace(str, pattern, " ");
 }
 
 } // namespace ParserUtils
