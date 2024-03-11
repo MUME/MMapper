@@ -1,4 +1,11 @@
 ================================
+MMapper 24.03.1 (March 11, 2024)
+================================
+
+Bug fix:
+ - Do not send MSSP to clients that haven't requested it. This fix helps JMC users.
+
+================================
 MMapper 24.03.0 (March 10, 2024)
 ================================
 
