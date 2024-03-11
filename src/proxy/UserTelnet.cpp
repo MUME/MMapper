@@ -129,6 +129,9 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 
 void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
 {
+    if (!myOptionState[OPT_MSSP])
+        return;
+
     sendMudServerStatus(data);
 }
 
