@@ -98,6 +98,7 @@ QString ParseEvent::toQString() const
 }
 
 SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
+                                         RoomServerId moved_roomServerId,
                                          RoomName moved_roomName,
                                          RoomDesc moved_roomDesc,
                                          RoomContents moved_roomContents,
@@ -115,6 +116,7 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
     event->setProperty(terrain);
 
     // After this block, the moved values are gone.
+    event->m_roomServerId = std::exchange(moved_roomServerId, {});
     event->m_roomName = std::exchange(moved_roomName, {});
     event->m_roomDesc = std::exchange(moved_roomDesc, {});
     event->m_roomContents = std::exchange(moved_roomContents, {});
@@ -130,6 +132,7 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createEvent(CommandEnum::UNKNOWN,
+                       UNKNOWN_ROOMSERVERID,
                        RoomName{},
                        RoomDesc{},
                        RoomContents{},

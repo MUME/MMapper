@@ -585,6 +585,8 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         updatedCheckBox->setCheckable(true);
         updatedCheckBox->setText("Online update status has not been changed.");
 
+        mapIdLineEdit->hide();
+
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
 
@@ -618,6 +620,14 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         } else {
             updatedCheckBox->setText("Room has not been online updated yet!!!");
         }
+
+        if (r->getServerId().isSet())
+        {
+            mapIdLineEdit->show();
+            mapIdLineEdit->setText(QString::number(r->getServerId().asUint32()));
+        }
+        else
+            mapIdLineEdit->hide();
 
         exitsFrame->setEnabled(true);
 

@@ -45,6 +45,41 @@
        <property name="spacing">
         <number>6</number>
        </property>
+       <item row="2" column="2">
+        <widget class="QLineEdit" name="mapIdLineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="acceptDrops">
+          <bool>false</bool>
+         </property>
+         <property name="toolTip">
+          <string>MUME MapId</string>
+         </property>
+         <property name="frame">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="placeholderText">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="updatedCheckBox">
+         <property name="text">
+          <string>Room has not been updated yet!</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QComboBox" name="roomListComboBox">
          <property name="minimumSize">
@@ -58,7 +93,20 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
+       <item row="0" column="2">
+        <spacer>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>171</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="3">
         <widget class="QTextEdit" name="roomDescriptionTextEdit">
          <property name="lineWrapMode">
           <enum>QTextEdit::NoWrap</enum>
@@ -74,21 +122,14 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="updatedCheckBox">
-         <property name="text">
-          <string>Room has not been updated yet!</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <spacer>
+       <item row="2" column="1">
+        <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>171</width>
+           <width>40</width>
            <height>20</height>
           </size>
          </property>

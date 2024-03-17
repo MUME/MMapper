@@ -62,6 +62,7 @@ private:
     bool m_descriptionReady = false;
 
     // REVISIT: Is there any point to having a distinction between null and empty?
+    RoomServerId m_roomServerId;
     std::optional<RoomName> m_roomName;
     std::optional<RoomDesc> m_roomDesc;
     std::optional<RoomContents> m_roomContents;

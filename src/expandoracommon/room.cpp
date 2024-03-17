@@ -232,6 +232,15 @@ void Room::setId(const RoomId id)
     setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
 }
 
+void Room::setServerId(const RoomServerId id)
+{
+    if (m_serverid == id)
+        return;
+
+    m_serverid = id;
+    setModified(RoomUpdateFlags{RoomUpdateEnum::ServerId});
+}
+
 void Room::setPosition(const Coordinate &c)
 {
     if (c == m_position)
@@ -304,6 +313,7 @@ SharedParseEvent Room::getEvent(const Room *const room)
     exitFlags.setValid();
 
     return ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                   room->getServerId(),
                                    room->getName(),
                                    room->getDescription(),
                                    room->getContents(),
@@ -320,6 +330,14 @@ NODISCARD static int wordDifference(StringView a, StringView b)
         if (a.takeFirstLetter() != b.takeFirstLetter())
             ++diff;
     return static_cast<int>(diff + a.size() + b.size());
+}
+
+ComparisonResultEnum Room::compareServerIds(const RoomServerId room, const RoomServerId event)
+{
+    if (room.isSet() != event.isSet()) {
+        return ComparisonResultEnum::TOLERANCE;
+    }
+    return room == event ? ComparisonResultEnum::EQUAL : ComparisonResultEnum::DIFFERENT;
 }
 
 ComparisonResultEnum Room::compareStrings(const std::string &room,
@@ -369,49 +387,55 @@ ComparisonResultEnum Room::compare(const Room *const room,
     const auto &name = room->getName();
     const auto &desc = room->getDescription();
     const RoomTerrainEnum terrainType = room->getTerrainType();
+    bool mapIdMatch = (event.getRoomServerId() == room->getServerId());
     bool updated = room->isUpToDate();
 
     //    if (event == nullptr) {
     //        return ComparisonResultEnum::EQUAL;
     //    }
 
-    if (name.isEmpty() && desc.isEmpty() && (!updated)) {
+    if (name.isEmpty() && desc.isEmpty() && !room->isUpToDate()) {
         // user-created
         return ComparisonResultEnum::TOLERANCE;
     }
 
-    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+    if (!room->getServerId().isSet())
+        mapIdMatch = false;
+    else if (!mapIdMatch)
         return ComparisonResultEnum::DIFFERENT;
+
+    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
     }
 
     switch (compareStrings(name.getStdString(), event.getRoomName().getStdString(), tolerance)) {
+    case ComparisonResultEnum::DIFFERENT:
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (
         compareStrings(desc.getStdString(), event.getRoomDesc().getStdString(), tolerance, updated)) {
+    case ComparisonResultEnum::DIFFERENT:
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (compareWeakProps(room, event)) {
     case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 
@@ -608,6 +632,13 @@ void Room::update(Room &room, const ParseEvent &event)
         }
     }
 
+    const auto &serverId = event.getRoomServerId();
+    if (!serverId.isSet()) {
+        isUpToDate = false;
+    } else {
+        room.setServerId(serverId);
+    }
+
     const auto &terrain = event.getTerrainType();
     if (terrain == RoomTerrainEnum::UNDEFINED) {
         isUpToDate = false;
@@ -637,6 +668,10 @@ void Room::update(Room &room, const ParseEvent &event)
 
 void Room::update(Room *const target, const Room *const source)
 {
+    const auto &serverId = source->getServerId();
+    if (serverId.isSet()) {
+        target->setServerId(serverId);
+    }
     const auto &name = source->getName();
     if (!name.isEmpty()) {
         target->setName(name);
@@ -786,6 +821,7 @@ std::shared_ptr<Room> Room::clone(RoomModificationTracker &tracker) const
     COPY(m_fields);
     COPY(m_exits);
     COPY(m_id);
+    COPY(m_serverid);
     COPY(m_status);
     COPY(m_borked);
 #undef COPY

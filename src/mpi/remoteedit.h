@@ -41,7 +41,7 @@ protected:
 private:
     NODISCARD uint getInternalIdCount()
     {
-        return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1;
+        return greatestUsedId == std::numeric_limits<uint32_t>::max() ? 0 : greatestUsedId + 1;
     }
     void addSession(const RemoteSession &, const QString &, const QString &);
     void removeSession(const RemoteEditSession *session);
