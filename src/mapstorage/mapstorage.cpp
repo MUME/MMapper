@@ -46,7 +46,8 @@ static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit
 static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
 static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
 static constexpr const int MMAPPER_19_10_0_SCHEMA = 36; // switches to new coordinate system
-static constexpr const int CURRENT_SCHEMA = MMAPPER_19_10_0_SCHEMA;
+static constexpr const int MMAPPER_24_03_2_SCHEMA = 37; // add MapId
+static constexpr const int CURRENT_SCHEMA = MMAPPER_24_03_2_SCHEMA;
 
 static_assert(021 == 17, "MMapper 2.0.0 Schema");
 static_assert(030 == 24, "MMapper 2.0.2 Schema");
@@ -276,9 +277,12 @@ SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
         (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
     room->setLoadFlags(serialize<RoomLoadFlags>(
         (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
-    if (helper.read_u8() /*roomUpdated*/ != 0u) {
+    auto roomUpdated = helper.read_u8();
+    if (version < MMAPPER_24_03_2_SCHEMA)
+        room->setOutDated();
+    else if (roomUpdated != 0u)
         room->setUpToDate();
-    }
+    room->setServerId((version >= MMAPPER_24_03_2_SCHEMA) ? RoomServerId{helper.read_u32()} : UNKNOWN_ROOMSERVERID);
 
     room->setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
     loadExits(*room, stream, version);
@@ -316,11 +320,11 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
 
         e.setDoorName(static_cast<DoorName>(helper.read_string()));
 
-        for (uint32_t connection = helper.read_u32(); connection != uint32_t(-1);
+        for (uint32_t connection = helper.read_u32(); connection != INVALID_ROOMID.asUint32();
              connection = helper.read_u32()) {
             e.addIn(RoomId{connection + baseId});
         }
-        for (uint32_t connection = helper.read_u32(); connection != uint32_t(-1);
+        for (uint32_t connection = helper.read_u32(); connection != INVALID_ROOMID.asUint32();
              connection = helper.read_u32()) {
             e.addOut(RoomId{connection + baseId});
         }
@@ -395,6 +399,7 @@ bool MapStorage::mergeData()
             case MMAPPER_2_4_3_SCHEMA:
             case MMAPPER_2_5_1_SCHEMA:
             case MMAPPER_19_10_0_SCHEMA:
+            case MMAPPER_24_03_2_SCHEMA:
                 return true;
             default:
                 break;
@@ -570,6 +575,7 @@ void MapStorage::saveRoom(const Room &room, QDataStream &stream)
     stream << static_cast<quint32>(room.getMobFlags());
     stream << static_cast<quint32>(room.getLoadFlags());
     stream << static_cast<quint8>(room.isUpToDate());
+    stream << static_cast<quint32>(room.getServerId());
     writeCoordinate(stream, room.getPosition());
     saveExits(room, stream);
 }

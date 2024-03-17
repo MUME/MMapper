@@ -40,6 +40,7 @@ public:
         : value{value}
     {}
     inline constexpr bool isSet() const { return value != 0; }
+    inline constexpr explicit operator uint32_t() const { return value; }
     inline uint32_t asUint32() const { return value; }
 
     inline constexpr bool operator<(RoomServerId rhs) const { return value < rhs.value; }
@@ -49,7 +50,7 @@ public:
     inline constexpr bool operator==(RoomServerId rhs) const { return value == rhs.value; }
     inline constexpr bool operator!=(RoomServerId rhs) const { return value != rhs.value; }
 };
-static constexpr const RoomServerId UNKNOWN_ROOMSERVERID{};
+static constexpr const RoomServerId UNKNOWN_ROOMSERVERID{0};
 
 template<>
 struct std::hash<RoomServerId>

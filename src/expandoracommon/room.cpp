@@ -387,62 +387,55 @@ ComparisonResultEnum Room::compare(const Room *const room,
     const auto &name = room->getName();
     const auto &desc = room->getDescription();
     const RoomTerrainEnum terrainType = room->getTerrainType();
+    bool mapIdMatch = (event.getRoomServerId() == room->getServerId());
     bool updated = room->isUpToDate();
 
     //    if (event == nullptr) {
     //        return ComparisonResultEnum::EQUAL;
     //    }
 
-    switch (compareServerIds(room->getServerId(), event.getRoomServerId())) {
-    case ComparisonResultEnum::TOLERANCE:
-        updated = false;
-        break;
-    case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::EQUAL:
-        // roomServerId is fully trusted: if it matches, ignore all other room fields
-        return ComparisonResultEnum::EQUAL;
-    default:
-        break;
-    }
-
-    if (name.isEmpty() && desc.isEmpty() && (!updated)) {
+    if (name.isEmpty() && desc.isEmpty() && !room->isUpToDate()) {
         // user-created
         return ComparisonResultEnum::TOLERANCE;
     }
 
-    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+    if (!room->getServerId().isSet())
+        mapIdMatch = false;
+    else if (!mapIdMatch)
         return ComparisonResultEnum::DIFFERENT;
+
+    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
     }
 
     switch (compareStrings(name.getStdString(), event.getRoomName().getStdString(), tolerance)) {
+    case ComparisonResultEnum::DIFFERENT:
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (
         compareStrings(desc.getStdString(), event.getRoomDesc().getStdString(), tolerance, updated)) {
+    case ComparisonResultEnum::DIFFERENT:
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (compareWeakProps(room, event)) {
     case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
+        break;
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
-        break;
-    case ComparisonResultEnum::EQUAL:
         break;
     }
 

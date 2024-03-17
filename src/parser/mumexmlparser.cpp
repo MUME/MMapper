@@ -343,11 +343,14 @@ bool MumeXmlParser::element(const QByteArray &line)
                             // std::cout << "XML room attribute " << pair.first << '=' << pair.second
                             //          << std::endl;
                             if (pair.first == "id" && !pair.second.empty()) {
-                                const uint32_t id = static_cast<uint32_t>(std::stoul(pair.second));
-                                if (id != UNKNOWN_ROOMSERVERID.asUint32()
-                                    && std::to_string(id) == pair.second) {
-                                    // MUME's room id parsed successfully
-                                    m_roomServerId = RoomServerId{id};
+                                try {
+                                    const uint32_t id = static_cast<uint32_t>(std::stoul(pair.second));
+                                    if (id != UNKNOWN_ROOMSERVERID.asUint32())
+                                        m_roomServerId = RoomServerId{id};
+                                } catch (const std::out_of_range& e) {
+                                    qWarning() << "Conversion error: " << e.what();
+                                } catch (const std::invalid_argument& e) {
+                                    qWarning() << "Invalid argument: " << e.what();
                                 }
                             }
                             break;
