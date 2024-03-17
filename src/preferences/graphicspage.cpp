@@ -152,11 +152,13 @@ void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)
 void GraphicsPage::slot_updatedStateChanged(int /*unused*/)
 {
     setConfig().canvas.showUpdated = ui->updated->isChecked();
+    graphicsSettingsChanged();
 }
 
 void GraphicsPage::slot_drawNotMappedExitsStateChanged(int /*unused*/)
 {
     setConfig().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
+    graphicsSettingsChanged();
 }
 
 void GraphicsPage::slot_drawDoorNamesStateChanged(int /*unused*/)
