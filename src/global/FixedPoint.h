@@ -12,7 +12,7 @@
 #include "RuleOf5.h"
 #include "utils.h"
 
-template<int _Digits>
+template<int Digits_>
 class NODISCARD FixedPoint final
 {
 private:
@@ -20,7 +20,7 @@ private:
     bool m_notifying = false;
 
 public:
-    static constexpr const int digits = _Digits;
+    static constexpr const int digits = Digits_;
     const int min;
     const int max;
     const int defaultValue;
@@ -107,7 +107,7 @@ public:
     // NOTE: The clone does not inherit our change monitor!
     NODISCARD FixedPoint clone(int value) const
     {
-        return FixedPoint<_Digits>{min, max, defaultValue, value};
+        return FixedPoint<Digits_>{min, max, defaultValue, value};
     }
 
 public:

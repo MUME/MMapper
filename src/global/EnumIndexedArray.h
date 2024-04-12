@@ -12,17 +12,17 @@
 #include "Flags.h"
 #include "macros.h"
 
-template<typename T, typename E, size_t _SIZE = enums::CountOf<E>::value>
-class NODISCARD EnumIndexedArray : private MMapper::Array<T, _SIZE>
+template<typename T, typename E, size_t SIZE_ = enums::CountOf<E>::value>
+class NODISCARD EnumIndexedArray : private MMapper::Array<T, SIZE_>
 {
 public:
     using index_type = E;
-    using base = typename MMapper::Array<T, _SIZE>;
-    static constexpr const size_t SIZE = _SIZE;
+    using base = typename MMapper::Array<T, SIZE_>;
+    static constexpr const size_t SIZE = SIZE_;
 
 public:
     // inherits all constructors
-    using MMapper::Array<T, _SIZE>::Array;
+    using MMapper::Array<T, SIZE_>::Array;
 
 public:
     decltype(auto) at(E e) { return base::at(static_cast<uint32_t>(e)); }

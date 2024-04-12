@@ -32,37 +32,37 @@
 
 namespace Legacy {
 
-template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
+template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static auto createMesh(const SharedFunctions &functions,
                                  const DrawModeEnum mode,
-                                 const std::vector<_VertType> &batch,
-                                 const std::shared_ptr<_ProgType> &prog)
+                                 const std::vector<VertType_> &batch,
+                                 const std::shared_ptr<ProgType_> &prog)
 {
-    using Mesh = _Mesh<_VertType>;
-    static_assert(std::is_same_v<typename Mesh::ProgramType, _ProgType>);
+    using Mesh = Mesh_<VertType_>;
+    static_assert(std::is_same_v<typename Mesh::ProgramType, ProgType_>);
     return std::make_unique<Mesh>(functions, prog, mode, batch);
 }
 
-template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
+template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static UniqueMesh createUniqueMesh(const SharedFunctions &functions,
                                              const DrawModeEnum mode,
-                                             const std::vector<_VertType> &batch,
-                                             const std::shared_ptr<_ProgType> &prog)
+                                             const std::vector<VertType_> &batch,
+                                             const std::shared_ptr<ProgType_> &prog)
 {
     assert(mode != DrawModeEnum::INVALID);
-    return UniqueMesh(createMesh<_Mesh, _VertType, _ProgType>(functions, mode, batch, prog));
+    return UniqueMesh(createMesh<Mesh_, VertType_, ProgType_>(functions, mode, batch, prog));
 }
 
-template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
+template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static UniqueMesh createTexturedMesh(const SharedFunctions &functions,
                                                const DrawModeEnum mode,
-                                               const std::vector<_VertType> &batch,
-                                               const std::shared_ptr<_ProgType> &prog,
+                                               const std::vector<VertType_> &batch,
+                                               const std::shared_ptr<ProgType_> &prog,
                                                const SharedMMTexture &texture)
 {
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     return UniqueMesh{std::make_unique<TexturedRenderable>(
-        texture, createMesh<_Mesh, _VertType, _ProgType>(functions, mode, batch, prog))};
+        texture, createMesh<Mesh_, VertType_, ProgType_>(functions, mode, batch, prog))};
 }
 
 UniqueMesh Functions::createPointBatch(const std::vector<ColorVert> &batch)
@@ -104,11 +104,11 @@ UniqueMesh Functions::createColoredTexturedBatch(const DrawModeEnum mode,
     return createTexturedMesh<ColoredTexturedMesh>(shared_from_this(), mode, batch, prog, texture);
 }
 
-template<typename _VertexType, template<typename> typename _Mesh, typename _ShaderType>
+template<typename VertexType_, template<typename> typename Mesh_, typename ShaderType_>
 static void renderImmediate(const SharedFunctions &sharedFunctions,
                             const DrawModeEnum mode,
-                            const std::vector<_VertexType> &verts,
-                            const std::shared_ptr<_ShaderType> &sharedShader,
+                            const std::vector<VertexType_> &verts,
+                            const std::shared_ptr<ShaderType_> &sharedShader,
                             const GLRenderState &renderState)
 {
     if (verts.empty())
@@ -127,8 +127,8 @@ static void renderImmediate(const SharedFunctions &sharedFunctions,
         vbo.emplace(sharedFunctions);
     }
 
-    using Mesh = _Mesh<_VertexType>;
-    static_assert(std::is_same_v<typename Mesh::ProgramType, _ShaderType>);
+    using Mesh = Mesh_<VertexType_>;
+    static_assert(std::is_same_v<typename Mesh::ProgramType, ShaderType_>);
 
     const auto before = vbo.get();
     {

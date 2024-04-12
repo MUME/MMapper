@@ -10,17 +10,17 @@
 #include "SimpleMesh.h"
 
 #define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
-#define VPO(x) VOIDPTR_OFFSETOF(_VertexType, x)
+#define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
 
 namespace Legacy {
 
 // Textured mesh with color modulated by color attribute,
 // but it does a screen space transform. See FontVert3d.
-template<typename _VertexType>
-class NODISCARD SimpleFont3dMesh : public SimpleMesh<_VertexType, FontShader>
+template<typename VertexType_>
+class NODISCARD SimpleFont3dMesh : public SimpleMesh<VertexType_, FontShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, FontShader>;
+    using Base = SimpleMesh<VertexType_, FontShader>;
 
     explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
                               const std::shared_ptr<FontShader> &sharedProgram)
@@ -30,7 +30,7 @@ public:
     explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
                               const std::shared_ptr<FontShader> &sharedProgram,
                               const DrawModeEnum mode,
-                              const std::vector<_VertexType> &verts)
+                              const std::vector<VertexType_> &verts)
         : Base(sharedFunctions, sharedProgram, mode, verts)
     {}
 
@@ -57,11 +57,11 @@ private:
 
     void virt_bind() override
     {
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
-        static_assert(sizeof(std::declval<_VertexType>().base) == 3 * sizeof(GLfloat));
-        static_assert(sizeof(std::declval<_VertexType>().color) == 4 * sizeof(uint8_t));
-        static_assert(sizeof(std::declval<_VertexType>().tex) == 2 * sizeof(GLfloat));
-        static_assert(sizeof(std::declval<_VertexType>().vert) == 2 * sizeof(GLfloat));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
+        static_assert(sizeof(std::declval<VertexType_>().base) == 3 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
+        static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().vert) == 2 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
 
