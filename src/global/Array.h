@@ -42,8 +42,7 @@ public:
 
 #if __cpp_deduction_guides >= 201606
 // deducation guide copied from std::array
-template<typename _Tp, typename... _Up>
-Array(_Tp, _Up...)
-    -> Array<std::enable_if_t<(std::is_same_v<_Tp, _Up> && ...), _Tp>, 1 + sizeof...(_Up)>;
+template<typename T, typename... U>
+Array(T, U...) -> Array<std::enable_if_t<(std::is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>;
 #endif
 } // namespace MMapper

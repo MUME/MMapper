@@ -38,9 +38,9 @@ NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 // REVISIT: Find this a new home when there's more than one OpenGL implementation.
 // Note: This version is only suitable for drawArrays(). You'll need another function
 // to transform indices if you want to use it with drawElements().
-template<typename _VertexType>
-NODISCARD static inline std::vector<_VertexType> convertQuadsToTris(
-    const std::vector<_VertexType> &quads)
+template<typename VertexType_>
+NODISCARD static inline std::vector<VertexType_> convertQuadsToTris(
+    const std::vector<VertexType_> &quads)
 {
     // d-c
     // |/|
@@ -48,7 +48,7 @@ NODISCARD static inline std::vector<_VertexType> convertQuadsToTris(
     const static constexpr int TRIANGLE_VERTS_PER_QUAD = 6;
     const size_t numQuads = quads.size() / VERTS_PER_QUAD;
     const size_t expected = numQuads * TRIANGLE_VERTS_PER_QUAD;
-    std::vector<_VertexType> triangles;
+    std::vector<VertexType_> triangles;
     triangles.reserve(expected);
     const auto *it = quads.data();
     for (size_t i = 0; i < numQuads; i++) {
@@ -219,13 +219,13 @@ public:
     NODISCARD static const char *getShaderVersion();
 
 private:
-    template<typename _VertexType>
+    template<typename VertexType_>
     NODISCARD GLsizei setVbo_internal(const GLuint vbo,
-                                      const std::vector<_VertexType> &batch,
+                                      const std::vector<VertexType_> &batch,
                                       const BufferUsageEnum usage)
     {
         const auto numVerts = static_cast<GLsizei>(batch.size());
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         const auto numBytes = numVerts * vertSize;
         Base::glBindBuffer(GL_ARRAY_BUFFER, vbo);
         Base::glBufferData(GL_ARRAY_BUFFER, numBytes, batch.data(), Legacy::toGLenum(usage));

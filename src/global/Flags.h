@@ -31,18 +31,18 @@ struct NODISCARD CountOf
     }
 
 template<typename CRTP,
-         typename _Flag,
-         typename _UnderlyingType,
-         size_t _NUM_FLAGS = CountOf<_Flag>::value>
+         typename Flag_,
+         typename UnderlyingType_,
+         size_t NUM_FLAGS_ = CountOf<Flag_>::value>
 class NODISCARD Flags
 {
 public:
-    using Flag = _Flag;
-    using underlying_type = _UnderlyingType;
+    using Flag = Flag_;
+    using underlying_type = UnderlyingType_;
     static_assert(std::is_enum_v<Flag>);
     static_assert(std::is_integral_v<underlying_type>);
     static_assert(!std::numeric_limits<underlying_type>::is_signed);
-    static constexpr const size_t NUM_FLAGS = _NUM_FLAGS;
+    static constexpr const size_t NUM_FLAGS = NUM_FLAGS_;
     static_assert(NUM_FLAGS != 0u);
     static_assert(NUM_FLAGS <= std::numeric_limits<underlying_type>::digits);
 

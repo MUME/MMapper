@@ -12,24 +12,24 @@
 
 namespace Legacy {
 
-template<typename _VertexType, typename _ProgramType>
+template<typename VertexType_, typename ProgramType_>
 class NODISCARD SimpleMesh : public IRenderable
 {
 public:
-    using ProgramType = _ProgramType;
+    using ProgramType = ProgramType_;
     static_assert(std::is_base_of_v<AbstractShaderProgram, ProgramType>);
 
 protected:
     const SharedFunctions m_shared_functions;
     Functions &m_functions;
-    const std::shared_ptr<_ProgramType> m_shared_program;
-    _ProgramType &m_program;
+    const std::shared_ptr<ProgramType_> m_shared_program;
+    ProgramType_ &m_program;
     VBO m_vbo;
     DrawModeEnum m_drawMode = DrawModeEnum::INVALID;
     GLsizei m_numVerts = 0;
 
 public:
-    explicit SimpleMesh(SharedFunctions sharedFunctions, std::shared_ptr<_ProgramType> sharedProgram)
+    explicit SimpleMesh(SharedFunctions sharedFunctions, std::shared_ptr<ProgramType_> sharedProgram)
         : m_shared_functions{std::move(sharedFunctions)}
         , m_functions{deref(m_shared_functions)}
         , m_shared_program{std::move(sharedProgram)}
@@ -37,10 +37,10 @@ public:
     {}
 
     explicit SimpleMesh(const SharedFunctions &sharedFunctions,
-                        const std::shared_ptr<_ProgramType> &sharedProgram,
+                        const std::shared_ptr<ProgramType_> &sharedProgram,
                         const DrawModeEnum mode,
-                        const std::vector<_VertexType> &verts)
-        : SimpleMesh(sharedFunctions, sharedProgram)
+                        const std::vector<VertexType_> &verts)
+        : SimpleMesh{sharedFunctions, sharedProgram}
     {
         setStatic(mode, verts);
     }
@@ -84,18 +84,18 @@ public:
     void unsafe_swapVboId(VBO &vbo) { return m_vbo.unsafe_swapVboId(vbo); }
 
 public:
-    void setDynamic(const DrawModeEnum mode, const std::vector<_VertexType> &verts)
+    void setDynamic(const DrawModeEnum mode, const std::vector<VertexType_> &verts)
     {
         setCommon(mode, verts, BufferUsageEnum::DYNAMIC_DRAW);
     }
-    void setStatic(const DrawModeEnum mode, const std::vector<_VertexType> &verts)
+    void setStatic(const DrawModeEnum mode, const std::vector<VertexType_> &verts)
     {
         setCommon(mode, verts, BufferUsageEnum::STATIC_DRAW);
     }
 
 private:
     void setCommon(const DrawModeEnum mode,
-                   const std::vector<_VertexType> &verts,
+                   const std::vector<VertexType_> &verts,
                    const BufferUsageEnum usage)
     {
         const auto numVerts = verts.size();
@@ -107,7 +107,7 @@ private:
 
         if (LOG_VBO_STATIC_UPLOADS && usage == BufferUsageEnum::STATIC_DRAW && m_vbo) {
             qInfo() << "Uploading static buffer with" << numVerts << "verts of size"
-                    << sizeof(_VertexType) << "(total" << (numVerts * sizeof(_VertexType))
+                    << sizeof(VertexType_) << "(total" << (numVerts * sizeof(VertexType_))
                     << "bytes) to VBO" << m_vbo.get() << __FUNCTION__;
         }
 

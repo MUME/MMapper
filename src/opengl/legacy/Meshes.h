@@ -8,16 +8,16 @@
 #include "SimpleMesh.h"
 
 #define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
-#define VPO(x) VOIDPTR_OFFSETOF(_VertexType, x)
+#define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
 
 namespace Legacy {
 
 // Uniform color
-template<typename _VertexType>
-class NODISCARD PlainMesh final : public SimpleMesh<_VertexType, UColorPlainShader>
+template<typename VertexType_>
+class NODISCARD PlainMesh final : public SimpleMesh<VertexType_, UColorPlainShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, UColorPlainShader>;
+    using Base = SimpleMesh<VertexType_, UColorPlainShader>;
     using Base::Base;
 
 private:
@@ -37,7 +37,7 @@ private:
 
     void virt_bind() override
     {
-        static_assert(sizeof(std::declval<_VertexType>()) == 3 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>()) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);
@@ -63,11 +63,11 @@ private:
 
 // Per-vertex color
 // flat-shaded in MMapper, due to glShadeModel(GL_FLAT)
-template<typename _VertexType>
-class NODISCARD ColoredMesh final : public SimpleMesh<_VertexType, AColorPlainShader>
+template<typename VertexType_>
+class NODISCARD ColoredMesh final : public SimpleMesh<VertexType_, AColorPlainShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, AColorPlainShader>;
+    using Base = SimpleMesh<VertexType_, AColorPlainShader>;
     using Base::Base;
 
 private:
@@ -89,9 +89,9 @@ private:
 
     void virt_bind() override
     {
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
-        static_assert(sizeof(std::declval<_VertexType>().color) == 4 * sizeof(uint8_t));
-        static_assert(sizeof(std::declval<_VertexType>().vert) == 3 * sizeof(GLfloat));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
+        static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
+        static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);
@@ -118,11 +118,11 @@ private:
 }; // namespace Legacy
 
 // Textured mesh with color modulated by uniform
-template<typename _VertexType>
-class NODISCARD TexturedMesh final : public SimpleMesh<_VertexType, UColorTexturedShader>
+template<typename VertexType_>
+class NODISCARD TexturedMesh final : public SimpleMesh<VertexType_, UColorTexturedShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, UColorTexturedShader>;
+    using Base = SimpleMesh<VertexType_, UColorTexturedShader>;
     using Base::Base;
 
 private:
@@ -144,9 +144,9 @@ private:
 
     void virt_bind() override
     {
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
-        static_assert(sizeof(std::declval<_VertexType>().tex) == 2 * sizeof(GLfloat));
-        static_assert(sizeof(std::declval<_VertexType>().vert) == 3 * sizeof(GLfloat));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
+        static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);
@@ -174,11 +174,11 @@ private:
 };
 
 // Textured mesh with color modulated by color attribute.
-template<typename _VertexType>
-class NODISCARD ColoredTexturedMesh final : public SimpleMesh<_VertexType, AColorTexturedShader>
+template<typename VertexType_>
+class NODISCARD ColoredTexturedMesh final : public SimpleMesh<VertexType_, AColorTexturedShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, AColorTexturedShader>;
+    using Base = SimpleMesh<VertexType_, AColorTexturedShader>;
     using Base::Base;
 
 private:
@@ -202,10 +202,10 @@ private:
 
     void virt_bind() override
     {
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
-        static_assert(sizeof(std::declval<_VertexType>().color) == 4 * sizeof(uint8_t));
-        static_assert(sizeof(std::declval<_VertexType>().tex) == 2 * sizeof(GLfloat));
-        static_assert(sizeof(std::declval<_VertexType>().vert) == 3 * sizeof(GLfloat));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
+        static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
+        static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);
@@ -236,11 +236,11 @@ private:
 
 // Per-vertex color
 // flat-shaded in MMapper, due to glShadeModel(GL_FLAT)
-template<typename _VertexType>
-class NODISCARD PointMesh final : public SimpleMesh<_VertexType, PointShader>
+template<typename VertexType_>
+class NODISCARD PointMesh final : public SimpleMesh<VertexType_, PointShader>
 {
 public:
-    using Base = SimpleMesh<_VertexType, PointShader>;
+    using Base = SimpleMesh<VertexType_, PointShader>;
     using Base::Base;
 
 private:
@@ -262,9 +262,9 @@ private:
 
     void virt_bind() override
     {
-        const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
-        static_assert(sizeof(std::declval<_VertexType>().color) == 4 * sizeof(uint8_t));
-        static_assert(sizeof(std::declval<_VertexType>().vert) == 3 * sizeof(GLfloat));
+        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
+        static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
+        static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);

@@ -17,11 +17,11 @@
 ///
 /// NOTE: This class purposely avoids wrapping shared_ptr's operator->(),
 /// operator*(), reset(), etc.
-template<typename _T>
+template<typename T>
 class MmQtHandle final
 {
 public:
-    using contained_type = _T;
+    using contained_type = T;
     using shared_type = std::shared_ptr<contained_type>;
 
 private:
