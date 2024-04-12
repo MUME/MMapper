@@ -96,7 +96,7 @@ private:
     void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
     void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
     void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
-    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
+    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
     void log(const QString &msg) { emit sig_log("Proxy", msg); }
 
 private:

@@ -41,5 +41,5 @@ public:
 public:
     void gmcpToMud(const GmcpMessage &msg) const;
     void gmcpToUser(const GmcpMessage &msg) const;
-    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
 };

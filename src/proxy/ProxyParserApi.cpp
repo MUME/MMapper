@@ -66,10 +66,10 @@ void ProxyParserApi::gmcpToUser(const GmcpMessage &msg) const
     m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToUser(msg); });
 }
 
-bool ProxyParserApi::isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const
+bool ProxyParserApi::isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
 {
     bool result = false;
     m_proxy.acceptVisitor(
-        [&module, &result](Proxy &proxy) { result = proxy.isGmcpModuleEnabled(module); });
+        [&mod, &result](Proxy &proxy) { result = proxy.isGmcpModuleEnabled(mod); });
     return result;
 }

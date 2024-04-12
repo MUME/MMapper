@@ -118,8 +118,8 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     const auto name = msg.getName().getStdString();
     const std::size_t found = name.find_last_of('.');
     try {
-        const GmcpModule module(name.substr(0, found));
-        if (gmcp.modules.find(module) != gmcp.modules.end())
+        const GmcpModule mod(name.substr(0, found));
+        if (gmcp.modules.find(mod) != gmcp.modules.end())
             sendGmcpMessage(msg);
 
     } catch (const std::exception &e) {
@@ -169,8 +169,8 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
                 continue;
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule module(moduleStr);
-                receiveGmcpModule(module, !msg.isCoreSupportsRemove());
+                const GmcpModule mod(moduleStr);
+                receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
                 qWarning() << "Module" << moduleStr
@@ -183,13 +183,13 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         std::ostringstream oss;
         oss << "[ ";
         bool comma = false;
-        for (const GmcpModule &module : gmcp.modules) {
+        for (const GmcpModule &mod : gmcp.modules) {
             // REVISIT: Are some MMapper supported modules not supposed to be filtered?
-            if (module.isSupported())
+            if (mod.isSupported())
                 continue;
             if (comma)
                 oss << ", ";
-            oss << '"' << module.toStdString() << '"';
+            oss << '"' << mod.toStdString() << '"';
             comma = true;
         }
         oss << " ]";
@@ -235,19 +235,19 @@ bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
     return gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
 }
 
-void UserTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
+void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 {
     if (enabled) {
-        if (!module.hasVersion())
+        if (!mod.hasVersion())
             throw std::runtime_error("missing version");
-        gmcp.modules.insert(module);
-        if (module.isSupported())
-            gmcp.supported[module.getType()] = module.getVersion();
+        gmcp.modules.insert(mod);
+        if (mod.isSupported())
+            gmcp.supported[mod.getType()] = mod.getVersion();
 
     } else {
-        gmcp.modules.erase(module);
-        if (module.isSupported())
-            gmcp.supported[module.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+        gmcp.modules.erase(mod);
+        if (mod.isSupported())
+            gmcp.supported[mod.getType()] = DEFAULT_GMCP_MODULE_VERSION;
     }
 }
 
