@@ -622,107 +622,6 @@ NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
     return UniqueMeshVector{std::move(result_meshes)};
 }
 
-struct NODISCARD LayerBatchMeasurements final
-{
-    size_t numTerrains = 0;
-    size_t numOverlays = 0;
-
-    size_t numSolidWalls = 0;
-    size_t numDottedWalls = 0;
-    size_t numDoors = 0;
-    size_t numUpDownExits = 0;
-
-    RoomTintArray<size_t> numTints;
-
-    size_t numStreamOuts = 0;
-    size_t numStreamIns = 0;
-};
-
-struct NODISCARD LayerBatchMeasurer final : public IRoomVisitorCallbacks
-{
-    LayerBatchMeasurements &measurements;
-    const OptBounds &bounds;
-
-    explicit LayerBatchMeasurer(LayerBatchMeasurements &measurements, const OptBounds &bounds)
-        : measurements(measurements)
-        , bounds{bounds}
-    {}
-    ~LayerBatchMeasurer() override;
-
-    DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchMeasurer);
-
-    NODISCARD bool virt_acceptRoom(const Room *const room) const override
-    {
-        return bounds.contains(room->getPosition());
-    }
-
-private:
-    void virt_visitTerrainTexture(const Room *, MMTexture *const terrain) final
-    {
-        if (terrain != nullptr)
-            ++measurements.numTerrains;
-        else
-            assert(false);
-    }
-    void virt_visitOverlayTexture(const Room *, MMTexture *const overlay) final
-    {
-        if (overlay != nullptr)
-            ++measurements.numOverlays;
-    }
-
-    void virt_visitNamedColorTint(const Room *, const RoomTintEnum tint) final
-    {
-        ++measurements.numTints[tint];
-    }
-
-    void virt_visitWall(const Room *,
-                        const ExitDirEnum dir,
-                        const XNamedColor color,
-                        const WallTypeEnum wallType,
-                        bool /*isClimb*/) final
-    {
-        if (isTransparent(color))
-            return;
-
-        if (wallType == WallTypeEnum::DOOR) {
-            // assumes NESW doors have the same number of lines as UD doors.
-            ++measurements.numDoors;
-            return;
-        }
-
-        if (isNESW(dir)) {
-            size_t &toInc = (wallType == WallTypeEnum::SOLID) ? measurements.numSolidWalls
-                                                              : measurements.numDottedWalls;
-            ++toInc;
-        } else {
-            const bool isUp = dir == ExitDirEnum::UP;
-            assert(isUp || dir == ExitDirEnum::DOWN);
-            if (wallType == WallTypeEnum::DOTTED) {
-                // NOTE: Currently ignores dotted status of up/down.
-            }
-            ++measurements.numUpDownExits;
-        }
-    }
-
-    void virt_visitStream(const Room *, ExitDirEnum, const StreamTypeEnum type) final
-    {
-        switch (type) {
-        case StreamTypeEnum::OutFlow:
-            ++measurements.numStreamOuts;
-            return;
-        case StreamTypeEnum::InFlow:
-            ++measurements.numStreamIns;
-            return;
-        default:
-            break;
-        }
-
-        assert(false);
-    }
-};
-
-LayerBatchMeasurer::~LayerBatchMeasurer() = default;
-
 using PlainQuadBatch = std::vector<glm::vec3>;
 
 struct NODISCARD LayerBatchData final
@@ -740,40 +639,7 @@ struct NODISCARD LayerBatchData final
     RoomTintArray<PlainQuadBatch> roomTints;
     PlainQuadBatch roomLayerBoostQuads;
 
-    explicit LayerBatchData(const LayerBatchMeasurements &measurements)
-    {
-        roomTerrains.reserve(measurements.numTerrains);
-        roomOverlays.reserve(measurements.numOverlays);
-        roomUpDownExits.reserve(measurements.numUpDownExits);
-        doors.reserve(measurements.numDoors);
-        solidWallLines.reserve(measurements.numSolidWalls);
-        dottedWallLines.reserve(measurements.numDottedWalls);
-        streamIns.reserve(measurements.numStreamIns);
-        streamOuts.reserve(measurements.numStreamOuts);
-        for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
-            roomTints[tint].reserve(measurements.numTints[tint] * VERTS_PER_QUAD);
-        }
-        roomLayerBoostQuads.reserve(VERTS_PER_QUAD * measurements.numTerrains);
-    }
-
-    void verifyCounts(const LayerBatchMeasurements &measurements)
-    {
-        if constexpr (IS_DEBUG_BUILD) {
-            assert(roomTerrains.size() == measurements.numTerrains);
-            assert(roomOverlays.size() == measurements.numOverlays);
-            assert(roomUpDownExits.size() == measurements.numUpDownExits);
-            assert(doors.size() == measurements.numDoors);
-            assert(solidWallLines.size() == measurements.numSolidWalls);
-            assert(dottedWallLines.size() == measurements.numDottedWalls);
-            assert(streamIns.size() == measurements.numStreamIns);
-            assert(streamOuts.size() == measurements.numStreamOuts);
-            for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
-                assert(roomTints[tint].size() == measurements.numTints[tint] * VERTS_PER_QUAD);
-            }
-            assert(roomLayerBoostQuads.size() == VERTS_PER_QUAD * measurements.numTerrains);
-        }
-    }
-
+    explicit LayerBatchData() = default;
     ~LayerBatchData() = default;
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchData);
 
@@ -947,22 +813,9 @@ NODISCARD static LayerMeshes generateLayerMeshes(OpenGL &gl,
                                                  const MapCanvasTextures &textures,
                                                  const OptBounds &bounds)
 {
-    const LayerBatchMeasurements measurements =
-        [&bounds, &rooms, &roomIndex, &textures]() -> LayerBatchMeasurements {
-        LayerBatchMeasurements result;
-        LayerBatchMeasurer measurer{result, bounds};
-        visitRooms(rooms, roomIndex, textures, measurer);
-        return result;
-    }();
-
-    LayerBatchData data{measurements};
+    LayerBatchData data;
     LayerBatchBuilder builder{data, textures, bounds};
     visitRooms(rooms, roomIndex, textures, builder);
-
-    if constexpr (IS_DEBUG_BUILD) {
-        data.verifyCounts(measurements);
-    }
-
     data.sort();
     return data.getMeshes(gl);
 }
@@ -997,18 +850,8 @@ static void generateAllLayerMeshes(MapBatches &batches,
 
             RoomNameBatch rnb;
             ConnectionDrawer cd{cdb, rnb, currentLayer, bounds};
-            {
-                // pass 1: measurements
-                for (const auto &room : rooms) {
-                    cd.drawRoomConnectionsAndDoors(room, roomIndex);
-                }
-                cd.endMeasurements();
-
-                // pass 2: add to buffers
-                for (const auto &room : rooms) {
-                    cd.drawRoomConnectionsAndDoors(room, roomIndex);
-                }
-                cd.verify();
+            for (const auto &room : rooms) {
+                cd.drawRoomConnectionsAndDoors(room, roomIndex);
             }
 
             layerRoomNames = rnb.getMesh(font);

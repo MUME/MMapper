@@ -155,11 +155,6 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
             return;
         }
 
-        if (m_measureOnly) {
-            ++m_expectedRoomNames;
-            return;
-        }
-
         together = true;
 
         // no need for duplicating names (its spammy)
@@ -171,10 +166,6 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
             name = sourceName;
         }
     } else {
-        if (m_measureOnly) {
-            ++m_expectedRoomNames;
-            return;
-        }
         name = getPostfixedDoorName(sourceRoom, sourceDir);
     }
 
@@ -758,11 +749,6 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
                                                       const glm::vec3 &b,
                                                       const glm::vec3 &c)
 {
-    if (m_measureOnly) {
-        m_expectedTriVerts[isNormal() ? 0 : 1] += 3;
-        return;
-    }
-
     const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
                                    : Colors::red;
     auto &verts = deref(m_currentBuffer).triVerts;
@@ -774,17 +760,6 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
     static const size_t LONG_LINE_DIVISONS = 3;
-
-    if (m_measureOnly) {
-        auto count = VERTS_PER_LINE * (points.size() - 1);
-        for (size_t i = 1, size = points.size(); i < size; ++i) {
-            if (isLongLine(points[i - 1u], points[i])) {
-                count += (LONG_LINE_DIVISONS - 1) * VERTS_PER_LINE;
-            }
-        }
-        m_expectedLineVerts[isNormal() ? 0 : 1] += count;
-        return;
-    }
 
     const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
                                    : Colors::red;
