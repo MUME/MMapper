@@ -6,8 +6,6 @@
 
 #include <cstddef> // size_t
 
-namespace std {
-
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept
 {
     // we could use some Qt function, as for example QtStringView::compare(QLatin1String), but:
@@ -28,7 +26,6 @@ bool operator==(const std::u16string_view left, const std::string_view right) no
     }
     return true;
 }
-} // namespace std
 
 template<>
 uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok)
