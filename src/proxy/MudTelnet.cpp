@@ -79,8 +79,8 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
                 continue;
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule module(moduleStr);
-                receiveGmcpModule(module, !msg.isCoreSupportsRemove());
+                const GmcpModule mod(moduleStr);
+                receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
                 qWarning() << "Module" << moduleStr
@@ -178,12 +178,12 @@ void MudTelnet::virt_sendRawData(const std::string_view data)
     emit sig_sendToSocket(::toQByteArrayLatin1(data));
 }
 
-void MudTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
+void MudTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 {
     if (enabled)
-        gmcp.insert(module);
+        gmcp.insert(mod);
     else
-        gmcp.erase(module);
+        gmcp.erase(mod);
 }
 
 void MudTelnet::resetGmcpModules()
@@ -207,10 +207,10 @@ void MudTelnet::sendCoreSupports()
     std::ostringstream oss;
     oss << "[ ";
     bool comma = false;
-    for (const GmcpModule &module : gmcp) {
+    for (const GmcpModule &mod : gmcp) {
         if (comma)
             oss << ", ";
-        oss << '"' << module.toStdString() << '"';
+        oss << '"' << mod.toStdString() << '"';
         comma = true;
     }
     oss << " ]";

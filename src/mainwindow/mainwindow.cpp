@@ -567,9 +567,9 @@ void MainWindow::wireConnections()
             &MainWindow::slot_onEditRoomSelection);
 }
 
-void MainWindow::slot_log(const QString &module, const QString &message)
+void MainWindow::slot_log(const QString &mod, const QString &message)
 {
-    logWindow->append("[" + module + "] " + message);
+    logWindow->append("[" + mod + "] " + message);
     logWindow->moveCursor(QTextCursor::MoveOperation::End);
     logWindow->ensureCursorVisible();
     logWindow->update();

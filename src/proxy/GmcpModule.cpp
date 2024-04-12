@@ -39,9 +39,9 @@ GmcpModule::GmcpModule(const std::string &moduleVersion)
     type = toGmcpModuleType(normalizedName);
 }
 
-GmcpModule::GmcpModule(const std::string &module, const GmcpModuleVersion version)
+GmcpModule::GmcpModule(const std::string &mod, const GmcpModuleVersion version)
 {
-    normalizedName = ::toLowerLatin1(module);
+    normalizedName = ::toLowerLatin1(mod);
     this->version = version;
     type = toGmcpModuleType(normalizedName);
 }

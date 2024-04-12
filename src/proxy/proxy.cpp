@@ -570,9 +570,9 @@ void Proxy::disconnectFromMud()
     }
 }
 
-bool Proxy::isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const
+bool Proxy::isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
 {
-    return m_userTelnet->isGmcpModuleEnabled(module);
+    return m_userTelnet->isGmcpModuleEnabled(mod);
 }
 
 void Proxy::slot_onSendGameTimeToClock(const int year,
