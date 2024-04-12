@@ -117,7 +117,16 @@ void ClientTelnet::slot_onReadyRead()
 
 void ClientTelnet::virt_sendToMapper(const QByteArray &data, bool /*goAhead*/)
 {
-    QString out = QString::fromLatin1(data);
+    QString out = [&data] {
+        switch (getConfig().general.characterEncoding) {
+        case CharacterEncodingEnum::UTF8:
+            return QString::fromUtf8(data);
+        case CharacterEncodingEnum::LATIN1:
+        case CharacterEncodingEnum::ASCII:
+        default:
+            return QString::fromLatin1(data);
+        }
+    }();
 
     // Replace BEL character with an application beep
     static constexpr const QChar BEL{'\a'};
