@@ -7,7 +7,7 @@
 #include <QPushButton>
 #include <QStatusBar>
 
-#include "adventure/adventuretracker.h"
+#include "adventuretracker.h"
 
 class XPStatusWidget : public QPushButton
 {

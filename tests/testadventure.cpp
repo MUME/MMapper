@@ -2,9 +2,10 @@
 // Copyright (C) 2023 The MMapper Authors
 
 #include "testadventure.h"
+
 #include "../src/adventure/adventuresession.h"
-#include "adventure/adventuretracker.h"
-#include "observer/gameobserver.h"
+#include "../src/adventure/adventuretracker.h"
+#include "../src/observer/gameobserver.h"
 
 #include <QtTest/QtTest>
 

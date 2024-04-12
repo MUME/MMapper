@@ -11,8 +11,8 @@
 #include <QtCore>
 
 #include "../global/macros.h"
+#include "../observer/gameobserver.h"
 #include "mumemoment.h"
-#include "observer/gameobserver.h"
 
 class GmcpMessage;
 class QMetaEnum;

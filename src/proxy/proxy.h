@@ -16,11 +16,11 @@
 
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
+#include "../observer/gameobserver.h"
 #include "../pandoragroup/GroupManagerApi.h"
 #include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
-#include "observer/gameobserver.h"
 
 class ConnectionListener;
 class MapCanvas;

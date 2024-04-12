@@ -4,7 +4,7 @@
 
 #include "gameobserver.h"
 
-#include "parser/parserutils.h"
+#include "../parser/parserutils.h"
 
 GameObserver::GameObserver(QObject *const parent)
     : QObject{parent}

@@ -5,7 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "observer/gameobserver.h"
+#include "../observer/gameobserver.h"
+
 #include <memory>
 #include <vector>
 #include <QHostAddress>

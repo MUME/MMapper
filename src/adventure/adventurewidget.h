@@ -8,7 +8,7 @@
 #include <QtCore>
 #include <QtWidgets>
 
-#include "adventure/adventuretracker.h"
+#include "adventuretracker.h"
 
 class AdventureWidget : public QWidget
 {
