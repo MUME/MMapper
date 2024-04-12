@@ -6,6 +6,8 @@
 
 #include "parserutils.h"
 
+#include "../global/TextUtils.h"
+
 #include <array>
 #include <iostream>
 #include <regex>
@@ -105,10 +107,54 @@ void latin1ToAscii(std::ostream &os, const std::string_view sv)
     }
 }
 
-std::string normalizeWhitespace(const std::string &str)
+// copied from StringView.cpp
+NODISCARD static bool is_space(char c)
 {
-    static const std::regex pattern(R"(\s+)", std::regex::optimize);
-    return std::regex_replace(str, pattern, " ");
+    return std::isspace(static_cast<uint8_t>(c) & 0xff);
+}
+
+NODISCARD bool isWhitespaceNormalized(const std::string_view sv)
+{
+    bool last_was_space = false;
+    for (char c : sv) {
+        if (c == C_SPACE) {
+            if (last_was_space) {
+                return false;
+            } else {
+                last_was_space = true;
+            }
+        } else if (is_space(c)) {
+            return false;
+        } else {
+            last_was_space = false;
+        }
+    }
+
+    return true;
+}
+
+std::string normalizeWhitespace(std::string str)
+{
+    if (!isWhitespaceNormalized(str)) {
+        const size_t len = str.size();
+        bool last_was_space = false;
+        size_t out = 0;
+        for (size_t in = 0; in < len; ++in) {
+            const char c = str[in];
+            if (is_space(c)) {
+                if (!last_was_space) {
+                    last_was_space = true;
+                    str[out++] = C_SPACE;
+                }
+            } else {
+                last_was_space = false;
+                str[out++] = c;
+            }
+        }
+        str.resize(out);
+        assert(isWhitespaceNormalized(str));
+    }
+    return str;
 }
 
 } // namespace ParserUtils
