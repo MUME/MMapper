@@ -43,7 +43,6 @@ int64_t to_integer<int64_t>(std::u16string_view str, bool &ok);
 template<>
 uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok);
 
-namespace std {
 /// \return true if UTF-16 and Latin1 string_views have the same contents, without allocating
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept;
 
@@ -59,5 +58,3 @@ bool operator==(const std::u16string_view left, const char (&right)[N]) noexcept
 {
     return left == std::string_view{right, N - 1};
 }
-
-} // namespace std
