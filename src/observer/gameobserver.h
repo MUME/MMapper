@@ -5,7 +5,7 @@
 
 #include <QObject>
 
-#include "proxy/GmcpMessage.h"
+#include "../proxy/GmcpMessage.h"
 
 class GameObserver : public QObject
 {

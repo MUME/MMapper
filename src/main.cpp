@@ -12,13 +12,13 @@
 #include <QtCore>
 #include <QtWidgets>
 
-#include "configuration/configuration.h"
-#include "display/Filenames.h"
-#include "global/Debug.h"
-#include "global/Version.h"
-#include "global/WinSock.h"
-#include "global/utils.h"
-#include "mainwindow/mainwindow.h"
+#include "./configuration/configuration.h"
+#include "./display/Filenames.h"
+#include "./global/Debug.h"
+#include "./global/Version.h"
+#include "./global/WinSock.h"
+#include "./global/utils.h"
+#include "./mainwindow/mainwindow.h"
 
 #ifdef WITH_DRMINGW
 #include <exchndl.h>

@@ -5,9 +5,9 @@
 
 #include <QObject>
 
-#include "adventure/adventuresession.h"
-#include "adventure/lineparsers.h"
-#include "observer/gameobserver.h"
+#include "../observer/gameobserver.h"
+#include "adventuresession.h"
+#include "lineparsers.h"
 
 class AdventureTracker final : public QObject
 {

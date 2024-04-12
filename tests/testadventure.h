@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2023 The MMapper Authors
 
-#include "adventure/lineparsers.h"
+#include "../src/adventure/lineparsers.h"
+
 #include <QObject>
 
 struct TestLine
