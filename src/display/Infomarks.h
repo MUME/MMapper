@@ -37,17 +37,10 @@ private:
     glm::vec3 m_offset{0};
     Color m_color;
 
-    size_t m_expectedPoints = 0;
-    size_t m_expectedLines = 0;
-    size_t m_expectedTris = 0;
-    size_t m_expectedText = 0;
-
     std::vector<ColorVert> m_points;
     std::vector<ColorVert> m_lines;
     std::vector<ColorVert> m_tris;
     std::vector<GLText> m_text;
-
-    bool m_measuring = true;
 
 public:
     explicit InfomarksBatch(OpenGL &gl, GLFont &font)
@@ -72,8 +65,6 @@ public:
                     const FontFormatFlags &fontFormatFlag,
                     int rotationAngle);
 
-    void endMeasure();
-    void verify();
     NODISCARD InfomarksMeshes getMeshes();
     void renderImmediate(const GLRenderState &state);
 };

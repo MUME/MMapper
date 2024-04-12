@@ -118,16 +118,9 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
     for (auto &it : result) {
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
-        for (int i = 0; i < 2; ++i) {
-            for (const auto &m : m_data.getMarkersList()) {
-                drawInfoMark(batch, m.get(), layer);
-            }
-            if (i == 0)
-                batch.endMeasure();
-            else
-                batch.verify();
+        for (const auto &m : m_data.getMarkersList()) {
+            drawInfoMark(batch, m.get(), layer);
         }
-
         it.second = batch.getMeshes();
     }
 
@@ -136,32 +129,17 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
 
 void InfomarksBatch::drawPoint(const glm::vec3 &a)
 {
-    if (m_measuring) {
-        ++m_expectedPoints;
-        return;
-    }
-
     m_points.emplace_back(m_color, a + m_offset);
 }
 
 void InfomarksBatch::drawLine(const glm::vec3 &a, const glm::vec3 &b)
 {
-    if (m_measuring) {
-        ++m_expectedLines;
-        return;
-    }
-
     m_lines.emplace_back(m_color, a + m_offset);
     m_lines.emplace_back(m_color, b + m_offset);
 }
 
 void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
 {
-    if (m_measuring) {
-        ++m_expectedTris;
-        return;
-    }
-
     m_tris.emplace_back(m_color, a + m_offset);
     m_tris.emplace_back(m_color, b + m_offset);
     m_tris.emplace_back(m_color, c + m_offset);
@@ -174,35 +152,7 @@ void InfomarksBatch::renderText(const glm::vec3 &pos,
                                 const FontFormatFlags &fontFormatFlag,
                                 const int rotationAngle)
 {
-    if (m_measuring) {
-        ++m_expectedText;
-        return;
-    }
-
     m_text.emplace_back(pos, text, color, std::move(moved_bgcolor), fontFormatFlag, rotationAngle);
-}
-
-void InfomarksBatch::endMeasure()
-{
-    m_measuring = false;
-
-    assert(m_points.empty());
-    assert(m_tris.empty());
-    assert(m_lines.empty());
-    assert(m_text.empty());
-
-    m_points.reserve(m_expectedPoints);
-    m_lines.reserve(m_expectedLines * VERTS_PER_LINE);
-    m_tris.reserve(m_expectedTris * VERTS_PER_TRI);
-    m_text.reserve(m_expectedText);
-}
-
-void InfomarksBatch::verify()
-{
-    assert(m_points.size() == m_expectedPoints);
-    assert(m_lines.size() == m_expectedLines * VERTS_PER_LINE);
-    assert(m_tris.size() == m_expectedTris * VERTS_PER_TRI);
-    assert(m_text.size() == m_expectedText);
 }
 
 InfomarksMeshes InfomarksBatch::getMeshes()
@@ -340,9 +290,8 @@ void MapCanvas::paintSelectedInfoMarks()
     if (m_infoMarkSelection == nullptr && m_canvasMouseMode != CanvasMouseModeEnum::SELECT_INFOMARKS)
         return;
 
-    const bool measureAndVerify = true;
     InfomarksBatch batch{getOpenGL(), getGLFont()};
-    const auto draw = [this, &batch]() {
+    {
         // draw selections
         if (m_infoMarkSelection != nullptr) {
             for (const auto &marker : *m_infoMarkSelection) {
@@ -390,14 +339,6 @@ void MapCanvas::paintSelectedInfoMarks()
                 drawSelectionPoints(marker.get());
             }
         }
-    };
-    if (measureAndVerify) {
-        draw();
-    }
-    batch.endMeasure();
-    draw();
-    if (measureAndVerify) {
-        batch.verify();
     }
     batch.renderImmediate(GLRenderState());
 }

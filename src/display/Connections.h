@@ -106,10 +106,6 @@ private:
         ConnectionDrawerBuffers &m_buffers;
         ConnectionDrawerColorBuffer *m_currentBuffer = nullptr;
         glm::vec3 m_offset{0.f};
-        bool m_measureOnly = true;
-
-        MMapper::Array<size_t, 2> m_expectedTriVerts;
-        MMapper::Array<size_t, 2> m_expectedLineVerts;
 
     public:
         explicit ConnectionFakeGL(ConnectionDrawerBuffers &buffers)
@@ -119,26 +115,6 @@ private:
 
         ~ConnectionFakeGL() = default;
         DELETE_CTORS_AND_ASSIGN_OPS(ConnectionFakeGL);
-
-    public:
-        void endMeasurements()
-        {
-            m_measureOnly = false;
-
-            assert(m_buffers.empty());
-            m_buffers.normal.lineVerts.reserve(m_expectedLineVerts[0]);
-            m_buffers.normal.triVerts.reserve(m_expectedTriVerts[0]);
-            m_buffers.red.lineVerts.reserve(m_expectedLineVerts[1]);
-            m_buffers.red.triVerts.reserve(m_expectedTriVerts[1]);
-        }
-
-        void verify()
-        {
-            assert(m_buffers.normal.lineVerts.size() == m_expectedLineVerts[0]);
-            assert(m_buffers.normal.triVerts.size() == m_expectedTriVerts[0]);
-            assert(m_buffers.red.lineVerts.size() == m_expectedLineVerts[1]);
-            assert(m_buffers.red.triVerts.size() == m_expectedTriVerts[1]);
-        }
 
     public:
         void setOffset(float x, float y, float z) { m_offset = glm::vec3{x, y, z}; }
@@ -157,8 +133,6 @@ private:
     RoomNameBatch &m_roomNameBatch;
     const OptBounds &m_bounds;
     const int &m_currentLayer;
-    bool m_measureOnly = true;
-    size_t m_expectedRoomNames = 0;
 
 public:
     explicit ConnectionDrawer(ConnectionDrawerBuffers &buffers,
@@ -179,19 +153,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(ConnectionDrawer);
 
 public:
-    void endMeasurements()
-    {
-        m_measureOnly = false;
-        m_fake.endMeasurements();
-        m_roomNameBatch.reserve(m_expectedRoomNames);
-    }
-
-    void verify()
-    {
-        m_fake.verify();
-        assert(m_roomNameBatch.size() == m_expectedRoomNames);
-    }
-
     NODISCARD ConnectionFakeGL &getFakeGL() { return m_fake; }
 
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
