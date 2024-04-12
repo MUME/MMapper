@@ -6,8 +6,8 @@ set(mmapper_SRCS
     adventure/adventuretracker.h
     adventure/adventurewidget.cpp
     adventure/adventurewidget.h
-    adventure/lineparsers.h
     adventure/lineparsers.cpp
+    adventure/lineparsers.h
     adventure/xpstatuswidget.cpp
     adventure/xpstatuswidget.h
     client/ClientTelnet.cpp
@@ -27,9 +27,9 @@ set(mmapper_SRCS
     clock/mumemoment.cpp
     clock/mumemoment.h
     configuration/NamedConfig.h
+    configuration/configobserver.h
     configuration/configuration.cpp
     configuration/configuration.h
-    configuration/configobserver.h
     display/CanvasMouseModeEnum.h
     display/Characters.cpp
     display/Characters.h
@@ -185,6 +185,8 @@ set(mmapper_SRCS
     mapstorage/PandoraMapStorage.h
     mapstorage/StorageUtils.cpp
     mapstorage/StorageUtils.h
+    mapstorage/XmlMapStorage.cpp
+    mapstorage/XmlMapStorage.h
     mapstorage/abstractmapstorage.cpp
     mapstorage/abstractmapstorage.h
     mapstorage/basemapsavefilter.cpp
@@ -199,8 +201,6 @@ set(mmapper_SRCS
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
     mapstorage/roomsaver.h
-    mapstorage/XmlMapStorage.cpp
-    mapstorage/XmlMapStorage.h
     mpi/mpifilter.cpp
     mpi/mpifilter.h
     mpi/remoteedit.cpp
@@ -277,9 +277,9 @@ set(mmapper_SRCS
     parser/AbstractParser-Group.cpp
     parser/AbstractParser-Mark.cpp
     parser/AbstractParser-Room.cpp
+    parser/AbstractParser-Timer.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
-    parser/AbstractParser-Timer.cpp
     parser/Action.cpp
     parser/Action.h
     parser/CommandId.cpp
