@@ -683,17 +683,17 @@ struct NODISCARD LayerBatchData final
 class NODISCARD LayerBatchBuilder final : public IRoomVisitorCallbacks
 {
 private:
-    LayerBatchData &data;
-    const MapCanvasTextures &textures;
-    const OptBounds &bounds;
+    LayerBatchData &m_data;
+    const MapCanvasTextures &m_textures;
+    const OptBounds &m_bounds;
 
 public:
     explicit LayerBatchBuilder(LayerBatchData &data,
                                const MapCanvasTextures &textures,
                                const OptBounds &bounds)
-        : data{data}
-        , textures{textures}
-        , bounds{bounds}
+        : m_data{data}
+        , m_textures{textures}
+        , m_bounds{bounds}
     {}
 
     ~LayerBatchBuilder() override;
@@ -702,7 +702,7 @@ public:
 
     NODISCARD bool virt_acceptRoom(const Room *const room) const override
     {
-        return bounds.contains(room->getPosition());
+        return m_bounds.contains(room->getPosition());
     }
 
 private:
@@ -711,10 +711,10 @@ private:
         if (terrain == nullptr)
             return;
 
-        data.roomTerrains.emplace_back(room, terrain);
+        m_data.roomTerrains.emplace_back(room, terrain);
 
         const auto v0 = room->getPosition().to_vec3();
-#define EMIT(x, y) data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
+#define EMIT(x, y) m_data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);
@@ -725,13 +725,13 @@ private:
     void virt_visitOverlayTexture(const Room *const room, MMTexture *const overlay) final
     {
         if (overlay != nullptr)
-            data.roomOverlays.emplace_back(room, overlay);
+            m_data.roomOverlays.emplace_back(room, overlay);
     }
 
     void virt_visitNamedColorTint(const Room *const room, const RoomTintEnum tint) final
     {
         const auto v0 = room->getPosition().to_vec3();
-#define EMIT(x, y) data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
+#define EMIT(x, y) m_data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);
@@ -759,28 +759,28 @@ private:
         if (wallType == WallTypeEnum::DOOR) {
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
-            const SharedMMTexture &tex = textures.door[dir];
-            data.doors.emplace_back(room, tex->getRaw(), glcolor);
+            const SharedMMTexture &tex = m_textures.door[dir];
+            m_data.doors.emplace_back(room, tex->getRaw(), glcolor);
 
         } else {
             if (isNESW(dir)) {
                 if (wallType == WallTypeEnum::SOLID) {
-                    const SharedMMTexture &tex = textures.wall[dir];
-                    data.solidWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                    const SharedMMTexture &tex = m_textures.wall[dir];
+                    m_data.solidWallLines.emplace_back(room, tex->getRaw(), glcolor);
                 } else {
-                    const SharedMMTexture &tex = textures.dotted_wall[dir];
-                    data.dottedWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                    const SharedMMTexture &tex = m_textures.dotted_wall[dir];
+                    m_data.dottedWallLines.emplace_back(room, tex->getRaw(), glcolor);
                 }
             } else {
                 const bool isUp = dir == ExitDirEnum::UP;
                 assert(isUp || dir == ExitDirEnum::DOWN);
 
-                const SharedMMTexture &tex = isClimb
-                                                 ? (isUp ? textures.exit_climb_up
-                                                         : textures.exit_climb_down)
-                                                 : (isUp ? textures.exit_up : textures.exit_down);
+                const SharedMMTexture &tex = isClimb ? (isUp ? m_textures.exit_climb_up
+                                                             : m_textures.exit_climb_down)
+                                                     : (isUp ? m_textures.exit_up
+                                                             : m_textures.exit_down);
 
-                data.roomUpDownExits.emplace_back(room, tex->getRaw(), glcolor);
+                m_data.roomUpDownExits.emplace_back(room, tex->getRaw(), glcolor);
             }
         }
     }
@@ -792,10 +792,10 @@ private:
         const Color color = LOOKUP_COLOR(STREAM).getColor();
         switch (type) {
         case StreamTypeEnum::OutFlow:
-            data.streamOuts.emplace_back(room, textures.stream_out[dir]->getRaw(), color);
+            m_data.streamOuts.emplace_back(room, m_textures.stream_out[dir]->getRaw(), color);
             return;
         case StreamTypeEnum::InFlow:
-            data.streamIns.emplace_back(room, textures.stream_in[dir]->getRaw(), color);
+            m_data.streamIns.emplace_back(room, m_textures.stream_in[dir]->getRaw(), color);
             return;
         default:
             break;

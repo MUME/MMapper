@@ -22,9 +22,9 @@ struct NODISCARD TexVert final
     glm::vec2 tex;
     glm::vec3 vert;
 
-    explicit TexVert(const glm::vec2 &tex, const glm::vec3 &vert)
-        : tex{tex}
-        , vert{vert}
+    explicit TexVert(const glm::vec2 &tex_, const glm::vec3 &vert_)
+        : tex{tex_}
+        , vert{vert_}
     {}
 };
 
@@ -34,10 +34,10 @@ struct NODISCARD ColoredTexVert final
     glm::vec2 tex;
     glm::vec3 vert;
 
-    explicit ColoredTexVert(const Color &color, const glm::vec2 &tex, const glm::vec3 &vert)
-        : color{color}
-        , tex{tex}
-        , vert{vert}
+    explicit ColoredTexVert(const Color &color_, const glm::vec2 &tex_, const glm::vec3 &vert_)
+        : color{color_}
+        , tex{tex_}
+        , vert{vert_}
     {}
 };
 
@@ -46,9 +46,9 @@ struct NODISCARD ColorVert final
     Color color;
     glm::vec3 vert;
 
-    explicit ColorVert(const Color &color, const glm::vec3 &vert)
-        : color{color}
-        , vert{vert}
+    explicit ColorVert(const Color &color_, const glm::vec3 &vert_)
+        : color{color_}
+        , vert{vert_}
     {}
 };
 
@@ -65,14 +65,14 @@ struct NODISCARD FontVert3d final
     glm::vec2 tex;
     glm::vec2 vert; // screen space
 
-    explicit FontVert3d(const glm::vec3 &base,
-                        const Color &color,
-                        const glm::vec2 &tex,
-                        const glm::vec2 &vert)
-        : base(base)
-        , color(color)
-        , tex(tex)
-        , vert(vert)
+    explicit FontVert3d(const glm::vec3 &base_,
+                        const Color &color_,
+                        const glm::vec2 &tex_,
+                        const glm::vec2 &vert_)
+        : base{base_}
+        , color{color_}
+        , tex{tex_}
+        , vert{vert_}
     {}
 };
 
@@ -83,8 +83,8 @@ struct NODISCARD LineParams final
     float width = 1.f;
     LineParams() = default;
 
-    explicit LineParams(const float width)
-        : width(width)
+    explicit LineParams(const float width_)
+        : width{width_}
     {}
 };
 

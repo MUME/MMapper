@@ -31,9 +31,9 @@ public:
     const float rotationDegrees;
 
 public:
-    explicit DistantObjectTransform(const glm::vec3 &offset, const float rotationDegrees)
-        : offset(offset)
-        , rotationDegrees(rotationDegrees)
+    explicit DistantObjectTransform(const glm::vec3 &offset_, const float rotationDegrees_)
+        : offset{offset_}
+        , rotationDegrees{rotationDegrees_}
     {}
 
 public:

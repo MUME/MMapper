@@ -339,15 +339,15 @@ private:
     struct NODISCARD ActionDisabler final
     {
     private:
-        MainWindow &self;
+        MainWindow &m_self;
 
     public:
         explicit ActionDisabler(MainWindow &self)
-            : self(self)
+            : m_self(self)
         {
             self.disableActions(true);
         }
-        ~ActionDisabler() { self.disableActions(false); }
+        ~ActionDisabler() { m_self.disableActions(false); }
 
     public:
         DELETE_CTORS_AND_ASSIGN_OPS(ActionDisabler);
@@ -357,15 +357,15 @@ private:
     struct NODISCARD CanvasHider final
     {
     private:
-        MainWindow &self;
+        MainWindow &m_self;
 
     public:
         explicit CanvasHider(MainWindow &self)
-            : self(self)
+            : m_self(self)
         {
             self.hideCanvas(true);
         }
-        ~CanvasHider() { self.hideCanvas(false); }
+        ~CanvasHider() { m_self.hideCanvas(false); }
 
     public:
         DELETE_CTORS_AND_ASSIGN_OPS(CanvasHider);
@@ -375,11 +375,11 @@ private:
     struct NODISCARD ProgressDialogLifetime final
     {
     private:
-        MainWindow &self;
+        MainWindow &m_self;
 
     public:
         explicit ProgressDialogLifetime(MainWindow &self)
-            : self(self)
+            : m_self(self)
         {}
         ~ProgressDialogLifetime() { reset(); }
 
@@ -387,7 +387,7 @@ private:
         DELETE_CTORS_AND_ASSIGN_OPS(ProgressDialogLifetime);
 
     public:
-        void reset() { self.endProgressDialog(); }
+        void reset() { m_self.endProgressDialog(); }
     };
     NODISCARD ProgressDialogLifetime createNewProgressDialog(const QString &text);
     void endProgressDialog();
