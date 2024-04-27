@@ -497,7 +497,11 @@ void Mmapper2Group::slot_onAffectTimeout()
 
 void Mmapper2Group::slot_setPath(CommandQueue dirs)
 {
-    group->getSelf()->prespam = std::move(dirs);
+    if (group) {
+        if (auto self = group->getSelf()) {
+            self->prespam = std::move(dirs);
+        }
+    }
 }
 
 void Mmapper2Group::slot_reset()
