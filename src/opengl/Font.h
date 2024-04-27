@@ -27,18 +27,18 @@ struct NODISCARD GLText final
     FontFormatFlags fontFormatFlag;
     int rotationAngle = 0;
 
-    explicit GLText(const glm::vec3 &pos,
+    explicit GLText(const glm::vec3 &pos_,
                     std::string moved_text,
-                    const Color &color = {},
-                    std::optional<Color> moved_bgcolor = {},
-                    const FontFormatFlags &fontFormatFlag = {},
-                    int rotationAngle = 0)
-        : pos(pos)
-        , text(std::move(moved_text))
-        , color(color)
-        , bgcolor(std::move(moved_bgcolor))
-        , fontFormatFlag(fontFormatFlag)
-        , rotationAngle(rotationAngle)
+                    const Color &color_ = {},
+                    std::optional<Color> bgcolor_ = {},
+                    const FontFormatFlags &fontFormatFlag_ = {},
+                    int rotationAngle_ = 0)
+        : pos{pos_}
+        , text{std::move(moved_text)}
+        , color{color_}
+        , bgcolor{bgcolor_}
+        , fontFormatFlag{fontFormatFlag_}
+        , rotationAngle{rotationAngle_}
     {}
 };
 

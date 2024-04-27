@@ -22,9 +22,9 @@ struct NODISCARD MouseSel final
     int layer = 0;
 
     MouseSel() = default;
-    explicit MouseSel(const Coordinate2f &pos, const int layer)
-        : pos{pos}
-        , layer{layer}
+    explicit MouseSel(const Coordinate2f &pos_, const int layer_)
+        : pos{pos_}
+        , layer{layer_}
     {}
 
     NODISCARD Coordinate getCoordinate() const { return Coordinate{pos.truncate(), layer}; }

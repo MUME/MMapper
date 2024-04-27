@@ -167,8 +167,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
 #undef UPDATE_AND_BOUNDS_CHECK
 
-    const auto setPosition = [&position = this->position,
-                              &updated](const CharacterPositionEnum newPosition) {
+    const auto setPosition = [this, &updated](const CharacterPositionEnum newPosition) {
         if (newPosition != position) {
             updated = true;
             position = newPosition;
@@ -186,8 +185,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         }
     }
 
-    const auto setAffects = [&affects = this->affects,
-                             &updated](const CharacterAffectFlags newAffects) {
+    const auto setAffects = [this, &updated](const CharacterAffectFlags newAffects) {
         if (newAffects != affects) {
             updated = true;
             affects = newAffects;

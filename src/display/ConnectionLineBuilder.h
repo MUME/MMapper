@@ -11,15 +11,15 @@
 class NODISCARD ConnectionLineBuilder final
 {
 private:
-    std::vector<glm::vec3> &points;
+    std::vector<glm::vec3> &m_points;
 
 public:
     explicit ConnectionLineBuilder(std::vector<glm::vec3> &points)
-        : points{points}
+        : m_points{points}
     {}
 
 private:
-    void addVertex(float x, float y, float z) { points.emplace_back(x, y, z); }
+    void addVertex(float x, float y, float z) { m_points.emplace_back(x, y, z); }
 
 private:
     void drawConnStartLineUp(bool neighbours, float srcZ);

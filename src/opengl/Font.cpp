@@ -87,48 +87,48 @@ struct NODISCARD FontMetrics
         DEFAULT_CTORS_AND_ASSIGN_OPS(Glyph);
 
         // used by most cases
-        explicit Glyph(const int id,
-                       const int x,
-                       const int y,
-                       const int width,
-                       const int height,
-                       const int xoffset,
-                       const int yoffset,
-                       const int xadvance)
-            : id(id)
-            , x(x)
-            , y(y)
-            , width(width)
-            , height(height)
-            , xoffset(xoffset)
-            , yoffset(yoffset)
-            , xadvance(xadvance)
+        explicit Glyph(const int id_,
+                       const int x_,
+                       const int y_,
+                       const int width_,
+                       const int height_,
+                       const int xoffset_,
+                       const int yoffset_,
+                       const int xadvance_)
+            : id{id_}
+            , x{x_}
+            , y{y_}
+            , width{width_}
+            , height{height_}
+            , xoffset{xoffset_}
+            , yoffset{yoffset_}
+            , xadvance{xadvance_}
         {}
 
         // used for underline
-        explicit Glyph(const int id,
-                       const int x,
-                       const int y,
-                       const int width,
-                       const int height,
-                       const int xoffset,
-                       const int yoffset)
-            : id(id)
-            , x(x)
-            , y(y)
-            , width(width)
-            , height(height)
-            , xoffset(xoffset)
-            , yoffset(yoffset)
+        explicit Glyph(const int id_,
+                       const int x_,
+                       const int y_,
+                       const int width_,
+                       const int height_,
+                       const int xoffset_,
+                       const int yoffset_)
+            : id{id_}
+            , x{x_}
+            , y{y_}
+            , width{width_}
+            , height{height_}
+            , xoffset{xoffset_}
+            , yoffset{yoffset_}
         {}
 
         // used for background
-        explicit Glyph(const int id, const int x, const int y, const int width, const int height)
-            : id(id)
-            , x(x)
-            , y(y)
-            , width(width)
-            , height(height)
+        explicit Glyph(const int id_, const int x_, const int y_, const int width_, const int height_)
+            : id{id_}
+            , x{x_}
+            , y{y_}
+            , width{width_}
+            , height{height_}
         {}
 
         NODISCARD glm::ivec2 getPosition() const { return glm::ivec2{x, y}; }
@@ -159,10 +159,10 @@ struct NODISCARD FontMetrics
         ~Kerning() = default;
         DEFAULT_CTORS_AND_ASSIGN_OPS(Kerning);
 
-        Kerning(const int first, const int second, const int amount)
-            : first(first)
-            , second(second)
-            , amount(amount)
+        Kerning(const int first_, const int second_, const int amount_)
+            : first{first_}
+            , second{second_}
+            , amount{amount_}
         {}
     };
 
@@ -515,31 +515,31 @@ private:
     };
 
 private:
-    const FontMetrics &fm;
-    const glm::ivec2 iTexSize;
-    std::vector<FontVert3d> &verts3d;
-    Opts opts;
-    Bounds bounds;
-    int xlinepos = 0;
-    bool noOutput = false;
+    const FontMetrics &m_fm;
+    const glm::ivec2 m_iTexSize;
+    std::vector<FontVert3d> &m_verts3d;
+    Opts m_opts;
+    Bounds m_bounds;
+    int m_xlinepos = 0;
+    bool m_noOutput = false;
     void resetPerStringData()
     {
-        opts.reset();
-        bounds = Bounds();
-        xlinepos = 0;
-        noOutput = false;
+        m_opts.reset();
+        m_bounds = Bounds();
+        m_xlinepos = 0;
+        m_noOutput = false;
     }
 
 public:
     explicit FontBatchBuilder(const FontMetrics &fm, std::vector<FontVert3d> &output)
-        : fm{fm}
-        , iTexSize{fm.common.scaleW, fm.common.scaleH}
-        , verts3d{output}
+        : m_fm{fm}
+        , m_iTexSize{fm.common.scaleW, fm.common.scaleH}
+        , m_verts3d{output}
     {}
 
     NODISCARD glm::vec2 getTexCoord(const glm::ivec2 &iTexCoord) const
     {
-        return glm::vec2(iTexCoord) / glm::vec2(iTexSize);
+        return glm::vec2(iTexCoord) / glm::vec2(m_iTexSize);
     }
 
     // REVISIT: This could be done in the shader,
@@ -548,12 +548,12 @@ public:
     {
         glm::vec2 pos(ipos);
 
-        if (opts.wantItalics) {
+        if (m_opts.wantItalics) {
             pos.x += pos.y / 6.f;
         }
 
-        if (opts.rotation) {
-            pos = glm::vec2(opts.rotation.value() * glm::vec4(pos, 0, 1));
+        if (m_opts.rotation) {
+            pos = glm::vec2(m_opts.rotation.value() * glm::vec4(pos, 0, 1));
         }
         return pos;
     }
@@ -568,16 +568,16 @@ public:
             const glm::ivec2 relativeVertPos = iVertex00 + pixelOffset;
             if (!isEmpty) {
                 // side-effect: updates bounds; this must come before return
-                bounds.include(relativeVertPos);
+                m_bounds.include(relativeVertPos);
             }
 
-            if (noOutput) {
+            if (m_noOutput) {
                 return;
             }
 
             const glm::vec2 tc = getTexCoord(iTexCoord00 + pixelOffset);
             const glm::vec2 vert = transformVert(relativeVertPos);
-            verts3d.emplace_back(opts.pos, opts.fgColor, tc, vert);
+            m_verts3d.emplace_back(m_opts.pos, m_opts.fgColor, tc, vert);
         };
 
         const auto &x = iglyphSize.x;
@@ -598,10 +598,10 @@ public:
         const auto iTexCoord00 = glm::ivec2(g->x, g->y);
         if (k != nullptr) {
             // kerning amount is added to the advance
-            xlinepos += k->amount;
+            m_xlinepos += k->amount;
         }
-        const auto iVertex00 = glm::ivec2(xlinepos + g->xoffset, g->yoffset);
-        xlinepos += g->xadvance;
+        const auto iVertex00 = glm::ivec2(m_xlinepos + g->xoffset, g->yoffset);
+        m_xlinepos += g->xadvance;
         emitGlyphQuad(std::isspace(g->id), iVertex00, iTexCoord00, glyphSize);
     }
 
@@ -612,15 +612,15 @@ public:
             emitGlyph(g, k);
         };
 
-        noOutput = !output;
-        xlinepos = wordOffset;
-        fm.foreach_glyph(opts.msg, emitGlyphLambda);
+        m_noOutput = !output;
+        m_xlinepos = wordOffset;
+        m_fm.foreach_glyph(m_opts.msg, emitGlyphLambda);
     }
 
     void addString(const GLText &text)
     {
         resetPerStringData();
-        this->opts = Opts{text};
+        this->m_opts = Opts{text};
 
         int wordOffset = 0;
         call_foreach_glyph(wordOffset, false);
@@ -630,7 +630,7 @@ public:
             const auto add = [this](const Color &c, const glm::ivec2 &ivert, const glm::ivec2 &itc) {
                 const glm::vec2 tc = getTexCoord(itc);
                 const glm::vec2 vert = transformVert(ivert);
-                verts3d.emplace_back(opts.pos, c, tc, vert);
+                m_verts3d.emplace_back(m_opts.pos, c, tc, vert);
             };
 
             const auto quad = [&add](const Color &c, const Rect &vert, const Rect &tc) {
@@ -643,35 +643,35 @@ public:
 #undef ADD
             };
 
-            const glm::ivec2 margin{fm.common.marginX, fm.common.marginY};
-            const auto &lo = bounds.minVertPos;
-            const auto &hi = bounds.maxVertPos;
+            const glm::ivec2 margin{m_fm.common.marginX, m_fm.common.marginY};
+            const auto &lo = m_bounds.minVertPos;
+            const auto &hi = m_bounds.maxVertPos;
 
-            if (opts.wantAlignCenter) {
-                const auto halfWidth = xlinepos / 2;
+            if (m_opts.wantAlignCenter) {
+                const auto halfWidth = m_xlinepos / 2;
                 wordOffset -= halfWidth;
-                bounds.minVertPos.x -= halfWidth;
-                bounds.maxVertPos.x -= halfWidth;
-            } else if (opts.wantAlignRight) {
-                wordOffset -= xlinepos;
-                bounds.minVertPos.x -= xlinepos;
-                bounds.maxVertPos.x -= xlinepos;
+                m_bounds.minVertPos.x -= halfWidth;
+                m_bounds.maxVertPos.x -= halfWidth;
+            } else if (m_opts.wantAlignRight) {
+                wordOffset -= m_xlinepos;
+                m_bounds.minVertPos.x -= m_xlinepos;
+                m_bounds.maxVertPos.x -= m_xlinepos;
             }
 
-            if (opts.optBgColor) {
-                if (const FontMetrics::Glyph *const background = fm.getBackground()) {
-                    quad(opts.optBgColor.value(),
+            if (m_opts.optBgColor) {
+                if (const FontMetrics::Glyph *const background = m_fm.getBackground()) {
+                    quad(m_opts.optBgColor.value(),
                          Rect{lo - margin, hi + margin},
                          background->getRect());
                 }
             }
 
-            if (opts.wantUnderline) {
-                if (const FontMetrics::Glyph *const underline = fm.getUnderline()) {
+            if (m_opts.wantUnderline) {
+                if (const FontMetrics::Glyph *const underline = m_fm.getUnderline()) {
                     const auto usize = underline->getSize();
                     const auto offset = underline->getOffset() + glm::ivec2{wordOffset, 0};
-                    quad(opts.fgColor,
-                         Rect{offset, offset + glm::ivec2{xlinepos, usize.y}},
+                    quad(m_opts.fgColor,
+                         Rect{offset, offset + glm::ivec2{m_xlinepos, usize.y}},
                          underline->getRect());
                 }
             }
