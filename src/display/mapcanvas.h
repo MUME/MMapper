@@ -5,22 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <glm/glm.hpp>
-#include <map>
-#include <memory>
-#include <optional>
-#include <set>
-#include <vector>
-#include <QColor>
-#include <QMatrix4x4>
-#include <QOpenGLDebugMessage>
-#include <QOpenGLFunctions_1_0>
-#include <QOpenGLWidget>
-#include <QtCore>
-
 #include "../mapdata/roomselection.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
@@ -29,6 +13,24 @@
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "Textures.h"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QColor>
+#include <QMatrix4x4>
+#include <QOpenGLDebugMessage>
+#include <QOpenGLFunctions_1_0>
+#include <QOpenGLWidget>
+#include <QtCore>
 
 class CharacterBatch;
 class ConnectionSelection;

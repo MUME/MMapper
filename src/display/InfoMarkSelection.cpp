@@ -4,12 +4,12 @@
 
 #include "InfoMarkSelection.h"
 
-#include <algorithm>
-#include <cassert>
-
 #include "../expandoracommon/coordinate.h"
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
+
+#include <algorithm>
+#include <cassert>
 
 // Assumes arguments are pre-scaled by INFOMARK_SCALE;
 // TODO: add a new type to avoid accidental conversion

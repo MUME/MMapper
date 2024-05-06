@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <cstdlib>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <memory>
-#include <optional>
-#include <vector>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "../global/EnumIndexedArray.h"
@@ -18,6 +11,14 @@
 #include "MapCanvasData.h"
 #include "Textures.h"
 #include "mapcanvas.h"
+
+#include <cstdlib>
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class NODISCARD RoomSelFakeGL final
 {
@@ -56,7 +57,10 @@ public:
 #define DECL(name, a, b) \
     const TexVert name \
     { \
-        glm::vec2{(a), (b)}, glm::vec3 { (a), (b), 0 } \
+        glm::vec2{(a), (b)}, glm::vec3 \
+        { \
+            (a), (b), 0 \
+        } \
     }
         DECL(A, 0, 0);
         DECL(B, 1, 0);

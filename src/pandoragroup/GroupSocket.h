@@ -4,6 +4,8 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/io.h"
+
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QMap>
@@ -13,8 +15,6 @@
 #include <QTimer>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "../global/io.h"
 
 class GroupAuthority;
 

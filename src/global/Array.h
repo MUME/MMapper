@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <array>
-#include <cstddef>
-
 #include "RuleOf5.h"
 #include "macros.h"
+
+#include <array>
+#include <cstddef>
 
 namespace MMapper {
 

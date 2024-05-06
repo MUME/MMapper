@@ -4,10 +4,10 @@
 
 #include "AbstractParser-Utils.h"
 
+#include "../configuration/configuration.h"
+
 #include <cctype>
 #include <sstream>
-
-#include "../configuration/configuration.h"
 
 bool isOffline()
 {

@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/EnumIndexedArray.h"
+#include "../global/Flags.h"
+#include "../global/RuleOf5.h"
+
 #include <cstdint>
 #include <functional>
 #include <string>
 #include <unordered_set>
-
-#include "../global/EnumIndexedArray.h"
-#include "../global/Flags.h"
-#include "../global/RuleOf5.h"
 
 // TODO: Comm
 

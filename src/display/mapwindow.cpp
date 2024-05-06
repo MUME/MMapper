@@ -6,12 +6,13 @@
 
 #include "mapwindow.h"
 
-#include <memory>
-#include <QGridLayout>
-#include <QScrollBar>
-
 #include "../global/SignalBlocker.h"
 #include "mapcanvas.h"
+
+#include <memory>
+
+#include <QGridLayout>
+#include <QScrollBar>
 
 class QResizeEvent;
 

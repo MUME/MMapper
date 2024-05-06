@@ -4,11 +4,11 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../parser/CommandQueue.h"
+
 #include <QObject>
 #include <QString>
 #include <QtCore>
-
-#include "../parser/CommandQueue.h"
 
 class MapCanvas;
 class MapData;

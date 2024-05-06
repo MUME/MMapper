@@ -5,13 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <vector>
-#include <QDialog>
-#include <QString>
-#include <QtCore>
-#include <QtWidgets/QListWidgetItem>
-
 #include "../global/EnumIndexedArray.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
@@ -20,6 +13,14 @@
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "ui_roomeditattrdlg.h"
+
+#include <memory>
+#include <vector>
+
+#include <QDialog>
+#include <QString>
+#include <QtCore>
+#include <QtWidgets/QListWidgetItem>
 
 class AbstractAction;
 class MapCanvas;

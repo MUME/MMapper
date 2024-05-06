@@ -5,12 +5,12 @@
 
 #include "CGroupChar.h"
 
-#include <QDebug>
-#include <QMessageLogContext>
-
 #include "../global/QuotedQString.h"
 #include "../global/roomid.h"
 #include "../parser/abstractparser.h"
+
+#include <QDebug>
+#include <QMessageLogContext>
 
 #define KEY static constexpr const char *const
 KEY playerDataKey = "playerData";

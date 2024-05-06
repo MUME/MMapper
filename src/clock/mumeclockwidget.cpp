@@ -4,16 +4,17 @@
 
 #include "mumeclockwidget.h"
 
+#include "../configuration/configuration.h"
+#include "mumeclock.h"
+#include "mumemoment.h"
+
 #include <cassert>
 #include <memory>
+
 #include <QDateTime>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QString>
-
-#include "../configuration/configuration.h"
-#include "mumeclock.h"
-#include "mumemoment.h"
 
 MumeClockWidget::MumeClockWidget(MumeClock *const clock, QWidget *const parent)
     : QWidget(parent)

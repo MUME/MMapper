@@ -4,13 +4,13 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <unordered_map>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
+
+#include <unordered_map>
 
 class ParseEvent;
 class Room;

@@ -3,15 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "NullPointerException.h"
+#include "macros.h"
+
 #include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
-
-#include "NullPointerException.h"
-#include "macros.h"
 
 namespace utils {
 namespace details {

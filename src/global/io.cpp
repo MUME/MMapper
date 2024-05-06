@@ -8,10 +8,11 @@
 #include <cstring>
 
 #ifndef Q_OS_WIN
+#include <unistd.h>
+
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
-#include <unistd.h>
 #endif
 
 #ifdef Q_OS_MAC

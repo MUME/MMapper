@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
+
+#include <cstdint>
 
 #define X_FOREACH_PROMPT_WEATHER_ENUM(X) \
     X(UNDEFINED) \

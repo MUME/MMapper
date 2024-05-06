@@ -70,9 +70,24 @@ ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<Q.*'
-    Priority:        200
+  # Headers in ""
+  - Regex:           '^"'
+    Priority:        1
+    SortPriority:    1
+  # Headers in <>
+  - Regex:           '^<[^Q][^/]*>$'
+    Priority:        2
+    SortPriority:    2
+  # Headers in <>
+  - Regex:           '^<[^Q].*[/]'
+    Priority:        3
+    SortPriority:    3
+  # Qt headers
+  - Regex:           '^<Q[^>]'
+    Priority:        4
+    SortPriority:    4
 IncludeIsMainRegex: '(Test)?$'
 IndentCaseLabels: false
 IndentWidth:     4
@@ -97,7 +112,7 @@ PenaltyExcessCharacter: 50
 PenaltyReturnTypeOnItsOwnLine: 300
 PointerAlignment: Right
 ReflowComments:  false
-SortIncludes:    true
+SortIncludes:    CaseSensitive
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false

@@ -5,6 +5,7 @@
 #include "GroupPortMapper.h"
 
 #include <memory>
+
 #include <QDebug>
 
 #ifndef MMAPPER_NO_MINIUPNPC
@@ -99,7 +100,10 @@ public:
     }
     ~MiniUPnPcPortMapper() final;
 
-    NODISCARD bool validIGD() const { return validIGDState == 1; }
+    NODISCARD bool validIGD() const
+    {
+        return validIGDState == 1;
+    }
 
 private:
     NODISCARD QByteArray virt_tryGetExternalIp() final

@@ -4,9 +4,6 @@
 
 #include "roomfilter.h"
 
-#include <optional>
-#include <regex>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/StringView.h"
@@ -18,6 +15,9 @@
 #include "ExitFieldVariant.h"
 #include "enums.h"
 #include "mmapper2room.h"
+
+#include <optional>
+#include <regex>
 
 NODISCARD static std::regex createRegex(const std::string &input,
                                         const Qt::CaseSensitivity cs,

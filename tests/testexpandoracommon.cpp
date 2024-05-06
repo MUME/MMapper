@@ -3,12 +3,12 @@
 
 #include "testexpandoracommon.h"
 
-#include <QtTest/QtTest>
-
 #include "../src/expandoracommon/RoomAdmin.h"
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
 #include "../src/expandoracommon/room.h"
+
+#include <QtTest/QtTest>
 
 TestExpandoraCommon::TestExpandoraCommon() = default;
 

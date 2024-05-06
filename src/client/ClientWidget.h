@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QPointer>
 #include <QString>
 #include <QWidget>
 #include <QtCore>
-
-#include "../global/macros.h"
 
 class QObject;
 class QEvent;

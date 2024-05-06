@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstddef>
-
 #include "../global/Array.h"
+
+#include <cstddef>
 
 enum class NODISCARD DoorActionEnum {
     OPEN,

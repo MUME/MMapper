@@ -4,11 +4,18 @@
 
 #include "remoteeditwidget.h"
 
+#include "../configuration/configuration.h"
+#include "../global/RAII.h"
+#include "../global/TextUtils.h"
+#include "../global/entities.h"
+#include "../global/utils.h"
+
 #include <cassert>
 #include <cctype>
 #include <memory>
 #include <optional>
 #include <utility>
+
 #include <QAction>
 #include <QMenu>
 #include <QMenuBar>
@@ -23,12 +30,6 @@
 #include <QTextDocument>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "../global/RAII.h"
-#include "../global/TextUtils.h"
-#include "../global/entities.h"
-#include "../global/utils.h"
 
 static constexpr const bool USE_TOOLTIPS = false;
 static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};

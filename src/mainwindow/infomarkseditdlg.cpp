@@ -5,17 +5,18 @@
 
 #include "infomarkseditdlg.h"
 
-#include <cassert>
-#include <memory>
-#include <QString>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../display/mapcanvas.h"
 #include "../expandoracommon/coordinate.h"
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
+
+#include <cassert>
+#include <memory>
+
+#include <QString>
+#include <QtWidgets>
 
 InfoMarksEditDlg::InfoMarksEditDlg(QWidget *const parent)
     : QDialog(parent)

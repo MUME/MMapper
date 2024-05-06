@@ -3,14 +3,14 @@
 
 #include "TestGlobal.h"
 
-#include <QDebug>
-#include <QtTest/QtTest>
-
 #include "../src/global/AnsiColor.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
+
+#include <QDebug>
+#include <QtTest/QtTest>
 
 TestGlobal::TestGlobal() = default;
 

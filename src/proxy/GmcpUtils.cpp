@@ -3,11 +3,12 @@
 
 #include "GmcpUtils.h"
 
-#include <sstream>
-#include <QString>
-
 #include "../global/TextUtils.h"
 #include "GmcpMessage.h"
+
+#include <sstream>
+
+#include <QString>
 
 namespace GmcpUtils {
 

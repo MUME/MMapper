@@ -4,11 +4,11 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <optional>
-#include <string>
-
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
+
+#include <optional>
+#include <string>
 
 class NODISCARD Property final
 {

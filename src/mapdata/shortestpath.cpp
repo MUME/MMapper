@@ -4,14 +4,6 @@
 
 #include "shortestpath.h"
 
-#include <memory>
-#include <type_traits>
-#include <utility>
-#include <QBasicMutex>
-#include <QSet>
-#include <QVector>
-#include <queue>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/enums.h"
@@ -21,6 +13,15 @@
 #include "mapdata.h"
 #include "mmapper2room.h"
 #include "roomfilter.h"
+
+#include <memory>
+#include <type_traits>
+#include <utility>
+
+#include <QBasicMutex>
+#include <QSet>
+#include <QVector>
+#include <queue>
 
 // Movement costs per terrain type.
 // Same order as the RoomTerrainEnum enum.

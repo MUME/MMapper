@@ -4,9 +4,9 @@
 
 #include "DoorAction.h"
 
-#include <array>
-
 #include "../global/enums.h"
+
+#include <array>
 
 namespace enums {
 

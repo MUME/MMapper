@@ -4,11 +4,11 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <QString>
-#include <QtCore>
-
 #include "../expandoracommon/parseevent.h"
 #include "pathmachine.h"
+
+#include <QString>
+#include <QtCore>
 
 class Configuration;
 class MapData;

@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "Accept.h"
+#include "TokenMatcher.h"
+#include "Value.h"
+
 #include <functional>
 #include <memory>
 #include <stack>
 #include <variant>
-
-#include "Accept.h"
-#include "TokenMatcher.h"
-#include "Value.h"
 
 namespace syntax {
 

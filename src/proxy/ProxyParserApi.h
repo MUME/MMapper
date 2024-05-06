@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <string_view>
-#include <QByteArray>
-
 #include "../global/WeakHandle.h"
 #include "GmcpMessage.h"
 #include "GmcpModule.h"
+
+#include <string_view>
+
+#include <QByteArray>
 
 class Proxy;
 

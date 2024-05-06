@@ -5,11 +5,11 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QString>
-#include <QtCore>
-
 #include "../global/macros.h"
 #include "abstractmapstorage.h"
+
+#include <QString>
+#include <QtCore>
 
 class MapData;
 class QObject;

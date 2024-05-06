@@ -3,8 +3,16 @@
 
 #include "AdvancedGraphics.h"
 
+#include "../configuration/configuration.h"
+#include "../display/MapCanvasConfig.h"
+#include "../global/FixedPoint.h"
+#include "../global/RuleOf5.h"
+#include "../global/SignalBlocker.h"
+#include "../global/utils.h"
+
 #include <cassert>
 #include <memory>
+
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -14,13 +22,6 @@
 #include <QVBoxLayout>
 #include <QVector>
 #include <QWidget>
-
-#include "../configuration/configuration.h"
-#include "../display/MapCanvasConfig.h"
-#include "../global/FixedPoint.h"
-#include "../global/RuleOf5.h"
-#include "../global/SignalBlocker.h"
-#include "../global/utils.h"
 
 class FpSlider final : public QSlider
 {

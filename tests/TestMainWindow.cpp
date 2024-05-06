@@ -3,11 +3,11 @@
 
 #include "TestMainWindow.h"
 
-#include <QDebug>
-#include <QtTest/QtTest>
-
 #include "../src/global/Version.h"
 #include "../src/mainwindow/UpdateDialog.h"
+
+#include <QDebug>
+#include <QtTest/QtTest>
 
 const char *getMMapperVersion()
 {

@@ -4,9 +4,9 @@
 
 #include "WinSock.h"
 
-#include <iostream>
-
 #include "macros.h"
+
+#include <iostream>
 
 #ifdef __MINGW32__
 #include <winsock2.h>

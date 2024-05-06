@@ -4,17 +4,18 @@
 
 #include "MudTelnet.h"
 
-#include <sstream>
-#include <string>
-#include <string_view>
-#include <QByteArray>
-#include <QSysInfo>
-
 #include "../configuration/configuration.h"
 #include "../display/MapCanvasConfig.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "GmcpUtils.h"
+
+#include <sstream>
+#include <string>
+#include <string_view>
+
+#include <QByteArray>
+#include <QSysInfo>
 
 NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
 {

@@ -6,6 +6,7 @@
 
 #include "CGroupCommunicator.h"
 #include "GroupSocket.h"
+
 #include <QVariantMap>
 
 class GroupClient final : public CGroupCommunicator

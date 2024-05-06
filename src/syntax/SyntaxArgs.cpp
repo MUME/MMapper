@@ -3,15 +3,15 @@
 
 #include "SyntaxArgs.h"
 
-#include <cmath>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "../global/TextUtils.h"
 #include "IMatchErrorLogger.h"
 #include "ParserInput.h"
 #include "TokenMatcher.h"
+
+#include <cmath>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace syntax {
 

@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "macros.h"
+
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
-
-#include "macros.h"
 
 template<typename Tag_, typename Wrapped_>
 struct NODISCARD TaggedInt

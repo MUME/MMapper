@@ -3,8 +3,10 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "groupaction.h"
+
 #include "CGroup.h"
 #include "CGroupChar.h"
+
 #include <cassert>
 #include <utility>
 

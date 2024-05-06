@@ -5,15 +5,16 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../expandoracommon/coordinate.h"
+#include "mapcanvas.h"
+
 #include <memory>
+
 #include <QPoint>
 #include <QString>
 #include <QWidget>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "../expandoracommon/coordinate.h"
-#include "mapcanvas.h"
 
 class MapCanvas;
 class MapData;

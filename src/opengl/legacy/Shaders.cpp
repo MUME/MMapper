@@ -3,9 +3,9 @@
 
 #include "Shaders.h"
 
-#include <QFile>
-
 #include "ShaderUtils.h"
+
+#include <QFile>
 
 NODISCARD static std::string readWholeResourceFile(const std::string &fullPath)
 {

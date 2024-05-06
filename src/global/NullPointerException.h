@@ -4,10 +4,10 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <stdexcept>
-
 #include "RuleOf5.h"
 #include "macros.h"
+
+#include <stdexcept>
 
 struct NODISCARD NullPointerException final : public std::runtime_error
 {

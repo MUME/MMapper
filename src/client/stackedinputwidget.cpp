@@ -4,10 +4,10 @@
 
 #include "stackedinputwidget.h"
 
+#include "inputwidget.h"
+
 #include <QLineEdit>
 #include <QString>
-
-#include "inputwidget.h"
 
 class QWidget;
 

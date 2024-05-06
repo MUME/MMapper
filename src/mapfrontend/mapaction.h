@@ -4,20 +4,21 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <memory>
-#include <set>
-#include <stack>
-#include <vector>
-#include <QString>
-#include <QVariant>
-#include <QtGlobal>
-
 #include "../expandoracommon/parseevent.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
+
+#include <memory>
+#include <set>
+#include <stack>
+#include <vector>
+
+#include <QString>
+#include <QVariant>
+#include <QtGlobal>
 
 class Map;
 class MapFrontend;

@@ -3,13 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <vector>
-#include <qopengl.h>
-
 #include "../global/utils.h"
 #include "OpenGLTypes.h"
+
+#include <memory>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <qopengl.h>
 
 namespace Legacy {
 class Functions;

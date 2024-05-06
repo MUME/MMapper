@@ -6,11 +6,11 @@
 
 #include "coordinate.h"
 
+#include "../global/utils.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
-
-#include "../global/utils.h"
 
 Coordinate2i Coordinate2f::truncate() const
 {

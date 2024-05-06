@@ -3,9 +3,9 @@
 
 #include "TestRoomMob.h"
 
-#include <QtTest>
-
 #include "roompanel/RoomMob.h"
+
+#include <QtTest>
 
 TestRoomMob::TestRoomMob() = default;
 

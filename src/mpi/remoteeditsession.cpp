@@ -4,16 +4,17 @@
 
 #include "remoteeditsession.h"
 
-#include <cassert>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QScopedPointer>
-#include <QString>
-
 #include "../global/utils.h"
 #include "remoteedit.h"
 #include "remoteeditprocess.h"
 #include "remoteeditwidget.h"
+
+#include <cassert>
+
+#include <QMessageLogContext>
+#include <QObject>
+#include <QScopedPointer>
+#include <QString>
 
 RemoteEditSession::RemoteEditSession(const uint internalId,
                                      const RemoteSession &sessionId,

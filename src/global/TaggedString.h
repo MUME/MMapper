@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <cassert>
-#include <string>
-#include <QByteArray>
-#include <QString>
-
 #include "RuleOf5.h"
 #include "TextUtils.h"
+
+#include <cassert>
+#include <string>
+
+#include <QByteArray>
+#include <QString>
 
 // Latin1
 template<typename T>

@@ -4,9 +4,14 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/RuleOf5.h"
+#include "CGroupChar.h"
+#include "groupselection.h"
+
 #include <memory>
 #include <set>
 #include <vector>
+
 #include <QByteArray>
 #include <QMutex>
 #include <QObject>
@@ -14,10 +19,6 @@
 #include <QWidget>
 #include <QtCore>
 #include <queue>
-
-#include "../global/RuleOf5.h"
-#include "CGroupChar.h"
-#include "groupselection.h"
 
 class GroupSocket;
 class CGroupCommunicator;

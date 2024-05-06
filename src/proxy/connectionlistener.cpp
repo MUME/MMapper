@@ -6,13 +6,14 @@
 
 #include "connectionlistener.h"
 
-#include <memory>
-#include <QTcpSocket>
-#include <QThread>
-
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "proxy.h"
+
+#include <memory>
+
+#include <QTcpSocket>
+#include <QThread>
 
 ConnectionListenerTcpServer::ConnectionListenerTcpServer(ConnectionListener *const parent)
     : QTcpServer(parent)

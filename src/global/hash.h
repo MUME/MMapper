@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "macros.h"
+
 #include <cstring>
 #include <string_view>
 #include <type_traits>
-
-#include "macros.h"
 
 template<typename T>
 NODISCARD static auto numeric_hash(const T val) noexcept

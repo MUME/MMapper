@@ -4,17 +4,18 @@
 
 #include "basemapsavefilter.h"
 
-#include <cassert>
-#include <list>
-#include <set>
-#include <QtCore>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
 #include "progresscounter.h"
+
+#include <cassert>
+#include <list>
+#include <set>
+
+#include <QtCore>
 
 class RoomAdmin;
 

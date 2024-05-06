@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/TextUtils.h"
+
 #include <cassert>
 #include <iostream>
 #include <memory>
 #include <vector>
-
-#include "../global/TextUtils.h"
 
 namespace syntax {
 class ParserInput final

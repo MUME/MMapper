@@ -3,12 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Mattias 'Mew_' Viklund <devmew@exedump.com> (Mirnir)
 
+#include "../global/macros.h"
+
 #include <fstream>
 #include <string>
+
 #include <QFileInfoList>
 #include <QObject>
-
-#include "../global/macros.h"
 
 class AutoLogger final : public QObject
 {

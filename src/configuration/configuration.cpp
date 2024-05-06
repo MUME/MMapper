@@ -6,9 +6,13 @@
 
 #include "configuration.h"
 
+#include "../global/utils.h"
+#include "../pandoragroup/mmapper2group.h"
+
 #include <cassert>
 #include <mutex>
 #include <optional>
+
 #include <QByteArray>
 #include <QChar>
 #include <QDir>
@@ -16,9 +20,6 @@
 #include <QSslSocket>
 #include <QString>
 #include <QStringList>
-
-#include "../global/utils.h"
-#include "../pandoragroup/mmapper2group.h"
 
 static std::atomic_bool config_enteredMain{false};
 

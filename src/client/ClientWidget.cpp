@@ -4,15 +4,15 @@
 
 #include "ClientWidget.h"
 
-#include <QString>
-#include <QTimer>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "ClientTelnet.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
 #include "ui_ClientWidget.h"
+
+#include <QString>
+#include <QTimer>
+#include <QtWidgets>
 
 ClientWidget::ClientWidget(QWidget *const parent)
     : QWidget(parent)

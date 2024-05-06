@@ -6,13 +6,15 @@
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <QLatin1String>
 #include <QtCore>
 #include <QtGui>

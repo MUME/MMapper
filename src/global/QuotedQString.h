@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QDebug>
 #include <QString>
-
-#include "../global/macros.h"
 
 class NODISCARD QuotedQString final
 {

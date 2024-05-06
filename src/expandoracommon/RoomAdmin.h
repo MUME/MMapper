@@ -4,9 +4,9 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <memory>
-
 #include "room.h"
+
+#include <memory>
 
 class RoomRecipient;
 class MapAction;

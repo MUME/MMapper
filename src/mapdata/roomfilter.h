@@ -3,16 +3,17 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
+#include "../expandoracommon/room.h"
+
 #include <cassert>
 #include <optional>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <type_traits>
+
 #include <QString>
 #include <QtCore>
-
-#include "../expandoracommon/room.h"
 
 class Room;
 

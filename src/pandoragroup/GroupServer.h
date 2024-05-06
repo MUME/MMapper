@@ -8,6 +8,7 @@
 #include "GroupPortMapper.h"
 
 #include <vector>
+
 #include <QByteArray>
 #include <QPointer>
 #include <QString>

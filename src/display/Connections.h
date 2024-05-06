@@ -2,14 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <glm/glm.hpp>
-#include <unordered_map>
-#include <vector>
-#include <QString>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/Array.h"
 #include "../global/RuleOf5.h"
@@ -18,6 +10,16 @@
 #include "../mapdata/ExitDirection.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <unordered_map>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QString>
 
 class OpenGL;
 class Room;

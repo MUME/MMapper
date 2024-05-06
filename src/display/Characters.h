@@ -2,21 +2,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <cassert>
-#include <cstddef>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <map>
-#include <memory>
-#include <stack>
-#include <vector>
-#include <QColor>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
+
+#include <cassert>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <stack>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <QColor>
 
 class MapScreen;
 class OpenGL;

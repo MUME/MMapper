@@ -5,19 +5,20 @@
 
 #include "CGroup.h"
 
-#include <cassert>
-#include <memory>
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QMutex>
-#include <QObject>
-#include <QVariantMap>
-
 #include "../configuration/configuration.h"
 #include "../global/roomid.h"
 #include "CGroupChar.h"
 #include "groupaction.h"
 #include "groupselection.h"
+
+#include <cassert>
+#include <memory>
+
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QMutex>
+#include <QObject>
+#include <QVariantMap>
 
 CGroup::CGroup(QObject *const parent)
     : QObject(parent)

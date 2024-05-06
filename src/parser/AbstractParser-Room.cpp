@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "abstractparser.h"
-
-#include <map>
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <sstream>
-#include <vector>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/room.h"
 #include "../global/TextUtils.h"
@@ -24,6 +15,14 @@
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Commands.h"
 #include "AbstractParser-Utils.h"
+#include "abstractparser.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <ostream>
+#include <sstream>
+#include <vector>
 
 static constexpr const auto staticRoomFields = RoomFieldEnum::NAME | RoomFieldEnum::DESC;
 static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::CONTENTS;

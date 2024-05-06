@@ -4,13 +4,14 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <list>
-#include <memory>
-#include <QtGlobal>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../global/RuleOf5.h"
 #include "path.h"
+
+#include <list>
+#include <memory>
+
+#include <QtGlobal>
 
 class Room;
 class RoomAdmin;

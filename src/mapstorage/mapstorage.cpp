@@ -6,18 +6,6 @@
 
 #include "mapstorage.h"
 
-#include <climits>
-#include <cstdint>
-#include <memory>
-#include <mutex>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QtCore>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -37,6 +25,19 @@
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
+
+#include <climits>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+
+#include <QMessageLogContext>
+#include <QObject>
+#include <QtCore>
+#include <QtWidgets>
 
 static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
 static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag

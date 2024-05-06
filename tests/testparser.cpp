@@ -3,16 +3,17 @@
 
 #include "testparser.h"
 
-#include <memory>
-#include <QDebug>
-#include <QString>
-#include <QtTest/QtTest>
-
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
 #include "../src/global/TextUtils.h"
 #include "../src/mapdata/mmapper2room.h"
 #include "../src/parser/parserutils.h"
+
+#include <memory>
+
+#include <QDebug>
+#include <QString>
+#include <QtTest/QtTest>
 
 TestParser::TestParser() = default;
 

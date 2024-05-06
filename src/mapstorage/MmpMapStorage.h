@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QString>
-#include <QtCore>
-
 #include "../global/macros.h"
 #include "abstractmapstorage.h"
+
+#include <QString>
+#include <QtCore>
 
 class MapData;
 class QObject;

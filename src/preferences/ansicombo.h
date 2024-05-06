@@ -4,14 +4,14 @@
 // Author: Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/AnsiColor.h"
+
 #include <QColor>
 #include <QComboBox>
 #include <QIcon>
 #include <QString>
 #include <QVector>
 #include <QtCore>
-
-#include "../global/AnsiColor.h"
 
 class QObject;
 class QWidget;

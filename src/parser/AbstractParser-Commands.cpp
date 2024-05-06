@@ -4,18 +4,6 @@
 
 #include "AbstractParser-Commands.h"
 
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <ostream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
-#include <QMessageLogContext>
-#include <QtCore>
-
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
@@ -30,6 +18,19 @@
 #include "CommandId.h"
 #include "DoorAction.h"
 #include "abstractparser.h"
+
+#include <algorithm>
+#include <functional>
+#include <map>
+#include <ostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <QMessageLogContext>
+#include <QtCore>
 
 const Abbrev cmdBack{"back"};
 const Abbrev cmdConfig{"config", 4};

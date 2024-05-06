@@ -3,13 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
-#include <cstdint>
-#include <memory>
-#include <sys/types.h>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
+
+#include <cstdint>
+#include <memory>
+
+#include <sys/types.h>
 
 class RoomAdmin;
 class MapData;

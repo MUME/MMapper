@@ -6,11 +6,6 @@
 
 #include "pathmachine.h"
 
-#include <cassert>
-#include <memory>
-#include <set>
-#include <utility>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -32,6 +27,11 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 #include "syncing.h"
+
+#include <cassert>
+#include <memory>
+#include <set>
+#include <utility>
 
 class RoomRecipient;
 

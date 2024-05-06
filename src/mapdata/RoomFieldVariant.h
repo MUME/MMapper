@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstddef>
-#include <cstdlib>
-
 #include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
+
+#include <cstddef>
+#include <cstdlib>
 
 //
 // X(UPPER_CASE, CamelCase, Type)
@@ -60,7 +60,10 @@ public:
     explicit RoomFieldVariant(Type val) \
         : m_data{std::move(val)} \
     {} \
-    NODISCARD const Type &get##CamelCase() const { return std::get<Type>(m_data); }
+    NODISCARD const Type &get##CamelCase() const \
+    { \
+        return std::get<Type>(m_data); \
+    }
     X_FOREACH_ROOM_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
 #undef DEFINE_CTOR_AND_GETTER
 #undef NOP
@@ -99,5 +102,8 @@ public:
     {
         return m_data == other.m_data;
     }
-    NODISCARD bool operator!=(const RoomFieldVariant &other) const { return !operator==(other); }
+    NODISCARD bool operator!=(const RoomFieldVariant &other) const
+    {
+        return !operator==(other);
+    }
 };

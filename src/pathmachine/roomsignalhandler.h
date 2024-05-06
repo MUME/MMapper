@@ -4,16 +4,17 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <map>
-#include <memory>
-#include <set>
-#include <QObject>
-#include <QString>
-#include <QtCore>
-
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
+
+#include <map>
+#include <memory>
+#include <set>
+
+#include <QObject>
+#include <QString>
+#include <QtCore>
 
 class MapAction;
 class Room;

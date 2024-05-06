@@ -5,17 +5,18 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
+#include "pathparameters.h"
+
 #include <cassert>
 #include <climits>
 #include <list>
 #include <memory>
 #include <optional>
 #include <vector>
-#include <QtGlobal>
 
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/mmapper2exit.h"
-#include "pathparameters.h"
+#include <QtGlobal>
 
 class Coordinate;
 class Room;

@@ -5,15 +5,16 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>  // std::enable_shared_from_this<>
-#include <utility> // std::move()
-#include <vector>  // std::vector<>
-#include <QColor>
-#include <QVariant>
-
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
+
+#include <memory>  // std::enable_shared_from_this<>
+#include <utility> // std::move()
+#include <vector>  // std::vector<>
+
+#include <QColor>
+#include <QVariant>
 
 // -----------------------------------------------------------------------------
 

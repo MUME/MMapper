@@ -5,8 +5,14 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../configuration/configuration.h"
+#include "../display/CanvasMouseModeEnum.h"
+#include "../mapdata/roomselection.h"
+#include "../pandoragroup/mmapper2group.h"
+
 #include <memory>
 #include <optional>
+
 #include <QActionGroup>
 #include <QDockWidget>
 #include <QFileDialog>
@@ -17,11 +23,6 @@
 #include <QTextBrowser>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "../configuration/configuration.h"
-#include "../display/CanvasMouseModeEnum.h"
-#include "../mapdata/roomselection.h"
-#include "../pandoragroup/mmapper2group.h"
 
 class AutoLogger;
 class AbstractAction;

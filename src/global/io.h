@@ -3,19 +3,20 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "RuleOf5.h"
+#include "macros.h"
+
 #include <cassert>
 #include <cstddef>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
+
 #include <QtCore/QByteArray>
 #include <QtCore/QIODevice>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "RuleOf5.h"
-#include "macros.h"
 
 class QFile;
 

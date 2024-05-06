@@ -4,9 +4,6 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <memory>
-#include <unordered_map>
-
 #include "../expandoracommon/MmQtHandle.h"
 #include "../expandoracommon/RoomRecipient.h"
 #include "../global/NullPointerException.h"
@@ -14,6 +11,9 @@
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "roomfilter.h"
+
+#include <memory>
+#include <unordered_map>
 
 class RoomSelection;
 using SharedRoomSelection = std::shared_ptr<RoomSelection>;

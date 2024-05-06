@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/RuleOf5.h"
+#include "CGroupChar.h"
+
 #include <cassert>
 #include <cstdint>
 #include <vector>
-
-#include "../global/RuleOf5.h"
-#include "CGroupChar.h"
 
 class CGroupChar;
 class GroupRecipient;

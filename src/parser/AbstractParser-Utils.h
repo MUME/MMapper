@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <string>
-
 #include "../syntax/Value.h"
+
+#include <string>
 
 NODISCARD bool isOffline();
 NODISCARD bool isOnline();

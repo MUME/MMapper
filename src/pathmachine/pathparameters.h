@@ -4,9 +4,9 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <cstdint>
-
 #include "../global/macros.h"
+
+#include <cstdint>
 
 using uint = uint32_t;
 

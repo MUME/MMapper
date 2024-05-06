@@ -5,10 +5,10 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <string>
 #include <string_view>
-
-#include "../global/macros.h"
 
 class QString;
 

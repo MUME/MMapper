@@ -6,12 +6,12 @@
 
 #include "generalpage.h"
 
+#include "../configuration/configuration.h"
+#include "ui_generalpage.h"
+
 #include <QSslSocket>
 #include <QString>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "ui_generalpage.h"
 
 // Order of entries in charsetComboBox drop down
 static_assert(static_cast<int>(CharacterEncodingEnum::LATIN1) == 0);

@@ -3,10 +3,10 @@
 
 #include "TestRoomManager.h"
 
-#include <QtTest>
-
 #include "proxy/GmcpMessage.h"
 #include "roompanel/RoomManager.h"
+
+#include <QtTest>
 
 TestRoomManager::TestRoomManager(RoomManager &manager)
     : manager(manager)

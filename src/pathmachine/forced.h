@@ -4,7 +4,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../expandoracommon/RoomRecipient.h"
-
 #include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
 

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "Shaders.h"
+#include "SimpleMesh.h"
+
 #include <memory>
 #include <optional>
 #include <vector>
-
-#include "Shaders.h"
-#include "SimpleMesh.h"
 
 #define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
 #define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)

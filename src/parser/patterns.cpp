@@ -5,9 +5,9 @@
 
 #include "patterns.h"
 
-#include <QRegularExpression>
-
 #include "../configuration/configuration.h"
+
+#include <QRegularExpression>
 
 bool Patterns::matchPattern(const QString &pattern, const QString &str)
 {

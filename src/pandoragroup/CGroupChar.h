@@ -4,16 +4,17 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <vector>
-#include <QByteArray>
-#include <QColor>
-#include <QVariantMap>
-
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "../parser/CommandQueue.h"
 #include "mmapper2character.h"
+
+#include <memory>
+#include <vector>
+
+#include <QByteArray>
+#include <QColor>
+#include <QVariantMap>
 
 class CGroupChar;
 using SharedGroupChar = std::shared_ptr<CGroupChar>;

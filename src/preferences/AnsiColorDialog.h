@@ -5,9 +5,9 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QDialog>
-
 #include "../global/macros.h"
+
+#include <QDialog>
 
 namespace Ui {
 class AnsiColorDialog;

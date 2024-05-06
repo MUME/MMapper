@@ -3,12 +3,13 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
-#include <memory>
-#include <QJsonObject>
-#include <QObject>
-
 #include "RoomMob.h"
 #include "RoomMobs.h"
+
+#include <memory>
+
+#include <QJsonObject>
+#include <QObject>
 
 class RoomMobUpdate;
 class GmcpMessage;

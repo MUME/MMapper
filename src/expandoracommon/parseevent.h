@@ -4,17 +4,6 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <QDebug>
-#include <QString>
-#include <QtGlobal>
-
 #include "../mapdata/mmapper2exit.h"
 #include "../parser/CommandId.h"
 #include "../parser/ConnectedRoomFlags.h"
@@ -22,6 +11,18 @@
 #include "../parser/PromptFlags.h"
 #include "MmQtHandle.h"
 #include "property.h"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+
+#include <QDebug>
+#include <QString>
+#include <QtGlobal>
 
 class ParseEvent;
 using SharedParseEvent = std::shared_ptr<ParseEvent>;

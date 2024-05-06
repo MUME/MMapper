@@ -4,16 +4,17 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "RoomMob.h"
+
 #include <memory>
 #include <unordered_map>
 #include <vector>
+
 #include <QAbstractTableModel>
 #include <QString>
 #include <QStyledItemDelegate>
 #include <QWidget>
 #include <QtCore>
-
-#include "RoomMob.h"
 
 class RoomMobs;
 class QObject;

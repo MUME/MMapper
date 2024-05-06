@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-
 #include "../global/Flags.h"
 #include "../mapdata/ExitDirection.h"
+
+#include <cstdint>
 
 class Room;
 

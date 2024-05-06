@@ -3,13 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/StringView.h"
+
 #include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
 #include <string_view>
-
-#include "../global/StringView.h"
 
 NODISCARD bool isAbbrev(StringView input, const std::string_view command, int minAbbrev);
 

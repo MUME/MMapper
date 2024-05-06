@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <QObject>
-
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
 #include "../src/expandoracommon/room.h"
+
+#include <QObject>
 
 Q_DECLARE_METATYPE(SharedRoom)
 Q_DECLARE_METATYPE(SharedParseEvent)

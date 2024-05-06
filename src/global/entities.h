@@ -3,12 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "macros.h"
+
 #include <functional>
 #include <optional>
+
 #include <QByteArray>
 #include <QString>
-
-#include "macros.h"
 
 static constexpr const uint32_t MAX_UNICODE_CODEPOINT = 0x10FFFFu;
 

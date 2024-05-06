@@ -4,15 +4,16 @@
 
 #include "Filenames.h"
 
-#include <memory>
-#include <mutex>
-#include <QtCore/QDebug>
-#include <QtCore/QFile>
-
 #include "../configuration/configuration.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
+
+#include <memory>
+#include <mutex>
+
+#include <QtCore/QDebug>
+#include <QtCore/QFile>
 
 // NOTE: This isn't used by the parser (currently only used for filenames).
 // If we were going to use it for parsing, then we'd probably want to

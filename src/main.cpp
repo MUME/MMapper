@@ -4,14 +4,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <optional>
-#include <set>
-#include <thread>
-#include <QPixmap>
-#include <QtCore>
-#include <QtWidgets>
-
 #include "./configuration/configuration.h"
 #include "./display/Filenames.h"
 #include "./global/Debug.h"
@@ -19,6 +11,15 @@
 #include "./global/WinSock.h"
 #include "./global/utils.h"
 #include "./mainwindow/mainwindow.h"
+
+#include <memory>
+#include <optional>
+#include <set>
+#include <thread>
+
+#include <QPixmap>
+#include <QtCore>
+#include <QtWidgets>
 
 #ifdef WITH_DRMINGW
 #include <exchndl.h>

@@ -3,10 +3,11 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
-#include <chrono>
-#include <QString>
-
 #include "../../tests/testadventure.h"
+
+#include <chrono>
+
+#include <QString>
 
 class AdventureSession
 {

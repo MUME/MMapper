@@ -3,13 +3,13 @@
 
 #include "TestProxy.h"
 
-#include <QDebug>
-#include <QtTest/QtTest>
-
 #include "../src/global/TextUtils.h"
 #include "../src/proxy/GmcpMessage.h"
 #include "../src/proxy/GmcpModule.h"
 #include "../src/proxy/GmcpUtils.h"
+
+#include <QDebug>
+#include <QtTest/QtTest>
 
 void TestProxy::escapeTest()
 {

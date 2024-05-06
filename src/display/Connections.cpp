@@ -3,15 +3,6 @@
 
 #include "Connections.h"
 
-#include <cassert>
-#include <cstdlib>
-#include <glm/glm.hpp>
-#include <optional>
-#include <vector>
-#include <QColor>
-#include <QMessageLogContext>
-#include <QtCore>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -27,6 +18,17 @@
 #include "MapCanvasData.h"
 #include "connectionselection.h"
 #include "mapcanvas.h"
+
+#include <cassert>
+#include <cstdlib>
+#include <optional>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QColor>
+#include <QMessageLogContext>
+#include <QtCore>
 
 static constexpr const float CONNECTION_LINE_WIDTH = 2.f;
 static constexpr const float VALID_CONNECTION_POINT_SIZE = 6.f;

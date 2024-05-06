@@ -8,6 +8,7 @@
 #include "../global/TextUtils.h"
 
 #include <optional>
+
 #include <QDebug>
 
 struct NODISCARD TextCodec::Pimpl

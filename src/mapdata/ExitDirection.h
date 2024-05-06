@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-
 #include "../global/Array.h"
 #include "ExitFlags.h"
+
+#include <cstdint>
 
 enum class NODISCARD ExitDirEnum { NORTH = 0, SOUTH, EAST, WEST, UP, DOWN, UNKNOWN, NONE };
 

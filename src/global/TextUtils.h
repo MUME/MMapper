@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "utils.h"
+
 #include <cassert>
 #include <cctype>
 #include <iosfwd>
@@ -11,10 +13,9 @@
 #include <string_view>
 #include <variant>
 #include <vector>
+
 #include <QRegularExpression>
 #include <QString>
-
-#include "utils.h"
 
 NODISCARD bool containsAnsi(const QStringView str);
 NODISCARD bool containsAnsi(const QString &str);
@@ -302,10 +303,16 @@ struct NODISCARD raw_ansi final
     NODISCARD uint16_t get_bits_normalized() const;
 
     bool operator==(const raw_ansi &other) const;
-    bool operator!=(const raw_ansi &other) const { return !operator==(other); }
+    bool operator!=(const raw_ansi &other) const
+    {
+        return !operator==(other);
+    }
     NODISCARD static raw_ansi difference(const raw_ansi &a, const raw_ansi &b);
 
-    NODISCARD AnsiString asAnsiString() const { return getAnsiString(*this); }
+    NODISCARD AnsiString asAnsiString() const
+    {
+        return getAnsiString(*this);
+    }
     NODISCARD static AnsiString getAnsiString(raw_ansi value);
     NODISCARD static AnsiString transition(const raw_ansi &from, const raw_ansi &to);
 
@@ -348,7 +355,10 @@ NODISCARD TextBuffer normalizeAnsi(const QString &str);
     static constexpr const QChar QC_##NAME{(C_##NAME)}; \
     static constexpr const char ARR_##NAME[2]{C_##NAME, C_NUL}; \
     static constexpr const char *const S_##NAME{ARR_##NAME}; \
-    static constexpr const std::string_view SV_##NAME { ARR_##NAME }
+    static constexpr const std::string_view SV_##NAME \
+    { \
+        ARR_##NAME \
+    }
 
 // TODO: put these in a string constants namespace
 static constexpr const char C_NUL = 0;

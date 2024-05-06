@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <algorithm>
-#include <functional>
-
 #include "RuleOf5.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <functional>
 
 class NODISCARD RAIIBool final
 {

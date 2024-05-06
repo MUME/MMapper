@@ -3,12 +3,13 @@
 
 #include "GmcpModule.h"
 
+#include "../global/TextUtils.h"
+
 #include <exception>
 #include <sstream>
 #include <string>
-#include <QString>
 
-#include "../global/TextUtils.h"
+#include <QString>
 
 GmcpModule::GmcpModule(const QString &moduleVersion)
     : GmcpModule(::toStdStringLatin1(moduleVersion))

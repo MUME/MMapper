@@ -4,6 +4,9 @@
 
 #include "clientpage.h"
 
+#include "../configuration/configuration.h"
+#include "ui_clientpage.h"
+
 #include <QFont>
 #include <QFontInfo>
 #include <QPalette>
@@ -11,9 +14,6 @@
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "ui_clientpage.h"
 
 ClientPage::ClientPage(QWidget *parent)
     : QWidget(parent)

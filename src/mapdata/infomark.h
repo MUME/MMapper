@@ -4,12 +4,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <cassert>
-#include <memory>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/Flags.h"
 #include "../global/TaggedString.h"
+
+#include <cassert>
+#include <memory>
 
 static constexpr const auto INFOMARK_SCALE = 100;
 
@@ -116,7 +116,10 @@ public:
 
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
-    NODISCARD inline const _Type &get##_Prop() const { return m_fields._Prop; } \
+    NODISCARD inline const _Type &get##_Prop() const \
+    { \
+        return m_fields._Prop; \
+    } \
     void set##_Prop(_Type value);
     X_FOREACH_INFOMARK_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS

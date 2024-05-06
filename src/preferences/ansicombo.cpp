@@ -5,15 +5,16 @@
 
 #include "ansicombo.h"
 
+#include "../global/AnsiColor.h"
+
 #include <cassert>
 #include <memory>
 #include <type_traits>
+
 #include <QRegularExpression>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../global/AnsiColor.h"
 
 struct NODISCARD AnsiItem final
 {

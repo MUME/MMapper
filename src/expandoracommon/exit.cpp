@@ -10,19 +10,28 @@
 #include "../mapdata/ExitFlags.h"
 
 #define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void Exit::set##_Type(_Type value) { m_fields._Prop = std::move(value); }
+    void Exit::set##_Type(_Type value) \
+    { \
+        m_fields._Prop = std::move(value); \
+    }
 XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
 #undef DEFINE_SETTERS
 
 // bool Exit::exitXXX() const
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool Exit::exitIs##CamelCase() const { return getExitFlags().is##CamelCase(); }
+    bool Exit::exitIs##CamelCase() const \
+    { \
+        return getExitFlags().is##CamelCase(); \
+    }
 X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 // bool Exit::doorIsXXX() const
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool Exit::doorIs##CamelCase() const { return exitIsDoor() && getDoorFlags().is##CamelCase(); }
+    bool Exit::doorIs##CamelCase() const \
+    { \
+        return exitIsDoor() && getDoorFlags().is##CamelCase(); \
+    }
 X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 

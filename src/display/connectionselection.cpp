@@ -5,15 +5,15 @@
 
 #include "connectionselection.h"
 
-#include <cassert>
-#include <utility>
-
 #include "../configuration/NamedConfig.h"
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
+
+#include <cassert>
+#include <utility>
 
 ConnectionSelection::ConnectionSelection(this_is_private)
 {

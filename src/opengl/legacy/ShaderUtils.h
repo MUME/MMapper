@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "Legacy.h"
+
 #include <string>
 #include <vector>
-
-#include "Legacy.h"
 
 namespace ShaderUtils {
 using Functions = Legacy::Functions;

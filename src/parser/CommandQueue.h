@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QQueue>
-
 #include "CommandId.h"
+
+#include <QQueue>
 
 class NODISCARD CommandQueue : private QQueue<CommandEnum>
 {

@@ -2,6 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/RuleOf5.h"
+#include "../global/StringView.h"
+#include "../global/TextUtils.h"
+#include "Accept.h"
+#include "IArgument.h"
+#include "IMatchErrorLogger.h"
+#include "MatchResult.h"
+#include "ParseResult.h"
+#include "ParserInput.h"
+#include "User.h"
+#include "Value.h"
+
 #include <any>
 #include <cassert>
 #include <cstring>
@@ -14,18 +26,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
-#include "../global/RuleOf5.h"
-#include "../global/StringView.h"
-#include "../global/TextUtils.h"
-#include "Accept.h"
-#include "IArgument.h"
-#include "IMatchErrorLogger.h"
-#include "MatchResult.h"
-#include "ParseResult.h"
-#include "ParserInput.h"
-#include "User.h"
-#include "Value.h"
 
 namespace syntax {
 

@@ -4,12 +4,12 @@
 
 #include "enums.h"
 
-#include <array>
-#include <vector>
-
 #include "../global/enums.h"
 #include "groupauthority.h"
 #include "mmapper2character.h"
+
+#include <array>
+#include <vector>
 
 #define DEFINE_GETTER(E, N, name) \
     const MMapper::Array<E, N> &name() \

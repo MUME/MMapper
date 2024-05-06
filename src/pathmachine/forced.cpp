@@ -4,11 +4,11 @@
 
 #include "forced.h"
 
-#include <memory>
-
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../mapfrontend/mapaction.h"
+
+#include <memory>
 
 void Forced::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
 {

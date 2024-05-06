@@ -6,15 +6,15 @@
 
 #include "mumesocket.h"
 
+#include "../configuration/configuration.h"
+#include "../global/io.h"
+
 #include <QByteArray>
 #include <QLocale>
 #include <QMessageLogContext>
 #include <QSslSocket>
 #include <QString>
 #include <QtNetwork>
-
-#include "../configuration/configuration.h"
-#include "../global/io.h"
 
 static constexpr int TIMEOUT_MILLIS = 30000;
 

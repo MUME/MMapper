@@ -3,11 +3,11 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
-#include <QObject>
-
 #include "../observer/gameobserver.h"
 #include "adventuresession.h"
 #include "lineparsers.h"
+
+#include <QObject>
 
 class AdventureTracker final : public QObject
 {

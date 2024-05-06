@@ -4,11 +4,11 @@
 
 #include "CommandId.h"
 
-#include <array>
-#include <stdexcept>
-
 #include "../global/enums.h"
 #include "../mapdata/ExitDirection.h"
+
+#include <array>
+#include <stdexcept>
 
 namespace enums {
 const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands()

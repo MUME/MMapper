@@ -5,16 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <string_view>
-#include <QByteArray>
-#include <QColor>
-#include <QMap>
-#include <QObject>
-#include <QString>
-#include <QStringList>
-#include <QtCore>
-#include <QtGlobal>
-
 #include "../global/Array.h"
 #include "../global/Debug.h"
 #include "../global/FixedPoint.h"
@@ -23,6 +13,17 @@
 #include "../pandoragroup/mmapper2group.h"
 #include "NamedConfig.h"
 #include "configobserver.h"
+
+#include <string_view>
+
+#include <QByteArray>
+#include <QColor>
+#include <QMap>
+#include <QObject>
+#include <QString>
+#include <QStringList>
+#include <QtCore>
+#include <QtGlobal>
 
 #undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 

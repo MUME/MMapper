@@ -5,11 +5,6 @@
 
 #include "customaction.h"
 
-#include <memory>
-#include <set>
-#include <stdexcept>
-#include <utility>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
@@ -22,6 +17,11 @@
 #include "ExitDirection.h"
 #include "ExitFlags.h"
 #include "roomselection.h"
+
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <utility>
 
 template<typename T>
 NODISCARD static inline TaggedString<T> modifyField(const TaggedString<T> &prev,

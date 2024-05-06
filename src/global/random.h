@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <random>
-#include <stdexcept>
-
 #include "RuleOf5.h"
 #include "macros.h"
+
+#include <random>
+#include <stdexcept>
 
 class NODISCARD RandomEngine final : public std::mt19937
 {

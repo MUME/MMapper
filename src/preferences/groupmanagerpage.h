@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../pandoragroup/mmapper2group.h"
+#include "ui_groupmanagerpage.h"
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
-
-#include "../pandoragroup/mmapper2group.h"
-#include "ui_groupmanagerpage.h"
 
 class Mmapper2Group;
 class QObject;

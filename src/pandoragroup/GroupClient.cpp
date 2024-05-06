@@ -5,15 +5,6 @@
 
 #include "GroupClient.h"
 
-#include <memory>
-#include <QAbstractSocket>
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QSslSocket>
-#include <QString>
-#include <QVariantMap>
-
 #include "../configuration/configuration.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
@@ -21,6 +12,16 @@
 #include "groupaction.h"
 #include "groupauthority.h"
 #include "mmapper2group.h"
+
+#include <memory>
+
+#include <QAbstractSocket>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QSslSocket>
+#include <QString>
+#include <QVariantMap>
 
 using MessagesEnum = CGroupCommunicator::MessagesEnum;
 

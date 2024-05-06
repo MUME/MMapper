@@ -3,10 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-#include <QString>
-
 #include "../global/macros.h"
+
+#include <cstdint>
+
+#include <QString>
 
 static constexpr const int MUME_START_YEAR = 2850;
 

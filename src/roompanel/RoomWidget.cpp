@@ -5,16 +5,16 @@
 
 #include "RoomWidget.h"
 
+#include "../configuration/configuration.h"
+#include "../global/AnsiColor.h"
+#include "RoomManager.h"
+
 #include <QAction>
 #include <QColor>
 #include <QHeaderView>
 #include <QString>
 #include <QStyledItemDelegate>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "../global/AnsiColor.h"
-#include "RoomManager.h"
 
 static constexpr const uint8_t ROOM_COLUMN_COUNT = 7;
 static_assert(ROOM_COLUMN_COUNT == static_cast<int>(RoomModel::ColumnTypeEnum::MOUNT) + 1,

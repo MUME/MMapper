@@ -3,13 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "ui_graphicspage.h"
+
 #include <memory>
 #include <vector>
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
-
-#include "ui_graphicspage.h"
 
 class AdvancedGraphicsGroupBox;
 class QObject;

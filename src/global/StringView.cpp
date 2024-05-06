@@ -4,14 +4,15 @@
 
 #include "StringView.h"
 
+#include "TextUtils.h"
+
 #include <cctype>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <QString>
 
-#include "TextUtils.h"
+#include <QString>
 
 NODISCARD static bool is_space(char c)
 {

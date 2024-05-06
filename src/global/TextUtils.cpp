@@ -4,6 +4,8 @@
 
 #include "TextUtils.h"
 
+#include "utils.h"
+
 #include <cassert>
 #include <cctype>
 #include <cstdint>
@@ -13,10 +15,9 @@
 #include <optional>
 #include <sstream>
 #include <vector>
+
 #include <QRegularExpression>
 #include <QString>
-
-#include "utils.h"
 
 // allows ">" or "|" as the quote character
 static const QRegularExpression quotePrefixRegex(R"(^[[:space:]]*([>|][[:space:]]*)*)");

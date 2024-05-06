@@ -5,11 +5,11 @@
 
 #include "syncing.h"
 
-#include <memory>
-
 #include "../mapdata/ExitDirection.h"
 #include "path.h"
 #include "pathparameters.h"
+
+#include <memory>
 
 class Room;
 

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "utils.h"
+
 #include <memory>
 #include <optional>
-
-#include "utils.h"
 
 /// The object's acceptVisitor() allows safe use the object if it still exists.
 /// However since no access is given to the underlying weak_ptr, clients cannot

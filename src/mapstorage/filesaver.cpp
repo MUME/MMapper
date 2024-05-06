@@ -4,14 +4,15 @@
 
 #include "filesaver.h"
 
-#include <cstdio>
-#include <stdexcept>
-#include <QByteArray>
-#include <QIODevice>
-
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/io.h"
+
+#include <cstdio>
+#include <stdexcept>
+
+#include <QByteArray>
+#include <QIODevice>
 
 static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != PlatformEnum::Windows;
 

@@ -5,18 +5,19 @@
 
 #include "AbstractTelnet.h"
 
-#include <cassert>
-#include <limits>
-#include <sstream>
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QString>
-
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
+
+#include <cassert>
+#include <limits>
+#include <sstream>
+
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QString>
 
 NODISCARD static QString telnetCommandName(uint8_t cmd)
 {

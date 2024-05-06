@@ -3,12 +3,12 @@
 
 #include "unquote.h"
 
+#include "TextUtils.h"
+
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <vector>
-
-#include "TextUtils.h"
 
 enum class NODISCARD ReasonEnum {
     INVALID_ESCAPE,

@@ -3,15 +3,15 @@
 
 #include "TreeParser.h"
 
+#include "../global/unquote.h"
+#include "SyntaxArgs.h"
+#include "TokenMatcher.h"
+
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <vector>
-
-#include "../global/unquote.h"
-#include "SyntaxArgs.h"
-#include "TokenMatcher.h"
 
 namespace syntax {
 

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <QByteArray>
-
 #include "../global/WeakHandle.h"
 #include "mmapper2character.h"
+
+#include <QByteArray>
 
 class Mmapper2Group;
 

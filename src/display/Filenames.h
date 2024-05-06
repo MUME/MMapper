@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QString>
-
 #include "../mapdata/mmapper2room.h"
 #include "../pandoragroup/mmapper2character.h"
 #include "RoadIndex.h"
+
+#include <QString>
 
 NODISCARD extern QString getResourceFilenameRaw(const QString &dir, const QString &name);
 NODISCARD extern QString getPixmapFilenameRaw(const QString &name);

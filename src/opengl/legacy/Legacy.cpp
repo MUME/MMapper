@@ -3,22 +3,6 @@
 
 #include "Legacy.h"
 
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <utility>
-#include <vector>
-#include <QDebug>
-#include <QFile>
-#include <QMessageLogContext>
-#include <QOpenGLTexture>
-
 #include "../../global/utils.h"
 #include "../OpenGLTypes.h"
 #include "AbstractShaderProgram.h"
@@ -29,6 +13,24 @@
 #include "Shaders.h"
 #include "SimpleMesh.h"
 #include "VBO.h"
+
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <QDebug>
+#include <QFile>
+#include <QMessageLogContext>
+#include <QOpenGLTexture>
 
 namespace Legacy {
 

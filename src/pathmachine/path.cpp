@@ -5,10 +5,6 @@
 
 #include "path.h"
 
-#include <cassert>
-#include <cstdint>
-#include <memory>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -17,6 +13,10 @@
 #include "../mapdata/ExitDirection.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
 
 std::shared_ptr<Path> Path::alloc(const Room *const room,
                                   RoomAdmin *const owner,

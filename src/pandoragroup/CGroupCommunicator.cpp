@@ -5,14 +5,6 @@
 
 #include "CGroupCommunicator.h"
 
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QString>
-#include <QVariantMap>
-#include <QXmlStreamReader>
-#include <QXmlStreamWriter>
-
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
 #include "CGroup.h"
@@ -21,6 +13,14 @@
 #include "groupaction.h"
 #include "groupauthority.h"
 #include "mmapper2group.h"
+
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QString>
+#include <QVariantMap>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 using MessagesEnum = CGroupCommunicator::MessagesEnum;
 

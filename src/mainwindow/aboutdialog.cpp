@@ -4,12 +4,12 @@
 
 #include "aboutdialog.h"
 
+#include "../global/Version.h"
+
 #include <QString>
 #include <QtConfig>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../global/Version.h"
 
 NODISCARD static QString getBuildInformation()
 {

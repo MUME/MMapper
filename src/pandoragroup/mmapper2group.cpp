@@ -5,15 +5,6 @@
 
 #include "mmapper2group.h"
 
-#include <memory>
-#include <QColor>
-#include <QDateTime>
-#include <QMessageLogContext>
-#include <QMutex>
-#include <QThread>
-#include <QVariantMap>
-#include <QtCore>
-
 #include "../configuration/configuration.h"
 #include "../global/AnsiColor.h"
 #include "../global/roomid.h"
@@ -26,6 +17,16 @@
 #include "groupauthority.h"
 #include "groupselection.h"
 #include "mmapper2character.h"
+
+#include <memory>
+
+#include <QColor>
+#include <QDateTime>
+#include <QMessageLogContext>
+#include <QMutex>
+#include <QThread>
+#include <QVariantMap>
+#include <QtCore>
 
 static constexpr const bool THREADED = true;
 static constexpr const auto ONE_MINUTE = 60;

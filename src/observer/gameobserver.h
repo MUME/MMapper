@@ -3,9 +3,9 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
-#include <QObject>
-
 #include "../proxy/GmcpMessage.h"
+
+#include <QObject>
 
 class GameObserver : public QObject
 {

@@ -4,15 +4,16 @@
 
 #include "graphicspage.h"
 
-#include <memory>
-#include <QString>
-#include <QtGui>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
 #include "AdvancedGraphics.h"
 #include "ui_graphicspage.h"
+
+#include <memory>
+
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
 
 static void setIconColor(QPushButton *const button, const XNamedColor &namedColor)
 {

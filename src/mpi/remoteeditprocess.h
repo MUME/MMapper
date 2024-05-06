@@ -3,15 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+#include "remoteeditsession.h"
+
 #include <QDateTime>
 #include <QObject>
 #include <QProcess>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
-
-#include "../global/macros.h"
-#include "remoteeditsession.h"
 
 class RemoteEditProcess final : public QObject
 {

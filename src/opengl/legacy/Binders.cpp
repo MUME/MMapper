@@ -2,6 +2,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "Binders.h"
+
 #include "../../display/Textures.h" // modularity violation
 
 namespace Legacy {

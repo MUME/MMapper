@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <string_view>
-#include <vector>
-
 #include "Color.h"
 #include "RuleOf5.h"
 #include "utils.h"
+
+#include <string_view>
+#include <vector>
 
 // TODO: rename this, but to what? NamedColorHandle?
 class NODISCARD XNamedColor final

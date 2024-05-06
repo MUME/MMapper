@@ -5,15 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <QByteArray>
-#include <QObject>
-#include <QScopedPointer>
-#include <QString>
-#include <QTcpSocket>
-#include <QtCore>
-#include <QtGlobal>
-
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
 #include "../observer/gameobserver.h"
@@ -21,6 +12,16 @@
 #include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
+
+#include <memory>
+
+#include <QByteArray>
+#include <QObject>
+#include <QScopedPointer>
+#include <QString>
+#include <QTcpSocket>
+#include <QtCore>
+#include <QtGlobal>
 
 class ConnectionListener;
 class MapCanvas;

@@ -6,10 +6,6 @@
 
 #include "configdialog.h"
 
-#include <QIcon>
-#include <QListWidget>
-#include <QtWidgets>
-
 #include "autologpage.h"
 #include "clientpage.h"
 #include "generalpage.h"
@@ -19,6 +15,10 @@
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "ui_configdialog.h"
+
+#include <QIcon>
+#include <QListWidget>
+#include <QtWidgets>
 
 ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     : QDialog(parent)

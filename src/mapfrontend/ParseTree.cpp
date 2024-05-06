@@ -4,6 +4,13 @@
 
 #include "ParseTree.h"
 
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/property.h"
+#include "../global/Array.h"
+#include "../global/EnumIndexedArray.h"
+#include "../global/utils.h"
+#include "roomcollection.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cctype>
@@ -15,13 +22,6 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/property.h"
-#include "../global/Array.h"
-#include "../global/EnumIndexedArray.h"
-#include "../global/utils.h"
-#include "roomcollection.h"
 
 enum class NODISCARD MaskFlagsEnum : uint32_t {
     NONE = 0u,

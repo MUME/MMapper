@@ -3,15 +3,6 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <map>
-#include <optional>
-#include <unordered_map>
-#include <vector>
-#include <QColor>
-#include <QtCore>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "../global/Array.h"
@@ -23,6 +14,17 @@
 #include "Infomarks.h"
 #include "MapCanvasData.h"
 #include "RoadIndex.h"
+
+#include <map>
+#include <optional>
+#include <unordered_map>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <QColor>
+#include <QtCore>
 
 class InfoMark;
 class MapCanvasRoomDrawer;

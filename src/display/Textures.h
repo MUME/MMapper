@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <functional>
-#include <memory>
-#include <QOpenGLTexture>
-#include <QString>
-#include <QtGui/qopengl.h>
-
 #include "../global/EnumIndexedArray.h"
 #include "../mapdata/mmapper2room.h"
 #include "../opengl/OpenGLTypes.h"
 #include "RoadIndex.h"
+
+#include <functional>
+#include <memory>
+
+#include <QOpenGLTexture>
+#include <QString>
+#include <QtGui/qopengl.h>
 
 // currently forward declared in OpenGLTypes.h
 // so it can define SharedMMTexture

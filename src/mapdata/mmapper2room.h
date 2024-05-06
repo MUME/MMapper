@@ -4,10 +4,10 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <QtGlobal>
-
 #include "../global/Flags.h"
 #include "../global/TaggedString.h"
+
+#include <QtGlobal>
 
 class Room;
 

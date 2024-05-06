@@ -5,17 +5,18 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <list>
-#include <memory>
-#include <optional>
-#include <QString>
-#include <QtCore>
-
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "path.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
+
+#include <list>
+#include <memory>
+#include <optional>
+
+#include <QString>
+#include <QtCore>
 
 class Approved;
 class Coordinate;

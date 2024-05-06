@@ -3,10 +3,11 @@
 
 #include "SignalBlocker.h"
 
-#include <cassert>
-#include <QWidget>
-
 #include "utils.h"
+
+#include <cassert>
+
+#include <QWidget>
 
 SignalBlocker::SignalBlocker(QObject &in)
     : obj{in}

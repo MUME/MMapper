@@ -4,12 +4,13 @@
 
 #include "mumeprotocolpage.h"
 
-#include <utility>
-#include <QString>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "ui_mumeprotocolpage.h"
+
+#include <utility>
+
+#include <QString>
+#include <QtWidgets>
 
 MumeProtocolPage::MumeProtocolPage(QWidget *parent)
     : QWidget(parent)

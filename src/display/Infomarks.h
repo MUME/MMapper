@@ -2,18 +2,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <cstddef>
-#include <glm/glm.hpp>
-#include <optional>
-#include <unordered_map>
-#include <vector>
-#include <QString>
-
 #include "../global/Color.h"
 #include "../global/utils.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGLTypes.h"
+
+#include <cstddef>
+#include <optional>
+#include <unordered_map>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QString>
 
 class OpenGL;
 
