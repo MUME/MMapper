@@ -5,17 +5,6 @@
 
 #include "GroupServer.h"
 
-#include <algorithm>
-#include <QAbstractSocket>
-#include <QByteArray>
-#include <QHostAddress>
-#include <QList>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QSslSocket>
-#include <QString>
-#include <QVariantMap>
-
 #include "../configuration/configuration.h"
 #include "../global/random.h"
 #include "CGroup.h"
@@ -26,6 +15,18 @@
 #include "groupauthority.h"
 #include "groupselection.h"
 #include "mmapper2group.h"
+
+#include <algorithm>
+
+#include <QAbstractSocket>
+#include <QByteArray>
+#include <QHostAddress>
+#include <QList>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QSslSocket>
+#include <QString>
+#include <QVariantMap>
 
 using MessagesEnum = CGroupCommunicator::MessagesEnum;
 

@@ -4,11 +4,6 @@
 
 #include "groupmanagerpage.h"
 
-#include <QSet>
-#include <QString>
-#include <QtGui>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../pandoragroup/CGroup.h"
 #include "../pandoragroup/groupauthority.h"
@@ -16,6 +11,11 @@
 #include "AnsiColorDialog.h"
 #include "ansicombo.h"
 #include "ui_groupmanagerpage.h"
+
+#include <QSet>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
 
 GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)

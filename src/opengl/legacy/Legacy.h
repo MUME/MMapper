@@ -2,19 +2,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../../global/RuleOf5.h"
+#include "../../global/utils.h"
+#include "../OpenGLTypes.h"
+
 #include <cmath>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
-#include <QOpenGLFunctions>
 
-#include "../../global/RuleOf5.h"
-#include "../../global/utils.h"
-#include "../OpenGLTypes.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <QOpenGLFunctions>
 
 class OpenGL;
 

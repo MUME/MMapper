@@ -4,12 +4,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/macros.h"
+#include "ui_parserpage.h"
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
-
-#include "../global/macros.h"
-#include "ui_parserpage.h"
 
 class QObject;
 

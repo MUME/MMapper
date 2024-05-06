@@ -3,16 +3,17 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+#include "../observer/gameobserver.h"
+#include "mumemoment.h"
+
 #include <cstdint>
+
 #include <QList>
 #include <QMetaEnum>
 #include <QObject>
 #include <QString>
 #include <QtCore>
-
-#include "../global/macros.h"
-#include "../observer/gameobserver.h"
-#include "mumemoment.h"
 
 class GmcpMessage;
 class QMetaEnum;

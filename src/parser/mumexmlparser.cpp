@@ -5,12 +5,6 @@
 
 #include "mumexmlparser.h"
 
-#include <cctype>
-#include <sstream>
-#include <utility>
-#include <QByteArray>
-#include <QString>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/TextUtils.h"
@@ -22,6 +16,13 @@
 #include "abstractparser.h"
 #include "parserutils.h"
 #include "patterns.h"
+
+#include <cctype>
+#include <sstream>
+#include <utility>
+
+#include <QByteArray>
+#include <QString>
 
 class MapData;
 

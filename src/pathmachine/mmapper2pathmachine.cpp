@@ -5,14 +5,15 @@
 
 #include "mmapper2pathmachine.h"
 
-#include <cassert>
-#include <QElapsedTimer>
-#include <QString>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
+
+#include <cassert>
+
+#include <QElapsedTimer>
+#include <QString>
 
 NODISCARD static const char *stateName(const PathStateEnum state)
 {

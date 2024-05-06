@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <cassert>
-
 #include "../OpenGLTypes.h"
 #include "AbstractShaderProgram.h"
 #include "Binders.h"
 #include "Legacy.h"
 #include "VBO.h"
+
+#include <cassert>
 
 namespace Legacy {
 

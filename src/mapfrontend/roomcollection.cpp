@@ -5,12 +5,12 @@
 
 #include "roomcollection.h"
 
-#include <cassert>
-#include <memory>
-
 #include "../expandoracommon/room.h"
 #include "../global/RAII.h"
 #include "AbstractRoomVisitor.h"
+
+#include <cassert>
+#include <memory>
 
 #ifndef NDEBUG
 #define DEBUG_ONLY(x) x // NOLINT

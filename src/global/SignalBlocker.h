@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <QObject>
-#include <QVector>
-
 #include "RuleOf5.h"
 #include "utils.h"
+
+#include <QObject>
+#include <QVector>
 
 class QWidget;
 

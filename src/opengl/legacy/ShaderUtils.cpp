@@ -3,6 +3,9 @@
 
 #include "ShaderUtils.h"
 
+#include "../../global/Debug.h"
+#include "../../global/TextUtils.h"
+
 #include <cassert>
 #include <cstdio>
 #include <iomanip>
@@ -10,11 +13,9 @@
 #include <sstream>
 #include <string_view>
 #include <vector>
+
 #include <QDebug>
 #include <QMessageBox>
-
-#include "../../global/Debug.h"
-#include "../../global/TextUtils.h"
 
 namespace ShaderUtils {
 

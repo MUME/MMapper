@@ -6,13 +6,13 @@
 
 #include "RoomMob.h"
 
+#include "../parser/abstractparser.h"
+
 #include <initializer_list>
 #include <utility>
 
 #include <QDebug>
 #include <QMessageLogContext>
-
-#include "../parser/abstractparser.h"
 
 // ----------------------------- RoomMobData ----------------------------------
 RoomMobData::RoomMobData()

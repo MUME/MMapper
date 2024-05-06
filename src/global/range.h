@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <iterator> // IWYU pragma: keep (std::rbegin)
-
 #include "macros.h"
+
+#include <iterator> // IWYU pragma: keep (std::rbegin)
 
 template<typename It>
 struct NODISCARD range

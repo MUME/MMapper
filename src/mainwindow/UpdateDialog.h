@@ -3,14 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Array.h"
+
 #include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QNetworkAccessManager>
 #include <QString>
-
-#include "../global/Array.h"
 
 class NODISCARD CompareVersion final
 {

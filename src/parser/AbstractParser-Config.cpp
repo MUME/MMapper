@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "abstractparser.h"
-
-#include <ostream>
-#include <QColor>
-
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../display/MapCanvasConfig.h"
@@ -16,6 +11,11 @@
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
+#include "abstractparser.h"
+
+#include <ostream>
+
+#include <QColor>
 
 class ArgNamedColor final : public syntax::IArgument
 {

@@ -5,14 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <map>
-#include <memory>
-#include <vector>
-#include <QList>
-#include <QString>
-#include <QtCore>
-#include <QtGlobal>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
@@ -21,6 +13,15 @@
 #include "roomfilter.h"
 #include "roomselection.h"
 #include "shortestpath.h"
+
+#include <map>
+#include <memory>
+#include <vector>
+
+#include <QList>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
 
 class AbstractAction;
 class ExitFieldVariant;

@@ -5,15 +5,16 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/RuleOf5.h"
+#include "RoomMob.h"
+
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include <QMutex>
 #include <QObject>
 #include <QtCore>
-
-#include "../global/RuleOf5.h"
-#include "RoomMob.h"
 
 class RoomMobs final : public QObject
 {

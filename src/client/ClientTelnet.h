@@ -4,12 +4,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/io.h"
+#include "../proxy/AbstractTelnet.h"
+
 #include <QAbstractSocket>
 #include <QObject>
 #include <QTcpSocket>
-
-#include "../global/io.h"
-#include "../proxy/AbstractTelnet.h"
 
 class ClientTelnet final : public AbstractTelnet
 {

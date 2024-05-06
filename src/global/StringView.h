@@ -3,15 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "utils.h"
+
 #include <cassert>
 #include <string>
 #include <string_view>
 #include <vector>
+
 #include <QByteArray>
 #include <QChar>
 #include <QString>
-
-#include "utils.h"
 
 /*
  * NOTE: As a view, it requires the string object to remain valid and unchanged for the entire lifetime.

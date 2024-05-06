@@ -3,15 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <vector>
-
 #include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "AbstractRoomVisitor.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 class AbstractRoomVisitor;
 class ParseEvent;

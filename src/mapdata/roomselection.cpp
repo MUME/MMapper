@@ -5,11 +5,11 @@
 
 #include "roomselection.h"
 
-#include <cassert>
-#include <memory>
-
 #include "../expandoracommon/room.h"
 #include "mapdata.h"
+
+#include <cassert>
+#include <memory>
 
 RoomSelection::RoomSelection(MapData &admin)
     : m_mapData(admin)

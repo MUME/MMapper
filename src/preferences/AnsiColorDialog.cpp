@@ -5,9 +5,9 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "AnsiColorDialog.h"
-#include "ui_AnsiColorDialog.h"
 
 #include "ansicombo.h"
+#include "ui_AnsiColorDialog.h"
 
 AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
     : QDialog(parent)

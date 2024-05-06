@@ -4,19 +4,6 @@
 
 #include "MapCanvasRoomDrawer.h"
 
-#include <cassert>
-#include <cstdlib>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <optional>
-#include <set>
-#include <stdexcept>
-#include <vector>
-#include <QColor>
-#include <QMessageLogContext>
-#include <QtGui/qopengl.h>
-#include <QtGui>
-
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
@@ -43,6 +30,21 @@
 #include "MapCanvasData.h"
 #include "RoadIndex.h"
 #include "mapcanvas.h" // hack, since we're now definining some of its symbols
+
+#include <cassert>
+#include <cstdlib>
+#include <optional>
+#include <set>
+#include <stdexcept>
+#include <vector>
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <QColor>
+#include <QMessageLogContext>
+#include <QtGui/qopengl.h>
+#include <QtGui>
 
 enum class NODISCARD StreamTypeEnum { OutFlow, InFlow };
 enum class NODISCARD WallTypeEnum { SOLID, DOTTED, DOOR };

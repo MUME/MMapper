@@ -6,15 +6,6 @@
 
 #include "mapdata.h"
 
-#include <algorithm>
-#include <cassert>
-#include <list>
-#include <map>
-#include <memory>
-#include <set>
-#include <QList>
-#include <QString>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -33,6 +24,16 @@
 #include "mmapper2room.h"
 #include "roomfilter.h"
 #include "roomselection.h"
+
+#include <algorithm>
+#include <cassert>
+#include <list>
+#include <map>
+#include <memory>
+#include <set>
+
+#include <QList>
+#include <QString>
 
 MapData::MapData(QObject *const parent)
     : MapFrontend(parent)

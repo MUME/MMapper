@@ -4,10 +4,10 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Flags.h"
+
 #include <QMetaType>
 #include <QtGlobal>
-
-#include "../global/Flags.h"
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
 #define X_FOREACH_CHARACTER_POSITION(X) \
@@ -67,7 +67,10 @@ class NODISCARD CharacterAffectFlags final
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    NODISCARD bool is##CamelCase() const { return contains(CharacterAffectEnum::UPPER_CASE); }
+    NODISCARD bool is##CamelCase() const \
+    { \
+        return contains(CharacterAffectEnum::UPPER_CASE); \
+    }
     X_FOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };

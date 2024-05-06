@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <variant>
-
 #include "MatchResult.h"
 #include "ParserInput.h"
+
+#include <variant>
 
 namespace syntax {
 

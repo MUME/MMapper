@@ -4,15 +4,16 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <memory>
-#include <QtGlobal>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 #include "path.h"
+
+#include <memory>
+
+#include <QtGlobal>
 
 class PathMachine;
 class Room;

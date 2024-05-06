@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
-#include <QFile>
-#include <QString>
-
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
+
+#include <QFile>
+#include <QString>
 
 /*! \brief Save to a file in an atomic way.
  *

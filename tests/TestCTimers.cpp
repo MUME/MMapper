@@ -3,9 +3,9 @@
 
 #include "TestCTimers.h"
 
-#include <QtTest/QtTest>
-
 #include "../src/timers/CTimers.h"
+
+#include <QtTest/QtTest>
 
 TestCTimers::TestCTimers() = default;
 

@@ -4,12 +4,6 @@
 
 #include "MmpMapStorage.h"
 
-#include <cassert>
-#include <cstddef>
-#include <stdexcept>
-#include <QString>
-#include <QXmlStreamWriter>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -25,6 +19,13 @@
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
+
+#include <cassert>
+#include <cstddef>
+#include <stdexcept>
+
+#include <QString>
+#include <QXmlStreamWriter>
 
 MmpMapStorage::MmpMapStorage(MapData &mapdata,
                              const QString &filename,

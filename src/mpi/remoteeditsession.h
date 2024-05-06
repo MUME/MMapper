@@ -3,15 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/TaggedString.h"
+#include "../global/macros.h"
+
 #include <algorithm>
+
 #include <QObject>
 #include <QScopedPointer>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "../global/TaggedString.h"
-#include "../global/macros.h"
 
 class RemoteEdit;
 class RemoteEditProcess;

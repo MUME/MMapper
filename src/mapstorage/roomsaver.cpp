@@ -4,9 +4,11 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "roomsaver.h"
+
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../mapdata/mapdata.h"
+
 #include <cassert>
 
 RoomSaver::RoomSaver(RoomAdmin &admin, ConstRoomList &list)

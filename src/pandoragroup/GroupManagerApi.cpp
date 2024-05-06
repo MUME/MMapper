@@ -3,10 +3,11 @@
 
 #include "GroupManagerApi.h"
 
-#include <exception>
-#include <QByteArray>
-
 #include "mmapper2group.h"
+
+#include <exception>
+
+#include <QByteArray>
 
 void GroupManagerApi::kickCharacter(const QByteArray &name) const
 {

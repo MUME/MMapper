@@ -5,10 +5,6 @@
 
 #include "parseevent.h"
 
-#include <cassert>
-#include <cstdint>
-#include <memory>
-
 #include "../global/TextUtils.h"
 #include "../mapdata/ExitDirection.h"
 #include "../parser/CommandId.h"
@@ -17,6 +13,10 @@
 #include "../parser/PromptFlags.h"
 #include "../parser/parserutils.h"
 #include "property.h"
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
 
 ParseEvent::ArrayOfProperties::ArrayOfProperties() = default;
 ParseEvent::ArrayOfProperties::~ArrayOfProperties() = default;

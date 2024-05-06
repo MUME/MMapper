@@ -3,10 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cmath>
-#include <QColor>
-
 #include "macros.h"
+
+#include <cmath>
+
+#include <QColor>
 
 enum class NODISCARD AnsiColorTableEnum {
     black = 0,

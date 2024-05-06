@@ -4,11 +4,11 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
 
 #include <memory>
-#include <QByteArray>
 
-#include "../global/macros.h"
+#include <QByteArray>
 
 class NODISCARD GroupPortMapper final
 {

@@ -4,13 +4,13 @@
 
 #include "enums.h"
 
-#include <array>
-#include <vector>
-
 #include "../global/enums.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
 #include "mmapper2room.h"
+
+#include <array>
+#include <vector>
 
 #define DEFINE_GETTER(E, N, name) \
     const MMapper::Array<E, N> &name() \

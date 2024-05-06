@@ -6,16 +6,6 @@
 
 #include "proxy.h"
 
-#include <cassert>
-#include <memory>
-#include <stdexcept>
-#include <QByteArray>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QScopedPointer>
-#include <QSslSocket>
-#include <QTcpSocket>
-
 #include "../clock/mumeclock.h"
 #include "../configuration/configuration.h"
 #include "../display/mapcanvas.h"
@@ -35,6 +25,17 @@
 #include "connectionlistener.h"
 #include "mumesocket.h"
 #include "telnetfilter.h"
+
+#include <cassert>
+#include <memory>
+#include <stdexcept>
+
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QScopedPointer>
+#include <QSslSocket>
+#include <QTcpSocket>
 
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 

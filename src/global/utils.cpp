@@ -10,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+
 #include <QByteArray>
 #include <qglobal.h>
 

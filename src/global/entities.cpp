@@ -4,6 +4,8 @@
 
 #include "entities.h"
 
+#include "RuleOf5.h"
+
 #include <cassert>
 #include <cstdint>
 #include <limits>
@@ -11,11 +13,10 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
+
 #include <QByteArray>
 #include <QHash>
 #include <QString>
-
-#include "RuleOf5.h"
 
 NODISCARD static bool isLatin1(const QChar qc)
 {
@@ -380,7 +381,10 @@ NODISCARD static EntityTable initEntityTable()
 {
     // prefixed enum class is an antipattern, but we may not be able to avoid it in this case.
 #define X(name, value) \
-    XmlEntity { #name, "&" #name ";", XmlEntityEnum::XID_##name }
+    XmlEntity \
+    { \
+#name, "&" #name ";", XmlEntityEnum::XID_##name \
+    }
 #define SEP_COMMA() ,
 
     const std::vector<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};

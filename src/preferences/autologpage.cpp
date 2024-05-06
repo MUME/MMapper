@@ -4,13 +4,13 @@
 
 #include "autologpage.h"
 
+#include "../configuration/configuration.h"
+#include "ui_autologpage.h"
+
 #include <QSpinBox>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "ui_autologpage.h"
 
 static const constexpr int MEGABYTE_IN_BYTES = 1000000;
 

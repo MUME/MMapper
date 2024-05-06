@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "ChangeMonitor.h"
+#include "RuleOf5.h"
+#include "utils.h"
+
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <vector>
-#include <QSlider>
 
-#include "ChangeMonitor.h"
-#include "RuleOf5.h"
-#include "utils.h"
+#include <QSlider>
 
 template<int Digits_>
 class NODISCARD FixedPoint final

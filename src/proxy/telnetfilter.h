@@ -5,14 +5,15 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <cstdint>
+
 #include <QByteArray>
 #include <QObject>
 #include <QQueue>
 #include <QString>
 #include <QtCore>
-
-#include "../global/macros.h"
 
 enum class NODISCARD TelnetDataEnum : uint8_t { UNKNOWN, PROMPT, CRLF, LF, DELAY };
 

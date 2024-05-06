@@ -5,6 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/io.h"
+
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
@@ -12,8 +14,6 @@
 #include <QString>
 #include <QTimer>
 #include <QtCore>
-
-#include "../global/io.h"
 
 class QSslError;
 

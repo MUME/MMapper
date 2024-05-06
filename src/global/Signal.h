@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "RuleOf5.h"
+#include "utils.h"
+
 #include <cassert>
 #include <functional>
 #include <list>
 #include <memory>
 #include <type_traits>
-#include <QDebug>
 
-#include "RuleOf5.h"
-#include "utils.h"
+#include <QDebug>
 
 template<typename... Args>
 struct NODISCARD Signal;

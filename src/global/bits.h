@@ -3,10 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-#include <glm/glm.hpp>
-
 #include "macros.h"
+
+#include <cstdint>
+
+#include <glm/glm.hpp>
 
 namespace bits {
 template<typename T>

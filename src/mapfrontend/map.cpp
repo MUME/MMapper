@@ -5,14 +5,14 @@
 
 #include "map.h"
 
-#include <map>
-#include <memory>
-#include <utility>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "../global/utils.h"
 #include "AbstractRoomVisitor.h"
+
+#include <map>
+#include <memory>
+#include <utility>
 
 struct NODISCARD CoordinateMinMax final
 {

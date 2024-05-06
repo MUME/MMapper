@@ -4,11 +4,11 @@
 
 #include "adventurewidget.h"
 
-#include <QtCore>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "adventuresession.h"
+
+#include <QtCore>
+#include <QtWidgets>
 
 AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     : QWidget{parent}

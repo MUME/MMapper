@@ -3,13 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cassert>
-#include <cstdint>
-#include <stdexcept>
-
 #include "../global/Flags.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
+
+#include <cassert>
+#include <cstdint>
+#include <stdexcept>
 
 enum class NODISCARD ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = (1u << 30) };
 // 2nd declaration to avoid having to type "ExitFlagExt::" to use this

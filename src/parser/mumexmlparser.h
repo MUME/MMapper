@@ -5,17 +5,18 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "CommandId.h"
+#include "LineFlags.h"
+#include "abstractparser.h"
+
 #include <optional>
 #include <string_view>
+
 #include <QByteArray>
 #include <QString>
 #include <QtCore/QFile>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "CommandId.h"
-#include "LineFlags.h"
-#include "abstractparser.h"
 
 class GmcpMessage;
 class GroupManagerApi;

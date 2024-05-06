@@ -4,15 +4,16 @@
 
 #include "groupauthority.h"
 
-#include <exception>
-#include <iostream>
-#include <memory>
-#include <QDebug>
-
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
 #include "GroupSocket.h"
 #include "enums.h"
+
+#include <exception>
+#include <iostream>
+#include <memory>
+
+#include <QDebug>
 
 #ifndef MMAPPER_NO_OPENSSL
 #include <openssl/bio.h>

@@ -5,13 +5,13 @@
 
 #include "roomsignalhandler.h"
 
-#include <cassert>
-#include <memory>
-
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapaction.h"
+
+#include <cassert>
+#include <memory>
 
 void RoomSignalHandler::hold(const Room *const room,
                              RoomAdmin *const owner,

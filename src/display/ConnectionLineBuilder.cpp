@@ -4,9 +4,9 @@
 
 #include "ConnectionLineBuilder.h"
 
-#include <cassert>
-
 #include "../mapdata/ExitDirection.h"
+
+#include <cassert>
 
 void ConnectionLineBuilder::drawConnLineStart(const ExitDirEnum dir,
                                               const bool neighbours,

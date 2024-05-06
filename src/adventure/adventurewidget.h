@@ -3,12 +3,12 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "adventuretracker.h"
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
 #include <QtWidgets>
-
-#include "adventuretracker.h"
 
 class AdventureWidget : public QWidget
 {

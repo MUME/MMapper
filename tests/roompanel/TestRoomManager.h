@@ -3,6 +3,7 @@
 // Copyright (C) 2023 The MMapper Authors
 
 #include "roompanel/RoomManager.h"
+
 #include <QObject>
 
 class TestRoomManager final : public QObject

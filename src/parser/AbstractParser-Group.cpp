@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "abstractparser.h"
-
-#include <ostream>
-#include <sstream>
-#include <QByteArray>
-
 #include "../configuration/configuration.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
+#include "abstractparser.h"
+
+#include <ostream>
+#include <sstream>
+
+#include <QByteArray>
 
 NODISCARD static QByteArray simplify(const std::string &s)
 {

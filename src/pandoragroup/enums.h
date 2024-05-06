@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <vector>
-
 #include "../global/Array.h"
 #include "groupauthority.h"
 #include "mmapper2character.h"
+
+#include <vector>
 
 #define DECL_GETTER(E, N, name) const MMapper::Array<E, N> &name();
 #define DECL_GETTER_DEFINED(E, N, name) const std::vector<E> &name();

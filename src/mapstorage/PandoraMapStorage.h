@@ -3,12 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <QString>
-#include <QtCore>
-
 #include "../expandoracommon/coordinate.h"
 #include "abstractmapstorage.h"
+
+#include <memory>
+
+#include <QString>
+#include <QtCore>
 
 class MapData;
 class QObject;

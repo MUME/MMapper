@@ -2,20 +2,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/Array.h"
+#include "../global/Color.h"
+#include "../global/utils.h"
+#include "FontFormatFlags.h"
+
 #include <cstdint>
-#include <glm/glm.hpp>
 #include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include <glm/glm.hpp>
+
 #include <QDebug>
 #include <qopengl.h>
-
-#include "../global/Array.h"
-#include "../global/Color.h"
-#include "../global/utils.h"
-#include "FontFormatFlags.h"
 
 struct NODISCARD TexVert final
 {

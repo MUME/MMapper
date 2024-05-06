@@ -5,14 +5,14 @@
 
 #include "room.h"
 
-#include <memory>
-#include <sstream>
-#include <vector>
-
 #include "../global/StringView.h"
 #include "../global/random.h"
 #include "../mapdata/ExitFieldVariant.h"
 #include "parseevent.h"
+
+#include <memory>
+#include <sstream>
+#include <vector>
 
 static constexpr const auto default_updateFlags = RoomUpdateFlags{}; /* none */
 static constexpr const auto mesh_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Mesh};

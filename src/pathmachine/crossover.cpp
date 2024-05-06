@@ -5,12 +5,12 @@
 
 #include "crossover.h"
 
-#include <memory>
-
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../mapdata/ExitDirection.h"
 #include "experimenting.h"
+
+#include <memory>
 
 struct PathParameters;
 

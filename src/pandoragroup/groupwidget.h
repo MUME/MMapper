@@ -3,15 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "groupselection.h"
+#include "mmapper2character.h"
+
 #include <vector>
+
 #include <QAbstractTableModel>
 #include <QString>
 #include <QStyledItemDelegate>
 #include <QWidget>
 #include <QtCore>
-
-#include "groupselection.h"
-#include "mmapper2character.h"
 
 class QAction;
 class MapData;

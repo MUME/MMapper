@@ -3,14 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-#include <QString>
-#include <QWidget>
-#include <QtCore>
-
 #include "mumeclock.h"
 #include "mumemoment.h"
 #include "ui_mumeclockwidget.h"
+
+#include <memory>
+
+#include <QString>
+#include <QWidget>
+#include <QtCore>
 
 class QMouseEvent;
 class QObject;

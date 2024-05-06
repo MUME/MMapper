@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "IArgument.h"
+#include "TokenMatcher.h"
+
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "IArgument.h"
-#include "TokenMatcher.h"
 
 namespace syntax {
 

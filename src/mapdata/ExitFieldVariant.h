@@ -3,15 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstddef>
-#include <cstdlib>
-#include <variant>
-#include <QString>
-
 #include "../global/RuleOf5.h"
 #include "../global/TaggedString.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
+
+#include <cstddef>
+#include <cstdlib>
+#include <variant>
+
+#include <QString>
 
 namespace tags {
 struct NODISCARD DoorNameTag final
@@ -60,7 +61,10 @@ public:
     explicit ExitFieldVariant(CamelCase val) \
         : m_data{std::move(val)} \
     {} \
-    const CamelCase &get##CamelCase() const { return std::get<CamelCase>(m_data); }
+    const CamelCase &get##CamelCase() const \
+    { \
+        return std::get<CamelCase>(m_data); \
+    }
     X_FOREACH_EXIT_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
 #undef DEFINE_CTOR_AND_GETTER
 #undef NOP
@@ -98,5 +102,8 @@ public:
     {
         return m_data == other.m_data;
     }
-    NODISCARD bool operator!=(const ExitFieldVariant &other) const { return !operator==(other); }
+    NODISCARD bool operator!=(const ExitFieldVariant &other) const
+    {
+        return !operator==(other);
+    }
 };

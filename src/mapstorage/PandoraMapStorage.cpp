@@ -4,11 +4,6 @@
 
 #include "PandoraMapStorage.h"
 
-#include <cassert>
-#include <QLatin1String>
-#include <QRegularExpression>
-#include <QXmlStreamReader>
-
 #include "../expandoracommon/room.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
@@ -17,6 +12,12 @@
 #include "../mapdata/mmapper2room.h"
 #include "../parser/parserutils.h"
 #include "mapstorage.h"
+
+#include <cassert>
+
+#include <QLatin1String>
+#include <QRegularExpression>
+#include <QXmlStreamReader>
 
 PandoraMapStorage::PandoraMapStorage(MapData &mapdata,
                                      const QString &filename,

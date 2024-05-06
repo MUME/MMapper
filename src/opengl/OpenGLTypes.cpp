@@ -3,11 +3,11 @@
 
 #include "OpenGLTypes.h"
 
-#include <algorithm>
-#include <memory>
-
 #include "../display/Textures.h"
 #include "../global/utils.h"
+
+#include <algorithm>
+#include <memory>
 
 IRenderable::~IRenderable() = default;
 

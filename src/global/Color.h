@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <glm/glm.hpp>
+#include "RuleOf5.h"
+#include "macros.h"
+
 #include <iostream>
 #include <string_view>
 
-#include "RuleOf5.h"
-#include "macros.h"
+#include <glm/glm.hpp>
 
 class QColor;
 

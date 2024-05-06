@@ -5,15 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <map>
-#include <memory>
-#include <optional>
-#include <set>
-#include <stack>
-#include <QMutex>
-#include <QString>
-#include <QtCore>
-
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
@@ -21,6 +12,16 @@
 #include "../mapdata/infomark.h"
 #include "ParseTree.h"
 #include "map.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <stack>
+
+#include <QMutex>
+#include <QString>
+#include <QtCore>
 
 class MapAction;
 class ParseEvent;

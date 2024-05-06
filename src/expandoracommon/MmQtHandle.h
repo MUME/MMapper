@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstddef>
-#include <memory>
-
 #include "../global/NullPointerException.h"
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
+
+#include <cstddef>
+#include <memory>
 
 /// Handle used for QT signals.
 ///

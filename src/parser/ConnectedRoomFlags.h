@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-
 #include "../global/utils.h"
 #include "../mapdata/ExitDirection.h"
+
+#include <cstdint>
 
 enum class NODISCARD DirectSunlightEnum : uint32_t {
     UNKNOWN = 0,

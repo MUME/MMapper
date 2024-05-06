@@ -4,16 +4,17 @@
 
 #include "mumeclock.h"
 
+#include "../global/Array.h"
+#include "../proxy/GmcpMessage.h"
+#include "mumemoment.h"
+
 #include <cassert>
+
 #include <QDebug>
 #include <QMetaEnum>
 #include <QObject>
 #include <QRegularExpression>
 #include <QString>
-
-#include "../global/Array.h"
-#include "../proxy/GmcpMessage.h"
-#include "mumemoment.h"
 
 static constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
 static constexpr const int DEFAULT_TOLERANCE_LIMIT = 10;

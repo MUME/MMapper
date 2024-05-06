@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/RuleOf5.h"
+#include "../mapdata/DoorFlags.h"
+#include "../mapdata/ExitFlags.h"
+#include "../mapdata/infomark.h"
+
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -9,11 +14,6 @@
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "../global/RuleOf5.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFlags.h"
-#include "../mapdata/infomark.h"
 
 struct Pair;
 struct Value;
@@ -85,21 +85,33 @@ public:
     explicit Value(T) = delete;
 
 public:
-    NODISCARD bool isNull() const { return std::holds_alternative<std::nullptr_t>(m_value); }
+    NODISCARD bool isNull() const
+    {
+        return std::holds_alternative<std::nullptr_t>(m_value);
+    }
 
 #define DEFINE_CTOR_IS_GET(ValueType, RefType, CamelCase) \
     explicit Value(ValueType x) \
         : m_value(std::move(x)) \
     {} \
-    NODISCARD bool is##CamelCase() const { return std::holds_alternative<ValueType>(m_value); } \
-    NODISCARD RefType get##CamelCase() const { return std::get<ValueType>(m_value); }
+    NODISCARD bool is##CamelCase() const \
+    { \
+        return std::holds_alternative<ValueType>(m_value); \
+    } \
+    NODISCARD RefType get##CamelCase() const \
+    { \
+        return std::get<ValueType>(m_value); \
+    }
 
     X_FOREACH_VALUE_TYPE(DEFINE_CTOR_IS_GET)
 
 #undef DEFINE_CTOR_IS_GET
 
 public:
-    NODISCARD IndexEnum getType() const { return static_cast<IndexEnum>(m_value.index()); }
+    NODISCARD IndexEnum getType() const
+    {
+        return static_cast<IndexEnum>(m_value.index());
+    }
 
 public:
     friend std::ostream &operator<<(std::ostream &os, const Value &value);

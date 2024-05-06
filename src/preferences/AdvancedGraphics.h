@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../display/MapCanvasConfig.h"
+
 #include <functional>
 #include <memory>
 #include <vector>
-#include <QGroupBox>
 
-#include "../display/MapCanvasConfig.h"
+#include <QGroupBox>
 
 class SliderSpinboxButton;
 struct NODISCARD SSBDeleter final

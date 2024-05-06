@@ -4,15 +4,16 @@
 
 #include "Abbrev.h"
 
+#include "../global/StringView.h"
+#include "../global/utils.h"
+
 #include <cassert>
 #include <cctype>
 #include <cstring>
 #include <stdexcept>
 #include <string_view>
-#include <QtCore>
 
-#include "../global/StringView.h"
-#include "../global/utils.h"
+#include <QtCore>
 
 bool isAbbrev(StringView input, const std::string_view command, const int minAbbrev)
 {

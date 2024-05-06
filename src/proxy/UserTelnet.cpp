@@ -4,11 +4,12 @@
 
 #include "UserTelnet.h"
 
-#include <sstream>
-#include <QJsonDocument>
-
 #include "../global/Charset.h"
 #include "../global/TextUtils.h"
+
+#include <sstream>
+
+#include <QJsonDocument>
 
 // REVISIT: Does this belong somewhere else?
 static void normalizeForUser(std::ostream &os,

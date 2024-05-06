@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/Flags.h"
+#include "../global/TaggedString.h"
+
 #include <cstdint>
 #include <optional>
 #include <string>
+
 #include <QByteArray>
 #include <QJsonDocument>
 #include <QString>
-
-#include "../global/Flags.h"
-#include "../global/TaggedString.h"
 
 class ParseEvent;
 
@@ -86,14 +87,26 @@ public:
 
 public:
 #define DECL_GETTERS_AND_SETTERS(UPPER_CASE, CamelCase, normalized, friendly) \
-    inline bool is##CamelCase() const { return type == GmcpMessageTypeEnum::UPPER_CASE; }
+    inline bool is##CamelCase() const \
+    { \
+        return type == GmcpMessageTypeEnum::UPPER_CASE; \
+    }
     X_FOREACH_GMCP_MESSAGE_TYPE(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD const GmcpMessageName &getName() const { return name; }
-    NODISCARD const std::optional<GmcpJson> &getJson() const { return json; }
-    NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const { return document; }
+    NODISCARD const GmcpMessageName &getName() const
+    {
+        return name;
+    }
+    NODISCARD const std::optional<GmcpJson> &getJson() const
+    {
+        return json;
+    }
+    NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const
+    {
+        return document;
+    }
 
 public:
     NODISCARD QByteArray toRawBytes() const;

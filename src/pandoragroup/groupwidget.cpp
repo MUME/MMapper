@@ -4,13 +4,6 @@
 
 #include "groupwidget.h"
 
-#include <QAction>
-#include <QHeaderView>
-#include <QMessageLogContext>
-#include <QString>
-#include <QStyledItemDelegate>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
 #include "../expandoracommon/room.h"
@@ -23,6 +16,13 @@
 #include "enums.h"
 #include "groupselection.h"
 #include "mmapper2group.h"
+
+#include <QAction>
+#include <QHeaderView>
+#include <QMessageLogContext>
+#include <QString>
+#include <QStyledItemDelegate>
+#include <QtWidgets>
 
 static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,

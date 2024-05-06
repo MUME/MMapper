@@ -3,14 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "hash.h"
+
 #include <climits>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <set>
 #include <vector>
-
-#include "hash.h"
 
 struct NODISCARD RoomId final
 {

@@ -7,6 +7,7 @@
 #include <cstdint> // int64_t, uint64_t
 #include <string_view>
 #include <type_traits>
+
 #include <QStringView>
 
 // Convert a QStringView to std::u16string_view.

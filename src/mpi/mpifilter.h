@@ -3,13 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../mpi/remoteeditsession.h"
+#include "../proxy/telnetfilter.h"
+
 #include <QByteArray>
 #include <QObject>
 #include <QString>
 #include <QtCore>
-
-#include "../mpi/remoteeditsession.h"
-#include "../proxy/telnetfilter.h"
 
 class MpiFilter final : public QObject
 {

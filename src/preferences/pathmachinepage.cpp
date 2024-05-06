@@ -5,9 +5,9 @@
 
 #include "pathmachinepage.h"
 
-#include <QDoubleSpinBox>
-
 #include "../configuration/configuration.h"
+
+#include <QDoubleSpinBox>
 
 PathmachinePage::PathmachinePage(QWidget *parent)
     : QWidget(parent)

@@ -2,14 +2,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../clock/mumeclock.h"
+#include "../pandoragroup/mmapper2group.h"
+#include "Action.h"
 #include "abstractparser.h"
 
 #include <cassert>
 #include <memory>
-
-#include "../clock/mumeclock.h"
-#include "../pandoragroup/mmapper2group.h"
-#include "Action.h"
 
 void AbstractParser::initActionMap()
 {

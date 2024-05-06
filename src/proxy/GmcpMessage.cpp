@@ -3,12 +3,12 @@
 
 #include "GmcpMessage.h"
 
-#include <exception>
-#include <sstream>
-
 #include "../global/TextUtils.h"
 #include "GmcpModule.h"
 #include "GmcpUtils.h"
+
+#include <exception>
+#include <sstream>
 
 NODISCARD static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum type)
 {

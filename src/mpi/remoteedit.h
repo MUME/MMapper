@@ -3,17 +3,18 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+#include "remoteeditsession.h"
+
 #include <climits>
 #include <map>
 #include <memory>
+
 #include <QByteArray>
 #include <QObject>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
-
-#include "../global/macros.h"
-#include "remoteeditsession.h"
 
 class RemoteEditSession;
 

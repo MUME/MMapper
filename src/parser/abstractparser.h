@@ -5,18 +5,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <functional>
-#include <map>
-#include <memory>
-#include <ostream>
-#include <string>
-#include <vector>
-#include <QArgument>
-#include <QObject>
-#include <QQueue>
-#include <QTimer>
-#include <QVariant>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/StringView.h"
@@ -39,6 +27,19 @@
 #include "DoorAction.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
+
+#include <functional>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
+
+#include <QArgument>
+#include <QObject>
+#include <QQueue>
+#include <QTimer>
+#include <QVariant>
 
 class Coordinate;
 class MapData;

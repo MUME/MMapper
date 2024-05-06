@@ -3,15 +3,6 @@
 
 #include "Infomarks.h"
 
-#include <cassert>
-#include <glm/glm.hpp>
-#include <optional>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-#include <QMessageLogContext>
-#include <QtCore>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../global/AnsiColor.h"
@@ -26,6 +17,17 @@
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
 #include "mapcanvas.h"
+
+#include <cassert>
+#include <optional>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QMessageLogContext>
+#include <QtCore>
 
 static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 2.f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;

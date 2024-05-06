@@ -5,18 +5,19 @@
 
 #include "ClientTelnet.h"
 
+#include "../configuration/configuration.h"
+#include "../global/io.h"
+#include "../global/utils.h"
+#include "../proxy/TextCodec.h"
+
 #include <limits>
+
 #include <QApplication>
 #include <QByteArray>
 #include <QHostAddress>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
-
-#include "../configuration/configuration.h"
-#include "../global/io.h"
-#include "../global/utils.h"
-#include "../proxy/TextCodec.h"
 
 ClientTelnet::ClientTelnet(QObject *const parent)
     : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, "MMapper")

@@ -4,6 +4,9 @@
 
 #include "UpdateDialog.h"
 
+#include "../configuration/configuration.h"
+#include "../global/Version.h"
+
 #include <QDesktopServices>
 #include <QGridLayout>
 #include <QJsonArray>
@@ -12,9 +15,6 @@
 #include <QNetworkReply>
 #include <QPushButton>
 #include <QRegularExpression>
-
-#include "../configuration/configuration.h"
-#include "../global/Version.h"
 
 static constexpr const char *APPIMAGE_KEY = "APPIMAGE";
 

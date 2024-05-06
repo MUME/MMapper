@@ -3,10 +3,10 @@
 
 #include "WeakHandle.h"
 
+#include "Debug.h"
+
 #include <cassert>
 #include <string>
-
-#include "Debug.h"
 
 namespace {
 

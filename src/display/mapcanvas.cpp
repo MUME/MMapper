@@ -6,23 +6,6 @@
 
 #include "mapcanvas.h"
 
-#include <array>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
-#include <utility>
-#include <vector>
-#include <QGestureEvent>
-#include <QMessageLogContext>
-#include <QOpenGLDebugMessage>
-#include <QSize>
-#include <QString>
-#include <QToolTip>
-#include <QtGui>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -38,6 +21,24 @@
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
+
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include <QGestureEvent>
+#include <QMessageLogContext>
+#include <QOpenGLDebugMessage>
+#include <QSize>
+#include <QString>
+#include <QToolTip>
+#include <QtGui>
+#include <QtWidgets>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #undef near // Bad dog, Microsoft; bad dog!!!

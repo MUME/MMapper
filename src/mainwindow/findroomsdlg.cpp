@@ -5,11 +5,6 @@
 
 #include "findroomsdlg.h"
 
-#include <cstdint>
-#include <QString>
-#include <QtGui>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -20,6 +15,12 @@
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
 #include "../parser/parserutils.h"
+
+#include <cstdint>
+
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
 
 FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
     : QDialog(parent)

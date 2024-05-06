@@ -4,12 +4,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/macros.h"
+#include "AbstractRoomVisitor.h"
+
 #include <cassert>
 #include <memory>
 #include <set>
-
-#include "../global/macros.h"
-#include "AbstractRoomVisitor.h"
 
 class AbstractRoomVisitor;
 class Room;

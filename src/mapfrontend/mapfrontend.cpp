@@ -6,12 +6,6 @@
 
 #include "mapfrontend.h"
 
-#include <cassert>
-#include <memory>
-#include <set>
-#include <utility>
-#include <QMutex>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
@@ -22,6 +16,13 @@
 #include "mapaction.h"
 #include "roomcollection.h"
 #include "roomlocker.h"
+
+#include <cassert>
+#include <memory>
+#include <set>
+#include <utility>
+
+#include <QMutex>
 
 MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)

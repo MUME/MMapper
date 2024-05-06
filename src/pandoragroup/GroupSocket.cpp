@@ -5,7 +5,12 @@
 
 #include "GroupSocket.h"
 
+#include "../configuration/configuration.h"
+#include "../global/io.h"
+#include "groupauthority.h"
+
 #include <cassert>
+
 #include <QByteArray>
 #include <QHostAddress>
 #include <QMessageLogContext>
@@ -13,10 +18,6 @@
 #include <QString>
 #include <QTcpSocket>
 #include <QTimer>
-
-#include "../configuration/configuration.h"
-#include "../global/io.h"
-#include "groupauthority.h"
 
 static constexpr const bool DEBUG = false;
 static constexpr const auto THIRTY_SECOND_TIMEOUT = 30000;

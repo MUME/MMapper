@@ -3,14 +3,6 @@
 
 #include "Textures.h"
 
-#include <glm/glm.hpp>
-#include <optional>
-#include <stdexcept>
-#include <vector>
-#include <QMessageLogContext>
-#include <QtCore>
-#include <QtGui>
-
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
 #include "../opengl/Font.h"
@@ -18,6 +10,16 @@
 #include "Filenames.h"
 #include "RoadIndex.h"
 #include "mapcanvas.h"
+
+#include <optional>
+#include <stdexcept>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QMessageLogContext>
+#include <QtCore>
+#include <QtGui>
 
 MMTexture::MMTexture(this_is_private, const QString &name)
     : m_qt_texture{QImage{name}.mirrored()}

@@ -3,15 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/RuleOf5.h"
+#include "../global/StringView.h"
+
 #include <functional>
 #include <memory>
 #include <regex>
 #include <string>
 #include <unordered_map>
 #include <utility>
-
-#include "../global/RuleOf5.h"
-#include "../global/StringView.h"
 
 using ActionCallback = std::function<void(StringView)>;
 

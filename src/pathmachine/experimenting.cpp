@@ -5,11 +5,11 @@
 
 #include "experimenting.h"
 
-#include <memory>
-
 #include "../expandoracommon/room.h"
 #include "path.h"
 #include "pathparameters.h"
+
+#include <memory>
 
 Experimenting::Experimenting(std::shared_ptr<PathList> pat,
                              const ExitDirEnum in_dirCode,

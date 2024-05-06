@@ -5,17 +5,18 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-#include <QArgument>
-#include <QObject>
-#include <QString>
-#include <QtGlobal>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 #include "../mapdata/mapdata.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "abstractmapstorage.h"
+
+#include <cstdint>
+
+#include <QArgument>
+#include <QObject>
+#include <QString>
+#include <QtGlobal>
 
 class InfoMark;
 class QDataStream;

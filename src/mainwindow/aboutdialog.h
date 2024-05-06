@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Kalev Lember <kalev@smartlink.ee> (Kalev)
 
+#include "ui_aboutdialog.h"
+
 #include <QDialog>
 #include <QString>
 #include <QtCore>
-
-#include "ui_aboutdialog.h"
 
 class QObject;
 class QTextBrowser;

@@ -3,12 +3,12 @@
 
 #include "testclock.h"
 
-#include <QDebug>
-#include <QtTest/QtTest>
-
 #include "../src/clock/mumeclock.h"
 #include "../src/observer/gameobserver.h"
 #include "../src/proxy/GmcpMessage.h"
+
+#include <QDebug>
+#include <QtTest/QtTest>
 
 TestClock::TestClock() = default;
 

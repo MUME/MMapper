@@ -3,14 +3,14 @@
 
 #include "Value.h"
 
+#include "../global/TextUtils.h"
+
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <vector>
-
-#include "../global/TextUtils.h"
 
 namespace value_helper {
 

@@ -4,15 +4,15 @@
 // Author: Kalev Lember <kalev@smartlink.ee> (Kalev)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../mapdata/roomselection.h"
+#include "../parser/abstractparser.h"
+#include "ui_findroomsdlg.h" // auto-generated
+
 #include <QDialog>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
 #include <QtWidgets/QTreeWidgetItem>
-
-#include "../mapdata/roomselection.h"
-#include "../parser/abstractparser.h"
-#include "ui_findroomsdlg.h" // auto-generated
 
 class MapCanvas;
 class MapData;

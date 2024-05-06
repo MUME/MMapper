@@ -4,9 +4,6 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <list>
-#include <memory>
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapaction.h"
@@ -16,6 +13,9 @@
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
 #include "roomselection.h"
+
+#include <list>
+#include <memory>
 
 class DoorFlags;
 class ExitFlags;

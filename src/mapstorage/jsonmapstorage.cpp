@@ -6,12 +6,6 @@
 
 #include "jsonmapstorage.h"
 
-#include <cassert>
-#include <cstddef>
-#include <stdexcept>
-#include <unordered_map>
-#include <QString>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -27,6 +21,13 @@
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
+
+#include <cassert>
+#include <cstddef>
+#include <stdexcept>
+#include <unordered_map>
+
+#include <QString>
 
 namespace {
 

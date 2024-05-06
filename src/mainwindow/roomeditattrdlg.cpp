@@ -6,15 +6,6 @@
 
 #include "roomeditattrdlg.h"
 
-#include <cstddef>
-#include <map>
-#include <memory>
-#include <QMessageLogContext>
-#include <QString>
-#include <QVariant>
-#include <QtGui>
-#include <QtWidgets>
-
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
 #include "../display/mapcanvas.h"
@@ -30,6 +21,16 @@
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "../mapfrontend/mapaction.h"
+
+#include <cstddef>
+#include <map>
+#include <memory>
+
+#include <QMessageLogContext>
+#include <QString>
+#include <QVariant>
+#include <QtGui>
+#include <QtWidgets>
 
 template<typename T>
 void fixMissing(T &array, const char *const name)

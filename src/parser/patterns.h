@@ -4,9 +4,9 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <QtCore>
-
 #include "../global/macros.h"
+
+#include <QtCore>
 
 class QByteArray;
 class QString;

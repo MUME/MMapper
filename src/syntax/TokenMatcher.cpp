@@ -3,11 +3,11 @@
 
 #include "TokenMatcher.h"
 
+#include "../global/TextUtils.h"
+
 #include <cassert>
 #include <iostream>
 #include <utility>
-
-#include "../global/TextUtils.h"
 
 namespace syntax {
 

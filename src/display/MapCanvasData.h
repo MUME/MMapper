@@ -3,17 +3,6 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <map>
-#include <memory>
-#include <optional>
-#include <unordered_map>
-#include <QOpenGLTexture>
-#include <QWidget>
-#include <QtGui/QMatrix4x4>
-#include <QtGui/QMouseEvent>
-#include <QtGui/qopengl.h>
-#include <QtGui>
-
 #include "../global/EnumIndexedArray.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mapdata.h"
@@ -24,6 +13,18 @@
 #include "RoadIndex.h"
 #include "connectionselection.h"
 #include "prespammedpath.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <unordered_map>
+
+#include <QOpenGLTexture>
+#include <QWidget>
+#include <QtGui/QMatrix4x4>
+#include <QtGui/QMouseEvent>
+#include <QtGui/qopengl.h>
+#include <QtGui>
 
 class ConnectionSelection;
 class MapData;

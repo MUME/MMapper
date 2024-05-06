@@ -3,13 +3,13 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
-#include <QSet>
-#include <QVector>
-
 #include "../expandoracommon/RoomAdmin.h"
 #include "../parser/abstractparser.h"
 #include "ExitDirection.h"
 #include "mmapper2exit.h"
+
+#include <QSet>
+#include <QVector>
 
 class Room;
 class RoomAdmin;

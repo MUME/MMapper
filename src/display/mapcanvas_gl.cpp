@@ -1,35 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "mapcanvas.h"
-
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <functional>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <limits>
-#include <list>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <sstream>
-#include <stdexcept>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-#include <QMessageBox>
-#include <QMessageLogContext>
-#include <QOpenGLWidget>
-#include <QtCore>
-#include <QtGui/qopengl.h>
-#include <QtGui>
-
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
@@ -49,6 +20,36 @@
 #include "MapCanvasRoomDrawer.h"
 #include "Textures.h"
 #include "connectionselection.h"
+#include "mapcanvas.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <limits>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <QMessageBox>
+#include <QMessageLogContext>
+#include <QOpenGLWidget>
+#include <QtCore>
+#include <QtGui/qopengl.h>
+#include <QtGui>
 
 namespace MapCanvasConfig {
 

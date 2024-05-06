@@ -4,13 +4,13 @@
 
 #include "mpifilter.h"
 
+#include "../configuration/configuration.h"
+#include "../proxy/telnetfilter.h"
+
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
-
-#include "../configuration/configuration.h"
-#include "../proxy/telnetfilter.h"
 
 NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
 {

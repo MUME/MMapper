@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../syntax/SyntaxArgs.h"
+#include "../syntax/TreeParser.h"
+#include "AbstractParser-Utils.h"
 #include "abstractparser.h"
 
 #include <map>
@@ -9,10 +12,6 @@
 #include <ostream>
 #include <sstream>
 #include <vector>
-
-#include "../syntax/SyntaxArgs.h"
-#include "../syntax/TreeParser.h"
-#include "AbstractParser-Utils.h"
 
 class NODISCARD ArgTimerName final : public syntax::IArgument
 {

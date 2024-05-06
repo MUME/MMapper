@@ -6,13 +6,14 @@
 
 #include "abstractmapstorage.h"
 
-#include <stdexcept>
-#include <utility>
-#include <QObject>
-#include <QString>
-
 #include "../global/NullPointerException.h"
 #include "progresscounter.h"
+
+#include <stdexcept>
+#include <utility>
+
+#include <QObject>
+#include <QString>
 
 AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
                                        QString filename,

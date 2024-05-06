@@ -3,11 +3,12 @@
 
 #include "Color.h"
 
+#include "utils.h"
+
 #include <iomanip>
 #include <sstream>
-#include <QColor>
 
-#include "utils.h"
+#include <QColor>
 
 static constexpr const int SHIFT_r = 0;
 static constexpr const int SHIFT_g = 8;

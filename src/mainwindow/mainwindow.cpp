@@ -6,23 +6,6 @@
 
 #include "mainwindow.h"
 
-#include <memory>
-#include <mutex>
-#include <stdexcept>
-#include <vector>
-#include <QActionGroup>
-#include <QCloseEvent>
-#include <QDesktopServices>
-#include <QFileDialog>
-#include <QFontDatabase>
-#include <QHostAddress>
-#include <QIcon>
-#include <QProgressDialog>
-#include <QSize>
-#include <QString>
-#include <QTextBrowser>
-#include <QtWidgets>
-
 #include "../adventure/adventuretracker.h"
 #include "../adventure/adventurewidget.h"
 #include "../adventure/xpstatuswidget.h"
@@ -75,6 +58,24 @@
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
 #include "roomeditattrdlg.h"
+
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <vector>
+
+#include <QActionGroup>
+#include <QCloseEvent>
+#include <QDesktopServices>
+#include <QFileDialog>
+#include <QFontDatabase>
+#include <QHostAddress>
+#include <QIcon>
+#include <QProgressDialog>
+#include <QSize>
+#include <QString>
+#include <QTextBrowser>
+#include <QtWidgets>
 
 class RoomRecipient;
 

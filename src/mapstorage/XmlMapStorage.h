@@ -4,15 +4,16 @@
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <string_view>
-#include <unordered_map>
-#include <QString>
-#include <QtCore>
-
 #include "../global/macros.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
 #include "mapstorage.h" // MapFrontendBlocker
+
+#include <string_view>
+#include <unordered_map>
+
+#include <QString>
+#include <QtCore>
 
 class QObject;
 class QXmlStreamWriter;

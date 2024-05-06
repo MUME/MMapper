@@ -4,19 +4,20 @@
 
 #include "remoteedit.h"
 
+#include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
+#include "remoteeditsession.h"
+
 #include <cassert>
 #include <memory>
 #include <type_traits>
 #include <utility>
+
 #include <QClipboard>
 #include <QFileDialog>
 #include <QGuiApplication>
 #include <QMessageLogContext>
 #include <QString>
-
-#include "../configuration/configuration.h"
-#include "../global/TextUtils.h"
-#include "remoteeditsession.h"
 
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)

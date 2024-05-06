@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstdint>
+
 #include <QByteArray>
 #include <QObject>
 #include <QString>

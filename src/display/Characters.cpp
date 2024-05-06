@@ -3,12 +3,6 @@
 
 #include "Characters.h"
 
-#include <cmath>
-#include <glm/glm.hpp>
-#include <optional>
-#include <vector>
-#include <QtCore>
-
 #include "../configuration/configuration.h"
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
@@ -23,6 +17,14 @@
 #include "Textures.h"
 #include "mapcanvas.h"
 #include "prespammedpath.h"
+
+#include <cmath>
+#include <optional>
+#include <vector>
+
+#include <glm/glm.hpp>
+
+#include <QtCore>
 
 static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
 static constexpr float PATH_LINE_WIDTH = 4.f;

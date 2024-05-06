@@ -5,12 +5,13 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "progresscounter.h"
+
 #include <memory>
+
 #include <QObject>
 #include <QString>
 #include <QtCore>
-
-#include "progresscounter.h"
 
 class InfoMark;
 class MapData;

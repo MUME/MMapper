@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include <functional>
-#include <memory>
-#include <stack>
-#include <variant>
-
 #include "../global/NullPointerException.h"
 #include "ParserInput.h"
 #include "Sublist.h"
 #include "TokenMatcher.h"
 #include "Value.h"
+
+#include <functional>
+#include <memory>
+#include <stack>
+#include <variant>
 
 namespace syntax {
 

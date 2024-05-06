@@ -4,11 +4,11 @@
 
 #include "RoadIndex.h"
 
-#include <stdexcept>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../mapdata/ExitDirection.h"
+
+#include <stdexcept>
 
 RoadIndexMaskEnum getRoadIndex(const ExitDirEnum dir)
 {

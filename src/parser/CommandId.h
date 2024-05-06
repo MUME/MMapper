@@ -4,7 +4,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Array.h"
-
 #include "../mapdata/ExitDirection.h"
 
 enum class NODISCARD CommandEnum : uint8_t {

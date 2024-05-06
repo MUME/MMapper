@@ -4,16 +4,17 @@
 
 #include "OpenGL.h"
 
-#include <cassert>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <optional>
-#include <vector>
-
 #include "OpenGLTypes.h"
 #include "legacy/Legacy.h"
 #include "legacy/ShaderUtils.h"
+
+#include <cassert>
+#include <optional>
+#include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #ifdef WIN32
 extern "C" {

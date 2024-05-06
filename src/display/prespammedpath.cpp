@@ -5,10 +5,10 @@
 
 #include "prespammedpath.h"
 
-#include <utility>
-
 #include "../parser/CommandId.h"
 #include "../parser/abstractparser.h"
+
+#include <utility>
 
 // #define TEST
 #ifdef TEST

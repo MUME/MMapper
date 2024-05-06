@@ -5,6 +5,7 @@
 #include "MapCanvasData.h"
 
 #include <optional>
+
 #include <QPointF>
 
 const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints()

@@ -5,17 +5,17 @@
 
 #include "parserpage.h"
 
+#include "../configuration/configuration.h"
+#include "../parser/AbstractParser-Utils.h"
+#include "AnsiColorDialog.h"
+#include "ansicombo.h"
+
 #include <QColor>
 #include <QComboBox>
 #include <QRegularExpression>
 #include <QString>
 #include <QValidator>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
-#include "../parser/AbstractParser-Utils.h"
-#include "AnsiColorDialog.h"
-#include "ansicombo.h"
 
 class CommandPrefixValidator final : public QValidator
 {

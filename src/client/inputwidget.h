@@ -3,8 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <iterator>
 #include <list>
+
 #include <QEvent>
 #include <QObject>
 #include <QPlainTextEdit>
@@ -12,8 +15,6 @@
 #include <QString>
 #include <QWidget>
 #include <QtCore>
-
-#include "../global/macros.h"
 
 class QKeyEvent;
 class QObject;

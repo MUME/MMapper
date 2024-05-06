@@ -4,10 +4,10 @@
 
 #include "mumemoment.h"
 
-#include <iostream>
-
 #include "../global/Debug.h"
 #include "mumeclock.h"
+
+#include <iostream>
 
 static void maybe_warn_if_not_clamped(
     const char *const name, bool &warned, const int val, const int lo, const int hi)

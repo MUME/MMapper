@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "abstractparser.h"
-
-#include <map>
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <sstream>
-#include <vector>
-
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../expandoracommon/room.h"
@@ -26,6 +17,14 @@
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Commands.h"
 #include "AbstractParser-Utils.h"
+#include "abstractparser.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <ostream>
+#include <sstream>
+#include <vector>
 
 NODISCARD static const char *getTypeName(const InfoMarkTypeEnum type)
 {

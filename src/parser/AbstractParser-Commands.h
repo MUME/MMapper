@@ -3,8 +3,6 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <QByteArray>
-
 #include "../global/Flags.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
@@ -12,6 +10,8 @@
 #include "../mapdata/mmapper2room.h"
 #include "Abbrev.h"
 #include "DoorAction.h"
+
+#include <QByteArray>
 
 extern const Abbrev cmdBack;
 extern const Abbrev cmdDirections;

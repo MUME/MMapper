@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QColor>
 #include <QFont>
 #include <QSize>
@@ -12,8 +14,6 @@
 #include <QTextFormat>
 #include <QtCore>
 #include <QtGui>
-
-#include "../global/macros.h"
 
 class QObject;
 class QResizeEvent;

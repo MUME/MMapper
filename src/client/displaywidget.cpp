@@ -4,6 +4,9 @@
 
 #include "displaywidget.h"
 
+#include "../configuration/configuration.h"
+#include "../global/AnsiColor.h"
+
 #include <QMessageLogContext>
 #include <QRegularExpression>
 #include <QScrollBar>
@@ -11,9 +14,6 @@
 #include <QTextCursor>
 #include <QToolTip>
 #include <QtGui>
-
-#include "../configuration/configuration.h"
-#include "../global/AnsiColor.h"
 
 static const constexpr int SCROLLBAR_BUFFER = 1;
 static const constexpr int TAB_WIDTH_SPACES = 8;

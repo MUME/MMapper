@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <memory>
-
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
+
+#include <memory>
 
 class NODISCARD InfoMarkSelection final : public MarkerList,
                                           public std::enable_shared_from_this<InfoMarkSelection>

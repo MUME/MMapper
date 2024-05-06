@@ -4,6 +4,8 @@
 
 #include "inputwidget.h"
 
+#include "../configuration/configuration.h"
+
 #include <QLinkedList>
 #include <QMessageLogContext>
 #include <QRegularExpression>
@@ -11,8 +13,6 @@
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../configuration/configuration.h"
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 

@@ -5,17 +5,6 @@
 
 #include "XmlMapStorage.h"
 
-#include <cassert>
-#include <cstddef>
-#include <stdexcept>
-#include <type_traits>
-#include <QHash>
-#include <QMessageBox>
-#include <QString>
-#include <QStringView>
-#include <QXmlStreamReader>
-#include <QXmlStreamWriter>
-
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -34,6 +23,18 @@
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
+
+#include <cassert>
+#include <cstddef>
+#include <stdexcept>
+#include <type_traits>
+
+#include <QHash>
+#include <QMessageBox>
+#include <QString>
+#include <QStringView>
+#include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 // ---------------------------- XmlMapStorage::Type ------------------------
 // list know enum types
@@ -106,7 +107,10 @@ private:
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define DECL(X) \
-    static constexpr Type enumToType(X) { return Type::X; }
+    static constexpr Type enumToType(X) \
+    { \
+        return Type::X; \
+    }
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 

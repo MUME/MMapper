@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/ChangeMonitor.h"
+
 #include <cmath>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
-
-#include "../global/ChangeMonitor.h"
 
 template<typename T>
 class NODISCARD NamedConfig final

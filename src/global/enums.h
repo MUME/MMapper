@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "Array.h"
+
 #include <cstddef>
 #include <stdexcept>
 

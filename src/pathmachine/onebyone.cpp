@@ -5,9 +5,6 @@
 
 #include "onebyone.h"
 
-#include <list>
-#include <memory>
-
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/utils.h"
@@ -15,6 +12,9 @@
 #include "experimenting.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
+
+#include <list>
+#include <memory>
 
 class Path;
 

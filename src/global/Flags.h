@@ -3,6 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "bits.h"
+#include "utils.h"
+
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -10,9 +13,6 @@
 #include <limits>
 #include <optional>
 #include <type_traits>
-
-#include "bits.h"
-#include "utils.h"
 
 namespace enums {
 

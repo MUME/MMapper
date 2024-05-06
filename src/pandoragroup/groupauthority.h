@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QObject>
 #include <QSslCertificate>
 #include <QSslKey>
 #include <QStringListModel>
-
-#include "../global/macros.h"
 
 enum class NODISCARD GroupMetadataEnum { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;

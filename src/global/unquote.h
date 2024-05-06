@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "macros.h"
+
 #include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
-
-#include "macros.h"
 
 struct NODISCARD UnquoteFailureReason final : public std::string
 {

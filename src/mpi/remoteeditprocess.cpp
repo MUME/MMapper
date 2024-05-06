@@ -4,21 +4,22 @@
 
 #include "remoteeditprocess.h"
 
+#include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
+#include "../global/io.h"
+#include "../global/random.h"
+
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
 #include <QDateTime>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QProcess>
 #include <QString>
 #include <QStringList>
-
-#include "../configuration/configuration.h"
-#include "../global/TextUtils.h"
-#include "../global/io.h"
-#include "../global/random.h"
 
 static constexpr const std::string_view VALID
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

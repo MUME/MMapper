@@ -6,24 +6,6 @@
 
 #include "abstractparser.h"
 
-#include <algorithm>
-#include <cassert>
-#include <cctype>
-#include <cstdlib>
-#include <iterator>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <utility>
-#include <vector>
-#include <QDesktopServices>
-#include <QMessageLogContext>
-#include <QObject>
-#include <QVariant>
-#include <QtCore>
-
 #include "../clock/mumeclock.h"
 #include "../clock/mumemoment.h"
 #include "../configuration/configuration.h"
@@ -64,6 +46,25 @@
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
 #include "parserutils.h"
+
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <cstdlib>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <QDesktopServices>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QVariant>
+#include <QtCore>
 
 class RoomAdmin;
 

@@ -2,15 +2,17 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <QtCore>
+#include "RoomManager.h"
 
 #include "../global/StringView.h"
 #include "../proxy/GmcpMessage.h"
-#include "RoomManager.h"
 #include "RoomMobs.h"
+
+#include <memory>
+#include <string>
+#include <utility>
+
+#include <QtCore>
 
 RoomManager::RoomManager(QObject *const parent)
     : QObject{parent}

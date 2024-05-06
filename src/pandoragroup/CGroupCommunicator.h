@@ -4,18 +4,19 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "GroupSocket.h"
+#include "groupaction.h"
+#include "mmapper2group.h"
+
 #include <cstdint>
 #include <memory>
+
 #include <QByteArray>
 #include <QList>
 #include <QObject>
 #include <QString>
 #include <QVariantMap>
 #include <QtCore>
-
-#include "GroupSocket.h"
-#include "groupaction.h"
-#include "mmapper2group.h"
 
 class CGroup;
 class GroupAuthority;

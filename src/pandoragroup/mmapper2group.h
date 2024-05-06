@@ -4,18 +4,19 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/WeakHandle.h"
+#include "../global/roomid.h"
+#include "GroupManagerApi.h"
+#include "mmapper2character.h"
+
 #include <memory>
+
 #include <QArgument>
 #include <QMap>
 #include <QMutex>
 #include <QObject>
 #include <QTimer>
 #include <QVariantMap>
-
-#include "../global/WeakHandle.h"
-#include "../global/roomid.h"
-#include "GroupManagerApi.h"
-#include "mmapper2character.h"
 
 class GmcpMessage;
 class GroupAuthority;

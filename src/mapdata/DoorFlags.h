@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdint>
-
 #include "../global/Flags.h"
+
+#include <cstdint>
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
 #define X_FOREACH_DOOR_FLAG(X) \
@@ -40,13 +40,19 @@ public:
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const { return contains(DoorFlagEnum::UPPER_CASE); }
+    bool is##CamelCase() const \
+    { \
+        return contains(DoorFlagEnum::UPPER_CASE); \
+    }
     X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 public:
     // REVISIT: this name is different from the rest
-    inline bool needsKey() const { return isNeedKey(); }
+    inline bool needsKey() const
+    {
+        return isNeedKey();
+    }
 };
 
 inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagEnum rhs) noexcept

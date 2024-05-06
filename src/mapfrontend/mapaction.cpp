@@ -5,10 +5,6 @@
 
 #include "mapaction.h"
 
-#include <memory>
-#include <stack>
-#include <utility>
-
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
@@ -20,6 +16,10 @@
 #include "map.h"
 #include "mapfrontend.h"
 #include "roomcollection.h"
+
+#include <memory>
+#include <stack>
+#include <utility>
 
 AbstractAction::~AbstractAction() = default;
 MapAction::~MapAction() = default;

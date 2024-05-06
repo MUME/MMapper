@@ -3,14 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "Array.h"
+#include "Flags.h"
+#include "macros.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-
-#include "Array.h"
-#include "Flags.h"
-#include "macros.h"
 
 template<typename T, typename E, size_t SIZE_ = enums::CountOf<E>::value>
 class NODISCARD EnumIndexedArray : private MMapper::Array<T, SIZE_>

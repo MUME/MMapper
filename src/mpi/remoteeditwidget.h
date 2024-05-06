@@ -3,6 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+#include "remoteeditsession.h"
+
 #include <QAction>
 #include <QMainWindow>
 #include <QPlainTextEdit>
@@ -12,9 +15,6 @@
 #include <QtCore>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QVBoxLayout>
-
-#include "../global/macros.h"
-#include "remoteeditsession.h"
 
 struct EditViewCommand;
 struct EditCommand2;

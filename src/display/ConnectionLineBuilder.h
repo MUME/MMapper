@@ -3,10 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <vector>
-
 #include "../mapdata/ExitDirection.h"
 #include "../opengl/OpenGL.h"
+
+#include <vector>
 
 class NODISCARD ConnectionLineBuilder final
 {
