@@ -17,6 +17,9 @@ class MumeProtocolPage final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::MumeProtocolPage *const ui;
+
 public:
     explicit MumeProtocolPage(QWidget *parent);
     ~MumeProtocolPage() final;
@@ -27,7 +30,4 @@ public slots:
     void slot_internalEditorRadioButtonChanged(bool);
     void slot_externalEditorCommandTextChanged(QString);
     void slot_externalEditorBrowseButtonClicked(bool);
-
-private:
-    Ui::MumeProtocolPage *ui = nullptr;
 };

@@ -19,6 +19,9 @@ class GeneralPage final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::GeneralPage *const ui;
+
 public:
     explicit GeneralPage(QWidget *parent);
     ~GeneralPage() final;
@@ -43,7 +46,4 @@ public slots:
 
 signals:
     void sig_factoryReset();
-
-private:
-    Ui::GeneralPage *ui = nullptr;
 };

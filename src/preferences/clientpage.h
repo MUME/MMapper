@@ -17,6 +17,9 @@ class ClientPage final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::ClientPage *const ui;
+
 public:
     explicit ClientPage(QWidget *parent);
     ~ClientPage() final;
@@ -33,9 +36,4 @@ public slots:
     void slot_onChangeLinesOfScrollback(int);
     void slot_onChangeLinesOfInputHistory(int);
     void slot_onChangeTabCompletionDictionarySize(int);
-
-signals:
-
-private:
-    Ui::ClientPage *ui = nullptr;
 };

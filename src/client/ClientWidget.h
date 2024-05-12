@@ -22,6 +22,10 @@ class ClientWidget final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::ClientWidget *const ui;
+    QPointer<ClientTelnet> m_telnet;
+
 public:
     explicit ClientWidget(QWidget *parent);
     ~ClientWidget() final;
@@ -39,9 +43,4 @@ public slots:
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
-
-private:
-    Ui::ClientWidget *ui = nullptr;
-
-    QPointer<ClientTelnet> m_telnet;
 };

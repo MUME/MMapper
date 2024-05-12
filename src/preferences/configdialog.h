@@ -24,6 +24,11 @@ class ConfigDialog final : public QDialog
 {
     Q_OBJECT
 
+private:
+    Ui::ConfigDialog *const ui;
+    Mmapper2Group *const m_groupManager;
+    QStackedWidget *pagesWidget = nullptr;
+
 public:
     explicit ConfigDialog(Mmapper2Group *, QWidget *parent);
     ~ConfigDialog() final;
@@ -39,8 +44,5 @@ public slots:
     void slot_changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
-    Ui::ConfigDialog *ui = nullptr;
     void createIcons();
-    QStackedWidget *pagesWidget = nullptr;
-    Mmapper2Group *m_groupManager = nullptr;
 };
