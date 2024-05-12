@@ -20,6 +20,11 @@ class GroupManagerPage;
 class GroupManagerPage final : public QWidget
 {
     Q_OBJECT
+
+private:
+    Mmapper2Group *const m_groupManager;
+    Ui::GroupManagerPage *const ui;
+
 public:
     explicit GroupManagerPage(Mmapper2Group *, QWidget *parent);
     ~GroupManagerPage() final;
@@ -40,8 +45,4 @@ signals:
 
 private:
     void loadRemoteHostConfig();
-
-private:
-    Mmapper2Group *m_groupManager = nullptr;
-    Ui::GroupManagerPage *ui = nullptr;
 };

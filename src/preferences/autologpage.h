@@ -14,6 +14,9 @@ class AutoLogPage final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::AutoLogPage *const ui;
+
 public:
     explicit AutoLogPage(QWidget *parent);
     ~AutoLogPage() final;
@@ -22,9 +25,4 @@ public slots:
     void slot_loadConfig();
     void slot_logStrategyChanged(int);
     void slot_selectLogLocationButtonClicked(int);
-
-signals:
-
-private:
-    Ui::AutoLogPage *ui = nullptr;
 };
