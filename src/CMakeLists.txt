@@ -473,6 +473,7 @@ if(CHECK_MISSING_INCLUDES)
         set(FNAME "${CMAKE_CURRENT_BINARY_DIR}/gen/${header_path}.gen.cpp")
         file(WRITE ${FNAME} "#include \"${header_path}\"\n")
         list(APPEND DUMMY_FILES ${FNAME})
+        set_property(SOURCE ${FNAME} APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${header_path})
         set(FNAME "")
     endforeach()
     # REVISIT: Find a way to avoid adding this to mmapper_SRCS?
