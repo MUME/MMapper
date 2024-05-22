@@ -29,8 +29,9 @@ void ParseEvent::ArrayOfProperties::setProperty(const size_t pos, std::string s)
 NODISCARD static std::string getTerrainBytes(const RoomTerrainEnum &terrain)
 {
     const bool terrainValid = (terrain != RoomTerrainEnum::UNDEFINED);
-    const auto terrainBytes = terrainValid ? std::string(1, static_cast<int8_t>(terrain))
-                                           : std::string{};
+    const auto terrainBytes = terrainValid
+                                  ? std::string(1, static_cast<char>(static_cast<uint8_t>(terrain)))
+                                  : std::string{};
     assert(terrainBytes.size() == (terrainValid ? 1 : 0));
     return terrainBytes;
 }
