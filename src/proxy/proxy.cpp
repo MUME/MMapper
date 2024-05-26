@@ -127,9 +127,15 @@ void Proxy::slot_start()
                                               *m_timers,
                                               this);
 
-    m_mudSocket = (!QSslSocket::supportsSsl() || !getConfig().connection.tlsEncryption)
-                      ? QPointer<MumeSocket>(makeQPointer<MumeTcpSocket>(this))
-                      : QPointer<MumeSocket>(makeQPointer<MumeSslSocket>(this));
+    // REVISIT: The mud socket is never altered if the user changes socket settings
+    m_mudSocket = [this] {
+        const auto &conf = getConfig().connection;
+        if (!NO_WEBSOCKETS && conf.webSocket)
+            return QPointer<MumeSocket>(makeQPointer<MumeWebSocket>(this));
+        if (!QSslSocket::supportsSsl() && conf.tlsEncryption)
+            return QPointer<MumeSocket>(makeQPointer<MumeSslSocket>(this));
+        return QPointer<MumeSocket>(makeQPointer<MumeTcpSocket>(this));
+    }();
 
     auto *const userSocket = m_userSocket.data();
     auto *const userTelnet = m_userTelnet.data();

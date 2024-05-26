@@ -28,7 +28,6 @@ public slots:
     void slot_remoteNameTextChanged(const QString &);
     void slot_remotePortValueChanged(int);
     void slot_localPortValueChanged(int);
-    void slot_tlsEncryptionCheckBoxStateChanged(int);
 
     void slot_emulatedExitsStateChanged(int);
     void slot_showHiddenExitFlagsStateChanged(int);

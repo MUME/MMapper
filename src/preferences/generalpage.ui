@@ -26,19 +26,13 @@
       <string>Connection</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_5">
-      <item row="2" column="0">
-       <widget class="QLabel" name="textLabel4_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string>Local port number:</string>
+         <string>Character encoding:</string>
         </property>
         <property name="buddy">
-         <cstring>localPort</cstring>
+         <cstring>charsetComboBox</cstring>
         </property>
        </widget>
       </item>
@@ -46,16 +40,6 @@
        <widget class="QSpinBox" name="remotePort">
         <property name="maximum">
          <number>65535</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="3">
-       <widget class="QLineEdit" name="remoteName">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
         </property>
        </widget>
       </item>
@@ -75,20 +59,26 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="textLabel4_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Local port number:</string>
+        </property>
+        <property name="buddy">
+         <cstring>localPort</cstring>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="QSpinBox" name="localPort">
         <property name="maximum">
          <number>65535</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="tlsEncryptionCheckBox">
-        <property name="toolTip">
-         <string>Encrypt your connection to MUME using TLS</string>
-        </property>
-        <property name="text">
-         <string>TLS encryption</string>
         </property>
        </widget>
       </item>
@@ -108,7 +98,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
+      <item row="1" column="4">
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -121,13 +111,13 @@
         </property>
        </spacer>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Character encoding:</string>
-        </property>
-        <property name="buddy">
-         <cstring>charsetComboBox</cstring>
+      <item row="0" column="1" colspan="4">
+       <widget class="QLineEdit" name="remoteName">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
        </widget>
       </item>
@@ -148,6 +138,29 @@
           <string extracomment="No special characters">US-ASCII</string>
          </property>
         </item>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="secureCheckBox">
+        <property name="toolTip">
+         <string>Encrypt your connection to MUME using a TLS tunnel</string>
+        </property>
+        <property name="text">
+         <string>Secure</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QCheckBox" name="webProxyCheckBox">
+        <property name="toolTip">
+         <string>Connect over HTTPS WebSockets to get past restrictive firewalls</string>
+        </property>
+        <property name="text">
+         <string>Web Proxy</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -379,6 +392,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="configurationResetButton">
+        <property name="text">
+         <string>Reset to Default Settings</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -400,7 +420,8 @@
  <tabstops>
   <tabstop>remoteName</tabstop>
   <tabstop>remotePort</tabstop>
-  <tabstop>tlsEncryptionCheckBox</tabstop>
+  <tabstop>secureCheckBox</tabstop>
+  <tabstop>webProxyCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
   <tabstop>showClientPanelCheckBox</tabstop>
