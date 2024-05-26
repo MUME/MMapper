@@ -308,7 +308,7 @@ for:
       - cmd: cd c:\Build\MMapper
       - cmd: md winbuild
       - cmd: cd winbuild
-      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%"
+      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%" "-DCMAKE_LINKER=C:\Program Files\LLVM\bin\lld.exe"
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
       - ps: move *.exe* ../
