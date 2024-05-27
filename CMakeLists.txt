@@ -272,7 +272,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     endif()
 
     if(MMAPPER_IS_DEBUG)
-        if(TRUE)
+        if(NOT WIN32)
             # segfaults in ASAN initializer on 32-bit Ubuntu 18.04.1 with clang 6.0
             # note: apparently -fsanitize=address can't be used with gnu libc 2.25+
             # Ubuntu 18.04.1 has libc 2.27.
