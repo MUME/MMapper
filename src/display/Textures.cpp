@@ -108,55 +108,53 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
             const int size = 1 << (MAX_BITS - i);
             QImage image{size, size, QImage::Format::Format_RGBA8888};
             image.fill(TRANSPARENT_BLACK);
-            if (size >= 4) {
-                if (size >= 16) {
-                    // 64 and 128:
-                    // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
-                    // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
-                    // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
-                    // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
-                    // 32:
-                    // ##..##..##..##..##..##..##..##..
-                    // ##..##..##..##..##..##..##..##..
-                    // 16:
-                    // ##..##..##..##..
+            if (size >= 16) {
+                // 64 and 128:
+                // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
+                // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
+                // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
+                // ##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..##..
+                // 32:
+                // ##..##..##..##..##..##..##..##..
+                // ##..##..##..##..##..##..##..##..
+                // 16:
+                // ##..##..##..##..
 
-                    const int width = [i]() -> int {
-                        switch (MAX_BITS - i) {
-                        case 4:
-                            return 1;
-                        case 5:
-                            return 2;
-                        case 6:
-                        case 7:
-                            return 4;
-                        default:
-                            assert(false);
-                            return 4;
-                        }
-                    }();
-
-                    assert(isClamped(width, 1, 4));
-
-                    for (int y = 0; y < width; ++y) {
-                        for (int x = 0; x < size; x += 4) {
-                            image.setPixelColor(x + 0, y, OPAQUE_WHITE);
-                            image.setPixelColor(x + 1, y, OPAQUE_WHITE);
-                        }
+                const int width = [i]() -> int {
+                    switch (MAX_BITS - i) {
+                    case 4:
+                        return 1;
+                    case 5:
+                        return 2;
+                    case 6:
+                    case 7:
+                        return 4;
+                    default:
+                        assert(false);
+                        return 4;
                     }
-                } else if (size == 8) {
-                    // #...#...
-                    image.setPixelColor(1, 0, OPAQUE_WHITE);
-                    image.setPixelColor(5, 0, OPAQUE_WHITE);
-                } else if (size == 4) {
-                    // -.-.
-                    image.setPixelColor(0, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.5));
-                    image.setPixelColor(2, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.5));
-                } else if (size == 2) {
-                    // ..
-                    image.setPixelColor(0, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.25));
-                    image.setPixelColor(1, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.25));
+                }();
+
+                assert(isClamped(width, 1, 4));
+
+                for (int y = 0; y < width; ++y) {
+                    for (int x = 0; x < size; x += 4) {
+                        image.setPixelColor(x + 0, y, OPAQUE_WHITE);
+                        image.setPixelColor(x + 1, y, OPAQUE_WHITE);
+                    }
                 }
+            } else if (size == 8) {
+                // #...#...
+                image.setPixelColor(1, 0, OPAQUE_WHITE);
+                image.setPixelColor(5, 0, OPAQUE_WHITE);
+            } else if (size == 4) {
+                // -.-.
+                image.setPixelColor(0, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.5));
+                image.setPixelColor(2, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.5));
+            } else if (size == 2) {
+                // ..
+                image.setPixelColor(0, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.25));
+                image.setPixelColor(1, 0, QColor::fromRgbF(1.0, 1.0, 1.0, 0.25));
             }
 
             if (dir == ExitDirEnum::EAST || dir == ExitDirEnum::WEST) {
