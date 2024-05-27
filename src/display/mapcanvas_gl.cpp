@@ -200,21 +200,28 @@ bool MapCanvas::isBlacklistedDriver()
 void MapCanvas::initializeGL()
 {
     auto &gl = getOpenGL();
-    gl.initializeOpenGLFunctions();
+    try {
+        gl.initializeOpenGLFunctions();
 
-    reportGLVersion();
-
-    // TODO: Perform the blacklist test as a call from main() to minimize player headache.
-    if (isBlacklistedDriver()) {
-        setConfig().canvas.softwareOpenGL = true;
-        setConfig().write();
+        // TODO: Perform the blacklist test as a call from main() to minimize player headache.
+        if (isBlacklistedDriver()) {
+            throw std::runtime_error("unsupported driver");
+        }
+    } catch (const std::exception &) {
         hide();
         doneCurrent();
         QMessageBox::critical(this,
-                              "OpenGL Driver Blacklisted",
-                              "Please restart MMapper to enable software rendering");
+                              "Unable to initialize OpenGL",
+                              "Upgrade your video card drivers");
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+            // Link to Microsoft OpenGL Compatibility Pack
+            QDesktopServices::openUrl(
+                QUrl(QStringLiteral("ms-windows-store://pdp/?productid=9nqpsl29bfff")));
+        }
         return;
     }
+
+    reportGLVersion();
 
     // NOTE: If you're adding code that relies on generating OpenGL errors (e.g. ANGLE),
     // you *MUST* force it to complete those error probes before calling initLogger(),

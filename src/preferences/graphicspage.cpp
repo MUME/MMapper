@@ -54,12 +54,6 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GraphicsPage::slot_trilinearFilteringStateChanged);
-    connect(ui->softwareOpenGLCheckBox, &QCheckBox::clicked, this, [this]() {
-        QMessageBox::information(this,
-                                 "Restart Required",
-                                 "Please restart MMapper for this change to take effect.");
-        setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
-    });
 
     connect(ui->drawUnsavedChanges, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
         setConfig().canvas.showUnsavedChanges.set(ui->drawUnsavedChanges->isChecked());
@@ -120,12 +114,6 @@ void GraphicsPage::slot_loadConfig()
         ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
     ui->antialiasingSamplesComboBox->setCurrentIndex(index);
     ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering);
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-        ui->softwareOpenGLCheckBox->setEnabled(false);
-        ui->softwareOpenGLCheckBox->setChecked(false);
-    } else {
-        ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
-    }
 
     ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
     ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());

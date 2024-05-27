@@ -947,7 +947,7 @@ if(WIN32)
     endif()
 
     # Bundle Library Files
-    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --compiler-runtime --no-angle --no-translations --no-system-d3d-compiler --verbose 1)
+    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --compiler-runtime --no-angle --no-translations --no-system-d3d-compiler --no-opengl-sw --verbose 1)
     find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES .)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
     message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")

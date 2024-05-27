@@ -288,7 +288,6 @@ ConstString KEY_SHOW_MISSING_MAP_ID = "Show missing map id";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
-ConstString KEY_USE_SOFTWARE_OPENGL = "Use software OpenGL";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
 ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
@@ -599,7 +598,6 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     roomDarkLitColor = lookupColor(KEY_ROOM_DARK_LIT_COLOR, DEFAULT_NO_SUNDEATH_COLOR);
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, true).toBool();
-    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, false).toBool();
     advanced.use3D.set(conf.value(KEY_3D_CANVAS, false).toBool());
     advanced.autoTilt.set(conf.value(KEY_3D_AUTO_TILT, true).toBool());
     advanced.printPerfStats.set(conf.value(KEY_3D_PERFSTATS, IS_DEBUG_BUILD).toBool());
@@ -783,7 +781,6 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_CONNECTION_NORMAL_COLOR, getQColorName(connectionNormalColor));
     conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples);
     conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering);
-    conf.setValue(KEY_USE_SOFTWARE_OPENGL, softwareOpenGL);
     conf.setValue(KEY_3D_CANVAS, advanced.use3D.get());
     conf.setValue(KEY_3D_AUTO_TILT, advanced.autoTilt.get());
     conf.setValue(KEY_3D_PERFSTATS, advanced.printPerfStats.get());
