@@ -1051,8 +1051,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
          * give higher contrast for the base textures.
          */
         if (disableTextures) {
-            const auto layerWhite = Colors::white.withAlpha((thisLayer <= focusedLayer) ? 0.90f
-                                                                                        : 0.20f);
+            const auto layerWhite = Colors::white.withAlpha(0.20f);
             layerBoost.render(less_blended.withColor(layerWhite));
         } else {
             terrain.render(less_blended.withColor(color));
