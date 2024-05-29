@@ -162,4 +162,7 @@ public:
 public:
     void cleanup();
     void setTextureLookup(MMTextureId, SharedMMTexture);
+
+public:
+    void initArray(const SharedMMTexture &array, const std::vector<SharedMMTexture> &input);
 };

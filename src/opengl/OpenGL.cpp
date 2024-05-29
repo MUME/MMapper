@@ -4,11 +4,14 @@
 
 #include "OpenGL.h"
 
+#include "../display/Textures.h"
 #include "../global/logging.h"
 #include "./legacy/Legacy.h"
+#include "./legacy/VBO.h"
 #include "OpenGLTypes.h"
 
 #include <cassert>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -459,7 +462,9 @@ void OpenGL::renderFont3d(const SharedMMTexture &texture, const std::vector<Font
 
 void OpenGL::initializeOpenGLFunctions()
 {
-    getFunctions().initializeOpenGLFunctions();
+    if (!getFunctions().initializeOpenGLFunctions()) {
+        throw std::runtime_error("failed to initialize");
+    }
 }
 
 const char *OpenGL::glGetString(GLenum name)
@@ -487,4 +492,165 @@ void OpenGL::setDevicePixelRatio(const float devicePixelRatio)
 void OpenGL::setTextureLookup(const MMTextureId id, SharedMMTexture tex)
 {
     getFunctions().getTexLookup().set(id, std::move(tex));
+}
+
+namespace init_array_helper {
+
+NODISCARD static GLint xglGetTexParameteri(QOpenGLFunctions_3_3_Core &gl,
+                                           GLenum target,
+                                           GLenum pname)
+{
+    GLint result = 0;
+    gl.glGetTexParameteriv(target, pname, &result);
+    return result;
+}
+
+NODISCARD static GLint xglGetTexLevelParameteri(QOpenGLFunctions_3_3_Core &gl,
+                                                GLenum target,
+                                                GLint level,
+                                                GLenum pname)
+{
+    GLint result = 0;
+    gl.glGetTexLevelParameteriv(target, level, pname, &result);
+    return result;
+}
+
+static void buildTexture2dArray(QOpenGLFunctions_3_3_Core &gl,
+                                const GLuint vbo,
+                                const std::vector<GLuint> &srcNames,
+                                const GLuint dstName,
+                                const GLsizei img_width,
+                                const GLsizei img_height)
+{
+    assert(vbo != 0);
+
+    if (img_width != img_height)
+        throw std::runtime_error("texture must be square");
+
+    using GLsizeui = std::make_unsigned_t<GLsizei>;
+
+    if (!utils::isPowerOfTwo(static_cast<GLsizeui>(img_width)))
+        throw std::runtime_error("texture size must be a power of two");
+
+    gl.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vbo);
+    gl.glBufferData(GL_PIXEL_UNPACK_BUFFER, img_width * img_height * 4, nullptr, GL_DYNAMIC_COPY);
+    gl.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+    // GLint oldTexture = xglGetInteger(GL_ACTIVE_TEXTURE);
+    // GLint oldTex2d = xglGetInteger(GL_TEXTURE_BINDING_2D);
+    // GLint oldTex2dArray = xglGetInteger(GL_TEXTURE_BINDING_2D_ARRAY);
+    // GLint oldReadBuffer = xglGetInteger(GL_COPY_READ_BUFFER_BINDING);
+    // GLint oldPackBuffer = xglGetInteger(GL_PIXEL_PACK_BUFFER_BINDING);
+    // xglGetInteger(GL_PACK_ALIGNMENT);
+
+    gl.glActiveTexture(GL_TEXTURE0);
+    gl.glBindTexture(GL_TEXTURE_2D_ARRAY, dstName);
+    gl.glActiveTexture(GL_TEXTURE1);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
+    gl.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vbo);
+    gl.glBindBuffer(GL_PIXEL_PACK_BUFFER, vbo);
+    gl.glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+    struct NODISCARD CleanupRaii final
+    {
+        QOpenGLFunctions_3_3_Core &m_gl;
+        ~CleanupRaii()
+        {
+            m_gl.glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+            m_gl.glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+            m_gl.glActiveTexture(GL_TEXTURE1);
+            m_gl.glBindTexture(GL_TEXTURE_2D, 0);
+            m_gl.glActiveTexture(GL_TEXTURE0);
+            m_gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        }
+    };
+    CleanupRaii cleanup{gl};
+
+    const GLsizei layers = static_cast<GLsizei>(srcNames.size());
+    for (GLsizei layer = 0; layer < layers; ++layer) {
+        const GLuint srcName = srcNames[static_cast<GLsizeui>(layer)];
+
+        gl.glActiveTexture(GL_TEXTURE1);
+        gl.glBindTexture(GL_TEXTURE_2D, srcName);
+
+        const GLint baseLevel = xglGetTexParameteri(gl, GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL);
+        const GLint maxLevel = xglGetTexParameteri(gl, GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL);
+        MAYBE_UNUSED const GLint inFmt = xglGetTexLevelParameteri(gl,
+                                                                  GL_TEXTURE_2D,
+                                                                  0,
+                                                                  GL_TEXTURE_INTERNAL_FORMAT);
+        if (baseLevel != 0)
+            throw std::runtime_error("baseLevel is not zero");
+
+        if (maxLevel != 1000)
+            throw std::runtime_error("maxLevel is not 1000");
+
+        {
+            const GLint width = xglGetTexLevelParameteri(gl, GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH);
+            const GLint height = xglGetTexLevelParameteri(gl, GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT);
+
+            if (img_width != width || img_height != height)
+                throw std::runtime_error("input texture is the wrong size");
+        }
+
+        for (int level = 0; (img_width >> level) > 0; ++level) {
+            gl.glActiveTexture(GL_TEXTURE1);
+            const GLint level_width = xglGetTexLevelParameteri(gl,
+                                                               GL_TEXTURE_2D,
+                                                               level,
+                                                               GL_TEXTURE_WIDTH);
+            const GLint level_height = xglGetTexLevelParameteri(gl,
+                                                                GL_TEXTURE_2D,
+                                                                level,
+                                                                GL_TEXTURE_HEIGHT);
+
+            assert(level_width == level_height);
+            assert(level_width == img_width >> level);
+
+            // writes to GL_PIXEL_PACK_BUFFER
+            gl.glGetTexImage(GL_TEXTURE_2D, level, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+            // reads from GL_PIXEL_UNPACK_BUFFER
+            gl.glActiveTexture(GL_TEXTURE0);
+            gl.glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+                               level,
+                               0,
+                               0,
+                               layer,
+                               level_width,
+                               level_height,
+                               1,
+                               GL_RGBA,
+                               GL_UNSIGNED_BYTE,
+                               nullptr);
+        }
+    }
+}
+
+} // namespace init_array_helper
+
+void OpenGL::initArray(const SharedMMTexture &array, const std::vector<SharedMMTexture> &input)
+{
+    Legacy::VBO vbo;
+    vbo.emplace(getSharedFunctions());
+
+    MMTexture &tex = deref(array);
+    QOpenGLTexture &qtex = deref(tex.get());
+
+    std::vector<GLuint> srcNames;
+    srcNames.reserve(input.size());
+    for (const auto &x : input) {
+        srcNames.emplace_back(deref(deref(x).get()).textureId());
+    }
+    assert(srcNames.size() == input.size());
+    assert(qtex.layers() == static_cast<int>(input.size()));
+
+    init_array_helper::buildTexture2dArray(getFunctions(),
+                                           vbo.get(),
+                                           srcNames,
+                                           qtex.textureId(),
+                                           qtex.width(),
+                                           qtex.height());
+
+    vbo.reset();
 }

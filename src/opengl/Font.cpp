@@ -637,7 +637,7 @@ public:
     void addString(const GLText &text)
     {
         resetPerStringData();
-        this->m_opts = Opts{text};
+        m_opts = Opts{text};
 
         int wordOffset = 0;
         call_foreach_glyph(wordOffset, false);

@@ -756,11 +756,11 @@ void MapCanvas::paintDifferences()
 
     if (getConfig().canvas.showMissingMapId.get()) {
         if (auto &needsUpdate = highlight.needsUpdate; !needsUpdate.empty()) {
-            needsUpdate.render(gl, m_textures.room_needs_update->getId());
+            needsUpdate.render(gl, m_textures.room_needs_update->getArrayPosition().array);
         }
     }
     if (auto &modified = highlight.modified; !modified.empty()) {
-        modified.render(gl, m_textures.room_modified->getId());
+        modified.render(gl, m_textures.room_modified->getArrayPosition().array);
     }
 }
 

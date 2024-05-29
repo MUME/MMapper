@@ -10,10 +10,19 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <QOpenGLTexture>
 #include <QString>
 #include <QtGui/qopengl.h>
+
+NODISCARD MMTextureId allocateTextureId();
+
+struct NODISCARD MMTexArrayPosition final
+{
+    MMTextureId array;
+    int position = 0;
+};
 
 // currently forward declared in OpenGLTypes.h
 // so it can define SharedMMTexture
@@ -22,6 +31,7 @@ class NODISCARD MMTexture final : public std::enable_shared_from_this<MMTexture>
 private:
     QOpenGLTexture m_qt_texture;
     MMTextureId m_id = INVALID_MM_TEXTURE_ID;
+    std::optional<MMTexArrayPosition> m_arrayPos;
     bool m_forbidUpdates = false;
 
 public:
@@ -59,9 +69,20 @@ public:
     void bind() { get()->bind(); }
     void bind(GLuint x) { get()->bind(x); }
     void release(GLuint x) { get()->release(x); }
-    NODISCARD GLuint textureId() const { return get()->textureId(); }
+
     NODISCARD QOpenGLTexture::Target target() const { return get()->target(); }
     NODISCARD bool canBeUpdated() const { return !m_forbidUpdates; }
+
+    NODISCARD bool hasArrayPosition() const { return m_arrayPos.has_value(); }
+    NODISCARD MMTexArrayPosition getArrayPosition() const
+    {
+        if (hasArrayPosition()) {
+            return deref(m_arrayPos);
+        }
+
+        return MMTexArrayPosition{getId(), 0};
+    }
+    void setArrayPosition(const MMTexArrayPosition &pos) { m_arrayPos = pos; }
 
     NODISCARD SharedMMTexture getShared() { return shared_from_this(); }
     NODISCARD MMTexture *getRaw() { return this; }
@@ -136,6 +157,9 @@ struct NODISCARD MapCanvasTextures final
 #define X_DECL(_Type, _Name) _Type _Name;
     XFOREACH_MAPCANVAS_TEXTURES(X_DECL)
 #undef X_DECL
+#define X_DECL(_Type, _Name) SharedMMTexture _Name##_Array;
+    XFOREACH_MAPCANVAS_TEXTURES(X_DECL)
+#undef X_DECL
 
 private:
     template<typename Callback>
@@ -167,7 +191,7 @@ namespace mctp {
 namespace detail {
 template<typename E_, size_t Size_>
 auto typeHack(EnumIndexedArray<SharedMMTexture, E_, Size_>)
-    -> EnumIndexedArray<MMTextureId, E_, Size_>;
+    -> EnumIndexedArray<MMTexArrayPosition, E_, Size_>;
 
 template<typename T>
 struct NODISCARD Proxy
@@ -178,7 +202,7 @@ struct NODISCARD Proxy
 template<>
 struct NODISCARD Proxy<SharedMMTexture>
 {
-    using type = MMTextureId;
+    using type = MMTexArrayPosition;
 };
 
 template<typename T>
@@ -195,5 +219,3 @@ struct NODISCARD MapCanvasTexturesProxy final
 NODISCARD extern MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct);
 
 } // namespace mctp
-
-NODISCARD extern MMTextureId allocateTextureId();

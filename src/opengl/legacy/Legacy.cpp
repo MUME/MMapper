@@ -35,6 +35,7 @@
 #include <QOpenGLTexture>
 
 namespace Legacy {
+
 template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static auto createMesh(const SharedFunctions &functions,
                                  const DrawModeEnum mode,
