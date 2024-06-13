@@ -77,7 +77,7 @@ public:
                            CamelCase>); \
         return ExitFieldEnum::UPPER_CASE; \
     }
-        switch (const auto index = m_data.index()) {
+        switch (m_data.index()) {
             X_FOREACH_EXIT_FIELD(CASE, NOP)
         }
 #undef CASE

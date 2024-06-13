@@ -36,6 +36,7 @@ void TestParser::latinToAsciiTest()
 
 void TestParser::createParseEventTest()
 {
+    RoomServerId roomServerId{};
     RoomName roomName{"Room"};
     RoomDesc parsedRoomDescription{"Description"};
     RoomContents roomContents{"Contents"};
@@ -47,6 +48,7 @@ void TestParser::createParseEventTest()
     ConnectedRoomFlagsType cFlags;
     cFlags.setValid();
     auto event = ParseEvent::createEvent(CommandEnum::NORTH,
+                                         roomServerId,
                                          roomName,
                                          parsedRoomDescription,
                                          roomContents,
@@ -57,6 +59,7 @@ void TestParser::createParseEventTest()
 
     const ParseEvent &e = *event;
     qDebug() << e;
+    QCOMPARE(e.getRoomServerId(), roomServerId);
     QCOMPARE(e.getRoomName(), roomName);
     QCOMPARE(e.getRoomDesc(), parsedRoomDescription);
     QCOMPARE(e.getRoomContents(), roomContents);
