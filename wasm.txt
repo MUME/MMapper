@@ -1,0 +1,20 @@
+docker run --rm -it -v $(pwd):/root/mmapper --entrypoint /bin/bash maukalinow/qtwasm_builder:5.13_latest
+
+export CMAKE_PREFIX_PATH="/usr/local/Qt/"
+export Qt5_DIR="/usr/local/Qt/lib/cmake/Qt5"
+# Might not be required ^^
+
+export EMSCRIPTEN="/root/dev/emsdk/fastcomp/emscripten/"
+
+#Sources
+# https://forum.qt.io/topic/106515/cmake-project-builds-target-webassembly/4
+# https://bugreports.qt.io/browse/QTBUG-78647
+# https://forum.qt.io/topic/100248/problems-compiling-qt-5-13-0-alpha-for-webassembly/8
+# https://wiki.qt.io/Qt_for_WebAssembly
+
+#apt install -y build-essential git libgles2-mesa-dev zlib1g-dev cmake
+
+Cmake 3.13
+
+cmake .. -DCMAKE_TOOLCHAIN_FILE=/root/dev/emsdk/fastcomp/emscripten/cmake/Modules/Platform/Emscripten.cmake -DEMSCRIPTEN_ROOT_PATH=/root/dev/emsdk/fastcomp/emscripten/ -DWITH_ZLIB=OFF -DWITH_OPENSSL=OFF -DWITH_MINIUPNPC=OFF -DWITH_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+

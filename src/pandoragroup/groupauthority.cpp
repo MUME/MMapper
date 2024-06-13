@@ -215,10 +215,12 @@ void GroupAuthority::refresh()
 #else
 void GroupAuthority::refresh()
 {
+#ifndef Q_OS_WASM
     certificate.clear();
     setConfig().groupManager.certificate = "";
     key.clear();
     setConfig().groupManager.privateKey = "";
+#endif
 }
 #endif
 
@@ -248,6 +250,7 @@ GroupAuthority::GroupAuthority(QObject *const parent)
     : QObject(parent)
 {
     qRegisterMetaType<GroupSecret>("GroupSecret");
+#ifndef Q_OS_WASM
 
     // Always utilize a temporary keychain
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
@@ -279,12 +282,17 @@ GroupAuthority::GroupAuthority(QObject *const parent)
 
     // Prime model
     model.setStringList(groupManager.authorizedSecrets);
+#endif
 }
 
 GroupSecret GroupAuthority::getSecret() const
 {
+#ifndef Q_OS_WASM
     // SHA-1 isn't very secure but at 40 characters it fits within a line for tells
     return certificate.digest(QCryptographicHash::Algorithm::Sha1).toHex();
+#else
+    return "";
+#endif
 }
 
 bool GroupAuthority::add(const GroupSecret &secret)
@@ -339,6 +347,7 @@ bool GroupAuthority::validSecret(const GroupSecret &secret) const
 
 bool GroupAuthority::validCertificate(const GroupSocket *connection) const
 {
+#ifndef Q_OS_WASM
     const GroupSecret &targetSecret = connection->getSecret();
     const QString &storedCertificate = getMetadata(targetSecret, GroupMetadataEnum::CERTIFICATE);
     if (storedCertificate.isEmpty())
@@ -348,6 +357,9 @@ bool GroupAuthority::validCertificate(const GroupSocket *connection) const
     const bool certificatesMatch = targetCertficiate.compare(storedCertificate, Qt::CaseInsensitive)
                                    == 0;
     return certificatesMatch;
+#else
+    return false;
+#endif
 }
 
 QString GroupAuthority::getMetadata(const GroupSecret &secret, GroupMetadataEnum meta) const

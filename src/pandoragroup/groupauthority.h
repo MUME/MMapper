@@ -4,8 +4,10 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <QObject>
+#ifndef Q_OS_WASM
 #include <QSslCertificate>
 #include <QSslKey>
+#endif
 #include <QStringListModel>
 
 #include "../global/macros.h"
@@ -34,8 +36,11 @@ public slots:
 
 public:
     NODISCARD GroupSecret getSecret() const;
+
+#ifndef Q_OS_WASM
     NODISCARD QSslCertificate getLocalCertificate() const { return certificate; }
     NODISCARD QSslKey getPrivateKey() const { return key; }
+#endif
 
 public:
     NODISCARD QAbstractItemModel *getItemModel() { return &model; }
@@ -54,6 +59,8 @@ signals:
 
 private:
     QStringListModel model;
+#ifndef Q_OS_WASM
     QSslCertificate certificate;
     QSslKey key;
+#endif
 };
