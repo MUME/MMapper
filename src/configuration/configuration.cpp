@@ -956,6 +956,8 @@ const Configuration &getConfig()
     return setConfig();
 }
 
+#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
+
 void Configuration::ColorSettings::resetToDefaults()
 {
     assert(Colors::black.getRGB() == 0 && Colors::black.getRGBA() != 0);
