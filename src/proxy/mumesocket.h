@@ -17,6 +17,10 @@
 
 class QSslError;
 
+#ifndef NO_MMAPPER_WEBSOCKETS
+#include <QWebSocket>
+#endif
+
 class MumeSocket : public QObject
 {
     Q_OBJECT
@@ -99,4 +103,27 @@ public:
 private:
     void virt_connectToHost() final;
     void virt_onConnect() final;
+};
+
+class MumeWebSocket : public MumeSocket
+{
+    Q_OBJECT
+public:
+    explicit MumeWebSocket(QObject *parent);
+
+private:
+    void virt_disconnectFromHost() final;
+    void virt_connectToHost() override;
+    void virt_sendToMud(const QByteArray &ba) final;
+    NODISCARD QAbstractSocket::SocketState virt_state() override { return m_socket.state(); }
+    void virt_onError(QAbstractSocket::SocketError e) final;
+
+protected slots:
+    void slot_onBinaryMessageReceived(const QByteArray &);
+    void slot_onError(QAbstractSocket::SocketError e) { virt_onError(e); }
+
+private:
+#ifndef NO_MMAPPER_WEBSOCKETS
+    QWebSocket m_socket;
+#endif
 };
