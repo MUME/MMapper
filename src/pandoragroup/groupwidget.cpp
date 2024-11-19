@@ -17,6 +17,8 @@
 #include "groupselection.h"
 #include "mmapper2group.h"
 
+#include <map>
+
 #include <QAction>
 #include <QHeaderView>
 #include <QMessageLogContext>
@@ -27,6 +29,47 @@
 static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
               "# of columns");
+
+namespace { // anonymous
+
+class NODISCARD GroupImageCache final
+{
+private:
+    using Key = std::pair<QString, bool>;
+    std::map<std::pair<QString, bool>, QImage> m_images;
+
+public:
+    explicit GroupImageCache() = default;
+    ~GroupImageCache() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(GroupImageCache);
+
+public:
+    NODISCARD bool contains(const Key &key) const { return m_images.find(key) != m_images.end(); }
+    NODISCARD QImage &getImage(const QString &filename, const bool invert)
+    {
+        const Key key{filename, invert};
+        if (!contains(key)) {
+            auto &&[it, added] = m_images.emplace(key, filename);
+            if (!added)
+                std::abort();
+            QImage &image = it->second;
+            if (invert)
+                image.invertPixels();
+
+            qInfo() << "created image" << filename << (invert ? "(inverted)" : "(regular)");
+        }
+        return m_images[key];
+    }
+};
+
+NODISCARD static auto &getImage(const QString &filename, const bool invert)
+{
+    static GroupImageCache g_groupImageCache;
+
+    // NOTE: Assumes we're single-threaded; otherwise we'd need a lock here.
+    return g_groupImageCache.getImage(filename, invert);
+}
+} // namespace
 
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
@@ -57,19 +100,10 @@ void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
     m_height = rect.height();
     painter.scale(m_height, m_height); // Images are squares
 
-    // REVISIT: Build images ahead of time
-
     const bool invert = mmqt::textColor(m_color) == Qt::white;
 
     const auto drawOne = [&painter, invert](QString filename) -> void {
-        const auto getImage = [invert, &filename]() {
-            QImage image{filename};
-            if (invert)
-                image.invertPixels();
-            return image;
-        };
-
-        painter.drawImage(QRect{0, 0, 1, 1}, getImage());
+        painter.drawImage(QRect{0, 0, 1, 1}, getImage(filename, invert));
         painter.translate(1, 0);
     };
 
