@@ -272,7 +272,7 @@ void GroupClient::receiveGroupInformation(const QVariantMap &data)
         // Update metadata and assume first received character is host
         const auto &secret = m_socket.getSecret();
         const auto &nameStr = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
-        getAuthority()->setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
+        GroupAuthority::setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
         emit sig_sendLog("Host's name is most likely '" + nameStr + "'");
     }
     emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
@@ -300,7 +300,7 @@ void GroupClient::slot_connectionEncrypted()
     GroupAuthority &authority = deref(getAuthority());
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = authority.validSecret(secret);
-    const bool validCert = authority.validCertificate(m_socket);
+    const bool validCert = GroupAuthority::validCertificate(m_socket);
     if (requireAuth && !validSecret) {
         emit sig_messageBox(
             QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
@@ -321,14 +321,14 @@ void GroupClient::slot_connectionEncrypted()
         if (!validSecret)
             getAuthority()->add(secret);
         // Update metadata
-        getAuthority()->setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, m_socket.getPeerName());
-        getAuthority()->setMetadata(secret,
+        GroupAuthority::setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, m_socket.getPeerName());
+        GroupAuthority::setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
-        getAuthority()->setMetadata(secret,
+        GroupAuthority::setMetadata(secret,
                                     GroupMetadataEnum::CERTIFICATE,
                                     m_socket.getPeerCertificate().toPem());
-        getAuthority()->setMetadata(secret,
+        GroupAuthority::setMetadata(secret,
                                     GroupMetadataEnum::PORT,
                                     QString("%1").arg(m_socket.getPeerPort()));
     }

@@ -371,7 +371,7 @@ void GroupServer::parseLoginInformation(GroupSocket &socket, const QVariantMap &
                              && socket.getProtocolVersion() >= PROTOCOL_VERSION_103;
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = getAuthority()->validSecret(secret);
-    const bool validCert = getAuthority()->validCertificate(socket);
+    const bool validCert = GroupAuthority::validCertificate(socket);
     bool reconnect = false;
     if (isEncrypted) {
         emit sig_sendLog(QString("'%1's secret: %2").arg(tempName, QString::fromLatin1(secret)));
@@ -429,12 +429,12 @@ void GroupServer::parseLoginInformation(GroupSocket &socket, const QVariantMap &
     // Client is allowed to log in
     if (isEncrypted && validSecret) {
         // Update metadata
-        getAuthority()->setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
-        getAuthority()->setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, socket.getPeerName());
-        getAuthority()->setMetadata(secret,
+        GroupAuthority::setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
+        GroupAuthority::setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, socket.getPeerName());
+        GroupAuthority::setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
-        getAuthority()->setMetadata(secret,
+        GroupAuthority::setMetadata(secret,
                                     GroupMetadataEnum::CERTIFICATE,
                                     socket.getPeerCertificate().toPem());
     }

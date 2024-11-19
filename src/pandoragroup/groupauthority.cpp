@@ -335,7 +335,7 @@ bool GroupAuthority::validSecret(const GroupSecret &secret) const
     return model.stringList().contains(secret.toLower());
 }
 
-bool GroupAuthority::validCertificate(const GroupSocket &connection) const
+bool GroupAuthority::validCertificate(const GroupSocket &connection)
 {
     const GroupSecret &targetSecret = connection.getSecret();
     const QString &storedCertificate = getMetadata(targetSecret, GroupMetadataEnum::CERTIFICATE);
@@ -348,7 +348,7 @@ bool GroupAuthority::validCertificate(const GroupSocket &connection) const
     return certificatesMatch;
 }
 
-QString GroupAuthority::getMetadata(const GroupSecret &secret, const GroupMetadataEnum meta) const
+QString GroupAuthority::getMetadata(const GroupSecret &secret, const GroupMetadataEnum meta)
 {
     const auto &metadata = getConfig().groupManager.secretMetadata;
     return metadata[getMetadataKey(secret, meta)].toString();

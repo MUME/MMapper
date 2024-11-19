@@ -189,9 +189,9 @@ void GroupManagerPage::loadRemoteHostConfig()
     for (int i = 0; i < itemModel->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
         const auto key = itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray();
-        const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
-        const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
-        const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
+        const auto ip = GroupAuthority::getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
+        const auto port = GroupAuthority::getMetadata(key, GroupMetadataEnum::PORT).toInt();
+        const auto name = GroupAuthority::getMetadata(key, GroupMetadataEnum::NAME);
 
         // IP and Port must be valid
         if (ip.isEmpty() || port <= 0)
@@ -290,14 +290,14 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 
     if (correctLength && alreadyPresent) {
         const auto key = secretText.toLatin1();
-        const auto lastLogin = authority->getMetadata(key, GroupMetadataEnum::LAST_LOGIN);
+        const auto lastLogin = GroupAuthority::getMetadata(key, GroupMetadataEnum::LAST_LOGIN);
         QString line;
         if (lastLogin.isEmpty()) {
             line = "<i>Never seen before</i>";
         } else {
-            const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
-            const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
-            const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
+            const auto name = GroupAuthority::getMetadata(key, GroupMetadataEnum::NAME);
+            const auto ip = GroupAuthority::getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
+            const auto port = GroupAuthority::getMetadata(key, GroupMetadataEnum::PORT).toInt();
             line = QString("<i>Last seen %1%2 from %3</i>")
                        .arg(lastLogin)
                        .arg(name.isEmpty() ? "" : QString(" as '%2'").arg(name))
