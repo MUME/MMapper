@@ -83,6 +83,10 @@ NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::st
         return std::nullopt;
     }
 
+    if (input.length() >= 2 && isAbbrev(input, "unknown")) {
+        return ExitDirEnum::UNKNOWN;
+    }
+
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         if (isAbbrev(input, lowercaseDirection(dir))) {
             return dir;
