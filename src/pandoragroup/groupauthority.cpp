@@ -35,19 +35,26 @@ NODISCARD static EVP_PKEY_ptr generatePrivateKey()
 {
     /* Allocate memory for the EVP_PKEY and BIGNUM structures. */
     EVP_PKEY_ptr pkey(EVP_PKEY_new(), ::EVP_PKEY_free);
-    if (!pkey)
+
+    if (pkey == nullptr) {
         throw std::runtime_error("Unable to create EVP_PKEY structure.");
+    }
 
     using BIGNUM_ptr = std::unique_ptr<BIGNUM, decltype(&::BN_free)>;
     BIGNUM_ptr bn(BN_new(), ::BN_free);
-    if (!bn)
+
+    if (bn == nullptr) {
         throw std::runtime_error("Unable to create BIGNUM structure.");
+    }
+
     BN_set_word(bn.get(), RSA_F4);
 
     using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&::EVP_PKEY_CTX_free)>;
     EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr), ::EVP_PKEY_CTX_free);
-    if (!ctx)
+
+    if (ctx == nullptr) {
         throw std::runtime_error("Unable to allocate public key algorithm contex.");
+    }
 
     if (EVP_PKEY_keygen_init(ctx.get()) <= 0) {
         throw std::runtime_error("Unable to initialize a public key algorithm.");
@@ -71,8 +78,9 @@ NODISCARD static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
 {
     /* Allocate memory for the X509 structure. */
     X509_ptr x509(X509_new(), ::X509_free);
-    if (!x509)
+    if (x509 == nullptr) {
         throw std::runtime_error("Unable to create X509 structure.");
+    }
 
     /* Set the serial number. */
     ASN1_INTEGER_set(X509_get_serialNumber(x509.get()), 1);
@@ -167,8 +175,9 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
     OSSL_ENCODER_CTX_ptr
         ectx(OSSL_ENCODER_CTX_new_for_pkey(pkey.get(), selection, format, structure, nullptr),
              ::OSSL_ENCODER_CTX_free);
-    if (!ectx)
+    if (ectx == nullptr) {
         throw std::runtime_error("No suitable potential encoders found,");
+    }
 
     if (!OSSL_ENCODER_to_bio(ectx.get(), bio.get())) {
         throw std::runtime_error("Encoding PEM failed.");
