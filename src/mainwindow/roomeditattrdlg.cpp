@@ -210,6 +210,26 @@ NODISCARD static int getPriority(const RoomLoadFlagEnum flag)
     return static_cast<int>(flag);
 }
 
+template<typename T, typename Flags>
+void setCheckStates(T &array, const Flags flags)
+{
+    for (size_t i = 0, len = array.size(); i < len; ++i) {
+        const auto flag = static_cast<typename T::index_type>(i);
+        if (UniqueRoomListWidgetItem &x = array[flag]) {
+            deref(x).setCheckState(flags.contains(flag) ? Qt::CheckState::Checked
+                                                        : Qt::CheckState::Unchecked);
+        }
+    }
+}
+
+template<typename T>
+void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
+{
+    for (UniqueRoomListWidgetItem &x : array) {
+        deref(x).setFlags(flags);
+    }
+}
+
 RoomListWidgetItem::RoomListWidgetItem(const QString &text, const int priority)
     : QListWidgetItem(text)
 {
@@ -546,26 +566,6 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
     }
 
     connect(this, &RoomEditAttrDlg::sig_requestUpdate, m_mapCanvas, &MapCanvas::slot_requestUpdate);
-}
-
-template<typename T, typename Flags>
-void setCheckStates(T &array, const Flags flags)
-{
-    for (size_t i = 0, len = array.size(); i < len; ++i) {
-        const auto flag = static_cast<typename T::index_type>(i);
-        if (UniqueRoomListWidgetItem &x = array[flag]) {
-            deref(x).setCheckState(flags.contains(flag) ? Qt::CheckState::Checked
-                                                        : Qt::CheckState::Unchecked);
-        }
-    }
-}
-
-template<typename T>
-void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
-{
-    for (UniqueRoomListWidgetItem &x : array) {
-        deref(x).setFlags(flags);
-    }
 }
 
 void RoomEditAttrDlg::updateDialog(const Room *r)
