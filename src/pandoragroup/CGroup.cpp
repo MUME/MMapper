@@ -132,17 +132,15 @@ void CGroup::removeChar(const QByteArray &name)
         return;
     }
 
-    auto &charIndex = m_charIndex;
-    for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
-        SharedGroupChar character = *it;
-        if (character->getName() == name) {
-            log(QString("Removing '%1' from the group.")
-                    .arg(QString::fromLatin1(character->getName())));
-            charIndex.erase(it);
-            characterChanged(true);
-            return;
+    utils::erase_if(m_charIndex, [this, &name](const SharedGroupChar &pChar) -> bool {
+        auto &character = deref(pChar);
+        if (character.getName() != name) {
+            return false;
         }
-    }
+        log(QString("Removing '%1' from the group.").arg(QString::fromLatin1(character.getName())));
+        characterChanged(true);
+        return true;
+    });
 }
 
 bool CGroup::isNamePresent(const QByteArray &name) const

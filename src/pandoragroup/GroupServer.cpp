@@ -100,19 +100,15 @@ void GroupServer::closeOne(GroupSocket &target)
     disconnectAll(target);
 
     auto &clients = filterClientList();
-    const auto end = clients.end();
-    if (const auto it = std::find_if(clients.begin(),
-                                     end,
-                                     [&target](const QPointer<GroupSocket> &socket) -> bool {
-                                         return socket == &target;
-                                     });
-        it != end) {
-        clients.erase(it);
-        return;
-    }
+    const bool num_erased = utils::erase_if(clients,
+                                            [&target](const QPointer<GroupSocket> &socket) -> bool {
+                                                return socket == &target;
+                                            });
 
-    qWarning() << "Could not find" << target.getName() << "among clients";
-    assert(false);
+    if (num_erased == 0) {
+        qWarning() << "Could not find" << target.getName() << "among clients";
+        assert(false);
+    }
 }
 
 void GroupServer::connectAll(GroupSocket &clientRef)
@@ -585,14 +581,7 @@ void GroupServer::slot_onRevokeWhitelist(const QByteArray &secret)
 GroupServer::ClientList &GroupServer::filterClientList()
 {
     auto &clients = m_clientsList;
-    const auto end = clients.end();
-    if (const auto it = std::remove_if(clients.begin(),
-                                       end,
-                                       [](const QPointer<GroupSocket> &sock) -> bool {
-                                           return sock == nullptr;
-                                       });
-        it != end) {
-        clients.erase(it, end);
-    }
+    utils::erase_if(clients,
+                    [](const QPointer<GroupSocket> &sock) -> bool { return sock == nullptr; });
     return clients;
 }
