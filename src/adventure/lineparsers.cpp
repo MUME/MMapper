@@ -4,6 +4,8 @@
 
 #include "lineparsers.h"
 
+#include <QDebug>
+
 AbstractLineParser::~AbstractLineParser() = default;
 
 bool AccomplishedTaskParser::virt_parse(QString line)
@@ -48,6 +50,11 @@ bool HintParser::virt_parse(QString line)
     //   (1) A line matching exactly "# Hint:"
     //   (2) The next line is interpreted as the hint text.
     if (m_pending) {
+        // Consider checking that it actually starts with the expected pattern.
+        if (line.length() < 4) {
+            qWarning() << "Hint is too short";
+            return false;
+        }
         m_lastSuccessVal = line.mid(4).trimmed(); // mid(4) is to chomp the leading "#  "
         m_pending = false;
         return true;
