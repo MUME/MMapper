@@ -48,7 +48,7 @@ private:
 
     QRecursiveMutex m_networkLock;
     std::unique_ptr<GroupAuthority> m_authority;
-    std::unique_ptr<CGroupCommunicator> m_network;
+    QPointer<CGroupCommunicator> m_network;
     std::unique_ptr<CGroup> m_group;
 
 public:

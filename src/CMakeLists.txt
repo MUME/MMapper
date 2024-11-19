@@ -91,6 +91,7 @@ set(mmapper_SRCS
     global/IndexedVector.h
     global/LineUtils.cpp
     global/LineUtils.h
+    global/MakeQPointer.h
     global/MmQtHandle.h
     global/NamedColors.cpp
     global/NamedColors.h

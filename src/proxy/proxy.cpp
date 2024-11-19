@@ -10,6 +10,7 @@
 #include "../configuration/configuration.h"
 #include "../display/mapcanvas.h"
 #include "../display/prespammedpath.h"
+#include "../global/MakeQPointer.h"
 #include "../global/io.h"
 #include "../mainwindow/mainwindow.h"
 #include "../map/parseevent.h"
@@ -39,15 +40,7 @@
 
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
-template<typename T, typename... Args>
-NODISCARD static inline auto makeQPointer(Args &&...args)
-{
-    static_assert(std::is_base_of_v<QObject, T>);
-    auto tmp = std::make_unique<T>(std::forward<Args>(args)...);
-    if (tmp->QObject::parent() == nullptr)
-        throw std::invalid_argument("allocated QObject does not have a parent");
-    return QPointer<T>{tmp.release()};
-}
+using mmqt::makeQPointer;
 
 Proxy::Proxy(MapData &md,
              Mmapper2PathMachine &pm,
@@ -58,7 +51,7 @@ Proxy::Proxy(MapData &md,
              GameObserver &go,
              qintptr &socketDescriptor,
              ConnectionListener &listener)
-    : QObject(nullptr)
+    : QObject(&listener) // parent must be set in order to use mmqt::makeQPointer<Proxy>()
     , m_mapData(md)
     , m_pathMachine(pm)
     , m_prespammedPath(pp)

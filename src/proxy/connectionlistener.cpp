@@ -7,6 +7,7 @@
 #include "connectionlistener.h"
 
 #include "../configuration/configuration.h"
+#include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
 #include "proxy.h"
 
@@ -44,12 +45,7 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_gameOberver{go}
 {}
 
-ConnectionListener::~ConnectionListener()
-{
-    if (m_proxy) {
-        m_proxy.release(); // thread will delete the proxy
-    }
-}
+ConnectionListener::~ConnectionListener() = default;
 
 void ConnectionListener::listen()
 {
@@ -59,7 +55,7 @@ void ConnectionListener::listen()
     const auto port = settings.localPort;
 
     const auto createServer = [this]() {
-        QPointer<ConnectionListenerTcpServer> server(new ConnectionListenerTcpServer(this));
+        auto server = mmqt::makeQPointer<ConnectionListenerTcpServer>(this);
         server->setMaxPendingConnections(1);
         connect(server, &ConnectionListenerTcpServer::acceptError, this, [this, server]() {
             log(QString("Encountered an error: %1").arg(server->errorString()));
@@ -93,20 +89,17 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
         m_accept = false;
         emit sig_clientSuccessfullyConnected();
 
-        m_proxy = std::make_unique<Proxy>(m_mapData,
-                                          m_pathMachine,
-                                          m_prespammedPath,
-                                          m_groupManager,
-                                          m_mumeClock,
-                                          m_mapCanvas,
-                                          m_gameOberver,
-                                          socketDescriptor,
-                                          *this);
+        m_proxy = mmqt::makeQPointer<Proxy>(m_mapData,
+                                            m_pathMachine,
+                                            m_prespammedPath,
+                                            m_groupManager,
+                                            m_mumeClock,
+                                            m_mapCanvas,
+                                            m_gameOberver,
+                                            socketDescriptor,
+                                            *this);
 
-        connect(m_proxy.get(), &QObject::destroyed, this, [this]() {
-            m_accept = true;
-            m_proxy.release();
-        });
+        connect(m_proxy, &QObject::destroyed, this, [this]() { m_accept = true; });
         m_proxy->slot_start();
 
     } else {

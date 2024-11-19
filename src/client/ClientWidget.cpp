@@ -5,6 +5,7 @@
 #include "ClientWidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/MakeQPointer.h"
 #include "ClientTelnet.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
@@ -19,7 +20,7 @@
 ClientWidget::ClientWidget(QWidget *const parent)
     : QWidget(parent)
     , m_ui(std::make_unique<Ui::ClientWidget>())
-    , m_telnet(new ClientTelnet(this))
+    , m_telnet(mmqt::makeQPointer<ClientTelnet>(this))
 {
     setWindowTitle("MMapper Client");
 

@@ -56,7 +56,7 @@ private:
     GameObserver &m_gameOberver;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;
-    std::unique_ptr<Proxy> m_proxy;
+    QPointer<Proxy> m_proxy;
 
     bool m_accept = true;
 

@@ -7,6 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
+#include "../global/MakeQPointer.h"
 #include "../global/PrintUtils.h"
 #include "../parser/CommandQueue.h"
 #include "../proxy/GmcpMessage.h"
@@ -630,49 +631,51 @@ void Mmapper2Group::slot_startNetwork()
         // Create network
         switch (Mmapper2Group::getConfigState()) {
         case GroupManagerStateEnum::Server:
-            network = std::make_unique<GroupServer>(this);
+            network = mmqt::makeQPointer<GroupServer>(this);
             break;
         case GroupManagerStateEnum::Client:
-            network = std::make_unique<GroupClient>(this);
+            network = mmqt::makeQPointer<GroupClient>(this);
             break;
         case GroupManagerStateEnum::Off:
+            // NOTE: network isn't created in this case.
             return;
         }
 
-        connect(network.get(), &CGroupCommunicator::sig_sendLog, this, &Mmapper2Group::slot_sendLog);
-        connect(network.get(),
+        connect(network, &CGroupCommunicator::sig_sendLog, this, &Mmapper2Group::slot_sendLog);
+        connect(network,
                 &CGroupCommunicator::sig_messageBox,
                 this,
                 &Mmapper2Group::slot_relayMessageBox);
-        connect(network.get(),
+        connect(network,
                 &CGroupCommunicator::sig_gTellArrived,
                 this,
                 &Mmapper2Group::slot_gTellArrived);
-        connect(network.get(), &CGroupCommunicator::destroyed, this, [this]() {
-            std::ignore = m_network.release();
+        connect(network, &CGroupCommunicator::destroyed, this, [this]() {
             emit sig_networkStatus(false);
         });
-        connect(network.get(),
+        connect(network,
                 &CGroupCommunicator::sig_scheduleAction,
                 getGroup(),
                 &CGroup::slot_scheduleAction);
         connect(this,
                 &Mmapper2Group::sig_kickCharacter,
-                network.get(),
+                network,
                 &CGroupCommunicator::slot_kickCharacter);
         connect(this,
                 &Mmapper2Group::sig_sendGroupTell,
-                network.get(),
+                network,
                 &CGroupCommunicator::slot_sendGroupTell);
         connect(this,
                 &Mmapper2Group::sig_sendCharUpdate,
-                network.get(),
+                network,
                 QOverload<const QVariantMap &>::of(&CGroupCommunicator::slot_sendCharUpdate));
         connect(this,
                 &Mmapper2Group::sig_sendSelfRename,
-                network.get(),
+                network,
                 &CGroupCommunicator::slot_sendSelfRename);
     }
+
+    std::ignore = deref(network);
 
     // REVISIT: What about if the network is already started?
     if (network->start()) {

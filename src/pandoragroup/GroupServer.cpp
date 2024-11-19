@@ -6,6 +6,7 @@
 #include "GroupServer.h"
 
 #include "../configuration/configuration.h"
+#include "../global/MakeQPointer.h"
 #include "../global/random.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
@@ -46,8 +47,8 @@ void GroupServer::slot_onIncomingConnection(qintptr socketDescriptor)
 {
     // connect the socket straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
-    GroupSocket &socket = deref(filterClientList().emplace_back(
-        QPointer<GroupSocket>(new GroupSocket(getAuthority(), this))));
+    GroupSocket &socket = deref(
+        filterClientList().emplace_back(mmqt::makeQPointer<GroupSocket>(getAuthority(), this)));
     connectAll(socket);
     socket.setSocket(socketDescriptor);
     qDebug() << "Adding incoming client" << socket.getPeerName();
