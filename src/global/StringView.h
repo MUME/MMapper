@@ -43,9 +43,9 @@ public:
     NODISCARD inline bool empty() const noexcept { return m_sv.empty(); }
 
 public:
-    NODISCARD std::string toStdString() const noexcept(false);
-    NODISCARD QString toQString() const noexcept(false);
-    NODISCARD QByteArray toQByteArray() const noexcept(false);
+    NODISCARD std::string toStdString() const;
+    NODISCARD QString toQString() const;
+    NODISCARD QByteArray toQByteArray() const;
     NODISCARD std::string_view getStdStringView() const { return m_sv; }
 
 public:
@@ -54,27 +54,27 @@ public:
     inline StringView &trim() noexcept { return trimLeft().trimRight(); }
 
 private:
-    void mustNotBeEmpty() const noexcept(false);
+    void mustNotBeEmpty() const;
     void eatFirst();
     void eatLast();
 
 public:
-    NODISCARD char firstChar() const noexcept(false);
-    NODISCARD char lastChar() const noexcept(false);
+    NODISCARD char firstChar() const;
+    NODISCARD char lastChar() const;
 
 public:
-    char takeFirstLetter() noexcept(false);
+    char takeFirstLetter();
 
 public:
-    StringView takeFirstWord() noexcept(false);
-    StringView takeFirstWordNoPostTrim() noexcept(false);
+    StringView takeFirstWord();
+    StringView takeFirstWordNoPostTrim();
 
 public:
     NODISCARD int countNonSpaceChars() const noexcept;
-    NODISCARD int countWords() const noexcept(false);
-    NODISCARD std::vector<StringView> getWords() const noexcept(false);
-    NODISCARD std::vector<std::string> getWordsAsStdStrings() const noexcept(false);
-    NODISCARD std::vector<QString> getWordsAsQStrings() const noexcept(false);
+    NODISCARD int countWords() const;
+    NODISCARD std::vector<StringView> getWords() const;
+    NODISCARD std::vector<std::string> getWordsAsStdStrings() const;
+    NODISCARD std::vector<QString> getWordsAsQStrings() const;
 
 public:
     bool operator==(const char *s) const noexcept = delete;

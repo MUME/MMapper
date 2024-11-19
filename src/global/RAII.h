@@ -41,5 +41,5 @@ public:
 
 public:
     explicit RAIICallback(Callback &&callback);
-    ~RAIICallback() noexcept(false);
+    ~RAIICallback();
 };

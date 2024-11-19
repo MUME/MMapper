@@ -104,7 +104,7 @@ public:
     explicit TelnetFormatter(AbstractTelnet &telnet)
         : m_telnet{telnet}
     {}
-    ~TelnetFormatter() noexcept(false)
+    ~TelnetFormatter()
     {
         try {
             m_telnet.sendRawData(m_os.str());

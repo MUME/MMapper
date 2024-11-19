@@ -27,17 +27,17 @@ StringView::StringView(const std::string &s) noexcept
     : m_sv{s}
 {}
 
-std::string StringView::toStdString() const noexcept(false)
+std::string StringView::toStdString() const
 {
     return std::string(m_sv);
 }
 
-QString StringView::toQString() const noexcept(false)
+QString StringView::toQString() const
 {
     return ::toQStringLatin1(m_sv);
 }
 
-QByteArray StringView::toQByteArray() const noexcept(false)
+QByteArray StringView::toQByteArray() const
 {
     return ::toQByteArrayLatin1(m_sv);
 }
@@ -70,26 +70,26 @@ StringView &StringView::trimRight() noexcept
     return *this;
 }
 
-void StringView::mustNotBeEmpty() const noexcept(false)
+void StringView::mustNotBeEmpty() const
 {
     if (isEmpty())
         throw std::runtime_error("StringView is empty");
 }
 
-char StringView::firstChar() const noexcept(false)
+char StringView::firstChar() const
 {
     mustNotBeEmpty();
     return *m_sv.cbegin();
 }
 
-char StringView::lastChar() const noexcept(false)
+char StringView::lastChar() const
 {
     mustNotBeEmpty();
     return *m_sv.crbegin();
 }
 
 // is NOT allowed to be a space
-char StringView::takeFirstLetter() noexcept(false)
+char StringView::takeFirstLetter()
 {
     mustNotBeEmpty();
 
@@ -101,7 +101,7 @@ char StringView::takeFirstLetter() noexcept(false)
     return c;
 }
 
-StringView StringView::takeFirstWordNoPostTrim() noexcept(false)
+StringView StringView::takeFirstWordNoPostTrim()
 {
     trimLeft();
     mustNotBeEmpty();
@@ -117,7 +117,7 @@ StringView StringView::takeFirstWordNoPostTrim() noexcept(false)
     return StringView{before.substr(0, len)};
 }
 
-StringView StringView::takeFirstWord() noexcept(false)
+StringView StringView::takeFirstWord()
 {
     auto result = takeFirstWordNoPostTrim();
     trimLeft();
@@ -133,8 +133,8 @@ int StringView::countNonSpaceChars() const noexcept
     return result;
 }
 
-/* NOTE: This must be flagged noexcept(false) because it calls takeFirstWord() */
-int StringView::countWords() const noexcept(false)
+/* NOTE: This must can throw because it calls takeFirstWord() */
+int StringView::countWords() const
 {
     auto tmp = *this;
     tmp.trim();
@@ -145,7 +145,7 @@ int StringView::countWords() const noexcept(false)
     return result;
 }
 
-std::vector<StringView> StringView::getWords() const noexcept(false)
+std::vector<StringView> StringView::getWords() const
 {
     const auto numWords = countWords();
     assert(numWords >= 0);
@@ -162,7 +162,7 @@ std::vector<StringView> StringView::getWords() const noexcept(false)
     return result;
 }
 
-std::vector<std::string> StringView::getWordsAsStdStrings() const noexcept(false)
+std::vector<std::string> StringView::getWordsAsStdStrings() const
 {
     const auto numWords = countWords();
     assert(numWords >= 0);
@@ -179,7 +179,7 @@ std::vector<std::string> StringView::getWordsAsStdStrings() const noexcept(false
     return result;
 }
 
-std::vector<QString> StringView::getWordsAsQStrings() const noexcept(false)
+std::vector<QString> StringView::getWordsAsQStrings() const
 {
     const auto numWords = countWords();
     assert(numWords >= 0);

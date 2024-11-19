@@ -7,6 +7,8 @@
 #include <cassert>
 #include <utility>
 
+#include <QtDebug>
+
 RAIIBool::RAIIBool(bool &b)
     : ref{b}
 {
@@ -34,8 +36,13 @@ RAIICallback::RAIICallback(RAIICallback::Callback &&callback)
     : callback{std::move(callback)}
 {}
 
-RAIICallback::~RAIICallback() noexcept(false)
+RAIICallback::~RAIICallback()
 {
-    if (!moved)
-        callback();
+    if (!moved) {
+        try {
+            callback();
+        } catch (...) {
+            qWarning() << "Exception in callback";
+        }
+    }
 }
