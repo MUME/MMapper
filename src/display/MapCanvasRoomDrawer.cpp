@@ -415,7 +415,7 @@ struct NODISCARD RoomTex
         : room{_room}
         , tex{_tex}
     {
-        deref(_tex);
+        std::ignore = deref(_tex);
     }
 
     NODISCARD int priority() const { return deref(tex).getPriority(); }
@@ -437,7 +437,7 @@ struct NODISCARD ColoredRoomTex : public RoomTex
         : RoomTex{_room, _tex}
         , color{_color}
     {
-        deref(_tex);
+        std::ignore = deref(_tex);
     }
 };
 

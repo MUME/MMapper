@@ -49,7 +49,7 @@ enum class NODISCARD MumeMoonPhaseEnum : int8_t {
     WANING_CRESCENT, //  5,  4,  3
     NEW_MOON         //  2,  1,  0
 };
-enum class MumeMoonVisibilityEnum : uint8_t { UNKNOWN, INVISIBLE, DIM, BRIGHT };
+enum class NODISCARD MumeMoonVisibilityEnum : uint8_t { UNKNOWN, INVISIBLE, DIM, BRIGHT };
 enum class NODISCARD MumeMoonPositionEnum : int8_t {
     UNKNOWN = -1,
     INVISIBLE,

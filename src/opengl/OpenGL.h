@@ -17,7 +17,7 @@ namespace Legacy {
 class Functions;
 } // namespace Legacy
 
-class OpenGL final
+class NODISCARD OpenGL final
 {
 private:
     std::shared_ptr<Legacy::Functions> m_opengl;

@@ -140,7 +140,7 @@ int StringView::countWords() const
     tmp.trim();
 
     int result = 0;
-    for (; !tmp.isEmpty(); tmp.takeFirstWord())
+    for (; !tmp.isEmpty(); std::ignore = tmp.takeFirstWord())
         ++result;
     return result;
 }
@@ -467,7 +467,7 @@ static void testEmpty()
     TEST_ASSERT(count == 0);
     bool threwException = false;
     try {
-        tmp.takeFirstLetter();
+        std::ignore = tmp.takeFirstLetter();
     } catch (...) {
         threwException = true;
     }

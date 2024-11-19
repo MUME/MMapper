@@ -14,7 +14,7 @@
  * Currently this does not work on Windows (where a simple file overwriting is
  * then performed).
  */
-class FileSaver final
+class NODISCARD FileSaver final
 {
 private:
     QString m_filename;

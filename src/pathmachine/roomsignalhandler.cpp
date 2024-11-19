@@ -46,7 +46,7 @@ void RoomSignalHandler::release(const Room *const room)
 
 void RoomSignalHandler::keep(const Room *const room, const ExitDirEnum dir, const RoomId fromId)
 {
-    deref(room);
+    std::ignore = deref(room);
     assert(holdCount[room] != 0);
 
     RoomAdmin *const rcv = owners[room];

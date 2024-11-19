@@ -103,17 +103,17 @@ struct NODISCARD EntityTable final
 {
     struct NODISCARD MyHash final
     {
-        uint32_t operator()(const QString &qs) const { return qHash(qs); }
+        NODISCARD uint32_t operator()(const QString &qs) const { return qHash(qs); }
     };
 
     std::unordered_map<QString, XmlEntity, MyHash> by_short_name;
     std::unordered_map<QString, XmlEntity, MyHash> by_full_name;
     std::unordered_map<XmlEntityEnum, XmlEntity> by_id;
 
-    XmlEntityEnum lookup_entity_id_by_short_name(const QString &entity) const;
-    XmlEntityEnum lookup_entity_id_by_full_name(const QString &entity) const;
-    OptQByteArray lookup_entity_short_name_by_id(XmlEntityEnum id) const;
-    OptQByteArray lookup_entity_full_name_by_id(XmlEntityEnum id) const;
+    NODISCARD XmlEntityEnum lookup_entity_id_by_short_name(const QString &entity) const;
+    NODISCARD XmlEntityEnum lookup_entity_id_by_full_name(const QString &entity) const;
+    NODISCARD OptQByteArray lookup_entity_short_name_by_id(XmlEntityEnum id) const;
+    NODISCARD OptQByteArray lookup_entity_full_name_by_id(XmlEntityEnum id) const;
 };
 
 NODISCARD static EntityTable initEntityTable()

@@ -301,7 +301,7 @@ public:
     explicit UniqueMesh(std::unique_ptr<IRenderable> mesh)
         : m_mesh{std::move(mesh)}
     {
-        deref(m_mesh);
+        std::ignore = deref(m_mesh);
     }
     ~UniqueMesh() = default;
     DEFAULT_MOVES_DELETE_COPIES(UniqueMesh);

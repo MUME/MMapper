@@ -258,7 +258,7 @@ HelpFrame HelpFrame::makeChild()
     return child; // c++17 spec says NRVO elides the move constructor here, but g++ 7.4 uses move ctor.
 }
 
-class TreeParser::HelpCommon final
+class NODISCARD TreeParser::HelpCommon final
 {
 protected:
     const bool isFull = true;
@@ -269,12 +269,21 @@ public:
     {}
 
 public:
-public:
-    ParseResult syntaxRecurseFirst(const Sublist &node, const ParserInput &input, HelpFrame &frame);
-    ParseResult recurseNewSublist(const Sublist &node, const ParserInput &input, HelpFrame &frame);
-    ParseResult recurseTokenMatcher(const Sublist &node, const ParserInput &input, HelpFrame &frame);
-    ParseResult syntaxRecurseNext(const Sublist &node, const ParserInput &input, HelpFrame &frame);
-    ParseResult recurseAccept(const Sublist &node, const ParserInput &input, HelpFrame &frame);
+    NODISCARD ParseResult syntaxRecurseFirst(const Sublist &node,
+                                             const ParserInput &input,
+                                             HelpFrame &frame);
+    NODISCARD ParseResult recurseNewSublist(const Sublist &node,
+                                            const ParserInput &input,
+                                            HelpFrame &frame);
+    NODISCARD ParseResult recurseTokenMatcher(const Sublist &node,
+                                              const ParserInput &input,
+                                              HelpFrame &frame);
+    NODISCARD ParseResult syntaxRecurseNext(const Sublist &node,
+                                            const ParserInput &input,
+                                            HelpFrame &frame);
+    NODISCARD ParseResult recurseAccept(const Sublist &node,
+                                        const ParserInput &input,
+                                        HelpFrame &frame);
 };
 
 void HelpFrame::addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTypeEnum> type)

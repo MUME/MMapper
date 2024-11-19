@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace syntax {
-class ParserInput final
+class NODISCARD ParserInput final
 {
 private:
     std::shared_ptr<const std::vector<std::string>> m_vector;

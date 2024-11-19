@@ -25,10 +25,10 @@ public:
     using base::base;
 
 public:
-    decltype(auto) at(E e) { return base::at(static_cast<uint32_t>(e)); }
-    decltype(auto) at(E e) const { return base::at(static_cast<uint32_t>(e)); }
-    decltype(auto) operator[](E e) { return at(e); }
-    decltype(auto) operator[](E e) const { return at(e); }
+    NODISCARD decltype(auto) at(E e) { return base::at(static_cast<uint32_t>(e)); }
+    NODISCARD decltype(auto) at(E e) const { return base::at(static_cast<uint32_t>(e)); }
+    NODISCARD decltype(auto) operator[](E e) { return at(e); }
+    NODISCARD decltype(auto) operator[](E e) const { return at(e); }
 
 public:
     using base::data;

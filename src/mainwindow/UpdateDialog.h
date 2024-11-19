@@ -21,12 +21,12 @@ public:
     explicit CompareVersion(const QString &versionStr) noexcept;
 
 public:
-    bool operator>(const CompareVersion &other) const;
-    bool operator==(const CompareVersion &other) const;
+    NODISCARD bool operator>(const CompareVersion &other) const;
+    NODISCARD bool operator==(const CompareVersion &other) const;
 
-    int major() const { return parts[0]; }
-    int minor() const { return parts[1]; }
-    int patch() const { return parts[2]; }
+    NODISCARD int major() const { return parts[0]; }
+    NODISCARD int minor() const { return parts[1]; }
+    NODISCARD int patch() const { return parts[2]; }
 
 public:
     NODISCARD QString toQString() const;

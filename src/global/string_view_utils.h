@@ -3,6 +3,8 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
+#include "macros.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -16,7 +18,7 @@
 //
 // For this reason, caller must take care that pointed data outlives the u16string_view
 // (as it also happens when using a QStringView).
-inline std::u16string_view as_u16string_view(const QStringView str) noexcept
+NODISCARD inline std::u16string_view as_u16string_view(const QStringView str) noexcept
 {
     static_assert(sizeof(QChar) == sizeof(char16_t),
                   "QChar and char16_t must have the same sizeof()");
@@ -27,7 +29,7 @@ inline std::u16string_view as_u16string_view(const QStringView str) noexcept
 // convert a UTF-16 string_view to integer number. String view must contain only decimal digits
 // or (for signed numbers) start with the minus character '-'
 template<typename T>
-inline T to_integer(std::u16string_view str, bool &ok)
+NODISCARD inline T to_integer(std::u16string_view str, bool &ok)
 {
     static_assert(std::is_integral<T>::value, "to_integer() template type T must be integral");
 
@@ -39,23 +41,24 @@ inline T to_integer(std::u16string_view str, bool &ok)
 }
 
 template<>
-int64_t to_integer<int64_t>(std::u16string_view str, bool &ok);
+NODISCARD int64_t to_integer<int64_t>(std::u16string_view str, bool &ok);
 
 template<>
-uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok);
+NODISCARD uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok);
 
 /// \return true if UTF-16 and Latin1 string_views have the same contents, without allocating
-bool operator==(const std::u16string_view left, const std::string_view right) noexcept;
+NODISCARD bool operator==(std::u16string_view left, std::string_view right) noexcept;
 
 /// \return true if Latin1 and UTF-16 string_views have the same contents, without allocating
-inline bool operator==(const std::string_view left, const std::u16string_view right) noexcept
+NODISCARD inline bool operator==(const std::string_view left,
+                                 const std::u16string_view right) noexcept
 {
     return right == left;
 }
 
 /// \return true if UTF-16 string_view and Latin1 string literal have the same contents, without allocating
 template<size_t N>
-bool operator==(const std::u16string_view left, const char (&right)[N]) noexcept
+NODISCARD bool operator==(const std::u16string_view left, const char (&right)[N]) noexcept
 {
     return left == std::string_view{right, N - 1};
 }

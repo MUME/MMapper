@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QStackedWidget>
 #include <QString>
 #include <QtCore>
@@ -23,7 +25,7 @@ public:
     ~StackedInputWidget() final;
 
 private:
-    bool eventFilter(QObject *obj, QEvent *event) final;
+    NODISCARD bool eventFilter(QObject *obj, QEvent *event) final;
 
 public slots:
     void slot_toggleEchoMode(bool);

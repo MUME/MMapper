@@ -59,7 +59,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(GLFont);
 
 private:
-    const FontMetrics &getFontMetrics() const { return deref(m_fontMetrics); }
+    NODISCARD const FontMetrics &getFontMetrics() const { return deref(m_fontMetrics); }
 
 public:
     void init();

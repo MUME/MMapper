@@ -137,8 +137,8 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
 class NODISCARD ArgDirection final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
@@ -173,10 +173,10 @@ NODISCARD static bool isAddFlag(StringView &sv)
 {
     switch (sv.firstChar()) {
     case '-':
-        sv.takeFirstLetter();
+        std::ignore = sv.takeFirstLetter();
         return false;
     case '+':
-        sv.takeFirstLetter();
+        std::ignore = sv.takeFirstLetter();
         return true;
     default:
         return true;
@@ -186,8 +186,8 @@ NODISCARD static bool isAddFlag(StringView &sv)
 class NODISCARD ArgDoorFlag final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
@@ -229,8 +229,8 @@ std::ostream &ArgDoorFlag::virt_to_stream(std::ostream &os) const
 class NODISCARD ArgExitFlag final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
@@ -272,8 +272,8 @@ std::ostream &ArgExitFlag::virt_to_stream(std::ostream &os) const
 class NODISCARD ArgRoomFlag final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };

@@ -45,7 +45,7 @@ public:
     buffer() = default;
     ~buffer() = default;
     DELETE_CTORS_AND_ASSIGN_OPS(buffer);
-    char *data() { return m_internal->data; }
+    NODISCARD char *data() { return m_internal->data; }
 };
 
 enum class NODISCARD IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
@@ -90,8 +90,8 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(IOException);
 
 public:
-    static IOException withCurrentErrno();
-    static IOException withErrorNumber(int error_number);
+    NODISCARD static IOException withCurrentErrno();
+    NODISCARD static IOException withErrorNumber(int error_number);
 };
 
 class NODISCARD ErrorNumberMessage final

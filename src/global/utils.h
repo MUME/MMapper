@@ -13,6 +13,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <type_traits>
 
 #include <QPointer>
@@ -104,26 +105,26 @@ NODISCARD std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 }
 
 template<typename T>
-inline T &deref(T *const ptr)
+NODISCARD inline T &deref(T *const ptr)
 {
     if (ptr == nullptr)
         throw NullPointerException();
     return *ptr;
 }
 template<typename T>
-inline T deref(std::optional<T> &&ptr)
+NODISCARD inline T deref(std::optional<T> &&ptr)
 {
     // note: this can throw bad_optional_access
     return std::move(ptr).value();
 }
 template<typename T>
-inline T &deref(std::optional<T> &ptr)
+NODISCARD inline T &deref(std::optional<T> &ptr)
 {
     // note: this can throw bad_optional_access
     return ptr.value();
 }
 template<typename T>
-inline const T &deref(const std::optional<T> &ptr)
+NODISCARD inline const T &deref(const std::optional<T> &ptr)
 {
     // note: this can throw bad_optional_access
     return ptr.value();
@@ -134,7 +135,7 @@ inline const T &deref(const std::optional<T> &ptr)
 template<typename T>
 inline T deref(std::shared_ptr<T> &&ptr) = delete;
 template<typename T>
-inline T &deref(const std::shared_ptr<T> &ptr)
+NODISCARD inline T &deref(const std::shared_ptr<T> &ptr)
 {
     if (ptr == nullptr)
         throw NullPointerException();
@@ -145,14 +146,14 @@ inline T &deref(const std::shared_ptr<T> &ptr)
 template<typename T>
 inline T deref(std::unique_ptr<T> &&ptr) = delete;
 template<typename T>
-inline T &deref(const std::unique_ptr<T> &ptr)
+NODISCARD inline T &deref(const std::unique_ptr<T> &ptr)
 {
     if (ptr == nullptr)
         throw NullPointerException();
     return *ptr;
 }
 template<typename T>
-inline T &deref(const QPointer<T> &ptr)
+NODISCARD inline T &deref(const QPointer<T> &ptr)
 {
     if (ptr == nullptr)
         throw NullPointerException();
@@ -197,7 +198,7 @@ NODISCARD Base checked_static_upcast(Derived ptr) noexcept(false)
     static_assert(std::is_base_of_v<actual_base, actual_derived>);
     static_assert(std::is_const_v<actual_derived> == std::is_const_v<actual_base>);
 
-    deref(ptr); // called for side-effect (might throw)
+    std::ignore = deref(ptr);
     return static_cast<Base>(ptr);
 }
 

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2023 The MMapper Authors
 
+#include "../global/macros.h"
+
 #include <cstdint>
 #include <list>
 #include <string>
@@ -10,7 +12,7 @@
 #include <QObject>
 #include <QTimer>
 
-class TTimer final
+class NODISCARD TTimer final
 {
 public:
     explicit TTimer(const std::string &name, const std::string &desc, int64_t durationMs);
@@ -42,8 +44,8 @@ private:
     QTimer m_timer;
 
 public:
-    std::string getTimers();
-    std::string getCountdowns();
+    NODISCARD std::string getTimers();
+    NODISCARD std::string getCountdowns();
 
 signals:
     void sig_sendTimersUpdateToUser(const std::string &str);

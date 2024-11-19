@@ -135,7 +135,7 @@ struct NODISCARD Bounds final
     {}
 
 private:
-    static inline bool isBounded(const int x, const int lo, const int hi)
+    NODISCARD static inline bool isBounded(const int x, const int lo, const int hi)
     {
         return lo <= x && x <= hi;
     }

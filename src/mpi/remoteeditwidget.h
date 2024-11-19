@@ -138,8 +138,8 @@ public:
     ~RemoteEditWidget() override;
 
 public:
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
+    NODISCARD QSize minimumSizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
     void closeEvent(QCloseEvent *event) override;
 
 public:
@@ -148,8 +148,8 @@ public:
 protected slots:
     void slot_cancelEdit();
     void slot_finishEdit();
-    bool slot_maybeCancel();
-    bool slot_contentsChanged() const;
+    NODISCARD bool slot_maybeCancel();
+    NODISCARD bool slot_contentsChanged() const;
     void slot_updateStatusBar();
 
 #define X(a, b, c, d, e) void slot_##a();

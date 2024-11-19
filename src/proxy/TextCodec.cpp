@@ -42,7 +42,7 @@ public:
 
 TextCodec::Pimpl::~Pimpl() = default;
 
-class AutoSelectTextCodec final : public TextCodec::Pimpl
+class NODISCARD AutoSelectTextCodec final : public TextCodec::Pimpl
 {
 private:
     std::optional<CharacterEncodingEnum> opt;
@@ -102,7 +102,7 @@ private:
 
 AutoSelectTextCodec::~AutoSelectTextCodec() = default;
 
-class ForcedTextCodec final : public TextCodec::Pimpl
+class NODISCARD ForcedTextCodec final : public TextCodec::Pimpl
 {
 private:
     const CharacterEncodingEnum encoding;

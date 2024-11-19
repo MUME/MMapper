@@ -963,7 +963,7 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(const bool val)
 
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
-    deref(item);
+    std::ignore = deref(item);
     const auto optFlag = mobListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
@@ -986,7 +986,7 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 
 void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
-    deref(item);
+    std::ignore = deref(item);
 
     const auto optFlag = loadListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
@@ -1011,7 +1011,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 
 void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
-    deref(item);
+    std::ignore = deref(item);
 
     const auto optFlag = exitListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
@@ -1060,7 +1060,7 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged()
 
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
-    deref(item);
+    std::ignore = deref(item);
 
     const auto optFlag = doorListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));

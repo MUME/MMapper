@@ -33,14 +33,14 @@ static constexpr const int NUM_DOOR_FLAGS = X_FOREACH_DOOR_FLAG(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(DoorFlagEnum, NUM_DOOR_FLAGS)
 
-class DoorFlags final : public enums::Flags<DoorFlags, DoorFlagEnum, uint16_t>
+class NODISCARD DoorFlags final : public enums::Flags<DoorFlags, DoorFlagEnum, uint16_t>
 {
 public:
     using Flags::Flags;
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const \
+    NODISCARD bool is##CamelCase() const \
     { \
         return contains(DoorFlagEnum::UPPER_CASE); \
     }
@@ -49,13 +49,13 @@ public:
 
 public:
     // REVISIT: this name is different from the rest
-    inline bool needsKey() const
+    NODISCARD bool needsKey() const
     {
         return isNeedKey();
     }
 };
 
-inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagEnum rhs) noexcept
+NODISCARD inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagEnum rhs) noexcept
 {
     return DoorFlags{lhs} | DoorFlags{rhs};
 }

@@ -38,7 +38,7 @@ private:
 
 public:
     ExitsFlagsType() = default;
-    explicit operator uint32_t() const { return value; }
+    NODISCARD explicit operator uint32_t() const { return value; }
     NODISCARD static ExitsFlagsType create_unsafe(const uint32_t value)
     {
         if (false) {

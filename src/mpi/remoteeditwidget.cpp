@@ -72,7 +72,7 @@ public:
     ~RaiiGroupUndoActions() { cursor_.endEditBlock(); }
 };
 
-class LineHighlighter final : public QSyntaxHighlighter
+class NODISCARD LineHighlighter final : public QSyntaxHighlighter
 {
 public:
     explicit LineHighlighter(int maxLength, QTextDocument *parent);

@@ -18,7 +18,7 @@ class Sublist;
 using SharedConstSublist = std::shared_ptr<const Sublist>;
 class TreeParser;
 
-class Sublist final
+class NODISCARD Sublist final
 {
 private:
     friend class TreeParser;

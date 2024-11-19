@@ -565,7 +565,7 @@ void AbstractParser::parseDirections(StringView view)
         doGetDirectionsCommand(view);
 }
 
-class ArgHelpCommand final : public syntax::IArgument
+class NODISCARD ArgHelpCommand final : public syntax::IArgument
 {
 private:
     const AbstractParser::ParserRecordMap &m_map;
@@ -576,8 +576,8 @@ public:
     {}
 
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger * /*logger*/) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger * /*logger*/) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };

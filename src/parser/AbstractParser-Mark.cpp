@@ -45,8 +45,8 @@ NODISCARD static const char *getTypeName(const InfoMarkTypeEnum type)
 class NODISCARD ArgMarkClass final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };

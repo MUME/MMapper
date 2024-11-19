@@ -18,7 +18,7 @@
 /// NOTE: This class purposely avoids wrapping shared_ptr's operator->(),
 /// operator*(), reset(), etc.
 template<typename T>
-class MmQtHandle final
+class NODISCARD MmQtHandle final
 {
 public:
     using contained_type = T;
@@ -43,16 +43,19 @@ public:
 
 public:
     // keep as non-inline for debugging
-    bool isValid() const { return m_shared != nullptr; }
-    inline explicit operator bool() const { return isValid(); }
+    NODISCARD bool isValid() const { return m_shared != nullptr; }
+    NODISCARD inline explicit operator bool() const { return isValid(); }
 
 public:
-    inline bool operator==(std::nullptr_t) const { return m_shared == nullptr; }
-    inline bool operator!=(std::nullptr_t) const { return m_shared != nullptr; }
+    NODISCARD inline bool operator==(std::nullptr_t) const { return m_shared == nullptr; }
+    NODISCARD inline bool operator!=(std::nullptr_t) const { return m_shared != nullptr; }
 
 public:
-    inline bool operator==(const MmQtHandle &rhs) const { return m_shared == rhs.m_shared; }
-    inline bool operator!=(const MmQtHandle &rhs) const { return !(*this == rhs); }
+    NODISCARD inline bool operator==(const MmQtHandle &rhs) const
+    {
+        return m_shared == rhs.m_shared;
+    }
+    NODISCARD inline bool operator!=(const MmQtHandle &rhs) const { return !(*this == rhs); }
 
 public:
     inline const MmQtHandle &requireValid() const noexcept(false)
@@ -64,7 +67,7 @@ public:
     }
 
 public:
-    const shared_type &getShared() const noexcept(false)
+    NODISCARD const shared_type &getShared() const noexcept(false)
     {
         if (auto &p = m_shared)
             return p;
@@ -72,7 +75,7 @@ public:
     }
 
 public:
-    contained_type &deref() const
+    NODISCARD contained_type &deref() const
         /* throws NullPointerException */
         noexcept(false)
     {

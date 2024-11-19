@@ -52,7 +52,7 @@ private:
 
 FakeSplash::~FakeSplash() = default;
 
-class Splash final : public ISplash
+class NODISCARD Splash final : public ISplash
 {
 private:
     QPixmap pixmap;

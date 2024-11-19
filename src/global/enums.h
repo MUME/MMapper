@@ -36,13 +36,13 @@ struct NODISCARD counting_iterator
         return *this;
     }
 
-    bool operator==(const counting_iterator &rhs) const
+    NODISCARD bool operator==(const counting_iterator &rhs) const
     {
         if (begin_ != rhs.begin_ || end_ != rhs.end_)
             throw std::runtime_error("invalid comparison");
         return it_ == rhs.it_;
     }
-    bool operator!=(const counting_iterator &rhs) const { return !operator==(rhs); }
+    NODISCARD bool operator!=(const counting_iterator &rhs) const { return !operator==(rhs); }
 
     NODISCARD E operator*()
     {

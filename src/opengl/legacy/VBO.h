@@ -28,10 +28,10 @@ public:
 public:
     void emplace(const SharedFunctions &sharedFunctions);
     void reset();
-    GLuint get();
+    NODISCARD GLuint get();
 
 public:
-    explicit operator bool() const { return m_vbo != 0; }
+    NODISCARD explicit operator bool() const { return m_vbo != 0; }
 
 public:
     void unsafe_swapVboId(VBO &other) { std::swap(m_vbo, other.m_vbo); }

@@ -3,15 +3,16 @@
 // Copyright (C) 2023 The MMapper Authors
 
 #include "../src/adventure/lineparsers.h"
+#include "../src/global/macros.h"
 
 #include <QObject>
 
-struct TestLine final
+struct NODISCARD TestLine final
 {
     bool expected = false;
     QString line;
 
-    QString errorMsg() const
+    NODISCARD QString errorMsg() const
     {
         return QString("Parsing failed, expected %1 for line: %2").arg(expected).arg(line);
     }

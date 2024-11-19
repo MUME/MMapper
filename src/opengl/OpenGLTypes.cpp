@@ -16,7 +16,7 @@ TexturedRenderable::TexturedRenderable(const SharedMMTexture &tex,
     : m_texture(tex)
     , m_mesh(std::move(moved_mesh))
 {
-    deref(m_mesh);
+    std::ignore = deref(m_mesh);
 }
 
 TexturedRenderable::~TexturedRenderable() = default;

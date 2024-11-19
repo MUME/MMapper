@@ -2449,7 +2449,7 @@ void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)
 
 void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> input_action)
 {
-    deref(m_roomSelection);
+    std::ignore = deref(m_roomSelection);
     deref(m_mapData).execute(std::make_unique<GroupMapAction>(std::move(input_action),
                                                               m_roomSelection),
                              m_roomSelection);

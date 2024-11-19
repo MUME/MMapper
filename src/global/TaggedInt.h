@@ -58,22 +58,22 @@ public:
 // for lack of a better place to put these...
 
 template<typename...>
-struct underlying_helper;
+struct NODISCARD underlying_helper;
 
 template<typename T>
-struct underlying_helper<T>
+struct NODISCARD underlying_helper<T>
 {
     using type = T;
 };
 
 template<typename T>
-struct underlying_helper<T, std::enable_if_t<std::is_enum_v<T>>>
+struct NODISCARD underlying_helper<T, std::enable_if_t<std::is_enum_v<T>>>
 {
     using type = typename std::underlying_type_t<T>;
 };
 
 template<typename Tag_, typename Type_>
-struct underlying_helper<TaggedInt<Tag_, Type_>>
+struct NODISCARD underlying_helper<TaggedInt<Tag_, Type_>>
 {
     using type = Type_;
 };

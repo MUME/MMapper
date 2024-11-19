@@ -17,7 +17,7 @@
 #include <QValidator>
 #include <QtWidgets>
 
-class CommandPrefixValidator final : public QValidator
+class NODISCARD CommandPrefixValidator final : public QValidator
 {
 public:
     explicit CommandPrefixValidator(QObject *const parent);

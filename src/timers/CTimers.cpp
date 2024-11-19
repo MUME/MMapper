@@ -14,7 +14,7 @@
 
 #include <QMutexLocker>
 
-static inline int64_t nowMs()
+NODISCARD static inline int64_t nowMs()
 {
     using namespace std::chrono;
     const auto now = steady_clock::now();
@@ -45,7 +45,7 @@ CTimers::CTimers(QObject *const parent)
     connect(&m_timer, &QTimer::timeout, this, &CTimers::slot_finishCountdownTimer);
 }
 
-static std::string msToMinSec(const int64_t ms)
+NODISCARD static std::string msToMinSec(const int64_t ms)
 {
     const auto hour = ms / 1000 / 60 / 60;
     const auto min = ms / 1000 / 60 % 60;

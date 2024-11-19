@@ -23,7 +23,7 @@
 #include <QVector>
 #include <QWidget>
 
-class FpSlider final : public QSlider
+class NODISCARD FpSlider final : public QSlider
 {
 private:
     FixedPoint<1> &m_fp;
@@ -41,7 +41,7 @@ public:
 
 FpSlider::~FpSlider() = default;
 
-class FpSpinBox final : public QDoubleSpinBox
+class NODISCARD FpSpinBox final : public QDoubleSpinBox
 {
 private:
     using FP = FixedPoint<1>;
@@ -61,7 +61,7 @@ public:
     ~FpSpinBox() final;
 
 public:
-    int getIntValue() const
+    NODISCARD int getIntValue() const
     {
         return static_cast<int>(std::lround(std::clamp(value() * std::pow(10.0, FP::digits),
                                                        static_cast<double>(m_fp.min),

@@ -733,7 +733,7 @@ NODISCARD static QString compressDirections(QString original)
     return ans;
 }
 
-class ShortestPathEmitter final : public ShortestPathRecipient
+class NODISCARD ShortestPathEmitter final : public ShortestPathRecipient
 {
     AbstractParser &parser;
 

@@ -188,7 +188,7 @@ protected:
     OptionArray triedToEnable;
 
     /** current dimensions for NAWS */
-    struct
+    struct NODISCARD NawsData final
     {
         int x = 80, y = 24;
     } current{};

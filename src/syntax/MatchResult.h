@@ -36,6 +36,6 @@ private:
     MatchResult(ParserInput matched, ParserInput unmatched, OptValue optResult);
 
 public:
-    explicit operator bool() const { return is_success; }
+    NODISCARD explicit operator bool() const { return is_success; }
 };
 } // namespace syntax

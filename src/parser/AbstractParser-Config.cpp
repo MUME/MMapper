@@ -17,11 +17,11 @@
 
 #include <QColor>
 
-class ArgNamedColor final : public syntax::IArgument
+class NODISCARD ArgNamedColor final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
@@ -48,11 +48,11 @@ std::ostream &ArgNamedColor::virt_to_stream(std::ostream &os) const
     return os << "<NamedColor>";
 }
 
-class ArgHexColor final : public syntax::IArgument
+class NODISCARD ArgHexColor final : public syntax::IArgument
 {
 private:
-    syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                   syntax::IMatchErrorLogger *) const override;
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const override;
 
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
@@ -86,7 +86,7 @@ std::ostream &ArgHexColor::virt_to_stream(std::ostream &os) const
     return os << "<HexColor>";
 }
 
-class BoolAlpha final
+class NODISCARD BoolAlpha final
 {
 private:
     bool value = false;

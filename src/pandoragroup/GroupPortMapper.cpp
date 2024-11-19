@@ -31,7 +31,7 @@ public:
 
 GroupPortMapper::Pimpl::~Pimpl() = default;
 
-class NoopPortMapper final : public GroupPortMapper::Pimpl
+class NODISCARD NoopPortMapper final : public GroupPortMapper::Pimpl
 {
 public:
     NoopPortMapper() = default;
@@ -69,7 +69,7 @@ using UPNPDev_ptr = std::unique_ptr<UPNPDev, decltype(&::freeUPNPDevlist)>;
 #define MM_UPNP_UNKNOWN_DEVICE UPNP_UNKNOWN_DEVICE
 #endif
 
-class MiniUPnPcPortMapper final : public GroupPortMapper::Pimpl
+class NODISCARD MiniUPnPcPortMapper final : public GroupPortMapper::Pimpl
 {
 private:
     UPNPDev_ptr deviceList{nullptr, ::freeUPNPDevlist};

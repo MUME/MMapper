@@ -19,7 +19,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(RandomEngine);
 
 public:
-    static RandomEngine &getSingleton();
+    NODISCARD static RandomEngine &getSingleton();
 };
 
 // returns a uniformly-distributed random number in [0..max], inclusive

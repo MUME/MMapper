@@ -336,7 +336,7 @@ public:
 
     struct NODISCARD AdventurePanelSettings final
     {
-        bool getDisplayXPStatus() const { return displayXPStatus; }
+        NODISCARD bool getDisplayXPStatus() const { return displayXPStatus; }
         void setDisplayXPStatus(bool display)
         {
             displayXPStatus = display;

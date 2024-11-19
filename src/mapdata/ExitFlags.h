@@ -41,7 +41,7 @@ public:
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const \
+    NODISCARD bool is##CamelCase() const \
     { \
         return contains(ExitFlagEnum::UPPER_CASE); \
     }

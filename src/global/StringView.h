@@ -19,7 +19,7 @@
  *
  * NOTE: This is does not fill the same role as QStringView or std::string_view.
  */
-struct StringView final
+struct NODISCARD StringView final
 {
 public:
     using const_iterator = std::string_view::const_iterator;
@@ -49,8 +49,11 @@ public:
     NODISCARD std::string_view getStdStringView() const { return m_sv; }
 
 public:
+    // allow discard
     StringView &trimLeft() noexcept;
+    // allow discard
     StringView &trimRight() noexcept;
+    // allow discard
     StringView &trim() noexcept { return trimLeft().trimRight(); }
 
 private:
@@ -63,11 +66,11 @@ public:
     NODISCARD char lastChar() const;
 
 public:
-    char takeFirstLetter();
+    NODISCARD char takeFirstLetter();
 
 public:
-    StringView takeFirstWord();
-    StringView takeFirstWordNoPostTrim();
+    NODISCARD StringView takeFirstWord();
+    NODISCARD StringView takeFirstWordNoPostTrim();
 
 public:
     NODISCARD int countNonSpaceChars() const noexcept;
@@ -77,13 +80,13 @@ public:
     NODISCARD std::vector<QString> getWordsAsQStrings() const;
 
 public:
-    bool operator==(const char *s) const noexcept = delete;
+    NODISCARD bool operator==(const char *s) const noexcept = delete;
 
-    bool operator==(const std::string_view sv) const noexcept { return m_sv == sv; }
-    bool operator!=(const std::string_view sv) const noexcept { return !(*this == sv); }
+    NODISCARD bool operator==(const std::string_view sv) const noexcept { return m_sv == sv; }
+    NODISCARD bool operator!=(const std::string_view sv) const noexcept { return !(*this == sv); }
 
-    bool operator==(const StringView rhs) const noexcept { return m_sv == rhs.m_sv; }
-    bool operator!=(const StringView rhs) const noexcept { return !(*this == rhs); }
+    NODISCARD bool operator==(const StringView rhs) const noexcept { return m_sv == rhs.m_sv; }
+    NODISCARD bool operator!=(const StringView rhs) const noexcept { return !(*this == rhs); }
 
 public:
     NODISCARD StringView substr(size_t pos, size_t len = std::string_view::npos) const;
@@ -105,7 +108,7 @@ public:
     NODISCARD StringView right(size_t len) const;
     ALLOW_DISCARD StringView &operator++();
     void operator++(int) = delete;
-    char operator[](size_t pos) const;
+    NODISCARD char operator[](size_t pos) const;
     NODISCARD bool startsWith(std::string_view other) const;
     NODISCARD bool endsWith(std::string_view other) const;
     void remove_suffix(size_t n);

@@ -68,7 +68,7 @@ public:
         m_hash.addData(name.toLatin1() + "\n" + desc.toLatin1());
     }
 
-    QByteArray result() const { return m_hash.result(); }
+    NODISCARD QByteArray result() const { return m_hash.result(); }
 
     void reset() { m_hash.reset(); }
 };

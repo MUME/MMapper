@@ -41,7 +41,7 @@ public:
     void keyReleaseEvent(QKeyEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
-    MapCanvas *getCanvas() const;
+    NODISCARD MapCanvas *getCanvas() const;
 
 signals:
     void sig_setScroll(const glm::vec2 &worldPos);
@@ -58,7 +58,7 @@ public slots:
 public:
     void updateScrollBars();
     void setZoom(float zoom);
-    float getZoom() const;
+    NODISCARD float getZoom() const;
 
 protected:
     std::unique_ptr<QTimer> scrollTimer;

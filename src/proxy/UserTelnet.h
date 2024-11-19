@@ -13,7 +13,7 @@ class UserTelnet final : public AbstractTelnet
     Q_OBJECT
 private:
     /** modules for GMCP */
-    struct
+    struct NODISCARD GmcpData final
     {
         /** MMapper relevant modules and their version */
         GmcpModuleVersionList supported;

@@ -3,13 +3,15 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/macros.h"
+
 #include <chrono>
 
 #include <QString>
 
 class TestAdventure;
 
-class AdventureSession
+class NODISCARD AdventureSession final
 {
     template<typename T>
     struct Counter

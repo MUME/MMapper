@@ -129,8 +129,8 @@ private:
     void connectAll();
     void disconnectAll();
 
-    const Room *getSelectedRoom();
-    ExitDirEnum getSelectedExit();
+    NODISCARD const Room *getSelectedRoom();
+    NODISCARD ExitDirEnum getSelectedExit();
     void updateDialog(const Room *r);
 
 private:
@@ -142,12 +142,12 @@ private:
     void updateRoomSundeath(RoomSundeathEnum value);
 
 private:
-    QRadioButton *getAlignRadioButton(RoomAlignEnum value) const;
-    QRadioButton *getPortableRadioButton(RoomPortableEnum value) const;
-    QRadioButton *getRideableRadioButton(RoomRidableEnum value) const;
-    QRadioButton *getLightRadioButton(RoomLightEnum value) const;
-    QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
-    QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
+    NODISCARD QRadioButton *getAlignRadioButton(RoomAlignEnum value) const;
+    NODISCARD QRadioButton *getPortableRadioButton(RoomPortableEnum value) const;
+    NODISCARD QRadioButton *getRideableRadioButton(RoomRidableEnum value) const;
+    NODISCARD QRadioButton *getLightRadioButton(RoomLightEnum value) const;
+    NODISCARD QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
+    NODISCARD QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
 
 private:
     EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
