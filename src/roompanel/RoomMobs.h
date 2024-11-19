@@ -28,12 +28,14 @@ private:
         size_t index;
     };
 
+    // TODO: eliminate this
+    mutable QRecursiveMutex mutex;
+
     // mobs ordered by ID
     std::unordered_map<RoomMob::Id, SharedRoomMobAndIndex> m_mobs;
     // mobs ordered as they should be shown
     std::map<size_t, SharedRoomMob> m_mobsByIndex;
-    mutable QRecursiveMutex mutex;
-    size_t m_nextIndex;
+    size_t m_nextIndex = 0;
 
 public:
     explicit RoomMobs(QObject *parent);

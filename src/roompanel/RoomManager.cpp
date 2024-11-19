@@ -18,7 +18,6 @@
 RoomManager::RoomManager(QObject *const parent)
     : QObject{parent}
     , m_room{this}
-    , m_debug{false}
 {}
 
 RoomManager::~RoomManager() = default;

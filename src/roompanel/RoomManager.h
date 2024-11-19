@@ -19,6 +19,13 @@ class RoomManager final : public QObject
 public:
     Q_OBJECT
 
+private:
+    static const QHash<QString, MobFieldEnum> mobFields;
+
+private:
+    RoomMobs m_room;
+    bool m_debug = false;
+
 public:
     explicit RoomManager(QObject *parent);
     ~RoomManager() final;
@@ -48,10 +55,4 @@ private:
     NODISCARD bool toMob(const QJsonObject &obj, RoomMobUpdate &mob) const;
     NODISCARD static bool toMobId(const QJsonValue &value, RoomMobUpdate &data);
     static void toMobField(const QJsonValue &value, RoomMobUpdate &data, MobFieldEnum i);
-
-private:
-    RoomMobs m_room;
-    bool m_debug;
-
-    static const QHash<QString, MobFieldEnum> mobFields;
 };

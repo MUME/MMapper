@@ -26,9 +26,6 @@ const QVariant RoomModel::empty;
 RoomModel::RoomModel(QObject *const parent, const RoomMobs &room)
     : QAbstractTableModel{parent}
     , m_room{room}
-    , m_mobsById{}
-    , m_mobVector{}
-    , m_debug{false}
 {}
 
 int RoomModel::rowCount(const QModelIndex & /* parent */) const

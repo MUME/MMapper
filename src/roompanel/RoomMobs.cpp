@@ -12,9 +12,6 @@
 
 RoomMobs::RoomMobs(QObject *const parent)
     : QObject(parent)
-    , m_mobs()
-    , m_mobsByIndex()
-    , m_nextIndex(0)
 {}
 
 void RoomMobs::updateModel(std::unordered_map<RoomMob::Id, SharedRoomMob> &mobsById,

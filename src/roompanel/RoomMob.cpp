@@ -14,14 +14,6 @@
 #include <QDebug>
 #include <QMessageLogContext>
 
-// ----------------------------- RoomMobData ----------------------------------
-RoomMobData::RoomMobData()
-    : m_fields{}
-    , m_id{NOID}
-{}
-
-RoomMobData::~RoomMobData() = default;
-
 // ----------------------------- RoomMob --------------------------------------
 SharedRoomMob RoomMob::alloc()
 {
@@ -49,10 +41,3 @@ bool RoomMob::updateFrom(RoomMobUpdate &&data)
     }
     return updated;
 }
-
-// ----------------------------- RoomMobUpdate --------------------------------
-RoomMobUpdate::RoomMobUpdate()
-    : m_flags()
-{}
-
-RoomMobUpdate::~RoomMobUpdate() = default;

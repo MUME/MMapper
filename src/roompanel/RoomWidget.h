@@ -35,6 +35,16 @@ public:
         MOUNT,
     };
 
+private:
+    static const QVariant empty;
+
+private:
+    const RoomMobs &m_room;
+    std::unordered_map<RoomMob::Id, SharedRoomMob> m_mobsById;
+    std::vector<SharedRoomMob> m_mobVector;
+    bool m_debug = false;
+
+public:
     RoomModel(QObject *parent, const RoomMobs &room);
 
     NODISCARD int rowCount(const QModelIndex &parent) const override;
@@ -53,18 +63,15 @@ private:
     NODISCARD bool isEnemy(int row, int column) const;
     NODISCARD bool isFightingYOU(int row, int column) const;
 
-private:
-    const RoomMobs &m_room;
-    std::unordered_map<RoomMob::Id, SharedRoomMob> m_mobsById;
-    std::vector<SharedRoomMob> m_mobVector;
-    bool m_debug;
-
-    static const QVariant empty;
 }; // class RoomModel
 
 class RoomWidget final : public QWidget
 {
     Q_OBJECT
+
+private:
+    RoomModel m_model;
+    RoomManager &m_roomManager;
 
 public:
     explicit RoomWidget(RoomManager &rm, QWidget *parent);
@@ -78,8 +85,4 @@ signals:
 private:
     void readSettings();
     void writeSettings();
-
-private:
-    RoomModel m_model;
-    RoomManager &m_roomManager;
 };

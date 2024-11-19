@@ -53,11 +53,16 @@ class NODISCARD RoomMobData
 public:
     using Field = MobFieldEnum;
     using Id = uint32_t; // matches QVariant::toUint() return type
-    static constexpr const Id NOID = 0;
 
-    RoomMobData();
-    ~RoomMobData();
-    DEFAULT_CTORS_AND_ASSIGN_OPS(RoomMobData);
+protected:
+    using MobFieldList = EnumIndexedArray<QVariant, MobFieldEnum, NUM_MOB_FIELDS>;
+
+public:
+    static inline constexpr const Id NOID = 0;
+
+protected:
+    MobFieldList m_fields{};
+    Id m_id = NOID;
 
 public:
     NODISCARD Id getId() const { return m_id; }
@@ -65,12 +70,6 @@ public:
 
     NODISCARD const QVariant &getField(const Field index) const { return m_fields.at(index); }
     void setField(const Field index, QVariant value) { m_fields[index] = std::move(value); }
-
-protected:
-    using MobFieldList = EnumIndexedArray<QVariant, MobFieldEnum, NUM_MOB_FIELDS>;
-
-    MobFieldList m_fields;
-    Id m_id;
 };
 
 // -----------------------------------------------------------------------------
@@ -107,9 +106,8 @@ class NODISCARD RoomMobUpdate : public RoomMobData
 public:
     using Flags = MobFieldFlags;
 
-    RoomMobUpdate();
-    ~RoomMobUpdate();
-    DEFAULT_CTORS_AND_ASSIGN_OPS(RoomMobUpdate);
+private:
+    Flags m_flags; // keeps track of which fields are present
 
 public:
     NODISCARD Flags getFlags() const { return m_flags; }
@@ -119,7 +117,4 @@ public:
     {
         return m_flags.contains(index);
     }
-
-private:
-    Flags m_flags; // keeps track of which fields are present
 };
