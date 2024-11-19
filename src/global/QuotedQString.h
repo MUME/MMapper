@@ -11,17 +11,17 @@
 class NODISCARD QuotedQString final
 {
 private:
-    QString str;
+    QString m_str;
 
 public:
     explicit QuotedQString(QString input)
-        : str{std::move(input)}
+        : m_str{std::move(input)}
     {}
 
     friend QDebug &operator<<(QDebug &debug, const QuotedQString &q)
     {
         debug.quote();
-        debug << q.str;
+        debug << q.m_str;
         debug.noquote();
         return debug;
     }

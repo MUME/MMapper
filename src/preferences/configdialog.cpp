@@ -40,7 +40,9 @@ ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
     auto mumeProtocolPage = new MumeProtocolPage(this);
     auto pathmachinePage = new PathmachinePage(this);
 
-    pagesWidget = new QStackedWidget(this);
+    m_pagesWidget = new QStackedWidget(this);
+
+    auto *const pagesWidget = m_pagesWidget;
     pagesWidget->addWidget(generalPage);
     pagesWidget->addWidget(graphicsPage);
     pagesWidget->addWidget(parserPage);
@@ -160,5 +162,5 @@ void ConfigDialog::slot_changePage(QListWidgetItem *current, QListWidgetItem *co
         current = previous;
     }
     ui->pagesScrollArea->verticalScrollBar()->setSliderPosition(0);
-    pagesWidget->setCurrentIndex(ui->contentsWidget->row(current));
+    m_pagesWidget->setCurrentIndex(ui->contentsWidget->row(current));
 }

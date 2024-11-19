@@ -29,12 +29,12 @@ class CGroup final : public QObject, public GroupAdmin
     Q_OBJECT
 
 private:
-    mutable QRecursiveMutex characterLock;
-    std::set<GroupRecipient *> locks;
-    std::queue<std::shared_ptr<GroupAction>> actionSchedule;
-    GroupVector charIndex;
+    mutable QRecursiveMutex m_characterLock;
+    std::set<GroupRecipient *> m_locks;
+    std::queue<std::shared_ptr<GroupAction>> m_actionSchedule;
+    GroupVector m_charIndex;
     // deleted in destructor as member of charIndex
-    SharedGroupChar self;
+    SharedGroupChar m_self;
 
 public:
     explicit CGroup(QObject *parent);
@@ -67,7 +67,7 @@ protected:
     void executeActions();
 
 public:
-    NODISCARD const SharedGroupChar &getSelf() { return self; }
+    NODISCARD const SharedGroupChar &getSelf() { return m_self; }
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map

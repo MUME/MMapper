@@ -19,7 +19,7 @@ private:
         GmcpModuleVersionList supported;
         /** All GMCP modules */
         GmcpModuleSet modules;
-    } gmcp{};
+    } m_gmcp{};
 
 public:
     explicit UserTelnet(QObject *parent);

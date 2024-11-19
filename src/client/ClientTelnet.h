@@ -16,8 +16,8 @@ class ClientTelnet final : public AbstractTelnet
     Q_OBJECT
 
 private:
-    io::buffer<(1 << 15)> buffer;
-    QTcpSocket socket;
+    io::buffer<(1 << 15)> m_buffer;
+    QTcpSocket m_socket;
 
 public:
     explicit ClientTelnet(QObject *parent);

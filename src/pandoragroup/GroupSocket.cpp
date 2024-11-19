@@ -25,15 +25,16 @@ static constexpr const auto THIRTY_SECOND_TIMEOUT = 30000;
 
 GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
     : QObject(parent)
-    , socket{this}
-    , timer{this}
+    , m_socket{this}
+    , m_timer{this}
 {
+    auto &timer = m_timer;
     timer.setInterval(THIRTY_SECOND_TIMEOUT);
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, &GroupSocket::slot_onTimeout);
 
     const auto get_ssl_config = [this, authority]() {
-        auto config = socket.sslConfiguration();
+        auto config = m_socket.sslConfiguration();
         config.setCaCertificates({});
         if (!NO_OPEN_SSL) {
             config.setLocalCertificate(authority->getLocalCertificate());
@@ -46,15 +47,16 @@ GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
         config.setSslOption(QSsl::SslOption::SslOptionDisableCompression, false);
         return config;
     };
+    auto &socket = m_socket;
     socket.setSslConfiguration(get_ssl_config());
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() {
         emit sig_sendLog("Host found...");
     });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
-        socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
-        socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-        if (io::tuneKeepAlive(socket.socketDescriptor())) {
+        m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
+        m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+        if (io::tuneKeepAlive(m_socket.socketDescriptor())) {
             emit sig_sendLog("Tuned TCP keep alive parameters for socket");
         }
         setProtocolState(ProtocolStateEnum::AwaitingLogin);
@@ -62,14 +64,16 @@ GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
         emit sig_connectionEstablished(this);
     });
     connect(&socket, &QSslSocket::encrypted, this, [this]() {
-        timer.stop();
-        secret
-            = socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex().toLower();
+        m_timer.stop();
+        m_secret = m_socket.peerCertificate()
+                       .digest(QCryptographicHash::Algorithm::Sha1)
+                       .toHex()
+                       .toLower();
         emit sig_sendLog("Connection successfully encrypted...");
         emit sig_connectionEncrypted(this);
     });
     connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
-        timer.stop();
+        m_timer.stop();
         emit sig_connectionClosed(this);
     });
     connect(&socket, &QIODevice::readyRead, this, &GroupSocket::slot_onReadyRead);
@@ -82,19 +86,20 @@ GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
 
 GroupSocket::~GroupSocket()
 {
-    timer.stop();
-    socket.disconnectFromHost();
+    m_timer.stop();
+    m_socket.disconnectFromHost();
 }
 
 void GroupSocket::connectToHost()
 {
+    auto &socket = m_socket;
     bool retry = false;
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         retry = true;
         socket.abort();
     }
     reset();
-    timer.start();
+    m_timer.start();
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
     const auto remotePort = static_cast<uint16_t>(groupConfig.remotePort);
@@ -107,7 +112,8 @@ void GroupSocket::connectToHost()
 
 void GroupSocket::disconnectFromHost()
 {
-    timer.stop();
+    m_timer.stop();
+    auto &socket = m_socket;
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.flush();
         sendLog("Closing the socket. Quitting.");
@@ -118,14 +124,15 @@ void GroupSocket::disconnectFromHost()
 
 QString GroupSocket::getPeerName() const
 {
-    const auto s = socket.peerName();
+    const auto s = m_socket.peerName();
     if (!s.isEmpty())
         return s;
-    return socket.peerAddress().toString();
+    return m_socket.peerAddress().toString();
 }
 
 void GroupSocket::setSocket(qintptr socketDescriptor)
 {
+    auto &socket = m_socket;
     if (!socket.setSocketDescriptor(socketDescriptor)) {
         qWarning() << "Connection failed. Native socket not recognized.";
         slot_onError(QAbstractSocket::SocketAccessError);
@@ -142,10 +149,11 @@ void GroupSocket::setSocket(qintptr socketDescriptor)
 
 void GroupSocket::setProtocolState(const ProtocolStateEnum val)
 {
+    auto &timer = m_timer;
     timer.stop();
     if (DEBUG)
         qInfo() << "Protocol state:" << static_cast<int>(val);
-    protocolState = val;
+    m_protocolState = val;
     switch (val) {
     case ProtocolStateEnum::AwaitingLogin:
         // Restart timer to verify that info was sent
@@ -154,7 +162,7 @@ void GroupSocket::setProtocolState(const ProtocolStateEnum val)
     case ProtocolStateEnum::AwaitingInfo:
         // Restart timer to verify that login occurred
         sendLog("Receiving group information...");
-        timer.start();
+        m_timer.start();
         break;
     case ProtocolStateEnum::Logged:
         sendLog("Group information received. Login completed successfully.");
@@ -170,9 +178,9 @@ void GroupSocket::slot_onError(QAbstractSocket::SocketError e)
 {
     // Disconnecting and timeouts are not an error
     if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
-        qDebug() << "onError" << static_cast<int>(e) << socket.errorString();
-        timer.stop();
-        emit sig_errorInConnection(this, socket.errorString());
+        qDebug() << "onError" << static_cast<int>(e) << m_socket.errorString();
+        m_timer.stop();
+        emit sig_errorInConnection(this, m_socket.errorString());
     }
 }
 
@@ -183,15 +191,16 @@ void GroupSocket::slot_onPeerVerifyError(const QSslError &error)
         return;
 
     sendLog("<b>WARNING:</b> " + error.errorString());
-    qWarning() << "onPeerVerifyError" << static_cast<int>(socket.error()) << socket.errorString()
-               << error.errorString();
+    qWarning() << "onPeerVerifyError" << static_cast<int>(m_socket.error())
+               << m_socket.errorString() << error.errorString();
 }
 
 void GroupSocket::slot_onTimeout()
 {
+    auto &socket = m_socket;
     switch (socket.state()) {
     case QAbstractSocket::ConnectedState:
-        switch (protocolState) {
+        switch (m_protocolState) {
         case ProtocolStateEnum::Unconnected:
         case ProtocolStateEnum::AwaitingLogin:
             if (!socket.isEncrypted()) {
@@ -229,7 +238,7 @@ void GroupSocket::slot_onReadyRead()
 {
     // REVISIT: check return value?
     MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
+        io::readAllAvailable(m_socket, m_ioBuffer, [this](const QByteArray &byteArray) {
             for (const auto &c : byteArray) {
                 onReadInternal(c);
             }
@@ -238,11 +247,13 @@ void GroupSocket::slot_onReadyRead()
 
 void GroupSocket::onReadInternal(const char c)
 {
-    switch (state) {
+    auto &buffer = m_buffer;
+    auto &currentMessageLen = m_currentMessageLen;
+    switch (m_state) {
     case GroupMessageStateEnum::LENGTH:
         if (c == char_consts::C_SPACE && currentMessageLen > 0) {
             // Terminating space received
-            state = GroupMessageStateEnum::PAYLOAD;
+            m_state = GroupMessageStateEnum::PAYLOAD;
         } else if (c >= '0' && c <= '9') {
             // Digit received
             currentMessageLen *= 10;
@@ -263,7 +274,7 @@ void GroupSocket::onReadInternal(const char c)
             // Reset state machine
             buffer.clear();
             currentMessageLen = 0;
-            state = GroupMessageStateEnum::LENGTH;
+            m_state = GroupMessageStateEnum::LENGTH;
         }
         break;
     }
@@ -274,7 +285,7 @@ void GroupSocket::onReadInternal(const char c)
  */
 void GroupSocket::sendData(const QByteArray &data)
 {
-    if (socket.state() != QAbstractSocket::ConnectedState) {
+    if (m_socket.state() != QAbstractSocket::ConnectedState) {
         qWarning() << "Socket is not connected";
         return;
     }
@@ -284,16 +295,16 @@ void GroupSocket::sendData(const QByteArray &data)
     buff += data;
     if (DEBUG)
         qDebug() << "Sending message:" << buff;
-    socket.write(buff);
+    m_socket.write(buff);
 }
 
 void GroupSocket::reset()
 {
-    protocolState = ProtocolStateEnum::Unconnected;
-    protocolVersion = 102;
-    buffer.clear();
-    secret.clear();
-    name.clear();
-    state = GroupMessageStateEnum::LENGTH;
-    currentMessageLen = 0;
+    m_protocolState = ProtocolStateEnum::Unconnected;
+    m_protocolVersion = 102;
+    m_buffer.clear();
+    m_secret.clear();
+    m_name.clear();
+    m_state = GroupMessageStateEnum::LENGTH;
+    m_currentMessageLen = 0;
 }

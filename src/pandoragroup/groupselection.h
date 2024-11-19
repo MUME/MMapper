@@ -47,7 +47,7 @@ class NODISCARD GroupSelection final : public GroupRecipient
 {
 private:
     GroupAdmin *m_admin = nullptr;
-    GroupVector chars;
+    GroupVector m_chars;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(GroupSelection);
@@ -57,18 +57,18 @@ public:
     ~GroupSelection() final;
 
 private:
-    void virt_receiveCharacters(GroupAdmin *, GroupVector v) final;
+    void virt_receiveCharacters(GroupAdmin *admin, GroupVector chars) final;
 
 public:
-    NODISCARD auto at(int i) const
+    NODISCARD auto at(const int i) const
     {
         assert(i >= 0);
-        return chars.at(static_cast<uint32_t>(i));
+        return m_chars.at(static_cast<uint32_t>(i));
     }
-    NODISCARD auto begin() const { return chars.begin(); }
-    NODISCARD auto cbegin() const { return chars.cbegin(); }
-    NODISCARD auto cend() const { return chars.cend(); }
-    NODISCARD auto end() const { return chars.end(); }
-    NODISCARD auto size() const { return chars.size(); }
-    NODISCARD auto empty() const { return chars.empty(); }
+    NODISCARD auto begin() const { return m_chars.begin(); }
+    NODISCARD auto cbegin() const { return m_chars.cbegin(); }
+    NODISCARD auto cend() const { return m_chars.cend(); }
+    NODISCARD auto end() const { return m_chars.end(); }
+    NODISCARD auto size() const { return m_chars.size(); }
+    NODISCARD auto empty() const { return m_chars.empty(); }
 };

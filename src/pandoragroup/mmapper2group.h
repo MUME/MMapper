@@ -40,16 +40,16 @@ private:
 
         void reset() { *this = LastPrompt{}; }
     };
-    LastPrompt lastPrompt;
+    LastPrompt m_lastPrompt;
 
     std::atomic_int m_calledStopInternal{0};
-    QTimer affectTimer;
-    QMap<CharacterAffectEnum, int64_t> affectLastSeen;
+    QTimer m_affectTimer;
+    QMap<CharacterAffectEnum, int64_t> m_affectLastSeen;
 
-    QRecursiveMutex networkLock;
-    std::unique_ptr<GroupAuthority> authority;
-    std::unique_ptr<CGroupCommunicator> network;
-    std::unique_ptr<CGroup> group;
+    QRecursiveMutex m_networkLock;
+    std::unique_ptr<GroupAuthority> m_authority;
+    std::unique_ptr<CGroupCommunicator> m_network;
+    std::unique_ptr<CGroup> m_group;
 
 public:
     NODISCARD static GroupManagerStateEnum getConfigState();
@@ -95,8 +95,8 @@ public:
 
     NODISCARD GroupManagerStateEnum getMode();
 
-    NODISCARD GroupAuthority *getAuthority() { return authority.get(); }
-    NODISCARD CGroup *getGroup() { return group.get(); }
+    NODISCARD GroupAuthority *getAuthority() { return m_authority.get(); }
+    NODISCARD CGroup *getGroup() { return m_group.get(); }
 
 public:
     NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }

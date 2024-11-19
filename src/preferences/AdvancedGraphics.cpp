@@ -79,76 +79,78 @@ class NODISCARD SliderSpinboxButton final
 {
 private:
     using FP = FixedPoint<1>;
-    AdvancedGraphicsGroupBox &group;
-    FP &fp;
-    FpSlider slider;
-    FpSpinBox spin;
-    QPushButton reset;
-    QHBoxLayout horizontal;
-    QVector<QWidget *> blockable;
+    AdvancedGraphicsGroupBox &m_group;
+    FP &m_fp;
+    FpSlider m_slider;
+    FpSpinBox m_spin;
+    QPushButton m_reset;
+    QHBoxLayout m_horizontal;
+    QVector<QWidget *> m_blockable;
 
 public:
     explicit SliderSpinboxButton(AdvancedGraphicsGroupBox &in_group,
                                  QVBoxLayout &vbox,
                                  const QString &name,
                                  FP &in_fp)
-        : group{in_group}
-        , fp{in_fp}
-        , slider(fp)
-        , spin(fp)
-        , reset("Reset")
-        , horizontal{}
+        : m_group{in_group}
+        , m_fp{in_fp}
+        , m_slider(m_fp)
+        , m_spin(m_fp)
+        , m_reset("Reset")
     {
-        QObject::connect(&slider, &QSlider::valueChanged, &group, [this](int value) {
-            const SignalBlocker block_slider{slider};
-            const SignalBlocker block_spin{spin};
-            fp.set(value);
-            spin.setIntValue(value);
-            group.graphicsSettingsChanged();
+        auto &group = m_group;
+        QObject::connect(&m_slider, &QSlider::valueChanged, &group, [this](int value) {
+            const SignalBlocker block_slider{m_slider};
+            const SignalBlocker block_spin{m_spin};
+            m_fp.set(value);
+            m_spin.setIntValue(value);
+            m_group.graphicsSettingsChanged();
         });
 
-        QObject::connect(&spin,
+        QObject::connect(&m_spin,
                          QOverload<double>::of(&FpSpinBox::valueChanged),
                          &group,
                          [this](double /*value*/) {
-                             const SignalBlocker block_slider{slider};
-                             const SignalBlocker block_spin{spin};
-                             const int value = spin.getIntValue();
-                             fp.set(value);
-                             slider.setValue(value);
-                             group.graphicsSettingsChanged();
+                             const SignalBlocker block_slider{m_slider};
+                             const SignalBlocker block_spin{m_spin};
+                             const int value = m_spin.getIntValue();
+                             m_fp.set(value);
+                             m_slider.setValue(value);
+                             m_group.graphicsSettingsChanged();
                          });
 
-        QObject::connect(&reset, &QPushButton::clicked, &group, [this](bool) {
-            slider.setValue(fp.defaultValue);
+        QObject::connect(&m_reset, &QPushButton::clicked, &group, [this](bool) {
+            m_slider.setValue(m_fp.defaultValue);
         });
 
         vbox.addWidget(new QLabel(name));
+
+        auto &horizontal = m_horizontal;
         horizontal.addSpacing(20);
-        horizontal.addWidget(&slider);
-        horizontal.addWidget(&spin);
-        horizontal.addWidget(&reset);
+        horizontal.addWidget(&m_slider);
+        horizontal.addWidget(&m_spin);
+        horizontal.addWidget(&m_reset);
         vbox.addLayout(&horizontal, 0);
     }
     ~SliderSpinboxButton() = default;
 
     void setEnabled(bool enabled)
     {
-        this->slider.setEnabled(enabled);
-        this->spin.setEnabled(enabled);
-        this->reset.setEnabled(enabled);
+        this->m_slider.setEnabled(enabled);
+        this->m_spin.setEnabled(enabled);
+        this->m_reset.setEnabled(enabled);
     }
 
     void forcedUpdate()
     {
-        const SignalBlocker block_slider{slider};
-        const SignalBlocker block_spin{spin};
+        const SignalBlocker block_slider{m_slider};
+        const SignalBlocker block_spin{m_spin};
 
-        const auto value = fp.get();
-        spin.setIntValue(value);
-        slider.setValue(value);
+        const auto value = m_fp.get();
+        m_spin.setIntValue(value);
+        m_slider.setValue(value);
         if ((false))
-            group.graphicsSettingsChanged();
+            m_group.graphicsSettingsChanged();
     }
 
     DELETE_CTORS_AND_ASSIGN_OPS(SliderSpinboxButton);

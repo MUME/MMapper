@@ -45,7 +45,7 @@ public:
     static constexpr const auto WEATHER_TYPE = 0b111u << 5;
 
 private:
-    uint32_t flags = 0u;
+    uint32_t m_flags = 0u;
 
 private:
     NODISCARD static uint32_t encodeFogType(const PromptFogEnum pf)
@@ -61,36 +61,36 @@ public:
     PromptFlagsType() = default;
 
 public:
-    NODISCARD explicit operator uint32_t() const { return flags; }
-    NODISCARD bool operator==(const PromptFlagsType rhs) const { return flags == rhs.flags; }
-    NODISCARD bool operator!=(const PromptFlagsType rhs) const { return flags != rhs.flags; }
+    NODISCARD explicit operator uint32_t() const { return m_flags; }
+    NODISCARD bool operator==(const PromptFlagsType rhs) const { return m_flags == rhs.m_flags; }
+    NODISCARD bool operator!=(const PromptFlagsType rhs) const { return m_flags != rhs.m_flags; }
 
 public:
-    NODISCARD bool isValid() const { return flags & PROMPT_FLAGS_VALID; }
-    void setValid() { flags |= PROMPT_FLAGS_VALID; }
+    NODISCARD bool isValid() const { return m_flags & PROMPT_FLAGS_VALID; }
+    void setValid() { m_flags |= PROMPT_FLAGS_VALID; }
 
 public:
     NODISCARD PromptFogEnum getFogType() const
     {
-        return static_cast<PromptFogEnum>(flags & static_cast<uint32_t>(FOG_TYPE));
+        return static_cast<PromptFogEnum>(m_flags & static_cast<uint32_t>(FOG_TYPE));
     }
     void setFogType(const PromptFogEnum type)
     {
-        using flags_type = decltype(flags);
-        flags = static_cast<flags_type>(flags & ~FOG_TYPE);
-        flags = static_cast<flags_type>(flags | (encodeFogType(type) & FOG_TYPE));
+        using flags_type = decltype(m_flags);
+        m_flags = static_cast<flags_type>(m_flags & ~FOG_TYPE);
+        m_flags = static_cast<flags_type>(m_flags | (encodeFogType(type) & FOG_TYPE));
     }
 
 public:
     NODISCARD PromptWeatherEnum getWeatherType() const
     {
-        return static_cast<PromptWeatherEnum>(flags & WEATHER_TYPE);
+        return static_cast<PromptWeatherEnum>(m_flags & WEATHER_TYPE);
     }
     void setWeatherType(const PromptWeatherEnum type)
     {
-        using flags_type = decltype(flags);
-        flags = static_cast<flags_type>(flags & ~WEATHER_TYPE);
-        flags = static_cast<flags_type>(flags | (encodeWeatherType(type) & WEATHER_TYPE));
+        using flags_type = decltype(m_flags);
+        m_flags = static_cast<flags_type>(m_flags & ~WEATHER_TYPE);
+        m_flags = static_cast<flags_type>(m_flags | (encodeWeatherType(type) & WEATHER_TYPE));
     }
 
 public:
@@ -101,23 +101,23 @@ public:
     }
 
 public:
-    NODISCARD bool isLit() const { return (flags & LIT_ROOM) != 0; }
+    NODISCARD bool isLit() const { return (m_flags & LIT_ROOM) != 0; }
     void setLit()
     {
-        using flags_type = decltype(flags);
-        flags = static_cast<flags_type>(flags & ~LIGHT_MASK);
-        flags = static_cast<flags_type>(flags | (LIT_ROOM & LIGHT_MASK));
+        using flags_type = decltype(m_flags);
+        m_flags = static_cast<flags_type>(m_flags & ~LIGHT_MASK);
+        m_flags = static_cast<flags_type>(m_flags | (LIT_ROOM & LIGHT_MASK));
     }
-    NODISCARD bool isDark() const { return (flags & DARK_ROOM) != 0; }
+    NODISCARD bool isDark() const { return (m_flags & DARK_ROOM) != 0; }
     void setDark()
     {
-        using flags_type = decltype(flags);
-        flags = static_cast<flags_type>(flags & ~LIGHT_MASK);
-        flags = static_cast<flags_type>(flags | (DARK_ROOM & LIGHT_MASK));
+        using flags_type = decltype(m_flags);
+        m_flags = static_cast<flags_type>(m_flags & ~LIGHT_MASK);
+        m_flags = static_cast<flags_type>(m_flags | (DARK_ROOM & LIGHT_MASK));
     }
 
 public:
-    void reset() { flags = uint32_t{0}; }
+    void reset() { m_flags = uint32_t{0}; }
 };
 
 template<>

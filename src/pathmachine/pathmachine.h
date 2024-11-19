@@ -42,13 +42,13 @@ class PathMachine : public QObject
     Q_OBJECT
 
 protected:
-    PathParameters params;
+    PathParameters m_params;
     MapData &m_mapData;
-    RoomSignalHandler signaler;
+    RoomSignalHandler m_signaler;
     /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
-    SigParseEvent lastEvent;
-    PathStateEnum state = PathStateEnum::SYNCING;
-    std::shared_ptr<PathList> paths;
+    SigParseEvent m_lastEvent;
+    PathStateEnum m_state = PathStateEnum::SYNCING;
+    std::shared_ptr<PathList> m_paths;
 
 private:
     std::optional<Coordinate> m_pathRootPos;

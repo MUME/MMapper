@@ -127,8 +127,9 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
     try {
         const GmcpModule mod{name.substr(0, found)};
-        if (gmcp.modules.find(mod) != gmcp.modules.end())
+        if (m_gmcp.modules.find(mod) != m_gmcp.modules.end()) {
             sendGmcpMessage(msg);
+        }
 
     } catch (const std::exception &e) {
         qWarning() << "Message" << msg.toRawBytes() << "error because:" << e.what();
@@ -191,7 +192,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         std::ostringstream oss;
         oss << "[ ";
         bool comma = false;
-        for (const GmcpModule &mod : gmcp.modules) {
+        for (const GmcpModule &mod : m_gmcp.modules) {
             // REVISIT: Are some MMapper supported modules not supposed to be filtered?
             if (mod.isSupported())
                 continue;
@@ -241,22 +242,25 @@ bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
     if (!myOptionState[OPT_GMCP])
         return false;
 
-    return gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
+    return m_gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
 }
 
 void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 {
     if (enabled) {
-        if (!mod.hasVersion())
+        if (!mod.hasVersion()) {
             throw std::runtime_error("missing version");
-        gmcp.modules.insert(mod);
-        if (mod.isSupported())
-            gmcp.supported[mod.getType()] = mod.getVersion();
+        }
+        m_gmcp.modules.insert(mod);
+        if (mod.isSupported()) {
+            m_gmcp.supported[mod.getType()] = mod.getVersion();
+        }
 
     } else {
-        gmcp.modules.erase(mod);
-        if (mod.isSupported())
-            gmcp.supported[mod.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+        m_gmcp.modules.erase(mod);
+        if (mod.isSupported()) {
+            m_gmcp.supported[mod.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+        }
     }
 }
 
@@ -265,8 +269,8 @@ void UserTelnet::resetGmcpModules()
     if (debug)
         qDebug() << "Clearing GMCP modules";
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
+    m_gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
     X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
-    gmcp.modules.clear();
+    m_gmcp.modules.clear();
 }

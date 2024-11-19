@@ -27,7 +27,7 @@ class ConfigDialog final : public QDialog
 private:
     Ui::ConfigDialog *const ui;
     Mmapper2Group *const m_groupManager;
-    QStackedWidget *pagesWidget = nullptr;
+    QStackedWidget *m_pagesWidget = nullptr;
 
 public:
     explicit ConfigDialog(Mmapper2Group *, QWidget *parent);

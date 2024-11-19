@@ -43,35 +43,35 @@ bool isAbbrev(StringView input, const std::string_view command, const int minAbb
 }
 
 Abbrev::Abbrev(const char *const arg_command, const int arg_minAbbrev)
-    : command{arg_command}
-    , minAbbrev{arg_minAbbrev}
+    : m_command{arg_command}
+    , m_minAbbrev{arg_minAbbrev}
 {
-    if (this->command == nullptr || this->command[0] == C_NUL)
+    if (this->m_command == nullptr || this->m_command[0] == C_NUL)
         throw std::invalid_argument("command");
 
-    this->len = static_cast<int>(std::strlen(this->command));
-    if (this->minAbbrev == -1)
-        this->minAbbrev = this->len;
+    this->m_len = static_cast<int>(std::strlen(this->m_command));
+    if (this->m_minAbbrev == -1)
+        this->m_minAbbrev = this->m_len;
 
-    if (!isClamped(this->minAbbrev, 1, this->len))
+    if (!isClamped(this->m_minAbbrev, 1, this->m_len))
         throw std::invalid_argument("minAbbrev");
 }
 
 Abbrev::operator bool() const
 {
-    return command != nullptr && command[0] != C_NUL && isClamped(minAbbrev, 1, len);
+    return m_command != nullptr && m_command[0] != C_NUL && isClamped(m_minAbbrev, 1, m_len);
 }
 
 QString Abbrev::describe() const
 {
-    if (command == nullptr)
+    if (m_command == nullptr)
         return "";
 
     QByteArray result;
-    result.reserve(len);
-    for (int i = 0; i < len; ++i) {
-        const char c = command[i];
-        result.append(static_cast<char>((i < minAbbrev) ? std::toupper(c) : std::tolower(c)));
+    result.reserve(m_len);
+    for (int i = 0; i < m_len; ++i) {
+        const char c = m_command[i];
+        result.append(static_cast<char>((i < m_minAbbrev) ? std::toupper(c) : std::tolower(c)));
     }
 
     return result;

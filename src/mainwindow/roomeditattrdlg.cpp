@@ -252,10 +252,10 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     : QDialog(parent)
 {
 #define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
-    static_assert(NUM_ELEMENTS(loadListItems) <= 32u);
-    static_assert(NUM_ELEMENTS(mobListItems) <= 32u);
-    static_assert(NUM_ELEMENTS(exitListItems) <= 16u);
-    static_assert(NUM_ELEMENTS(doorListItems) <= 16u);
+    static_assert(NUM_ELEMENTS(m_loadListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(m_mobListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(m_exitListItems) <= 16u);
+    static_assert(NUM_ELEMENTS(m_doorListItems) <= 16u);
     static_assert(NUM_ELEMENTS(roomTerrainButtons) == NUM_ROOM_TERRAIN_TYPES);
     static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
 #undef NUM_ELEMENTS
@@ -273,41 +273,41 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
     for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS) {
-        mobListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
-                                                                  getName(flag),
-                                                                  getPriority(flag));
+        m_mobListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
+                                                                    getName(flag),
+                                                                    getPriority(flag));
     }
 
-    installWidgets(mobListItems,
+    installWidgets(m_mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
     for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS) {
-        loadListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
-                                                                   getName(flag),
-                                                                   getPriority(flag));
+        m_loadListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
+                                                                     getName(flag),
+                                                                     getPriority(flag));
     }
 
-    installWidgets(loadListItems,
+    installWidgets(m_loadListItems,
                    "load list",
                    *loadFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
     for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
-        exitListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+        m_exitListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
     }
 
-    installWidgets(exitListItems,
+    installWidgets(m_exitListItems,
                    "exit list",
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
     for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
-        doorListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+        m_doorListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
     }
 
-    installWidgets(doorListItems,
+    installWidgets(m_doorListItems,
                    "door list",
                    *doorFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
@@ -606,12 +606,12 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         lightGroupBox->setChecked(false);
         sunGroupBox->setChecked(false);
 
-        for (const auto &x : loadListItems) {
+        for (const auto &x : m_loadListItems) {
             x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
 
-        for (const auto &x : mobListItems) {
+        for (const auto &x : m_mobListItems) {
             x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
@@ -630,13 +630,13 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         exitsFrame->setEnabled(true);
 
         const Exit &e = r->exit(getSelectedExit());
-        setCheckStates(exitListItems, e.getExitFlags());
+        setCheckStates(m_exitListItems, e.getExitFlags());
 
         if (e.isDoor()) {
             doorNameLineEdit->setEnabled(true);
             doorFlagsListWidget->setEnabled(true);
             doorNameLineEdit->setText(e.getDoorName().toQString());
-            setCheckStates(doorListItems, e.getDoorFlags());
+            setCheckStates(m_doorListItems, e.getDoorFlags());
 
         } else {
             doorNameLineEdit->clear();
@@ -647,11 +647,11 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
 
-        setFlags(loadListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-        setFlags(mobListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        setFlags(m_loadListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        setFlags(m_mobListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
-        setCheckStates(mobListItems, r->getMobFlags());
-        setCheckStates(loadListItems, r->getLoadFlags());
+        setCheckStates(m_mobListItems, r->getMobFlags());
+        setCheckStates(m_loadListItems, r->getLoadFlags());
 
         roomDescriptionTextEdit->setEnabled(true);
         roomNoteTextEdit->setEnabled(true);
@@ -971,7 +971,7 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(const bool val)
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
-    const auto optFlag = mobListItems.findIndexOf(
+    const auto optFlag = m_mobListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops" << __FILE__ << ":" << __LINE__;
@@ -995,7 +995,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = loadListItems.findIndexOf(
+    const auto optFlag = m_loadListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
@@ -1020,7 +1020,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = exitListItems.findIndexOf(
+    const auto optFlag = m_exitListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
@@ -1069,7 +1069,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = doorListItems.findIndexOf(
+    const auto optFlag = m_doorListItems.findIndexOf(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
@@ -1102,9 +1102,9 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 void RoomEditAttrDlg::toggleHiddenDoor()
 {
     if (doorFlagsListWidget->isEnabled()) {
-        doorListItems[DoorFlagEnum::HIDDEN]->setCheckState(
-            doorListItems[DoorFlagEnum::HIDDEN]->checkState() == Qt::Unchecked ? Qt::Checked
-                                                                               : Qt::Unchecked);
+        m_doorListItems[DoorFlagEnum::HIDDEN]->setCheckState(
+            m_doorListItems[DoorFlagEnum::HIDDEN]->checkState() == Qt::Unchecked ? Qt::Checked
+                                                                                 : Qt::Unchecked);
     }
 }
 

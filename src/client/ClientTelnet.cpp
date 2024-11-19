@@ -22,6 +22,7 @@
 ClientTelnet::ClientTelnet(QObject *const parent)
     : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, "MMapper")
 {
+    auto &socket = m_socket;
     connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
     connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);
     connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::slot_onReadyRead);
@@ -33,11 +34,12 @@ ClientTelnet::ClientTelnet(QObject *const parent)
 
 ClientTelnet::~ClientTelnet()
 {
-    socket.disconnectFromHost();
+    m_socket.disconnectFromHost();
 }
 
 void ClientTelnet::connectToHost()
 {
+    auto &socket = m_socket;
     if (socket.state() == QAbstractSocket::ConnectedState)
         return;
 
@@ -51,14 +53,14 @@ void ClientTelnet::connectToHost()
 void ClientTelnet::slot_onConnected()
 {
     reset();
-    socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
-    socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
+    m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     emit sig_connected();
 }
 
 void ClientTelnet::disconnectFromHost()
 {
-    socket.disconnectFromHost();
+    m_socket.disconnectFromHost();
 }
 
 void ClientTelnet::slot_onDisconnected()
@@ -74,8 +76,9 @@ void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
         // The connection closing isn't an error
         return;
     }
-    QString err = socket.errorString();
-    socket.abort();
+
+    QString err = m_socket.errorString();
+    m_socket.abort();
     emit sig_socketError(err);
 }
 
@@ -87,7 +90,7 @@ void ClientTelnet::slot_sendToMud(const QString &data)
 void ClientTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
-    socket.write(mmqt::toQByteArrayLatin1(data));
+    m_socket.write(mmqt::toQByteArrayLatin1(data));
 }
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
@@ -111,7 +114,7 @@ void ClientTelnet::slot_onReadyRead()
 {
     // REVISIT: check return value?
     MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(socket, buffer, [this](const QByteArray &byteArray) {
+        io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
             onReadInternal(byteArray);
         });
 }

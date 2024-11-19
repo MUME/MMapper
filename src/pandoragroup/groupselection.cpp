@@ -26,8 +26,8 @@ GroupSelection::~GroupSelection()
  * @param admin lock administrator
  * @param chars characters to insert
  */
-void GroupSelection::virt_receiveCharacters(GroupAdmin *const admin, GroupVector in_chars)
+void GroupSelection::virt_receiveCharacters(GroupAdmin *const admin, GroupVector chars)
 {
     assert(admin == m_admin);
-    chars = std::move(in_chars);
+    m_chars = std::move(chars);
 }

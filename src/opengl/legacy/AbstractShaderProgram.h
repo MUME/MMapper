@@ -33,20 +33,21 @@ public:
     class NODISCARD ProgramUnbinder final
     {
     private:
-        AbstractShaderProgram *self = nullptr;
+        AbstractShaderProgram *m_self = nullptr;
 
     public:
         ProgramUnbinder() = delete;
         DEFAULT_MOVES_DELETE_COPIES(ProgramUnbinder);
 
     public:
-        explicit ProgramUnbinder(AbstractShaderProgram &_self)
-            : self{&_self}
+        explicit ProgramUnbinder(AbstractShaderProgram &self)
+            : m_self{&self}
         {}
         ~ProgramUnbinder()
         {
-            if (self)
-                self->unbind();
+            if (m_self) {
+                m_self->unbind();
+            }
         }
     };
 

@@ -38,50 +38,51 @@ class RoomRecipient;
 PathMachine::PathMachine(MapData *const mapData, QObject *const parent)
     : QObject(parent)
     , m_mapData{deref(mapData)}
-    , signaler{this}
-    , lastEvent{ParseEvent::createDummyEvent()}
-    , paths{PathList::alloc()}
+    , m_signaler{this}
+    , m_lastEvent{ParseEvent::createDummyEvent()}
+    , m_paths{PathList::alloc()}
 {
-    connect(&signaler,
+    connect(&m_signaler,
             &RoomSignalHandler::sig_scheduleAction,
             this,
             &PathMachine::slot_scheduleAction);
 }
 
-void PathMachine::slot_setCurrentRoom(const RoomId id, bool update)
+void PathMachine::slot_setCurrentRoom(const RoomId id, const bool update)
 {
-    Forced forced(lastEvent, update);
+    Forced forced{m_lastEvent, update};
     emit sig_lookingForRooms(forced, id);
     slot_releaseAllPaths();
     if (const Room *const perhaps = forced.oneMatch()) {
         setMostLikelyRoom(*perhaps);
         emit sig_playerMoved(perhaps->getPosition());
         emit sig_setCharPosition(perhaps->getId());
-        state = PathStateEnum::APPROVED;
+        m_state = PathStateEnum::APPROVED;
     } else {
         clearMostLikelyRoom();
-        state = PathStateEnum::SYNCING;
+        m_state = PathStateEnum::SYNCING;
     }
 }
 
 void PathMachine::slot_releaseAllPaths()
 {
-    for (auto &path : *paths) {
-        path->deny();
+    std::ignore = deref(m_paths);
+    for (auto &path : *m_paths) {
+        deref(path).deny();
     }
-    paths->clear();
+    m_paths->clear();
 
-    state = PathStateEnum::SYNCING;
+    m_state = PathStateEnum::SYNCING;
 }
 
 void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
 {
-    if (lastEvent != sigParseEvent.requireValid())
-        lastEvent = sigParseEvent;
+    if (m_lastEvent != sigParseEvent.requireValid())
+        m_lastEvent = sigParseEvent;
 
-    lastEvent.requireValid();
+    m_lastEvent.requireValid();
 
-    switch (state) {
+    switch (m_state) {
     case PathStateEnum::APPROVED:
         approved(sigParseEvent);
         break;
@@ -160,7 +161,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 {
     ParseEvent &event = sigParseEvent.deref();
 
-    Approved appr(sigParseEvent, params.matchingTolerance);
+    Approved appr{sigParseEvent, m_params.matchingTolerance};
     const Room *perhaps = nullptr;
 
     if (event.getMoveType() == CommandEnum::LOOK) {
@@ -215,7 +216,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 
     if (perhaps == nullptr) {
         // couldn't match, give up
-        state = PathStateEnum::EXPERIMENTING;
+        m_state = PathStateEnum::EXPERIMENTING;
         m_pathRootPos = m_mostLikelyRoomPos;
 
         const Room *const pathRoot = getPathRoot();
@@ -224,7 +225,8 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             return;
         }
 
-        paths->push_front(Path::alloc(pathRoot, nullptr, nullptr, &signaler, std::nullopt));
+        deref(m_paths).push_front(
+            Path::alloc(pathRoot, nullptr, nullptr, &m_signaler, std::nullopt));
         experimenting(sigParseEvent);
 
         return;
@@ -288,11 +290,11 @@ void PathMachine::syncing(const SigParseEvent &sigParseEvent)
 {
     ParseEvent &event = sigParseEvent.deref();
     {
-        Syncing sync(params, paths, &signaler);
-        if (event.getNumSkipped() <= params.maxSkipped) {
+        Syncing sync{m_params, m_paths, &m_signaler};
+        if (event.getNumSkipped() <= m_params.maxSkipped) {
             emit sig_lookingForRooms(sync, sigParseEvent);
         }
-        paths = sync.evaluate();
+        m_paths = sync.evaluate();
     }
     evaluatePaths();
 }
@@ -312,10 +314,10 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 
     if (event.getNumSkipped() == 0 && moveCode < CommandEnum::FLEE && hasMostLikelyRoom()
         && !move.isNull()) {
-        exp = std::make_unique<Crossover>(paths, dir, params);
+        exp = std::make_unique<Crossover>(m_paths, dir, m_params);
         std::set<const Room *> pathEnds{};
-        for (auto &path : *paths) {
-            const Room *const working = path->getRoom();
+        for (auto &path : deref(m_paths)) {
+            const Room *const working = deref(path).getRoom();
             if (pathEnds.find(working) == pathEnds.end()) {
                 emit sig_createRoom(sigParseEvent, working->getPosition() + move);
                 pathEnds.insert(working);
@@ -323,10 +325,10 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
         }
         emit sig_lookingForRooms(*exp, sigParseEvent);
     } else {
-        auto pOneByOne = std::make_unique<OneByOne>(sigParseEvent, params, &signaler);
+        auto pOneByOne = std::make_unique<OneByOne>(sigParseEvent, m_params, &m_signaler);
         {
             auto &tmp = *pOneByOne;
-            for (auto &path : *paths) {
+            for (auto &path : deref(m_paths)) {
                 const Room *const working = path->getRoom();
                 tmp.addPath(path);
                 tryExits(working, tmp, event, true);
@@ -337,27 +339,27 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
         exp = static_upcast<Experimenting>(std::exchange(pOneByOne, nullptr));
     }
 
-    paths = exp->evaluate();
+    m_paths = exp->evaluate();
     evaluatePaths();
 }
 
 void PathMachine::evaluatePaths()
 {
-    std::ignore = deref(paths);
-    if (paths->empty()) {
-        state = PathStateEnum::SYNCING;
+    auto &paths = deref(m_paths);
+    if (paths.empty()) {
+        m_state = PathStateEnum::SYNCING;
     } else {
-        if (const Room *const room = (paths->front()->getRoom()))
+        if (const Room *const room = (paths.front()->getRoom()))
             setMostLikelyRoom(*room);
         else
             clearMostLikelyRoom();
 
-        if (++paths->begin() == paths->end()) {
-            state = PathStateEnum::APPROVED;
-            std::shared_ptr<Path> path = utils::pop_front(*paths);
+        if (std::next(paths.begin()) == paths.end()) {
+            m_state = PathStateEnum::APPROVED;
+            std::shared_ptr<Path> path = utils::pop_front(deref(m_paths));
             deref(path).approve();
         } else {
-            state = PathStateEnum::EXPERIMENTING;
+            m_state = PathStateEnum::EXPERIMENTING;
         }
         emit sig_playerMoved(getMostLikelyRoomPosition());
         emit sig_setCharPosition(getMostLikelyRoomId());

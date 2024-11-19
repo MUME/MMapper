@@ -26,25 +26,23 @@ private:
         T start{}, current{};
 
     private:
-        bool initialized = false;
-        T lastCheckpoint{};
+        bool m_initialized = false;
+        T m_lastCheckpoint{};
 
     public:
-        NODISCARD
-        T checkpoint()
+        NODISCARD T checkpoint()
         {
-            T gained = current - lastCheckpoint;
-            lastCheckpoint = current;
+            T gained = current - m_lastCheckpoint;
+            m_lastCheckpoint = current;
             return gained;
         }
-        NODISCARD
-        T gainedSession() const { return current - start; }
+        NODISCARD T gainedSession() const { return current - start; }
         void update(T val)
         {
-            if (!initialized) {
+            if (!m_initialized) {
                 start = val;
-                lastCheckpoint = val;
-                initialized = true;
+                m_lastCheckpoint = val;
+                m_initialized = true;
             }
             current = val;
         }

@@ -24,7 +24,7 @@ class Mmapper2PathMachine final : public PathMachine
     Q_OBJECT
 
 private:
-    QElapsedTimer time;
+    QElapsedTimer m_time;
 
 public:
     explicit Mmapper2PathMachine(MapData *mapData, QObject *parent);

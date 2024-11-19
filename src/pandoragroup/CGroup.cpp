@@ -22,14 +22,15 @@
 
 CGroup::CGroup(QObject *const parent)
     : QObject(parent)
-    , self{CGroupChar::alloc()}
+    , m_self{CGroupChar::alloc()}
 {
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
+    auto &self = m_self;
     self->setName(groupManager.charName);
     self->setLabel(groupManager.charName);
     self->setRoomId(INVALID_ROOMID);
     self->setColor(groupManager.color);
-    charIndex.push_back(self);
+    m_charIndex.push_back(self);
 }
 
 /**
@@ -38,18 +39,18 @@ CGroup::CGroup(QObject *const parent)
  */
 void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     deref(action).schedule(this);
-    actionSchedule.emplace(std::move(action));
-    if (locks.empty()) {
+    m_actionSchedule.emplace(std::move(action));
+    if (m_locks.empty()) {
         executeActions();
     }
 }
 
 void CGroup::executeActions()
 {
-    while (!actionSchedule.empty()) {
-        std::shared_ptr<GroupAction> action = utils::pop_front(actionSchedule);
+    while (!m_actionSchedule.empty()) {
+        std::shared_ptr<GroupAction> action = utils::pop_front(m_actionSchedule);
         deref(action).exec();
     }
 }
@@ -57,27 +58,27 @@ void CGroup::executeActions()
 void CGroup::virt_releaseCharacters(GroupRecipient *const sender)
 {
     std::ignore = deref(sender);
-    QMutexLocker lock(&characterLock);
-    locks.erase(sender);
-    if (locks.empty()) {
+    QMutexLocker lock(&m_characterLock);
+    m_locks.erase(sender);
+    if (m_locks.empty()) {
         executeActions();
     }
 }
 
 std::unique_ptr<GroupSelection> CGroup::selectAll()
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     auto selection = std::make_unique<GroupSelection>(this);
-    locks.insert(selection.get());
-    selection->receiveCharacters(this, charIndex);
+    m_locks.insert(selection.get());
+    selection->receiveCharacters(this, m_charIndex);
     return selection;
 }
 
 std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     auto selection = std::make_unique<GroupSelection>(this);
-    locks.insert(selection.get());
+    m_locks.insert(selection.get());
     const SharedGroupChar ch = getCharByName(name);
     if (ch == nullptr) {
         return selection;
@@ -91,24 +92,25 @@ std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 
 void CGroup::resetChars()
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
 
     log("You have left the group.");
 
+    auto &charIndex = m_charIndex;
     for (const auto &character : charIndex) {
-        if (character != self) {
+        if (character != m_self) {
             // TODO: mark character as Zombie ?
         }
     }
     charIndex.clear();
-    charIndex.push_back(self);
+    charIndex.push_back(m_self);
 
     characterChanged(true);
 }
 
 bool CGroup::addChar(const QVariantMap &map)
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     auto newChar = CGroupChar::alloc();
     std::ignore = newChar->updateFromVariantMap(map); // why is the return value ignored?
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
@@ -117,19 +119,20 @@ bool CGroup::addChar(const QVariantMap &map)
         return false;
     }
     log(QString("'%1' joined the group.").arg(QString::fromLatin1(newChar->getName())));
-    charIndex.push_back(newChar);
+    m_charIndex.push_back(newChar);
     characterChanged(true);
     return true;
 }
 
 void CGroup::removeChar(const QByteArray &name)
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     if (name == getConfig().groupManager.charName) {
         log("You cannot delete yourself from the group.");
         return;
     }
 
+    auto &charIndex = m_charIndex;
     for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
         SharedGroupChar character = *it;
         if (character->getName() == name) {
@@ -144,10 +147,10 @@ void CGroup::removeChar(const QByteArray &name)
 
 bool CGroup::isNamePresent(const QByteArray &name) const
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
 
     const QString nameStr = name.simplified();
-    for (const auto &character : charIndex) {
+    for (const auto &character : m_charIndex) {
         if (nameStr.compare(character->getName(), Qt::CaseInsensitive) == 0) {
             return true;
         }
@@ -158,8 +161,8 @@ bool CGroup::isNamePresent(const QByteArray &name) const
 
 SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
 {
-    QMutexLocker locker(&characterLock);
-    for (const auto &character : charIndex) {
+    QMutexLocker locker(&m_characterLock);
+    for (const auto &character : m_charIndex) {
         if (character->getName() == name) {
             return character;
         }
@@ -188,7 +191,7 @@ void CGroup::updateChar(const QVariantMap &map)
 
 void CGroup::renameChar(const QVariantMap &map)
 {
-    QMutexLocker locker(&characterLock);
+    QMutexLocker locker(&m_characterLock);
     if (!map.contains("oldname") && map["oldname"].canConvert(QMetaType::QString)) {
         qWarning() << "'oldname' element not found" << map;
         return;

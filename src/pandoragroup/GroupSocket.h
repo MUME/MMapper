@@ -26,25 +26,25 @@ class GroupSocket final : public QObject
     Q_OBJECT
 
 private:
-    QSslSocket socket;
-    QTimer timer;
+    QSslSocket m_socket;
+    QTimer m_timer;
 
-    ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
-    ProtocolVersion protocolVersion = 102;
+    ProtocolStateEnum m_protocolState = ProtocolStateEnum::Unconnected;
+    ProtocolVersion m_protocolVersion = 102;
 
     enum class NODISCARD GroupMessageStateEnum {
         /// integer string representing the message length
         LENGTH,
         /// message payload
         PAYLOAD
-    } state
+    } m_state
         = GroupMessageStateEnum::LENGTH;
 
-    io::buffer<(1 << 15)> ioBuffer;
-    QByteArray buffer;
-    QByteArray secret;
-    QByteArray name;
-    unsigned int currentMessageLen = 0;
+    io::buffer<(1 << 15)> m_ioBuffer;
+    QByteArray m_buffer;
+    QByteArray m_secret;
+    QByteArray m_name;
+    unsigned int m_currentMessageLen = 0;
 
 public:
     explicit GroupSocket(GroupAuthority *authority, QObject *parent);
@@ -53,24 +53,24 @@ public:
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
     void disconnectFromHost();
-    void startServerEncrypted() { socket.startServerEncryption(); }
-    void startClientEncrypted() { socket.startClientEncryption(); }
+    void startServerEncrypted() { m_socket.startServerEncryption(); }
+    void startClientEncrypted() { m_socket.startClientEncryption(); }
 
-    NODISCARD QByteArray getSecret() const { return secret; }
+    NODISCARD QByteArray getSecret() const { return m_secret; }
     NODISCARD QString getPeerName() const;
-    NODISCARD uint16_t getPeerPort() const { return socket.peerPort(); }
+    NODISCARD uint16_t getPeerPort() const { return m_socket.peerPort(); }
 
-    NODISCARD QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
-    NODISCARD QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
+    NODISCARD QAbstractSocket::SocketError getSocketError() const { return m_socket.error(); }
+    NODISCARD QSslCertificate getPeerCertificate() const { return m_socket.peerCertificate(); }
 
     void setProtocolState(ProtocolStateEnum val);
-    NODISCARD ProtocolStateEnum getProtocolState() const { return protocolState; }
+    NODISCARD ProtocolStateEnum getProtocolState() const { return m_protocolState; }
 
-    void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
-    NODISCARD ProtocolVersion getProtocolVersion() const { return protocolVersion; }
+    void setProtocolVersion(const ProtocolVersion val) { m_protocolVersion = val; }
+    NODISCARD ProtocolVersion getProtocolVersion() const { return m_protocolVersion; }
 
-    void setName(const QByteArray &val) { name = val; }
-    NODISCARD const QByteArray &getName() { return name; }
+    void setName(const QByteArray &val) { m_name = val; }
+    NODISCARD const QByteArray &getName() { return m_name; }
 
     void sendData(const QByteArray &data);
 

@@ -15,7 +15,7 @@
 class NODISCARD CompareVersion final
 {
 private:
-    MMapper::Array<int, 3> parts;
+    MMapper::Array<int, 3> m_parts;
 
 public:
     explicit CompareVersion(const QString &versionStr) noexcept;
@@ -24,9 +24,9 @@ public:
     NODISCARD bool operator>(const CompareVersion &other) const;
     NODISCARD bool operator==(const CompareVersion &other) const;
 
-    NODISCARD int major() const { return parts[0]; }
-    NODISCARD int minor() const { return parts[1]; }
-    NODISCARD int patch() const { return parts[2]; }
+    NODISCARD int major() const { return m_parts[0]; }
+    NODISCARD int minor() const { return m_parts[1]; }
+    NODISCARD int patch() const { return m_parts[2]; }
 
 public:
     NODISCARD QString toQString() const;
@@ -41,10 +41,10 @@ class UpdateDialog : public QDialog
 {
     Q_OBJECT
 private:
-    QNetworkAccessManager manager;
-    QString downloadUrl;
-    QLabel *text = nullptr;
-    QDialogButtonBox *buttonBox = nullptr;
+    QNetworkAccessManager m_manager;
+    QString m_downloadUrl;
+    QLabel *m_text = nullptr;
+    QDialogButtonBox *m_buttonBox = nullptr;
 
 public:
     explicit UpdateDialog(QWidget *parent);
