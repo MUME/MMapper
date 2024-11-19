@@ -171,6 +171,7 @@ set(mmapper_SRCS
     mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.cpp
     mainwindow/infomarkseditdlg.h
+    mainwindow/mainwindow-saveslots.cpp
     mainwindow/mainwindow.cpp
     mainwindow/mainwindow.h
     mainwindow/roomeditattrdlg.cpp
