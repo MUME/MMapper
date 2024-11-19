@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <stdexcept>
+#include <tuple>
 
 #include <QByteArray>
 #include <QIODevice>
@@ -63,7 +64,7 @@ void FileSaver::close() CAN_THROW
 
     m_file.flush();
     // REVISIT: check return value?
-    MAYBE_UNUSED const auto ignored = ::io::fsync(m_file);
+    std::ignore = ::io::fsync(m_file);
     remove_tmp_suffix(m_filename);
     m_file.close();
 }

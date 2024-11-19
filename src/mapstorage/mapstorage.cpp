@@ -31,6 +31,7 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -496,15 +497,13 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
     auto helper = LoadRoomHelper{stream};
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        MAYBE_UNUSED const auto ignored = //
-            helper.read_string();         /* value ignored; called for side effect */
+        std::ignore = helper.read_string(); /* value ignored; called for side effect */
     }
 
     mark.setText(InfoMarkText(helper.read_string()));
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        MAYBE_UNUSED const auto ignored = //
-            helper.read_datetime();       /* value ignored; called for side effect */
+        std::ignore = helper.read_datetime(); /* value ignored; called for side effect */
     }
 
     const auto type = [](const uint8_t value) {

@@ -70,10 +70,9 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
     qDebug() << "View session file template" << m_fileName;
     file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
     file.flush();
-    {
-        // REVISIT: check return value?
-        MAYBE_UNUSED const auto ignored = io::fsyncNoexcept(file);
-    }
+
+    // REVISIT: check return value?
+    std::ignore = io::fsyncNoexcept(file);
     file.close();
     m_previousTime = QFileInfo{m_fileName}.lastModified();
     qDebug() << "File written with last modified timestamp" << m_previousTime;

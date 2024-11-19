@@ -13,6 +13,7 @@
 
 #include <optional>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -334,5 +335,5 @@ void MapCanvas::updateTextures()
     activeStatus = wantTrilinear;
 
     // called to trigger an early error
-    MAYBE_UNUSED auto proxy = mctp::getProxy(m_textures);
+    std::ignore = mctp::getProxy(m_textures);
 }

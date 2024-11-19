@@ -30,6 +30,7 @@
 #include <cassert>
 #include <memory>
 #include <stdexcept>
+#include <tuple>
 
 #include <QByteArray>
 #include <QMessageLogContext>
@@ -435,12 +436,11 @@ void Proxy::slot_processUserStream()
     }
 
     // REVISIT: check return value?
-    MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
-            if (!byteArray.isEmpty()) {
-                emit sig_analyzeUserStream(byteArray);
-            }
-        });
+    std::ignore = io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
+        if (!byteArray.isEmpty()) {
+            emit sig_analyzeUserStream(byteArray);
+        }
+    });
 }
 
 void Proxy::slot_onSendToMudSocket(const QByteArray &ba)

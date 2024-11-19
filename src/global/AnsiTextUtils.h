@@ -12,6 +12,7 @@
 #include <array>
 #include <optional>
 #include <ostream>
+#include <tuple>
 #include <variant>
 
 #include <QColor>
@@ -904,7 +905,7 @@ struct NODISCARD AnsiTokenizer final
         NODISCARD AnsiStringToken operator*() { return getCurrent(); }
         ALLOW_DISCARD Iterator &operator++()
         {
-            MAYBE_UNUSED const auto ignored = next();
+            std::ignore = next();
             return *this;
         }
 

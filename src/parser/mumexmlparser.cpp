@@ -16,6 +16,7 @@
 #include <list>
 #include <optional>
 #include <sstream>
+#include <tuple>
 #include <utility>
 
 #include <QByteArray>
@@ -85,8 +86,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
             if (c == char_consts::C_GREATER_THAN) {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
-                    MAYBE_UNUSED const auto ignored = //
-                        element(m_tempTag);
+                    std::ignore = element(m_tempTag);
                 }
 
                 m_tempTag.clear();

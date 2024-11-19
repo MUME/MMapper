@@ -14,6 +14,7 @@
 #include <optional>
 #include <ostream>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 namespace syntax {
@@ -421,8 +422,7 @@ void TreeParser::help(const ParserInput &input, const bool isFull)
 {
     const Sublist &node = deref(m_syntaxRoot);
     HelpFrame frame{m_user.getOstream()};
-    MAYBE_UNUSED const ParseResult ignored = //
-        HelpCommon{isFull}.syntaxRecurseFirst(node, input, frame);
+    std::ignore = HelpCommon{isFull}.syntaxRecurseFirst(node, input, frame);
 }
 
 std::string processSyntax(const syntax::SharedConstSublist &syntax,
@@ -447,8 +447,7 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
 
     {
         // REVISIT: check return value?
-        MAYBE_UNUSED const auto ignored = //
-            parser.parse(input);
+        std::ignore = parser.parse(input);
     }
 
     return ss.str();

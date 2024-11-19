@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <tuple>
 
 #include <QDebug>
 #include <QFileInfo>
@@ -197,7 +198,7 @@ bool AutoLogger::showDeleteDialog(QString message)
 
 void AutoLogger::slot_writeToLog(const QString &str)
 {
-    MAYBE_UNUSED const auto ignored = writeLine(str);
+    std::ignore = writeLine(str);
 }
 
 void AutoLogger::slot_shouldLog(bool echo)

@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -280,8 +281,8 @@ struct NODISCARD FontMetrics
             return;
         }
 
-        MAYBE_UNUSED const bool addedBackground = tryAddBackgroundGlyph(img);
-        MAYBE_UNUSED const bool addedUnderline = tryAddUnderlineGlyph(img);
+        std::ignore = tryAddBackgroundGlyph(img);
+        std::ignore = tryAddUnderlineGlyph(img);
     }
 
     NODISCARD const Kerning *lookupKerning(const Glyph *const prev, const Glyph *const current) const

@@ -10,6 +10,8 @@
 #include "../global/Consts.h"
 #include "../global/io.h"
 
+#include <tuple>
+
 #include <QByteArray>
 #include <QLocale>
 #include <QMessageLogContext>
@@ -193,12 +195,11 @@ void MumeSslSocket::slot_onPeerVerifyError(const QSslError &error)
 void MumeSslSocket::slot_onReadyRead()
 {
     // REVISIT: check return value?
-    MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-            if (!byteArray.isEmpty()) {
-                emit sig_processMudStream(byteArray);
-            }
-        });
+    std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
+        if (!byteArray.isEmpty()) {
+            emit sig_processMudStream(byteArray);
+        }
+    });
 }
 
 void MumeSslSocket::slot_checkTimeout()

@@ -10,6 +10,8 @@
 #include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
 
+#include <tuple>
+
 #include <QDebug>
 #include <QtTest/QtTest>
 
@@ -68,10 +70,8 @@ void TestGlobal::ansi256ColorTest()
 #define X_TEST(N, lower, UPPER) \
     do { \
         const std::string_view testing = #lower; \
-        MAYBE_UNUSED const auto fg = mmqt::rgbToAnsi256String(lower##Rgb, \
-                                                              AnsiColor16LocationEnum::Foreground); \
-        MAYBE_UNUSED const auto bg = mmqt::rgbToAnsi256String(lower##Rgb, \
-                                                              AnsiColor16LocationEnum::Background); \
+        std::ignore = mmqt::rgbToAnsi256String(lower##Rgb, AnsiColor16LocationEnum::Foreground); \
+        std::ignore = mmqt::rgbToAnsi256String(lower##Rgb, AnsiColor16LocationEnum::Background); \
     } while (false);
     XFOREACH_ANSI_COLOR_0_7(X_TEST)
 

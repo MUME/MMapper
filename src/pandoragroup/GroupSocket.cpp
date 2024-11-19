@@ -11,6 +11,7 @@
 #include "groupauthority.h"
 
 #include <cassert>
+#include <tuple>
 
 #include <QByteArray>
 #include <QHostAddress>
@@ -240,12 +241,11 @@ void GroupSocket::slot_onTimeout()
 void GroupSocket::slot_onReadyRead()
 {
     // REVISIT: check return value?
-    MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(m_socket, m_ioBuffer, [this](const QByteArray &byteArray) {
-            for (const auto &c : byteArray) {
-                onReadInternal(c);
-            }
-        });
+    std::ignore = io::readAllAvailable(m_socket, m_ioBuffer, [this](const QByteArray &byteArray) {
+        for (const auto &c : byteArray) {
+            onReadInternal(c);
+        }
+    });
 }
 
 void GroupSocket::onReadInternal(const char c)
