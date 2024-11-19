@@ -200,15 +200,21 @@ AbstractTelnet::~AbstractTelnet()
 #endif
 }
 
-void AbstractTelnet::reset()
+void AbstractTelnet::Options::reset()
 {
-    if (m_debug)
-        qDebug() << "Reset telnet";
     myOptionState.fill(false);
     hisOptionState.fill(false);
     announcedState.fill(false);
     heAnnouncedState.fill(false);
     triedToEnable.fill(false);
+}
+
+void AbstractTelnet::reset()
+{
+    if (m_debug)
+        qDebug() << "Reset telnet";
+
+    m_options.reset();
 
     // reset telnet status
     m_termType = m_defaultTermType;
@@ -243,6 +249,7 @@ static void doubleIacs(std::ostream &os, const std::string_view input)
 void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool goAhead)
 {
     auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
+        auto &myOptionState = m_options.myOptionState;
         if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
             return std::array<char, 2>{char(TN_IAC), char(myOptionState[OPT_EOR] ? TN_EOR : TN_GA)};
         }
@@ -287,8 +294,8 @@ void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 {
     // Do not respond if we initiated this request
-    if (triedToEnable[option]) {
-        triedToEnable[option] = false;
+    if (m_options.triedToEnable[option]) {
+        m_options.triedToEnable[option] = false;
         return;
     }
 
@@ -306,11 +313,11 @@ void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char optio
 {
     // Set his option state correctly
     if (type == TN_DO || type == TN_DONT)
-        hisOptionState[option] = (type == TN_DO);
+        m_options.hisOptionState[option] = (type == TN_DO);
 
     sendTelnetOption(type, option);
 
-    triedToEnable[option] = true;
+    m_options.triedToEnable[option] = true;
 }
 
 void AbstractTelnet::sendCharsetRequest()
@@ -411,11 +418,11 @@ void AbstractTelnet::sendOptionStatus()
     s.addRaw(OPT_STATUS);
     s.addRaw(TNSB_IS);
     for (size_t i = 0; i < NUM_OPTS; ++i) {
-        if (myOptionState[i]) {
+        if (m_options.myOptionState[i]) {
             s.addRaw(TN_WILL);
             s.addRaw(static_cast<unsigned char>(i));
         }
-        if (hisOptionState[i]) {
+        if (m_options.hisOptionState[i]) {
             s.addRaw(TN_DO);
             s.addRaw(static_cast<unsigned char>(i));
         }
@@ -437,6 +444,11 @@ void AbstractTelnet::sendTerminalTypeRequest()
 void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 {
     assert(!command.isEmpty());
+
+    auto &myOptionState = m_options.myOptionState;
+    auto &hisOptionState = m_options.hisOptionState;
+    auto &announcedState = m_options.announcedState;
+    auto &heAnnouncedState = m_options.heAnnouncedState;
 
     const unsigned char ch = command.unsigned_at(1);
     unsigned char option;
@@ -568,6 +580,9 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
 void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 {
+    auto &myOptionState = m_options.myOptionState;
+    auto &hisOptionState = m_options.hisOptionState;
+
     if (m_debug) {
         if (payload.length() == 1)
             qDebug() << "* Processing Telnet Subnegotiation:"
@@ -983,5 +998,5 @@ void AbstractTelnet::resetCompress()
 {
     m_inflateTelnet = false;
     m_recvdCompress = false;
-    hisOptionState[OPT_COMPRESS2] = false;
+    m_options.hisOptionState[OPT_COMPRESS2] = false;
 }

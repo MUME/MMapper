@@ -94,8 +94,9 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         }
 
         // Send it now if GMCP has been negotiated
-        if (hisOptionState[OPT_GMCP])
+        if (m_options.hisOptionState[OPT_GMCP]) {
             sendCoreSupports();
+        }
         return;
     }
 
@@ -103,7 +104,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         m_receivedExternalDiscordHello = true;
     }
 
-    if (!hisOptionState[OPT_GMCP]) {
+    if (!m_options.hisOptionState[OPT_GMCP]) {
         qDebug() << "MUME did not request GMCP yet";
         return;
     }
@@ -119,7 +120,7 @@ void MudTelnet::slot_onRelayNaws(const int x, const int y)
     m_current.x = x;
     m_current.y = y;
 
-    if (myOptionState[OPT_NAWS]) {
+    if (m_options.myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
         sendWindowSizeChanged(x, y);
     }
@@ -129,7 +130,7 @@ void MudTelnet::slot_onRelayTermType(const QByteArray &terminalType)
 {
     // Append the MMapper version suffix to the terminal type
     setTerminalType(addTerminalTypeSuffix(terminalType.constData()));
-    if (myOptionState[OPT_TERMINAL_TYPE]) {
+    if (m_options.myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(getTerminalType());
     }
 }

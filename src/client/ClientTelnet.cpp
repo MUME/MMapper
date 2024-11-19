@@ -104,7 +104,7 @@ void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
     m_current.x = x;
     m_current.y = y;
 
-    if (myOptionState[OPT_NAWS]) {
+    if (m_options.myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
         sendWindowSizeChanged(x, y);
     }

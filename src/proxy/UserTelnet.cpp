@@ -120,7 +120,7 @@ void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 
 void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 {
-    if (!myOptionState[OPT_GMCP])
+    if (!m_options.myOptionState[OPT_GMCP])
         return;
 
     const auto name = msg.getName().getStdStringLatin1();
@@ -138,7 +138,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 
 void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
 {
-    if (!myOptionState[OPT_MSSP])
+    if (!m_options.myOptionState[OPT_MSSP])
         return;
 
     sendMudServerStatus(data);
@@ -155,8 +155,8 @@ void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
 void UserTelnet::slot_onRelayEchoMode(const bool isDisabled)
 {
     sendTelnetOption(isDisabled ? TN_WONT : TN_WILL, OPT_ECHO);
-    myOptionState[OPT_ECHO] = !isDisabled;
-    announcedState[OPT_ECHO] = true;
+    m_options.myOptionState[OPT_ECHO] = !isDisabled;
+    m_options.announcedState[OPT_ECHO] = true;
 }
 
 void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
@@ -239,7 +239,7 @@ void UserTelnet::virt_sendRawData(const std::string_view data)
 
 bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
 {
-    if (!myOptionState[OPT_GMCP])
+    if (!m_options.myOptionState[OPT_GMCP])
         return false;
 
     return m_gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
