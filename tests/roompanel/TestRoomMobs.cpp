@@ -3,7 +3,7 @@
 
 #include "TestRoomMobs.h"
 
-#include "roompanel/RoomMobs.h"
+#include "../src/roompanel/RoomMobs.h"
 
 #include <QtTest>
 

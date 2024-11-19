@@ -10,6 +10,7 @@
 #include "../global/LineUtils.h"
 #include "../global/TextUtils.h"
 
+#include <ostream>
 #include <sstream>
 
 #include <QJsonDocument>

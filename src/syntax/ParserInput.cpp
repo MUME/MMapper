@@ -6,6 +6,7 @@
 #include "../global/PrintUtils.h"
 
 #include <memory>
+#include <ostream>
 #include <sstream>
 #include <vector>
 

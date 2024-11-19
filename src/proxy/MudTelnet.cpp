@@ -4,8 +4,10 @@
 
 #include "MudTelnet.h"
 
+#include "../configuration/configuration.h"
 #include "../display/MapCanvasConfig.h"
 #include "../global/Consts.h"
+#include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "GmcpUtils.h"
 
@@ -13,7 +15,6 @@
 #include <map>
 #include <optional>
 #include <sstream>
-#include <string>
 #include <string_view>
 
 #include <QByteArray>
