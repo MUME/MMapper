@@ -136,7 +136,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
     return block;
 }
 
-void CGroupCommunicator::sendMessage(GroupSocket *const socket,
+void CGroupCommunicator::sendMessage(GroupSocket &socket,
                                      const MessagesEnum message,
                                      const QByteArray &text)
 {
@@ -145,11 +145,11 @@ void CGroupCommunicator::sendMessage(GroupSocket *const socket,
     sendMessage(socket, message, root);
 }
 
-void CGroupCommunicator::sendMessage(GroupSocket *const socket,
+void CGroupCommunicator::sendMessage(GroupSocket &socket,
                                      const MessagesEnum message,
                                      const QVariantMap &node)
 {
-    socket->sendData(formMessageBlock(message, node));
+    socket.sendData(formMessageBlock(message, node));
 }
 
 // the core of the protocol
@@ -269,7 +269,7 @@ void CGroupCommunicator::slot_sendGroupTell(const QByteArray &tell)
     slot_sendGroupTellMessage(root);
 }
 
-void CGroupCommunicator::sendCharUpdate(GroupSocket *const socket, const QVariantMap &map)
+void CGroupCommunicator::sendCharUpdate(GroupSocket &socket, const QVariantMap &map)
 {
     sendMessage(socket, MessagesEnum::UPDATE_CHAR, map);
 }

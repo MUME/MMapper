@@ -63,28 +63,28 @@ public:
     NODISCARD bool start() { return virt_start(); }
 
 protected:
-    void sendCharUpdate(GroupSocket *, const QVariantMap &);
-    void sendMessage(GroupSocket *, MessagesEnum, const QByteArray & = "");
-    void sendMessage(GroupSocket *, MessagesEnum, const QVariantMap &);
+    static void sendCharUpdate(GroupSocket &, const QVariantMap &);
+    static void sendMessage(GroupSocket &, MessagesEnum, const QByteArray & = "");
+    static void sendMessage(GroupSocket &, MessagesEnum, const QVariantMap &);
 
     NODISCARD static QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
     NODISCARD CGroup *getGroup();
     NODISCARD GroupAuthority *getAuthority();
 
 private:
-    virtual void virt_connectionClosed(GroupSocket *) = 0;
+    virtual void virt_connectionClosed(GroupSocket &) = 0;
     virtual void virt_kickCharacter(const QByteArray &) = 0;
-    virtual void virt_retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
+    virtual void virt_retrieveData(GroupSocket &, MessagesEnum, const QVariantMap &) = 0;
     virtual void virt_sendCharRename(const QVariantMap &map) = 0;
     virtual void virt_sendCharUpdate(const QVariantMap &map) = 0;
     virtual void virt_sendGroupTellMessage(const QVariantMap &map) = 0;
 
 public slots:
-    void slot_connectionClosed(GroupSocket *sock) { virt_connectionClosed(sock); }
+    void slot_connectionClosed(GroupSocket *sock) { virt_connectionClosed(deref(sock)); }
     void slot_kickCharacter(const QByteArray &msg) { virt_kickCharacter(msg); }
     void slot_retrieveData(GroupSocket *sock, MessagesEnum msg, const QVariantMap &var)
     {
-        virt_retrieveData(sock, msg, var);
+        virt_retrieveData(deref(sock), msg, var);
     }
     void slot_sendCharRename(const QVariantMap &map) { virt_sendCharRename(map); }
     void slot_sendCharUpdate(const QVariantMap &map) { virt_sendCharUpdate(map); }

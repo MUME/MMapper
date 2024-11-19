@@ -41,9 +41,22 @@ class GroupServer final : public CGroupCommunicator
 {
     Q_OBJECT
 
+private:
+    using ClientList = std::vector<QPointer<GroupSocket>>;
+    ClientList m_clientsList{};
+    GroupTcpServer m_server;
+    GroupPortMapper m_portMapper;
+
 public:
     explicit GroupServer(Mmapper2Group *parent);
     ~GroupServer() final;
+
+private:
+    NODISCARD ClientList &filterClientList();
+    void relayMessage(GroupSocket &socket, const MessagesEnum message, const QVariantMap &data)
+    {
+        slot_relayMessage(&socket, message, data);
+    }
 
 protected slots:
     void slot_relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
@@ -53,36 +66,31 @@ protected slots:
     void slot_errorInConnection(GroupSocket *, const QString &);
 
 protected:
-    void sendRemoveUserNotification(GroupSocket *socket, const QByteArray &name);
+    void sendRemoveUserNotification(GroupSocket &socket, const QByteArray &name);
 
 private:
     NODISCARD bool virt_start() final;
     void virt_stop() final;
 
 private:
-    void virt_connectionClosed(GroupSocket *socket) final;
+    void virt_connectionClosed(GroupSocket &socket) final;
     void virt_kickCharacter(const QByteArray &) final;
-    void virt_retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) final;
+    void virt_retrieveData(GroupSocket &socket, MessagesEnum message, const QVariantMap &data) final;
     void virt_sendCharRename(const QVariantMap &map) final;
     void virt_sendCharUpdate(const QVariantMap &map) final;
     void virt_sendGroupTellMessage(const QVariantMap &root) final;
 
 private:
-    void parseHandshake(GroupSocket *socket, const QVariantMap &data);
-    void parseLoginInformation(GroupSocket *socket, const QVariantMap &data);
-    void sendGroupInformation(GroupSocket *socket);
-    void kickConnection(GroupSocket *socket, const QString &message);
+    void parseHandshake(GroupSocket &socket, const QVariantMap &data);
+    void parseLoginInformation(GroupSocket &socket, const QVariantMap &data);
+    void sendGroupInformation(GroupSocket &socket);
+    void kickConnection(GroupSocket &socket, const QString &message);
 
 private:
     void sendToAll(const QByteArray &);
     void sendToAllExceptOne(GroupSocket *exception, const QByteArray &);
     void closeAll();
-    void closeOne(GroupSocket *target);
-    void connectAll(GroupSocket *);
-    void disconnectAll(GroupSocket *);
-
-    using ClientList = std::vector<QPointer<GroupSocket>>;
-    ClientList clientsList{};
-    GroupTcpServer server;
-    GroupPortMapper portMapper;
+    void closeOne(GroupSocket &target);
+    void connectAll(GroupSocket &);
+    void disconnectAll(GroupSocket &);
 };

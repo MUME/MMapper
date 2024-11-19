@@ -42,7 +42,7 @@ public:
     bool add(const GroupSecret &);
     bool remove(const GroupSecret &);
     NODISCARD bool validSecret(const GroupSecret &) const;
-    NODISCARD bool validCertificate(const GroupSocket *) const;
+    NODISCARD bool validCertificate(const GroupSocket &) const;
 
 public:
     NODISCARD QString getMetadata(const GroupSecret &, GroupMetadataEnum) const;

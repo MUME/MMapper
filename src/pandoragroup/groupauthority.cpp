@@ -335,14 +335,14 @@ bool GroupAuthority::validSecret(const GroupSecret &secret) const
     return model.stringList().contains(secret.toLower());
 }
 
-bool GroupAuthority::validCertificate(const GroupSocket *connection) const
+bool GroupAuthority::validCertificate(const GroupSocket &connection) const
 {
-    const GroupSecret &targetSecret = connection->getSecret();
+    const GroupSecret &targetSecret = connection.getSecret();
     const QString &storedCertificate = getMetadata(targetSecret, GroupMetadataEnum::CERTIFICATE);
     if (storedCertificate.isEmpty())
         return true;
 
-    const QString targetCertficiate = connection->getPeerCertificate().toPem();
+    const QString targetCertficiate = connection.getPeerCertificate().toPem();
     const bool certificatesMatch = targetCertficiate.compare(storedCertificate, Qt::CaseInsensitive)
                                    == 0;
     return certificatesMatch;
