@@ -52,8 +52,11 @@ namespace mmz {
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int zpipe_deflate(IFile &source, IFile &dest, int level)
+int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
 {
+    const auto input_size = source.get_bytes_avail_read();
+    pc.increaseTotalStepsBy(2 + input_size);
+
     int ret = Z_OK;
     int flush = Z_NO_FLUSH;
     unsigned have = 0;
@@ -66,12 +69,13 @@ int zpipe_deflate(IFile &source, IFile &dest, int level)
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
     ret = deflateInit(&strm, level);
+    pc.step();
     if (ret != Z_OK)
         return ret;
 
     /* compress until end of file */
     do {
-        strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
         if (source.ferror()) {
             (void) deflateEnd(&strm);
             return Z_ERRNO;
@@ -94,12 +98,14 @@ int zpipe_deflate(IFile &source, IFile &dest, int level)
         } while (strm.avail_out == 0);
         assert(strm.avail_in == 0); /* all input will be used */
 
+        pc.step(got);
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
     assert(ret == Z_STREAM_END); /* stream will be complete */
 
     /* clean up and return */
     (void) deflateEnd(&strm);
+    pc.step();
     return Z_OK;
 }
 
@@ -109,8 +115,11 @@ int zpipe_deflate(IFile &source, IFile &dest, int level)
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int zpipe_inflate(IFile &source, IFile &dest)
+int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
 {
+    const auto input_size = source.get_bytes_avail_read();
+    pc.increaseTotalStepsBy(2 + input_size);
+
     int ret = Z_OK;
     unsigned have = 0;
     z_stream strm{};
@@ -124,12 +133,13 @@ int zpipe_inflate(IFile &source, IFile &dest)
     strm.avail_in = 0;
     strm.next_in = Z_NULL;
     ret = inflateInit(&strm);
+    pc.step();
     if (ret != Z_OK)
         return ret;
 
     /* decompress until deflate stream ends or end of file */
     do {
-        strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
         if (source.ferror()) {
             (void) inflateEnd(&strm);
             return Z_ERRNO;
@@ -159,12 +169,14 @@ int zpipe_inflate(IFile &source, IFile &dest)
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
+        pc.step(got);
 
         /* done when inflate() says it's done */
     } while (ret != Z_STREAM_END);
 
     /* clean up and return */
     (void) inflateEnd(&strm);
+    pc.step();
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 

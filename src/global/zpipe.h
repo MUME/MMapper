@@ -3,6 +3,7 @@
 // Copyright (C) 2024 The MMapper Authors
 
 #include "macros.h"
+#include "progresscounter.h"
 
 #include <cstddef>
 
@@ -12,8 +13,8 @@
 namespace mmz {
 
 struct IFile;
-NODISCARD int zpipe_deflate(IFile &source, IFile &dest, int level);
-NODISCARD int zpipe_inflate(IFile &source, IFile &dest);
+NODISCARD int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level);
+NODISCARD int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest);
 
 struct NODISCARD IFile
 {
