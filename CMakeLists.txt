@@ -328,8 +328,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=return-stack-address)
         add_compile_options(-Werror=return-type)
         add_compile_options(-Werror=reorder)
-        # ignore common idioms; otherwise shadowing is an error
-        add_compile_options(-Werror=shadow -Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local)
+        add_compile_options(-Werror=shadow)
+        add_compile_options(-Werror=shadow-field-in-constructor)
+        add_compile_options(-Werror=shadow-uncaptured-local)
         add_compile_options(-Werror=shorten-64-to-32)
         add_compile_options(-Werror=sign-conversion) # can warn about hard-to-spot bugs.
         add_compile_options(-Werror=switch)
