@@ -41,7 +41,7 @@ bool RoomMob::updateFrom(RoomMobUpdate &&data)
     }
     bool updated = false;
     for (size_t i = 0; i < size_t(NUM_MOB_FIELDS); i++) {
-        const Field f = static_cast<Field>(i);
+        const auto f = static_cast<Field>(i);
         if (data.contains(f) && getField(f) != data.getField(f)) {
             setField(f, data.getField(f));
             updated = true;

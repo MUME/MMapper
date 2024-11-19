@@ -64,7 +64,7 @@ public:
     void setId(const Id id) { m_id = id; }
 
     NODISCARD const QVariant &getField(const Field index) const { return m_fields.at(index); }
-    void setField(const Field index, const QVariant value) { m_fields[index] = std::move(value); }
+    void setField(const Field index, QVariant value) { m_fields[index] = std::move(value); }
 
 protected:
     using MobFieldList = EnumIndexedArray<QVariant, MobFieldEnum, NUM_MOB_FIELDS>;
