@@ -90,6 +90,8 @@ set(mmapper_SRCS
     global/Consts.h
     global/EnumIndexedArray.h
     global/Flags.h
+    global/HideQDebug.cpp
+    global/HideQDebug.h
     global/IndexedVector.h
     global/LineUtils.cpp
     global/LineUtils.h

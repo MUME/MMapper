@@ -5,6 +5,8 @@
 
 #include "../src/global/AnsiTextUtils.h"
 #include "../src/global/CaseUtils.h"
+#include "../src/global/HideQDebug.h"
+#include "../src/global/RAII.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/string_view_utils.h"
@@ -112,6 +114,93 @@ void TestGlobal::ansiToRgbTest()
     testOne(8, "#555753", AnsiColor16Enum::BLACK);
     testOne(14, "#34E2E2", AnsiColor16Enum::CYAN);
     testOne(15, "#EEEEEC", AnsiColor16Enum::WHITE);
+}
+
+void TestGlobal::hideQDebugTest()
+{
+    static constexpr auto onlyDebug = []() {
+        mmqt::HideQDebugOptions tmp;
+        tmp.hideInfo = false;
+        return tmp;
+    }();
+
+    static constexpr auto onlyInfo = []() {
+        mmqt::HideQDebugOptions tmp;
+        tmp.hideDebug = false;
+        return tmp;
+    }();
+
+    const QString expected = "1{DIW}\n2{DW}\n3{DIW}\n4{IW}\n5{DIW}\n"
+                             "---\n"
+                             "1{W}\n2{W}\n3{W}\n4{W}\n5{W}\n"
+                             "---\n"
+                             "1{DIW}\n2{DW}\n3{DIW}\n4{IW}\n5{DIW}\n";
+
+    static QString tmp;
+    static QString expectMsg;
+
+    auto testCase = [](int n) {
+        expectMsg = QString::asprintf("%d", n);
+        tmp += expectMsg;
+        tmp += "{";
+        qDebug() << n;
+        qInfo() << n;
+        qWarning() << n;
+        tmp += "}\n";
+    };
+
+    auto testAlternations = [&testCase]() {
+        testCase(1);
+        {
+            mmqt::HideQDebug hide{onlyInfo};
+            testCase(2);
+        }
+        testCase(3);
+        {
+            mmqt::HideQDebug hide{onlyDebug};
+            testCase(4);
+        }
+        testCase(5);
+    };
+    static auto localMessageHandler =
+        [](const QtMsgType type, const QMessageLogContext &, const QString &msg) {
+            assert(expectMsg == msg);
+            switch (type) {
+            case QtDebugMsg:
+                tmp += "D";
+                break;
+            case QtWarningMsg:
+                tmp += "W";
+                break;
+            case QtCriticalMsg:
+                tmp += "C";
+                break;
+            case QtFatalMsg:
+                tmp += "F";
+                break;
+            case QtInfoMsg:
+                tmp += "I";
+                break;
+            }
+        };
+
+    tmp.clear();
+    {
+        const auto old = qInstallMessageHandler(localMessageHandler);
+        RAIICallback restoreOld{[old]() { qInstallMessageHandler(old); }};
+
+        {
+            testAlternations();
+            tmp += "---\n";
+            {
+                mmqt::HideQDebug hideBoth;
+                testAlternations();
+            }
+            tmp += "---\n";
+            testAlternations();
+        }
+    }
+    QCOMPARE(tmp, expected);
 }
 
 void TestGlobal::stringViewTest()
