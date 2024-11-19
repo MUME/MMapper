@@ -3,8 +3,8 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
-#include <cstddef> // size_t
-#include <cstdint> // int64_t, uint64_t
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 #include <type_traits>
 

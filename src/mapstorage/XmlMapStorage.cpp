@@ -12,7 +12,7 @@
 #include "../global/roomid.h"
 #include "../global/string_view_utils.h"
 #include "../global/utils.h"
-#include "../mainwindow/UpdateDialog.h" // CompareVersion
+#include "../mainwindow/UpdateDialog.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"

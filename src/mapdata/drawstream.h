@@ -4,7 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../display/MapCanvasRoomDrawer.h" // LayerToRooms
+#include "../display/MapCanvasRoomDrawer.h"
 #include "../mapfrontend/AbstractRoomVisitor.h"
 
 class Room;

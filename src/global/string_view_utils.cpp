@@ -4,7 +4,7 @@
 
 #include "string_view_utils.h"
 
-#include <cstddef> // size_t
+#include <cstddef>
 
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept
 {

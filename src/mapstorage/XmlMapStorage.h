@@ -7,7 +7,7 @@
 #include "../global/macros.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
-#include "mapstorage.h" // MapFrontendBlocker
+#include "mapstorage.h"
 
 #include <string_view>
 #include <unordered_map>

@@ -9,9 +9,9 @@
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
 
-#include <memory>  // std::enable_shared_from_this<>
-#include <utility> // std::move()
-#include <vector>  // std::vector<>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include <QColor>
 #include <QVariant>

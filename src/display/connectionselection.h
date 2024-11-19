@@ -5,7 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/coordinate.h" /* Coordinate2f */
+#include "../expandoracommon/coordinate.h"
 #include "../global/Array.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
