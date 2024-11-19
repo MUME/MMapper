@@ -4,6 +4,7 @@
 
 #include "entities.h"
 
+#include "Consts.h"
 #include "RuleOf5.h"
 
 #include <cassert>
@@ -17,6 +18,8 @@
 #include <QByteArray>
 #include <QHash>
 #include <QString>
+
+using namespace char_consts;
 
 NODISCARD static bool isLatin1(const QChar qc)
 {
@@ -58,7 +61,7 @@ namespace entities {
 // only bother with the latin1 subset
 NODISCARD static bool isNameStartChar(const QChar c)
 {
-    if (c == ':' || c == '_' || isLatin1Alpha(c))
+    if (c == C_COLON || c == C_UNDERSCORE || isLatin1Alpha(c))
         return true;
     const auto uc = static_cast<uint32_t>(c.unicode());
     return uc >= 0xc0 && uc != 0xd7 && uc != 0xf7;
@@ -67,7 +70,8 @@ NODISCARD static bool isNameStartChar(const QChar c)
 // only bother with the latin1 subset
 NODISCARD static bool isNameChar(const QChar c)
 {
-    return isNameStartChar(c) || c == '-' || c == '.' || isLatin1Digit(c) || c.unicode() == 0xb7;
+    return isNameStartChar(c) || c == C_MINUS_SIGN || c == C_PERIOD || isLatin1Digit(c)
+           || c.unicode() == 0xb7;
 }
 } // namespace entities
 
@@ -186,6 +190,8 @@ OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityEnum id)
 
 NODISCARD static const char *translit(const QChar qc)
 {
+    using namespace string_consts;
+
     // not fully implemented
     // note: some of these might be better off just giving the entity
 
@@ -193,11 +199,11 @@ NODISCARD static const char *translit(const QChar qc)
     case XmlEntityEnum::XID_lang:
     case XmlEntityEnum::XID_laquo:
     case XmlEntityEnum::XID_lsaquo:
-        return "<";
+        return S_LESS_THAN;
     case XmlEntityEnum::XID_rang:
     case XmlEntityEnum::XID_raquo:
     case XmlEntityEnum::XID_rsaquo:
-        return ">";
+        return S_GREATER_THAN;
 
     case XmlEntityEnum::XID_loz:
         return "<>";
@@ -219,12 +225,12 @@ NODISCARD static const char *translit(const QChar qc)
     case XmlEntityEnum::XID_thinsp:
     case XmlEntityEnum::XID_ensp:
     case XmlEntityEnum::XID_emsp:
-        return " ";
+        return S_SPACE;
 
     case XmlEntityEnum::XID_ndash:
     case XmlEntityEnum::XID_mdash:
         // case XmlEntityEnum::XID_oline:
-        return "-";
+        return S_MINUS_SIGN;
 
     case XmlEntityEnum::XID_horbar:
         return "--";
@@ -232,26 +238,26 @@ NODISCARD static const char *translit(const QChar qc)
     case XmlEntityEnum::XID_lsquo:
     case XmlEntityEnum::XID_rsquo:
     case XmlEntityEnum::XID_prime:
-        return "\'";
+        return S_SQUOTE;
 
     case XmlEntityEnum::XID_ldquo:
     case XmlEntityEnum::XID_rdquo:
     case XmlEntityEnum::XID_bdquo:
     case XmlEntityEnum::XID_Prime:
-        return "\"";
+        return S_DQUOTE;
 
     case XmlEntityEnum::XID_frasl:
-        return "/";
+        return S_SLASH;
 
     case XmlEntityEnum::XID_sdot:
-        return ".";
+        return S_PERIOD;
 
     case XmlEntityEnum::XID_hellip:
         return "...";
 
     case XmlEntityEnum::XID_and:
     case XmlEntityEnum::XID_circ:
-        return "^";
+        return S_CARET;
 
     case XmlEntityEnum::XID_empty: {
         static_assert(static_cast<uint16_t>(XmlEntityEnum::XID_oslash) == 0xf8);
@@ -260,11 +266,11 @@ NODISCARD static const char *translit(const QChar qc)
 
     case XmlEntityEnum::XID_lowast:
     case XmlEntityEnum::XID_bull:
-        return "*";
+        return S_ASTERISK;
 
     case XmlEntityEnum::XID_tilde:
     case XmlEntityEnum::XID_sim:
-        return "~";
+        return S_TILDE;
 
     case XmlEntityEnum::XID_ge:
         return ">=";
@@ -293,27 +299,27 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
         if (codepoint < 256) {
             const char c = qc.toLatin1();
             switch (c) {
-            case '&':
+            case C_AMPERSAND:
                 out += "&amp;";
                 continue;
-            case '<':
+            case C_LESS_THAN:
                 out += "&lt;";
                 continue;
-            case '>':
+            case C_GREATER_THAN:
                 out += "&gt;";
                 continue;
 
-            case '\0':
-            case '\a':
-            case '\b':
-            case '\f':
-            case '\r':
-            case '\t':
-            case '\v':
-            case '\xa0':
+            case C_NUL:
+            case C_ALERT:
+            case C_BACKSPACE:
+            case C_FORM_FEED:
+            case C_CARRIAGE_RETURN:
+            case C_TAB:
+            case C_VERTICAL_TAB:
+            case C_NBSP:
                 break;
 
-            case '\n':
+            case C_NEWLINE:
             default:
                 if (isprint(c) || isspace(c)) {
                     // REVISIT: transliterate unprintable latin1 code points here, or wait?
@@ -427,7 +433,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
     const QChar *const end = input.end();
 
     for (const QChar *it = beg; it < end;) {
-        if (*it != '&') {
+        if (*it != C_AMPERSAND) {
             // out.append(*it);
             ++it;
             continue;
@@ -435,7 +441,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
 
         const QChar *const amp = it++;
         const auto ampStart = static_cast<int>(amp - beg);
-        if (it + 1 < end && *it == '#') {
+        if (it + 1 < end && *it == C_POUND_SIGN) {
             ++it;
 
             if (*it == 'x') {
@@ -444,7 +450,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
                     if (!isLatin1HexDigit(*it))
                         break;
 
-                if (it < end && *it == ';') {
+                if (it < end && *it == C_SEMICOLON) {
                     ++it;
 
                     callback.decodedEntity(ampStart,
@@ -458,7 +464,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
                     if (!isLatin1Digit(*it))
                         break;
 
-                if (it < end && *it == ';') {
+                if (it < end && *it == C_SEMICOLON) {
                     ++it;
                     callback.decodedEntity(ampStart,
                                            static_cast<int>(it - amp),
@@ -472,7 +478,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
                 if (!isNameChar(*it))
                     break;
 
-            if (it < end && *it == ';') {
+            if (it < end && *it == C_SEMICOLON) {
                 ++it;
                 const auto ampLen = static_cast<int>(it - amp);
                 const auto full = input.mid(ampStart, ampLen).toString();
@@ -500,7 +506,7 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
 
 auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
 {
-    static constexpr const char unprintable = '?';
+    static constexpr const char unprintable = C_QUESTION_MARK;
     struct NODISCARD MyEntityCallback final : public EntityCallback
     {
     public:
@@ -572,26 +578,28 @@ static void testDecode(const char *_in, const char *_expect)
 }
 
 static const bool self_test = []() -> bool {
+    using namespace string_consts;
+
     //
     testDecode("", "");
-    testDecode("&amp;", "&");
-    testDecode("&nbsp;", "\xa0");
+    testDecode("&amp;", S_AMPERSAND);
+    testDecode("&nbsp;", S_NBSP);
 
-    testDecode("&#9;", "\t");
-    testDecode("&#x9;", "\t");
-    testDecode("&#10;", "\n");
-    testDecode("&#xA;", "\n");
-    testDecode("&#x20;", " ");
-    testDecode("&#32;", " ");
+    testDecode("&#9;", S_TAB);
+    testDecode("&#x9;", S_TAB);
+    testDecode("&#10;", S_NEWLINE);
+    testDecode("&#xA;", S_NEWLINE);
+    testDecode("&#x20;", S_SPACE);
+    testDecode("&#32;", S_SPACE);
     testDecode("&#xFF;", "\xFF");
     testDecode("&#255;", "\xFF");
 
     //
     testEncode("", "");
     testEncode("&amp;", "&amp;amp;");
-    testEncode("\t", "&#9;");    // Note: chooses dec (#9) over hex (#x9).
-    testEncode("\n", "\n");      // Note: chooses literal instead of dec (#10) or hex (#xA).
-    testEncode("\x0B", "&#xB;"); // Note: chooses hex (#xB) over decimal (#11).
+    testEncode(S_TAB, "&#9;");        // Note: chooses dec (#9) over hex (#x9).
+    testEncode(S_NEWLINE, S_NEWLINE); // Note: chooses literal instead of dec (#10) or hex (#xA).
+    testEncode("\x0B", "&#xB;");      // Note: chooses hex (#xB) over decimal (#11).
     {
         QString in;
         in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};

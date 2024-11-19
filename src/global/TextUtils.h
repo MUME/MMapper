@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "Consts.h"
 #include "utils.h"
 
 #include <cassert>
@@ -51,7 +52,8 @@ void foreachChar(const std::string_view input, const char c, Callback &&callback
 template<typename Callback>
 void foreachLine(const std::string_view input, Callback &&callback)
 {
-    constexpr char C_NEWLINE = '\n';
+    using char_consts::C_NEWLINE;
+
     const size_t len = input.size();
     size_t pos = 0;
     while (pos < len) {
@@ -97,14 +99,16 @@ inline void foreachChar(const QString &input, const char c, Callback &&callback)
 template<typename Callback>
 void foreachLine(const QStringView input, Callback &&callback)
 {
+    using char_consts::C_NEWLINE;
+
     const auto len = input.size();
     int pos = 0;
     while (pos < len) {
-        const auto next = input.indexOf('\n', pos);
+        const auto next = input.indexOf(C_NEWLINE, pos);
         if (next < 0)
             break;
         assert(next >= pos);
-        assert(input[next] == '\n');
+        assert(input[next] == C_NEWLINE);
         callback(input.mid(pos, next - pos), true);
         pos = static_cast<int>(next + 1);
     }
@@ -354,33 +358,7 @@ namespace mmqt {
  */
 NODISCARD TextBuffer normalizeAnsi(QStringView);
 NODISCARD TextBuffer normalizeAnsi(const QString &str);
-} // namespace mmqt
 
-#define DEFINE_CHAR_CONST(NAME, val) \
-    static constexpr const char C_##NAME{(val)}; \
-    static constexpr const QChar QC_##NAME{(C_##NAME)}; \
-    static constexpr const char ARR_##NAME[2]{C_##NAME, C_NUL}; \
-    static constexpr const char *const S_##NAME{ARR_##NAME}; \
-    static constexpr const std::string_view SV_##NAME \
-    { \
-        ARR_##NAME \
-    }
-
-// TODO: put these in a string constants namespace
-static constexpr const char C_NUL = 0;
-DEFINE_CHAR_CONST(ESC, '\x1b');
-DEFINE_CHAR_CONST(CARRIAGE_RETURN, '\r');
-DEFINE_CHAR_CONST(NBSP, static_cast<char>('\xa0'));
-DEFINE_CHAR_CONST(NEWLINE, '\n');
-DEFINE_CHAR_CONST(OPEN_BRACKET, '[');
-DEFINE_CHAR_CONST(SEMICOLON, ';');
-DEFINE_CHAR_CONST(SPACE, ' ');
-DEFINE_CHAR_CONST(TAB, '\t');
-static_assert(C_SPACE == 0x20);
-
-#undef DEFINE_CHAR_CONST
-
-namespace mmqt {
 class NODISCARD AnsiStringToken final
 {
 public:
@@ -544,7 +522,7 @@ std::ostream &print_string_smartquote(std::ostream &os, std::string_view sv);
 struct NODISCARD QuotedChar final
 {
 private:
-    char m_c = '\0';
+    char m_c = char_consts::C_NUL;
 
 public:
     explicit QuotedChar(char c)

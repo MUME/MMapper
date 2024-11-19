@@ -4,6 +4,7 @@
 
 #include "RoomManager.h"
 
+#include "../global/Consts.h"
 #include "../global/StringView.h"
 #include "../proxy/GmcpMessage.h"
 #include "RoomMobs.h"
@@ -79,7 +80,7 @@ void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
     }
     const RoomMob::Id id = static_cast<RoomMob::Id>(num);
     if (bad || id == RoomMobData::NOID || static_cast<unsigned long>(id) != num
-        || (pos < str.size() && str[pos] > ' ')) {
+        || (pos < str.size() && str[pos] > char_consts::C_SPACE)) {
         qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                              << "containing invalid payload: expecting unsigned number, got"
                              << msg.getJson()->toQString();
@@ -222,7 +223,7 @@ void RoomManager::toMobField(const QJsonValue &value, RoomMobUpdate &data, const
         for (QJsonValueRef item : value.toArray()) {
             if (item.isString()) {
                 if (!str.isEmpty()) {
-                    str += ',';
+                    str += char_consts::C_COMMA;
                 }
                 str += item.toString();
             }

@@ -5,6 +5,7 @@
 #include "MudTelnet.h"
 
 #include "../display/MapCanvasConfig.h"
+#include "../global/Consts.h"
 #include "../global/Version.h"
 #include "GmcpUtils.h"
 
@@ -212,7 +213,7 @@ void MudTelnet::sendCoreSupports()
     for (const GmcpModule &mod : gmcp) {
         if (comma)
             oss << ", ";
-        oss << '"' << mod.toStdString() << '"';
+        oss << char_consts::C_DQUOTE << mod.toStdString() << char_consts::C_DQUOTE;
         comma = true;
     }
     oss << " ]";

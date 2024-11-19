@@ -6,6 +6,7 @@
 #include "../display/MapCanvasConfig.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
+#include "../global/Consts.h"
 #include "../global/NamedColors.h"
 #include "../proxy/proxy.h"
 #include "../syntax/SyntaxArgs.h"
@@ -133,7 +134,7 @@ void AbstractParser::doConfig(const StringView cmd)
 
             os << "Customizable colors:" << std::endl;
             for (const auto &name : names) {
-                if (name.empty() || name[0] == '.')
+                if (name.empty() || name[0] == char_consts::C_PERIOD)
                     continue;
                 XNamedColor color(name);
                 os << " " << SmartQuotedString{name} << " = " << color.getColor() << std::endl;
@@ -211,7 +212,7 @@ void AbstractParser::doConfig(const StringView cmd)
 
     const auto argBool = TokenMatcher::alloc<ArgBool>();
     const auto argInt = TokenMatcher::alloc<ArgInt>();
-    const auto optArgEquals = TokenMatcher::alloc<ArgOptionalChar>('=');
+    const auto optArgEquals = TokenMatcher::alloc<ArgOptionalChar>(char_consts::C_EQUALS);
 
     auto makeFixedPointArg = [optArgEquals,
                               &makeSetFixedPoint](FixedPoint<1> &fp,

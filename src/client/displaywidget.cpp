@@ -149,7 +149,7 @@ void DisplayWidget::slot_displayText(const QString &str)
                 m_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 1);
                 m_backspace = false;
             }
-            int backspaceIndex = textStr.indexOf('\10');
+            int backspaceIndex = textStr.indexOf(char_consts::C_BACKSPACE);
             if (backspaceIndex == -1) {
                 // No backspace
                 m_cursor.insertText(textStr, m_format);
@@ -164,7 +164,7 @@ void DisplayWidget::slot_displayText(const QString &str)
         // Change format according to ansi codes
         if (ansiIterator.hasNext()) {
             // split several semicoloned ansi codes into individual codes
-            QStringList subAnsi = ansiIterator.next().split(';');
+            QStringList subAnsi = ansiIterator.next().split(char_consts::C_SEMICOLON);
             QStringListIterator ansiCodeIterator(subAnsi);
             while (ansiCodeIterator.hasNext()) {
                 int ansiCode = ansiCodeIterator.next().toInt();

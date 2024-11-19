@@ -239,7 +239,7 @@ void GroupSocket::onReadInternal(const char c)
 {
     switch (state) {
     case GroupMessageStateEnum::LENGTH:
-        if (c == ' ' && currentMessageLen > 0) {
+        if (c == char_consts::C_SPACE && currentMessageLen > 0) {
             // Terminating space received
             state = GroupMessageStateEnum::PAYLOAD;
         } else if (c >= '0' && c <= '9') {

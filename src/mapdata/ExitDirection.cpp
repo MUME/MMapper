@@ -5,6 +5,7 @@
 #include "ExitDirection.h"
 
 #include "../global/Array.h"
+#include "../global/Consts.h"
 #include "../global/enums.h"
 
 namespace enums {
@@ -161,6 +162,6 @@ char charForDir(const ExitDirEnum dir)
     case ExitDirEnum::NONE:
         break;
     }
-    return '?';
+    return char_consts::C_QUESTION_MARK;
 }
 } // namespace Mmapper2Exit

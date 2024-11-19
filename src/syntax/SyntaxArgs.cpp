@@ -168,7 +168,8 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
 
         // The function std::stoi is documented to skip leading whitespace.
         const char firstChar = stringView.firstChar();
-        if (!std::isdigit(firstChar) && firstChar != '-' && firstChar != '+')
+        if (!std::isdigit(firstChar) && firstChar != char_consts::C_MINUS_SIGN
+            && firstChar != char_consts::C_PLUS_SIGN)
             return MatchResult::failure(input);
 
         ++stringView;
@@ -187,10 +188,10 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
     auto sv = input_sv;
     bool negative = false;
     switch (sv.firstChar()) {
-    case '+':
+    case char_consts::C_PLUS_SIGN:
         ++sv;
         break;
-    case '-':
+    case char_consts::C_MINUS_SIGN:
         ++sv;
         negative = true;
         break;

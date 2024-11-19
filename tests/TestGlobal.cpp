@@ -119,7 +119,8 @@ void TestGlobal::toLowerLatin1Test()
 
     QCOMPARE(toLowerLatin1('A'), 'a');
     QCOMPARE(toLowerLatin1('Z'), 'z');
-    QCOMPARE(toLowerLatin1('-'), '-');
+    using char_consts::C_MINUS_SIGN;
+    QCOMPARE(toLowerLatin1(C_MINUS_SIGN), C_MINUS_SIGN);
 }
 
 void TestGlobal::to_numberTest()

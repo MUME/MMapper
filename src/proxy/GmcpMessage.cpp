@@ -3,6 +3,7 @@
 
 #include "GmcpMessage.h"
 
+#include "../global/Consts.h"
 #include "../global/TextUtils.h"
 #include "GmcpModule.h"
 #include "GmcpUtils.h"
@@ -80,13 +81,13 @@ QByteArray GmcpMessage::toRawBytes() const
     std::ostringstream oss;
     oss << name.getStdString();
     if (json)
-        oss << ' ' << json->getStdString();
+        oss << char_consts::C_SPACE << json->getStdString();
     return mmqt::toQByteArrayUtf8(oss.str());
 }
 
 GmcpMessage GmcpMessage::fromRawBytes(const QByteArray &ba)
 {
-    const int pos = ba.indexOf(' ');
+    const int pos = ba.indexOf(char_consts::C_SPACE);
     // <data> is optional
     if (pos == -1)
         return GmcpMessage(ba.toStdString());

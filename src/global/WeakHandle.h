@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "Consts.h"
 #include "utils.h"
 
 #include <memory>
@@ -65,7 +66,7 @@ private:
 
 public:
     EnableGetWeakHandleFromThis()
-        : m_dummy(std::make_shared<char>('\0'))
+        : m_dummy(std::make_shared<char>(char_consts::C_NUL))
     {
         static_assert(std::is_base_of_v<EnableGetWeakHandleFromThis<T>, T>);
     }
@@ -95,7 +96,7 @@ private:
 
 public:
     explicit WeakHandleLifetime(T &parent)
-        : m_dummy(std::make_shared<char>('\0'))
+        : m_dummy(std::make_shared<char>(char_consts::C_NUL))
         , m_parent(parent)
     {
         const auto parent_beg = reinterpret_cast<uintptr_t>(&parent);

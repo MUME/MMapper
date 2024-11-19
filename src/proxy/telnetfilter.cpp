@@ -6,12 +6,14 @@
 
 #include "telnetfilter.h"
 
+#include "../global/Consts.h"
+
 #include <QByteArray>
 #include <QObject>
 
-static constexpr const char ASCII_DEL = '\x08';
-static constexpr const char ASCII_CR = '\r';
-static constexpr const char ASCII_LF = '\n';
+static constexpr const char ASCII_DEL = char_consts::C_BACKSPACE;
+static constexpr const char ASCII_CR = char_consts::C_CARRIAGE_RETURN;
+static constexpr const char ASCII_LF = char_consts::C_NEWLINE;
 
 static_assert(ASCII_DEL == 8);
 static_assert(ASCII_LF == 10);

@@ -4,6 +4,7 @@
 
 #include "Abbrev.h"
 
+#include "../global/Consts.h"
 #include "../global/StringView.h"
 #include "../global/utils.h"
 
@@ -14,6 +15,8 @@
 #include <string_view>
 
 #include <QtCore>
+
+using char_consts::C_NUL;
 
 bool isAbbrev(StringView input, const std::string_view command, const int minAbbrev)
 {
@@ -43,7 +46,7 @@ Abbrev::Abbrev(const char *const arg_command, const int arg_minAbbrev)
     : command{arg_command}
     , minAbbrev{arg_minAbbrev}
 {
-    if (this->command == nullptr || this->command[0] == '\0')
+    if (this->command == nullptr || this->command[0] == C_NUL)
         throw std::invalid_argument("command");
 
     this->len = static_cast<int>(std::strlen(this->command));
@@ -56,7 +59,7 @@ Abbrev::Abbrev(const char *const arg_command, const int arg_minAbbrev)
 
 Abbrev::operator bool() const
 {
-    return command != nullptr && command[0] != '\0' && isClamped(minAbbrev, 1, len);
+    return command != nullptr && command[0] != C_NUL && isClamped(minAbbrev, 1, len);
 }
 
 QString Abbrev::describe() const

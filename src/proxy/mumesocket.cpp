@@ -7,6 +7,7 @@
 #include "mumesocket.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Consts.h"
 #include "../global/io.h"
 
 #include <QByteArray>
@@ -152,7 +153,9 @@ void MumeSslSocket::slot_onEncrypted()
         const auto cert = m_socket.peerCertificate();
         const auto commonNameList = cert.subjectInfo(cert.CommonName);
         const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
-        const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1).toHex(':').toStdString();
+        const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1)
+                              .toHex(char_consts::C_COLON)
+                              .toStdString();
         const auto expStr = QLocale::system().toString(cert.expiryDate(), QLocale::LongFormat);
         proxy_log(QString("Peer certificate common name: %1.").arg(commonName));
         proxy_log(QString("Peer certificate SHA1: %1.").arg(sha1.c_str()));

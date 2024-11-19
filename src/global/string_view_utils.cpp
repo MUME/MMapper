@@ -4,6 +4,8 @@
 
 #include "string_view_utils.h"
 
+#include "Consts.h"
+
 #include <cstddef>
 
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept
@@ -64,7 +66,7 @@ int64_t to_integer<int64_t>(std::u16string_view str, bool &ok)
         return 0;
     }
     bool negative = false;
-    if (str[0] == '-') {
+    if (str[0] == char_consts::C_MINUS_SIGN) {
         negative = true;
         str.remove_prefix(1);
     }

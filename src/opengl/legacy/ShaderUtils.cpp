@@ -33,7 +33,7 @@ static void foreach_line(const Source &source, Callback &&callback)
 {
     std::string_view sv{source.source};
     while (!sv.empty()) {
-        const auto it = sv.find(C_NEWLINE);
+        const auto it = sv.find(char_consts::C_NEWLINE);
         if (it == npos) {
             callback(sv, false);
             break;

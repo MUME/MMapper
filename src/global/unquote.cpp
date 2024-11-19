@@ -3,12 +3,15 @@
 
 #include "unquote.h"
 
+#include "Consts.h"
 #include "TextUtils.h"
 
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <vector>
+
+using namespace char_consts;
 
 enum class NODISCARD ReasonEnum {
     INVALID_ESCAPE,
@@ -54,6 +57,8 @@ NODISCARD static std::optional<uint32_t> try_decode_hex(char c) noexcept
 NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view input,
                                                          const bool allowUnbalancedQuotes)
 {
+    using namespace char_consts;
+
     const auto foreach_char = [allowUnbalancedQuotes, &input](auto &&visit) -> void {
         const auto visit_oct = [&visit](auto &it, const auto end) -> void {
             uint32_t result = 0;
@@ -101,7 +106,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             }
 
             static constexpr const auto DEFAULT_TRANSLIT = static_cast<uint32_t>(
-                static_cast<unsigned char>('?'));
+                static_cast<unsigned char>(C_QUESTION_MARK));
 
             if (result > 255)
                 result = DEFAULT_TRANSLIT;
@@ -121,7 +126,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
                     continue;
 
                 visit(TokenEnum::BeginString);
-                if (c == '"') {
+                if (c == C_DQUOTE) {
                     mode = ModeEnum::DoubleQuote;
                 } else {
                     mode = ModeEnum::Other;
@@ -129,7 +134,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
                 }
                 continue;
             } else if (mode == ModeEnum::Other) {
-                if (c == '"') {
+                if (c == C_DQUOTE) {
                     mode = ModeEnum::DoubleQuote;
                 } else if (std::isspace(c)) {
                     mode = ModeEnum::Space;
@@ -141,10 +146,10 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             }
 
             assert(mode == ModeEnum::DoubleQuote);
-            if (c == '"') {
+            if (c == C_DQUOTE) {
                 mode = ModeEnum::Other;
                 continue;
-            } else if (c != '\\') {
+            } else if (c != C_BACKSLASH) {
                 visit(c);
                 continue;
             }
@@ -152,7 +157,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             const char c2 = *it++;
             switch (c2) {
             case '0':
-                visit('\0');
+                visit(C_NUL);
                 continue;
 
             case '1':
@@ -165,34 +170,34 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
                 throw UnquoteException(ReasonEnum::INVALID_ESCAPE);
 
             case 'a':
-                visit('\a');
+                visit(C_ALERT);
                 continue;
             case 'b':
-                visit('\b');
+                visit(C_BACKSPACE);
                 continue;
             case 'e': // Not valid C++
                 visit(C_ESC);
                 continue;
             case 'f':
-                visit('\f');
+                visit(C_FORM_FEED);
                 continue;
             case 'n':
-                visit('\n');
+                visit(C_NEWLINE);
                 continue;
             case 'r':
-                visit('\r');
+                visit(C_CARRIAGE_RETURN);
                 continue;
             case 't':
-                visit('\t');
+                visit(C_TAB);
                 continue;
             case 'v':
-                visit('\v');
+                visit(C_VERTICAL_TAB);
                 continue;
 
-            case '\'':
-            case '\"':
-            case '\?':
-            case '\\':
+            case C_SQUOTE:
+            case C_DQUOTE:
+            case C_QUESTION_MARK:
+            case C_BACKSLASH:
                 visit(c2);
                 continue;
 
@@ -358,16 +363,18 @@ void test_unquote() noexcept /* will crash the program if it throws */
         expectString(R"("\ufffff")", "?f");
         expectString(R"("\Ufffffffff")", "?f");
 
-        expectString(R"("\e")", "\033");
+        using string_consts::S_ESC;
+        expectString(R"("\e")", S_ESC);
 
-        static constexpr const char NULL_CHAR_ARRAY[2] = {'\0', '\0'};
+        using char_consts::C_NUL;
+        static constexpr const char NULL_CHAR_ARRAY[2] = {C_NUL, C_NUL};
         static constexpr const std::string_view NULL_CHAR_STRINGVIEW{NULL_CHAR_ARRAY, 1};
         static_assert(NULL_CHAR_STRINGVIEW.length() == 1);
-        static_assert(NULL_CHAR_STRINGVIEW[0] == '\0');
+        static_assert(NULL_CHAR_STRINGVIEW[0] == C_NUL);
         expectString(R"("\0")", NULL_CHAR_STRINGVIEW);
         expectString(R"("\o000")", NULL_CHAR_STRINGVIEW);
 
-        expectString(R"("\o033")", "\033"); // C_ESC
+        expectString(R"("\o033")", S_ESC);  // C_ESC
         expectString(R"("\o377")", "\377"); // '\xff'
     }
     {
@@ -420,7 +427,8 @@ void test_unquote() noexcept /* will crash the program if it throws */
     }
 
     {
-        const char buf[8] = {'a', 'b', 'c', '\0', 'd', 'e', 'f', '\0'};
+        using char_consts::C_NUL;
+        const char buf[8] = {'a', 'b', 'c', C_NUL, 'd', 'e', 'f', C_NUL};
         const std::string s{buf, 7};
         assert(s.length() == 7);
         assert(std::strlen(s.c_str()) == 3);

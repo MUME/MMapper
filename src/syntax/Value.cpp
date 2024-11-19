@@ -3,6 +3,7 @@
 
 #include "Value.h"
 
+#include "../global/Consts.h"
 #include "../global/TextUtils.h"
 
 #include <cassert>
@@ -24,9 +25,9 @@ static void print(std::ostream &os, bool value)
 
 static void print(std::ostream &os, char value)
 {
-    os << '\'';
+    os << char_consts::C_SQUOTE;
     ::print_char(os, value, false);
-    os << '\'';
+    os << char_consts::C_SQUOTE;
 }
 
 static void print(std::ostream &os, int32_t value)

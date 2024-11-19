@@ -628,7 +628,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             switch (payload[1]) {
             case TNSB_REQUEST:
                 // MMapper does not support [TTABLE]
-                if (payload.length() >= 4 && payload[2] != '[') {
+                if (payload.length() >= 4 && payload[2] != char_consts::C_OPEN_BRACKET) {
                     bool accepted = false;
                     // Split remainder into delim and IAC
                     // CHARSET REQUEST <sep> <charsets>

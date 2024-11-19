@@ -6,7 +6,7 @@
 
 #include "parserutils.h"
 
-#include "TextUtils.h"
+#include "Consts.h"
 
 #include <array>
 #include <ostream>
@@ -59,10 +59,10 @@ NODISCARD static inline constexpr char latin1ToAscii(char c) noexcept
 
 static_assert(latin1ToAscii('X') == 'X');
 static_assert(latin1ToAscii('x') == 'x');
-static_assert(latin1ToAscii("\x7f"[0]) == '\x7f');
+static_assert(latin1ToAscii(char_consts::C_DELETE) == char_consts::C_DELETE);
 static_assert(latin1ToAscii("\x80"[0]) == LATIN1_UNDEFINED);
 static_assert(latin1ToAscii("\x9f"[0]) == LATIN1_UNDEFINED);
-static_assert(latin1ToAscii("\xa0"[0]) == ' ');
+static_assert(latin1ToAscii(char_consts::C_NBSP) == char_consts::C_SPACE);
 static_assert(latin1ToAscii("\xff"[0]) == 'y');
 
 QString &removeAnsiMarksInPlace(QString &str)
@@ -118,7 +118,7 @@ NODISCARD bool isWhitespaceNormalized(const std::string_view sv)
 {
     bool last_was_space = false;
     for (char c : sv) {
-        if (c == C_SPACE) {
+        if (c == char_consts::C_SPACE) {
             if (last_was_space) {
                 return false;
             } else {
@@ -145,7 +145,7 @@ std::string normalizeWhitespace(std::string str)
             if (is_space(c)) {
                 if (!last_was_space) {
                     last_was_space = true;
-                    str[out++] = C_SPACE;
+                    str[out++] = char_consts::C_SPACE;
                 }
             } else {
                 last_was_space = false;

@@ -4,6 +4,7 @@
 
 #include "AbstractParser-Commands.h"
 
+#include "../global/Consts.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
@@ -514,7 +515,8 @@ void AbstractParser::parseSetCommand(StringView view)
         auto next = view.takeFirstWord();
         if (next.length() == 3) {
             auto quote = next.takeFirstLetter();
-            const bool validQuote = quote == '\'' || quote == '"';
+            const bool validQuote = quote == char_consts::C_SQUOTE
+                                    || quote == char_consts::C_DQUOTE;
             const auto prefix = next.takeFirstLetter();
 
             if (validQuote && isValidPrefix(prefix) && quote == next.takeFirstLetter()

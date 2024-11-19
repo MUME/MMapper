@@ -3,6 +3,7 @@
 
 #include "TreeParser.h"
 
+#include "../global/Consts.h"
 #include "../global/unquote.h"
 #include "SyntaxArgs.h"
 #include "TokenMatcher.h"
@@ -168,13 +169,15 @@ HelpFrame::~HelpFrame()
 
 void HelpFrame::flush()
 {
+    using namespace char_consts;
+
     if (empty())
         return;
 
     if (!m_helps.empty() || m_accept) {
         std::stringstream ss;
 
-        ss << std::string(2 * m_indent, ' ');
+        ss << std::string(2 * m_indent, C_SPACE);
 
         if (!m_helps.empty()) {
             bool first = true;
@@ -182,7 +185,7 @@ void HelpFrame::flush()
                 if (first)
                     first = false;
                 else
-                    ss << ' ';
+                    ss << C_SPACE;
                 ss << h;
             }
         }
@@ -214,7 +217,7 @@ void HelpFrame::flush()
         if (m_accept) {
             if (!m_helps.empty()) {
                 pos += 1;
-                os << ' ';
+                os << C_SPACE;
             }
 
             const auto &acc = m_accept.value();
@@ -222,10 +225,10 @@ void HelpFrame::flush()
             const auto wouldEndAt = pos + accLen;
             const size_t rightMargin = 80;
             if (wouldEndAt <= rightMargin) {
-                os << std::string(rightMargin - wouldEndAt, ' ');
+                os << std::string(rightMargin - wouldEndAt, C_SPACE);
             } else if (accLen + 2 <= rightMargin) {
                 os << std::endl;
-                os << std::string(rightMargin - accLen - 2, ' ');
+                os << std::string(rightMargin - accLen - 2, C_SPACE);
                 os << "# ";
             } else {
                 os << std::endl;
@@ -238,7 +241,7 @@ void HelpFrame::flush()
 
     if (!m_errors.empty()) {
         for (const std::string &w : m_errors) {
-            os << std::string(2 * m_indent, ' ');
+            os << std::string(2 * m_indent, C_SPACE);
             os << " ^ warning: " << w << std::endl;
         }
 

@@ -19,6 +19,8 @@
 #include <QMessageLogContext>
 #include <QString>
 
+using char_consts::C_NEWLINE;
+
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)
 {
@@ -107,8 +109,8 @@ void RemoteEdit::save(const RemoteEditSession *const session)
     if (session->isConnected()) {
         // The body contents have to be followed by a LF if they are not empty
         QString content = session->getContent();
-        if (!content.isEmpty() && !content.endsWith(C_NEWLINE)) {
-            content.append(C_NEWLINE);
+        if (!content.isEmpty() && !content.endsWith(char_consts::C_NEWLINE)) {
+            content.append(char_consts::C_NEWLINE);
         }
 
         const QString &sessionIdstr = QString("E%1\n").arg(session->getSessionId().toQString());

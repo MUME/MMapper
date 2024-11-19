@@ -4,6 +4,7 @@
 
 #include "WinSock.h"
 
+#include "Consts.h"
 #include "macros.h"
 
 #include <iostream>
@@ -70,7 +71,7 @@ bool WinSock::tuneKeepAlive(MAYBE_UNUSED unsigned int socket,
     }
 
     // Verify that keepalive option is enabled
-    char optVal = '\0';
+    char optVal = char_consts::C_NUL;
     int optLen = sizeof(optVal);
     ret = getsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen);
     if (ret != 0) {

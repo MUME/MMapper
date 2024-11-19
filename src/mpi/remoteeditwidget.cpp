@@ -5,6 +5,7 @@
 #include "remoteeditwidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Consts.h"
 #include "../global/entities.h"
 
 #include <cassert>
@@ -28,8 +29,9 @@
 #include <QtGui>
 #include <QtWidgets>
 
+using namespace char_consts;
+
 static constexpr const bool USE_TOOLTIPS = false;
-static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
 
@@ -105,11 +107,12 @@ public:
 
     void highlightTabs(const QString &line)
     {
-        if (line.indexOf('\t') < 0)
+        if (line.indexOf(C_TAB) < 0)
             return;
 
         const auto fmt = getBackgroundFormat(Qt::yellow);
-        mmqt::foreachChar(line, '\t', [this, &fmt](const auto at) {
+        // REVISIT: Should this be in TabUtils?
+        mmqt::foreachChar(line, C_TAB, [this, &fmt](const auto at) {
             setFormat(static_cast<int>(at), 1, fmt);
         });
     }
@@ -500,12 +503,12 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
     event->accept();
     auto cur = textCursor();
     if (cur.hasSelection())
-        return prefixPartialSelection(S_TWO_SPACES);
+        return prefixPartialSelection(string_consts::S_TWO_SPACES);
 
     /* otherwise, insert a real tab, expand it, and restore the cursor */
     RaiiGroupUndoActions raii(cur);
 
-    cur.insertText(S_TAB);
+    cur.insertText(string_consts::S_TAB);
 
     const int col_before = cur.positionInBlock();
     const auto &block = cur.block();
@@ -1044,7 +1047,8 @@ void RemoteEditWidget::slot_updateStatusBar()
 
         const QString selection = cur.selection().toPlainText();
         const int selectionLength = selection.length();
-        const int selectionLines = selection.count('\n') + (selection.endsWith('\n') ? 0 : 1);
+        const int selectionLines = selection.count(C_NEWLINE)
+                                   + (selection.endsWith(C_NEWLINE) ? 0 : 1);
 
         status.append(QString(", Selection: %1 char%2 on %3 line%4")
                           .arg(selectionLength)
@@ -1096,7 +1100,7 @@ void RemoteEditWidget::slot_justifyText()
     mmqt::foreachLine(old,
                       [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
                           text.appendJustified(line, maxLen);
-                          text.append('\n');
+                          text.append(C_NEWLINE);
                       });
     m_textEdit->replaceAll(text.getQString());
 }
@@ -1144,7 +1148,7 @@ void RemoteEditWidget::slot_removeDuplicateSpaces()
         if (!text.contains(spaces))
             return;
 
-        text.replace(spaces, S_SPACE);
+        text.replace(spaces, string_consts::S_SPACE);
         line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
         line.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
         line.insertText(text);
@@ -1159,7 +1163,7 @@ void RemoteEditWidget::slot_normalizeAnsi()
 
     mmqt::TextBuffer output = mmqt::normalizeAnsi(old);
     if (!output.hasTrailingNewline())
-        output.append('\n');
+        output.append(C_NEWLINE);
 
     m_textEdit->replaceAll(output.getQString());
 }

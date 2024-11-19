@@ -302,7 +302,7 @@ struct NODISCARD FontMetrics
             if (current != nullptr) {
                 emitGlyph(current, lookupKerning(prev, current));
                 prev = current;
-            } else if (auto oops = lookupGlyph('?')) {
+            } else if (auto oops = lookupGlyph(char_consts::C_QUESTION_MARK)) {
                 qWarning() << "Unable to lookup glyph" << QString(QChar(c));
                 emitGlyph(oops, lookupKerning(prev, oops));
                 prev = oops;

@@ -3,6 +3,7 @@
 
 #include "Color.h"
 
+#include "Consts.h"
 #include "utils.h"
 
 #include <iomanip>
@@ -137,7 +138,7 @@ std::string Color::toHex() const
 
 std::ostream &Color::toHex(std::ostream &os) const
 {
-    os << '#';
+    os << char_consts::C_POUND_SIGN;
 
     auto hex2 = [&os](uint32_t val) {
         os << std::hex << std::setw(2) << std::setfill('0') << (val & 0xffu) << std::dec;

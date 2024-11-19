@@ -172,10 +172,10 @@ std::ostream &ArgDirection::virt_to_stream(std::ostream &os) const
 NODISCARD static bool isAddFlag(StringView &sv)
 {
     switch (sv.firstChar()) {
-    case '-':
+    case char_consts::C_MINUS_SIGN:
         std::ignore = sv.takeFirstLetter();
         return false;
-    case '+':
+    case char_consts::C_PLUS_SIGN:
         std::ignore = sv.takeFirstLetter();
         return true;
     default:

@@ -9,6 +9,7 @@
 #include "../global/ConfigConsts-Computed.h"
 #include "../global/ConfigConsts.h"
 #include "../global/ConfigEnums.h"
+#include "../global/Consts.h"
 #include "../global/FixedPoint.h"
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
@@ -79,7 +80,7 @@ public:
         QString roomNameColor; // ANSI room name color
         QString roomDescColor; // ANSI room descriptions color
         bool removeXmlTags = false;
-        char prefixChar = '_';
+        char prefixChar = char_consts::C_UNDERSCORE;
         QStringList noDescriptionPatternsList;
 
     private:

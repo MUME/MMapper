@@ -14,6 +14,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/CharBuffer.h"
+#include "../global/Consts.h"
 #include "../global/RAII.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
@@ -67,6 +68,8 @@
 #include <QVariant>
 #include <QtCore>
 
+using namespace char_consts;
+
 class RoomAdmin;
 
 const QString AbstractParser::nullString{};
@@ -76,40 +79,40 @@ NODISCARD static char getTerrainSymbol(const RoomTerrainEnum type)
 {
     switch (type) {
     case RoomTerrainEnum::UNDEFINED:
-        return ' ';
+        return C_SPACE;
     case RoomTerrainEnum::INDOORS:
-        return '['; // [  // indoors
+        return C_OPEN_BRACKET; // [  // indoors
     case RoomTerrainEnum::CITY:
-        return '#'; // #  // city
+        return C_POUND_SIGN; // #  // city
     case RoomTerrainEnum::FIELD:
-        return '.'; // .  // field
+        return C_PERIOD; // .  // field
     case RoomTerrainEnum::FOREST:
         return 'f'; // f  // forest
     case RoomTerrainEnum::HILLS:
-        return '('; // (  // hills
+        return C_OPEN_PARENS; // (  // hills
     case RoomTerrainEnum::MOUNTAINS:
-        return '<'; // <  // mountains
+        return C_LESS_THAN; // <  // mountains
     case RoomTerrainEnum::SHALLOW:
-        return '%'; // %  // shallow
+        return C_PERCENT_SIGN; // %  // shallow
     case RoomTerrainEnum::WATER:
-        return '~'; // ~  // water
+        return C_TILDE; // ~  // water
     case RoomTerrainEnum::RAPIDS:
         return 'W'; // W  // rapids
     case RoomTerrainEnum::UNDERWATER:
         return 'U'; // U  // underwater
     case RoomTerrainEnum::ROAD:
-        return '+'; // +  // road
+        return C_PLUS_SIGN; // +  // road
     case RoomTerrainEnum::TUNNEL:
-        return '='; // =  // tunnel
+        return C_EQUALS; // =  // tunnel
     case RoomTerrainEnum::CAVERN:
         return 'O'; // O  // cavern
     case RoomTerrainEnum::BRUSH:
-        return ':'; // :  // brush
+        return C_COLON; // :  // brush
     case RoomTerrainEnum::DEATHTRAP:
         return 'X';
     }
 
-    return ' ';
+    return C_SPACE;
 }
 
 NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
@@ -119,10 +122,10 @@ NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
         return 'o';
     case RoomLightEnum::LIT:
     case RoomLightEnum::UNDEFINED:
-        return '*';
+        return C_ASTERISK;
     }
 
-    return '?';
+    return C_QUESTION_MARK;
 }
 
 AbstractParser::AbstractParser(MapData &md,
@@ -165,19 +168,19 @@ void AbstractParser::parsePrompt(const QString &prompt)
     m_promptFlags.reset();
 
     int index = 0;
-    if (index < prompt.length() && prompt[index] == '+') {
+    if (index < prompt.length() && prompt[index] == C_PLUS_SIGN) {
         // susceptible to mudlle (muddling Maiar only)
         index += 2;
     }
 
     if (index < prompt.length()) {
         switch (prompt[index++].toLatin1()) {
-        case '*': // indoor/sun (direct and indirect)
+        case C_ASTERISK: // indoor/sun (direct and indirect)
             m_promptFlags.setLit();
             break;
-        case '!': // artifical light
+        case C_EXCLAMATION: // artifical light
             break;
-        case ')': // moon (direct and indirect)
+        case C_CLOSE_PARENS: // moon (direct and indirect)
             m_promptFlags.setLit();
             break;
         case 'o': // darkness
@@ -191,20 +194,20 @@ void AbstractParser::parsePrompt(const QString &prompt)
     if (index < prompt.length()) {
         // Terrain type
         switch (prompt[index++].toLatin1()) {
-        case '[':
-        case '#':
-        case '.':
+        case C_OPEN_BRACKET:
+        case C_POUND_SIGN:
+        case C_PERIOD:
         case 'f':
-        case '(':
-        case '<':
-        case '%':
-        case '~':
+        case C_OPEN_PARENS:
+        case C_LESS_THAN:
+        case C_PERCENT_SIGN:
+        case C_TILDE:
         case 'W':
         case 'U':
-        case '+':
-        case '=':
+        case C_PLUS_SIGN:
+        case C_EQUALS:
         case 'O':
-        case ':':
+        case C_COLON:
             break;
         default:
             index--;
@@ -214,16 +217,16 @@ void AbstractParser::parsePrompt(const QString &prompt)
 
     if (index < prompt.length()) {
         switch (prompt[index++].toLatin1()) {
-        case '~':
+        case C_TILDE:
             m_promptFlags.setWeatherType(PromptWeatherEnum::CLOUDS);
             break;
-        case '\'':
+        case C_SQUOTE:
             m_promptFlags.setWeatherType(PromptWeatherEnum::RAIN);
             break;
-        case '"':
+        case C_DQUOTE:
             m_promptFlags.setWeatherType(PromptWeatherEnum::HEAVY_RAIN);
             break;
-        case '*':
+        case C_ASTERISK:
             m_promptFlags.setWeatherType(PromptWeatherEnum::SNOW);
             break;
         default:
@@ -234,10 +237,10 @@ void AbstractParser::parsePrompt(const QString &prompt)
 
     if (index < prompt.length()) {
         switch (prompt[index++].toLatin1()) {
-        case '-':
+        case C_MINUS_SIGN:
             m_promptFlags.setFogType(PromptFogEnum::LIGHT_FOG);
             break;
-        case '=':
+        case C_EQUALS:
             m_promptFlags.setFogType(PromptFogEnum::HEAVY_FOG);
             break;
         default:
@@ -299,35 +302,35 @@ void AbstractParser::parseExits(std::ostream &os)
     const auto parse_exit_flag =
         [&doors, &closed, &road, &climb, &portal, &directSun](const char sign) -> bool {
         switch (sign) {
-        case '(': // open door
+        case C_OPEN_PARENS: // open door
             doors = true;
             break;
-        case '[': // closed door
+        case C_OPEN_BRACKET: // closed door
             doors = true;
             closed = true;
             break;
-        case '#': // broken door
+        case C_POUND_SIGN: // broken door
             doors = true;
             break;
-        case '=': // road
+        case C_EQUALS: // road
             road = true;
             break;
-        case '-': // trail
+        case C_MINUS_SIGN: // trail
             road = true;
             break;
-        case '/': // upward climb
+        case C_SLASH: // upward climb
             climb = true;
             break;
-        case '\\': // downward climb
+        case C_BACKSLASH: // downward climb
             climb = true;
             break;
-        case '{': // portal
+        case C_OPEN_CURLY: // portal
             portal = true;
             break;
-        case '*': // sunlit room (troll/orc only)
+        case C_ASTERISK: // sunlit room (troll/orc only)
             directSun = true;
             break;
-        case '^': // outdoors room (troll only)
+        case C_CARET: // outdoors room (troll only)
             directSun = true;
             break;
         default:
@@ -336,7 +339,7 @@ void AbstractParser::parseExits(std::ostream &os)
         return true;
     };
 
-    if (str.length() > 5 && str.at(5).toLatin1() != ':') {
+    if (str.length() > 5 && str.at(5).toLatin1() != C_COLON) {
         // Ainur exits
         static const QRegularExpression rx(
             R"(^\s*([\^\*~\-={#\[\(\\\/]+)?([A-za-z]+)([\^\*~\-=}#\]\)\\\/]+)?\s+\- (.*)$)");
@@ -366,7 +369,7 @@ void AbstractParser::parseExits(std::ostream &os)
             const char c = str.at(i).toLatin1();
             if (!parse_exit_flag(c)) {
                 switch (c) {
-                case ' ': // empty space means reset for next exit
+                case C_SPACE: // empty space means reset for next exit
                     reset_exit_flags();
                     break;
 
@@ -680,11 +683,11 @@ NODISCARD static QString compressDirections(QString original)
 {
     QString ans;
     int curnum = 0;
-    QChar curval = '\0';
+    QChar curval = C_NUL;
     Coordinate delta;
     const auto addDirs = [&ans, &curnum, &curval, &delta]() {
         assert(curnum >= 1);
-        assert(curval != '\0');
+        assert(curval != C_NUL);
         if (curnum > 1) {
             ans.append(QString::number(curnum));
         }
@@ -715,7 +718,7 @@ NODISCARD static QString compressDirections(QString original)
                     return;
                 curnum = std::abs(n);
                 curval = (n < 0) ? neg : pos;
-                ans += ' ';
+                ans += C_SPACE;
                 addDirs();
             };
 
@@ -809,7 +812,7 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 
 void AbstractParser::showCommandPrefix()
 {
-    const auto quote = static_cast<char>((prefixChar == '\'') ? '"' : '\'');
+    const auto quote = static_cast<char>((prefixChar == C_SQUOTE) ? C_DQUOTE : C_SQUOTE);
     sendToUser(
         QString("The current command prefix is: %1%2%1 (e.g. %2help)\n").arg(quote).arg(prefixChar));
 }
@@ -934,7 +937,7 @@ void AbstractParser::showHeader(const QString &s)
     result += "\n";
     result += s;
     result += "\n";
-    result += QString(s.size(), '-');
+    result += QString(s.size(), C_MINUS_SIGN);
     result += "\n";
     sendToUser(result);
 }
@@ -1243,7 +1246,7 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     }
 
     const auto &settings = getConfig().parser;
-    static constexpr const auto ESCAPE = S_ESC;
+    static constexpr const auto ESCAPE = string_consts::S_ESC;
 
     QByteArray roomName("\n");
     if (!settings.roomNameColor.isEmpty()) {
@@ -1282,8 +1285,8 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
         return;
     }
     const char sunCharacter = (m_mumeClock.getMumeMoment().toTimeOfDay() <= MumeTimeEnum::DAY)
-                                  ? '*'
-                                  : '^';
+                                  ? C_ASTERISK
+                                  : C_CARET;
     uint32_t exitCount = 0;
     QString etmp = "Exits/emulated:";
     for (const ExitDirEnum direction : ALL_EXITS_NESWUD) {
@@ -1372,7 +1375,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
     if (exitCount == 0) {
         etmp += " none.";
     } else {
-        etmp.replace(etmp.length() - 1, 1, '.');
+        etmp.replace(etmp.length() - 1, 1, C_PERIOD);
     }
 
     QByteArray cn = enhanceExits(r);
@@ -1408,7 +1411,7 @@ void AbstractParser::sendPromptToUser()
             getNextPosition())) // REVISIT: Should this be the current position?
         sendPromptToUser(*r);
     else
-        sendPromptToUser('?', '?');
+        sendPromptToUser(C_QUESTION_MARK, C_QUESTION_MARK);
 }
 
 void AbstractParser::sendPromptToUser(const Room &r)
@@ -1423,7 +1426,7 @@ void AbstractParser::sendPromptToUser(const RoomLightEnum lightType,
 {
     const char light = m_mumeClock.getMumeMoment().moonVisibility()
                                == MumeMoonVisibilityEnum::BRIGHT
-                           ? ')' // Moon is out
+                           ? C_CLOSE_PARENS // Moon is out
                            : getLightSymbol(lightType);
     const char terrain = getTerrainSymbol(terrainType);
     sendPromptToUser(light, terrain);

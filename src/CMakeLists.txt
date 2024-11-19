@@ -88,6 +88,8 @@ set(mmapper_SRCS
     global/ConfigConsts-Computed.h
     global/ConfigConsts.h
     global/ConfigEnums.h
+    global/Consts.cpp
+    global/Consts.h
     global/EnumIndexedArray.h
     global/Flags.h
     global/NamedColors.cpp

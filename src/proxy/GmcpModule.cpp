@@ -3,6 +3,7 @@
 
 #include "GmcpModule.h"
 
+#include "../global/Consts.h"
 #include "../global/TextUtils.h"
 
 #include <exception>
@@ -29,7 +30,7 @@ NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
 
 GmcpModule::GmcpModule(const std::string &moduleVersion)
 {
-    auto found = moduleVersion.find(' ');
+    auto found = moduleVersion.find(char_consts::C_SPACE);
     if (found == std::string::npos) {
         normalizedName = ::toLowerLatin1(moduleVersion);
     } else {
@@ -68,6 +69,6 @@ std::string GmcpModule::toStdString() const
     std::ostringstream oss;
     oss << normalizedName;
     if (hasVersion())
-        oss << ' ' << version.asUint32();
+        oss << char_consts::C_SPACE << version.asUint32();
     return oss.str();
 }

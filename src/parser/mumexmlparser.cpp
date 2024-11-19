@@ -5,6 +5,7 @@
 
 #include "mumexmlparser.h"
 
+#include "../global/Consts.h"
 #include "../global/parserutils.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
@@ -19,6 +20,8 @@
 
 #include <QByteArray>
 #include <QString>
+
+using namespace char_consts;
 
 class MapData;
 
@@ -139,7 +142,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
 
     for (const char c : line) {
         if (m_readingTag) {
-            if (c == '>') {
+            if (c == C_GREATER_THAN) {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
                     MAYBE_UNUSED const auto ignored = //
@@ -154,7 +157,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
             m_tempTag.append(c);
 
         } else {
-            if (c == '<') {
+            if (c == C_LESS_THAN) {
                 m_lineToUser.append(characters(m_tempCharacters));
                 m_tempCharacters.clear();
 
@@ -179,8 +182,8 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         }
         QString tempStr = temp;
         tempStr = normalizeStringCopy(tempStr.trimmed());
-        if (m_snoopChar.has_value() && tempStr.length() > 3 && tempStr.at(0) == '&'
-            && tempStr.at(1) == m_snoopChar.value() && tempStr.at(2) == ' ') {
+        if (m_snoopChar.has_value() && tempStr.length() > 3 && tempStr.at(0) == C_AMPERSAND
+            && tempStr.at(1) == m_snoopChar.value() && tempStr.at(2) == C_SPACE) {
             // Remove snoop prefix (i.e. "&J Exits: north.")
             tempStr = tempStr.mid(3);
         }
@@ -219,7 +222,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case XmlAttributeStateEnum::ATTRIBUTE:
                 if (std::isspace(c))
                     continue;
-                else if (c == '=') {
+                else if (c == C_EQUALS) {
                     key = os.str();
                     os.str(std::string());
                     state = XmlAttributeStateEnum::EQUALS;
@@ -229,9 +232,9 @@ bool MumeXmlParser::element(const QByteArray &line)
             case XmlAttributeStateEnum::EQUALS:
                 if (std::isspace(c))
                     continue;
-                else if (c == '\'')
+                else if (c == C_SQUOTE)
                     state = XmlAttributeStateEnum::SINGLE_QUOTED_VALUE;
-                else if (c == '"')
+                else if (c == C_DQUOTE)
                     state = XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE;
                 else {
                     os << c;
@@ -240,19 +243,19 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case XmlAttributeStateEnum::UNQUOTED_VALUE:
                 // Note: This format is not valid according to the W3C XML standard
-                if (std::isspace(c) || c == '/')
+                if (std::isspace(c) || c == C_SLASH)
                     makeAttribute();
                 else
                     os << c;
                 break;
             case XmlAttributeStateEnum::SINGLE_QUOTED_VALUE:
-                if (c == '\'')
+                if (c == C_SQUOTE)
                     makeAttribute();
                 else
                     os << c;
                 break;
             case XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE:
-                if (c == '"')
+                if (c == C_DQUOTE)
                     makeAttribute();
                 else
                     os << c;
@@ -268,7 +271,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::NONE:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/snoop")) {
                     m_descriptionReady = false;
                     m_lineFlags.remove(LineFlagEnum::SNOOP);
@@ -516,7 +519,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_descriptionReady = true;
                 }
                 break;
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
                     m_lineFlags.remove(LineFlagEnum::ROOM);
@@ -537,7 +540,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::DESCRIPTION:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/description")) {
                     m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::DESCRIPTION);
@@ -549,7 +552,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::EXITS:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/exits")) {
                     std::ostringstream os;
                     parseExits(os);
@@ -574,7 +577,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineFlags.insert(LineFlagEnum::CHARACTER);
                 }
                 break;
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/prompt")) {
                     m_xmlMode = XmlModeEnum::NONE;
                     m_lineFlags.remove(LineFlagEnum::PROMPT);
@@ -609,7 +612,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::TERRAIN:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/terrain")) {
                     m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::TERRAIN);
@@ -621,7 +624,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::HEADER:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/header")) {
                     m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::HEADER);
@@ -633,7 +636,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::CHARACTER:
         if (length > 0) {
             switch (line.at(0)) {
-            case '/':
+            case C_SLASH:
                 if (line.startsWith("/character")) {
                     if (m_lineFlags.isPrompt())
                         m_xmlMode = XmlModeEnum::PROMPT;
@@ -673,8 +676,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     const auto &config = getConfig();
     m_stringBuffer = QString::fromLatin1(ch);
 
-    if (m_lineFlags.isSnoop() && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
-        && m_stringBuffer.at(2) == ' ') {
+    if (m_lineFlags.isSnoop() && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == C_AMPERSAND
+        && m_stringBuffer.at(2) == C_SPACE) {
         // Remove snoop prefix (i.e. "&J Exits: north.")
         m_stringBuffer = m_stringBuffer.mid(3);
     }
@@ -815,11 +818,11 @@ std::string MumeXmlParser::snoopToUser(const std::string_view str)
     bool snoopPrefix = m_snoopChar.has_value();
     for (const char c : str) {
         if (snoopPrefix) {
-            os << '&' << m_snoopChar.value() << ' ';
+            os << C_AMPERSAND << m_snoopChar.value() << C_SPACE;
             snoopPrefix = false;
         }
         os << c;
-        if (c == '\n' && m_snoopChar.has_value())
+        if (c == C_NEWLINE && m_snoopChar.has_value())
             snoopPrefix = true;
     }
     return os.str();

@@ -67,7 +67,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
     auto view = StringView{line}.trim();
     if (view.isEmpty())
         return std::nullopt;
-    else if (view.takeFirstLetter() != '-')
+    else if (view.takeFirstLetter() != char_consts::C_MINUS_SIGN)
         return RoomFilter{line, Qt::CaseInsensitive, false, PatternKindsEnum::NAME};
 
     const auto first = view.takeFirstWord();

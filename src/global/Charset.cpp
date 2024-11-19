@@ -28,7 +28,7 @@ void latin1ToUtf8(std::ostream &os, const char c)
     char buf[3];
     buf[0] = char(0xc0u | (uc >> 6u));          // c2..c3
     buf[1] = char(0x80u | (uc & SIX_BIT_MASK)); // 80..bf
-    buf[2] = C_NUL;
+    buf[2] = char_consts::C_NUL;
     os.write(buf, 2);
 }
 

@@ -5,6 +5,7 @@
 #include "UserTelnet.h"
 
 #include "../global/Charset.h"
+#include "../global/Consts.h"
 #include "../global/TextUtils.h"
 
 #include <sstream>
@@ -19,6 +20,9 @@ static void normalizeForUser(std::ostream &os,
 {
     // REVISIT: perform ANSI normalization in this function, too?
     foreachLine(sv, [&os, encoding, &goAhead](std::string_view sv) {
+        using char_consts::C_CARRIAGE_RETURN;
+        using char_consts::C_NEWLINE;
+
         if (sv.empty())
             return;
 
@@ -117,7 +121,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
         return;
 
     const auto name = msg.getName().getStdString();
-    const std::size_t found = name.find_last_of('.');
+    const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
     try {
         const GmcpModule mod(name.substr(0, found));
         if (gmcp.modules.find(mod) != gmcp.modules.end())
@@ -190,7 +194,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
                 continue;
             if (comma)
                 oss << ", ";
-            oss << '"' << mod.toStdString() << '"';
+            oss << char_consts::C_DQUOTE << mod.toStdString() << char_consts::C_DQUOTE;
             comma = true;
         }
         oss << " ]";

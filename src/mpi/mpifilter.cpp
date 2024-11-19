@@ -12,6 +12,8 @@
 #include <QObject>
 #include <QString>
 
+using char_consts::C_NEWLINE;
+
 NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
 {
     switch (type) {
@@ -90,13 +92,13 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
         qWarning() << "Expected 'M' character in remote editing protocol";
         return;
     }
-    int sessionEnd = buffer.indexOf('\n', 1);
+    int sessionEnd = buffer.indexOf(C_NEWLINE, 1);
     if (sessionEnd == -1) {
         qWarning() << "Unable to detect remote editing session end";
         return;
     }
     const RemoteSession sessionId = RemoteSession(buffer.mid(1, sessionEnd - 1).toStdString());
-    int descriptionEnd = buffer.indexOf('\n', sessionEnd + 1);
+    int descriptionEnd = buffer.indexOf(C_NEWLINE, sessionEnd + 1);
     if (descriptionEnd == -1) {
         qWarning() << "Unable to detect remote editing description end";
         return;
@@ -114,7 +116,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
 
 void MpiFilter::parseViewMessage(const QByteArray &buffer)
 {
-    int descriptionEnd = buffer.indexOf('\n');
+    int descriptionEnd = buffer.indexOf(C_NEWLINE);
     if (descriptionEnd == -1) {
         qWarning() << "Unable to detect remote viewing description end";
         return;

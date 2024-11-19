@@ -143,34 +143,35 @@ void ParserPage::slot_removeEndDescPatternClicked()
 
 void ParserPage::slot_testPatternClicked()
 {
+    using namespace char_consts;
     QString pattern = newPattern->text();
     QString str = testString->text();
     bool matches = false;
 
-    if ((pattern)[0] != '#') {
+    if ((pattern)[0] != C_POUND_SIGN) {
     } else {
         switch (static_cast<int>((pattern[1]).toLatin1())) {
-        case 33: // !
+        case C_EXCLAMATION: // !
             if (QRegularExpression(pattern.remove(0, 2)).match(str).hasMatch()) {
                 matches = true;
             }
             break;
-        case 60: // <
+        case C_LESS_THAN: // <
             if (str.startsWith((pattern).remove(0, 2))) {
                 matches = true;
             }
             break;
-        case 61: // =
+        case C_EQUALS: // =
             if (str == ((pattern).remove(0, 2))) {
                 matches = true;
             }
             break;
-        case 62: // >
+        case C_GREATER_THAN: // >
             if (str.endsWith((pattern).remove(0, 2))) {
                 matches = true;
             }
             break;
-        case 63: // ?
+        case C_QUESTION_MARK: // ?
             if (str.contains((pattern).remove(0, 2))) {
                 matches = true;
             }
@@ -186,14 +187,16 @@ void ParserPage::slot_testPatternClicked()
 
 void ParserPage::slot_validPatternClicked()
 {
+    using namespace char_consts;
     QString pattern = newPattern->text();
     QString str = "Pattern '" + pattern + "' is valid!!!";
 
-    if (((pattern)[0] != '#')
-        || (((pattern)[1] != '!') && ((pattern)[1] != '?') && ((pattern)[1] != '<')
-            && ((pattern)[1] != '>') && ((pattern)[1] != '='))) {
+    if (((pattern)[0] != C_POUND_SIGN)
+        || (((pattern)[1] != C_EXCLAMATION) && ((pattern)[1] != C_QUESTION_MARK)
+            && ((pattern)[1] != C_LESS_THAN) && ((pattern)[1] != C_GREATER_THAN)
+            && ((pattern)[1] != C_EQUALS))) {
         str = "Pattern must begin with '#t', where t means type of pattern (!?<>=)";
-    } else if ((pattern)[1] == '!') {
+    } else if ((pattern)[1] == C_EXCLAMATION) {
         QRegularExpression rx(pattern.remove(0, 2));
         if (!rx.isValid()) {
             str = "Pattern '" + pattern + "' is not valid!!!";

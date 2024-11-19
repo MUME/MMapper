@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Consts.h"
 #include "../mpi/remoteeditsession.h"
 #include "../proxy/telnetfilter.h"
 
@@ -18,7 +19,7 @@ private:
     TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
     bool m_receivingMpi = false;
 
-    char m_command = '\0';
+    char m_command = char_consts::C_NUL;
     int m_remaining = 0;
     QByteArray m_buffer;
 

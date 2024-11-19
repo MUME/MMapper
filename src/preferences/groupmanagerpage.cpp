@@ -309,7 +309,7 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 void GroupManagerPage::slot_remoteHostTextChanged()
 {
     const auto currentText = ui->remoteHost->currentText().simplified().toLatin1();
-    const auto parts = currentText.split(':');
+    const auto parts = currentText.split(char_consts::C_COLON);
     if (parts.size() == 2) {
         const auto currentHost = parts[0];
         auto &savedHost = setConfig().groupManager.host;

@@ -19,8 +19,10 @@
 #include <QRegularExpression>
 #include <QString>
 
+using namespace char_consts;
+
 namespace {
-static constexpr const char C_ANSI_ESCAPE = C_ESC;
+static constexpr const char C_ANSI_ESCAPE = char_consts::C_ESC;
 }
 
 namespace mmqt {
@@ -166,8 +168,8 @@ int measureExpandedTabsOneLine(const QStringView line, const int startingColumn)
 {
     int col = startingColumn;
     for (const auto &c : line) {
-        assert(c != '\n');
-        if (c == '\t') {
+        assert(c != C_NEWLINE);
+        if (c == C_TAB) {
             col += 8 - (col % 8);
         } else {
             col += 1;
@@ -715,7 +717,7 @@ void TextBuffer::appendJustified(QStringView input_line, const int maxLen)
                 const int spaceCol = measureExpandedTabsOneLine(leadingSpace, col);
 
                 if (spaceCol + word.length() > maxLen) {
-                    append('\n');
+                    append(C_NEWLINE);
                     prefix.write(appender);
                     col = prefix.length();
                 } else {
@@ -744,11 +746,11 @@ void TextBuffer::appendExpandedTabs(const QStringView line, const int start_at)
 {
     int col = start_at;
     for (const QChar c : line) {
-        if (c == '\t') {
+        if (c == C_TAB) {
             const int spaces = 8 - (col % 8);
             col += spaces;
             for (int i = 0; i < spaces; ++i)
-                append(' ');
+                append(C_SPACE);
 
         } else {
             col += 1;
@@ -764,7 +766,7 @@ bool TextBuffer::isEmpty() const
 
 bool TextBuffer::hasTrailingNewline() const
 {
-    return !isEmpty() && text_.at(text_.length() - 1) == '\n';
+    return !isEmpty() && text_.at(text_.length() - 1) == C_NEWLINE;
 }
 
 TextBuffer normalizeAnsi(const QStringView old)
@@ -805,7 +807,7 @@ TextBuffer normalizeAnsi(const QStringView old)
 
         int pos = 0;
         foreachAnsi(line, [&next, &line, &pos, &print](const auto begin, const QStringView ansiStr) {
-            assert(line.at(begin) == '\x1b');
+            assert(line.at(begin) == C_ANSI_ESCAPE);
             if (begin > pos) {
                 print(line.mid(pos, begin - pos));
             }
@@ -823,7 +825,7 @@ TextBuffer normalizeAnsi(const QStringView old)
         }
 
         if (hasNewline)
-            output.append('\n');
+            output.append(C_NEWLINE);
         ansi = next;
     });
 
@@ -1030,44 +1032,44 @@ std::ostream &print_char(std::ostream &os, char c, bool doubleQuote)
     case C_ESC:
         os << "\\e"; // Not valid C++, but borrowed from /bin/echo.
         break;
-    case '\a':
+    case C_ALERT:
         os << "\\a";
         break;
-    case '\b':
+    case C_BACKSPACE:
         os << "\\b";
         break;
-    case '\f':
+    case C_FORM_FEED:
         os << "\\f";
         break;
-    case '\n':
+    case C_NEWLINE:
         os << "\\n";
         break;
-    case '\r':
+    case C_CARRIAGE_RETURN:
         os << "\\r";
         break;
-    case '\t':
+    case C_TAB:
         os << "\\t";
         break;
-    case '\v':
+    case C_VERTICAL_TAB:
         os << "\\v";
         break;
-    case '\\':
+    case C_BACKSLASH:
         os << "\\\\";
         break;
-    case '\0':
+    case C_NUL:
         // NOTE: If we were generating C++, this could emit incorrect results (e.g. '0' followed by '0'),
         // but this format only allows octal values with '\o###'.
         os << "\\0";
         break;
     default:
         if (isPrintLatin1(c)) {
-            if (c == (doubleQuote ? '"' : '\''))
-                os << '\\';
+            if (c == (doubleQuote ? C_DQUOTE : C_SQUOTE))
+                os << C_BACKSLASH;
             os << c;
         } else {
             // NOTE: This form can generate invalid C++.
             os << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (c & 0xff) << std::dec
-               << std::setfill(' ');
+               << std::setfill(C_SPACE);
         }
         break;
     }
@@ -1076,7 +1078,6 @@ std::ostream &print_char(std::ostream &os, char c, bool doubleQuote)
 
 std::ostream &print_char_quoted(std::ostream &os, const char c)
 {
-    static constexpr const char C_SQUOTE = '\'';
     os << C_SQUOTE;
     print_char(os, c, false);
     return os << C_SQUOTE;
@@ -1084,7 +1085,6 @@ std::ostream &print_char_quoted(std::ostream &os, const char c)
 
 std::ostream &print_string_quoted(std::ostream &os, const std::string_view sv)
 {
-    static constexpr const char C_DQUOTE = '"';
     os << C_DQUOTE;
     for (const auto &c : sv) {
         print_char(os, c, true);

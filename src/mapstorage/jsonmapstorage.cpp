@@ -65,7 +65,7 @@ public:
         ParserUtils::toAsciiInPlace(desc);
 
         // REVISIT: should this be latin1 or utf8?
-        m_hash.addData(name.toLatin1() + "\n" + desc.toLatin1());
+        m_hash.addData(name.toLatin1() + char_consts::C_NEWLINE + desc.toLatin1());
     }
 
     NODISCARD QByteArray result() const { return m_hash.result(); }

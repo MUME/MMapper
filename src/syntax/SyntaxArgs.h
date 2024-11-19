@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/Consts.h"
 #include "IArgument.h"
 #include "TokenMatcher.h"
 
@@ -114,7 +115,7 @@ private:
 class NODISCARD ArgOptionalChar final : public IArgument
 {
 private:
-    char m_c = '\0';
+    char m_c = char_consts::C_NUL;
 
 public:
     explicit ArgOptionalChar(char c)

@@ -5,6 +5,7 @@
 #include "Filenames.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Consts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
@@ -48,7 +49,7 @@ NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
             if ((e & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
                 *ptr++ = 'w';
             }
-            *ptr = '\0';
+            *ptr = char_consts::C_NUL;
         }
         return arr;
     }();

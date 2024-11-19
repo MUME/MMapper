@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "Consts.h"
 #include "macros.h"
 
 #include <cstddef>
@@ -21,7 +22,7 @@ public:
     {
         auto &buf = this->buffer;
         std::memcpy(buf, data, N);
-        buf[N] = '\0';
+        buf[N] = char_consts::C_NUL;
     }
 
 public:

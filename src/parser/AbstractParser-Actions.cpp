@@ -3,6 +3,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../clock/mumeclock.h"
+#include "../global/Consts.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "Action.h"
 #include "abstractparser.h"
@@ -30,7 +31,9 @@ void AbstractParser::initActionMap()
     auto addRegex = [&map](const std::string &match, const ActionCallback &callback) {
         assert(!match.empty());
         const char hint = [&match]() -> char {
-            if (match.length() > 2 && match[0] == '^' && match[1] != '\\' && match[1] != '(')
+            using namespace char_consts;
+            if (match.length() > 2 && match[0] == C_CARET && match[1] != C_BACKSLASH
+                && match[1] != C_OPEN_PARENS)
                 return match[1];
             return 0;
         }();

@@ -5,6 +5,7 @@
 #include "remoteeditprocess.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Consts.h"
 #include "../global/TextUtils.h"
 #include "../global/io.h"
 #include "../global/random.h"
@@ -153,19 +154,20 @@ enum class NODISCARD StateEnum { Idle, Arg, QuotedArg };
 
 QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
 {
+    using char_consts::C_DQUOTE;
     // https://stackoverflow.com/questions/25068750/extract-parameters-from-string-included-quoted-regions-in-qt
     QStringList list;
     QString arg;
     bool escape = false;
     StateEnum state = StateEnum::Idle;
     for (const QChar c : cmdLine) {
-        if (!escape && c == '\\') {
+        if (!escape && c == char_consts::C_BACKSLASH) {
             escape = true;
             continue;
         }
         switch (state) {
         case StateEnum::Idle:
-            if (!escape && c == '"') {
+            if (!escape && c == C_DQUOTE) {
                 state = StateEnum::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
@@ -173,7 +175,7 @@ QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
             }
             break;
         case StateEnum::Arg:
-            if (!escape && c == '"') {
+            if (!escape && c == C_DQUOTE) {
                 state = StateEnum::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
@@ -184,7 +186,7 @@ QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
             }
             break;
         case StateEnum::QuotedArg:
-            if (!escape && c == '"') {
+            if (!escape && c == C_DQUOTE) {
                 state = arg.isEmpty() ? StateEnum::Idle : StateEnum::Arg;
             } else {
                 arg += c;

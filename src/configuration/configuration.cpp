@@ -656,7 +656,9 @@ void Configuration::ParserSettings::read(const QSettings &conf)
                                  QString(ANSI_GREEN));
     roomDescColor = sanitizeAnsi(conf.value(KEY_ROOM_DESC_ANSI_COLOR, ANSI_RESET).toString(),
                                  QString(ANSI_RESET));
-    prefixChar = conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1('_')).toChar().toLatin1();
+    prefixChar = conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(char_consts::C_UNDERSCORE))
+                     .toChar()
+                     .toLatin1();
     removeXmlTags = conf.value(KEY_REMOVE_XML_TAGS, true).toBool();
     noDescriptionPatternsList = conf.value(KEY_NO_ROOM_DESCRIPTION_PATTERNS).toStringList();
 
@@ -958,7 +960,7 @@ void Configuration::ColorSettings::resetToDefaults()
 {
     assert(Colors::black.getRGB() == 0 && Colors::black.getRGBA() != 0);
     static const auto fromHashHex = [](std::string_view sv) {
-        assert(sv.length() == 7 && sv[0] == '#');
+        assert(sv.length() == 7 && sv[0] == char_consts::C_POUND_SIGN);
         return Color::fromHex(sv.substr(1));
     };
 
