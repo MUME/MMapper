@@ -72,15 +72,15 @@ class QWidget;
 class NODISCARD RaiiGroupUndoActions final
 {
 private:
-    QTextCursor cursor_;
+    QTextCursor m_cursor;
 
 public:
-    explicit RaiiGroupUndoActions(QTextCursor _cursor)
-        : cursor_{std::move(_cursor)}
+    explicit RaiiGroupUndoActions(const QTextCursor &cursor)
+        : m_cursor{cursor}
     {
-        cursor_.beginEditBlock();
+        m_cursor.beginEditBlock();
     }
-    ~RaiiGroupUndoActions() { cursor_.endEditBlock(); }
+    ~RaiiGroupUndoActions() { m_cursor.endEditBlock(); }
 };
 
 class NODISCARD LineHighlighter final : public QSyntaxHighlighter

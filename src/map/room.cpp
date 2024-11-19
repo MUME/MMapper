@@ -56,9 +56,9 @@ void RoomModificationTracker::notifyModified(Room &room, RoomUpdateFlags updateF
     virt_onNotifyModified(room, updateFlags);
 }
 
-ExitDirConstRef::ExitDirConstRef(const ExitDirEnum dir, const Exit &exit)
-    : dir{dir}
-    , exit{exit}
+ExitDirConstRef::ExitDirConstRef(const ExitDirEnum dir_, const Exit &exit_)
+    : dir{dir_}
+    , exit{exit_}
 {}
 
 Room::Room(this_is_private, RoomModificationTracker &tracker, const RoomStatusEnum status)

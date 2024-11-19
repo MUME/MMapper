@@ -6,7 +6,7 @@
 #include "drawstream.h"
 
 DrawStream::DrawStream(LayerToRooms &layerToRooms)
-    : layerToRooms(layerToRooms)
+    : m_layerToRooms(layerToRooms)
 {}
 
 DrawStream::~DrawStream() = default;
@@ -17,6 +17,6 @@ void DrawStream::visit(const Room *room)
         return;
 
     const auto z = room->getPosition().z;
-    auto &layer = layerToRooms[z];
+    auto &layer = m_layerToRooms[z];
     layer.emplace_back(room);
 }

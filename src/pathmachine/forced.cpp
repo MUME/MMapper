@@ -12,13 +12,13 @@
 
 void Forced::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
 {
-    if (matchedRoom == nullptr) {
-        matchedRoom = perhaps;
-        owner = sender;
-        if (update) {
+    if (m_matchedRoom == nullptr) {
+        m_matchedRoom = perhaps;
+        m_owner = sender;
+        if (m_update) {
             // Force update room with last event
-            owner->scheduleAction(
-                std::make_shared<SingleRoomAction>(std::make_unique<Update>(myEvent),
+            m_owner->scheduleAction(
+                std::make_shared<SingleRoomAction>(std::make_unique<Update>(m_myEvent),
                                                    perhaps->getId()));
         }
     } else {
@@ -28,12 +28,12 @@ void Forced::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps
 
 Forced::~Forced()
 {
-    if (owner != nullptr) {
-        owner->releaseRoom(*this, matchedRoom->getId());
+    if (m_owner != nullptr) {
+        m_owner->releaseRoom(*this, m_matchedRoom->getId());
     }
 }
 
 Forced::Forced(const SigParseEvent &sigParseEvent, bool update)
-    : myEvent{sigParseEvent.requireValid()}
-    , update{update}
+    : m_myEvent{sigParseEvent.requireValid()}
+    , m_update{update}
 {}

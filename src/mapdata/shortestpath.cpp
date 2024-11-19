@@ -117,7 +117,7 @@ void MapData::shortestPathSearch(const Room *origin,
     QVector<SPNode> sp_nodes;
     QSet<RoomId> visited;
     std::priority_queue<std::pair<double, int>> future_paths;
-    sp_nodes.push_back(SPNode(origin, -1, 0, ExitDirEnum::UNKNOWN));
+    sp_nodes.push_back(SPNode{origin, -1, 0, ExitDirEnum::UNKNOWN});
     future_paths.emplace(0, 0);
     while (!future_paths.empty()) {
         int spindex = utils::pop_top(future_paths).second;
@@ -159,7 +159,7 @@ void MapData::shortestPathSearch(const Room *origin,
                 continue;
             }
             const double length = getLength(e, thisr, nextr.get());
-            sp_nodes.push_back(SPNode(nextr.get(), spindex, thisdist + length, dir));
+            sp_nodes.push_back(SPNode{nextr.get(), spindex, thisdist + length, dir});
             future_paths.emplace(-(thisdist + length), sp_nodes.size() - 1);
         }
     }

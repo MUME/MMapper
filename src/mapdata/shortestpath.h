@@ -16,22 +16,12 @@
 class Room;
 class RoomAdmin;
 
-class NODISCARD SPNode final
+struct NODISCARD SPNode final
 {
-public:
     const Room *r = nullptr;
     int parent = 0;
     double dist = 0.0;
     ExitDirEnum lastdir = ExitDirEnum::NONE;
-
-public:
-    SPNode() = default;
-    explicit SPNode(const Room *r, const int parent, double dist, ExitDirEnum lastdir)
-        : r(r)
-        , parent(parent)
-        , dist(dist)
-        , lastdir(lastdir)
-    {}
 };
 
 class NODISCARD ShortestPathRecipient

@@ -14,10 +14,10 @@ class RoomAdmin;
 class NODISCARD Forced final : public RoomRecipient
 {
 private:
-    RoomAdmin *owner = nullptr;
-    const Room *matchedRoom = nullptr;
-    SigParseEvent myEvent;
-    bool update = false;
+    RoomAdmin *m_owner = nullptr;
+    const Room *m_matchedRoom = nullptr;
+    SigParseEvent m_myEvent;
+    bool m_update = false;
 
 public:
     explicit Forced(const SigParseEvent &sigParseEvent, bool update = false);
@@ -31,5 +31,5 @@ private:
     void virt_receiveRoom(RoomAdmin *, const Room *) final;
 
 public:
-    NODISCARD const Room *oneMatch() const { return matchedRoom; }
+    NODISCARD const Room *oneMatch() const { return m_matchedRoom; }
 };

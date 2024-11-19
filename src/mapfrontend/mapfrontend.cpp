@@ -166,12 +166,12 @@ RoomId MapFrontend::assignId(const SharedRoom &room, const SharedRoomCollection 
             /* avoid adding operator++ to RoomId, to help avoid mistakes */
             return greatestUsedId = RoomId{greatestUsedId.asUint32() + 1u};
         } else {
-            auto id = unusedIds.top();
+            const auto next_id = unusedIds.top();
             unusedIds.pop();
-            if (id > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
-                greatestUsedId = id;
+            if (next_id > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
+                greatestUsedId = next_id;
             }
-            return id;
+            return next_id;
         }
     }();
 

@@ -11,11 +11,11 @@ class Room;
 
 class NODISCARD DrawStream final : public AbstractRoomVisitor
 {
+private:
+    LayerToRooms &m_layerToRooms;
+
 public:
     explicit DrawStream(LayerToRooms &layerToRooms);
     ~DrawStream() override;
     void visit(const Room *room) override;
-
-private:
-    LayerToRooms &layerToRooms;
 };

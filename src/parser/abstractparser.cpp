@@ -445,10 +445,10 @@ void AbstractParser::parseExits(std::ostream &os)
     RoomSelection rs(m_mapData);
     if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
-        const auto right_trim = [](const QString &str) -> QString {
-            for (int n = str.size() - 1; n >= 0; --n) {
-                if (!str.at(n).isSpace()) {
-                    return str.left(n + 1);
+        const auto right_trim = [](const QString &str_to_trim) -> QString {
+            for (int n = str_to_trim.size() - 1; n >= 0; --n) {
+                if (!str_to_trim.at(n).isSpace()) {
+                    return str_to_trim.left(n + 1);
                 }
             }
             return "";
@@ -739,11 +739,12 @@ NODISCARD static QString compressDirections(QString original)
 
 class NODISCARD ShortestPathEmitter final : public ShortestPathRecipient
 {
-    AbstractParser &parser;
+private:
+    AbstractParser &m_parser;
 
 public:
     explicit ShortestPathEmitter(AbstractParser &parser)
-        : parser(parser)
+        : m_parser{parser}
     {}
     ~ShortestPathEmitter() override;
 
@@ -752,6 +753,7 @@ private:
                                   QVector<SPNode> spnodes,
                                   const int endpoint) final
     {
+        auto &parser = m_parser;
         const SPNode *spnode = &spnodes[endpoint];
         auto name = spnode->r->getName();
         parser.sendToUser("Distance " + std::to_string(spnode->dist) + ": "
@@ -1174,7 +1176,7 @@ void AbstractParser::slot_doOfflineCharacterMove()
         return e;
     };
 
-    const auto showMovement = [this, flee, scout](const CommandEnum direction,
+    const auto showMovement = [this, flee, scout](const CommandEnum dir,
                                                   const Room *const otherRoom) {
         const auto showOtherRoom = [this, otherRoom]() {
             sendRoomInfoToUser(otherRoom);
@@ -1182,9 +1184,8 @@ void AbstractParser::slot_doOfflineCharacterMove()
         };
 
         if (scout) {
-            sendToUser(QByteArray("You quietly scout ")
-                           .append(getLowercase(direction))
-                           .append("wards...\n"));
+            sendToUser(
+                QByteArray("You quietly scout ").append(getLowercase(dir)).append("wards...\n"));
             showOtherRoom();
             sendToUser("\n"
                        "You stop scouting.\n");
@@ -1194,14 +1195,14 @@ void AbstractParser::slot_doOfflineCharacterMove()
 
         if (flee) {
             // REVISIT: Does MUME actually show you the direction when you flee?
-            sendToUser(QByteArray("You flee ").append(getLowercase(direction)).append("."));
+            sendToUser(QByteArray("You flee ").append(getLowercase(dir)).append("."));
         }
 
         showOtherRoom();
         sendPromptToUser(*otherRoom);
 
         // Create character move event for main move/search algorithm
-        auto ev = ParseEvent::createEvent(direction,
+        auto ev = ParseEvent::createEvent(dir,
                                           otherRoom->getName(),
                                           otherRoom->getDescription(),
                                           otherRoom->getContents(),

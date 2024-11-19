@@ -129,9 +129,9 @@ struct NODISCARD Bounds final
     Coordinate max;
 
     Bounds() = default;
-    Bounds(const Coordinate &min, const Coordinate &max)
-        : min{min}
-        , max{max}
+    Bounds(const Coordinate &a, const Coordinate &b)
+        : min{a}
+        , max{b}
     {}
 
 private:

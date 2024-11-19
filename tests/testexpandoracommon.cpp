@@ -423,8 +423,8 @@ void TestExpandoraCommon::roomCompareTest()
     const int matchingTolerance = 8;
     auto result = Room::compare(room.get(), *event, matchingTolerance);
 
-    const auto to_str = [](const auto comparison) {
-        switch (comparison) {
+    const auto to_str = [](const auto cmp) {
+        switch (cmp) {
         case ComparisonResultEnum::EQUAL:
             return "EQUAL";
         case ComparisonResultEnum::DIFFERENT:

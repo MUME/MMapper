@@ -108,7 +108,6 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
 
 bool RoomFilter::filter(const Room *const pr) const
 {
-    auto &r = deref(pr);
     const auto filter_kind = [this](const Room &r, const PatternKindsEnum pat) -> bool {
         switch (pat) {
         case PatternKindsEnum::ALL:
@@ -158,6 +157,7 @@ bool RoomFilter::filter(const Room *const pr) const
         throw std::invalid_argument("pat");
     };
 
+    auto &r = deref(pr);
     if (m_kind != PatternKindsEnum::ALL) {
         return filter_kind(r, m_kind);
     }

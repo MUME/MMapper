@@ -761,8 +761,9 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
-    const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
-                                   : Colors::red;
+    const auto &connectionNormalColor = isNormal()
+                                            ? getConfig().canvas.connectionNormalColor.getColor()
+                                            : Colors::red;
 
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     auto &verts = deref(m_currentBuffer).lineVerts;
@@ -778,7 +779,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
         const auto end = transform(points[i]);
 
         if (!isLongLine(start, end)) {
-            drawLine(color, start, end);
+            drawLine(connectionNormalColor, start, end);
             continue;
         }
 
@@ -786,10 +787,10 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
         const auto faintCutoff = LONG_LINE_HALFLEN / len;
         const auto mid1 = glm::mix(start, end, faintCutoff);
         const auto mid2 = glm::mix(start, end, 1.f - faintCutoff);
-        const auto faint = color.withAlpha(FAINT_CONNECTION_ALPHA);
+        const auto faint = connectionNormalColor.withAlpha(FAINT_CONNECTION_ALPHA);
 
-        drawLine(color, start, mid1);
+        drawLine(connectionNormalColor, start, mid1);
         drawLine(faint, mid1, mid2);
-        drawLine(color, mid2, end);
+        drawLine(connectionNormalColor, mid2, end);
     }
 }

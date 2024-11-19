@@ -69,7 +69,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         // Instead, this should serialize the room coordinates + name/desc/exits.
 
         // NOTE: We don't have access to the map here, so we can't verify the room #.
-        const auto newRoomId = [i]() {
+        const auto id = [i]() {
             auto newRoomId = RoomId{i};
             if (newRoomId == INVALID_ROOMID) {
                 qWarning() << "Invalid room changed to default room.";
@@ -78,9 +78,9 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
             return newRoomId;
         }();
 
-        if (newRoomId != roomId) {
+        if (id != roomId) {
             updated = true;
-            roomId = newRoomId;
+            roomId = id;
         }
     }
 

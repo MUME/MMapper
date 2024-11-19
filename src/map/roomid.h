@@ -15,25 +15,25 @@
 struct NODISCARD RoomId final
 {
 private:
-    uint32_t value = 0;
+    uint32_t m_value = 0;
 
 public:
     RoomId() = default;
     constexpr explicit RoomId(uint32_t value) noexcept
-        : value{value}
+        : m_value{value}
     {}
-    inline constexpr explicit operator uint32_t() const { return value; }
-    inline constexpr uint32_t asUint32() const { return value; }
-    inline constexpr bool operator<(RoomId rhs) const { return value < rhs.value; }
-    inline constexpr bool operator>(RoomId rhs) const { return value > rhs.value; }
-    inline constexpr bool operator<=(RoomId rhs) const { return value <= rhs.value; }
-    inline constexpr bool operator>=(RoomId rhs) const { return value >= rhs.value; }
-    inline constexpr bool operator==(RoomId rhs) const { return value == rhs.value; }
-    inline constexpr bool operator!=(RoomId rhs) const { return value != rhs.value; }
+    NODISCARD inline constexpr explicit operator uint32_t() const { return m_value; }
+    NODISCARD inline constexpr uint32_t asUint32() const { return m_value; }
+    NODISCARD inline constexpr bool operator<(RoomId rhs) const { return m_value < rhs.m_value; }
+    NODISCARD inline constexpr bool operator>(RoomId rhs) const { return m_value > rhs.m_value; }
+    NODISCARD inline constexpr bool operator<=(RoomId rhs) const { return m_value <= rhs.m_value; }
+    NODISCARD inline constexpr bool operator>=(RoomId rhs) const { return m_value >= rhs.m_value; }
+    NODISCARD inline constexpr bool operator==(RoomId rhs) const { return m_value == rhs.m_value; }
+    NODISCARD inline constexpr bool operator!=(RoomId rhs) const { return m_value != rhs.m_value; }
 
 public:
     // TODO: Is this still needed?
-    friend inline uint32_t qHash(RoomId id) { return id.asUint32(); }
+    NODISCARD friend inline uint32_t qHash(RoomId id) { return id.asUint32(); }
 };
 static constexpr const RoomId INVALID_ROOMID{UINT_MAX};
 static constexpr const RoomId DEFAULT_ROOMID{0};

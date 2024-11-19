@@ -19,9 +19,9 @@ struct NODISCARD CoordinateMinMax final
     Coordinate min;
     Coordinate max;
 
-    explicit CoordinateMinMax(const Coordinate &min, const Coordinate &max)
-        : min{min}
-        , max{max}
+    explicit CoordinateMinMax(const Coordinate &min_, const Coordinate &max_)
+        : min{min_}
+        , max{max_}
     {
         assert(isValid());
     }

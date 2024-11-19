@@ -360,12 +360,12 @@ void ModifyRoomUpToDate::exec(const RoomId id)
     }
 }
 
-ModifyExitFlags::ModifyExitFlags(const ExitFieldVariant in_flags,
-                                 const ExitDirEnum in_dir,
-                                 const FlagModifyModeEnum in_mode)
-    : var{in_flags}
-    , mode(in_mode)
-    , dir(in_dir)
+ModifyExitFlags::ModifyExitFlags(const ExitFieldVariant flags,
+                                 const ExitDirEnum dir,
+                                 const FlagModifyModeEnum mode)
+    : m_var{flags}
+    , m_mode{mode}
+    , m_dir{dir}
 {}
 
 void ModifyExitFlags::exec(const RoomId id)
@@ -374,13 +374,13 @@ void ModifyExitFlags::exec(const RoomId id)
 #define X_CASE(UPPER_CASE, CamelCase) \
     { \
     case ExitFieldEnum::UPPER_CASE: \
-        return room->set##CamelCase(dir, \
-                                    modifyField(room->get##CamelCase(dir), \
-                                                var.get##CamelCase(), \
-                                                mode)); \
+        return room->set##CamelCase(m_dir, \
+                                    modifyField(room->get##CamelCase(m_dir), \
+                                                m_var.get##CamelCase(), \
+                                                m_mode)); \
     }
     if (Room *const room = roomIndex(id)) {
-        switch (var.getType()) {
+        switch (m_var.getType()) {
             X_FOREACH_EXIT_FIELD(X_CASE, NOP)
 #undef X_CASE
 #undef NOP

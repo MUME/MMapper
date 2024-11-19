@@ -534,13 +534,13 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
         }
     }
 
-    const auto read_coord = [](auto &helper, const auto &basePos) -> Coordinate {
+    const auto read_coord = [&helper](const auto &basePos) -> Coordinate {
         return helper.readCoord3d()
                + Coordinate{basePos.x * INFOMARK_SCALE, basePos.y * INFOMARK_SCALE, basePos.z};
     };
 
-    mark.setPosition1(read_coord(helper, basePosition));
-    mark.setPosition2(read_coord(helper, basePosition));
+    mark.setPosition1(read_coord(basePosition));
+    mark.setPosition2(read_coord(basePosition));
 
     transformInfomarkOnLoad(version, mark);
 

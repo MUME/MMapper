@@ -155,22 +155,22 @@ protected:
 // Despite its name, this is also used to modify an exit's DoorFlags and door names
 class NODISCARD ModifyExitFlags final : public AbstractAction
 {
+protected:
+    const ExitFieldVariant m_var;
+    const FlagModifyModeEnum m_mode = FlagModifyModeEnum::SET;
+    const ExitDirEnum m_dir = ExitDirEnum::UNKNOWN;
+
 public:
     explicit ModifyExitFlags(ExitFieldVariant, ExitDirEnum, FlagModifyModeEnum);
 
 #define NOP()
 #define X_DECLARE_CONSTRUCTORS(UPPER_CASE, Type) \
-    explicit ModifyExitFlags(Type type, ExitDirEnum dir, FlagModifyModeEnum in_mode) \
-        : ModifyExitFlags{ExitFieldVariant{type}, dir, in_mode} \
+    explicit ModifyExitFlags(Type type, const ExitDirEnum dir, const FlagModifyModeEnum mode) \
+        : ModifyExitFlags{ExitFieldVariant{std::move(type)}, dir, mode} \
     {}
     X_FOREACH_EXIT_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
 #undef X_DECLARE_CONSTRUCTORS
 #undef NOP
 
     void exec(RoomId id) override;
-
-protected:
-    const ExitFieldVariant var;
-    const FlagModifyModeEnum mode;
-    const ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };

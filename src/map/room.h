@@ -42,7 +42,7 @@ struct NODISCARD ExitDirConstRef final
 {
     const ExitDirEnum dir;
     const Exit &exit;
-    explicit ExitDirConstRef(ExitDirEnum dir, const Exit &exit);
+    explicit ExitDirConstRef(ExitDirEnum dir_, const Exit &exit_);
 };
 
 using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
