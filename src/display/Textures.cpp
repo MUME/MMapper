@@ -4,6 +4,7 @@
 #include "Textures.h"
 
 #include "../configuration/configuration.h"
+#include "../global/thread_utils.h"
 #include "../global/utils.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
@@ -24,6 +25,7 @@
 
 MMTextureId allocateTextureId()
 {
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     static MMTextureId next{0};
     return next++;
 }
