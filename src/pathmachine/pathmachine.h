@@ -40,6 +40,20 @@ enum class NODISCARD PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 
 class PathMachine : public QObject
 {
     Q_OBJECT
+
+protected:
+    PathParameters params;
+    MapData &m_mapData;
+    RoomSignalHandler signaler;
+    /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
+    SigParseEvent lastEvent;
+    PathStateEnum state = PathStateEnum::SYNCING;
+    std::shared_ptr<PathList> paths;
+
+private:
+    std::optional<Coordinate> m_pathRootPos;
+    std::optional<Coordinate> m_mostLikelyRoomPos;
+
 public slots:
     void slot_releaseAllPaths();
     void slot_setCurrentRoom(RoomId id, bool update);
@@ -64,9 +78,6 @@ private:
     void scheduleAction(const std::shared_ptr<MapAction> &action);
 
 protected:
-    PathParameters params;
-    MapData &m_mapData;
-
     void experimenting(const SigParseEvent &sigParseEvent);
     void syncing(const SigParseEvent &sigParseEvent);
     void approved(const SigParseEvent &sigParseEvent);
@@ -74,16 +85,6 @@ protected:
     void tryExits(const Room *, RoomRecipient &, const ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
     void tryCoordinate(const Room *, RoomRecipient &, const ParseEvent &);
-
-    RoomSignalHandler signaler;
-    /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
-    SigParseEvent lastEvent;
-    PathStateEnum state = PathStateEnum::SYNCING;
-    std::shared_ptr<PathList> paths;
-
-private:
-    std::optional<Coordinate> m_pathRootPos;
-    std::optional<Coordinate> m_mostLikelyRoomPos;
 
 private:
     void clearMostLikelyRoom() { m_mostLikelyRoomPos.reset(); }

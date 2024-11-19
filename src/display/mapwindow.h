@@ -32,6 +32,29 @@ class MapWindow final : public QWidget
 {
     Q_OBJECT
 
+protected:
+    std::unique_ptr<QTimer> scrollTimer;
+    int m_verticalScrollStep = 0;
+    int m_horizontalScrollStep = 0;
+
+    std::unique_ptr<QGridLayout> m_gridLayout;
+    std::unique_ptr<QScrollBar> m_horizontalScrollBar;
+    std::unique_ptr<QScrollBar> m_verticalScrollBar;
+    std::unique_ptr<MapCanvas> m_canvas;
+
+private:
+    struct NODISCARD KnownMapSize final
+    {
+        glm::ivec3 min{0};
+        glm::ivec3 max{0};
+
+        NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
+
+        NODISCARD glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
+        NODISCARD glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
+
+    } m_knownMapSize;
+
 public:
     explicit MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *parent);
     ~MapWindow() final;
@@ -59,29 +82,6 @@ public:
     void updateScrollBars();
     void setZoom(float zoom);
     NODISCARD float getZoom() const;
-
-protected:
-    std::unique_ptr<QTimer> scrollTimer;
-    int m_verticalScrollStep = 0;
-    int m_horizontalScrollStep = 0;
-
-    std::unique_ptr<QGridLayout> m_gridLayout;
-    std::unique_ptr<QScrollBar> m_horizontalScrollBar;
-    std::unique_ptr<QScrollBar> m_verticalScrollBar;
-    std::unique_ptr<MapCanvas> m_canvas;
-
-private:
-    struct NODISCARD KnownMapSize final
-    {
-        glm::ivec3 min{0};
-        glm::ivec3 max{0};
-
-        NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
-
-        NODISCARD glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
-        NODISCARD glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
-
-    } m_knownMapSize;
 
 private:
     void centerOnScrollPos(const glm::ivec2 &scrollPos);

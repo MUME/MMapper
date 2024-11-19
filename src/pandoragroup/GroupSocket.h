@@ -24,6 +24,28 @@ using ProtocolVersion = uint32_t;
 class GroupSocket final : public QObject
 {
     Q_OBJECT
+
+private:
+    QSslSocket socket;
+    QTimer timer;
+
+    ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
+    ProtocolVersion protocolVersion = 102;
+
+    enum class NODISCARD GroupMessageStateEnum {
+        /// integer string representing the message length
+        LENGTH,
+        /// message payload
+        PAYLOAD
+    } state
+        = GroupMessageStateEnum::LENGTH;
+
+    io::buffer<(1 << 15)> ioBuffer;
+    QByteArray buffer;
+    QByteArray secret;
+    QByteArray name;
+    unsigned int currentMessageLen = 0;
+
 public:
     explicit GroupSocket(GroupAuthority *authority, QObject *parent);
     ~GroupSocket() final;
@@ -69,26 +91,5 @@ signals:
 private:
     void reset();
     void sendLog(const QString &msg) { emit sig_sendLog(msg); }
-
-private:
-    QSslSocket socket;
-    QTimer timer;
     void onReadInternal(char c);
-
-    ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
-    ProtocolVersion protocolVersion = 102;
-
-    enum class NODISCARD GroupMessageStateEnum {
-        /// integer string representing the message length
-        LENGTH,
-        /// message payload
-        PAYLOAD
-    } state
-        = GroupMessageStateEnum::LENGTH;
-
-    io::buffer<(1 << 15)> ioBuffer;
-    QByteArray buffer;
-    QByteArray secret;
-    QByteArray name;
-    unsigned int currentMessageLen = 0;
 };

@@ -30,12 +30,12 @@ class RoomManager;
 
 class ConnectionListenerTcpServer final : public QTcpServer
 {
+private:
+    Q_OBJECT
+
 public:
     explicit ConnectionListenerTcpServer(ConnectionListener *parent);
     ~ConnectionListenerTcpServer() final;
-
-private:
-    Q_OBJECT
 
 protected:
     void incomingConnection(qintptr socketDescriptor) override;
@@ -46,33 +46,6 @@ signals:
 
 class ConnectionListener final : public QObject
 {
-public:
-    explicit ConnectionListener(MapData &,
-                                Mmapper2PathMachine &,
-                                PrespammedPath &,
-                                Mmapper2Group &,
-                                MumeClock &,
-                                MapCanvas &,
-                                GameObserver &,
-                                QObject *parent);
-    ~ConnectionListener() final;
-
-private:
-    Q_OBJECT
-
-public:
-    void listen();
-
-private:
-    void log(const QString &msg) { emit sig_log("Listener", msg); }
-
-signals:
-    void sig_log(const QString &, const QString &);
-    void sig_clientSuccessfullyConnected();
-
-protected slots:
-    void slot_onIncomingConnection(qintptr socketDescriptor);
-
 private:
     MapData &m_mapData;
     Mmapper2PathMachine &m_pathMachine;
@@ -86,4 +59,31 @@ private:
     std::unique_ptr<Proxy> m_proxy;
 
     bool m_accept = true;
+
+private:
+    Q_OBJECT
+
+public:
+    explicit ConnectionListener(MapData &,
+                                Mmapper2PathMachine &,
+                                PrespammedPath &,
+                                Mmapper2Group &,
+                                MumeClock &,
+                                MapCanvas &,
+                                GameObserver &,
+                                QObject *parent);
+    ~ConnectionListener() final;
+
+public:
+    void listen();
+
+private:
+    void log(const QString &msg) { emit sig_log("Listener", msg); }
+
+signals:
+    void sig_log(const QString &, const QString &);
+    void sig_clientSuccessfullyConnected();
+
+protected slots:
+    void slot_onIncomingConnection(qintptr socketDescriptor);
 };

@@ -28,6 +28,14 @@ class CGroup final : public QObject, public GroupAdmin
 {
     Q_OBJECT
 
+private:
+    mutable QRecursiveMutex characterLock;
+    std::set<GroupRecipient *> locks;
+    std::queue<std::shared_ptr<GroupAction>> actionSchedule;
+    GroupVector charIndex;
+    // deleted in destructor as member of charIndex
+    SharedGroupChar self;
+
 public:
     explicit CGroup(QObject *parent);
     ~CGroup() final = default;
@@ -68,12 +76,4 @@ public:
 
 public:
     NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
-
-private:
-    mutable QRecursiveMutex characterLock;
-    std::set<GroupRecipient *> locks;
-    std::queue<std::shared_ptr<GroupAction>> actionSchedule;
-    GroupVector charIndex;
-    // deleted in destructor as member of charIndex
-    SharedGroupChar self;
 };

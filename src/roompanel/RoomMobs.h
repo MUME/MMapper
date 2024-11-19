@@ -21,6 +21,20 @@ class RoomMobs final : public QObject
 {
     Q_OBJECT
 
+private:
+    struct SharedRoomMobAndIndex
+    {
+        SharedRoomMob mob;
+        size_t index;
+    };
+
+    // mobs ordered by ID
+    std::unordered_map<RoomMob::Id, SharedRoomMobAndIndex> m_mobs;
+    // mobs ordered as they should be shown
+    std::map<size_t, SharedRoomMob> m_mobsByIndex;
+    mutable QRecursiveMutex mutex;
+    size_t m_nextIndex;
+
 public:
     explicit RoomMobs(QObject *parent);
     ~RoomMobs() final = default;
@@ -38,18 +52,4 @@ public:
 
 signals:
     void sig_mobsChanged();
-
-private:
-    struct SharedRoomMobAndIndex
-    {
-        SharedRoomMob mob;
-        size_t index;
-    };
-
-    // mobs ordered by ID
-    std::unordered_map<RoomMob::Id, SharedRoomMobAndIndex> m_mobs;
-    // mobs ordered as they should be shown
-    std::map<size_t, SharedRoomMob> m_mobsByIndex;
-    mutable QRecursiveMutex mutex;
-    size_t m_nextIndex;
 };

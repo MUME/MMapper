@@ -35,6 +35,12 @@ class FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
 {
     Q_OBJECT
 
+private:
+    MapData &m_mapData;
+    QTreeWidgetItem *item = nullptr;
+    QShortcut *m_showSelectedRoom = nullptr;
+
+public:
 signals:
     void sig_center(const glm::vec2 &worldPos);
     void sig_newRoomSelection(const SigRoomSelection &);
@@ -59,10 +65,6 @@ public:
     void writeSettings();
 
 private:
-    MapData &m_mapData;
-    QTreeWidgetItem *item = nullptr;
-    QShortcut *m_showSelectedRoom = nullptr;
-
     void adjustResultTable();
 
 private slots:

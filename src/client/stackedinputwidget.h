@@ -20,6 +20,11 @@ class StackedInputWidget final : public QStackedWidget
 private:
     Q_OBJECT
 
+private:
+    InputWidget *m_inputWidget = nullptr;
+    QLineEdit *m_passwordWidget = nullptr;
+    bool m_localEcho = false;
+
 public:
     explicit StackedInputWidget(QWidget *parent);
     ~StackedInputWidget() final;
@@ -39,9 +44,4 @@ signals:
     void sig_sendUserInput(const QString &);
     void sig_displayMessage(const QString &);
     void sig_showMessage(const QString &, int);
-
-private:
-    bool m_localEcho = false;
-    InputWidget *m_inputWidget = nullptr;
-    QLineEdit *m_passwordWidget = nullptr;
 };

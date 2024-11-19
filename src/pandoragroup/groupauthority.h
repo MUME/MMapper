@@ -23,6 +23,12 @@ class GroupSocket;
 class GroupAuthority : public QObject
 {
     Q_OBJECT
+
+private:
+    QStringListModel model;
+    QSslCertificate certificate;
+    QSslKey key;
+
 public:
     explicit GroupAuthority(QObject *parent);
 
@@ -51,9 +57,4 @@ public:
 signals:
     void sig_secretRevoked(const GroupSecret &);
     void sig_secretRefreshed(const GroupSecret &);
-
-private:
-    QStringListModel model;
-    QSslCertificate certificate;
-    QSslKey key;
 };

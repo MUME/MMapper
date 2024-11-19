@@ -45,6 +45,38 @@ class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
     Q_OBJECT
 
 private:
+    struct NODISCARD Connections final
+    {
+    private:
+        std::vector<QMetaObject::Connection> m_connections;
+
+    public:
+        Connections &operator+=(QMetaObject::Connection c)
+        {
+            m_connections.emplace_back(std::move(c));
+            return *this;
+        }
+        void disconnectAll()
+        {
+            for (const auto &c : m_connections)
+                QObject::disconnect(c);
+            m_connections.clear();
+        }
+    };
+    Connections m_connections;
+
+    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
+    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
+    EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
+    EnumIndexedArray<RoomListWidgetItem *, DoorFlagEnum> doorListItems;
+    EnumIndexedArray<QToolButton *, RoomTerrainEnum> roomTerrainButtons;
+
+    SharedRoomSelection m_roomSelection;
+    MapData *m_mapData = nullptr;
+    MapCanvas *m_mapCanvas = nullptr;
+    std::unique_ptr<QShortcut> m_hiddenShortcut;
+
+private:
     void requestUpdate() { emit sig_requestUpdate(); }
 
 signals:
@@ -107,25 +139,6 @@ public:
     void writeSettings();
 
 private:
-    struct NODISCARD Connections final
-    {
-    private:
-        std::vector<QMetaObject::Connection> m_connections;
-
-    public:
-        Connections &operator+=(QMetaObject::Connection c)
-        {
-            m_connections.emplace_back(std::move(c));
-            return *this;
-        }
-        void disconnectAll()
-        {
-            for (const auto &c : m_connections)
-                QObject::disconnect(c);
-            m_connections.clear();
-        }
-    };
-    Connections m_connections;
     void connectAll();
     void disconnectAll();
 
@@ -148,16 +161,4 @@ private:
     NODISCARD QRadioButton *getLightRadioButton(RoomLightEnum value) const;
     NODISCARD QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
     NODISCARD QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
-
-private:
-    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
-    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
-    EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
-    EnumIndexedArray<RoomListWidgetItem *, DoorFlagEnum> doorListItems;
-    EnumIndexedArray<QToolButton *, RoomTerrainEnum> roomTerrainButtons;
-
-    SharedRoomSelection m_roomSelection;
-    MapData *m_mapData = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
-    std::unique_ptr<QShortcut> m_hiddenShortcut;
 };

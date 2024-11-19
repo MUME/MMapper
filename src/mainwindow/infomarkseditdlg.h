@@ -26,6 +26,12 @@ class InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
 {
     Q_OBJECT
 
+private:
+    std::shared_ptr<InfoMarkSelection> m_selection;
+    std::vector<std::shared_ptr<InfoMark>> m_markers;
+    MapData *m_mapData = nullptr;
+    MapCanvas *m_mapCanvas = nullptr;
+
 public:
     explicit InfoMarksEditDlg(QWidget *parent);
     ~InfoMarksEditDlg() final;
@@ -44,11 +50,6 @@ public slots:
     void slot_modifyClicked();
 
 private:
-    std::shared_ptr<InfoMarkSelection> m_selection;
-    std::vector<std::shared_ptr<InfoMark>> m_markers;
-    MapData *m_mapData = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
-
     void connectAll();
     void disconnectAll();
 

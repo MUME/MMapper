@@ -35,6 +35,13 @@ class RemoteEditSession : public QObject
     friend class RemoteEditExternalSession;
     friend class RemoteEditInternalSession;
 
+private:
+    bool m_connected = true;
+    const uint32_t m_internalId = 0;
+    const RemoteSession m_sessionId = REMOTE_VIEW_SESSION_ID;
+    RemoteEdit *m_manager = nullptr;
+    QString m_content;
+
 public:
     explicit RemoteEditSession(uint32_t internalId,
                                const RemoteSession &sessionId,
@@ -60,13 +67,6 @@ protected slots:
         setContent(content);
         save();
     }
-
-private:
-    bool m_connected = true;
-    const uint32_t m_internalId = 0;
-    const RemoteSession m_sessionId = REMOTE_VIEW_SESSION_ID;
-    RemoteEdit *m_manager = nullptr;
-    QString m_content;
 };
 
 class RemoteEditInternalSession final : public RemoteEditSession

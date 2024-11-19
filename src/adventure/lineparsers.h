@@ -7,14 +7,14 @@
 
 class AbstractLineParser
 {
+protected:
+    QString m_lastSuccessVal;
+    bool m_pending = false;
+
 public:
     virtual ~AbstractLineParser(); // required for warning -W non-virtual-dtor
     virtual bool parse(QString line) = 0;
     virtual QString getLastSuccessVal();
-
-protected:
-    bool m_pending = false;
-    QString m_lastSuccessVal;
 };
 
 class AccomplishedTaskParser final : public AbstractLineParser
@@ -49,9 +49,9 @@ public:
 
 class KillAndXPParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
-
 private:
     int m_linesSinceShareExp = 0;
+
+public:
+    bool parse(QString line) override;
 };

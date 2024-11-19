@@ -130,6 +130,14 @@ class RemoteEditWidget : public QMainWindow
 public:
     using Editor = RemoteTextEdit;
 
+private:
+    const bool m_editSession;
+    const QString m_title;
+    const QString m_body;
+
+    bool m_submitted = false;
+    QScopedPointer<Editor> m_textEdit;
+
 public:
     explicit RemoteEditWidget(bool editSession,
                               const QString &title,
@@ -171,12 +179,4 @@ private:
     void addSave(QMenu *fileMenu);
     void addExit(QMenu *fileMenu);
     void addStatusBar(const Editor *pTextEdit);
-
-private:
-    const bool m_editSession;
-    const QString m_title;
-    const QString m_body;
-
-    bool m_submitted = false;
-    QScopedPointer<Editor> m_textEdit;
 };

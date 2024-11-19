@@ -22,6 +22,9 @@ class QWidget;
 
 class NODISCARD InputHistory final : private std::list<QString>
 {
+private:
+    std::list<QString>::iterator m_iterator;
+
 public:
     InputHistory() { m_iterator = begin(); }
 
@@ -38,14 +41,14 @@ public:
 public:
     NODISCARD bool atFront() const { return m_iterator == begin(); }
     NODISCARD bool atEnd() const { return m_iterator == end(); }
-
-private:
-    std::list<QString>::iterator m_iterator;
 };
 
 class NODISCARD TabHistory final : private std::list<QString>
 {
     using base = std::list<QString>;
+
+private:
+    std::list<QString>::iterator m_iterator;
 
 public:
     TabHistory() { m_iterator = begin(); }
@@ -63,18 +66,20 @@ public:
 public:
     NODISCARD bool empty() { return base::empty(); }
     NODISCARD bool atEnd() const { return m_iterator == end(); }
-
-private:
-    std::list<QString>::iterator m_iterator;
 };
 
 class InputWidget final : public QPlainTextEdit
 {
+    Q_OBJECT
+
 private:
     using base = QPlainTextEdit;
 
 private:
-    Q_OBJECT
+    QString m_tabFragment;
+    TabHistory m_tabHistory;
+    InputHistory m_inputHistory;
+    bool m_tabbing = false;
 
 public:
     explicit InputWidget(QWidget *parent);
@@ -93,14 +98,10 @@ private:
 
 private:
     void tabComplete();
-    bool m_tabbing = false;
-    QString m_tabFragment;
-    TabHistory m_tabHistory;
 
 private:
     void forwardHistory();
     void backwardHistory();
-    InputHistory m_inputHistory;
 
 private:
     void sendUserInput(const QString &msg) { emit sig_sendUserInput(msg); }

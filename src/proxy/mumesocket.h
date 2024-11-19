@@ -79,6 +79,12 @@ signals:
 class MumeSslSocket : public MumeSocket
 {
     Q_OBJECT
+
+protected:
+    io::buffer<(1 << 13)> m_buffer;
+    QSslSocket m_socket;
+    QTimer m_timer;
+
 public:
     explicit MumeSslSocket(QObject *parent);
     ~MumeSslSocket() override;
@@ -96,11 +102,6 @@ protected slots:
     void slot_onEncrypted();
     void slot_onPeerVerifyError(const QSslError &error);
     void slot_checkTimeout();
-
-protected:
-    io::buffer<(1 << 13)> m_buffer;
-    QSslSocket m_socket;
-    QTimer m_timer;
 };
 
 class MumeTcpSocket final : public MumeSslSocket

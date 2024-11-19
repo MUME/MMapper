@@ -27,6 +27,10 @@ public:
     static const char *const parse_help;
     NODISCARD static std::optional<RoomFilter> parseRoomFilter(const std::string_view line);
 
+private:
+    const std::regex m_regex;
+    const PatternKindsEnum m_kind;
+
 public:
     RoomFilter() = delete;
     explicit RoomFilter(const std::string_view str,
@@ -76,8 +80,4 @@ private:
     {
         return (type != E::UNDEFINED) && this->matchesParserCommand(type);
     }
-
-private:
-    const std::regex m_regex;
-    const PatternKindsEnum m_kind;
 };

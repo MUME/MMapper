@@ -45,7 +45,10 @@ public:
 
 class NODISCARD GroupSelection final : public GroupRecipient
 {
-    // NOTE: deleted members must be public.
+private:
+    GroupAdmin *m_admin = nullptr;
+    GroupVector chars;
+
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(GroupSelection);
 
@@ -68,8 +71,4 @@ public:
     NODISCARD auto end() const { return chars.end(); }
     NODISCARD auto size() const { return chars.size(); }
     NODISCARD auto empty() const { return chars.empty(); }
-
-private:
-    GroupAdmin *m_admin = nullptr;
-    GroupVector chars;
 };

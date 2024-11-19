@@ -20,15 +20,6 @@ class QTimer;
 class MumeClockWidget final : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
-public:
-    explicit MumeClockWidget(MumeClock *clock, QWidget *parent);
-    ~MumeClockWidget() final;
-
-public slots:
-    void slot_updateLabel();
-
-protected:
-    void mousePressEvent(QMouseEvent *event) override;
 
 private:
     MumeClock *m_clock = nullptr;
@@ -39,4 +30,14 @@ private:
     MumeMoonPhaseEnum m_lastPhase = MumeMoonPhaseEnum::UNKNOWN;
     MumeMoonVisibilityEnum m_lastVisibility = MumeMoonVisibilityEnum::UNKNOWN;
     MumeClockPrecisionEnum m_lastPrecision = MumeClockPrecisionEnum::UNSET;
+
+public:
+    explicit MumeClockWidget(MumeClock *clock, QWidget *parent);
+    ~MumeClockWidget() final;
+
+public slots:
+    void slot_updateLabel();
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
 };

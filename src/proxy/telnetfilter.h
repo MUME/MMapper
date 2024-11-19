@@ -27,7 +27,15 @@ struct NODISCARD TelnetData final
 class TelnetFilter final : public QObject
 {
     Q_OBJECT
+
+public:
     using TelnetIncomingDataQueue = QQueue<TelnetData>;
+
+private:
+    TelnetData m_userIncomingData;
+    TelnetData m_mudIncomingBuffer;
+    TelnetIncomingDataQueue m_mudIncomingQue;
+    TelnetIncomingDataQueue m_userIncomingQue;
 
 public:
     explicit TelnetFilter(QObject *const parent)
@@ -48,9 +56,4 @@ private:
                               TelnetData &m_incomingData,
                               TelnetIncomingDataQueue &que,
                               const bool &goAhead);
-
-    TelnetData m_userIncomingData;
-    TelnetData m_mudIncomingBuffer;
-    TelnetIncomingDataQueue m_mudIncomingQue;
-    TelnetIncomingDataQueue m_userIncomingQue;
 };

@@ -46,6 +46,47 @@ class CTimers;
 class Proxy final : public QObject
 {
     Q_OBJECT
+
+private:
+    io::buffer<(1 << 13)> m_buffer;
+    WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
+    ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
+
+    MapData &m_mapData;
+    Mmapper2PathMachine &m_pathMachine;
+    PrespammedPath &m_prespammedPath;
+    Mmapper2Group &m_groupManager;
+    MumeClock &m_mumeClock;
+    MapCanvas &m_mapCanvas;
+    GameObserver &m_gameObserver;
+    const qintptr m_socketDescriptor;
+    ConnectionListener &m_listener;
+
+    // initialized in ctor
+    QPointer<RemoteEdit> m_remoteEdit;
+
+    // initialized in start()
+    QPointer<QTcpSocket> m_userSocket;
+    QPointer<UserTelnet> m_userTelnet;
+    QPointer<MudTelnet> m_mudTelnet;
+    QPointer<TelnetFilter> m_telnetFilter;
+    QPointer<MpiFilter> m_mpiFilter;
+    QPointer<MumeXmlParser> m_parserXml;
+    QPointer<MumeSocket> m_mudSocket;
+    QPointer<CTimers> m_timers;
+
+    enum class NODISCARD ServerStateEnum {
+        INITIALIZED,
+        OFFLINE,
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTING,
+        DISCONNECTED,
+        ERROR,
+    };
+
+    ServerStateEnum m_serverState = ServerStateEnum::INITIALIZED;
+
 public:
     explicit Proxy(MapData &,
                    Mmapper2PathMachine &,
@@ -96,44 +137,4 @@ private:
     void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
     bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
     void log(const QString &msg) { emit sig_log("Proxy", msg); }
-
-private:
-    io::buffer<(1 << 13)> m_buffer;
-    WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
-    ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
-
-    MapData &m_mapData;
-    Mmapper2PathMachine &m_pathMachine;
-    PrespammedPath &m_prespammedPath;
-    Mmapper2Group &m_groupManager;
-    MumeClock &m_mumeClock;
-    MapCanvas &m_mapCanvas;
-    GameObserver &m_gameObserver;
-    const qintptr m_socketDescriptor;
-    ConnectionListener &m_listener;
-
-    // initialized in ctor
-    QPointer<RemoteEdit> m_remoteEdit;
-
-    // initialized in start()
-    QPointer<QTcpSocket> m_userSocket;
-    QPointer<UserTelnet> m_userTelnet;
-    QPointer<MudTelnet> m_mudTelnet;
-    QPointer<TelnetFilter> m_telnetFilter;
-    QPointer<MpiFilter> m_mpiFilter;
-    QPointer<MumeXmlParser> m_parserXml;
-    QPointer<MumeSocket> m_mudSocket;
-    QPointer<CTimers> m_timers;
-
-    enum class NODISCARD ServerStateEnum {
-        INITIALIZED,
-        OFFLINE,
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTING,
-        DISCONNECTED,
-        ERROR,
-    };
-
-    ServerStateEnum m_serverState = ServerStateEnum::INITIALIZED;
 };
