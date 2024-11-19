@@ -1,88 +1,100 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (C) 2019 The MMapper Authors
-// Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+// Copyright (C) 2024 The MMapper Authors
 
 #include "StorageUtils.h"
+
+#ifndef MMAPPER_NO_ZLIB
+#include "ConfigConsts.h"
+#include "zpipe.h"
+#endif
+
+#include <array>
+#include <limits>
+#include <stdexcept>
 
 #include <QByteArray>
 
 #ifndef MMAPPER_NO_ZLIB
-#include <cassert>
-#include <sstream>
-#include <stdexcept>
 #include <zlib.h>
 #endif
 
-namespace StorageUtils {
-
-#ifndef MMAPPER_NO_ZLIB
-
-template<typename T>
-Bytef *as_far_byte_array(T s) = delete;
-
-template<>
-inline Bytef *as_far_byte_array(char *const s)
+namespace StorageUtils::mmqt {
+#ifdef MMAPPER_NO_ZLIB
+QByteArray inflate(ProgressCounter &pc, QByteArray &data)
 {
-    static_assert(alignof(char) == alignof(Bytef));
-    return reinterpret_cast<Bytef *>(s);
+    throw std::runtime_error("unable to inflate (built without zlib)");
 }
 
-QByteArray inflate(QByteArray &data)
+QByteArray deflate(ProgressCounter &pc, const QByteArray &data)
 {
-    const auto get_zlib_error_str = [](const int ret, const z_stream &strm) {
-        std::ostringstream oss;
-        oss << "zlib error: (" << ret << ") " << strm.msg;
-        return oss.str();
-    };
-
-    static constexpr const int CHUNK = 1024;
-    char out[CHUNK];
-    QByteArray result;
-
-    /* allocate inflate state */
-    z_stream strm;
-    strm.zalloc = nullptr;
-    strm.zfree = nullptr;
-    strm.opaque = nullptr;
-    strm.avail_in = static_cast<uInt>(data.size());
-    strm.next_in = as_far_byte_array(data.data());
-    int ret = inflateInit(&strm);
-    if (ret != Z_OK) {
-        throw std::runtime_error("Unable to initialize zlib");
-    }
-
-    /* decompress until deflate stream ends */
-    do {
-        strm.avail_out = CHUNK;
-        strm.next_out = as_far_byte_array(out);
-        ret = inflate(&strm, Z_NO_FLUSH);
-        assert(ret != Z_STREAM_ERROR); /* state not clobbered */
-        switch (ret) {
-        case Z_NEED_DICT:
-        case Z_DATA_ERROR:
-        case Z_MEM_ERROR:
-            (void) inflateEnd(&strm);
-            throw std::runtime_error(get_zlib_error_str(ret, strm));
-        default:
-            break;
-        }
-        int length = CHUNK - static_cast<int>(strm.avail_out);
-        result.append(out, length);
-
-    } while (strm.avail_out == 0);
-
-    /* clean up and return */
-    inflateEnd(&strm);
-    if (ret != Z_STREAM_END) {
-        throw std::runtime_error(get_zlib_error_str(ret, strm));
-    }
-
-    return result;
+    throw std::runtime_error("unable to deflate (built without zlib)");
 }
 #else
-QByteArray inflate(QByteArray & /*data*/)
+QByteArray zlib_inflate(ProgressCounter &pc, const QByteArray &data)
 {
-    abort();
+    ::mmqt::QByteArrayInputStream is{data};
+    ::mmqt::QByteArrayOutputStream os;
+    int err = mmz::zpipe_inflate(pc, is, os);
+    if (err != 0) {
+        throw std::runtime_error("error while inflating");
+    }
+    return std::move(os).get();
+}
+QByteArray zlib_deflate(ProgressCounter &pc, const QByteArray &data, const int level)
+{
+    ::mmqt::QByteArrayInputStream is{data};
+    ::mmqt::QByteArrayOutputStream os;
+    int err = mmz::zpipe_deflate(pc, is, os, level);
+    if (err != 0) {
+        throw std::runtime_error("error while deflating");
+    }
+    return std::move(os).get();
 }
 #endif
-} // namespace StorageUtils
+
+QByteArray uncompress(ProgressCounter &pc, const QByteArray &input)
+{
+    if constexpr (NO_ZLIB) {
+        return ::qUncompress(input);
+    } else {
+        using U = uint32_t;
+        using I = int32_t;
+
+        std::array<char, 4> buf; // NOLINT (uninitialized; will be overwritten by memcpy)
+        static_assert(sizeof(buf) == 4);
+        memcpy(buf.data(), input.data(), 4);
+
+        uint32_t expect = Size::decode(buf);
+        if (expect > static_cast<U>(std::numeric_limits<int>::max())) {
+            throw std::runtime_error("data is too large to compress");
+        }
+
+        QByteArray result = mmqt::zlib_inflate(pc, input.mid(4));
+        if (result.size() != static_cast<I>(expect)) {
+            throw std::runtime_error("failed to uncompress");
+        }
+        return result;
+    }
+}
+
+QByteArray compress(ProgressCounter &pc, const QByteArray &input)
+{
+    if constexpr (NO_ZLIB) {
+        return ::qCompress(input);
+    } else {
+        using U = uint32_t;
+        U size = static_cast<U>(input.size());
+        if (size > static_cast<U>(std::numeric_limits<int>::max())) {
+            throw std::runtime_error("data is too large to compress");
+        }
+        auto header = Size::encode(size);
+        static_assert(header.size() == 4);
+        QByteArray result;
+        result.append(header.data(), 4);
+        result.append(mmqt::zlib_deflate(pc, input));
+
+        return result;
+    }
+}
+
+} // namespace StorageUtils::mmqt

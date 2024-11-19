@@ -421,8 +421,11 @@ bool MapStorage::mergeData()
                                      && version <= MMAPPER_2_4_0_SCHEMA);
         if (qCompressed || (!NO_ZLIB && zlibCompressed)) {
             QByteArray compressedData(stream.device()->readAll());
-            QByteArray uncompressedData = qCompressed ? qUncompress(compressedData)
-                                                      : StorageUtils::inflate(compressedData);
+            QByteArray uncompressedData = qCompressed
+                                              ? StorageUtils::mmqt::uncompress(progressCounter,
+                                                                               compressedData)
+                                              : StorageUtils::mmqt::zlib_inflate(progressCounter,
+                                                                                 compressedData);
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
@@ -659,7 +662,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     buffer.close();
 
     QByteArray uncompressedData(buffer.data());
-    QByteArray compressedData = qCompress(uncompressedData);
+    QByteArray compressedData = StorageUtils::mmqt::compress(progressCounter, uncompressedData);
     progressCounter.step();
     double compressionRatio = (compressedData.isEmpty())
                                   ? 1.0
