@@ -11,7 +11,6 @@ public:
     TestParser();
     ~TestParser() final;
 
-private:
 private Q_SLOTS:
     // ParserUtils
     void removeAnsiMarksTest();

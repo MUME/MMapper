@@ -11,7 +11,6 @@ public:
     TestCTimers();
     ~TestCTimers() final;
 
-private:
 private Q_SLOTS:
     void testAddRemoveTimer();
     void testAddRemoveCountdown();

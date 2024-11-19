@@ -11,7 +11,6 @@ public:
     TestClock();
     ~TestClock() final;
 
-private:
 private Q_SLOTS:
     // MumeClock
     void mumeClockTest();
