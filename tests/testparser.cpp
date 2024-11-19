@@ -30,7 +30,7 @@ void TestParser::removeAnsiMarksTest()
 
 void TestParser::toAsciiTest()
 {
-    const QString qs("Nórui Nínui");
+    const QString qs("N\u00F3rui N\u00EDnui");
     QCOMPARE(qs.length(), 11);
     {
         const QString expectedAscii("Norui Ninui");

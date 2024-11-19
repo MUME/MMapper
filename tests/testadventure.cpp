@@ -34,7 +34,7 @@ const QString dunadan = []() -> QString {
     const std::array<char, 8> utf8_bytes = {'D', '\xC3', '\xBA', 'n', 'a', 'd', 'a', 'n'};
     TEST_ASSERT(latin1ToAscii('\xFA') == 'u');
 
-    const QString result = "Dúnadan";
+    const QString result = "D\u00FAnadan";
     TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
     TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
     testQStringAsAscii(result, "Dunadan");
@@ -46,7 +46,7 @@ const auto gomgal = []() {
     const std::array<char, 6> latin1_bytes = {'G', 'o', 'm', 'g', '\xE2', 'l'};
     const std::array<char, 7> utf8_bytes = {'G', 'o', 'm', 'g', '\xC3', '\xA2', 'l'};
 
-    const QString result = "Gomgâl";
+    const QString result = "Gomg\u00E2l";
     TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
     TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
     testQStringAsAscii(result, "Gomgal");

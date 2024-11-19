@@ -11,7 +11,7 @@
 #include <QtTest>
 namespace { // anonymous
 const auto mysterieuse = []() -> QString {
-    const QString result = "mystérieuse créature";
+    const QString result = "myst\u00E9rieuse cr\u00E9ature";
     {
         const auto expected_ascii = "mysterieuse creature";
         auto copy = result;
