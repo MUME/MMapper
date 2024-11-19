@@ -308,7 +308,7 @@ void Proxy::slot_start()
     connect(parserXml,
             &AbstractParser::sig_infoMarksChanged,
             &m_mapCanvas,
-            &MapCanvas::infomarksChanged);
+            &MapCanvas::slot_infomarksChanged);
 
     connectToMud();
 }
