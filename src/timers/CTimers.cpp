@@ -13,6 +13,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <QMutexLocker>
 
@@ -119,37 +120,44 @@ void CTimers::slot_finishCountdownTimer()
 {
     QMutexLocker locker(&m_lock);
 
-    std::optional<int64_t> next;
+    static auto get_diff = [](const TTimer &t) -> int64_t { return t.durationMs() - t.elapsedMs(); };
 
     // See if we need to restart the timer
-    for (auto it = m_countdowns.begin(); it != m_countdowns.end();) {
-        const auto diff = it->durationMs() - it->elapsedMs();
-        if (diff <= 0) {
+    {
+        std::vector<std::string> updates;
+        utils::erase_if(m_countdowns, [&updates](TTimer &t) -> bool {
+            if (get_diff(t) > 0) {
+                return false;
+            }
             std::ostringstream ostr;
-            ostr << "Countdown timer " << it->getName();
-            if (!it->getDescription().empty())
-                ostr << " <" << it->getDescription() << ">";
-            ostr << " finished." << std::endl;
-            emit sig_sendTimersUpdateToUser(ostr.str());
-            it = m_countdowns.erase(it);
-        } else {
-            if (next)
-                next = std::min(diff, next.value());
-            else
-                next = diff;
-            ++it;
+            ostr << "Countdown timer " << t.getName();
+            if (!t.getDescription().empty()) {
+                ostr << " <" << t.getDescription() << ">";
+            }
+            // why does this include a newline?
+            ostr << " finished.\n";
+            updates.emplace_back(std::move(ostr).str());
+            return true;
+        });
+        for (const std::string &s : updates) {
+            emit sig_sendTimersUpdateToUser(s);
         }
     }
 
+    // Why do we return before stopping the timer?
     if (m_countdowns.empty())
         return;
 
-    if (m_timer.isActive())
+    // Why do we stop unconditionally and then restart?
+    if (m_timer.isActive()) {
         m_timer.stop();
+    }
 
+    const int64_t next = *utils::find_min_computed(m_countdowns, get_diff);
     // Restart the timer
-    if (next.value_or(0) > 0)
-        m_timer.start(static_cast<int>(next.value()));
+    if (next > 0) {
+        m_timer.start(static_cast<int>(next));
+    }
 }
 
 std::string CTimers::getTimers()
