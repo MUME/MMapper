@@ -180,7 +180,8 @@ private:
     virtual void virt_visitNamedColorTint(const Room *, RoomTintEnum) = 0;
 
     // Walls
-    virtual void virt_visitWall(const Room *, ExitDirEnum, XNamedColor, WallTypeEnum, bool isClimb)
+    virtual void virt_visitWall(
+        const Room *, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
         = 0;
 
     // Streams
@@ -204,7 +205,7 @@ public:
     // Walls
     void visitWall(const Room *const room,
                    const ExitDirEnum dir,
-                   const XNamedColor color,
+                   const XNamedColor &color,
                    const WallTypeEnum wallType,
                    const bool isClimb)
     {
@@ -743,7 +744,7 @@ private:
 
     void virt_visitWall(const Room *const room,
                         const ExitDirEnum dir,
-                        const XNamedColor color,
+                        const XNamedColor &color,
                         const WallTypeEnum wallType,
                         const bool isClimb) final
     {
