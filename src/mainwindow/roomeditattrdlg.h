@@ -118,10 +118,10 @@ private:
             m_connections.emplace_back(std::move(c));
             return *this;
         }
-        void disconnectAll(QObject &o)
+        void disconnectAll()
         {
             for (const auto &c : m_connections)
-                o.disconnect(c);
+                QObject::disconnect(c);
             m_connections.clear();
         }
     };

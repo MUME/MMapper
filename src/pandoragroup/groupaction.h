@@ -62,7 +62,7 @@ private:
     QVariantMap m_map;
 
 public:
-    explicit UpdateCharacter(const QVariantMap &variant);
+    explicit UpdateCharacter(QVariantMap variant);
 
 private:
     void virt_exec() final;
@@ -74,7 +74,7 @@ private:
     QVariantMap m_map;
 
 public:
-    explicit RenameCharacter(const QVariantMap &variant);
+    explicit RenameCharacter(QVariantMap variant);
 
 private:
     void virt_exec() final;

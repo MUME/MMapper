@@ -180,7 +180,7 @@ NODISCARD static int getPriority(const RoomMobFlagEnum flag)
 #define X_POS(UPPER, pos) \
     do { \
         if (flag == RoomMobFlagEnum::UPPER) \
-            return NUM_ROOM_MOB_FLAGS * -1 + pos; \
+            return (pos) - (NUM_ROOM_MOB_FLAGS); \
     } while (false)
     X_POS(PASSIVE_MOB, 0);
     X_POS(AGGRESSIVE_MOB, 1);
@@ -197,7 +197,7 @@ NODISCARD static int getPriority(const RoomLoadFlagEnum flag)
 #define X_POS(UPPER, pos) \
     do { \
         if (flag == RoomLoadFlagEnum::UPPER) \
-            return NUM_ROOM_LOAD_FLAGS * -1 + pos; \
+            return (pos) - (NUM_ROOM_LOAD_FLAGS); \
     } while (false)
     X_POS(TREASURE, 0);
     X_POS(ARMOUR, 1);
@@ -469,7 +469,7 @@ void RoomEditAttrDlg::connectAll()
 
 void RoomEditAttrDlg::disconnectAll()
 {
-    m_connections.disconnectAll(*this);
+    m_connections.disconnectAll();
 }
 
 const Room *RoomEditAttrDlg::getSelectedRoom()

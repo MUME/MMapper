@@ -49,7 +49,7 @@ QString toQStringUtf8(const std::string_view sv)
 
 QByteArray toQByteArrayLatin1(const std::string_view sv)
 {
-    return QByteArray(sv.data(), static_cast<int>(sv.size()));
+    return QByteArray{sv.data(), static_cast<int>(sv.size())};
 }
 
 QByteArray toQByteArrayUtf8(const std::string_view sv)

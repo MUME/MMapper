@@ -341,7 +341,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
 
         /* this will be statically true until Qt changes the type to uint32_t */
         assert(static_cast<uint32_t>(codepoint) <= MAX_UNICODE_CODEPOINT);
-        const int masked = codepoint & 0x1FFFFFu;
+        const auto masked = static_cast<int32_t>(codepoint & 0x1FFFFFu);
         assert(masked == codepoint);
 
         char decbuf[16];

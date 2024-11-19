@@ -455,7 +455,7 @@ namespace test_detail {
                                      ":" STRINGIZE(__LINE__) ": " #x); \
     } while (false)
 
-static void testEmpty()
+void testEmpty()
 {
     StringView tmp;
     TEST_ASSERT(tmp.empty());
@@ -474,40 +474,25 @@ static void testEmpty()
     TEST_ASSERT(threwException);
 }
 
-static void testLazyDog(const bool verbose = false)
+void testLazyDog()
 {
     std::ostringstream os;
     const std::string s = "The quick brown fox\njumps \t\tover\t\t the lazy dog.\n";
     const auto view = StringView{s}.trim();
     const auto words = view.countWords();
-    if (verbose)
-        os << "# words: " << words << "\n";
     TEST_ASSERT(words == 9);
 
     const auto nonSpaceChars = view.countNonSpaceChars();
-    if (verbose)
-        os << "# non-space chars: " << nonSpaceChars << "\n";
     TEST_ASSERT(nonSpaceChars == 36);
 
-    if (verbose)
-        os << "---\n";
     int seenWords = 0;
-    for (const auto &w : view.getWordsAsStdStrings()) {
-        if (seenWords++ > 0) {
-            if (verbose)
-                os << " ";
-        }
-        if (verbose)
-            os << "[" << w << "]";
+    for (MAYBE_UNUSED const auto &word : view.getWordsAsStdStrings()) {
+        ++seenWords;
     }
     TEST_ASSERT(seenWords == words);
-    if (verbose) {
-        os << "\n---\n";
-        MMLOG() << std::move(os).str();
-    }
 }
 
-static void testIntersect()
+void testIntersect()
 {
     const std::string s = "test";
     const StringView sv{s};
@@ -526,7 +511,7 @@ static void testIntersect()
     assert(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
 }
 
-static void testSubstring()
+void testSubstring()
 {
     const std::string s = "test";
     const StringView sv{s};

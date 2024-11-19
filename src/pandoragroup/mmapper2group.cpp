@@ -345,10 +345,10 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 
 #define X_SCORE(target, lower, upper) \
     do { \
-        if (text == target) { \
-            if (current >= upper) \
+        if (text == (target)) { \
+            if (current >= (upper)) \
                 return upper; \
-            else if (current <= lower) \
+            else if (current <= (lower)) \
                 return lower; \
             else \
                 return current; \

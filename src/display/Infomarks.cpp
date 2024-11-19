@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -102,8 +103,9 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
         for (const auto &mark : m_data.getMarkersList()) {
             const int layer = mark->getPosition1().z;
             const auto it = result.find(layer);
-            if (it == result.end())
-                result[layer]; // side effect: this creates the entry
+            if (it == result.end()) {
+                std::ignore = result[layer]; // side effect: this creates the entry
+            }
         }
     }
 

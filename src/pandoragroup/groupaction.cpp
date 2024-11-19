@@ -51,8 +51,8 @@ void RemoveCharacter::virt_exec()
  * @brief UpdateCharacter::UpdateCharacter
  * @param Variant map with which to update the character with
  */
-UpdateCharacter::UpdateCharacter(const QVariantMap &map)
-    : m_map{map}
+UpdateCharacter::UpdateCharacter(QVariantMap map)
+    : m_map{std::move(map)}
 {}
 
 void UpdateCharacter::virt_exec()
@@ -64,8 +64,8 @@ void UpdateCharacter::virt_exec()
  * @brief RenameCharacter::RenameCharacter
  * @param Variant map with the new name of the character
  */
-RenameCharacter::RenameCharacter(const QVariantMap &map)
-    : m_map{map}
+RenameCharacter::RenameCharacter(QVariantMap map)
+    : m_map{std::move(map)}
 {}
 
 void RenameCharacter::virt_exec()

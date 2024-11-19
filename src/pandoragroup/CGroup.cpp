@@ -201,7 +201,7 @@ void CGroup::renameChar(const QVariantMap &map)
     const QString oldname = map["oldname"].toString();
     const QString newname = map["newname"].toString();
 
-    log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
+    log(QString("Renaming '%1' to '%2'").arg(oldname, newname));
 
     const auto ch = getCharByName(oldname.toLatin1());
     if (ch == nullptr) {

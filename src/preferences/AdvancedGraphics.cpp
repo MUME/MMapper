@@ -99,7 +99,7 @@ public:
         , reset("Reset")
         , horizontal{}
     {
-        group.connect(&slider, &QSlider::valueChanged, &group, [this](int value) {
+        QObject::connect(&slider, &QSlider::valueChanged, &group, [this](int value) {
             const SignalBlocker block_slider{slider};
             const SignalBlocker block_spin{spin};
             fp.set(value);
@@ -107,19 +107,19 @@ public:
             group.graphicsSettingsChanged();
         });
 
-        group.connect(&spin,
-                      QOverload<double>::of(&FpSpinBox::valueChanged),
-                      &group,
-                      [this](double /*value*/) {
-                          const SignalBlocker block_slider{slider};
-                          const SignalBlocker block_spin{spin};
-                          const int value = spin.getIntValue();
-                          fp.set(value);
-                          slider.setValue(value);
-                          group.graphicsSettingsChanged();
-                      });
+        QObject::connect(&spin,
+                         QOverload<double>::of(&FpSpinBox::valueChanged),
+                         &group,
+                         [this](double /*value*/) {
+                             const SignalBlocker block_slider{slider};
+                             const SignalBlocker block_spin{spin};
+                             const int value = spin.getIntValue();
+                             fp.set(value);
+                             slider.setValue(value);
+                             group.graphicsSettingsChanged();
+                         });
 
-        group.connect(&reset, &QPushButton::clicked, &group, [this](bool) {
+        QObject::connect(&reset, &QPushButton::clicked, &group, [this](bool) {
             slider.setValue(fp.defaultValue);
         });
 

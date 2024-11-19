@@ -10,6 +10,7 @@
 #include "mmapper2character.h"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include <QByteArray>
@@ -77,10 +78,10 @@ public:
 
 public:
     NODISCARD const QByteArray &getName() const { return m_internal.name; }
-    void setName(QByteArray name) { m_internal.name = name; }
+    void setName(QByteArray name) { m_internal.name = std::move(name); }
     NODISCARD const QByteArray &getLabel() const { return m_internal.label; }
-    void setLabel(QByteArray label) { m_internal.label = label; }
-    void setColor(QColor col) { m_internal.color = col; }
+    void setLabel(QByteArray label) { m_internal.label = std::move(label); }
+    void setColor(QColor col) { m_internal.color = std::move(col); }
     NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD QVariantMap toVariantMap() const;
     NODISCARD bool updateFromVariantMap(const QVariantMap &);

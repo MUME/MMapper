@@ -301,7 +301,7 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
     values.emplace_back(isAddFlag(sv));
 
 #define DEFINE_MATCH_LOGIC(FLAGS) \
-    for (const auto &flag : FLAGS) { \
+    for (const auto &flag : (FLAGS)) { \
         const auto &command = getParserCommandName(flag); \
         if (!command.matches(sv)) \
             continue; \
@@ -314,7 +314,7 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
     if (logger) {
         std::ostringstream os;
 #define DEFINE_VALID_FLAGS_LOGIC(FLAGS) \
-    for (const auto &flag : FLAGS) \
+    for (const auto &flag : (FLAGS)) \
         os << getParserCommandName(flag).getCommand() << " ";
         X_FOREACH_ARG_ROOM_FLAG(DEFINE_VALID_FLAGS_LOGIC)
 #undef DEFINE_VALID_FLAGS_LOGIC

@@ -8,6 +8,16 @@
 
 #include <cstddef>
 
+namespace { // anonymous
+
+NODISCARD char16_t to_char16(const char c)
+{
+    // zero-extend possibly signed Latin1 char to unsigned char16_t
+    return static_cast<char16_t>(static_cast<uint8_t>(c));
+}
+
+} // namespace
+
 bool operator==(const std::u16string_view left, const std::string_view right) noexcept
 {
     // we could use some Qt function, as for example QtStringView::compare(QLatin1String), but:
@@ -18,11 +28,8 @@ bool operator==(const std::u16string_view left, const std::string_view right) no
     if (n != right.size()) {
         return false;
     }
-    const char16_t *ldata = left.data();
-    const char *rdata = right.data();
-    for (size_t i = 0; i < n; i++) {
-        // zero-extend possibly signed Latin1 char to unsigned char16_t
-        if (ldata[i] != char16_t(static_cast<unsigned char>(rdata[i]))) {
+    for (size_t i = 0; i < n; ++i) {
+        if (left[i] != to_char16(right[i])) {
             return false;
         }
     }

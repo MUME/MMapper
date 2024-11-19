@@ -328,5 +328,6 @@ void MapCanvas::updateTextures()
     });
     activeStatus = wantTrilinear;
 
-    auto proxy = mctp::getProxy(m_textures);
+    // called to trigger an early error
+    MAYBE_UNUSED auto proxy = mctp::getProxy(m_textures);
 }

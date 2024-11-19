@@ -151,7 +151,7 @@ void MumeSslSocket::slot_onEncrypted()
     if ((LOG_CERT_INFO)) {
         /* TODO: If we save the cert to config file, then we can notify the user if it changes! */
         const auto cert = m_socket.peerCertificate();
-        const auto commonNameList = cert.subjectInfo(cert.CommonName);
+        const auto commonNameList = cert.subjectInfo(QSslCertificate::CommonName);
         const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
         const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1)
                               .toHex(char_consts::C_COLON)

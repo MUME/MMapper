@@ -47,7 +47,7 @@ MumeXmlParser::MumeXmlParser(MapData &md,
                              GroupManagerApi group,
                              CTimers &timers,
                              QObject *parent)
-    : AbstractParser(md, mc, proxy, group, timers, parent)
+    : AbstractParser(md, mc, std::move(proxy), std::move(group), timers, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";
@@ -206,7 +206,7 @@ bool MumeXmlParser::element(const QByteArray &line)
         const auto makeAttribute = [&key, &os, &attributes, &state]() {
             assert(key.has_value());
             // REVISIT: Translate XML entities into text
-            attributes.emplace_back(make_pair(key.value(), os.str()));
+            attributes.emplace_back(key.value(), os.str());
             key.reset();
             os.str(std::string());
             state = XmlAttributeStateEnum::ATTRIBUTE;
