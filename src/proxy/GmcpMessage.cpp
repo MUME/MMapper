@@ -3,6 +3,7 @@
 
 #include "GmcpMessage.h"
 
+#include "../global/CaseUtils.h"
 #include "../global/Consts.h"
 #include "../global/TextUtils.h"
 #include "GmcpModule.h"

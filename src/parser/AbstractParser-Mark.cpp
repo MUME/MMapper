@@ -4,6 +4,7 @@
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../expandoracommon/room.h"
+#include "../global/CaseUtils.h"
 #include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"

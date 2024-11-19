@@ -4,6 +4,7 @@
 #include "TestGlobal.h"
 
 #include "../src/global/AnsiColor.h"
+#include "../src/global/CaseUtils.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/string_view_utils.h"

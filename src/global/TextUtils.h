@@ -507,10 +507,6 @@ static_assert(next_tab_stop(8) == 16);
 static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
 
-NODISCARD extern char toLowerLatin1(char c);
-NODISCARD extern std::string toLowerLatin1(std::string_view str);
-NODISCARD extern char toUpperLatin1(char c);
-NODISCARD extern std::string toUpperLatin1(std::string_view str);
 NODISCARD extern bool isAbbrev(std::string_view abbr, std::string_view fullText);
 NODISCARD extern bool isPrintLatin1(char c);
 NODISCARD extern bool requiresQuote(std::string_view str);

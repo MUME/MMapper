@@ -79,6 +79,8 @@ set(mmapper_SRCS
     expandoracommon/room.h
     global/AnsiColor.h
     global/Array.h
+    global/CaseUtils.cpp
+    global/CaseUtils.h
     global/ChangeMonitor.h
     global/CharBuffer.h
     global/Charset.cpp

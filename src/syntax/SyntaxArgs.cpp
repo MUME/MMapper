@@ -3,6 +3,7 @@
 
 #include "SyntaxArgs.h"
 
+#include "../global/CaseUtils.h"
 #include "../global/TextUtils.h"
 #include "IMatchErrorLogger.h"
 #include "ParserInput.h"

@@ -965,43 +965,6 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
 }
 } // namespace mmqt
 
-char toLowerLatin1(const char c)
-{
-    const int i = static_cast<int>(static_cast<uint8_t>(c));
-    if (i >= 192 && i <= 221 && i != 215) {
-        // handle accented Latin-1 chars
-        return static_cast<char>(i + 32);
-    }
-    return static_cast<char>(std::tolower(c));
-}
-
-std::string toLowerLatin1(const std::string_view str)
-{
-    std::ostringstream oss;
-    for (char c : str) {
-        oss << toLowerLatin1(c);
-    }
-    return oss.str();
-}
-
-char toUpperLatin1(const char c)
-{
-    const int i = static_cast<int>(static_cast<uint8_t>(c));
-    if (i >= 224 && i <= 253 && i != 247) {
-        // handle accented Latin-1 chars
-        return static_cast<char>(i - 32);
-    }
-    return static_cast<char>(std::toupper(c));
-}
-
-std::string toUpperLatin1(const std::string_view str)
-{
-    std::ostringstream oss;
-    for (char c : str) {
-        oss << toUpperLatin1(c);
-    }
-    return oss.str();
-}
 
 bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 {

@@ -5,6 +5,7 @@
 #include "TextCodec.h"
 
 #include "../configuration/configuration.h"
+#include "../global/CaseUtils.h"
 #include "../global/TextUtils.h"
 
 #include <list>

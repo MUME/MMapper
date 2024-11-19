@@ -4,6 +4,7 @@
 
 #include "AbstractParser-Commands.h"
 
+#include "../global/CaseUtils.h"
 #include "../global/Consts.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"

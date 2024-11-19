@@ -10,6 +10,7 @@ set(clock_SRCS
     ../src/clock/mumeclock.h
     ../src/clock/mumemoment.cpp
     ../src/clock/mumemoment.h
+    ../src/global/CaseUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/observer/gameobserver.cpp
@@ -112,6 +113,7 @@ set(proxy_SRCS
     ../src/proxy/GmcpModule.h
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
+    ../src/global/CaseUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     )
@@ -150,6 +152,7 @@ add_test(NAME TestMainWindow COMMAND TestMainWindow)
 # Global
 set(global_SRCS
     ../src/global/AnsiColor.h
+    ../src/global/CaseUtils.cpp
     ../src/global/StringView.cpp
     ../src/global/StringView.h
     ../src/global/TextUtils.cpp
@@ -272,6 +275,7 @@ set(room_manager
         ../src/roompanel/RoomMob.cpp
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
+        ../src/global/CaseUtils.cpp
         ../src/global/TextUtils.cpp
         ../src/proxy/GmcpMessage.cpp
 )
