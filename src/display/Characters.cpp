@@ -404,7 +404,7 @@ void MapCanvas::paintCharacters()
 void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 {
     CGroup *const pGroup = m_groupManager.getGroup();
-    if ((pGroup == nullptr) || getConfig().groupManager.state == GroupManagerStateEnum::Off
+    if ((pGroup == nullptr) || Mmapper2Group::getConfigState() == GroupManagerStateEnum::Off
         || m_data.isEmpty()) {
         return;
     }

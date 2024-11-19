@@ -392,8 +392,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             }
 
             // Build Context menu
-            auto &settings = getConfig().groupManager;
-            const bool isServer = settings.state == GroupManagerStateEnum::Server;
+            const bool isServer = Mmapper2Group::getConfigState() == GroupManagerStateEnum::Server;
             const bool selectedSelf = (index.row() == 0);
             if (isServer && !selectedSelf) {
                 // All context menu actions are only actionable by the server right now

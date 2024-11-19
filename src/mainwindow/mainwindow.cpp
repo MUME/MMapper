@@ -391,9 +391,10 @@ void MainWindow::startServices()
     }
 
     m_groupManager->start();
-    const auto &groupConfig = getConfig().groupManager;
+
     groupNetwork.networkStopAct->setChecked(true);
-    switch (groupConfig.state) {
+
+    switch (Mmapper2Group::getConfigState()) {
     case GroupManagerStateEnum::Off:
         groupMode.groupOffAct->setChecked(true);
         slot_onModeGroupOff();
@@ -407,13 +408,20 @@ void MainWindow::startServices()
         slot_onModeGroupServer();
         break;
     }
-    if (groupConfig.state != GroupManagerStateEnum::Off && groupConfig.autoStart)
-        groupNetwork.networkStartAct->trigger();
+
+    if (Mmapper2Group::getConfigState() == GroupManagerStateEnum::Off) {
+        auto should_autostart = []() -> bool { return getConfig().groupManager.autoStart; };
+        if (should_autostart()) {
+            groupNetwork.networkStartAct->trigger();
+        }
+    }
 
     if constexpr (!NO_UPDATER) {
+        auto should_check_for_update = []() -> bool { return getConfig().general.checkForUpdate; };
         // Raise the update dialog if an update is found
-        if (getConfig().general.checkForUpdate)
+        if (should_check_for_update()) {
             m_updateDialog->open();
+        }
     }
 }
 

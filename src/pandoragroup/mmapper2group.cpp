@@ -639,7 +639,7 @@ void Mmapper2Group::slot_startNetwork()
 
     if (!network) {
         // Create network
-        switch (getConfig().groupManager.state) {
+        switch (Mmapper2Group::getConfigState()) {
         case GroupManagerStateEnum::Server:
             network = std::make_unique<GroupServer>(this);
             break;
@@ -715,7 +715,7 @@ void Mmapper2Group::slot_setMode(const GroupManagerStateEnum newMode)
 {
     QMutexLocker locker(&networkLock);
 
-    setConfig().groupManager.state = newMode; // Ensure config matches reality
+    Mmapper2Group::setConfigState(newMode); // Ensure config matches reality
 
     const auto currentState = getMode();
     if (currentState == newMode)
@@ -725,4 +725,14 @@ void Mmapper2Group::slot_setMode(const GroupManagerStateEnum newMode)
     slot_stopNetwork();
 
     qDebug() << "Network type set to" << static_cast<int>(newMode);
+}
+
+GroupManagerStateEnum Mmapper2Group::getConfigState()
+{
+    return getConfig().groupManager.state;
+}
+
+void Mmapper2Group::setConfigState(GroupManagerStateEnum state)
+{
+    setConfig().groupManager.state = state;
 }

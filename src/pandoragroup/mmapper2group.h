@@ -31,6 +31,10 @@ class Mmapper2Group final : public QObject
 public:
     Q_OBJECT
 
+public:
+    NODISCARD static GroupManagerStateEnum getConfigState();
+    static void setConfigState(GroupManagerStateEnum state);
+
 private:
     void log(const QString &msg) { emit sig_log("GroupManager", msg); }
     void messageBox(const QString &msg) { emit sig_messageBox("GroupManager", msg); }
