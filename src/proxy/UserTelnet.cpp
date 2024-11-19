@@ -121,7 +121,7 @@ void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 
 void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 {
-    if (!m_options.myOptionState[OPT_GMCP]) {
+    if (!getOptions().myOptionState[OPT_GMCP]) {
         return;
     }
 
@@ -140,7 +140,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 
 void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
 {
-    if (!m_options.myOptionState[OPT_MSSP]) {
+    if (!getOptions().myOptionState[OPT_MSSP]) {
         return;
     }
 
@@ -158,6 +158,9 @@ void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
 void UserTelnet::slot_onRelayEchoMode(const bool isDisabled)
 {
     sendTelnetOption(isDisabled ? TN_WONT : TN_WILL, OPT_ECHO);
+
+    // REVISIT: This is he only non-const use of the options variable;
+    // it could be refactored so the base class does the writes.
     m_options.myOptionState[OPT_ECHO] = !isDisabled;
     m_options.announcedState[OPT_ECHO] = true;
 }
@@ -211,7 +214,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         }
         oss << " ]";
         if (!comma) {
-            if (m_debug) {
+            if (getDebug()) {
                 qDebug() << "All modules were supported or nothing was requested";
             }
             return;
@@ -227,7 +230,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
 void UserTelnet::virt_receiveTerminalType(const QByteArray &data)
 {
-    if (m_debug) {
+    if (getDebug()) {
         qDebug() << "Received Terminal Type" << data;
     }
     emit sig_relayTermType(data);
@@ -249,7 +252,7 @@ void UserTelnet::virt_sendRawData(const std::string_view data)
 
 bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
 {
-    if (!m_options.myOptionState[OPT_GMCP]) {
+    if (!getOptions().myOptionState[OPT_GMCP]) {
         return false;
     }
 
@@ -277,7 +280,7 @@ void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 
 void UserTelnet::resetGmcpModules()
 {
-    if (m_debug) {
+    if (getDebug()) {
         qDebug() << "Clearing GMCP modules";
     }
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \

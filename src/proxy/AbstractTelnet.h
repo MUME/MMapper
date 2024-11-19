@@ -4,6 +4,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Array.h"
+#include "GmcpMessage.h"
+#include "GmcpModule.h"
+#include "TextCodec.h"
+
 #include <cassert>
 #include <cstdint>
 
@@ -11,15 +16,6 @@
 #include <QObject>
 #include <QString>
 #include <QtCore>
-
-#ifndef MMAPPER_NO_ZLIB
-#include <zlib.h>
-#endif
-
-#include "../global/Array.h"
-#include "GmcpMessage.h"
-#include "GmcpModule.h"
-#include "TextCodec.h"
 
 // telnet command codes (prefixed with TN_ to prevent duplicit #defines
 static constexpr const uint8_t TN_EOR = 239;
@@ -119,27 +115,32 @@ protected:
         OptionArray triedToEnable;
 
         void reset();
-    } m_options;
-
-    /** current dimensions for NAWS */
+    };
     struct NODISCARD NawsData final
     {
-        int x = 80, y = 24;
-    } m_current{};
+        int width = 80;
+        int height = 24;
+    };
 
+protected:
+    Options m_options{};
+    NawsData m_currentNaws{};
+    int64_t m_sentBytes = 0;
+
+private:
     /* Terminal Type */
     const QByteArray m_defaultTermType;
     QByteArray m_termType;
 
     /** amount of bytes sent up to now */
-    int64_t m_sentBytes = 0;
-
-private:
     TextCodec m_textCodec;
-
     AppendBuffer m_commandBuffer;
     AppendBuffer m_subnegBuffer;
-    enum class NODISCARD TelnetStateEnum {
+
+    struct ZstreamPimpl;
+    std::unique_ptr<ZstreamPimpl> m_zstream_pimpl;
+
+    enum class NODISCARD TelnetStateEnum : uint8_t {
         /// normal input
         NORMAL,
         /// received IAC
@@ -152,37 +153,29 @@ private:
         SUBNEG_IAC,
         /// received IAC SB ... IAC <WILL|WONT|DO|DONT>
         SUBNEG_COMMAND
-    } m_state;
+    };
 
+    TelnetStateEnum m_state = TelnetStateEnum::NORMAL;
     /** have we received the GA signal? */
     bool m_recvdGA = false;
-
-protected:
-    bool m_debug = false;
-
-private:
-#ifndef MMAPPER_NO_ZLIB
-    // REVIST: Refactor this to use PImpl
-    z_stream m_stream;
-#endif
     bool m_inflateTelnet = false;
     bool m_recvdCompress = false;
+    bool m_debug = false;
 
 public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
                             QObject *parent,
-                            const QByteArray &defaultTermType);
+                            QByteArray defaultTermType);
     ~AbstractTelnet() override;
 
-    NODISCARD QByteArray getTerminalType() const
-    {
-        return m_termType;
-    }
+protected:
+    NODISCARD const Options &getOptions() const { return m_options; }
+    NODISCARD bool getDebug() const { return m_debug; }
+
+public:
+    NODISCARD QByteArray getTerminalType() const { return m_termType; }
     /* unused */
-    NODISCARD int64_t getSentBytes() const
-    {
-        return m_sentBytes;
-    }
+    NODISCARD int64_t getSentBytes() const { return m_sentBytes; }
 
     NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
     {
@@ -206,10 +199,7 @@ protected:
     void submitOverTelnet(std::string_view data, bool goAhead);
 
 private:
-    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &)
-    {
-        return false;
-    }
+    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
@@ -223,67 +213,34 @@ private:
     virtual void virt_sendToMapper(const QByteArray &, bool goAhead) = 0;
 
 protected:
-    void onGmcpEnabled()
-    {
-        virt_onGmcpEnabled();
-    }
-    void receiveEchoMode(bool b)
-    {
-        virt_receiveEchoMode(b);
-    }
-    void receiveGmcpMessage(const GmcpMessage &msg)
-    {
-        virt_receiveGmcpMessage(msg);
-    }
-    void receiveTerminalType(const QByteArray &ba)
-    {
-        virt_receiveTerminalType(ba);
-    }
-    void receiveMudServerStatus(const QByteArray &ba)
-    {
-        virt_receiveMudServerStatus(ba);
-    }
-    void receiveWindowSize(int x, int y)
-    {
-        virt_receiveWindowSize(x, y);
-    }
+    void onGmcpEnabled() { virt_onGmcpEnabled(); }
+    void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
+    void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
+    void receiveTerminalType(const QByteArray &ba) { virt_receiveTerminalType(ba); }
+    void receiveMudServerStatus(const QByteArray &ba) { virt_receiveMudServerStatus(ba); }
+    void receiveWindowSize(int x, int y) { virt_receiveWindowSize(x, y); }
 
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    void sendRawData(const std::string_view ba)
-    {
-        virt_sendRawData(ba);
-    }
+    void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
     void sendRawData(const char *s) = delete;
 
 private:
     // DEPRECATED_MSG("use STL functions")
-    void sendRawData(const QByteArray &arr)
-    {
-        sendRawData(mmqt::toStdStringViewLatin1(arr));
-    }
+    void sendRawData(const QByteArray &arr) { sendRawData(mmqt::toStdStringViewLatin1(arr)); }
 
 protected:
-    void sendToMapper(const QByteArray &ba, bool goAhead)
-    {
-        virt_sendToMapper(ba, goAhead);
-    }
+    void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
 
 protected:
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
     void reset();
     void onReadInternal(const QByteArray &);
-    void setTerminalType(const QByteArray &terminalType)
-    {
-        m_termType = terminalType;
-    }
+    void setTerminalType(const QByteArray &terminalType) { m_termType = terminalType; }
 
-    NODISCARD CharacterEncodingEnum getEncoding() const
-    {
-        return m_textCodec.getEncoding();
-    }
+    NODISCARD CharacterEncodingEnum getEncoding() const { return m_textCodec.getEncoding(); }
 
 private:
     void onReadInternal2(AppendBuffer &, uint8_t);
@@ -297,4 +254,5 @@ private:
 private:
     NODISCARD int onReadInternalInflate(const char *, const int, AppendBuffer &);
     void resetCompress();
+    void processGA(AppendBuffer &cleanData);
 };

@@ -70,6 +70,8 @@ void MudTelnet::slot_onSendToMud(const QByteArray &ba)
 
 void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
 {
+    const auto &hisOptionState = getOptions().hisOptionState;
+
     // Remember Core.Supports.[Add|Set|Remove] modules
     if (msg.getJson()
         && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())
@@ -96,7 +98,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         }
 
         // Send it now if GMCP has been negotiated
-        if (m_options.hisOptionState[OPT_GMCP]) {
+        if (hisOptionState[OPT_GMCP]) {
             sendCoreSupports();
         }
         return;
@@ -106,7 +108,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         m_receivedExternalDiscordHello = true;
     }
 
-    if (!m_options.hisOptionState[OPT_GMCP]) {
+    if (!hisOptionState[OPT_GMCP]) {
         qDebug() << "MUME did not request GMCP yet";
         return;
     }
@@ -114,17 +116,17 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
     sendGmcpMessage(msg);
 }
 
-void MudTelnet::slot_onRelayNaws(const int x, const int y)
+void MudTelnet::slot_onRelayNaws(const int width, const int height)
 {
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
     // we won't be called again when connecting
-    m_current.x = x;
-    m_current.y = y;
+    m_currentNaws.width = width;
+    m_currentNaws.height = height;
 
-    if (m_options.myOptionState[OPT_NAWS]) {
+    if (getOptions().myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
-        sendWindowSizeChanged(x, y);
+        sendWindowSizeChanged(width, height);
     }
 }
 
@@ -132,7 +134,7 @@ void MudTelnet::slot_onRelayTermType(const QByteArray &terminalType)
 {
     // Append the MMapper version suffix to the terminal type
     setTerminalType(addTerminalTypeSuffix(terminalType.constData()));
-    if (m_options.myOptionState[OPT_TERMINAL_TYPE]) {
+    if (getOptions().myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(getTerminalType());
     }
 }
@@ -149,7 +151,7 @@ void MudTelnet::virt_receiveEchoMode(bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
-    if (m_debug) {
+    if (getDebug()) {
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
     }
 
@@ -164,7 +166,7 @@ void MudTelnet::virt_receiveMudServerStatus(const QByteArray &ba)
 
 void MudTelnet::virt_onGmcpEnabled()
 {
-    if (m_debug) {
+    if (getDebug()) {
         qDebug() << "Requesting GMCP from MUME";
     }
 
@@ -230,7 +232,7 @@ void MudTelnet::sendCoreSupports()
     oss << " ]";
     const std::string set = oss.str();
 
-    if (m_debug) {
+    if (getDebug()) {
         qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
     }
 
@@ -258,7 +260,7 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
     const auto addValue([&map, &vals, &varName, &buffer, this]() {
         // Put it into the map.
-        if (m_debug) {
+        if (getDebug()) {
             qDebug() << "MSSP received value" << mmqt::toQByteArrayLatin1(buffer.toStdString())
                      << "for variable" << mmqt::toQByteArrayLatin1(varName.value());
         }
@@ -287,13 +289,13 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
             case TNSB_MSSP_VAL: {
                 if (buffer.isEmpty()) {
-                    if (m_debug) {
+                    if (getDebug()) {
                         qDebug() << "MSSP received variable without any name; ignoring it";
                     }
                     continue;
                 }
 
-                if (m_debug) {
+                if (getDebug()) {
                     qDebug() << "MSSP received variable"
                              << mmqt::toQByteArrayLatin1(buffer.toStdString());
                 }

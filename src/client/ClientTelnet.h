@@ -28,7 +28,7 @@ public:
 
 public slots:
     /** Window size has changed - informs the server about it */
-    void slot_onWindowSizeChanged(int x, int y);
+    void slot_onWindowSizeChanged(int width, int height);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
     void slot_sendToMud(const QString &data);

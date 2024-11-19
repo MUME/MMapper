@@ -11,6 +11,7 @@
 #include "../proxy/TextCodec.h"
 
 #include <limits>
+#include <tuple>
 
 #include <QApplication>
 #include <QByteArray>
@@ -95,31 +96,31 @@ void ClientTelnet::virt_sendRawData(const std::string_view data)
     m_socket.write(mmqt::toQByteArrayLatin1(data));
 }
 
-void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
+void ClientTelnet::slot_onWindowSizeChanged(const int width, const int height)
 {
-    if (m_current.x == x && m_current.y == y) {
+    auto &current = m_currentNaws;
+    if (current.width == width && current.height == height) {
         return;
     }
 
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
     // we won't be called again when connecting
-    m_current.x = x;
-    m_current.y = y;
+    current.width = width;
+    current.height = height;
 
-    if (m_options.myOptionState[OPT_NAWS]) {
+    if (getOptions().myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
-        sendWindowSizeChanged(x, y);
+        sendWindowSizeChanged(width, height);
     }
 }
 
 void ClientTelnet::slot_onReadyRead()
 {
     // REVISIT: check return value?
-    MAYBE_UNUSED const auto ignored = //
-        io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-            onReadInternal(byteArray);
-        });
+    std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
+        onReadInternal(byteArray);
+    });
 }
 
 void ClientTelnet::virt_sendToMapper(const QByteArray &data, bool /*goAhead*/)

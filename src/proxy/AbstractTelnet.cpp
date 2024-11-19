@@ -10,12 +10,18 @@
 #include "../global/utils.h"
 #include "TextCodec.h"
 
+#ifndef MMAPPER_NO_ZLIB
+#include <zlib.h>
+#endif
+
 #include <array>
 #include <cassert>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <ostream>
 #include <sstream>
+#include <utility>
 
 #include <QByteArray>
 #include <QMessageLogContext>
@@ -169,39 +175,64 @@ public:
     void addSubnegEnd() { addCommand(TN_SE); }
 };
 
-AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
-                               QObject *const parent,
-                               const QByteArray &defaultTermType)
-    : QObject(parent)
-    , m_defaultTermType(defaultTermType)
-    , m_textCodec{strategy}
+struct NODISCARD AbstractTelnet::ZstreamPimpl final
 {
 #ifndef MMAPPER_NO_ZLIB
+    z_stream zstream{};
+    explicit ZstreamPimpl();
+    ~ZstreamPimpl();
+#endif
+    void reset();
+};
+
+#ifndef MMAPPER_NO_ZLIB
+AbstractTelnet::ZstreamPimpl::ZstreamPimpl()
+{
+    auto &stream = zstream;
     /* allocate inflate state */
-    auto &stream = m_stream;
     stream.zalloc = Z_NULL;
     stream.zfree = Z_NULL;
     stream.opaque = Z_NULL;
     stream.avail_in = 0;
     stream.next_in = Z_NULL;
-    int ret = inflateInit(&stream);
+    const int ret = inflateInit(&stream);
     if (ret != Z_OK) {
         throw std::runtime_error("Unable to initialize zlib");
     }
+}
+
+AbstractTelnet::ZstreamPimpl::~ZstreamPimpl()
+{
+    inflateEnd(&zstream);
+}
 #endif
 
+void AbstractTelnet::ZstreamPimpl::reset()
+{
+#ifndef MMAPPER_NO_ZLIB
+    const int ret = inflateReset(&zstream);
+    if (ret != Z_OK) {
+        throw std::runtime_error("Could not reset zlib");
+    }
+#endif
+}
+
+AbstractTelnet::AbstractTelnet(const TextCodecStrategyEnum strategy,
+                               QObject *const parent,
+                               QByteArray defaultTermType)
+    : QObject(parent)
+    , m_defaultTermType(std::move(defaultTermType))
+    , m_textCodec{strategy}
+    , m_zstream_pimpl{std::make_unique<ZstreamPimpl>()}
+{
     reset();
 }
 
-AbstractTelnet::~AbstractTelnet()
-{
-#ifndef MMAPPER_NO_ZLIB
-    inflateEnd(&m_stream);
-#endif
-}
+AbstractTelnet::~AbstractTelnet() = default;
 
 void AbstractTelnet::Options::reset()
 {
+    // Could also use "*this = {};" instead of the following:
     myOptionState.fill(false);
     hisOptionState.fill(false);
     announcedState.fill(false);
@@ -224,6 +255,8 @@ void AbstractTelnet::reset()
     m_subnegBuffer.clear();
     m_sentBytes = 0;
     m_recvdGA = false;
+
+    assert(m_options.hisOptionState[OPT_COMPRESS2] == false);
     resetCompress();
 }
 
@@ -251,7 +284,7 @@ static void doubleIacs(std::ostream &os, const std::string_view input)
 void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool goAhead)
 {
     auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
-        auto &myOptionState = m_options.myOptionState;
+        const auto &myOptionState = m_options.myOptionState;
         if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
             return std::array<char, 2>{char(TN_IAC), char(myOptionState[OPT_EOR] ? TN_EOR : TN_GA)};
         }
@@ -279,26 +312,27 @@ void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool go
     sendRawData(os.str());
 }
 
-void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
+void AbstractTelnet::sendWindowSizeChanged(const int width, const int height)
 {
     if (m_debug) {
-        qDebug() << "Sending NAWS" << x << y;
+        qDebug() << "Sending NAWS" << width << height;
     }
 
     // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_NAWS);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
-    s.addClampedTwoByteEscaped(x);
-    s.addClampedTwoByteEscaped(y);
+    s.addClampedTwoByteEscaped(width);
+    s.addClampedTwoByteEscaped(height);
     s.addSubnegEnd();
 }
 
 void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 {
     // Do not respond if we initiated this request
-    if (m_options.triedToEnable[option]) {
-        m_options.triedToEnable[option] = false;
+    auto &triedToEnable = m_options.triedToEnable;
+    if (triedToEnable[option]) {
+        triedToEnable[option] = false;
         return;
     }
 
@@ -333,7 +367,6 @@ void AbstractTelnet::sendCharsetRequest()
     for (const auto &encoding : m_textCodec.supportedEncodings()) {
         myCharacterSets << mmqt::toQByteArrayLatin1(encoding);
     }
-
     if (m_debug) {
         qDebug() << "Sending Charset request" << myCharacterSets;
     }
@@ -559,7 +592,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                         // NAWS here - window size info must be sent
                         // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
                         // messages per second when the user adjusts the window size?
-                        sendWindowSizeChanged(m_current.x, m_current.y);
+                        sendWindowSizeChanged(m_currentNaws.width, m_currentNaws.height);
                     } else if (option == OPT_GMCP) {
                         onGmcpEnabled();
                     } else if (option == OPT_LINEMODE) {
@@ -790,35 +823,31 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     int pos = 0;
     while (pos < data.size()) {
         if (m_inflateTelnet) {
-            int remaining = onReadInternalInflate(data.data() + pos, data.size() - pos, cleanData);
+            const int remaining = onReadInternalInflate(data.data() + pos,
+                                                        data.size() - pos,
+                                                        cleanData);
             pos = data.length() - remaining;
             // Continue because there might be additional chunks left to inflate
             continue;
         }
 
         // Process character by character
-        const uint8_t c = static_cast<unsigned char>(data.at(pos));
+        const auto c = static_cast<uint8_t>(data.at(pos));
+        ++pos;
         onReadInternal2(cleanData, c);
-        pos++;
 
         if (m_recvdCompress) {
             m_inflateTelnet = true;
             m_recvdCompress = false;
-#ifndef MMAPPER_NO_ZLIB
-            int ret = inflateReset(&m_stream);
-            if (ret != Z_OK) {
-                throw std::runtime_error("Could not reset zlib");
-            }
-#endif
+            deref(m_zstream_pimpl).reset();
 
             // Start inflating at the next position
             continue;
         }
 
+        // Should this be before or after processing m_recvdCompress?
         if (m_recvdGA) {
-            sendToMapper(cleanData, m_recvdGA); // with GO-AHEAD
-            cleanData.clear();
-            m_recvdGA = false;
+            processGA(cleanData);
         }
     }
 
@@ -965,7 +994,7 @@ void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
     }
 }
 
-int AbstractTelnet::onReadInternalInflate(const char *data,
+int AbstractTelnet::onReadInternalInflate(const char *const data,
                                           const int length,
                                           AppendBuffer &cleanData)
 {
@@ -973,9 +1002,9 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
     abort();
 #else
     static constexpr const int CHUNK = 1024;
-    char out[CHUNK];
+    alignas(64) char out[CHUNK];
 
-    auto &stream = m_stream;
+    auto &stream = deref(m_zstream_pimpl).zstream;
     stream.avail_in = static_cast<uint32_t>(length);
     stream.next_in = reinterpret_cast<const Bytef *>(data);
 
@@ -1009,11 +1038,8 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
             // Process character by character
             const uint8_t c = static_cast<unsigned char>(out[i]);
             onReadInternal2(cleanData, c);
-
             if (m_recvdGA) {
-                sendToMapper(cleanData, m_recvdGA); // with GO-AHEAD
-                cleanData.clear();
-                m_recvdGA = false;
+                processGA(cleanData);
             }
         }
 
@@ -1026,5 +1052,20 @@ void AbstractTelnet::resetCompress()
 {
     m_inflateTelnet = false;
     m_recvdCompress = false;
-    m_options.hisOptionState[OPT_COMPRESS2] = false;
+
+    // Should this be called here?
+    if (false) {
+        deref(m_zstream_pimpl).reset();
+    }
+}
+
+void AbstractTelnet::processGA(AppendBuffer &cleanData)
+{
+    if (!m_recvdGA) {
+        return;
+    }
+
+    sendToMapper(cleanData, m_recvdGA); // with GO-AHEAD
+    cleanData.clear();
+    m_recvdGA = false;
 }
