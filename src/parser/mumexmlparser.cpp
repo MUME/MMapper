@@ -25,7 +25,7 @@ using namespace char_consts;
 
 class MapData;
 
-namespace {
+namespace { // anonymous
 #if defined(XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE)
 static constexpr const auto XPS_DEBUG_TO_FILE = static_cast<bool>(
     XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE);

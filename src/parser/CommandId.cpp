@@ -148,7 +148,7 @@ const char *getLowercase(const CommandEnum cmd)
     throw std::runtime_error("missing name for command");
 }
 
-namespace {
+namespace { // anonymous
 #define TEST(a, b) static_assert(static_cast<int>(a) == (b), "")
 
 // NORTH

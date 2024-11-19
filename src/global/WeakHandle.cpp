@@ -8,7 +8,7 @@
 #include <cassert>
 #include <string>
 
-namespace {
+namespace { // anonymous
 
 class Foo final : public EnableGetWeakHandleFromThis<Foo>
 {

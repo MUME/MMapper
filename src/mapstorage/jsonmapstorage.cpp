@@ -29,7 +29,7 @@
 
 #include <QString>
 
-namespace {
+namespace { // anonymous
 
 // These settings have to be shared with the JS code:
 // Group all rooms with the same 2 first hash bytes into the same file

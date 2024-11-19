@@ -20,7 +20,7 @@
 
 class RoomAdmin;
 
-namespace {
+namespace { // anonymous
 
 struct NODISCARD RoomLink
 {
