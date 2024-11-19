@@ -166,6 +166,8 @@ void CTimers::slot_finishCountdownTimer()
 
 std::string CTimers::getTimers()
 {
+    QMutexLocker locker(&m_lock);
+
     if (m_timers.empty())
         return "";
 
@@ -183,6 +185,8 @@ std::string CTimers::getTimers()
 
 std::string CTimers::getCountdowns()
 {
+    QMutexLocker locker(&m_lock);
+
     if (m_countdowns.empty())
         return "";
 
@@ -201,8 +205,6 @@ std::string CTimers::getCountdowns()
 
 std::string CTimers::getStatCommandEntry()
 {
-    QMutexLocker locker(&m_lock);
-
     return getCountdowns() + getTimers();
 }
 
