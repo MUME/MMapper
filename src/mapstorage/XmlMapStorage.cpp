@@ -36,7 +36,7 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
-// ---------------------------- XmlMapStorage::Type ------------------------
+// ---------------------------- XmlMapStorage::TypeEnum ------------------------
 // list know enum types
 #define X_FOREACH_TYPE_ENUM(X) \
     X(RoomAlignEnum) \
@@ -51,9 +51,9 @@
     X(RoomRidableEnum) \
     X(RoomSundeathEnum) \
     X(RoomTerrainEnum) \
-    X(Type)
+    X(TypeEnum)
 
-enum class XmlMapStorage::Type : uint {
+enum class XmlMapStorage::TypeEnum : uint {
 #define DECL(X) X,
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
@@ -101,21 +101,21 @@ public:
 
 private:
     // define a bunch of methods
-    //   static constexpr Type enumToType(RoomAlignEnum) { return Type::RoomAlignEnum; }
-    //   static constexpr Type enumToType(DoorFlagEnum)  { return Type::DoorFlagEnum;  }
+    //   static constexpr TypeEnum enumToType(RoomAlignEnum) { return TypeEnum::RoomAlignEnum; }
+    //   static constexpr TypeEnum enumToType(DoorFlagEnum)  { return TypeEnum::DoorFlagEnum;  }
     //   ...
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define DECL(X) \
-    static constexpr Type enumToType(X) \
+    static constexpr TypeEnum enumToType(X) \
     { \
-        return Type::X; \
+        return TypeEnum::X; \
     }
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 
-    uint stringToEnum(Type type, const QStringView str, bool &fail) const;
-    const QString &enumToString(Type type, uint val) const;
+    uint stringToEnum(TypeEnum type, const QStringView str, bool &fail) const;
+    const QString &enumToString(TypeEnum type, uint val) const;
 
     std::vector<std::vector<QString>> enumToStrings;
     std::vector<QHash<QStringView, uint>> stringToEnums;
@@ -170,7 +170,7 @@ XmlMapStorage::Converter::Converter()
     }
 }
 
-const QString &XmlMapStorage::Converter::enumToString(Type type, uint val) const
+const QString &XmlMapStorage::Converter::enumToString(const TypeEnum type, const uint val) const
 {
     const uint index = uint(type);
     if (index < enumToStrings.size() && val < enumToStrings[index].size()) {
@@ -182,7 +182,9 @@ const QString &XmlMapStorage::Converter::enumToString(Type type, uint val) const
     return empty;
 }
 
-uint XmlMapStorage::Converter::stringToEnum(Type type, const QStringView str, bool &fail) const
+uint XmlMapStorage::Converter::stringToEnum(const TypeEnum type,
+                                            const QStringView str,
+                                            bool &fail) const
 {
     const uint index = uint(type);
     if (index < stringToEnums.size()) {

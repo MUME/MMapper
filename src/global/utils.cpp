@@ -19,17 +19,17 @@ namespace utils::details::tests {
 static_assert(!isBitMask<int32_t>());
 static_assert(isBitMask<uint32_t>());
 
-enum class NotBitmask { A = -1, B, C };
-static_assert(!isBitMask<NotBitmask>());
+enum class NODISCARD NotBitmaskEnum { A = -1, B, C };
+static_assert(!isBitMask<NotBitmaskEnum>());
 
-enum class NotBitmask_int : int { A = -1, B, C };
-static_assert(!isBitMask<NotBitmask_int>());
+enum class NODISCARD NotBitmask_intEnum : int { A = -1, B, C };
+static_assert(!isBitMask<NotBitmask_intEnum>());
 
-enum class NotBitmask_int8 : int8_t { A, B, C };
-static_assert(!isBitMask<NotBitmask_int8>());
+enum class NODISCARD NotBitmask_int8Enum : int8_t { A, B, C };
+static_assert(!isBitMask<NotBitmask_int8Enum>());
 
-enum class Bitmask_uint8 : uint8_t { A, B, C };
-static_assert(isBitMask<Bitmask_uint8>());
+enum class NODISCARD Bitmask_uint8Enum : uint8_t { A, B, C };
+static_assert(isBitMask<Bitmask_uint8Enum>());
 
 static_assert(!isBitMask<float>());
 static_assert(!isBitMask<double>());
