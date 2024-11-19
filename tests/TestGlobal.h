@@ -12,10 +12,10 @@ public:
     ~TestGlobal() final;
 
 private Q_SLOTS:
-    void ansi256ColorTest();
-    void ansiToRgbTest();
-    void stringViewTest();
-    void toLowerLatin1Test();
-    void to_numberTest();
-    void unquoteTest();
+    static void ansi256ColorTest();
+    static void ansiToRgbTest();
+    static void stringViewTest();
+    static void toLowerLatin1Test();
+    static void to_numberTest();
+    static void unquoteTest();
 };

@@ -26,7 +26,7 @@ public slots:
 private:
     NODISCARD bool writeLine(const QString &str);
     void deleteOldLogs();
-    void deleteLogs(const QFileInfoList &files);
+    static void deleteLogs(const QFileInfoList &files);
     NODISCARD bool showDeleteDialog(QString message);
     NODISCARD bool createFile();
 
