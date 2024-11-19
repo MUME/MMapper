@@ -20,8 +20,9 @@ NODISCARD static std::string generateRunId()
 {
     // Generate 6 random characters
     std::ostringstream os;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 6; ++i) {
         os << static_cast<char>(getRandom(25u) + 65u);
+    }
     return os.str();
 }
 
