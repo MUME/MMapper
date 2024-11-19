@@ -400,10 +400,10 @@ NODISCARD static bool isCommand(const std::string &str, const CommandEnum cmd)
 
 bool AbstractParser::parseUserCommands(const QString &input)
 {
-    if (input.startsWith(prefixChar)) {
+    if (input.startsWith(getPrefixChar())) {
         std::string s = mmqt::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
-        if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
+        if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar())
             sendToUser("Internal error. Sorry.\n");
         else
             parseSpecialCommand(view);
@@ -502,7 +502,7 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser(QString("Syntax: %1set prefix [punct-char]\n").arg(prefixChar));
+        sendToUser(QString("Syntax: %1set prefix [punct-char]\n").arg(getPrefixChar()));
         return;
     }
 
@@ -664,7 +664,7 @@ void AbstractParser::initSpecialCommandMap()
             sendToUser(QString("Help for %1%2:\n"
                                "  %3\n"
                                "\n")
-                           .arg(prefixChar)
+                           .arg(getPrefixChar())
                            .arg(mmqt::toQStringLatin1(name))
                            .arg(mmqt::toQStringLatin1(help)));
         };
@@ -798,7 +798,7 @@ void AbstractParser::initSpecialCommandMap()
             sendToUser(QString("Help for %1%2:\n"
                                "%3\n"
                                "\n")
-                           .arg(prefixChar)
+                           .arg(getPrefixChar())
                            .arg(mmqt::toQStringLatin1(name))
                            .arg(mmqt::toQStringLatin1(help)));
         });

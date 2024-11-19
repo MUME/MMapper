@@ -141,7 +141,6 @@ AbstractParser::AbstractParser(MapData &md,
     , m_mapData(md)
     , m_proxy(std::move(proxy))
     , m_group(std::move(group))
-    , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer,
             &QTimer::timeout,
@@ -816,6 +815,7 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 
 void AbstractParser::showCommandPrefix()
 {
+    const auto prefixChar = getPrefixChar();
     const auto quote = static_cast<char>((prefixChar == C_SQUOTE) ? C_DQUOTE : C_SQUOTE);
     sendToUser(
         QString("The current command prefix is: %1%2%1 (e.g. %2help)\n").arg(quote).arg(prefixChar));
@@ -832,7 +832,7 @@ bool AbstractParser::setCommandPrefix(const char prefix)
 
 void AbstractParser::showSyntax(const char *rest)
 {
-    sendToUser(QString::asprintf("Usage: %c%s\n", prefixChar, rest));
+    sendToUser(QString::asprintf("Usage: %c%s\n", getPrefixChar(), rest));
 }
 
 void AbstractParser::showNote()
@@ -916,6 +916,7 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
         return a.from < b.from;
     });
 
+    const auto prefixChar = getPrefixChar();
     char currentLetter = records[0].from[0];
     for (const auto &rec : records) {
         const auto thisLetter = rec.from[0];
@@ -952,7 +953,7 @@ void AbstractParser::showMiscHelp()
     sendToUser(QString("  %1back        - delete prespammed commands from queue\n"
                        "  %1time        - display current MUME time\n"
                        "  %1vote        - vote for MUME on TMC!\n")
-                   .arg(prefixChar));
+                   .arg(getPrefixChar()));
 }
 
 void AbstractParser::showHelp()
@@ -985,7 +986,7 @@ void AbstractParser::showHelp()
                      "  %1connect                   - connect to the MUD\n"
                      "  %1disconnect                - disconnect from the MUD\n");
 
-    sendToUser(s.arg(prefixChar));
+    sendToUser(s.arg(getPrefixChar()));
 }
 
 void AbstractParser::showMumeTime()
@@ -1005,7 +1006,8 @@ void AbstractParser::showMumeTime()
         } else {
             data += "\033[33mday\033[0m";
         }
-        data += " for " + mmqt::toQByteArrayLatin1(m_mumeClock.toCountdown(moment)) + " more ticks.\n";
+        data += " for " + mmqt::toQByteArrayLatin1(m_mumeClock.toCountdown(moment))
+                + " more ticks.\n";
 
         // Moon data
         data += moment.toMumeMoonTime().toLatin1() + "\n";
@@ -1032,7 +1034,7 @@ void AbstractParser::showDoorCommandHelp()
     for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
         const int cmdWidth = 6;
         sendToUser(QString("  %1%2 [dir] - executes \"%3 ... [dir]\"\n")
-                       .arg(prefixChar)
+                       .arg(getPrefixChar())
                        .arg(getParserCommandName(dat).describe(), -cmdWidth)
                        .arg(QString{getCommandName(dat)}));
     }
@@ -1041,7 +1043,7 @@ void AbstractParser::showDoorCommandHelp()
 
     showHeader("Destructive commands");
     sendToUser(QString("  %1%2   - removes all secret door names from the current map\n")
-                   .arg(prefixChar)
+                   .arg(getPrefixChar())
                    .arg(cmdRemoveDoorNames.getCommand()));
 }
 
@@ -1607,7 +1609,7 @@ void AbstractParser::eval(const std::string &name,
                           StringView input)
 {
     using namespace syntax;
-    const auto thisCommand = std::string(1, prefixChar) + name;
+    const auto thisCommand = std::string(1, getPrefixChar()) + name;
     const auto completeSyntax = buildSyntax(stringToken(thisCommand), syntax);
     sendToUser(processSyntax(completeSyntax, thisCommand, input));
 }

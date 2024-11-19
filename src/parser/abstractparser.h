@@ -86,7 +86,11 @@ public:
 
 private:
     ParserRecordMap m_specialCommandMap;
-    const char &prefixChar;
+    NODISCARD static char getPrefixChar()
+    {
+        static const char &g_prefixChar = getConfig().parser.prefixChar;
+        return g_prefixChar;
+    }
 
 private:
     ActionRecordMap m_actionMap;
