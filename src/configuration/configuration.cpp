@@ -21,6 +21,8 @@
 #include <QString>
 #include <QStringList>
 
+#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
+
 static std::atomic_bool config_enteredMain{false};
 
 NODISCARD static const char *getPlatformEditor()
@@ -952,8 +954,6 @@ const Configuration &getConfig()
 {
     return setConfig();
 }
-
-#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 
 void Configuration::ColorSettings::resetToDefaults()
 {
