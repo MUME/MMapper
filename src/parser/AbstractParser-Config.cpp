@@ -142,7 +142,7 @@ void AbstractParser::doConfig(const StringView cmd)
 
             os << "Customizable colors:" << std::endl;
             for (const auto &name : names) {
-                if (name.empty() || name[0] == char_consts::C_PERIOD) {
+                if (name.empty() || name.front() == char_consts::C_PERIOD) {
                     continue;
                 }
                 XNamedColor color(name);

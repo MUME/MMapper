@@ -77,6 +77,7 @@ private:
 
     NODISCARD static int getShift(const ExitDirEnum dir) { return static_cast<int>(dir) * 2; }
 
+public:
     NODISCARD DirectSunlightEnum getDirectSunlight(const ExitDirEnum dir) const
     {
         const auto shift = getShift(dir);

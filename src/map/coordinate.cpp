@@ -6,8 +6,6 @@
 
 #include "coordinate.h"
 
-#include "../global/utils.h"
-
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>

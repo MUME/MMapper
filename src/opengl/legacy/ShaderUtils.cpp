@@ -22,12 +22,8 @@
 
 namespace ShaderUtils {
 
-static const bool VERBOSE_SHADER_DEBUG = []() -> bool {
-    if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_SHADER_DEBUG")) {
-        return opt.value();
-    }
-    return false;
-}();
+static const bool VERBOSE_SHADER_DEBUG = utils::getEnvBool("MMAPPER_VERBOSE_SHADER_DEBUG")
+                                             .value_or(false);
 static constexpr const auto npos = std::string_view::npos;
 
 template<typename Callback>

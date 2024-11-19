@@ -59,13 +59,13 @@ void RemoteEdit::addSession(const RemoteSession &sessionId,
     }
     m_sessions.insert(std::make_pair(internalId, std::move(session)));
 
-    greatestUsedId = internalId; // Increment internalId counter
+    m_greatestUsedId = internalId; // Increment internalId counter
 }
 
 void RemoteEdit::removeSession(const RemoteEditSession *const session)
 {
-    const uint internalId = session->getInternalId();
-    auto search = m_sessions.find(internalId);
+    const uint32_t internalId = session->getInternalId();
+    const auto search = m_sessions.find(internalId);
     if (search != m_sessions.end()) {
         qDebug() << "Destroying RemoteEditSession" << internalId;
         m_sessions.erase(search);

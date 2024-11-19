@@ -11,7 +11,6 @@ public:
     TestRoomMobs();
     ~TestRoomMobs() final;
 
-private:
 private Q_SLOTS:
     void testAddMob();
     void testRemoveMobById();

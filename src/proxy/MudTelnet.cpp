@@ -330,8 +330,7 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
                 break;
             }
             break;
-
-        } break;
+        }
         }
     }
 

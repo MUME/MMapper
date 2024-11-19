@@ -105,9 +105,9 @@ protected:
 protected:
     CommandEnum m_move = CommandEnum::LOOK;
     QByteArray m_lastPrompt;
+    CommandQueue m_queue;
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
-    CommandQueue m_queue;
     bool m_trollExitMapping = false;
 
 private:

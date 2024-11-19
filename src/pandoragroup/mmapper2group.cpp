@@ -409,10 +409,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (self.maxmoves != 0) {
         const auto calc_moves = [](const QByteArray &text, const int current) -> int {
             if (text.isEmpty()) {
-                if (current <= 50)
-                    return 50;
-                else
-                    return current;
+                return std::max(50, current);
             }
             X_SCORE("Tired", 30, 49);
             X_SCORE("Slow", 15, 29);

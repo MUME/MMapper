@@ -186,18 +186,15 @@ private:
     void updateTextures();
     void updateMultisampling();
 
-    NODISCARD
-    std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
-    NODISCARD
-    static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
-                                     const glm::ivec2 &size,
-                                     float zoomScale,
-                                     int currentLayer);
-    NODISCARD
-    static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
-                                 const glm::ivec2 &size,
-                                 float zoomScale,
-                                 int currentLayer);
+    NODISCARD std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
+    NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
+                                               const glm::ivec2 &size,
+                                               float zoomScale,
+                                               int currentLayer);
+    NODISCARD static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
+                                           const glm::ivec2 &size,
+                                           float zoomScale,
+                                           int currentLayer);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 

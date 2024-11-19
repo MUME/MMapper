@@ -7,7 +7,6 @@
 #include "../global/enums.h"
 #include "ExitDirection.h"
 
-#include <array>
 #include <stdexcept>
 
 namespace enums {

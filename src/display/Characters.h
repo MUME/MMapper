@@ -40,10 +40,9 @@ public:
 
 public:
     // Caller must apply the correct translation and rotation.
-    NODISCARD
-    static DistantObjectTransform construct(const glm::vec3 &pos,
-                                            const MapScreen &mapScreen,
-                                            float marginPixels);
+    NODISCARD static DistantObjectTransform construct(const glm::vec3 &pos,
+                                                      const MapScreen &mapScreen,
+                                                      float marginPixels);
 };
 
 class NODISCARD CharacterBatch final
@@ -175,14 +174,12 @@ private:
             FILL = 2,
             BEACON = 4
         };
-        NODISCARD
-        friend QuadOptsEnum operator|(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
+        NODISCARD friend QuadOptsEnum operator|(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              | static_cast<uint32_t>(rhs));
         }
-        NODISCARD
-        friend QuadOptsEnum operator&(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
+        NODISCARD friend QuadOptsEnum operator&(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              & static_cast<uint32_t>(rhs));

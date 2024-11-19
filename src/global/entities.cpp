@@ -363,7 +363,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
 
         out += (hexlen <= declen) ? hexbuf : decbuf;
 
-        continue;
+        // continue;
     }
 
     return out;

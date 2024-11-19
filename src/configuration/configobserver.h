@@ -23,5 +23,5 @@ signals:
     void sig_configChanged(const std::type_info &configGroup);
 
 private:
-    ConfigObserver() {}
+    ConfigObserver() = default;
 };

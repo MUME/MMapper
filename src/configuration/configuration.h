@@ -348,11 +348,11 @@ private:
     friend Configuration &setConfig();
 };
 
+#undef SUBGROUP
+
 /// Must be called before you can call setConfig() or getConfig().
 /// Please don't try to cheat it. Only call this function from main().
 void setEnteredMain();
 /// Returns a reference to the application configuration object.
 NODISCARD Configuration &setConfig();
 NODISCARD const Configuration &getConfig();
-
-#undef SUBGROUP

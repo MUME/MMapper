@@ -12,9 +12,11 @@
 
 RoadIndexMaskEnum getRoadIndex(const ExitDirEnum dir)
 {
-    if (isNESW(dir))
-        return static_cast<RoadIndexMaskEnum>(1 << static_cast<int>(dir));
-    throw std::invalid_argument("dir");
+    if (!isNESW(dir)) {
+        throw std::invalid_argument("dir");
+    }
+
+    return static_cast<RoadIndexMaskEnum>(1 << static_cast<int>(dir));
 }
 
 RoadIndexMaskEnum getRoadIndex(const Room &room)

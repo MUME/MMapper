@@ -17,7 +17,9 @@ class AdvancedGraphicsGroupBox final : public QObject
 
 private:
     friend SliderSpinboxButton;
-    QGroupBox *m_groupBox;
+
+private:
+    QGroupBox *const m_groupBox;
     using UniqueSsb = std::unique_ptr<SliderSpinboxButton>;
     std::vector<UniqueSsb> m_ssbs;
     // purposely unused; this variable exists as an RAII for the change monitors.

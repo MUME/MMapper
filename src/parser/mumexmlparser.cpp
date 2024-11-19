@@ -513,10 +513,8 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineToUser.append(mmqt::toQByteArrayLatin1(snoopToUser(os.str())));
                     m_exitsReady = true;
                     m_lineFlags.remove(LineFlagEnum::EXITS);
-                    if (m_lineFlags.contains(LineFlagEnum::ROOM))
-                        m_xmlMode = XmlModeEnum::ROOM;
-                    else
-                        m_xmlMode = XmlModeEnum::NONE;
+                    m_xmlMode = (m_lineFlags.contains(LineFlagEnum::ROOM) ? XmlModeEnum::ROOM
+                                                                          : XmlModeEnum::NONE);
                 }
                 break;
             }

@@ -23,6 +23,10 @@ class RemoteEdit final : public QObject
     Q_OBJECT
     friend class RemoteEditSession;
 
+private:
+    std::map<uint32_t, std::unique_ptr<RemoteEditSession>> m_sessions;
+    uint32_t m_greatestUsedId = 0;
+
 public:
     explicit RemoteEdit(QObject *parent);
     ~RemoteEdit() final = default;
@@ -40,13 +44,10 @@ protected:
     void save(const RemoteEditSession *);
 
 private:
-    NODISCARD uint getInternalIdCount()
+    NODISCARD uint32_t getInternalIdCount() const
     {
-        return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1;
+        return m_greatestUsedId == UINT_MAX ? 0 : m_greatestUsedId + 1;
     }
     void addSession(const RemoteSession &, const QString &, const QString &);
     void removeSession(const RemoteEditSession *session);
-
-    uint greatestUsedId = 0;
-    std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;
 };

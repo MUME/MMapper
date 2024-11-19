@@ -220,8 +220,7 @@ void ParserPage::slot_endDescPatternsListActivated(const QString &str)
 
 void ParserPage::slot_addEndDescPatternClicked()
 {
-    QString str;
-    if ((str = newPattern->text()) != "") {
+    if (QString str = newPattern->text(); str != "") {
         endDescPatternsList->addItem(str);
         endDescPatternsList->setCurrentIndex(endDescPatternsList->count() - 1);
     }

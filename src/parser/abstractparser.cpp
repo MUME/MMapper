@@ -374,7 +374,7 @@ void AbstractParser::parseExits(std::ostream &os)
                     break;
 
                 case 'n':
-                    if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
+                    if ((i + 2) < length && str.at(i + 2).toLatin1() == 'r') { // north
                         i += 5;
                         dir = ExitDirEnum::NORTH;
                     } else {

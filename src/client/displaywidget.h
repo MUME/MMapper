@@ -50,11 +50,11 @@ struct NODISCARD AnsiTextHelper final
     RawAnsi currentAnsi;
     bool backspace = false;
 
-    explicit AnsiTextHelper(QTextEdit &input_textEdit, const FontDefaults &def)
+    explicit AnsiTextHelper(QTextEdit &input_textEdit, FontDefaults def)
         : textEdit{input_textEdit}
         , cursor{textEdit.document()->rootFrame()->firstCursorPosition()}
         , format{cursor.charFormat()}
-        , defaults{def}
+        , defaults{std::move(def)}
     {}
 
     explicit AnsiTextHelper(QTextEdit &input_textEdit)
