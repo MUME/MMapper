@@ -120,20 +120,20 @@ protected:
     struct NODISCARD NawsData final
     {
         int x = 80, y = 24;
-    } current{};
+    } m_current{};
 
     /* Terminal Type */
     const QByteArray m_defaultTermType;
-    QByteArray termType;
+    QByteArray m_termType;
 
     /** amount of bytes sent up to now */
-    int64_t sentBytes = 0;
+    int64_t m_sentBytes = 0;
 
 private:
-    TextCodec textCodec;
+    TextCodec m_textCodec;
 
-    AppendBuffer commandBuffer;
-    AppendBuffer subnegBuffer;
+    AppendBuffer m_commandBuffer;
+    AppendBuffer m_subnegBuffer;
     enum class NODISCARD TelnetStateEnum {
         /// normal input
         NORMAL,
@@ -147,21 +147,21 @@ private:
         SUBNEG_IAC,
         /// received IAC SB ... IAC <WILL|WONT|DO|DONT>
         SUBNEG_COMMAND
-    } state;
+    } m_state;
 
     /** have we received the GA signal? */
-    bool recvdGA = false;
+    bool m_recvdGA = false;
 
 protected:
-    bool debug = false;
+    bool m_debug = false;
 
 private:
 #ifndef MMAPPER_NO_ZLIB
     // REVIST: Refactor this to use PImpl
-    z_stream stream;
+    z_stream m_stream;
 #endif
-    bool inflateTelnet = false;
-    bool recvdCompress = false;
+    bool m_inflateTelnet = false;
+    bool m_recvdCompress = false;
 
 public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
@@ -169,15 +169,9 @@ public:
                             const QByteArray &defaultTermType);
     ~AbstractTelnet() override;
 
-    NODISCARD QByteArray getTerminalType() const
-    {
-        return termType;
-    }
+    NODISCARD QByteArray getTerminalType() const { return m_termType; }
     /* unused */
-    NODISCARD int64_t getSentBytes() const
-    {
-        return sentBytes;
-    }
+    NODISCARD int64_t getSentBytes() const { return m_sentBytes; }
 
     NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
     {
@@ -201,10 +195,7 @@ protected:
     void submitOverTelnet(std::string_view data, bool goAhead);
 
 private:
-    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &)
-    {
-        return false;
-    }
+    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
@@ -218,67 +209,34 @@ private:
     virtual void virt_sendToMapper(const QByteArray &, bool goAhead) = 0;
 
 protected:
-    void onGmcpEnabled()
-    {
-        virt_onGmcpEnabled();
-    }
-    void receiveEchoMode(bool b)
-    {
-        virt_receiveEchoMode(b);
-    }
-    void receiveGmcpMessage(const GmcpMessage &msg)
-    {
-        virt_receiveGmcpMessage(msg);
-    }
-    void receiveTerminalType(const QByteArray &ba)
-    {
-        virt_receiveTerminalType(ba);
-    }
-    void receiveMudServerStatus(const QByteArray &ba)
-    {
-        virt_receiveMudServerStatus(ba);
-    }
-    void receiveWindowSize(int x, int y)
-    {
-        virt_receiveWindowSize(x, y);
-    }
+    void onGmcpEnabled() { virt_onGmcpEnabled(); }
+    void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
+    void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
+    void receiveTerminalType(const QByteArray &ba) { virt_receiveTerminalType(ba); }
+    void receiveMudServerStatus(const QByteArray &ba) { virt_receiveMudServerStatus(ba); }
+    void receiveWindowSize(int x, int y) { virt_receiveWindowSize(x, y); }
 
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    void sendRawData(const std::string_view ba)
-    {
-        virt_sendRawData(ba);
-    }
+    void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
     void sendRawData(const char *s) = delete;
 
 private:
     // DEPRECATED_MSG("use STL functions")
-    void sendRawData(const QByteArray &arr)
-    {
-        sendRawData(mmqt::toStdStringViewLatin1(arr));
-    }
+    void sendRawData(const QByteArray &arr) { sendRawData(mmqt::toStdStringViewLatin1(arr)); }
 
 protected:
-    void sendToMapper(const QByteArray &ba, bool goAhead)
-    {
-        virt_sendToMapper(ba, goAhead);
-    }
+    void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
 
 protected:
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
     void reset();
     void onReadInternal(const QByteArray &);
-    void setTerminalType(const QByteArray &terminalType)
-    {
-        termType = terminalType;
-    }
+    void setTerminalType(const QByteArray &terminalType) { m_termType = terminalType; }
 
-    NODISCARD CharacterEncodingEnum getEncoding() const
-    {
-        return textCodec.getEncoding();
-    }
+    NODISCARD CharacterEncodingEnum getEncoding() const { return m_textCodec.getEncoding(); }
 
 private:
     void onReadInternal2(AppendBuffer &, uint8_t);

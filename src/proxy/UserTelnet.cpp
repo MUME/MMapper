@@ -203,7 +203,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         }
         oss << " ]";
         if (!comma) {
-            if (debug)
+            if (m_debug)
                 qDebug() << "All modules were supported or nothing was requested";
             return;
         }
@@ -218,7 +218,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
 void UserTelnet::virt_receiveTerminalType(const QByteArray &data)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Received Terminal Type" << data;
     emit sig_relayTermType(data);
 }
@@ -233,7 +233,7 @@ void UserTelnet::virt_receiveWindowSize(const int x, const int y)
             telnet sequences. */
 void UserTelnet::virt_sendRawData(const std::string_view data)
 {
-    sentBytes += data.length();
+    m_sentBytes += data.length();
     emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
 }
 
@@ -266,7 +266,7 @@ void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 
 void UserTelnet::resetGmcpModules()
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Clearing GMCP modules";
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     m_gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;

@@ -116,8 +116,8 @@ void MudTelnet::slot_onRelayNaws(const int x, const int y)
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
     // we won't be called again when connecting
-    current.x = x;
-    current.y = y;
+    m_current.x = x;
+    m_current.y = y;
 
     if (myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
@@ -146,7 +146,7 @@ void MudTelnet::virt_receiveEchoMode(bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
 
     emit sig_relayGmcp(msg);
@@ -160,7 +160,7 @@ void MudTelnet::virt_receiveMudServerStatus(const QByteArray &ba)
 
 void MudTelnet::virt_onGmcpEnabled()
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Requesting GMCP from MUME";
 
     sendGmcpMessage(
@@ -181,7 +181,7 @@ void MudTelnet::virt_onGmcpEnabled()
             telnet sequences. */
 void MudTelnet::virt_sendRawData(const std::string_view data)
 {
-    sentBytes += data.length();
+    m_sentBytes += data.length();
     emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
 }
 
@@ -224,7 +224,7 @@ void MudTelnet::sendCoreSupports()
     oss << " ]";
     const std::string set = oss.str();
 
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
 
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, GmcpJson{set}));
@@ -251,7 +251,7 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
     const auto addValue([&map, &vals, &varName, &buffer, this]() {
         // Put it into the map.
-        if (debug)
+        if (m_debug)
             qDebug() << "MSSP received value" << mmqt::toQByteArrayLatin1(buffer.toStdString())
                      << "for variable" << mmqt::toQByteArrayLatin1(varName.value());
 
@@ -278,12 +278,12 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
             case TNSB_MSSP_VAL: {
                 if (buffer.isEmpty()) {
-                    if (debug)
+                    if (m_debug)
                         qDebug() << "MSSP received variable without any name; ignoring it";
                     continue;
                 }
 
-                if (debug)
+                if (m_debug)
                     qDebug() << "MSSP received variable"
                              << mmqt::toQByteArrayLatin1(buffer.toStdString());
 

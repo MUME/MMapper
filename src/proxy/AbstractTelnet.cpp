@@ -174,10 +174,11 @@ AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
                                const QByteArray &defaultTermType)
     : QObject(parent)
     , m_defaultTermType(defaultTermType)
-    , textCodec{strategy}
+    , m_textCodec{strategy}
 {
 #ifndef MMAPPER_NO_ZLIB
     /* allocate inflate state */
+    auto &stream = m_stream;
     stream.zalloc = Z_NULL;
     stream.zfree = Z_NULL;
     stream.opaque = Z_NULL;
@@ -195,13 +196,13 @@ AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
 AbstractTelnet::~AbstractTelnet()
 {
 #ifndef MMAPPER_NO_ZLIB
-    inflateEnd(&stream);
+    inflateEnd(&m_stream);
 #endif
 }
 
 void AbstractTelnet::reset()
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Reset telnet";
     myOptionState.fill(false);
     hisOptionState.fill(false);
@@ -210,12 +211,12 @@ void AbstractTelnet::reset()
     triedToEnable.fill(false);
 
     // reset telnet status
-    termType = m_defaultTermType;
-    state = TelnetStateEnum::NORMAL;
-    commandBuffer.clear();
-    subnegBuffer.clear();
-    sentBytes = 0;
-    recvdGA = false;
+    m_termType = m_defaultTermType;
+    m_state = TelnetStateEnum::NORMAL;
+    m_commandBuffer.clear();
+    m_subnegBuffer.clear();
+    m_sentBytes = 0;
+    m_recvdGA = false;
     resetCompress();
 }
 
@@ -271,7 +272,7 @@ void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool go
 
 void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending NAWS" << x << y;
 
     // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
@@ -291,7 +292,7 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
         return;
     }
 
-    if (debug)
+    if (m_debug)
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
 
@@ -317,9 +318,9 @@ void AbstractTelnet::sendCharsetRequest()
     // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
 
     QStringList myCharacterSets;
-    for (const auto &encoding : textCodec.supportedEncodings())
+    for (const auto &encoding : m_textCodec.supportedEncodings())
         myCharacterSets << mmqt::toQByteArrayLatin1(encoding);
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending Charset request" << myCharacterSets;
 
     static constexpr const auto delimeter = ";";
@@ -337,7 +338,7 @@ void AbstractTelnet::sendCharsetRequest()
 void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
 {
     auto payload = msg.toRawBytes();
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending GMCP:" << payload;
 
     TelnetFormatter s{*this};
@@ -348,7 +349,7 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
 
 void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending MSSP:" << data;
 
     TelnetFormatter s{*this};
@@ -359,7 +360,7 @@ void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
 
 void AbstractTelnet::sendLineModeEdit()
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending Linemode EDIT";
 
     TelnetFormatter s{*this};
@@ -371,7 +372,7 @@ void AbstractTelnet::sendLineModeEdit()
 
 void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Sending Terminal Type:" << terminalType;
 
     TelnetFormatter s{*this};
@@ -392,7 +393,7 @@ void AbstractTelnet::sendCharsetRejected()
 
 void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Accepted Charset" << characterSet;
 
     TelnetFormatter s{*this};
@@ -425,7 +426,7 @@ void AbstractTelnet::sendOptionStatus()
 
 void AbstractTelnet::sendTerminalTypeRequest()
 {
-    if (debug)
+    if (m_debug)
         qDebug() << "Requesting Terminal Type";
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
@@ -442,13 +443,13 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
     switch (command.length()) {
     case 2:
-        if (ch != TN_GA && ch != TN_EOR && debug)
+        if (m_debug && ch != TN_GA && ch != TN_EOR)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
 
         switch (ch) {
         case TN_GA:
         case TN_EOR:
-            recvdGA = true; // signal will be emitted later
+            m_recvdGA = true; // signal will be emitted later
             break;
         }
         break;
@@ -456,7 +457,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
     case 3:
         option = command.unsigned_at(2);
 
-        if (debug)
+        if (m_debug)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
                      << telnetOptionName(option);
 
@@ -529,7 +530,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                         // NAWS here - window size info must be sent
                         // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
                         // messages per second when the user adjusts the window size?
-                        sendWindowSizeChanged(current.x, current.y);
+                        sendWindowSizeChanged(m_current.x, m_current.y);
                     } else if (option == OPT_GMCP) {
                         onGmcpEnabled();
                     } else if (option == OPT_LINEMODE) {
@@ -567,7 +568,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
 void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 {
-    if (debug) {
+    if (m_debug) {
         if (payload.length() == 1)
             qDebug() << "* Processing Telnet Subnegotiation:"
                      << telnetOptionName(payload.unsigned_at(0));
@@ -599,7 +600,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             switch (payload[1]) {
             case TNSB_SEND:
                 // server wants us to send terminal type
-                sendTerminalType(termType);
+                sendTerminalType(m_termType);
                 break;
             case TNSB_IS:
                 // Extract sender's terminal type
@@ -621,13 +622,13 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     // CHARSET REQUEST <sep> <charsets>
                     const auto sep = payload[2];
                     const auto characterSets = payload.mid(3).split(sep);
-                    if (debug)
+                    if (m_debug)
                         qDebug() << "Received encoding options" << characterSets;
                     for (const auto &characterSet : characterSets) {
                         const auto name = mmqt::toStdStringLatin1(characterSet.simplified());
-                        if (textCodec.supports(name)) {
+                        if (m_textCodec.supports(name)) {
                             accepted = true;
-                            textCodec.setEncodingForName(name);
+                            m_textCodec.setEncodingForName(name);
 
                             // Reply to server that we accepted this encoding
                             sendCharsetAccepted(characterSet);
@@ -638,7 +639,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                         break;
                 }
                 // Reject invalid requests or if we did not find any supported codecs
-                if (debug)
+                if (m_debug)
                     qDebug() << "Rejected all encodings";
                 sendCharsetRejected();
                 break;
@@ -646,14 +647,14 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 if (payload.length() > 3) {
                     // CHARSET ACCEPTED <charset>
                     const auto characterSet = payload.mid(2).simplified();
-                    textCodec.setEncodingForName(mmqt::toStdStringLatin1(characterSet));
-                    if (debug)
+                    m_textCodec.setEncodingForName(mmqt::toStdStringLatin1(characterSet));
+                    if (m_debug)
                         qDebug() << "He accepted charset" << characterSet;
                     // TODO: RFC 2066 states to stop queueing data
                 }
                 break;
             case TNSB_REJECTED:
-                if (debug)
+                if (m_debug)
                     qDebug() << "He rejected charset";
                 // TODO: RFC 2066 states to stop queueing data
                 break;
@@ -669,13 +670,13 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     case OPT_COMPRESS2:
         assert(!NO_ZLIB);
         if (hisOptionState[OPT_COMPRESS2]) {
-            if (inflateTelnet) {
+            if (m_inflateTelnet) {
                 qWarning() << "Compression was already enabled";
                 break;
             }
-            if (debug)
+            if (m_debug)
                 qDebug() << "Starting compression";
-            recvdCompress = true;
+            m_recvdCompress = true;
         }
         break;
 
@@ -688,7 +689,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             }
             try {
                 GmcpMessage msg = GmcpMessage::fromRawBytes(payload.mid(1));
-                if (debug) {
+                if (m_debug) {
                     qDebug() << "Received GMCP message" << msg.getName().toQString()
                              << (msg.getJson() ? msg.getJson()->toQString() : "");
                 }
@@ -704,7 +705,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 
     case OPT_MSSP:
         if (hisOptionState[OPT_MSSP]) {
-            if (debug)
+            if (m_debug)
                 qDebug() << "Received MSSP message" << payload;
 
             receiveMudServerStatus(payload);
@@ -748,7 +749,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
 
     int pos = 0;
     while (pos < data.size()) {
-        if (inflateTelnet) {
+        if (m_inflateTelnet) {
             int remaining = onReadInternalInflate(data.data() + pos, data.size() - pos, cleanData);
             pos = data.length() - remaining;
             // Continue because there might be additional chunks left to inflate
@@ -760,11 +761,11 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         onReadInternal2(cleanData, c);
         pos++;
 
-        if (recvdCompress) {
-            inflateTelnet = true;
-            recvdCompress = false;
+        if (m_recvdCompress) {
+            m_inflateTelnet = true;
+            m_recvdCompress = false;
 #ifndef MMAPPER_NO_ZLIB
-            int ret = inflateReset(&stream);
+            int ret = inflateReset(&m_stream);
             if (ret != Z_OK)
                 throw std::runtime_error("Could not reset zlib");
 #endif
@@ -773,16 +774,16 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
             continue;
         }
 
-        if (recvdGA) {
-            sendToMapper(cleanData, recvdGA); // with GO-AHEAD
+        if (m_recvdGA) {
+            sendToMapper(cleanData, m_recvdGA); // with GO-AHEAD
             cleanData.clear();
-            recvdGA = false;
+            m_recvdGA = false;
         }
     }
 
     // some data left to send - do it now!
     if (!cleanData.isEmpty()) {
-        sendToMapper(cleanData, recvdGA); // without GO-AHEAD
+        sendToMapper(cleanData, m_recvdGA); // without GO-AHEAD
         cleanData.clear();
     }
 }
@@ -814,6 +815,9 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
  */
 void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
 {
+    auto &state = m_state;
+    auto &commandBuffer = m_commandBuffer;
+    auto &subnegBuffer = m_subnegBuffer;
     switch (state) {
     case TelnetStateEnum::NORMAL:
         if (c == TN_IAC) {
@@ -930,6 +934,7 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
     static constexpr const int CHUNK = 1024;
     char out[CHUNK];
 
+    auto &stream = m_stream;
     stream.avail_in = static_cast<uint32_t>(length);
     stream.next_in = reinterpret_cast<const Bytef *>(data);
 
@@ -948,8 +953,8 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
             throw std::runtime_error(stream.msg);
         case Z_STREAM_END:
             /* clean up and return */
-            inflateTelnet = false;
-            if (debug)
+            m_inflateTelnet = false;
+            if (m_debug)
                 qDebug() << "Ending compression";
             break;
         default:
@@ -962,10 +967,10 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
             const uint8_t c = static_cast<unsigned char>(out[i]);
             onReadInternal2(cleanData, c);
 
-            if (recvdGA) {
-                sendToMapper(cleanData, recvdGA); // with GO-AHEAD
+            if (m_recvdGA) {
+                sendToMapper(cleanData, m_recvdGA); // with GO-AHEAD
                 cleanData.clear();
-                recvdGA = false;
+                m_recvdGA = false;
             }
         }
 
@@ -976,7 +981,7 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
 
 void AbstractTelnet::resetCompress()
 {
-    inflateTelnet = false;
-    recvdCompress = false;
+    m_inflateTelnet = false;
+    m_recvdCompress = false;
     hisOptionState[OPT_COMPRESS2] = false;
 }

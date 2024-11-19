@@ -89,20 +89,20 @@ void ClientTelnet::slot_sendToMud(const QString &data)
 
 void ClientTelnet::virt_sendRawData(const std::string_view data)
 {
-    sentBytes += data.length();
+    m_sentBytes += data.length();
     m_socket.write(mmqt::toQByteArrayLatin1(data));
 }
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
 {
-    if (current.x == x && current.y == y)
+    if (m_current.x == x && m_current.y == y)
         return;
 
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
     // we won't be called again when connecting
-    current.x = x;
-    current.y = y;
+    m_current.x = x;
+    m_current.y = y;
 
     if (myOptionState[OPT_NAWS]) {
         // only if we have negotiated this option
