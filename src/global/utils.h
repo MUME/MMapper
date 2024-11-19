@@ -293,4 +293,26 @@ NODISCARD static inline auto pop_top(T &container)
     return x;
 }
 
+// returns the number of elements removed
+template<typename Container, typename Callback>
+ALLOW_DISCARD static inline size_t erase_if(Container &container, Callback &&callback)
+{
+    const auto beg = container.begin();
+    const auto end = container.end();
+    if (beg == end) {
+        return 0;
+    }
+
+    const size_t before = container.size();
+    const auto it = std::remove_if(beg, end, std::forward<Callback>(callback));
+    if (it == end) {
+        return 0;
+    }
+
+    container.erase(it, end);
+    const auto after = container.size();
+    assert(before > after);
+    return before - after;
+}
+
 } // namespace utils
