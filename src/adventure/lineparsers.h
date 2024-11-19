@@ -5,62 +5,57 @@
 
 #include "../global/macros.h"
 
+#include <optional>
 #include <utility>
 
 #include <QString>
 
-class AbstractLineParser
+struct NODISCARD LineParserResult final : private std::optional<QString>
 {
-protected:
+    using base = std::optional<QString>;
+    using base::base;
+    using base::operator bool;
+    using base::has_value;
+    using base::value;
+
+    NODISCARD bool operator==(const LineParserResult &rhs) const
+    {
+        const bool ok = has_value();
+        if (ok != rhs.has_value()) {
+            return false;
+        }
+        return !ok || value() == rhs.value();
+    }
+    NODISCARD bool operator!=(const LineParserResult &rhs) const { return !(*this == rhs); }
+};
+
+namespace AccomplishedTaskParser {
+NODISCARD extern bool parse(const QString &line);
+}
+
+namespace AchievementParser {
+NODISCARD extern LineParserResult parse(const QString &prev, const QString &line);
+}
+
+namespace DiedParser {
+NODISCARD extern bool parse(const QString &line);
+}
+
+namespace GainedLevelParser {
+NODISCARD extern bool parse(const QString &line);
+}
+
+namespace HintParser {
+NODISCARD extern LineParserResult parse(const QString &prev, const QString &line);
+}
+
+class NODISCARD KillAndXPParser final
+{
+private:
     QString m_lastSuccessVal;
+    int m_linesSinceShareExp = 0;
     bool m_pending = false;
 
 public:
-    virtual ~AbstractLineParser(); // required for warning -W non-virtual-dtor
-
-public:
-    NODISCARD bool parse(QString line) { return virt_parse(std::move(line)); }
-    NODISCARD QString getLastSuccessVal() const { return m_lastSuccessVal; }
-
-private:
-    NODISCARD virtual bool virt_parse(QString line) = 0;
-};
-
-class AccomplishedTaskParser final : public AbstractLineParser
-{
-private:
-    NODISCARD bool virt_parse(QString line) final;
-};
-
-class AchievementParser final : public AbstractLineParser
-{
-private:
-    NODISCARD bool virt_parse(QString line) final;
-};
-
-class DiedParser final : public AbstractLineParser
-{
-private:
-    NODISCARD bool virt_parse(QString line) final;
-};
-
-class GainedLevelParser final : public AbstractLineParser
-{
-private:
-    NODISCARD bool virt_parse(QString line) final;
-};
-
-class HintParser final : public AbstractLineParser
-{
-private:
-    NODISCARD bool virt_parse(QString line) final;
-};
-
-class KillAndXPParser final : public AbstractLineParser
-{
-private:
-    int m_linesSinceShareExp = 0;
-
-private:
-    NODISCARD bool virt_parse(QString line) final;
+    NODISCARD LineParserResult parse(const QString &line);
 };

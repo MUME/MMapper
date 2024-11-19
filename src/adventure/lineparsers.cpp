@@ -6,65 +6,59 @@
 
 #include <QDebug>
 
-AbstractLineParser::~AbstractLineParser() = default;
-
-bool AccomplishedTaskParser::virt_parse(QString line)
+bool AccomplishedTaskParser::parse(const QString &line)
 {
     // REVISIT: there are at least three different versions of this
     //   accomplished
     //   knowledgeable (xp?)
     //   travelled (tp?)
+    // (In that case, plan to change to return a LineParserResult to indicate which one it was...)
     return line.startsWith("With the task complete, you feel more");
 }
 
-bool AchievementParser::virt_parse(QString line)
+LineParserResult AchievementParser::parse(const QString &prev, const QString &line)
 {
     // An achievement event is:
     //   (1) A line matching exactly "You achieved something new!"
     //   (2) The next line is interpreted as the achievement text.
 
-    if (m_pending) {
-        m_lastSuccessVal = line.trimmed();
-        m_pending = false;
-        return true;
+    if (!prev.startsWith("You achieved something new!")) {
+        return std::nullopt;
     }
 
-    m_pending = line.startsWith("You achieved something new!");
-
-    return false;
+    return line.trimmed();
 }
 
-bool DiedParser::virt_parse(QString line)
+bool DiedParser::parse(const QString &line)
 {
     return line.startsWith("You are dead! Sorry...");
 }
 
-bool GainedLevelParser::virt_parse(QString line)
+bool GainedLevelParser::parse(const QString &line)
 {
     return line.startsWith("You gain a level!");
 }
 
-bool HintParser::virt_parse(QString line)
+LineParserResult HintParser::parse(const QString &prev, const QString &line)
 {
     // A hint event is:
     //   (1) A line matching exactly "# Hint:"
     //   (2) The next line is interpreted as the hint text.
-    if (m_pending) {
-        // Consider checking that it actually starts with the expected pattern.
-        if (line.length() < 4) {
-            qWarning() << "Hint is too short";
-            return false;
-        }
-        m_lastSuccessVal = line.mid(4).trimmed(); // mid(4) is to chomp the leading "#  "
-        m_pending = false;
-        return true;
+    if (!prev.startsWith("# Hint:")) {
+        return std::nullopt;
     }
 
-    m_pending = line.startsWith("# Hint:");
-    return false;
+    // Consider using a regex here to allow variation in number of spaces, or do something like:
+    // trim, check for #, remove it, trim again, and then verify that the hint isn't "Hint:",
+    // which could happen if the line "# Hint:" is somehow repeated twice.
+    if (line.length() < 4 || !line.startsWith("#   ")) {
+        qWarning() << "Hint has unexpected format.";
+        return std::nullopt;
+    }
+    return line.mid(4).trimmed(); // mid(4) is to chomp the leading "#  "
 }
 
-bool KillAndXPParser::virt_parse(QString line)
+LineParserResult KillAndXPParser::parse(const QString &line)
 {
     // A kill and exp earned event as follows:
     // A line matching exactly either of:
@@ -82,43 +76,44 @@ bool KillAndXPParser::virt_parse(QString line)
         || line.startsWith("You feel more experienced.")) {
         m_pending = true;
         m_linesSinceShareExp = 0;
-        return false;
+        return std::nullopt;
     }
 
-    if (!m_pending)
-        return false;
+    if (!m_pending) {
+        return std::nullopt;
+    }
 
     m_linesSinceShareExp++;
 
     if (m_linesSinceShareExp > 5) {
         // too many lines have passed, our pending share exp has expired
         m_pending = false;
-        return false;
-
-    } else {
-        // We're in a pending share of experience, let's see if a kill
-        auto idx_dead = line.indexOf(" is dead! R.I.P.");
-        if (idx_dead == -1)
-            idx_dead = line.indexOf(" disappears into nothing.");
-
-        if (idx_dead > -1) {
-            // Kill, extract the mob/enemy name and reset pending
-            m_lastSuccessVal = line.left(idx_dead);
-            m_pending = false;
-            return true;
-        }
-
-        idx_dead = line.indexOf(" has drawn his last breath! R.I.P.");
-        if (idx_dead == -1)
-            idx_dead = line.indexOf(" has drawn her last breath! R.I.P.");
-
-        if (idx_dead > -1) {
-            // Kill, extract the mob/enemy name and reset pending
-            m_lastSuccessVal = line.left(idx_dead);
-            m_pending = false;
-            return true;
-        }
-
-        return false;
+        return std::nullopt;
     }
+    // We're in a pending share of experience, let's see if a kill
+    auto idx_dead = line.indexOf(" is dead! R.I.P.");
+    if (idx_dead == -1) {
+        idx_dead = line.indexOf(" disappears into nothing.");
+    }
+
+    if (idx_dead > -1) {
+        // Kill, extract the mob/enemy name and reset pending
+        m_lastSuccessVal = line.left(idx_dead);
+        m_pending = false;
+        return m_lastSuccessVal;
+    }
+
+    idx_dead = line.indexOf(" has drawn his last breath! R.I.P.");
+    if (idx_dead == -1) {
+        idx_dead = line.indexOf(" has drawn her last breath! R.I.P.");
+    }
+
+    if (idx_dead > -1) {
+        // Kill, extract the mob/enemy name and reset pending
+        m_lastSuccessVal = line.left(idx_dead);
+        m_pending = false;
+        return m_lastSuccessVal;
+    }
+
+    return std::nullopt;
 }

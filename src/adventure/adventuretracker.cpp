@@ -4,6 +4,7 @@
 
 #include "adventuretracker.h"
 
+#include "../global/RAII.h"
 #include "../proxy/GmcpMessage.h"
 
 #include <memory>
@@ -31,41 +32,47 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
 
 void AdventureTracker::slot_onUserText(const QString &line)
 {
-    // Try to order these by frequency to minimize unnecessary parsing
+    // These are sorted by order of frequency, which could create a problem for stateful
+    // parsers that miss out on state because another parser returned before the parser
+    // was able to learn the current state.
+    //
+    // Currently the KillAndXPParser is the only stateful parser; the rest of the parsers
+    // use a common previous line that's safely remembered by this RAII callback.
+    const RAIICallback uponReturn{[this, &line]() { m_prevLine = line; }};
 
-    if (m_killParser.parse(line)) {
-        auto killName = m_killParser.getLastSuccessVal();
+    if (auto tmp = m_killParser.parse(line)) {
+        auto killName = tmp.value();
         double xpGained = checkpointXP();
         emit sig_killedMob(killName, xpGained);
         return;
     }
 
-    if (m_gainedLevelParser.parse(line)) {
+    if (GainedLevelParser::parse(line)) {
         emit sig_gainedLevel();
         return;
     }
 
-    if (m_achievementParser.parse(line)) {
-        auto achievement = m_achievementParser.getLastSuccessVal();
+    if (auto tmp = AchievementParser::parse(m_prevLine, line)) {
+        auto achievement = tmp.value();
         auto xpGained = checkpointXP();
         emit sig_achievedSomething(achievement, xpGained);
         return;
     }
 
-    if (m_accomplishedTaskParser.parse(line)) {
+    if (AccomplishedTaskParser::parse(line)) {
         auto xpGained = checkpointXP();
         emit sig_accomplishedTask(xpGained);
         return;
     }
 
-    if (m_diedParser.parse(line)) {
+    if (DiedParser::parse(line)) {
         auto xpLost = checkpointXP();
         emit sig_diedInGame(xpLost);
         return;
     }
 
-    if (m_hintParser.parse(line)) {
-        auto hint = m_hintParser.getLastSuccessVal();
+    if (auto tmp = HintParser::parse(m_prevLine, line)) {
+        auto hint = tmp.value();
         emit sig_receivedHint(hint);
         return;
     }

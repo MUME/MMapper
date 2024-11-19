@@ -9,83 +9,146 @@
 
 #include <QtTest/QtTest>
 
-struct
+namespace { // anonymous
+
+QDebug operator<<(QDebug debug, const LineParserResult &result)
 {
-    std::vector<TestLine> achievement1
-        = {{false, "An accomplished hunter says 'Good job, Gomgâl! One more to go!'"},
-           {false, "You achieved something new!"},
-           {true, "You aided the hunter in the Tower Hills by cleaning out a rat infestation."}};
-    const char *achievement1Success
-        = "You aided the hunter in the Tower Hills by cleaning out a rat infestation.";
+    if (result) {
+        debug << "(result: " << result.value() << ")";
+    } else {
+        debug << "(no result expected)";
+    }
+    return debug;
+}
 
-    std::vector<TestLine> hint1 = {{false, "It seems to be latched."},
-                                   {false, ""},
-                                   {false, "# Hint:"},
-                                   {true, "#   Type unlock hatch to unlatch the hatch."}};
-    const char *hint1Success = "Type unlock hatch to unlatch the hatch.";
+struct NODISCARD TestLine final
+{
+    QString line;
+    LineParserResult expected;
 
-    std::vector<TestLine> killMob1
-        = {{false, "You cleave a husky smuggler's right leg extremely hard and shatter it."},
-           {false, "You receive your share of experience."},
-           {false, "Congratulations! This is the first time you've killed it!"},
-           {true, "A husky smuggler is dead! R.I.P."}};
-    const char *killMob1Success = "A husky smuggler";
+    explicit TestLine(QString moved_line, LineParserResult moved_result)
+        : line{std::move(moved_line)}
+        , expected{std::move(moved_result)}
+    {}
 
-    std::vector<TestLine> killMob2
-        = {{false, "You cleave a wild bull (x)'s body extremely hard and shatter it."},
-           {false, "Your victim is shocked by your hit!"},
-           {false, "You receive your share of experience."},
-           {false, "Congratulations! This is the first time you've killed it!"},
-           {true, "A wild bull (x) is dead! R.I.P."}};
-    const char *killMob2Success = "A wild bull (x)"; // TODO FIXME remove the (label) when parsing
+    friend QDebug operator<<(QDebug debug, const TestLine &test)
+    {
+        debug << "line:" << test.line;
+        debug << "expected:" << test.expected;
+        return debug;
+    }
+};
 
-    std::vector<TestLine> killMob3
-        = {{false, "You cleave a tree-snake's body extremely hard and shatter it."},
-           {false, "Your victim is shocked by your hit!"},
-           {false, "You receive your share of experience."},
-           {false, "Yes! You're beginning to get the idea."},
-           {true, "A tree-snake is dead! R.I.P."}};
-    const char *killMob3Success = "A tree-snake";
+namespace TestLines {
+const auto achievement1 = std::vector<TestLine>{
+    TestLine{"An accomplished hunter says 'Good job, Gomgâl! One more to go!'", std::nullopt},
+    TestLine{"You achieved something new!", std::nullopt},
+    TestLine{"You aided the hunter in the Tower Hills by cleaning out a rat infestation.",
+             LineParserResult{
+                 "You aided the hunter in the Tower Hills by cleaning out a rat infestation."}}};
 
-    std::vector<TestLine> killMob4 = {{false,
-                                       "You cleave a spirit's body extremely hard and shatter it."},
-                                      {false, "You receive your share of experience."},
-                                      {false, "**Yawn** Boring kill, wasn't it?"},
-                                      {true, "A spirit disappears into nothing.}"}};
-    const char *killMob4Success = "A spirit";
+const auto hint1
+    = std::vector<TestLine>{TestLine{"It seems to be latched.", std::nullopt},
+                            TestLine{"", std::nullopt},
+                            TestLine{"# Hint:", std::nullopt},
+                            TestLine{"#   Type unlock hatch to unlatch the hatch.",
+                                     LineParserResult{"Type unlock hatch to unlatch the hatch."}},
+                            TestLine{"#   Type unlock hatch to unlatch the hatch.", std::nullopt}};
 
-    std::vector<TestLine> killPlayer1 = {
-        {false, "You pierce *an Elf* (k)'s right hand extremely hard and shatter it."},
-        {false, "You feel more experienced."},
-        {false, "Congratulations! This is the first time you've killed it!"},
-        {false,
-         "You feel revitalized as the dark power within you drains the last bit of life from *an Elf* (k)."},
-        {false, "You are surrounded by a misty shroud."},
-        {false, "You hear *an Elf* (k)'s death cry as he collapses."},
-        {true, "*an Elf* (k) has drawn his last breath! R.I.P."},
-        {false, "A shadow slowly rises above the corpse of *an Elf* (k)."}};
-    const char *killPlayer1Success = "*an Elf* (k)";
+const auto killMob1 = std::vector<TestLine>{
+    TestLine{"You cleave a husky smuggler's right leg extremely hard and shatter it.", std::nullopt},
+    TestLine{"You receive your share of experience.", std::nullopt},
+    TestLine{"Congratulations! This is the first time you've killed it!", std::nullopt},
+    TestLine{"A husky smuggler is dead! R.I.P.", LineParserResult{"A husky smuggler"}}};
 
-    std::vector<TestLine> killPlayer2
-        = {{false, "You slash *a Half-Elf*'s right hand extremely hard and shatter it."},
-           {false, "Your victim is shocked by your hit!"},
-           {false, "You feel more experienced."},
-           {false, "Yes! You're beginning to get the idea."},
-           {false, "You hear *a Half-Elf*'s death cry as she collapses."},
-           {true, "*a Half-Elf* has drawn her last breath! R.I.P."}};
-    const char *killPlayer2Success = "*a Half-Elf*";
+const auto killMob2 = std::vector<TestLine>{
+    TestLine{"You cleave a wild bull (x)'s body extremely hard and shatter it.", std::nullopt},
+    TestLine{"Your victim is shocked by your hit!", std::nullopt},
+    TestLine{"You receive your share of experience.", std::nullopt},
+    TestLine{"Congratulations! This is the first time you've killed it!", std::nullopt},
+    TestLine{"A wild bull (x) is dead! R.I.P.", LineParserResult{"A wild bull (x)"}}};
 
-    std::vector<TestLine> killPlayer3
-        = {{false, "You pierce *Gaer the Dúnadan Man*'s body extremely hard and shatter it."},
-           {false, "Your victim is shocked by your hit!"},
-           {false, "You feel more experienced."},
-           {false, "Congratulations! This is the first time you've killed it!"},
-           {false, "You gained some renown in this battle!"},
-           {false, "You hear *Gaer the Dúnadan Man*'s death cry as he collapses."},
-           {true, "*Gaer the Dúnadan Man* has drawn his last breath! R.I.P."},
-           {false, "A shadow slowly rises above the corpse of *Gaer the Dúnadan Man*."}};
-    const char *killPlayer3Success = "*Gaer the Dúnadan Man*";
-} TestLines;
+const auto killMob3 = std::vector<TestLine>{
+    TestLine{"You cleave a tree-snake's body extremely hard and shatter it.", std::nullopt},
+    TestLine{"Your victim is shocked by your hit!", std::nullopt},
+    TestLine{"You receive your share of experience.", std::nullopt},
+    TestLine{"Yes! You're beginning to get the idea.", std::nullopt},
+    TestLine{"A tree-snake is dead! R.I.P.", LineParserResult{"A tree-snake"}}};
+
+const auto killMob4
+    = std::vector<TestLine>{TestLine{"You cleave a spirit's body extremely hard and shatter it.",
+                                     std::nullopt},
+                            TestLine{"You receive your share of experience.", std::nullopt},
+                            TestLine{"**Yawn** Boring kill, wasn't it?", std::nullopt},
+                            TestLine{"A spirit disappears into nothing.",
+                                     LineParserResult{"A spirit"}}};
+
+const auto killPlayer1 = std::vector<TestLine>{
+    TestLine{"You pierce *an Elf* (k)'s right hand extremely hard and shatter it.", std::nullopt},
+    TestLine{"You feel more experienced.", std::nullopt},
+    TestLine{"Congratulations! This is the first time you've killed it!", std::nullopt},
+    TestLine{
+        "You feel revitalized as the dark power within you drains the last bit of life from *an Elf* (k).",
+        std::nullopt},
+    TestLine{"You are surrounded by a misty shroud.", std::nullopt},
+    TestLine{"You hear *an Elf* (k)'s death cry as he collapses.", std::nullopt},
+    TestLine{"*an Elf* (k) has drawn his last breath! R.I.P.", LineParserResult{"*an Elf* (k)"}},
+    TestLine{"A shadow slowly rises above the corpse of *an Elf* (k).", std::nullopt}};
+
+const auto killPlayer2 = std::vector<TestLine>{
+    TestLine{"You slash *a Half-Elf*'s right hand extremely hard and shatter it.", std::nullopt},
+    TestLine{"Your victim is shocked by your hit!", std::nullopt},
+    TestLine{"You feel more experienced.", std::nullopt},
+    TestLine{"Yes! You're beginning to get the idea.", std::nullopt},
+    TestLine{"You hear *a Half-Elf*'s death cry as she collapses.", std::nullopt},
+    TestLine{"*a Half-Elf* has drawn her last breath! R.I.P.", LineParserResult{"*a Half-Elf*"}}};
+
+const auto killPlayer3 = std::vector<TestLine>{
+    TestLine{"You pierce *Gaer the Dúnadan Man*'s body extremely hard and shatter it.",
+             std::nullopt},
+    TestLine{"Your victim is shocked by your hit!", std::nullopt},
+    TestLine{"You feel more experienced.", std::nullopt},
+    TestLine{"Congratulations! This is the first time you've killed it!", std::nullopt},
+    TestLine{"You gained some renown in this battle!", std::nullopt},
+    TestLine{"You hear *Gaer the Dúnadan Man*'s death cry as he collapses.", std::nullopt},
+    TestLine{"*Gaer the Dúnadan Man* has drawn his last breath! R.I.P.",
+             LineParserResult{"*Gaer the Dúnadan Man*"}},
+    TestLine{"A shadow slowly rises above the corpse of *Gaer the Dúnadan Man*.", std::nullopt}};
+} // namespace TestLines
+
+template<typename T>
+void testParser(T &parser, const std::vector<TestLine> &testLines)
+{
+    for (const TestLine &tl : testLines) {
+        const auto got = parser.parse(tl.line);
+        static_assert(std::is_same_v<decltype(got), const LineParserResult>);
+        if (got != tl.expected) {
+            qInfo() << "while testing" << tl;
+            qInfo() << "got" << got << "vs expected" << tl.expected;
+            qFatal("invalid result");
+        }
+    }
+}
+
+template<auto parseFn>
+struct NODISCARD OneLineMemoryParser final
+{
+private:
+    QString m_prev = "";
+
+public:
+    NODISCARD LineParserResult parse(const QString &line)
+    {
+        using Callback = decltype(parseFn);
+        static_assert(
+            std::is_invocable_r_v<LineParserResult, Callback, const QString &, const QString &>);
+        auto result = parseFn(m_prev, line);
+        static_assert(std::is_same_v<decltype(result), LineParserResult>);
+        m_prev = line;
+        return result;
+    }
+};
+} // namespace
 
 void TestAdventure::testSessionHourlyRateXP()
 {
@@ -122,51 +185,28 @@ void TestAdventure::testSessionHourlyRateXP()
     QCOMPARE(session.calculateHourlyRateXP(), 6000.0);
 }
 
-void TestAdventure::testParser(AbstractLineParser &parser, const std::vector<TestLine> &testLines)
-{
-    for (const TestLine &tl : testLines) {
-        QVERIFY2(parser.parse(tl.line) == tl.expected, qPrintable(tl.errorMsg()));
-    }
-}
-
 void TestAdventure::testAchievementParser()
 {
-    AchievementParser parser{};
-    testParser(parser, TestLines.achievement1);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.achievement1Success);
+    OneLineMemoryParser<&AchievementParser::parse> parser;
+    testParser(parser, TestLines::achievement1);
 }
 
 void TestAdventure::testHintParser()
 {
-    HintParser parser{};
-    testParser(parser, TestLines.hint1);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.hint1Success);
+    OneLineMemoryParser<&HintParser::parse> parser;
+    testParser(parser, TestLines::hint1);
 }
 
 void TestAdventure::testKillAndXPParser()
 {
     KillAndXPParser parser{};
-
-    testParser(parser, TestLines.killMob1);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob1Success);
-
-    testParser(parser, TestLines.killMob2);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob2Success);
-
-    testParser(parser, TestLines.killMob3);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob3Success);
-
-    testParser(parser, TestLines.killMob4);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killMob4Success);
-
-    testParser(parser, TestLines.killPlayer1);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer1Success);
-
-    testParser(parser, TestLines.killPlayer2);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer2Success);
-
-    testParser(parser, TestLines.killPlayer3);
-    QCOMPARE(parser.getLastSuccessVal(), TestLines.killPlayer3Success);
+    testParser(parser, TestLines::killMob1);
+    testParser(parser, TestLines::killMob2);
+    testParser(parser, TestLines::killMob3);
+    testParser(parser, TestLines::killMob4);
+    testParser(parser, TestLines::killPlayer1);
+    testParser(parser, TestLines::killPlayer2);
+    testParser(parser, TestLines::killPlayer3);
 }
 
 void TestAdventure::testE2E()
@@ -177,13 +217,13 @@ void TestAdventure::testE2E()
     std::vector<QString> hints;
     std::vector<QString> killedMobs;
 
-    connect(&tracker, &AdventureTracker::sig_achievedSomething, [&achievements](QString x) {
+    connect(&tracker, &AdventureTracker::sig_achievedSomething, [&achievements](const QString &x) {
         achievements.push_back(x);
     });
-    connect(&tracker, &AdventureTracker::sig_receivedHint, [&hints](QString x) {
+    connect(&tracker, &AdventureTracker::sig_receivedHint, [&hints](const QString &x) {
         hints.push_back(x);
     });
-    connect(&tracker, &AdventureTracker::sig_killedMob, [&killedMobs](QString x) {
+    connect(&tracker, &AdventureTracker::sig_killedMob, [&killedMobs](const QString &x) {
         killedMobs.push_back(x);
     });
 
@@ -193,15 +233,15 @@ void TestAdventure::testE2E()
         }
     };
 
-    pump(TestLines.achievement1);
-    pump(TestLines.hint1);
-    pump(TestLines.killMob1);
-    pump(TestLines.killMob2);
-    pump(TestLines.killMob3);
-    pump(TestLines.killMob4);
-    pump(TestLines.killPlayer1);
-    pump(TestLines.killPlayer2);
-    pump(TestLines.killPlayer3);
+    pump(TestLines::achievement1);
+    pump(TestLines::hint1);
+    pump(TestLines::killMob1);
+    pump(TestLines::killMob2);
+    pump(TestLines::killMob3);
+    pump(TestLines::killMob4);
+    pump(TestLines::killPlayer1);
+    pump(TestLines::killPlayer2);
+    pump(TestLines::killPlayer3);
 
     QCOMPARE(achievements.size(), 1u);
     QCOMPARE(hints.size(), 1u);

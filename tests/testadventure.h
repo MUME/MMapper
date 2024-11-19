@@ -7,30 +7,14 @@
 
 #include <QObject>
 
-struct NODISCARD TestLine final
-{
-    bool expected = false;
-    QString line;
-
-    NODISCARD QString errorMsg() const
-    {
-        return QString("Parsing failed, expected %1 for line: %2").arg(expected).arg(line);
-    }
-};
-
 class NODISCARD_QOBJECT TestAdventure final : public QObject
 {
     Q_OBJECT
 
-    void testParser(AbstractLineParser &parser, const std::vector<TestLine> &testLines);
-
 private slots:
-
-    void testSessionHourlyRateXP();
-
-    void testAchievementParser();
-    void testHintParser();
-    void testKillAndXPParser();
-
-    void testE2E();
+    static void testSessionHourlyRateXP();
+    static void testAchievementParser();
+    static void testHintParser();
+    static void testKillAndXPParser();
+    static void testE2E();
 };

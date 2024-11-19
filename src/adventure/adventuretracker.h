@@ -18,12 +18,8 @@ class NODISCARD_QOBJECT AdventureTracker final : public QObject
 private:
     GameObserver &m_observer;
     std::shared_ptr<AdventureSession> m_session;
-    AchievementParser m_achievementParser;
-    DiedParser m_diedParser;
-    GainedLevelParser m_gainedLevelParser;
-    HintParser m_hintParser;
     KillAndXPParser m_killParser;
-    AccomplishedTaskParser m_accomplishedTaskParser;
+    QString m_prevLine = "";
 
 public:
     explicit AdventureTracker(GameObserver &observer, QObject *parent);
