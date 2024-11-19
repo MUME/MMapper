@@ -35,12 +35,12 @@ public:
     explicit StringView(const QString &) = delete;
 
 public:
-    NODISCARD inline const_iterator begin() const noexcept { return m_sv.begin(); }
-    NODISCARD inline const_iterator end() const noexcept { return m_sv.end(); }
-    NODISCARD inline size_t size() const noexcept { return m_sv.size(); }
-    NODISCARD inline size_t length() const noexcept { return m_sv.length(); }
-    NODISCARD inline bool isEmpty() const noexcept { return empty(); }
-    NODISCARD inline bool empty() const noexcept { return m_sv.empty(); }
+    NODISCARD const_iterator begin() const noexcept { return m_sv.begin(); }
+    NODISCARD const_iterator end() const noexcept { return m_sv.end(); }
+    NODISCARD size_t size() const noexcept { return m_sv.size(); }
+    NODISCARD size_t length() const noexcept { return m_sv.length(); }
+    NODISCARD bool isEmpty() const noexcept { return empty(); }
+    NODISCARD bool empty() const noexcept { return m_sv.empty(); }
 
 public:
     NODISCARD std::string toStdString() const;
@@ -51,7 +51,7 @@ public:
 public:
     StringView &trimLeft() noexcept;
     StringView &trimRight() noexcept;
-    inline StringView &trim() noexcept { return trimLeft().trimRight(); }
+    StringView &trim() noexcept { return trimLeft().trimRight(); }
 
 private:
     void mustNotBeEmpty() const;
