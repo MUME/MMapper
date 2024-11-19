@@ -40,7 +40,7 @@ void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 {
     QMutexLocker locker(&characterLock);
     action->schedule(this);
-    actionSchedule.push(action);
+    actionSchedule.emplace(std::move(action));
     if (locks.empty()) {
         executeActions();
     }
