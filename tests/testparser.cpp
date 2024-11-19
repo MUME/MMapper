@@ -28,12 +28,33 @@ void TestParser::removeAnsiMarksTest()
     QCOMPARE(ansiString, expected);
 }
 
-void TestParser::latinToAsciiTest()
+void TestParser::toAsciiTest()
 {
-    QString utf8("Nórui Nínui");
-    const QString expectedAscii("Norui Ninui");
-    mmqt::toAsciiInPlace(utf8);
-    QCOMPARE(utf8, expectedAscii);
+    const QString qs("Nórui Nínui");
+    QCOMPARE(qs.length(), 11);
+    {
+        const QString expectedAscii("Norui Ninui");
+        QCOMPARE(expectedAscii.length(), 11);
+
+        auto copy = qs;
+        mmqt::toAsciiInPlace(copy);
+        QCOMPARE(copy, expectedAscii);
+    }
+    {
+        const auto latin1 = mmqt::toStdStringLatin1(qs);
+        QCOMPARE(latin1.length(), 11);
+        QCOMPARE(latin1[1], '\xF3');
+        QCOMPARE(latin1[7], '\xED');
+    }
+    {
+        const auto utf8 = mmqt::toStdStringUtf8(qs);
+        QCOMPARE(utf8.length(), 13);
+        QCOMPARE(utf8[1], '\xC3');
+        QCOMPARE(utf8[2], '\xB3');
+
+        QCOMPARE(utf8[8], '\xC3');
+        QCOMPARE(utf8[9], '\xAD');
+    }
 }
 
 void TestParser::createParseEventTest()

@@ -3,10 +3,49 @@
 
 #include "TestRoomManager.h"
 
-#include "proxy/GmcpMessage.h"
-#include "roompanel/RoomManager.h"
+#include "../src/global/Charset.h"
+#include "../src/global/tests.h"
+#include "../src/proxy/GmcpMessage.h"
+#include "../src/roompanel/RoomManager.h"
 
 #include <QtTest>
+namespace { // anonymous
+const auto mysterieuse = []() -> QString {
+    const QString result = "mystérieuse créature";
+    {
+        const auto expected_ascii = "mysterieuse creature";
+        auto copy = result;
+        mmqt::toAsciiInPlace(copy);
+        TEST_ASSERT(copy == expected_ascii);
+    }
+    {
+        TEST_ASSERT(result.size() == 20);
+        TEST_ASSERT(result[4].unicode() == 0xE9u);
+    }
+    {
+        const auto latin1 = mmqt::toStdStringLatin1(result);
+        TEST_ASSERT(latin1.size() == 20);
+        TEST_ASSERT(latin1[4] == '\xE9');
+    }
+    {
+        const auto utf8 = mmqt::toStdStringUtf8(result);
+        TEST_ASSERT(utf8.size() == 22);
+        TEST_ASSERT(utf8[4] == '\xC3');
+        TEST_ASSERT(utf8[5] == '\xA9');
+    }
+    return result;
+}();
+
+const QJsonObject gmcpRoomCharsAddObj = {{"desc",
+                                          "A magpie is flying around looking for some food."},
+                                         {"flags", QJsonArray()},
+                                         {"id", 2},
+                                         {"labels", QJsonArray()},
+                                         {"name", mysterieuse},
+                                         {"position", "standing"},
+                                         {"type", "npc"}};
+
+} // namespace
 
 TestRoomManager::TestRoomManager(RoomManager &manager)
     : m_manager{manager}
@@ -17,15 +56,6 @@ TestRoomManager::~TestRoomManager() = default;
 void TestRoomManager::init() {}
 
 void TestRoomManager::cleanup() {}
-
-static QJsonObject gmcpRoomCharsAddObj = {{"desc",
-                                           "A magpie is flying around looking for some food."},
-                                          {"flags", QJsonArray()},
-                                          {"id", 2},
-                                          {"labels", QJsonArray()},
-                                          {"name", "mystérieuse créature"},
-                                          {"position", "standing"},
-                                          {"type", "npc"}};
 
 void TestRoomManager::testSlotReset()
 {

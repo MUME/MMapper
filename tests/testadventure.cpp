@@ -5,11 +5,53 @@
 
 #include "../src/adventure/adventuresession.h"
 #include "../src/adventure/adventuretracker.h"
+#include "../src/global/Charset.h"
+#include "../src/global/tests.h"
 #include "../src/observer/gameobserver.h"
 
 #include <QtTest/QtTest>
 
 namespace { // anonymous
+
+template<size_t N>
+NODISCARD std::string_view arrToStdSv(const std::array<char, N> &arr)
+{
+    TEST_ASSERT(N != 0);
+    TEST_ASSERT(arr.back() != char_consts::C_NUL);
+    return std::string_view{arr.data(), N};
+}
+
+void testQStringAsAscii(const QString &qs, std::string_view expected_ascii)
+{
+    const auto latin1 = mmqt::toStdStringLatin1(qs);
+    const auto ascii = latin1ToAscii(latin1);
+    TEST_ASSERT(ascii == expected_ascii);
+}
+
+const QString dunadan = []() -> QString {
+    const std::array<char, 7> latin1_bytes = {'D', '\xFA', 'n', 'a', 'd', 'a', 'n'};
+    const std::array<char, 8> utf8_bytes = {'D', '\xC3', '\xBA', 'n', 'a', 'd', 'a', 'n'};
+    TEST_ASSERT(latin1ToAscii('\xFA') == 'u');
+
+    const QString result = "Dúnadan";
+    TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
+    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
+    testQStringAsAscii(result, "Dunadan");
+
+    return result;
+}();
+
+const auto gomgal = []() {
+    const std::array<char, 6> latin1_bytes = {'G', 'o', 'm', 'g', '\xE2', 'l'};
+    const std::array<char, 7> utf8_bytes = {'G', 'o', 'm', 'g', '\xC3', '\xA2', 'l'};
+
+    const QString result = "Gomgâl";
+    TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
+    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
+    testQStringAsAscii(result, "Gomgal");
+
+    return result;
+}();
 
 QDebug operator<<(QDebug debug, const LineParserResult &result)
 {
@@ -40,8 +82,10 @@ struct NODISCARD TestLine final
 };
 
 namespace TestLines {
+
 const auto achievement1 = std::vector<TestLine>{
-    TestLine{"An accomplished hunter says 'Good job, Gomgâl! One more to go!'", std::nullopt},
+    TestLine{"An accomplished hunter says 'Good job, " + gomgal + "! One more to go!'",
+             std::nullopt},
     TestLine{"You achieved something new!", std::nullopt},
     TestLine{"You aided the hunter in the Tower Hills by cleaning out a rat infestation.",
              LineParserResult{
@@ -104,16 +148,17 @@ const auto killPlayer2 = std::vector<TestLine>{
     TestLine{"*a Half-Elf* has drawn her last breath! R.I.P.", LineParserResult{"*a Half-Elf*"}}};
 
 const auto killPlayer3 = std::vector<TestLine>{
-    TestLine{"You pierce *Gaer the Dúnadan Man*'s body extremely hard and shatter it.",
+    TestLine{"You pierce *Gaer the " + dunadan + " Man*'s body extremely hard and shatter it.",
              std::nullopt},
     TestLine{"Your victim is shocked by your hit!", std::nullopt},
     TestLine{"You feel more experienced.", std::nullopt},
     TestLine{"Congratulations! This is the first time you've killed it!", std::nullopt},
     TestLine{"You gained some renown in this battle!", std::nullopt},
-    TestLine{"You hear *Gaer the Dúnadan Man*'s death cry as he collapses.", std::nullopt},
-    TestLine{"*Gaer the Dúnadan Man* has drawn his last breath! R.I.P.",
-             LineParserResult{"*Gaer the Dúnadan Man*"}},
-    TestLine{"A shadow slowly rises above the corpse of *Gaer the Dúnadan Man*.", std::nullopt}};
+    TestLine{"You hear *Gaer the " + dunadan + " Man*'s death cry as he collapses.", std::nullopt},
+    TestLine{"*Gaer the " + dunadan + " Man* has drawn his last breath! R.I.P.",
+             LineParserResult{"*Gaer the " + dunadan + " Man*"}},
+    TestLine{"A shadow slowly rises above the corpse of *Gaer the " + dunadan + " Man*.",
+             std::nullopt}};
 } // namespace TestLines
 
 template<typename T>
@@ -256,7 +301,7 @@ void TestAdventure::testE2E()
                                    QString{"A spirit"},
                                    QString{"*an Elf* (k)"},
                                    QString{"*a Half-Elf*"},
-                                   QString{"*Gaer the Dúnadan Man*"}}));
+                                   QString{"*Gaer the " + dunadan + " Man*"}}));
 }
 
 QTEST_MAIN(TestAdventure)
