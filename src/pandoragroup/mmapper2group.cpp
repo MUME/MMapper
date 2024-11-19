@@ -93,12 +93,6 @@ Mmapper2Group::~Mmapper2Group()
     // Stop the network
     stop();
 
-    // Release resources
-    authority.reset();
-    group.reset();
-    network.reset();
-    thread.reset();
-
     qInfo() << "Terminated Group Manager service";
 }
 
