@@ -3,6 +3,10 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/macros.h"
+
+#include <utility>
+
 #include <QString>
 
 class AbstractLineParser
@@ -13,38 +17,43 @@ protected:
 
 public:
     virtual ~AbstractLineParser(); // required for warning -W non-virtual-dtor
-    virtual bool parse(QString line) = 0;
-    virtual QString getLastSuccessVal();
+
+public:
+    NODISCARD bool parse(QString line) { return virt_parse(std::move(line)); }
+    NODISCARD QString getLastSuccessVal() const { return m_lastSuccessVal; }
+
+private:
+    NODISCARD virtual bool virt_parse(QString line) = 0;
 };
 
 class AccomplishedTaskParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };
 
 class AchievementParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };
 
 class DiedParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };
 
 class GainedLevelParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };
 
 class HintParser final : public AbstractLineParser
 {
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };
 
 class KillAndXPParser final : public AbstractLineParser
@@ -52,6 +61,6 @@ class KillAndXPParser final : public AbstractLineParser
 private:
     int m_linesSinceShareExp = 0;
 
-public:
-    bool parse(QString line) override;
+private:
+    NODISCARD bool virt_parse(QString line) final;
 };

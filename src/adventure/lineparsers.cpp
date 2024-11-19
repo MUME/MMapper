@@ -4,15 +4,9 @@
 
 #include "lineparsers.h"
 
-// required for warning -W non-virtual-dtor
-AbstractLineParser::~AbstractLineParser() {}
+AbstractLineParser::~AbstractLineParser() = default;
 
-QString AbstractLineParser::getLastSuccessVal()
-{
-    return m_lastSuccessVal;
-}
-
-bool AccomplishedTaskParser::parse(QString line)
+bool AccomplishedTaskParser::virt_parse(QString line)
 {
     // REVISIT: there are at least three different versions of this
     //   accomplished
@@ -21,7 +15,7 @@ bool AccomplishedTaskParser::parse(QString line)
     return line.startsWith("With the task complete, you feel more");
 }
 
-bool AchievementParser::parse(QString line)
+bool AchievementParser::virt_parse(QString line)
 {
     // An achievement event is:
     //   (1) A line matching exactly "You achieved something new!"
@@ -38,17 +32,17 @@ bool AchievementParser::parse(QString line)
     return false;
 }
 
-bool DiedParser::parse(QString line)
+bool DiedParser::virt_parse(QString line)
 {
     return line.startsWith("You are dead! Sorry...");
 }
 
-bool GainedLevelParser::parse(QString line)
+bool GainedLevelParser::virt_parse(QString line)
 {
     return line.startsWith("You gain a level!");
 }
 
-bool HintParser::parse(QString line)
+bool HintParser::virt_parse(QString line)
 {
     // A hint event is:
     //   (1) A line matching exactly "# Hint:"
@@ -63,7 +57,7 @@ bool HintParser::parse(QString line)
     return false;
 }
 
-bool KillAndXPParser::parse(QString line)
+bool KillAndXPParser::virt_parse(QString line)
 {
     // A kill and exp earned event as follows:
     // A line matching exactly either of:
