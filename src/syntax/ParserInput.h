@@ -28,8 +28,16 @@ public:
     NODISCARD const std::string &front() const;
     NODISCARD const std::string &back() const;
 
-    NODISCARD auto begin() const { return m_vector->data() + m_beg; }
-    NODISCARD auto end() const { return m_vector->data() + m_end; }
+    NODISCARD auto begin() const
+    {
+        const auto &v = deref(m_vector);
+        return std::next(v.begin(), static_cast<ptrdiff_t>(m_beg));
+    }
+    NODISCARD auto end() const
+    {
+        const auto &v = deref(m_vector);
+        return std::next(v.begin(), static_cast<ptrdiff_t>(m_end));
+    }
 
     NODISCARD ParserInput subset(size_t a, size_t b) const;
 
