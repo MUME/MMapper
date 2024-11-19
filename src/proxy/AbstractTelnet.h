@@ -159,6 +159,10 @@ protected:
     void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
     void sendRawData(const char *s) = delete;
 
+private:
+    // DEPRECATED_MSG("use STL functions")
+    void sendRawData(const QByteArray &arr) { sendRawData(mmqt::toStdStringViewLatin1(arr)); }
+
 protected:
     void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
 
