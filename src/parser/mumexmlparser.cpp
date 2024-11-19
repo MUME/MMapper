@@ -25,15 +25,6 @@ using namespace char_consts;
 
 class MapData;
 
-namespace { // anonymous
-#if defined(XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE)
-static constexpr const auto XPS_DEBUG_TO_FILE = static_cast<bool>(
-    XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE);
-#else
-static constexpr const auto XPS_DEBUG_TO_FILE = false;
-#endif
-} // namespace
-
 static const QByteArray greaterThanChar(">");
 static const QByteArray lessThanChar("<");
 static const QByteArray greaterThanTemplate("&gt;");
@@ -48,73 +39,21 @@ MumeXmlParser::MumeXmlParser(MapData &md,
                              CTimers &timers,
                              QObject *parent)
     : AbstractParser(md, mc, std::move(proxy), std::move(group), timers, parent)
-{
-    if (XPS_DEBUG_TO_FILE) {
-        QString fileName = "xmlparser_debug.dat";
+{}
 
-        file = new QFile(fileName);
-
-        if (!file->open(QFile::WriteOnly))
-            return;
-
-        debugStream = new QDataStream(file);
-    }
-}
-
-MumeXmlParser::~MumeXmlParser()
-{
-    if (XPS_DEBUG_TO_FILE) {
-        file->close();
-    }
-}
+MumeXmlParser::~MumeXmlParser() = default;
 
 void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
-    switch (data.type) {
-    case TelnetDataEnum::DELAY: // Twiddlers
-        if (XPS_DEBUG_TO_FILE) {
-            (*debugStream) << "***STYPE***";
-            (*debugStream) << "DELAY";
-            (*debugStream) << "***ETYPE***";
-        }
+    const bool isPrompt = data.type == TelnetDataEnum::PROMPT;
+    const bool isTwiddlers = data.type == TelnetDataEnum::DELAY;
+    if (isTwiddlers) {
         m_lastPrompt = data.line;
-        if (getConfig().parser.removeXmlTags)
+        if (getConfig().parser.removeXmlTags) {
             stripXmlEntities(m_lastPrompt);
-        parse(data, true);
-        break;
-    case TelnetDataEnum::PROMPT:
-        if (XPS_DEBUG_TO_FILE) {
-            (*debugStream) << "***STYPE***";
-            (*debugStream) << "PROMPT";
-            (*debugStream) << "***ETYPE***";
         }
-        parse(data, true);
-        break;
-    case TelnetDataEnum::UNKNOWN:
-        if (XPS_DEBUG_TO_FILE) {
-            (*debugStream) << "***STYPE***";
-            (*debugStream) << "OTHER";
-            (*debugStream) << "***ETYPE***";
-        }
-        parse(data, false);
-        break;
-
-    case TelnetDataEnum::LF:
-    case TelnetDataEnum::CRLF:
-        if (XPS_DEBUG_TO_FILE) {
-            (*debugStream) << "***STYPE***";
-            (*debugStream) << "CRLF";
-            (*debugStream) << "***ETYPE***";
-        }
-        // XML and prompts
-        parse(data, false);
-        break;
     }
-    if (XPS_DEBUG_TO_FILE) {
-        (*debugStream) << "***S***";
-        (*debugStream) << data.line;
-        (*debugStream) << "***E***";
-    }
+    parse(data, isPrompt || isTwiddlers);
 }
 
 void MumeXmlParser::slot_parseGmcpInput(const GmcpMessage &msg)

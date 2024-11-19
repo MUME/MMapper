@@ -23,12 +23,9 @@ class GroupManagerApi;
 class MapData;
 class MumeClock;
 class ProxyParserApi;
-class QDataStream;
 class QFile;
 class QObject;
 struct TelnetData;
-
-// #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
 enum class NODISCARD XmlModeEnum : uint8_t {
     NONE,
@@ -48,8 +45,6 @@ private:
     Q_OBJECT
 
 private:
-    QDataStream *debugStream = nullptr;
-    QFile *file = nullptr;
     XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
     LineFlags m_lineFlags;
     QByteArray m_lineToUser;
