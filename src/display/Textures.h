@@ -91,56 +91,60 @@ struct NODISCARD road_texture_array : private texture_array<RoadIndexMaskEnum>
     using base::size;
 };
 
+using TextureArrayNESW = EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESW>;
+using TextureArrayNESWUD = EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESWUD>;
+
+// X(_Type, _Name)
+#define XFOREACH_MAPCANVAS_TEXTURES(X) \
+    X(texture_array<RoomTerrainEnum>, terrain) \
+    X(road_texture_array<RoadTagEnum::ROAD>, road) \
+    X(road_texture_array<RoadTagEnum::TRAIL>, trail) \
+    X(texture_array<RoomMobFlagEnum>, mob) \
+    X(texture_array<RoomLoadFlagEnum>, load) \
+    X(TextureArrayNESW, wall) \
+    X(TextureArrayNESW, dotted_wall) \
+    X(TextureArrayNESWUD, stream_in) \
+    X(TextureArrayNESWUD, stream_out) \
+    X(TextureArrayNESWUD, door) \
+    X(SharedMMTexture, char_arrows) \
+    X(SharedMMTexture, char_room_sel) \
+    X(SharedMMTexture, exit_climb_down) \
+    X(SharedMMTexture, exit_climb_up) \
+    X(SharedMMTexture, exit_down) \
+    X(SharedMMTexture, exit_up) \
+    X(SharedMMTexture, no_ride) \
+    X(SharedMMTexture, room_sel) \
+    X(SharedMMTexture, room_sel_distant) \
+    X(SharedMMTexture, room_sel_move_bad) \
+    X(SharedMMTexture, room_sel_move_good) \
+    X(SharedMMTexture, update)
+
 struct NODISCARD MapCanvasTextures final
 {
-    texture_array<RoomTerrainEnum> terrain;
-    road_texture_array<RoadTagEnum::ROAD> road;
-    road_texture_array<RoadTagEnum::TRAIL> trail;
-    texture_array<RoomMobFlagEnum> mob;
-    texture_array<RoomLoadFlagEnum> load;
-    EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESW> wall;
-    EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESW> dotted_wall;
-    EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESWUD> stream_in;
-    EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESWUD> stream_out;
-    EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EXITS_NESWUD> door;
-    SharedMMTexture char_arrows;
-    SharedMMTexture char_room_sel;
-    SharedMMTexture exit_climb_down;
-    SharedMMTexture exit_climb_up;
-    SharedMMTexture exit_down;
-    SharedMMTexture exit_up;
-    SharedMMTexture no_ride;
-    SharedMMTexture room_sel;
-    SharedMMTexture room_sel_distant;
-    SharedMMTexture room_sel_move_bad;
-    SharedMMTexture room_sel_move_good;
-    SharedMMTexture update;
+#define DECL(_Type, _Name) _Type _Name;
+    XFOREACH_MAPCANVAS_TEXTURES(DECL)
+#undef DECL
 
+private:
+    template<typename Callback>
+    static void apply_callback(SharedMMTexture &tex, Callback &&callback)
+    {
+        callback(tex);
+    }
+
+    template<typename T, typename Callback>
+    static void apply_callback(T &x, Callback &&callback)
+    {
+        x.for_each(callback);
+    }
+
+public:
     template<typename Callback>
     void for_each(Callback &&callback)
     {
-        terrain.for_each(callback);
-        road.for_each(callback);
-        trail.for_each(callback);
-        mob.for_each(callback);
-        load.for_each(callback);
-        wall.for_each(callback);
-        dotted_wall.for_each(callback);
-        door.for_each(callback);
-        stream_in.for_each(callback);
-        stream_out.for_each(callback);
-        callback(char_arrows);
-        callback(char_room_sel);
-        callback(exit_climb_down);
-        callback(exit_climb_up);
-        callback(exit_down);
-        callback(exit_up);
-        callback(no_ride);
-        callback(room_sel);
-        callback(room_sel_distant);
-        callback(room_sel_move_bad);
-        callback(room_sel_move_good);
-        callback(update);
+#define EACH(_Type, _Name) apply_callback(_Name, callback);
+        XFOREACH_MAPCANVAS_TEXTURES(EACH)
+#undef EACH
     }
 
     void destroyAll();
