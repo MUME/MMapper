@@ -14,8 +14,8 @@ class NODISCARD ParserInput final
 {
 private:
     std::shared_ptr<const std::vector<std::string>> m_vector;
-    size_t m_beg;
-    size_t m_end;
+    size_t m_beg = 0;
+    size_t m_end = 0;
 
 public:
     explicit ParserInput(std::shared_ptr<const std::vector<std::string>> v);
