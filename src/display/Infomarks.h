@@ -64,7 +64,7 @@ public:
                     const std::string &text,
                     const Color &color,
                     std::optional<Color> moved_bgcolor,
-                    const FontFormatFlags &fontFormatFlag,
+                    FontFormatFlags fontFormatFlag,
                     int rotationAngle);
 
     NODISCARD InfomarksMeshes getMeshes();

@@ -151,7 +151,7 @@ void InfomarksBatch::renderText(const glm::vec3 &pos,
                                 const std::string &text,
                                 const Color &color,
                                 std::optional<Color> moved_bgcolor,
-                                const FontFormatFlags &fontFormatFlag,
+                                const FontFormatFlags fontFormatFlag,
                                 const int rotationAngle)
 {
     m_text.emplace_back(pos, text, color, std::move(moved_bgcolor), fontFormatFlag, rotationAngle);

@@ -66,7 +66,7 @@ NODISCARD static std::optional<Color> getColor(const XNamedColor &namedColor)
 }
 
 enum class NODISCARD WallOrientationEnum { HORIZONTAL, VERTICAL };
-NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
+NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags flags,
                                                      const WallOrientationEnum wallOrientation)
 {
     const bool isVertical = wallOrientation == WallOrientationEnum::VERTICAL;
@@ -105,12 +105,12 @@ NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
     }
 }
 
-NODISCARD static XNamedColor getWallNamedColor(const ExitFlags &flags)
+NODISCARD static XNamedColor getWallNamedColor(const ExitFlags flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::HORIZONTAL);
 }
 
-NODISCARD static XNamedColor getVerticalNamedColor(const ExitFlags &flags)
+NODISCARD static XNamedColor getVerticalNamedColor(const ExitFlags flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::VERTICAL);
 }
@@ -276,7 +276,7 @@ static void visitRoom(const Room *const room,
                 continue;
             for (const ExitDirEnum targetDir : ALL_EXITS_NESWUD) {
                 const Exit &targetExit = targetRoom->exit(targetDir);
-                const ExitFlags &flags = targetExit.getExitFlags();
+                const ExitFlags flags = targetExit.getExitFlags();
                 if (flags.isFlow() && targetExit.containsOut(room->getId())) {
                     callbacks.visitStream(room, dir, StreamTypeEnum::InFlow);
                     return;
@@ -292,7 +292,7 @@ static void visitRoom(const Room *const room,
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
     for (const ExitDirEnum dir : ALL_EXITS_NESW) {
         const Exit &exit = room->exit(dir);
-        const ExitFlags &flags = exit.getExitFlags();
+        const ExitFlags flags = exit.getExitFlags();
         const auto isExit = flags.isExit();
         const auto isDoor = flags.isDoor();
 

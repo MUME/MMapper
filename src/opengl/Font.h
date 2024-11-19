@@ -33,7 +33,7 @@ struct NODISCARD GLText final
                     std::string moved_text,
                     const Color &color_ = {},
                     std::optional<Color> bgcolor_ = {},
-                    const FontFormatFlags &fontFormatFlag_ = {},
+                    const FontFormatFlags fontFormatFlag_ = {},
                     int rotationAngle_ = 0)
         : pos{pos_}
         , text{std::move(moved_text)}

@@ -297,7 +297,7 @@ public:
         size_t m_pos = 0;
 
     public:
-        Iterator(const Flags &flags, const size_t pos)
+        Iterator(const Flags flags, const size_t pos)
             : m_bits{flags.m_flags}
             , m_pos{pos}
         {}

@@ -545,7 +545,7 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
 }
 
 template<typename T, typename Flags>
-void setCheckStates(T &array, const Flags &flags)
+void setCheckStates(T &array, const Flags flags)
 {
     for (size_t i = 0, len = array.size(); i < len; ++i) {
         const auto flag = static_cast<typename T::index_type>(i);
@@ -557,7 +557,7 @@ void setCheckStates(T &array, const Flags &flags)
 }
 
 template<typename T>
-void setFlags(T &array, const QFlags<Qt::ItemFlag> &flags)
+void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
 {
     for (auto &x : array) {
         x->setFlags(flags);

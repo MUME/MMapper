@@ -114,7 +114,7 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(RoomMobUpdate);
 
 public:
-    const Flags &getFlags() const { return m_flags; }
+    Flags getFlags() const { return m_flags; }
     void setFlags(Flags flags) { m_flags = flags; }
 
     constexpr bool contains(const Field index) const noexcept { return m_flags.contains(index); }
