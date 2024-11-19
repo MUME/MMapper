@@ -17,12 +17,31 @@
 
 #include <QMutexLocker>
 
-NODISCARD static inline int64_t nowMs()
+namespace { // anonymous
+
+NODISCARD int64_t nowMs()
 {
     using namespace std::chrono;
     const auto now = steady_clock::now();
     return time_point_cast<milliseconds>(now).time_since_epoch().count();
 }
+
+NODISCARD std::string msToMinSec(const int64_t ms)
+{
+    const auto hour = ms / 1000 / 60 / 60;
+    const auto min = ms / 1000 / 60 % 60;
+    const auto sec = ms / 1000 % 60;
+
+    std::ostringstream ostr;
+    ostr << std::setfill('0');
+    if (hour) {
+        ostr << hour << ":" << std::setw(2);
+    }
+    ostr << min << ":" << std::setw(2) << sec;
+    return ostr.str();
+}
+
+} // namespace
 
 TTimer::TTimer(std::string name, std::string desc, int64_t durationMs)
     : m_name{std::move(name)}
@@ -46,21 +65,6 @@ CTimers::CTimers(QObject *const parent)
     m_timer.setSingleShot(true);
 
     connect(&m_timer, &QTimer::timeout, this, &CTimers::slot_finishCountdownTimer);
-}
-
-NODISCARD static std::string msToMinSec(const int64_t ms)
-{
-    const auto hour = ms / 1000 / 60 / 60;
-    const auto min = ms / 1000 / 60 % 60;
-    const auto sec = ms / 1000 % 60;
-
-    std::ostringstream ostr;
-    ostr << std::setfill('0');
-    if (hour) {
-        ostr << hour << ":" << std::setw(2);
-    }
-    ostr << min << ":" << std::setw(2) << sec;
-    return ostr.str();
 }
 
 void CTimers::addTimer(std::string name, std::string desc)
