@@ -58,6 +58,7 @@
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
+#include "metatypes.h"
 #include "roomeditattrdlg.h"
 
 #include <memory>
@@ -123,15 +124,7 @@ MainWindow::MainWindow()
     setObjectName("MainWindow");
     setWindowIcon(QIcon(":/icons/m.png"));
     addApplicationFont();
-
-    qRegisterMetaType<RoomId>("RoomId");
-    qRegisterMetaType<TelnetData>("TelnetData");
-    qRegisterMetaType<CommandQueue>("CommandQueue");
-    qRegisterMetaType<DoorActionEnum>("DoorActionEnum");
-    qRegisterMetaType<ExitDirEnum>("ExitDirEnum");
-    qRegisterMetaType<GroupManagerStateEnum>("GroupManagerStateEnum");
-    qRegisterMetaType<SigParseEvent>("SigParseEvent");
-    qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
+    registerMetatypes();
 
     m_mapData = new MapData(this);
     auto &mapData = *m_mapData;

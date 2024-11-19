@@ -23,9 +23,7 @@ using char_consts::C_NEWLINE;
 
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)
-{
-    qRegisterMetaType<RemoteSession>("RemoteSession");
-}
+{}
 
 void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {

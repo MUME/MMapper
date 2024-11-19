@@ -174,6 +174,8 @@ set(mmapper_SRCS
     mainwindow/mainwindow-saveslots.cpp
     mainwindow/mainwindow.cpp
     mainwindow/mainwindow.h
+    mainwindow/metatypes.cpp
+    mainwindow/metatypes.h
     mainwindow/roomeditattrdlg.cpp
     mainwindow/roomeditattrdlg.h
     mapdata/DoorFlags.h

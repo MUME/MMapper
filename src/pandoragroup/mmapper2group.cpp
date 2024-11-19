@@ -74,10 +74,6 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     , affectTimer{this}
     , thread(THREADED ? new QThread : nullptr)
 {
-    qRegisterMetaType<CharacterPositionEnum>("CharacterPositionEnum");
-    qRegisterMetaType<CharacterAffectEnum>("CharacterAffectEnum");
-    qRegisterMetaType<GmcpMessage>("GmcpMessage");
-
     connect(this,
             &Mmapper2Group::sig_invokeStopInternal,
             this,

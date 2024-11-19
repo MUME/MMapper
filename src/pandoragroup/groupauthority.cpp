@@ -247,8 +247,6 @@ NODISCARD static inline QString getMetadataKey(const GroupSecret &secret,
 GroupAuthority::GroupAuthority(QObject *const parent)
     : QObject(parent)
 {
-    qRegisterMetaType<GroupSecret>("GroupSecret");
-
     // Always utilize a temporary keychain
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
 
