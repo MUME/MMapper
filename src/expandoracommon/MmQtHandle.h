@@ -30,11 +30,11 @@ private:
 public:
     explicit MmQtHandle(std::nullptr_t) {}
     explicit MmQtHandle(const shared_type &event)
-        /* throws invalid argument */
+        /* throws NullPointerException */
         noexcept(false)
         : m_shared{event}
     {
-        requireValid(); /* throws invalid argument */
+        requireValid(); /* throws NullPointerException */
     }
 
 public:
@@ -58,6 +58,7 @@ public:
     NODISCARD inline bool operator!=(const MmQtHandle &rhs) const { return !(*this == rhs); }
 
 public:
+    /* result can be discarded; throws NullPointerException */
     inline const MmQtHandle &requireValid() const noexcept(false)
     {
         if (!isValid())
