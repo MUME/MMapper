@@ -309,7 +309,7 @@ bool RemoteTextEdit::event(QEvent *const event)
 
 void RemoteTextEdit::handle_toolTip(QEvent *const event) const
 {
-    QHelpEvent *const helpEvent = static_cast<QHelpEvent *>(event);
+    auto *const helpEvent = checked_dynamic_downcast<QHelpEvent *>(event);
     QTextCursor cursor = cursorForPosition(helpEvent->pos());
     if ((false))
         cursor.select(QTextCursor::WordUnderCursor);
