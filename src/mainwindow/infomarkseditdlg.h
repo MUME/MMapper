@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/Connections.h"
 #include "../map/infomark.h"
 #include "ui_infomarkseditdlg.h"
 
@@ -27,6 +28,7 @@ class NODISCARD_QOBJECT InfoMarksEditDlg final : public QDialog, private Ui::Inf
     Q_OBJECT
 
 private:
+    mmqt::Connections m_connections;
     std::shared_ptr<InfoMarkSelection> m_selection;
     std::vector<std::shared_ptr<InfoMark>> m_markers;
     MapData *m_mapData = nullptr;

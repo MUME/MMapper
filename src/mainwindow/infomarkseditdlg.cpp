@@ -61,20 +61,33 @@ void InfoMarksEditDlg::writeSettings()
 
 void InfoMarksEditDlg::connectAll()
 {
-    connect(this,
-            &InfoMarksEditDlg::sig_infomarksChanged,
-            m_mapCanvas,
-            &MapCanvas::slot_infomarksChanged);
-    connect(objectsList,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this,
-            &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
-    connect(objectType,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this,
-            &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
-    connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_createClicked);
-    connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_modifyClicked);
+    std::ignore = deref(objectsList);
+    std::ignore = deref(objectType);
+    std::ignore = deref(objectCreate);
+    std::ignore = deref(objectModify);
+
+    disconnectAll();
+
+    m_connections += connect(this,
+                             &InfoMarksEditDlg::sig_infomarksChanged,
+                             m_mapCanvas,
+                             &MapCanvas::slot_infomarksChanged);
+    m_connections += connect(objectsList,
+                             QOverload<int>::of(&QComboBox::currentIndexChanged),
+                             this,
+                             &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
+    m_connections += connect(objectType,
+                             QOverload<int>::of(&QComboBox::currentIndexChanged),
+                             this,
+                             &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
+    m_connections += connect(objectCreate,
+                             &QAbstractButton::clicked,
+                             this,
+                             &InfoMarksEditDlg::slot_createClicked);
+    m_connections += connect(objectModify,
+                             &QAbstractButton::clicked,
+                             this,
+                             &InfoMarksEditDlg::slot_modifyClicked);
 }
 
 void InfoMarksEditDlg::slot_objectListCurrentIndexChanged(int /*unused*/)
@@ -144,20 +157,7 @@ void InfoMarksEditDlg::slot_modifyClicked()
 
 void InfoMarksEditDlg::disconnectAll()
 {
-    disconnect(this,
-               &InfoMarksEditDlg::sig_infomarksChanged,
-               m_mapCanvas,
-               &MapCanvas::slot_infomarksChanged);
-    disconnect(objectsList,
-               QOverload<int>::of(&QComboBox::currentIndexChanged),
-               this,
-               &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
-    disconnect(objectType,
-               QOverload<int>::of(&QComboBox::currentIndexChanged),
-               this,
-               &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
-    disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_createClicked);
-    disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_modifyClicked);
+    m_connections.disconnectAll();
 }
 
 void InfoMarksEditDlg::updateMarkers()
