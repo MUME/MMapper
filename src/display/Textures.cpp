@@ -203,36 +203,43 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
 void MapCanvas::initTextures()
 {
     MapCanvasTextures &textures = this->m_textures;
+    loadPixmapArray(textures.terrain); // 128
+    loadPixmapArray(textures.road);    // 128
+    loadPixmapArray(textures.trail);   // 64
+    loadPixmapArray(textures.mob);     // 128
+    loadPixmapArray(textures.load);    // 128
 
-    loadPixmapArray(textures.terrain);
-    loadPixmapArray(textures.road);
-    loadPixmapArray(textures.trail);
-    loadPixmapArray(textures.mob);
-    loadPixmapArray(textures.load);
     for (const ExitDirEnum dir : ALL_EXITS_NESW) {
         textures.dotted_wall[dir] = createDottedWall(dir);
         textures.wall[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("wall-%s.png", lowercaseDirection(dir))));
     }
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+        // doors are 256
         textures.door[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("door-%s.png", lowercaseDirection(dir))));
+        // streams are 128
         textures.stream_in[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("stream-in-%s.png", lowercaseDirection(dir))));
         textures.stream_out[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("stream-out-%s.png", lowercaseDirection(dir))));
     }
+
+    // char images are 256
     textures.char_arrows = loadTexture(getPixmapFilenameRaw("char-arrows.png"));
     textures.char_room_sel = loadTexture(getPixmapFilenameRaw("char-room-sel.png"));
+    // exits are 128
     textures.exit_climb_down = loadTexture(getPixmapFilenameRaw("exit-climb-down.png"));
     textures.exit_climb_up = loadTexture(getPixmapFilenameRaw("exit-climb-up.png"));
     textures.exit_down = loadTexture(getPixmapFilenameRaw("exit-down.png"));
     textures.exit_up = loadTexture(getPixmapFilenameRaw("exit-up.png"));
     textures.no_ride = loadTexture(getPixmapFilenameRaw("no-ride.png"));
+    // room are 256
     textures.room_sel = loadTexture(getPixmapFilenameRaw("room-sel.png"));
     textures.room_sel_distant = loadTexture(getPixmapFilenameRaw("room-sel-distant.png"));
     textures.room_sel_move_bad = loadTexture(getPixmapFilenameRaw("room-sel-move-bad.png"));
     textures.room_sel_move_good = loadTexture(getPixmapFilenameRaw("room-sel-move-good.png"));
+    // 128
     textures.update = loadTexture(getPixmapFilenameRaw("update0.png"));
 
     {
