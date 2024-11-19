@@ -62,7 +62,6 @@ set(mmapper_SRCS
     display/mapwindow.h
     display/prespammedpath.cpp
     display/prespammedpath.h
-    expandoracommon/MmQtHandle.h
     expandoracommon/RoomAdmin.cpp
     expandoracommon/RoomAdmin.h
     expandoracommon/RoomRecipient.cpp
@@ -99,6 +98,7 @@ set(mmapper_SRCS
     global/Flags.h
     global/LineUtils.cpp
     global/LineUtils.h
+    global/MmQtHandle.h
     global/NamedColors.cpp
     global/NamedColors.h
     global/NullPointerException.cpp

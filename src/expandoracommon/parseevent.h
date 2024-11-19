@@ -4,12 +4,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/MmQtHandle.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../parser/CommandId.h"
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
-#include "MmQtHandle.h"
 #include "property.h"
 
 #include <array>
