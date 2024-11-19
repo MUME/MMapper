@@ -49,13 +49,6 @@ static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous No
 static constexpr const int MMAPPER_19_10_0_SCHEMA = 36; // switches to new coordinate system
 static constexpr const int CURRENT_SCHEMA = MMAPPER_19_10_0_SCHEMA;
 
-static_assert(021 == 17, "MMapper 2.0.0 Schema");
-static_assert(030 == 24, "MMapper 2.0.2 Schema");
-static_assert(031 == 25, "MMapper 2.0.4 Schema");
-static_assert(040 == 32, "MMapper 2.3.7 Schema");
-static_assert(041 == 33, "MMapper 2.4.0 Schema");
-static_assert(042 == 34, "MMapper 2.4.3 Schema");
-
 NODISCARD static const Coordinate convertESUtoENU(Coordinate c)
 {
     c.y *= -1;
