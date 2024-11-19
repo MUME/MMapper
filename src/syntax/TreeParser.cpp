@@ -399,7 +399,7 @@ void TreeParser::help(const ParserInput &input, const bool isFull)
 
 std::string processSyntax(const syntax::SharedConstSublist &syntax,
                           const std::string &name,
-                          const StringView &args)
+                          const StringView args)
 {
     using namespace syntax;
 

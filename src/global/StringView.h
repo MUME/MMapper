@@ -29,7 +29,7 @@ private:
 
 public:
     StringView() noexcept = default;
-    explicit StringView(const std::string_view sv) noexcept;
+    explicit StringView(std::string_view sv) noexcept;
     explicit StringView(const std::string &s) noexcept;
     explicit StringView(std::string &&) = delete;
     explicit StringView(const QString &) = delete;
@@ -82,8 +82,8 @@ public:
     bool operator==(const std::string_view sv) const noexcept { return m_sv == sv; }
     bool operator!=(const std::string_view sv) const noexcept { return !(*this == sv); }
 
-    bool operator==(const StringView &rhs) const noexcept { return m_sv == rhs.m_sv; }
-    bool operator!=(const StringView &rhs) const noexcept { return !(*this == rhs); }
+    bool operator==(const StringView rhs) const noexcept { return m_sv == rhs.m_sv; }
+    bool operator!=(const StringView rhs) const noexcept { return !(*this == rhs); }
 
 public:
     NODISCARD StringView substr(size_t pos, size_t len = std::string_view::npos) const;
@@ -106,8 +106,8 @@ public:
     StringView &operator++();
     void operator++(int) = delete;
     char operator[](size_t pos) const;
-    NODISCARD bool startsWith(const std::string_view other) const;
-    NODISCARD bool endsWith(const std::string_view other) const;
+    NODISCARD bool startsWith(std::string_view other) const;
+    NODISCARD bool endsWith(std::string_view other) const;
     void remove_suffix(size_t n);
 
 public:
@@ -134,12 +134,12 @@ public:
     //     assert(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
     // }
     // </ecode>
-    NODISCARD bool intersects(const StringView &other) const;
+    NODISCARD bool intersects(StringView other) const;
 
     // This O(1) function returns if this string points to an actual substring of the other string.
     // NOTE: This function uses comparison of pointers, so it is not to be confused with the O(M+N)
     // test of whether or not `other.find(*this) != npos`.
-    NODISCARD bool isSubstringOf(const StringView &other) const;
+    NODISCARD bool isSubstringOf(StringView other) const;
 
 public:
     // std::string s = "ResultOtherIgnored";
@@ -147,28 +147,28 @@ public:
     // assert(sv.beforeSubstring(sv.mid(6, 5)/* "Other" */) == sv.left(6) /* "Result" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    NODISCARD StringView beforeSubstring(const StringView &other) const;
+    NODISCARD StringView beforeSubstring(StringView other) const;
 
     // std::string s ="IgnoredOtherResult";
     // StringView sv{};
     // assert(sv.startingWithSubstring(sv.mid(7, 5) /* "Other" */) == sv.mid(7) /* "OtherResult" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    NODISCARD StringView startingWithSubstring(const StringView &other) const;
+    NODISCARD StringView startingWithSubstring(StringView other) const;
 
     // std::string s = "ResultOtherIgnored";
     // StringView sv{s};
     // assert(sv.beforeSubstring(sv.mid(6, 5) /* "Other" */) == sv.left(11) /* "ResultOther" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    NODISCARD StringView upToAndIncludingSubstring(const StringView &other) const;
+    NODISCARD StringView upToAndIncludingSubstring(StringView other) const;
 
     // std::string s = "IgnoredOtherResult";
     // StringView sv{s};
     // assert(sv.afterSubstring(sv.substr(7, 5) /* "Other */) == sv.right(6) /* Result */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    NODISCARD StringView afterSubstring(const StringView &other) const;
+    NODISCARD StringView afterSubstring(StringView other) const;
 };
 
 namespace test {

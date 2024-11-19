@@ -122,7 +122,7 @@ NODISCARD static auto syn(Args &&...args)
     return syntax::buildSyntax(remap(std::forward<Args>(args))...);
 }
 
-void AbstractParser::doConfig(const StringView &cmd)
+void AbstractParser::doConfig(const StringView cmd)
 {
     auto listColors = syntax::Accept(
         [](User &user, const Pair *) {

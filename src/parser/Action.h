@@ -23,10 +23,10 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(IAction);
 
 private:
-    virtual void virt_match(const StringView &input) const = 0;
+    virtual void virt_match(StringView input) const = 0;
 
 public:
-    void match(const StringView &input) const;
+    void match(StringView input) const;
 };
 
 class NODISCARD StartsWithAction : public IAction
@@ -42,7 +42,7 @@ public:
     {}
 
 private:
-    void virt_match(const StringView &input) const override;
+    void virt_match(StringView input) const override;
 };
 
 class NODISCARD EndsWithAction : public IAction
@@ -58,7 +58,7 @@ public:
     {}
 
 private:
-    void virt_match(const StringView &input) const override;
+    void virt_match(StringView input) const override;
 };
 
 class NODISCARD RegexAction : public IAction
@@ -71,7 +71,7 @@ public:
     explicit RegexAction(const std::string &pattern, const ActionCallback &callback);
 
 private:
-    void virt_match(const StringView &input) const override;
+    void virt_match(StringView input) const override;
 };
 
 using ActionHint = char;

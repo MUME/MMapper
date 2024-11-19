@@ -8,18 +8,18 @@
 
 IAction::~IAction() = default;
 
-void IAction::match(const StringView &input) const
+void IAction::match(const StringView input) const
 {
     return virt_match(input);
 }
 
-void StartsWithAction::virt_match(const StringView &input) const
+void StartsWithAction::virt_match(const StringView input) const
 {
     if (input.startsWith(match))
         callback(input);
 }
 
-void EndsWithAction::virt_match(const StringView &input) const
+void EndsWithAction::virt_match(const StringView input) const
 {
     if (input.endsWith(match))
         callback(input);
@@ -35,7 +35,7 @@ RegexAction::RegexAction(const std::string &pattern, const ActionCallback &callb
     , callback{callback}
 {}
 
-void RegexAction::virt_match(const StringView &input) const
+void RegexAction::virt_match(const StringView input) const
 {
     if (std::regex_match(input.begin(), input.end(), regex))
         callback(input);

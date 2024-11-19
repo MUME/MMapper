@@ -224,7 +224,7 @@ private:
 
     void openVoteURL();
     void doBackCommand();
-    void doConfig(const StringView &view);
+    void doConfig(StringView view);
     void doConnectToHost();
     void doDisconnectFromHost();
     void doRemoveDoorNamesCommand();

@@ -93,6 +93,6 @@ NODISCARD SharedConstSublist buildSyntax(First &&first, Second &&second, Rest &&
 
 NODISCARD std::string processSyntax(const syntax::SharedConstSublist &syntax,
                                     const std::string &name,
-                                    const StringView &args);
+                                    StringView args);
 
 } // namespace syntax

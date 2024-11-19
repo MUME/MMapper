@@ -395,7 +395,7 @@ NODISCARD static bool isSubstringOf(const char *const a,
 
 } // namespace detail
 
-bool StringView::intersects(const StringView &other) const
+bool StringView::intersects(const StringView other) const
 {
     return ::detail::intersection::intersects(m_sv.data(),
                                               m_sv.size(),
@@ -403,7 +403,7 @@ bool StringView::intersects(const StringView &other) const
                                               other.m_sv.size());
 }
 
-bool StringView::isSubstringOf(const StringView &other) const
+bool StringView::isSubstringOf(const StringView other) const
 {
     return ::detail::substring::isSubstringOf(m_sv.data(),
                                               m_sv.size(),
@@ -411,7 +411,7 @@ bool StringView::isSubstringOf(const StringView &other) const
                                               other.m_sv.size());
 }
 
-StringView StringView::beforeSubstring(const StringView &other) const
+StringView StringView::beforeSubstring(const StringView other) const
 {
     assert(other.isSubstringOf(*this));
     const auto end = other.m_sv.data() - m_sv.data();
@@ -419,7 +419,7 @@ StringView StringView::beforeSubstring(const StringView &other) const
     return left(static_cast<size_t>(end));
 }
 
-StringView StringView::startingWithSubstring(const StringView &other) const
+StringView StringView::startingWithSubstring(const StringView other) const
 {
     assert(other.isSubstringOf(*this));
     const auto end = other.m_sv.data() - m_sv.data();
@@ -427,7 +427,7 @@ StringView StringView::startingWithSubstring(const StringView &other) const
     return mid(static_cast<size_t>(end));
 }
 
-StringView StringView::upToAndIncludingSubstring(const StringView &other) const
+StringView StringView::upToAndIncludingSubstring(const StringView other) const
 {
     assert(other.isSubstringOf(*this));
     const auto end = other.m_sv.data() + other.m_sv.size();
@@ -436,7 +436,7 @@ StringView StringView::upToAndIncludingSubstring(const StringView &other) const
     return left(static_cast<size_t>(offset));
 }
 
-StringView StringView::afterSubstring(const StringView &other) const
+StringView StringView::afterSubstring(const StringView other) const
 {
     assert(other.isSubstringOf(*this));
     const auto end = other.m_sv.data() + other.m_sv.size();
