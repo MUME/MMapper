@@ -6,7 +6,7 @@
 
 #include "parserutils.h"
 
-#include "../global/TextUtils.h"
+#include "TextUtils.h"
 
 #include <array>
 #include <ostream>

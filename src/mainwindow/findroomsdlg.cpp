@@ -9,12 +9,12 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/parserutils.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
-#include "../parser/parserutils.h"
 
 #include <cstdint>
 

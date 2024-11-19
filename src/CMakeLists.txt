@@ -120,6 +120,8 @@ set(mmapper_SRCS
     global/io.cpp
     global/io.h
     global/macros.h
+    global/parserutils.cpp
+    global/parserutils.h
     global/random.cpp
     global/random.h
     global/range.h
@@ -299,8 +301,6 @@ set(mmapper_SRCS
     parser/abstractparser.h
     parser/mumexmlparser.cpp
     parser/mumexmlparser.h
-    parser/parserutils.cpp
-    parser/parserutils.h
     parser/patterns.cpp
     parser/patterns.h
     pathmachine/approved.cpp

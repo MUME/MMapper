@@ -5,10 +5,10 @@
 
 #include "mumexmlparser.h"
 
+#include "../global/parserutils.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
 #include "abstractparser.h"
-#include "parserutils.h"
 #include "patterns.h"
 
 #include <cctype>

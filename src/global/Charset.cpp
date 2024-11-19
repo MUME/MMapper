@@ -3,7 +3,7 @@
 
 #include "Charset.h"
 
-#include "../parser/parserutils.h"
+#include "../global/parserutils.h"
 #include "TextUtils.h"
 
 void latin1ToUtf8(std::ostream &os, const char c)

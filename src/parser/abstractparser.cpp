@@ -17,6 +17,7 @@
 #include "../global/RAII.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
+#include "../global/parserutils.h"
 #include "../global/random.h"
 #include "../global/utils.h"
 #include "../mapdata/DoorFlags.h"
@@ -45,7 +46,6 @@
 #include "DoorAction.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
-#include "parserutils.h"
 
 #include <algorithm>
 #include <cassert>

@@ -5,12 +5,12 @@
 #include "PandoraMapStorage.h"
 
 #include "../expandoracommon/room.h"
+#include "../global/parserutils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
-#include "../parser/parserutils.h"
 #include "mapstorage.h"
 
 #include <cassert>

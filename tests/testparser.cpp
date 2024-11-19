@@ -6,8 +6,8 @@
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
 #include "../src/global/TextUtils.h"
+#include "../src/global/parserutils.h"
 #include "../src/mapdata/mmapper2room.h"
-#include "../src/parser/parserutils.h"
 
 #include <memory>
 

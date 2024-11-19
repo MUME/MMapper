@@ -6,12 +6,12 @@
 #include "parseevent.h"
 
 #include "../global/TextUtils.h"
+#include "../global/parserutils.h"
 #include "../mapdata/ExitDirection.h"
 #include "../parser/CommandId.h"
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
-#include "../parser/parserutils.h"
 #include "property.h"
 
 #include <cassert>

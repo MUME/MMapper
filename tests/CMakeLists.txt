@@ -14,7 +14,7 @@ set(clock_SRCS
     ../src/global/TextUtils.h
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
-    ../src/parser/parserutils.cpp
+    ../src/global/parserutils.cpp
     ../src/proxy/GmcpMessage.cpp
     ../src/proxy/GmcpMessage.h
     )
@@ -52,8 +52,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/mapdata/ExitFieldVariant.h
     ../src/parser/CommandId.cpp
     ../src/parser/CommandId.h
-    ../src/parser/parserutils.cpp
-    ../src/parser/parserutils.h
+    ../src/global/parserutils.cpp
+    ../src/global/parserutils.h
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
@@ -86,8 +86,8 @@ set(parser_SRCS
     ../src/mapdata/ExitDirection.h
     ../src/parser/CommandId.cpp
     ../src/parser/CommandId.h
-    ../src/parser/parserutils.cpp
-    ../src/parser/parserutils.h
+    ../src/global/parserutils.cpp
+    ../src/global/parserutils.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
@@ -189,8 +189,8 @@ set(adventure_SRCS
         ../src/global/utils.h
         ../src/observer/gameobserver.cpp
         ../src/observer/gameobserver.h
-        ../src/parser/parserutils.cpp
-        ../src/parser/parserutils.h
+        ../src/global/parserutils.cpp
+        ../src/global/parserutils.h
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
