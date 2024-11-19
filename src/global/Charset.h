@@ -44,4 +44,9 @@ extern void convert(std::ostream &os,
                     std::string_view sv,
                     CharacterEncodingEnum from,
                     CharacterEncodingEnum to);
+
+// This is a lenient tester; it just recognizes the format but doesn't check actual codepoints.
+// The goal is to detect accidentally passing latin1 to utf8.
+NODISCARD extern bool isProbablyUtf8(std::string_view sv);
+
 } // namespace charset

@@ -293,3 +293,151 @@ void charset::convert(std::ostream &os,
         break;
     }
 }
+
+namespace { // anonymous
+
+namespace detail {
+// This is a lenient tester; it just recognizes the format but doesn't check actual codepoints.
+// The goal is to detect accidentally passing latin1 to utf8.
+NODISCARD static constexpr bool isProbablyUtf8(const std::string_view sv)
+{
+    constexpr uint8_t allZeros = 0;
+    constexpr uint8_t topBit = 0b1000'0000;
+    constexpr uint8_t top2Bits = 0b1100'0000;
+    constexpr uint8_t top3Bits = 0b1110'0000;
+    constexpr uint8_t top4Bits = 0b1111'0000;
+    constexpr uint8_t top5Bits = 0b1111'1000;
+    constexpr uint8_t top6Bits = 0b1111'1100;
+    constexpr uint8_t top7Bits = 0b1111'1110;
+    static_assert(topBit == 0x80);
+    static_assert(top2Bits == 0xc0);
+    static_assert(top3Bits == 0xe0);
+    static_assert(top4Bits == 0xf0);
+    static_assert(top5Bits == 0xf8);
+    static_assert(top6Bits == 0xfc);
+    static_assert(top7Bits == 0xfe);
+
+    size_t multiByteExpected = 0;
+    for (const char c : sv) {
+        const auto uc = static_cast<uint8_t>(c);
+        if (multiByteExpected) {
+            if ((uc & top2Bits) != topBit)
+                return false;
+            // 10xxxxxx
+            --multiByteExpected;
+            continue;
+        }
+
+        if ((uc & topBit) == allZeros) {
+            // U+0000 to U+007F
+            // 0xxxxxxx
+            continue;
+        }
+
+        if ((uc & top2Bits) == topBit) {
+            return false;
+        }
+
+        if ((uc & top3Bits) == top2Bits) {
+            // U+0080 to U+07FF
+            // 110xxxxx 10xxxxxx
+            //
+            // c?
+            // d?
+            //
+            // note: technically uc == c0 ||  uc == c1 are considered invalid because
+            // they are 2-byte encodings of 7-bit ascii codepoints.
+
+            if ((uc & top7Bits) == top2Bits) {
+                return false;
+            }
+
+            multiByteExpected = 1;
+            continue;
+        }
+
+        if ((uc & top4Bits) == top3Bits) {
+            // U+0800 to U+FFFF
+            // 1110xxxx 10xxxxxx 10xxxxxx
+            multiByteExpected = 2;
+            continue;
+        }
+
+        if ((uc & top5Bits) == top4Bits) {
+            // U+10000 to U+10FFFF
+            // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+
+            if ((uc & 0x7u) == 0x4u) {
+                // These may or may not be invalid,
+                // but we'd have to check the next byte to know.
+                // Note: 0xF4 is used for U+100000 to U+13FFFF,
+                // but only code points up to U+10FFFF are valid.
+            }
+
+            if ((uc & 0x7u) >= 0x5u) {
+                // U+140000 and beyond
+                return false;
+            }
+
+            multiByteExpected = 3;
+            continue;
+        }
+
+        // As of March 2021, there are no valid 5 or 6-byte utf8 values.
+        return false;
+    }
+    return !multiByteExpected;
+}
+
+static_assert(isProbablyUtf8("\x00")); // U+0000 (ascii 0x00)
+static_assert(isProbablyUtf8("\x7f")); // U+007f (ascii 0x7f)
+//
+static_assert(!isProbablyUtf8("\x80"));
+static_assert(!isProbablyUtf8("\xbf"));
+//
+static_assert(!isProbablyUtf8("\xc0\x80")); // invalid over-long encoding
+static_assert(!isProbablyUtf8("\xc1\x80")); // invalid over-long encoding
+//
+static_assert(isProbablyUtf8("\xc2\x80")); // U+  80 (latin1 0x80)
+static_assert(isProbablyUtf8("\xc2\xbf")); // U+  BF (latin1 0xbf)
+static_assert(isProbablyUtf8("\xc3\x80")); // U+  C0 (latin1 0xc0)
+static_assert(isProbablyUtf8("\xc3\xbf")); // U+  FF (latin1 0xff)
+static_assert(isProbablyUtf8("\xc4\x80")); // U+0100
+static_assert(isProbablyUtf8("\xdf\x80")); // U+07C0
+static_assert(isProbablyUtf8("\xdf\xbf")); // U+07FF
+//
+static_assert(isProbablyUtf8("\xe0\x80\x80")); // U+0800 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xe1\x80\x80")); // U+1000
+static_assert(isProbablyUtf8("\xec\x80\x80")); // U+C000
+static_assert(isProbablyUtf8("\xed\x80\x80")); // U+D000 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xee\x80\x80")); // U+E000
+static_assert(isProbablyUtf8("\xef\x80\x80")); // U+F000
+static_assert(isProbablyUtf8("\xef\xbf\xbf")); // U+FFFF
+//
+static_assert(isProbablyUtf8("\xf0\x80\x80\x80")); // U+ 10000 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xf1\x80\x80\x80")); // U+ 40000
+static_assert(isProbablyUtf8("\xf2\x80\x80\x80")); // U+ 80000
+static_assert(isProbablyUtf8("\xf3\x80\x80\x80")); // U+ C0000
+static_assert(isProbablyUtf8("\xf4\x80\x80\x80")); // U+100000 (* not all in this range are valid)
+//
+static_assert(!isProbablyUtf8("\xf5\x80\x80\x80")); // U+140000
+static_assert(!isProbablyUtf8("\xf6\x80\x80\x80")); // U+180000
+static_assert(!isProbablyUtf8("\xf7\x80\x80\x80")); // U+1C0000
+//
+static_assert(!isProbablyUtf8("\xf8\x80\x80\x80\x80"));     // illegal 5-byte sequence
+static_assert(!isProbablyUtf8("\xfc\x80\x80\x80\x80\x80")); // illegal 6-byte sequence
+static_assert(!isProbablyUtf8("\xfe"));                     // not valid anywhere
+static_assert(!isProbablyUtf8("\xff"));                     // not valid anywhere
+
+} // namespace detail
+} // namespace
+
+namespace charset {
+// This is a lenient tester; it just recognizes the format but doesn't check actual codepoints.
+// The goal is to detect accidentally passing latin1 to utf8.
+NODISCARD bool isProbablyUtf8(const std::string_view sv)
+{
+    return detail::isProbablyUtf8(sv);
+}
+
+} // namespace charset
