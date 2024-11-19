@@ -446,6 +446,4 @@ void test::test_unquote() noexcept /* will crash the program if it throws */
         const auto result = unquote(R"("abc\0def")", false, false);
         assert(result && result.getVectorOfStrings() == expect);
     }
-
-    MMLOG() << __FUNCTION__ << ": All tests passed.";
 }

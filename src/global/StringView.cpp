@@ -555,5 +555,4 @@ void test::testStringView()
     testLazyDog();
     testIntersect();
     testSubstring();
-    MMLOG() << "Test \"" << __FUNCTION__ << "\" passed.";
 }

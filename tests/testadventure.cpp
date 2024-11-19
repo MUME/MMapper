@@ -6,6 +6,7 @@
 #include "../src/adventure/adventuresession.h"
 #include "../src/adventure/adventuretracker.h"
 #include "../src/global/Charset.h"
+#include "../src/global/HideQDebug.h"
 #include "../src/global/tests.h"
 #include "../src/observer/gameobserver.h"
 
@@ -273,6 +274,7 @@ void TestAdventure::testE2E()
     });
 
     auto pump = [&observer](const std::vector<TestLine> &lines) {
+        mmqt::HideQDebug forThisFunction;
         for (const TestLine &tl : lines) {
             observer.slot_observeSentToUser(mmqt::toQByteArrayLatin1(tl.line), true);
         }
