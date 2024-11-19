@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2023 The MMapper Authors
 
+#include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
 #include <cstdint>
@@ -21,8 +22,11 @@ private:
     int64_t m_duration = 0;
 
 public:
-    explicit TTimer(const std::string &name, const std::string &desc, int64_t durationMs);
-    explicit TTimer(const std::string &name, const std::string &desc);
+    explicit TTimer(std::string name, std::string desc, int64_t durationMs);
+    explicit TTimer(std::string name, std::string desc);
+    TTimer() = delete;
+    ~TTimer() = default;
+    DEFAULT_MOVES_DELETE_COPIES(TTimer);
 
 public:
     NODISCARD const std::string &getName() const { return m_name; }
@@ -53,12 +57,13 @@ signals:
 public:
     explicit CTimers(QObject *parent);
     ~CTimers() final = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(CTimers);
 
-    void addTimer(const std::string &name, const std::string &desc);
-    void addCountdown(const std::string &name, const std::string &desc, int64_t timeMs);
+    void addTimer(std::string name, std::string desc);
+    void addCountdown(std::string name, std::string desc, int64_t timeMs);
 
-    bool removeTimer(const std::string &name);
-    bool removeCountdown(const std::string &name);
+    NODISCARD bool removeTimer(const std::string &name);
+    NODISCARD bool removeCountdown(const std::string &name);
 
     // for stat command representation
     NODISCARD std::string getStatCommandEntry();

@@ -5,6 +5,8 @@
 
 #include "../src/timers/CTimers.h"
 
+#include <tuple>
+
 #include <QtTest/QtTest>
 
 TestCTimers::TestCTimers() = default;
@@ -63,7 +65,7 @@ void TestCTimers::testElapsedTime()
     QString timersList = QString::fromStdString(timers.getTimers());
     QVERIFY(timersList.contains("up for - 0:00"));
 
-    timers.removeTimer(timerName.toStdString());
+    std::ignore = timers.removeTimer(timerName.toStdString());
 }
 
 void TestCTimers::testCountdownCompletion()

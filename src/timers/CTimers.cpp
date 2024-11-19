@@ -3,6 +3,8 @@
 
 #include "CTimers.h"
 
+#include "../global/utils.h"
+
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
@@ -21,15 +23,15 @@ NODISCARD static inline int64_t nowMs()
     return time_point_cast<milliseconds>(now).time_since_epoch().count();
 }
 
-TTimer::TTimer(const std::string &name, const std::string &desc, int64_t durationMs)
-    : m_name{name}
-    , m_desc{desc}
+TTimer::TTimer(std::string name, std::string desc, int64_t durationMs)
+    : m_name{std::move(name)}
+    , m_desc{std::move(desc)}
     , m_start{nowMs()}
     , m_duration{durationMs}
 {}
 
-TTimer::TTimer(const std::string &name, const std::string &desc)
-    : TTimer(name, desc, 0)
+TTimer::TTimer(std::string name, std::string desc)
+    : TTimer{std::move(name), std::move(desc), 0}
 {}
 
 int64_t TTimer::elapsedMs() const
@@ -60,12 +62,10 @@ NODISCARD static std::string msToMinSec(const int64_t ms)
     return ostr.str();
 }
 
-void CTimers::addTimer(const std::string &name, const std::string &desc)
+void CTimers::addTimer(std::string name, std::string desc)
 {
     QMutexLocker locker(&m_lock);
-
-    TTimer timer(name, desc);
-    m_timers.push_back(std::move(timer));
+    m_timers.emplace_back(std::move(name), std::move(desc));
 }
 
 bool CTimers::removeCountdown(const std::string &name)
@@ -96,12 +96,10 @@ bool CTimers::removeTimer(const std::string &name)
     return false;
 }
 
-void CTimers::addCountdown(const std::string &name, const std::string &desc, int64_t timeMs)
+void CTimers::addCountdown(std::string name, std::string desc, int64_t timeMs)
 {
     QMutexLocker locker(&m_lock);
-
-    TTimer countdown(name, desc, timeMs);
-    m_countdowns.push_back(std::move(countdown));
+    m_countdowns.emplace_back(std::move(name), std::move(desc), timeMs);
 
     // See if we need to restart the timer
     if (m_timer.isActive()) {
@@ -124,8 +122,7 @@ void CTimers::slot_finishCountdownTimer()
     std::optional<int64_t> next;
 
     // See if we need to restart the timer
-    std::list<TTimer>::iterator it = m_countdowns.begin();
-    while (it != m_countdowns.end()) {
+    for (auto it = m_countdowns.begin(); it != m_countdowns.end();) {
         const auto diff = it->durationMs() - it->elapsedMs();
         if (diff <= 0) {
             std::ostringstream ostr;
