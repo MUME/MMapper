@@ -17,6 +17,7 @@
 #include <type_traits>
 
 #include <QPointer>
+#include <queue>
 
 namespace utils {
 namespace details {
@@ -266,6 +267,22 @@ NODISCARD static inline T clampNonNegative(T x)
 {
     static_assert((std::is_integral_v<T> && std::is_signed_v<T>) || std::is_floating_point_v<T>);
     return std::max(T(0), x);
+}
+
+template<typename T>
+NODISCARD static inline auto pop_front(T &container)
+{
+    auto x = std::move(container.front());
+    container.pop_front();
+    return x;
+}
+
+template<typename T>
+NODISCARD static inline auto pop_front(std::queue<T> &container)
+{
+    auto x = std::move(container.front());
+    container.pop();
+    return x;
 }
 
 } // namespace utils

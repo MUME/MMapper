@@ -6,6 +6,7 @@
 #include "experimenting.h"
 
 #include "../expandoracommon/room.h"
+#include "../global/utils.h"
 #include "path.h"
 #include "pathparameters.h"
 
@@ -46,11 +47,11 @@ void Experimenting::augmentPath(const std::shared_ptr<Path> &path,
 
 std::shared_ptr<PathList> Experimenting::evaluate()
 {
-    for (std::shared_ptr<Path> working = nullptr; !shortPaths->empty();) {
-        working = shortPaths->front();
-        shortPaths->pop_front();
-        if (!(working->hasChildren())) {
-            working->deny();
+    for (PathList &sp = deref(shortPaths); !sp.empty();) {
+        std::shared_ptr<Path> ppath = utils::pop_front(sp);
+        Path &path = deref(ppath);
+        if (!path.hasChildren()) {
+            path.deny();
         }
     }
 

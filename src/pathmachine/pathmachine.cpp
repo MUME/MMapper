@@ -354,8 +354,8 @@ void PathMachine::evaluatePaths()
 
         if (++paths->begin() == paths->end()) {
             state = PathStateEnum::APPROVED;
-            paths->front()->approve();
-            paths->pop_front();
+            std::shared_ptr<Path> path = utils::pop_front(*paths);
+            deref(path).approve();
         } else {
             state = PathStateEnum::EXPERIMENTING;
         }

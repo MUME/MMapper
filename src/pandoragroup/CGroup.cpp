@@ -49,9 +49,8 @@ void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 void CGroup::executeActions()
 {
     while (!actionSchedule.empty()) {
-        std::shared_ptr<GroupAction> action = actionSchedule.front();
-        actionSchedule.pop();
-        action->exec();
+        std::shared_ptr<GroupAction> action = utils::pop_front(actionSchedule);
+        deref(action).exec();
     }
 }
 
