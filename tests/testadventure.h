@@ -11,7 +11,7 @@ struct TestLine
     bool expected;
     QString line;
 
-    QString errorMsg()
+    QString errorMsg() const
     {
         return QString("Parsing failed, expected %1 for line: %2").arg(expected).arg(line);
     }
@@ -21,7 +21,7 @@ class TestAdventure final : public QObject
 {
     Q_OBJECT
 
-    void testParser(AbstractLineParser &parser, std::vector<TestLine> testLines);
+    void testParser(AbstractLineParser &parser, const std::vector<TestLine> &testLines);
 
 private slots:
 

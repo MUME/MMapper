@@ -122,9 +122,9 @@ void TestAdventure::testSessionHourlyRateXP()
     QCOMPARE(session.calculateHourlyRateXP(), 6000.0);
 }
 
-void TestAdventure::testParser(AbstractLineParser &parser, std::vector<TestLine> testLines)
+void TestAdventure::testParser(AbstractLineParser &parser, const std::vector<TestLine> &testLines)
 {
-    for (auto &tl : testLines) {
+    for (const TestLine &tl : testLines) {
         QVERIFY2(parser.parse(tl.line) == tl.expected, qPrintable(tl.errorMsg()));
     }
 }
@@ -187,8 +187,8 @@ void TestAdventure::testE2E()
         killedMobs.push_back(x);
     });
 
-    auto pump = [&observer](std::vector<TestLine> lines) {
-        for (auto tl : lines) {
+    auto pump = [&observer](const std::vector<TestLine> &lines) {
+        for (const TestLine &tl : lines) {
             observer.slot_observeSentToUser(qPrintable(tl.line), true);
         }
     };

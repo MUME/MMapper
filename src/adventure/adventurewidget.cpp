@@ -26,7 +26,7 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     m_textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_textEdit->setTabChangesFocus(false);
 
-    const auto settings = getConfig().integratedClient;
+    const auto &settings = getConfig().integratedClient;
 
     QTextFrameFormat frameFormat = m_textEdit->document()->rootFrame()->frameFormat();
     frameFormat.setBackground(settings.backgroundColor);
