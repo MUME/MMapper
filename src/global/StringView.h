@@ -103,7 +103,7 @@ public:
     // StringView sv{s};
     // assert(sv.right(5).toStdString() == "Right");
     NODISCARD StringView right(size_t len) const;
-    StringView &operator++();
+    ALLOW_DISCARD StringView &operator++();
     void operator++(int) = delete;
     char operator[](size_t pos) const;
     NODISCARD bool startsWith(std::string_view other) const;

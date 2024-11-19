@@ -28,7 +28,7 @@ struct NODISCARD counting_iterator
     It end_;
 
     void operator++(int) = delete;
-    counting_iterator &operator++()
+    ALLOW_DISCARD counting_iterator &operator++()
     {
         if (it_ >= end_)
             throw std::runtime_error("overflow");

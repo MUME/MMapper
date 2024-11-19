@@ -307,7 +307,7 @@ public:
 
     public:
         NODISCARD Flag operator*() const { return Flags{m_bits}.at(m_pos); }
-        Iterator operator++()
+        ALLOW_DISCARD Iterator operator++()
         {
             assert(m_pos < Flags{m_bits}.size());
             ++m_pos;

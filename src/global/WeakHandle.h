@@ -45,7 +45,7 @@ public:
 
 public:
     template<typename Visitor>
-    bool acceptVisitor(Visitor &&visitor) const
+    ALLOW_DISCARD bool acceptVisitor(Visitor &&visitor) const
     {
         if (auto shared = m_weakPtr.lock()) {
             T &ref = *shared;
