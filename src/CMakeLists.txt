@@ -102,6 +102,8 @@ set(mmapper_SRCS
     global/Signal.h
     global/SignalBlocker.cpp
     global/SignalBlocker.h
+    global/StorageUtils.cpp
+    global/StorageUtils.h
     global/StringView.cpp
     global/StringView.h
     global/TaggedInt.h
@@ -192,8 +194,6 @@ set(mmapper_SRCS
     mapstorage/MmpMapStorage.h
     mapstorage/PandoraMapStorage.cpp
     mapstorage/PandoraMapStorage.h
-    mapstorage/StorageUtils.cpp
-    mapstorage/StorageUtils.h
     mapstorage/XmlMapStorage.cpp
     mapstorage/XmlMapStorage.h
     mapstorage/abstractmapstorage.cpp
