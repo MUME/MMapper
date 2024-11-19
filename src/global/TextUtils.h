@@ -17,8 +17,10 @@
 #include <QRegularExpression>
 #include <QString>
 
+namespace mmqt {
 NODISCARD bool containsAnsi(QStringView str);
 NODISCARD bool containsAnsi(const QString &str);
+} // namespace mmqt
 
 // Callback = void(string_view);
 // callback is either a span excluding c, or a span of contiguous c's.
@@ -65,6 +67,7 @@ void foreachLine(const std::string_view input, Callback &&callback)
         callback(input.substr(pos, len - pos));
 }
 
+namespace mmqt {
 // Callback is void(int pos)
 template<typename Callback>
 void foreachChar(const QStringView input, char c, Callback &&callback)
@@ -239,6 +242,7 @@ public:
     NODISCARD bool isEmpty() const;
     NODISCARD bool hasTrailingNewline() const;
 };
+} // namespace mmqt
 
 class NODISCARD AnsiString final
 {
@@ -335,6 +339,7 @@ public:
     bool operator!=(const Ansi &other) const { return ansi_ != other.ansi_; }
 };
 
+namespace mmqt {
 /**
  * NOTE:
  * 1. Code will assert() if the text does not contain any ansi strings.
@@ -349,6 +354,7 @@ public:
  */
 NODISCARD TextBuffer normalizeAnsi(QStringView);
 NODISCARD TextBuffer normalizeAnsi(const QString &str);
+} // namespace mmqt
 
 #define DEFINE_CHAR_CONST(NAME, val) \
     static constexpr const char C_##NAME{(val)}; \
@@ -374,6 +380,7 @@ static_assert(C_SPACE == 0x20);
 
 #undef DEFINE_CHAR_CONST
 
+namespace mmqt {
 class NODISCARD AnsiStringToken final
 {
 public:
@@ -485,14 +492,14 @@ struct NODISCARD AnsiTokenizer final
             assert(isClamped(it, start, len));
             return it - start;
         }
-        size_type skip_ansi();
+        NODISCARD size_type skip_ansi();
         NODISCARD static bool isControl(const QChar c)
         {
             return std::iscntrl(c.toLatin1()) && c != QC_NBSP;
         }
-        size_type skip_control();
-        size_type skip_space();
-        size_type skip_word();
+        NODISCARD size_type skip_control();
+        NODISCARD size_type skip_space();
+        NODISCARD size_type skip_word();
     };
 
     const QString &str_;
@@ -504,6 +511,7 @@ struct NODISCARD AnsiTokenizer final
     NODISCARD Iterator begin() { return Iterator{str_, 0}; }
     NODISCARD auto end() { return nullptr; }
 };
+} // namespace mmqt
 
 NODISCARD static inline constexpr int tab_advance(int col)
 {
@@ -583,6 +591,7 @@ public:
     }
 };
 
+namespace mmqt {
 NODISCARD extern QString toQStringLatin1(std::string_view sv);
 NODISCARD extern QString toQStringUtf8(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayLatin1(std::string_view sv);
@@ -591,3 +600,4 @@ NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &&) = delete;
+} // namespace mmqt

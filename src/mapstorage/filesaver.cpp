@@ -50,7 +50,7 @@ void FileSaver::open(const QString &filename) noexcept(false)
     m_file.setFileName(maybe_add_suffix(filename));
 
     if (!m_file.open(QFile::WriteOnly)) {
-        throw std::runtime_error(::toStdStringUtf8(m_file.errorString()));
+        throw std::runtime_error(mmqt::toStdStringUtf8(m_file.errorString()));
     }
 }
 

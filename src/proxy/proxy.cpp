@@ -582,6 +582,6 @@ void Proxy::slot_onSendGameTimeToClock(const int year,
                                        const int hour)
 {
     // Month from MSSP comes as a string, so fetch the month index.
-    const int month = m_mumeClock.getMumeMonth(::toQStringLatin1(monthStr));
+    const int month = m_mumeClock.getMumeMonth(mmqt::toQStringLatin1(monthStr));
     m_mumeClock.parseMSSP(year, month, day, hour);
 }

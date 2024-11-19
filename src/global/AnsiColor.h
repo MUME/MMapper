@@ -28,6 +28,8 @@ enum class NODISCARD AnsiColorTableEnum {
     WHITE
 };
 
+namespace mmqt {
+
 NODISCARD static inline QColor ansiColor(const AnsiColorTableEnum i)
 {
     static const QColor black("#2e3436");
@@ -130,6 +132,8 @@ NODISCARD static inline QColor ansi256toRgb(const int ansi)
     return ansiColor(static_cast<AnsiColorTableEnum>(ansi));
 }
 
+} // namespace mmqt
+
 NODISCARD static inline int rgbToAnsi256(const int r, const int g, const int b)
 {
     // https://stackoverflow.com/questions/15682537/ansi-color-specific-rgb-sequence-bash
@@ -152,9 +156,13 @@ NODISCARD static inline int rgbToAnsi256(const int r, const int g, const int b)
     return 16 + red + green + blue;
 }
 
+namespace mmqt {
+
 NODISCARD static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = true)
 {
     return QString("[%1;5;%2m")
         .arg(foreground ? "38" : QString("%1;48").arg(textColor(rgb) == Qt::white ? "37" : "30"))
         .arg(rgbToAnsi256(rgb.red(), rgb.green(), rgb.blue()));
 }
+
+} // namespace mmqt

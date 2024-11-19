@@ -34,12 +34,12 @@ std::string StringView::toStdString() const
 
 QString StringView::toQString() const
 {
-    return ::toQStringLatin1(m_sv);
+    return mmqt::toQStringLatin1(m_sv);
 }
 
 QByteArray StringView::toQByteArray() const
 {
-    return ::toQByteArrayLatin1(m_sv);
+    return mmqt::toQByteArrayLatin1(m_sv);
 }
 
 void StringView::eatFirst()

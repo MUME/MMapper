@@ -53,7 +53,7 @@ static int testing()
     const auto result = escapeGmcpStringData(s);
     assert(result.size() == 14);
 
-    const auto str = ::toStdStringUtf8(result);
+    const auto str = mmqt::toStdStringUtf8(result);
     assert(str
            == "\\\""
               "\\\\"

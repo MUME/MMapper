@@ -36,7 +36,7 @@ public:
         : m_str(std::move(s))
     {}
     explicit TaggedString(const QString &s)
-        : m_str(::toStdStringLatin1(s))
+        : m_str(mmqt::toStdStringLatin1(s))
     {}
     DEFAULT_RULE_OF_5(TaggedString);
 
@@ -58,8 +58,8 @@ public:
 
 public:
     NODISCARD const std::string &getStdString() const { return m_str; }
-    NODISCARD QByteArray toQByteArray() const { return ::toQByteArrayLatin1(m_str); }
-    NODISCARD QString toQString() const { return ::toQStringLatin1(m_str); }
+    NODISCARD QByteArray toQByteArray() const { return mmqt::toQByteArrayLatin1(m_str); }
+    NODISCARD QString toQString() const { return mmqt::toQStringLatin1(m_str); }
 
 public:
     NODISCARD bool empty() const { return m_str.empty(); }
@@ -79,7 +79,7 @@ public:
         : TaggedString<T>(std::move(s))
     {}
     explicit TaggedStringUtf8(const QString &s)
-        : TaggedString<T>(::toStdStringUtf8(s))
+        : TaggedString<T>(mmqt::toStdStringUtf8(s))
     {}
 
 public:
@@ -107,7 +107,7 @@ public:
         const std::string &str = getStdString();
         return QByteArray(str.data(), static_cast<int>(str.size()));
     }
-    NODISCARD QString toQString() const { return ::toQStringUtf8(getStdString()); }
+    NODISCARD QString toQString() const { return mmqt::toQStringUtf8(getStdString()); }
 
 public:
     using base::empty;

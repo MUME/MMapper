@@ -58,7 +58,7 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
 
     // REVISIT: Build images ahead of time
 
-    const bool invert = textColor(color) == Qt::white;
+    const bool invert = mmqt::textColor(color) == Qt::white;
 
     const auto drawOne = [painter, invert](auto &&filename) -> void {
         const auto getImage = [invert](auto &filename) {
@@ -234,7 +234,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         return character.getColor();
 
     case Qt::ForegroundRole:
-        return textColor(character.getColor());
+        return mmqt::textColor(character.getColor());
 
     case Qt::TextAlignmentRole:
         if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {

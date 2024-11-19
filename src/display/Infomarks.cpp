@@ -245,7 +245,7 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
         batch.renderText(pos,
                          marker->getText().getStdString(),
                          // TODO: add Color overload for textColor()
-                         Color{textColor(color.getQColor())},
+                         Color{mmqt::textColor(color.getQColor())},
                          color,
                          fontFormatFlag,
                          marker->getRotationAngle());

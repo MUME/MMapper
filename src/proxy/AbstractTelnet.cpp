@@ -318,7 +318,7 @@ void AbstractTelnet::sendCharsetRequest()
 
     QStringList myCharacterSets;
     for (const auto &encoding : textCodec.supportedEncodings())
-        myCharacterSets << ::toQByteArrayLatin1(encoding);
+        myCharacterSets << mmqt::toQByteArrayLatin1(encoding);
     if (debug)
         qDebug() << "Sending Charset request" << myCharacterSets;
 
@@ -637,7 +637,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     if (debug)
                         qDebug() << "Received encoding options" << characterSets;
                     for (const auto &characterSet : characterSets) {
-                        const auto name = ::toStdStringLatin1(characterSet.simplified());
+                        const auto name = mmqt::toStdStringLatin1(characterSet.simplified());
                         if (textCodec.supports(name)) {
                             accepted = true;
                             textCodec.setEncodingForName(name);
@@ -659,7 +659,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 if (payload.length() > 3) {
                     // CHARSET ACCEPTED <charset>
                     const auto characterSet = payload.mid(2).simplified();
-                    textCodec.setEncodingForName(::toStdStringLatin1(characterSet));
+                    textCodec.setEncodingForName(mmqt::toStdStringLatin1(characterSet));
                     if (debug)
                         qDebug() << "He accepted charset" << characterSet;
                     // TODO: RFC 2066 states to stop queueing data

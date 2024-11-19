@@ -54,8 +54,8 @@ bool AutoLogger::createFile()
     QString fileName = QString("MMapper_Log_%1_%2_%3.txt")
                            .arg(QDate::currentDate().toString("yyyy_MM_dd"))
                            .arg(QString::number(m_curFile))
-                           .arg(::toQStringUtf8(m_runId));
-    m_logFile.open(::toStdStringUtf8(dir.absoluteFilePath(fileName)),
+                           .arg(mmqt::toQStringUtf8(m_runId));
+    m_logFile.open(mmqt::toStdStringUtf8(dir.absoluteFilePath(fileName)),
                    std::fstream::out | std::fstream::binary | std::fstream::app);
     if (!m_logFile.is_open()) // Could not create file.
         return false;
@@ -88,7 +88,7 @@ bool AutoLogger::writeLine(const QString &str)
     }
 
     // ANSI marks removed upstream by GameObserver
-    const auto &line = ::toStdStringUtf8(str);
+    const auto &line = mmqt::toStdStringUtf8(str);
 
     m_logFile << line;
     m_logFile.flush();

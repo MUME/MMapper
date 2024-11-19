@@ -612,7 +612,7 @@ void MapCanvas::paintGL()
     auto y = lineHeight;
     const auto print = [lineHeight, rightMargin, &text, &y](const QString &msg) {
         text.emplace_back(glm::vec3(rightMargin, y, 0),
-                          ::toStdStringLatin1(msg),
+                          mmqt::toStdStringLatin1(msg),
                           Colors::white,
                           Colors::black.withAlpha(0.4f),
                           FontFormatFlags{FontFormatFlagEnum::HALIGN_RIGHT});

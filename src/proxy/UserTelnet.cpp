@@ -51,7 +51,7 @@ NODISCARD static std::string encodeForUser(const CharacterEncodingEnum encoding,
                                            const bool goAhead)
 {
     std::ostringstream oss;
-    normalizeForUser(oss, encoding, goAhead, ::toStdStringViewLatin1(ba));
+    normalizeForUser(oss, encoding, goAhead, mmqt::toStdStringViewLatin1(ba));
     return oss.str();
 }
 
@@ -72,7 +72,7 @@ NODISCARD static QByteArray decodeFromUser(const CharacterEncodingEnum encoding,
             } else
                 oss << "?";
         }
-        return ::toQByteArrayLatin1(oss.str());
+        return mmqt::toQByteArrayLatin1(oss.str());
     }
     default:
         break;
@@ -225,7 +225,7 @@ void UserTelnet::virt_receiveWindowSize(const int x, const int y)
 void UserTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
-    emit sig_sendToSocket(::toQByteArrayLatin1(data));
+    emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
 }
 
 bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)

@@ -79,7 +79,7 @@ QString ParseEvent::toQString() const
         }
     }
     QString promptStr;
-    promptStr.append(::toQStringLatin1(getTerrainBytes(m_terrain)));
+    promptStr.append(mmqt::toQStringLatin1(getTerrainBytes(m_terrain)));
     if (m_promptFlags.isValid()) {
         if (m_promptFlags.isLit())
             promptStr.append("*");

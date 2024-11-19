@@ -212,7 +212,7 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
     static const auto bg = Colors::black.withAlpha(0.4f);
     const glm::vec3 pos{xy, m_currentLayer};
     m_roomNameBatch.emplace_back(GLText{pos,
-                                        ::toStdStringLatin1(name),
+                                        mmqt::toStdStringLatin1(name),
                                         Colors::white,
                                         bg,
                                         FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}});

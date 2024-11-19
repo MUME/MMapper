@@ -239,7 +239,7 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
             name = QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
                                           QString::fromLatin1(character->getLabel()));
         if (getConfig().groupManager.useGroupTellAnsi256Color)
-            color = rgbToAnsi256String(character->getColor(), false);
+            color = mmqt::rgbToAnsi256String(character->getColor(), false);
     }
     log(QString("GTell from %1 arrived: %2").arg(from, text));
 

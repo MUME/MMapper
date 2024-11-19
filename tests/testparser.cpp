@@ -69,8 +69,8 @@ void TestParser::createParseEventTest()
     QCOMPARE(e.getNumSkipped(), 0u);
     QCOMPARE(RoomName(e[0].getStdString()), roomName);
     QCOMPARE(RoomDesc(e[1].getStdString()), parsedRoomDescription);
-    QCOMPARE(::toQStringLatin1(e[2].getStdString()),
-             ::toQStringLatin1(std::string(1, static_cast<char>(terrain))));
+    QCOMPARE(mmqt::toQStringLatin1(e[2].getStdString()),
+             mmqt::toQStringLatin1(std::string(1, static_cast<char>(terrain))));
 }
 
 QTEST_MAIN(TestParser)

@@ -192,14 +192,14 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
     if (m_ansi256Foreground) {
         if (ansiCode == 5)
             return;
-        format.setForeground(ansi256toRgb(ansiCode));
+        format.setForeground(mmqt::ansi256toRgb(ansiCode));
         m_ansi256Foreground = false;
         return;
     }
     if (m_ansi256Background) {
         if (ansiCode == 5)
             return;
-        format.setBackground(ansi256toRgb(ansiCode));
+        format.setBackground(mmqt::ansi256toRgb(ansiCode));
         m_ansi256Background = false;
         return;
     }
@@ -277,35 +277,35 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         break;
     case 30:
         // black foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 31:
         // red foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 32:
         // green foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 33:
         // yellow foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 34:
         // blue foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 35:
         // magenta foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 36:
         // cyan foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 37:
         // gray foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 38:
         // 256 color foreground
@@ -313,35 +313,35 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         break;
     case 40:
         // black background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 41:
         // red background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 42:
         // green background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 43:
         // yellow background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 44:
         // blue background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 45:
         // magenta background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 46:
         // cyan background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 47:
         // gray background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 48:
         // 256 color background
@@ -349,67 +349,67 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         break;
     case 90:
         // high-black foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 91:
         // high-red foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 92:
         // high-green foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 93:
         // high-yellow foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 94:
         // high-blue foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 95:
         // high-magenta foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 96:
         // high-cyan foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 97:
         // high-white foreground
-        format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
+        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
         break;
     case 100:
         // high-black background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 101:
         // high-red background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 102:
         // high-green background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 103:
         // high-yellow background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 104:
         // high-blue background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 105:
         // high-magenta background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 106:
         // high-cyan background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     case 107:
         // high-white background
-        format.setBackground(ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
+        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
         break;
     default:
         qWarning() << "Unknown ansicode" << ansiCode;
@@ -420,7 +420,7 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
 void DisplayWidget::updateFormatBoldColor(QTextCharFormat &format)
 {
     for (int i = 0; i <= static_cast<int>(AnsiColorTableEnum::white); i++) {
-        if (format.foreground().color() == ansiColor(static_cast<AnsiColorTableEnum>(i)))
-            format.setForeground(ansiColor(static_cast<AnsiColorTableEnum>(i + 60)));
+        if (format.foreground().color() == mmqt::ansiColor(static_cast<AnsiColorTableEnum>(i)))
+            format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(i + 60)));
     }
 }

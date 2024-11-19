@@ -101,7 +101,7 @@ QVariant RoomModel::data(const QModelIndex &index, int role) const
                 return QColor(Qt::red);
             } else if (isEnemy(row, column)) {
                 // highlight enemy players
-                return textColor(Qt::yellow);
+                return mmqt::textColor(Qt::yellow);
             }
             break;
         default:

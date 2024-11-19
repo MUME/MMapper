@@ -277,7 +277,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                             m_exitsReady = true;
                             std::ostringstream os;
                             emulateExits(os, m_move);
-                            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                            sendToUser(mmqt::toQByteArrayLatin1(snoopToUser(os.str())));
                         }
                         m_promptFlags.reset(); // Don't trust god prompts
                         if (!m_queue.isEmpty() && m_move != CommandEnum::LOOK) // Remove follows
@@ -389,7 +389,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                                     break;
                                 default:
                                     qWarning() << "Unknown terrain type"
-                                               << ::toQByteArrayLatin1(pair.second);
+                                               << mmqt::toQByteArrayLatin1(pair.second);
                                     break;
                                 }
                             }
@@ -438,7 +438,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                                     break;
                                 default:
                                     qWarning() << "Unknown movement dir"
-                                               << ::toQByteArrayLatin1(pair.second);
+                                               << mmqt::toQByteArrayLatin1(pair.second);
                                     break;
                                 }
                             }
@@ -553,7 +553,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("/exits")) {
                     std::ostringstream os;
                     parseExits(os);
-                    m_lineToUser.append(::toQByteArrayLatin1(snoopToUser(os.str())));
+                    m_lineToUser.append(mmqt::toQByteArrayLatin1(snoopToUser(os.str())));
                     m_exitsReady = true;
                     m_lineFlags.remove(LineFlagEnum::EXITS);
                     if (m_lineFlags.contains(LineFlagEnum::ROOM))
@@ -597,7 +597,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                             m_exitsReady = true;
                             std::ostringstream os;
                             emulateExits(os, m_move);
-                            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                            sendToUser(mmqt::toQByteArrayLatin1(snoopToUser(os.str())));
                         }
                         move();
                     }
@@ -703,7 +703,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 m_exitsReady = true;
                 std::ostringstream os;
                 emulateExits(os, m_move);
-                sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                sendToUser(mmqt::toQByteArrayLatin1(snoopToUser(os.str())));
             }
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);
@@ -804,7 +804,7 @@ void MumeXmlParser::move()
 void MumeXmlParser::parseMudCommands(const QString &str)
 {
     // REVISIT: Add XML tag-based actions that match on a given LineFlag
-    const auto stdString = ::toStdStringLatin1(str);
+    const auto stdString = mmqt::toStdStringLatin1(str);
     if (evalActionMap(StringView{stdString}))
         return;
 }

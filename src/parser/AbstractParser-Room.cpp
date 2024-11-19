@@ -108,7 +108,7 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
                 if (it == result.end())
                     result.emplace(key, convert(flag));
                 else {
-                    qWarning() << ("unable to add " + ::toQStringLatin1(key) + " for "
+                    qWarning() << ("unable to add " + mmqt::toQStringLatin1(key) + " for "
                                    + abb.describe());
                 }
             }

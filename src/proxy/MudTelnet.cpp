@@ -38,7 +38,7 @@ NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
        << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << get_os_string() << "/"
        << arch.constData();
-    return ::toQByteArrayLatin1(ss.str());
+    return mmqt::toQByteArrayLatin1(ss.str());
 }
 
 MudTelnet::MudTelnet(QObject *const parent)
@@ -63,7 +63,7 @@ void MudTelnet::slot_onAnalyzeMudStream(const QByteArray &data)
 void MudTelnet::slot_onSendToMud(const QByteArray &ba)
 {
     // Bytes are already Latin-1 so we just send it to MUME
-    submitOverTelnet(::toStdStringViewLatin1(ba), false);
+    submitOverTelnet(mmqt::toStdStringViewLatin1(ba), false);
 }
 
 void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
@@ -177,7 +177,7 @@ void MudTelnet::virt_onGmcpEnabled()
 void MudTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
-    emit sig_sendToSocket(::toQByteArrayLatin1(data));
+    emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
 }
 
 void MudTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
@@ -219,7 +219,7 @@ void MudTelnet::sendCoreSupports()
     const std::string set = oss.str();
 
     if (debug)
-        qDebug() << "Sending GMCP Core.Supports to MUME" << ::toQByteArrayLatin1(set);
+        qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
 
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, set));
 }
@@ -246,8 +246,8 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
     const auto addValue([&map, &vals, &varName, &buffer, this]() {
         // Put it into the map.
         if (debug)
-            qDebug() << "MSSP received value" << ::toQByteArrayLatin1(buffer.toStdString())
-                     << "for variable" << ::toQByteArrayLatin1(varName.value());
+            qDebug() << "MSSP received value" << mmqt::toQByteArrayLatin1(buffer.toStdString())
+                     << "for variable" << mmqt::toQByteArrayLatin1(varName.value());
 
         vals.push_back(buffer.toStdString());
         map[varName.value()] = vals;
@@ -279,7 +279,7 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
                 if (debug)
                     qDebug() << "MSSP received variable"
-                             << ::toQByteArrayLatin1(buffer.toStdString());
+                             << mmqt::toQByteArrayLatin1(buffer.toStdString());
 
                 varName = buffer.toStdString();
                 state = MSSPStateEnum::IN_VAL;
@@ -332,10 +332,10 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
     const auto hourStr = firstElement(map["GAME HOUR"]);
 
     qInfo() << "MSSP game time received with"
-            << "year:" << ::toQByteArrayLatin1(yearStr.value_or("unknown"))
-            << "month:" << ::toQByteArrayLatin1(monthStr.value_or("unknown"))
-            << "day:" << ::toQByteArrayLatin1(dayStr.value_or("unknown"))
-            << "hour:" << ::toQByteArrayLatin1(hourStr.value_or("unknown"));
+            << "year:" << mmqt::toQByteArrayLatin1(yearStr.value_or("unknown"))
+            << "month:" << mmqt::toQByteArrayLatin1(monthStr.value_or("unknown"))
+            << "day:" << mmqt::toQByteArrayLatin1(dayStr.value_or("unknown"))
+            << "hour:" << mmqt::toQByteArrayLatin1(hourStr.value_or("unknown"));
 
     if (yearStr.has_value() && monthStr.has_value() && dayStr.has_value() && hourStr.has_value()) {
         const int year = stoi(yearStr.value());

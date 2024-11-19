@@ -449,17 +449,17 @@ void AbstractParser::parseExits(std::ostream &os)
             }
             return "";
         };
-        os << ::toStdStringLatin1(right_trim(m_exits) + cn);
+        os << mmqt::toStdStringLatin1(right_trim(m_exits) + cn);
 
         if (getConfig().mumeNative.showNotes) {
             const auto &ns = room->getNote();
             if (!ns.isEmpty()) {
                 const QString note = QString("Note: %1\n").arg(ns.toQString());
-                os << ::toStdStringLatin1(note);
+                os << mmqt::toStdStringLatin1(note);
             }
         }
     } else {
-        os << ::toStdStringLatin1(m_exits);
+        os << mmqt::toStdStringLatin1(m_exits);
     }
 }
 
@@ -1273,7 +1273,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *const r)
 {
     std::ostringstream os;
     sendRoomExitsInfoToUser(os, r);
-    sendToUser(::toQByteArrayLatin1(os.str()));
+    sendToUser(mmqt::toQByteArrayLatin1(os.str()));
 }
 
 void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const r)
@@ -1376,13 +1376,13 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
     }
 
     QByteArray cn = enhanceExits(r);
-    os << ::toStdStringLatin1(etmp.toLatin1() + cn);
+    os << mmqt::toStdStringLatin1(etmp.toLatin1() + cn);
 
     if (getConfig().mumeNative.showNotes) {
         const auto &ns = r->getNote();
         if (!ns.isEmpty()) {
             QByteArray note = "Note: " + ns.toQByteArray() + "\n";
-            os << ::toStdStringLatin1(note);
+            os << mmqt::toStdStringLatin1(note);
         }
     }
 }

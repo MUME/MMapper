@@ -54,10 +54,10 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     // Set the file template
     QString fileTemplate = QString("%1MMapper.%2.pid%3.%4")
-                               .arg(QDir::tempPath() + QDir::separator()) // %1
-                               .arg(m_editSession ? "edit" : "view")      // %2
-                               .arg(QCoreApplication::applicationPid())   // %3
-                               .arg(::toQStringLatin1(randomString(6)));  // %4
+                               .arg(QDir::tempPath() + QDir::separator())    // %1
+                               .arg(m_editSession ? "edit" : "view")         // %2
+                               .arg(QCoreApplication::applicationPid())      // %3
+                               .arg(mmqt::toQStringLatin1(randomString(6))); // %4
     QFile file(fileTemplate);
 
     // Try opening up the temporary file

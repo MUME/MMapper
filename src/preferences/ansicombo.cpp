@@ -204,7 +204,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligibleName)
 {
     intelligibleName = tr("undefined!");
-    col = ansiColor(AnsiColorTableEnum::white);
+    col = mmqt::ansiColor(AnsiColorTableEnum::white);
 
     const bool foreground = (30 <= numColor && numColor <= 37) || (90 <= numColor && numColor <= 97)
                             || numColor == DEFAULT_FG;
@@ -215,91 +215,91 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     /* TODO: Simplify this. E.g. se ansi_color_table[n-30], etc. */
     switch (numColor) {
     case DEFAULT_FG:
-        col = ansiColor(AnsiColorTableEnum::white);
+        col = mmqt::ansiColor(AnsiColorTableEnum::white);
         intelligibleName = tr(NONE);
         break;
     case DEFAULT_BG:
-        col = ansiColor(AnsiColorTableEnum::black);
+        col = mmqt::ansiColor(AnsiColorTableEnum::black);
         intelligibleName = tr(NONE);
         break;
     case 30:
     case 40:
-        col = ansiColor(AnsiColorTableEnum::black);
+        col = mmqt::ansiColor(AnsiColorTableEnum::black);
         intelligibleName = tr("black");
         break;
     case 31:
     case 41:
-        col = ansiColor(AnsiColorTableEnum::red);
+        col = mmqt::ansiColor(AnsiColorTableEnum::red);
         intelligibleName = tr("red");
         break;
     case 32:
     case 42:
-        col = ansiColor(AnsiColorTableEnum::green);
+        col = mmqt::ansiColor(AnsiColorTableEnum::green);
         intelligibleName = tr("green");
         break;
     case 33:
     case 43:
-        col = ansiColor(AnsiColorTableEnum::yellow);
+        col = mmqt::ansiColor(AnsiColorTableEnum::yellow);
         intelligibleName = tr("yellow");
         break;
     case 34:
     case 44:
-        col = ansiColor(AnsiColorTableEnum::blue);
+        col = mmqt::ansiColor(AnsiColorTableEnum::blue);
         intelligibleName = tr("blue");
         break;
     case 35:
     case 45:
-        col = ansiColor(AnsiColorTableEnum::magenta);
+        col = mmqt::ansiColor(AnsiColorTableEnum::magenta);
         intelligibleName = tr("magenta");
         break;
     case 36:
     case 46:
-        col = ansiColor(AnsiColorTableEnum::cyan);
+        col = mmqt::ansiColor(AnsiColorTableEnum::cyan);
         intelligibleName = tr("cyan");
         break;
     case 37:
     case 47:
-        col = ansiColor(AnsiColorTableEnum::white);
+        col = mmqt::ansiColor(AnsiColorTableEnum::white);
         intelligibleName = tr("white");
         break;
     case 90:
     case 100:
-        col = ansiColor(AnsiColorTableEnum::BLACK);
+        col = mmqt::ansiColor(AnsiColorTableEnum::BLACK);
         intelligibleName = tr("BLACK");
         break;
     case 91:
     case 101:
-        col = ansiColor(AnsiColorTableEnum::RED);
+        col = mmqt::ansiColor(AnsiColorTableEnum::RED);
         intelligibleName = tr("RED");
         break;
     case 92:
     case 102:
-        col = ansiColor(AnsiColorTableEnum::GREEN);
+        col = mmqt::ansiColor(AnsiColorTableEnum::GREEN);
         intelligibleName = tr("GREEN");
         break;
     case 93:
     case 103:
-        col = ansiColor(AnsiColorTableEnum::YELLOW);
+        col = mmqt::ansiColor(AnsiColorTableEnum::YELLOW);
         intelligibleName = tr("YELLOW");
         break;
     case 94:
     case 104:
-        col = ansiColor(AnsiColorTableEnum::BLUE);
+        col = mmqt::ansiColor(AnsiColorTableEnum::BLUE);
         intelligibleName = tr("BLUE");
         break;
     case 95:
     case 105:
-        col = ansiColor(AnsiColorTableEnum::MAGENTA);
+        col = mmqt::ansiColor(AnsiColorTableEnum::MAGENTA);
         intelligibleName = tr("MAGENTA");
         break;
     case 96:
     case 106:
-        col = ansiColor(AnsiColorTableEnum::CYAN);
+        col = mmqt::ansiColor(AnsiColorTableEnum::CYAN);
         intelligibleName = tr("CYAN");
         break;
     case 97:
     case 107:
-        col = ansiColor(AnsiColorTableEnum::WHITE);
+        col = mmqt::ansiColor(AnsiColorTableEnum::WHITE);
         intelligibleName = tr("WHITE");
         break;
     }

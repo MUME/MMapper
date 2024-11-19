@@ -33,11 +33,12 @@ static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
 
+namespace mmqt {
 NODISCARD static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
-    for (auto token : AnsiTokenizer{s}) {
-        using Type = AnsiStringToken::TokenTypeEnum;
+    for (auto token : mmqt::AnsiTokenizer{s}) {
+        using Type = mmqt::AnsiStringToken::TokenTypeEnum;
         switch (token.type) {
         case Type::ANSI:
             break;
@@ -48,12 +49,13 @@ NODISCARD static int measureTabAndAnsiAware(const QString &s)
         case Type::SPACE:
         case Type::CONTROL:
         case Type::WORD:
-            col = measureExpandedTabsOneLine(token.getQStringView(), col);
+            col = mmqt::measureExpandedTabsOneLine(token.getQStringView(), col);
             break;
         }
     }
     return col;
 }
+} // namespace mmqt
 
 class QWidget;
 
@@ -107,14 +109,14 @@ public:
             return;
 
         const auto fmt = getBackgroundFormat(Qt::yellow);
-        foreachChar(line, '\t', [this, &fmt](const auto at) {
+        mmqt::foreachChar(line, '\t', [this, &fmt](const auto at) {
             setFormat(static_cast<int>(at), 1, fmt);
         });
     }
 
     void highlightOverflow(const QString &line)
     {
-        const int breakPos = (measureTabAndAnsiAware(line) <= maxLength) ? -1 : maxLength;
+        const int breakPos = (mmqt::measureTabAndAnsiAware(line) <= maxLength) ? -1 : maxLength;
         if (breakPos < 0) {
             return;
         }
@@ -133,7 +135,7 @@ public:
 
     void highlightTrailingSpace(const QString &line)
     {
-        const int breakPos = findTrailingWhitespace(line);
+        const int breakPos = mmqt::findTrailingWhitespace(line);
         if (breakPos < 0) {
             return;
         }
@@ -147,10 +149,10 @@ public:
         const auto red = getBackgroundFormat(Qt::red);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
+        mmqt::foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
             setFormat(static_cast<int>(start),
                       static_cast<int>(sv.length()),
-                      isValidAnsiColor(sv) ? cyan : red);
+                      mmqt::isValidAnsiColor(sv) ? cyan : red);
         });
     }
 
@@ -357,7 +359,7 @@ static void expandTabs(QTextCursor line)
     const QTextBlock &block = line.block();
     const QString &s = block.text();
 
-    TextBuffer prefix;
+    mmqt::TextBuffer prefix;
     prefix.appendExpandedTabs(QStringView{s}, 0);
 
     line.setPosition(block.position());
@@ -508,7 +510,7 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
     const int col_before = cur.positionInBlock();
     const auto &block = cur.block();
     const QString &s = block.text().left(col_before);
-    const int col_after = measureExpandedTabsOneLine(s, 0);
+    const int col_after = mmqt::measureExpandedTabsOneLine(s, 0);
     expandTabs(cur);
 
     cur.setPosition(block.position() + col_after);
@@ -544,7 +546,7 @@ void RemoteTextEdit::joinLines()
         }
     }
 
-    TextBuffer buffer;
+    mmqt::TextBuffer buffer;
     foreach_partly_selected_block(cur, [&buffer](const auto &line) -> void {
         const auto &block = line.block();
         const auto &text = block.text();
@@ -583,7 +585,7 @@ void RemoteTextEdit::justifyLines(const int maxLen)
     const int a = from.position();
     const int b = to.position() + to.length() - 1;
 
-    TextBuffer buffer;
+    mmqt::TextBuffer buffer;
     for (auto it = from; it.isValid() && it.blockNumber() <= toBlockNumber; it = it.next()) {
         const auto &text = it.text();
         if (text.isEmpty())
@@ -958,14 +960,14 @@ NODISCARD static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
 
     CursorColumnInfo cci;
     cci.actual = pos;
-    cci.tab_aware = measureExpandedTabsOneLine(text, 0);
-    cci.tab_and_ansi_aware = measureTabAndAnsiAware(text);
+    cci.tab_aware = mmqt::measureExpandedTabsOneLine(text, 0);
+    cci.tab_and_ansi_aware = mmqt::measureTabAndAnsiAware(text);
     return cci;
 }
 
 struct NODISCARD CursorAnsiInfo final
 {
-    TextBuffer buffer;
+    mmqt::TextBuffer buffer;
     raw_ansi ansi;
 
     explicit operator bool() const { return !buffer.isEmpty(); }
@@ -977,18 +979,18 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 
     CursorAnsiInfo result;
     const auto &line = cursor.block().text();
-    foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
+    mmqt::foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
         if (result || pos < start || pos >= start + sv.length())
             return;
 
-        if (!isValidAnsiColor(sv)) {
+        if (!mmqt::isValidAnsiColor(sv)) {
             result.buffer.append("*invalid*");
             return;
         }
 
         bool first = true;
         Ansi ansi;
-        AnsiColorParser::for_each_code(sv, [&ansi, &first, &result](int code) {
+        mmqt::AnsiColorParser::for_each_code(sv, [&ansi, &first, &result](int code) {
             ansi.process_code(code);
             if (first)
                 first = false;
@@ -1013,7 +1015,7 @@ NODISCARD static bool linesHaveTrailingSpace(const QTextCursor &cur)
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         const auto &block = it.block();
         const auto &line = block.text();
-        return findTrailingWhitespace(line) >= 0;
+        return mmqt::findTrailingWhitespace(line) >= 0;
     });
 }
 
@@ -1022,7 +1024,7 @@ NODISCARD static bool hasLongLines(const QTextCursor &cur)
     return exists_partly_selected_block(cur, [](const QTextCursor &line) -> bool {
         const auto &block = line.block();
         const auto &s = block.text();
-        return measureTabAndAnsiAware(s) > 80;
+        return mmqt::measureTabAndAnsiAware(s) > 80;
     });
 }
 
@@ -1089,12 +1091,13 @@ void RemoteEditWidget::slot_updateStatusBar()
 void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
-    TextBuffer text;
+    mmqt::TextBuffer text;
     text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
-    foreachLine(old, [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
-        text.appendJustified(line, maxLen);
-        text.append('\n');
-    });
+    mmqt::foreachLine(old,
+                      [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
+                          text.appendJustified(line, maxLen);
+                          text.append('\n');
+                      });
     m_textEdit->replaceAll(text.getQString());
 }
 
@@ -1151,10 +1154,10 @@ void RemoteEditWidget::slot_removeDuplicateSpaces()
 void RemoteEditWidget::slot_normalizeAnsi()
 {
     const QString &old = m_textEdit->toPlainText();
-    if (!containsAnsi(old))
+    if (!mmqt::containsAnsi(old))
         return;
 
-    TextBuffer output = ::normalizeAnsi(old);
+    mmqt::TextBuffer output = mmqt::normalizeAnsi(old);
     if (!output.hasTrailingNewline())
         output.append('\n');
 

@@ -63,7 +63,7 @@ private:
             opt = CharacterEncodingEnum::ASCII;
         else
             qWarning() << "Refusing to autoselect to an unsupported codec"
-                       << ::toQByteArrayLatin1(upper);
+                       << mmqt::toQByteArrayLatin1(upper);
     }
 
 private:
@@ -120,7 +120,8 @@ private:
     {
         const auto upper = ::toUpperLatin1(sv);
         if (getName() != upper)
-            qWarning() << "Refusing to switch to an unforced codec" << ::toQByteArrayLatin1(upper);
+            qWarning() << "Refusing to switch to an unforced codec"
+                       << mmqt::toQByteArrayLatin1(upper);
     }
 
 private:

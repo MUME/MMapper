@@ -849,7 +849,7 @@ void GLFont::renderTextCentered(const QString &text,
     const auto center = glm::vec2{getScreenCenter()};
     render2dTextImmediate(
         std::vector<GLText>{GLText{glm::vec3{center, 0.f},
-                                   ::toStdStringLatin1(text),
+                                   mmqt::toStdStringLatin1(text),
                                    color,
                                    bgcolor,
                                    FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}}});

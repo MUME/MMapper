@@ -399,7 +399,7 @@ NODISCARD static bool isCommand(const std::string &str, const CommandEnum cmd)
 bool AbstractParser::parseUserCommands(const QString &input)
 {
     if (input.startsWith(prefixChar)) {
-        std::string s = ::toStdStringLatin1(input);
+        std::string s = mmqt::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
             sendToUser("Internal error. Sorry.\n");
@@ -417,7 +417,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
 
 bool AbstractParser::parseSimpleCommand(const QString &qstr)
 {
-    const std::string str = ::toStdStringLatin1(qstr);
+    const std::string str = mmqt::toStdStringLatin1(qstr);
     const auto isOnline = ::isOnline();
 
     for (const CommandEnum cmd : ALL_COMMANDS) {
@@ -662,8 +662,8 @@ void AbstractParser::initSpecialCommandMap()
                                "  %3\n"
                                "\n")
                            .arg(prefixChar)
-                           .arg(::toQStringLatin1(name))
-                           .arg(::toQStringLatin1(help)));
+                           .arg(mmqt::toQStringLatin1(name))
+                           .arg(mmqt::toQStringLatin1(help)));
         };
     };
 
@@ -796,8 +796,8 @@ void AbstractParser::initSpecialCommandMap()
                                "%3\n"
                                "\n")
                            .arg(prefixChar)
-                           .arg(::toQStringLatin1(name))
-                           .arg(::toQStringLatin1(help)));
+                           .arg(mmqt::toQStringLatin1(name))
+                           .arg(mmqt::toQStringLatin1(help)));
         });
     add(
         cmdTime,
@@ -879,7 +879,7 @@ void AbstractParser::addSpecialCommand(const char *const s,
 
             map.emplace(key, ParserRecord{fullName, callback, help});
         else {
-            qWarning() << ("unable to add " + ::toQStringLatin1(key) + " for " + abb.describe());
+            qWarning() << ("unable to add " + mmqt::toQStringLatin1(key) + " for " + abb.describe());
         }
     }
 }

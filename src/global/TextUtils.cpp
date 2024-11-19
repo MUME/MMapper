@@ -19,6 +19,12 @@
 #include <QRegularExpression>
 #include <QString>
 
+namespace {
+static constexpr const char C_ANSI_ESCAPE = C_ESC;
+}
+
+namespace mmqt {
+
 // allows ">" or "|" as the quote character
 static const QRegularExpression quotePrefixRegex(R"(^[[:space:]]*([>|][[:space:]]*)*)");
 
@@ -35,8 +41,6 @@ static const QRegularExpression twoOrMoreSpaceCharsRegex(R"(  +)");
 
 /* visible */
 const QRegularExpression weakAnsiRegex(R"(\x1b\[?[[:digit:];]*[[:alpha:]]?)");
-
-static constexpr const char C_ANSI_ESCAPE = C_ESC;
 
 bool containsAnsi(const QStringView str)
 {
@@ -189,6 +193,7 @@ int findTrailingWhitespace(const QString &line)
 {
     return findTrailingWhitespace(QStringView{line});
 }
+} // namespace mmqt
 
 static constexpr const int ANSI_RESET = 0;
 #define X(UPPER, lower, n) \
@@ -565,7 +570,7 @@ NODISCARD static bool isValidAnsiCode(const int n)
     // 51-55: encircled/overlined (rarely supported)
     // 60-65: ideograms (rarely supported)
 }
-
+namespace mmqt {
 bool isValidAnsiColor(const QStringView ansi)
 {
     if (!isAnsiColor(ansi))
@@ -956,6 +961,7 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
         }
     });
 }
+} // namespace mmqt
 
 char toLowerLatin1(const char c)
 {
@@ -1094,6 +1100,8 @@ std::ostream &print_string_smartquote(std::ostream &os, const std::string_view s
     return print_string_quoted(os, sv);
 }
 
+namespace mmqt {
+
 QString toQStringLatin1(const std::string_view sv)
 {
     return QString::fromLatin1(sv.data(), static_cast<int>(sv.size()));
@@ -1128,3 +1136,4 @@ std::string_view toStdStringViewLatin1(const QByteArray &arr)
 {
     return std::string_view{arr.data(), static_cast<size_t>(arr.size())};
 }
+} // namespace mmqt

@@ -44,7 +44,7 @@ NODISCARD static SharedMMTexture loadTexture(const QString &name)
         texture->create();
 
         if (!texture->isCreated())
-            throw std::runtime_error(::toStdStringUtf8("failed to create: " + name));
+            throw std::runtime_error(mmqt::toStdStringUtf8("failed to create: " + name));
     }
 
     texture->setWrapMode(QOpenGLTexture::WrapMode::MirroredRepeat);

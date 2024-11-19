@@ -61,7 +61,7 @@ public:
         // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces makes the hash more resilient.
-        auto desc = ::toQStringLatin1(ParserUtils::normalizeWhitespace(roomDesc.getStdString()));
+        auto desc = mmqt::toQStringLatin1(ParserUtils::normalizeWhitespace(roomDesc.getStdString()));
         ParserUtils::toAsciiInPlace(desc);
 
         // REVISIT: should this be latin1 or utf8?
@@ -146,7 +146,7 @@ static void writeJson(const QString &filePath, JsonT &json, const QString &what)
     if (!file.open(QIODevice::WriteOnly)) {
         QString msg(
             QString("error opening %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
-        throw std::runtime_error(::toStdStringUtf8(msg));
+        throw std::runtime_error(mmqt::toStdStringUtf8(msg));
     }
 
     QJsonDocument doc(json);
@@ -156,7 +156,7 @@ static void writeJson(const QString &filePath, JsonT &json, const QString &what)
     if (!file.flush() || stream.status() != QTextStream::Ok) {
         QString msg(
             QString("error writing %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
-        throw std::runtime_error(::toStdStringUtf8(msg));
+        throw std::runtime_error(mmqt::toStdStringUtf8(msg));
     }
 }
 
@@ -435,7 +435,7 @@ void JsonWorld::writeZones(const QDir &dir,
             progressCounter.step();
         }
 
-        QString filePath = dir.filePath(::toQStringUtf8(kv.first + ".json"));
+        QString filePath = dir.filePath(mmqt::toQStringUtf8(kv.first + ".json"));
         writeJson(filePath, jRooms, "zone");
     }
 }

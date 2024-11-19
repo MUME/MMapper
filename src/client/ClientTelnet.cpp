@@ -81,13 +81,13 @@ void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
 
 void ClientTelnet::slot_sendToMud(const QString &data)
 {
-    submitOverTelnet(::toStdStringLatin1(data), false);
+    submitOverTelnet(mmqt::toStdStringLatin1(data), false);
 }
 
 void ClientTelnet::virt_sendRawData(const std::string_view data)
 {
     sentBytes += data.length();
-    socket.write(::toQByteArrayLatin1(data));
+    socket.write(mmqt::toQByteArrayLatin1(data));
 }
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)

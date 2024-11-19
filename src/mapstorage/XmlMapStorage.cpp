@@ -666,7 +666,7 @@ void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
 void XmlMapStorage::throwError(QXmlStreamReader &stream, const QString &msg)
 {
     QString errmsg = QString("Error at line %1:\n%2").arg(stream.lineNumber()).arg(msg);
-    throw std::runtime_error(::toStdStringUtf8(errmsg));
+    throw std::runtime_error(mmqt::toStdStringUtf8(errmsg));
 }
 
 void XmlMapStorage::throwIfDuplicate(QXmlStreamReader &stream,

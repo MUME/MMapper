@@ -12,7 +12,7 @@
 #include <QString>
 
 GmcpModule::GmcpModule(const QString &moduleVersion)
-    : GmcpModule(::toStdStringLatin1(moduleVersion))
+    : GmcpModule(mmqt::toStdStringLatin1(moduleVersion))
 {}
 
 NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)

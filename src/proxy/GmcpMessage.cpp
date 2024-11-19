@@ -57,13 +57,13 @@ GmcpMessage::GmcpMessage(const std::string &package)
 GmcpMessage::GmcpMessage(const std::string &package, const std::string &json)
     : name(package)
     , json(GmcpJson{json})
-    , document(GmcpJsonDocument::fromJson(::toQByteArrayUtf8(json)))
+    , document(GmcpJsonDocument::fromJson(mmqt::toQByteArrayUtf8(json)))
     , type(toGmcpMessageType(package))
 {}
 
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, const QString &json)
     : name(toGmcpMessageName(type))
-    , json(::toStdStringUtf8(json))
+    , json(mmqt::toStdStringUtf8(json))
     , document(GmcpJsonDocument::fromJson(json.toUtf8()))
     , type(type)
 {}
@@ -71,7 +71,7 @@ GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, const QString &json)
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, const std::string &json)
     : name(toGmcpMessageName(type))
     , json(GmcpJson{json})
-    , document(GmcpJsonDocument::fromJson(::toQByteArrayUtf8(json)))
+    , document(GmcpJsonDocument::fromJson(mmqt::toQByteArrayUtf8(json)))
     , type(type)
 {}
 
@@ -81,7 +81,7 @@ QByteArray GmcpMessage::toRawBytes() const
     oss << name.getStdString();
     if (json)
         oss << ' ' << json->getStdString();
-    return ::toQByteArrayUtf8(oss.str());
+    return mmqt::toQByteArrayUtf8(oss.str());
 }
 
 GmcpMessage GmcpMessage::fromRawBytes(const QByteArray &ba)

@@ -252,7 +252,7 @@ public:
     NODISCARD std::string toStdString() const;
     NODISCARD QString toQString() const
     {
-        return ::toQStringLatin1(toStdString());
+        return mmqt::toQStringLatin1(toStdString());
     }
     explicit operator QString() const
     {

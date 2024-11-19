@@ -46,8 +46,8 @@ public:
 
     struct NODISCARD AnsiColor final
     {
-        QColor colFg = ansiColor(AnsiColorTableEnum::white);
-        QColor colBg = ansiColor(AnsiColorTableEnum::black);
+        QColor colFg = mmqt::ansiColor(AnsiColorTableEnum::white);
+        QColor colBg = mmqt::ansiColor(AnsiColorTableEnum::black);
         int ansiCodeFg = DEFAULT_FG;
         int ansiCodeBg = DEFAULT_BG;
         QString intelligibleNameFg = NONE;
