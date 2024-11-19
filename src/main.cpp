@@ -6,7 +6,7 @@
 
 #include "./configuration/configuration.h"
 #include "./display/Filenames.h"
-#include "./global/Debug.h"
+#include "./global/ConfigConsts.h"
 #include "./global/Version.h"
 #include "./global/WinSock.h"
 #include "./global/utils.h"

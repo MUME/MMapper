@@ -3,7 +3,7 @@
 
 #include "ShaderUtils.h"
 
-#include "../../global/Debug.h"
+#include "../../global/ConfigConsts.h"
 #include "../../global/TextUtils.h"
 
 #include <array>

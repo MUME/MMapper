@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/macros.h"
+#include "macros.h"
 
 #include <QDebug>
 #include <QString>

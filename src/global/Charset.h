@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
-#include "../configuration/configuration.h" // TODO: move CharacterEncodingEnum somewhere
+#include "ConfigEnums.h"
+#include "macros.h"
 
 #include <iosfwd>
 #include <string>

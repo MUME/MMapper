@@ -7,7 +7,6 @@
 #include "configuration.h"
 
 #include "../global/utils.h"
-#include "../pandoragroup/mmapper2group.h"
 
 #include <cassert>
 #include <mutex>

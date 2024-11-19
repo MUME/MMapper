@@ -9,7 +9,7 @@
 #include "../display/Filenames.h"
 #include "../display/MapCanvasData.h"
 #include "../display/Textures.h"
-#include "../global/Debug.h"
+#include "../global/ConfigConsts.h"
 #include "../global/hash.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"

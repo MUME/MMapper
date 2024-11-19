@@ -3,7 +3,7 @@
 
 #include "WeakHandle.h"
 
-#include "Debug.h"
+#include "ConfigConsts.h"
 
 #include <cassert>
 #include <string>

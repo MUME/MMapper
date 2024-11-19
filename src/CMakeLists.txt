@@ -85,7 +85,9 @@ set(mmapper_SRCS
     global/Charset.h
     global/Color.cpp
     global/Color.h
-    global/Debug.h
+    global/ConfigConsts-Computed.h
+    global/ConfigConsts.h
+    global/ConfigEnums.h
     global/EnumIndexedArray.h
     global/Flags.h
     global/NamedColors.cpp

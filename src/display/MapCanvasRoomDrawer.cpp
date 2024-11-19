@@ -11,7 +11,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/AnsiColor.h"
 #include "../global/Array.h"
-#include "../global/Debug.h"
+#include "../global/ConfigConsts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"

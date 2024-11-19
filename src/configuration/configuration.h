@@ -6,11 +6,12 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Array.h"
-#include "../global/Debug.h"
+#include "../global/ConfigConsts-Computed.h"
+#include "../global/ConfigConsts.h"
+#include "../global/ConfigEnums.h"
 #include "../global/FixedPoint.h"
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
-#include "../pandoragroup/mmapper2group.h"
 #include "NamedConfig.h"
 #include "configobserver.h"
 
@@ -26,65 +27,6 @@
 #include <QtGlobal>
 
 #undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
-
-enum class NODISCARD MapModeEnum { PLAY, MAP, OFFLINE };
-enum class NODISCARD PlatformEnum { Unknown, Windows, Mac, Linux };
-enum class NODISCARD CharacterEncodingEnum { LATIN1, UTF8, ASCII };
-enum class NODISCARD EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
-enum class NODISCARD RestrictMapEnum { Never, OnlyInMapMode, Always };
-enum class NODISCARD AutoLoggerEnum { KeepForever, DeleteDays, DeleteSize };
-
-// Do not call this directly; use CURRENT_PLATFORM.
-NODISCARD static inline constexpr PlatformEnum getCurrentPlatform()
-{
-#if defined(Q_OS_WIN)
-    return PlatformEnum::Windows;
-#elif defined(Q_OS_MAC)
-    return PlatformEnum::Mac;
-#elif defined(Q_OS_LINUX)
-    return PlatformEnum::Linux;
-#else
-    throw std::runtime_error("unsupported platform");
-#endif
-}
-static constexpr const PlatformEnum CURRENT_PLATFORM = getCurrentPlatform();
-
-// Do not call this directly; use CURRENT_ENVIRONMENT.
-NODISCARD static inline constexpr EnvironmentEnum getCurrentEnvironment()
-{
-#if Q_PROCESSOR_WORDSIZE == 4
-    return EnvironmentEnum::Env32Bit;
-#elif Q_PROCESSOR_WORDSIZE == 8
-    return EnvironmentEnum::Env64Bit;
-#else
-    throw std::runtime_error("unsupported environment");
-#endif
-}
-static constexpr const EnvironmentEnum CURRENT_ENVIRONMENT = getCurrentEnvironment();
-
-#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
-static constexpr const bool NO_OPEN_SSL = true;
-#else
-static constexpr const bool NO_OPEN_SSL = false;
-#endif
-
-#if defined(MMAPPER_NO_UPDATER) && MMAPPER_NO_UPDATER
-static constexpr const bool NO_UPDATER = true;
-#else
-static constexpr const bool NO_UPDATER = false;
-#endif
-
-#if defined(MMAPPER_NO_MAP) && MMAPPER_NO_MAP
-static constexpr const bool NO_MAP_RESOURCE = true;
-#else
-static constexpr const bool NO_MAP_RESOURCE = false;
-#endif
-
-#if defined(MMAPPER_NO_ZLIB) && MMAPPER_NO_ZLIB
-static constexpr const bool NO_ZLIB = true;
-#else
-static constexpr const bool NO_ZLIB = false;
-#endif
 
 #define SUBGROUP() \
     friend class Configuration; \

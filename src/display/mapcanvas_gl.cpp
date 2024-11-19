@@ -6,7 +6,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../global/Array.h"
 #include "../global/ChangeMonitor.h"
-#include "../global/Debug.h"
+#include "../global/ConfigConsts.h"
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
 #include "../mapdata/mapdata.h"

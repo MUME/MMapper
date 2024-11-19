@@ -4,6 +4,7 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/ConfigEnums.h"
 #include "../global/WeakHandle.h"
 #include "../global/roomid.h"
 #include "GroupManagerApi.h"
@@ -24,7 +25,6 @@ class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
 class CommandQueue;
-enum class NODISCARD GroupManagerStateEnum { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group final : public QObject
 {

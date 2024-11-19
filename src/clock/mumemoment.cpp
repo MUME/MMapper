@@ -4,7 +4,7 @@
 
 #include "mumemoment.h"
 
-#include "../global/Debug.h"
+#include "../global/ConfigConsts.h"
 #include "mumeclock.h"
 
 #include <iostream>
