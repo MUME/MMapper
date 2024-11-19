@@ -127,6 +127,8 @@ set(mmapper_SRCS
     global/TextBuffer.h
     global/TextUtils.cpp
     global/TextUtils.h
+    global/Timer.cpp
+    global/Timer.h
     global/Version.h
     global/WeakHandle.cpp
     global/WeakHandle.h
