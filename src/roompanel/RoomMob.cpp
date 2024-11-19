@@ -25,7 +25,7 @@ RoomMobData::~RoomMobData() = default;
 // ----------------------------- RoomMob --------------------------------------
 SharedRoomMob RoomMob::alloc()
 {
-    return std::make_shared<RoomMob>(this_is_private{});
+    return std::make_shared<RoomMob>(this_is_private{0});
 }
 
 RoomMob::RoomMob(this_is_private) {}

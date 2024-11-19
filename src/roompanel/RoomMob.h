@@ -80,7 +80,7 @@ class NODISCARD RoomMob final : public RoomMobData, public std::enable_shared_fr
 private:
     struct NODISCARD this_is_private final
     {
-        this_is_private() {}
+        explicit this_is_private(int) {}
     };
 
 public:
