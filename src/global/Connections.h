@@ -4,12 +4,29 @@
 
 #include "macros.h"
 
+#include <optional>
 #include <vector>
 
 #include <QMetaObject>
 #include <QObject>
 
 namespace mmqt {
+class NODISCARD SingleConnection final
+{
+private:
+    std::optional<QMetaObject::Connection> m_connection;
+
+public:
+    SingleConnection() = default;
+    ~SingleConnection();
+    SingleConnection(const SingleConnection &) = delete;
+    SingleConnection &operator=(const SingleConnection &) = delete;
+
+public:
+    SingleConnection &operator=(QMetaObject::Connection c);
+    void disconnect();
+};
+
 class NODISCARD Connections final
 {
 private:

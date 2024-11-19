@@ -5,6 +5,25 @@
 
 namespace mmqt {
 
+SingleConnection::~SingleConnection()
+{
+    disconnect();
+}
+
+SingleConnection &SingleConnection::operator=(QMetaObject::Connection c)
+{
+    disconnect();
+    m_connection = std::move(c);
+    return *this;
+}
+void SingleConnection::disconnect()
+{
+    if (m_connection.has_value()) {
+        QObject::disconnect(m_connection.value());
+    }
+    m_connection.reset();
+}
+
 Connections::~Connections()
 {
     disconnectAll();
