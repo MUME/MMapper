@@ -121,7 +121,6 @@ protected:
     void sendCharsetRejected();
     void sendCharsetAccepted(const QByteArray &characterSet);
     void sendOptionStatus();
-    void sendAreYouThere();
     void sendWindowSizeChanged(int, int);
     void sendTerminalTypeRequest();
     void sendGmcpMessage(const GmcpMessage &msg);
@@ -158,6 +157,7 @@ protected:
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
     void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
+    void sendRawData(const char *s) = delete;
 
 protected:
     void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }

@@ -423,16 +423,6 @@ void AbstractTelnet::sendOptionStatus()
     s.addRaw(TN_SE);
 }
 
-void AbstractTelnet::sendAreYouThere()
-{
-    sendRawData("I'm here! Please be more patient!\n");
-    // well, this should never be executed, as the response would probably
-    // be treated as a command. But that's server's problem, not ours...
-    // If the server wasn't capable of handling this, it wouldn't have
-    // sent us the AYT command, would it? Impatient server = bad server.
-    // Let it suffer! ;-)
-}
-
 void AbstractTelnet::sendTerminalTypeRequest()
 {
     if (debug)
@@ -456,9 +446,6 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
 
         switch (ch) {
-        case TN_AYT:
-            sendAreYouThere();
-            break;
         case TN_GA:
         case TN_EOR:
             recvdGA = true; // signal will be emitted later
