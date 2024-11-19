@@ -1,7 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+// FIXME: including display/ from opengl/ is a modularity violation.
+
 #include "Font.h"
+
+#include "../configuration/configuration.h"
+#include "../display/Filenames.h"
+#include "../display/MapCanvasData.h"
+#include "../display/Textures.h"
+#include "../global/Debug.h"
+#include "../global/hash.h"
+#include "../global/utils.h"
+#include "FontFormatFlags.h"
+#include "OpenGL.h"
 
 #include <cassert>
 #include <cctype>
@@ -18,17 +30,6 @@
 #include <QLatin1String>
 #include <QtCore>
 #include <QtGui>
-
-// FIXME: including display/ from opengl/ is a modularity violation.
-#include "../configuration/configuration.h"
-#include "../display/Filenames.h"
-#include "../display/MapCanvasData.h"
-#include "../display/Textures.h"
-#include "../global/Debug.h"
-#include "../global/hash.h"
-#include "../global/utils.h"
-#include "FontFormatFlags.h"
-#include "OpenGL.h"
 
 static const bool VERBOSE_FONT_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_FONT_DEBUG")) {
