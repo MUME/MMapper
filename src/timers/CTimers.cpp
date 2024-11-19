@@ -15,7 +15,7 @@
 static inline int64_t nowMs()
 {
     using namespace std::chrono;
-    const auto now = system_clock::now();
+    const auto now = steady_clock::now();
     return time_point_cast<milliseconds>(now).time_since_epoch().count();
 }
 
