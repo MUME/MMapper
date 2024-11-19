@@ -65,10 +65,11 @@ private:
     };
     Connections m_connections;
 
-    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
-    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
-    EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
-    EnumIndexedArray<RoomListWidgetItem *, DoorFlagEnum> doorListItems;
+    using UniqueRoomListWidgetItem = std::unique_ptr<RoomListWidgetItem>;
+    EnumIndexedArray<UniqueRoomListWidgetItem, RoomLoadFlagEnum> loadListItems;
+    EnumIndexedArray<UniqueRoomListWidgetItem, RoomMobFlagEnum> mobListItems;
+    EnumIndexedArray<UniqueRoomListWidgetItem, ExitFlagEnum> exitListItems;
+    EnumIndexedArray<UniqueRoomListWidgetItem, DoorFlagEnum> doorListItems;
     EnumIndexedArray<QToolButton *, RoomTerrainEnum> roomTerrainButtons;
 
     SharedRoomSelection m_roomSelection;

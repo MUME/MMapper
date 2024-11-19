@@ -154,11 +154,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(SliderSpinboxButton);
 };
 
-void SSBDeleter::operator()(SliderSpinboxButton *ssb)
-{
-    delete ssb;
-}
-
 static void addLine(QLayout &layout)
 {
     auto *const line = new QFrame;
@@ -177,7 +172,7 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
 
     auto makeSsb = [this, vertical](const QString name, FP &fp) {
         addLine(*vertical);
-        m_ssbs.emplace_back(UniqueSsb(new SliderSpinboxButton{*this, *vertical, name, fp}));
+        m_ssbs.emplace_back(std::make_unique<SliderSpinboxButton>(*this, *vertical, name, fp));
     };
 
     auto *const checkboxDiag = new QCheckBox("Show Performance Stats");

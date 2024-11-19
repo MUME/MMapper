@@ -7,6 +7,8 @@
 #include "../mapdata/roomselection.h"
 #include "../parser/abstractparser.h"
 
+#include <memory>
+
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -38,7 +40,7 @@ class FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
 private:
     MapData &m_mapData;
     QTreeWidgetItem *item = nullptr;
-    QShortcut *m_showSelectedRoom = nullptr;
+    std::unique_ptr<QShortcut> m_showSelectedRoom;
 
 public:
 signals:

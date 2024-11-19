@@ -11,11 +11,6 @@
 #include <QGroupBox>
 
 class SliderSpinboxButton;
-struct NODISCARD SSBDeleter final
-{
-    void operator()(SliderSpinboxButton *ssb);
-};
-
 class AdvancedGraphicsGroupBox final : public QObject
 {
     Q_OBJECT
@@ -23,7 +18,7 @@ class AdvancedGraphicsGroupBox final : public QObject
 private:
     friend SliderSpinboxButton;
     QGroupBox *m_groupBox;
-    using UniqueSsb = std::unique_ptr<SliderSpinboxButton, SSBDeleter>;
+    using UniqueSsb = std::unique_ptr<SliderSpinboxButton>;
     std::vector<UniqueSsb> m_ssbs;
     // purposely unused; this variable exists as an RAII for the change monitors.
     ConnectionSet m_connections;

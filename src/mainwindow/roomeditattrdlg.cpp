@@ -32,14 +32,17 @@
 #include <QtGui>
 #include <QtWidgets>
 
+using UniqueRoomListWidgetItem = std::unique_ptr<RoomListWidgetItem>;
+
 template<typename T>
 void fixMissing(T &array, const char *const name)
 {
-    for (auto &x : array) { // reference to pointer so we can add missing elements
+    // reference to pointer so we can add missing elements
+    for (UniqueRoomListWidgetItem &x : array) {
         if (x != nullptr)
             continue;
         const auto ordinal = static_cast<int>(&x - array.data());
-        x = new RoomListWidgetItem(QString::asprintf("%d", ordinal));
+        x = std::make_unique<RoomListWidgetItem>(QString::asprintf("%d", ordinal));
         qWarning() << "Missing " << name << " " << ordinal;
     }
 }
@@ -52,9 +55,9 @@ void installWidgets(T &array,
 {
     fixMissing(array, name);
     widget.clear();
-    for (RoomListWidgetItem *const x : array) {
-        x->setFlags(flags);
-        widget.addItem(checked_static_upcast<QListWidgetItem *>(x));
+    for (UniqueRoomListWidgetItem &x : array) {
+        deref(x).setFlags(flags);
+        widget.addItem(checked_static_upcast<QListWidgetItem *>(x.get()));
     }
 }
 
@@ -249,31 +252,41 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
-    for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS)
-        mobListItems[flag] = new RoomListWidgetItem(getIcon(flag), getName(flag), getPriority(flag));
+    for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS) {
+        mobListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
+                                                                  getName(flag),
+                                                                  getPriority(flag));
+    }
+
     installWidgets(mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
-    for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS)
-        loadListItems[flag] = new RoomListWidgetItem(getIcon(flag),
-                                                     getName(flag),
-                                                     getPriority(flag));
+    for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS) {
+        loadListItems[flag] = std::make_unique<RoomListWidgetItem>(getIcon(flag),
+                                                                   getName(flag),
+                                                                   getPriority(flag));
+    }
+
     installWidgets(loadListItems,
                    "load list",
                    *loadFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
-    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS)
-        exitListItems[flag] = new RoomListWidgetItem(getName(flag));
+    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
+        exitListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+    }
+
     installWidgets(exitListItems,
                    "exit list",
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
-    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS)
-        doorListItems[flag] = new RoomListWidgetItem(getName(flag));
+    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
+        doorListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+    }
+
     installWidgets(doorListItems,
                    "door list",
                    *doorFlagsListWidget,
@@ -294,15 +307,6 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 RoomEditAttrDlg::~RoomEditAttrDlg()
 {
     writeSettings();
-
-    for (auto &x : mobListItems)
-        delete std::exchange(x, nullptr);
-    for (auto &x : loadListItems)
-        delete std::exchange(x, nullptr);
-    for (auto &x : exitListItems)
-        delete std::exchange(x, nullptr);
-    for (auto &x : doorListItems)
-        delete std::exchange(x, nullptr);
 }
 
 void RoomEditAttrDlg::readSettings()
@@ -549,9 +553,9 @@ void setCheckStates(T &array, const Flags flags)
 {
     for (size_t i = 0, len = array.size(); i < len; ++i) {
         const auto flag = static_cast<typename T::index_type>(i);
-        if (auto *const x = array[flag]) {
-            x->setCheckState(flags.contains(flag) ? Qt::CheckState::Checked
-                                                  : Qt::CheckState::Unchecked);
+        if (UniqueRoomListWidgetItem &x = array[flag]) {
+            deref(x).setCheckState(flags.contains(flag) ? Qt::CheckState::Checked
+                                                        : Qt::CheckState::Unchecked);
         }
     }
 }
@@ -559,8 +563,8 @@ void setCheckStates(T &array, const Flags flags)
 template<typename T>
 void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
 {
-    for (auto &x : array) {
-        x->setFlags(flags);
+    for (UniqueRoomListWidgetItem &x : array) {
+        deref(x).setFlags(flags);
     }
 }
 

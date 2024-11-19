@@ -18,72 +18,70 @@
 
 ClientWidget::ClientWidget(QWidget *const parent)
     : QWidget(parent)
-    , ui(new Ui::ClientWidget)
+    , m_ui(std::make_unique<Ui::ClientWidget>())
     , m_telnet(new ClientTelnet(this))
 {
     setWindowTitle("MMapper Client");
-    ui->setupUi(this);
+
+    auto &ui = deref(m_ui);
+    ui.setupUi(this);
+    std::ignore = deref(ui.display);
+    std::ignore = deref(ui.input);
 
     // Port
-    ui->port->setText(QString("%1").arg(getConfig().connection.localPort));
+    ui.port->setText(QString("%1").arg(getConfig().connection.localPort));
 
-    ui->playButton->setFocus();
-    connect(ui->playButton, &QAbstractButton::clicked, this, [this]() {
-        ui->parent->setCurrentIndex(1);
+    ui.playButton->setFocus();
+    connect(ui.playButton, &QAbstractButton::clicked, this, [this]() {
+        deref(m_ui).parent->setCurrentIndex(1);
         m_telnet->connectToHost();
     });
 
     // Keyboard input on the display widget should be redirected to the input widget
-    ui->display->setFocusProxy(ui->input);
+    ui.display->setFocusProxy(ui.input);
 
-    ui->input->installEventFilter(this);
+    ui.input->installEventFilter(this);
 
     // Connect the signals/slots
     connect(m_telnet, &ClientTelnet::sig_disconnected, this, [this]() {
-        ui->display->slot_displayText("\n\n\n");
+        deref(deref(m_ui).display).slot_displayText("\n\n\n");
         emit sig_relayMessage("Disconnected using the integrated client");
     });
     connect(m_telnet, &ClientTelnet::sig_connected, this, [this]() {
         emit sig_relayMessage("Connected using the integrated client");
 
         // Focus should be on the input
-        ui->input->setFocus();
+        deref(m_ui).input->setFocus();
     });
     connect(m_telnet, &ClientTelnet::sig_socketError, this, [this](const QString &errorStr) {
-        ui->display->slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
+        deref(deref(m_ui).display).slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
     });
 
     // Input
-    connect(ui->input,
+    connect(ui.input,
             &StackedInputWidget::sig_sendUserInput,
             m_telnet,
             &ClientTelnet::slot_sendToMud);
     connect(m_telnet,
             &ClientTelnet::sig_echoModeChanged,
-            ui->input,
+            ui.input,
             &StackedInputWidget::slot_toggleEchoMode);
-    connect(ui->input,
-            &StackedInputWidget::sig_showMessage,
-            this,
-            &ClientWidget::slot_onShowMessage);
+    connect(ui.input, &StackedInputWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
 
     // Display
-    connect(ui->input,
+    connect(ui.input,
             &StackedInputWidget::sig_displayMessage,
-            ui->display,
+            ui.display,
             &DisplayWidget::slot_displayText);
-    connect(m_telnet, &ClientTelnet::sig_sendToUser, ui->display, &DisplayWidget::slot_displayText);
-    connect(ui->display, &DisplayWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
-    connect(ui->display,
+    connect(m_telnet, &ClientTelnet::sig_sendToUser, ui.display, &DisplayWidget::slot_displayText);
+    connect(ui.display, &DisplayWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
+    connect(ui.display,
             &DisplayWidget::sig_windowSizeChanged,
             m_telnet,
             &ClientTelnet::slot_onWindowSizeChanged);
 }
 
-ClientWidget::~ClientWidget()
-{
-    delete ui;
-}
+ClientWidget::~ClientWidget() = default;
 
 void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 {
@@ -105,7 +103,7 @@ void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 
 bool ClientWidget::isUsingClient() const
 {
-    return ui->parent->currentIndex() != 0;
+    return deref(m_ui).parent->currentIndex() != 0;
 }
 
 void ClientWidget::slot_onShowMessage(const QString &message)
@@ -158,7 +156,7 @@ void ClientWidget::slot_saveLog()
         const QString string = isHtml ? doc.toHtml() : doc.toPlainText();
         return string.toLocal8Bit();
     };
-    document.write(getDocString8bit(ui->display->document(), result.isHtml));
+    document.write(getDocString8bit(deref(deref(m_ui).display).document(), result.isHtml));
     document.close();
 }
 
@@ -166,19 +164,22 @@ bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
 {
     if (event->type() == QEvent::KeyPress) {
         if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
+            Ui::ClientWidget &ui = deref(m_ui);
+            DisplayWidget &display = deref(ui.display);
+            StackedInputWidget &input = deref(ui.input);
             if (keyEvent->matches(QKeySequence::Copy)) {
-                if (ui->display->canCopy())
-                    ui->display->copy();
+                if (display.canCopy())
+                    display.copy();
                 else
-                    ui->input->slot_copy();
+                    input.slot_copy();
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Cut)) {
-                ui->input->slot_cut();
+                input.slot_cut();
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Paste)) {
-                ui->input->slot_paste();
+                input.slot_paste();
                 keyEvent->accept();
                 return true;
             }

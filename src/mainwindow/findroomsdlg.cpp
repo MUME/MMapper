@@ -18,6 +18,7 @@
 #include "../mapdata/roomselection.h"
 
 #include <cstdint>
+#include <memory>
 
 #include <QString>
 #include <QtGui>
@@ -31,7 +32,8 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
 
     adjustResultTable();
 
-    m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
+    m_showSelectedRoom = std::make_unique<QShortcut>(QKeySequence(tr("Space", "Select result item")),
+                                                     resultTable);
     m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
     selectButton->setEnabled(false);
@@ -44,7 +46,10 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
             &QTreeWidget::itemDoubleClicked,
             this,
             &FindRoomsDlg::slot_itemDoubleClicked);
-    connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::slot_showSelectedRoom);
+    connect(m_showSelectedRoom.get(),
+            &QShortcut::activated,
+            this,
+            &FindRoomsDlg::slot_showSelectedRoom);
     connect(resultTable, &QTreeWidget::itemSelectionChanged, this, [this]() {
         const bool enabled = !resultTable->selectedItems().isEmpty();
         selectButton->setEnabled(enabled);
@@ -89,7 +94,6 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
 
 FindRoomsDlg::~FindRoomsDlg()
 {
-    delete m_showSelectedRoom;
     resultTable->clear();
 }
 

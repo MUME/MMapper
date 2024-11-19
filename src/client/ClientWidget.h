@@ -5,6 +5,8 @@
 
 #include "../global/macros.h"
 
+#include <memory>
+
 #include <QPointer>
 #include <QString>
 #include <QWidget>
@@ -23,7 +25,7 @@ class ClientWidget final : public QWidget
     Q_OBJECT
 
 private:
-    Ui::ClientWidget *const ui;
+    const std::unique_ptr<Ui::ClientWidget> m_ui;
     QPointer<ClientTelnet> m_telnet;
 
 public:
