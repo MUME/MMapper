@@ -36,9 +36,6 @@ public:
     };
 
 private:
-    static const QVariant empty;
-
-private:
     const RoomMobs &m_room;
     std::unordered_map<RoomMob::Id, SharedRoomMob> m_mobsById;
     std::vector<SharedRoomMob> m_mobVector;

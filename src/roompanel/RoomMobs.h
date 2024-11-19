@@ -22,10 +22,10 @@ class RoomMobs final : public QObject
     Q_OBJECT
 
 private:
-    struct SharedRoomMobAndIndex
+    struct NODISCARD SharedRoomMobAndIndex final
     {
         SharedRoomMob mob;
-        size_t index;
+        size_t index = 0;
     };
 
     // TODO: eliminate this

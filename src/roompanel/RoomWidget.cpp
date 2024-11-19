@@ -16,12 +16,14 @@
 #include <QStyledItemDelegate>
 #include <QtWidgets>
 
-static constexpr const uint8_t ROOM_COLUMN_COUNT = 7;
+namespace { // anonymous
+const QVariant empty;
+constexpr const uint8_t ROOM_COLUMN_COUNT = 7;
 static_assert(ROOM_COLUMN_COUNT == static_cast<int>(RoomModel::ColumnTypeEnum::MOUNT) + 1,
               "# of columns");
+} // namespace
 
 // ---------------------------- RoomModel --------------------------------------
-const QVariant RoomModel::empty;
 
 RoomModel::RoomModel(QObject *const parent, const RoomMobs &room)
     : QAbstractTableModel{parent}

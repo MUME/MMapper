@@ -52,7 +52,8 @@ class NODISCARD RoomMobData
 {
 public:
     using Field = MobFieldEnum;
-    using Id = uint32_t; // matches QVariant::toUint() return type
+    using Id = uint32_t;
+    static_assert(std::is_same_v<Id, decltype(std::declval<QVariant>().toUInt())>);
 
 protected:
     using MobFieldList = EnumIndexedArray<QVariant, MobFieldEnum, NUM_MOB_FIELDS>;
