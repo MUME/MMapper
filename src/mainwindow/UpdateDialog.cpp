@@ -46,8 +46,7 @@ bool CompareVersion::operator>(const CompareVersion &other) const
 
 bool CompareVersion::operator==(const CompareVersion &other) const
 {
-    return parts.at(0) == other.parts.at(0) && parts.at(1) == other.parts.at(1)
-           && parts.at(2) == other.parts.at(2);
+    return parts == other.parts;
 }
 
 QString CompareVersion::toQString() const
