@@ -52,7 +52,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
     const auto write_player_data = [&xml](const QVariantMap &output_data) {
         if (!output_data.contains("playerData")
             || !output_data["playerData"].canConvert(QMetaType::QVariantMap)) {
-            abort();
+            throw std::runtime_error("playerData not a map");
         }
         const QVariantMap &playerData = output_data["playerData"].toMap();
         xml.writeStartElement("playerData");
