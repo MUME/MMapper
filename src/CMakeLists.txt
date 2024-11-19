@@ -138,6 +138,8 @@ set(mmapper_SRCS
     global/unquote.h
     global/utils.cpp
     global/utils.h
+    global/zpipe.cpp
+    global/zpipe.h
     logger/autologger.cpp
     logger/autologger.h
     mainwindow/UpdateDialog.cpp

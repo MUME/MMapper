@@ -1,32 +1,50 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2024 The MMapper Authors
+
 /* zpipe.c: example of proper use of zlib's inflate() and deflate()
    Not copyrighted -- provided to the public domain
    Version 1.4  11 December 2005  Mark Adler */
 
-/* Version history:
-   1.0  30 Oct 2004  First version
-   1.1   8 Nov 2004  Add void casting for unused return values
-                     Use switch statement for inflate() return values
-   1.2   9 Nov 2004  Add assertions to document zlib guarantees
-   1.3   6 Apr 2005  Remove incorrect assertion in inf()
-   1.4  11 Dec 2005  Add hack to avoid MSDOS end-of-line conversions
-                     Avoid some compiler warnings for input and output buffers
- */
+#include "zpipe.h"
 
-#include "zlib.h"
+#include "checked_cast.h"
+#include "macros.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
+#include <limits>
+#include <stdexcept>
+#include <zlib.h>
+
+#include <QDebug>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
 #include <io.h>
-#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
-#else
-#define SET_BINARY_MODE(file)
 #endif
 
-#define CHUNK 16384
+#ifdef MMAPPER_NO_ZLIB
+NODISCARD int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
+{
+    throw std::runtime_error("unable to deflate (built without zlib)");
+}
+NODISCARD int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
+{
+    throw std::runtime_error("unable to inflate (built without zlib)");
+}
+#else
+
+static inline constexpr const size_t PAGE_SIZE = 1u << 12;
+static_assert(PAGE_SIZE != 0 && (PAGE_SIZE & (PAGE_SIZE - 1)) == 0,
+              "PAGE_SIZE must be a power of two");
+
+#define PAGE_ALIGN alignas(PAGE_SIZE)
+
+static inline constexpr const size_t CHUNK = 1u << 14;
+static_assert(CHUNK != 0 && (CHUNK & (CHUNK - 1)) == 0, "CHUNK must be a power of two");
+static_assert(CHUNK >= PAGE_SIZE);
+
+namespace mmz {
 
 /* Compress from file source to file dest until EOF on source.
    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
@@ -34,13 +52,14 @@
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
-int def(FILE *source, FILE *dest, int level)
+int zpipe_deflate(IFile &source, IFile &dest, int level)
 {
-    int ret, flush;
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
+    int ret = Z_OK;
+    int flush = Z_NO_FLUSH;
+    unsigned have = 0;
+    z_stream strm{};
+    PAGE_ALIGN unsigned char in[CHUNK];
+    PAGE_ALIGN unsigned char out[CHUNK];
 
     /* allocate deflate state */
     strm.zalloc = Z_NULL;
@@ -52,12 +71,12 @@ int def(FILE *source, FILE *dest, int level)
 
     /* compress until end of file */
     do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
+        strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        if (source.ferror()) {
             (void) deflateEnd(&strm);
             return Z_ERRNO;
         }
-        flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
+        flush = source.feof() ? Z_FINISH : Z_NO_FLUSH;
         strm.next_in = in;
 
         /* run deflate() on input until output buffer not full, finish
@@ -68,7 +87,7 @@ int def(FILE *source, FILE *dest, int level)
             ret = deflate(&strm, flush);   /* no bad return value */
             assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+            if (dest.fwrite(out, have) != have || dest.ferror()) {
                 (void) deflateEnd(&strm);
                 return Z_ERRNO;
             }
@@ -90,13 +109,13 @@ int def(FILE *source, FILE *dest, int level)
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-int inf(FILE *source, FILE *dest)
+int zpipe_inflate(IFile &source, IFile &dest)
 {
-    int ret;
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
+    int ret = Z_OK;
+    unsigned have = 0;
+    z_stream strm{};
+    PAGE_ALIGN unsigned char in[CHUNK];
+    PAGE_ALIGN unsigned char out[CHUNK];
 
     /* allocate inflate state */
     strm.zalloc = Z_NULL;
@@ -110,8 +129,8 @@ int inf(FILE *source, FILE *dest)
 
     /* decompress until deflate stream ends or end of file */
     do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
+        strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        if (source.ferror()) {
             (void) inflateEnd(&strm);
             return Z_ERRNO;
         }
@@ -128,13 +147,14 @@ int inf(FILE *source, FILE *dest)
             switch (ret) {
             case Z_NEED_DICT:
                 ret = Z_DATA_ERROR; /* and fall through */
+                FALLTHROUGH;
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 (void) inflateEnd(&strm);
                 return ret;
             }
             have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+            if (dest.fwrite(out, have) != have || dest.ferror()) {
                 (void) inflateEnd(&strm);
                 return Z_ERRNO;
             }
@@ -148,6 +168,7 @@ int inf(FILE *source, FILE *dest)
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
+#if 0
 /* report a zlib or i/o error */
 void zerr(int ret)
 {
@@ -172,3 +193,100 @@ void zerr(int ret)
         fputs("zlib version mismatch!\n", stderr);
     }
 }
+#endif
+#endif
+
+IFile::~IFile() = default;
+
+} // namespace mmz
+namespace mmqt {
+
+QByteArrayInputStream::QByteArrayInputStream(QByteArray ba)
+{
+    m_buffer.buffer() = ba;
+    m_buffer.open(QIODevice::ReadOnly);
+}
+
+QByteArrayInputStream::~QByteArrayInputStream() = default;
+
+size_t QByteArrayInputStream::virt_fread(unsigned char *const buf, const size_t bytes)
+{
+    using U = uint32_t;
+    using I = int32_t;
+    const auto avail = static_cast<I>(m_buffer.bytesAvailable());
+    const size_t requested = bytes;
+    static constexpr size_t lim = static_cast<U>(std::numeric_limits<I>::max());
+    if (requested > lim) {
+        throw std::runtime_error("read is too large");
+    }
+    auto ireq = static_cast<I>(requested);
+    if (ireq > avail) {
+        ireq = avail;
+    }
+    auto ureq = static_cast<U>(ireq);
+    if (ureq <= 0) {
+        return 0;
+    }
+    auto wrote = m_buffer.read(reinterpret_cast<char *>(buf), static_cast<int64_t>(ureq));
+    return static_cast<size_t>(wrote);
+}
+size_t QByteArrayInputStream::virt_fwrite(const unsigned char *const /*buf*/, const size_t /*bytes*/)
+{
+    throw std::runtime_error("read-only");
+}
+int QByteArrayInputStream::virt_ferror()
+{
+    return 0;
+}
+int QByteArrayInputStream::virt_feof()
+{
+    return m_buffer.bytesAvailable() == 0;
+}
+int QByteArrayInputStream::virt_fflush()
+{
+    return 0;
+}
+size_t QByteArrayInputStream::virt_get_bytes_avail_read()
+{
+    return static_cast<size_t>(m_buffer.bytesAvailable());
+}
+
+QByteArrayOutputStream::QByteArrayOutputStream()
+{
+    m_ba.open(QIODevice::WriteOnly);
+}
+
+QByteArrayOutputStream::~QByteArrayOutputStream() = default;
+size_t QByteArrayOutputStream::virt_fread(unsigned char *const /*buf*/, const size_t /*bytes*/)
+{
+    throw std::runtime_error("write-only");
+}
+size_t QByteArrayOutputStream::virt_fwrite(const unsigned char *const buf, const size_t bytes)
+{
+    const size_t wanted = bytes;
+    using U = uint32_t;
+    using I = int32_t;
+    static constexpr size_t lim = static_cast<U>(std::numeric_limits<I>::max());
+    if (wanted > lim) {
+        throw std::runtime_error("write is too large");
+    }
+    m_ba.write(reinterpret_cast<const char *>(buf), static_cast<int64_t>(wanted));
+    return wanted;
+}
+int QByteArrayOutputStream::virt_ferror()
+{
+    return 0;
+}
+int QByteArrayOutputStream::virt_feof()
+{
+    return m_ba.size() == 0;
+}
+int QByteArrayOutputStream::virt_fflush()
+{
+    return 0;
+}
+size_t QByteArrayOutputStream::virt_get_bytes_avail_read()
+{
+    return 0;
+}
+} // namespace mmqt
