@@ -31,6 +31,29 @@ class Mmapper2Group final : public QObject
 public:
     Q_OBJECT
 
+private:
+    struct NODISCARD LastPrompt final
+    {
+        QByteArray textHP;
+        QByteArray textMoves;
+        QByteArray textMana;
+
+        void reset() { *this = LastPrompt{}; }
+    };
+    LastPrompt lastPrompt;
+
+    std::atomic_int m_calledStopInternal{0};
+    QTimer affectTimer;
+    QMap<CharacterAffectEnum, int64_t> affectLastSeen;
+    using AffectTimeout = QMap<CharacterAffectEnum, int32_t>;
+    static const AffectTimeout s_affectTimeout;
+
+    QRecursiveMutex networkLock;
+    std::unique_ptr<QThread> thread;
+    std::unique_ptr<GroupAuthority> authority;
+    std::unique_ptr<CGroupCommunicator> network;
+    std::unique_ptr<CGroup> group;
+
 public:
     NODISCARD static GroupManagerStateEnum getConfigState();
     static void setConfigState(GroupManagerStateEnum state);
@@ -118,31 +141,9 @@ protected slots:
     void slot_stopInternal();
 
 private:
-    struct NODISCARD LastPrompt final
-    {
-        QByteArray textHP;
-        QByteArray textMoves;
-        QByteArray textMana;
-
-        void reset() { *this = LastPrompt{}; }
-    };
-    LastPrompt lastPrompt;
-
-    std::atomic_int m_calledStopInternal{0};
-    QTimer affectTimer;
-    QMap<CharacterAffectEnum, int64_t> affectLastSeen;
-    using AffectTimeout = QMap<CharacterAffectEnum, int32_t>;
-    static const AffectTimeout s_affectTimeout;
-
     bool init();
     void issueLocalCharUpdate();
     bool setCharacterPosition(CharacterPositionEnum pos);
     bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
     void renameCharacter(QByteArray newname);
-
-    QRecursiveMutex networkLock;
-    std::unique_ptr<QThread> thread;
-    std::unique_ptr<GroupAuthority> authority;
-    std::unique_ptr<CGroupCommunicator> network;
-    std::unique_ptr<CGroup> group;
 };
