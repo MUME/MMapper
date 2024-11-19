@@ -123,11 +123,7 @@ struct NODISCARD EntityTable final
 NODISCARD static EntityTable initEntityTable()
 {
     // prefixed enum class is an antipattern, but we may not be able to avoid it in this case.
-#define X(name, value) \
-    XmlEntity \
-    { \
-#name, "&" #name ";", XmlEntityEnum::XID_##name \
-    }
+#define X(name, value) (XmlEntity{#name, "&" #name ";", XmlEntityEnum::XID_##name})
 #define SEP_COMMA() ,
 
     const std::vector<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};
