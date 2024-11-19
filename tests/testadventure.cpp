@@ -229,7 +229,7 @@ void TestAdventure::testE2E()
 
     auto pump = [&observer](const std::vector<TestLine> &lines) {
         for (const TestLine &tl : lines) {
-            observer.slot_observeSentToUser(qPrintable(tl.line), true);
+            observer.slot_observeSentToUser(mmqt::toQByteArrayLatin1(tl.line), true);
         }
     };
 
@@ -243,9 +243,20 @@ void TestAdventure::testE2E()
     pump(TestLines::killPlayer2);
     pump(TestLines::killPlayer3);
 
-    QCOMPARE(achievements.size(), 1u);
-    QCOMPARE(hints.size(), 1u);
-    QCOMPARE(killedMobs.size(), 7u);
+    QCOMPARE(achievements,
+             std::vector<QString>{QString{
+                 "You aided the hunter in the Tower Hills by cleaning out a rat infestation."}});
+
+    QCOMPARE(hints, std::vector<QString>{QString{"Type unlock hatch to unlatch the hatch."}});
+
+    QCOMPARE(killedMobs,
+             (std::vector<QString>{QString{"A husky smuggler"},
+                                   QString{"A wild bull (x)"},
+                                   QString{"A tree-snake"},
+                                   QString{"A spirit"},
+                                   QString{"*an Elf* (k)"},
+                                   QString{"*a Half-Elf*"},
+                                   QString{"*Gaer the Dúnadan Man*"}}));
 }
 
 QTEST_MAIN(TestAdventure)
