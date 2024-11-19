@@ -6,6 +6,7 @@
 #include "RoomMobs.h"
 
 #include "../configuration/configuration.h"
+#include "../global/thread_utils.h"
 
 #include <unordered_map>
 #include <vector>
@@ -17,7 +18,7 @@ RoomMobs::RoomMobs(QObject *const parent)
 void RoomMobs::updateModel(std::unordered_map<RoomMob::Id, SharedRoomMob> &mobsById,
                            std::vector<SharedRoomMob> &mobVector) const
 {
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     mobsById.clear();
     mobVector.clear();
@@ -34,13 +35,13 @@ void RoomMobs::updateModel(std::unordered_map<RoomMob::Id, SharedRoomMob> &mobsB
 
 bool RoomMobs::isIdPresent(const RoomMob::Id id) const
 {
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     return m_mobs.find(id) != m_mobs.end();
 }
 
 SharedRoomMob RoomMobs::getMobById(const RoomMob::Id id) const
 {
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     auto it = m_mobs.find(id);
     if (it != m_mobs.end()) {
         return it->second.mob;
@@ -50,7 +51,7 @@ SharedRoomMob RoomMobs::getMobById(const RoomMob::Id id) const
 
 void RoomMobs::resetMobs()
 {
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     m_mobs.clear();
     m_mobsByIndex.clear();
     m_nextIndex = 0;
@@ -67,7 +68,7 @@ void RoomMobs::addMob(RoomMobUpdate &&mob)
     // why is this return value ignored?
     std::ignore = newMob->updateFrom(std::move(mob));
 
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     const size_t index = m_nextIndex++;
     m_mobs.try_emplace(id, SharedRoomMobAndIndex{newMob, index});
     m_mobsByIndex.try_emplace(index, newMob);
@@ -75,7 +76,7 @@ void RoomMobs::addMob(RoomMobUpdate &&mob)
 
 bool RoomMobs::removeMobById(const RoomMob::Id id)
 {
-    QMutexLocker locker(&mutex);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     auto it = m_mobs.find(id);
     if (it == m_mobs.end()) {
         return false;

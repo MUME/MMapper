@@ -9,7 +9,6 @@
 #include <list>
 #include <string>
 
-#include <QMutex>
 #include <QObject>
 #include <QTimer>
 
@@ -42,14 +41,13 @@ class NODISCARD_QOBJECT CTimers final : public QObject
     Q_OBJECT
 
 private:
-    QMutex m_lock;
     std::list<TTimer> m_timers;
     std::list<TTimer> m_countdowns;
     QTimer m_timer;
 
 public:
-    NODISCARD std::string getTimers();
-    NODISCARD std::string getCountdowns();
+    NODISCARD std::string getTimers() const;
+    NODISCARD std::string getCountdowns() const;
 
 public:
     explicit CTimers(QObject *parent);
@@ -63,7 +61,7 @@ public:
     NODISCARD bool removeCountdown(const std::string &name);
 
     // for stat command representation
-    NODISCARD std::string getStatCommandEntry();
+    NODISCARD std::string getStatCommandEntry() const;
 
     void clear();
 

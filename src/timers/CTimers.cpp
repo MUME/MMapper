@@ -3,6 +3,7 @@
 
 #include "CTimers.h"
 
+#include "../global/thread_utils.h"
 #include "../global/utils.h"
 
 #include <chrono>
@@ -12,8 +13,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <QMutexLocker>
 
 namespace { // anonymous
 
@@ -67,13 +66,13 @@ CTimers::CTimers(QObject *const parent)
 
 void CTimers::addTimer(std::string name, std::string desc)
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     m_timers.emplace_back(std::move(name), std::move(desc));
 }
 
 bool CTimers::removeCountdown(const std::string &name)
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     return utils::listRemoveIf(m_countdowns, [&name](const TTimer &timer) -> bool {
         return timer.getName() == name;
     });
@@ -81,7 +80,7 @@ bool CTimers::removeCountdown(const std::string &name)
 
 bool CTimers::removeTimer(const std::string &name)
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     return utils::listRemoveIf(m_timers, [&name](const TTimer &timer) -> bool {
         return timer.getName() == name;
     });
@@ -89,7 +88,7 @@ bool CTimers::removeTimer(const std::string &name)
 
 void CTimers::addCountdown(std::string name, std::string desc, int64_t timeMs)
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     m_countdowns.emplace_back(std::move(name), std::move(desc), timeMs);
 
     // See if we need to restart the timer
@@ -108,7 +107,7 @@ void CTimers::addCountdown(std::string name, std::string desc, int64_t timeMs)
 
 void CTimers::slot_finishCountdownTimer()
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     static auto get_diff = [](const TTimer &t) -> int64_t { return t.durationMs() - t.elapsedMs(); };
 
@@ -151,9 +150,9 @@ void CTimers::slot_finishCountdownTimer()
     }
 }
 
-std::string CTimers::getTimers()
+std::string CTimers::getTimers() const
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     if (m_timers.empty()) {
         return "";
@@ -172,9 +171,9 @@ std::string CTimers::getTimers()
     return ostr.str();
 }
 
-std::string CTimers::getCountdowns()
+std::string CTimers::getCountdowns() const
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     if (m_countdowns.empty()) {
         return "";
@@ -194,14 +193,14 @@ std::string CTimers::getCountdowns()
     return ostr.str();
 }
 
-std::string CTimers::getStatCommandEntry()
+std::string CTimers::getStatCommandEntry() const
 {
     return getCountdowns() + getTimers();
 }
 
 void CTimers::clear()
 {
-    QMutexLocker locker(&m_lock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     m_countdowns.clear();
     m_timers.clear();

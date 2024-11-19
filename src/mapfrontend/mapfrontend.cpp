@@ -21,8 +21,6 @@
 #include <set>
 #include <utility>
 
-#include <QMutex>
-
 MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)
 {}

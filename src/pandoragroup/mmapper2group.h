@@ -14,7 +14,6 @@
 
 #include <QArgument>
 #include <QMap>
-#include <QMutex>
 #include <QObject>
 #include <QTimer>
 #include <QVariantMap>
@@ -45,7 +44,6 @@ private:
     QTimer m_affectTimer;
     QMap<CharacterAffectEnum, int64_t> m_affectLastSeen;
 
-    QRecursiveMutex m_networkLock;
     std::unique_ptr<GroupAuthority> m_authority;
     QPointer<CGroupCommunicator> m_network;
     std::unique_ptr<CGroup> m_group;

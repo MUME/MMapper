@@ -9,6 +9,7 @@
 #include "../global/AnsiTextUtils.h"
 #include "../global/MakeQPointer.h"
 #include "../global/PrintUtils.h"
+#include "../global/thread_utils.h"
 #include "../parser/CommandQueue.h"
 #include "../proxy/GmcpMessage.h"
 #include "CGroup.h"
@@ -25,7 +26,6 @@
 #include <QColor>
 #include <QDateTime>
 #include <QMessageLogContext>
-#include <QMutex>
 #include <QThread>
 #include <QVariantMap>
 #include <QtCore>
@@ -110,6 +110,7 @@ void Mmapper2Group::init()
 void Mmapper2Group::stop()
 {
     assert(QThread::currentThread() == QObject::thread());
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     m_affectTimer.stop();
     slot_stopNetwork();
     ++m_calledStopInternal;
@@ -125,7 +126,7 @@ void Mmapper2Group::slot_characterChanged(bool updateCanvas)
 
 void Mmapper2Group::slot_updateSelf()
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_group == nullptr) {
         return;
     }
@@ -154,7 +155,7 @@ void Mmapper2Group::slot_updateSelf()
 
 void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_group == nullptr) {
         return;
     }
@@ -187,7 +188,7 @@ void Mmapper2Group::issueLocalCharUpdate()
 {
     emit sig_updateWidget();
 
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_group == nullptr || getMode() == GroupManagerStateEnum::Off) {
         return;
     }
@@ -239,7 +240,7 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
 
 void Mmapper2Group::kickCharacter(const QByteArray &character)
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     switch (getMode()) {
     case GroupManagerStateEnum::Off:
@@ -260,7 +261,7 @@ void Mmapper2Group::kickCharacter(const QByteArray &character)
 
 void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_network == nullptr) {
         throw std::runtime_error("network is down");
     }
@@ -521,7 +522,7 @@ void Mmapper2Group::slot_setPath(CommandQueue dirs)
 
 void Mmapper2Group::slot_reset()
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     // Reset prompt
     m_lastPrompt.reset();
@@ -622,7 +623,7 @@ void Mmapper2Group::renameCharacter(QByteArray newname)
             newname = fallback;
     }
     if (oldname != newname) {
-        QMutexLocker locker(&m_networkLock);
+        ABORT_IF_NOT_ON_MAIN_THREAD();
 
         // Inform the server that we're renaming ourselves
         if (m_network != nullptr) {
@@ -640,13 +641,13 @@ void Mmapper2Group::slot_sendLog(const QString &text)
 
 GroupManagerStateEnum Mmapper2Group::getMode()
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     return m_network != nullptr ? m_network->getMode() : GroupManagerStateEnum::Off;
 }
 
 void Mmapper2Group::slot_startNetwork()
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     auto &network = m_network;
     if (network == nullptr) {
@@ -718,7 +719,7 @@ void Mmapper2Group::slot_startNetwork()
 
 void Mmapper2Group::slot_stopNetwork()
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_network != nullptr) {
         m_network->stop();
         qDebug() << "Network down";
@@ -727,7 +728,7 @@ void Mmapper2Group::slot_stopNetwork()
 
 void Mmapper2Group::slot_setMode(const GroupManagerStateEnum newMode)
 {
-    QMutexLocker locker(&m_networkLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     Mmapper2Group::setConfigState(newMode); // Ensure config matches reality
 

@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include <QMutex>
 #include <QObject>
 #include <QtCore>
 
@@ -27,9 +26,6 @@ private:
         SharedRoomMob mob;
         size_t index = 0;
     };
-
-    // TODO: eliminate this
-    mutable QRecursiveMutex mutex;
 
     // mobs ordered by ID
     std::unordered_map<RoomMob::Id, SharedRoomMobAndIndex> m_mobs;

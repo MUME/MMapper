@@ -6,6 +6,7 @@
 #include "CGroup.h"
 
 #include "../configuration/configuration.h"
+#include "../global/thread_utils.h"
 #include "../map/roomid.h"
 #include "CGroupChar.h"
 #include "groupaction.h"
@@ -16,7 +17,6 @@
 
 #include <QByteArray>
 #include <QMessageLogContext>
-#include <QMutex>
 #include <QObject>
 #include <QVariantMap>
 
@@ -39,7 +39,7 @@ CGroup::CGroup(QObject *const parent)
  */
 void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     deref(action).schedule(this);
     m_actionSchedule.emplace(std::move(action));
     if (m_locks.empty()) {
@@ -58,7 +58,7 @@ void CGroup::executeActions()
 void CGroup::virt_releaseCharacters(GroupRecipient *const sender)
 {
     std::ignore = deref(sender);
-    QMutexLocker lock(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     m_locks.erase(sender);
     if (m_locks.empty()) {
         executeActions();
@@ -67,7 +67,7 @@ void CGroup::virt_releaseCharacters(GroupRecipient *const sender)
 
 std::unique_ptr<GroupSelection> CGroup::selectAll()
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     auto selection = std::make_unique<GroupSelection>(this);
     m_locks.insert(selection.get());
     selection->receiveCharacters(this, m_charIndex);
@@ -76,7 +76,7 @@ std::unique_ptr<GroupSelection> CGroup::selectAll()
 
 std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     auto selection = std::make_unique<GroupSelection>(this);
     m_locks.insert(selection.get());
     const SharedGroupChar ch = getCharByName(name);
@@ -92,7 +92,7 @@ std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 
 void CGroup::resetChars()
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     log("You have left the group.");
 
@@ -110,7 +110,7 @@ void CGroup::resetChars()
 
 void CGroup::addChar(const QVariantMap &map)
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     auto newChar = CGroupChar::alloc();
     std::ignore = newChar->updateFromVariantMap(map); // why is the return value ignored?
 
@@ -127,7 +127,7 @@ void CGroup::addChar(const QVariantMap &map)
 
 void CGroup::removeChar(const QByteArray &name)
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (name == getConfig().groupManager.charName) {
         log("You cannot delete yourself from the group.");
         return;
@@ -146,7 +146,7 @@ void CGroup::removeChar(const QByteArray &name)
 
 bool CGroup::isNamePresent(const QByteArray &name) const
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
 
     const QString nameStr = name.simplified();
     for (const auto &character : m_charIndex) {
@@ -160,7 +160,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
 
 SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     for (const auto &character : m_charIndex) {
         if (character->getName() == name) {
             return character;
@@ -190,7 +190,7 @@ void CGroup::updateChar(const QVariantMap &map)
 
 void CGroup::renameChar(const QVariantMap &map)
 {
-    QMutexLocker locker(&m_characterLock);
+    ABORT_IF_NOT_ON_MAIN_THREAD();
     if (!map.contains("oldname") && map["oldname"].canConvert(QMetaType::QString)) {
         qWarning() << "'oldname' element not found" << map;
         return;
