@@ -87,9 +87,7 @@ public:
     RoomMob() = delete;
     explicit RoomMob(this_is_private);
     virtual ~RoomMob();
-    DELETE_CTORS(RoomMob);
-    DELETE_COPY_ASSIGN_OP(RoomMob);
-    DEFAULT_MOVE_ASSIGN_OP(RoomMob);
+    DELETE_CTORS_AND_ASSIGN_OPS(RoomMob);
 
 public:
     static SharedRoomMob alloc();
