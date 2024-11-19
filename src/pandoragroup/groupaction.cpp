@@ -18,13 +18,12 @@ GroupAction::~GroupAction() = default;
  * @param Variant map representing the character
  */
 AddCharacter::AddCharacter(const QVariantMap &map)
-    : map(map)
+    : m_map{map}
 {}
 
 void AddCharacter::virt_exec()
 {
-    assert(group);
-    group->addChar(map);
+    deref(m_group).addChar(m_map);
 }
 
 /**
@@ -40,13 +39,12 @@ RemoveCharacter::RemoveCharacter(const QVariantMap &map)
  * @param name of the character to delete
  */
 RemoveCharacter::RemoveCharacter(QByteArray name)
-    : name(std::move(name))
+    : m_name{std::move(name)}
 {}
 
 void RemoveCharacter::virt_exec()
 {
-    assert(group);
-    group->removeChar(name);
+    deref(m_group).removeChar(m_name);
 }
 
 /**
@@ -54,13 +52,12 @@ void RemoveCharacter::virt_exec()
  * @param Variant map with which to update the character with
  */
 UpdateCharacter::UpdateCharacter(const QVariantMap &map)
-    : map(map)
+    : m_map{map}
 {}
 
 void UpdateCharacter::virt_exec()
 {
-    assert(group);
-    group->updateChar(map);
+    deref(m_group).updateChar(m_map);
 }
 
 /**
@@ -68,13 +65,12 @@ void UpdateCharacter::virt_exec()
  * @param Variant map with the new name of the character
  */
 RenameCharacter::RenameCharacter(const QVariantMap &map)
-    : map(map)
+    : m_map{map}
 {}
 
 void RenameCharacter::virt_exec()
 {
-    assert(group);
-    group->renameChar(map);
+    deref(m_group).renameChar(m_map);
 }
 
 /**
@@ -84,6 +80,5 @@ ResetCharacters::ResetCharacters() = default;
 
 void ResetCharacters::virt_exec()
 {
-    assert(group);
-    group->resetChars();
+    deref(m_group).resetChars();
 }

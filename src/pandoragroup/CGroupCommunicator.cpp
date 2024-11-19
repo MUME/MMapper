@@ -27,8 +27,8 @@ using MessagesEnum = CGroupCommunicator::MessagesEnum;
 constexpr const bool LOG_MESSAGE_INFO = false;
 
 CGroupCommunicator::CGroupCommunicator(const GroupManagerStateEnum mode, Mmapper2Group *const parent)
-    : QObject(parent)
-    , mode(mode)
+    : QObject{parent}
+    , m_mode{mode}
 {}
 
 //

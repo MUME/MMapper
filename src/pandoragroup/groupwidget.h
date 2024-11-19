@@ -23,6 +23,13 @@ class QTableView;
 
 class NODISCARD GroupStateData final
 {
+private:
+    QColor m_color;
+    CharacterPositionEnum m_position = CharacterPositionEnum::UNDEFINED;
+    CharacterAffectFlags m_affects;
+    int m_count = 0;
+    int m_height = 23;
+
 public:
     GroupStateData() = default;
     explicit GroupStateData(const QColor &color,
@@ -30,15 +37,9 @@ public:
                             CharacterAffectFlags affects);
 
 public:
-    void paint(QPainter *painter, const QRect &rect);
-    NODISCARD int getWidth() const { return count * height; }
-
-private:
-    QColor color;
-    CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
-    CharacterAffectFlags affects;
-    int count = 0;
-    int height = 23;
+    void paint(QPainter *pPainter, const QRect &rect);
+    // Shouldn't this be "getArea()"?
+    NODISCARD int getWidth() const { return m_count * m_height; }
 };
 Q_DECLARE_METATYPE(GroupStateData)
 
@@ -60,6 +61,11 @@ public:
 class GroupModel final : public QAbstractTableModel
 {
     Q_OBJECT
+
+private:
+    MapData *m_map = nullptr;
+    Mmapper2Group *m_group = nullptr;
+    bool m_mapLoaded = false;
 
 public:
     enum class NODISCARD ColumnTypeEnum {
@@ -89,16 +95,21 @@ public:
     NODISCARD Qt::ItemFlags flags(const QModelIndex &parent) const override;
 
     void setMapLoaded(const bool val) { m_mapLoaded = val; }
-
-private:
-    MapData *m_map = nullptr;
-    Mmapper2Group *m_group = nullptr;
-    bool m_mapLoaded = false;
 };
 
 class GroupWidget final : public QWidget
 {
     Q_OBJECT
+
+private:
+    QTableView *m_table = nullptr;
+    Mmapper2Group *m_group = nullptr;
+    MapData *m_map = nullptr;
+    GroupModel m_model;
+
+private:
+    QAction *m_kick = nullptr;
+    QByteArray selectedCharacter;
 
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
@@ -117,14 +128,4 @@ signals:
 private:
     void readSettings();
     void writeSettings();
-
-private:
-    QTableView *m_table = nullptr;
-    Mmapper2Group *m_group = nullptr;
-    MapData *m_map = nullptr;
-    GroupModel m_model;
-
-private:
-    QAction *m_kick = nullptr;
-    QByteArray selectedCharacter;
 };

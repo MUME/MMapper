@@ -33,7 +33,7 @@ private:
                                          OptValue optResult);
 
 private:
-    MatchResult(ParserInput matched, ParserInput unmatched, OptValue optResult);
+    MatchResult(ParserInput matched_, ParserInput unmatched_, OptValue optResult);
 
 public:
     NODISCARD explicit operator bool() const { return is_success; }

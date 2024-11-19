@@ -134,8 +134,8 @@ private:
     bool m_failed = false;
 
 public:
-    explicit HelpFrame(std::ostream &os)
-        : os(os)
+    explicit HelpFrame(std::ostream &os_)
+        : os{os_}
     {}
     DEFAULT_COPY_CTOR(HelpFrame);
     // TODO: change this to DELETE_MOVE_CTOR (compiler bug: g++ 7.4 uses move ctor in NRVO).
@@ -267,11 +267,11 @@ HelpFrame HelpFrame::makeChild()
 class NODISCARD TreeParser::HelpCommon final
 {
 protected:
-    const bool isFull = true;
+    const bool m_isFull = true;
 
 public:
-    explicit HelpCommon(bool isFull)
-        : isFull(isFull)
+    explicit HelpCommon(const bool isFull)
+        : m_isFull(isFull)
     {}
 
 public:
@@ -377,7 +377,7 @@ ParseResult TreeParser::HelpCommon::syntaxRecurseNext(const Sublist &node,
                                                       const ParserInput &input,
                                                       HelpFrame &frame)
 {
-    if (!isFull)
+    if (!m_isFull)
         if (frame.getFailed()) {
             if (!node.hasNextNode() || node.getNext())
                 frame.addHelp("...");

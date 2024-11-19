@@ -5,9 +5,9 @@
 
 namespace syntax {
 
-MatchResult::MatchResult(ParserInput matched, ParserInput unmatched, OptValue optResult)
-    : matched(std::move(matched))
-    , unmatched(std::move(unmatched))
+MatchResult::MatchResult(ParserInput matched_, ParserInput unmatched_, OptValue optResult)
+    : matched(std::move(matched_))
+    , unmatched(std::move(unmatched_))
     , optValue(std::move(optResult))
 {}
 

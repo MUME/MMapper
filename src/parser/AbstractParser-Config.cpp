@@ -91,16 +91,16 @@ std::ostream &ArgHexColor::virt_to_stream(std::ostream &os) const
 class NODISCARD BoolAlpha final
 {
 private:
-    bool value = false;
+    bool m_value = false;
 
 public:
-    explicit BoolAlpha(bool value)
-        : value(value)
+    explicit BoolAlpha(const bool value)
+        : m_value{value}
     {}
 
     friend std::ostream &operator<<(std::ostream &os, const BoolAlpha &x)
     {
-        return os << (x.value ? "true" : "false");
+        return os << (x.m_value ? "true" : "false");
     }
 };
 

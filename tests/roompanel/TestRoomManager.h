@@ -9,6 +9,10 @@
 class TestRoomManager final : public QObject
 {
     Q_OBJECT
+
+private:
+    RoomManager &m_manager;
+
 public:
     explicit TestRoomManager(RoomManager &manager);
     ~TestRoomManager() final;
@@ -21,7 +25,4 @@ private Q_SLOTS:
     void testParseGmcpAddValidMessage();
     void testParseGmcpInvalidMessage();
     void testParseGmcpUpdateValidMessage();
-
-private:
-    RoomManager &manager;
 };

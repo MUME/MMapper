@@ -106,13 +106,13 @@ AutoSelectTextCodec::~AutoSelectTextCodec() = default;
 class NODISCARD ForcedTextCodec final : public TextCodec::Pimpl
 {
 private:
-    const CharacterEncodingEnum encoding;
-    const std::string_view name;
+    const CharacterEncodingEnum m_encoding;
+    const std::string_view m_name;
 
 public:
     ForcedTextCodec(const CharacterEncodingEnum encoding, const std::string_view name)
-        : encoding(encoding)
-        , name(name)
+        : m_encoding{encoding}
+        , m_name{name}
     {}
     ~ForcedTextCodec() final;
 
@@ -126,13 +126,13 @@ private:
     }
 
 private:
-    NODISCARD CharacterEncodingEnum virt_getEncoding() const final { return encoding; }
+    NODISCARD CharacterEncodingEnum virt_getEncoding() const final { return m_encoding; }
     NODISCARD bool virt_supports(const std::string_view sv) const final
     {
-        return name == ::toUpperLatin1(sv);
+        return m_name == ::toUpperLatin1(sv);
     }
-    NODISCARD std::list<std::string_view> virt_supportedEncodings() const final { return {name}; }
-    NODISCARD std::string_view virt_getName() const final { return name; }
+    NODISCARD std::list<std::string_view> virt_supportedEncodings() const final { return {m_name}; }
+    NODISCARD std::string_view virt_getName() const final { return m_name; }
 };
 
 ForcedTextCodec::~ForcedTextCodec() = default;

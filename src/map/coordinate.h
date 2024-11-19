@@ -19,9 +19,9 @@ public:
 
 public:
     Coordinate2i() = default;
-    explicit Coordinate2i(const int x, const int y)
-        : x{x}
-        , y{y}
+    explicit Coordinate2i(const int x_, const int y_)
+        : x{x_}
+        , y{y_}
     {}
     explicit Coordinate2i(const glm::ivec2 &rhs)
         : x{rhs.x}
@@ -60,9 +60,9 @@ public:
 
 public:
     Coordinate2f() = default;
-    explicit Coordinate2f(const float x, const float y)
-        : x{x}
-        , y{y}
+    explicit Coordinate2f(const float x_, const float y_)
+        : x{x_}
+        , y{y_}
     {}
 
     NODISCARD Coordinate2i truncate() const;

@@ -10,12 +10,12 @@
 struct NODISCARD User
 {
 private:
-    std::ostream &os;
+    std::ostream &m_os;
 
 public:
     explicit User(std::ostream &os)
-        : os(os)
+        : m_os{os}
     {}
 
-    NODISCARD std::ostream &getOstream() const { return os; }
+    NODISCARD std::ostream &getOstream() const { return m_os; }
 };

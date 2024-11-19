@@ -190,15 +190,18 @@ void InfoMarksEditDlg::updateMarkers()
 
 void InfoMarksEditDlg::updateDialog()
 {
-    struct NODISCARD DisconnectReconnectAntiPattern final
+    class NODISCARD DisconnectReconnectAntiPattern final
     {
-        InfoMarksEditDlg &self;
+    private:
+        InfoMarksEditDlg &m_self;
+
+    public:
         explicit DisconnectReconnectAntiPattern(InfoMarksEditDlg &self)
-            : self{self}
+            : m_self{self}
         {
-            self.disconnectAll();
+            m_self.disconnectAll();
         }
-        ~DisconnectReconnectAntiPattern() { self.connectAll(); }
+        ~DisconnectReconnectAntiPattern() { m_self.connectAll(); }
     } antiPattern{*this};
 
     InfoMark *const im = getCurrentInfoMark();

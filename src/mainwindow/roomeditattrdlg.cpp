@@ -566,17 +566,20 @@ void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
 
 void RoomEditAttrDlg::updateDialog(const Room *r)
 {
-    struct NODISCARD DisconnectReconnectAntiPattern final
+    class NODISCARD DisconnectReconnectAntiPattern final
     {
-        RoomEditAttrDlg &self;
-        SignalBlocker signalBlocker;
+    private:
+        RoomEditAttrDlg &m_self;
+        SignalBlocker m_signalBlocker;
+
+    public:
         explicit DisconnectReconnectAntiPattern(RoomEditAttrDlg &self)
-            : self{self}
-            , signalBlocker{self}
+            : m_self{self}
+            , m_signalBlocker{self}
         {
-            self.disconnectAll();
+            m_self.disconnectAll();
         }
-        ~DisconnectReconnectAntiPattern() { self.connectAll(); }
+        ~DisconnectReconnectAntiPattern() { m_self.connectAll(); }
     } antiPattern{*this};
 
     if (r == nullptr) {

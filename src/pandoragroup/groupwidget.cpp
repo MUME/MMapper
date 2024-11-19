@@ -31,36 +31,37 @@ static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum:
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
                                const CharacterAffectFlags affects)
-    : color(std::move(color))
-    , position(position)
-    , affects(affects)
+    : m_color(std::move(color))
+    , m_position(position)
+    , m_affects(affects)
 {
     if (position != CharacterPositionEnum::UNDEFINED)
-        count++;
+        ++m_count;
     // Increment imageCount for each active affect
     for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect))
-            count++;
+            ++m_count;
     }
     // Users spam search/reveal/flush so pad an extra position to reduce eye strain
     if (!affects.contains(CharacterAffectEnum::SEARCH))
-        count++;
+        ++m_count;
 }
 
-void GroupStateData::paint(QPainter *const painter, const QRect &rect)
+void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
 {
-    painter->fillRect(rect, color);
+    auto &painter = deref(pPainter);
+    painter.fillRect(rect, m_color);
 
-    painter->save();
-    painter->translate(rect.x(), rect.y());
-    height = rect.height();
-    painter->scale(height, height); // Images are squares
+    painter.save();
+    painter.translate(rect.x(), rect.y());
+    m_height = rect.height();
+    painter.scale(m_height, m_height); // Images are squares
 
     // REVISIT: Build images ahead of time
 
-    const bool invert = mmqt::textColor(color) == Qt::white;
+    const bool invert = mmqt::textColor(m_color) == Qt::white;
 
-    const auto drawOne = [painter, invert](auto &&filename) -> void {
+    const auto drawOne = [&painter, invert](auto &&filename) -> void {
         const auto getImage = [invert](auto &filename) {
             QImage image{filename};
             if (invert)
@@ -68,18 +69,18 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
             return image;
         };
 
-        painter->drawImage(QRect{0, 0, 1, 1}, getImage(filename));
-        painter->translate(1, 0);
+        painter.drawImage(QRect{0, 0, 1, 1}, getImage(filename));
+        painter.translate(1, 0);
     };
 
-    if (position != CharacterPositionEnum::UNDEFINED)
-        drawOne(getIconFilename(position));
+    if (m_position != CharacterPositionEnum::UNDEFINED)
+        drawOne(getIconFilename(m_position));
     for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-        if (affects.contains(affect)) {
+        if (m_affects.contains(affect)) {
             drawOne(getIconFilename(affect));
         }
     }
-    painter->restore();
+    painter.restore();
 }
 
 GroupDelegate::GroupDelegate(QObject *parent)

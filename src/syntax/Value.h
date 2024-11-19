@@ -126,9 +126,9 @@ public:
     const Pair *cdr = nullptr;
 
 public:
-    Pair(Value car, const Pair *const cdr)
-        : car(std::move(car))
-        , cdr(cdr)
+    Pair(Value car_, const Pair *const cdr_)
+        : car{std::move(car_)}
+        , cdr{cdr_}
     {}
 
 public:

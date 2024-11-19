@@ -72,7 +72,7 @@ public:
     int minute = 0;
 
 public:
-    explicit MumeMoment(int year, int month, int day, int hour, int minute);
+    explicit MumeMoment(int y, int mon, int d, int h, int min);
     NODISCARD static MumeMoment sinceMumeEpoch(int64_t secsSinceMumeStartEpoch);
 
     NODISCARD int dayOfYear() const;

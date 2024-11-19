@@ -7,6 +7,8 @@
 
 #include "../global/macros.h"
 
+#include <memory>
+
 #include <QDialog>
 
 namespace Ui {
@@ -21,8 +23,8 @@ public:
     NODISCARD static QString getColor(const QString &ansiString, QWidget *parent);
 
 private:
-    QString ansiString;
-    Ui::AnsiColorDialog *const ui;
+    QString m_ansiString;
+    const std::unique_ptr<Ui::AnsiColorDialog> m_ui;
 
 public:
     explicit AnsiColorDialog(const QString &ansiString, QWidget *parent);
@@ -30,7 +32,7 @@ public:
     ~AnsiColorDialog() final;
 
 public:
-    NODISCARD QString getAnsiString() const { return ansiString; }
+    NODISCARD QString getAnsiString() const { return m_ansiString; }
 
 private:
     void ansiComboChange();

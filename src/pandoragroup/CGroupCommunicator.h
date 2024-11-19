@@ -24,6 +24,10 @@ class GroupAuthority;
 class CGroupCommunicator : public QObject
 {
     Q_OBJECT
+
+private:
+    GroupManagerStateEnum m_mode = GroupManagerStateEnum::Off;
+
 public:
     explicit CGroupCommunicator(GroupManagerStateEnum mode, Mmapper2Group *parent);
 
@@ -48,7 +52,7 @@ public:
         RENAME_CHAR
     };
 
-    NODISCARD GroupManagerStateEnum getMode() const { return mode; }
+    NODISCARD GroupManagerStateEnum getMode() const { return m_mode; }
 
 private:
     virtual void virt_stop() = 0;
@@ -103,7 +107,4 @@ signals:
     void sig_scheduleAction(std::shared_ptr<GroupAction> action);
     void sig_gTellArrived(QVariantMap node);
     void sig_sendLog(const QString &);
-
-private:
-    GroupManagerStateEnum mode = GroupManagerStateEnum::Off;
 };

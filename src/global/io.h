@@ -97,21 +97,21 @@ public:
 class NODISCARD ErrorNumberMessage final
 {
 private:
-    char buf[1024 - sizeof(const char *) - sizeof(int)]{};
-    int error_number = 0;
-    const char *str = nullptr;
+    char m_buf[1024 - sizeof(const char *) - sizeof(int)]{};
+    int m_error_number = 0;
+    const char *m_str = nullptr;
 
 public:
     ErrorNumberMessage() = default;
     explicit ErrorNumberMessage(int error_number) noexcept;
 
 public:
-    explicit operator bool() const { return str != nullptr; }
-    explicit operator const char *() const { return str; }
+    explicit operator bool() const { return m_str != nullptr; }
+    explicit operator const char *() const { return m_str; }
 
 public:
-    NODISCARD const char *getErrorMessage() const { return str; }
-    NODISCARD int getErrorNumber() const { return error_number; }
+    NODISCARD const char *getErrorMessage() const { return m_str; }
+    NODISCARD int getErrorNumber() const { return m_error_number; }
 };
 static_assert(sizeof(ErrorNumberMessage) == 1024);
 

@@ -12,13 +12,14 @@
 
 AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
     : QDialog(parent)
-    , ansiString{ansiString}
-    , ui(new Ui::AnsiColorDialog)
+    , m_ansiString{ansiString}
+    , m_ui(new Ui::AnsiColorDialog)
 {
-    ui->setupUi(this);
+    auto &ui = deref(m_ui);
+    ui.setupUi(this);
 
-    AnsiCombo *const bg = ui->backgroundAnsiCombo;
-    AnsiCombo *const fg = ui->foregroundAnsiCombo;
+    AnsiCombo *const bg = ui.backgroundAnsiCombo;
+    AnsiCombo *const fg = ui.foregroundAnsiCombo;
 
     bg->initColours(AnsiColor16LocationEnum::Background);
     fg->initColours(AnsiColor16LocationEnum::Foreground);
@@ -43,9 +44,9 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
 
     connectCombo(bg);
     connectCombo(fg);
-    connectCheckBox(ui->boldCheckBox);
-    connectCheckBox(ui->italicCheckBox);
-    connectCheckBox(ui->underlineCheckBox);
+    connectCheckBox(ui.boldCheckBox);
+    connectCheckBox(ui.italicCheckBox);
+    connectCheckBox(ui.underlineCheckBox);
 }
 
 AnsiColorDialog::AnsiColorDialog(QWidget *parent)
@@ -60,10 +61,7 @@ QString AnsiColorDialog::getColor(const QString &ansiColor, QWidget *parent)
     return ansiColor;
 }
 
-AnsiColorDialog::~AnsiColorDialog()
-{
-    delete ui;
-}
+AnsiColorDialog::~AnsiColorDialog() = default;
 
 void AnsiColorDialog::slot_ansiComboChange()
 {
@@ -80,19 +78,20 @@ void AnsiColorDialog::ansiComboChange()
 
 void AnsiColorDialog::slot_updateColors()
 {
-    AnsiCombo::makeWidgetColoured(ui->exampleLabel, ansiString, false);
+    auto &ui = deref(m_ui);
+    AnsiCombo::makeWidgetColoured(ui.exampleLabel, m_ansiString, false);
 
-    AnsiCombo::AnsiColor color = AnsiCombo::colorFromString(ansiString);
+    AnsiCombo::AnsiColor color = AnsiCombo::colorFromString(m_ansiString);
 
-    ui->boldCheckBox->setChecked(color.bold);
-    ui->italicCheckBox->setChecked(color.italic);
-    ui->underlineCheckBox->setChecked(color.underline);
+    ui.boldCheckBox->setChecked(color.bold);
+    ui.italicCheckBox->setChecked(color.italic);
+    ui.underlineCheckBox->setChecked(color.underline);
 
-    QString toolTipString = ansiString.isEmpty() ? "[0m" : ansiString;
-    ui->exampleLabel->setToolTip(toolTipString);
+    QString toolTipString = m_ansiString.isEmpty() ? "[0m" : m_ansiString;
+    ui.exampleLabel->setToolTip(toolTipString);
 
-    ui->backgroundAnsiCombo->setAnsiCode(color.bg);
-    ui->foregroundAnsiCombo->setAnsiCode(color.fg);
+    ui.backgroundAnsiCombo->setAnsiCode(color.bg);
+    ui.foregroundAnsiCombo->setAnsiCode(color.fg);
 }
 
 void AnsiColorDialog::slot_generateNewAnsiColor()
@@ -128,12 +127,13 @@ void AnsiColorDialog::slot_generateNewAnsiColor()
         return mmqt::toQStringLatin1(sv);
     };
 
-    ansiString = getColor(ui->foregroundAnsiCombo,
-                          ui->backgroundAnsiCombo,
-                          ui->boldCheckBox,
-                          ui->italicCheckBox,
-                          ui->underlineCheckBox);
+    auto &ui = deref(m_ui);
+    m_ansiString = getColor(ui.foregroundAnsiCombo,
+                            ui.backgroundAnsiCombo,
+                            ui.boldCheckBox,
+                            ui.italicCheckBox,
+                            ui.underlineCheckBox);
 
     if (false)
-        MMLOG() << "new ansi string " << mmqt::toStdStringLatin1(ansiString);
+        MMLOG() << "new ansi string " << mmqt::toStdStringLatin1(m_ansiString);
 }

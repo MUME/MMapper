@@ -85,6 +85,9 @@ public:
 
 class NODISCARD LineHighlighter final : public QSyntaxHighlighter
 {
+private:
+    const int m_maxLength;
+
 public:
     explicit LineHighlighter(int maxLength, QTextDocument *parent);
     ~LineHighlighter() final;
@@ -126,7 +129,7 @@ public:
 
     void highlightOverflow(const QString &line)
     {
-        const int breakPos = (mmqt::measureTabAndAnsiAware(line) <= maxLength) ? -1 : maxLength;
+        const int breakPos = (mmqt::measureTabAndAnsiAware(line) <= m_maxLength) ? -1 : m_maxLength;
         if (breakPos < 0) {
             return;
         }
@@ -272,14 +275,11 @@ public:
             ++pos;
         }
     }
-
-private:
-    const int maxLength;
 };
 
-LineHighlighter::LineHighlighter(int maxLength, QTextDocument *const parent)
+LineHighlighter::LineHighlighter(const int maxLength, QTextDocument *const parent)
     : QSyntaxHighlighter(parent)
-    , maxLength(maxLength)
+    , m_maxLength{maxLength}
 {}
 
 LineHighlighter::~LineHighlighter() = default;

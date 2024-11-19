@@ -24,10 +24,10 @@ enum class NODISCARD ReasonEnum {
 struct NODISCARD UnquoteException final : public std::runtime_error
 {
     const ReasonEnum reason;
-    explicit UnquoteException(const ReasonEnum reason) noexcept(
+    explicit UnquoteException(const ReasonEnum reason_) noexcept(
         noexcept(std::runtime_error("UnquoteException")))
         : std::runtime_error("UnquoteException")
-        , reason{reason}
+        , reason{reason_}
     {}
     ~UnquoteException() final;
 };

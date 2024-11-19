@@ -32,13 +32,13 @@ public:
 class NODISCARD StartsWithAction : public IAction
 {
 private:
-    const std::string match;
-    const ActionCallback callback;
+    const std::string m_match;
+    const ActionCallback m_callback;
 
 public:
     explicit StartsWithAction(std::string moved_str, const ActionCallback &callback)
-        : match{std::move(moved_str)}
-        , callback{callback}
+        : m_match{std::move(moved_str)}
+        , m_callback{callback}
     {}
 
 private:
@@ -48,13 +48,13 @@ private:
 class NODISCARD EndsWithAction : public IAction
 {
 private:
-    const std::string match;
-    const ActionCallback callback;
+    const std::string m_match;
+    const ActionCallback m_callback;
 
 public:
     explicit EndsWithAction(std::string moved_str, const ActionCallback &callback)
-        : match{std::move(moved_str)}
-        , callback{callback}
+        : m_match{std::move(moved_str)}
+        , m_callback{callback}
     {}
 
 private:
@@ -64,8 +64,8 @@ private:
 class NODISCARD RegexAction : public IAction
 {
 private:
-    const std::regex regex;
-    const ActionCallback callback;
+    const std::regex m_regex;
+    const ActionCallback m_callback;
 
 public:
     explicit RegexAction(const std::string &pattern, const ActionCallback &callback);

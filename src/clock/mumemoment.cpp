@@ -28,13 +28,12 @@ static void maybe_warn_if_not_clamped(
     warned = true;
 }
 
-MumeMoment::MumeMoment(
-    const int year, const int month, const int day, const int hour, const int minute)
-    : year{year}
-    , month{month}
-    , day{day}
-    , hour{hour}
-    , minute{minute}
+MumeMoment::MumeMoment(const int y, const int mon, const int d, const int h, const int min)
+    : year{y}
+    , month{mon}
+    , day{d}
+    , hour{h}
+    , minute{min}
 {
     static thread_local bool year_warned = false, month_warned = false, day_warned = false,
                              hour_warned = false, minute_warned = false;

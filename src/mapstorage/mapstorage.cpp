@@ -135,11 +135,11 @@ void MapStorage::newData()
 class NODISCARD LoadRoomHelper final
 {
 private:
-    QDataStream &stream;
+    QDataStream &m_stream;
 
 public:
     explicit LoadRoomHelper(QDataStream &stream)
-        : stream{stream}
+        : m_stream{stream}
     {
         check_status();
     }
@@ -147,7 +147,7 @@ public:
 public:
     void check_status()
     {
-        switch (stream.status()) {
+        switch (m_stream.status()) {
         case QDataStream::Ok:
             break;
         case QDataStream::ReadPastEnd:
@@ -165,7 +165,7 @@ public:
     NODISCARD auto read_u8()
     {
         uint8_t result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }
@@ -173,7 +173,7 @@ public:
     NODISCARD auto read_u16()
     {
         uint16_t result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }
@@ -181,14 +181,14 @@ public:
     NODISCARD auto read_u32()
     {
         uint32_t result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }
     NODISCARD auto read_i32()
     {
         int32_t result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }
@@ -196,7 +196,7 @@ public:
     NODISCARD auto read_string()
     {
         QString result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }
@@ -204,7 +204,7 @@ public:
     NODISCARD auto read_datetime()
     {
         QDateTime result;
-        stream >> result;
+        m_stream >> result;
         check_status();
         return result;
     }

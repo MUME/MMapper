@@ -30,17 +30,17 @@ private:
     int m_value = 0;
 
 private:
-    explicit FixedPoint(const int min, const int max, const int defaultValue, const int value)
-        : min(min)
-        , max(max)
-        , defaultValue(defaultValue)
-        , m_value{std::clamp(value, min, max)}
+    explicit FixedPoint(const int min_, const int max_, const int defaultValue_, const int value)
+        : min{min_}
+        , max{max_}
+        , defaultValue{defaultValue_}
+        , m_value{std::clamp(value, min_, max_)}
     {
         // set(value);
         static_assert(0 <= digits && digits < 6);
-        if (min > max)
+        if (min_ > max_)
             throw std::invalid_argument("min/max");
-        if (defaultValue < min || defaultValue > max)
+        if (defaultValue_ < min_ || defaultValue_ > max_)
             throw std::invalid_argument("defaultValue");
     }
 

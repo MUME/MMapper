@@ -26,17 +26,17 @@
 namespace io {
 
 ErrorNumberMessage::ErrorNumberMessage(const int error_number) noexcept
-    : error_number{error_number}
+    : m_error_number{error_number}
 {
 #ifdef Q_OS_WIN
     /* nop */
 #elif defined(__GLIBC__)
     /* GNU/Linux version can return a pointer to a static string */
-    str = ::strerror_r(error_number, buf, sizeof(buf));
+    m_str = ::strerror_r(error_number, m_buf, sizeof(m_buf));
 #else
     /* XSI-compliant/BSD version version returns 0 on success */
-    if (::strerror_r(error_number, buf, sizeof(buf)) == 0) {
-        str = buf;
+    if (::strerror_r(m_error_number, m_buf, sizeof(m_buf)) == 0) {
+        m_str = m_buf;
     }
 #endif
 }

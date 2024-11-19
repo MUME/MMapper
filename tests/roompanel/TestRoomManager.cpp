@@ -9,7 +9,7 @@
 #include <QtTest>
 
 TestRoomManager::TestRoomManager(RoomManager &manager)
-    : manager(manager)
+    : m_manager{manager}
 {}
 
 TestRoomManager::~TestRoomManager() = default;
@@ -29,6 +29,7 @@ static QJsonObject gmcpRoomCharsAddObj = {{"desc",
 
 void TestRoomManager::testSlotReset()
 {
+    auto &manager = m_manager;
     QVERIFY(!manager.getRoom().isIdPresent(2));
 
     auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact)};
@@ -46,6 +47,7 @@ void TestRoomManager::testParseGmcpAddValidMessage()
     auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact)};
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
+    auto &manager = m_manager;
     QSignalSpy updateWidgetSpy(&manager, &RoomManager::sig_updateWidget);
     manager.slot_parseGmcpInput(addMessage);
     QCOMPARE(updateWidgetSpy.count(), 1);
@@ -60,6 +62,7 @@ void TestRoomManager::testParseGmcpInvalidMessage()
     GmcpMessage invalidMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     // Attempt to parse the invalid message
+    auto &manager = m_manager;
     QSignalSpy updateWidgetSpy(&manager, &RoomManager::sig_updateWidget);
     manager.slot_parseGmcpInput(invalidMessage);
 
@@ -73,6 +76,7 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
     QJsonObject addObj = {{"id", 2}, {"name", "male magpie"}, {"position", "standing"}};
     auto addJsonStr = GmcpJson{QJsonDocument(addObj).toJson(QJsonDocument::Compact)};
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, addJsonStr);
+    auto &manager = m_manager;
     manager.slot_parseGmcpInput(addMessage);
     QVERIFY(manager.getRoom().isIdPresent(2)); // Verify mob was added correctly
 
