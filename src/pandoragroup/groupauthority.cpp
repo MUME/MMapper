@@ -189,7 +189,7 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
 
     QByteArray ba(mem->data, static_cast<int>(mem->length));
     setConfig().groupManager.privateKey = ba;
-    return QSslKey(ba, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey);
+    return QSslKey{ba, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey};
 }
 
 void GroupAuthority::refresh()

@@ -22,7 +22,7 @@ private:
 protected:
     NODISCARD static QMessageLogger getMessageLogger(const mm::source_location loc)
     {
-        return QMessageLogger(loc.file_name(), static_cast<int>(loc.line()), loc.function_name());
+        return QMessageLogger{loc.file_name(), static_cast<int>(loc.line()), loc.function_name()};
     }
 
 public:
