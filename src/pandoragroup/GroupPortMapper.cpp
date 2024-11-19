@@ -62,6 +62,7 @@ private:
     UPNPUrls urls;
     IGDdatas igdData;
     char lanAddress[64];
+    char wanAddress[64];
     int validIGDState = 0;
 
 public:
@@ -75,11 +76,21 @@ public:
         deviceList = UPNPDev_ptr(upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &result),
                                  ::freeUPNPDevlist);
 #endif
+#if MINIUPNPC_API_VERSION < 18
         validIGDState = UPNP_GetValidIGD(deviceList.get(),
                                          &urls,
                                          &igdData,
                                          lanAddress,
                                          sizeof lanAddress);
+#else
+        validIGDState = UPNP_GetValidIGD(deviceList.get(),
+                                         &urls,
+                                         &igdData,
+                                         lanAddress,
+                                         sizeof lanAddress,
+                                         wanAddress,
+                                         sizeof wanAddress);
+#endif
         switch (validIGDState) {
         case 0:
             qInfo() << "No IGD found";
