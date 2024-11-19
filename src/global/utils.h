@@ -285,4 +285,12 @@ NODISCARD static inline auto pop_front(std::queue<T> &container)
     return x;
 }
 
+template<typename T>
+NODISCARD static inline auto pop_top(T &container)
+{
+    auto x = std::move(container.top());
+    container.pop();
+    return x;
+}
+
 } // namespace utils

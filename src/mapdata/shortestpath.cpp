@@ -8,6 +8,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/enums.h"
 #include "../global/roomid.h"
+#include "../global/utils.h"
 #include "ExitDirection.h"
 #include "ExitFlags.h"
 #include "mapdata.h"
@@ -108,8 +109,7 @@ void MapData::shortestPathSearch(const Room *origin,
     sp_nodes.push_back(SPNode(origin, -1, 0, ExitDirEnum::UNKNOWN));
     future_paths.emplace(0, 0);
     while (!future_paths.empty()) {
-        int spindex = future_paths.top().second;
-        future_paths.pop();
+        int spindex = utils::pop_top(future_paths).second;
         const Room *thisr = sp_nodes[spindex].r;
         auto thisdist = sp_nodes[spindex].dist;
         auto room_id = thisr->getId();
