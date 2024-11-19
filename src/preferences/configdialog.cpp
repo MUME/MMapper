@@ -20,7 +20,7 @@
 #include <QListWidget>
 #include <QtWidgets>
 
-ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
+ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
     : QDialog(parent)
     , ui(new Ui::ConfigDialog)
     , m_groupManager(gm)
@@ -90,7 +90,7 @@ ConfigDialog::~ConfigDialog()
     delete ui;
 }
 
-void ConfigDialog::showEvent(QShowEvent *event)
+void ConfigDialog::showEvent(QShowEvent *const event)
 {
     // Populate the preference pages from config each time the widget is shown
     emit sig_loadConfig();
@@ -154,7 +154,7 @@ void ConfigDialog::createIcons()
     pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 }
 
-void ConfigDialog::slot_changePage(QListWidgetItem *current, QListWidgetItem *previous)
+void ConfigDialog::slot_changePage(QListWidgetItem *current, QListWidgetItem *const previous)
 {
     if (current == nullptr) {
         current = previous;

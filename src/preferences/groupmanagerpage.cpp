@@ -17,7 +17,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
+GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const parent)
     : QWidget(parent)
     , m_groupManager(gm)
     , ui(new Ui::GroupManagerPage)

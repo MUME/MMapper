@@ -47,7 +47,7 @@ private:
 
     NODISCARD bool toMob(const QJsonObject &obj, RoomMobUpdate &mob) const;
     static bool toMobId(const QJsonValue &value, RoomMobUpdate &data);
-    static void toMobField(const QJsonValue &value, RoomMobUpdate &data, const MobFieldEnum i);
+    static void toMobField(const QJsonValue &value, RoomMobUpdate &data, MobFieldEnum i);
 
 private:
     RoomMobs m_room;

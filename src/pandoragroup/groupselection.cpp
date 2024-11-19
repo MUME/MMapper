@@ -12,7 +12,7 @@
 GroupAdmin::~GroupAdmin() = default;
 GroupRecipient::~GroupRecipient() = default;
 
-GroupSelection::GroupSelection(GroupAdmin *admin)
+GroupSelection::GroupSelection(GroupAdmin *const admin)
     : m_admin(admin)
 {}
 

@@ -24,7 +24,7 @@ class RemoteEdit final : public QObject
     friend class RemoteEditSession;
 
 public:
-    explicit RemoteEdit(QObject *const parent);
+    explicit RemoteEdit(QObject *parent);
     ~RemoteEdit() final = default;
 
 public slots:

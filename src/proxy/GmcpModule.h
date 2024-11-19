@@ -69,8 +69,8 @@ private:
 public:
     explicit GmcpModule(const QString &);
     explicit GmcpModule(const std::string &);
-    explicit GmcpModule(const std::string &, const GmcpModuleVersion);
-    explicit GmcpModule(const GmcpModuleTypeEnum, const GmcpModuleVersion);
+    explicit GmcpModule(const std::string &, GmcpModuleVersion);
+    explicit GmcpModule(GmcpModuleTypeEnum, GmcpModuleVersion);
     DEFAULT_RULE_OF_5(GmcpModule);
 
 public:

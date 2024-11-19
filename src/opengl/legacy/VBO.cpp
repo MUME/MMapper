@@ -30,7 +30,7 @@ void VBO::reset()
     assert(m_weakFunctions.lock() == nullptr);
 }
 
-GLuint VBO::get()
+GLuint VBO::get() const
 {
     if (m_vbo == 0)
         throw std::runtime_error("VBO not allocated");

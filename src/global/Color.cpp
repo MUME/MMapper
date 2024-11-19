@@ -156,7 +156,7 @@ std::ostream &Color::toHex(std::ostream &os) const
     return os;
 }
 
-Color Color::fromRGB(uint32_t rgb)
+Color Color::fromRGB(const uint32_t rgb)
 {
     Color c;
     c.m_color = (rgb & MASK_RGB) | MASK_ALPHA;

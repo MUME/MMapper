@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <string_view>
 
-NODISCARD bool isAbbrev(StringView input, const std::string_view command, int minAbbrev);
+NODISCARD bool isAbbrev(StringView input, std::string_view command, int minAbbrev);
 
 struct NODISCARD Abbrev final
 {

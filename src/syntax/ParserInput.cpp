@@ -41,25 +41,25 @@ ParserInput ParserInput::subset(const size_t a, const size_t b) const
     return copy;
 }
 
-ParserInput ParserInput::left(size_t n) const
+ParserInput ParserInput::left(const size_t n) const
 {
     assert(n <= size());
     return subset(0, n);
 }
 
-ParserInput ParserInput::mid(size_t n) const
+ParserInput ParserInput::mid(const size_t n) const
 {
     assert(n <= size());
     return subset(n, size());
 }
 
-ParserInput ParserInput::right(size_t n) const
+ParserInput ParserInput::right(const size_t n) const
 {
     assert(n <= size());
     return subset(size() - n, size());
 }
 
-ParserInput ParserInput::rmid(size_t n) const
+ParserInput ParserInput::rmid(const size_t n) const
 {
     assert(n <= size());
     return subset(0, size() - n);

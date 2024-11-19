@@ -45,7 +45,7 @@ public:
     NODISCARD ProtocolStateEnum getProtocolState() const { return protocolState; }
 
     void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
-    NODISCARD ProtocolVersion getProtocolVersion() { return protocolVersion; }
+    NODISCARD ProtocolVersion getProtocolVersion() const { return protocolVersion; }
 
     void setName(const QByteArray &val) { name = val; }
     NODISCARD const QByteArray &getName() { return name; }

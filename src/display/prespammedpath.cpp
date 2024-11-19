@@ -17,7 +17,7 @@ static constexpr const bool USE_TEST = true;
 static constexpr const bool USE_TEST = false;
 #endif
 
-PrespammedPath::PrespammedPath(QObject *parent)
+PrespammedPath::PrespammedPath(QObject *const parent)
     : QObject(parent)
 {
     if (USE_TEST) {
@@ -33,7 +33,7 @@ PrespammedPath::PrespammedPath(QObject *parent)
 
 PrespammedPath::~PrespammedPath() = default;
 
-void PrespammedPath::slot_setPath(CommandQueue queue)
+void PrespammedPath::slot_setPath(const CommandQueue queue)
 {
     m_queue = std::move(queue);
     emit sig_update();

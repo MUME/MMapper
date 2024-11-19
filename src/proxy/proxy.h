@@ -71,10 +71,7 @@ public slots:
     void slot_onMudError(const QString &);
     void slot_onMudConnected();
 
-    void slot_onSendGameTimeToClock(const int year,
-                                    const std::string &month,
-                                    const int day,
-                                    const int hour);
+    void slot_onSendGameTimeToClock(int year, const std::string &month, int day, int hour);
 
 signals:
     void sig_log(const QString &, const QString &);

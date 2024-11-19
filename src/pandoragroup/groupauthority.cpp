@@ -351,14 +351,14 @@ bool GroupAuthority::validCertificate(const GroupSocket *connection) const
     return certificatesMatch;
 }
 
-QString GroupAuthority::getMetadata(const GroupSecret &secret, GroupMetadataEnum meta) const
+QString GroupAuthority::getMetadata(const GroupSecret &secret, const GroupMetadataEnum meta) const
 {
     const auto &metadata = getConfig().groupManager.secretMetadata;
     return metadata[getMetadataKey(secret, meta)].toString();
 }
 
 void GroupAuthority::setMetadata(const GroupSecret &secret,
-                                 GroupMetadataEnum meta,
+                                 const GroupMetadataEnum meta,
                                  const QString &value)
 {
     auto &metadata = setConfig().groupManager.secretMetadata;

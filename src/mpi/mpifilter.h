@@ -37,7 +37,7 @@ public slots:
     void slot_analyzeNewMudInput(const TelnetData &data);
 
 protected:
-    void parseMessage(const char command, const QByteArray &buffer);
+    void parseMessage(char command, const QByteArray &buffer);
     void parseEditMessage(const QByteArray &buffer);
     void parseViewMessage(const QByteArray &buffer);
 };

@@ -38,11 +38,11 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(TextCodec);
 
 public:
-    void setEncodingForName(const std::string_view encodingName);
+    void setEncodingForName(std::string_view encodingName);
 
 public:
     NODISCARD CharacterEncodingEnum getEncoding() const;
-    NODISCARD bool supports(const std::string_view encodingName) const;
+    NODISCARD bool supports(std::string_view encodingName) const;
     NODISCARD std::list<std::string_view> supportedEncodings() const;
     NODISCARD std::string_view getName() const;
 };

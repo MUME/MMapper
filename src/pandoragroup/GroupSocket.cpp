@@ -22,7 +22,7 @@
 static constexpr const bool DEBUG = false;
 static constexpr const auto THIRTY_SECOND_TIMEOUT = 30000;
 
-GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
+GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
     : QObject(parent)
     , socket{this}
     , timer{this}

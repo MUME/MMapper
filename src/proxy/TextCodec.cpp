@@ -19,11 +19,11 @@ struct NODISCARD TextCodec::Pimpl
     virtual ~Pimpl();
 
 private:
-    virtual void virt_setEncodingForName(const std::string_view encodingName) = 0;
+    virtual void virt_setEncodingForName(std::string_view encodingName) = 0;
 
 private:
     NODISCARD virtual CharacterEncodingEnum virt_getEncoding() const = 0;
-    NODISCARD virtual bool virt_supports(const std::string_view encodingName) const = 0;
+    NODISCARD virtual bool virt_supports(std::string_view encodingName) const = 0;
     NODISCARD virtual std::list<std::string_view> virt_supportedEncodings() const = 0;
     NODISCARD virtual std::string_view virt_getName() const = 0;
 

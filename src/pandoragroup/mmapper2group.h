@@ -132,13 +132,8 @@ private:
 
     bool init();
     void issueLocalCharUpdate();
-    bool setCharacterPosition(const CharacterPositionEnum pos);
-    bool setCharacterScore(const int hp,
-                           const int maxhp,
-                           const int mana,
-                           const int maxmana,
-                           const int mp,
-                           const int maxmp);
+    bool setCharacterPosition(CharacterPositionEnum pos);
+    bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
     void renameCharacter(QByteArray newname);
 
     QRecursiveMutex networkLock;

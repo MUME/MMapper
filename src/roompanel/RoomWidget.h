@@ -47,11 +47,11 @@ public:
     void update();
 
 private:
-    NODISCARD SharedRoomMob getMob(const int row) const;
-    NODISCARD RoomMob::Field getField(const ColumnTypeEnum column) const;
-    NODISCARD const QVariant &getMobField(const int row, const int column) const;
-    NODISCARD bool isEnemy(const int row, const int column) const;
-    NODISCARD bool isFightingYOU(const int row, const int column) const;
+    NODISCARD SharedRoomMob getMob(int row) const;
+    NODISCARD RoomMob::Field getField(ColumnTypeEnum column) const;
+    NODISCARD const QVariant &getMobField(int row, int column) const;
+    NODISCARD bool isEnemy(int row, int column) const;
+    NODISCARD bool isFightingYOU(int row, int column) const;
 
 private:
     const RoomMobs &m_room;

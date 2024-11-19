@@ -55,7 +55,7 @@ void CGroup::executeActions()
     }
 }
 
-void CGroup::virt_releaseCharacters(GroupRecipient *sender)
+void CGroup::virt_releaseCharacters(GroupRecipient *const sender)
 {
     std::ignore = deref(sender);
     QMutexLocker lock(&characterLock);

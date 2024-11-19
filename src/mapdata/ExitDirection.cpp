@@ -142,7 +142,7 @@ ExitDirEnum dirForChar(const char dir)
     }
 }
 
-char charForDir(ExitDirEnum dir)
+char charForDir(const ExitDirEnum dir)
 {
     switch (dir) {
     case ExitDirEnum::NORTH:

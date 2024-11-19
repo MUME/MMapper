@@ -20,7 +20,7 @@
 class NODISCARD CommandPrefixValidator final : public QValidator
 {
 public:
-    explicit CommandPrefixValidator(QObject *const parent);
+    explicit CommandPrefixValidator(QObject *parent);
     ~CommandPrefixValidator() final;
 
     void fixup(QString &input) const override { input = input.toLatin1(); }

@@ -50,7 +50,7 @@ signals:
 private:
     void virt_sendToMapper(const QByteArray &, bool goAhead) final;
     void virt_receiveEchoMode(bool) final;
-    void virt_sendRawData(const std::string_view data) final;
+    void virt_sendRawData(std::string_view data) final;
 
     io::buffer<(1 << 15)> buffer;
     QTcpSocket socket;

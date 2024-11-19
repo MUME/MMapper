@@ -36,9 +36,9 @@ class RemoteEditSession : public QObject
     friend class RemoteEditInternalSession;
 
 public:
-    explicit RemoteEditSession(const uint32_t internalId,
+    explicit RemoteEditSession(uint32_t internalId,
                                const RemoteSession &sessionId,
-                               RemoteEdit *const remoteEdit);
+                               RemoteEdit *remoteEdit);
 
 public:
     NODISCARD auto getInternalId() const { return m_internalId; }
@@ -73,11 +73,11 @@ class RemoteEditInternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    explicit RemoteEditInternalSession(const uint32_t internalId,
+    explicit RemoteEditInternalSession(uint32_t internalId,
                                        const RemoteSession &sessionId,
                                        const QString &title,
                                        const QString &body,
-                                       RemoteEdit *const remoteEdit);
+                                       RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
 
 private:
@@ -88,11 +88,11 @@ class RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    explicit RemoteEditExternalSession(const uint32_t internalId,
+    explicit RemoteEditExternalSession(uint32_t internalId,
                                        const RemoteSession &sessionId,
                                        const QString &title,
                                        const QString &body,
-                                       RemoteEdit *const remoteEdit);
+                                       RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
 
 private:

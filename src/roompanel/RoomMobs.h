@@ -29,11 +29,11 @@ public:
     void updateModel(std::unordered_map<RoomMob::Id, SharedRoomMob> &mobsById,
                      std::vector<SharedRoomMob> &mobVector) const;
 
-    NODISCARD bool isIdPresent(const RoomMob::Id id) const;
-    NODISCARD SharedRoomMob getMobById(const RoomMob::Id id) const;
+    NODISCARD bool isIdPresent(RoomMob::Id id) const;
+    NODISCARD SharedRoomMob getMobById(RoomMob::Id id) const;
     void resetMobs();
     void addMob(RoomMobUpdate &&mob);
-    bool removeMobById(const RoomMob::Id id);      // return true if removed
+    bool removeMobById(RoomMob::Id id);            // return true if removed
     NODISCARD bool updateMob(RoomMobUpdate &&mob); // return true if modified
 
 signals:

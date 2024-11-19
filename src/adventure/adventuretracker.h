@@ -15,7 +15,7 @@ class AdventureTracker final : public QObject
 {
     Q_OBJECT
 public:
-    explicit AdventureTracker(GameObserver &observer, QObject *const parent = nullptr);
+    explicit AdventureTracker(GameObserver &observer, QObject *parent = nullptr);
 
 signals:
     void sig_accomplishedTask(double xpGained);

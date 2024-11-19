@@ -17,7 +17,7 @@
 #include <QRegularExpression>
 #include <QString>
 
-NODISCARD bool containsAnsi(const QStringView str);
+NODISCARD bool containsAnsi(QStringView str);
 NODISCARD bool containsAnsi(const QString &str);
 
 // Callback = void(string_view);
@@ -203,16 +203,16 @@ void ansiForeachColorCode(const QString &ansi, Callback &&callback)
     ansiForeachColorCode(QStringView{ansi}, std::forward<Callback>(callback));
 }
 
-NODISCARD extern bool isValidAnsiColor(const QStringView ansi);
+NODISCARD extern bool isValidAnsiColor(QStringView ansi);
 NODISCARD extern bool isValidAnsiColor(const QString &ansi);
 
 NODISCARD extern int countLines(const QString &input);
-NODISCARD extern int countLines(const QStringView input);
+NODISCARD extern int countLines(QStringView input);
 
-NODISCARD extern int measureExpandedTabsOneLine(const QStringView line, int starting_at);
+NODISCARD extern int measureExpandedTabsOneLine(QStringView line, int starting_at);
 NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);
 
-NODISCARD extern int findTrailingWhitespace(const QStringView line);
+NODISCARD extern int findTrailingWhitespace(QStringView line);
 NODISCARD extern int findTrailingWhitespace(const QString &line);
 
 class NODISCARD TextBuffer final
@@ -233,7 +233,7 @@ public:
 
 public:
     void appendJustified(QStringView line, int maxLen);
-    void appendExpandedTabs(const QStringView line, int start_at = 0);
+    void appendExpandedTabs(QStringView line, int start_at = 0);
 
 public:
     NODISCARD bool isEmpty() const;
@@ -347,7 +347,7 @@ public:
  *    the function doesn't return a "current" ansi color.
  * 6. Assumes UNIX-style newlines (LF only, not CRLF).
  */
-NODISCARD TextBuffer normalizeAnsi(const QStringView);
+NODISCARD TextBuffer normalizeAnsi(QStringView);
 NODISCARD TextBuffer normalizeAnsi(const QString &str);
 
 #define DEFINE_CHAR_CONST(NAME, val) \
@@ -522,16 +522,16 @@ static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
 
 NODISCARD extern char toLowerLatin1(char c);
-NODISCARD extern std::string toLowerLatin1(const std::string_view str);
+NODISCARD extern std::string toLowerLatin1(std::string_view str);
 NODISCARD extern char toUpperLatin1(char c);
-NODISCARD extern std::string toUpperLatin1(const std::string_view str);
-NODISCARD extern bool isAbbrev(const std::string_view abbr, const std::string_view fullText);
+NODISCARD extern std::string toUpperLatin1(std::string_view str);
+NODISCARD extern bool isAbbrev(std::string_view abbr, std::string_view fullText);
 NODISCARD extern bool isPrintLatin1(char c);
-NODISCARD extern bool requiresQuote(const std::string_view str);
+NODISCARD extern bool requiresQuote(std::string_view str);
 std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);
 std::ostream &print_char_quoted(std::ostream &os, char c);
-std::ostream &print_string_quoted(std::ostream &os, const std::string_view sv);
-std::ostream &print_string_smartquote(std::ostream &os, const std::string_view sv);
+std::ostream &print_string_quoted(std::ostream &os, std::string_view sv);
+std::ostream &print_string_smartquote(std::ostream &os, std::string_view sv);
 
 struct NODISCARD QuotedChar final
 {
@@ -583,10 +583,10 @@ public:
     }
 };
 
-NODISCARD extern QString toQStringLatin1(const std::string_view sv);
-NODISCARD extern QString toQStringUtf8(const std::string_view sv);
-NODISCARD extern QByteArray toQByteArrayLatin1(const std::string_view sv);
-NODISCARD extern QByteArray toQByteArrayUtf8(const std::string_view sv);
+NODISCARD extern QString toQStringLatin1(std::string_view sv);
+NODISCARD extern QString toQStringUtf8(std::string_view sv);
+NODISCARD extern QByteArray toQByteArrayLatin1(std::string_view sv);
+NODISCARD extern QByteArray toQByteArrayUtf8(std::string_view sv);
 NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);

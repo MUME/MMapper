@@ -28,7 +28,7 @@ public:
 public:
     void emplace(const SharedFunctions &sharedFunctions);
     void reset();
-    NODISCARD GLuint get();
+    NODISCARD GLuint get() const;
 
 public:
     NODISCARD explicit operator bool() const { return m_vbo != 0; }

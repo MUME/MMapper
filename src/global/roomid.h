@@ -43,7 +43,7 @@ using RoomIdSet = std::set<RoomId>;
 template<>
 struct std::hash<RoomId>
 {
-    std::size_t operator()(const RoomId &id) const noexcept { return numeric_hash(id.asUint32()); }
+    std::size_t operator()(const RoomId id) const noexcept { return numeric_hash(id.asUint32()); }
 };
 
 template<typename T>

@@ -134,7 +134,7 @@ public:
     explicit RemoteEditWidget(bool editSession,
                               const QString &title,
                               const QString &body,
-                              QWidget *const parent);
+                              QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:
