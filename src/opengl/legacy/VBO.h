@@ -16,8 +16,9 @@ extern bool LOG_VBO_STATIC_UPLOADS;
 class NODISCARD VBO final
 {
 private:
+    static inline constexpr GLuint INVALID_VBOID = 0;
     WeakFunctions m_weakFunctions;
-    GLuint m_vbo = 0;
+    GLuint m_vbo = INVALID_VBOID;
 
 public:
     VBO() = default;
@@ -31,7 +32,7 @@ public:
     NODISCARD GLuint get() const;
 
 public:
-    NODISCARD explicit operator bool() const { return m_vbo != 0; }
+    NODISCARD explicit operator bool() const { return m_vbo != INVALID_VBOID; }
 
 public:
     void unsafe_swapVboId(VBO &other) { std::swap(m_vbo, other.m_vbo); }
