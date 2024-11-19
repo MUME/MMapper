@@ -26,6 +26,12 @@ class MumeClock final : public QObject
 
     friend class TestClock;
 
+private:
+    int64_t m_lastSyncEpoch = 0;
+    int64_t m_mumeStartEpoch = 0;
+    MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
+    GameObserver &m_observer;
+
 public:
     static constexpr const int NUM_MONTHS = 12;
     struct NODISCARD DawnDusk
@@ -42,18 +48,15 @@ public:
     explicit MumeClock(GameObserver &observer);
 
     NODISCARD MumeMoment getMumeMoment() const;
-
     NODISCARD MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch) const;
 
     // REVISIT: This can't be const because it logs.
     NODISCARD MumeClockPrecisionEnum getPrecision();
 
     NODISCARD QString toMumeTime(const MumeMoment &moment) const;
-
     NODISCARD QString toCountdown(const MumeMoment &moment) const;
 
     NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
-
     NODISCARD int64_t getLastSyncEpoch() const { return m_lastSyncEpoch; }
 
     enum class WestronMonthNamesEnum : int8_t {
@@ -118,12 +121,6 @@ public:
 
     Q_ENUM(SindarinWeekDayNamesEnum)
 
-public:
-    static const QMetaEnum s_westronMonthNames;
-    static const QMetaEnum s_sindarinMonthNames;
-    static const QMetaEnum s_westronWeekDayNames;
-    static const QMetaEnum s_sindarinWeekDayNames;
-
 private:
     void log(const QString &msg) { emit sig_log("MumeClock", msg); }
 
@@ -132,29 +129,18 @@ signals:
 
 public slots:
     void parseMumeTime(const QString &mumeTime);
-
     void parseClockTime(const QString &clockTime);
-
     void slot_onUserGmcp(const GmcpMessage &msg);
 
 public:
-    void setPrecision(const MumeClockPrecisionEnum state);
+    void setPrecision(MumeClockPrecisionEnum state);
     void setLastSyncEpoch(int64_t epoch) { m_lastSyncEpoch = epoch; }
 
-    int getMumeMonth(const QString &monthName);
-    void parseMSSP(const int year, const int month, const int day, const int hour);
+    NODISCARD static int getMumeMonth(const QString &monthName);
+    void parseMSSP(int year, int month, int day, int hour);
 
 protected:
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
-
     void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);
-
-    void parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch);
-
-private:
-    int64_t m_lastSyncEpoch = 0;
-    int64_t m_mumeStartEpoch = 0;
-    MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
-    int m_clockTolerance = 0;
-    GameObserver &m_observer;
+    void parseWeather(MumeTimeEnum time, int64_t secsSinceEpoch);
 };
