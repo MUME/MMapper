@@ -85,7 +85,7 @@ std::string ParserInput::concatenate() const
     if (empty())
         return {};
 
-    std::stringstream ss;
+    std::ostringstream ss;
     concatenate_into(ss);
     return ss.str();
 }

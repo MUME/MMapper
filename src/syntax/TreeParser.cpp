@@ -177,7 +177,7 @@ void HelpFrame::flush()
         return;
 
     if (!m_helps.empty() || m_accept) {
-        std::stringstream ss;
+        std::ostringstream ss;
 
         ss << std::string(2 * m_indent, C_SPACE);
 
@@ -295,7 +295,7 @@ public:
 void HelpFrame::addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTypeEnum> type)
 {
     if (!type) {
-        std::stringstream ss;
+        std::ostringstream ss;
         ss << tokenMatcher;
         addHelp(ss.str());
         return;
@@ -317,7 +317,7 @@ void HelpFrame::addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTyp
     }
 
     // REVISIT: store this as Ansi instead of the string version.
-    std::stringstream ss;
+    std::ostringstream ss;
     to_stream_as_reset(ss, ANSI_COLOR_SUPPORT_HI, raw);
     ss << tokenMatcher;
     ss << reset_ansi;
@@ -429,7 +429,7 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
     const auto shared_vec = std::make_shared<const std::vector<std::string>>(v.getVectorOfStrings());
 
     const ParserInput input(shared_vec);
-    std::stringstream ss;
+    std::ostringstream ss;
     User u{ss};
     TreeParser parser{syntax, u};
 

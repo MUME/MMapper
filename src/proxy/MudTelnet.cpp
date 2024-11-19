@@ -35,7 +35,7 @@ NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
     };
     const auto arch = QSysInfo::currentCpuArchitecture().toLatin1();
 
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
        << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << get_os_string() << "/"
        << arch.constData();

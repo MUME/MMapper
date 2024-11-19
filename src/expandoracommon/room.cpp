@@ -723,7 +723,7 @@ void Room::update(Room *const target, const Room *const source)
 // Latin1
 std::string Room::toStdString() const
 {
-    std::stringstream ss;
+    std::ostringstream ss;
     ss << getName().getStdStringLatin1() << "\n"
        << getDescription().getStdStringLatin1() << getContents().getStdStringLatin1();
 
