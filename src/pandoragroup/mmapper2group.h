@@ -19,12 +19,12 @@
 #include <QTimer>
 #include <QVariantMap>
 
+class CGroup;
+class CGroupCommunicator;
+class CommandQueue;
 class GmcpMessage;
 class GroupAuthority;
-class CGroupCommunicator;
-class CGroup;
 class Mmapper2Group;
-class CommandQueue;
 
 class Mmapper2Group final : public QObject
 {
