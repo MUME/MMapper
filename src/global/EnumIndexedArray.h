@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 
 template<typename T, typename E, size_t SIZE_ = enums::CountOf<E>::value>
@@ -40,12 +41,32 @@ public:
     using base::cend;
     using base::end;
 
+private:
+    template<typename U>
+    NODISCARD static bool my_equals(const U &a, const U &b)
+    {
+        return a == b;
+    }
+    template<typename U>
+    NODISCARD static bool my_equals(U *const a, const std::unique_ptr<U> &b)
+    {
+        return a == b.get();
+    }
+    template<typename U>
+    NODISCARD static bool my_equals(const std::unique_ptr<U> &a, U *const b)
+    {
+        return a.get() == b;
+    }
+
 public:
-    NODISCARD std::optional<E> findIndexOf(const T element) const
+    template<typename U>
+    NODISCARD std::optional<E> findIndexOf(const U element) const
     {
         const auto beg = this->begin();
         const auto end = this->end();
-        const auto it = std::find(beg, end, element);
+        const auto it = std::find_if(beg, end, [element](auto &x) -> bool {
+            return my_equals(x, element);
+        });
         if (it == end)
             return std::nullopt;
 
