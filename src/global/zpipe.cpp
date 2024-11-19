@@ -12,17 +12,18 @@
                      Avoid some compiler warnings for input and output buffers
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 #include "zlib.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
-#  include <fcntl.h>
-#  include <io.h>
-#  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#include <fcntl.h>
+#include <io.h>
+#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
 #else
-#  define SET_BINARY_MODE(file)
+#define SET_BINARY_MODE(file)
 #endif
 
 #define CHUNK 16384
@@ -53,7 +54,7 @@ int def(FILE *source, FILE *dest, int level)
     do {
         strm.avail_in = fread(in, 1, CHUNK, source);
         if (ferror(source)) {
-            (void)deflateEnd(&strm);
+            (void) deflateEnd(&strm);
             return Z_ERRNO;
         }
         flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
@@ -64,22 +65,22 @@ int def(FILE *source, FILE *dest, int level)
         do {
             strm.avail_out = CHUNK;
             strm.next_out = out;
-            ret = deflate(&strm, flush);    /* no bad return value */
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            ret = deflate(&strm, flush);   /* no bad return value */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)deflateEnd(&strm);
+                (void) deflateEnd(&strm);
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
-        assert(strm.avail_in == 0);     /* all input will be used */
+        assert(strm.avail_in == 0); /* all input will be used */
 
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
-    assert(ret == Z_STREAM_END);        /* stream will be complete */
+    assert(ret == Z_STREAM_END); /* stream will be complete */
 
     /* clean up and return */
-    (void)deflateEnd(&strm);
+    (void) deflateEnd(&strm);
     return Z_OK;
 }
 
@@ -111,7 +112,7 @@ int inf(FILE *source, FILE *dest)
     do {
         strm.avail_in = fread(in, 1, CHUNK, source);
         if (ferror(source)) {
-            (void)inflateEnd(&strm);
+            (void) inflateEnd(&strm);
             return Z_ERRNO;
         }
         if (strm.avail_in == 0)
@@ -123,18 +124,18 @@ int inf(FILE *source, FILE *dest)
             strm.avail_out = CHUNK;
             strm.next_out = out;
             ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+            assert(ret != Z_STREAM_ERROR); /* state not clobbered */
             switch (ret) {
             case Z_NEED_DICT:
-                ret = Z_DATA_ERROR;     /* and fall through */
+                ret = Z_DATA_ERROR; /* and fall through */
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
-                (void)inflateEnd(&strm);
+                (void) inflateEnd(&strm);
                 return ret;
             }
             have = CHUNK - strm.avail_out;
             if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)inflateEnd(&strm);
+                (void) inflateEnd(&strm);
                 return Z_ERRNO;
             }
         } while (strm.avail_out == 0);
@@ -143,7 +144,7 @@ int inf(FILE *source, FILE *dest)
     } while (ret != Z_STREAM_END);
 
     /* clean up and return */
-    (void)inflateEnd(&strm);
+    (void) inflateEnd(&strm);
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
