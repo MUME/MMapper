@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Connections.h"
 #include "../global/EnumIndexedArray.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
@@ -45,25 +46,7 @@ class NODISCARD_QOBJECT RoomEditAttrDlg final : public QDialog, private Ui::Room
     Q_OBJECT
 
 private:
-    struct NODISCARD Connections final
-    {
-    private:
-        std::vector<QMetaObject::Connection> m_connections;
-
-    public:
-        Connections &operator+=(QMetaObject::Connection c)
-        {
-            m_connections.emplace_back(std::move(c));
-            return *this;
-        }
-        void disconnectAll()
-        {
-            for (const auto &c : m_connections)
-                QObject::disconnect(c);
-            m_connections.clear();
-        }
-    };
-    Connections m_connections;
+    mmqt::Connections m_connections;
 
     using UniqueRoomListWidgetItem = std::unique_ptr<RoomListWidgetItem>;
     EnumIndexedArray<UniqueRoomListWidgetItem, RoomLoadFlagEnum> m_loadListItems;

@@ -84,6 +84,8 @@ set(mmapper_SRCS
     global/ConfigConsts-Computed.h
     global/ConfigConsts.h
     global/ConfigEnums.h
+    global/Connections.cpp
+    global/Connections.h
     global/Consts.cpp
     global/Consts.h
     global/EnumIndexedArray.h
