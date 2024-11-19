@@ -343,6 +343,7 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 
 void PathMachine::evaluatePaths()
 {
+    std::ignore = deref(paths);
     if (paths->empty()) {
         state = PathStateEnum::SYNCING;
     } else {

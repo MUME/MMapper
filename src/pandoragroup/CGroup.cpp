@@ -39,7 +39,7 @@ CGroup::CGroup(QObject *const parent)
 void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 {
     QMutexLocker locker(&characterLock);
-    action->schedule(this);
+    deref(action).schedule(this);
     actionSchedule.emplace(std::move(action));
     if (locks.empty()) {
         executeActions();
@@ -57,8 +57,8 @@ void CGroup::executeActions()
 
 void CGroup::virt_releaseCharacters(GroupRecipient *sender)
 {
+    std::ignore = deref(sender);
     QMutexLocker lock(&characterLock);
-    assert(sender);
     locks.erase(sender);
     if (locks.empty()) {
         executeActions();

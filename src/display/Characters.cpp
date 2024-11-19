@@ -403,27 +403,31 @@ void MapCanvas::paintCharacters()
 
 void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 {
-    CGroup *const group = m_groupManager.getGroup();
-    if ((group == nullptr) || getConfig().groupManager.state == GroupManagerStateEnum::Off
+    CGroup *const pGroup = m_groupManager.getGroup();
+    if ((pGroup == nullptr) || getConfig().groupManager.state == GroupManagerStateEnum::Off
         || m_data.isEmpty()) {
         return;
     }
 
+    CGroup &group = deref(pGroup);
+    const CGroupChar &self = deref(group.getSelf());
+
     // Omit player so that they know group members are below them
     QSet<RoomId> drawnRoomIds;
-    auto selection = group->selectAll();
-    for (const auto &character : *selection) {
-        const RoomId id = character->getRoomId();
+    const auto pSelection = group.selectAll();
+    for (const auto &pCharacter : deref(pSelection)) {
+        const CGroupChar &character = deref(pCharacter);
+        const RoomId id = character.getRoomId();
         // Do not draw the character if they're in an "Unknown" room
-        if (id == INVALID_ROOMID || id > m_data.getMaxId() || character == group->getSelf())
+        if (id == INVALID_ROOMID || id > m_data.getMaxId() || &character == &self)
             continue;
         auto roomSelection = RoomSelection(m_data);
         if (const Room *const r = roomSelection.getRoom(id)) {
             const auto pos = r->getPosition();
-            const auto color = Color{character->getColor()};
+            const auto color = Color{character.getColor()};
             const bool fill = !drawnRoomIds.contains(r->getId());
             batch.drawCharacter(pos, color, fill);
-            const auto prespam = m_data.getPath(pos, character->prespam);
+            const auto prespam = m_data.getPath(pos, character.prespam);
             batch.drawPreSpammedPath(pos, prespam, color);
             drawnRoomIds.insert(r->getId());
         }

@@ -154,12 +154,12 @@ void Mmapper2Group::slot_updateSelf()
         return;
     }
 
-    auto &self = group->getSelf();
+    CGroupChar &self = deref(group->getSelf());
     const Configuration::GroupManagerSettings &conf = getConfig().groupManager;
-    if (conf.charName != self->getLabel())
-        self->setLabel(conf.charName);
-    else if (self->getColor() != conf.color)
-        self->setColor(conf.color);
+    if (conf.charName != self.getLabel())
+        self.setLabel(conf.charName);
+    else if (self.getColor() != conf.color)
+        self.setColor(conf.color);
     else
         return;
 
@@ -172,12 +172,13 @@ void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
     if (!group)
         return;
 
-    if (group->getSelf()->getRoomId() == roomId)
+    CGroupChar &self = deref(group->getSelf());
+    if (self.getRoomId() == roomId)
         return; // No update needed
 
     // Check if we are still snared
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
-    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = self.affects;
     if (affects.contains(CharacterAffectEnum::SNARED)) {
         const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
         const auto lastSeen = affectLastSeen.value(CharacterAffectEnum::SNARED, 0);
@@ -189,7 +190,7 @@ void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
         }
     }
 
-    group->getSelf()->setRoomId(roomId);
+    self.setRoomId(roomId);
 
     issueLocalCharUpdate();
 }
@@ -304,9 +305,9 @@ bool Mmapper2Group::setCharacterScore(const int hp,
                                       const int moves,
                                       const int maxmoves)
 {
-    const SharedGroupChar &self = getGroup()->getSelf();
-    if (self->hp == hp && self->maxhp == maxhp && self->mana == mana && self->maxmana == maxmana
-        && self->moves == moves && self->maxmoves == maxmoves)
+    CGroupChar &self = deref(getGroup()->getSelf());
+    if (self.hp == hp && self.maxhp == maxhp && self.mana == mana && self.maxmana == maxmana
+        && self.moves == moves && self.maxmoves == maxmoves)
         return false; // No update needed
 
     log(QString("Updated score: %1/%2 hits, %3/%4 mana, and %5/%6 moves.")
@@ -317,7 +318,7 @@ bool Mmapper2Group::setCharacterScore(const int hp,
             .arg(moves)
             .arg(maxmoves));
 
-    self->setScore(hp, maxhp, mana, maxmana, moves, maxmoves);
+    self.setScore(hp, maxhp, mana, maxmana, moves, maxmoves);
     return true;
 }
 
@@ -333,11 +334,11 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!match.hasMatch())
         return;
 
-    SharedGroupChar self = getGroup()->getSelf();
+    CGroupChar &self = deref(getGroup()->getSelf());
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
-    CharacterAffectFlags &affects = self->affects;
+    CharacterAffectFlags &affects = self.affects;
 
     const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
     if (wasSearching)
@@ -371,7 +372,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     } while (false)
 
     // Estimate new numerical scores using prompt
-    if (self->maxhp != 0) {
+    if (self.maxhp != 0) {
         // REVISIT: Replace this if/else tree with a data structure
         const auto calc_hp =
             [](const QByteArray &text, const double current, const double max) -> double {
@@ -384,9 +385,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             X_SCORE("Awful", max * 0.01, max * 0.10);
             return 0.0; // Dying
         };
-        self->hp = static_cast<int>(calc_hp(textHP, self->hp, self->maxhp));
+        self.hp = static_cast<int>(calc_hp(textHP, self.hp, self.maxhp));
     }
-    if (self->maxmana != 0) {
+    if (self.maxmana != 0) {
         const auto calc_mana =
             [](const QByteArray &text, const double current, const double max) -> double {
             if (text.isEmpty())
@@ -398,9 +399,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             X_SCORE("Icy", max * 0.01, max * 0.10);
             return 0.0; // Frozen
         };
-        self->mana = static_cast<int>(calc_mana(textMana, self->mana, self->maxmana));
+        self.mana = static_cast<int>(calc_mana(textMana, self.mana, self.maxmana));
     }
-    if (self->maxmoves != 0) {
+    if (self.maxmoves != 0) {
         const auto calc_moves = [](const QByteArray &text, const int current) -> int {
             if (text.isEmpty()) {
                 if (current <= 50)
@@ -414,7 +415,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             X_SCORE("Fainting", 1, 4);
             return 0; // Exhausted
         };
-        self->moves = calc_moves(textMoves, self->moves);
+        self.moves = calc_moves(textMoves, self.moves);
     }
 #undef X_SCORE
 
@@ -423,20 +424,20 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 
 bool Mmapper2Group::setCharacterPosition(const CharacterPositionEnum position)
 {
-    const SharedGroupChar &self = getGroup()->getSelf();
-    const CharacterPositionEnum oldPosition = self->position;
+    CGroupChar &self = deref(getGroup()->getSelf());
+    const CharacterPositionEnum oldPosition = self.position;
 
     if (oldPosition == position)
         return false; // No update needed
 
     // Reset affects on death
     if (position == CharacterPositionEnum::DEAD)
-        self->affects = CharacterAffectFlags{};
+        self.affects = CharacterAffectFlags{};
 
     if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
         return false; // Prefer dead state until we finish recovering some hp (i.e. stand)
 
-    self->position = position;
+    self.position = position;
     return true;
 }
 
@@ -545,19 +546,19 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
         const GmcpJsonDocument &doc = msg.getJsonDocument().value();
         const auto &obj = doc.object();
 
-        const SharedGroupChar &self = getGroup()->getSelf();
-        CharacterAffectFlags &affects = self->affects;
+        CGroupChar &self = deref(getGroup()->getSelf());
+        CharacterAffectFlags &affects = self.affects;
 
         bool update = false;
 
         if (obj.contains("hp") || obj.contains("maxhp") || obj.contains("mana")
             || obj.contains("maxmana") || obj.contains("mp") || obj.contains("maxmp")) {
-            const int hp = obj.value("hp").toInt(self->hp);
-            const int maxhp = obj.value("maxhp").toInt(self->maxhp);
-            const int mana = obj.value("mana").toInt(self->mana);
-            const int maxmana = obj.value("maxmana").toInt(self->maxmana);
-            const int mp = obj.value("mp").toInt(self->moves);
-            const int maxmp = obj.value("maxmp").toInt(self->maxmoves);
+            const int hp = obj.value("hp").toInt(self.hp);
+            const int maxhp = obj.value("maxhp").toInt(self.maxhp);
+            const int mana = obj.value("mana").toInt(self.mana);
+            const int maxmana = obj.value("maxmana").toInt(self.maxmana);
+            const int mp = obj.value("mp").toInt(self.moves);
+            const int maxmp = obj.value("maxmp").toInt(self.maxmoves);
             if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp))
                 update = true;
         }

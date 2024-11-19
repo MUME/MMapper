@@ -184,40 +184,41 @@ NODISCARD static QString getPrettyName(const CharacterAffectEnum affect)
 #undef X_CASE
 }
 
-QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
+QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
                                       const ColumnTypeEnum column,
                                       const int role) const
 {
+    const CGroupChar &character = deref(pCharacter);
     // Map column to data
     switch (role) {
     case Qt::DisplayRole:
         switch (column) {
         case ColumnTypeEnum::NAME:
-            if (character->getLabel().isEmpty() || character->getName() == character->getLabel())
-                return character->getName();
+            if (character.getLabel().isEmpty() || character.getName() == character.getLabel())
+                return character.getName();
             else
-                return QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
-                                              QString::fromLatin1(character->getLabel()));
+                return QString("%1 (%2)").arg(QString::fromLatin1(character.getName()),
+                                              QString::fromLatin1(character.getLabel()));
         case ColumnTypeEnum::HP_PERCENT:
-            return calculatePercentage(character->hp, character->maxhp);
+            return calculatePercentage(character.hp, character.maxhp);
         case ColumnTypeEnum::MANA_PERCENT:
-            return calculatePercentage(character->mana, character->maxmana);
+            return calculatePercentage(character.mana, character.maxmana);
         case ColumnTypeEnum::MOVES_PERCENT:
-            return calculatePercentage(character->moves, character->maxmoves);
+            return calculatePercentage(character.moves, character.maxmoves);
         case ColumnTypeEnum::HP:
-            return calculateRatio(character->hp, character->maxhp);
+            return calculateRatio(character.hp, character.maxhp);
         case ColumnTypeEnum::MANA:
-            return calculateRatio(character->mana, character->maxmana);
+            return calculateRatio(character.mana, character.maxmana);
         case ColumnTypeEnum::MOVES:
-            return calculateRatio(character->moves, character->maxmoves);
+            return calculateRatio(character.moves, character.maxmoves);
         case ColumnTypeEnum::STATE:
             return QVariant::fromValue(
-                GroupStateData(character->getColor(), character->position, character->affects));
+                GroupStateData(character.getColor(), character.position, character.affects));
         case ColumnTypeEnum::ROOM_NAME:
-            if (character->roomId != INVALID_ROOMID && !m_map->isEmpty() && m_mapLoaded
-                && character->roomId <= m_map->getMaxId()) {
+            if (character.roomId != INVALID_ROOMID && !m_map->isEmpty() && m_mapLoaded
+                && character.roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
-                if (const Room *const r = roomSelection.getRoom(character->roomId)) {
+                if (const Room *const r = roomSelection.getRoom(character.roomId)) {
                     return r->getName().toQString();
                 }
             }
@@ -230,10 +231,10 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
         break;
 
     case Qt::BackgroundRole:
-        return character->getColor();
+        return character.getColor();
 
     case Qt::ForegroundRole:
-        return textColor(character->getColor());
+        return textColor(character.getColor());
 
     case Qt::TextAlignmentRole:
         if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
@@ -245,15 +246,15 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
     case Qt::ToolTipRole:
         switch (column) {
         case ColumnTypeEnum::HP_PERCENT:
-            return calculateRatio(character->hp, character->maxhp);
+            return calculateRatio(character.hp, character.maxhp);
         case ColumnTypeEnum::MANA_PERCENT:
-            return calculateRatio(character->mana, character->maxmana);
+            return calculateRatio(character.mana, character.maxmana);
         case ColumnTypeEnum::MOVES_PERCENT:
-            return calculateRatio(character->moves, character->maxmoves);
+            return calculateRatio(character.moves, character.maxmoves);
         case ColumnTypeEnum::STATE: {
-            QString prettyName = getPrettyName(character->position);
+            QString prettyName = getPrettyName(character.position);
             for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-                if (character->affects.contains(affect)) {
+                if (character.affects.contains(affect)) {
                     prettyName.append(", ").append(getPrettyName(affect));
                 }
             }
@@ -374,14 +375,15 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             auto selection = group->selectAll();
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
-                const SharedGroupChar &character = selection->at(index.row());
-                selectedCharacter = character->getName();
+                const SharedGroupChar &pCharacter = selection->at(index.row());
+                const CGroupChar &character = deref(pCharacter);
+                selectedCharacter = character.getName();
 
                 // Center map on the clicked character
-                if (character->roomId != INVALID_ROOMID && !m_map->isEmpty()
-                    && character->roomId <= m_map->getMaxId()) {
+                if (character.roomId != INVALID_ROOMID && !m_map->isEmpty()
+                    && character.roomId <= m_map->getMaxId()) {
                     auto roomSelection = RoomSelection(*m_map);
-                    if (const Room *const r = roomSelection.getRoom(character->roomId)) {
+                    if (const Room *const r = roomSelection.getRoom(character.roomId)) {
                         const Coordinate &c = r->getPosition();
                         const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
                         emit sig_center(worldPos); // connects to MapWindow
