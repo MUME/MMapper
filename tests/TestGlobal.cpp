@@ -6,6 +6,7 @@
 #include "../src/global/AnsiTextUtils.h"
 #include "../src/global/CaseUtils.h"
 #include "../src/global/CharUtils.h"
+#include "../src/global/Flags.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/global/RAII.h"
 #include "../src/global/StringView.h"
@@ -146,6 +147,11 @@ void TestGlobal::colorTest()
 void TestGlobal::entitiesTest()
 {
     test::test_entities();
+}
+
+void TestGlobal::flagsTest()
+{
+    test::testFlags();
 }
 
 void TestGlobal::hideQDebugTest()

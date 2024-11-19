@@ -212,34 +212,12 @@ private:
     }
 
 public:
-    // CAUTION: This function behaves differently than you probably expect.
+    // CAUTION: This function behaves differently than you might expect;
+    // it returns the nth bit set, defined in order from least-significant
+    // to most-significant bit that's currently set in the mask.
     //
-    // This function returns the nth bit set, defined in order from least to most significant bit that's currently
-    // set in the mask. For example, the following code compiled and passed when this function was added:
+    // Refer to test::testFlags() in Flags.cpp for an example.
     //
-    //    enum class Letter : uint8_t {A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z };
-    //    static_assert(static_cast<uint8_t>(Letter::A) == 0);
-    //    static_assert(static_cast<uint8_t>(Letter::Z) == 25);
-    //    struct Letters : public enums::Flags<Letters, Letter, uint32_t, 26>
-    //    {
-    //        using Flags::Flags;
-    //    };
-    //
-    //    static int testFlags = []() {
-    //    Letters letters = Letters{Letter::A} | Letter::F | Letter::Z;
-    //    assert(letters.size() == 3);
-    //    assert(letters[0] == Letter::A);
-    //    assert(letters[1] == Letter::F);
-    //    assert(letters[2] == Letter::Z);
-    //
-    //    letters |= Letter::D;
-    //    assert(letters.size() == 4);
-    //    assert(letters[0] == Letter::A);
-    //    assert(letters[1] == Letter::D);
-    //    assert(letters[2] == Letter::F);
-    //    assert(letters[3] == Letter::Z);
-    //
-    NODISCARD Flag operator[](const size_t n) const noexcept { return at(n); }
     // Note: both [] and at() perform bounds checking in debug mode.
     NODISCARD Flag at(const size_t n_) const noexcept
     {
@@ -257,6 +235,7 @@ public:
 
         std::abort(); /* crash */
     }
+    NODISCARD Flag operator[](const size_t n) const noexcept { return at(n); }
 
     /// Syntax:
     ///  find_first_matching([](Flag f) -> bool { /* ... */ });
@@ -328,3 +307,7 @@ public:
 };
 
 } // namespace enums
+
+namespace test {
+extern void testFlags();
+} // namespace test

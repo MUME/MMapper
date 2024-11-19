@@ -22,6 +22,7 @@ private Q_SLOTS:
     static void charUtilsTest();
     static void colorTest();
     static void entitiesTest();
+    static void flagsTest();
     static void hideQDebugTest();
     static void stringViewTest();
     static void toLowerLatin1Test();

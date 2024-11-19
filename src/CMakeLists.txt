@@ -89,6 +89,7 @@ set(mmapper_SRCS
     global/Consts.h
     global/ConversionResult.h
     global/EnumIndexedArray.h
+    global/Flags.cpp
     global/Flags.h
     global/HideQDebug.cpp
     global/HideQDebug.h
