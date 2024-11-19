@@ -73,7 +73,6 @@ private:
 private:
     QSslSocket socket;
     QTimer timer;
-    GroupAuthority *const authority;
     void onReadInternal(char c);
 
     ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;

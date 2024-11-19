@@ -71,8 +71,6 @@ protected:
     std::unique_ptr<MapCanvas> m_canvas;
 
 private:
-    QPoint mousePressPos;
-    QPoint scrollBarValuesOnMousePress;
     struct NODISCARD KnownMapSize final
     {
         glm::ivec3 min{0};

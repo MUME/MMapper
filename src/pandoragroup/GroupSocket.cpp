@@ -26,7 +26,6 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     : QObject(parent)
     , socket{this}
     , timer{this}
-    , authority(authority)
 {
     timer.setInterval(THIRTY_SECOND_TIMEOUT);
     timer.setSingleShot(true);

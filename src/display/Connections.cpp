@@ -761,8 +761,6 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
-    static const size_t LONG_LINE_DIVISONS = 3;
-
     const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
                                    : Colors::red;
 

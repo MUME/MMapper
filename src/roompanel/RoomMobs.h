@@ -39,9 +39,6 @@ signals:
     void sig_mobsChanged();
 
 private:
-    void mobsChanged();
-
-private:
     struct SharedRoomMobAndIndex
     {
         SharedRoomMob mob;

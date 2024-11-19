@@ -165,17 +165,6 @@ public:
         return connection;
     }
 
-    template<typename T>
-    using MemberFunctionPtr = void (T::*)(Args...);
-
-    template<typename T>
-    NODISCARD SharedConnection connectMember(T &obj, MemberFunctionPtr<T> pfn)
-    {
-        if (pfn == nullptr)
-            throw NullPointerException();
-        return connect([&obj, pfn](Args... args) { (obj.*pfn)(args...); });
-    }
-
     void disconnect(const SharedConnection &connection)
     {
         if (connection)

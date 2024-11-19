@@ -41,11 +41,6 @@ private:
     void virt_releaseCharacters(GroupRecipient *sender) final;
 
 public:
-    void unselect(GroupSelection *s)
-    {
-        releaseCharacters(s);
-        delete s;
-    }
     NODISCARD std::unique_ptr<GroupSelection> selectAll();
     NODISCARD std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 

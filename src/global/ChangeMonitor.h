@@ -19,13 +19,6 @@ public:
         return Base::connect(std::move(callback));
     }
 
-    template<typename T>
-    NODISCARD CallbackLifetime registerMemberFunctionChangeCallback(T &obj,
-                                                                    Base::MemberFunctionPtr<T> pfn)
-    {
-        return Base::connectMember(obj, pfn);
-    }
-
 public:
     void notifyAll() { Base::invoke(); }
 };
