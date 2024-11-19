@@ -241,6 +241,8 @@ void MapCanvas::initTextures()
     textures.room_sel_move_good = loadTexture(getPixmapFilenameRaw("room-sel-move-good.png"));
     // 128
     textures.update = loadTexture(getPixmapFilenameRaw("update0.png"));
+    // 256
+    textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
     {
         int priority = 0;
