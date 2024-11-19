@@ -496,7 +496,7 @@ void MainWindow::wireConnections()
             m_dockDialogClient->hide();
     });
     connect(m_clientWidget, &ClientWidget::sig_relayMessage, this, [this](const QString &message) {
-        statusBar()->showMessage(message, 2000);
+        showStatusShort(message);
     });
 
     // Find Room Dialog Connections
@@ -1441,7 +1441,7 @@ void MainWindow::setupToolBars()
 
 void MainWindow::setupStatusBar()
 {
-    statusBar()->showMessage(tr("Say friend and enter..."));
+    showStatusForever(tr("Say friend and enter..."));
     statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock, this));
 
     XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
@@ -1478,10 +1478,9 @@ void MainWindow::slot_newRoomSelection(const SigRoomSelection &rs)
         m_roomSelection.reset();
 
     if (m_roomSelection != nullptr) {
-        statusBar()->showMessage(QString("Selection: %1 room%2")
-                                     .arg(m_roomSelection->size())
-                                     .arg((m_roomSelection->size() != 1) ? "s" : ""),
-                                 5000);
+        showStatusLong(QString("Selection: %1 room%2")
+                           .arg(m_roomSelection->size())
+                           .arg((m_roomSelection->size() != 1) ? "s" : ""));
         selectedRoomActGroup->setEnabled(true);
         if (m_roomSelection->size() == 1) {
             forceRoomAct->setEnabled(true);
@@ -1503,10 +1502,9 @@ void MainWindow::slot_newInfoMarkSelection(InfoMarkSelection *const is)
     infoMarkActions.infoMarkGroup->setEnabled(m_infoMarkSelection != nullptr);
 
     if (m_infoMarkSelection != nullptr) {
-        statusBar()->showMessage(QString("Selection: %1 mark%2")
-                                     .arg(m_infoMarkSelection->size())
-                                     .arg((m_infoMarkSelection->size() != 1) ? "s" : ""),
-                                 5000);
+        showStatusLong(QString("Selection: %1 mark%2")
+                           .arg(m_infoMarkSelection->size())
+                           .arg((m_infoMarkSelection->size() != 1) ? "s" : ""));
         if (m_infoMarkSelection->empty()) {
             // Create a new infomark if its an empty selection
             slot_onEditInfoMarkSelection();
@@ -1643,7 +1641,7 @@ void MainWindow::slot_merge()
         showWarning(tr("Failed to merge file %1.").arg(fileName));
     } else {
         mapChanged();
-        statusBar()->showMessage(tr("File merged"), 2000);
+        showStatusShort(tr("File merged"));
     }
 
     progressDlg.reset();
@@ -1662,7 +1660,7 @@ void MainWindow::slot_open()
         savedLastMapDir,
         "MMapper2 Maps (*.mm2);;MMapper2 XML Maps (*.mm2xml);;Pandora Maps (*.xml)");
     if (fileName.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return;
     }
     QFileInfo file(fileName);
@@ -1710,7 +1708,7 @@ void MainWindow::endProgressDialog()
 void MainWindow::loadFile(const QString &fileName)
 {
     if (fileName.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return;
     }
 
@@ -1773,7 +1771,7 @@ void MainWindow::loadFile(const QString &fileName)
 
     mapChanged();
     setCurrentFile(m_mapData->getFileName());
-    statusBar()->showMessage(tr("File loaded"), 2000);
+    showStatusShort(tr("File loaded"));
 }
 
 void MainWindow::slot_percentageChanged(const uint32_t p)
@@ -1859,7 +1857,7 @@ bool MainWindow::saveFile(const QString &fileName,
             m_mapData->setFileName(fileName, !QFileInfo(fileName).isWritable());
             setCurrentFile(fileName);
         }
-        statusBar()->showMessage(tr("File saved"), 2000);
+        showStatusShort(tr("File saved"));
     }
 
     setWindowModified(false);
@@ -2207,4 +2205,9 @@ void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> inp
     deref(m_mapData).execute(std::make_unique<GroupMapAction>(std::move(input_action),
                                                               m_roomSelection),
                              m_roomSelection);
+}
+
+void MainWindow::showStatusInternal(const QString &text, int duration)
+{
+    statusBar()->showMessage(text, duration);
 }

@@ -160,6 +160,10 @@ private:
     void startServices();
     void forceNewFile();
     void showWarning(const QString &s);
+    void showStatusInternal(const QString &txt, int duration);
+    void showStatusShort(const QString &txt) { showStatusInternal(txt, 2000); }
+    void showStatusLong(const QString &txt) { showStatusInternal(txt, 5000); }
+    void showStatusForever(const QString &txt) { showStatusInternal(txt, 0); }
 
 private:
     MapWindow *m_mapWindow = nullptr;

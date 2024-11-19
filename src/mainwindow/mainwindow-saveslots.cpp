@@ -7,7 +7,6 @@
 #include <memory>
 
 #include <QMessageBox>
-#include <QStatusBar>
 
 NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
 {
@@ -80,7 +79,7 @@ bool MainWindow::slot_saveAs()
     };
     const QStringList fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return false;
     }
 
@@ -119,7 +118,7 @@ bool MainWindow::slot_exportBaseMap()
 
     const auto fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return false;
     }
 
@@ -147,7 +146,7 @@ bool MainWindow::slot_exportMm2xmlMap()
 
     const auto fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return false;
     }
     return saveFile(fileNames[0], SaveModeEnum::FULL, SaveFormatEnum::MM2XML);
@@ -169,7 +168,7 @@ bool MainWindow::slot_exportWebMap()
 
     const QStringList fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return false;
     }
 
@@ -197,7 +196,7 @@ bool MainWindow::slot_exportMmpMap()
 
     const auto fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
-        statusBar()->showMessage(tr("No filename provided"), 2000);
+        showStatusShort(tr("No filename provided"));
         return false;
     }
     return saveFile(fileNames[0], SaveModeEnum::FULL, SaveFormatEnum::MMP);
