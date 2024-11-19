@@ -163,7 +163,7 @@ NODISCARD inline T &deref(const QPointer<T> &ptr)
 
 ///  Can throw NullPointerException or std::bad_cast
 template<typename /* must be specified */ Derived, typename /* deduced */ Base>
-NODISCARD Derived checked_dynamic_downcast(Base ptr) noexcept(false)
+NODISCARD Derived checked_dynamic_downcast(Base ptr) CAN_THROW
 {
     static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);
     static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
@@ -184,7 +184,7 @@ NODISCARD Derived checked_dynamic_downcast(Base ptr) noexcept(false)
 
 ///  Can throw NullPointerException
 template<typename /* must be specified */ Base, typename /* deduced */ Derived>
-NODISCARD Base checked_static_upcast(Derived ptr) noexcept(false)
+NODISCARD Base checked_static_upcast(Derived ptr) CAN_THROW
 {
     static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
     static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);

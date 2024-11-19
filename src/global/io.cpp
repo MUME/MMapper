@@ -57,7 +57,7 @@ IOException IOException::withCurrentErrno()
 
 IOException::~IOException() = default;
 
-bool fsync(QFile &file) noexcept(false)
+bool fsync(QFile &file) CAN_THROW
 {
     const int handle = file.handle();
 #ifdef Q_OS_WIN

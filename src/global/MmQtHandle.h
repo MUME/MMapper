@@ -5,6 +5,7 @@
 
 #include "NullPointerException.h"
 #include "RuleOf5.h"
+#include "macros.h"
 #include "utils.h"
 
 #include <cstddef>
@@ -31,8 +32,7 @@ public:
     explicit MmQtHandle(std::nullptr_t) {}
     explicit MmQtHandle(const shared_type &event)
         /* throws NullPointerException */
-        noexcept(false)
-        : m_shared{event}
+        CAN_THROW : m_shared{event}
     {
         requireValid(); /* throws NullPointerException */
     }
@@ -59,7 +59,7 @@ public:
 
 public:
     /* result can be discarded; throws NullPointerException */
-    inline const MmQtHandle &requireValid() const noexcept(false)
+    ALLOW_DISCARD inline const MmQtHandle &requireValid() const CAN_THROW
     {
         if (!isValid())
             throw NullPointerException();
@@ -68,7 +68,7 @@ public:
     }
 
 public:
-    NODISCARD const shared_type &getShared() const noexcept(false)
+    NODISCARD const shared_type &getShared() const CAN_THROW
     {
         if (auto &p = m_shared)
             return p;
@@ -78,7 +78,7 @@ public:
 public:
     NODISCARD contained_type &deref() const
         /* throws NullPointerException */
-        noexcept(false)
+        CAN_THROW
     {
         return ::deref(m_shared);
     }

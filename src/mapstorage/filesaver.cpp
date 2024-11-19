@@ -22,7 +22,7 @@ NODISCARD static auto maybe_add_suffix(const QString &filename)
     return USE_TMP_SUFFIX ? (filename + TMP_FILE_SUFFIX) : filename;
 }
 
-static void remove_tmp_suffix(const QString &filename) noexcept(false)
+static void remove_tmp_suffix(const QString &filename) CAN_THROW
 {
     if (!USE_TMP_SUFFIX)
         return;
@@ -42,7 +42,7 @@ FileSaver::~FileSaver()
     }
 }
 
-void FileSaver::open(const QString &filename) noexcept(false)
+void FileSaver::open(const QString &filename) CAN_THROW
 {
     close();
 
@@ -54,7 +54,7 @@ void FileSaver::open(const QString &filename) noexcept(false)
     }
 }
 
-void FileSaver::close() noexcept(false)
+void FileSaver::close() CAN_THROW
 {
     if (!m_file.isOpen()) {
         return;

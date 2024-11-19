@@ -115,7 +115,7 @@ public:
 };
 static_assert(sizeof(ErrorNumberMessage) == 1024);
 
-NODISCARD extern bool fsync(QFile &) noexcept(false);
+NODISCARD extern bool fsync(QFile &) CAN_THROW;
 
 NODISCARD extern IOResultEnum fsyncNoexcept(QFile &) noexcept;
 

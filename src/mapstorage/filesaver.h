@@ -33,9 +33,9 @@ public:
     /*! \exception std::runtime_error if the file can't be opened or a currently
      * open file can't be closed.
      */
-    void open(const QString &filename) noexcept(false);
+    void open(const QString &filename) CAN_THROW;
 
     /*! \exception std::runtime_error if the file can't be safely closed.
      */
-    void close() noexcept(false);
+    void close() CAN_THROW;
 };
