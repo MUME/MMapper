@@ -445,7 +445,8 @@ StringView StringView::afterSubstring(const StringView other) const
     return mid(static_cast<size_t>(offset));
 }
 
-namespace test {
+namespace { // anonymous
+namespace test_detail {
 #define STRINGIZE2(x) #x
 #define STRINGIZE(x) STRINGIZE2(x)
 #define TEST_ASSERT(x) \
@@ -542,8 +543,12 @@ static void testSubstring()
     assert(sv.right(0).isSubstringOf(sv));
 }
 
-void testStringView()
+} // namespace test_detail
+} // namespace
+
+void test::testStringView()
 {
+    using namespace test_detail;
     testEmpty();
     testLazyDog();
     testIntersect();
@@ -551,5 +556,3 @@ void testStringView()
     std::cout << "Test \"" << __FUNCTION__ << "\" passed.\n" << std::flush;
     std::cerr << std::flush;
 }
-
-} // namespace test

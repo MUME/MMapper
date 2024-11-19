@@ -323,9 +323,7 @@ NODISCARD UnquoteResult unquote(const std::string_view input,
     return UnquoteResult{UnquoteFailureReason{"unknown error"}};
 }
 
-namespace test {
-
-void test_unquote() noexcept /* will crash the program if it throws */
+void test::test_unquote() noexcept /* will crash the program if it throws */
 {
     {
         static const auto expectString2 = [](const std::string_view input,
@@ -444,5 +442,3 @@ void test_unquote() noexcept /* will crash the program if it throws */
 
     std::cout << __FUNCTION__ << ": All tests passed.\n" << std::flush;
 }
-
-} // namespace test

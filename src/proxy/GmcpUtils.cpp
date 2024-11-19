@@ -39,6 +39,7 @@ QString escapeGmcpStringData(const QString &str)
     return result;
 }
 
+namespace { // anonymous
 namespace test {
 static int testing()
 {
@@ -70,5 +71,5 @@ static int testing()
 }
 MAYBE_UNUSED static int test = testing();
 } // namespace test
-
+} // namespace
 } // namespace GmcpUtils
