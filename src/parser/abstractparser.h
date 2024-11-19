@@ -56,12 +56,11 @@ class Sublist;
 
 class AbstractParser : public QObject
 {
+    Q_OBJECT
+
 protected:
     static const QString nullString;
     static const QByteArray emptyByteArray;
-
-private:
-    Q_OBJECT
 
 protected:
     MumeClock &m_mumeClock;

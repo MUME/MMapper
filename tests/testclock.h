@@ -7,6 +7,7 @@
 class TestClock final : public QObject
 {
     Q_OBJECT
+
 public:
     TestClock();
     ~TestClock() final;

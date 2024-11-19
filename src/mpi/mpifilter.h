@@ -15,6 +15,7 @@
 class MpiFilter final : public QObject
 {
     Q_OBJECT
+
 private:
     TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
     bool m_receivingMpi = false;

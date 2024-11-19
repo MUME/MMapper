@@ -45,6 +45,8 @@ struct MapCanvasTexturesProxy;
 class MapData final : public MapFrontend
 {
     Q_OBJECT
+
+private:
     friend class RoomSelection;
 
 protected:

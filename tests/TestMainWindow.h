@@ -7,6 +7,7 @@
 class TestMainWindow final : public QObject
 {
     Q_OBJECT
+
 public:
     TestMainWindow();
     ~TestMainWindow() final;

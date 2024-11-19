@@ -11,6 +11,7 @@
 class UserTelnet final : public AbstractTelnet
 {
     Q_OBJECT
+
 private:
     /** modules for GMCP */
     struct NODISCARD GmcpData final

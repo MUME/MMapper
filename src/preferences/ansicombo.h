@@ -20,8 +20,10 @@ class QWidget;
 
 class AnsiCombo : public QComboBox
 {
-    using super = QComboBox;
     Q_OBJECT
+
+private:
+    using super = QComboBox;
 
 public:
     struct NODISCARD AnsiItem final

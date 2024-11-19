@@ -10,6 +10,7 @@
 class GameObserver : public QObject
 {
     Q_OBJECT
+
 public:
     explicit GameObserver(QObject *parent);
 

@@ -32,6 +32,7 @@ class RemoteEditSession : public QObject
 {
     Q_OBJECT
 
+private:
     friend class RemoteEditExternalSession;
     friend class RemoteEditInternalSession;
 
@@ -72,6 +73,7 @@ protected slots:
 class RemoteEditInternalSession final : public RemoteEditSession
 {
     Q_OBJECT
+
 public:
     explicit RemoteEditInternalSession(uint32_t internalId,
                                        const RemoteSession &sessionId,
@@ -87,6 +89,7 @@ private:
 class RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
+
 public:
     explicit RemoteEditExternalSession(uint32_t internalId,
                                        const RemoteSession &sessionId,

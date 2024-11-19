@@ -40,6 +40,7 @@ public:
 class UpdateDialog : public QDialog
 {
     Q_OBJECT
+
 private:
     QNetworkAccessManager m_manager;
     QString m_downloadUrl;

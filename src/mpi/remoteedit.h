@@ -21,6 +21,8 @@ class RemoteEditSession;
 class RemoteEdit final : public QObject
 {
     Q_OBJECT
+
+private:
     friend class RemoteEditSession;
 
 private:

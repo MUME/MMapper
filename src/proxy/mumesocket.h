@@ -20,6 +20,7 @@ class QSslError;
 class MumeSocket : public QObject
 {
     Q_OBJECT
+
 public:
     explicit MumeSocket(QObject *parent)
         : QObject(parent)
@@ -107,6 +108,7 @@ protected slots:
 class MumeTcpSocket final : public MumeSslSocket
 {
     Q_OBJECT
+
 public:
     explicit MumeTcpSocket(QObject *parent)
         : MumeSslSocket(parent)

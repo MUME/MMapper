@@ -16,7 +16,6 @@ class GmcpMessage;
 
 class RoomManager final : public QObject
 {
-public:
     Q_OBJECT
 
 private:

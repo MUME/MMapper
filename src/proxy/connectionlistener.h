@@ -30,7 +30,6 @@ class RoomManager;
 
 class ConnectionListenerTcpServer final : public QTcpServer
 {
-private:
     Q_OBJECT
 
 public:
@@ -46,6 +45,8 @@ signals:
 
 class ConnectionListener final : public QObject
 {
+    Q_OBJECT
+
 private:
     MapData &m_mapData;
     Mmapper2PathMachine &m_pathMachine;
@@ -59,9 +60,6 @@ private:
     QPointer<Proxy> m_proxy;
 
     bool m_accept = true;
-
-private:
-    Q_OBJECT
 
 public:
     explicit ConnectionListener(MapData &,

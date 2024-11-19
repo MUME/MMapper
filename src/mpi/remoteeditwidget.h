@@ -85,11 +85,10 @@ enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
 
 class RemoteTextEdit final : public QPlainTextEdit
 {
-private:
-    using base = QPlainTextEdit;
+    Q_OBJECT
 
 private:
-    Q_OBJECT
+    using base = QPlainTextEdit;
 
 public:
     explicit RemoteTextEdit(const QString &initialText, QWidget *parent);

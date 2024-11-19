@@ -12,6 +12,8 @@
 class GroupClient final : public CGroupCommunicator
 {
     Q_OBJECT
+
+private:
     friend class GroupSocket;
 
 private:

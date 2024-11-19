@@ -14,6 +14,7 @@
 class AutoLogger final : public QObject
 {
     Q_OBJECT
+
 public:
     explicit AutoLogger(QObject *parent);
     ~AutoLogger() final;

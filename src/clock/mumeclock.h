@@ -24,6 +24,7 @@ class MumeClock final : public QObject
 {
     Q_OBJECT
 
+private:
     friend class TestClock;
 
 private:

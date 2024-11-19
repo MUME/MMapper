@@ -27,6 +27,7 @@ struct RoomId;
 class RoomSignalHandler final : public QObject
 {
     Q_OBJECT
+
 private:
     std::map<const Room *, RoomAdmin *> owners{};
     std::map<const Room *, std::set<RoomRecipient *>> lockers{};

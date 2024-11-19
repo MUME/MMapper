@@ -11,6 +11,7 @@
 class MudTelnet final : public AbstractTelnet
 {
     Q_OBJECT
+
 private:
     /** modules for GMCP */
     GmcpModuleSet m_gmcp;

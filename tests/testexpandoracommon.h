@@ -15,6 +15,7 @@ Q_DECLARE_METATYPE(ComparisonResultEnum)
 class TestExpandoraCommon final : public QObject
 {
     Q_OBJECT
+
 public:
     TestExpandoraCommon();
     ~TestExpandoraCommon() final;

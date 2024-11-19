@@ -68,11 +68,10 @@ struct NODISCARD AnsiTextHelper final
 
 class DisplayWidget final : public QTextEdit
 {
-private:
-    using base = QTextEdit;
+    Q_OBJECT
 
 private:
-    Q_OBJECT
+    using base = QTextEdit;
 
 private:
     AnsiTextHelper m_ansiTextHelper;

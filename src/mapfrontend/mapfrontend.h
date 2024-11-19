@@ -36,6 +36,8 @@ class RoomRecipient;
 class MapFrontend : public QObject, public RoomAdmin, public InfoMarkModificationTracker
 {
     Q_OBJECT
+
+private:
     friend class FrontendAccessor;
 
 protected:

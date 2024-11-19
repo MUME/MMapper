@@ -7,6 +7,7 @@
 class TestCTimers final : public QObject
 {
     Q_OBJECT
+
 public:
     TestCTimers();
     ~TestCTimers() final;

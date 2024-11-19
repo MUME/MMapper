@@ -28,7 +28,6 @@ class Mmapper2Group;
 
 class Mmapper2Group final : public QObject
 {
-public:
     Q_OBJECT
 
 private:

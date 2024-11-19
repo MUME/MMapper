@@ -7,6 +7,7 @@
 class TestGlobal final : public QObject
 {
     Q_OBJECT
+
 public:
     TestGlobal();
     ~TestGlobal() final;

@@ -7,6 +7,7 @@
 class TestParser final : public QObject
 {
     Q_OBJECT
+
 public:
     TestParser();
     ~TestParser() final;

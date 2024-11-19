@@ -7,6 +7,7 @@
 class TestProxy final : public QObject
 {
     Q_OBJECT
+
 public:
     TestProxy() = default;
     ~TestProxy() override = default;

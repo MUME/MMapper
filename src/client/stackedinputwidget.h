@@ -17,7 +17,6 @@ class QWidget;
 
 class StackedInputWidget final : public QStackedWidget
 {
-private:
     Q_OBJECT
 
 private:

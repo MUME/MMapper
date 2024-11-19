@@ -7,6 +7,7 @@
 class TestRoomMob final : public QObject
 {
     Q_OBJECT
+
 public:
     TestRoomMob();
     ~TestRoomMob() final;
