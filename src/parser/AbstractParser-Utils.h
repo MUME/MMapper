@@ -9,7 +9,7 @@
 
 NODISCARD bool isOffline();
 NODISCARD bool isOnline();
-NODISCARD const char *enabledString(bool isEnabled);
+NODISCARD std::string_view enabledString(bool isEnabled);
 NODISCARD bool isValidPrefix(char c);
 
 template<typename T>

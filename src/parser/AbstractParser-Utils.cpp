@@ -19,9 +19,11 @@ bool isOnline()
     return !isOffline();
 }
 
-const char *enabledString(const bool isEnabled)
+std::string_view enabledString(const bool isEnabled)
 {
-    return isEnabled ? "enabled" : "disabled";
+    static constexpr const std::string_view enabled{"enabled"};
+    static constexpr const std::string_view disabled{"disabled"};
+    return isEnabled ? enabled : disabled;
 }
 
 bool isValidPrefix(const char c)
