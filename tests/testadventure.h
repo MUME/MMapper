@@ -6,9 +6,9 @@
 
 #include <QObject>
 
-struct TestLine
+struct TestLine final
 {
-    bool expected;
+    bool expected = false;
     QString line;
 
     QString errorMsg() const

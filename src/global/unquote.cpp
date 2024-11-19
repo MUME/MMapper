@@ -237,7 +237,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             case TokenEnum::BeginString:
                 assert(!current_length.has_value());
                 current_length.emplace(0);
-                result.emplace_back(std::string{});
+                result.emplace_back();
                 break;
             case TokenEnum::EndString:
                 result.back().resize(current_length.value());

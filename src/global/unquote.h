@@ -33,10 +33,13 @@ public:
     NODISCARD bool has_value() const { return m_var.index() == 0; }
     explicit operator bool() const { return has_value(); }
 
-    NODISCARD const VectorOfStrings &getVectorOfStrings() const { return std::get<0>(m_var); }
+    NODISCARD const VectorOfStrings &getVectorOfStrings() const
+    {
+        return std::get<VectorOfStrings>(m_var);
+    }
     NODISCARD const UnquoteFailureReason &getUnquoteFailureReason() const
     {
-        return std::get<1>(m_var);
+        return std::get<UnquoteFailureReason>(m_var);
     }
 };
 
