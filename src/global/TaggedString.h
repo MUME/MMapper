@@ -91,18 +91,6 @@ public:
         else
             std::abort();
     }
-
-public:
-    NODISCARD
-    friend auto operator+(const TaggedString &taggedString, const QString &qs)
-    {
-        return taggedString.toQString() + qs;
-    }
-    NODISCARD
-    friend auto operator+(const QString &qs, const TaggedString &taggedString)
-    {
-        return qs + taggedString.toQString();
-    }
 };
 
 // Latin1
@@ -257,18 +245,6 @@ public:
         return mmqt::toQByteArrayLatin1(getStdStringViewLatin1());
     }
     NODISCARD QString toQString() const { return mmqt::toQStringLatin1(getStdStringViewLatin1()); }
-
-public:
-    NODISCARD
-    friend auto operator+(const TaggedBoxedStringLatin1 &taggedString, const QString &qs)
-    {
-        return taggedString.toQString() + qs;
-    }
-    NODISCARD
-    friend auto operator+(const QString &qs, const TaggedBoxedStringLatin1 &taggedString)
-    {
-        return qs + taggedString.toQString();
-    }
 };
 
 // Utf8

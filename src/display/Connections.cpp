@@ -115,7 +115,7 @@ NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnu
 NODISCARD static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
-    return room->exit(dir).getDoorName() + postFix;
+    return room->exit(dir).getDoorName().toQString() + postFix;
 }
 
 UniqueMesh RoomNameBatch::getMesh(GLFont &font)

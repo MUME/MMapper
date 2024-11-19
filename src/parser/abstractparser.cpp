@@ -754,7 +754,8 @@ private:
     {
         const SPNode *spnode = &spnodes[endpoint];
         auto name = spnode->r->getName();
-        parser.sendToUser("Distance " + QString::number(spnode->dist) + ": " + name + "\n");
+        parser.sendToUser("Distance " + std::to_string(spnode->dist) + ": "
+                          + name.getStdStringLatin1() + "\n");
         QString dirs;
         while (spnode->parent >= 0) {
             if (&spnodes[spnode->parent] == spnode) {
