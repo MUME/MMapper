@@ -29,8 +29,6 @@
 #include <QVariantMap>
 #include <QtCore>
 
-static constexpr const bool THREADED = true;
-
 using Seconds = std::chrono::seconds;
 using Minutes = std::chrono::minutes;
 struct NODISCARD AffectTimeoutMap final : private std::map<CharacterAffectEnum, Seconds>
@@ -69,35 +67,14 @@ NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
     return CharacterPositionEnum::UNDEFINED;
 }
 
-Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
-    : QObject(nullptr)
+Mmapper2Group::Mmapper2Group(QObject *const parent)
+    : QObject{parent}
     , affectTimer{this}
-    , thread(THREADED ? new QThread : nullptr)
 {
-    connect(this,
-            &Mmapper2Group::sig_invokeStopInternal,
-            this,
-            &Mmapper2Group::slot_stopInternal,
-            Qt::ConnectionType::BlockingQueuedConnection);
-
     affectTimer.setInterval(1000);
     affectTimer.setSingleShot(false);
     affectTimer.start();
     connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::slot_onAffectTimeout);
-
-    if (thread) {
-        connect(thread.get(), &QThread::started, this, [this]() {
-            log("Initialized Group Manager service");
-        });
-        connect(thread.get(), &QThread::finished, this, [this]() {
-            thread.get()->deleteLater();
-            qInfo() << "Group Manager thread stopped";
-        });
-        connect(thread.get(), &QThread::destroyed, this, [this]() {
-            thread.release();
-            deleteLater();
-        });
-    }
 }
 
 Mmapper2Group::~Mmapper2Group()
@@ -111,10 +88,6 @@ Mmapper2Group::~Mmapper2Group()
 void Mmapper2Group::start()
 {
     init();
-    if (thread != nullptr) {
-        moveToThread(thread.get());
-        thread->start();
-    }
 }
 
 void Mmapper2Group::init()
@@ -132,26 +105,12 @@ void Mmapper2Group::init()
     emit sig_updateWidget();
 }
 
-void Mmapper2Group::slot_stopInternal()
+void Mmapper2Group::stop()
 {
     assert(QThread::currentThread() == QObject::thread());
-    assert(QThread::currentThread() == Mmapper2Group::thread.get() || !Mmapper2Group::thread);
     affectTimer.stop();
     slot_stopNetwork();
     ++m_calledStopInternal;
-}
-
-void Mmapper2Group::stop()
-{
-    emit sig_invokeStopInternal();
-    assert(m_calledStopInternal > 0);
-
-    // Wait until the thread is halted
-    if (thread && thread->isRunning()) {
-        thread->quit();
-        thread->wait(1000);
-        thread.release(); // finished() and destroyed() signals will destruct the thread
-    }
 }
 
 void Mmapper2Group::slot_characterChanged(bool updateCanvas)

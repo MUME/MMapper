@@ -47,7 +47,6 @@ private:
     QMap<CharacterAffectEnum, int64_t> affectLastSeen;
 
     QRecursiveMutex networkLock;
-    std::unique_ptr<QThread> thread;
     std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;
     std::unique_ptr<CGroup> group;
@@ -77,9 +76,6 @@ signals:
     void sig_messageBox(QString title, QString message);
     // GroupWidget::updateLabels (via GroupWidget)
     void sig_updateWidget(); // update group widget
-
-    // Mmapper2Group::slot_stopInternal
-    void sig_invokeStopInternal();
 
     // CGroupCommunicator::sendGroupTell
     void sig_sendGroupTell(const QByteArray &tell);
@@ -136,7 +132,6 @@ protected slots:
     void slot_sendLog(const QString &);
     void slot_characterChanged(bool updateCanvas);
     void slot_onAffectTimeout();
-    void slot_stopInternal();
 
 private:
     void init();
