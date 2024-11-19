@@ -62,11 +62,13 @@ void RoomMobs::resetMobs()
 void RoomMobs::addMob(RoomMobUpdate &&mob)
 {
     const RoomMob::Id id = mob.getId();
-    removeMobById(id); // in case it's already present
+    std::ignore = removeMobById(id); // in case it's already present
 
     SharedRoomMob newMob = RoomMob::alloc();
     newMob->setId(id);
-    newMob->updateFrom(std::move(mob));
+
+    // why is this return value ignored?
+    std::ignore = newMob->updateFrom(std::move(mob));
 
     QMutexLocker locker(&mutex);
     const size_t index = m_nextIndex++;

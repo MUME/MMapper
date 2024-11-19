@@ -47,7 +47,7 @@ public:
     NODISCARD SharedRoomMob getMobById(RoomMob::Id id) const;
     void resetMobs();
     void addMob(RoomMobUpdate &&mob);
-    bool removeMobById(RoomMob::Id id);            // return true if removed
+    NODISCARD bool removeMobById(RoomMob::Id id);  // return true if removed
     NODISCARD bool updateMob(RoomMobUpdate &&mob); // return true if modified
 
 signals:

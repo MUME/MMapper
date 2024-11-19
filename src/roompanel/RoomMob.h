@@ -90,9 +90,9 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(RoomMob);
 
 public:
-    static SharedRoomMob alloc();
+    NODISCARD static SharedRoomMob alloc();
     /// @return true if some fields changed
-    bool updateFrom(RoomMobUpdate &&);
+    NODISCARD bool updateFrom(RoomMobUpdate &&);
 };
 
 // -----------------------------------------------------------------------------
@@ -112,10 +112,13 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(RoomMobUpdate);
 
 public:
-    Flags getFlags() const { return m_flags; }
+    NODISCARD Flags getFlags() const { return m_flags; }
     void setFlags(Flags flags) { m_flags = flags; }
 
-    constexpr bool contains(const Field index) const noexcept { return m_flags.contains(index); }
+    NODISCARD constexpr bool contains(const Field index) const noexcept
+    {
+        return m_flags.contains(index);
+    }
 
 private:
     Flags m_flags; // keeps track of which fields are present
