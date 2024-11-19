@@ -6,6 +6,7 @@
 #include "AbstractTelnet.h"
 
 #include "../configuration/configuration.h"
+#include "../global/CharUtils.h"
 #include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "TextCodec.h"

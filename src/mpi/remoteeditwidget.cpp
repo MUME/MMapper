@@ -5,6 +5,7 @@
 #include "remoteeditwidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/CharUtils.h"
 #include "../global/Consts.h"
 #include "../global/entities.h"
 

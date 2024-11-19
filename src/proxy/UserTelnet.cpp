@@ -4,6 +4,7 @@
 
 #include "UserTelnet.h"
 
+#include "../global/CharUtils.h"
 #include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/TextUtils.h"

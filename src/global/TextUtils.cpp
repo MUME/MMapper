@@ -965,7 +965,6 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
 }
 } // namespace mmqt
 
-
 bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 {
     return !abbr.empty()                               //

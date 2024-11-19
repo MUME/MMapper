@@ -24,31 +24,6 @@ NODISCARD bool containsAnsi(const QString &str);
 } // namespace mmqt
 
 // Callback = void(string_view);
-// callback is either a span excluding c, or a span of contiguous c's.
-template<typename Callback>
-void foreachChar(const std::string_view input, const char c, Callback &&callback)
-{
-    std::string_view sv = input;
-    while (!sv.empty()) {
-        if (const auto next = sv.find(c); next == std::string_view::npos) {
-            callback(sv);
-            break;
-        } else if (next > 0) {
-            callback(sv.substr(0, next));
-            sv.remove_prefix(next);
-        }
-        assert(!sv.empty() && sv.front() == c);
-        if (const auto span = sv.find_first_not_of(c); span == std::string_view::npos) {
-            callback(sv);
-            break;
-        } else {
-            callback(sv.substr(0, span));
-            sv.remove_prefix(span);
-        }
-    }
-}
-
-// Callback = void(string_view);
 template<typename Callback>
 void foreachLine(const std::string_view input, Callback &&callback)
 {
@@ -70,29 +45,6 @@ void foreachLine(const std::string_view input, Callback &&callback)
 }
 
 namespace mmqt {
-// Callback is void(int pos)
-template<typename Callback>
-void foreachChar(const QStringView input, char c, Callback &&callback)
-{
-    const auto len = input.size();
-    int pos = 0;
-    while (pos < len) {
-        const auto next = input.indexOf(c, pos);
-        if (next < 0)
-            break;
-        assert(next >= pos);
-        assert(input[next] == c);
-        callback(next);
-        pos = static_cast<int>(next + 1);
-    }
-}
-
-template<typename Callback>
-inline void foreachChar(const QString &input, const char c, Callback &&callback)
-{
-    foreachChar(QStringView{input}, c, std::forward<Callback>(callback));
-}
-
 // Callback can be:
 // void(const QStringView line, bool hasNewline), or
 // void(QStringView line, bool hasNewline)

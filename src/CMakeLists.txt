@@ -83,6 +83,8 @@ set(mmapper_SRCS
     global/CaseUtils.h
     global/ChangeMonitor.h
     global/CharBuffer.h
+    global/CharUtils.cpp
+    global/CharUtils.h
     global/Charset.cpp
     global/Charset.h
     global/Color.cpp
