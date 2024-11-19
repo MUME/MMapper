@@ -35,11 +35,11 @@ private:
 
 public:
     /* move ctor */
-    RAIICallback(RAIICallback &&rhs);
+    RAIICallback(RAIICallback &&rhs) noexcept;
     DELETE_COPY_CTOR(RAIICallback);
     DELETE_ASSIGN_OPS(RAIICallback);
 
 public:
-    explicit RAIICallback(Callback &&callback);
+    explicit RAIICallback(Callback &&callback) noexcept;
     ~RAIICallback();
 };

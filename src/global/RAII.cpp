@@ -28,14 +28,18 @@ RAIIBool::~RAIIBool()
     }
 }
 
-RAIICallback::RAIICallback(RAIICallback &&rhs)
-    : m_callback{std::exchange(rhs.m_callback, {})}
-    , m_was_moved{std::exchange(rhs.m_was_moved, true)}
-{}
+RAIICallback::RAIICallback(RAIICallback &&rhs) noexcept
+    : m_was_moved{std::exchange(rhs.m_was_moved, true)}
+{
+    static_assert(std::is_nothrow_swappable_v<Callback>);
+    std::swap(m_callback, rhs.m_callback);
+}
 
-RAIICallback::RAIICallback(RAIICallback::Callback &&callback)
+RAIICallback::RAIICallback(RAIICallback::Callback &&callback) noexcept
     : m_callback{std::move(callback)}
-{}
+{
+    static_assert(std::is_nothrow_move_constructible_v<Callback>);
+}
 
 RAIICallback::~RAIICallback()
 {
