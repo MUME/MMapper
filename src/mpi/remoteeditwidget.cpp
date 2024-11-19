@@ -871,7 +871,8 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
     QMenu *const colorsMenu = m_editSession ? editMenu->addMenu("&Colors") : nullptr;
     QMenu *const whitespaceMenu = m_editSession ? editMenu->addMenu("&Whitespace") : nullptr;
 
-    const auto getMenu = [=](EditViewCmdEnum cmd) -> QMenu * {
+    const auto getMenu = [alignmentMenu, colorsMenu, editMenu, viewMenu, whitespaceMenu](
+                             const EditViewCmdEnum cmd) -> QMenu * {
         switch (cmd) {
         case EditViewCmdEnum::VIEW_OPTION:
             return viewMenu;
