@@ -128,3 +128,6 @@ struct std::hash<PromptFlagsType>
         return std::hash<uint32_t>()(static_cast<uint32_t>(x));
     }
 };
+
+NODISCARD extern std::string_view to_string_view(PromptFogEnum);
+NODISCARD extern std::string_view to_string_view(PromptWeatherEnum);
