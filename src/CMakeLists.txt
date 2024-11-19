@@ -161,6 +161,8 @@ set(mmapper_SRCS
     global/zpipe.h
     logger/autologger.cpp
     logger/autologger.h
+    mainwindow/MapZoomSlider.cpp
+    mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
     mainwindow/aboutdialog.cpp

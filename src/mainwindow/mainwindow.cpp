@@ -53,6 +53,7 @@
 #include "../proxy/telnetfilter.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
+#include "MapZoomSlider.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
@@ -115,67 +116,6 @@ static void addApplicationFont()
         }
     }
 }
-
-class MapZoomSlider final : public QSlider
-{
-private:
-    static constexpr float SCALE = 100.f;
-    static constexpr float INV_SCALE = 1.f / SCALE;
-
-    // can't get this to work as constexpr, so we'll just inline the static min/max.
-    static int calcPos(const float zoom) noexcept
-    {
-        static const float INV_DIVISOR = 1.f / std::log2(ScaleFactor::ZOOM_STEP);
-        return static_cast<int>(std::lround(SCALE * std::log2(zoom) * INV_DIVISOR));
-    }
-    static inline const int min = calcPos(ScaleFactor::MIN_VALUE);
-    static inline const int max = calcPos(ScaleFactor::MAX_VALUE);
-    MapWindow &m_map;
-
-public:
-    explicit MapZoomSlider(MapWindow &map, QWidget *const parent)
-        : QSlider(Qt::Orientation::Horizontal, parent)
-        , m_map{map}
-    {
-        setRange(min, max);
-        setFromActual();
-
-        connect(this, &QSlider::valueChanged, this, [this](int /*value*/) {
-            requestChange();
-            setFromActual();
-        });
-
-        connect(&map, &MapWindow::sig_zoomChanged, this, [this](float) { setFromActual(); });
-        setToolTip("Zoom");
-    }
-    ~MapZoomSlider() final;
-
-public:
-    void requestChange()
-    {
-        const float desiredZoomSteps = static_cast<float>(clamp(value())) * INV_SCALE;
-        {
-            const SignalBlocker block{*this};
-            m_map.setZoom(std::pow(ScaleFactor::ZOOM_STEP, desiredZoomSteps));
-        }
-        m_map.slot_graphicsSettingsChanged();
-    }
-
-    void setFromActual()
-    {
-        const float actualZoom = m_map.getZoom();
-        const int rounded = calcPos(actualZoom);
-        {
-            const SignalBlocker block{*this};
-            setValue(clamp(rounded));
-        }
-    }
-
-private:
-    static int clamp(int val) { return std::clamp(val, min, max); }
-};
-
-MapZoomSlider::~MapZoomSlider() = default;
 
 MainWindow::MainWindow()
     : QMainWindow(nullptr, Qt::WindowFlags{})
