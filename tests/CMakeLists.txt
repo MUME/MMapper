@@ -16,6 +16,8 @@ set(clock_SRCS
     ../src/global/TabUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/logging.cpp
+    ../src/global/parserutils.cpp
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
     ../src/global/parserutils.cpp
@@ -48,6 +50,7 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/logging.cpp
     ../src/global/progresscounter.cpp
     ../src/global/progresscounter.h
     ../src/global/random.cpp
@@ -132,6 +135,7 @@ set(proxy_SRCS
     ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/logging.cpp
     )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
@@ -177,6 +181,7 @@ set(global_SRCS
     ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/logging.cpp
     ../src/global/string_view_utils.cpp
     ../src/global/string_view_utils.h
     ../src/global/unquote.cpp

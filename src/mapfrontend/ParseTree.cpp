@@ -8,6 +8,7 @@
 #include "../expandoracommon/property.h"
 #include "../global/Array.h"
 #include "../global/EnumIndexedArray.h"
+#include "../global/logging.h"
 #include "../global/utils.h"
 #include "roomcollection.h"
 
@@ -63,7 +64,7 @@ NODISCARD static MaskFlagsEnum getKeyMask(const ParseEvent &event)
         // The only one never seen in the wild
         static std::once_flag flag;
         std::call_once(flag, []() {
-            std::cerr << "WARNING: MaskFlagsEnum::DESC observed in the wild!" << std::endl;
+            MMLOG_ERROR() << "WARNING: MaskFlagsEnum::DESC observed in the wild!";
             assert(false);
         });
     }

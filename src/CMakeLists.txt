@@ -131,6 +131,8 @@ set(mmapper_SRCS
     global/hash.h
     global/io.cpp
     global/io.h
+    global/logging.cpp
+    global/logging.h
     global/macros.h
     global/parserutils.cpp
     global/parserutils.h

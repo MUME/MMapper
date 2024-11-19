@@ -5,6 +5,7 @@
 
 #include "Consts.h"
 #include "TextUtils.h"
+#include "logging.h"
 
 #include <iostream>
 #include <optional>
@@ -440,5 +441,5 @@ void test::test_unquote() noexcept /* will crash the program if it throws */
         assert(result && result.getVectorOfStrings() == expect);
     }
 
-    std::cout << __FUNCTION__ << ": All tests passed.\n" << std::flush;
+    MMLOG() << __FUNCTION__ << ": All tests passed.";
 }

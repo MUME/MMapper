@@ -5,6 +5,7 @@
 #include "groupauthority.h"
 
 #include "../configuration/configuration.h"
+#include "../global/logging.h"
 #include "../global/utils.h"
 #include "GroupSocket.h"
 #include "enums.h"
@@ -124,8 +125,8 @@ NODISCARD static QSslCertificate toSslCertificate(const X509_ptr &x509)
     unsigned long err = ERR_get_error();
 
     if (rc != 1) {
-        std::cerr << "PEM_write_bio_X509 failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err;
+        MMLOG_ERROR() << "PEM_write_bio_X509 failed, error " << err << ", " << std::hex << "0x"
+                      << err;
         throw std::runtime_error("Encoding certificate failed.");
     }
 
@@ -134,8 +135,7 @@ NODISCARD static QSslCertificate toSslCertificate(const X509_ptr &x509)
     err = ERR_get_error();
 
     if (!mem || !mem->data || !mem->length) {
-        std::cerr << "BIO_get_mem_ptr failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err;
+        MMLOG_ERROR() << "BIO_get_mem_ptr failed, error " << err << ", " << std::hex << "0x" << err;
         throw std::runtime_error("Fetching certificate failed.");
     }
 
@@ -172,8 +172,8 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
     int rc = PEM_write_bio_RSAPrivateKey(bio.get(), rsa, nullptr, nullptr, 0, nullptr, nullptr);
 
     if (rc != 1) {
-        std::cerr << "PEM_write_bio_RSAPrivateKey failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err << std::endl;
+        MMLOG_ERROR() << "PEM_write_bio_RSAPrivateKey failed, error " << err << ", " << std::hex
+                      << "0x" << err;
         throw std::runtime_error("");
     }
 #endif
@@ -183,8 +183,7 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
     err = ERR_get_error();
 
     if (!mem || !mem->data || !mem->length) {
-        std::cerr << "BIO_get_mem_ptr failed, error " << err << ", ";
-        std::cerr << std::hex << "0x" << err << std::endl;
+        MMLOG_ERROR() << "BIO_get_mem_ptr failed, error " << err << ", " << std::hex << "0x" << err;
         throw std::runtime_error("Fetching encoded key failed.");
     }
 

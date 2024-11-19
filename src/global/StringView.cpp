@@ -5,9 +5,11 @@
 #include "StringView.h"
 
 #include "TextUtils.h"
+#include "logging.h"
 
 #include <cctype>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -472,7 +474,7 @@ static void testEmpty()
 
 static void testLazyDog(const bool verbose = false)
 {
-    std::ostream &os = std::cout;
+    std::ostringstream os;
     const std::string s = "The quick brown fox\njumps \t\tover\t\t the lazy dog.\n";
     const auto view = StringView{s}.trim();
     const auto words = view.countWords();
@@ -499,8 +501,7 @@ static void testLazyDog(const bool verbose = false)
     TEST_ASSERT(seenWords == words);
     if (verbose) {
         os << "\n---\n";
-        os << std::flush;
-        std::cerr << std::flush;
+        MMLOG() << std::move(os).str();
     }
 }
 
@@ -548,6 +549,5 @@ void test::testStringView()
     testLazyDog();
     testIntersect();
     testSubstring();
-    std::cout << "Test \"" << __FUNCTION__ << "\" passed.\n" << std::flush;
-    std::cerr << std::flush;
+    MMLOG() << "Test \"" << __FUNCTION__ << "\" passed.";
 }

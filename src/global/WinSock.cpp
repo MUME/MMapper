@@ -5,9 +5,11 @@
 #include "WinSock.h"
 
 #include "Consts.h"
+#include "logging.h"
 #include "macros.h"
 
 #include <iostream>
+#include <sstream>
 
 #ifdef __MINGW32__
 #include <winsock2.h>
@@ -26,7 +28,7 @@ WinSock::WinSock()
     WSADATA wsd;
     WORD requested = MAKEWORD(2, 2);
     if (WSAStartup(requested, &wsd) != 0) {
-        std::cerr << "WSAStartup() failed with error code" << WSAGetLastError();
+        MMLOG_ERROR() << "WSAStartup() failed with error code " << WSAGetLastError();
     }
 }
 
@@ -65,8 +67,8 @@ bool WinSock::tuneKeepAlive(MAYBE_UNUSED unsigned int socket,
                        nullptr,
                        nullptr);
     if (ret != 0) {
-        std::cerr << "Could not enable TCP Keep-Alive for with error code" << ret
-                  << WSAGetLastError();
+        MMLOG_ERROR() << "Could not enable TCP Keep-Alive for with error code " << ret << " "
+                      << WSAGetLastError();
         return false;
     }
 
@@ -75,11 +77,12 @@ bool WinSock::tuneKeepAlive(MAYBE_UNUSED unsigned int socket,
     int optLen = sizeof(optVal);
     ret = getsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen);
     if (ret != 0) {
-        std::cerr << "getsockopt(SO_KEEPALIVE) failed with error code" << ret << WSAGetLastError();
+        MMLOG_ERROR() << "getsockopt(SO_KEEPALIVE) failed with error code " << ret << " "
+                      << WSAGetLastError();
         return false;
     }
     if (optVal != 1) {
-        std::cerr << "SO_KEEPALIVE was not enabled" << optVal;
+        MMLOG_ERROR() << "SO_KEEPALIVE was not enabled " << optVal;
         return false;
     }
     return true;

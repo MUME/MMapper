@@ -5,6 +5,7 @@
 #include "mumemoment.h"
 
 #include "../global/ConfigConsts.h"
+#include "../global/logging.h"
 #include "mumeclock.h"
 
 #include <iostream>
@@ -18,11 +19,12 @@ static void maybe_warn_if_not_clamped(
     if (val >= lo && val < hi)
         return;
 
+    auto &&os = MMLOG_ERROR();
     if constexpr (IS_DEBUG_BUILD) {
-        std::cerr << "[at " << __FILE__ << ":" << __LINE__ << "] ";
+        os << "[at " << __FILE__ << ":" << __LINE__ << "] ";
     }
-    std::cerr << "WARNING: soft assertion failure: " << name << "(" << val
-              << ") is not in the half-open interval '[" << lo << ".." << hi << ")'" << std::endl;
+    os << "WARNING: soft assertion failure: " << name << "(" << val
+       << ") is not in the half-open interval '[" << lo << ".." << hi << ")'";
     warned = true;
 }
 
