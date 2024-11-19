@@ -345,4 +345,15 @@ NODISCARD static inline auto find_min_computed(const Container &container, Callb
 template<typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
+template<typename T, typename... Ts>
+struct are_distinct : std::conjunction<std::negation<std::is_same<T, Ts>>..., are_distinct<Ts...>>
+{};
+
+template<typename T>
+struct are_distinct<T> : std::true_type
+{};
+
+template<typename... Args>
+static inline constexpr bool are_distinct_v = are_distinct<Args...>::value;
+
 } // namespace utils
