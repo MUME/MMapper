@@ -16,7 +16,7 @@
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 
-static const QRegularExpression s_whitespaceRx(R"(\W+)");
+static const QRegularExpression g_whitespaceRx(R"(\W+)");
 
 InputWidget::InputWidget(QWidget *const parent)
     : QPlainTextEdit(parent)
@@ -248,7 +248,7 @@ void InputHistory::addInputLine(const QString &string)
 
 void TabHistory::addInputLine(const QString &string)
 {
-    QStringList list = string.split(s_whitespaceRx, Qt::SkipEmptyParts);
+    QStringList list = string.split(g_whitespaceRx, Qt::SkipEmptyParts);
     for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary

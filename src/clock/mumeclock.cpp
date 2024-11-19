@@ -32,9 +32,9 @@ NODISCARD int pm(const int h)
     return h + 12;
 }
 
-const MMapper::Array<int, 12> s_dawnHour
+const MMapper::Array<int, 12> g_dawnHour
     = {am(8), am(9), am(8), am(7), am(7), am(6), am(5), am(4), am(5), am(6), am(7), am(7)};
-const MMapper::Array<int, 12> s_duskHour
+const MMapper::Array<int, 12> g_duskHour
     = {pm(6), pm(5), pm(6), pm(7), pm(8), pm(8), pm(9), pm(10), pm(9), pm(8), pm(8), pm(7)};
 
 // TODO: move this somewhere useful?
@@ -90,10 +90,10 @@ public:
 };
 } // namespace mmqt
 
-static const mmqt::QME<MumeClock::WestronMonthNamesEnum> s_westronMonthNames;
-static const mmqt::QME<MumeClock::SindarinMonthNamesEnum> s_sindarinMonthNames;
-static const mmqt::QME<MumeClock::WestronWeekDayNamesEnum> s_westronWeekDayNames;
-static const mmqt::QME<MumeClock::SindarinWeekDayNamesEnum> s_sindarinWeekDayNames;
+static const mmqt::QME<MumeClock::WestronMonthNamesEnum> g_westronMonthNames;
+static const mmqt::QME<MumeClock::SindarinMonthNamesEnum> g_sindarinMonthNames;
+static const mmqt::QME<MumeClock::WestronWeekDayNamesEnum> g_westronWeekDayNames;
+static const mmqt::QME<MumeClock::SindarinWeekDayNamesEnum> g_sindarinWeekDayNames;
 
 MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const parent)
     : QObject(parent)
@@ -160,15 +160,15 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
             hour = 0;
         }
         const QString cap3 = match.captured(3);
-        weekDay = s_westronWeekDayNames.keyToValue(cap3);
+        weekDay = g_westronWeekDayNames.keyToValue(cap3);
         if (weekDay == static_cast<int>(WestronWeekDayNamesEnum::UnknownWestronWeekDay)) {
-            weekDay = s_sindarinWeekDayNames.keysToValue(cap3);
+            weekDay = g_sindarinWeekDayNames.keysToValue(cap3);
         }
         day = match.captured(4).toInt() - 1;
         const QString cap5 = match.captured(5);
-        month = s_westronMonthNames.keyToValue(cap5);
+        month = g_westronMonthNames.keyToValue(cap5);
         if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-            month = s_sindarinMonthNames.keyToValue(cap5);
+            month = g_sindarinMonthNames.keyToValue(cap5);
         }
         year = match.captured(6).toInt();
         if (m_precision <= MumeClockPrecisionEnum::DAY) {
@@ -185,15 +185,15 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         }
 
         const QString cap1 = match.captured(1);
-        weekDay = s_westronWeekDayNames.keyToValue(cap1.toLatin1().data());
+        weekDay = g_westronWeekDayNames.keyToValue(cap1.toLatin1().data());
         if (weekDay == static_cast<int>(WestronWeekDayNamesEnum::UnknownWestronWeekDay)) {
-            weekDay = s_sindarinWeekDayNames.keysToValue(cap1.toLatin1().data());
+            weekDay = g_sindarinWeekDayNames.keysToValue(cap1.toLatin1().data());
         }
         day = match.captured(2).toInt() - 1;
         const QString cap3 = match.captured(3);
-        month = s_westronMonthNames.keyToValue(cap3.toLatin1().data());
+        month = g_westronMonthNames.keyToValue(cap3.toLatin1().data());
         if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-            month = s_sindarinMonthNames.keyToValue(cap3.toLatin1().data());
+            month = g_sindarinMonthNames.keyToValue(cap3.toLatin1().data());
         }
         year = match.captured(4).toInt();
         if (m_precision <= MumeClockPrecisionEnum::UNSET) {
@@ -413,7 +413,7 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
         period = "am";
     }
 
-    QString weekDay = s_westronWeekDayNames.valueToKey(moment.weekDay());
+    QString weekDay = g_westronWeekDayNames.valueToKey(moment.weekDay());
     QString time;
     switch (m_precision) {
     case MumeClockPrecisionEnum::HOUR:
@@ -435,7 +435,7 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
 
     const int day = moment.day + 1;
     // TODO: Detect what calendar the player is using
-    const QString monthName = s_westronMonthNames.valueToKey(moment.month);
+    const QString monthName = g_westronMonthNames.valueToKey(moment.month);
     return QString("%1, the %2%3 of %4, year %5 of the Third Age.")
         .arg(time)
         .arg(day)
@@ -475,14 +475,14 @@ MumeClock::DawnDusk MumeClock::getDawnDusk(const int month)
 {
     assert(month >= 0 && month < NUM_MONTHS);
     const auto m = static_cast<uint32_t>(month);
-    return DawnDusk{s_dawnHour.at(m), s_duskHour.at(m)};
+    return DawnDusk{g_dawnHour.at(m), g_duskHour.at(m)};
 }
 
 int MumeClock::getMumeMonth(const QString &monthName)
 {
-    const int month = s_westronMonthNames.keyToValue(monthName.toLatin1().data());
+    const int month = g_westronMonthNames.keyToValue(monthName.toLatin1().data());
     if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-        return s_sindarinMonthNames.keysToValue(monthName.toLatin1().data());
+        return g_sindarinMonthNames.keysToValue(monthName.toLatin1().data());
     }
     return month;
 }
