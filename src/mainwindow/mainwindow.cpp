@@ -360,7 +360,36 @@ void MainWindow::startServices()
 
 void MainWindow::readSettings()
 {
-    const auto &settings = getConfig().general;
+    struct NODISCARD MySettings final
+    {
+#define XDECL(name) decltype(Configuration::GeneralSettings::name) name{};
+#define XCOPY(name) (my_settings.name) = (actual_settings.name);
+#define XFOREACH_MY_SETTINGS(X) \
+    X(firstRun) \
+    X(windowGeometry) \
+    X(windowState) \
+    X(noClientPanel)
+
+        // member variable declarations
+        XFOREACH_MY_SETTINGS(XDECL)
+
+        NODISCARD static MySettings get()
+        {
+            // REVISIT: Does this actually need to take the lock?
+            auto &&config = getConfig();
+            const auto &actual_settings = config.general;
+            MySettings my_settings{};
+            XFOREACH_MY_SETTINGS(XCOPY)
+            return my_settings;
+        }
+
+#undef XCOPY
+#undef XDECL
+#undef XFOREACH_MY_SETTINGS
+    };
+
+    MySettings settings = MySettings::get();
+
     if (settings.firstRun) {
         adjustSize();
         setGeometry(QStyle::alignedRect(Qt::LeftToRight,
@@ -1013,6 +1042,11 @@ void MainWindow::createActions()
     connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::mapAndInfomarksChanged);
 }
 
+static void setConfigMapMode(const MapModeEnum mode)
+{
+    setConfig().general.mapMode = mode;
+}
+
 void MainWindow::slot_onPlayMode()
 {
     disconnect(m_pathMachine,
@@ -1023,7 +1057,7 @@ void MainWindow::slot_onPlayMode()
                &Mmapper2PathMachine::sig_scheduleAction,
                m_mapData,
                &MapData::slot_scheduleAction);
-    setConfig().general.mapMode = MapModeEnum::PLAY;
+    setConfigMapMode(MapModeEnum::PLAY);
     modeMenu->setIcon(mapperMode.playModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
     mapperMode.playModeAct->setChecked(true);
@@ -1041,7 +1075,7 @@ void MainWindow::slot_onMapMode()
             &Mmapper2PathMachine::sig_scheduleAction,
             m_mapData,
             &MapData::slot_scheduleAction);
-    setConfig().general.mapMode = MapModeEnum::MAP;
+    setConfigMapMode(MapModeEnum::MAP);
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
     mapperMode.mapModeAct->setChecked(true);
@@ -1058,7 +1092,7 @@ void MainWindow::slot_onOfflineMode()
                &Mmapper2PathMachine::sig_scheduleAction,
                m_mapData,
                &MapData::slot_scheduleAction);
-    setConfig().general.mapMode = MapModeEnum::OFFLINE;
+    setConfigMapMode(MapModeEnum::OFFLINE);
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
     mapperMode.offlineModeAct->setChecked(true);
