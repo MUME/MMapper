@@ -72,8 +72,11 @@ public:
     {}
 
 private:
-    NODISCARD CRTP &crtp_self() noexcept { return static_cast<CRTP &>(*this); }
-    NODISCARD const CRTP &crtp_self() const noexcept { return static_cast<CRTP &>(*this); }
+    NODISCARD constexpr CRTP &crtp_self() noexcept { return static_cast<CRTP &>(*this); }
+    NODISCARD constexpr const CRTP &crtp_self() const noexcept
+    {
+        return static_cast<CRTP &>(*this);
+    }
 
 public:
     NODISCARD explicit constexpr operator underlying_type() const noexcept { return m_flags; }
@@ -152,8 +155,8 @@ public:
     NODISCARD inline constexpr explicit operator bool() const noexcept { return m_flags != 0u; }
 
 public:
-    inline CRTP &operator&=(const Flag rhs) { return crtp_self() &= CRTP{rhs}; }
-    inline CRTP &operator&=(const CRTP rhs)
+    inline constexpr CRTP &operator&=(const Flag rhs) { return crtp_self() &= CRTP{rhs}; }
+    inline constexpr CRTP &operator&=(const CRTP rhs)
     {
         auto &self = crtp_self();
         self = (self & rhs);
@@ -161,8 +164,8 @@ public:
     }
 
 public:
-    inline CRTP &operator|=(const Flag rhs) noexcept { return crtp_self() |= CRTP{rhs}; }
-    inline CRTP &operator|=(const CRTP rhs) noexcept
+    inline constexpr CRTP &operator|=(const Flag rhs) noexcept { return crtp_self() |= CRTP{rhs}; }
+    inline constexpr CRTP &operator|=(const CRTP rhs) noexcept
     {
         auto &self = crtp_self();
         self = (self | rhs);
@@ -170,8 +173,8 @@ public:
     }
 
 public:
-    inline CRTP &operator^=(const Flag rhs) noexcept { return crtp_self() ^= CRTP{rhs}; }
-    inline CRTP &operator^=(const CRTP rhs) noexcept
+    inline constexpr CRTP &operator^=(const Flag rhs) noexcept { return crtp_self() ^= CRTP{rhs}; }
+    inline constexpr CRTP &operator^=(const CRTP rhs) noexcept
     {
         auto &self = crtp_self();
         self = (self ^ rhs);
@@ -191,9 +194,9 @@ public:
     {
         return (m_flags & rhs.m_flags) == rhs.m_flags;
     }
-    inline void insert(const Flag flag) noexcept { crtp_self() |= flag; }
-    inline void remove(const Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
-    inline void clear() noexcept { m_flags = 0; }
+    inline constexpr void insert(const Flag flag) noexcept { crtp_self() |= flag; }
+    inline constexpr void remove(const Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
+    inline constexpr void clear() noexcept { m_flags = 0; }
     NODISCARD inline constexpr bool isEmpty() const { return m_flags == 0; }
     NODISCARD inline constexpr bool empty() const { return isEmpty(); }
     NODISCARD inline size_t count() const { return static_cast<size_t>(bits::bitCount(m_flags)); }
