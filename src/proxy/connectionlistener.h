@@ -84,7 +84,6 @@ private:
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;
     std::unique_ptr<Proxy> m_proxy;
-    std::unique_ptr<QThread> m_thread;
 
     bool m_accept = true;
 };

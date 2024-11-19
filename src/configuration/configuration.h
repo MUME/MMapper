@@ -67,7 +67,6 @@ public:
         uint16_t remotePort = 0u;
         uint16_t localPort = 0u; /// Port to bind to on local machine
         bool tlsEncryption = false;
-        bool proxyThreaded = false;
         bool proxyConnectionStatus = false;
         bool proxyListensOnAnyInterface = false;
 

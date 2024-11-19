@@ -93,9 +93,6 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::slot_displayXPStatusStateChanged);
 
-    connect(ui->proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().connection.proxyThreaded = ui->proxyThreadedCheckBox->isChecked();
-    });
     connect(ui->proxyConnectionStatusCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyConnectionStatus = ui->proxyConnectionStatusCheckBox->isChecked();
     });
@@ -155,7 +152,6 @@ void GeneralPage::slot_loadConfig()
 
     ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
 
-    ui->proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 }
 

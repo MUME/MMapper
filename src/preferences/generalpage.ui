@@ -275,11 +275,11 @@
        </widget>
       </item>
       <item row="0" column="1">
-        <widget class="QCheckBox" name ="displayXPStatusCheckBox">
-         <property name="text">
-          <string>Show Session XP</string>
-         </property>
-        </widget>
+       <widget class="QCheckBox" name="displayXPStatusCheckBox">
+        <property name="text">
+         <string>Show Session XP</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -332,16 +332,6 @@
       <string>Advanced</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="proxyConnectionStatusCheckBox">
-        <property name="toolTip">
-         <string>Disconnect from the mud client when MUME disconnects</string>
-        </property>
-        <property name="text">
-         <string>Proxy connection status</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
@@ -362,14 +352,17 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="proxyThreadedCheckBox">
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="proxyConnectionStatusCheckBox">
+        <property name="toolTip">
+         <string>Disconnect from the mud client when MUME disconnects</string>
+        </property>
         <property name="text">
-         <string>Proxy threaded</string>
+         <string>Proxy connection status</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
+      <item row="0" column="0">
        <widget class="QCheckBox" name="proxyListensOnAnyInterfaceCheckBox">
         <property name="toolTip">
          <string>Allow external traffic to connect to MMapper</string>
@@ -413,7 +406,6 @@
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
-  <tabstop>proxyThreadedCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
   <tabstop>configurationResetButton</tabstop>
  </tabstops>

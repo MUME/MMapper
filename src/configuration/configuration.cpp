@@ -257,7 +257,6 @@ ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
-ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
@@ -572,7 +571,6 @@ void Configuration::ConnectionSettings::read(const QSettings &conf)
                                static_cast<uint16_t>(DEFAULT_PORT));
     tlsEncryption = QSslSocket::supportsSsl() ? conf.value(KEY_TLS_ENCRYPTION, true).toBool()
                                               : false;
-    proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
     proxyListensOnAnyInterface = conf.value(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, false).toBool();
 }
@@ -790,7 +788,6 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_MUME_REMOTE_PORT, static_cast<int>(remotePort));
     conf.setValue(KEY_PROXY_LOCAL_PORT, static_cast<int>(localPort));
     conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
-    conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
     conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
     conf.setValue(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, proxyListensOnAnyInterface);
 }

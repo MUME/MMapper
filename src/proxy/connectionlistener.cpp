@@ -49,11 +49,6 @@ ConnectionListener::~ConnectionListener()
     if (m_proxy) {
         m_proxy.release(); // thread will delete the proxy
     }
-    if (m_thread) {
-        m_thread->quit();
-        m_thread->wait();
-        m_thread.release(); // finished() and destroyed() signals will destruct the thread
-    }
 }
 
 void ConnectionListener::listen()
@@ -108,33 +103,11 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                           socketDescriptor,
                                           *this);
 
-        if (getConfig().connection.proxyThreaded) {
-            m_thread = std::make_unique<QThread>();
-            m_proxy->moveToThread(m_thread.get());
-
-            // Proxy destruction stops the thread which then destroys itself on completion
-            connect(m_proxy.get(), &QObject::destroyed, m_thread.get(), &QThread::quit);
-            connect(m_thread.get(), &QThread::finished, m_thread.get(), &QObject::deleteLater);
-            connect(m_thread.get(), &QObject::destroyed, this, [this]() {
-                m_accept = true;
-                m_proxy.release();
-                m_thread.release();
-            });
-
-            // Make sure if the thread is interrupted that we kill the proxy
-            connect(m_thread.get(), &QThread::finished, m_proxy.get(), &QObject::deleteLater);
-
-            // Start the proxy when the thread starts
-            connect(m_thread.get(), &QThread::started, m_proxy.get(), &Proxy::slot_start);
-            m_thread->start();
-
-        } else {
-            connect(m_proxy.get(), &QObject::destroyed, this, [this]() {
-                m_accept = true;
-                m_proxy.release();
-            });
-            m_proxy->slot_start();
-        }
+        connect(m_proxy.get(), &QObject::destroyed, this, [this]() {
+            m_accept = true;
+            m_proxy.release();
+        });
+        m_proxy->slot_start();
 
     } else {
         log("New connection: rejected.");
