@@ -120,7 +120,7 @@ void MapWindow::slot_continuousScroll(const int hStep, const int input_vStep)
         return static_cast<int>(static_cast<int8_t>(n)) == n;
     };
 
-    // code originally used qint8
+    // code originally used int8_t
     assert(fitsInInt8(hStep));
     assert(fitsInInt8(input_vStep));
 

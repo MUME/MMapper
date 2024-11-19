@@ -20,13 +20,13 @@ struct NODISCARD GroupPortMapper::Pimpl
 
 private:
     NODISCARD virtual QByteArray virt_tryGetExternalIp() = 0;
-    NODISCARD virtual bool virt_tryAddPortMapping(quint16 port) = 0;
-    NODISCARD virtual bool virt_tryDeletePortMapping(quint16 port) = 0;
+    NODISCARD virtual bool virt_tryAddPortMapping(uint16_t port) = 0;
+    NODISCARD virtual bool virt_tryDeletePortMapping(uint16_t port) = 0;
 
 public:
     NODISCARD QByteArray tryGetExternalIp() { return virt_tryGetExternalIp(); }
-    NODISCARD bool tryAddPortMapping(quint16 port) { return virt_tryAddPortMapping(port); }
-    NODISCARD bool tryDeletePortMapping(quint16 port) { return virt_tryDeletePortMapping(port); }
+    NODISCARD bool tryAddPortMapping(uint16_t port) { return virt_tryAddPortMapping(port); }
+    NODISCARD bool tryDeletePortMapping(uint16_t port) { return virt_tryDeletePortMapping(port); }
 };
 
 GroupPortMapper::Pimpl::~Pimpl() = default;
@@ -43,8 +43,8 @@ private:
         // TODO: Use a 3rd party service like checkip.dyndns.org
         return "";
     }
-    NODISCARD bool virt_tryAddPortMapping(const quint16) final { return false; }
-    NODISCARD bool virt_tryDeletePortMapping(const quint16) final { return false; }
+    NODISCARD bool virt_tryAddPortMapping(const uint16_t) final { return false; }
+    NODISCARD bool virt_tryDeletePortMapping(const uint16_t) final { return false; }
 };
 
 NoopPortMapper::~NoopPortMapper() = default;
@@ -164,7 +164,7 @@ private:
         return QByteArray(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
     }
 
-    NODISCARD bool virt_tryAddPortMapping(const quint16 port) final
+    NODISCARD bool virt_tryAddPortMapping(const uint16_t port) final
     {
         if (!validIGD()) {
             qDebug() << "No IGD found to add a port mapping to";
@@ -190,7 +190,7 @@ private:
         return true;
     }
 
-    NODISCARD bool virt_tryDeletePortMapping(const quint16 port) final
+    NODISCARD bool virt_tryDeletePortMapping(const uint16_t port) final
     {
         if (!validIGD()) {
             qDebug() << "No IGD found to remove a port mapping from";
@@ -234,12 +234,12 @@ QByteArray GroupPortMapper::tryGetExternalIp()
     return m_pimpl->tryGetExternalIp();
 }
 
-bool GroupPortMapper::tryAddPortMapping(const quint16 port)
+bool GroupPortMapper::tryAddPortMapping(const uint16_t port)
 {
     return m_pimpl->tryAddPortMapping(port);
 }
 
-bool GroupPortMapper::tryDeletePortMapping(const quint16 port)
+bool GroupPortMapper::tryDeletePortMapping(const uint16_t port)
 {
     return m_pimpl->tryDeletePortMapping(port);
 }

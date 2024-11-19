@@ -36,7 +36,7 @@ public:
 
     NODISCARD QByteArray getSecret() const { return secret; }
     NODISCARD QString getPeerName() const;
-    NODISCARD quint16 getPeerPort() const { return socket.peerPort(); }
+    NODISCARD uint16_t getPeerPort() const { return socket.peerPort(); }
 
     NODISCARD QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
     NODISCARD QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }

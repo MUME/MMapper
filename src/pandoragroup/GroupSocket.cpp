@@ -96,7 +96,7 @@ void GroupSocket::connectToHost()
     timer.start();
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
-    const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
+    const auto remotePort = static_cast<uint16_t>(groupConfig.remotePort);
     sendLog(QString("%1 to remote host %2:%3")
                 .arg(retry ? "Reconnecting" : "Connecting")
                 .arg(remoteHost.simplified().constData())

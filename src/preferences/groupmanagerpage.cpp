@@ -317,7 +317,7 @@ void GroupManagerPage::slot_remoteHostTextChanged()
             savedHost = currentHost;
         }
         auto &savedRemotePort = setConfig().groupManager.remotePort;
-        const auto currentRemotePort = static_cast<quint16>(QString(parts[1]).toInt());
+        const auto currentRemotePort = static_cast<uint16_t>(QString(parts[1]).toInt());
         if (currentRemotePort != savedRemotePort) {
             savedRemotePort = currentRemotePort;
         }
@@ -327,7 +327,7 @@ void GroupManagerPage::slot_remoteHostTextChanged()
 void GroupManagerPage::slot_localPortValueChanged(int /*unused*/)
 {
     auto &savedLocalPort = setConfig().groupManager.localPort;
-    const auto currentLocalPort = static_cast<quint16>(ui->localPort->value());
+    const auto currentLocalPort = static_cast<uint16_t>(ui->localPort->value());
     if (currentLocalPort != savedLocalPort) {
         savedLocalPort = currentLocalPort;
     }

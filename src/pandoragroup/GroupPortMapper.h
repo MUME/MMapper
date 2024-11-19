@@ -24,6 +24,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(GroupPortMapper);
 
     NODISCARD QByteArray tryGetExternalIp();
-    NODISCARD bool tryAddPortMapping(quint16 port);
-    NODISCARD bool tryDeletePortMapping(quint16 port);
+    NODISCARD bool tryAddPortMapping(uint16_t port);
+    NODISCARD bool tryDeletePortMapping(uint16_t port);
 };

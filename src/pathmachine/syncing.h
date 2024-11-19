@@ -22,11 +22,11 @@ class NODISCARD Syncing final : public RoomRecipient
 {
 private:
     RoomSignalHandler *signaler = nullptr;
-    uint numPaths = 0u;
     PathParameters &params;
     const std::shared_ptr<PathList> paths;
     // This is not our parent; it's the parent we assign to new objects.
     std::shared_ptr<Path> parent;
+    uint32_t numPaths = 0u;
 
 public:
     explicit Syncing(PathParameters &p,

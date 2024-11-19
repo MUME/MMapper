@@ -150,7 +150,7 @@ void ConnectionSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *c
 {
     m_admin = admin;
     // addroom to internal map
-    // quint32 id = aRoom->getId();
+    // uint32_t id = aRoom->getId();
 
     if (m_first) {
         if (m_connectionDescriptor[0].room != nullptr) {

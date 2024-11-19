@@ -105,9 +105,9 @@ static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
 
 static void writeCoordinate(QDataStream &stream, const Coordinate &c)
 {
-    stream << static_cast<qint32>(c.x);
-    stream << static_cast<qint32>(c.y);
-    stream << static_cast<qint32>(c.z);
+    stream << static_cast<int32_t>(c.x);
+    stream << static_cast<int32_t>(c.y);
+    stream << static_cast<int32_t>(c.z);
 }
 
 MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent)
@@ -553,17 +553,17 @@ void MapStorage::saveRoom(const Room &room, QDataStream &stream)
     stream << room.getName().toQString();
     stream << room.getDescription().toQString();
     stream << room.getContents().toQString();
-    stream << static_cast<quint32>(room.getId());
+    stream << static_cast<uint32_t>(room.getId());
     stream << room.getNote().toQString();
-    stream << static_cast<quint8>(room.getTerrainType());
-    stream << static_cast<quint8>(room.getLightType());
-    stream << static_cast<quint8>(room.getAlignType());
-    stream << static_cast<quint8>(room.getPortableType());
-    stream << static_cast<quint8>(room.getRidableType());
-    stream << static_cast<quint8>(room.getSundeathType());
-    stream << static_cast<quint32>(room.getMobFlags());
-    stream << static_cast<quint32>(room.getLoadFlags());
-    stream << static_cast<quint8>(room.isUpToDate());
+    stream << static_cast<uint8_t>(room.getTerrainType());
+    stream << static_cast<uint8_t>(room.getLightType());
+    stream << static_cast<uint8_t>(room.getAlignType());
+    stream << static_cast<uint8_t>(room.getPortableType());
+    stream << static_cast<uint8_t>(room.getRidableType());
+    stream << static_cast<uint8_t>(room.getSundeathType());
+    stream << static_cast<uint32_t>(room.getMobFlags());
+    stream << static_cast<uint32_t>(room.getLoadFlags());
+    stream << static_cast<uint8_t>(room.isUpToDate());
     writeCoordinate(stream, room.getPosition());
     saveExits(room, stream);
 }
@@ -579,11 +579,11 @@ void MapStorage::saveExits(const Room &room, QDataStream &stream)
         stream << static_cast<uint16_t>(e.getDoorFlags());
         stream << e.getDoorName().toQString();
         for (auto idx : e.inRange()) {
-            stream << static_cast<quint32>(idx);
+            stream << static_cast<uint32_t>(idx);
         }
         stream << UINT_MAX;
         for (auto idx : e.outRange()) {
-            stream << static_cast<quint32>(idx);
+            stream << static_cast<uint32_t>(idx);
         }
         stream << UINT_MAX;
     }
@@ -604,7 +604,7 @@ bool MapStorage::saveData(bool baseMapOnly)
 
     const MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
-    for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
+    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
 
@@ -627,8 +627,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     progressCounter.increaseTotalStepsBy(1);
 
     // Write a header with a "magic number" and a version
-    fileStream << static_cast<quint32>(0xFFB2AF01);
-    fileStream << static_cast<qint32>(CURRENT_SCHEMA);
+    fileStream << static_cast<uint32_t>(0xFFB2AF01);
+    fileStream << static_cast<int32_t>(CURRENT_SCHEMA);
 
     // Serialize the data
     QBuffer buffer;
@@ -637,8 +637,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream.setVersion(QDataStream::Qt_4_8);
 
     // write counters
-    stream << static_cast<quint32>(roomsCount);
-    stream << static_cast<quint32>(marksCount);
+    stream << static_cast<uint32_t>(roomsCount);
+    stream << static_cast<uint32_t>(marksCount);
 
     // write selected room x,y,z
     writeCoordinate(stream, m_mapData.getPosition());
@@ -682,10 +682,10 @@ void MapStorage::saveMark(const InfoMark &mark, QDataStream &stream)
     // REVISIT: save type first, and then avoid saving fields that aren't necessary?
     const InfoMarkTypeEnum type = mark.getType();
     stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark.getText().toQString() : "");
-    stream << static_cast<quint8>(type);
-    stream << static_cast<quint8>(mark.getClass());
+    stream << static_cast<uint8_t>(type);
+    stream << static_cast<uint8_t>(mark.getClass());
     // REVISIT: round to 45 degrees?
-    stream << static_cast<qint32>(std::lround(mark.getRotationAngle()));
+    stream << static_cast<int32_t>(std::lround(mark.getRotationAngle()));
     writeCoordinate(stream, mark.getPosition1());
     writeCoordinate(stream, mark.getPosition2());
 }

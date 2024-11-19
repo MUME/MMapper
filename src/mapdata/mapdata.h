@@ -67,7 +67,7 @@ public:
 
     NODISCARD const Coordinate &getPosition() const { return m_position; }
     NODISCARD const MarkerList &getMarkersList() const { return m_markers; }
-    NODISCARD uint getRoomsCount() const
+    NODISCARD uint32_t getRoomsCount() const
     {
         return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
     }

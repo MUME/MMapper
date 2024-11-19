@@ -119,7 +119,7 @@ private:
     // ---------------- misc -------------------
     void log(const QString &msg);
 
-    enum class NODISCARD TypeEnum : uint;
+    enum class NODISCARD TypeEnum : uint32_t;
     class Converter;
     static const Converter conv;
 };

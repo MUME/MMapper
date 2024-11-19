@@ -943,7 +943,7 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
     static constexpr const int CHUNK = 1024;
     char out[CHUNK];
 
-    stream.avail_in = static_cast<uInt>(length);
+    stream.avail_in = static_cast<uint32_t>(length);
     stream.next_in = reinterpret_cast<const Bytef *>(data);
 
     /* decompress until deflate stream ends */

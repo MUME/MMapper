@@ -55,7 +55,7 @@ template<typename E>
 static void loadPixmapArray(texture_array<E> &textures)
 {
     const auto N = textures.size();
-    for (uint i = 0u; i < N; ++i) {
+    for (size_t i = 0u; i < N; ++i) {
         const auto x = static_cast<E>(i);
         textures[x] = loadTexture(getPixmapFilename(x));
     }
@@ -65,7 +65,7 @@ template<RoadTagEnum Tag>
 static void loadPixmapArray(road_texture_array<Tag> &textures)
 {
     const auto N = textures.size();
-    for (uint i = 0u; i < N; ++i) {
+    for (size_t i = 0u; i < N; ++i) {
         const auto x = TaggedRoadIndex<Tag>{static_cast<RoadIndexMaskEnum>(i)};
         textures[x] = loadTexture(getPixmapFilename(x));
     }

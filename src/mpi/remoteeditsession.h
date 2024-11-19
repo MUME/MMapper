@@ -36,7 +36,7 @@ class RemoteEditSession : public QObject
     friend class RemoteEditInternalSession;
 
 public:
-    explicit RemoteEditSession(const uint internalId,
+    explicit RemoteEditSession(const uint32_t internalId,
                                const RemoteSession &sessionId,
                                RemoteEdit *const remoteEdit);
 
@@ -63,7 +63,7 @@ protected slots:
 
 private:
     bool m_connected = true;
-    const uint m_internalId = 0;
+    const uint32_t m_internalId = 0;
     const RemoteSession m_sessionId = REMOTE_VIEW_SESSION_ID;
     RemoteEdit *m_manager = nullptr;
     QString m_content;
@@ -73,7 +73,7 @@ class RemoteEditInternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    explicit RemoteEditInternalSession(const uint internalId,
+    explicit RemoteEditInternalSession(const uint32_t internalId,
                                        const RemoteSession &sessionId,
                                        const QString &title,
                                        const QString &body,
@@ -88,7 +88,7 @@ class RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    explicit RemoteEditExternalSession(const uint internalId,
+    explicit RemoteEditExternalSession(const uint32_t internalId,
                                        const RemoteSession &sessionId,
                                        const QString &title,
                                        const QString &body,

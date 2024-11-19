@@ -877,7 +877,7 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
 void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_STATE, static_cast<int>(state));
-    // Note: There's no QVariant(quint16) constructor.
+    // Note: There's no QVariant(uint16_t) constructor.
     conf.setValue(KEY_GROUP_LOCAL_PORT, static_cast<int>(localPort));
     conf.setValue(KEY_GROUP_REMOTE_PORT, static_cast<int>(remotePort));
     conf.setValue(KEY_HOST, host);

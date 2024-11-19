@@ -165,7 +165,7 @@ GroupServer::~GroupServer()
                this,
                &GroupServer::slot_onRevokeWhitelist);
     closeAll();
-    const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
+    const auto localPort = static_cast<uint16_t>(getConfig().groupManager.localPort);
     if (portMapper.tryDeletePortMapping(localPort)) {
         emit sig_sendLog("Deleted port mapping from UPnP IGD router");
     }
@@ -502,7 +502,7 @@ bool GroupServer::virt_start()
         closeAll();
         server.close();
     }
-    const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
+    const auto localPort = static_cast<uint16_t>(getConfig().groupManager.localPort);
     if (portMapper.tryAddPortMapping(localPort)) {
         const QString externalIp = QString::fromLocal8Bit(portMapper.tryGetExternalIp());
         emit sig_sendLog(

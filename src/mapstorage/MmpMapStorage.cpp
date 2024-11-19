@@ -124,11 +124,11 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
     // The RoomSaver acts as a lock on the rooms.
     ConstRoomList roomList;
     RoomSaver saver(m_mapData, roomList);
-    for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
+    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
 
-    uint roomsCount = saver.getRoomsCount();
+    uint32_t roomsCount = saver.getRoomsCount();
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();

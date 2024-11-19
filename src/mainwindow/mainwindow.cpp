@@ -2022,7 +2022,7 @@ void MainWindow::loadFile(const QString &fileName)
     statusBar()->showMessage(tr("File loaded"), 2000);
 }
 
-void MainWindow::slot_percentageChanged(const quint32 p)
+void MainWindow::slot_percentageChanged(const uint32_t p)
 {
     if (m_progressDlg == nullptr)
         return;

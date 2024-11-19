@@ -37,7 +37,7 @@ uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok)
     uint64_t ret = 0;
     for (const char16_t ch : str) {
         if (ch >= '0' && ch <= '9') {
-            const uint digit = static_cast<uint>(ch - '0');
+            const auto digit = static_cast<uint32_t>(ch - '0');
             const uint64_t next = ret * 10 + digit;
             // on overflow we lose at least the top bit => next is less than half the value it should be,
             // so divided by 8 will be less than the original (non multiplied by 10) value

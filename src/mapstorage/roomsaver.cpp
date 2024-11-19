@@ -26,9 +26,9 @@ void RoomSaver::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
     }
 }
 
-quint32 RoomSaver::getRoomsCount()
+uint32_t RoomSaver::getRoomsCount()
 {
-    return static_cast<quint32>(m_roomList.size());
+    return static_cast<uint32_t>(m_roomList.size());
 }
 
 RoomSaver::~RoomSaver()

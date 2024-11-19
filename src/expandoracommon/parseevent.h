@@ -63,7 +63,7 @@ private:
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
 
-    uint m_numSkipped = 0u;
+    uint32_t m_numSkipped = 0u;
 
     RoomTerrainEnum m_terrain = RoomTerrainEnum::UNDEFINED;
     CommandEnum m_moveType = CommandEnum::NONE;
@@ -104,7 +104,7 @@ public:
     NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
     NODISCARD CommandEnum getMoveType() const { return m_moveType; }
     NODISCARD RoomTerrainEnum getTerrainType() const { return m_terrain; }
-    NODISCARD uint getNumSkipped() const { return m_numSkipped; }
+    NODISCARD uint32_t getNumSkipped() const { return m_numSkipped; }
     const Property &operator[](const size_t pos) const { return m_properties.at(pos); }
 
 public:

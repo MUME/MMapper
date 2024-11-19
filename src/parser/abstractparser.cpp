@@ -563,7 +563,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
             } else if (!e.outIsEmpty()) {
                 // Check target room for exit information
                 const auto targetId = e.outFirst();
-                uint exitCount = 0;
+                uint32_t exitCount = 0;
                 bool oneWay = false;
                 bool hasNoFlee = false;
                 auto rs = RoomSelection(m_mapData);
@@ -1284,7 +1284,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
     const char sunCharacter = (m_mumeClock.getMumeMoment().toTimeOfDay() <= MumeTimeEnum::DAY)
                                   ? '*'
                                   : '^';
-    uint exitCount = 0;
+    uint32_t exitCount = 0;
     QString etmp = "Exits/emulated:";
     for (const ExitDirEnum direction : ALL_EXITS_NESWUD) {
         bool door = false;

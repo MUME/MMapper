@@ -31,5 +31,5 @@ private:
     void virt_receiveRoom(RoomAdmin *admin, const Room *room) final;
 
 public:
-    NODISCARD quint32 getRoomsCount();
+    NODISCARD uint32_t getRoomsCount();
 };

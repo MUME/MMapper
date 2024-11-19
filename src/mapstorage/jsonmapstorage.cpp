@@ -213,7 +213,7 @@ public:
     }
 };
 
-using JsonRoomId = uint;
+using JsonRoomId = uint32_t;
 
 // Maps MM2 room IDs -> hole-free JSON room IDs
 class JsonRoomIdsCache
@@ -226,7 +226,7 @@ public:
     JsonRoomIdsCache();
     void addRoom(RoomId mm2RoomId) { m_cache[mm2RoomId] = m_nextJsonId++; }
     JsonRoomId operator[](RoomId roomId) const;
-    uint size() const;
+    uint32_t size() const;
 };
 
 JsonRoomIdsCache::JsonRoomIdsCache() = default;
@@ -238,7 +238,7 @@ JsonRoomId JsonRoomIdsCache::operator[](RoomId roomId) const
     return *it;
 }
 
-uint JsonRoomIdsCache::size() const
+uint32_t JsonRoomIdsCache::size() const
 {
     return m_nextJsonId;
 }
@@ -374,15 +374,15 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     jr["y"] = -pos.y;
     jr["z"] = pos.z;
 
-    uint jsonId = m_jRoomIds[room.getId()];
+    uint32_t jsonId = m_jRoomIds[room.getId()];
     jr["id"] = QString::number(jsonId);
     jr["name"] = room.getName().toQString();
     jr["desc"] = room.getDescription().toQString();
-    jr["sector"] = static_cast<quint8>(room.getTerrainType());
-    jr["light"] = static_cast<quint8>(room.getLightType());
-    jr["portable"] = static_cast<quint8>(room.getPortableType());
-    jr["rideable"] = static_cast<quint8>(room.getRidableType());
-    jr["sundeath"] = static_cast<quint8>(room.getSundeathType());
+    jr["sector"] = static_cast<uint8_t>(room.getTerrainType());
+    jr["light"] = static_cast<uint8_t>(room.getLightType());
+    jr["portable"] = static_cast<uint8_t>(room.getPortableType());
+    jr["rideable"] = static_cast<uint8_t>(room.getRidableType());
+    jr["sundeath"] = static_cast<uint8_t>(room.getSundeathType());
     jr["mobflags"] = static_cast<qint64>(room.getMobFlags().asUint32());
     jr["loadflags"] = static_cast<qint64>(room.getLoadFlags().asUint32());
 
@@ -476,12 +476,12 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
 
     const MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
-    for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
+    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
 
-    uint roomsCount = saver.getRoomsCount();
-    auto marksCount = static_cast<uint>(markerList.size());
+    uint32_t roomsCount = saver.getRoomsCount();
+    auto marksCount = static_cast<uint32_t>(markerList.size());
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();

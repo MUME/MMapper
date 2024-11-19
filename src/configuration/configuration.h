@@ -121,8 +121,8 @@ public:
     struct NODISCARD ConnectionSettings final
     {
         QString remoteServerName; /// Remote host and port settings
-        quint16 remotePort = 0u;
-        quint16 localPort = 0u; /// Port to bind to on local machine
+        uint16_t remotePort = 0u;
+        uint16_t localPort = 0u; /// Port to bind to on local machine
         bool tlsEncryption = false;
         bool proxyThreaded = false;
         bool proxyConnectionStatus = false;
@@ -303,8 +303,8 @@ public:
     struct NODISCARD GroupManagerSettings final
     {
         GroupManagerStateEnum state = GroupManagerStateEnum::Off;
-        quint16 localPort = 0u;
-        quint16 remotePort = 0u;
+        uint16_t localPort = 0u;
+        uint16_t remotePort = 0u;
         QByteArray host;
         QByteArray charName;
         bool shareSelf = false;

@@ -8,8 +8,6 @@
 
 #include <cstdint>
 
-using uint = uint32_t;
-
 struct NODISCARD PathParameters final
 {
     double acceptBestRelative = 10.0;
@@ -19,5 +17,5 @@ struct NODISCARD PathParameters final
     double correctPositionBonus = 5.1;
     double maxPaths = 500.0;
     int matchingTolerance = 5;
-    uint maxSkipped = 1;
+    uint32_t maxSkipped = 1;
 };

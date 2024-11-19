@@ -53,14 +53,14 @@
     X(RoomTerrainEnum) \
     X(TypeEnum)
 
-enum class XmlMapStorage::TypeEnum : uint {
+enum class XmlMapStorage::TypeEnum : uint32_t {
 #define DECL(X) X,
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 };
 
 #define ADD(X) +1
-static constexpr const uint NUM_XMLMAPSTORAGE_TYPE = (X_FOREACH_TYPE_ENUM(ADD));
+static constexpr const uint32_t NUM_XMLMAPSTORAGE_TYPE = (X_FOREACH_TYPE_ENUM(ADD));
 #undef ADD
 
 // ---------------------------- XmlMapStorage::Converter -----------------------
@@ -96,7 +96,7 @@ public:
     const QString &toString(ENUM val) const
     {
         static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
-        return enumToString(enumToType(val), uint(val));
+        return enumToString(enumToType(val), static_cast<uint32_t>(val));
     }
 
 private:
@@ -114,11 +114,11 @@ private:
     X_FOREACH_TYPE_ENUM(DECL)
 #undef DECL
 
-    uint stringToEnum(TypeEnum type, const QStringView str, bool &fail) const;
-    const QString &enumToString(TypeEnum type, uint val) const;
+    uint32_t stringToEnum(TypeEnum type, const QStringView str, bool &fail) const;
+    const QString &enumToString(TypeEnum type, uint32_t val) const;
 
     std::vector<std::vector<QString>> enumToStrings;
-    std::vector<QHash<QStringView, uint>> stringToEnums;
+    std::vector<QHash<QStringView, uint32_t>> stringToEnums;
     const QString empty;
 };
 
@@ -153,8 +153,8 @@ XmlMapStorage::Converter::Converter()
     // create the maps string -> enum value for each enum type listed above
     for (std::vector<QString> &vec : enumToStrings) {
         stringToEnums.emplace_back();
-        QHash<QStringView, uint> &map = stringToEnums.back();
-        uint val = 0;
+        QHash<QStringView, uint32_t> &map = stringToEnums.back();
+        uint32_t val = 0;
         for (QString &str : vec) {
             if (str == "UNDEFINED") {
                 str.clear(); // we never save or load the string "UNDEFINED"
@@ -170,9 +170,9 @@ XmlMapStorage::Converter::Converter()
     }
 }
 
-const QString &XmlMapStorage::Converter::enumToString(const TypeEnum type, const uint val) const
+const QString &XmlMapStorage::Converter::enumToString(const TypeEnum type, const uint32_t val) const
 {
-    const uint index = uint(type);
+    const auto index = static_cast<uint32_t>(type);
     if (index < enumToStrings.size() && val < enumToStrings[index].size()) {
         return enumToStrings[index][val];
     }
@@ -182,11 +182,11 @@ const QString &XmlMapStorage::Converter::enumToString(const TypeEnum type, const
     return empty;
 }
 
-uint XmlMapStorage::Converter::stringToEnum(const TypeEnum type,
-                                            const QStringView str,
-                                            bool &fail) const
+uint32_t XmlMapStorage::Converter::stringToEnum(const TypeEnum type,
+                                                const QStringView str,
+                                                bool &fail) const
 {
-    const uint index = uint(type);
+    const auto index = static_cast<uint32_t>(type);
     if (index < stringToEnums.size()) {
         auto iter = stringToEnums[index].find(str);
         if (iter != stringToEnums[index].end()) {

@@ -183,12 +183,12 @@ void GeneralPage::slot_remoteNameTextChanged(const QString & /*unused*/)
 
 void GeneralPage::slot_remotePortValueChanged(int /*unused*/)
 {
-    setConfig().connection.remotePort = static_cast<quint16>(ui->remotePort->value());
+    setConfig().connection.remotePort = static_cast<uint16_t>(ui->remotePort->value());
 }
 
 void GeneralPage::slot_localPortValueChanged(int /*unused*/)
 {
-    setConfig().connection.localPort = static_cast<quint16>(ui->localPort->value());
+    setConfig().connection.localPort = static_cast<uint16_t>(ui->localPort->value());
 }
 
 void GeneralPage::slot_tlsEncryptionCheckBoxStateChanged(int /*unused*/)

@@ -16,7 +16,7 @@
 #include <QScopedPointer>
 #include <QString>
 
-RemoteEditSession::RemoteEditSession(const uint internalId,
+RemoteEditSession::RemoteEditSession(const uint32_t internalId,
                                      const RemoteSession &sessionId,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
@@ -37,7 +37,7 @@ void RemoteEditSession::cancel()
     m_manager->cancel(this);
 }
 
-RemoteEditInternalSession::RemoteEditInternalSession(const uint internalId,
+RemoteEditInternalSession::RemoteEditInternalSession(const uint32_t internalId,
                                                      const RemoteSession &sessionId,
                                                      const QString &title,
                                                      const QString &body,
@@ -63,7 +63,7 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
         notLeaked->deleteLater();
 }
 
-RemoteEditExternalSession::RemoteEditExternalSession(const uint internalId,
+RemoteEditExternalSession::RemoteEditExternalSession(const uint32_t internalId,
                                                      const RemoteSession &sessionId,
                                                      const QString &title,
                                                      const QString &body,

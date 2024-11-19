@@ -66,19 +66,19 @@ std::shared_ptr<Path> Path::fork(const Room *const in_room,
     insertChild(ret);
 
     double dist = expectedCoordinate.distance(in_room->getPosition());
-    const auto size = static_cast<uint>(m_room->getExitsList().size());
+    const auto size = static_cast<uint32_t>(m_room->getExitsList().size());
     // NOTE: we can probably assert that size is nonzero (room is not a dummy).
     assert(size == 0u /* dummy */ || size == NUM_EXITS /* valid */);
 
     if (dist < 0.5) {
-        if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
+        if (static_cast<uint32_t>(direction) < NUM_EXITS_INCLUDING_NONE) {
             /* NOTE: This is currently always true unless the data is corrupt. */
             dist = 1.0 / p.correctPositionBonus;
         } else {
             dist = p.multipleConnectionsPenalty;
         }
     } else {
-        if (static_cast<uint>(direction) < size) {
+        if (static_cast<uint32_t>(direction) < size) {
             const Exit &e = m_room->exit(direction);
             auto oid = in_room->getId();
             if (e.containsOut(oid)) {
@@ -92,9 +92,9 @@ std::shared_ptr<Path> Path::fork(const Room *const in_room,
                 }
             }
 
-        } else if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
+        } else if (static_cast<uint32_t>(direction) < NUM_EXITS_INCLUDING_NONE) {
             /* NOTE: This is currently always true unless the data is corrupt. */
-            for (uint d = 0; d < size; ++d) {
+            for (uint32_t d = 0; d < size; ++d) {
                 const Exit &e = m_room->exit(static_cast<ExitDirEnum>(d));
                 if (e.containsOut(in_room->getId())) {
                     dist = 1.0 / p.correctPositionBonus;

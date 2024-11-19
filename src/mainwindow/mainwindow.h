@@ -92,7 +92,7 @@ public slots:
     bool slot_exportMmpMap();
     void slot_about();
 
-    void slot_percentageChanged(quint32);
+    void slot_percentageChanged(uint32_t);
 
     void slot_log(const QString &, const QString &);
 
