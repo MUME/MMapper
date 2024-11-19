@@ -16,10 +16,10 @@ public:
     static constexpr size_t UNINITIALIZED = 0;
 
 private:
-    const size_t m_index = UNINITIALIZED;
+    const size_t m_index;
 
 public:
-    XNamedColor() = default;
+    XNamedColor() = delete;
     XNamedColor(std::nullptr_t) = delete;
     explicit XNamedColor(std::string_view name);
     template<size_t N>
