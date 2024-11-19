@@ -142,6 +142,8 @@ set(mmapper_SRCS
     global/roomid.h
     global/string_view_utils.cpp
     global/string_view_utils.h
+    global/tests.cpp
+    global/tests.h
     global/unquote.cpp
     global/unquote.h
     global/utils.cpp
