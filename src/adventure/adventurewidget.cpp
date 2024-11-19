@@ -7,6 +7,8 @@
 #include "../configuration/configuration.h"
 #include "adventuresession.h"
 
+#include <memory>
+
 #include <QtCore>
 #include <QtWidgets>
 

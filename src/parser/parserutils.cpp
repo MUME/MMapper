@@ -9,7 +9,7 @@
 #include "../global/TextUtils.h"
 
 #include <array>
-#include <iostream>
+#include <ostream>
 #include <regex>
 
 #include <QRegularExpression>

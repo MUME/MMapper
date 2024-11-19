@@ -8,6 +8,8 @@
 #include "adventuresession.h"
 #include "adventuretracker.h"
 
+#include <memory>
+
 XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidget *const parent)
     : QPushButton(parent)
     , m_statusBar{sb}

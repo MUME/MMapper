@@ -5,6 +5,7 @@
 #include "MatchResult.h"
 
 #include <iosfwd>
+#include <ostream>
 
 namespace syntax {
 

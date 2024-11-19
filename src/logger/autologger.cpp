@@ -9,7 +9,6 @@
 #include "../global/random.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <sstream>
 
 #include <QDebug>

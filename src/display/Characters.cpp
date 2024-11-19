@@ -18,6 +18,7 @@
 #include "mapcanvas.h"
 #include "prespammedpath.h"
 
+#include <array>
 #include <cmath>
 #include <optional>
 #include <vector>

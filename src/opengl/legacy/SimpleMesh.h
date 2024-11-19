@@ -9,6 +9,9 @@
 #include "VBO.h"
 
 #include <cassert>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace Legacy {
 

@@ -8,7 +8,7 @@
 
 #include "../parser/abstractparser.h"
 
-#include <initializer_list>
+#include <memory>
 #include <utility>
 
 #include <QDebug>

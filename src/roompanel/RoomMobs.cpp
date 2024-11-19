@@ -7,6 +7,9 @@
 
 #include "../configuration/configuration.h"
 
+#include <unordered_map>
+#include <vector>
+
 RoomMobs::RoomMobs(QObject *const parent)
     : QObject(parent)
     , m_mobs()

@@ -1,5 +1,7 @@
 #include "Legacy.h"
 
+#include <optional>
+
 namespace Legacy {
 
 bool Functions::canRenderQuads()

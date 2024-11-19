@@ -4,6 +4,9 @@
 
 #include "adventuretracker.h"
 
+#include <memory>
+#include <optional>
+
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>

@@ -5,6 +5,9 @@
 #include "../../global/utils.h"
 #include "Legacy.h"
 
+#include <memory>
+#include <vector>
+
 namespace Legacy {
 
 extern bool LOG_VBO_ALLOCATIONS;

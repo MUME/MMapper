@@ -3,6 +3,9 @@
 
 #include "FontMesh3d.h"
 
+#include <memory>
+#include <vector>
+
 namespace Legacy {
 
 FontMesh3d::FontMesh3d(const SharedFunctions &functions,

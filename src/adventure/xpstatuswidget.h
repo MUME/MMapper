@@ -5,6 +5,8 @@
 
 #include "adventuretracker.h"
 
+#include <memory>
+
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>

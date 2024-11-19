@@ -17,6 +17,7 @@
 #include "mmapper2group.h"
 
 #include <algorithm>
+#include <memory>
 
 #include <QAbstractSocket>
 #include <QByteArray>

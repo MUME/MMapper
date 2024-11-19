@@ -5,6 +5,7 @@
 #include "../global/macros.h"
 
 #include <iosfwd>
+#include <ostream>
 
 struct NODISCARD User
 {

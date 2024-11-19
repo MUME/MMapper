@@ -11,6 +11,8 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 
+#include <memory>
+
 class MapFrontend;
 class Room;
 class RoomAdmin;

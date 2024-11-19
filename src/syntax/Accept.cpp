@@ -4,6 +4,7 @@
 #include "Accept.h"
 
 #include <memory>
+#include <ostream>
 
 namespace syntax {
 

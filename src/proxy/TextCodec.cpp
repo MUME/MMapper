@@ -7,6 +7,8 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 
+#include <list>
+#include <memory>
 #include <optional>
 
 #include <QDebug>

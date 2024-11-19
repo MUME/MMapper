@@ -5,12 +5,6 @@
 
 #include "mumexmlparser.h"
 
-#include "../configuration/configuration.h"
-#include "../expandoracommon/parseevent.h"
-#include "../global/TextUtils.h"
-#include "../pandoragroup/mmapper2group.h"
-#include "../proxy/GmcpMessage.h"
-#include "../proxy/telnetfilter.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
 #include "abstractparser.h"
@@ -18,6 +12,8 @@
 #include "patterns.h"
 
 #include <cctype>
+#include <list>
+#include <optional>
 #include <sstream>
 #include <utility>
 

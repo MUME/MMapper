@@ -19,8 +19,8 @@
 #include <cstring>
 #include <functional>
 #include <iomanip>
-#include <iostream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <utility>

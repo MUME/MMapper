@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <variant>
 
 //
 // X(UPPER_CASE, CamelCase, Type)

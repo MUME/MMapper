@@ -10,6 +10,8 @@
 #include "stackedinputwidget.h"
 #include "ui_ClientWidget.h"
 
+#include <memory>
+
 #include <QString>
 #include <QTimer>
 #include <QtWidgets>

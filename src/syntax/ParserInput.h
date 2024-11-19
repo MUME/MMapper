@@ -5,8 +5,8 @@
 #include "../global/TextUtils.h"
 
 #include <cassert>
-#include <iostream>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 namespace syntax {

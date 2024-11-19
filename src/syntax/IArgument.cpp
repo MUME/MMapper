@@ -3,6 +3,8 @@
 
 #include "IArgument.h"
 
+#include <ostream>
+
 namespace syntax {
 
 IArgument::~IArgument() = default;

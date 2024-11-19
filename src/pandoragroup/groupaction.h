@@ -5,6 +5,8 @@
 
 #include "../global/macros.h"
 
+#include <memory>
+
 #include <QByteArray>
 #include <QString>
 #include <QVariantMap>

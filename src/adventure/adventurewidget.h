@@ -5,6 +5,8 @@
 
 #include "adventuretracker.h"
 
+#include <memory>
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>

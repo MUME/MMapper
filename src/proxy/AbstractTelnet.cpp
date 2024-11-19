@@ -10,8 +10,11 @@
 #include "../global/utils.h"
 #include "TextCodec.h"
 
+#include <array>
 #include <cassert>
 #include <limits>
+#include <optional>
+#include <ostream>
 #include <sstream>
 
 #include <QByteArray>

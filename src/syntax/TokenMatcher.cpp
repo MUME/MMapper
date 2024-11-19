@@ -6,7 +6,7 @@
 #include "../global/TextUtils.h"
 
 #include <cassert>
-#include <iostream>
+#include <ostream>
 #include <utility>
 
 namespace syntax {

@@ -5,6 +5,8 @@
 
 #include "../../display/Textures.h" // modularity violation
 
+#include <optional>
+
 namespace Legacy {
 
 BlendBinder::BlendBinder(Functions &in_functions, const BlendModeEnum in_blend)

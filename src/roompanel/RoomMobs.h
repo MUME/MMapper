@@ -8,6 +8,7 @@
 #include "../global/RuleOf5.h"
 #include "RoomMob.h"
 
+#include <map>
 #include <unordered_map>
 #include <utility>
 #include <vector>

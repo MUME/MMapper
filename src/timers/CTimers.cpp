@@ -7,8 +7,10 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <list>
 #include <optional>
 #include <sstream>
+#include <string>
 
 #include <QMutexLocker>
 

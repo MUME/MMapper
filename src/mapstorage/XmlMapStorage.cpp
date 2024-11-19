@@ -24,10 +24,10 @@
 #include "progresscounter.h"
 #include "roomsaver.h"
 
-#include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include <QHash>
 #include <QMessageBox>

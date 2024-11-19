@@ -7,6 +7,8 @@
 #include "adventuresession.h"
 #include "lineparsers.h"
 
+#include <memory>
+
 #include <QObject>
 
 class AdventureTracker final : public QObject

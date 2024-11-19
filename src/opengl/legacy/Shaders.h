@@ -4,6 +4,8 @@
 
 #include "AbstractShaderProgram.h"
 
+#include <memory>
+
 namespace Legacy {
 
 struct NODISCARD AColorPlainShader final : public AbstractShaderProgram

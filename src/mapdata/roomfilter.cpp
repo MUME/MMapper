@@ -16,8 +16,10 @@
 #include "enums.h"
 #include "mmapper2room.h"
 
+#include <array>
 #include <optional>
 #include <regex>
+#include <vector>
 
 NODISCARD static std::regex createRegex(const std::string &input,
                                         const Qt::CaseSensitivity cs,

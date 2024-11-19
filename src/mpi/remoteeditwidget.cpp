@@ -5,16 +5,14 @@
 #include "remoteeditwidget.h"
 
 #include "../configuration/configuration.h"
-#include "../global/RAII.h"
-#include "../global/TextUtils.h"
 #include "../global/entities.h"
-#include "../global/utils.h"
 
 #include <cassert>
 #include <cctype>
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include <QAction>
 #include <QMenu>
@@ -23,7 +21,6 @@
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
-#include <QScopedPointer>
 #include <QSize>
 #include <QStatusBar>
 #include <QString>

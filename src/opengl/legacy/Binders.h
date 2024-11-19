@@ -5,6 +5,8 @@
 #include "../../global/utils.h"
 #include "Legacy.h"
 
+#include <optional>
+
 namespace Legacy {
 
 struct NODISCARD BlendBinder final

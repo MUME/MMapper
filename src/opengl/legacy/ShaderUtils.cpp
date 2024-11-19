@@ -6,10 +6,11 @@
 #include "../../global/Debug.h"
 #include "../../global/TextUtils.h"
 
+#include <array>
 #include <cassert>
 #include <cstdio>
 #include <iomanip>
-#include <iostream>
+#include <ostream>
 #include <sstream>
 #include <string_view>
 #include <vector>

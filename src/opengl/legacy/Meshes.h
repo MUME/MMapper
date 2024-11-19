@@ -7,6 +7,8 @@
 #include "Shaders.h"
 #include "SimpleMesh.h"
 
+#include <optional>
+
 #define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
 #define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
 
