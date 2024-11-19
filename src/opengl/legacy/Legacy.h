@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../../global/Badge.h"
 #include "../../global/RuleOf5.h"
 #include "../../global/utils.h"
 #include "../OpenGLTypes.h"
@@ -88,17 +89,11 @@ private:
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
 
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     NODISCARD static std::shared_ptr<Functions> alloc();
 
 public:
-    explicit Functions(this_is_private);
+    explicit Functions(Badge<Functions>);
 
     ~Functions();
     DELETE_CTORS_AND_ASSIGN_OPS(Functions);

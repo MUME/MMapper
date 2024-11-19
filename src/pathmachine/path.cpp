@@ -22,7 +22,7 @@ std::shared_ptr<Path> Path::alloc(const Room *const room,
                                   RoomSignalHandler *const signaler,
                                   std::optional<ExitDirEnum> moved_direction)
 {
-    return std::make_shared<Path>(this_is_private{0},
+    return std::make_shared<Path>(Badge<Path>{},
                                   room,
                                   owner,
                                   locker,
@@ -30,7 +30,7 @@ std::shared_ptr<Path> Path::alloc(const Room *const room,
                                   std::move(moved_direction));
 }
 
-Path::Path(this_is_private,
+Path::Path(Badge<Path>,
            const Room *const in_room,
            RoomAdmin *const owner,
            RoomRecipient *const locker,

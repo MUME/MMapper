@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Badge.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 
@@ -15,22 +16,19 @@ private:
     Coordinate m_sel1;
     Coordinate m_sel2;
 
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     NODISCARD static std::shared_ptr<InfoMarkSelection> alloc(MapData &mapData,
                                                               const Coordinate &c1,
                                                               const Coordinate &c2)
     {
-        return std::make_shared<InfoMarkSelection>(this_is_private{0}, mapData, c1, c2);
+        return std::make_shared<InfoMarkSelection>(Badge<InfoMarkSelection>{}, mapData, c1, c2);
     }
 
 public:
-    InfoMarkSelection(this_is_private, MapData &, const Coordinate &c1, const Coordinate &c2);
+    InfoMarkSelection(Badge<InfoMarkSelection>,
+                      MapData &,
+                      const Coordinate &c1,
+                      const Coordinate &c2);
     DELETE_CTORS_AND_ASSIGN_OPS(InfoMarkSelection);
 
     NODISCARD const Coordinate &getPosition1() const { return m_sel1; }

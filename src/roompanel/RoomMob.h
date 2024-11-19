@@ -5,6 +5,7 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Badge.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
@@ -77,15 +78,9 @@ public:
 // represent a mob in current room, as received from GCMP messages Room.Chars.*
 class NODISCARD RoomMob final : public RoomMobData, public std::enable_shared_from_this<RoomMob>
 {
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     RoomMob() = delete;
-    explicit RoomMob(this_is_private);
+    explicit RoomMob(Badge<RoomMob>);
     virtual ~RoomMob();
     DELETE_CTORS_AND_ASSIGN_OPS(RoomMob);
 

@@ -69,6 +69,8 @@ set(mmapper_SRCS
     global/AnsiTextUtils.cpp
     global/AnsiTextUtils.h
     global/Array.h
+    global/Badge.cpp
+    global/Badge.h
     global/CaseUtils.cpp
     global/CaseUtils.h
     global/ChangeMonitor.h

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "Badge.h"
 #include "RuleOf5.h"
 #include "utils.h"
 
@@ -25,12 +26,6 @@ public:
     using Signal = ::Signal<Args...>;
 
 private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
-private:
     Signal *m_signal = nullptr;
     Function m_function;
 
@@ -38,7 +33,7 @@ private:
     friend Signal;
     NODISCARD static std::shared_ptr<Connection> alloc(Signal &signal, Function function)
     {
-        return std::make_shared<Connection>(this_is_private{0}, signal, std::move(function));
+        return std::make_shared<Connection>(Badge<Connection>{}, signal, std::move(function));
     }
 
 public:
@@ -50,7 +45,7 @@ public:
     }
 
 public:
-    explicit Connection(this_is_private, Signal &signal, Function function)
+    explicit Connection(Badge<Connection>, Signal &signal, Function function)
         : m_signal{&signal}
         , m_function(std::move(function))
     {

@@ -15,13 +15,15 @@
 #include <cassert>
 #include <utility>
 
-ConnectionSelection::ConnectionSelection(this_is_private)
+ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>)
 {
     for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 }
 
-ConnectionSelection::ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel)
+ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
+                                         MapFrontend *mf,
+                                         const MouseSel &sel)
 {
     for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);

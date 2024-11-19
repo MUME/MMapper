@@ -27,7 +27,7 @@ MMTextureId allocateTextureId()
     return next++;
 }
 
-MMTexture::MMTexture(this_is_private, const QString &name)
+MMTexture::MMTexture(Badge<MMTexture>, const QString &name)
     : m_qt_texture{QImage{name}.mirrored()}
 {
     auto &tex = m_qt_texture;

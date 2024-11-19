@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../global/Array.h"
+#include "../global/Badge.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
@@ -63,12 +64,6 @@ public:
     };
 
 private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
-private:
     // REVISIT: give these enum names?
     MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;
 
@@ -78,15 +73,15 @@ private:
 public:
     NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
     {
-        return std::make_shared<ConnectionSelection>(this_is_private{0}, mf, sel);
+        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, mf, sel);
     }
     NODISCARD static std::shared_ptr<ConnectionSelection> alloc()
     {
-        return std::make_shared<ConnectionSelection>(this_is_private{0});
+        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{});
     }
 
-    explicit ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel);
-    explicit ConnectionSelection(this_is_private);
+    explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend *mf, const MouseSel &sel);
+    explicit ConnectionSelection(Badge<ConnectionSelection>);
     ~ConnectionSelection() override;
     DELETE_CTORS_AND_ASSIGN_OPS(ConnectionSelection);
 

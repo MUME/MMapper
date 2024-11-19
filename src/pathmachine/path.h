@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Badge.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
@@ -29,12 +30,6 @@ struct PathParameters;
 
 class NODISCARD Path final : public std::enable_shared_from_this<Path>
 {
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     static std::shared_ptr<Path> alloc(const Room *room,
                                        RoomAdmin *owner,
@@ -43,7 +38,7 @@ public:
                                        std::optional<ExitDirEnum> direction);
 
 public:
-    explicit Path(this_is_private,
+    explicit Path(Badge<Path>,
                   const Room *room,
                   RoomAdmin *owner,
                   RoomRecipient *locker,
@@ -107,19 +102,13 @@ private:
 struct NODISCARD PathList : public std::list<std::shared_ptr<Path>>,
                             public std::enable_shared_from_this<PathList>
 {
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     NODISCARD static std::shared_ptr<PathList> alloc()
     {
-        return std::make_shared<PathList>(this_is_private{0});
+        return std::make_shared<PathList>(Badge<PathList>{});
     }
 
 public:
-    explicit PathList(this_is_private) {}
+    explicit PathList(Badge<PathList>) {}
     DELETE_CTORS_AND_ASSIGN_OPS(PathList);
 };

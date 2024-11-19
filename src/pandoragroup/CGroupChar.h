@@ -4,6 +4,7 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Badge.h"
 #include "../global/RuleOf5.h"
 #include "../map/roomid.h"
 #include "../parser/CommandQueue.h"
@@ -26,12 +27,6 @@ class NODISCARD GroupVector : public std::vector<SharedGroupChar>
 
 class NODISCARD CGroupChar final : public std::enable_shared_from_this<CGroupChar>
 {
-private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
 public:
     RoomId roomId = INVALID_ROOMID;
     int hp = 0;
@@ -55,7 +50,7 @@ private:
 
 public:
     CGroupChar() = delete;
-    explicit CGroupChar(this_is_private);
+    explicit CGroupChar(Badge<CGroupChar>);
     virtual ~CGroupChar();
     DELETE_CTORS(CGroupChar);
     DELETE_COPY_ASSIGN_OP(CGroupChar);
@@ -69,12 +64,12 @@ public:
     void reset()
     {
         const Internal saved = m_internal;
-        *this = CGroupChar{this_is_private{0}};
+        *this = CGroupChar{Badge<CGroupChar>{}};
         m_internal = saved;
     }
 
 public:
-    static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(this_is_private{0}); }
+    static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(Badge<CGroupChar>{}); }
 
 public:
     NODISCARD const QByteArray &getName() const { return m_internal.name; }

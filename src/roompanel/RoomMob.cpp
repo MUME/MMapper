@@ -17,10 +17,10 @@
 // ----------------------------- RoomMob --------------------------------------
 SharedRoomMob RoomMob::alloc()
 {
-    return std::make_shared<RoomMob>(this_is_private{0});
+    return std::make_shared<RoomMob>(Badge<RoomMob>{});
 }
 
-RoomMob::RoomMob(this_is_private) {}
+RoomMob::RoomMob(Badge<RoomMob>) {}
 
 RoomMob::~RoomMob() = default;
 

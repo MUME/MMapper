@@ -14,7 +14,7 @@
 // Assumes arguments are pre-scaled by INFOMARK_SCALE;
 // TODO: add a new type to avoid accidental conversion
 // from "world scale" Coordinate to "infomark scale" Coordinate.
-InfoMarkSelection::InfoMarkSelection(this_is_private,
+InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
                                      MapData &mapData,
                                      const Coordinate &c1,
                                      const Coordinate &c2)

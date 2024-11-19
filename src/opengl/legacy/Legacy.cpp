@@ -230,7 +230,7 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
         std::make_unique<Legacy::FontMesh3d>(shared_from_this(), prog, texture, mode, batch)};
 }
 
-Functions::Functions(this_is_private)
+Functions::Functions(Badge<Functions>)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
@@ -283,7 +283,7 @@ TexLookup &Functions::getTexLookup()
 
 std::shared_ptr<Functions> Functions::alloc()
 {
-    return std::make_shared<Functions>(this_is_private{0});
+    return std::make_shared<Functions>(Badge<Functions>{});
 }
 
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().

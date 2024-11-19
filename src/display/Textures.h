@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/Badge.h"
 #include "../global/EnumIndexedArray.h"
 #include "../map/mmapper2room.h"
 #include "../opengl/OpenGLTypes.h"
@@ -19,12 +20,6 @@
 class NODISCARD MMTexture final : public std::enable_shared_from_this<MMTexture>
 {
 private:
-    struct NODISCARD this_is_private final
-    {
-        explicit this_is_private(int) {}
-    };
-
-private:
     QOpenGLTexture m_qt_texture;
     MMTextureId m_id = INVALID_MM_TEXTURE_ID;
     bool m_forbidUpdates = false;
@@ -32,20 +27,20 @@ private:
 public:
     NODISCARD static std::shared_ptr<MMTexture> alloc(const QString &name)
     {
-        return std::make_shared<MMTexture>(this_is_private{0}, name);
+        return std::make_shared<MMTexture>(Badge<MMTexture>{}, name);
     }
     NODISCARD static std::shared_ptr<MMTexture> alloc(
         const QOpenGLTexture::Target target,
         const std::function<void(QOpenGLTexture &)> &init,
         const bool forbidUpdates)
     {
-        return std::make_shared<MMTexture>(this_is_private{0}, target, init, forbidUpdates);
+        return std::make_shared<MMTexture>(Badge<MMTexture>{}, target, init, forbidUpdates);
     }
 
 public:
     MMTexture() = delete;
-    MMTexture(this_is_private, const QString &name);
-    MMTexture(this_is_private,
+    MMTexture(Badge<MMTexture>, const QString &name);
+    MMTexture(Badge<MMTexture>,
               const QOpenGLTexture::Target target,
               const std::function<void(QOpenGLTexture &)> &init,
               const bool forbidUpdates)

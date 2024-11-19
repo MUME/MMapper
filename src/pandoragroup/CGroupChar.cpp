@@ -24,7 +24,7 @@ KEY affectsKey = "affects";
 
 #undef KEY
 
-CGroupChar::CGroupChar(this_is_private){};
+CGroupChar::CGroupChar(Badge<CGroupChar>) {}
 CGroupChar::~CGroupChar() = default;
 
 QVariantMap CGroupChar::toVariantMap() const
