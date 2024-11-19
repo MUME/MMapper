@@ -22,8 +22,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgBool final : public IArgument
@@ -33,8 +33,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgChoice final : public IArgument
@@ -52,9 +52,8 @@ public:
     {}
 
 private:
-    NODISCARD MatchResult virt_match(const ParserInput &sv,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    NODISCARD MatchResult virt_match(const ParserInput &sv, IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgInt final : public IArgument
@@ -72,8 +71,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgFloat final : public IArgument
@@ -91,8 +90,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgOneOrMoreToken final : public IArgument
@@ -107,8 +106,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 // always ignored.
@@ -124,8 +123,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgOptionalToken final : public IArgument
@@ -148,8 +147,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 /// Matches 0 or more arguments; result is a Vector of raw (unquoted) strings.
@@ -159,8 +158,8 @@ class NODISCARD ArgRest final : public IArgument
 {
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 /// Matches exactly one argument; result is a raw (unquoted) string.
@@ -176,8 +175,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgStringExact final : public IArgument
@@ -192,8 +191,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 class NODISCARD ArgStringIgnoreCase final : public IArgument
@@ -208,8 +207,8 @@ public:
 
 private:
     NODISCARD MatchResult virt_match(const ParserInput &input,
-                                     IMatchErrorLogger *logger) const override;
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+                                     IMatchErrorLogger *logger) const final;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 /// matches the any non-zero abbreviation (case insensitive)

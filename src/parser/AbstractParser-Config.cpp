@@ -23,9 +23,9 @@ class NODISCARD ArgNamedColor final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgNamedColor::virt_match(const syntax::ParserInput &input,
@@ -56,9 +56,9 @@ class NODISCARD ArgHexColor final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgHexColor::virt_match(const syntax::ParserInput &input,

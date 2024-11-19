@@ -590,9 +590,9 @@ public:
 
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger * /*logger*/) const override;
+                                             syntax::IMatchErrorLogger * /*logger*/) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgHelpCommand::virt_match(const syntax::ParserInput &input,

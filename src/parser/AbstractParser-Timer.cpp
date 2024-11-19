@@ -17,9 +17,9 @@ class NODISCARD ArgTimerName final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgTimerName::virt_match(const syntax::ParserInput &input,

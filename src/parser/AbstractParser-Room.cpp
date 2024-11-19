@@ -145,9 +145,9 @@ class NODISCARD ArgDirection final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgDirection::virt_match(const syntax::ParserInput &input,
@@ -195,9 +195,9 @@ class NODISCARD ArgDoorFlag final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgDoorFlag::virt_match(const syntax::ParserInput &input,
@@ -241,9 +241,9 @@ class NODISCARD ArgExitFlag final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 syntax::MatchResult ArgExitFlag::virt_match(const syntax::ParserInput &input,
@@ -287,9 +287,9 @@ class NODISCARD ArgRoomFlag final : public syntax::IArgument
 {
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const override;
+                                             syntax::IMatchErrorLogger *) const final;
 
-    std::ostream &virt_to_stream(std::ostream &os) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
 // REVISIT: DEFINED_ROOM_* includes multiple flags but should be one: i.e. "noride" and "ride"
