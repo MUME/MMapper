@@ -124,6 +124,8 @@ set(mmapper_SRCS
     global/macros.h
     global/parserutils.cpp
     global/parserutils.h
+    global/progresscounter.cpp
+    global/progresscounter.h
     global/random.cpp
     global/random.h
     global/range.h
@@ -204,8 +206,6 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mapstorage/progresscounter.cpp
-    mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
     mapstorage/roomsaver.h
     mpi/mpifilter.cpp

@@ -6,10 +6,10 @@
 
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/progresscounter.h"
 #include "../global/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
-#include "progresscounter.h"
 
 #include <cassert>
 #include <list>

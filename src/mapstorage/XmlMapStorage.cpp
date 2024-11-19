@@ -9,6 +9,7 @@
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/TextUtils.h"
+#include "../global/progresscounter.h"
 #include "../global/roomid.h"
 #include "../global/string_view_utils.h"
 #include "../global/utils.h"
@@ -21,7 +22,6 @@
 #include "../mapdata/mmapper2room.h"
 #include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
-#include "progresscounter.h"
 #include "roomsaver.h"
 
 #include <cstddef>

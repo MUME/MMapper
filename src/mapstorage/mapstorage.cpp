@@ -11,6 +11,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
 #include "../global/io.h"
+#include "../global/progresscounter.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/DoorFlags.h"
@@ -23,7 +24,6 @@
 #include "StorageUtils.h"
 #include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
-#include "progresscounter.h"
 #include "roomsaver.h"
 
 #include <climits>

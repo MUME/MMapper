@@ -7,7 +7,7 @@
 #include "abstractmapstorage.h"
 
 #include "../global/NullPointerException.h"
-#include "progresscounter.h"
+#include "../global/progresscounter.h"
 
 #include <stdexcept>
 #include <utility>
