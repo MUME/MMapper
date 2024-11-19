@@ -75,6 +75,7 @@ private:
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
+    NORETURN
     static void throwError(QXmlStreamReader &stream, const QString &msg);
 
     // clang-format off
