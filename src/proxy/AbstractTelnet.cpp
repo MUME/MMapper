@@ -478,13 +478,12 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             // peer wants to enable some option (or he sends a timing-mark)...
             if (!hisOptionState[option] || !heAnnouncedState[option]) {
                 // only if the option is currently disabled
+                // these options are supported
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                     || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) || (option == OPT_ECHO)
                     || (option == OPT_CHARSET) || (option == OPT_COMPRESS2 && !NO_ZLIB)
                     || (option == OPT_GMCP) || (option == OPT_MSSP) || (option == OPT_LINEMODE)
-                    || (option == OPT_EOR))
-                // these options are supported
-                {
+                    || (option == OPT_EOR)) {
                     sendTelnetOption(TN_DO, option);
                     hisOptionState[option] = true;
 

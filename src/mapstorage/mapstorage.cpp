@@ -546,8 +546,8 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 
     if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty())
         mark.setText(InfoMarkText{});
-    // REVISIT: Just discard empty text markers?
     else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty())
+        // REVISIT: Just discard empty text markers?
         mark.setText(InfoMarkText{"New Marker"});
 }
 
