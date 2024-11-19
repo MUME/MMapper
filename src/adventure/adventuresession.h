@@ -59,7 +59,7 @@ public:
     Counter<double> xp() const;
     double calculateHourlyRateTP() const;
     double calculateHourlyRateXP() const;
-    static const QString formatPoints(double points);
+    static QString formatPoints(double points);
 
     friend TestAdventure;
 

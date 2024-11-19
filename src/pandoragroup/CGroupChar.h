@@ -82,7 +82,7 @@ public:
     void setLabel(QByteArray label) { m_internal.label = label; }
     void setColor(QColor col) { m_internal.color = col; }
     NODISCARD const QColor &getColor() const { return m_internal.color; }
-    NODISCARD const QVariantMap toVariantMap() const;
+    NODISCARD QVariantMap toVariantMap() const;
     bool updateFromVariantMap(const QVariantMap &);
     void setRoomId(RoomId id) { roomId = id; }
     NODISCARD RoomId getRoomId() const { return roomId; }

@@ -28,7 +28,7 @@ KEY affectsKey = "affects";
 CGroupChar::CGroupChar(this_is_private){};
 CGroupChar::~CGroupChar() = default;
 
-const QVariantMap CGroupChar::toVariantMap() const
+QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
 

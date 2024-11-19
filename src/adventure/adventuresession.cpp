@@ -112,7 +112,7 @@ std::chrono::seconds AdventureSession::elapsed() const
     return std::chrono::duration_cast<std::chrono::seconds>(end - m_startTimePoint);
 }
 
-const QString AdventureSession::formatPoints(double points)
+QString AdventureSession::formatPoints(double points)
 {
     if (abs(points) < 1000) {
         return QString::number(points, 'f', 0);

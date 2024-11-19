@@ -49,7 +49,7 @@ static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous No
 static constexpr const int MMAPPER_19_10_0_SCHEMA = 36; // switches to new coordinate system
 static constexpr const int CURRENT_SCHEMA = MMAPPER_19_10_0_SCHEMA;
 
-NODISCARD static const Coordinate convertESUtoENU(Coordinate c)
+NODISCARD static Coordinate convertESUtoENU(Coordinate c)
 {
     c.y *= -1;
     return c;
