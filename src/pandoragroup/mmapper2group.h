@@ -45,8 +45,6 @@ private:
     std::atomic_int m_calledStopInternal{0};
     QTimer affectTimer;
     QMap<CharacterAffectEnum, int64_t> affectLastSeen;
-    using AffectTimeout = QMap<CharacterAffectEnum, int32_t>;
-    static const AffectTimeout s_affectTimeout;
 
     QRecursiveMutex networkLock;
     std::unique_ptr<QThread> thread;

@@ -18,6 +18,7 @@
 #include "groupselection.h"
 #include "mmapper2character.h"
 
+#include <map>
 #include <memory>
 
 #include <QColor>
@@ -29,17 +30,32 @@
 #include <QtCore>
 
 static constexpr const bool THREADED = true;
-static constexpr const auto ONE_MINUTE = 60;
-static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
-static constexpr const int DEFAULT_EXPIRE = THIRTY_MINUTES;
-const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
-    = {{CharacterAffectEnum::BASHED, 4},
-       {CharacterAffectEnum::BLIND, THIRTY_MINUTES},
-       {CharacterAffectEnum::POISONED, 5 * ONE_MINUTE},
-       {CharacterAffectEnum::SLEPT, THIRTY_MINUTES},
-       {CharacterAffectEnum::BLEEDING, 2 * ONE_MINUTE},
-       {CharacterAffectEnum::HUNGRY, 2 * ONE_MINUTE},
-       {CharacterAffectEnum::THIRSTY, 2 * ONE_MINUTE}};
+
+using Seconds = std::chrono::seconds;
+using Minutes = std::chrono::minutes;
+struct NODISCARD AffectTimeoutMap final : private std::map<CharacterAffectEnum, Seconds>
+{
+    using map::map;
+    NODISCARD Seconds value(const CharacterAffectEnum key, const Seconds defaultValue) const
+    {
+        if (const auto it = find(key); it != end()) {
+            return it->second;
+        }
+        return defaultValue;
+    }
+};
+
+static constexpr const auto TWO_MINUTES = Minutes{2};
+static constexpr const auto THIRTY_MINUTES = Minutes{30};
+static constexpr const auto DEFAULT_EXPIRE = THIRTY_MINUTES;
+
+static const AffectTimeoutMap g_affectTimeoutMap = {{CharacterAffectEnum::BASHED, Seconds{4}},
+                                                    {CharacterAffectEnum::BLIND, THIRTY_MINUTES},
+                                                    {CharacterAffectEnum::POISONED, Minutes{5}},
+                                                    {CharacterAffectEnum::SLEPT, THIRTY_MINUTES},
+                                                    {CharacterAffectEnum::BLEEDING, TWO_MINUTES},
+                                                    {CharacterAffectEnum::HUNGRY, TWO_MINUTES},
+                                                    {CharacterAffectEnum::THIRSTY, TWO_MINUTES}};
 
 NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
 {
@@ -485,8 +501,8 @@ void Mmapper2Group::slot_onAffectTimeout()
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const bool expired = [this, &affect, &now]() {
             const auto lastSeen = affectLastSeen.value(affect, 0);
-            const auto timeout = s_affectTimeout.value(affect, DEFAULT_EXPIRE);
-            const auto expiringAt = lastSeen + timeout;
+            const auto timeout = g_affectTimeoutMap.value(affect, DEFAULT_EXPIRE);
+            const auto expiringAt = lastSeen + static_cast<Seconds>(timeout).count();
             return expiringAt <= now;
         }();
         if (expired) {
