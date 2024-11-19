@@ -141,9 +141,9 @@ protected slots:
     void slot_stopInternal();
 
 private:
-    bool init();
+    void init();
     void issueLocalCharUpdate();
-    bool setCharacterPosition(CharacterPositionEnum pos);
-    bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
+    NODISCARD bool setCharacterPosition(CharacterPositionEnum pos);
+    NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
     void renameCharacter(QByteArray newname);
 };

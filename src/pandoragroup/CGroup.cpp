@@ -111,7 +111,7 @@ bool CGroup::addChar(const QVariantMap &map)
 {
     QMutexLocker locker(&characterLock);
     auto newChar = CGroupChar::alloc();
-    newChar->updateFromVariantMap(map);
+    std::ignore = newChar->updateFromVariantMap(map); // why is the return value ignored?
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         log(QString("'%1' could not join the group because the name already existed.")
                 .arg(QString::fromLatin1(newChar->getName())));

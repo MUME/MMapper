@@ -83,7 +83,7 @@ public:
     void setColor(QColor col) { m_internal.color = col; }
     NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD QVariantMap toVariantMap() const;
-    bool updateFromVariantMap(const QVariantMap &);
+    NODISCARD bool updateFromVariantMap(const QVariantMap &);
     void setRoomId(RoomId id) { roomId = id; }
     NODISCARD RoomId getRoomId() const { return roomId; }
     NODISCARD static QByteArray getNameFromUpdateChar(const QVariantMap &);

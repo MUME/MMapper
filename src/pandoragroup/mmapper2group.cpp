@@ -104,17 +104,14 @@ Mmapper2Group::~Mmapper2Group()
 
 void Mmapper2Group::start()
 {
+    init();
     if (thread != nullptr) {
-        if (init()) {
-            moveToThread(thread.get());
-        }
+        moveToThread(thread.get());
         thread->start();
-    } else {
-        init();
     }
 }
 
-bool Mmapper2Group::init()
+void Mmapper2Group::init()
 {
     group = std::make_unique<CGroup>(this);
     authority = std::make_unique<GroupAuthority>(this);
@@ -127,7 +124,6 @@ bool Mmapper2Group::init()
             Qt::QueuedConnection);
 
     emit sig_updateWidget();
-    return true;
 }
 
 void Mmapper2Group::slot_stopInternal()
