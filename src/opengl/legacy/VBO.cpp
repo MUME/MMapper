@@ -37,4 +37,55 @@ GLuint VBO::get() const
     return m_vbo;
 }
 
+void Program::swapWith(Program &other) noexcept
+{
+    assert(&other != this);
+    std::swap(m_weakFunctions, other.m_weakFunctions);
+    std::swap(m_program, other.m_program);
+}
+
+Program::Program(Program &&other) noexcept
+{
+    swapWith(other);
+}
+
+Program &Program::operator=(Program &&other) noexcept
+{
+    if (&other != this) {
+        swapWith(other);
+    }
+    return *this;
+}
+
+void Program::emplace(const SharedFunctions &sharedFunctions)
+{
+    if (m_program == INVALID_PROGRAM) {
+        m_weakFunctions = sharedFunctions;
+        m_program = deref(sharedFunctions).glCreateProgram();
+        if (LOG_VBO_ALLOCATIONS) {
+            qInfo() << this << "Allocated Shader Program" << m_program;
+        }
+        assert(m_program != INVALID_PROGRAM);
+    }
+}
+
+void Program::reset()
+{
+    if (auto program = std::exchange(m_program, INVALID_PROGRAM); program != INVALID_PROGRAM) {
+        if (LOG_VBO_ALLOCATIONS) {
+            qInfo() << this << "Freeing Shader Program" << program;
+        }
+        auto sharedFunctions = std::exchange(m_weakFunctions, {}).lock();
+        deref(sharedFunctions).glDeleteProgram(program);
+    }
+    assert(m_weakFunctions.lock() == nullptr);
+}
+
+GLuint Program::get() const
+{
+    if (m_program == INVALID_PROGRAM)
+        throw std::runtime_error("Shader Program not allocated");
+    return m_program;
+}
+
 } // namespace Legacy

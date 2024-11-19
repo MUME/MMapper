@@ -6,32 +6,23 @@
 namespace Legacy {
 
 AbstractShaderProgram::AbstractShaderProgram(std::string dirName,
-                                             const SharedFunctions &functions,
-                                             const GLuint program)
-    : m_dirName(std::move(dirName))
-    , m_functions(functions)
-    , m_program(program)
+                                             SharedFunctions functions,
+                                             Program program)
+    : m_dirName{std::move(dirName)}
+    , m_functions{std::move(functions)}
+    , m_program{std::move(program)}
 {}
 
 AbstractShaderProgram::~AbstractShaderProgram()
 {
     assert(!m_isBound);
-    const auto weakf = std::exchange(m_functions, {});
-    const auto p = std::exchange(m_program, 0);
-    if (p != 0) {
-        if (auto f = weakf.lock())
-            f->glDeleteProgram(p);
-        else
-            qWarning() << "You forgot to initialize functions, or forgot to delete a shader.";
-    }
 }
 
 AbstractShaderProgram::ProgramUnbinder AbstractShaderProgram::bind()
 {
-    assert(m_program != 0);
     assert(!m_isBound);
     if (auto f = m_functions.lock()) {
-        f->glUseProgram(m_program);
+        f->glUseProgram(getProgram());
     }
     m_isBound = true;
     return ProgramUnbinder{*this};
@@ -60,10 +51,9 @@ void AbstractShaderProgram::setUniforms(const glm::mat4 &mvp,
 GLuint AbstractShaderProgram::getAttribLocation(const char *const name) const
 {
     assert(name != nullptr);
-    assert(m_program != 0);
     assert(m_isBound);
     auto functions = m_functions.lock();
-    const auto tmp = deref(functions).glGetAttribLocation(m_program, name);
+    const auto tmp = deref(functions).glGetAttribLocation(getProgram(), name);
     // Reason for making the cast here: glGetAttribLocation uses signed GLint,
     // but glVertexAttribXXX() uses unsigned GLuint.
     const auto result = static_cast<GLuint>(tmp);
@@ -74,10 +64,9 @@ GLuint AbstractShaderProgram::getAttribLocation(const char *const name) const
 GLint AbstractShaderProgram::getUniformLocation(const char *const name) const
 {
     assert(name != nullptr);
-    assert(m_program != 0);
     assert(m_isBound);
     auto functions = m_functions.lock();
-    const auto result = deref(functions).glGetUniformLocation(m_program, name);
+    const auto result = deref(functions).glGetUniformLocation(getProgram(), name);
     assert(result != INVALID_UNIFORM_LOCATION);
     return result;
 }
@@ -85,9 +74,8 @@ GLint AbstractShaderProgram::getUniformLocation(const char *const name) const
 bool AbstractShaderProgram::hasUniform(const char *const name) const
 {
     assert(name != nullptr);
-    assert(m_program != 0);
     auto functions = m_functions.lock();
-    const auto result = deref(functions).glGetUniformLocation(m_program, name);
+    const auto result = deref(functions).glGetUniformLocation(getProgram(), name);
     return result != INVALID_UNIFORM_LOCATION;
 }
 

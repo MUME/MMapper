@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "Legacy.h"
+#include "VBO.h"
 
 namespace Legacy {
 
@@ -14,7 +15,7 @@ struct NODISCARD AbstractShaderProgram
 protected:
     std::string m_dirName;
     WeakFunctions m_functions;
-    GLuint m_program = 0;
+    Program m_program;
     bool m_isBound = false;
 
 public:
@@ -22,9 +23,11 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(AbstractShaderProgram);
 
 public:
-    AbstractShaderProgram(std::string dirName, const SharedFunctions &functions, GLuint program);
+    AbstractShaderProgram(std::string dirName, SharedFunctions functions, Program program);
 
     virtual ~AbstractShaderProgram();
+
+    NODISCARD GLuint getProgram() const { return m_program.get(); }
 
 public:
     class NODISCARD ProgramUnbinder final

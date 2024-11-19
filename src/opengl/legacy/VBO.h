@@ -21,9 +21,9 @@ private:
 
 public:
     VBO() = default;
+    ~VBO() { reset(); }
 
     DELETE_CTORS_AND_ASSIGN_OPS(VBO);
-    ~VBO() { reset(); }
 
 public:
     void emplace(const SharedFunctions &sharedFunctions);
@@ -56,6 +56,32 @@ public:
     }
 
     void resetAll() { base::clear(); }
+};
+
+class NODISCARD Program final
+{
+private:
+    static inline constexpr GLuint INVALID_PROGRAM = 0;
+    WeakFunctions m_weakFunctions;
+    GLuint m_program = INVALID_PROGRAM;
+
+private:
+    void swapWith(Program &other) noexcept;
+
+public:
+    Program() noexcept = default;
+    ~Program() { reset(); }
+    Program(Program &&) noexcept;
+    Program &operator=(Program &&) noexcept;
+    DELETE_COPIES(Program);
+
+public:
+    void emplace(const SharedFunctions &sharedFunctions);
+    void reset();
+    NODISCARD GLuint get() const;
+
+public:
+    NODISCARD explicit operator bool() const { return m_program != INVALID_PROGRAM; }
 };
 
 } // namespace Legacy

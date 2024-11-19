@@ -3,12 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "Legacy.h"
+#include "VBO.h"
 
 #include <string>
 #include <vector>
 
 namespace ShaderUtils {
 using Functions = Legacy::Functions;
+using Program = Legacy::Program;
 
 struct NODISCARD Source final
 {
@@ -25,6 +27,6 @@ struct NODISCARD Source final
     explicit operator bool() const { return !filename.empty() || !source.empty(); }
 };
 
-NODISCARD GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag);
+NODISCARD Program loadShaders(Functions &gl, const Source &vert, const Source &frag);
 
 } // namespace ShaderUtils

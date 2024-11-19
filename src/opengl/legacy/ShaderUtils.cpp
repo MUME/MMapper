@@ -213,7 +213,7 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     return shaderId;
 }
 
-GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
+Program loadShaders(Functions &gl, const Source &vert, const Source &frag)
 {
     std::vector<GLuint> shaders{compileShader(gl, GL_VERTEX_SHADER, vert),
                                 compileShader(gl, GL_FRAGMENT_SHADER, frag)};
@@ -229,7 +229,10 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
         qDebug() << os.str().c_str();
     }
 
-    const GLuint prog = gl.glCreateProgram();
+    Program result_prog;
+    result_prog.emplace(gl.shared_from_this());
+    const GLuint prog = result_prog.get();
+
     for (const GLuint s : shaders) {
         if (is_valid(s)) {
             gl.glAttachShader(prog, s);
@@ -246,7 +249,7 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
         }
     }
 
-    return prog;
+    return result_prog;
 }
 
 } // namespace ShaderUtils

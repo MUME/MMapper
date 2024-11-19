@@ -45,10 +45,10 @@ NODISCARD static std::shared_ptr<T> loadSimpleShaderProgram(Functions &functions
         return ::readWholeShader(dir, name);
     };
 
-    const GLuint program = ShaderUtils::loadShaders(functions,
-                                                    getSource("vert.glsl"),
-                                                    getSource("frag.glsl"));
-    return std::make_shared<T>(dir, functions.shared_from_this(), program);
+    auto program = ShaderUtils::loadShaders(functions,
+                                            getSource("vert.glsl"),
+                                            getSource("frag.glsl"));
+    return std::make_shared<T>(dir, functions.shared_from_this(), std::move(program));
 }
 
 // essentially a private member of ShaderPrograms
