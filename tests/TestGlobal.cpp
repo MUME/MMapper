@@ -33,10 +33,20 @@ void TestGlobal::ansi256ColorTest()
     QColor greenRgb = mmqt::ansi256toRgb(greenAnsi);
     QCOMPARE(greenRgb, QColor(Qt::green));
 
+    int yellowAnsi = rgbToAnsi256(255, 255, 0);
+    QCOMPARE(yellowAnsi, 226);
+    QColor yellowRgb = mmqt::ansi256toRgb(yellowAnsi);
+    QCOMPARE(yellowRgb, QColor(Qt::yellow));
+
     int blueAnsi = rgbToAnsi256(0, 0, 255);
     QCOMPARE(blueAnsi, 21);
     QColor blueRgb = mmqt::ansi256toRgb(blueAnsi);
     QCOMPARE(blueRgb, QColor(Qt::blue));
+
+    int magentaAnsi = rgbToAnsi256(255, 0, 255);
+    QCOMPARE(magentaAnsi, 201);
+    QColor magentaRgb = mmqt::ansi256toRgb(magentaAnsi);
+    QCOMPARE(magentaRgb, QColor(Qt::magenta));
 
     int cyanAnsi = rgbToAnsi256(0, 255, 255);
     QCOMPARE(cyanAnsi, 51);
@@ -52,6 +62,12 @@ void TestGlobal::ansi256ColorTest()
     QCOMPARE(grayAnsi, 244);
     QColor grayRgb = mmqt::ansi256toRgb(grayAnsi);
     QCOMPARE(grayRgb, QColor(Qt::darkGray));
+
+    QCOMPARE(mmqt::rgbToAnsi256String(blackRgb, true), QString("[38;5;16m"));
+    QCOMPARE(mmqt::rgbToAnsi256String(blackRgb, false), QString("[37;48;5;16m"));
+
+    QCOMPARE(mmqt::rgbToAnsi256String(whiteRgb, true), QString("[38;5;231m"));
+    QCOMPARE(mmqt::rgbToAnsi256String(whiteRgb, false), QString("[30;48;5;231m"));
 }
 
 void TestGlobal::ansiToRgbTest()
@@ -67,6 +83,19 @@ void TestGlobal::ansiToRgbTest()
     int highBlackAnsi = static_cast<int>(AnsiColorTableEnum::BLACK) + 8 - 60;
     QColor highBlackRgb = mmqt::ansi256toRgb(highBlackAnsi);
     QCOMPARE(highBlackRgb, QColor("#555753"));
+
+    auto testOne = [](const int ansi256, const QColor color, const AnsiColorTableEnum ansi) {
+        QCOMPARE(mmqt::ansiColor(ansi), color);
+        QCOMPARE(mmqt::ansi256toRgb(ansi256), color);
+    };
+
+    testOne(0, "#2e3436", AnsiColorTableEnum::black);
+    testOne(6, "#06989a", AnsiColorTableEnum::cyan);
+    testOne(7, "#d3d7cf", AnsiColorTableEnum::white);
+
+    testOne(8, "#555753", AnsiColorTableEnum::BLACK);
+    testOne(14, "#34e2e2", AnsiColorTableEnum::CYAN);
+    testOne(15, "#eeeeec", AnsiColorTableEnum::WHITE);
 }
 
 void TestGlobal::stringViewTest()
