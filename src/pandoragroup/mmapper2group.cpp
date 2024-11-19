@@ -614,14 +614,14 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
 
 void Mmapper2Group::renameCharacter(QByteArray newname)
 {
-    const auto &oldname = getGroup()->getSelf()->getName();
+    auto &group = deref(getGroup());
+    auto &self = deref(group.getSelf());
+    const auto &oldname = self.getName();
     if (getGroup()->isNamePresent(newname)) {
         const auto &fallback = getConfig().groupManager.charName;
-        if (getGroup()->isNamePresent(fallback))
-            newname = oldname;
-        else
-            newname = fallback;
+        newname = (group.isNamePresent(fallback) ? oldname : fallback);
     }
+
     if (oldname != newname) {
         ABORT_IF_NOT_ON_MAIN_THREAD();
 
@@ -630,7 +630,7 @@ void Mmapper2Group::renameCharacter(QByteArray newname)
             // why does this check network? signal should handle.
             emit sig_sendSelfRename(oldname, newname);
         }
-        m_group->getSelf()->setName(newname);
+        self.setName(newname);
     }
 }
 
