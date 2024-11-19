@@ -119,3 +119,12 @@ public:
 public:
     void reset() { flags = uint32_t{0}; }
 };
+
+template<>
+struct std::hash<PromptFlagsType>
+{
+    NODISCARD std::size_t operator()(const PromptFlagsType x) const noexcept
+    {
+        return std::hash<uint32_t>()(static_cast<uint32_t>(x));
+    }
+};
