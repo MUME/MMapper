@@ -22,8 +22,8 @@ public:
     NODISCARD static MatchResult failure(ParserInput matched, ParserInput unmatched);
 
 public:
-    NODISCARD static MatchResult success(size_t numMatched, ParserInput input, Value result);
-    NODISCARD static MatchResult success(size_t numMatched, ParserInput input);
+    NODISCARD static MatchResult success(size_t numMatched, const ParserInput &input, Value result);
+    NODISCARD static MatchResult success(size_t numMatched, const ParserInput &input);
     // matched everything
     NODISCARD static MatchResult success(ParserInput input, OptValue optResult);
 

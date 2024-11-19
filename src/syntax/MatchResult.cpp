@@ -29,12 +29,12 @@ MatchResult MatchResult::success(ParserInput matched, ParserInput unmatched, Opt
     return MatchResult{std::move(matched), std::move(unmatched), std::move(optResult)};
 }
 
-MatchResult MatchResult::success(size_t numMatched, ParserInput input, Value result)
+MatchResult MatchResult::success(size_t numMatched, const ParserInput &input, Value result)
 {
     return success(input.left(numMatched), input.mid(numMatched), std::move(result));
 }
 
-MatchResult MatchResult::success(size_t numMatched, ParserInput input)
+MatchResult MatchResult::success(size_t numMatched, const ParserInput &input)
 {
     return success(input.left(numMatched), input.mid(numMatched), std::nullopt);
 }

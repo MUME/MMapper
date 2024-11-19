@@ -47,7 +47,7 @@ public:
     void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
     NODISCARD ProtocolVersion getProtocolVersion() { return protocolVersion; }
 
-    void setName(const QByteArray val) { name = val; }
+    void setName(const QByteArray &val) { name = val; }
     NODISCARD const QByteArray &getName() { return name; }
 
     void sendData(const QByteArray &data);
