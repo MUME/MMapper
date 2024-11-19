@@ -86,6 +86,7 @@ set(mmapper_SRCS
     global/Consts.h
     global/EnumIndexedArray.h
     global/Flags.h
+    global/IndexedVector.h
     global/LineUtils.cpp
     global/LineUtils.h
     global/MmQtHandle.h
