@@ -16,23 +16,51 @@
 #include <QRegularExpression>
 #include <QString>
 
-static constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
-static constexpr const int DEFAULT_TOLERANCE_LIMIT = 10;
-static constexpr const int ONE_RL_DAY_IN_SECONDS = 86400;
+namespace { // anonymous
 
-NODISCARD static inline int am(int h)
+constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
+constexpr const int ONE_RL_DAY_IN_SECONDS = 86400;
+
+NODISCARD int am(const int h)
 {
+    assert(h >= 0 && h < 12);
     return h;
 }
-NODISCARD static inline int pm(int h)
+NODISCARD int pm(const int h)
 {
+    assert(h >= 0 && h < 12);
     return h + 12;
 }
 
-static const MMapper::Array<int, 12> s_dawnHour
+const MMapper::Array<int, 12> s_dawnHour
     = {am(8), am(9), am(8), am(7), am(7), am(6), am(5), am(4), am(5), am(6), am(7), am(7)};
-static const MMapper::Array<int, 12> s_duskHour
+const MMapper::Array<int, 12> s_duskHour
     = {pm(6), pm(5), pm(6), pm(7), pm(8), pm(8), pm(9), pm(10), pm(9), pm(8), pm(8), pm(7)};
+
+// TODO: move this somewhere useful?
+NODISCARD const char *getOrdinalSuffix(const int day)
+{
+    switch (day % 100) {
+    case 11:
+    case 12:
+    case 13:
+        return "th";
+    default:
+        break;
+    }
+    switch (day % 10) {
+    case 1:
+        return "st";
+    case 2:
+        return "nd";
+    case 3:
+        return "rd";
+    default:
+        return "th";
+    }
+}
+
+} // namespace
 
 namespace mmqt {
 template<typename T>
@@ -351,29 +379,6 @@ void MumeClock::parseMSSP(const int year, const int month, const int day, const 
 
     setPrecision(MumeClockPrecisionEnum::HOUR);
     log("Synchronized clock using MSSP");
-}
-
-// TODO: move this somewhere useful?
-NODISCARD static const char *getOrdinalSuffix(const int day)
-{
-    switch (day % 100) {
-    case 11:
-    case 12:
-    case 13:
-        return "th";
-    default:
-        break;
-    }
-    switch (day % 10) {
-    case 1:
-        return "st";
-    case 2:
-        return "nd";
-    case 3:
-        return "rd";
-    default:
-        return "th";
-    }
 }
 
 void MumeClock::setPrecision(const MumeClockPrecisionEnum precision)
