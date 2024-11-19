@@ -129,13 +129,21 @@ PointSizeBinder::~PointSizeBinder()
     }
 }
 
-TexturesBinder::TexturesBinder(const TexturesBinder::Textures &in_textures)
-    : textures{in_textures}
+TexturesBinder::TexturesBinder(const TexLookup &in_lookup,
+                               const TexturesBinder::Textures &in_textures)
+    : lookup{in_lookup}
+    , textures{in_textures}
 {
     for (size_t i = 0, size = textures.size(); i < size; ++i) {
-        const SharedMMTexture &tex = textures[i];
-        if (tex != nullptr) {
-            tex->bind(static_cast<uint32_t>(i));
+        const auto id = textures[i];
+        if (id == INVALID_MM_TEXTURE_ID)
+            continue;
+
+        // note: pointer to shared pointer
+        if (const SharedMMTexture *const pShared = lookup.find(id)) {
+            if (const SharedMMTexture &tex = *pShared) {
+                tex->bind(static_cast<uint32_t>(i));
+            }
         }
     }
 }
@@ -143,20 +151,28 @@ TexturesBinder::TexturesBinder(const TexturesBinder::Textures &in_textures)
 TexturesBinder::~TexturesBinder()
 {
     for (size_t i = 0, size = textures.size(); i < size; ++i) {
-        auto &tex = textures[i];
-        if (tex != nullptr) {
-            tex->release(static_cast<uint32_t>(i));
+        const auto id = textures[i];
+        if (id == INVALID_MM_TEXTURE_ID)
+            continue;
+
+        // note: pointer to shared pointer
+        if (const SharedMMTexture *const pShared = lookup.find(id)) {
+            if (const SharedMMTexture &tex = *pShared) {
+                tex->release(static_cast<uint32_t>(i));
+            }
         }
     }
 }
 
-RenderStateBinder::RenderStateBinder(Functions &functions, const GLRenderState &renderState)
+RenderStateBinder::RenderStateBinder(Functions &functions,
+                                     const TexLookup &texLookup,
+                                     const GLRenderState &renderState)
     : blendBinder{functions, renderState.blend}
     , cullingBinder{functions, renderState.culling}
     , depthBinder{functions, renderState.depth}
     , lineParamsBinder{functions, renderState.lineParams}
     , pointSizeBinder{functions, renderState.uniforms.pointSize}
-    , texturesBinder{renderState.uniforms.textures}
+    , texturesBinder{texLookup, renderState.uniforms.textures}
 {}
 
 } // namespace Legacy

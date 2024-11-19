@@ -161,7 +161,7 @@ private:
         const glm::mat4 mvp = m_functions.getProjectionMatrix();
         auto programUnbinder = m_program.bind();
         m_program.setUniforms(mvp, renderState.uniforms);
-        RenderStateBinder renderStateBinder(m_functions, renderState);
+        RenderStateBinder renderStateBinder(m_functions, m_functions.getTexLookup(), renderState);
         auto attribUnbinder = bindAttribs(); // mesh sets its own attributes
 
         m_functions.checkError();

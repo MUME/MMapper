@@ -71,9 +71,9 @@ public:
     // colored means the color is defined by attribute
     NODISCARD UniqueMesh createColoredQuadBatch(const std::vector<ColorVert> &verts);
     NODISCARD UniqueMesh createTexturedQuadBatch(const std::vector<TexVert> &verts,
-                                                 const SharedMMTexture &texture);
+                                                 MMTextureId texture);
     NODISCARD UniqueMesh createColoredTexturedQuadBatch(const std::vector<ColoredTexVert> &verts,
-                                                        const SharedMMTexture &texture);
+                                                        MMTextureId texture);
 
     NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,
                                         DrawModeEnum mode,
@@ -147,4 +147,5 @@ public:
 
 public:
     void cleanup();
+    void setTextureLookup(MMTextureId, SharedMMTexture);
 };

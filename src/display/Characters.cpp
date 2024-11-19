@@ -314,7 +314,7 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
 
     if (!m_charRoomQuads.empty()) {
         gl.renderColoredTexturedQuads(m_charRoomQuads,
-                                      blended_noDepth.withTexture0(textures.char_room_sel));
+                                      blended_noDepth.withTexture0(textures.char_room_sel->getId()));
     }
 
     if (!m_charTris.empty()) {

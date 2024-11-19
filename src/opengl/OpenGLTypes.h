@@ -4,6 +4,9 @@
 
 #include "../global/Array.h"
 #include "../global/Color.h"
+#include "../global/IndexedVector.h"
+#include "../global/TaggedInt.h"
+#include "../global/hash.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 
@@ -132,8 +135,34 @@ enum class NODISCARD CullingEnum {
 
 };
 
+namespace tags {
+struct NODISCARD MMTextureIdTag final
+{};
+}; // namespace tags
+
+struct NODISCARD MMTextureId final : TaggedInt<MMTextureId, tags::MMTextureIdTag, int32_t, -1>
+{
+    using TaggedInt::TaggedInt;
+    NODISCARD explicit operator bool() { return value() > DEFAULT_VALUE; }
+    NODISCARD explicit operator size_t() const
+    {
+        if (value() < 0)
+            throw std::runtime_error("negative index");
+        return static_cast<size_t>(value());
+    }
+};
+static constexpr const MMTextureId INVALID_MM_TEXTURE_ID{MMTextureId::DEFAULT_VALUE};
+
+template<>
+struct std::hash<MMTextureId>
+{
+    std::size_t operator()(const MMTextureId id) const noexcept { return numeric_hash(id.value()); }
+};
+
 class MMTexture;
 using SharedMMTexture = std::shared_ptr<MMTexture>;
+using TexLookup = IndexedVector<SharedMMTexture, MMTextureId>;
+using SharedTexLookup = std::shared_ptr<TexLookup>;
 
 struct NODISCARD GLRenderState final
 {
@@ -149,7 +178,7 @@ struct NODISCARD GLRenderState final
     // glLineWidth() + { glEnable(LINE_STIPPLE) + glLineStipple() }
     LineParams lineParams;
 
-    using Textures = MMapper::Array<SharedMMTexture, 2>;
+    using Textures = MMapper::Array<MMTextureId, 2>;
     struct NODISCARD Uniforms final
     {
         Color color;
@@ -209,10 +238,10 @@ struct NODISCARD GLRenderState final
         return copy;
     }
 
-    NODISCARD GLRenderState withTexture0(const SharedMMTexture &new_texture) const
+    NODISCARD GLRenderState withTexture0(const MMTextureId new_texture) const
     {
         GLRenderState copy = *this;
-        copy.uniforms.textures = Textures{new_texture, nullptr};
+        copy.uniforms.textures = Textures{new_texture, INVALID_MM_TEXTURE_ID};
         return copy;
     }
 };
@@ -264,12 +293,12 @@ public:
 struct NODISCARD TexturedRenderable final : public IRenderable
 {
 private:
-    SharedMMTexture m_texture;
+    MMTextureId m_texture;
     std::unique_ptr<IRenderable> m_mesh;
 
 public:
-    explicit TexturedRenderable(const SharedMMTexture &tex, std::unique_ptr<IRenderable> mesh);
-    ~TexturedRenderable() override;
+    explicit TexturedRenderable(MMTextureId tex, std::unique_ptr<IRenderable> mesh);
+    ~TexturedRenderable() final;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(TexturedRenderable);
@@ -283,7 +312,7 @@ public:
     void virt_render(const GLRenderState &renderState) final;
 
 public:
-    NODISCARD SharedMMTexture replaceTexture(const SharedMMTexture &tex)
+    NODISCARD MMTextureId replaceTexture(const MMTextureId tex)
     {
         return std::exchange(m_texture, tex);
     }

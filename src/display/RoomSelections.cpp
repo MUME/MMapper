@@ -108,7 +108,7 @@ public:
                 std::abort();
             }();
 
-            gl.renderTexturedQuads(arr, rs.withTexture0(texture));
+            gl.renderTexturedQuads(arr, rs.withTexture0(texture->getId()));
         }
     }
 };

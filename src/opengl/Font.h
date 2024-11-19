@@ -51,6 +51,7 @@ class NODISCARD GLFont final
 private:
     OpenGL &m_gl;
     SharedMMTexture m_texture;
+    MMTextureId m_id = INVALID_MM_TEXTURE_ID;
     std::unique_ptr<FontMetrics> m_fontMetrics;
 
 public:
@@ -62,6 +63,11 @@ private:
     NODISCARD const FontMetrics &getFontMetrics() const { return deref(m_fontMetrics); }
 
 public:
+    void setTextureId(const MMTextureId id)
+    {
+        assert(m_id == INVALID_MM_TEXTURE_ID);
+        m_id = id;
+    }
     void init();
     void cleanup();
 

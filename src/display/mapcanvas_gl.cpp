@@ -235,8 +235,12 @@ void MapCanvas::initializeGL()
 
     gl.initializeRenderer(static_cast<float>(QPaintDevice::devicePixelRatioF()));
     updateMultisampling();
+
+    // REVISIT: should the font texture have the lowest ID?
     initTextures();
-    getGLFont().init();
+    auto &font = getGLFont();
+    font.setTextureId(allocateTextureId());
+    font.init();
 }
 
 /* Direct means it is always called from the emitter's thread */
@@ -464,6 +468,7 @@ void MapCanvas::updateMapBatches()
                           static_cast<int>(screenCenter.y),
                           m_currentLayer};
     }();
+
     std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
     if (opt_mapBatches && opt_mapBatches->redrawMargin.contains(center)) {
         return;

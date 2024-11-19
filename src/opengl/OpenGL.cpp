@@ -91,13 +91,13 @@ UniqueMesh OpenGL::createColoredQuadBatch(const std::vector<ColorVert> &batch)
 }
 
 UniqueMesh OpenGL::createTexturedQuadBatch(const std::vector<TexVert> &batch,
-                                           const SharedMMTexture &texture)
+                                           const MMTextureId texture)
 {
     return getFunctions().createTexturedBatch(DrawModeEnum::QUADS, batch, texture);
 }
 
 UniqueMesh OpenGL::createColoredTexturedQuadBatch(const std::vector<ColoredTexVert> &batch,
-                                                  const SharedMMTexture &texture)
+                                                  const MMTextureId texture)
 {
     return getFunctions().createColoredTexturedBatch(DrawModeEnum::QUADS, batch, texture);
 }
@@ -208,6 +208,12 @@ void OpenGL::glViewport(GLint x, GLint y, GLsizei w, GLsizei h)
 
 void OpenGL::setDevicePixelRatio(const float devicePixelRatio)
 {
-    auto &functions = getFunctions();
-    functions.setDevicePixelRatio(devicePixelRatio);
+    getFunctions().setDevicePixelRatio(devicePixelRatio);
+}
+
+// NOTE: Technically we could assert that the SharedMMTexture::getId() == id,
+// but this is treated as an opaque pointer and we don't include the header for it.
+void OpenGL::setTextureLookup(const MMTextureId id, SharedMMTexture tex)
+{
+    getFunctions().getTexLookup().set(id, std::move(tex));
 }

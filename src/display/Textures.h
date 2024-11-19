@@ -25,9 +25,8 @@ private:
     };
 
 private:
-    // REVISIT: can we store the actual QOpenGLTexture in this object?
     QOpenGLTexture m_qt_texture;
-    int m_priority = -1;
+    MMTextureId m_id = INVALID_MM_TEXTURE_ID;
     bool m_forbidUpdates = false;
 
 public:
@@ -66,14 +65,31 @@ public:
     void bind(GLuint x) { get()->bind(x); }
     void release(GLuint x) { get()->release(x); }
     NODISCARD GLuint textureId() const { return get()->textureId(); }
-    NODISCARD auto target() const { return get()->target(); }
+    NODISCARD QOpenGLTexture::Target target() const { return get()->target(); }
     NODISCARD bool canBeUpdated() const { return !m_forbidUpdates; }
 
     NODISCARD SharedMMTexture getShared() { return shared_from_this(); }
     NODISCARD MMTexture *getRaw() { return this; }
 
-    NODISCARD int getPriority() const { return m_priority; }
-    void setPriority(const int priority) { m_priority = priority; }
+    NODISCARD MMTextureId getId() const
+    {
+        assert(m_id != INVALID_MM_TEXTURE_ID);
+        return m_id;
+    }
+
+    // only called by MapCanvas::initTextures() and GLFont::init();
+    // don't forget to call OpenGL::setTextureLookup(), too.
+    void setId(const MMTextureId id)
+    {
+        assert(m_id == INVALID_MM_TEXTURE_ID);
+        m_id = id;
+    }
+
+    void clearId()
+    {
+        assert(m_id != INVALID_MM_TEXTURE_ID);
+        m_id = INVALID_MM_TEXTURE_ID;
+    }
 };
 
 template<typename E>
@@ -150,3 +166,39 @@ public:
 
     void destroyAll();
 };
+
+namespace mctp {
+
+namespace detail {
+template<typename E_, size_t Size_>
+auto typeHack(EnumIndexedArray<SharedMMTexture, E_, Size_>)
+    -> EnumIndexedArray<MMTextureId, E_, Size_>;
+
+template<typename T>
+struct NODISCARD Proxy
+{
+    using type = decltype(typeHack(std::declval<T>()));
+};
+
+template<>
+struct NODISCARD Proxy<SharedMMTexture>
+{
+    using type = MMTextureId;
+};
+
+template<typename T>
+using proxy_t = typename Proxy<T>::type;
+} // namespace detail
+
+struct NODISCARD MapCanvasTexturesProxy final
+{
+#define DECL_PROXY(_Type, _Name) mctp::detail::proxy_t<_Type> _Name;
+    XFOREACH_MAPCANVAS_TEXTURES(DECL_PROXY)
+#undef DECL_PROXY
+};
+
+NODISCARD extern MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct);
+
+} // namespace mctp
+
+extern MMTextureId allocateTextureId();

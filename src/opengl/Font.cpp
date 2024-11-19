@@ -737,6 +737,11 @@ void GLFont::init()
         qWarning() << "invalid font filename" << imageFilename;
     }
 
+    if (m_texture) {
+        m_texture->clearId();
+    }
+
+    // REVISIT: can this avoid switching to a different MMTexture object?
     m_texture = MMTexture::alloc(
         QOpenGLTexture::Target::Target2D,
         [&fm, &imageFilename](QOpenGLTexture &tex) -> void {
@@ -750,6 +755,11 @@ void GLFont::init()
             tex.setData(img, QOpenGLTexture::MipMapGeneration::DontGenerateMipMaps);
         },
         true);
+
+    // Each new MMTexture gets assigned the same old ID.
+
+    m_texture->setId(m_id);
+    m_gl.setTextureLookup(m_id, m_texture);
 }
 
 void GLFont::cleanup()

@@ -121,7 +121,7 @@ static void generateAllLayerMeshes(MapBatches &batches,
                                    GLFont &font,
                                    const LayerToRooms &layerToRooms,
                                    const RoomIndex &roomIndex,
-                                   const MapCanvasTextures &textures,
+                                   const mctp::MapCanvasTexturesProxy &textures,
                                    const OptBounds &bounds);
 
 void MapCanvasRoomDrawer::generateBatches(const LayerToRooms &layerToRooms,
@@ -136,29 +136,28 @@ void MapCanvasRoomDrawer::generateBatches(const LayerToRooms &layerToRooms,
                            getFont(),
                            layerToRooms,
                            roomIndex,
-                           m_textures,
+                           mctp::getProxy(m_textures),
                            bounds);
 }
 
 struct NODISCARD TerrainAndTrail
 {
-    MMTexture *terrain = nullptr;
-    MMTexture *trail = nullptr;
+    MMTextureId terrain = INVALID_MM_TEXTURE_ID;
+    MMTextureId trail = INVALID_MM_TEXTURE_ID;
 };
 
-NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const MapCanvasTextures &textures,
+NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const mctp::MapCanvasTexturesProxy &textures,
                                                         const Room *const room)
 {
     const auto roomTerrainType = room->getTerrainType();
     const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
 
     TerrainAndTrail result;
-    result.terrain = (roomTerrainType == RoomTerrainEnum::ROAD)
-                         ? textures.road[roadIndex]->getRaw()
-                         : textures.terrain[roomTerrainType]->getRaw();
+    result.terrain = (roomTerrainType == RoomTerrainEnum::ROAD) ? textures.road[roadIndex]
+                                                                : textures.terrain[roomTerrainType];
 
     if (roadIndex != RoadIndexMaskEnum::NONE && roomTerrainType != RoomTerrainEnum::ROAD) {
-        result.trail = textures.trail[roadIndex]->getRaw();
+        result.trail = textures.trail[roadIndex];
     }
     return result;
 }
@@ -175,8 +174,8 @@ public:
 
 private:
     // Rooms
-    virtual void virt_visitTerrainTexture(const Room *, MMTexture *) = 0;
-    virtual void virt_visitOverlayTexture(const Room *, MMTexture *) = 0;
+    virtual void virt_visitTerrainTexture(const Room *, MMTextureId) = 0;
+    virtual void virt_visitOverlayTexture(const Room *, MMTextureId) = 0;
     virtual void virt_visitNamedColorTint(const Room *, RoomTintEnum) = 0;
 
     // Walls
@@ -189,11 +188,11 @@ private:
 
 public:
     // Rooms
-    void visitTerrainTexture(const Room *const room, MMTexture *const tex)
+    void visitTerrainTexture(const Room *const room, const MMTextureId tex)
     {
         virt_visitTerrainTexture(room, tex);
     }
-    void visitOverlayTexture(const Room *const room, MMTexture *const tex)
+    void visitOverlayTexture(const Room *const room, const MMTextureId tex)
     {
         virt_visitOverlayTexture(room, tex);
     }
@@ -223,7 +222,7 @@ IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
 
 static void visitRoom(const Room *const room,
                       const RoomIndex &roomIndex,
-                      const MapCanvasTextures &textures,
+                      const mctp::MapCanvasTexturesProxy &textures,
                       IRoomVisitorCallbacks &callbacks)
 {
     if (!callbacks.acceptRoom(room))
@@ -252,20 +251,20 @@ static void visitRoom(const Room *const room,
         callbacks.visitNamedColorTint(room, RoomTintEnum::NO_SUNDEATH);
 
     mf.for_each([&room, &textures, &callbacks](const RoomMobFlagEnum flag) -> void {
-        callbacks.visitOverlayTexture(room, textures.mob[flag]->getRaw());
+        callbacks.visitOverlayTexture(room, textures.mob[flag]);
     });
 
     lf.for_each([&room, &textures, &callbacks](const RoomLoadFlagEnum flag) -> void {
-        callbacks.visitOverlayTexture(room, textures.load[flag]->getRaw());
+        callbacks.visitOverlayTexture(room, textures.load[flag]);
     });
 
     if (notRideable) {
-        callbacks.visitOverlayTexture(room, textures.no_ride->getRaw());
+        callbacks.visitOverlayTexture(room, textures.no_ride);
     }
 
     // FIXME: This requires a map update.
     if (needsUpdate) {
-        callbacks.visitOverlayTexture(room, textures.update->getRaw());
+        callbacks.visitOverlayTexture(room, textures.update);
     }
 
     const auto drawInFlow = [room, &roomIndex, &callbacks](const Exit &exit,
@@ -399,7 +398,7 @@ static void visitRoom(const Room *const room,
 
 static void visitRooms(const RoomVector &rooms,
                        const RoomIndex &roomIndex,
-                       const MapCanvasTextures &textures,
+                       const mctp::MapCanvasTexturesProxy &textures,
                        IRoomVisitorCallbacks &callbacks)
 {
     for (const auto &room : rooms) {
@@ -410,17 +409,18 @@ static void visitRooms(const RoomVector &rooms,
 struct NODISCARD RoomTex
 {
     const Room *room = nullptr;
-    MMTexture *tex = nullptr;
+    MMTextureId tex = INVALID_MM_TEXTURE_ID;
 
-    explicit RoomTex(const Room *const _room, MMTexture *const _tex)
-        : room{_room}
-        , tex{_tex}
+    explicit RoomTex(const Room *const room_, const MMTextureId tex_)
+        : room{room_}
+        , tex{tex_}
     {
-        std::ignore = deref(_tex);
+        if (tex_ == INVALID_MM_TEXTURE_ID)
+            throw std::invalid_argument("tex_");
     }
 
-    NODISCARD int priority() const { return deref(tex).getPriority(); }
-    NODISCARD GLuint textureId() const { return deref(tex).textureId(); }
+    NODISCARD MMTextureId priority() const { return tex; }
+    NODISCARD MMTextureId textureId() const { return tex; }
 
     friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
     {
@@ -432,13 +432,15 @@ struct NODISCARD RoomTex
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
-    ColoredRoomTex(const Room *const room, MMTexture *const tex) = delete;
 
-    explicit ColoredRoomTex(const Room *const _room, MMTexture *const _tex, const Color &_color)
-        : RoomTex{_room, _tex}
-        , color{_color}
+    ColoredRoomTex(const Room *const room, MMTextureId tex) = delete;
+
+    explicit ColoredRoomTex(const Room *const room_, const MMTextureId tex_, const Color &color_)
+        : RoomTex{room_, tex_}
+        , color{color_}
     {
-        std::ignore = deref(_tex);
+        if (tex_ == INVALID_MM_TEXTURE_ID)
+            throw std::invalid_argument("tex_");
     }
 };
 
@@ -568,7 +570,7 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
 #undef EMIT
         }
 
-        result_meshes.emplace_back(gl.createTexturedQuadBatch(verts, rtex.tex->getShared()));
+        result_meshes.emplace_back(gl.createTexturedQuadBatch(verts, rtex.tex));
     };
 
     ::foreach_texture(textures, lambda);
@@ -617,7 +619,7 @@ NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
 #undef EMIT
         }
 
-        result_meshes.emplace_back(gl.createColoredTexturedQuadBatch(verts, rtex.tex->getShared()));
+        result_meshes.emplace_back(gl.createColoredTexturedQuadBatch(verts, rtex.tex));
     };
 
     ::foreach_texture(textures, lambda);
@@ -687,12 +689,12 @@ class NODISCARD LayerBatchBuilder final : public IRoomVisitorCallbacks
 {
 private:
     LayerBatchData &m_data;
-    const MapCanvasTextures &m_textures;
+    const mctp::MapCanvasTexturesProxy &m_textures;
     const OptBounds &m_bounds;
 
 public:
     explicit LayerBatchBuilder(LayerBatchData &data,
-                               const MapCanvasTextures &textures,
+                               const mctp::MapCanvasTexturesProxy &textures,
                                const OptBounds &bounds)
         : m_data{data}
         , m_textures{textures}
@@ -708,10 +710,9 @@ public:
         return m_bounds.contains(room->getPosition());
     }
 
-private:
-    void virt_visitTerrainTexture(const Room *const room, MMTexture *const terrain) final
+    void virt_visitTerrainTexture(const Room *const room, const MMTextureId terrain) final
     {
-        if (terrain == nullptr)
+        if (terrain == INVALID_MM_TEXTURE_ID)
             return;
 
         m_data.roomTerrains.emplace_back(room, terrain);
@@ -725,9 +726,9 @@ private:
 #undef EMIT
     }
 
-    void virt_visitOverlayTexture(const Room *const room, MMTexture *const overlay) final
+    void virt_visitOverlayTexture(const Room *const room, const MMTextureId overlay) final
     {
-        if (overlay != nullptr)
+        if (overlay != INVALID_MM_TEXTURE_ID)
             m_data.roomOverlays.emplace_back(room, overlay);
     }
 
@@ -762,28 +763,27 @@ private:
         if (wallType == WallTypeEnum::DOOR) {
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
-            const SharedMMTexture &tex = m_textures.door[dir];
-            m_data.doors.emplace_back(room, tex->getRaw(), glcolor);
-
+            const MMTextureId tex = m_textures.door[dir];
+            m_data.doors.emplace_back(room, tex, glcolor);
         } else {
             if (isNESW(dir)) {
                 if (wallType == WallTypeEnum::SOLID) {
-                    const SharedMMTexture &tex = m_textures.wall[dir];
-                    m_data.solidWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                    const MMTextureId tex = m_textures.wall[dir];
+                    m_data.solidWallLines.emplace_back(room, tex, glcolor);
                 } else {
-                    const SharedMMTexture &tex = m_textures.dotted_wall[dir];
-                    m_data.dottedWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                    const MMTextureId tex = m_textures.dotted_wall[dir];
+                    m_data.dottedWallLines.emplace_back(room, tex, glcolor);
                 }
             } else {
                 const bool isUp = dir == ExitDirEnum::UP;
                 assert(isUp || dir == ExitDirEnum::DOWN);
 
-                const SharedMMTexture &tex = isClimb ? (isUp ? m_textures.exit_climb_up
-                                                             : m_textures.exit_climb_down)
-                                                     : (isUp ? m_textures.exit_up
-                                                             : m_textures.exit_down);
+                const MMTextureId tex = isClimb
+                                            ? (isUp ? m_textures.exit_climb_up
+                                                    : m_textures.exit_climb_down)
+                                            : (isUp ? m_textures.exit_up : m_textures.exit_down);
 
-                m_data.roomUpDownExits.emplace_back(room, tex->getRaw(), glcolor);
+                m_data.roomUpDownExits.emplace_back(room, tex, glcolor);
             }
         }
     }
@@ -795,10 +795,10 @@ private:
         const Color color = LOOKUP_COLOR(STREAM).getColor();
         switch (type) {
         case StreamTypeEnum::OutFlow:
-            m_data.streamOuts.emplace_back(room, m_textures.stream_out[dir]->getRaw(), color);
+            m_data.streamOuts.emplace_back(room, m_textures.stream_out[dir], color);
             return;
         case StreamTypeEnum::InFlow:
-            m_data.streamIns.emplace_back(room, m_textures.stream_in[dir]->getRaw(), color);
+            m_data.streamIns.emplace_back(room, m_textures.stream_in[dir], color);
             return;
         default:
             break;
@@ -813,7 +813,7 @@ LayerBatchBuilder::~LayerBatchBuilder() = default;
 NODISCARD static LayerMeshes generateLayerMeshes(OpenGL &gl,
                                                  const RoomVector &rooms,
                                                  const RoomIndex &roomIndex,
-                                                 const MapCanvasTextures &textures,
+                                                 const mctp::MapCanvasTexturesProxy &textures,
                                                  const OptBounds &bounds)
 {
     LayerBatchData data;
@@ -828,7 +828,7 @@ static void generateAllLayerMeshes(MapBatches &batches,
                                    GLFont &font,
                                    const LayerToRooms &layerToRooms,
                                    const RoomIndex &roomIndex,
-                                   const MapCanvasTextures &textures,
+                                   const mctp::MapCanvasTexturesProxy &textures,
                                    const OptBounds &bounds)
 {
     auto &batchedMeshes = batches.batchedMeshes;

@@ -86,6 +86,7 @@ private:
     float m_devicePixelRatio = 1.f;
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
+    std::unique_ptr<TexLookup> m_texLookup;
 
 private:
     struct NODISCARD this_is_private final
@@ -206,6 +207,8 @@ public:
 
     NODISCARD StaticVbos &getStaticVbos();
 
+    NODISCARD TexLookup &getTexLookup();
+
 private:
     friend PointSizeBinder;
     /// platform-specific (ES vs GL)
@@ -283,10 +286,10 @@ public:
     NODISCARD UniqueMesh createColoredBatch(DrawModeEnum mode, const std::vector<ColorVert> &batch);
     NODISCARD UniqueMesh createTexturedBatch(DrawModeEnum mode,
                                              const std::vector<TexVert> &batch,
-                                             const SharedMMTexture &texture);
+                                             MMTextureId texture);
     NODISCARD UniqueMesh createColoredTexturedBatch(DrawModeEnum mode,
                                                     const std::vector<ColoredTexVert> &batch,
-                                                    const SharedMMTexture &texture);
+                                                    MMTextureId texture);
 
 public:
     NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,

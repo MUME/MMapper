@@ -48,7 +48,7 @@ public:
 private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
-        assert(uniforms.textures[0]);
+        assert(uniforms.textures[0] != INVALID_MM_TEXTURE_ID);
 
         setColor("uColor", uniforms.color);
         setMatrix("uMVP", mvp);
@@ -66,7 +66,7 @@ public:
 private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
-        assert(uniforms.textures[0]);
+        assert(uniforms.textures[0] != INVALID_MM_TEXTURE_ID);
 
         setColor("uColor", uniforms.color);
         setMatrix("uMVP", mvp);
@@ -87,7 +87,7 @@ public:
 private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
-        assert(uniforms.textures[0]);
+        assert(uniforms.textures[0] != INVALID_MM_TEXTURE_ID);
         auto functions = Base::m_functions.lock();
 
         setMatrix("uMVP3D", mvp);

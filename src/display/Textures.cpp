@@ -21,6 +21,12 @@
 #include <QtCore>
 #include <QtGui>
 
+MMTextureId allocateTextureId()
+{
+    static MMTextureId next{0};
+    return next++;
+}
+
 MMTexture::MMTexture(this_is_private, const QString &name)
     : m_qt_texture{QImage{name}.mirrored()}
 {
@@ -245,13 +251,68 @@ void MapCanvas::initTextures()
     textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
     {
-        int priority = 0;
-        textures.for_each(
-            [&priority](SharedMMTexture &tex) -> void { deref(tex).setPriority(priority++); });
+        textures.for_each([this](SharedMMTexture &pTex) -> void {
+            auto &tex = deref(pTex);
+            assert(tex.get()); // make sure we didn't forget to initialize one
+
+            auto id = allocateTextureId();
+            tex.setId(id);
+            m_opengl.setTextureLookup(id, pTex);
+        });
     }
 
     updateTextures();
 }
+
+namespace mctp {
+
+namespace detail {
+
+static MMTextureId copy_proxy(const SharedMMTexture &pTex)
+{
+    if (!pTex)
+        return INVALID_MM_TEXTURE_ID;
+
+    MMTexture &tex = *pTex;
+    auto id = tex.getId();
+
+    if (false) {
+        QOpenGLTexture *qtex = tex.get();
+        QOpenGLTexture::Target target = tex.target();
+        bool canBeUpdated = tex.canBeUpdated();
+
+        qInfo() << "target:" << target << "/ id:" << id.value()
+                << "/ canBeUpdated:" << canBeUpdated;
+    }
+
+    return id;
+}
+
+template<typename T>
+auto copy_proxy(const T &input) -> ::mctp::detail::proxy_t<T>
+{
+    using Output = ::mctp::detail::proxy_t<T>;
+    using E = typename Output::index_type;
+    constexpr size_t SIZE = Output::SIZE;
+    Output output;
+    for (size_t i = 0; i < SIZE; ++i) {
+        const auto e = static_cast<E>(i);
+        output[e] = copy_proxy(input[e]);
+    }
+    return output;
+}
+
+} // namespace detail
+
+MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct)
+{
+    MapCanvasTexturesProxy result;
+#define COPY_PROXY(_Type, _Name) result._Name = detail::copy_proxy(mct._Name);
+    XFOREACH_MAPCANVAS_TEXTURES(COPY_PROXY)
+#undef COPY_PROXY
+    return result;
+}
+} // namespace mctp
 
 void MapCanvas::updateTextures()
 {
@@ -266,4 +327,6 @@ void MapCanvas::updateTextures()
         }
     });
     activeStatus = wantTrilinear;
+
+    auto proxy = mctp::getProxy(m_textures);
 }

@@ -3,6 +3,7 @@
 
 #include "Legacy.h"
 
+#include "../../display/Textures.h"
 #include "../../global/utils.h"
 #include "../OpenGLTypes.h"
 #include "AbstractShaderProgram.h"
@@ -33,7 +34,6 @@
 #include <QOpenGLTexture>
 
 namespace Legacy {
-
 template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static auto createMesh(const SharedFunctions &functions,
                                  const DrawModeEnum mode,
@@ -60,7 +60,7 @@ NODISCARD static UniqueMesh createTexturedMesh(const SharedFunctions &functions,
                                                const DrawModeEnum mode,
                                                const std::vector<VertType_> &batch,
                                                const std::shared_ptr<ProgType_> &prog,
-                                               const SharedMMTexture &texture)
+                                               const MMTextureId texture)
 {
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     return UniqueMesh{std::make_unique<TexturedRenderable>(
@@ -90,7 +90,7 @@ UniqueMesh Functions::createColoredBatch(const DrawModeEnum mode,
 
 UniqueMesh Functions::createTexturedBatch(const DrawModeEnum mode,
                                           const std::vector<TexVert> &batch,
-                                          const SharedMMTexture &texture)
+                                          const MMTextureId texture)
 {
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     const auto &prog = getShaderPrograms().getTexturedUColorShader();
@@ -99,7 +99,7 @@ UniqueMesh Functions::createTexturedBatch(const DrawModeEnum mode,
 
 UniqueMesh Functions::createColoredTexturedBatch(const DrawModeEnum mode,
                                                  const std::vector<ColoredTexVert> &batch,
-                                                 const SharedMMTexture &texture)
+                                                 const MMTextureId texture)
 {
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     const auto &prog = getShaderPrograms().getTexturedAColorShader();
@@ -210,7 +210,7 @@ void Functions::renderFont3d(const SharedMMTexture &texture, const std::vector<F
     const auto state = GLRenderState()
                            .withBlend(BlendModeEnum::TRANSPARENCY)
                            .withDepthFunction(std::nullopt)
-                           .withTexture0(texture);
+                           .withTexture0(texture->getId());
 
     const auto &prog = getShaderPrograms().getFontShader();
     renderImmediate<FontVert3d, Legacy::SimpleFont3dMesh>(shared_from_this(),
@@ -233,6 +233,7 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
 Functions::Functions(this_is_private)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
+    , m_texLookup{std::make_unique<TexLookup>()}
 {}
 
 Functions::~Functions()
@@ -263,6 +264,7 @@ void Functions::cleanup()
 
     getShaderPrograms().resetAll();
     getStaticVbos().resetAll();
+    getTexLookup().clear();
 }
 
 ShaderPrograms &Functions::getShaderPrograms()
@@ -272,6 +274,11 @@ ShaderPrograms &Functions::getShaderPrograms()
 StaticVbos &Functions::getStaticVbos()
 {
     return deref(m_staticVbos);
+}
+
+TexLookup &Functions::getTexLookup()
+{
+    return deref(m_texLookup);
 }
 
 std::shared_ptr<Functions> Functions::alloc()

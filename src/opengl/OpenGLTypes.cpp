@@ -11,7 +11,7 @@
 
 IRenderable::~IRenderable() = default;
 
-TexturedRenderable::TexturedRenderable(const SharedMMTexture &tex,
+TexturedRenderable::TexturedRenderable(const MMTextureId tex,
                                        std::unique_ptr<IRenderable> moved_mesh)
     : m_texture(tex)
     , m_mesh(std::move(moved_mesh))
@@ -28,7 +28,7 @@ void TexturedRenderable::virt_clear()
 
 void TexturedRenderable::virt_reset()
 {
-    m_texture.reset();
+    m_texture = INVALID_MM_TEXTURE_ID;
     m_mesh->reset();
 }
 

@@ -81,10 +81,11 @@ public:
     using Textures = GLRenderState::Textures;
 
 private:
+    const TexLookup &lookup;
     const Textures &textures;
 
 public:
-    explicit TexturesBinder(const Textures &in_textures);
+    explicit TexturesBinder(const TexLookup &in_lookup, const Textures &in_textures);
     ~TexturesBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(TexturesBinder);
 };
@@ -100,7 +101,9 @@ private:
     TexturesBinder texturesBinder;
 
 public:
-    explicit RenderStateBinder(Functions &functions, const GLRenderState &renderState);
+    explicit RenderStateBinder(Functions &functions,
+                               const TexLookup &,
+                               const GLRenderState &renderState);
     DELETE_CTORS_AND_ASSIGN_OPS(RenderStateBinder);
     DTOR(RenderStateBinder) = default;
 };

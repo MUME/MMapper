@@ -38,6 +38,10 @@ class ShortestPathRecipient;
 using ConstRoomList = std::vector<std::shared_ptr<const Room>>;
 using MarkerList = std::vector<std::shared_ptr<InfoMark>>;
 
+namespace mctp {
+struct MapCanvasTexturesProxy;
+}
+
 class MapData final : public MapFrontend
 {
     Q_OBJECT
