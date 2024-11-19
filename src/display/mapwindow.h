@@ -77,6 +77,7 @@ public slots:
     void slot_continuousScroll(int dx, int dy);
     void slot_scrollTimerTimeout();
     void slot_graphicsSettingsChanged();
+    void slot_zoomChanged(const float zoom) { emit sig_zoomChanged(zoom); }
 
 public:
     void updateScrollBars();

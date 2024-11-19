@@ -71,9 +71,7 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
         connect(canvas, &MapCanvas::sig_setScrollBars, this, &MapWindow::slot_setScrollBars);
         connect(canvas, &MapCanvas::sig_continuousScroll, this, &MapWindow::slot_continuousScroll);
         connect(canvas, &MapCanvas::sig_mapMove, this, &MapWindow::slot_mapMove);
-
-        // REVISIT: why are we directly connecting signals to signals?
-        connect(canvas, &MapCanvas::sig_zoomChanged, this, &MapWindow::sig_zoomChanged);
+        connect(canvas, &MapCanvas::sig_zoomChanged, this, &MapWindow::slot_zoomChanged);
     }
 }
 
