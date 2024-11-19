@@ -315,4 +315,30 @@ ALLOW_DISCARD static inline size_t erase_if(Container &container, Callback &&cal
     return before - after;
 }
 
+template<typename Container, typename Callback>
+NODISCARD static inline auto find_min_computed(const Container &container, Callback &&callback)
+{
+    using OptResult = std::optional<std::decay_t<decltype(callback(*container.begin()))>>;
+    if (container.empty()) {
+        return OptResult{};
+    }
+
+    const auto beg = container.begin();
+    const auto end = container.end();
+    if ((false)) {
+        auto result = callback(*beg);
+        for (auto it = std::next(beg); it != end; ++it) {
+            result = std::min(callback(*it), result);
+        }
+        return OptResult{result};
+    } else {
+        const auto it = std::min_element(beg,
+                                         end,
+                                         [&callback](const auto &a, const auto &b) -> bool {
+                                             return callback(a) < callback(b);
+                                         });
+        return OptResult{callback(*it)};
+    }
+}
+
 } // namespace utils
