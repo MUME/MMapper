@@ -23,7 +23,7 @@ struct NODISCARD RemoteSessionTag final
 {};
 } // namespace tags
 
-using RemoteSession = TaggedString<EncodingEnum::Latin1, tags::RemoteSessionTag>;
+using RemoteSession = TaggedStringLatin1<tags::RemoteSessionTag>;
 
 // Internally shared across all view sessions
 static const RemoteSession REMOTE_VIEW_SESSION_ID = RemoteSession("-1");

@@ -5,7 +5,7 @@
 #include "remoteedit.h"
 
 #include "../configuration/configuration.h"
-#include "../global/TextUtils.h"
+#include "../global/Consts.h"
 #include "remoteeditsession.h"
 
 #include <cassert>

@@ -13,7 +13,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 #include <QDateTime>
 #include <QMessageLogContext>
