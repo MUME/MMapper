@@ -26,7 +26,7 @@ private:
     AccomplishedTaskParser m_accomplishedTaskParser;
 
 public:
-    explicit AdventureTracker(GameObserver &observer, QObject *parent = nullptr);
+    explicit AdventureTracker(GameObserver &observer, QObject *parent);
 
 signals:
     void sig_accomplishedTask(double xpGained);

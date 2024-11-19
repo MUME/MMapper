@@ -11,7 +11,7 @@ class GameObserver : public QObject
 {
     Q_OBJECT
 public:
-    explicit GameObserver(QObject *parent = nullptr);
+    explicit GameObserver(QObject *parent);
 
 signals:
     void sig_connected();

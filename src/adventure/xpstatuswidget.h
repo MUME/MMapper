@@ -22,9 +22,7 @@ private:
     bool m_showPreference = true;
 
 public:
-    explicit XPStatusWidget(AdventureTracker &at,
-                            QStatusBar *sb = nullptr,
-                            QWidget *parent = nullptr);
+    explicit XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent);
 
 public slots:
     void slot_configChanged(const std::type_info &configGroup);

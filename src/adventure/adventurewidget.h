@@ -36,7 +36,7 @@ public:
     static constexpr const auto HINT_MSG = "Hint: %1\n";
     static constexpr const auto KILL_TROPHY_MSG = "Trophy: %1 (%2 xp)\n";
 
-    explicit AdventureWidget(AdventureTracker &at, QWidget *parent = nullptr);
+    explicit AdventureWidget(AdventureTracker &at, QWidget *parent);
 
 public slots:
     void slot_onAccomplishedTask(double xpGained);
