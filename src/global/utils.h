@@ -15,6 +15,8 @@
 #include <string>
 #include <type_traits>
 
+#include <QPointer>
+
 namespace utils {
 namespace details {
 template<typename T>
@@ -144,6 +146,13 @@ template<typename T>
 inline T deref(std::unique_ptr<T> &&ptr) = delete;
 template<typename T>
 inline T &deref(const std::unique_ptr<T> &ptr)
+{
+    if (ptr == nullptr)
+        throw NullPointerException();
+    return *ptr;
+}
+template<typename T>
+inline T &deref(const QPointer<T> &ptr)
 {
     if (ptr == nullptr)
         throw NullPointerException();
