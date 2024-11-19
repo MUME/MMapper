@@ -80,7 +80,7 @@ private:
     ProtocolVersion protocolVersion = 102;
 
     enum class NODISCARD GroupMessageStateEnum {
-        /// integer string representing the messge length
+        /// integer string representing the message length
         LENGTH,
         /// message payload
         PAYLOAD

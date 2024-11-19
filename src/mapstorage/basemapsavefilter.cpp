@@ -99,7 +99,7 @@ void BaseMapSaveFilter::prepare(ProgressCounter &counter)
         m_impl->roomsTodo.pop_front();
 
         if (considered.find(todo)
-            == considered.end()) { // Don't process twice the same room (ending condition)
+            == considered.end()) { // Don't process the same room twice (ending condition)
             m_impl->mapData->lookingForRooms(*this, todo);
             m_impl->mapData->releaseRoom(*this, todo);
             considered.insert(todo);

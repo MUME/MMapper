@@ -1398,7 +1398,7 @@
        <item>
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Type your note to the current room or area:</string>
+          <string>Type your note for the current room or area:</string>
          </property>
         </widget>
        </item>
