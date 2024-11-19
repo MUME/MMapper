@@ -50,49 +50,82 @@ private:
 NoopPortMapper::~NoopPortMapper() = default;
 
 #ifndef MMAPPER_NO_MINIUPNPC
-static constexpr const auto UPNP_DESCRIPTION = "MMapper";
-static constexpr const auto UPNP_WHITELISTED_PROTO = "TCP";
-static constexpr const auto UPNP_PERMANENT_LEASE = "0";
+static constexpr const auto MM_UPNP_DESCRIPTION = "MMapper";
+static constexpr const auto MM_UPNP_WHITELISTED_PROTO = "TCP";
+static constexpr const auto MM_UPNP_PERMANENT_LEASE = "0";
 using UPNPDev_ptr = std::unique_ptr<UPNPDev, decltype(&::freeUPNPDevlist)>;
+
+#if MINIUPNPC_API_VERSION < 19
+#define MM_UPNP_NO_IGD (0)
+#define MM_UPNP_CONNECTED_IGD (1)
+#define MM_UPNP_PRIVATEIP_IGD (2)
+#define MM_UPNP_DISCONNECTED_IGD (3)
+#define MM_UPNP_UNKNOWN_DEVICE (4)
+#else
+#define MM_UPNP_NO_IGD UPNP_NO_IGD
+#define MM_UPNP_CONNECTED_IGD UPNP_CONNECTED_IGD
+#define MM_UPNP_PRIVATEIP_IGD UPNP_PRIVATEIP_IGD
+#define MM_UPNP_DISCONNECTED_IGD UPNP_DISCONNECTED_IGD
+#define MM_UPNP_UNKNOWN_DEVICE UPNP_UNKNOWN_DEVICE
+#endif
 
 class MiniUPnPcPortMapper final : public GroupPortMapper::Pimpl
 {
 private:
     UPNPDev_ptr deviceList{nullptr, ::freeUPNPDevlist};
-    UPNPUrls urls;
-    IGDdatas igdData;
-    char lanAddress[64];
+    UPNPUrls urls{};
+    IGDdatas igdData{};
+    char lanAddress[64]{};
+    char wanAddress[64]{};
     int validIGDState = 0;
 
 public:
     MiniUPnPcPortMapper()
     {
-        int result = 0;
-#if MINIUPNPC_API_VERSION < 14
-        deviceList = UPNPDev_ptr(upnpDiscover(1000, nullptr, nullptr, 0, 0, &result),
-                                 ::freeUPNPDevlist);
-#else
-        deviceList = UPNPDev_ptr(upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &result),
-                                 ::freeUPNPDevlist);
+        int result = UPNPDISCOVER_SUCCESS;
+        deviceList = UPNPDev_ptr
+        {
+            upnpDiscover(1000,
+                         nullptr,
+                         nullptr,
+                         0,
+                         0,
+#if MINIUPNPC_API_VERSION >= 14
+                         2,
 #endif
+                         &result),
+                ::freeUPNPDevlist
+        };
+
+        if (result != UPNPDISCOVER_SUCCESS) {
+            // TODO: handle this error.
+        }
+
         validIGDState = UPNP_GetValidIGD(deviceList.get(),
                                          &urls,
                                          &igdData,
                                          lanAddress,
-                                         sizeof lanAddress);
+                                         sizeof lanAddress
+#if MINIUPNPC_API_VERSION >= 18
+                                         ,
+                                         wanAddress,
+                                         sizeof wanAddress
+#endif
+        );
         switch (validIGDState) {
-        case 0:
+        case MM_UPNP_NO_IGD:
             qInfo() << "No IGD found";
             break;
-        case 1:
+        case MM_UPNP_CONNECTED_IGD:
             qInfo() << "Valid IGD found";
             break;
-        case 2:
+        case MM_UPNP_PRIVATEIP_IGD:
             qInfo() << "Valid IGD has been found but it reported as not connected";
             break;
-        case 3:
+        case MM_UPNP_DISCONNECTED_IGD:
             qInfo() << "UPnP device has been found but was not recognized as an IGD";
             break;
+        case MM_UPNP_UNKNOWN_DEVICE:
         default:
             qWarning() << "UPNP_GetValidIGD returned an unknown result code" << validIGDState;
             break;
@@ -102,7 +135,7 @@ public:
 
     NODISCARD bool validIGD() const
     {
-        return validIGDState == 1;
+        return validIGDState == MM_UPNP_CONNECTED_IGD;
     }
 
 private:
@@ -113,7 +146,7 @@ private:
 
         // REVISIT: Expose the external IP in the preferences?
         static const constexpr int EXTERNAL_IP_ADDRESS_BYTES = 46; /* ipv6 requires 45 bytes */
-        char externalAddress[EXTERNAL_IP_ADDRESS_BYTES];
+        char externalAddress[EXTERNAL_IP_ADDRESS_BYTES]{};
         int result = UPNP_GetExternalIPAddress(urls.controlURL,
                                                igdData.first.servicetype,
                                                externalAddress);
@@ -144,10 +177,10 @@ private:
                                          portString.constData(),
                                          portString.constData(),
                                          lanAddress,
-                                         UPNP_DESCRIPTION,
-                                         UPNP_WHITELISTED_PROTO,
+                                         MM_UPNP_DESCRIPTION,
+                                         MM_UPNP_WHITELISTED_PROTO,
                                          nullptr,
-                                         UPNP_PERMANENT_LEASE);
+                                         MM_UPNP_PERMANENT_LEASE);
         if (result != UPNPCOMMAND_SUCCESS) {
             qWarning() << "UPNP_AddPortMapping failed with result code" << result;
             return false;
@@ -168,7 +201,7 @@ private:
         int result = UPNP_DeletePortMapping(urls.controlURL,
                                             igdData.first.servicetype,
                                             portString.constData(),
-                                            UPNP_WHITELISTED_PROTO,
+                                            MM_UPNP_WHITELISTED_PROTO,
                                             nullptr);
         if (result != UPNPCOMMAND_SUCCESS) {
             qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
@@ -182,8 +215,7 @@ private:
 
 MiniUPnPcPortMapper::~MiniUPnPcPortMapper()
 {
-    if (validIGDState != 0)
-        FreeUPNPUrls(&urls);
+    FreeUPNPUrls(&urls);
 }
 
 GroupPortMapper::GroupPortMapper()
