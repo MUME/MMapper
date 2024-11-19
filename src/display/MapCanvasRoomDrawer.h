@@ -12,6 +12,7 @@
 #include "../opengl/Font.h"
 #include "Connections.h"
 #include "Infomarks.h"
+#include "MapBatches.h"
 #include "MapCanvasData.h"
 #include "RoadIndex.h"
 
@@ -35,19 +36,6 @@ class Room;
 
 using RoomVector = std::vector<const Room *>;
 using LayerToRooms = std::map<int, RoomVector>;
-
-struct NODISCARD MapBatches final
-{
-    BatchedMeshes batchedMeshes;
-    BatchedConnections connectionDrawerBuffers;
-    BatchedConnectionMeshes connectionMeshes;
-    BatchedRoomNames roomNameBatches;
-    OptBounds redrawMargin;
-
-    MapBatches() = default;
-    ~MapBatches() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(MapBatches);
-};
 
 struct NODISCARD Batches final
 {
