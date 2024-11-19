@@ -14,6 +14,13 @@
 class XPStatusWidget : public QPushButton
 {
     Q_OBJECT
+
+private:
+    QStatusBar *m_statusBar = nullptr;
+    AdventureTracker &m_tracker;
+    std::shared_ptr<AdventureSession> m_session;
+    bool m_showPreference = true;
+
 public:
     explicit XPStatusWidget(AdventureTracker &at,
                             QStatusBar *sb = nullptr,
@@ -30,10 +37,4 @@ protected:
 private:
     void readConfig();
     void updateContent();
-
-    bool m_showPreference = true;
-
-    QStatusBar *m_statusBar;
-    AdventureTracker &m_tracker;
-    std::shared_ptr<AdventureSession> m_session;
 };

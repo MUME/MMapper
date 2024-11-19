@@ -14,6 +14,17 @@
 class AdventureTracker final : public QObject
 {
     Q_OBJECT
+
+private:
+    GameObserver &m_observer;
+    std::shared_ptr<AdventureSession> m_session;
+    AchievementParser m_achievementParser;
+    DiedParser m_diedParser;
+    GainedLevelParser m_gainedLevelParser;
+    HintParser m_hintParser;
+    KillAndXPParser m_killParser;
+    AccomplishedTaskParser m_accomplishedTaskParser;
+
 public:
     explicit AdventureTracker(GameObserver &observer, QObject *parent = nullptr);
 
@@ -35,17 +46,5 @@ private:
     void parseIfGoodbye(const GmcpMessage &msg);
     void parseIfUpdatedCharName(const GmcpMessage &msg);
     void parseIfUpdatedVitals(const GmcpMessage &msg);
-
-    double checkpointXP();
-
-    GameObserver &m_observer;
-
-    std::shared_ptr<AdventureSession> m_session;
-
-    AchievementParser m_achievementParser;
-    DiedParser m_diedParser;
-    GainedLevelParser m_gainedLevelParser;
-    HintParser m_hintParser;
-    KillAndXPParser m_killParser;
-    AccomplishedTaskParser m_accomplishedTaskParser;
+    NODISCARD double checkpointXP();
 };

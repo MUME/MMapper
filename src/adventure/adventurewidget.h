@@ -16,6 +16,13 @@ class AdventureWidget : public QWidget
 {
     Q_OBJECT
 
+private:
+    AdventureTracker &m_adventureTracker;
+
+    QTextEdit *m_textEdit = nullptr;
+    std::unique_ptr<QTextCursor> m_textCursor;
+    QAction *m_clearContentAction = nullptr;
+
 public:
     static constexpr const int MAX_LINES = 1024;
     static constexpr const auto DEFAULT_MSG
@@ -46,10 +53,4 @@ private slots:
 private:
     void addDefaultContent();
     void addAdventureUpdate(const QString &msg);
-
-    AdventureTracker &m_adventureTracker;
-
-    QTextEdit *m_textEdit = nullptr;
-    std::unique_ptr<QTextCursor> m_textCursor;
-    QAction *m_clearContentAction = nullptr;
 };

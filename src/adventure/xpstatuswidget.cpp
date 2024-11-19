@@ -14,7 +14,6 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidg
     : QPushButton(parent)
     , m_statusBar{sb}
     , m_tracker{at}
-    , m_session{}
 {
     setFlat(true);
     setStyleSheet("QPushButton { border: none; outline: none; }");

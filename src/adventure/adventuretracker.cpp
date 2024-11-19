@@ -4,6 +4,8 @@
 
 #include "adventuretracker.h"
 
+#include "../proxy/GmcpMessage.h"
+
 #include <memory>
 #include <optional>
 

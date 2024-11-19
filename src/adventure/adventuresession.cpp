@@ -9,69 +9,14 @@
 AdventureSession::AdventureSession(QString charName)
     : m_charName{std::move(charName)}
     , m_startTimePoint{std::chrono::steady_clock::now()}
-    , m_endTimePoint{}
-    , m_isEnded{false}
-    , m_tp{}
-    , m_xp{}
 {}
-
-AdventureSession::AdventureSession(const AdventureSession &src)
-    : m_charName{src.m_charName}
-    , m_startTimePoint{src.m_startTimePoint}
-    , m_endTimePoint{src.m_endTimePoint}
-    , m_isEnded{src.m_isEnded}
-    , m_tp{src.m_tp}
-    , m_xp{src.m_xp}
-{}
-
-AdventureSession &AdventureSession::operator=(const AdventureSession &src)
-{
-    m_charName = src.m_charName;
-    m_startTimePoint = src.m_startTimePoint;
-    m_endTimePoint = src.m_endTimePoint;
-    m_isEnded = src.m_isEnded;
-    m_tp = src.m_tp;
-    m_xp = src.m_xp;
-
-    return *this;
-}
 
 void AdventureSession::endSession()
 {
     if (!m_isEnded) {
-        m_endTimePoint = std::chrono::steady_clock::now();
+        m_endTimePoint = Clock::now();
         m_isEnded = true;
     }
-}
-
-const QString &AdventureSession::name() const
-{
-    return m_charName;
-}
-
-std::chrono::steady_clock::time_point AdventureSession::startTime() const
-{
-    return m_startTimePoint;
-}
-
-std::chrono::steady_clock::time_point AdventureSession::endTime() const
-{
-    return m_endTimePoint;
-}
-
-bool AdventureSession::isEnded() const
-{
-    return m_isEnded;
-}
-
-AdventureSession::Counter<double> AdventureSession::tp() const
-{
-    return m_tp;
-}
-
-AdventureSession::Counter<double> AdventureSession::xp() const
-{
-    return m_xp;
 }
 
 double AdventureSession::checkpointXPGained()
@@ -99,16 +44,15 @@ double AdventureSession::calculateHourlyRateXP() const
     return calculateHourlyRate(m_xp.gainedSession());
 }
 
-double AdventureSession::calculateHourlyRate(double points) const
+double AdventureSession::calculateHourlyRate(const double points) const
 {
-    auto seconds = elapsed().count();
-
+    const auto seconds = elapsed().count();
     return points / static_cast<double>(seconds) * 3600.0;
 }
 
 std::chrono::seconds AdventureSession::elapsed() const
 {
-    auto end = m_isEnded ? m_endTimePoint : std::chrono::steady_clock::now();
+    auto end = m_isEnded ? m_endTimePoint : Clock::now();
     return std::chrono::duration_cast<std::chrono::seconds>(end - m_startTimePoint);
 }
 
