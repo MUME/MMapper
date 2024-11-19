@@ -174,14 +174,24 @@ void Mmapper2Group::slot_updateSelf()
 
     CGroupChar &self = deref(group->getSelf());
     const Configuration::GroupManagerSettings &conf = getConfig().groupManager;
-    if (conf.charName != self.getLabel())
-        self.setLabel(conf.charName);
-    else if (self.getColor() != conf.color)
-        self.setColor(conf.color);
-    else
-        return;
 
-    issueLocalCharUpdate();
+    // Older code assumed that only one change can occur at a time,
+    // but we now support the possibility of multiple changes at once.
+    bool changed = false;
+
+    if (self.getLabel() != conf.charName) {
+        self.setLabel(conf.charName);
+        changed = true;
+    }
+
+    if (self.getColor() != conf.color) {
+        self.setColor(conf.color);
+        changed = true;
+    }
+
+    if (changed) {
+        issueLocalCharUpdate();
+    }
 }
 
 void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
