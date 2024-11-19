@@ -263,6 +263,7 @@ char StringView::operator[](size_t pos) const
     return m_sv[pos];
 }
 
+namespace { // anonymous
 namespace detail {
 
 namespace intersection {
@@ -391,6 +392,7 @@ NODISCARD static bool isSubstringOf(const char *const a,
 } // namespace substring
 
 } // namespace detail
+} // namespace
 
 bool StringView::intersects(const StringView other) const
 {
