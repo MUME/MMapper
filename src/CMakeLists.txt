@@ -110,6 +110,7 @@ set(mmapper_SRCS
     global/WinSock.cpp
     global/WinSock.h
     global/bits.h
+    global/entities-xforeach.txt
     global/entities.cpp
     global/entities.h
     global/enums.h
