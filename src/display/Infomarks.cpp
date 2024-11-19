@@ -5,6 +5,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
+#include "../global/Charset.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
@@ -34,7 +35,7 @@ static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 2.f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;
 static constexpr float INFOMARK_POINT_SIZE = 6.f;
 
-#define LOOKUP_COLOR_INFOMARK(X) (getConfig().colorSettings.X.getColor())
+#define LOOKUP_COLOR_INFOMARK(X) (getNamedColorOptions().X.getColor())
 
 // NOTE: This currently requires rebuilding the infomark meshes if a color changes.
 NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
@@ -100,8 +101,10 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
 
     BatchedInfomarksMeshes result;
     {
-        for (const auto &mark : m_data.getMarkersList()) {
-            const int layer = mark->getPosition1().z;
+        const auto &db = m_data.getMarkersList();
+        for (const InfomarkId id : db.getIdSet()) {
+            InfomarkHandle mark{db, id};
+            const int layer = mark.getPosition1().z;
             const auto it = result.find(layer);
             if (it == result.end()) {
                 std::ignore = result[layer]; // side effect: this creates the entry
@@ -120,11 +123,12 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
     // If the performance gets too bad, count # in each layer,
     // allocate vectors, fill the vectors, and then only visit
     // each one once per layer.
+    const auto &db = m_data.getInfomarkDb();
     for (auto &it : result) {
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
-        for (const auto &m : m_data.getMarkersList()) {
-            drawInfoMark(batch, m.get(), layer);
+        for (const InfomarkId id : db.getIdSet()) {
+            drawInfoMark(batch, InfomarkHandle{db, id}, layer);
         }
         it.second = batch.getMeshes();
     }
@@ -181,15 +185,12 @@ void InfomarksBatch::renderImmediate(const GLRenderState &state)
     if (!m_lines.empty()) {
         gl.renderColoredLines(m_lines, state);
     }
-
     if (!m_tris.empty()) {
         gl.renderColoredTris(m_tris, state);
     }
-
     if (!m_text.empty()) {
         m_font.render3dTextImmediate(m_text);
     }
-
     if (!m_points.empty()) {
         gl.renderPoints(m_points, state.withPointSize(INFOMARK_POINT_SIZE));
     }
@@ -211,32 +212,34 @@ void InfomarksMeshes::render()
 }
 
 void MapCanvas::drawInfoMark(InfomarksBatch &batch,
-                             InfoMark *const marker,
+                             const InfomarkHandle &marker,
                              const int currentLayer,
                              const glm::vec2 &offset,
                              const std::optional<Color> &overrideColor)
 {
-    if (marker == nullptr) {
+    if (!marker.exists()) {
         assert(false);
         return;
     }
 
-    const int layer = marker->getPosition1().z;
+    const Coordinate &pos1 = marker.getPosition1();
+    const int layer = pos1.z;
     if (layer != currentLayer) {
         // REVISIT: consider storing infomarks by level
         // so we don't have to test here.
         return;
     }
 
-    const float x1 = static_cast<float>(marker->getPosition1().x) / INFOMARK_SCALE + offset.x;
-    const float y1 = static_cast<float>(marker->getPosition1().y) / INFOMARK_SCALE + offset.y;
-    const float x2 = static_cast<float>(marker->getPosition2().x) / INFOMARK_SCALE + offset.x;
-    const float y2 = static_cast<float>(marker->getPosition2().y) / INFOMARK_SCALE + offset.y;
+    const Coordinate &pos2 = marker.getPosition2();
+    const float x1 = static_cast<float>(pos1.x) / INFOMARK_SCALE + offset.x;
+    const float y1 = static_cast<float>(pos1.y) / INFOMARK_SCALE + offset.y;
+    const float x2 = static_cast<float>(pos2.x) / INFOMARK_SCALE + offset.x;
+    const float y2 = static_cast<float>(pos2.y) / INFOMARK_SCALE + offset.y;
     const float dx = x2 - x1;
     const float dy = y2 - y1;
 
-    const auto infoMarkType = marker->getType();
-    const auto infoMarkClass = marker->getClass();
+    const auto infoMarkType = marker.getType();
+    const auto infoMarkClass = marker.getClass();
 
     // Color depends of the class of the InfoMark
     const Color infoMarkColor = getInfoMarkColor(infoMarkType, infoMarkClass).withAlpha(0.55f);
@@ -245,17 +248,19 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
     const glm::vec3 pos{x1, y1, static_cast<float>(layer)};
     batch.setOffset(pos);
 
-    const Color &color = (overrideColor) ? overrideColor.value() : infoMarkColor;
-    batch.setColor(color);
+    const Color &bgColor = (overrideColor) ? overrideColor.value() : infoMarkColor;
+    batch.setColor(bgColor);
 
     switch (infoMarkType) {
     case InfoMarkTypeEnum::TEXT: {
+        const auto utf8 = marker.getText().getStdStringViewUtf8();
+        const auto latin1_to_render = charset::conversion::utf8ToLatin1(utf8); // GL font is latin1
         batch.renderText(pos,
-                         marker->getText().getStdStringLatin1(),
-                         Color{color.getQColor()},
-                         color,
+                         latin1_to_render,
+                         textColor(bgColor),
+                         bgColor,
                          fontFormatFlag,
-                         marker->getRotationAngle());
+                         marker.getRotationAngle());
         break;
     }
 
@@ -306,14 +311,15 @@ void MapCanvas::paintSelectedInfoMarks()
     {
         // draw selections
         if (m_infoMarkSelection != nullptr) {
-            for (const auto &marker : *m_infoMarkSelection) {
-                drawInfoMark(batch, marker.get(), m_currentLayer, {}, Colors::red);
-            }
+            const InfoMarkSelection &sel = deref(m_infoMarkSelection);
+            sel.for_each([this, &batch](const InfomarkHandle &marker) {
+                drawInfoMark(batch, marker, m_currentLayer, {}, Colors::red);
+            });
             if (hasInfoMarkSelectionMove()) {
                 const glm::vec2 offset = m_infoMarkSelectionMove->pos.to_vec2();
-                for (const auto &marker : *m_infoMarkSelection) {
-                    drawInfoMark(batch, marker.get(), m_currentLayer, offset, Colors::yellow);
-                }
+                sel.for_each([this, &batch, &offset](const InfomarkHandle &marker) {
+                    drawInfoMark(batch, marker, m_currentLayer, offset, Colors::yellow);
+                });
             }
         }
 
@@ -328,29 +334,31 @@ void MapCanvas::paintSelectedInfoMarks()
                 batch.drawPoint(point);
             };
 
-            const auto drawSelectionPoints = [this, &drawPoint](InfoMark *const marker) {
-                const auto &pos1 = marker->getPosition1();
+            const auto drawSelectionPoints = [this, &drawPoint](const InfomarkHandle &marker) {
+                const auto &pos1 = marker.getPosition1();
                 if (pos1.z != m_currentLayer) {
                     return;
                 }
 
                 const auto color = (m_infoMarkSelection != nullptr
-                                    && m_infoMarkSelection->contains(marker))
+                                    && m_infoMarkSelection->contains(marker.getId()))
                                        ? Colors::yellow
                                        : Colors::cyan;
 
                 drawPoint(pos1, color);
-                if (marker->getType() == InfoMarkTypeEnum::TEXT) {
+                if (marker.getType() == InfoMarkTypeEnum::TEXT) {
                     return;
                 }
 
-                const Coordinate &pos2 = marker->getPosition2();
+                const Coordinate &pos2 = marker.getPosition2();
                 assert(pos2.z == m_currentLayer);
                 drawPoint(pos2, color);
             };
 
-            for (const auto &marker : m_data.getMarkersList()) {
-                drawSelectionPoints(marker.get());
+            const InfomarkDb &db = m_data.getMarkersList();
+            for (const InfomarkId id : db.getIdSet()) {
+                InfomarkHandle marker{db, id};
+                drawSelectionPoints(marker);
             }
         }
     }

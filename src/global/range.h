@@ -24,6 +24,12 @@ NODISCARD range<It> make_range(It begin, It end)
 }
 
 template<typename T>
+NODISCARD auto make_forward_range(T &&container)
+{
+    return make_range(std::begin(container), std::end(container));
+}
+
+template<typename T>
 NODISCARD auto make_reverse_range(T &&container)
 {
     return make_range(std::rbegin(container), std::rend(container));

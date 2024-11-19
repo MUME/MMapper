@@ -22,7 +22,7 @@
     X(NO_BASH, no_bash, NoBash, "No bash") \
     /* define door flags above */
 
-enum class NODISCARD DoorFlagEnum {
+enum class NODISCARD DoorFlagEnum : uint8_t {
 #define X_DECL_DOOR_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     XFOREACH_DOOR_FLAG(X_DECL_DOOR_FLAG)
 #undef X_DECL_DOOR_FLAG
@@ -59,3 +59,6 @@ NODISCARD inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagE
 {
     return DoorFlags{lhs} | DoorFlags{rhs};
 }
+
+NODISCARD extern std::string_view to_string_view(DoorFlagEnum flag);
+NODISCARD extern std::string_view getName(DoorFlagEnum flag);

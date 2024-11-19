@@ -3,6 +3,7 @@
 
 #include "ParserInput.h"
 
+#include "../global/AnsiOstream.h"
 #include "../global/PrintUtils.h"
 
 #include <memory>
@@ -84,6 +85,20 @@ void ParserInput::concatenate_into(std::ostream &os) const
     }
 }
 
+void ParserInput::concatenate_into(AnsiOstream &os) const
+{
+    bool first = true;
+    for (auto &s : *this) {
+        if (first) {
+            first = false;
+        } else {
+            os << " ";
+        }
+
+        os.writeSmartQuoted(s);
+    }
+}
+
 std::string ParserInput::concatenate() const
 {
     if (empty()) {
@@ -110,6 +125,14 @@ bool ParserInput::isSubsetOf(const ParserInput &parent) const
 }
 
 std::ostream &operator<<(std::ostream &os, const ParserInput &parserInput)
+{
+    os << "[";
+    parserInput.concatenate_into(os);
+    os << "]";
+    return os;
+}
+
+AnsiOstream &operator<<(AnsiOstream &os, const ParserInput &parserInput)
 {
     os << "[";
     parserInput.concatenate_into(os);

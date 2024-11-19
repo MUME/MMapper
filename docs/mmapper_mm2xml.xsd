@@ -41,8 +41,9 @@
             <xs:element name="note" type="xs:string" minOccurs="0" />
         </xs:sequence>
         <xs:attribute name="id" type="room_id" use="required" />
+        <xs:attribute name="server_id" type="server_id" use="optional" />
         <xs:attribute name="name" type="xs:string" use="optional" />
-        <!-- attribute uptodate can only be "false" or not present -->
+        <!-- attribute uptodate is not used anymore -->
         <xs:attribute name="uptodate" fixed="false" use="optional" />
     </xs:complexType>
 
@@ -63,6 +64,13 @@
         <xs:restriction base="xs:integer">
             <xs:minInclusive value="0" />
             <xs:maxInclusive value="4294967295" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="server_id">
+        <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1" />
+            <xs:maxInclusive value="2147483647" />
         </xs:restriction>
     </xs:simpleType>
 

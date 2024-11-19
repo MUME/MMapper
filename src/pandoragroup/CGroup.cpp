@@ -25,12 +25,8 @@ CGroup::CGroup(QObject *const parent)
     , m_self{CGroupChar::alloc()}
 {
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
-    auto &self = m_self;
-    self->setName(groupManager.charName);
-    self->setLabel(groupManager.charName);
-    self->setRoomId(INVALID_ROOMID);
-    self->setColor(groupManager.color);
-    m_charIndex.push_back(self);
+    deref(m_self).init(groupManager.charName, groupManager.color);
+    m_charIndex.push_back(m_self);
 }
 
 /**
@@ -74,7 +70,7 @@ std::unique_ptr<GroupSelection> CGroup::selectAll()
     return selection;
 }
 
-std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
+std::unique_ptr<GroupSelection> CGroup::selectByName(const QString &name)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     auto selection = std::make_unique<GroupSelection>(this);
@@ -113,19 +109,18 @@ void CGroup::addChar(const QVariantMap &map)
     ABORT_IF_NOT_ON_MAIN_THREAD();
     auto newChar = CGroupChar::alloc();
     std::ignore = newChar->updateFromVariantMap(map); // why is the return value ignored?
-
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         log(QString("'%1' could not join the group because the name already existed.")
-                .arg(QString::fromLatin1(newChar->getName())));
+                .arg(newChar->getName()));
         return; // not added
     }
 
-    log(QString("'%1' joined the group.").arg(QString::fromLatin1(newChar->getName())));
+    log(QString("'%1' joined the group.").arg(newChar->getName()));
     m_charIndex.push_back(newChar);
     characterChanged(true);
 }
 
-void CGroup::removeChar(const QByteArray &name)
+void CGroup::removeChar(const QString &name)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     if (name == getConfig().groupManager.charName) {
@@ -138,13 +133,13 @@ void CGroup::removeChar(const QByteArray &name)
         if (character.getName() != name) {
             return false;
         }
-        log(QString("Removing '%1' from the group.").arg(QString::fromLatin1(character.getName())));
+        log(QString("Removing '%1' from the group.").arg(character.getName()));
         characterChanged(true);
         return true;
     });
 }
 
-bool CGroup::isNamePresent(const QByteArray &name) const
+bool CGroup::isNamePresent(const QString &name) const
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
@@ -158,7 +153,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
     return false;
 }
 
-SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
+SharedGroupChar CGroup::getCharByName(const QString &name) const
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     for (const auto &character : m_charIndex) {
@@ -177,14 +172,23 @@ void CGroup::updateChar(const QVariantMap &map)
     }
 
     CGroupChar &ch = *sharedCh;
-    const auto oldRoomId = ch.getRoomId();
+    const auto oldExternalId = ch.getExternalId();
+    const auto oldServerId = ch.getServerId();
     const bool change = ch.updateFromVariantMap(map);
     if (!change) {
         return;
     }
 
     // Update canvas only if the character moved
-    const bool updateCanvas = ch.getRoomId() != oldRoomId;
+    const bool updateCanvas = [oldExternalId, oldServerId, &ch]() -> bool {
+        if (ch.getServerId() != INVALID_SERVER_ROOMID) {
+            return ch.getServerId() != oldServerId;
+        }
+        if (ch.getExternalId() != INVALID_EXTERNAL_ROOMID) {
+            return ch.getExternalId() != oldExternalId;
+        }
+        return false;
+    }();
     characterChanged(updateCanvas);
 }
 
@@ -205,12 +209,12 @@ void CGroup::renameChar(const QVariantMap &map)
 
     log(QString("Renaming '%1' to '%2'").arg(oldname, newname));
 
-    const auto ch = getCharByName(oldname.toLatin1());
+    const auto ch = getCharByName(oldname);
     if (ch == nullptr) {
         qWarning() << "Unable to find old name" << oldname;
         return;
     }
 
-    ch->setName(newname.toLatin1());
+    ch->setName(newname);
     characterChanged(false);
 }

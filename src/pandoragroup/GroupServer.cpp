@@ -57,22 +57,21 @@ void GroupServer::slot_onIncomingConnection(qintptr socketDescriptor)
 void GroupServer::slot_errorInConnection(GroupSocket *const pSocket, const QString &errorMessage)
 {
     GroupSocket &socket = deref(pSocket);
-    const QByteArray name = socket.getName();
+    const QString name = socket.getName();
     if (getGroup()->isNamePresent(name)) {
         sendRemoveUserNotification(socket, name);
-        emit sig_sendLog(
-            QString("'%1' encountered an error: %2").arg(QString::fromLatin1(name), errorMessage));
+        emit sig_sendLog(QString("'%1' encountered an error: %2").arg(name, errorMessage));
         emit sig_scheduleAction(std::make_shared<RemoveCharacter>(name));
     }
     closeOne(socket);
 }
 
-void GroupServer::sendToAll(const QByteArray &message)
+void GroupServer::sendToAll(const QString &message)
 {
     sendToAllExceptOne(nullptr, message);
 }
 
-void GroupServer::sendToAllExceptOne(GroupSocket *const exception, const QByteArray &message)
+void GroupServer::sendToAllExceptOne(GroupSocket *const exception, const QString &message)
 {
     for (auto &connection : filterClientList()) {
         if (connection == exception) {
@@ -190,7 +189,8 @@ void GroupServer::virt_connectionClosed(GroupSocket &socket)
 void GroupServer::slot_connectionEstablished(GroupSocket *const socket)
 {
     QVariantMap handshake;
-    handshake["protocolVersion"] = NO_OPEN_SSL ? PROTOCOL_VERSION_102 : PROTOCOL_VERSION_103;
+    handshake["protocolVersion"] = NO_OPEN_SSL ? PROTOCOL_VERSION_104_insecure
+                                               : PROTOCOL_VERSION_105_secure;
     sendMessage(deref(socket), MessagesEnum::REQ_HANDSHAKE, handshake);
 }
 
@@ -203,7 +203,7 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
                                     const MessagesEnum message,
                                     const QVariantMap &data)
 {
-    const QString nameStr = QString::fromLatin1(socket.getName());
+    const QString nameStr = socket.getName();
     // ---------------------- AwaitingLogin  --------------------
     if (socket.getProtocolState() == ProtocolStateEnum::AwaitingLogin) {
         // Login state. either REQ_HANDSHAKE, UPDATE_CHAR, or ACK should come
@@ -212,7 +212,7 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
             parseHandshake(socket, data);
         } else if (message == MessagesEnum::UPDATE_CHAR) {
             // aha! parse the data
-            if (socket.getProtocolVersion() >= PROTOCOL_VERSION_103) {
+            if (socket.getProtocolVersion() >= PROTOCOL_VERSION_105_secure) {
                 parseLoginInformation(socket, data);
             } else {
                 parseHandshake(socket, data); // Protocol 102 skips the handshake
@@ -232,7 +232,7 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
             socket.setProtocolState(ProtocolStateEnum::Logged);
             emit sig_sendLog(QString("'%1' has successfully logged in.").arg(nameStr));
             sendMessage(socket, MessagesEnum::STATE_LOGGED);
-            if (!NO_OPEN_SSL && socket.getProtocolVersion() == PROTOCOL_VERSION_102) {
+            if (!NO_OPEN_SSL && socket.getProtocolVersion() == PROTOCOL_VERSION_104_insecure) {
                 QVariantMap root;
                 root["text"] = QString("WARNING: %1 joined the group with an insecure connection "
                                        "and needs to upgrade MMapper!")
@@ -251,7 +251,7 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
     } else if (socket.getProtocolState() == ProtocolStateEnum::Logged) {
         // usual update situation. receive update, unpack, apply.
         if (message == MessagesEnum::UPDATE_CHAR) {
-            const QString &updateName = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
+            const QString &updateName = CGroupChar::getNameFromUpdateChar(data);
             if (!isEqualsCaseInsensitive(updateName, nameStr)) {
                 emit sig_sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr, updateName));
                 return;
@@ -288,13 +288,13 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
                     continue;
                 }
                 auto &target = deref(pTarget);
-                if (isEqualsCaseInsensitive(newName, QString::fromLatin1(target.getName()))) {
+                if (isEqualsCaseInsensitive(newName, target.getName())) {
                     kickConnection(socket,
                                    QString("Someone was already using the name '%1'").arg(newName));
                     return;
                 }
             }
-            socket.setName(newName.toLatin1());
+            socket.setName(newName);
             emit sig_scheduleAction(std::make_shared<RenameCharacter>(data));
             relayMessage(socket, MessagesEnum::RENAME_CHAR, data);
 
@@ -321,24 +321,26 @@ void GroupServer::parseHandshake(GroupSocket &socket, const QVariantMap &data)
         return;
     }
     const ProtocolVersion clientProtocolVersion = data["protocolVersion"].toUInt();
-    if (clientProtocolVersion < PROTOCOL_VERSION_102) {
+    if (clientProtocolVersion < PROTOCOL_VERSION_104_insecure) {
         kickConnection(socket,
                        "Host requires a newer version of the group protocol. "
                        "Please upgrade to the latest MMapper.");
         return;
     }
-    if (getConfig().groupManager.requireAuth && clientProtocolVersion == PROTOCOL_VERSION_102) {
+    if (getConfig().groupManager.requireAuth
+        && clientProtocolVersion == PROTOCOL_VERSION_104_insecure) {
         kickConnection(socket,
                        "Host requires authorization. "
                        "Please upgrade to the latest MMapper.");
         return;
     }
-    auto supportedProtocolVersion = NO_OPEN_SSL ? PROTOCOL_VERSION_102 : PROTOCOL_VERSION_103;
+    auto supportedProtocolVersion = NO_OPEN_SSL ? PROTOCOL_VERSION_104_insecure
+                                                : PROTOCOL_VERSION_105_secure;
     if (clientProtocolVersion > supportedProtocolVersion) {
         kickConnection(socket, "Host uses an older version of MMapper and needs to upgrade.");
         return;
     }
-    if (clientProtocolVersion == PROTOCOL_VERSION_102) {
+    if (clientProtocolVersion == PROTOCOL_VERSION_104_insecure) {
         socket.setProtocolVersion(clientProtocolVersion);
         parseLoginInformation(socket, data);
     } else {
@@ -362,19 +364,20 @@ void GroupServer::parseLoginInformation(GroupSocket &socket, const QVariantMap &
     }
     const QString &nameStr = playerData["name"].toString();
     const QString tempName = QString("%1-%2").arg(nameStr).arg(getRandom(1000));
-    socket.setName(tempName.toLatin1());
+    socket.setName(tempName);
     emit sig_sendLog(QString("'%1' is trying to join the group as '%2'.").arg(tempName, nameStr));
 
     // Check credentials
     const auto secret = socket.getSecret();
     const bool isEncrypted = !secret.isEmpty()
-                             && socket.getProtocolVersion() >= PROTOCOL_VERSION_103;
+                             && socket.getProtocolVersion() >= PROTOCOL_VERSION_105_secure;
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = getAuthority()->validSecret(secret);
     const bool validCert = GroupAuthority::validCertificate(socket);
     bool reconnect = false;
     if (isEncrypted) {
-        emit sig_sendLog(QString("'%1's secret: %2").arg(tempName, QString::fromLatin1(secret)));
+        emit sig_sendLog(
+            QString("'%1's secret: %2").arg(tempName, QString::fromUtf8(secret.getQByteArray())));
 
         // Verify only one secret can be connected at once
         for (const auto &pTarget : filterClientList()) {
@@ -418,13 +421,13 @@ void GroupServer::parseLoginInformation(GroupSocket &socket, const QVariantMap &
         kickConnection(socket, "Your name cannot be empty");
         return;
     }
-    if (getGroup()->isNamePresent(nameStr.toLatin1())) {
+    if (getGroup()->isNamePresent(nameStr)) {
         kickConnection(socket, "The name you picked is already present!");
         return;
     } else {
         // Allow this name to now take effect
         emit sig_sendLog(QString("'%1' will now be known as '%2'").arg(tempName, nameStr));
-        socket.setName(nameStr.toLatin1());
+        socket.setName(nameStr);
     }
 
     // Client is allowed to log in
@@ -465,7 +468,7 @@ void GroupServer::sendGroupInformation(GroupSocket &socket)
     }
 }
 
-void GroupServer::sendRemoveUserNotification(GroupSocket &socket, const QByteArray &name)
+void GroupServer::sendRemoveUserNotification(GroupSocket &socket, const QString &name)
 {
     auto selection = getGroup()->selectByName(name);
     for (const auto &character : *selection) {
@@ -528,7 +531,7 @@ bool GroupServer::virt_start()
     return true;
 }
 
-void GroupServer::virt_kickCharacter(const QByteArray &name)
+void GroupServer::virt_kickCharacter(const QString &name)
 {
     for (auto &pConn : filterClientList()) {
         auto &connection = deref(pConn);
@@ -541,18 +544,18 @@ void GroupServer::virt_kickCharacter(const QByteArray &name)
 
 void GroupServer::kickConnection(GroupSocket &socket, const QString &message)
 {
-    if (socket.getProtocolVersion() == PROTOCOL_VERSION_102
+    if (socket.getProtocolVersion() == PROTOCOL_VERSION_104_insecure
         && socket.getProtocolState() != ProtocolStateEnum::AwaitingLogin) {
         // Protocol 102 does not support kicking outside of AwaitingLogin so we fake it with a group tell
         QVariantMap root;
         root["text"] = message;
-        root["from"] = QString::fromLatin1(getGroup()->getSelf()->getName());
+        root["from"] = getGroup()->getSelf()->getName();
         sendMessage(socket, MessagesEnum::GTELL, root);
 
     } else {
-        sendMessage(socket, MessagesEnum::STATE_KICKED, message.toLatin1());
+        sendMessage(socket, MessagesEnum::STATE_KICKED, message);
     }
-    const QString nameStr = QString::fromLatin1(socket.getName());
+    const QString nameStr = socket.getName();
     const QString identifier = nameStr.isEmpty() ? socket.getPeerName() : nameStr;
     qDebug() << "Kicking" << identifier << "for" << message;
     emit sig_sendLog(QString("'%1' was kicked: %2").arg(identifier, message));
@@ -565,12 +568,12 @@ void GroupServer::kickConnection(GroupSocket &socket, const QString &message)
     closeOne(socket);
 }
 
-void GroupServer::slot_onRevokeWhitelist(const QByteArray &secret)
+void GroupServer::slot_onRevokeWhitelist(const GroupSecret &secret)
 {
     if (getConfig().groupManager.requireAuth) {
         for (auto &pConnection : filterClientList()) {
             auto &connection = deref(pConnection);
-            if (isEqualsCaseInsensitive(secret, connection.getSecret())) {
+            if (secret.getQByteArray() == connection.getSecret().getQByteArray()) {
                 kickConnection(connection, "You have been removed from the host's contacts!");
             }
         }

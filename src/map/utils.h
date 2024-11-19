@@ -5,52 +5,13 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/RuleOf5.h"
-#include "coordinate.h"
+#include "../global/macros.h"
 
-#include <memory>
+#include <cstdint>
+#include <functional>
 
-class AbstractRoomVisitor;
-class Room;
+class Coordinate;
 
-/**
- * The Map stores the geographic relations of rooms to each other
- * it doesn't store the search tree. The Map class is only used by the
- * RoomAdmin, which also stores the search tree
- */
-class Map final
-{
-public:
-    class MapOrderedTree;
-
-private:
-    std::unique_ptr<MapOrderedTree> m_pimpl;
-
-public:
-    Map();
-    ~Map();
-    DELETE_CTORS_AND_ASSIGN_OPS(Map);
-
-public:
-    void setNearest(const Coordinate &c, Room &room);
-    Room *get(const Coordinate &c) const;
-    void remove(const Coordinate &c);
-    void clear();
-    void getRooms(AbstractRoomVisitor &stream) const;
-    void getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const;
-
-private:
-    Coordinate getNearestFree(const Coordinate &c);
-};
-
-class NODISCARD CoordinateIterator final
-{
-private:
-    Coordinate c;
-    int threshold = 1;
-    int state = 7;
-
-public:
-    CoordinateIterator() = default;
-    NODISCARD Coordinate &next();
-};
+enum class NODISCARD FindCoordEnum : uint8_t { InUse, Available };
+NODISCARD extern Coordinate getNearestFree(
+    const Coordinate &c, const std::function<FindCoordEnum(const Coordinate &)> &check);

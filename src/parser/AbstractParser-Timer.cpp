@@ -28,6 +28,7 @@ syntax::MatchResult ArgTimerName::virt_match(const syntax::ParserInput &input,
     if (input.empty()) {
         return syntax::MatchResult::failure(input);
     }
+
     return syntax::MatchResult::success(1, input, Value{input.front()});
 }
 
@@ -61,7 +62,7 @@ void AbstractParser::parseTimer(StringView input)
             if (!desc.empty()) {
                 os << " <" << desc << ">";
             }
-            os << " for the duration of " << delay << " seconds." << std::endl;
+            os << " for the duration of " << delay << " seconds.\n";
             send_ok(os);
         },
         "add countdown timer");
@@ -84,7 +85,7 @@ void AbstractParser::parseTimer(StringView input)
             if (!desc.empty()) {
                 os << " <" << desc << ">";
             }
-            os << "." << std::endl;
+            os << ".\n";
             send_ok(os);
         },
         "add simple timer");
@@ -98,11 +99,11 @@ void AbstractParser::parseTimer(StringView input)
 
             auto res = false;
             if ((res = m_timers.removeTimer(name))) {
-                os << "Removed simple timer " << name << "." << std::endl;
+                os << "Removed simple timer " << name << ".\n";
             } else if ((res = m_timers.removeCountdown(name))) {
-                os << "Removed countdown timer " << name << "." << std::endl;
+                os << "Removed countdown timer " << name << ".\n";
             } else {
-                os << "No timer with that name found." << std::endl;
+                os << "No timer with that name found.\n";
             }
             send_ok(os);
         },
@@ -112,7 +113,7 @@ void AbstractParser::parseTimer(StringView input)
         [this](User &user, const Pair *const /* args */) {
             auto &os = user.getOstream();
             m_timers.clear();
-            os << "Cleared all timers." << std::endl;
+            os << "Cleared all timers.\n";
             send_ok(os);
         },
         "clear all timers");
@@ -122,7 +123,7 @@ void AbstractParser::parseTimer(StringView input)
             auto &os = user.getOstream();
             const auto list = m_timers.getStatCommandEntry();
             if (list.empty()) {
-                os << "No timers have been created yet." << std::endl;
+                os << "No timers have been created yet.\n";
             } else {
                 os << list;
             }

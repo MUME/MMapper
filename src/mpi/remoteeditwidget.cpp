@@ -4,6 +4,7 @@
 
 #include "remoteeditwidget.h"
 
+#include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
 #include "../global/CharUtils.h"
@@ -13,6 +14,9 @@
 #include "../global/TabUtils.h"
 #include "../global/TextUtils.h"
 #include "../global/entities.h"
+#include "../global/utils.h"
+#include "../global/window_utils.h"
+#include "../viewers/AnsiViewWindow.h"
 
 #include <cassert>
 #include <cctype>
@@ -684,7 +688,10 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     setWindowFlags(windowFlags() | Qt::WindowType::Widget);
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-    setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
+
+    mmqt::setWindowTitle2(*this,
+                          QString("MMapper %1").arg(m_editSession ? "Editor" : "Viewer"),
+                          m_title);
 
     // REVISIT: can this be called as an initializer?
     // Probably not. In fact this may be too early, since it accesses contentsMargins(),
@@ -1215,6 +1222,16 @@ void RemoteEditWidget::slot_normalizeAnsi()
     }
 
     m_textEdit->replaceAll(output.getQString());
+}
+
+void RemoteEditWidget::slot_previewAnsi()
+{
+    QString s = m_textEdit->toPlainText();
+    if (!s.endsWith(C_NEWLINE)) {
+        s += C_NEWLINE;
+    }
+
+    m_preview = makeAnsiViewWindow("MMapper Editor Preview", m_title, mmqt::toStdStringUtf8(s));
 }
 
 void RemoteEditWidget::slot_insertAnsiReset()

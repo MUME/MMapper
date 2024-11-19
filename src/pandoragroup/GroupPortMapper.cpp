@@ -5,6 +5,7 @@
 #include "GroupPortMapper.h"
 
 #include <memory>
+#include <string>
 
 #include <QDebug>
 
@@ -172,11 +173,11 @@ private:
             return false;
         }
 
-        const auto portString = QString("%1").arg(port).toLocal8Bit();
+        const auto portString = std::to_string(port);
         int result = UPNP_AddPortMapping(urls.controlURL,
                                          igdData.first.servicetype,
-                                         portString.constData(),
-                                         portString.constData(),
+                                         portString.c_str(),
+                                         portString.c_str(),
                                          lanAddress,
                                          MM_UPNP_DESCRIPTION,
                                          MM_UPNP_WHITELISTED_PROTO,
@@ -198,10 +199,10 @@ private:
             return false;
         }
 
-        const auto portString = QString("%1").arg(port).toLocal8Bit();
+        const auto portString = std::to_string(port);
         int result = UPNP_DeletePortMapping(urls.controlURL,
                                             igdData.first.servicetype,
-                                            portString.constData(),
+                                            portString.c_str(),
                                             MM_UPNP_WHITELISTED_PROTO,
                                             nullptr);
         if (result != UPNPCOMMAND_SUCCESS) {

@@ -10,8 +10,8 @@
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
-#include <iostream>
 #include <memory>
+#include <ostream>
 #include <vector>
 
 namespace value_helper {
@@ -66,12 +66,17 @@ static void print(std::ostream &os, const Vector &value)
 
 static void print(std::ostream &os, DoorFlagEnum value)
 {
-    os << "DoorFlagEnum(" << static_cast<int>(value) << ")";
+    os << "DoorFlag(" << to_string_view(value) << ")";
 }
 
 static void print(std::ostream &os, ExitFlagEnum value)
 {
-    os << "ExitFlagEnum(" << static_cast<int>(value) << ")";
+    os << "ExitFlag(" << to_string_view(value) << ")";
+}
+
+static void print(std::ostream &os, ExitDirEnum value)
+{
+    os << "Direction(" << to_string_view(value) << ")";
 }
 
 static void print(std::ostream &os, InfoMarkClassEnum value)

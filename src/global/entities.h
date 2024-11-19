@@ -16,47 +16,47 @@ static constexpr const uint32_t MAX_UNICODE_CODEPOINT = 0x10FFFFu;
 using OptQChar = std::optional<const QChar>;
 
 namespace entities {
-struct EncodedLatin1;
+struct EncodedString;
 /// Without entities
-struct NODISCARD DecodedUnicode : QString
+struct NODISCARD DecodedString : QString
 {
     using QString::QString;
-    explicit DecodedUnicode(const char *s)
-        : QString{QString::fromLatin1(s)}
+    explicit DecodedString(const char *s)
+        : QString{QString::fromUtf8(s)}
     {}
-    explicit DecodedUnicode(QString s)
+    explicit DecodedString(QString s)
         : QString{std::move(s)}
     {}
 
-    DecodedUnicode(QByteArray) = delete;
-    DecodedUnicode(QByteArray &&) = delete;
-    DecodedUnicode(const QByteArray &) = delete;
-    DecodedUnicode(EncodedLatin1) = delete;
-    DecodedUnicode(EncodedLatin1 &&) = delete;
-    DecodedUnicode(const EncodedLatin1 &) = delete;
+    DecodedString(QByteArray) = delete;
+    DecodedString(QByteArray &&) = delete;
+    DecodedString(const QByteArray &) = delete;
+    DecodedString(EncodedString) = delete;
+    DecodedString(EncodedString &&) = delete;
+    DecodedString(const EncodedString &) = delete;
 };
 /// With entities
-struct NODISCARD EncodedLatin1 : QByteArray
+struct NODISCARD EncodedString : QString
 {
-    using QByteArray::QByteArray;
-    explicit EncodedLatin1(const char *s)
-        : QByteArray{s}
+    using QString::QString;
+    explicit EncodedString(const char *s)
+        : QString{s}
     {}
-    explicit EncodedLatin1(QByteArray s)
-        : QByteArray{std::move(s)}
+    explicit EncodedString(QString s)
+        : QString{std::move(s)}
     {}
-    EncodedLatin1(QString) = delete;
-    EncodedLatin1(QString &&) = delete;
-    EncodedLatin1(const QString &) = delete;
-    EncodedLatin1(DecodedUnicode) = delete;
-    EncodedLatin1(DecodedUnicode &&) = delete;
-    EncodedLatin1(const DecodedUnicode &) = delete;
+    EncodedString(QByteArray) = delete;
+    EncodedString(QByteArray &&) = delete;
+    EncodedString(const QByteArray &) = delete;
+    EncodedString(DecodedString) = delete;
+    EncodedString(DecodedString &&) = delete;
+    EncodedString(const DecodedString &) = delete;
 };
 
 enum class NODISCARD EncodingEnum { Translit, Lossless };
-NODISCARD extern EncodedLatin1 encode(const DecodedUnicode &name,
+NODISCARD extern EncodedString encode(const DecodedString &name,
                                       EncodingEnum encodingType = EncodingEnum::Translit);
-NODISCARD extern DecodedUnicode decode(const EncodedLatin1 &input);
+NODISCARD extern DecodedString decode(const EncodedString &input);
 
 struct NODISCARD EntityCallback
 {

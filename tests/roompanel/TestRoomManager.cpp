@@ -23,7 +23,7 @@ const auto mysterieuse = []() -> QString {
         TEST_ASSERT(result[4].unicode() == 0xE9u);
     }
     {
-        const auto latin1 = mmqt::toStdStringLatin1(result);
+        const auto latin1 = mmqt::toStdStringLatin1(result); // sanity checking
         TEST_ASSERT(latin1.size() == 20);
         TEST_ASSERT(latin1[4] == '\xE9');
     }
@@ -45,6 +45,10 @@ const QJsonObject gmcpRoomCharsAddObj = {{"desc",
                                          {"position", "standing"},
                                          {"type", "npc"}};
 
+NODISCARD GmcpJson makeCompactJson(const QJsonObject &x)
+{
+    return GmcpJson{QJsonDocument(x).toJson(QJsonDocument::Compact).toStdString()};
+}
 } // namespace
 
 TestRoomManager::TestRoomManager(RoomManager &manager)
@@ -62,8 +66,7 @@ void TestRoomManager::testSlotReset()
     auto &manager = m_manager;
     QVERIFY(!manager.getRoom().isIdPresent(2));
 
-    auto jsonStr = GmcpJson{
-        QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact).toStdString()};
+    auto jsonStr = makeCompactJson(gmcpRoomCharsAddObj);
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     manager.slot_parseGmcpInput(addMessage);
@@ -75,8 +78,7 @@ void TestRoomManager::testSlotReset()
 
 void TestRoomManager::testParseGmcpAddValidMessage()
 {
-    auto jsonStr = GmcpJson{
-        QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact).toStdString()};
+    auto jsonStr = makeCompactJson(gmcpRoomCharsAddObj);
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     auto &manager = m_manager;
@@ -90,7 +92,7 @@ void TestRoomManager::testParseGmcpInvalidMessage()
 {
     // Create an invalid GMCP message (e.g., missing required fields)
     QJsonObject invalidObj = {{"invalidField", "value"}};
-    auto jsonStr = GmcpJson{QJsonDocument(invalidObj).toJson(QJsonDocument::Compact).toStdString()};
+    auto jsonStr = makeCompactJson(invalidObj);
     GmcpMessage invalidMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     // Attempt to parse the invalid message
@@ -106,7 +108,7 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
 {
     // Step 1: Add a mob to ensure there's something to update
     QJsonObject addObj = {{"id", 2}, {"name", "male magpie"}, {"position", "standing"}};
-    auto addJsonStr = GmcpJson{QJsonDocument(addObj).toJson(QJsonDocument::Compact).toStdString()};
+    auto addJsonStr = makeCompactJson(addObj);
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, addJsonStr);
     auto &manager = m_manager;
     manager.slot_parseGmcpInput(addMessage);
@@ -114,8 +116,7 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
 
     // Step 2: Create an update message for the same mob with new information
     QJsonObject updateObj = {{"id", 2}, {"name", "angry male magpie"}, {"position", "sleeping"}};
-    auto updateJsonStr = GmcpJson{
-        QJsonDocument(updateObj).toJson(QJsonDocument::Compact).toStdString()};
+    auto updateJsonStr = makeCompactJson(updateObj);
     GmcpMessage updateMessage(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE, updateJsonStr);
 
     // Prepare to capture the sig_updateWidget signal

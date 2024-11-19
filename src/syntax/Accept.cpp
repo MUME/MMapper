@@ -17,6 +17,16 @@ Accept::Accept(Accept::Function fn, std::string help)
     }
 }
 
+Accept Accept::convert(Function2 fn, std::string help)
+{
+    return Accept(
+        [callback = std::move(fn)](User &u, const Pair *args) -> void {
+            const auto argv = getAnyVectorReversed(args);
+            callback(u, argv);
+        },
+        std::move(help));
+}
+
 void Accept::call(User &user, const Pair *const matched) const
 {
     m_function->operator()(user, matched);

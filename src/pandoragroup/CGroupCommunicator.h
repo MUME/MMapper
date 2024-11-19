@@ -31,8 +31,8 @@ private:
 public:
     explicit CGroupCommunicator(GroupManagerStateEnum mode, Mmapper2Group *parent);
 
-    static constexpr const ProtocolVersion PROTOCOL_VERSION_103 = 103;
-    static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
+    static constexpr const ProtocolVersion PROTOCOL_VERSION_105_secure = 105;
+    static constexpr const ProtocolVersion PROTOCOL_VERSION_104_insecure = 104;
 
     // TODO: password and encryption options
     enum class NODISCARD MessagesEnum {
@@ -64,7 +64,7 @@ public:
 
 protected:
     static void sendCharUpdate(GroupSocket &, const QVariantMap &);
-    static void sendMessage(GroupSocket &, MessagesEnum, const QByteArray & = "");
+    static void sendMessage(GroupSocket &, MessagesEnum, const QString & = "");
     static void sendMessage(GroupSocket &, MessagesEnum, const QVariantMap &);
 
     NODISCARD static QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
@@ -73,7 +73,7 @@ protected:
 
 private:
     virtual void virt_connectionClosed(GroupSocket &) = 0;
-    virtual void virt_kickCharacter(const QByteArray &) = 0;
+    virtual void virt_kickCharacter(const QString &) = 0;
     virtual void virt_retrieveData(GroupSocket &, MessagesEnum, const QVariantMap &) = 0;
     virtual void virt_sendCharRename(const QVariantMap &map) = 0;
     virtual void virt_sendCharUpdate(const QVariantMap &map) = 0;
@@ -85,9 +85,15 @@ protected:
     void gTellArrived(QVariantMap node) { emit sig_gTellArrived(node); }
     void sendLog(const QString &msg) { emit sig_sendLog(msg); }
 
+signals:
+    void sig_messageBox(QString message);
+    void sig_scheduleAction(std::shared_ptr<GroupAction> action);
+    void sig_gTellArrived(QVariantMap node);
+    void sig_sendLog(const QString &);
+
 public slots:
     void slot_connectionClosed(GroupSocket *sock) { virt_connectionClosed(deref(sock)); }
-    void slot_kickCharacter(const QByteArray &msg) { virt_kickCharacter(msg); }
+    void slot_kickCharacter(const QString &msg) { virt_kickCharacter(msg); }
     void slot_retrieveData(GroupSocket *sock, MessagesEnum msg, const QVariantMap &var)
     {
         virt_retrieveData(deref(sock), msg, var);
@@ -96,15 +102,9 @@ public slots:
     void slot_sendCharUpdate(const QVariantMap &map) { virt_sendCharUpdate(map); }
     void slot_sendGroupTellMessage(const QVariantMap &map) { virt_sendGroupTellMessage(map); }
 
-signals:
-    void sig_messageBox(QString message);
-    void sig_scheduleAction(std::shared_ptr<GroupAction> action);
-    void sig_gTellArrived(QVariantMap node);
-    void sig_sendLog(const QString &);
-
 public slots:
-    void slot_incomingData(GroupSocket *, const QByteArray &);
-    void slot_sendGroupTell(const QByteArray &);
+    void slot_incomingData(GroupSocket *, const QString &);
+    void slot_sendGroupTell(const QString &);
     void slot_relayLog(const QString &);
-    void slot_sendSelfRename(const QByteArray &, const QByteArray &);
+    void slot_sendSelfRename(const QString &, const QString &);
 };

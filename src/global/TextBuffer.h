@@ -23,7 +23,7 @@ public:
     void append(QChar c) { m_text.append(c); }
     void append(const QString &line) { m_text.append(line); }
     void append(const QStringView line) { m_text.append(line); }
-    void appendLatin1(std::string_view sv) { m_text.append(mmqt::toQStringLatin1(sv)); }
+    void appendUf8(std::string_view sv) { m_text.append(mmqt::toQStringUtf8(sv)); }
 
 public:
     void appendJustified(QStringView line, int maxLen);

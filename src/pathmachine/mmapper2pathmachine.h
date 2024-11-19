@@ -11,10 +11,10 @@
 #include <QtCore>
 
 class Configuration;
-class MapData;
+class MapFrontend;
 class ParseEvent;
-class QObject;
 class QElapsedTimer;
+class QObject;
 
 /**
 @author alve,,,
@@ -27,7 +27,7 @@ private:
     QElapsedTimer m_time;
 
 public:
-    explicit Mmapper2PathMachine(MapData *mapData, QObject *parent);
+    explicit Mmapper2PathMachine(MapFrontend &map, QObject *parent);
 
 signals:
     void sig_log(const QString &, const QString &);

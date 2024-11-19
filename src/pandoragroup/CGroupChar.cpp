@@ -16,7 +16,8 @@ KEY playerDataKey = "playerData";
 
 KEY nameKey = "name";
 KEY labelKey = "label";
-KEY roomKey = "room";
+KEY externalIdKey = "room"; // external map ids
+KEY serverIdKey = "roomid"; // server map ids
 KEY colorKey = "color";
 KEY stateKey = "state";
 KEY prespamKey = "prespam";
@@ -27,12 +28,29 @@ KEY affectsKey = "affects";
 CGroupChar::CGroupChar(Badge<CGroupChar>) {}
 CGroupChar::~CGroupChar() = default;
 
+void CGroupChar::init(const QString name, const QColor color)
+{
+    reset();
+    setName(name);
+    setLabel(name);
+    setColor(color);
+}
+
+// REVISIT: should this reset the room or not?
+void CGroupChar::reset()
+{
+    // TODO: encapsulate the public members in a struct so they can be reset separately.
+    const Internal saved = m_internal;
+    *this = CGroupChar{Badge<CGroupChar>{}}; // the actual reset
+    m_internal = saved;
+}
+
 QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
 
-    playerData[nameKey] = QString::fromLatin1(m_internal.name);
-    playerData[labelKey] = QString::fromLatin1(m_internal.label);
+    playerData[nameKey] = m_internal.name;
+    playerData[labelKey] = m_internal.label;
     playerData[colorKey] = m_internal.color.name();
     playerData["hp"] = hp;
     playerData["maxhp"] = maxhp;
@@ -41,8 +59,9 @@ QVariantMap CGroupChar::toVariantMap() const
     playerData["moves"] = moves;
     playerData["maxmoves"] = maxmoves;
     playerData[stateKey] = static_cast<int>(position);
-    playerData[roomKey] = roomId.asUint32();
-    playerData[prespamKey] = QString::fromLatin1(prespam.toByteArray());
+    playerData[externalIdKey] = getExternalId().asUint32();
+    playerData[serverIdKey] = getServerId().asUint32();
+    playerData[prespamKey] = mmqt::toQByteArray(prespam);
     playerData[affectsKey] = affects.asUint32();
 
     QVariantMap root;
@@ -59,34 +78,46 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     const QVariantMap &playerData = data[playerDataKey].toMap();
 
     bool updated = false;
-    if (playerData.contains(roomKey) && playerData[roomKey].canConvert(QMetaType::UInt)) {
-        const uint32_t i = playerData[roomKey].toUInt();
-
-        // FIXME: Using a room# assumes everyone has _exactly_ the same static map;
-        // if anyone in the group modifies their map, they will report a room #
-        // that does not exist in anyone else's map. And if two different users
-        // each modify their maps, they'll be reported as being in the same room?
-        // Instead, this should serialize the room coordinates + name/desc/exits.
-
-        // NOTE: We don't have access to the map here, so we can't verify the room #.
-        const auto id = [i]() {
-            auto newRoomId = RoomId{i};
-            if (newRoomId == INVALID_ROOMID) {
-                qWarning() << "Invalid room changed to default room.";
-                newRoomId = DEFAULT_ROOMID;
+    if (playerData.contains(externalIdKey) && playerData[externalIdKey].canConvert(QMetaType::Int)) {
+        const int32_t i = playerData[externalIdKey].toInt();
+        const auto newExternalId = [i]() -> ExternalRoomId {
+            static constexpr const ExternalRoomId DEFAULT_EXTERNAL_ROOMID{0};
+            ExternalRoomId id{static_cast<uint32_t>(i)};
+            if (id == INVALID_EXTERNAL_ROOMID) {
+                qWarning() << "Invalid external id changed to default external id.";
+                return DEFAULT_EXTERNAL_ROOMID;
             }
-            return newRoomId;
+            return id;
         }();
-
-        if (id != roomId) {
+        if (newExternalId != getExternalId()) {
             updated = true;
-            roomId = id;
+            setExternalId(newExternalId);
         }
     }
 
-    const auto tryUpdateString = [&playerData, &updated](const char *const attr, QByteArray &arr) {
+    if (playerData.contains(serverIdKey) && playerData[serverIdKey].canConvert(QMetaType::Int)) {
+        const int32_t i = playerData[serverIdKey].toInt();
+
+        const auto newServerId = [i]() -> ServerRoomId {
+            if (i < 1) {
+                static constexpr auto ignore = static_cast<int32_t>(
+                    INVALID_SERVER_ROOMID.asUint32());
+                if (i != ignore) {
+                    qWarning() << "Invalid server id.";
+                }
+                return INVALID_SERVER_ROOMID;
+            }
+            return ServerRoomId{static_cast<uint32_t>(i)};
+        }();
+        if (newServerId != getServerId()) {
+            updated = true;
+            setServerId(newServerId);
+        }
+    }
+
+    const auto tryUpdateString = [&playerData, &updated](const char *const attr, QString &arr) {
         if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::QString)) {
-            const QByteArray s = mmqt::toQByteArrayLatin1(playerData[attr].toString());
+            const QString s = playerData[attr].toString();
             if (s != arr) {
                 updated = true;
                 arr = s;
@@ -100,10 +131,11 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 #undef TRY_UPDATE_STRING
 
     if (playerData.contains(prespamKey) && playerData[prespamKey].canConvert(QMetaType::QString)) {
-        const QByteArray &ba = mmqt::toQByteArrayLatin1(playerData[prespamKey].toString());
-        if (ba != prespam.toByteArray()) {
+        // TODO: This should also be a string instead of latin1 byte array.
+        const QByteArray ba = mmqt::toQByteArrayLatin1(playerData[prespamKey].toString());
+        if (ba != mmqt::toQByteArray(prespam)) {
             updated = true;
-            prespam = ba;
+            prespam = mmqt::toCommandQueue(ba);
         }
     }
 
@@ -200,7 +232,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     return updated;
 }
 
-QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
+QString CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
 {
     if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
         qWarning() << "Unable to find" << QuotedQString(playerDataKey) << "in map" << data;
@@ -213,5 +245,5 @@ QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
         return "";
     }
 
-    return playerData[nameKey].toString().toLatin1();
+    return playerData[nameKey].toString();
 }

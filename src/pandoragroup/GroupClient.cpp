@@ -106,7 +106,7 @@ void GroupClient::slot_errorInConnection(GroupSocket *const /* socket */, const 
     switch (m_socket.getSocketError()) {
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
-                  .arg(getConfig().groupManager.host.constData())
+                  .arg(getConfig().groupManager.host)
                   .arg(getConfig().groupManager.remotePort);
         log_message(QString("Connection refused: %1.").arg(str));
         break;
@@ -220,7 +220,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
     const auto serverProtocolVersion = [&data]() {
         if (!data.contains("protocolVersion")
             || !data["protocolVersion"].canConvert(QMetaType::UInt)) {
-            return PROTOCOL_VERSION_102;
+            return PROTOCOL_VERSION_104_insecure;
         }
         return data["protocolVersion"].toUInt();
     }();
@@ -229,12 +229,12 @@ void GroupClient::sendHandshake(const QVariantMap &data)
 
     m_proposedProtocolVersion =
         // Ensure we only pick a protocol within the bounds we understand
-        (QSslSocket::supportsSsl() && serverProtocolVersion >= PROTOCOL_VERSION_103)
-            ? PROTOCOL_VERSION_103
-            : PROTOCOL_VERSION_102;
+        (QSslSocket::supportsSsl() && serverProtocolVersion >= PROTOCOL_VERSION_105_secure)
+            ? PROTOCOL_VERSION_105_secure
+            : PROTOCOL_VERSION_104_insecure;
 
-    if (serverProtocolVersion == PROTOCOL_VERSION_102
-        || m_proposedProtocolVersion == PROTOCOL_VERSION_102) {
+    if (serverProtocolVersion == PROTOCOL_VERSION_104_insecure
+        || m_proposedProtocolVersion == PROTOCOL_VERSION_104_insecure) {
         if (QSslSocket::supportsSsl() && getConfig().groupManager.requireAuth) {
             emit sig_messageBox(
                 "Host does not support encryption.\n"
@@ -268,7 +268,7 @@ void GroupClient::receiveGroupInformation(const QVariantMap &data)
     if (isSolo) {
         // Update metadata and assume first received character is host
         const auto &secret = m_socket.getSecret();
-        const auto &nameStr = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
+        const auto &nameStr = CGroupChar::getNameFromUpdateChar(data);
         GroupAuthority::setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
         emit sig_sendLog("Host's name is most likely '" + nameStr + "'");
     }
@@ -279,10 +279,10 @@ void GroupClient::sendLoginInformation()
 {
     const SharedGroupChar &character = getGroup()->getSelf();
     QVariantMap loginData = character->toVariantMap();
-    if (m_proposedProtocolVersion == PROTOCOL_VERSION_102) {
+    if (m_proposedProtocolVersion == PROTOCOL_VERSION_104_insecure) {
         // Protocol 102 does handshake and login in one step
         loginData["protocolVersion"] = m_socket.getProtocolVersion();
-        m_socket.setProtocolVersion(PROTOCOL_VERSION_102);
+        m_socket.setProtocolVersion(PROTOCOL_VERSION_104_insecure);
     }
     QVariantMap root;
     root["loginData"] = loginData;
@@ -292,15 +292,15 @@ void GroupClient::sendLoginInformation()
 void GroupClient::slot_connectionEncrypted()
 {
     const auto secret = m_socket.getSecret();
-    emit sig_sendLog(QString("Host's secret: %1").arg(secret.constData()));
+    emit sig_sendLog(QString("Host's secret: %1").arg(secret.getQByteArray().constData()));
 
     GroupAuthority &authority = deref(getAuthority());
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = authority.validSecret(secret);
     const bool validCert = GroupAuthority::validCertificate(m_socket);
     if (requireAuth && !validSecret) {
-        emit sig_messageBox(
-            QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
+        emit sig_messageBox(QString("Host's secret is not in your contacts:\n%1")
+                                .arg(secret.getQByteArray().constData()));
         stop();
         return;
     }
@@ -378,7 +378,7 @@ bool GroupClient::virt_start()
     return true;
 }
 
-void GroupClient::virt_kickCharacter(const QByteArray &)
+void GroupClient::virt_kickCharacter(const QString &)
 {
     throw std::runtime_error("impossible");
 }

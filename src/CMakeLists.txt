@@ -38,10 +38,14 @@ set(mmapper_SRCS
     display/Connections.h
     display/Filenames.cpp
     display/Filenames.h
+    display/IMapBatchesFinisher.cpp
+    display/IMapBatchesFinisher.h
     display/InfoMarkSelection.cpp
     display/InfoMarkSelection.h
     display/Infomarks.cpp
     display/Infomarks.h
+    display/MapBatches.cpp
+    display/MapBatches.h
     display/MapCanvasConfig.h
     display/MapCanvasData.cpp
     display/MapCanvasData.h
@@ -61,21 +65,22 @@ set(mmapper_SRCS
     display/mapwindow.h
     display/prespammedpath.cpp
     display/prespammedpath.h
-    expandoracommon/RoomAdmin.cpp
-    expandoracommon/RoomAdmin.h
-    expandoracommon/property.cpp
-    expandoracommon/property.h
+    global/AnsiOstream.cpp
+    global/AnsiOstream.h
     global/AnsiTextUtils.cpp
     global/AnsiTextUtils.h
     global/Array.h
+    global/AsyncTasks.cpp
+    global/AsyncTasks.h
     global/Badge.cpp
     global/Badge.h
     global/CaseUtils.cpp
     global/CaseUtils.h
     global/ChangeMonitor.h
-    global/CharBuffer.h
     global/CharUtils.cpp
     global/CharUtils.h
+    global/Charset-Utf16.cpp
+    global/Charset-Utf8.cpp
     global/Charset.cpp
     global/Charset.h
     global/Color.cpp
@@ -88,12 +93,16 @@ set(mmapper_SRCS
     global/Consts.cpp
     global/Consts.h
     global/ConversionResult.h
+    global/Diff.cpp
+    global/Diff.h
     global/EnumIndexedArray.h
     global/Flags.cpp
     global/Flags.h
     global/HideQDebug.cpp
     global/HideQDebug.h
     global/IndexedVector.h
+    global/IndexedVectorWithDefault.cpp
+    global/IndexedVectorWithDefault.h
     global/LineUtils.cpp
     global/LineUtils.h
     global/MakeQPointer.h
@@ -102,6 +111,10 @@ set(mmapper_SRCS
     global/NamedColors.h
     global/NullPointerException.cpp
     global/NullPointerException.h
+    global/OrderedMap.cpp
+    global/OrderedMap.h
+    global/OrderedSet.cpp
+    global/OrderedSet.h
     global/PrintUtils.cpp
     global/PrintUtils.h
     global/RAII.cpp
@@ -120,10 +133,9 @@ set(mmapper_SRCS
     global/TabUtils.cpp
     global/TabUtils.h
     global/TaggedInt.h
+    global/TaggedString.cpp
     global/TaggedString.h
     global/TextBuffer.cpp
-    global/TextBuffer.cpp
-    global/TextBuffer.h
     global/TextBuffer.h
     global/TextUtils.cpp
     global/TextUtils.h
@@ -168,6 +180,8 @@ set(mmapper_SRCS
     global/unquote.h
     global/utils.cpp
     global/utils.h
+    global/window_utils.cpp
+    global/window_utils.h
     global/zpipe.cpp
     global/zpipe.h
     logger/autologger.cpp
@@ -182,6 +196,7 @@ set(mmapper_SRCS
     mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.cpp
     mainwindow/infomarkseditdlg.h
+    mainwindow/mainwindow-async.cpp
     mainwindow/mainwindow-saveslots.cpp
     mainwindow/mainwindow.cpp
     mainwindow/mainwindow.h
@@ -189,39 +204,102 @@ set(mmapper_SRCS
     mainwindow/metatypes.h
     mainwindow/roomeditattrdlg.cpp
     mainwindow/roomeditattrdlg.h
+    mainwindow/utils.cpp
+    mainwindow/utils.h
+    map/AbstractChangeVisitor.cpp
+    map/AbstractChangeVisitor.h
+    map/Change.cpp
+    map/Change.h
+    map/ChangeList.cpp
+    map/ChangeList.h
+    map/ChangePrinter.cpp
+    map/ChangePrinter.h
+    map/ChangeTypes.cpp
+    map/ChangeTypes.h
+    map/Changes.cpp
+    map/Changes.h
     map/CommandId.cpp
     map/CommandId.h
+    map/Compare.h
     map/ConnectedRoomFlags.h
+    map/Crtp.h
+    map/Diff-Test.cpp
+    map/Diff.cpp
+    map/Diff.h
+    map/DoorFlags.cpp
     map/DoorFlags.h
     map/ExitDirection.cpp
     map/ExitDirection.h
+    map/ExitFieldVariant.cpp
     map/ExitFieldVariant.h
+    map/ExitFields.cpp
+    map/ExitFields.h
+    map/ExitFlags.cpp
     map/ExitFlags.h
     map/ExitsFlags.h
+    map/InOutEnum.cpp
+    map/InOutEnum.h
+    map/InvalidMapOperation.cpp
+    map/InvalidMapOperation.h
+    map/Map.cpp
+    map/Map.h
+    map/ParseTree.cpp
+    map/ParseTree.h
+    map/PromptFlags.cpp
     map/PromptFlags.h
+    map/RawExit.cpp
+    map/RawExit.h
+    map/RawRoom.cpp
+    map/RawRoom.h
+    map/RawRooms.cpp
+    map/RawRooms.h
+    map/Remapping.cpp
+    map/Remapping.h
     map/RoomFieldVariant.h
+    map/RoomFields.cpp
+    map/RoomFields.h
+    map/RoomHandle.cpp
+    map/RoomHandle.h
+    map/RoomIdSet.cpp
+    map/RoomIdSet.h
     map/RoomRecipient.cpp
     map/RoomRecipient.h
+    map/RoomRevert.cpp
+    map/RoomRevert.h
+    map/ServerIdMap.cpp
+    map/ServerIdMap.h
+    map/SpatialDb.cpp
+    map/SpatialDb.h
+    map/TinyRoomIdSet.cpp
+    map/TinyRoomIdSet.h
+    map/World-BaseMap.cpp
+    map/World.cpp
+    map/World.h
+    map/WorldBuilder.cpp
+    map/WorldBuilder.h
     map/coordinate.cpp
     map/coordinate.h
     map/enums.cpp
     map/enums.h
-    map/exit.cpp
     map/exit.h
     map/infomark.cpp
     map/infomark.h
+    map/mmapper2room.cpp
     map/mmapper2room.h
     map/parseevent.cpp
     map/parseevent.h
     map/room.cpp
     map/room.h
+    map/roomid.cpp
     map/roomid.h
+    map/sanitizer.cpp
+    map/sanitizer.h
     map/utils.cpp
     map/utils.h
-    mapdata/customaction.cpp
-    mapdata/customaction.h
-    mapdata/drawstream.cpp
-    mapdata/drawstream.h
+    mapdata/GenericFind.cpp
+    mapdata/GenericFind.h
+    mapdata/MarkerList.cpp
+    mapdata/MarkerList.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h
     mapdata/roomfilter.cpp
@@ -230,36 +308,24 @@ set(mmapper_SRCS
     mapdata/roomselection.h
     mapdata/shortestpath.cpp
     mapdata/shortestpath.h
-    mapfrontend/AbstractRoomVisitor.cpp
-    mapfrontend/AbstractRoomVisitor.h
-    mapfrontend/ParseTree.cpp
-    mapfrontend/ParseTree.h
-    mapfrontend/mapaction.cpp
-    mapfrontend/mapaction.h
     mapfrontend/mapfrontend.cpp
     mapfrontend/mapfrontend.h
-    mapfrontend/roomcollection.cpp
-    mapfrontend/roomcollection.h
-    mapfrontend/roomlocker.cpp
-    mapfrontend/roomlocker.h
     mapstorage/MmpMapStorage.cpp
     mapstorage/MmpMapStorage.h
     mapstorage/PandoraMapStorage.cpp
     mapstorage/PandoraMapStorage.h
+    mapstorage/RawMapData.cpp
+    mapstorage/RawMapData.h
     mapstorage/XmlMapStorage.cpp
     mapstorage/XmlMapStorage.h
     mapstorage/abstractmapstorage.cpp
     mapstorage/abstractmapstorage.h
-    mapstorage/basemapsavefilter.cpp
-    mapstorage/basemapsavefilter.h
     mapstorage/filesaver.cpp
     mapstorage/filesaver.h
     mapstorage/jsonmapstorage.cpp
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mapstorage/roomsaver.cpp
-    mapstorage/roomsaver.h
     mpi/mpifilter.cpp
     mpi/mpifilter.h
     mpi/remoteedit.cpp
@@ -348,6 +414,7 @@ set(mmapper_SRCS
     parser/LineFlags.h
     parser/abstractparser.cpp
     parser/abstractparser.h
+    parser/mumexmlparser-gmcp.cpp
     parser/mumexmlparser.cpp
     parser/mumexmlparser.h
     parser/patterns.cpp
@@ -452,6 +519,11 @@ set(mmapper_SRCS
     syntax/Value.h
     timers/CTimers.cpp
     timers/CTimers.h
+    viewers/AnsiViewWindow.cpp
+    viewers/AnsiViewWindow.h
+    viewers/LaunchAsyncViewer.h
+    viewers/TopLevelWindows.cpp
+    viewers/TopLevelWindows.h
 )
 
 set(mmapper_RCS
@@ -537,14 +609,19 @@ set(mmapper_DATA
     MacOSXBundleInfo.plist.in
     global/Version.cpp.in)
 
+set(mmapper_map_SRCS ${mmapper_SRCS})
 set(mmapper_global_SRCS ${mmapper_SRCS})
+list(FILTER mmapper_map_SRCS INCLUDE REGEX "map/")
 list(FILTER mmapper_global_SRCS INCLUDE REGEX "global/")
+list(FILTER mmapper_SRCS EXCLUDE REGEX "map/")
 list(FILTER mmapper_SRCS EXCLUDE REGEX "global/")
 
 message("mmapper_SRCS=[${mmapper_SRCS}]")
 message("mmapper_global_SRCS=[${mmapper_global_SRCS}]")
+message("mmapper_map_SRCS=[${mmapper_map_SRCS}]")
 
 add_library(mm_global STATIC ${mmapper_global_SRCS})
+add_library(mm_map STATIC ${mmapper_map_SRCS})
 
 # Build the executable
 add_executable(mmapper WIN32 MACOSX_BUNDLE
@@ -554,13 +631,16 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_DATA}
 )
 
+set(mm_libs mm_map mm_global)
+
 target_link_libraries(mmapper PUBLIC
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
     Qt5::OpenGL
+    # note: link order matters on some platforms. include ${mm_libs} twice if you have a link failure.
+    ${mm_libs}
     ${CMAKE_THREAD_LIBS_INIT}
-    mm_global
 )
 
 set_target_properties(
@@ -579,8 +659,23 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 
+set_target_properties(
+  mm_map PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
 target_include_directories(mm_global SYSTEM PUBLIC
+        ${GLM_INCLUDE_DIR}
+        ${Qt5Core_INCLUDE_DIRS}
+        ${Qt5Widgets_INCLUDE_DIRS}
+        #${Qt5_Network_INCLUDE_DIRS}
+        #${Qt5_OpenGL_INCLUDE_DIRS}
+)
+target_include_directories(mm_map SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
         ${Qt5Core_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
@@ -591,8 +686,13 @@ target_link_libraries(mm_global PUBLIC
     Qt5::Core
     Qt5::Widgets
 )
-add_dependencies(mmapper glm mm_global)
+target_link_libraries(mm_map PUBLIC
+    Qt5::Core
+    Qt5::Widgets
+)
+add_dependencies(mmapper glm mm_global mm_map)
 add_dependencies(mm_global glm)
+add_dependencies(mm_map glm mm_global)
 
 if(WIN32)
     target_link_libraries(mmapper PUBLIC ws2_32)

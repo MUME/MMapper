@@ -55,7 +55,7 @@ public:
 private:
     void virt_setEncodingForName(const std::string_view sv) final
     {
-        const auto upper = ::toUpperLatin1(sv);
+        const auto upper = ::toUpperUtf8(sv);
         if (ENCODING_LATIN_1 == upper) {
             opt = CharacterEncodingEnum::LATIN1;
         } else if (ENCODING_UTF_8 == upper) {
@@ -64,7 +64,7 @@ private:
             opt = CharacterEncodingEnum::ASCII;
         } else {
             qWarning() << "Refusing to autoselect to an unsupported codec"
-                       << mmqt::toQByteArrayLatin1(upper);
+                       << mmqt::toQByteArrayUtf8(upper);
         }
     }
 
@@ -75,7 +75,7 @@ private:
     }
     NODISCARD bool virt_supports(const std::string_view sv) const final
     {
-        const auto upper = ::toUpperLatin1(sv);
+        const auto upper = ::toUpperUtf8(sv);
         for (const auto &supported : supportedEncodings()) {
             if (supported == upper) {
                 return true;
@@ -85,8 +85,8 @@ private:
     }
     NODISCARD std::list<std::string_view> virt_supportedEncodings() const final
     {
-        // Prefer Latin-1 over UTF-8 since MUME only understands Latin-1
-        return {ENCODING_LATIN_1, ENCODING_UTF_8, ENCODING_US_ASCII};
+        // Prefer UTF-8 over Latin-1, since we now only speak UTF-8 to MUME.
+        return {ENCODING_UTF_8, ENCODING_LATIN_1, ENCODING_US_ASCII};
     }
     NODISCARD std::string_view virt_getName() const final
     {
@@ -120,10 +120,10 @@ public:
 private:
     void virt_setEncodingForName(const std::string_view sv) final
     {
-        const auto upper = ::toUpperLatin1(sv);
+        const auto upper = ::toUpperUtf8(sv);
         if (getName() != upper) {
             qWarning() << "Refusing to switch to an unforced codec"
-                       << mmqt::toQByteArrayLatin1(upper);
+                       << mmqt::toQByteArrayUtf8(upper);
         }
     }
 
@@ -131,7 +131,7 @@ private:
     NODISCARD CharacterEncodingEnum virt_getEncoding() const final { return m_encoding; }
     NODISCARD bool virt_supports(const std::string_view sv) const final
     {
-        return m_name == ::toUpperLatin1(sv);
+        return m_name == ::toUpperUtf8(sv);
     }
     NODISCARD std::list<std::string_view> virt_supportedEncodings() const final { return {m_name}; }
     NODISCARD std::string_view virt_getName() const final { return m_name; }

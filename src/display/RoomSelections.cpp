@@ -114,7 +114,7 @@ public:
     }
 };
 
-void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
+void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
 {
     const Coordinate &roomPos = room.getPosition();
     const int x = roomPos.x;
@@ -172,10 +172,10 @@ void MapCanvas::paintSelectedRooms()
 
     RoomSelFakeGL gl;
 
-    for (const auto &[rid, room] : *m_roomSelection) {
-        if (room != nullptr) {
+    for (const RoomId id : deref(m_roomSelection)) {
+        if (const auto &room = m_data.findRoomHandle(id)) {
             gl.resetMatrix();
-            paintSelectedRoom(gl, *room);
+            paintSelectedRoom(gl, room->getRaw());
         }
     }
 

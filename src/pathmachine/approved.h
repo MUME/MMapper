@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../global/RuleOf5.h"
+#include "../map/RoomHandle.h"
 #include "../map/RoomRecipient.h"
 #include "../map/parseevent.h"
 #include "../map/room.h"
@@ -12,34 +13,33 @@
 
 #include <unordered_map>
 
+class MapFrontend;
 class ParseEvent;
-class Room;
-class RoomAdmin;
 
 class NODISCARD Approved final : public RoomRecipient
 {
 private:
     SigParseEvent myEvent;
     std::unordered_map<RoomId, ComparisonResultEnum> compareCache;
-    const Room *matchedRoom = nullptr;
-    RoomAdmin *owner = nullptr;
+    RoomPtr matchedRoom = std::nullopt;
+    MapFrontend &m_map;
     const int matchingTolerance;
     bool moreThanOne = false;
     bool update = false;
 
 public:
-    explicit Approved(const SigParseEvent &sigParseEvent, int matchingTolerance);
-    ~Approved() override;
+    explicit Approved(MapFrontend &map, const SigParseEvent &sigParseEvent, int matchingTolerance);
+    ~Approved() final;
 
 public:
     Approved() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Approved);
 
 private:
-    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+    void virt_receiveRoom(const RoomHandle &) final;
 
 public:
-    NODISCARD const Room *oneMatch() const;
+    NODISCARD RoomPtr oneMatch() const;
     NODISCARD bool needsUpdate() const { return update; }
     void releaseMatch();
 };

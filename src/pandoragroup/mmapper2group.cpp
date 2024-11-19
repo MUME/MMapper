@@ -153,7 +153,7 @@ void Mmapper2Group::slot_updateSelf()
     }
 }
 
-void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
+void Mmapper2Group::setCharRoomId(const ServerRoomId srvId, const ExternalRoomId extId)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_group == nullptr) {
@@ -161,9 +161,14 @@ void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
     }
 
     CGroupChar &self = deref(m_group->getSelf());
-    if (self.getRoomId() == roomId) {
+
+    if (srvId == self.getServerId() && extId == self.getExternalId()) {
+        qInfo() << "no update needed";
         return; // No update needed
     }
+
+    self.setServerId(srvId);
+    self.setExternalId(extId);
 
     // Check if we are still snared
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
@@ -178,8 +183,6 @@ void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
             m_affectLastSeen.remove(CharacterAffectEnum::SNARED);
         }
     }
-
-    self.setRoomId(roomId);
 
     issueLocalCharUpdate();
 }
@@ -201,7 +204,7 @@ void Mmapper2Group::issueLocalCharUpdate()
 
 void Mmapper2Group::slot_relayMessageBox(const QString &message)
 {
-    log(message.toLatin1());
+    log(message);
     messageBox(message);
 }
 
@@ -221,24 +224,20 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
 
     auto name = from;
     auto color = getConfig().groupManager.groupTellColor;
-    auto selection = getGroup()->selectByName(from.toLatin1());
-    if (!selection->empty()) {
+    auto selection = getGroup()->selectByName(from);
+    if (getConfig().groupManager.useGroupTellAnsi256Color && !selection->empty()) {
         const auto &character = selection->at(0);
         if (!character->getLabel().isEmpty() && character->getLabel() != character->getName()) {
-            name = QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
-                                          QString::fromLatin1(character->getLabel()));
+            name = QString("%1 (%2)").arg(character->getName(), character->getLabel());
         }
-        if (getConfig().groupManager.useGroupTellAnsi256Color) {
-            color = mmqt::rgbToAnsi256String(character->getColor(),
-                                             AnsiColor16LocationEnum::Background);
-        }
+        color = mmqt::rgbToAnsi256String(character->getColor(), AnsiColor16LocationEnum::Background);
     }
     log(QString("GTell from %1 arrived: %2").arg(from, text));
 
     emit sig_displayGroupTellEvent(color, name, text);
 }
 
-void Mmapper2Group::kickCharacter(const QByteArray &character)
+void Mmapper2Group::kickCharacter(const QString &character)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
@@ -259,7 +258,7 @@ void Mmapper2Group::kickCharacter(const QByteArray &character)
     }
 }
 
-void Mmapper2Group::sendGroupTell(const QByteArray &tell)
+void Mmapper2Group::sendGroupTell(const QString &tell)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     if (m_network == nullptr) {
@@ -269,7 +268,7 @@ void Mmapper2Group::sendGroupTell(const QByteArray &tell)
     emit sig_sendGroupTell(tell);
 }
 
-void Mmapper2Group::parseScoreInformation(const QByteArray &score)
+void Mmapper2Group::parseScoreInformation(const QString &score)
 {
     if (m_group == nullptr) {
         return;
@@ -284,6 +283,7 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
     if (!match.hasMatch()) {
         return;
     }
+
     const int hp = match.captured(1).toInt();
     const int maxhp = match.captured(2).toInt();
     const int mana = match.captured(3).toInt();
@@ -320,7 +320,7 @@ bool Mmapper2Group::setCharacterScore(const int hp,
     return true;
 }
 
-void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
+void Mmapper2Group::parsePromptInformation(const QString &prompt)
 {
     if (m_group == nullptr) {
         return;
@@ -335,9 +335,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     }
 
     CGroupChar &self = deref(getGroup()->getSelf());
-    QByteArray textHP;
-    QByteArray textMana;
-    QByteArray textMoves;
+    QString textHP;
+    QString textMana;
+    QString textMoves;
     CharacterAffectFlags &affects = self.affects;
 
     const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
@@ -346,9 +346,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     }
 
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
-    textHP = mmqt::toQByteArrayLatin1(match.captured(1));
-    textMana = mmqt::toQByteArrayLatin1(match.captured(2));
-    textMoves = mmqt::toQByteArrayLatin1(match.captured(3));
+    textHP = match.captured(1);
+    textMana = match.captured(2);
+    textMoves = match.captured(3);
 
     auto &lastPrompt = m_lastPrompt;
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
@@ -378,7 +378,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (self.maxhp != 0) {
         // REVISIT: Replace this if/else tree with a data structure
         const auto calc_hp =
-            [](const QByteArray &text, const double current, const double max) -> double {
+            [](const QString &text, const double current, const double max) -> double {
             if (text.isEmpty() || text == "Healthy") {
                 return max;
             }
@@ -393,7 +393,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     }
     if (self.maxmana != 0) {
         const auto calc_mana =
-            [](const QByteArray &text, const double current, const double max) -> double {
+            [](const QString &text, const double current, const double max) -> double {
             if (text.isEmpty()) {
                 return max;
             }
@@ -407,7 +407,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         self.mana = static_cast<int>(calc_mana(textMana, self.mana, self.maxmana));
     }
     if (self.maxmoves != 0) {
-        const auto calc_moves = [](const QByteArray &text, const int current) -> int {
+        const auto calc_moves = [](const QString &text, const int current) -> int {
             if (text.isEmpty()) {
                 return std::max(50, current);
             }
@@ -606,13 +606,13 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
             return;
         }
 
-        renameCharacter(name.toString().toLatin1());
+        renameCharacter(name.toString());
         issueLocalCharUpdate();
         return;
     }
 }
 
-void Mmapper2Group::renameCharacter(QByteArray newname)
+void Mmapper2Group::renameCharacter(QString newname)
 {
     auto &group = deref(getGroup());
     auto &self = deref(group.getSelf());

@@ -5,6 +5,7 @@
 
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
+#include "../proxy/TaggedBytes.h"
 
 #include <algorithm>
 
@@ -18,15 +19,10 @@ class RemoteEdit;
 class RemoteEditProcess;
 class RemoteEditWidget;
 
-namespace tags {
-struct NODISCARD RemoteSessionTag final
-{};
-} // namespace tags
-
-using RemoteSession = TaggedStringLatin1<tags::RemoteSessionTag>;
+using RemoteSession = RemoteEditMessageBytes;
 
 // Internally shared across all view sessions
-static const RemoteSession REMOTE_VIEW_SESSION_ID = RemoteSession("-1");
+static inline const RemoteSession REMOTE_VIEW_SESSION_ID = RemoteSession("-1");
 
 class NODISCARD_QOBJECT RemoteEditSession : public QObject
 {

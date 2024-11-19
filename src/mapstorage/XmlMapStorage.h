@@ -7,10 +7,11 @@
 #include "../global/macros.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
-#include "mapstorage.h"
 
+#include <memory>
+#include <optional>
 #include <string_view>
-#include <unordered_map>
+#include <unordered_set>
 
 #include <QString>
 #include <QtCore>
@@ -24,39 +25,48 @@ class NODISCARD_QOBJECT XmlMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 
-private:
-    std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
-    uint64_t m_loadProgressDivisor = 1;
-    uint32_t m_loadProgress = 0;
-    static constexpr const uint32_t LOAD_PROGRESS_MAX = 100;
-
 public:
     XmlMapStorage() = delete;
-    explicit XmlMapStorage(MapData &, const QString &, QFile *, QObject *parent);
+    explicit XmlMapStorage(const AbstractMapStorage::Data &, QObject *parent);
     ~XmlMapStorage() final;
 
-private:
-    NODISCARD bool canLoad() const override { return true; }
-    NODISCARD bool canSave() const override { return true; }
+    static inline constexpr uint32_t LOAD_PROGRESS_MAX = 100;
+    struct NODISCARD Loading final
+    {
+        RawMapLoadData result;
+        std::unordered_set<ExternalRoomId> loadedExternalRoomIds;
+        std::unordered_set<ServerRoomId> loadedServerIds;
+        uint64_t loadProgressDivisor = 1;
+        uint32_t loadProgress = 0;
+    };
+    std::unique_ptr<Loading> m_loading;
 
-    void newData() override;
-    NODISCARD bool loadData() override;
-    NODISCARD bool saveData(bool baseMapOnly) override;
-    NODISCARD bool mergeData() override;
+    struct NODISCARD Saving final
+    {
+        const RawMapData &map;
+        Saving() = delete;
+        explicit Saving(const RawMapData &m)
+            : map{m}
+        {}
+    };
+    std::unique_ptr<Saving> m_saving;
+
+private:
+    NODISCARD bool virt_canLoad() const final { return true; }
+    NODISCARD bool virt_canSave() const final { return true; }
+    NODISCARD std::optional<RawMapLoadData> virt_loadData() final;
+    NODISCARD bool virt_saveData(const RawMapData &map) final;
 
     // ---------------- load map -------------------
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
-    void loadRoom(QXmlStreamReader &stream);
-    NODISCARD static RoomId loadRoomId(QXmlStreamReader &stream, QStringView idstr);
+    void loadRoom(QXmlStreamReader &stream) const;
+    NODISCARD static ExternalRoomId loadExternalRoomId(QXmlStreamReader &stream, QStringView idstr);
+    NODISCARD static ServerRoomId loadServerRoomId(QXmlStreamReader &stream, QStringView idstr);
     NODISCARD static Coordinate loadCoordinate(QXmlStreamReader &stream);
-    void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
-    void loadMarker(QXmlStreamReader &stream);
+    static void loadExit(QXmlStreamReader &stream, ExternalRawRoom::Exits &exitList);
+    void loadMarker(QXmlStreamReader &stream) const;
     void loadNotifyProgress(QXmlStreamReader &stream);
-
-    void connectRoomsExitFrom(QXmlStreamReader &stream);
-    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, ExitDirEnum dir);
-    void moveRoomsToMapData();
 
     enum class NODISCARD RoomElementEnum : uint32_t {
         NONE /*  */ = 0,
@@ -73,11 +83,9 @@ private:
     };
 
     template<typename ENUM>
-    NODISCARD ENUM loadEnum(QXmlStreamReader &stream);
+    NODISCARD static ENUM loadEnum(QXmlStreamReader &stream);
     NODISCARD static QString loadString(QXmlStreamReader &stream);
     NODISCARD static QStringView loadStringView(QXmlStreamReader &stream);
-
-    NODISCARD static QString roomIdToString(RoomId id);
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
@@ -97,20 +105,20 @@ private:
                                  RoomElementEnum curr);
 
     // ---------------- save map -------------------
-    void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);
-    void saveRooms(QXmlStreamWriter &stream, bool baseMapOnly, const ConstRoomList &roomList);
-    static void saveRoom(QXmlStreamWriter &stream, const Room &room);
+    void saveWorld(QXmlStreamWriter &stream);
+    void saveRooms(QXmlStreamWriter &stream, const RoomIdSet &roomList);
+    static void saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &room);
     static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
     static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);
 
     static void saveCoordinate(QXmlStreamWriter &stream, const QString &name, const Coordinate &pos);
-    static void saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir);
-    static void saveExitTo(QXmlStreamWriter &stream, const Exit &e);
+    static void saveExit(QXmlStreamWriter &stream, const ExternalRawExit &e, ExitDirEnum dir);
+    static void saveExitTo(QXmlStreamWriter &stream, const ExternalRawExit &e);
     static void saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl);
     static void saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl);
 
-    void saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList);
-    static void saveMarker(QXmlStreamWriter &stream, const InfoMark &marker);
+    void saveMarkers(QXmlStreamWriter &stream, const RawMarkerData &markerList);
+    static void saveMarker(QXmlStreamWriter &stream, const InfoMarkFields &marker);
 
     static void saveXmlElement(QXmlStreamWriter &stream, const QString &name, const QString &value);
     static void saveXmlAttribute(QXmlStreamWriter &stream,

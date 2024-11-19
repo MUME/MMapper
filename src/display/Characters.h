@@ -218,7 +218,7 @@ public:
     void drawCharacter(const Coordinate &coordinate, const Color &color, bool fill = true);
 
     void drawPreSpammedPath(const Coordinate &coordinate,
-                            const QList<Coordinate> &path,
+                            const std::vector<Coordinate> &path,
                             const Color &color);
 
 public:

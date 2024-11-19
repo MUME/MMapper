@@ -23,7 +23,7 @@
     X(GUARDED, guarded, Guarded, "Guarded") \
     /* define exit flags above */
 
-enum class NODISCARD ExitFlagEnum {
+enum class NODISCARD ExitFlagEnum : uint8_t {
 #define X_DECL_EXIT_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     XFOREACH_EXIT_FLAG(X_DECL_EXIT_FLAG)
 #undef X_DECL_EXIT_FLAG
@@ -53,3 +53,6 @@ NODISCARD inline constexpr const ExitFlags operator|(ExitFlagEnum lhs, ExitFlagE
 {
     return ExitFlags{lhs} | ExitFlags{rhs};
 }
+
+NODISCARD extern std::string_view to_string_view(ExitFlagEnum flag);
+NODISCARD extern std::string_view getName(ExitFlagEnum flag);

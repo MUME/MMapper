@@ -28,28 +28,28 @@ public:
 
 private:
     NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) final;
-    void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
+    void virt_sendToMapper(const RawBytes &data, bool goAhead) final;
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
-    void virt_receiveTerminalType(const QByteArray &) final;
+    void virt_receiveTerminalType(const TelnetTermTypeBytes &) final;
     void virt_receiveWindowSize(int, int) final;
-    void virt_sendRawData(std::string_view data) final;
+    void virt_sendRawData(const TelnetIacBytes &data) final;
 
 private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
 
 signals:
-    void sig_analyzeUserStream(const QByteArray &, bool goAhead);
-    void sig_sendToSocket(const QByteArray &);
+    void sig_analyzeUserStream(const RawBytes &, bool goAhead);
+    void sig_sendToSocket(const TelnetIacBytes &);
     void sig_relayGmcp(const GmcpMessage &);
     void sig_relayNaws(int, int);
-    void sig_relayTermType(QByteArray);
+    void sig_relayTermType(TelnetTermTypeBytes);
 
 public slots:
-    void slot_onSendToUser(const QByteArray &data, bool goAhead);
-    void slot_onAnalyzeUserStream(const QByteArray &);
+    void slot_onSendToUser(const QString &data, bool goAhead);
+    void slot_onAnalyzeUserStream(const TelnetIacBytes &);
     void slot_onConnected();
     void slot_onRelayEchoMode(bool);
     void slot_onGmcpToUser(const GmcpMessage &);
-    void slot_onSendMSSPToUser(const QByteArray &);
+    void slot_onSendMSSPToUser(const TelnetMsspBytes &);
 };

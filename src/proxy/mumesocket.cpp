@@ -7,9 +7,11 @@
 #include "mumesocket.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiOstream.h"
 #include "../global/Consts.h"
 #include "../global/io.h"
 
+#include <sstream>
 #include <tuple>
 
 #include <QByteArray>
@@ -29,6 +31,16 @@ void MumeSocket::virt_onConnect()
 void MumeSocket::virt_onDisconnect()
 {
     emit sig_disconnected();
+}
+
+void MumeSocket::fakeMessageFromMud(const QString &msg)
+{
+    // This does not come from the mud, so we have to fake it.
+    // hopefully this won't interrupt telnet options, MPI, etc.
+
+    auto bytes = msg.toUtf8();
+    bytes.replace("\xFF", "\xFF\xFF");
+    emit sig_processMudStream(TelnetIacBytes{std::move(bytes)});
 }
 
 void MumeSocket::virt_onError2(QAbstractSocket::SocketError e, const QString &errorString)
@@ -178,18 +190,23 @@ void MumeSslSocket::slot_onPeerVerifyError(const QSslError &error)
     proxy_log("<b>WARNING:</b> " + error.errorString());
     qWarning() << "onPeerVerifyError" << m_socket.errorString() << error.errorString();
 
-    // Warn user of possible compromise
-    QByteArray byteArray = QByteArray("\n"
-                                      "\033[0;1;37;41m"
-                                      "ENCRYPTION WARNING:"
-                                      "\033[0;37;41m"
-                                      " ")
-                               .append(error.errorString().toLatin1())
-                               .append("!"
-                                       "\033[0m"
-                                       "\n"
-                                       "\n");
-    emit sig_processMudStream(byteArray);
+    const auto msg = [&error]() {
+        constexpr auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::red);
+        constexpr auto boldWhiteOnRed = whiteOnRed.withBold();
+
+        std::ostringstream oss;
+        AnsiOstream aos{oss};
+        aos.write("\n");
+        aos.writeWithColor(boldWhiteOnRed, "ENCRYPTION WARNING:");
+        aos.writeWithColor(whiteOnRed, " ");
+        aos.writeWithColor(whiteOnRed, mmqt::toStdStringUtf8(error.errorString()));
+        aos.writeWithColor(whiteOnRed, " ");
+        aos.writeWithColor(whiteOnRed, "!\n");
+        aos.write("\n");
+        return mmqt::toQStringUtf8(std::move(oss).str());
+    }();
+
+    fakeMessageFromMud(msg);
 }
 
 void MumeSslSocket::slot_onReadyRead()
@@ -197,7 +214,7 @@ void MumeSslSocket::slot_onReadyRead()
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
         assert(!byteArray.isEmpty());
-        emit sig_processMudStream(byteArray);
+        emit sig_processMudStream(TelnetIacBytes{byteArray});
     });
 }
 
@@ -230,13 +247,13 @@ void MumeSslSocket::slot_checkTimeout()
     }
 }
 
-void MumeSslSocket::virt_sendToMud(const QByteArray &ba)
+void MumeSslSocket::virt_sendToMud(const TelnetIacBytes &ba)
 {
     if (!isConnectedOrConnecting()) {
         qWarning() << "Socket is not connected";
         return;
     }
-    m_socket.write(ba);
+    m_socket.write(ba.getQByteArray());
 }
 
 void MumeTcpSocket::virt_connectToHost()
@@ -257,7 +274,7 @@ void MumeTcpSocket::virt_onConnect()
 
     if (QSslSocket::supportsSsl()) {
         // Warn user of the insecure connection
-        QByteArray byteArray = QByteArray(
+        QString msg = QByteArray(
             "\n"
             "\033[0;1;37;41m"
             "WARNING:"
@@ -268,7 +285,8 @@ void MumeTcpSocket::virt_onConnect()
             "\033[0m"
             "\n"
             "\n");
-        emit sig_processMudStream(byteArray);
+
+        fakeMessageFromMud(msg);
     }
 
     // NOTE: This originally bypassed the parent class`MumeSslSocket::onConnect()`

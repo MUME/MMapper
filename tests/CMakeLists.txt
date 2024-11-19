@@ -1,8 +1,26 @@
+add_compile_definitions(MM_TESTING)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 
 include_directories(SYSTEM ${GLM_INCLUDE_DIR})
+
+if(MMAPPER_IS_DEBUG)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(
+            -Wno-extra-semi-stmt
+            -Wno-missing-noreturn
+            -Wno-unreachable-code-return
+            -Wno-unused-const-variable
+            -Wno-unused-function
+            -Wno-unused-parameter
+            -Wno-unused-template
+            -Wno-unused-variable
+            -Werror=unused-result
+        )
+    endif()
+endif()
 
 # Clock
 set(clock_SRCS
@@ -34,18 +52,16 @@ set_target_properties(
 add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
-file(GLOB_RECURSE expandoracommon_SRCS
+set(expandoracommon_SRCS
     ../src/configuration/configuration.cpp
     ../src/configuration/configuration.h
-    ../src/expandoracommon/*.cpp
-    ../src/map/*.cpp
-    ../src/mapfrontend/AbstractRoomVisitor.cpp
     ../src/parser/Abbrev.cpp
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
-add_dependencies(TestExpandoraCommon glm mm_global)
+add_dependencies(TestExpandoraCommon glm mm_global mm_map)
 target_link_libraries(TestExpandoraCommon
+        mm_map
         mm_global
         Qt5::Gui
         Qt5::Network
@@ -63,18 +79,12 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
 set(parser_SRCS
-    ../src/expandoracommon/property.cpp
-    ../src/map/CommandId.cpp
-    ../src/map/CommandId.h
-    ../src/map/ExitDirection.cpp
-    ../src/map/ExitDirection.h
-    ../src/map/parseevent.cpp
-    ../src/map/parseevent.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
-add_dependencies(TestParser glm mm_global)
+add_dependencies(TestParser glm mm_global mm_map)
 target_link_libraries(TestParser
+        mm_map
         mm_global
         Qt5::Gui
         Qt5::Test
@@ -153,6 +163,31 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 add_test(NAME TestGlobal COMMAND TestGlobal)
+
+# Global
+set(TestMap_SRCS
+        ../src/configuration/configuration.cpp
+        ../src/configuration/configuration.h
+        TestMap.cpp
+)
+add_executable(TestMap ${TestMap_SRCS})
+add_dependencies(TestMap glm mm_global mm_map)
+target_link_libraries(TestMap
+        mm_map
+        mm_global
+        Qt5::Gui
+        Qt5::Network
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
+set_target_properties(
+        TestMap PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestMap COMMAND TestMap)
 
 # Adventure
 set(adventure_SRCS

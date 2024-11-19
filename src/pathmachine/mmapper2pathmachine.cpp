@@ -41,8 +41,8 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
      * and then just do: params = config.pathMachine; ? 
      */
     const auto &settings = getConfig().pathMachine;
-
     auto &params = m_params;
+
     // Note: clamping here isn't necessary if all writes are clamped.
     params.acceptBestRelative = settings.acceptBestRelative;
     params.acceptBestAbsolute = settings.acceptBestAbsolute;
@@ -53,14 +53,14 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
     m_time.restart();
-    emit sig_log(me, QString("received event, state: %1").arg(stateName(m_state)));
+    emit sig_log(me, QString("received event, state: %1").arg(stateName(getState())));
     PathMachine::handleParseEvent(sigParseEvent);
     emit sig_log(me,
                  QString("done processing event, state: %1, elapsed: %2 ms")
-                     .arg(stateName(m_state))
+                     .arg(stateName(getState()))
                      .arg(m_time.elapsed()));
 }
 
-Mmapper2PathMachine::Mmapper2PathMachine(MapData *const mapData, QObject *const parent)
-    : PathMachine(mapData, parent)
+Mmapper2PathMachine::Mmapper2PathMachine(MapFrontend &map, QObject *const parent)
+    : PathMachine(map, parent)
 {}

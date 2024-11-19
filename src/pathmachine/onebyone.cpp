@@ -7,6 +7,7 @@
 
 #include "../global/utils.h"
 #include "../map/CommandId.h"
+#include "../map/Compare.h"
 #include "../map/parseevent.h"
 #include "../map/room.h"
 #include "experimenting.h"
@@ -26,15 +27,16 @@ OneByOne::OneByOne(const SigParseEvent &sigParseEvent,
     , handler{in_handler}
 {}
 
-void OneByOne::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
+void OneByOne::virt_receiveRoom(const RoomHandle &room)
 {
-    if (Room::compare(room, deref(event), params.matchingTolerance) == ComparisonResultEnum::EQUAL) {
-        augmentPath(shortPaths->back(), admin, room);
+    if (::compare(room.getRaw(), deref(event), params.matchingTolerance)
+        == ComparisonResultEnum::EQUAL) {
+        augmentPath(shortPaths->back(), room);
     } else {
         // needed because the memory address is not unique and
         // calling admin->release might destroy a room still held by some path
-        handler->hold(room, admin, this);
-        handler->release(room);
+        handler->hold(room.getId(), this);
+        handler->release(room.getId());
     }
 }
 

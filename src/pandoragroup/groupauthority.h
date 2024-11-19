@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "../proxy/TaggedBytes.h"
 
 #include <QObject>
 #include <QSslCertificate>
@@ -12,8 +13,6 @@
 
 enum class NODISCARD GroupMetadataEnum { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;
-
-using GroupSecret = QByteArray;
 
 static constexpr const auto GROUP_ORGANIZATION = "MUME";
 static constexpr const auto GROUP_ORGANIZATIONAL_UNIT = "MMapper";

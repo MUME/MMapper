@@ -12,46 +12,22 @@
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
-#include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../display/MapCanvasData.h"
-#include "../display/connectionselection.h"
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
-#include "../display/prespammedpath.h"
-#include "../global/NullPointerException.h"
+#include "../global/AsyncTasks.h"
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
-#include "../global/progresscounter.h"
+#include "../global/window_utils.h"
 #include "../logger/autologger.h"
-#include "../map/ExitDirection.h"
-#include "../map/coordinate.h"
-#include "../map/parseevent.h"
-#include "../map/room.h"
-#include "../map/roomid.h"
-#include "../mapdata/customaction.h"
-#include "../mapdata/mapdata.h"
-#include "../mapdata/roomselection.h"
-#include "../mapfrontend/mapaction.h"
-#include "../mapfrontend/mapfrontend.h"
-#include "../mapstorage/MmpMapStorage.h"
-#include "../mapstorage/PandoraMapStorage.h"
-#include "../mapstorage/XmlMapStorage.h"
-#include "../mapstorage/abstractmapstorage.h"
-#include "../mapstorage/filesaver.h"
-#include "../mapstorage/jsonmapstorage.h"
-#include "../mapstorage/mapstorage.h"
 #include "../pandoragroup/groupwidget.h"
-#include "../pandoragroup/mmapper2group.h"
-#include "../parser/DoorAction.h"
-#include "../parser/abstractparser.h"
 #include "../pathmachine/mmapper2pathmachine.h"
-#include "../pathmachine/pathmachine.h"
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
-#include "../proxy/telnetfilter.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
+#include "../viewers/TopLevelWindows.h"
 #include "MapZoomSlider.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
@@ -59,18 +35,18 @@
 #include "infomarkseditdlg.h"
 #include "metatypes.h"
 #include "roomeditattrdlg.h"
+#include "utils.h"
 
 #include <memory>
 #include <mutex>
-#include <stdexcept>
-#include <vector>
+#include <optional>
+#include <thread>
 
 #include <QActionGroup>
 #include <QCloseEvent>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFontDatabase>
-#include <QHostAddress>
 #include <QIcon>
 #include <QProgressDialog>
 #include <QSize>
@@ -78,22 +54,36 @@
 #include <QTextBrowser>
 #include <QtWidgets>
 
-class RoomRecipient;
-
-class NODISCARD CanvasDisabler final
+NODISCARD static const char *get_type_name(const AsyncTypeEnum mode)
 {
-private:
-    MapCanvas &canvas;
-
-public:
-    explicit CanvasDisabler(MapCanvas &in_canvas)
-        : canvas{in_canvas}
-    {
-        canvas.setEnabled(false);
+    switch (mode) {
+    case AsyncTypeEnum::Load:
+        return "load";
+    case AsyncTypeEnum::Merge:
+        return "merge";
+    case AsyncTypeEnum::Save:
+        return "save";
+    default:
+        assert(false);
+        return "(error)";
     }
-    ~CanvasDisabler() { canvas.setEnabled(true); }
-    DELETE_CTORS_AND_ASSIGN_OPS(CanvasDisabler);
-};
+}
+
+NODISCARD static const char *basic_plural(size_t n)
+{
+    return (n == 1) ? "" : "s";
+}
+
+QString MainWindow::chooseLoadOrMergeFileName()
+{
+    const QString &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
+    return QFileDialog::getOpenFileName(this,
+                                        "Choose map file ...",
+                                        savedLastMapDir,
+                                        "MMapper2 maps (*.mm2)"
+                                        ";;MMapper2 XML or Pandora maps (*.xml)"
+                                        ";;Alternate suffix for MMapper2 XML maps (*.mm2xml)");
+}
 
 static void addApplicationFont()
 {
@@ -118,16 +108,27 @@ static void addApplicationFont()
     }
 }
 
+MainWindow::~MainWindow()
+{
+    forceNewFile();
+    mmqt::rdisconnect(this);
+    async_tasks::cleanup();
+    destroyTopLevelWindows();
+}
+
 MainWindow::MainWindow()
     : QMainWindow(nullptr, Qt::WindowFlags{})
+    , m_asyncTask(this)
 {
+    initTopLevelWindows();
+    async_tasks::init();
     setObjectName("MainWindow");
     setWindowIcon(QIcon(":/icons/m.png"));
     addApplicationFont();
     registerMetatypes();
 
     m_mapData = new MapData(this);
-    auto &mapData = *m_mapData;
+    MapData &mapData = deref(m_mapData);
 
     m_mapData->setObjectName("MapData");
     setCurrentFile("");
@@ -140,7 +141,7 @@ MainWindow::MainWindow()
     m_mapWindow = new MapWindow(mapData, deref(m_prespammedPath), deref(m_groupManager), this);
     setCentralWidget(m_mapWindow);
 
-    m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
+    m_pathMachine = new Mmapper2PathMachine(mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = std::make_unique<GameObserver>();
@@ -248,7 +249,7 @@ MainWindow::MainWindow()
         deref(m_logger).slot_writeToLog(msg);
     });
 
-    m_listener = new ConnectionListener(mapData,
+    m_listener = new ConnectionListener(deref(m_mapData),
                                         deref(m_pathMachine),
                                         deref(m_prespammedPath),
                                         deref(m_groupManager),
@@ -294,22 +295,12 @@ MainWindow::MainWindow()
         showMenuBarAct->setChecked(getConfig().general.showMenuBar);
         slot_setShowMenuBar();
     }
-}
 
-// depth-first recursively disconnect all children
-static void rdisconnect(QObject *const obj)
-{
-    auto &o = deref(obj);
-    for (QObject *const child : o.children()) {
-        rdisconnect(child);
-    }
-    o.disconnect();
-}
-
-MainWindow::~MainWindow()
-{
-    forceNewFile();
-    rdisconnect(this);
+    connect(m_mapData,
+            &MapData::sig_checkMapConsistency,
+            this,
+            &MainWindow::slot_checkMapConsistency);
+    connect(m_mapData, &MapData::sig_generateBaseMap, this, &MainWindow::slot_generateBaseMap);
 }
 
 void MainWindow::startServices()
@@ -321,7 +312,7 @@ void MainWindow::startServices()
     } catch (const std::exception &e) {
         const QString errorMsg = QString(
                                      "Unable to start the server (switching to offline mode): %1.")
-                                     .arg(QString::fromLatin1(e.what()));
+                                     .arg(QString::fromUtf8(e.what()));
         QMessageBox::critical(this, tr("mmapper"), errorMsg);
     }
 
@@ -424,21 +415,6 @@ void MainWindow::writeSettings()
 void MainWindow::wireConnections()
 {
     connect(m_pathMachine, &Mmapper2PathMachine::sig_log, this, &MainWindow::slot_log);
-
-    connect(m_pathMachine,
-            QOverload<RoomRecipient &, const Coordinate &>::of(
-                &Mmapper2PathMachine::sig_lookingForRooms),
-            m_mapData,
-            QOverload<RoomRecipient &, const Coordinate &>::of(&MapData::lookingForRooms));
-    connect(m_pathMachine,
-            QOverload<RoomRecipient &, const SigParseEvent &>::of(
-                &Mmapper2PathMachine::sig_lookingForRooms),
-            m_mapData,
-            QOverload<RoomRecipient &, const SigParseEvent &>::of(&MapData::lookingForRooms));
-    connect(m_pathMachine,
-            QOverload<RoomRecipient &, RoomId>::of(&Mmapper2PathMachine::sig_lookingForRooms),
-            m_mapData,
-            QOverload<RoomRecipient &, RoomId>::of(&MapData::lookingForRooms));
     connect(m_mapData,
             &MapFrontend::sig_clearingMap,
             m_pathMachine,
@@ -452,10 +428,14 @@ void MainWindow::wireConnections()
             canvas,
             &MapCanvas::slot_moveMarker);
 
-    connect(canvas,
-            &MapCanvas::sig_setCurrentRoom,
-            m_pathMachine,
-            &PathMachine::slot_setCurrentRoom);
+    connect(m_mapData, &MapData::sig_onPositionChange, this, [this]() {
+        m_pathMachine->onPositionChange(m_mapData->getCurrentRoomId());
+    });
+
+    connect(m_mapData,
+            &MapData::sig_onForcedPositionChange,
+            canvas,
+            &MapCanvas::slot_onForcedPositionChange);
 
     // moved to mapwindow
     connect(m_mapData, &MapData::sig_mapSizeChanged, m_mapWindow, &MapWindow::slot_setScrollBars);
@@ -465,10 +445,7 @@ void MainWindow::wireConnections()
     connect(m_mapData, &MapData::sig_log, this, &MainWindow::slot_log);
     connect(canvas, &MapCanvas::sig_log, this, &MainWindow::slot_log);
 
-    connect(m_mapData, &MapData::sig_onDataChanged, this, [this]() {
-        setWindowModified(true);
-        saveAct->setEnabled(true);
-    });
+    connect(m_mapData, &MapData::sig_onDataChanged, this, [this]() { this->updateMapModified(); });
 
     connect(zoomInAct, &QAction::triggered, canvas, &MapCanvas::slot_zoomIn);
     connect(zoomOutAct, &QAction::triggered, canvas, &MapCanvas::slot_zoomOut);
@@ -488,9 +465,9 @@ void MainWindow::wireConnections()
     // Group
     connect(m_groupManager, &Mmapper2Group::sig_log, this, &MainWindow::slot_log);
     connect(m_pathMachine,
-            &PathMachine::sig_setCharPosition,
+            &PathMachine::sig_setCharRoomIdEstimated,
             m_groupManager,
-            &Mmapper2Group::slot_setCharacterRoomId);
+            &Mmapper2Group::slot_setCharRoomIdEstimated);
     connect(m_groupManager,
             &Mmapper2Group::sig_updateMapCanvas,
             canvas,
@@ -892,13 +869,32 @@ void MainWindow::createActions()
             m_pathMachine,
             &PathMachine::slot_releaseAllPaths);
 
+    gotoRoomAct = new QAction(QIcon(":/icons/goto.png"), tr("Move to selected room"), this);
+    gotoRoomAct->setStatusTip(tr("Move to selected room"));
+    gotoRoomAct->setCheckable(false);
+    gotoRoomAct->setEnabled(false);
+    connect(gotoRoomAct, &QAction::triggered, this, [this]() {
+        if (m_roomSelection == nullptr) {
+            return;
+        }
+
+        auto &mapData = deref(m_mapData);
+        auto &sel = deref(m_roomSelection);
+        sel.removeMissing(mapData);
+
+        if (m_roomSelection->size() == 1) {
+            const RoomId id = m_roomSelection->getFirstRoomId();
+            m_mapData->setRoom(id);
+        }
+    });
+
     forceRoomAct = new QAction(QIcon(":/icons/force.png"),
-                               tr("Force update selected room with last movement"),
+                               tr("Update selected room with last movement"),
                                this);
-    forceRoomAct->setStatusTip(tr("Force update selected room with last movement"));
+    forceRoomAct->setStatusTip(tr("Update selected room with last movement"));
     forceRoomAct->setCheckable(false);
     forceRoomAct->setEnabled(false);
-    connect(forceRoomAct, &QAction::triggered, getCanvas(), &MapCanvas::slot_forceMapperToRoom);
+    connect(forceRoomAct, &QAction::triggered, this, &MainWindow::slot_forceMapperToRoom);
 
     selectedRoomActGroup = new QActionGroup(this);
     selectedRoomActGroup->setExclusive(false);
@@ -1039,7 +1035,7 @@ void MainWindow::createActions()
     rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild World"), this);
     rebuildMeshesAct->setStatusTip(tr("Reconstruct the world mesh to fix graphical rendering bugs"));
     rebuildMeshesAct->setCheckable(false);
-    connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::mapAndInfomarksChanged);
+    connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::slot_rebuildMeshes);
 }
 
 static void setConfigMapMode(const MapModeEnum mode)
@@ -1049,8 +1045,9 @@ static void setConfigMapMode(const MapModeEnum mode)
 
 void MainWindow::slot_onPlayMode()
 {
+    // map mode can only create rooms, but play mode can make changes
     disconnectCreateRoomConnection();
-    disconnectScheduleActionConnection();
+    connectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::PLAY);
     modeMenu->setIcon(mapperMode.playModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -1248,9 +1245,10 @@ void MainWindow::setupMenuBar()
     groupModeMenu->addAction(groupMode.groupServerAct);
     groupMenu->addAction(groupNetwork.networkStartAct);
     groupMenu->addAction(groupNetwork.networkStopAct);
-    QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/force.png"), tr("&Path Machine"));
+    QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/goto.png"), tr("&Path Machine"));
     pathMachineMenu->addAction(mouseMode.modeRoomSelectAct);
     pathMachineMenu->addSeparator();
+    pathMachineMenu->addAction(gotoRoomAct);
     pathMachineMenu->addAction(forceRoomAct);
     pathMachineMenu->addAction(releaseAllPathsAct);
 
@@ -1276,6 +1274,7 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
     QMenu contextMenu(tr("Context menu"), this);
     if (m_connectionSelection != nullptr) {
         // Connections cannot be selected alongside rooms and infomarks
+        // ^^^ Let's enforce that with a variant then?
         contextMenu.addAction(deleteConnectionSelectionAct);
 
     } else {
@@ -1292,6 +1291,7 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
                 contextMenu.addAction(deleteRoomSelectionAct);
                 contextMenu.addAction(connectToNeighboursRoomSelectionAct);
                 contextMenu.addSeparator();
+                contextMenu.addAction(gotoRoomAct);
                 contextMenu.addAction(forceRoomAct);
             }
         }
@@ -1426,6 +1426,7 @@ void MainWindow::setupToolBars()
     pathMachineToolBar = addToolBar(tr("Path Machine"));
     pathMachineToolBar->setObjectName("PathMachineToolBar");
     pathMachineToolBar->addAction(releaseAllPathsAct);
+    pathMachineToolBar->addAction(gotoRoomAct);
     pathMachineToolBar->addAction(forceRoomAct);
     pathMachineToolBar->hide();
 
@@ -1481,23 +1482,17 @@ void MainWindow::slot_onPreferences()
 
 void MainWindow::slot_newRoomSelection(const SigRoomSelection &rs)
 {
-    forceRoomAct->setEnabled(false);
-    if (rs.isValid()) {
-        m_roomSelection = rs.getShared();
-    } else {
-        m_roomSelection.reset();
-    }
+    const bool isValidSelection = rs.isValid();
+    const size_t selSize = !isValidSelection ? 0 : rs.deref().size();
 
-    if (m_roomSelection != nullptr) {
-        showStatusLong(QString("Selection: %1 room%2")
-                           .arg(m_roomSelection->size())
-                           .arg((m_roomSelection->size() != 1) ? "s" : ""));
-        selectedRoomActGroup->setEnabled(true);
-        if (m_roomSelection->size() == 1) {
-            forceRoomAct->setEnabled(true);
-        }
-    } else {
-        selectedRoomActGroup->setEnabled(false);
+    m_roomSelection = !isValidSelection ? nullptr : rs.getShared();
+    selectedRoomActGroup->setEnabled(isValidSelection);
+    gotoRoomAct->setEnabled(selSize == 1);
+    forceRoomAct->setEnabled(selSize == 1 && m_pathMachine->hasLastEvent());
+
+    if (isValidSelection) {
+        const auto msg = QString("Selection: %1 room%2").arg(selSize).arg(basic_plural(selSize));
+        showStatusLong(msg);
     }
 }
 
@@ -1539,16 +1534,23 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
     return QObject::eventFilter(obj, event);
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::closeEvent(QCloseEvent *const event)
 {
+    // REVISIT: wait and see if we're actually exiting first?
     writeSettings();
-    if (maybeSave()) {
-        // REVISIT: Group Manager is not owned by the MainWindow and needs to be terminated
-        m_groupManager->stop();
-        event->accept();
-    } else {
+
+    if (!maybeSave()) {
         event->ignore();
+        return;
     }
+
+    if (m_asyncTask) {
+        qInfo() << "Attempting to async task for faster shutdown";
+        m_progressDlg->reject();
+    }
+    // REVISIT: Group Manager is not owned by the MainWindow and needs to be terminated
+    m_groupManager->stop();
+    event->accept();
 }
 
 void MainWindow::showEvent(QShowEvent *const event)
@@ -1580,83 +1582,19 @@ void MainWindow::slot_newFile()
 
 void MainWindow::forceNewFile()
 {
-    MapStorage mapStorage(*m_mapData, "", this);
-    auto *storage = static_cast<AbstractMapStorage *>(&mapStorage);
-    connect(storage, &AbstractMapStorage::sig_onNewData, getCanvas(), &MapCanvas::slot_dataLoaded);
-    connect(storage,
-            &AbstractMapStorage::sig_onNewData,
-            m_groupWidget,
-            &GroupWidget::slot_mapLoaded);
-    connect(storage, &AbstractMapStorage::sig_onNewData, this, [this]() {
-        setWindowModified(false);
-        saveAct->setEnabled(false);
-    });
-    connect(storage, &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
-    storage->newData();
+    {
+        auto &mapData = deref(m_mapData);
+        mapData.clear();
+        mapData.setFileName("", false);
+        mapData.forcePosition(Coordinate{});
+    }
+
     setCurrentFile("");
+    getCanvas()->slot_dataLoaded();
+    m_groupWidget->slot_mapLoaded();
+
+    updateMapModified();
     mapChanged();
-}
-
-void MainWindow::slot_merge()
-{
-    CanvasDisabler canvasDisabler{deref(getCanvas())};
-
-    // FIXME: code duplication
-    const auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    "Choose map file ...",
-                                                    savedLastMapDir,
-                                                    "MMapper Maps (*.mm2)");
-    if (fileName.isEmpty()) {
-        return;
-    }
-
-    QFile file(fileName);
-
-    if (!file.open(QFile::ReadOnly)) {
-        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
-
-        return;
-    }
-
-    auto progressDlg = createNewProgressDialog("Importing map...");
-
-    getCanvas()->slot_clearAllSelections();
-
-    MapStorage mapStorage(*m_mapData, fileName, &file, this);
-    auto storage = static_cast<AbstractMapStorage *>(&mapStorage);
-    connect(storage,
-            &AbstractMapStorage::sig_onDataLoaded,
-            getCanvas(),
-            &MapCanvas::slot_dataLoaded);
-    connect(storage,
-            &AbstractMapStorage::sig_onDataLoaded,
-            m_groupWidget,
-            &GroupWidget::slot_mapLoaded);
-    connect(storage, &AbstractMapStorage::sig_onDataLoaded, this, [this]() {
-        setWindowModified(false);
-        saveAct->setEnabled(false);
-    });
-    connect(&storage->getProgressCounter(),
-            &ProgressCounter::sig_onPercentageChanged,
-            this,
-            &MainWindow::slot_percentageChanged);
-    connect(storage, &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
-
-    const bool merged = [this, &storage]() -> bool {
-        ActionDisabler actionDisabler{*this};
-        CanvasHider canvasHider{*this};
-        return storage->canLoad() && storage->mergeData();
-    }();
-
-    if (!merged) {
-        showWarning(tr("Failed to merge file %1.").arg(fileName));
-    } else {
-        mapChanged();
-        showStatusShort(tr("File merged"));
-    }
-
-    progressDlg.reset();
 }
 
 void MainWindow::slot_open()
@@ -1665,18 +1603,13 @@ void MainWindow::slot_open()
         return;
     }
 
-    // FIXME: code duplication
-    auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    const QString fileName = QFileDialog::getOpenFileName(
-        this,
-        "Choose map file ...",
-        savedLastMapDir,
-        "MMapper2 Maps (*.mm2);;MMapper2 XML Maps (*.mm2xml);;Pandora Maps (*.xml)");
+    const QString fileName = chooseLoadOrMergeFileName();
     if (fileName.isEmpty()) {
         showStatusShort(tr("No filename provided"));
         return;
     }
     QFileInfo file(fileName);
+    auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
     savedLastMapDir = file.dir().absolutePath();
     loadFile(file.absoluteFilePath());
 }
@@ -1696,20 +1629,42 @@ void MainWindow::slot_about()
     about.exec();
 }
 
-MainWindow::ProgressDialogLifetime MainWindow::createNewProgressDialog(const QString &text)
+MainWindow::ProgressDialogLifetime MainWindow::createNewProgressDialog(const QString &text,
+                                                                       const bool allow_cancel)
 {
     m_progressDlg = std::make_unique<QProgressDialog>(this);
-    {
-        QPushButton *cb = new QPushButton("Abort ...", m_progressDlg.get());
+    QProgressDialog *const progress = m_progressDlg.get();
+    if (allow_cancel) {
+        progress->setCancelButtonText("Cancel");
+    } else {
+        QPushButton *const cb = new QPushButton("Cancel", progress);
         cb->setEnabled(false);
-        m_progressDlg->setCancelButton(cb);
+        progress->setCancelButton(cb);
     }
-    m_progressDlg->setLabelText(text);
-    m_progressDlg->setCancelButtonText("Abort");
-    m_progressDlg->setMinimum(0);
-    m_progressDlg->setMaximum(100);
-    m_progressDlg->setValue(0);
-    m_progressDlg->show();
+
+    progress->setWindowTitle(text);
+    progress->setMinimum(0);
+    progress->setMaximum(100);
+    progress->setValue(0);
+    progress->setMinimumWidth(this->width() / 4);
+    progress->showNormal();
+    progress->raise();
+    progress->activateWindow();
+    progress->focusWidget();
+
+    connect(progress, &QProgressDialog::canceled, this, [this, allow_cancel]() {
+        if (allow_cancel) {
+            qInfo() << "QProgressDialog::canceled()";
+            this->m_asyncTask.request_cancel();
+        }
+    });
+    connect(progress, &QProgressDialog::rejected, this, [this, allow_cancel]() {
+        if (allow_cancel) {
+            qInfo() << "QProgressDialog::rejected()";
+            this->m_asyncTask.request_cancel();
+        }
+    });
+
     return ProgressDialogLifetime{*this};
 }
 
@@ -1718,76 +1673,19 @@ void MainWindow::endProgressDialog()
     m_progressDlg.reset();
 }
 
-void MainWindow::loadFile(const QString &fileName)
+void MainWindow::setMapModified(bool modified)
 {
-    if (fileName.isEmpty()) {
-        showStatusShort(tr("No filename provided"));
-        return;
-    }
-
-    CanvasDisabler canvasDisabler{deref(getCanvas())};
-
-    QFile file(fileName);
-    if (!file.open(QFile::ReadOnly)) {
-        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
-        return;
-    }
-
-    // Immediately discard the old map.
-    forceNewFile();
-
-    auto progressDlg = createNewProgressDialog("Loading map...");
-
-    const auto storage = [this, &fileName, &file]() -> std::unique_ptr<AbstractMapStorage> {
-        const QString fileNameLower = fileName.toLower();
-        if (fileNameLower.endsWith(".xml")) {
-            // Pandora map
-            return std::make_unique<PandoraMapStorage>(*m_mapData, fileName, &file, this);
-        } else if (fileNameLower.endsWith(".mm2xml")) {
-            // MMapper2 XML map
-            return std::make_unique<XmlMapStorage>(*m_mapData, fileName, &file, this);
-        } else {
-            // MMapper2 binary map
-            return std::make_unique<MapStorage>(*m_mapData, fileName, &file, this);
-        }
-    }();
-
-    // REVISIT: refactor the connections to a common function?
-    connect(storage.get(),
-            &AbstractMapStorage::sig_onDataLoaded,
-            getCanvas(),
-            &MapCanvas::slot_dataLoaded);
-    connect(storage.get(),
-            &AbstractMapStorage::sig_onDataLoaded,
-            m_groupWidget,
-            &GroupWidget::slot_mapLoaded);
-    connect(storage.get(), &AbstractMapStorage::sig_onDataLoaded, this, [this]() {
-        setWindowModified(false);
-        saveAct->setEnabled(false);
-    });
-    connect(&storage->getProgressCounter(),
-            &ProgressCounter::sig_onPercentageChanged,
-            this,
-            &MainWindow::slot_percentageChanged);
-    connect(storage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
-
-    const bool loaded = [this, &storage]() -> bool {
-        ActionDisabler actionDisabler{*this};
-        CanvasHider canvasHider{*this};
-        return storage->canLoad() && storage->loadData();
-    }();
-
-    if (!loaded) {
-        showWarning(tr("Failed to load file %1.").arg(fileName));
-        return;
-    }
-
-    mapChanged();
-    setCurrentFile(m_mapData->getFileName());
-    showStatusShort(tr("File loaded"));
+    setWindowModified(modified);
+    saveAct->setEnabled(modified);
 }
 
-void MainWindow::slot_percentageChanged(const uint32_t p)
+void MainWindow::updateMapModified()
+{
+    setMapModified(m_mapData->isModified());
+    getCanvas()->update();
+}
+
+void MainWindow::percentageChanged(const uint32_t p)
 {
     if (m_progressDlg == nullptr) {
         return;
@@ -1803,80 +1701,14 @@ void MainWindow::showWarning(const QString &s)
     QMessageBox::warning(nullptr, tr("Application"), s);
 }
 
-bool MainWindow::saveFile(const QString &fileName,
-                          const SaveModeEnum mode,
-                          const SaveFormatEnum format)
+void MainWindow::showAsyncFailure(const QString &fileName,
+                                  const AsyncTypeEnum mode,
+                                  const bool wasCanceled)
 {
-    CanvasDisabler canvasDisabler{deref(getCanvas())};
-
-    FileSaver saver;
-    // REVISIT: You can still test a directory for writing...
-    if (format != SaveFormatEnum::WEB) { // Web uses a whole directory
-        try {
-            saver.open(fileName);
-        } catch (const std::exception &e) {
-            showWarning(tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
-            return false;
-        }
-    }
-
-    const auto storage = [this, format, &fileName, &saver]() -> std::unique_ptr<AbstractMapStorage> {
-        switch (format) {
-        case SaveFormatEnum::MM2:
-            return std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
-        case SaveFormatEnum::MM2XML:
-            return std::make_unique<XmlMapStorage>(*m_mapData, fileName, &saver.file(), this);
-        case SaveFormatEnum::MMP:
-            return std::make_unique<MmpMapStorage>(*m_mapData, fileName, &saver.file(), this);
-        case SaveFormatEnum::WEB:
-            return std::make_unique<JsonMapStorage>(*m_mapData, fileName, this);
-        }
-        assert(false);
-        return {};
-    }();
-
-    if (!storage || !storage->canSave()) {
-        showWarning(tr("Selected format cannot save."));
-        return false;
-    }
-
-    auto progressDlg = createNewProgressDialog("Saving map...");
-
-    // REVISIT: This is done enough times that it should probably be a function by itself.
-    connect(&storage->getProgressCounter(),
-            &ProgressCounter::sig_onPercentageChanged,
-            this,
-            &MainWindow::slot_percentageChanged);
-    connect(storage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
-
-    const bool saveOk = [this, mode, &storage]() -> bool {
-        ActionDisabler actionDisabler{*this};
-        // REVISIT: Does this need hide/show?
-        return storage->saveData(mode == SaveModeEnum::BASEMAP);
-    }();
-    progressDlg.reset();
-
-    try {
-        saver.close();
-    } catch (const std::exception &e) {
-        showWarning(tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
-        return false;
-    }
-
-    if (!saveOk) {
-        showWarning(tr("Error while saving (see log)."));
-        // REVISIT: Shouldn't this return false?
-    } else {
-        if (mode == SaveModeEnum::FULL && format == SaveFormatEnum::MM2) {
-            m_mapData->setFileName(fileName, !QFileInfo(fileName).isWritable());
-            setCurrentFile(fileName);
-        }
-        showStatusShort(tr("File saved"));
-    }
-
-    setWindowModified(false);
-    saveAct->setEnabled(false);
-    return true;
+    const char *const modeName = get_type_name(mode);
+    const char *const msg = wasCanceled ? "User canceled the %1 of file %2"
+                                        : "Failed to %1 file %2";
+    showWarning(tr(msg).arg(modeName, fileName));
 }
 
 void MainWindow::slot_onFindRoom()
@@ -1946,7 +1778,10 @@ void MainWindow::setCurrentFile(const QString &fileName)
     // > The window title must contain a "[*]" placeholder, which indicates where the '*' should appear.
     // > Normally, it should appear right after the file name (e.g., "document1.txt[*] - Text Editor").
     // > If the window isn't modified, the placeholder is simply removed.
-    setWindowTitle(QString("%1[*]%2 - MMapper%3").arg(shownName).arg(fileSuffix).arg(appSuffix));
+
+    mmqt::setWindowTitle2(*this,
+                          QString("MMapper%1").arg(appSuffix),
+                          QString("%1[*]%2").arg(shownName).arg(fileSuffix));
 }
 
 void MainWindow::slot_onLayerUp()
@@ -2023,8 +1858,7 @@ void MainWindow::slot_onEditInfoMarkSelection()
 
 void MainWindow::slot_onCreateRoom()
 {
-    getCanvas()->slot_createRoom();
-    mapChanged();
+    deref(getCanvas()).slot_createRoom();
 }
 
 void MainWindow::slot_onEditRoomSelection()
@@ -2057,7 +1891,7 @@ void MainWindow::slot_onDeleteInfoMarkSelection()
 
     {
         const auto tmp = std::exchange(m_infoMarkSelection, nullptr);
-        m_mapData->removeMarkers(*tmp);
+        m_mapData->removeMarkers(tmp->getMarkerList());
     }
 
     MapCanvas *const canvas = getCanvas();
@@ -2071,9 +1905,10 @@ void MainWindow::slot_onDeleteRoomSelection()
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<Remove>());
+    applyGroupAction([](const RawRoom &room) -> Change {
+        return Change{room_change_types::RemoveRoom{room.getId()}};
+    });
     getCanvas()->slot_clearRoomSelection();
-    mapChanged();
 }
 
 void MainWindow::slot_onDeleteConnectionSelection()
@@ -2084,9 +1919,9 @@ void MainWindow::slot_onDeleteConnectionSelection()
 
     const auto &first = m_connectionSelection->getFirst();
     const auto &second = m_connectionSelection->getSecond();
-    const Room *const r1 = first.room;
-    const Room *const r2 = second.room;
-    if (r1 == nullptr || r2 == nullptr) {
+    const auto &r1 = first.room;
+    const auto &r2 = second.room;
+    if (r1 == std::nullopt || r2 == std::nullopt) {
         return; // previously called mapChanged for no good reason
     }
 
@@ -2095,57 +1930,71 @@ void MainWindow::slot_onDeleteConnectionSelection()
     const RoomId &id1 = r1->getId();
     const RoomId &id2 = r2->getId();
 
-    const auto tmpSel = RoomSelection::createSelection(*m_mapData);
-    tmpSel->getRoom(id1);
-    tmpSel->getRoom(id2);
     getCanvas()->slot_clearConnectionSelection();
-    m_mapData->execute(std::make_unique<RemoveTwoWayExit>(id1, id2, dir1, dir2), tmpSel);
 
-    mapChanged();
+    // REVISIT: dir2?
+    m_mapData->applySingleChange(Change{exit_change_types::ModifyExitConnection{
+        ChangeTypeEnum::Remove, id1, dir1, id2, WaysEnum::TwoWay}});
+}
+
+bool MainWindow::slot_moveRoomSelection(const Coordinate &offset)
+{
+    if (m_roomSelection == nullptr) {
+        return false;
+    }
+
+    applyGroupAction([&offset](const RawRoom &room) -> Change {
+        return Change{room_change_types::MoveRelative{room.getId(), offset}};
+    });
+    return true;
 }
 
 void MainWindow::slot_onMoveUpRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (!slot_moveRoomSelection(Coordinate(0, 0, 1))) {
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, 1)));
     slot_onLayerUp();
-    mapChanged();
 }
 
 void MainWindow::slot_onMoveDownRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (!slot_moveRoomSelection(Coordinate(0, 0, -1))) {
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, -1)));
     slot_onLayerDown();
-    mapChanged();
+}
+
+bool MainWindow::slot_mergeRoomSelection(const Coordinate &offset)
+{
+    if (m_roomSelection == nullptr) {
+        return false;
+    }
+
+    applyGroupAction([&offset](const RawRoom &room) -> Change {
+        return Change{room_change_types::MergeRelative{room.getId(), offset}};
+    });
+    return true;
 }
 
 void MainWindow::slot_onMergeUpRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (!slot_mergeRoomSelection(Coordinate(0, 0, 1))) {
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, 1)));
-    mapChanged();
     slot_onLayerUp();
     slot_onModeRoomSelect();
 }
 
 void MainWindow::slot_onMergeDownRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (!slot_mergeRoomSelection(Coordinate(0, 0, -1))) {
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, -1)));
-    mapChanged();
     slot_onLayerDown();
     slot_onModeRoomSelect();
 }
@@ -2156,8 +2005,39 @@ void MainWindow::slot_onConnectToNeighboursRoomSelection()
         return;
     }
 
-    execSelectionGroupMapAction(std::make_unique<ConnectToNeighbours>());
-    mapChanged();
+    auto &mapData = deref(m_mapData);
+    auto &sel = deref(m_roomSelection);
+    sel.removeMissing(mapData);
+
+    const Map &map = mapData.getCurrentMap();
+    ChangeList changes;
+    for (const RoomId id : sel) {
+        const auto &room = map.getRoomHandle(id);
+        connectToNeighbors(changes, room, ConnectToNeighborsArgs{});
+    }
+
+    if (changes.getChanges().empty()) {
+        return;
+    }
+
+    mapData.applyChanges(changes);
+}
+
+void MainWindow::slot_forceMapperToRoom()
+{
+    if (m_roomSelection == nullptr) {
+        return;
+    }
+
+    auto &mapData = deref(m_mapData);
+    auto &sel = deref(m_roomSelection);
+    sel.removeMissing(mapData);
+
+    if (m_roomSelection->size() == 1) {
+        const RoomId id = m_roomSelection->getFirstRoomId();
+        m_mapData->setRoom(id);
+        m_pathMachine->forceUpdate(id);
+    }
 }
 
 #ifdef __clang__
@@ -2231,7 +2111,7 @@ MapCanvas *MainWindow::getCanvas() const
 void MainWindow::mapChanged() const
 {
     if (MapCanvas *const canvas = getCanvas()) {
-        canvas->mapChanged();
+        canvas->slot_mapChanged();
     }
 }
 
@@ -2242,17 +2122,92 @@ void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)
     }
 }
 
-void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> input_action)
+void MainWindow::applyGroupAction(const std::function<Change(const RawRoom &)> &getChange)
 {
-    std::ignore = deref(m_roomSelection);
-    deref(m_mapData).execute(std::make_unique<GroupMapAction>(std::move(input_action),
-                                                              m_roomSelection),
-                             m_roomSelection);
+    m_mapData->applyChangesToList(deref(m_roomSelection), getChange);
 }
 
 void MainWindow::showStatusInternal(const QString &text, int duration)
 {
     statusBar()->showMessage(text, duration);
+}
+
+void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
+{
+    auto &mapData = deref(m_mapData);
+    auto &mapCanvas = deref(getCanvas());
+    auto &groupWidget = deref(m_groupWidget);
+
+    mapData.setMapData(mapLoadData);
+    mapData.checkSize();
+
+    // TODO: convert from slot_xxx prefix if these are no longer used as slots anywhere.
+    mapCanvas.slot_dataLoaded();
+    groupWidget.slot_mapLoaded();
+
+    // Should this be part of mapChanged?
+    updateMapModified();
+    mapChanged();
+
+    setCurrentFile(mapData.getFileName());
+    showStatusShort(tr("File loaded"));
+}
+
+void MainWindow::onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks)
+{
+    auto &mapData = deref(m_mapData);
+    auto &mapCanvas = deref(getCanvas());
+    auto &groupWidget = deref(m_groupWidget);
+
+    mapData.setCurrentMap(map);
+    mapData.setCurrentMarks(infomarks);
+    mapData.checkSize();
+
+    // FIXME: mapData.setMapData() or mapData.checkSize() kicks off an async remesh,
+    // and then slot_dataLoaded() immediately sets it to be ignored and starts another
+    // one in parallel? (see: ignorePendingRemesh)
+
+    mapCanvas.slot_dataLoaded();
+    groupWidget.slot_mapLoaded();
+    updateMapModified();
+    mapChanged();
+    showStatusShort(tr("File merged"));
+}
+
+void MainWindow::onSuccessfulSave(const SaveModeEnum mode,
+                                  const SaveFormatEnum format,
+                                  const QString &fileName)
+{
+    auto &mapData = deref(m_mapData);
+
+    if (mode == SaveModeEnum::FULL && format == SaveFormatEnum::MM2) {
+        mapData.setFileName(fileName, !QFileInfo(fileName).isWritable());
+        setCurrentFile(fileName);
+        mapData.currentHasBeenSaved();
+    }
+
+    showStatusShort(tr("File saved"));
+    updateMapModified();
+
+    QFileInfo file{fileName};
+
+    // Update last directory
+    auto &config = setConfig().autoLoad;
+    config.lastMapDirectory = file.absoluteDir().absolutePath();
+
+    const QString &absoluteFilePath = file.absoluteFilePath();
+    if (!config.autoLoadMap || config.fileName != absoluteFilePath) {
+        // Check if this should be the new autoload map
+        QMessageBox dlg(QMessageBox::Question,
+                        "Autoload Map?",
+                        "Autoload this map when MMapper starts?",
+                        QMessageBox::StandardButtons{QMessageBox::Yes | QMessageBox::No},
+                        this);
+        if (dlg.exec() == QMessageBox::Yes) {
+            config.autoLoadMap = true;
+            config.fileName = absoluteFilePath;
+        }
+    }
 }
 
 void MainWindow::connectCreateRoomConnection()

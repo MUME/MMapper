@@ -4,36 +4,33 @@
 
 #include "forced.h"
 
-#include "../expandoracommon/RoomAdmin.h"
+#include "../map/ChangeTypes.h"
 #include "../map/room.h"
-#include "../mapfrontend/mapaction.h"
+#include "../mapdata/mapdata.h"
 
 #include <memory>
 
-void Forced::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
+void Forced::virt_receiveRoom(const RoomHandle &perhaps)
 {
-    if (m_matchedRoom == nullptr) {
+    if (m_matchedRoom == std::nullopt) {
         m_matchedRoom = perhaps;
-        m_owner = sender;
         if (m_update) {
             // Force update room with last event
-            m_owner->scheduleAction(
-                std::make_shared<SingleRoomAction>(std::make_unique<Update>(m_myEvent),
-                                                   perhaps->getId()));
+            m_map.scheduleAction(
+                Change{room_change_types::Update{perhaps.getId(), m_myEvent.deref()}});
         }
     } else {
-        sender->releaseRoom(*this, perhaps->getId());
+        m_map.releaseRoom(*this, perhaps.getId());
     }
 }
 
 Forced::~Forced()
 {
-    if (m_owner != nullptr) {
-        m_owner->releaseRoom(*this, m_matchedRoom->getId());
-    }
+    m_map.releaseRoom(*this, deref(m_matchedRoom).getId());
 }
 
-Forced::Forced(const SigParseEvent &sigParseEvent, bool update)
-    : m_myEvent{sigParseEvent.requireValid()}
+Forced::Forced(MapFrontend &map, const SigParseEvent &sigParseEvent, const bool update)
+    : m_map{map}
+    , m_myEvent{sigParseEvent.requireValid()}
     , m_update{update}
 {}

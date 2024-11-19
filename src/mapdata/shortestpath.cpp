@@ -71,9 +71,9 @@ NODISCARD static double terrain_cost(const RoomTerrainEnum type)
     return 1.0;
 }
 
-NODISCARD static double getLength(const Exit &e, const Room *curr, const Room *nextr)
+NODISCARD static double getLength(const RawExit &e, const RoomHandle &curr, const RoomHandle &nextr)
 {
-    double cost = terrain_cost(nextr->getTerrainType());
+    double cost = terrain_cost(nextr.getTerrainType());
     auto flags = e.getExitFlags();
     if (flags.isRandom() || flags.isDamage() || flags.isFall()) {
         cost += 30;
@@ -84,10 +84,10 @@ NODISCARD static double getLength(const Exit &e, const Room *curr, const Room *n
     if (flags.isClimb()) {
         cost += 2;
     }
-    if (nextr->getRidableType() == RoomRidableEnum::NOT_RIDABLE) {
+    if (nextr.getRidableType() == RoomRidableEnum::NOT_RIDABLE) {
         cost += 3;
         // One non-ridable room means walking two rooms, plus dismount/mount.
-        if (curr->getRidableType() != RoomRidableEnum::NOT_RIDABLE) {
+        if (curr.getRidableType() != RoomRidableEnum::NOT_RIDABLE) {
             cost += 4;
         }
     }
@@ -97,8 +97,8 @@ NODISCARD static double getLength(const Exit &e, const Room *curr, const Room *n
     return cost;
 }
 
-void MapData::shortestPathSearch(const Room *origin,
-                                 ShortestPathRecipient *recipient,
+void MapData::shortestPathSearch(const RoomHandle &origin,
+                                 ShortestPathRecipient &recipient,
                                  const RoomFilter &f,
                                  int max_hits,
                                  const double max_dist)
@@ -113,23 +113,24 @@ void MapData::shortestPathSearch(const Room *origin,
         max_hits = std::numeric_limits<int>::max();
     }
 
-    QMutexLocker locker(&mapLock);
+    const Map &map = origin.getMap();
+
     QVector<SPNode> sp_nodes;
-    QSet<RoomId> visited;
+    RoomIdSet visited;
     std::priority_queue<std::pair<double, int>> future_paths;
     sp_nodes.push_back(SPNode{origin, -1, 0, ExitDirEnum::UNKNOWN});
-    future_paths.emplace(0, 0);
+    future_paths.emplace(0.0, 0);
     while (!future_paths.empty()) {
-        int spindex = utils::pop_top(future_paths).second;
-        const Room *thisr = sp_nodes[spindex].r;
-        auto thisdist = sp_nodes[spindex].dist;
-        auto room_id = thisr->getId();
+        const int spindex = utils::pop_top(future_paths).second;
+        const auto &thisr = deref(sp_nodes[spindex].r);
+        const auto thisdist = sp_nodes[spindex].dist;
+        auto room_id = thisr.getId();
         if (visited.contains(room_id)) {
             continue;
         }
         visited.insert(room_id);
-        if (f.filter(thisr)) {
-            recipient->receiveShortestPath(this, sp_nodes, spindex);
+        if (f.filter(thisr.getRaw())) {
+            recipient.receiveShortestPath(sp_nodes, spindex);
             if (--max_hits == 0) {
                 return;
             }
@@ -137,29 +138,40 @@ void MapData::shortestPathSearch(const Room *origin,
         if ((max_dist != 0.0) && thisdist > max_dist) {
             return;
         }
-        ExitsList exits = thisr->getExitsList();
-        for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
-            const Exit &e = exits[dir];
+        for (const ExitDirEnum dir : ALL_EXITS7) {
+            const auto &e = thisr.getExit(dir);
             if (!e.outIsUnique()) {
                 // 0: Not mapped
                 // 2+: Random, so no clear directions; skip it.
                 continue;
             }
-            if (!e.isExit()) {
+            if (!e.exitIsExit()) {
                 continue;
             }
-            const SharedConstRoom &nextr = roomIndex[e.outFirst()];
+
+            const RoomId nextrId = e.getOutgoingSet().first();
+            const auto &nextr = map.getRoomHandle(nextrId);
+
             if (!nextr) {
-                qWarning() << "Source room" << thisr->getId().asUint32() << "("
-                           << thisr->getName().toQString() << ") has target room"
-                           << e.outFirst().asUint32() << "which does not exist!";
+                /* DEAD CODE */
+                qWarning() << "Source room" << thisr.getIdExternal().asUint32() << "("
+                           << thisr.getName().toQString()
+                           << ") dir=" << mmqt::toQStringLatin1(to_string_view(dir))
+                           << "has target room with internal identifier" << nextrId.asUint32()
+                           << "which does not exist!";
+                qWarning() << mmqt::toQStringUtf8(thisr.toStdStringUtf8());
+                // This would cause a segfault in the old map scheme, but maps are now rigorously
+                // validated, so it should be impossible to have an exit to a room that does
+                // not exist.
+                assert(false);
                 continue;
             }
-            if (visited.contains(nextr->getId())) {
+            if (visited.contains(nextr.getId())) {
                 continue;
             }
-            const double length = getLength(e, thisr, nextr.get());
-            sp_nodes.push_back(SPNode{nextr.get(), spindex, thisdist + length, dir});
+
+            const double length = getLength(e, thisr, nextr);
+            sp_nodes.push_back(SPNode{nextr, spindex, thisdist + length, dir});
             future_paths.emplace(-(thisdist + length), sp_nodes.size() - 1);
         }
     }

@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/hash.h"
 #include "../global/utils.h"
 
 #include <cassert>
@@ -121,6 +122,40 @@ public:
 
     NODISCARD int distance(const Coordinate &other) const;
     void clear();
+
+public:
+    NODISCARD static Coordinate toCoordinate(const glm::ivec3 &c)
+    {
+        return Coordinate(c.x, c.y, c.z);
+    }
+
+    NODISCARD static Coordinate min(const Coordinate &a, const Coordinate &b)
+    {
+        return toCoordinate(glm::min(a.to_ivec3(), b.to_ivec3()));
+    }
+
+    NODISCARD static Coordinate max(const Coordinate &a, const Coordinate &b)
+    {
+        return toCoordinate(glm::max(a.to_ivec3(), b.to_ivec3()));
+    }
+
+public:
+    bool operator<(const Coordinate &rhs) const;
+    bool operator>(const Coordinate &rhs) const;
+    bool operator<=(const Coordinate &rhs) const;
+    bool operator>=(const Coordinate &rhs) const;
+};
+
+template<>
+struct std::hash<Coordinate>
+{
+    std::size_t operator()(const Coordinate &id) const noexcept
+    {
+        const auto hx = numeric_hash(id.x);
+        const auto hy = numeric_hash(id.y);
+        const auto hz = numeric_hash(id.z);
+        return hx ^ utils::rotate_bits64<21>(hy) ^ utils::rotate_bits64<42>(hz);
+    }
 };
 
 struct NODISCARD Bounds final
@@ -129,10 +164,10 @@ struct NODISCARD Bounds final
     Coordinate max;
 
     Bounds() = default;
-    Bounds(const Coordinate &a, const Coordinate &b)
-        : min{a}
-        , max{b}
-    {}
+
+    // NOTE: These are supposed to be min and max,
+    // but we'll accept a strange mixture.
+    Bounds(const Coordinate &a, const Coordinate &b);
 
 private:
     NODISCARD static inline bool isBounded(const int x, const int lo, const int hi)
@@ -146,6 +181,20 @@ public:
         return isBounded(coord.x, min.x, max.x)     //
                && isBounded(coord.y, min.y, max.y)  //
                && isBounded(coord.z, min.z, max.z); //
+    }
+
+    void insert(const Coordinate &c);
+    NODISCARD bool operator==(const Bounds &rhs) const { return min == rhs.min && max == rhs.max; }
+    NODISCARD bool operator!=(const Bounds &rhs) const { return !(rhs == *this); }
+};
+
+template<>
+struct std::hash<Bounds>
+{
+    size_t operator()(const Bounds &b) const
+    {
+        const std::hash<Coordinate> &hc = std::hash<Coordinate>();
+        return hc(b.min) ^ utils::rotate_bits64<32>(hc(b.max));
     }
 };
 

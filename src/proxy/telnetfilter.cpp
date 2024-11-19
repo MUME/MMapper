@@ -21,7 +21,7 @@ static_assert(ASCII_DEL == 8);
 static_assert(ASCII_LF == 10);
 static_assert(ASCII_CR == 13);
 
-static void dispatchTelnetStream(const QByteArray &stream,
+static void dispatchTelnetStream(const RawBytes &stream,
                                  TelnetData &buffer,
                                  TelnetIncomingDataQueue &queue,
                                  const bool goAhead)
@@ -92,7 +92,7 @@ static void dispatchTelnetStream(const QByteArray &stream,
 }
 } // namespace
 
-void MudTelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, const bool goAhead)
+void MudTelnetFilter::slot_onAnalyzeMudStream(const RawBytes &ba, const bool goAhead)
 {
     TelnetIncomingDataQueue queue;
     dispatchTelnetStream(ba, m_mudIncomingBuffer, queue, goAhead);
@@ -101,7 +101,7 @@ void MudTelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, const bool g
     }
 }
 
-void UserTelnetFilter::slot_onAnalyzeUserStream(const QByteArray &ba, const bool goAhead)
+void UserTelnetFilter::slot_onAnalyzeUserStream(const RawBytes &ba, const bool goAhead)
 {
     TelnetIncomingDataQueue queue;
     dispatchTelnetStream(ba, m_userIncomingData, queue, goAhead);

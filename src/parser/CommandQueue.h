@@ -3,32 +3,56 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/utils.h"
 #include "../map/CommandId.h"
 
-#include <QQueue>
+#include <deque>
 
-class NODISCARD CommandQueue : private QQueue<CommandEnum>
+#include <QByteArray>
+
+class NODISCARD CommandQueue final : private std::deque<CommandEnum>
 {
 private:
-    using base = QQueue<CommandEnum>;
+    using base = std::deque<CommandEnum>;
 
 public:
-    using QQueue<CommandEnum>::QQueue;
-
-public:
-    NODISCARD QByteArray toByteArray() const;
-    CommandQueue &operator=(const QByteArray &dirs);
+    using base::base;
 
 public:
     using base::begin;
+    using base::empty;
     using base::end;
-    using base::head;
-    using base::isEmpty;
+    using base::front;
+    using base::size;
 
 public:
-    using base::append;
     using base::clear;
-    using base::dequeue;
-    using base::enqueue;
-    using base::prepend;
+    using base::pop_front;
+    using base::push_back;
+    using base::push_front;
+
+public:
+    NODISCARD CommandEnum take_front() { return utils::pop_front(*this); }
+
+public:
+    // DEPRECATED_MSG("use empty()")
+    NODISCARD bool isEmpty() const { return empty(); }
+
+    // DEPRECATED_MSG("use front()")
+    NODISCARD CommandEnum head() const { return front(); }
+
+public:
+    // DEPRECATED_MSG("use push_back()")
+    void enqueue(const CommandEnum cmd) { push_back(cmd); }
+
+    // DEPRECATED_MSG("use take_front()")
+    NODISCARD CommandEnum dequeue() { return take_front(); }
+
+    // DEPRECATED_MSG("use push_back()")
+    void append(const CommandEnum cmd) { push_back(cmd); }
 };
+
+namespace mmqt {
+NODISCARD extern QByteArray toQByteArray(const CommandQueue &queue);
+NODISCARD extern CommandQueue toCommandQueue(const QByteArray &dirs);
+} // namespace mmqt

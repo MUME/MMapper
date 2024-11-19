@@ -7,6 +7,7 @@
 #include "connectionlistener.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Charset.h"
 #include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
 #include "proxy.h"
@@ -71,7 +72,7 @@ void ConnectionListener::listen()
     m_servers.emplace_back(createServer());
     auto &server = m_servers.back();
     if (!server->listen(hostAdress, port)) {
-        throw std::runtime_error(mmqt::toStdStringLatin1(server->errorString()));
+        throw std::runtime_error(mmqt::toStdStringUtf8(server->errorString()));
     }
 
     // Construct a second server for localhost IPv6 if we're only listening on localhost IPv4
@@ -79,7 +80,7 @@ void ConnectionListener::listen()
         m_servers.emplace_back(createServer());
         auto &serverIPv6 = m_servers.back();
         if (!serverIPv6->listen(QHostAddress::LocalHostIPv6, port)) {
-            throw std::runtime_error(mmqt::toStdStringLatin1(serverIPv6->errorString()));
+            throw std::runtime_error(mmqt::toStdStringUtf8(serverIPv6->errorString()));
         }
     }
 }
@@ -108,16 +109,21 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
         log("New connection: rejected.");
         QTcpSocket tcpSocket;
         if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
-            QByteArray ba("\033[0;1;37;41m"
-                          "You can't connect to MMapper more than once!"
-                          "\033[0m"
-                          "\n"
-                          "\n"
-                          "\033[1;37;41m"
-                          "Please close the existing connection."
-                          "\033[0m"
-                          "\n");
-            tcpSocket.write(ba);
+            const QByteArray msg = []() {
+                constexpr const auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white,
+                                                             AnsiColor16Enum::red);
+                std::stringstream oss;
+                AnsiOstream aos{oss};
+                aos.writeWithColor(whiteOnRed, "You can't connect to MMapper more than once!\n");
+                aos.write("\n");
+                aos.writeWithColor(whiteOnRed, "Please close the existing connection.\n");
+                // As long as the message is just ASCII, it doesn't matter that we send utf8,
+                // but hypothetically this function should do charset conversion and escape IACs
+                // if the message is ever changed to include non-ASCII characters.
+                return mmqt::toQByteArrayUtf8(oss.str());
+            }();
+
+            tcpSocket.write(msg);
             tcpSocket.flush();
             tcpSocket.disconnectFromHost();
             if (tcpSocket.state() != QAbstractSocket::UnconnectedState) {

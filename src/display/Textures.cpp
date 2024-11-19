@@ -97,7 +97,6 @@ static void setTrilinear(const SharedMMTexture &mmtex, const bool trilinear)
     if (mmtex == nullptr) {
         return;
     }
-
     if (QOpenGLTexture *const qtex = mmtex->get()) {
         qtex->setMinMagFilters(
             /* "minifying" filter */
@@ -251,9 +250,8 @@ void MapCanvas::initTextures()
     textures.room_sel_distant = loadTexture(getPixmapFilenameRaw("room-sel-distant.png"));
     textures.room_sel_move_bad = loadTexture(getPixmapFilenameRaw("room-sel-move-bad.png"));
     textures.room_sel_move_good = loadTexture(getPixmapFilenameRaw("room-sel-move-good.png"));
-    // 128
-    textures.update = loadTexture(getPixmapFilenameRaw("update0.png"));
     // 256
+    textures.room_needs_update = loadTexture(getPixmapFilenameRaw("room-needs-update.png"));
     textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
     {
@@ -324,7 +322,7 @@ MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct)
 void MapCanvas::updateTextures()
 {
     const bool wantTrilinear = getConfig().canvas.trilinearFiltering;
-    std::optional<bool> &activeStatus = graphicsOptionsStatus.trilinear;
+    std::optional<bool> &activeStatus = m_graphicsOptionsStatus.trilinear;
     if (activeStatus == wantTrilinear) {
         return;
     }

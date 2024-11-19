@@ -74,10 +74,7 @@ private:
     static inline const QMetaEnum g_qme = QMetaEnum::fromType<T>();
 
 public:
-    NODISCARD static int keyToValue(const QString &key)
-    {
-        return g_qme.keyToValue(mmqt::toQByteArrayLatin1(key));
-    }
+    NODISCARD static int keyToValue(const QString &key) { return g_qme.keyToValue(key.toUtf8()); }
     NODISCARD static QString valueToKey(const int value) { return g_qme.valueToKey(value); }
     NODISCARD static int keyCount() { return g_qme.keyCount(); }
 };
@@ -91,8 +88,7 @@ NODISCARD static int parseTwoEnums(const QString &s)
 
     assert(First::keyCount() == Second::keyCount());
 
-    // assume the enum name is actually ASCII, so Latin1 will give the correct result.
-    const QByteArray arr = s.toLatin1();
+    const QByteArray arr = s.toUtf8(); // assume the enum name is actually ASCII
     const char *const key = arr.data();
 
     if (const int value = First::keyToValue(key); value != -1) {

@@ -25,10 +25,6 @@ class NODISCARD_QOBJECT GraphicsPage final : public QWidget
 {
     Q_OBJECT
 
-private:
-    Ui::GraphicsPage *const ui;
-    std::unique_ptr<AdvancedGraphicsGroupBox> m_advanced;
-
 public:
     explicit GraphicsPage(QWidget *parent);
     ~GraphicsPage() final;
@@ -36,6 +32,8 @@ public:
 private:
     void changeColorClicked(XNamedColor &color, QPushButton *pushButton);
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
+    Ui::GraphicsPage *const ui;
+    std::unique_ptr<AdvancedGraphicsGroupBox> m_advanced;
 
 signals:
     void sig_graphicsSettingsChanged();
@@ -44,7 +42,7 @@ public slots:
     void slot_loadConfig();
     void slot_antialiasingSamplesTextChanged(const QString &);
     void slot_trilinearFilteringStateChanged(int);
-    void slot_updatedStateChanged(int);
+    void slot_drawNeedsUpdateStateChanged(int);
     void slot_drawNotMappedExitsStateChanged(int);
     void slot_drawDoorNamesStateChanged(int);
     void slot_drawUpperLayersTexturedStateChanged(int);

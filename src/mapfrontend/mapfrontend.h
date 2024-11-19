@@ -5,100 +5,125 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/RoomAdmin.h"
+#include "../map/Changes.h"
+#include "../map/Map.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
 #include "../map/parseevent.h"
 #include "../map/roomid.h"
-#include "../map/utils.h"
-#include "ParseTree.h"
 
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <stack>
+#include <utility>
 
-#include <QMutex>
 #include <QString>
 #include <QtCore>
 
-class MapAction;
 class ParseEvent;
 class QObject;
-class Room;
-class RoomCollection;
 class RoomRecipient;
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
 class NODISCARD_QOBJECT MapFrontend : public QObject,
-                                      public RoomAdmin,
+                                      public RoomModificationTracker,
                                       public InfoMarkModificationTracker
 {
     Q_OBJECT
 
 private:
-    friend class FrontendAccessor;
-
-protected:
-    ParseTree parseTree;
-    Map map;
-    RoomIndex roomIndex;
-    std::stack<RoomId> unusedIds;
-    std::map<RoomId, std::set<std::shared_ptr<MapAction>>> actionSchedule;
-    RoomHomes roomHomes;
-    RoomLocks locks;
-
-    RoomId greatestUsedId = INVALID_ROOMID;
-    QRecursiveMutex mapLock;
-
-    struct Bounds final
+    struct NODISCARD MapState final
     {
-        Coordinate min;
-        Coordinate max;
+        InfomarkDb marks;
+        Map map;
+
+        NODISCARD bool operator==(const MapState &rhs) const
+        {
+            return marks == rhs.marks && map == rhs.map;
+        }
+        NODISCARD bool operator!=(const MapState &rhs) const { return !(rhs == *this); }
     };
-    std::optional<Bounds> m_bounds;
 
-    void executeActions(RoomId roomId);
-    void executeAction(MapAction *action);
-    bool isExecutable(MapAction *action);
-    void removeAction(const std::shared_ptr<MapAction> &action);
-
-    RoomId assignId(const SharedRoom &room, const SharedRoomCollection &roomHome);
-    void checkSize(const Coordinate &);
+    MapState m_saved;
+    MapState m_current;
 
 public:
     explicit MapFrontend(QObject *parent);
     ~MapFrontend() override;
 
+public:
+    NODISCARD InfomarkDb getCurrentMarks() const { return m_current.marks; }
+    NODISCARD InfomarkDb getSavedMarks() const { return m_saved.marks; }
+    NODISCARD Map getCurrentMap() const { return m_current.map; }
+    NODISCARD Map getSavedMap() const { return m_saved.map; }
+
+public:
+    NODISCARD bool isModified() const { return m_current != m_saved; }
+
+private:
+    void setCurrentMap(const MapApplyResult &);
+
+public:
+    void setCurrentMap(Map map);
+    void setCurrentMarks(InfomarkDb marks, InfoMarkUpdateFlags modified);
+    void setSavedMarks(InfomarkDb marks);
+    void setSavedMap(Map map);
+    void currentHasBeenSaved() { m_saved = m_current; }
+
+public:
+    void setCurrentMarks(InfomarkDb marks)
+    {
+        setCurrentMarks(std::move(marks), ~InfoMarkUpdateFlags{});
+    }
+    NODISCARD InfomarkDb getInfomarkDb() const { return getCurrentMarks(); }
+
+public:
+    ALLOW_DISCARD bool applyChanges(const ChangeList &changes);
+    ALLOW_DISCARD bool applyChanges(ProgressCounter &pc, const ChangeList &changes);
+    ALLOW_DISCARD bool applySingleChange(const Change &);
+    ALLOW_DISCARD bool applySingleChange(ProgressCounter &pc, const Change &);
+
 private:
     virtual void virt_clear() = 0;
 
 public:
+    void revert();
     void clear();
     void block();
     void unblock();
     void checkSize();
 
-    // removes the lock on a room
-    // after the last lock is removed, the room is deleted
-    void releaseRoom(RoomRecipient &, RoomId) final;
+    NODISCARD bool createEmptyRoom(const Coordinate &);
 
-    // makes a lock on a room permanent and anonymous.
-    // Like that the room can't be deleted via releaseRoom anymore.
-    void keepRoom(RoomRecipient &, RoomId) final;
+    NODISCARD RoomPtr findRoomHandle(RoomId) const;
+    NODISCARD RoomPtr findRoomHandle(const Coordinate &) const;
+    NODISCARD RoomPtr findRoomHandle(ExternalRoomId id) const;
+    NODISCARD RoomPtr findRoomHandle(ServerRoomId id) const;
 
-    void lockRoom(RoomRecipient *, RoomId);
-    RoomId createEmptyRoom(const Coordinate &);
-    void insertPredefinedRoom(const SharedRoom &);
-    RoomId getMaxId() { return greatestUsedId; }
-    Coordinate getMin() const { return m_bounds ? m_bounds->min : Coordinate{}; }
-    Coordinate getMax() const { return m_bounds ? m_bounds->max : Coordinate{}; }
+    NODISCARD RoomHandle getRoomHandle(RoomId id) const;
+    NODISCARD const RawRoom &getRawRoom(RoomId id) const;
+
+    // Will technically be 0 or 1
+    NODISCARD RoomIdSet findAllRooms(const Coordinate &) const;
+    NODISCARD RoomIdSet findAllRooms(const SigParseEvent &) const;
+    // bounding box
+    NODISCARD RoomIdSet findAllRooms(const Coordinate &, const Coordinate &) const;
 
 public:
-    void scheduleAction(const std::shared_ptr<MapAction> &action) final;
+    void scheduleAction(const Change &change);
+
+    // looking for rooms leads to a bunch of foundRoom() signals
+    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    void lookingForRooms(RoomRecipient &, RoomId); // by id
+    void lookingForRooms(RoomRecipient &, const Coordinate &);
+
+public:
+    void keepRoom(RoomRecipient &, RoomId);
+    void releaseRoom(RoomRecipient &, RoomId);
 
 signals:
     // this signal is also sent out if a room is deleted. So any clients still
@@ -107,17 +132,7 @@ signals:
     void sig_clearingMap();
 
 public slots:
-    // looking for rooms leads to a bunch of foundRoom() signals
-    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
-    void lookingForRooms(RoomRecipient &, RoomId); // by id
-    void lookingForRooms(RoomRecipient &, const Coordinate &);
-    void lookingForRooms(RoomRecipient &,
-                         const Coordinate &,
-                         const Coordinate &); // by bounding box
-
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
     void slot_createRoom(const SigParseEvent &, const Coordinate &);
-
-    void slot_scheduleAction(std::shared_ptr<MapAction> action) { scheduleAction(action); }
 };

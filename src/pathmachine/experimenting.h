@@ -18,15 +18,13 @@
 #include <QtGlobal>
 
 class PathMachine;
-class Room;
-class RoomAdmin;
 struct PathParameters;
 
 // Base class for Crossover and OneByOne
 class NODISCARD Experimenting : public RoomRecipient
 {
 protected:
-    void augmentPath(const std::shared_ptr<Path> &path, RoomAdmin *map, const Room *room);
+    void augmentPath(const std::shared_ptr<Path> &path, const RoomHandle &room);
     const Coordinate direction;
     const ExitDirEnum dirCode;
     const std::shared_ptr<PathList> paths;
@@ -36,16 +34,18 @@ protected:
     std::shared_ptr<Path> second;
     double numPaths = 0.0;
 
-protected:
+public:
     Experimenting() = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
+
+protected:
     explicit Experimenting(std::shared_ptr<PathList> paths,
                            ExitDirEnum dirCode,
                            PathParameters &params);
 
 public:
     ~Experimenting() override;
-    DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
 
 public:
-    NODISCARD std::shared_ptr<PathList> evaluate();
+    std::shared_ptr<PathList> evaluate();
 };

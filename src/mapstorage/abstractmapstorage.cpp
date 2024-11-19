@@ -6,41 +6,62 @@
 
 #include "abstractmapstorage.h"
 
-#include "../global/NullPointerException.h"
-#include "../global/progresscounter.h"
+#include "../mapdata/mapdata.h"
 
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
 #include <QObject>
-#include <QString>
 
-AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
-                                       QString filename,
-                                       QFile *const file,
-                                       QObject *const parent)
-    : QObject(parent)
-    , m_file(file)
-    , m_mapData(mapdata)
-    , m_fileName(std::move(filename))
-    , m_progressCounter(new ProgressCounter(this))
-{}
+MapStorageError::~MapStorageError() = default;
 
-AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObject *const parent)
+AbstractMapStorage::AbstractMapStorage(const Data &data, QObject *const parent)
     : QObject(parent)
-    , m_mapData(mapdata)
-    , m_fileName(std::move(filename))
-    , m_progressCounter(new ProgressCounter(this))
+    , m_data(data)
 {}
 
 AbstractMapStorage::~AbstractMapStorage() = default;
 
-ProgressCounter &AbstractMapStorage::getProgressCounter() const
+std::optional<RawMapLoadData> AbstractMapStorage::loadData()
 {
-    // This will always exist, so it should be safe to just dereference it,
-    // but let's not tempt UB.
-    if (auto *const pc = m_progressCounter.get()) {
-        return *pc;
+    if (!canLoad()) {
+        throw std::runtime_error("format does not support loading");
     }
-    throw NullPointerException();
+
+    return virt_loadData();
+}
+
+bool AbstractMapStorage::saveData(const MapData &mapData, const bool baseMapOnly)
+{
+    if (!canSave()) {
+        throw std::runtime_error("format does not support saving");
+    }
+
+    RawMapData rawMapData{};
+    rawMapData.mapPair.modified = mapData.getCurrentMap();
+    rawMapData.position = mapData.tryGetPosition().value_or(Coordinate{});
+    rawMapData.filename = getFilename();
+    rawMapData.readonly = false; // otherwise we couldn't save
+
+    if (baseMapOnly) {
+        auto &map = rawMapData.mapPair.modified;
+        map = map.filterBaseMap(getProgressCounter());
+    }
+
+    // REVIST: Convert infomarks to immutable data structure to make this copy O(1).
+    if (const InfomarkDb &markers = mapData.getMarkersList(); !markers.empty()) {
+        auto &data = rawMapData.markerData.emplace();
+        auto &copy = data.markers;
+        auto &pc = getProgressCounter();
+        pc.setNewTask(ProgressMsg{"copying markers"}, markers.getIdSet().size());
+        for (const InfomarkId id : markers.getIdSet()) {
+            if (id != INVALID_INFOMARK_ID) {
+                copy.emplace_back(markers.getRawCopy(id));
+            }
+            pc.step();
+        }
+    }
+
+    return virt_saveData(rawMapData);
 }

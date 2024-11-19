@@ -18,16 +18,9 @@
 #include <QtWidgets>
 
 namespace mmqt {
-// REVISIT: should this be latin1 or utf8, and should it use transliterations?
-static QByteArray getSecretBytes(const QString &secretText)
+NODISCARD static GroupSecret getSecretBytes(const QString &secretText)
 {
-    if (false) {
-        return secretText.toUtf8();
-    } else if (false) {
-        return mmqt::toQByteArrayLatin1(secretText); // includes some transliterations
-    }
-
-    return secretText.toLatin1(); // no transliterations
+    return GroupSecret{secretText.toUtf8().toLower()};
 }
 } // namespace mmqt
 
@@ -42,7 +35,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
 
     connect(this, &GroupManagerPage::sig_refresh, authority, &GroupAuthority::slot_refresh);
     connect(authority, &GroupAuthority::sig_secretRefreshed, this, [this](const GroupSecret &secret) {
-        ui->secretLineEdit->setText(secret);
+        ui->secretLineEdit->setText(secret.getQByteArray());
         ui->refreshButton->setEnabled(true);
     });
 
@@ -78,7 +71,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
         slot_allowedSecretsChanged();
     });
 
-    static auto get_secret = [](GroupManagerPage *const self) -> QByteArray {
+    static auto get_secret = [](GroupManagerPage *const self) -> GroupSecret {
         GroupManagerPage &page = deref(self);
         Ui::GroupManagerPage &page_ui = deref(page.ui);
         QComboBox &combo = deref(page_ui.allowedComboBox);
@@ -96,7 +89,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
 
     // Host Section
     connect(ui->localHost, &QLabel::linkActivated, this, [](const QString &link) {
-        QDesktopServices::openUrl(QUrl::fromEncoded(link.toLatin1()));
+        QDesktopServices::openUrl(QUrl::fromEncoded(link.toUtf8())); //  percent-encoded ASCII
     });
     connect(ui->localPort,
             QOverload<int>::of(&QSpinBox::valueChanged),
@@ -162,7 +155,7 @@ void GroupManagerPage::slot_loadConfig()
     QPixmap charColorPixmap(16, 16);
     charColorPixmap.fill(settings.color);
     ui->changeColor->setIcon(QIcon(charColorPixmap));
-    ui->secretLineEdit->setText(authority->getSecret());
+    ui->secretLineEdit->setText(authority->getSecret().getQByteArray());
     ui->secretLineEdit->setEnabled(!NO_OPEN_SSL);
     ui->refreshButton->setEnabled(!NO_OPEN_SSL);
     ui->authorizationCheckBox->setChecked(settings.requireAuth);
@@ -190,8 +183,7 @@ void GroupManagerPage::slot_loadConfig()
 void GroupManagerPage::loadRemoteHostConfig()
 {
     const Configuration::GroupManagerSettings &settings = getConfig().groupManager;
-    const auto remoteHostText
-        = QString("%1:%2").arg(settings.host.constData()).arg(settings.remotePort);
+    const auto remoteHostText = QString("%1:%2").arg(settings.host).arg(settings.remotePort);
 
     const auto authority = m_groupManager->getAuthority();
     const auto &itemModel = authority->getItemModel();
@@ -203,7 +195,8 @@ void GroupManagerPage::loadRemoteHostConfig()
     QSet<QString> contacts;
     for (int i = 0; i < itemModel->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
-        const auto key = itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray();
+        const auto key = GroupSecret{
+            itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray().toLower()};
         const auto ip = GroupAuthority::getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
         const auto port = GroupAuthority::getMetadata(key, GroupMetadataEnum::PORT).toInt();
         const auto name = GroupAuthority::getMetadata(key, GroupMetadataEnum::NAME);
@@ -255,14 +248,11 @@ void GroupManagerPage::loadRemoteHostConfig()
 void GroupManagerPage::slot_charNameTextChanged()
 {
     // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
-    const QByteArray newName = ui->charName->text().toLatin1().simplified();
-
-    // Correct any UTF-8 characters that we do not understand
-    QString newNameStr = QString::fromLatin1(newName);
+    QString newNameStr = ui->charName->text().simplified();
 
     // Force first character to be uppercase
-    if (newNameStr.length() > 0) {
-        newNameStr.replace(0, 1, newNameStr[0].toUpper());
+    if (!newNameStr.isEmpty()) {
+        newNameStr.replace(0, 1, newNameStr.front().toUpper());
     }
 
     // Apply corrections back to the input field
@@ -271,7 +261,7 @@ void GroupManagerPage::slot_charNameTextChanged()
     }
 
     // REVISIT: Rename this and other functions to charLabel
-    setConfig().groupManager.charName = mmqt::toQByteArrayLatin1(newNameStr);
+    setConfig().groupManager.charName = newNameStr;
     emit sig_updatedSelf();
 }
 
@@ -293,18 +283,18 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 {
     static constexpr const int SHA1_LENGTH = 40;
     const auto authority = m_groupManager->getAuthority();
-    const auto secretText = ui->allowedComboBox->currentText().simplified();
-    bool correctLength = secretText.length() == SHA1_LENGTH;
-    bool isSelf = secretText.compare(authority->getSecret(), Qt::CaseInsensitive) == 0;
-    bool alreadyPresent = authority->validSecret(secretText.toLatin1());
+    const auto secretText = ui->allowedComboBox->currentText().simplified().toLower();
+    const bool correctLength = secretText.length() == SHA1_LENGTH;
+    const bool isSelf = secretText == authority->getSecret().getQByteArray();
+    const bool alreadyPresent = authority->validSecret(GroupSecret{secretText.toUtf8()});
 
-    bool enableAllowSecret = correctLength && !alreadyPresent && !isSelf;
+    const bool enableAllowSecret = correctLength && !alreadyPresent && !isSelf;
     if (ui->allowSecret->hasFocus() && !enableAllowSecret) {
         ui->allowedComboBox->setFocus();
     }
     ui->allowSecret->setEnabled(enableAllowSecret);
 
-    bool enableRevokeSecret = correctLength && alreadyPresent && !isSelf;
+    const bool enableRevokeSecret = correctLength && alreadyPresent && !isSelf;
     if (ui->revokeSecret->hasFocus() && !enableRevokeSecret) {
         ui->allowedComboBox->setFocus();
     }
@@ -337,8 +327,7 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 
 void GroupManagerPage::slot_remoteHostTextChanged()
 {
-    const QByteArray currentText = mmqt::toQByteArrayLatin1(
-        ui->remoteHost->currentText().simplified());
+    const QString currentText = ui->remoteHost->currentText().simplified();
 
     const auto parts = currentText.split(char_consts::C_COLON);
     if (parts.size() != 2) {
@@ -346,8 +335,8 @@ void GroupManagerPage::slot_remoteHostTextChanged()
         return;
     }
 
-    const QByteArray &currentHost = parts[0];
-    if (QByteArray &savedHost = setConfig().groupManager.host; currentHost != savedHost) {
+    const QString &currentHost = parts[0];
+    if (QString &savedHost = setConfig().groupManager.host; currentHost != savedHost) {
         savedHost = currentHost;
     }
 

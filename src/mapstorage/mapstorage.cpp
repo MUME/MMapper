@@ -6,34 +6,20 @@
 
 #include "mapstorage.h"
 
-#include "../configuration/configuration.h"
-#include "../global/Flags.h"
 #include "../global/StorageUtils.h"
+#include "../global/Timer.h"
 #include "../global/io.h"
 #include "../global/progresscounter.h"
-#include "../global/utils.h"
-#include "../map/DoorFlags.h"
-#include "../map/ExitDirection.h"
-#include "../map/ExitFlags.h"
-#include "../map/exit.h"
-#include "../map/infomark.h"
-#include "../map/mmapper2room.h"
-#include "../map/room.h"
-#include "../map/roomid.h"
-#include "../mapdata/mapdata.h"
-#include "../parser/patterns.h"
+#include "../map/enums.h"
 #include "abstractmapstorage.h"
-#include "basemapsavefilter.h"
-#include "roomsaver.h"
 
 #include <climits>
 #include <cstdint>
-#include <memory>
 #include <mutex>
-#include <stdexcept>
+#include <optional>
 #include <tuple>
-#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <QMessageLogContext>
 #include <QObject>
@@ -52,20 +38,31 @@ constexpr const int v2_4_3_qCompress = 34;        // qCompress, SunDeath flag (J
 constexpr const int v2_5_1_discardNoMatch = 35;   // discard previous NoMatch flags (Aug 2018)
 
 // starting in 2019, versions are date based: v${YY}_${MM}_${rev}.
-constexpr const int v19_10_0_newCoords = 36; // switches to new coordinate system
+constexpr const int v19_10_0_newCoords = 36;      // switches to new coordinate system
+constexpr const int v25_02_0_noInboundLinks = 38; // stops loading and saving inbound links
+constexpr const int v25_02_1_removeUpToDate = 39; // removes upToDate
+constexpr const int v25_02_2_serverId = 40;       // adds server_id
 
-constexpr const int CURRENT = v19_10_0_newCoords;
+constexpr const int CURRENT = v25_02_2_serverId;
 
 } // namespace schema
-} // namespace
 
-NODISCARD static Coordinate convertESUtoENU(Coordinate c)
+using enums::bitmaskToFlags;
+using enums::toEnum;
+
+NORETURN
+void critical(const QString &msg)
+{
+    throw MapStorageError(mmqt::toStdStringUtf8(msg));
+}
+
+NODISCARD Coordinate convertESUtoENU(Coordinate c)
 {
     c.y *= -1;
     return c;
 }
 
-NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
+NODISCARD Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
 {
     if (version < schema::v19_10_0_newCoords) {
         return convertESUtoENU(c);
@@ -73,7 +70,7 @@ NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordina
     return c;
 }
 
-static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
+void transformInfomarkOnLoad(const uint32_t version, InfoMarkFields &mark)
 {
     if (version >= schema::v19_10_0_newCoords) {
         return;
@@ -114,33 +111,11 @@ static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
     mark.setPosition2(convertESUtoENU(mark.getPosition2()));
 }
 
-static void writeCoordinate(QDataStream &stream, const Coordinate &c)
+void writeCoordinate(QDataStream &stream, const Coordinate &c)
 {
     stream << static_cast<int32_t>(c.x);
     stream << static_cast<int32_t>(c.y);
     stream << static_cast<int32_t>(c.z);
-}
-
-MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent)
-    : AbstractMapStorage(mapdata, filename, file, parent)
-{}
-
-MapStorage::MapStorage(MapData &mapdata, const QString &filename, QObject *parent)
-    : AbstractMapStorage(mapdata, filename, parent)
-{}
-
-void MapStorage::newData()
-{
-    m_mapData.unsetDataChanged();
-
-    m_mapData.setFileName(m_fileName, false);
-
-    Coordinate pos;
-    m_mapData.setPosition(pos);
-
-    // clear previous map
-    m_mapData.clear();
-    emit sig_onNewData();
 }
 
 class NODISCARD LoadRoomHelper final
@@ -229,82 +204,64 @@ public:
     }
 };
 
-/* FIXME: all of these static casts need to do stronger type checking */
-template<typename E>
-E serialize(const uint8_t value)
-{
-    /* Untrusted user data; this needs bounds checking! */
-    return static_cast<E>(value);
-}
-template<typename E>
-E serialize(const uint16_t value)
-{
-    /* Untrusted user data; this needs bounds checking! */
-    return static_cast<E>(value);
-}
-template<typename E>
-E serialize(const uint32_t value)
-{
-    /* Untrusted user data; this needs bounds checking! */
-    return static_cast<E>(value);
-}
+} // namespace
 
-NODISCARD static RoomTerrainEnum serialize(const uint32_t value)
-{
-    if (value >= NUM_ROOM_TERRAIN_TYPES) {
-        static std::once_flag flag;
-        std::call_once(flag, []() { qWarning() << "Detected out of bounds terrain type!"; });
-        return RoomTerrainEnum::UNDEFINED;
-    }
-    return static_cast<RoomTerrainEnum>(value);
-}
+MapStorage::MapStorage(const AbstractMapStorage::Data &data, QObject *parent)
+    : AbstractMapStorage{data, parent}
+{}
 
-SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
+ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
 {
     // TODO: change schema to just store size and latin1 bytes for strings.
     LoadRoomHelper helper{stream};
-    const SharedRoom room = Room::createPermanentRoom(m_mapData);
-    room->setName(RoomName{helper.read_string()});
-    room->setDescription(RoomDesc{helper.read_string()});
-    room->setContents(RoomContents{helper.read_string()});
-    room->setId(RoomId{helper.read_u32() + baseId});
-    room->setNote(RoomNote{helper.read_string()});
-    room->setTerrainType(serialize(helper.read_u8()));
-    room->setLightType(serialize<RoomLightEnum>(helper.read_u8()));
-    room->setAlignType(serialize<RoomAlignEnum>(helper.read_u8()));
-    room->setPortableType(serialize<RoomPortableEnum>(helper.read_u8()));
-    room->setRidableType(serialize<RoomRidableEnum>(
+    ExternalRawRoom room;
+    room.status = RoomStatusEnum::Permanent;
+    room.setName(mmqt::makeRoomName(helper.read_string()));
+    room.setDescription(mmqt::makeRoomDesc(helper.read_string()));
+    room.setContents(mmqt::makeRoomContents(helper.read_string()));
+    room.setId(ExternalRoomId{helper.read_u32()});
+    if (version >= schema::v25_02_2_serverId) {
+        room.setServerId(ServerRoomId{helper.read_u32()});
+    }
+    room.setNote(mmqt::makeRoomNote(helper.read_string()));
+    room.setTerrainType(toEnum<RoomTerrainEnum>(helper.read_u8()));
+    room.setLightType(toEnum<RoomLightEnum>(helper.read_u8()));
+    room.setAlignType(toEnum<RoomAlignEnum>(helper.read_u8()));
+    room.setPortableType(toEnum<RoomPortableEnum>(helper.read_u8()));
+    room.setRidableType(toEnum<RoomRidableEnum>(
         (version >= schema::v2_0_2_ridable) ? helper.read_u8() : uint8_t{0}));
-    room->setSundeathType(serialize<RoomSundeathEnum>(
+    room.setSundeathType(toEnum<RoomSundeathEnum>(
         (version >= schema::v2_4_0_largerFlags) ? helper.read_u8() : uint8_t{0}));
-    room->setMobFlags(serialize<RoomMobFlags>(
+    room.setMobFlags(bitmaskToFlags<RoomMobFlags>(
         (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
-    room->setLoadFlags(serialize<RoomLoadFlags>(
+    room.setLoadFlags(bitmaskToFlags<RoomLoadFlags>(
         (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
-    if (helper.read_u8() /*roomUpdated*/ != 0u) {
-        room->setUpToDate();
+    if (version < schema::v25_02_1_removeUpToDate) {
+        /*roomUpdated*/ std::ignore = helper.read_u8();
     }
 
-    room->setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
-    loadExits(*room, stream, version);
+    room.setPosition(transformRoomOnLoad(version, helper.readCoord3d()));
+    loadExits(room, stream, version);
     return room;
 }
 
-void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t version)
+void MapStorage::loadExits(ExternalRawRoom &room, QDataStream &stream, const uint32_t version)
 {
     LoadRoomHelper helper{stream};
 
-    ExitsList eList;
     for (const ExitDirEnum i : ALL_EXITS7) {
-        Exit &e = eList[i];
+        ExternalRawExit &e = room.exits[i];
 
         // Read the exit flags
         if (version >= schema::v2_4_0_largerFlags) {
-            e.setExitFlags(serialize<ExitFlags>(helper.read_u16()));
+            e.setExitFlags(bitmaskToFlags<ExitFlags>(helper.read_u16()));
         } else {
-            auto flags = serialize<ExitFlags>(helper.read_u8());
-            if (flags.isDoor()) {
-                flags |= ExitFlagEnum::EXIT;
+            auto flags = bitmaskToFlags<ExitFlags>(static_cast<uint16_t>(helper.read_u8()));
+            // REVISIT: This is now controlled by the map itself.
+            if (true) {
+                if (flags.isDoor()) {
+                    flags |= ExitFlagEnum::EXIT;
+                }
             }
             e.setExitFlags(flags);
         }
@@ -313,84 +270,65 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
         // corruption and excessive NO_MATCH exits;
         // this was finally fixed with schema::v2_5_1_discardNoMatch.
         if (version >= schema::v2_0_4_zlib && version < schema::v2_5_1_discardNoMatch) {
-            e.setExitFlags(e.getExitFlags() & ~ExitFlags{ExitFlagEnum::NO_MATCH});
+            e.fields.exitFlags &= ~ExitFlags{ExitFlagEnum::NO_MATCH};
         }
 
-        e.setDoorFlags(serialize<DoorFlags>((version >= schema::v2_3_7_doorFlagsNomatch)
-                                                ? helper.read_u16()
-                                                : static_cast<uint16_t>(helper.read_u8())));
+        e.setDoorFlags(bitmaskToFlags<DoorFlags>((version >= schema::v2_3_7_doorFlagsNomatch)
+                                                     ? helper.read_u16()
+                                                     : static_cast<uint16_t>(helper.read_u8())));
 
-        e.setDoorName(static_cast<DoorName>(helper.read_string()));
+        e.setDoorName(mmqt::makeDoorName(helper.read_string()));
+
+        if (version < schema::v25_02_0_noInboundLinks) {
+            // Inbound links will be converted to the new data format.
+            for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
+                 connection = helper.read_u32()) {
+                e.incoming.insert(ExternalRoomId{connection});
+            }
+        }
 
         for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
              connection = helper.read_u32()) {
-            e.addIn(RoomId{connection + baseId});
+            e.outgoing.insert(ExternalRoomId{connection});
         }
-        for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
-             connection = helper.read_u32()) {
-            e.addOut(RoomId{connection + baseId});
-        }
-    }
-
-    room.setExitsList(eList);
-}
-
-bool MapStorage::loadData()
-{
-    // clear previous map
-    m_mapData.clear();
-    try {
-        return mergeData();
-    } catch (const std::exception &ex) {
-        const auto msg = QString::asprintf("Exception: %s", ex.what());
-        log(msg);
-        qWarning().noquote() << msg;
-        m_mapData.clear();
-        return false;
     }
 }
 
-bool MapStorage::mergeData()
+void MapStorage::log(const QString &msg)
 {
-    const auto critical = [this](const QString &msg) -> void {
-        QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
-                              tr("MapStorage Error"),
-                              msg);
-    };
+    emit sig_log("MapStorage", msg);
+    qInfo() << msg;
+}
+
+std::optional<RawMapLoadData> MapStorage::virt_loadData()
+{
+    DECL_TIMER(t, "MapStorage::loadData2");
+
+    const auto &fileName = getFilename();
+
+    RawMapLoadData result;
+    result.filename = fileName;
+    result.readonly = !QFileInfo(fileName).isWritable();
+    auto &markerData = result.markerData.emplace();
+    auto &markers = markerData.markers;
 
     {
-        MapFrontendBlocker blocker(m_mapData);
-
-        /* NOTE: This relies on the maxID being ~0u, so adding 1 brings us back to 0u. */
-        baseId = m_mapData.getMaxId().asUint32() + 1u;
-        basePosition = m_mapData.getMax();
-
-        // REVISIT: What purpose does this serve?
-        //
-        // (Also, note that `(x + y + z) != 0` is *NOT* the same as `x != 0 || y != 0 || z != 0`,
-        // so things like: [1, 2, -3] would not be affected by this.)
-        if (basePosition.x + basePosition.y + basePosition.z != 0) {
-            basePosition.y = 0;
-            basePosition.x = 0;
-            basePosition.z = -1;
-        }
-
         log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
 
-        QDataStream stream(m_file);
+        QDataStream stream{getFile()};
         auto helper = LoadRoomHelper{stream};
-        m_mapData.setDataChanged();
 
         // Read the version and magic
         static constexpr const auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
         if (helper.read_i32() != MMAPPER_MAGIC) {
-            return false;
+            return std::nullopt;
         }
 
         const auto version = helper.read_u32();
+
         const bool supported = [version]() -> bool {
             switch (version) {
             case schema::v2_0_0_initial:
@@ -401,6 +339,9 @@ bool MapStorage::mergeData()
             case schema::v2_4_3_qCompress:
             case schema::v2_5_1_discardNoMatch:
             case schema::v19_10_0_newCoords:
+            case schema::v25_02_0_noInboundLinks:
+            case schema::v25_02_1_removeUpToDate:
+            case schema::v25_02_2_serverId:
                 return true;
             default:
                 break;
@@ -414,9 +355,17 @@ bool MapStorage::mergeData()
                              "\n"
                              "Please %3 MMapper.")
                          .arg(version)
-                         .arg(isNewer ? "new" : "old")
-                         .arg(isNewer ? "upgrade to the latest" : "try an older version of"));
-            return false;
+                         .arg(isNewer ? "new" : "old",
+                              isNewer ? "upgrade to the latest" : "try an older version of"));
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-return"
+#endif
+            // NOLINTNEXTLINE
+            return std::nullopt; // in case critical() doesn't throw.
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
         }
 
         // Force serialization to Qt4.8 because Qt5 has broke backwards compatability with QDateTime serialization
@@ -432,6 +381,7 @@ bool MapStorage::mergeData()
         const bool zlibCompressed = (version >= schema::v2_0_4_zlib
                                      && version < schema::v2_4_3_qCompress);
         if (qCompressed || (!NO_ZLIB && zlibCompressed)) {
+            progressCounter.setNewTask(ProgressMsg{"uncompressing"}, 1);
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qCompressed
                                               ? StorageUtils::mmqt::uncompress(progressCounter,
@@ -441,13 +391,25 @@ bool MapStorage::mergeData()
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
+            progressCounter.step();
             log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
-        } else if (NO_ZLIB && zlibCompressed) {
+        } else if (NO_ZLIB
+                   // NOLINTNEXTLINE
+                   && zlibCompressed) {
+            // NOLINTNEXTLINE
             critical("MMapper could not load this map because it is too old.\n"
                      "\n"
                      "Please recompile MMapper with USE_ZLIB.");
-            return false;
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-return"
+#endif
+            // NOLINTNEXTLINE
+            return std::nullopt; // in case critical() doesn't throw.
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
         } else {
             log("Map was not compressed");
         }
@@ -455,55 +417,39 @@ bool MapStorage::mergeData()
 
         const uint32_t roomsCount = helper.read_u32();
         const uint32_t marksCount = helper.read_u32();
-        progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
 
-        m_mapData.setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
+        result.position = transformRoomOnLoad(version, helper.readCoord3d());
 
         log(QString("Number of rooms: %1").arg(roomsCount));
 
+        progressCounter.setNewTask(ProgressMsg{"reading rooms"}, roomsCount);
+        std::vector<ExternalRawRoom> loading_rooms;
+        loading_rooms.reserve(roomsCount);
         for (uint32_t i = 0; i < roomsCount; ++i) {
-            SharedRoom room = loadRoom(stream, version);
-
+            loading_rooms.emplace_back(loadRoom(stream, version));
             progressCounter.step();
-            m_mapData.insertPredefinedRoom(room);
         }
 
         log(QString("Number of info items: %1").arg(marksCount));
 
-        // TODO: reserve the markerList with marksCount
-
         // create all pointers to items
+        progressCounter.setNewTask(ProgressMsg{"reading markers"}, marksCount);
+        markers.reserve(marksCount);
         for (uint32_t index = 0; index < marksCount; ++index) {
-            auto mark = InfoMark::alloc(m_mapData);
-            loadMark(deref(mark), stream, version);
-            m_mapData.addMarker(std::move(mark));
-
+            markers.emplace_back(loadMark(stream, version));
             progressCounter.step();
         }
 
-        log("Finished loading.");
-
-        // REVISIT: Closing is probably not necessary, since you don't do it in the failure cases.
-        buffer.close();
-        m_file->close();
-
-        // REVISIT: Having a save-file with 0 rooms probably shouldn't be treated as an error.
-        // (Consider just removing this test)
-        if (m_mapData.getRoomsCount() == 0u) {
-            return false;
-        }
-
-        m_mapData.setFileName(m_fileName, !QFileInfo(m_fileName).isWritable());
-        m_mapData.unsetDataChanged();
+        log("Finished reading rooms.");
+        result.rooms = std::move(loading_rooms);
     }
 
-    m_mapData.checkSize();
-    emit sig_onDataLoaded();
-    return true;
+    return result;
 }
 
-void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
+InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
 {
+    InfoMarkFields mark;
     auto helper = LoadRoomHelper{stream};
 
     if (version < schema::v19_10_0_newCoords) {
@@ -511,7 +457,7 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
         std::ignore = helper.read_string(); /* value ignored; called for side effect */
     }
 
-    mark.setText(InfoMarkText(helper.read_string()));
+    mark.setText(mmqt::makeInfoMarkText(helper.read_string()));
 
     if (version < schema::v19_10_0_newCoords) {
         // was timestamp
@@ -546,30 +492,29 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
         }
     }
 
-    const auto read_coord = [&helper](const auto &basePos) -> Coordinate {
-        return helper.readCoord3d()
-               + Coordinate{basePos.x * INFOMARK_SCALE, basePos.y * INFOMARK_SCALE, basePos.z};
-    };
-
-    mark.setPosition1(read_coord(basePosition));
-    mark.setPosition2(read_coord(basePosition));
+    mark.setPosition1(helper.readCoord3d());
+    mark.setPosition2(helper.readCoord3d());
 
     transformInfomarkOnLoad(version, mark);
 
     if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty()) {
         mark.setText(InfoMarkText{});
-    } else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty()) {
-        // REVISIT: Just discard empty text markers?
+    }
+    // REVISIT: Just discard empty text markers?
+    else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty()) {
         mark.setText(InfoMarkText{"New Marker"});
     }
+
+    return mark;
 }
 
-void MapStorage::saveRoom(const Room &room, QDataStream &stream)
+void MapStorage::saveRoom(const ExternalRawRoom &room, QDataStream &stream)
 {
     stream << room.getName().toQString();
     stream << room.getDescription().toQString();
     stream << room.getContents().toQString();
     stream << static_cast<uint32_t>(room.getId());
+    stream << static_cast<uint32_t>(room.getServerId());
     stream << room.getNote().toQString();
     stream << static_cast<uint8_t>(room.getTerrainType());
     stream << static_cast<uint8_t>(room.getLightType());
@@ -579,68 +524,55 @@ void MapStorage::saveRoom(const Room &room, QDataStream &stream)
     stream << static_cast<uint8_t>(room.getSundeathType());
     stream << static_cast<uint32_t>(room.getMobFlags());
     stream << static_cast<uint32_t>(room.getLoadFlags());
-    stream << static_cast<uint8_t>(room.isUpToDate());
     writeCoordinate(stream, room.getPosition());
     saveExits(room, stream);
 }
 
-void MapStorage::saveExits(const Room &room, QDataStream &stream)
+void MapStorage::saveExits(const ExternalRawRoom &room, QDataStream &stream)
 {
-    const ExitsList &exitList = room.getExitsList();
-    for (const Exit &e : exitList) {
+    for (const auto &e : room.getExits()) {
         // REVISIT: need to be much more careful about how we serialize flags;
         // places like this will be easy to overlook when the definition changes
         // to increase the size beyond 16 bits.
         stream << static_cast<uint16_t>(e.getExitFlags());
         stream << static_cast<uint16_t>(e.getDoorFlags());
         stream << e.getDoorName().toQString();
-        for (auto idx : e.inRange()) {
-            stream << static_cast<uint32_t>(idx);
-        }
-        stream << UINT_MAX;
-        for (auto idx : e.outRange()) {
+        for (const ExternalRoomId idx : e.getOutgoingSet()) {
             stream << static_cast<uint32_t>(idx);
         }
         stream << UINT_MAX;
     }
 }
 
-bool MapStorage::saveData(bool baseMapOnly)
+bool MapStorage::virt_saveData(const RawMapData &mapData)
 {
+    auto &progressCounter = getProgressCounter();
     log("Writing data to file ...");
 
-    QDataStream fileStream(m_file);
+    const auto &map = mapData.mapPair.modified;
+    const RawMarkerData noMarkers;
+    const RawMarkerData &markerList = mapData.markerData.has_value() ? mapData.markerData.value()
+                                                                     : noMarkers;
+
+    QDataStream fileStream(getFile());
     fileStream.setVersion(QDataStream::Qt_4_8);
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     ConstRoomList roomList;
-    roomList.reserve(m_mapData.getRoomsCount());
+    roomList.reserve(map.getRoomsCount());
 
-    const MarkerList &markerList = m_mapData.getMarkersList();
-    RoomSaver saver(m_mapData, roomList);
-    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
-        m_mapData.lookingForRooms(saver, RoomId{i});
+    progressCounter.setNewTask(ProgressMsg{"scanning rooms"}, map.getRooms().size());
+    for (const RoomId id : map.getRooms()) {
+        const auto &room = map.getRoomHandle(id);
+        if (!room.isTemporary()) {
+            roomList.push_back(room);
+        }
     }
 
-    auto roomsCount = saver.getRoomsCount();
+    auto roomsCount = static_cast<uint32_t>(roomList.size());
     const auto marksCount = static_cast<uint32_t>(markerList.size());
-
-    auto &progressCounter = getProgressCounter();
-    progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
-
-    BaseMapSaveFilter filter;
-    if (baseMapOnly) {
-        filter.setMapData(&m_mapData);
-        progressCounter.increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(progressCounter);
-        roomsCount = filter.acceptedRoomsCount();
-    }
-
-    // Compression step
-    progressCounter.increaseTotalStepsBy(1);
 
     // Write a header with a "magic number" and a version
     fileStream << static_cast<uint32_t>(0xFFB2AF01);
@@ -657,43 +589,47 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream << static_cast<uint32_t>(marksCount);
 
     // write selected room x,y,z
-    writeCoordinate(stream, m_mapData.getPosition());
+    writeCoordinate(stream, mapData.position);
 
     // save rooms
-    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
-    for (const std::shared_ptr<const Room> &pRoom : roomList) {
-        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
+    progressCounter.setNewTask(ProgressMsg{"saving rooms"}, roomsCount);
+    for (const RoomPtr &pRoom : roomList) {
+        saveRoom(deref(pRoom).getRawCopyExternal(), stream);
         progressCounter.step();
     }
 
     // save items
-    for (const auto &mark : markerList) {
-        saveMark(deref(mark), stream);
+    progressCounter.setNewTask(ProgressMsg{"saving markers"}, marksCount);
+    for (const auto &mark : markerList.markers) {
+        saveMark(mark, stream);
         progressCounter.step();
     }
 
     buffer.close();
 
-    QByteArray uncompressedData(buffer.data());
-    QByteArray compressedData = StorageUtils::mmqt::compress(progressCounter, uncompressedData);
-    progressCounter.step();
-    double compressionRatio = (compressedData.isEmpty())
-                                  ? 1.0
-                                  : (static_cast<double>(uncompressedData.size())
-                                     / static_cast<double>(compressedData.size()));
-    log(QString("Map compressed (compression ratio of %1:1)")
-            .arg(QString::number(compressionRatio, 'f', 1)));
+    {
+        progressCounter.setNewTask(ProgressMsg{"compressing"}, 1);
+        QByteArray uncompressedData(buffer.data());
+        QByteArray compressedData = StorageUtils::mmqt::compress(progressCounter, uncompressedData);
+        progressCounter.step();
 
-    fileStream.writeRawData(compressedData.data(), compressedData.size());
+        const double compressionRatio = (compressedData.isEmpty())
+                                            ? 1.0
+                                            : (static_cast<double>(uncompressedData.size())
+                                               / static_cast<double>(compressedData.size()));
+        log(QString("Map compressed (compression ratio of %1:1)")
+                .arg(QString::number(compressionRatio, 'f', 1)));
+
+        // TODO: add progress counter
+        fileStream.writeRawData(compressedData.data(), compressedData.size());
+    }
+
     log("Writing data finished.");
-
-    m_mapData.unsetDataChanged();
-    emit sig_onDataSaved();
 
     return true;
 }
 
-void MapStorage::saveMark(const InfoMark &mark, QDataStream &stream)
+void MapStorage::saveMark(const InfoMarkFields &mark, QDataStream &stream)
 {
     // REVISIT: save type first, and then avoid saving fields that aren't necessary?
     const InfoMarkTypeEnum type = mark.getType();

@@ -19,12 +19,12 @@ RoadIndexMaskEnum getRoadIndex(const ExitDirEnum dir)
     return static_cast<RoadIndexMaskEnum>(1 << static_cast<int>(dir));
 }
 
-RoadIndexMaskEnum getRoadIndex(const Room &room)
+RoadIndexMaskEnum getRoadIndex(const RawRoom &room)
 {
     RoadIndexMaskEnum roadIndex = RoadIndexMaskEnum::NONE;
 
     for (const ExitDirEnum dir : ALL_EXITS_NESW) {
-        if (room.exit(dir).exitIsRoad()) {
+        if (room.getExit(dir).exitIsRoad()) {
             roadIndex |= getRoadIndex(dir);
         }
     }

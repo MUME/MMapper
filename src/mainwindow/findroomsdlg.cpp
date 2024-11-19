@@ -56,32 +56,40 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
         editButton->setEnabled(enabled);
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(m_mapData);
+        auto map = m_mapData.getCurrentMap();
+        RoomIdSet tmpSet;
+        glm::vec2 sum{0.f, 0.f};
         for (const auto &selectedItem : resultTable->selectedItems()) {
-            const auto id = RoomId{selectedItem->text(0).toUInt()};
-            tmpSel->getRoom(id);
-        }
-        if (!tmpSel->empty()) {
-            glm::vec2 sum{0.f, 0.f};
-            // FIXME: This is actually an anti-feature if the rooms are far apart,
-            // because it drops you off in the middle of nowhere.
-            for (const auto &[rid, room] : *tmpSel) {
-                sum += room->getPosition().to_vec2();
+            const auto id = ExternalRoomId{selectedItem->text(0).toUInt()};
+            if (const auto &pRoom = map.findRoomHandle(id)) {
+                const auto &room = deref(pRoom);
+                sum += room.getPosition().to_vec2();
+                tmpSet.insert(room.getId());
             }
-            // note: half-room offset to the room center is applied to the average,
-            // rather than to each individual room.
-            const auto worldPos = sum / static_cast<float>(tmpSel->size()) + glm::vec2{0.5f, 0.5f};
+        }
+
+        if (!tmpSet.empty()) {
+            // note: half-room offset to the room center
+            const glm::vec2 offset{0.5f, 0.5f};
+            const auto worldPos = sum / static_cast<float>(tmpSet.size()) + offset;
             emit sig_center(worldPos);
         }
-        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+
+        auto shared = RoomSelection::createSelection(std::move(tmpSet));
+        emit sig_newRoomSelection(SigRoomSelection{std::move(shared)});
     });
     connect(editButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(m_mapData);
+        const auto &map = m_mapData;
+        const auto &currentMap = map.getCurrentMap();
+        RoomIdSet set;
         for (const auto &selectedItem : resultTable->selectedItems()) {
-            const auto id = RoomId{selectedItem->text(0).toUInt()};
-            tmpSel->getRoom(id);
+            const auto id = ExternalRoomId{selectedItem->text(0).toUInt()};
+            if (const RoomPtr &room = currentMap.findRoomHandle(id)) {
+                set.insert(room->getId());
+            }
         }
-        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+        auto tmpSel = RoomSelection::createSelection(std::move(set));
+        emit sig_newRoomSelection(SigRoomSelection{std::move(tmpSel)});
         emit sig_editSelection();
     });
 
@@ -112,9 +120,13 @@ void FindRoomsDlg::slot_findClicked()
     const Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive
                                                              : Qt::CaseInsensitive;
     const bool regex = regexCheckBox->isChecked();
-    std::string text = lineEdit->text().toLatin1().toStdString();
-    // remove latin1
-    text = ::latin1ToAsciiInPlace(text);
+
+    // REVISIT: Why is this converted to ASCII?
+    // Is it because we expect RoomName, RoomDesc, etc to contain ASCII codepoints?
+    // Note: This conversion transliterates non-ascii codepoints.
+    const std::string text = charset::conversion::utf8ToAscii(
+        mmqt::toStdStringUtf8(lineEdit->text()));
+
     resultTable->clear();
     roomsFoundLabel->clear();
 
@@ -134,13 +146,16 @@ void FindRoomsDlg::slot_findClicked()
     }
 
     try {
-        auto tmpSel = RoomSelection(m_mapData);
-        tmpSel.genericSearch(RoomFilter(text, cs, regex, kind));
+        RoomFilter filter(text, cs, regex, kind);
+        const Map &map = m_mapData.getCurrentMap();
+        for (const auto &roomId : map.getRooms()) {
+            const auto &room = map.getRoomHandle(roomId);
+            if (!filter.filter(room.getRaw())) {
+                continue;
+            }
 
-        for (const auto &[rid, room] : tmpSel) {
-            QString id;
-            id.setNum(rid.asUint32());
-            QString roomName = room->getName().toQString();
+            QString id = QString("%1").arg(room.getIdExternal().asUint32());
+            QString roomName = room.getName().toQString();
             QString toolTip = constructToolTip(room);
 
             item = new QTreeWidgetItem(resultTable);
@@ -160,11 +175,11 @@ void FindRoomsDlg::slot_findClicked()
                                  .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
 }
 
-// FIXME: This code is almost identical to the code in MapCanvas::mouseReleaseEvent. Refactor!
-QString FindRoomsDlg::constructToolTip(const Room *const r)
+QString FindRoomsDlg::constructToolTip(const RoomPtr &r)
 {
     const auto &room = deref(r);
-    return QString("Selected Room ID: %1\n%2").arg(room.getId().asUint32()).arg(room.toQString());
+    // Tooltip doesn't support ANSI, and there's no way to add formatted text.
+    return mmqt::previewRoom(room, mmqt::StripAnsiEnum::Yes, mmqt::PreviewStyleEnum::ForDisplay);
 }
 
 void FindRoomsDlg::slot_showSelectedRoom()
@@ -178,10 +193,12 @@ void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
         return;
     }
 
-    auto tmpSel = RoomSelection(m_mapData);
-    const auto id = RoomId{inputItem->text(0).toUInt()};
-    if (const Room *const r = tmpSel.getRoom(id)) {
-        if (r->getId() == id) {
+    const auto &map = m_mapData.getCurrentMap();
+    const auto extId = ExternalRoomId{inputItem->text(0).toUInt()};
+    if (const auto &r = map.findRoomHandle(extId)) {
+        // REVISIT: should this block be a stand-alone function?
+        {
+            assert(r->getIdExternal() == extId);
             const Coordinate &c = r->getPosition();
             const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
             emit sig_center(worldPos); // connects to MapWindow

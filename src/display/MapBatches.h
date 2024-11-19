@@ -39,12 +39,10 @@ using BatchedMeshes = std::map<int, LayerMeshes>;
 struct NODISCARD MapBatches final
 {
     BatchedMeshes batchedMeshes;
-    BatchedConnections connectionDrawerBuffers;
     BatchedConnectionMeshes connectionMeshes;
     BatchedRoomNames roomNameBatches;
-    OptBounds redrawMargin;
 
     MapBatches() = default;
     ~MapBatches() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(MapBatches);
+    DEFAULT_MOVES_DELETE_COPIES(MapBatches);
 };

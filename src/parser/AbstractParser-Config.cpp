@@ -6,6 +6,7 @@
 #include "../display/MapCanvasConfig.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
+#include "../global/AnsiOstream.h"
 #include "../global/Consts.h"
 #include "../global/NamedColors.h"
 #include "../global/PrintUtils.h"
@@ -108,14 +109,18 @@ public:
     {
         return os << (x.m_value ? "true" : "false");
     }
+    friend AnsiOstream &operator<<(AnsiOstream &os, const BoolAlpha &x)
+    {
+        return os << (x.m_value ? "true" : "false");
+    }
 };
 
 template<typename T>
 inline decltype(auto) remap(T &&x)
 {
     static_assert(!std::is_same_v<std::decay_t<T>, std::string_view>);
-    if constexpr (std::is_same_v<std::decay_t<T>,
-                                 std::string> || std::is_same_v<std::decay_t<T>, const char *>) {
+    if constexpr (std::is_same_v<std::decay_t<T>, std::string>
+                  || std::is_same_v<std::decay_t<T>, const char *>) {
         return syntax::abbrevToken(std::forward<T>(x));
     } else if constexpr (true) {
         return std::forward<T>(x);
@@ -140,13 +145,14 @@ void AbstractParser::doConfig(const StringView cmd)
             auto names = XNamedColor::getAllNames();
             std::sort(names.begin(), names.end());
 
-            os << "Customizable colors:" << std::endl;
+            os << "Customizable colors:\n";
             for (const auto &name : names) {
                 if (name.empty() || name.front() == char_consts::C_PERIOD) {
                     continue;
                 }
                 XNamedColor color(name);
-                os << " " << SmartQuotedString{name} << " = " << color.getColor() << std::endl;
+                os << " " << SmartQuotedString{name} << " = " << color.getColor()
+                   << AnsiOstream::endl;
             }
         },
         "list colors");
@@ -168,13 +174,13 @@ void AbstractParser::doConfig(const StringView cmd)
 
             if (oldColor.getRGB() == rgb) {
                 os << "Color " << SmartQuotedString{name} << " is already " << color.getColor()
-                   << "." << std::endl;
+                   << ".\n";
                 return;
             }
 
             color.setColor(newColor);
             os << "Color " << SmartQuotedString{name} << " has been changed from " << oldColor
-               << " to " << color.getColor() << "." << std::endl;
+               << " to " << color.getColor() << ".\n";
 
             // FIXME: Some of the colors still require a map update.
             if ((false)) {
@@ -206,14 +212,15 @@ void AbstractParser::doConfig(const StringView cmd)
                 auto clone = fp.clone(oldValue);
                 clone.setFloat(value);
                 if (clone.get() == oldValue) {
-                    os << "No change: " << help << " is already " << fp.getFloat() << std::endl;
+                    os << "No change: " << help << " is already " << fp.getFloat()
+                       << AnsiOstream::endl;
                     return;
                 }
 
                 clone.set(oldValue);
                 fp.setFloat(value);
                 os << "Changed " << help << " from " << clone.getFloat() << " to " << fp.getFloat()
-                   << std::endl;
+                   << AnsiOstream::endl;
                 this->graphicsSettingsChanged();
             },
             "set " + help);
@@ -275,14 +282,14 @@ void AbstractParser::doConfig(const StringView cmd)
 
                 const float oldValue = getZoom();
                 if (utils::equals(value, oldValue)) {
-                    os << "No change: zoom is already " << oldValue << std::endl;
+                    os << "No change: zoom is already " << oldValue << AnsiOstream::endl;
                     return;
                 }
 
                 if (setZoom(value)) {
-                    os << "Changed zoom from " << oldValue << " to " << value << std::endl;
+                    os << "Changed zoom from " << oldValue << " to " << value << AnsiOstream::endl;
                 } else {
-                    os << "Unable to change zoom." << std::endl;
+                    os << "Unable to change zoom.\n";
                 }
             },
             "set zoom");
@@ -302,12 +309,13 @@ void AbstractParser::doConfig(const StringView cmd)
 
                            if (conf.get() == value) {
                                os << conf.getName() << " is already " << BoolAlpha(value)
-                                  << std::endl;
+                                  << AnsiOstream::endl;
                                return;
                            }
 
                            conf.set(value);
-                           os << "Set " << conf.getName() << " = " << BoolAlpha(value) << std::endl;
+                           os << "Set " << conf.getName() << " = " << BoolAlpha(value)
+                              << AnsiOstream::endl;
                            graphicsSettingsChanged();
                        },
                        std::move(help)));
@@ -344,9 +352,9 @@ void AbstractParser::doConfig(const StringView cmd)
                 Accept(
                     [](User &user, auto) {
                         auto &os = user.getOstream();
-                        os << "Saving config file..." << std::endl;
+                        os << "Saving config file...\n";
                         getConfig().write();
-                        os << "Saved." << std::endl;
+                        os << "Saved.\n";
                     },
                     "save config file")),
             syn("load",
@@ -354,11 +362,10 @@ void AbstractParser::doConfig(const StringView cmd)
                     [this](User &user, auto) {
                         auto &os = user.getOstream();
                         if (m_proxy.isConnected()) {
-                            os << "You must disconnect before you can reload the saved configuration."
-                               << std::endl;
+                            os << "You must disconnect before you can reload the saved configuration.\n";
                             return;
                         }
-                        os << "Loading saved file..." << std::endl;
+                        os << "Loading saved file...\n";
                         setConfig().read();
                         send_ok(os);
                     },
@@ -370,14 +377,13 @@ void AbstractParser::doConfig(const StringView cmd)
                     [this](User &user, auto) {
                         auto &os = user.getOstream();
                         if (m_proxy.isConnected()) {
-                            os << "You must disconnect before you can do a factory reset."
-                               << std::endl;
+                            os << "You must disconnect before you can do a factory reset.\n";
                             return;
                         }
                         // REVISIT: only allow this when you're disconnected?
-                        os << "Performing factory reset..." << std::endl;
+                        os << "Performing factory reset...\n";
                         setConfig().reset();
-                        os << "WARNING: You have just reset your configuration." << std::endl;
+                        os << "WARNING: You have just reset your configuration.\n";
                     },
                     "factory reset the config"))),
         syn("map",

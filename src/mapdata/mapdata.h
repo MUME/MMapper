@@ -5,17 +5,28 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../display/IMapBatchesFinisher.h"
+#include "../map/Changes.h"
+#include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitFlags.h"
+#include "../map/Map.h"
 #include "../map/coordinate.h"
+#include "../map/mmapper2room.h"
 #include "../map/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "../parser/CommandQueue.h"
+#include "MarkerList.h"
 #include "roomfilter.h"
 #include "roomselection.h"
 #include "shortestpath.h"
 
 #include <map>
 #include <memory>
+#include <optional>
+#include <ostream>
+#include <utility>
 #include <vector>
 
 #include <QList>
@@ -23,24 +34,23 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class AbstractAction;
 class ExitFieldVariant;
-class InfoMark;
-class MapAction;
-class MapCanvasRoomDrawer;
+class ProgressCounter;
 class QObject;
-class Room;
 class RoomFieldVariant;
 class RoomFilter;
-class RoomRecipient;
 class ShortestPathRecipient;
 
-using ConstRoomList = std::vector<std::shared_ptr<const Room>>;
-using MarkerList = std::vector<std::shared_ptr<InfoMark>>;
+struct MapCanvasTextures;
+struct RawMapData;
+struct MapLoadData;
+struct RawMapLoadData;
 
 namespace mctp {
 struct MapCanvasTexturesProxy;
 }
+
+using ConstRoomList = std::vector<RoomPtr>;
 
 class NODISCARD_QOBJECT MapData final : public MapFrontend
 {
@@ -49,115 +59,166 @@ class NODISCARD_QOBJECT MapData final : public MapFrontend
 private:
     friend class RoomSelection;
 
-protected:
-    MarkerList m_markers;
-    // changed data?
-    bool m_dataChanged = false;
+private:
     bool m_fileReadOnly = false;
     QString m_fileName;
-    Coordinate m_position;
-
-protected:
-    // the room will be inserted in the given selection. the selection must have been created by mapdata
-    NODISCARD const Room *getRoom(const Coordinate &pos, RoomSelection &in);
-    NODISCARD const Room *getRoom(RoomId id, RoomSelection &in);
+    std::optional<RoomId> m_selectedRoom;
 
 public:
     explicit MapData(QObject *parent);
-    ~MapData() override;
+    ~MapData() final;
 
-    void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);
+    NODISCARD FutureSharedMapBatchFinisher
+    generateBatches(const mctp::MapCanvasTexturesProxy &textures);
 
-    /* REVISIT: some callers ignore this */
-    bool execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &unlock);
+    // REVISIT: convert to template, or functionref after it compiles everywhere?
+    void applyChangesToList(const RoomSelection &sel,
+                            const std::function<Change(const RawRoom &)> &callback);
 
-    NODISCARD const Coordinate &getPosition() const { return m_position; }
-    NODISCARD const MarkerList &getMarkersList() const { return m_markers; }
-    NODISCARD uint32_t getRoomsCount() const
+    NODISCARD std::optional<RoomId> getCurrentRoomId() const { return m_selectedRoom; }
+
+    NODISCARD std::optional<RoomHandle> getCurrentRoom() const
     {
-        return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
+        if (m_selectedRoom) {
+            return findRoomHandle(*m_selectedRoom);
+        }
+        return std::nullopt;
     }
 
-    void addMarker(const std::shared_ptr<InfoMark> &im);
-    void removeMarker(const std::shared_ptr<InfoMark> &im);
+    NODISCARD std::optional<Coordinate> tryGetPosition() const
+    {
+        if (const auto &opt_room = getCurrentRoom()) {
+            return opt_room->getPosition();
+        }
+        return std::nullopt;
+    }
+
+    NODISCARD InfomarkDb getMarkersList() const { return MapFrontend::getCurrentMarks(); }
+    NODISCARD bool isEmpty() const;
+
+    NODISCARD InfomarkId addMarker(const InfoMarkFields &im);
+    NODISCARD bool updateMarker(InfomarkId id, const InfoMarkFields &im);
+    NODISCARD bool updateMarkers(const std::vector<InformarkChange> &updates);
     void removeMarkers(const MarkerList &toRemove);
+    NODISCARD bool removeMarker(InfomarkId id);
 
-    NODISCARD bool isEmpty() const
-    {
-        return (greatestUsedId == INVALID_ROOMID) && m_markers.empty();
-    }
-    NODISCARD bool dataChanged() const { return m_dataChanged; }
-    NODISCARD QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
+    NODISCARD bool dataChanged() const { return MapFrontend::isModified(); }
+    void describeChanges(std::ostream &os) const;
+    NODISCARD std::string describeChanges() const;
+
+    NODISCARD std::vector<Coordinate> getPath(RoomId start, const CommandQueue &dirs) const;
+    NODISCARD std::optional<RoomId> getLast(RoomId start, const CommandQueue &dirs) const;
 
 private:
     void virt_clear() final;
 
 public:
     // search for matches
-    void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
+    NODISCARD RoomIdSet genericFind(const RoomFilter &f) const;
 
-    void shortestPathSearch(const Room *origin,
-                            ShortestPathRecipient *recipient,
-                            const RoomFilter &f,
-                            int max_hits = -1,
-                            double max_dist = 0);
+    static void shortestPathSearch(const RoomHandle &origin,
+                                   ShortestPathRecipient &recipient,
+                                   const RoomFilter &f,
+                                   int max_hits = -1,
+                                   double max_dist = 0);
 
     // Used in Console Commands
-    void removeDoorNames();
-    NODISCARD const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
+    void removeDoorNames(ProgressCounter &pc);
+    void generateBaseMap(ProgressCounter &pc);
+    NODISCARD DoorName getDoorName(RoomId id, ExitDirEnum dir);
 
 public:
-    void setFileName(QString filename, bool readOnly)
+    void setMapData(const MapLoadData &mapLoadData);
+    NODISCARD static std::pair<Map, InfomarkDb> mergeMapData(ProgressCounter &,
+                                                             const Map &currentMap,
+                                                             const InfomarkDb &currentMarks,
+                                                             RawMapLoadData newMapData);
+
+public:
+    void setFileName(QString filename, const bool readOnly)
     {
-        m_fileName = filename;
+        m_fileName = std::move(filename);
         m_fileReadOnly = readOnly;
     }
     NODISCARD const QString &getFileName() const { return m_fileName; }
     NODISCARD bool isFileReadOnly() const { return m_fileReadOnly; }
 
 public:
-    NODISCARD bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
     NODISCARD ExitDirFlags getExitDirections(const Coordinate &pos);
 
-public:
-    NODISCARD const Room *getRoom(const Coordinate &pos);
-
 private:
-    // REVISIT: This might be the equivalent of blocking Qt signals.
-    bool m_ignoreModifications = false;
-    void virt_onNotifyModified(Room &room, const RoomUpdateFlags updateFlags) override
+    void virt_onNotifyModified(const RoomUpdateFlags /*updateFlags*/) final { setDataChanged(); }
+    void virt_onNotifyModified(const InfoMarkUpdateFlags /*updateFlags*/) final
     {
-        RoomModificationTracker::virt_onNotifyModified(room, updateFlags);
-        if (!m_ignoreModifications) {
-            setDataChanged();
-        }
-    }
-    void virt_onNotifyModified(InfoMark &mark, const InfoMarkUpdateFlags updateFlags) override
-    {
-        InfoMarkModificationTracker::virt_onNotifyModified(mark, updateFlags);
-        if (!m_ignoreModifications) {
-            setDataChanged();
-        }
+        setDataChanged();
     }
 
     void log(const QString &msg) { emit sig_log("MapData", msg); }
+    void setDataChanged() { emit sig_onDataChanged(); }
 
 public:
-    void unsetDataChanged() { m_dataChanged = false; }
-    void setDataChanged()
+    void clearSelectedRoom() { m_selectedRoom.reset(); }
+
+    void setRoom(const RoomId id)
     {
-        m_dataChanged = true;
-        emit sig_onDataChanged();
+        auto before = m_selectedRoom;
+        if (const auto &room = findRoomHandle(id)) {
+            m_selectedRoom = id;
+        } else {
+            clearSelectedRoom();
+        }
+        if (before != m_selectedRoom) {
+            emit sig_onPositionChange();
+        }
     }
-    void setPosition(const Coordinate &pos) { m_position = pos; }
+
+    void setPosition(const Coordinate &pos)
+    {
+        if (const auto &room = findRoomHandle(pos)) {
+            setRoom(room->getId());
+        } else {
+            auto before = m_selectedRoom;
+            clearSelectedRoom();
+            if (before != m_selectedRoom) {
+                emit sig_onPositionChange();
+            }
+        }
+    }
+
+public:
+    void forceToRoom(RoomId id)
+    {
+        auto before = m_selectedRoom;
+        setRoom(id);
+        if (before != m_selectedRoom) {
+            emit sig_onForcedPositionChange();
+        }
+    }
+
+    void forcePosition(const Coordinate &pos)
+    {
+        if (const auto &room = findRoomHandle(pos)) {
+            forceToRoom(room->getId());
+        } else {
+            auto before = m_selectedRoom;
+            clearSelectedRoom();
+            if (before != m_selectedRoom) {
+                emit sig_onForcedPositionChange();
+            }
+        }
+    }
+
+private:
+    void removeMissing(RoomIdSet &set) const;
 
 signals:
     void sig_log(const QString &, const QString &);
     void sig_onDataChanged();
+    void sig_onPositionChange();
+    void sig_onForcedPositionChange();
+    void sig_checkMapConsistency();
+    void sig_generateBaseMap();
 
 public slots:
-    void slot_scheduleAction(std::shared_ptr<MapAction> action)
-    {
-        MapFrontend::scheduleAction(action);
-    }
+    void slot_scheduleAction(const SigMapChangeList &);
 };

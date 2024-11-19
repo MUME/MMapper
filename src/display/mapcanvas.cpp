@@ -7,6 +7,8 @@
 #include "mapcanvas.h"
 
 #include "../configuration/configuration.h"
+#include "../global/parserutils.h"
+#include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
 #include "../map/coordinate.h"
@@ -14,7 +16,6 @@
 #include "../map/infomark.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
-#include "../mapdata/customaction.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
 #include "InfoMarkSelection.h"
@@ -149,18 +150,24 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
 
 void MapCanvas::slot_setRoomSelection(const SigRoomSelection &selection)
 {
-    if (selection.isValid()) {
-        m_roomSelection = selection.getShared();
-        qDebug() << "Updated selection with" << m_roomSelection->size() << "rooms";
-        if (m_roomSelection->size() == 1) {
-            const Room *const r = m_roomSelection->getFirstRoom();
-            const Coordinate &roomPos = r->getPosition();
-            const auto x = roomPos.x;
-            const auto y = roomPos.y;
-            log(QString("Selected Room Coordinates: %1 %2\n%3").arg(x).arg(y).arg(r->toQString()));
-        }
-    } else {
+    if (!selection.isValid()) {
         m_roomSelection.reset();
+    } else {
+        m_roomSelection = selection.getShared();
+        auto &sel = deref(m_roomSelection);
+        auto &map = m_data;
+        sel.removeMissing(map);
+
+        qDebug() << "Updated selection with" << sel.size() << "rooms";
+        if (sel.size() == 1) {
+            if (const RoomPtr &ptr = map.findRoomHandle(sel.getFirstRoomId())) {
+                const auto &r = deref(ptr);
+                auto message = mmqt::previewRoom(r,
+                                                 mmqt::StripAnsiEnum::Yes,
+                                                 mmqt::PreviewStyleEnum::ForLog);
+                log(message);
+            }
+        }
     }
 
     // Let the MainWindow know
@@ -252,7 +259,7 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
                 // This probably shouldn't ever fail, but let's make it conditional
                 // (worst case: we're left centered on what we clicked on,
                 // which will create infuriating overshoots if it ever happens)
-                if (const auto optCenter2 = getUnprojectedMouseSel(event)) {
+                if (const auto &optCenter2 = getUnprojectedMouseSel(event)) {
                     const auto delta2 = glm::ivec2(glm::vec2(optCenter2->to_vec3() - newCenter)
                                                    * static_cast<float>(SCROLL_SCALE));
 
@@ -283,18 +290,8 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
     event->accept();
 }
 
-void MapCanvas::slot_forceMapperToRoom()
+void MapCanvas::slot_onForcedPositionChange()
 {
-    if (!m_roomSelection && hasSel1()) {
-        m_roomSelection = RoomSelection::createSelection(m_data, getSel1().getCoordinate());
-        emit sig_newRoomSelection(SigRoomSelection{m_roomSelection});
-    }
-    if (m_roomSelection->size() == 1) {
-        const RoomId id = m_roomSelection->getFirstRoomId();
-        // Force update rooms only if we're in play or mapping mode
-        const bool update = getConfig().general.mapMode != MapModeEnum::OFFLINE;
-        emit sig_setCurrentRoom(id, update);
-    }
     slot_requestUpdate();
 }
 
@@ -345,13 +342,17 @@ void MapCanvas::slot_createRoom()
     if (!hasSel1()) {
         return;
     }
+
     const Coordinate c = getSel1().getCoordinate();
-    RoomSelection tmpSel = RoomSelection(m_data, c);
-    if (tmpSel.empty()) {
-        MAYBE_UNUSED const auto ignored = //
-            m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer});
+    if (const auto &existing = m_data.findRoomHandle(c)) {
+        return;
     }
-    mapChanged();
+
+    if (m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer})) {
+        // success
+    } else {
+        // failed!
+    }
 }
 
 // REVISIT: This function doesn't need to return a shared ptr. Consider refactoring InfoMarkSelection?
@@ -413,7 +414,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
     const bool hasRightButton = (event->buttons() & Qt::RightButton) != 0u;
     const bool hasCtrl = (event->modifiers() & Qt::CTRL) != 0u;
-    const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
+    MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
     m_sel1 = m_sel2 = getUnprojectedMouseSel(event);
     m_mouseLeftPressed = hasLeftButton;
@@ -428,7 +429,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     } else if (!m_mouseLeftPressed && m_mouseRightPressed) {
         if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE && hasSel1()) {
             // Select the room under the cursor
-            m_roomSelection = RoomSelection::createSelection(m_data, getSel1().getCoordinate());
+            m_roomSelection = RoomSelection::createSelection(
+                m_data.findAllRooms(getSel1().getCoordinate()));
             slot_setRoomSelection(SigRoomSelection{m_roomSelection});
 
             // Select infomarks under the cursor.
@@ -450,7 +452,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         if (hasLeftButton && hasSel1()) {
             auto tmpSel = getInfoMarkSelection(getSel1());
             if (m_infoMarkSelection != nullptr && !tmpSel->empty()
-                && m_infoMarkSelection->contains(tmpSel->front().get())) {
+                && m_infoMarkSelection->contains(tmpSel->front().getId())) {
                 m_infoMarkSelectionMove.reset();   // dtor, if necessary
                 m_infoMarkSelectionMove.emplace(); // ctor
             } else {
@@ -482,28 +484,27 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 break;
             }
 
-            bool empty = true;
-            const auto tmpSel = RoomSelection::createSelection(m_data);
             const auto inv_denom = 1.f / (far.z - near.z);
 
             // REVISIT: This loop might feel laggy.
             // Consider clamping the bounds of what we know we're currently displaying (including XY).
             // (If you're looking almost parallel to the world, then the ray could pass through the
             // visible region but still be within the visible Z-range.)
+            RoomIdSet tmpSel;
             for (int z = hiz; z >= loz; --z) {
                 const float t = (static_cast<float>(z) - near.z) * inv_denom;
                 assert(isClamped(t, 0.f, 1.f));
                 const auto pos = glm::mix(near, far, t);
                 assert(static_cast<int>(std::lround(pos.z)) == z);
                 const Coordinate c2 = MouseSel{Coordinate2f{pos.x, pos.y}, z}.getCoordinate();
-                if (const Room *const r = m_data.getRoom(c2)) {
-                    tmpSel->receiveRoom(&m_data, r);
-                    empty = false;
+                if (const RoomPtr &r = m_data.findRoomHandle(c2)) {
+                    tmpSel.insert(deref(r).getId());
                 }
             }
 
-            if (!empty) {
-                slot_setRoomSelection(SigRoomSelection(tmpSel));
+            if (!tmpSel.empty()) {
+                slot_setRoomSelection(
+                    SigRoomSelection(RoomSelection::createSelection(std::move(tmpSel))));
             }
 
             selectionChanged();
@@ -511,14 +512,6 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
-        // Force mapper to room shortcut
-        if (hasLeftButton && hasCtrl && hasAlt) {
-            slot_clearRoomSelection();
-            m_ctrlPressed = true;
-            m_altPressed = true;
-            slot_forceMapperToRoom();
-            break;
-        }
         // Cancel
         if (hasRightButton) {
             m_selectedArea = false;
@@ -527,10 +520,9 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Select rooms
         if (hasLeftButton && hasSel1()) {
             if (!hasCtrl) {
-                const auto tmpSel = RoomSelection::createSelection(m_data,
-                                                                   getSel1().getCoordinate());
-                if ((m_roomSelection != nullptr) && !tmpSel->empty()
-                    && m_roomSelection->contains(tmpSel->getFirstRoomId())) {
+                const RoomPtr pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
+                if (pRoom != std::nullopt && m_roomSelection != nullptr
+                    && m_roomSelection->contains(deref(pRoom).getId())) {
                     m_roomSelectionMove.emplace(RoomSelMove{});
                 } else {
                     m_roomSelectionMove.reset();
@@ -548,7 +540,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         // Select connection
         if (hasLeftButton && hasSel1()) {
-            m_connectionSelection = ConnectionSelection::alloc(&m_data, getSel1());
+            m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
             if (!m_connectionSelection->isFirstValid()) {
                 m_connectionSelection = nullptr;
             }
@@ -563,14 +555,14 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if (hasLeftButton && hasSel1()) {
-            m_connectionSelection = ConnectionSelection::alloc(&m_data, getSel1());
+            m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
             if (!m_connectionSelection->isFirstValid()) {
                 m_connectionSelection = nullptr;
             } else {
-                const Room *r1 = m_connectionSelection->getFirst().room;
-                ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
+                const auto &r1 = m_connectionSelection->getFirst().room;
+                const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
 
-                if (r1->exit(dir1).outIsEmpty()) {
+                if (r1->getExit(dir1).outIsEmpty()) {
                     m_connectionSelection = nullptr;
                 }
             }
@@ -666,9 +658,23 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::SELECT_ROOMS:
         if (hasLeftButton) {
             if (hasRoomSelectionMove() && hasSel1() && hasSel2()) {
-                const auto diff = getSel2().pos.truncate() - getSel1().pos.truncate();
-                const auto wrongPlace = !m_roomSelection->isMovable(Coordinate{diff, 0});
+                auto &map = this->m_data;
+                auto isMovable = [&map](RoomSelection &sel, const Coordinate &offset) -> bool {
+                    sel.removeMissing(map);
+                    for (const RoomId id : sel) {
+                        const Coordinate &here = map.getRoomHandle(id).getPosition();
+                        const Coordinate target = here + offset;
+                        if (const auto &other = map.findRoomHandle(target)) {
+                            if (!sel.contains(other->getId())) {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                };
 
+                const auto diff = getSel2().pos.truncate() - getSel1().pos.truncate();
+                const auto wrongPlace = !isMovable(deref(m_roomSelection), Coordinate{diff, 0});
                 m_roomSelectionMove->pos = diff;
                 m_roomSelectionMove->wrongPlace = wrongPlace;
 
@@ -684,7 +690,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         if (hasLeftButton && hasSel2()) {
             if (m_connectionSelection != nullptr) {
-                m_connectionSelection->setSecond(&m_data, getSel2());
+                m_connectionSelection->setSecond(getSel2());
 
                 if (m_connectionSelection->isValid() && !m_connectionSelection->isCompleteNew()) {
                     m_connectionSelection->removeSecond();
@@ -700,7 +706,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if (hasLeftButton && hasSel2()) {
             if (m_connectionSelection != nullptr) {
-                m_connectionSelection->setSecond(&m_data, getSel2());
+                m_connectionSelection->setSecond(getSel2());
 
                 if (!m_connectionSelection->isCompleteExisting()) {
                     m_connectionSelection->removeSecond();
@@ -739,10 +745,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     const auto offset = Coordinate{(pos_copy * INFOMARK_SCALE).truncate(), 0};
 
                     // Update infomark location
-                    for (const auto &mark : *m_infoMarkSelection) {
-                        mark->setPosition1(mark->getPosition1() + offset);
-                        mark->setPosition2(mark->getPosition2() + offset);
-                    }
+                    const InfoMarkSelection &sel = deref(m_infoMarkSelection);
+                    sel.applyOffset(offset);
                     infomarksChanged();
                 }
             } else if (hasSel1() && hasSel2()) {
@@ -751,10 +755,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
                 auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
-                    const std::shared_ptr<InfoMark> &firstMark = tmpSel->front();
-                    const Coordinate &pos = firstMark->getPosition1();
+                    const InfomarkHandle &firstMark = tmpSel->front();
+                    const Coordinate &pos = firstMark.getPosition1();
                     QString ctemp = QString("Selected Info Mark: [%1] (at %2,%3,%4)")
-                                        .arg(firstMark->getText().toQString())
+                                        .arg(firstMark.getText().toQString())
                                         .arg(pos.x)
                                         .arg(pos.y)
                                         .arg(pos.z);
@@ -770,11 +774,12 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
         if (m_mouseLeftPressed && hasSel1() && hasSel2()) {
             m_mouseLeftPressed = false;
-            // Add infomarks to selection
             const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
             const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
-            auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
-            tmpSel->clear(); // REVISIT: Should creation workflow require the selection to be empty?
+            // REVISIT: this previously searched for all the marks in c1, c2,
+            // and then immediately cleared the selection.
+            // Why??? Now it just allocates an empty selection.
+            auto tmpSel = InfoMarkSelection::allocEmpty(m_data, c1, c2);
             slot_setInfoMarkSelection(tmpSel);
         }
         infomarksChanged();
@@ -788,9 +793,14 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         // Display a room info tooltip if there was no mouse movement
         if (hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
-            RoomSelection tmpSel = RoomSelection(m_data, getSel1().getCoordinate());
-            if (!tmpSel.empty()) {
-                QString message = tmpSel.getFirstRoom()->toQString();
+            if (const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate())) {
+                const auto &room = deref(pRoom);
+
+                // Tooltip doesn't support ANSI, and there's no way to add formatted text.
+                auto message = mmqt::previewRoom(room,
+                                                 mmqt::StripAnsiEnum::Yes,
+                                                 mmqt::PreviewStyleEnum::ForDisplay);
+
                 QToolTip::showText(mapToGlobal(event->pos()), message, this, rect(), 5000);
             }
         }
@@ -816,11 +826,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 m_roomSelectionMove.reset();
                 if (!wrongPlace && (m_roomSelection != nullptr)) {
                     const Coordinate moverel{pos, 0};
-                    m_data.execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(
-                                                                        moverel),
-                                                                    m_roomSelection),
-                                   m_roomSelection);
-                    mapChanged();
+                    m_data.applyChangesToList(
+                        *m_roomSelection, [&moverel](const RawRoom &room) -> Change {
+                            return Change{room_change_types::MoveRelative{room.getId(), moverel}};
+                        });
                 }
 
             } else {
@@ -829,21 +838,24 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     const Coordinate &c2 = getSel2().getCoordinate();
                     if (m_roomSelection == nullptr) {
                         // add rooms to default selections
-                        m_roomSelection = RoomSelection::createSelection(m_data, c1, c2);
+                        m_roomSelection = RoomSelection::createSelection(
+                            m_data.findAllRooms(c1, c2));
                     } else {
+                        auto &sel = deref(m_roomSelection);
+                        sel.removeMissing(m_data);
                         // add or remove rooms to/from default selection
-                        const auto tmpSel = RoomSelection(m_data, c1, c2);
-                        for (const auto &[key, value] : tmpSel) {
-                            if (m_roomSelection->contains(key)) {
-                                m_roomSelection->unselect(key);
+                        const auto tmpSel = m_data.findAllRooms(c1, c2);
+                        for (const RoomId key : tmpSel) {
+                            if (sel.contains(key)) {
+                                sel.erase(key);
                             } else {
-                                m_roomSelection->getRoom(key);
+                                sel.insert(key);
                             }
                         }
                     }
                 }
 
-                if (!m_roomSelection->empty()) {
+                if (m_roomSelection != nullptr && !m_roomSelection->empty()) {
                     slot_setRoomSelection(SigRoomSelection{m_roomSelection});
                 }
             }
@@ -858,46 +870,47 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr) {
-                m_connectionSelection = ConnectionSelection::alloc(&m_data, getSel1());
+                m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
             }
-            m_connectionSelection->setSecond(&m_data, getSel2());
+            m_connectionSelection->setSecond(getSel2());
 
             if (!m_connectionSelection->isValid()) {
                 m_connectionSelection = nullptr;
             } else {
                 const auto first = m_connectionSelection->getFirst();
                 const auto second = m_connectionSelection->getSecond();
-                const Room *const r1 = first.room;
-                const Room *const r2 = second.room;
+                const auto &r1 = first.room;
+                const auto &r2 = second.room;
 
-                if (r1 != nullptr && r2 != nullptr) {
+                if (r1.has_value() && r2.has_value()) {
                     const ExitDirEnum dir1 = first.direction;
                     const ExitDirEnum dir2 = second.direction;
 
-                    const RoomId &id1 = r1->getId();
-                    const RoomId &id2 = r2->getId();
-
-                    const auto tmpSel = RoomSelection::createSelection(m_data);
-                    tmpSel->getRoom(id1);
-                    tmpSel->getRoom(id2);
+                    const RoomId id1 = r1->getId();
+                    const RoomId id2 = r2->getId();
 
                     const bool isCompleteNew = m_connectionSelection->isCompleteNew();
                     m_connectionSelection = nullptr;
 
                     if (isCompleteNew) {
-                        if (m_canvasMouseMode != CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS) {
-                            m_data.execute(std::make_unique<AddTwoWayExit>(id1, id2, dir1, dir2),
-                                           tmpSel);
-                        } else {
-                            m_data.execute(std::make_unique<AddOneWayExit>(id1, id2, dir1), tmpSel);
-                        }
-                        m_connectionSelection = ConnectionSelection::alloc();
-                        m_connectionSelection->setFirst(&m_data, id1, dir1);
-                        m_connectionSelection->setSecond(&m_data, id2, dir2);
-                        mapChanged();
+                        const WaysEnum ways = (m_canvasMouseMode
+                                               != CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS)
+                                                  ? WaysEnum::TwoWay
+                                                  : WaysEnum::OneWay;
+                        const exit_change_types::ModifyExitConnection change{ChangeTypeEnum::Add,
+                                                                             id1,
+                                                                             dir1,
+                                                                             id2,
+                                                                             ways};
+                        m_data.applySingleChange(Change{change});
                     }
+                    m_connectionSelection = ConnectionSelection::alloc(m_data);
+                    m_connectionSelection->setFirst(id1, dir1);
+                    m_connectionSelection->setSecond(id2, dir2);
+                    slot_mapChanged();
                 }
             }
+
             slot_setConnectionSelection(m_connectionSelection);
         }
         selectionChanged();
@@ -908,9 +921,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr && hasSel1()) {
-                m_connectionSelection = ConnectionSelection::alloc(&m_data, getSel1());
+                m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
             }
-            m_connectionSelection->setSecond(&m_data, getSel2());
+            m_connectionSelection->setSecond(getSel2());
 
             if (!m_connectionSelection->isValid() || !m_connectionSelection->isCompleteExisting()) {
                 m_connectionSelection = nullptr;
@@ -984,29 +997,27 @@ void MapCanvas::slot_zoomReset()
     resizeGL();
 }
 
-void MapCanvas::slot_dataLoaded()
+void MapCanvas::onMovement()
 {
-    const Coordinate &pos = m_data.getPosition();
+    const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
     m_currentLayer = pos.z;
     emit sig_onCenter(pos.to_vec2() + glm::vec2{0.5f, 0.5f});
-    {
-        // REVISIT: is the makeCurrent necessary for calling update()?
-        // MakeCurrentRaii makeCurrentRaii{*this};
-        mapAndInfomarksChanged();
-    }
+    update();
 }
 
-void MapCanvas::slot_moveMarker(const Coordinate &c)
+void MapCanvas::slot_dataLoaded()
 {
-    m_data.setPosition(c);
-    m_currentLayer = c.z;
-    {
-        // REVISIT: is the makeCurrent necessary for calling update()?
-        // MakeCurrentRaii makeCurrentRaii{*this};
-        update();
-    }
+    onMovement();
 
-    emit sig_onCenter(c.to_vec2() + glm::vec2{0.5f, 0.5f});
+    // REVISIT: is the makeCurrent necessary for calling update()?
+    // MakeCurrentRaii makeCurrentRaii{*this};
+    forceUpdateMeshes();
+}
+
+void MapCanvas::slot_moveMarker(const RoomId id)
+{
+    m_data.setRoom(id);
+    onMovement();
 }
 
 void MapCanvas::infomarksChanged()
@@ -1020,17 +1031,20 @@ void MapCanvas::layerChanged()
     update();
 }
 
-void MapCanvas::mapAndInfomarksChanged()
+void MapCanvas::forceUpdateMeshes()
 {
-    m_batches.resetAll();
+    m_batches.resetExistingMeshesAndIgnorePendingRemesh();
+    m_diff.resetExistingMeshesAndIgnorePendingRemesh();
     update();
 }
 
-void MapCanvas::mapChanged()
+void MapCanvas::slot_mapChanged()
 {
     // REVISIT: Ideally we'd want to only update the layers/chunks
     // that actually changed.
-    m_batches.mapBatches.reset();
+    if ((false)) {
+        m_batches.mapBatches.reset();
+    }
     update();
 }
 
@@ -1042,15 +1056,26 @@ void MapCanvas::slot_requestUpdate()
 void MapCanvas::screenChanged()
 {
     auto &gl = getOpenGL();
+    if (!gl.isRendererInitialized()) {
+        return;
+    }
+
     const auto newDpi = static_cast<float>(QPaintDevice::devicePixelRatioF());
     const auto oldDpi = gl.getDevicePixelRatio();
+
     if (!utils::equals(newDpi, oldDpi)) {
         log(QString("Display: %1 DPI").arg(static_cast<double>(newDpi)));
-        m_batches.resetAll();
+
+        // NOTE: The new in-flight mesh will get UI updates when it "finishes".
+        // This means we could save the existing raw mesh data and re-finish it
+        // without having to compute it again, right?
+        m_batches.resetExistingMeshesButKeepPendingRemesh();
+
         gl.setDevicePixelRatio(newDpi);
         auto &font = getGLFont();
         font.cleanup();
         font.init();
+
         update();
     }
 }

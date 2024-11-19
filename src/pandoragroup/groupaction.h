@@ -46,11 +46,12 @@ private:
 class NODISCARD RemoveCharacter final : public GroupAction
 {
 private:
-    QByteArray m_name;
+    QString m_name;
 
 public:
     explicit RemoveCharacter(const QVariantMap &variant);
-    explicit RemoveCharacter(QByteArray);
+    explicit RemoveCharacter(QByteArray) = delete;
+    explicit RemoveCharacter(QString);
 
 private:
     void virt_exec() final;

@@ -31,7 +31,6 @@ class QObject;
 class QShortcut;
 class QTreeWidgetItem;
 class QWidget;
-class Room;
 
 class NODISCARD_QOBJECT FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
 {
@@ -54,7 +53,7 @@ public:
 
 private:
     void adjustResultTable();
-    NODISCARD QString constructToolTip(const Room *);
+    NODISCARD QString constructToolTip(const RoomPtr &);
 
 signals:
     void sig_center(const glm::vec2 &worldPos);
@@ -62,16 +61,17 @@ signals:
     void sig_editSelection();
     void sig_log(const QString &, const QString &);
 
-public slots:
-    void slot_closeEvent(QCloseEvent *event)
-    {
-        /* virtual */
-        closeEvent(event);
-    }
 private slots:
     void slot_on_lineEdit_textChanged();
     void slot_findClicked();
     void slot_enableFindButton(const QString &text);
     void slot_itemDoubleClicked(QTreeWidgetItem *inputItem);
     void slot_showSelectedRoom();
+
+public slots:
+    void slot_closeEvent(QCloseEvent *event)
+    {
+        /* virtual */
+        closeEvent(event);
+    }
 };

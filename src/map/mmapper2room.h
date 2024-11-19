@@ -9,23 +9,29 @@
 
 #include <QtGlobal>
 
-class Room;
-
 namespace tags {
 struct NODISCARD RoomNameTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 struct NODISCARD RoomDescTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 struct NODISCARD RoomContentsTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 struct NODISCARD RoomNoteTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 } // namespace tags
 
-using RoomName = TaggedStringLatin1<tags::RoomNameTag>;
-using RoomDesc = TaggedStringLatin1<tags::RoomDescTag>;
-using RoomContents = TaggedStringLatin1<tags::RoomContentsTag>;
-using RoomNote = TaggedStringLatin1<tags::RoomNoteTag>;
+using RoomName = TaggedBoxedStringUtf8<tags::RoomNameTag>;
+using RoomDesc = TaggedBoxedStringUtf8<tags::RoomDescTag>;
+using RoomContents = TaggedBoxedStringUtf8<tags::RoomContentsTag>;
+using RoomNote = TaggedBoxedStringUtf8<tags::RoomNoteTag>;
 
 #define XFOREACH_RoomTerrainEnum(X) \
     X(UNDEFINED) \
@@ -102,6 +108,12 @@ static constexpr const int NUM_RIDABLE_TYPES = XFOREACH_RoomRidableEnum(X_ADD);
 static constexpr const int NUM_SUNDEATH_TYPES = XFOREACH_RoomSundeathEnum(X_ADD);
 #undef X_ADD
 
+DEFINE_ENUM_COUNT(RoomAlignEnum, NUM_ALIGN_TYPES)
+DEFINE_ENUM_COUNT(RoomLightEnum, NUM_LIGHT_TYPES)
+DEFINE_ENUM_COUNT(RoomPortableEnum, NUM_PORTABLE_TYPES)
+DEFINE_ENUM_COUNT(RoomRidableEnum, NUM_RIDABLE_TYPES)
+DEFINE_ENUM_COUNT(RoomSundeathEnum, NUM_SUNDEATH_TYPES)
+
 #define CHECK3(ALL_CAPS, CamelCase) \
     static_assert(Room##CamelCase##Enum::UNDEFINED == Room##CamelCase##Enum{0}); \
     static_assert(NUM_##ALL_CAPS##_TYPES == 3);
@@ -132,7 +144,7 @@ CHECK3(SUNDEATH, Sundeath)
     X(MILKABLE) \
     X(RATTLESNAKE)
 
-enum class NODISCARD RoomMobFlagEnum {
+enum class NODISCARD RoomMobFlagEnum : uint8_t {
 #define X_DECL(X) X,
     XFOREACH_ROOM_MOB_FLAG(X_DECL)
 #undef X_DECL
@@ -174,7 +186,7 @@ class NODISCARD RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFl
     X(COACH) \
     X(FERRY)
 
-enum class NODISCARD RoomLoadFlagEnum {
+enum class NODISCARD RoomLoadFlagEnum : uint8_t {
 #define X_DECL(X) X,
     XFOREACH_ROOM_LOAD_FLAG(X_DECL)
 #undef X_DECL
@@ -227,3 +239,55 @@ NODISCARD inline constexpr RoomFieldFlags operator|(const RoomFieldEnum lhs,
 {
     return RoomFieldFlags{lhs} | RoomFieldFlags{rhs};
 }
+
+template<>
+struct std::hash<RoomName>
+{
+    NODISCARD std::size_t operator()(const RoomName &name) const noexcept
+    {
+        return std::hash<std::string_view>()(name.getStdStringViewUtf8());
+    }
+};
+template<>
+struct std::hash<RoomDesc>
+{
+    NODISCARD std::size_t operator()(const RoomDesc &desc) const noexcept
+    {
+        return std::hash<std::string_view>()(desc.getStdStringViewUtf8());
+    }
+};
+
+NODISCARD extern std::string_view to_string_view(RoomAlignEnum);
+NODISCARD extern std::string_view to_string_view(RoomLightEnum);
+NODISCARD extern std::string_view to_string_view(RoomLoadFlagEnum);
+NODISCARD extern std::string_view to_string_view(RoomMobFlagEnum);
+NODISCARD extern std::string_view to_string_view(RoomPortableEnum);
+NODISCARD extern std::string_view to_string_view(RoomRidableEnum);
+NODISCARD extern std::string_view to_string_view(RoomSundeathEnum);
+NODISCARD extern std::string_view to_string_view(RoomTerrainEnum);
+
+/* REVISIT: merge these with human-readable names used in parser output? */
+NODISCARD extern QString getName(RoomLoadFlagEnum flag);
+NODISCARD extern QString getName(RoomMobFlagEnum flag);
+NODISCARD extern QString getName(RoomTerrainEnum terrain);
+
+void sanitizeRoomName(std::string &name);
+void sanitizeRoomDesc(std::string &desc);
+void sanitizeRoomContents(std::string &contents);
+void sanitizeRoomNote(std::string &note);
+
+NODISCARD extern RoomName makeRoomName(std::string name);
+NODISCARD extern RoomDesc makeRoomDesc(std::string desc);
+NODISCARD extern RoomContents makeRoomContents(std::string desc);
+NODISCARD extern RoomNote makeRoomNote(std::string note);
+
+namespace mmqt {
+NODISCARD extern RoomName makeRoomName(QString name);
+NODISCARD extern RoomDesc makeRoomDesc(QString desc);
+NODISCARD extern RoomContents makeRoomContents(QString desc);
+NODISCARD extern RoomNote makeRoomNote(QString note);
+} // namespace mmqt
+
+namespace test {
+extern void test_mmapper2room();
+} // namespace test

@@ -7,6 +7,8 @@
 #include "../global/ChangeMonitor.h"
 #include "../global/ConfigConsts.h"
 #include "../global/RuleOf5.h"
+#include "../global/logging.h"
+#include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
@@ -23,6 +25,7 @@
 #include "mapcanvas.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -129,7 +132,7 @@ void MapCanvas::cleanupOpenGL()
 
     // note: m_batchedMeshes co-owns textures created by MapCanvasData,
     // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
-    m_batches.resetAll();
+    m_batches.resetExistingMeshesAndIgnorePendingRemesh();
     m_textures.destroyAll();
     getGLFont().cleanup();
     getOpenGL().cleanup();
@@ -241,6 +244,13 @@ void MapCanvas::initializeGL()
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
+
+    m_connections += setConfig().canvas.drawNeedsUpdate.registerChangeCallback([this]() {
+        if (setConfig().canvas.drawNeedsUpdate.get() && m_diff.highlight.has_value()
+            && m_diff.highlight->needsUpdate.empty()) {
+            this->forceUpdateMeshes();
+        }
+    });
 }
 
 /* Direct means it is always called from the emitter's thread */
@@ -438,7 +448,7 @@ void MapCanvas::setViewportAndMvp(int width, int height)
 
 void MapCanvas::resizeGL(int width, int height)
 {
-    if (m_textures.update == nullptr) {
+    if (m_textures.room_modified == nullptr) {
         // resizeGL called but initializeGL was not called yet
         return;
     }
@@ -457,63 +467,71 @@ void MapCanvas::updateBatches()
 
 void MapCanvas::updateMapBatches()
 {
-    if (m_data.getNeedsMapUpdate()) {
-        m_batches.mapBatches.reset();
-        m_data.clearNeedsMapUpdate();
-        assert(!m_data.getNeedsMapUpdate());
-    }
-
-    const Coordinate &center = [this]() {
-        const auto &screenCenter = m_mapScreen.getCenter();
-        return Coordinate{static_cast<int>(screenCenter.x),
-                          static_cast<int>(screenCenter.y),
-                          m_currentLayer};
-    }();
-
-    std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
-    if (opt_mapBatches && opt_mapBatches->redrawMargin.contains(center)) {
+    RemeshCookie &remeshCookie = m_batches.remeshCookie;
+    if (remeshCookie.isPending()) {
         return;
     }
 
-    const auto radius = []() -> Coordinate {
-        const auto &r = getConfig().canvas.mapRadius;
-        return Coordinate{r[0], r[1], r[2]};
-    }();
-
-    const OptBounds bounds = [&center, &radius]() -> OptBounds {
-        // TODO: allow unrestricted map if there hasn't been a map update or movement within N seconds.
-        // This could be done by using a timer to increment a counter on mapBatches,
-        // and then reset the counter if the player moves.
-        const bool restrict = []() -> bool {
-            const Configuration &config = getConfig();
-            switch (config.canvas.useRestrictedMap) {
-            case RestrictMapEnum::Never:
-                return false;
-            case RestrictMapEnum::Always:
-                return true;
-            case RestrictMapEnum::OnlyInMapMode:
-                return config.general.mapMode == MapModeEnum::MAP;
-            }
-            std::abort();
-        }();
-
-        return restrict                                          //
-                   ? OptBounds::fromCenterRadius(center, radius) //
-                   : OptBounds{};                                //
-    }();
-
-    MapCanvasRoomDrawer drawer{m_textures, getOpenGL(), getGLFont(), opt_mapBatches};
-
-    /// The following ends up calling MapCanvasRoomDrawer::generateBatches()
-    m_data.generateBatches(drawer, bounds);
-
-    if (bounds.isRestricted()) {
-        m_batches.mapBatches->redrawMargin = OptBounds::fromCenterRadius(center, radius * 3 / 4);
+    if (m_batches.mapBatches.has_value() && !m_data.getNeedsMapUpdate()) {
+        return;
     }
+
+    if (m_data.getNeedsMapUpdate()) {
+        m_data.clearNeedsMapUpdate();
+        assert(!m_data.getNeedsMapUpdate());
+        MMLOG() << "[updateMapBatches] cleared 'needsUpdate' flag";
+    }
+
+    auto getFuture = [this]() {
+        MMLOG() << "[updateMapBatches] calling generateBatches";
+        return m_data.generateBatches(mctp::getProxy(m_textures));
+    };
+
+    remeshCookie.set(getFuture());
+    assert(remeshCookie.isPending());
+
+    m_diff.cancelUpdates(m_data.getSavedMap());
+}
+
+void MapCanvas::finishPendingMapBatches()
+{
+    std::string_view prefix = "[finishPendingMapBatches] ";
+
+#define LOG() MMLOG() << prefix
+
+    RemeshCookie &remeshCookie = m_batches.remeshCookie;
+    if (!remeshCookie.isPending()) {
+        return;
+    } else if (!remeshCookie.isReady()) {
+        return;
+    }
+
+    LOG() << "Waiting for the cookie. This shouldn't take long.";
+    SharedMapBatchFinisher pFuture = remeshCookie.get();
+    assert(!remeshCookie.isPending());
+
+    if (pFuture == nullptr) {
+        // REVISIT: Do we need to schedule another update now?
+        LOG() << "Got NULL (means the update was flagged to be ignored)";
+        return;
+    }
+
+    // REVISIT: should we pass a "fake" one and only swap to the correct one on success?
+    LOG() << "Clearing the map batches and call the finisher to create new ones";
+
+    DECL_TIMER(t, __FUNCTION__);
+    const IMapBatchesFinisher &future = *pFuture;
+    std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
+    opt_mapBatches.reset();
+    finish(future, opt_mapBatches, getOpenGL(), getGLFont());
+    assert(opt_mapBatches.has_value());
+
+#undef LOG
 }
 
 void MapCanvas::actuallyPaintGL()
 {
+    // DECL_TIMER(t, __FUNCTION__);
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
@@ -528,17 +546,175 @@ void MapCanvas::actuallyPaintGL()
     paintBatchedInfomarks();
     paintSelections();
     paintCharacters();
+    paintDifferences();
+}
+
+NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
+{
+    return highlight && highlight->saved.isSamePointer(saved)
+           && highlight->current.isSamePointer(current);
+}
+
+// this differs from isUpToDate in that it allows display of a diff based on the current saved map,
+// but it allows the "current" to be different (e.g. during the async remesh for the current map).
+NODISCARD bool MapCanvas::Diff::hasRelatedDiff(const Map &saved) const
+{
+    return highlight && highlight->saved.isSamePointer(saved);
+}
+
+void MapCanvas::Diff::cancelUpdates(const Map &saved)
+{
+    futureHighlight.reset();
+    if (highlight) {
+        if (!hasRelatedDiff(saved)) {
+            highlight.reset();
+        }
+    }
+}
+
+void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
+{
+    auto &diff = *this;
+
+    // Pending takes precedence. This also usually guarantees at most one pending update at a time,
+    // but calling resetExistingMeshesAndIgnorePendingRemesh() could result in more than one diff
+    // mesh thread executing concurrently, where the old one will be ignored.
+    if (diff.futureHighlight) {
+        constexpr auto immediate = std::chrono::milliseconds(0);
+        if (diff.futureHighlight->wait_for(immediate) != std::future_status::timeout) {
+            try {
+                diff.highlight = diff.futureHighlight->get();
+            } catch (const std::exception &ex) {
+                MMLOG_ERROR() << "Exception: " << ex.what();
+            }
+            diff.futureHighlight.reset();
+        }
+        return;
+    }
+
+    // no change necessary
+    if (isUpToDate(saved, current)) {
+        return;
+    }
+
+    const bool showNeedsServerId = getConfig().canvas.drawNeedsUpdate.get();
+
+    diff.futureHighlight = std::async(
+        std::launch::async, [saved, current, showNeedsServerId]() -> Diff::HighlightDiff {
+            DECL_TIMER(t2, "[async] actuallyPaintGL: highlight differences and needs update");
+            // 3-2
+            // |/|
+            // 0-1
+            static constexpr std::array<glm::vec3, 4> corners{
+                glm::vec3{0, 0, 0},
+                glm::vec3{1, 0, 0},
+                glm::vec3{1, 1, 0},
+                glm::vec3{0, 1, 0},
+            };
+
+            // REVISIT: Just send the position and convert from point to quad in a shader?
+            auto getChanged = [&saved, &current]() -> TexVertVector {
+                DECL_TIMER(t3, "[async] actuallyPaintGL: compute differences");
+                TexVertVector changed;
+                auto drawQuad = [&changed](const RawRoom &room) {
+                    const auto &pos = room.getPosition().to_vec3();
+                    for (auto &corner : corners) {
+                        changed.emplace_back(corner, pos + corner);
+                    }
+                };
+
+                ProgressCounter dummyPc;
+                Map::foreachChangedRoom(dummyPc, saved, current, drawQuad);
+                return changed;
+            };
+
+            auto getNeedsUpdate = [&current, showNeedsServerId]() -> TexVertVector {
+                if (!showNeedsServerId) {
+                    return TexVertVector{};
+                }
+                DECL_TIMER(t3, "[async] actuallyPaintGL: compute needs update");
+
+                TexVertVector needsUpdate;
+                auto drawQuad = [&needsUpdate](const RoomHandle &h) {
+                    const auto &pos = h.getPosition().to_vec3();
+                    for (auto &corner : corners) {
+                        needsUpdate.emplace_back(corner, pos + corner);
+                    }
+                };
+                for (auto id : current.getRooms()) {
+                    if (auto h = current.getRoomHandle(id)) {
+                        if (h.getServerId() == INVALID_SERVER_ROOMID) {
+                            drawQuad(h);
+                        }
+                    }
+                }
+                return needsUpdate;
+            };
+
+            return Diff::HighlightDiff{saved, current, getNeedsUpdate(), getChanged()};
+        });
+}
+
+void MapCanvas::paintDifferences()
+{
+    auto &diff = m_diff;
+    const auto &saved = m_data.getSavedMap();
+    const auto &current = m_data.getCurrentMap();
+
+    diff.maybeAsyncUpdate(saved, current);
+    if (!diff.hasRelatedDiff(saved)) {
+        return;
+    }
+
+    const auto &highlight = deref(diff.highlight);
+    auto &gl = getOpenGL();
+
+    auto tryRenderWithTexture = [&gl](const TexVertVector &points, const MMTextureId texid) {
+        if (points.empty()) {
+            return;
+        }
+        gl.renderTexturedQuads(points,
+                               GLRenderState()
+                                   .withColor(Colors::white)
+                                   .withBlend(BlendModeEnum::TRANSPARENCY)
+                                   .withTexture0(texid));
+    };
+
+    if (getConfig().canvas.drawNeedsUpdate.get()) {
+        tryRenderWithTexture(highlight.needsUpdate, m_textures.room_needs_update->getId());
+    }
+    tryRenderWithTexture(highlight.diff, m_textures.room_modified->getId());
 }
 
 void MapCanvas::paintMap()
 {
+    const bool pending = m_batches.remeshCookie.isPending();
+    if (pending) {
+        // REVISIT: will this end up using 100% cpu,
+        // or will it only run up to the frame rate times per second?
+        update();
+    }
+
     if (!m_batches.mapBatches.has_value()) {
-        // This should never happen.
-        getGLFont().renderTextCentered("Batch error");
+        const QString msg = pending ? "Please wait... the map isn't ready yet." : "Batch error";
+        getGLFont().renderTextCentered(msg);
+        if (!pending) {
+            // REVISIT: does this need a better fix?
+            // pending already scheduled an update, but now we realize we need an update.
+            update();
+        }
         return;
     }
 
+    // TODO: add a GUI indicator for pending update?
     renderMapBatches();
+
+    if (pending) {
+        if (m_batches.pendingUpdateFlashState.tick()) {
+            const QString msg = "CAUTION: Async map update pending!";
+            getGLFont().renderTextCentered(msg);
+        }
+    }
 }
 
 void MapCanvas::paintSelections()
@@ -572,6 +748,9 @@ void MapCanvas::paintGL()
 
         // Note: The real work happens here!
         updateBatches();
+
+        // And here
+        finishPendingMapBatches();
 
         // For accurate timing of the update, we'd need to call glFinish(),
         // or at least set up an OpenGL query object. The update will send
@@ -623,7 +802,7 @@ void MapCanvas::paintGL()
     auto y = lineHeight;
     const auto print = [lineHeight, rightMargin, &text, &y](const QString &msg) {
         text.emplace_back(glm::vec3(rightMargin, y, 0),
-                          mmqt::toStdStringLatin1(msg),
+                          mmqt::toStdStringLatin1(msg), // GL font is latin1
                           Colors::white,
                           Colors::black.withAlpha(0.4f),
                           FontFormatFlags{FontFormatFlagEnum::HALIGN_RIGHT});
@@ -642,6 +821,7 @@ void MapCanvas::paintGL()
         ms(end - afterPaint),
         calledFinish ? "" : "*",
         total));
+
     if (!calledFinish) {
         print("* = unable to call glFinish()");
     }
@@ -715,6 +895,20 @@ void MapCanvas::paintSelectionArea()
             static constexpr float SELECTION_AREA_LINE_WIDTH = 2.f;
             const auto lineStyle = rs.withLineParams(LineParams{SELECTION_AREA_LINE_WIDTH});
             const std::vector<glm::vec3> verts{A, B, B, C, C, D, D, A};
+
+            // FIXME: ASAN flags this as out-of-bounds memory access inside an assertion
+            //
+            //     Q_ASSERT(QOpenGLFunctions::isInitialized(d_ptr));
+            //
+            // in QOpenGLFunctions::glDrawArrays(). However, it works without ASAN,
+            // so maybe the problem is in my OpenGL driver?
+            //
+            // "OpenGL Version:" "3.1 Mesa 20.2.6"
+            // "OpenGL Renderer:" "llvmpipe (LLVM 11.0.0, 256 bits)"
+            // "OpenGL Vendor:" "Mesa/X.org"
+            // "OpenGL GLSL:" "1.40"
+            // "Current OpenGL Context:" "3.1 (valid)"
+            //
             gl.renderPlainLines(verts, lineStyle.withColor(selFgColor));
         }
     }
@@ -725,7 +919,7 @@ void MapCanvas::paintSelectionArea()
 void MapCanvas::updateMultisampling()
 {
     const int wantMultisampling = getConfig().canvas.antialiasingSamples;
-    std::optional<int> &activeStatus = graphicsOptionsStatus.multisampling;
+    std::optional<int> &activeStatus = m_graphicsOptionsStatus.multisampling;
     if (activeStatus == wantMultisampling) {
         return;
     }

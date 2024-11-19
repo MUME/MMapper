@@ -6,6 +6,8 @@
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
+#include <memory>
+
 #include <QFile>
 #include <QString>
 
@@ -18,7 +20,10 @@ class NODISCARD FileSaver final
 {
 private:
     QString m_filename;
-    QFile m_file; // old comment says "disables copying" ... why? and how?
+
+    // old comment says "disables copying" ... why? and how?
+    // answer: QFile cannot be copied
+    std::shared_ptr<QFile> m_file = std::make_shared<QFile>();
 
 public:
     FileSaver() = default;
@@ -28,7 +33,8 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(FileSaver);
 
 public:
-    NODISCARD QFile &file() { return m_file; }
+    NODISCARD QFile &getFile() { return *m_file; }
+    NODISCARD std::shared_ptr<QFile> getSharedFile() { return m_file; }
 
     /*! \exception std::runtime_error if the file can't be opened or a currently
      * open file can't be closed.

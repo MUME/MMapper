@@ -67,6 +67,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
         xml.writeAttribute("hp", playerData["hp"].toString());
         xml.writeAttribute("maxmoves", playerData["maxmoves"].toString());
         xml.writeAttribute("room", playerData["room"].toString());
+        xml.writeAttribute("roomid", playerData["roomid"].toString());
         xml.writeAttribute("prespam", playerData["prespam"].toString());
         xml.writeAttribute("affects", playerData["affects"].toString());
         // REVISIT: Use static keys
@@ -139,10 +140,10 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
 
 void CGroupCommunicator::sendMessage(GroupSocket &socket,
                                      const MessagesEnum message,
-                                     const QByteArray &text)
+                                     const QString &text)
 {
     QVariantMap root;
-    root["text"] = QString::fromLatin1(text);
+    root["text"] = text;
     sendMessage(socket, message, root);
 }
 
@@ -154,7 +155,7 @@ void CGroupCommunicator::sendMessage(GroupSocket &socket,
 }
 
 // the core of the protocol
-void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByteArray &buff)
+void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QString &buff)
 {
     if (LOG_MESSAGE_INFO) {
         qInfo() << "Incoming message:" << buff;
@@ -166,7 +167,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
         return;
     }
 
-    if (xml.name() != QLatin1String("datagram")) {
+    if (xml.name() != "datagram") {
         qWarning() << "Message does not start with element 'datagram'" << buff;
         return;
     }
@@ -179,7 +180,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
     const MessagesEnum message = static_cast<MessagesEnum>(
         xml.attributes().value("message").toInt());
 
-    if (xml.readNextStartElement() && xml.name() != QLatin1String("data")) {
+    if (xml.readNextStartElement() && xml.name() != "data") {
         qWarning() << "'datagram' element did not have a 'data' child element" << buff;
         return;
     }
@@ -189,19 +190,19 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
     while (xml.readNextStartElement()) {
         switch (message) {
         case MessagesEnum::GTELL:
-            if (xml.name() == QLatin1String("gtell")) {
+            if (xml.name() == "gtell") {
                 data["from"] = xml.attributes().value("from").toString();
                 data["text"] = xml.readElementText();
             }
             break;
 
         case MessagesEnum::REQ_HANDSHAKE:
-            if (xml.name() == QLatin1String("protocolVersion")) {
+            if (xml.name() == "protocolVersion") {
                 data["protocolVersion"] = xml.readElementText();
             }
             break;
         case MessagesEnum::UPDATE_CHAR:
-            if (xml.name() == QLatin1String("loginData")) {
+            if (xml.name() == "loginData") {
                 const auto &attributes = xml.attributes();
                 if (attributes.hasAttribute("protocolVersion")) {
                     data["protocolVersion"] = attributes.value("protocolVersion").toUInt();
@@ -213,7 +214,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
         common_update_char:
         case MessagesEnum::REMOVE_CHAR:
         case MessagesEnum::ADD_CHAR:
-            if (xml.name() == QLatin1String("playerData")) {
+            if (xml.name() == "playerData") {
                 const auto &attributes = xml.attributes();
                 QVariantMap playerData;
                 playerData["hp"] = attributes.value("hp").toInt();
@@ -234,7 +235,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
             break;
 
         case MessagesEnum::RENAME_CHAR:
-            if (xml.name() == QLatin1String("rename")) {
+            if (xml.name() == "rename") {
                 const auto &attributes = xml.attributes();
                 data["oldname"] = attributes.value("oldname").toString();
                 data["newname"] = attributes.value("newname").toString();
@@ -249,7 +250,7 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
         case MessagesEnum::PROT_VERSION:
         case MessagesEnum::STATE_LOGGED:
         case MessagesEnum::STATE_KICKED:
-            if (xml.name() == QLatin1String("text")) {
+            if (xml.name() == "text") {
                 data["text"] = xml.readElementText();
             }
             break;
@@ -261,12 +262,12 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
 }
 
 // this function is for sending gtell from a local user
-void CGroupCommunicator::slot_sendGroupTell(const QByteArray &tell)
+void CGroupCommunicator::slot_sendGroupTell(const QString &tell)
 {
     // form the gtell QVariantMap first.
     QVariantMap root;
-    root["text"] = QString::fromLatin1(tell);
-    root["from"] = QString::fromLatin1(getGroup()->getSelf()->getName());
+    root["text"] = tell;
+    root["from"] = getGroup()->getSelf()->getName();
     // depending on the type of this communicator either send to
     // server or send to everyone
     slot_sendGroupTellMessage(root);
@@ -277,11 +278,11 @@ void CGroupCommunicator::sendCharUpdate(GroupSocket &socket, const QVariantMap &
     sendMessage(socket, MessagesEnum::UPDATE_CHAR, map);
 }
 
-void CGroupCommunicator::slot_sendSelfRename(const QByteArray &oldName, const QByteArray &newName)
+void CGroupCommunicator::slot_sendSelfRename(const QString &oldName, const QString &newName)
 {
     QVariantMap root;
-    root["oldname"] = QString::fromLatin1(oldName);
-    root["newname"] = QString::fromLatin1(newName);
+    root["oldname"] = oldName;
+    root["newname"] = newName;
     slot_sendCharRename(root);
 }
 

@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/AnsiOstream.h"
 #include "../global/Signal2.h"
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
@@ -13,8 +14,10 @@
 #include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
+#include "TaggedBytes.h"
 
 #include <memory>
+#include <sstream>
 
 #include <QByteArray>
 #include <QObject>
@@ -109,21 +112,62 @@ private:
     NODISCARD bool isConnected() const;
     void connectToMud();
     void disconnectFromMud();
-    void sendToUser(const QByteArray &ba) { emit sig_sendToUser(ba, false); }
-    void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
+    void sendToUser(const QString &ba) { emit sig_sendToUser(ba, false); }
+    void sendToMud(const QString &ba) { emit sig_sendToMud(ba); }
     void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
     void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
     NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
     void log(const QString &msg) { emit sig_log("Proxy", msg); }
 
+    class NODISCARD AnsiHelper final
+    {
+    public:
+        using Callback = Signal2<std::string>;
+
+    private:
+        Callback m_callback;
+        std::ostringstream m_oss;
+        AnsiOstream m_aos{m_oss};
+
+    public:
+        explicit AnsiHelper(const Signal2Lifetime &lifetime, Callback::Function fn)
+        {
+            m_callback.connect(lifetime, std::move(fn));
+        }
+        ~AnsiHelper()
+        {
+            auto str = std::move(m_oss).str();
+            m_callback.invoke(std::move(str));
+        }
+        DELETE_CTORS_AND_ASSIGN_OPS(AnsiHelper);
+
+        template<typename T>
+        void write(T &&x)
+        {
+            m_aos.write(std::forward<T>(x));
+        }
+        template<typename T>
+        void writeWithColor(const RawAnsi &ansi, T &&x)
+        {
+            m_aos.writeWithColor(ansi, std::forward<T>(x));
+        }
+    };
+
+    NODISCARD AnsiHelper getSendToUserAnsiOstream();
+    void sendNewlineToUser() { sendToUser("\n"); }
+    void sendWelcomeToUser();
+    void sendErrorToUser(std::string_view msg);
+    void sendStatusToUser(std::string_view msg);
+    void sendSyntaxHintToUser(std::string_view before, std::string_view cmd, std::string_view after);
+
 signals:
     void sig_log(const QString &, const QString &);
 
-    void sig_analyzeUserStream(const QByteArray &);
-    void sig_analyzeMudStream(const QByteArray &);
+    void sig_analyzeUserStream(const TelnetIacBytes &);
+    void sig_analyzeMudStream(const TelnetIacBytes &);
 
-    void sig_sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &, bool);
+    void sig_sendToMud(const QString &);
+    void sig_sendToUser(const QString &, bool);
 
     void sig_gmcpToMud(const GmcpMessage &);
     void sig_gmcpToUser(const GmcpMessage &);
@@ -135,8 +179,8 @@ public slots:
     void slot_userTerminatedConnection();
     void slot_mudTerminatedConnection();
 
-    void slot_onSendToMudSocket(const QByteArray &);
-    void slot_onSendToUserSocket(const QByteArray &);
+    void slot_onSendToMudSocket(const TelnetIacBytes &);
+    void slot_onSendToUserSocket(const TelnetIacBytes &);
 
     void slot_onMudError(const QString &);
     void slot_onMudConnected();

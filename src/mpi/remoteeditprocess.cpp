@@ -57,7 +57,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
                                .arg(QDir::tempPath() + QDir::separator())    // %1
                                .arg(m_editSession ? "edit" : "view")         // %2
                                .arg(QCoreApplication::applicationPid())      // %3
-                               .arg(mmqt::toQStringLatin1(randomString(6))); // %4
+                               .arg(mmqt::toQStringLatin1(randomString(6))); // %4 // ASCII
     QFile file(fileTemplate);
 
     // Try opening up the temporary file
@@ -68,7 +68,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     m_fileName = file.fileName();
     qDebug() << "View session file template" << m_fileName;
-    file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
+    file.write(m_body.toLatin1()); // MPI is always Latin1
     file.flush();
 
     // REVISIT: check return value?
@@ -133,7 +133,7 @@ void RemoteEditProcess::virt_onFinished(int exitCode, QProcess::ExitStatus statu
     }
 
     // Read the file
-    QString content = QString::fromLatin1(file.readAll());
+    QString content = QString::fromLatin1(file.readAll()); // MPI is always Latin1
     file.close();
 
     // Submit it to MUME

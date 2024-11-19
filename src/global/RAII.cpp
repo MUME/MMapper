@@ -4,29 +4,9 @@
 
 #include "RAII.h"
 
-#include <cassert>
 #include <utility>
 
 #include <QtDebug>
-
-RAIIBool::RAIIBool(bool &b)
-    : ref{b}
-{
-    assert(!ref);
-    ref = true;
-}
-
-RAIIBool::RAIIBool(RAIIBool &&rhs)
-    : ref{rhs.ref}
-    , moved{std::exchange(rhs.moved, true)}
-{}
-
-RAIIBool::~RAIIBool()
-{
-    if (!std::exchange(moved, true)) {
-        ref = false;
-    }
-}
 
 RAIICallback::RAIICallback(RAIICallback &&rhs) noexcept
     : m_was_moved{std::exchange(rhs.m_was_moved, true)}

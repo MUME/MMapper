@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
+#include "../map/RoomHandle.h"
 #include "../map/room.h"
 
 #include <cassert>
@@ -15,8 +16,6 @@
 #include <QString>
 #include <QtCore>
 
-class Room;
-
 enum class NODISCARD PatternKindsEnum { NONE, DESC, CONTENTS, NAME, NOTE, EXITS, FLAGS, ALL };
 static constexpr const auto PATTERN_KINDS_LENGTH = static_cast<size_t>(PatternKindsEnum::ALL) + 1u;
 static_assert(PATTERN_KINDS_LENGTH == 8);
@@ -25,7 +24,7 @@ class NODISCARD RoomFilter final
 {
 public:
     static const char *const parse_help;
-    NODISCARD static std::optional<RoomFilter> parseRoomFilter(const std::string_view line);
+    NODISCARD static std::optional<RoomFilter> parseRoomFilter(std::string_view line);
 
 private:
     const std::regex m_regex;
@@ -33,16 +32,17 @@ private:
 
 public:
     RoomFilter() = delete;
-    explicit RoomFilter(const std::string_view str,
+    explicit RoomFilter(std::string_view str,
                         Qt::CaseSensitivity cs,
                         bool regex,
                         PatternKindsEnum kind);
 
 public:
-    NODISCARD bool filter(const Room *r) const;
+    NODISCARD bool filter(const RawRoom &r) const;
     NODISCARD PatternKindsEnum patternKind() const { return m_kind; }
 
 private:
+    NODISCARD bool filter_kind(const RawRoom &r, const PatternKindsEnum pat) const;
     NODISCARD bool matches(const std::string_view s) const
     {
         return std::regex_match(s.begin(), s.end(), m_regex);
@@ -50,9 +50,14 @@ private:
 
 private:
     template<typename T>
-    NODISCARD bool matches(const TaggedStringLatin1<T> &s) const
+    NODISCARD bool matches(const TaggedStringUtf8<T> &s) const
     {
-        return this->matches(s.getStdStringLatin1());
+        return this->matches(s.getStdStringUtf8());
+    }
+    template<typename T>
+    NODISCARD bool matches(const TaggedBoxedStringUtf8<T> &s) const
+    {
+        return this->matches(s.getStdStringViewUtf8());
     }
 
 private:

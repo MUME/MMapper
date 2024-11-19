@@ -13,15 +13,20 @@
 
 #include <memory>
 
-class Room;
-class RoomAdmin;
+class MapFrontend;
 struct PathParameters;
 
 class NODISCARD Crossover final : public Experimenting
 {
+private:
+    MapFrontend &m_map;
+
 public:
-    Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params);
+    Crossover(MapFrontend &map,
+              std::shared_ptr<PathList> paths,
+              ExitDirEnum dirCode,
+              PathParameters &params);
 
 private:
-    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+    void virt_receiveRoom(const RoomHandle &) final;
 };

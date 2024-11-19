@@ -6,6 +6,7 @@
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
+#include "../map/RoomHandle.h"
 #include "../map/coordinate.h"
 #include "../map/roomid.h"
 #include "../opengl/Font.h"
@@ -22,7 +23,6 @@
 #include <QString>
 
 class OpenGL;
-class Room;
 
 struct NODISCARD RoomNameBatch final
 {
@@ -31,7 +31,7 @@ private:
 
 public:
     RoomNameBatch() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(RoomNameBatch);
+    DEFAULT_MOVES_DELETE_COPIES(RoomNameBatch);
     ~RoomNameBatch() = default;
 
 public:
@@ -44,7 +44,7 @@ public:
     NODISCARD bool empty() const { return m_names.empty(); }
 
 public:
-    NODISCARD UniqueMesh getMesh(GLFont &font);
+    NODISCARD UniqueMesh getMesh(GLFont &font) const;
 };
 
 using BatchedRoomNames = std::unordered_map<int, UniqueMesh>;
@@ -55,7 +55,7 @@ struct NODISCARD ConnectionDrawerColorBuffer final
     std::vector<ColorVert> triVerts;
 
     ConnectionDrawerColorBuffer() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(ConnectionDrawerColorBuffer);
+    DEFAULT_MOVES_DELETE_COPIES(ConnectionDrawerColorBuffer);
     ~ConnectionDrawerColorBuffer() = default;
 
     void clear()
@@ -77,7 +77,7 @@ struct NODISCARD ConnectionMeshes final
     DEFAULT_MOVES_DELETE_COPIES(ConnectionMeshes);
     ~ConnectionMeshes() = default;
 
-    void render(int thisLayer, int focusedLayer);
+    void render(int thisLayer, int focusedLayer) const;
 };
 
 struct NODISCARD ConnectionDrawerBuffers final
@@ -86,7 +86,7 @@ struct NODISCARD ConnectionDrawerBuffers final
     ConnectionDrawerColorBuffer red;
 
     ConnectionDrawerBuffers() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(ConnectionDrawerBuffers);
+    DEFAULT_MOVES_DELETE_COPIES(ConnectionDrawerBuffers);
     ~ConnectionDrawerBuffers() = default;
 
     void clear()
@@ -96,7 +96,7 @@ struct NODISCARD ConnectionDrawerBuffers final
     }
 
     NODISCARD bool empty() const { return red.empty() && normal.empty(); }
-    NODISCARD ConnectionMeshes getMeshes(OpenGL &gl);
+    NODISCARD ConnectionMeshes getMeshes(OpenGL &gl) const;
 };
 
 struct NODISCARD ConnectionDrawer final
@@ -157,17 +157,17 @@ public:
 public:
     NODISCARD ConnectionFakeGL &getFakeGL() { return m_fake; }
 
-    void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
+    void drawRoomConnectionsAndDoors(const RoomHandle &room);
 
-    void drawRoomDoorName(const Room *sourceRoom,
+    void drawRoomDoorName(const RoomHandle &sourceRoom,
                           ExitDirEnum sourceDir,
-                          const Room *targetRoom,
+                          const RoomHandle &targetRoom,
                           ExitDirEnum targetDir);
 
     void drawLineStrip(const std::vector<glm::vec3> &points);
 
-    void drawConnection(const Room *leftRoom,
-                        const Room *rightRoom,
+    void drawConnection(const RoomHandle &leftRoom,
+                        const RoomHandle &rightRoom,
                         ExitDirEnum startDir,
                         ExitDirEnum endDir,
                         bool oneway,

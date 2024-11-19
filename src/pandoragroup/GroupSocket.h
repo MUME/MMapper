@@ -5,6 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/io.h"
+#include "../proxy/TaggedBytes.h"
 
 #include <QAbstractSocket>
 #include <QByteArray>
@@ -26,11 +27,14 @@ class NODISCARD_QOBJECT GroupSocket final : public QObject
     Q_OBJECT
 
 private:
+    // TODO: use the same constant as CGroupCommunicator::PROTOCOL_VERSION_105;
+    static inline constexpr ProtocolVersion defaultProtocolVersion = 105;
+
     QSslSocket m_socket;
     QTimer m_timer;
 
     ProtocolStateEnum m_protocolState = ProtocolStateEnum::Unconnected;
-    ProtocolVersion m_protocolVersion = 102;
+    ProtocolVersion m_protocolVersion = defaultProtocolVersion;
 
     enum class NODISCARD GroupMessageStateEnum {
         /// integer string representing the message length
@@ -41,9 +45,9 @@ private:
         = GroupMessageStateEnum::LENGTH;
 
     io::buffer<(1 << 15)> m_ioBuffer;
-    QByteArray m_buffer;
-    QByteArray m_secret;
-    QByteArray m_name;
+    RawBytes m_buffer;
+    GroupSecret m_secret;
+    QString m_name;
     unsigned int m_currentMessageLen = 0;
 
 public:
@@ -56,7 +60,7 @@ public:
     void startServerEncrypted() { m_socket.startServerEncryption(); }
     void startClientEncrypted() { m_socket.startClientEncryption(); }
 
-    NODISCARD QByteArray getSecret() const { return m_secret; }
+    NODISCARD GroupSecret getSecret() const { return m_secret; }
     NODISCARD QString getPeerName() const;
     NODISCARD uint16_t getPeerPort() const { return m_socket.peerPort(); }
 
@@ -69,10 +73,11 @@ public:
     void setProtocolVersion(const ProtocolVersion val) { m_protocolVersion = val; }
     NODISCARD ProtocolVersion getProtocolVersion() const { return m_protocolVersion; }
 
-    void setName(const QByteArray &val) { m_name = val; }
-    NODISCARD const QByteArray &getName() { return m_name; }
+    void setName(const QByteArray &val) = delete;
+    void setName(const QString &val) { m_name = val; }
+    NODISCARD const QString &getName() { return m_name; }
 
-    void sendData(const QByteArray &data);
+    void sendData(const QString &data);
 
 private:
     void reset();
@@ -83,7 +88,7 @@ signals:
     void sig_sendLog(const QString &);
     void sig_connectionClosed(GroupSocket *);
     void sig_errorInConnection(GroupSocket *, const QString &);
-    void sig_incomingData(GroupSocket *, QByteArray);
+    void sig_incomingData(GroupSocket *, QString);
     void sig_connectionEstablished(GroupSocket *);
     void sig_connectionEncrypted(GroupSocket *);
 

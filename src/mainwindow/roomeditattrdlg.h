@@ -11,11 +11,14 @@
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitFlags.h"
+#include "../map/RoomHandle.h"
 #include "../map/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "ui_roomeditattrdlg.h"
 
+#include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include <QDialog>
@@ -23,14 +26,13 @@
 #include <QtCore>
 #include <QtWidgets/QListWidgetItem>
 
-class AbstractAction;
+class Change;
 class MapCanvas;
 class MapData;
 class QListWidgetItem;
 class QObject;
 class QShortcut;
 class QWidget;
-class Room;
 
 class NODISCARD RoomListWidgetItem final : public QListWidgetItem
 {
@@ -53,16 +55,19 @@ private:
     EnumIndexedArray<UniqueRoomListWidgetItem, RoomMobFlagEnum> m_mobListItems;
     EnumIndexedArray<UniqueRoomListWidgetItem, ExitFlagEnum> m_exitListItems;
     EnumIndexedArray<UniqueRoomListWidgetItem, DoorFlagEnum> m_doorListItems;
-    EnumIndexedArray<QToolButton *, RoomTerrainEnum> roomTerrainButtons;
+    EnumIndexedArray<QToolButton *, RoomTerrainEnum> m_roomTerrainButtons;
 
     SharedRoomSelection m_roomSelection;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
     std::unique_ptr<QShortcut> m_hiddenShortcut;
     bool m_noteSelected = false;
+    bool m_noteDirty = false;
 
 private:
     void requestUpdate() { emit sig_requestUpdate(); }
+    void closeEvent(QCloseEvent *) override;
+    void setRoomNoteDirty(bool dirty);
 
 public:
     explicit RoomEditAttrDlg(QWidget *parent);
@@ -75,12 +80,28 @@ private:
     void connectAll();
     void disconnectAll();
 
-    NODISCARD const Room *getSelectedRoom();
+    NODISCARD std::optional<RoomHandle> getSelectedRoom();
     NODISCARD ExitDirEnum getSelectedExit();
-    void updateDialog(const Room *r);
+    void updateDialog(const std::optional<RoomHandle> &);
 
 private:
-    void updateCommon(std::unique_ptr<AbstractAction> moved_action, bool onlyExecuteAction = false);
+    void updateCommon(const std::function<Change(const RawRoom &)> &getChange,
+                      bool onlyExecuteAction);
+    void updateCommon(const std::function<Change(const RawRoom &)> &getChange)
+    {
+        updateCommon(getChange, false);
+    }
+
+    void setFieldCommon(const RoomFieldVariant &, FlagModifyModeEnum mode, bool onlyExecuteAction);
+    void setFieldCommon(const RoomFieldVariant &var, FlagModifyModeEnum mode)
+    {
+        setFieldCommon(var, mode, false);
+    }
+
+    void setSelectedRoomExitField(const ExitFieldVariant &,
+                                  ExitDirEnum dir,
+                                  FlagModifyModeEnum mode);
+
     void updateRoomAlign(RoomAlignEnum value);
     void updateRoomPortable(RoomPortableEnum value);
     void updateRoomRideable(RoomRidableEnum value);

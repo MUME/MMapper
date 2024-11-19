@@ -9,23 +9,6 @@
 #include <algorithm>
 #include <functional>
 
-class NODISCARD RAIIBool final
-{
-private:
-    bool &ref;
-    bool moved = false;
-
-public:
-    explicit RAIIBool(bool &b);
-    ~RAIIBool();
-
-public:
-    /* move ctor */
-    RAIIBool(RAIIBool &&rhs);
-    DELETE_COPY_CTOR(RAIIBool);
-    DELETE_ASSIGN_OPS(RAIIBool);
-};
-
 class NODISCARD RAIICallback final
 {
 private:

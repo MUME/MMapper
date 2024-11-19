@@ -7,9 +7,10 @@
 
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
+#include "roomid.h"
 
-class Room;
-class RoomAdmin;
+class MapData;
+class RoomHandle;
 
 /*! \brief Interface giving briefly access to a mutex-protected room.
  *
@@ -21,15 +22,12 @@ public:
     RoomRecipient();
     virtual ~RoomRecipient();
 
+private:
+    virtual void virt_receiveRoom(const RoomHandle &) = 0;
+
+public:
+    void receiveRoom(const RoomHandle &room) { virt_receiveRoom(room); }
+
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(RoomRecipient);
-
-private:
-    virtual void virt_receiveRoom(RoomAdmin *admin, const Room *room) = 0;
-
-public:
-    void receiveRoom(RoomAdmin *const admin, const Room *const room)
-    {
-        virt_receiveRoom(admin, room);
-    }
 };

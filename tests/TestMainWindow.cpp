@@ -30,7 +30,7 @@ TestMainWindow::~TestMainWindow() = default;
 
 void TestMainWindow::updaterTest()
 {
-    CompareVersion version{QLatin1String(getMMapperVersion())};
+    CompareVersion version{QString::fromUtf8(getMMapperVersion())};
     QVERIFY2(version == version, "Version compared to itself matches");
 
     CompareVersion current{"2.8.0"};

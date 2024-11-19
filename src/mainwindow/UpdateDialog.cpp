@@ -170,7 +170,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         return;
     }
     const QString latestTag = obj["tag_name"].toString();
-    const QString currentVersion = QLatin1String(getMMapperVersion());
+    const QString currentVersion = QString::fromUtf8(getMMapperVersion());
     const CompareVersion latest(latestTag);
     static const CompareVersion current(currentVersion);
     qInfo() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest

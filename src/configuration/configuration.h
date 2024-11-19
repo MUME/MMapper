@@ -15,6 +15,7 @@
 #include "../global/RuleOf5.h"
 #include "NamedConfig.h"
 
+#include <memory>
 #include <string_view>
 
 #include <QByteArray>
@@ -111,16 +112,35 @@ public:
     static constexpr const std::string_view ROOM_DARK_NAME = "room-dark";
     static constexpr const std::string_view ROOM_NO_SUNDEATH_NAME = "room-no-sundeath";
 
-    struct NODISCARD CanvasSettings final
+#define XFOREACH_CANVAS_NAMED_COLOR_OPTIONS(X) \
+    X(backgroundColor, BACKGROUND_NAME) \
+    X(connectionNormalColor, CONNECTION_NORMAL_NAME) \
+    X(roomDarkColor, ROOM_DARK_NAME) \
+    X(roomDarkLitColor, ROOM_NO_SUNDEATH_NAME)
+
+    struct NODISCARD CanvasNamedColorOptions
     {
-        bool showUpdated = false;
+#define X_DECL(_id, _name) XNamedColor _id{_name};
+        XFOREACH_CANVAS_NAMED_COLOR_OPTIONS(X_DECL)
+#undef X_DECL
+
+        NODISCARD std::shared_ptr<const CanvasNamedColorOptions> clone() const
+        {
+            auto pResult = std::make_shared<CanvasNamedColorOptions>();
+            auto &result = deref(pResult);
+#define X_CLONE(_id, _name) result._id = this->_id.getColor();
+            XFOREACH_CANVAS_NAMED_COLOR_OPTIONS(X_CLONE)
+#undef X_CLONE
+            return pResult;
+        }
+    };
+
+    struct NODISCARD CanvasSettings final : public CanvasNamedColorOptions
+    {
+        NamedConfig<bool> drawNeedsUpdate{"DRAW_NEEDS_UPDATE", false};
         bool drawNotMappedExits = false;
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
-        XNamedColor backgroundColor{BACKGROUND_NAME};
-        XNamedColor connectionNormalColor{CONNECTION_NORMAL_NAME};
-        XNamedColor roomDarkColor{ROOM_DARK_NAME};
-        XNamedColor roomDarkLitColor{ROOM_NO_SUNDEATH_NAME};
         int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;
@@ -134,7 +154,6 @@ public:
         float extraDetailScaleCutoff = 0.15f;
 
         MMapper::Array<int, 3> mapRadius{100, 100, 100};
-        RestrictMapEnum useRestrictedMap = RestrictMapEnum::OnlyInMapMode;
 
         struct NODISCARD Advanced final
         {
@@ -161,43 +180,55 @@ public:
         SUBGROUP();
     } canvas;
 
-    struct NODISCARD ColorSettings final
+#define XFOREACH_NAMED_COLOR_OPTIONS(X) \
+    X(BACKGROUND, BACKGROUND_NAME) \
+    X(INFOMARK_COMMENT, "infomark-comment") \
+    X(INFOMARK_HERB, "infomark-herb") \
+    X(INFOMARK_MOB, "infomark-mob") \
+    X(INFOMARK_OBJECT, "infomark-object") \
+    X(INFOMARK_RIVER, "infomark-river") \
+    X(INFOMARK_ROAD, "infomark-road") \
+    X(CONNECTION_NORMAL, CONNECTION_NORMAL_NAME) \
+    X(ROOM_DARK, ROOM_DARK_NAME) \
+    X(ROOM_NO_SUNDEATH, ROOM_NO_SUNDEATH_NAME) \
+    X(STREAM, "stream") \
+    X(TRANSPARENT, ".transparent") \
+    X(VERTICAL_COLOR_CLIMB, "vertical-climb") \
+    X(VERTICAL_COLOR_REGULAR_EXIT, "vertical-regular") \
+    X(WALL_COLOR_BUG_WALL_DOOR, "wall-bug-wall-door") \
+    X(WALL_COLOR_CLIMB, "wall-climb") \
+    X(WALL_COLOR_FALL_DAMAGE, "wall-fall-damage") \
+    X(WALL_COLOR_GUARDED, "wall-guarded") \
+    X(WALL_COLOR_NO_FLEE, "wall-no-flee") \
+    X(WALL_COLOR_NO_MATCH, "wall-no-match") \
+    X(WALL_COLOR_NOT_MAPPED, "wall-not-mapped") \
+    X(WALL_COLOR_RANDOM, "wall-random") \
+    X(WALL_COLOR_REGULAR_EXIT, "wall-regular-exit") \
+    X(WALL_COLOR_SPECIAL, "wall-special")
+
+    struct NODISCARD NamedColorOptions
+    {
+#define X_DECL(_id, _name) XNamedColor _id{_name};
+        XFOREACH_NAMED_COLOR_OPTIONS(X_DECL)
+#undef X_DECL
+        NamedColorOptions() = default;
+        void resetToDefaults();
+
+        NODISCARD std::shared_ptr<const NamedColorOptions> clone() const
+        {
+            auto pResult = std::make_shared<NamedColorOptions>();
+            auto &result = deref(pResult);
+#define X_CLONE(_id, _name) result._id = this->_id.getColor();
+            XFOREACH_NAMED_COLOR_OPTIONS(X_CLONE)
+#undef X_CLONE
+            return pResult;
+        }
+    };
+
+    struct NODISCARD ColorSettings final : public NamedColorOptions
     {
         // TODO: save color settings
         // TODO: record which named colors require a full map update.
-        XNamedColor BACKGROUND{BACKGROUND_NAME};
-
-        XNamedColor INFOMARK_COMMENT{"infomark-comment"};
-        XNamedColor INFOMARK_HERB{"infomark-herb"};
-        XNamedColor INFOMARK_MOB{"infomark-mob"};
-        XNamedColor INFOMARK_OBJECT{"infomark-object"};
-        XNamedColor INFOMARK_RIVER{"infomark-river"};
-        XNamedColor INFOMARK_ROAD{"infomark-road"};
-
-        XNamedColor CONNECTION_NORMAL{CONNECTION_NORMAL_NAME};
-        XNamedColor ROOM_DARK{ROOM_DARK_NAME};
-        XNamedColor ROOM_NO_SUNDEATH{ROOM_NO_SUNDEATH_NAME};
-
-        XNamedColor STREAM{"stream"};
-
-        XNamedColor TRANSPARENT{".transparent"};
-
-        XNamedColor VERTICAL_COLOR_CLIMB{"vertical-climb"};
-        XNamedColor VERTICAL_COLOR_REGULAR_EXIT{"vertical-regular"};
-
-        XNamedColor WALL_COLOR_BUG_WALL_DOOR{"wall-bug-wall-door"};
-        XNamedColor WALL_COLOR_CLIMB{"wall-climb"};
-        XNamedColor WALL_COLOR_FALL_DAMAGE{"wall-fall-damage"};
-        XNamedColor WALL_COLOR_GUARDED{"wall-guarded"};
-        XNamedColor WALL_COLOR_NO_FLEE{"wall-no-flee"};
-        XNamedColor WALL_COLOR_NO_MATCH{"wall-no-match"};
-        XNamedColor WALL_COLOR_NOT_MAPPED{"wall-not-mapped"};
-        XNamedColor WALL_COLOR_RANDOM{"wall-random"};
-        XNamedColor WALL_COLOR_REGULAR_EXIT{"wall-regular-exit"};
-        XNamedColor WALL_COLOR_SPECIAL{"wall-special"};
-
-        ColorSettings() = default;
-        void resetToDefaults();
 
     private:
         SUBGROUP();
@@ -246,8 +277,8 @@ public:
         GroupManagerStateEnum state = GroupManagerStateEnum::Off;
         uint16_t localPort = 0u;
         uint16_t remotePort = 0u;
-        QByteArray host;
-        QByteArray charName;
+        QString host;
+        QString charName;
         bool shareSelf = false;
         QColor color;
         bool rulesWarning = false;
@@ -369,3 +400,16 @@ void setEnteredMain();
 /// Returns a reference to the application configuration object.
 NODISCARD Configuration &setConfig();
 NODISCARD const Configuration &getConfig();
+
+using SharedCanvasNamedColorOptions = std::shared_ptr<const Configuration::CanvasNamedColorOptions>;
+using SharedNamedColorOptions = std::shared_ptr<const Configuration::NamedColorOptions>;
+
+const Configuration::CanvasNamedColorOptions &getCanvasNamedColorOptions();
+const Configuration::NamedColorOptions &getNamedColorOptions();
+
+struct NODISCARD ThreadLocalNamedColorRaii final
+{
+    explicit ThreadLocalNamedColorRaii(SharedCanvasNamedColorOptions canvasNamedColorOptions,
+                                       SharedNamedColorOptions namedColorOptions);
+    ~ThreadLocalNamedColorRaii();
+};

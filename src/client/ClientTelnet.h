@@ -27,9 +27,9 @@ public:
     void disconnectFromHost();
 
 private:
-    void virt_sendToMapper(const QByteArray &, bool goAhead) final;
+    void virt_sendToMapper(const RawBytes &, bool goAhead) final;
     void virt_receiveEchoMode(bool) final;
-    void virt_sendRawData(std::string_view data) final;
+    void virt_sendRawData(const TelnetIacBytes &data) final;
 
 signals:
     /** Submits Telnet/text data back to the client */

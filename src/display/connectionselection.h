@@ -10,6 +10,7 @@
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitFlags.h"
+#include "../map/RoomHandle.h"
 #include "../map/RoomRecipient.h"
 #include "../map/coordinate.h"
 #include "../map/roomid.h"
@@ -17,9 +18,6 @@
 #include <memory>
 
 class MapFrontend;
-class Room;
-class RoomAdmin;
-struct RoomId;
 
 struct NODISCARD MouseSel final
 {
@@ -44,13 +42,12 @@ struct NODISCARD MouseSel final
     }
 };
 
-class NODISCARD ConnectionSelection final : public RoomRecipient,
-                                            public std::enable_shared_from_this<ConnectionSelection>
+class NODISCARD ConnectionSelection final : public std::enable_shared_from_this<ConnectionSelection>
 {
 public:
     struct NODISCARD ConnectionDescriptor final
     {
-        const Room *room = nullptr;
+        RoomPtr room = std::nullopt;
         ExitDirEnum direction = ExitDirEnum::NONE;
 
         NODISCARD static bool isTwoWay(const ConnectionDescriptor &first,
@@ -66,42 +63,40 @@ public:
 private:
     // REVISIT: give these enum names?
     MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;
-
+    MapFrontend &m_map;
     bool m_first = true;
-    RoomAdmin *m_admin = nullptr;
 
 public:
-    NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
+    NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend &map,
+                                                                const MouseSel &sel)
     {
-        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, mf, sel);
+        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, map, sel);
     }
-    NODISCARD static std::shared_ptr<ConnectionSelection> alloc()
+    NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend &map)
     {
-        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{});
+        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, map);
     }
 
-    explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend *mf, const MouseSel &sel);
-    explicit ConnectionSelection(Badge<ConnectionSelection>);
-    ~ConnectionSelection() override;
+    explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend &map, const MouseSel &sel);
+    explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend &map);
+    ~ConnectionSelection();
     DELETE_CTORS_AND_ASSIGN_OPS(ConnectionSelection);
 
-    void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
-    void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
-    void setSecond(MapFrontend *mf, const MouseSel &sel);
+    void setFirst(RoomId RoomId, ExitDirEnum dir);
+    void setSecond(RoomId RoomId, ExitDirEnum dir);
+    void setSecond(const MouseSel &sel);
     void removeSecond();
 
     NODISCARD ConnectionDescriptor getFirst() const;
     NODISCARD ConnectionDescriptor getSecond() const;
 
     // Valid just means the pointers aren't null.
-    bool isValid() const;
-    bool isFirstValid() const { return m_connectionDescriptor[0].room != nullptr; }
-    bool isSecondValid() const { return m_connectionDescriptor[1].room != nullptr; }
+    NODISCARD bool isValid() const;
+    NODISCARD bool isFirstValid() const { return m_connectionDescriptor[0].room != std::nullopt; }
+    NODISCARD bool isSecondValid() const { return m_connectionDescriptor[1].room != std::nullopt; }
 
-private:
-    void virt_receiveRoom(RoomAdmin *admin, const Room *aRoom) final;
+    void receiveRoom(const RoomHandle &);
 
-public:
     // Complete means it actually describes a useful oneway or twoway exit.
     NODISCARD bool isCompleteExisting() const
     {

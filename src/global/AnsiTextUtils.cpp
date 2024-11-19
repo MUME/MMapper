@@ -16,9 +16,9 @@
 
 #include <array>
 #include <cassert>
+#include <charconv>
 #include <cstdint>
 #include <initializer_list>
-#include <iostream>
 #include <optional>
 #include <ostream>
 #include <sstream>
@@ -1243,7 +1243,7 @@ QString mmqt::rgbToAnsi256String(const QColor &qrgb, const AnsiColor16LocationEn
     assert(static_cast<int>(rgb.getRed()) == qrgb.red());
     assert(static_cast<int>(rgb.getGreen()) == qrgb.green());
     assert(static_cast<int>(rgb.getBlue()) == qrgb.blue());
-    return toQStringLatin1(::rgbToAnsi256String(rgb, type));
+    return toQStringUtf8(::rgbToAnsi256String(rgb, type));
 }
 
 NODISCARD static AnsiColor16Enum getClosestMatchInColorSpace(const AnsiColorRGB rgb)
@@ -1580,6 +1580,96 @@ std::ostream &to_stream(std::ostream &os, const RawAnsi &raw)
     return os;
 }
 
+NODISCARD static bool isAnsiColorInner(char c)
+{
+    return isAscii(c) && (ascii::isDigit(c) || c == C_SEMICOLON || c == C_COLON);
+}
+
+size_t ansiCodeLen(const std::string_view input)
+{
+    assert(!input.empty());
+
+    if (input.front() != char_consts::C_ESC) {
+        return 0;
+    }
+
+    const auto len = input.length();
+    for (size_t it = 1; it < len; ++it) {
+        const char c = input[it];
+        if (!isAscii(c) || ascii::isCntrl(c)) {
+            return it;
+        } else if (ascii::isLower(c) || ascii::isUpper(c)) {
+            return it + 1;
+        }
+    }
+    return len;
+}
+
+bool isAnsiColor(std::string_view ansi)
+{
+    if (ansi.length() < 3 || ansi.front() != C_ANSI_ESCAPE || ansi.at(1) != C_OPEN_BRACKET
+        || ansi.back() != 'm') {
+        return false;
+    }
+
+    ansi = ansi.substr(2, ansi.length() - 3);
+    return std::all_of(ansi.begin(), ansi.end(), isAnsiColorInner);
+}
+
+std::optional<RawAnsi> ansi_parse(RawAnsi input_ansi, const std::string_view input)
+{
+    if (!isAnsiColor(input)) {
+        return std::nullopt;
+    }
+    auto ansi = input;
+    ansi.remove_prefix(2);
+    ansi.remove_suffix(1);
+
+    AnsiColorState state{input_ansi};
+    foreachUtf8CharSingle(
+        ansi,
+        C_SEMICOLON,
+        []() {
+            // semicolon
+        },
+        [&state](std::string_view digitsOrColons) {
+            AnsiItuColorCodes codes;
+            foreachUtf8CharSingle(
+                digitsOrColons,
+                C_COLON,
+                []() {
+                    // colon
+                },
+                [&codes](std::string_view digits) {
+                    if (digits.empty()) {
+                        codes.push_back(0);
+                        return;
+                    }
+                    const auto *const beg = digits.data();
+                    const auto *const end = beg + static_cast<ptrdiff_t>(digits.size());
+                    int result = 0;
+                    auto [ptr, ec] = std::from_chars(beg, end, result);
+                    if (ec != std::errc{} || ptr != end || result < 0 || result > 255) {
+                        codes.push_back(-1);
+                    } else {
+                        codes.push_back(result);
+                    }
+                });
+            if (codes.empty() || codes.overflowed()) {
+                state.receive(-1);
+            } else if (codes.size() == 1) {
+                state.receive(codes.front());
+            } else {
+                state.receive_itu(codes);
+            }
+        });
+
+    if (!state.hasCompleteState()) {
+        return std::nullopt;
+    }
+    return state.getRawAnsi();
+}
+
 namespace mmqt {
 
 bool containsAnsi(const QStringView str)
@@ -1594,8 +1684,8 @@ bool containsAnsi(const QString &str)
 
 bool isAnsiColor(QStringView ansi)
 {
-    if (ansi.length() < 3 || ansi.at(0) != C_ANSI_ESCAPE || ansi.at(1) != C_OPEN_BRACKET
-        || ansi.at(ansi.length() - 1) != 'm') {
+    if (ansi.length() < 3 || ansi.front() != C_ANSI_ESCAPE || ansi.at(1) != C_OPEN_BRACKET
+        || ansi.back() != 'm') {
         return false;
     }
 
@@ -2190,6 +2280,47 @@ void test_itu()
     }
 
 } // namespace
+
+void test_ansi_parse()
+{
+    {
+        auto tmp = ansi_parse({}, "\033[31;1");
+        TEST_ASSERT(!tmp.has_value());
+    }
+    {
+        RawAnsi expect = getRawAnsi(AnsiColor16Enum::red).withBold();
+        auto tmp = ansi_parse({}, "\033[31;1m");
+        TEST_ASSERT(tmp.has_value());
+        TEST_ASSERT(tmp.value() == expect);
+    }
+    {
+        RawAnsi expect = getRawAnsi(AnsiColor16Enum::red).withBold();
+        expect.setUnderlineStyle(AnsiUnderlineStyle::Curly);
+        auto tmp = ansi_parse({}, "\033[31;4:3;1m");
+        TEST_ASSERT(tmp.has_value());
+        TEST_ASSERT(tmp.value() == expect);
+    }
+    {
+        RawAnsi expect = getRawAnsi(AnsiColor16Enum::red).withBold();
+        expect.setUnderline();
+        auto tmp = ansi_parse({}, "\033[31;4;1m");
+        TEST_ASSERT(tmp.has_value());
+        TEST_ASSERT(tmp.value() == expect);
+    }
+    {
+        RawAnsi expect = getRawAnsi(AnsiColor16Enum::red);
+        expect.setUnderline();
+        auto tmp = ansi_parse({}, "\033[31;4:1m");
+        TEST_ASSERT(tmp.has_value());
+        TEST_ASSERT(tmp.value() == expect);
+    }
+    {
+        RawAnsi expect;
+        auto tmp = ansi_parse(RawAnsi{}.withBold(), "\033[21m");
+        TEST_ASSERT(tmp.has_value());
+        TEST_ASSERT(tmp.value() == expect);
+    }
+}
 } // namespace
 
 namespace test {
@@ -2401,6 +2532,7 @@ void testAnsiTextUtils()
     TEST_ASSERT(!failed);
 
     test_itu();
+    test_ansi_parse();
 }
 
 } // namespace test

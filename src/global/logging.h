@@ -34,17 +34,11 @@ public:
     void writeUtf8(std::string_view sv);
 
 public:
-    template<EncodingEnum E, typename T>
+    template<typename T>
     friend AbstractDebugOStream &operator<<(AbstractDebugOStream &self,
-                                            const TaggedString<E, T> &string)
+                                            const TaggedStringUtf8<T> &string)
     {
-        if constexpr (E == EncodingEnum::Latin1) {
-            self.writeLatin1(string.getRawStdString());
-        } else if constexpr (E == EncodingEnum::Utf8) {
-            self.writeUtf8(string.getRawStdString());
-        } else {
-            assert(false);
-        }
+        self.writeUtf8(string.getRawStdString());
         return self;
     }
 
@@ -63,7 +57,7 @@ public:
         assert(s != nullptr);
         auto &self = *this;
         if (s != nullptr) {
-            self.writeLatin1(s);
+            self.writeUtf8(s);
         }
         return self;
     }
@@ -72,7 +66,7 @@ public:
     AbstractDebugOStream &operator<<(const std::string_view s)
     {
         auto &self = *this;
-        self.writeLatin1(s);
+        self.writeUtf8(s);
         return self;
     }
 
@@ -80,7 +74,7 @@ public:
     AbstractDebugOStream &operator<<(const std::string &s)
     {
         auto &self = *this;
-        self.writeLatin1(s);
+        self.writeUtf8(s);
         return self;
     }
 

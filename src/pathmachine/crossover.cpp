@@ -5,28 +5,30 @@
 
 #include "crossover.h"
 
-#include "../expandoracommon/RoomAdmin.h"
 #include "../map/ExitDirection.h"
 #include "../map/room.h"
+#include "../mapdata/mapdata.h"
 #include "experimenting.h"
 
 #include <memory>
 
 struct PathParameters;
 
-Crossover::Crossover(std::shared_ptr<PathList> _paths,
+Crossover::Crossover(MapFrontend &map,
+                     std::shared_ptr<PathList> _paths,
                      const ExitDirEnum _dirCode,
                      PathParameters &_params)
     : Experimenting(std::move(_paths), _dirCode, _params)
+    , m_map{map}
 {}
 
-void Crossover::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
+void Crossover::virt_receiveRoom(const RoomHandle &room)
 {
-    if (shortPaths->empty()) {
-        admin->releaseRoom(*this, room->getId());
+    if (deref(shortPaths).empty()) {
+        m_map.releaseRoom(*this, room.getId());
     }
 
     for (auto &shortPath : *shortPaths) {
-        augmentPath(shortPath, admin, room);
+        augmentPath(shortPath, room);
     }
 }

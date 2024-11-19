@@ -4,10 +4,14 @@
 
 #include "string_view_utils.h"
 
+#include "ConfigConsts.h"
 #include "Consts.h"
 
 #include <limits>
 #include <optional>
+#include <sstream>
+
+#include <QDebug>
 
 namespace { // anonymous
 namespace detail {
@@ -19,31 +23,6 @@ NODISCARD constexpr char16_t to_char16(const char c) noexcept
 }
 
 static_assert(to_char16('\xFF') == 0xFFu); // not 0xFFFFu
-
-constexpr bool are_equivalent_latin1(const std::u16string_view left,
-                                     const std::string_view right) noexcept
-{
-    // we could use some Qt function, as for example QtStringView::compare(QLatin1String), but:
-    // 1. we are reducing the dependencies on Qt
-    // 2. it's difficult to find a non-allocating comparison between UTF-16 and Latin1 strings in Qt
-
-    const size_t n = left.size();
-    if (n != right.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < n; ++i) {
-        if (left[i] != to_char16(right[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-constexpr std::string_view latin1_empty{};
-constexpr std::u16string_view utf16_empty{};
-
-constexpr std::string_view latin1_x{"x"};
-constexpr std::u16string_view utf16_x{u"x"};
 
 constexpr std::string_view latin1_ff{"\xFF"};
 static_assert(latin1_ff.size() == 1);
@@ -58,20 +37,8 @@ constexpr std::u16string_view utf16_ff{u"\u00FF"};
 static_assert(utf16_ff.size() == 1);
 static_assert(utf16_ff.front() == static_cast<char16_t>(0xFF));
 
-static_assert(are_equivalent_latin1(utf16_empty, latin1_empty));
-static_assert(!are_equivalent_latin1(utf16_x, latin1_empty));
-static_assert(!are_equivalent_latin1(utf16_empty, latin1_x));
-static_assert(are_equivalent_latin1(utf16_x, latin1_x));
-static_assert(are_equivalent_latin1(utf16_ff, latin1_ff));
-static_assert(!are_equivalent_latin1(utf16_ff, utf8_ff));
-
 } // namespace detail
 } // namespace
-
-bool are_equivalent_latin1(const std::u16string_view left, const std::string_view right) noexcept
-{
-    return detail::are_equivalent_latin1(left, right);
-}
 
 namespace { // anonymous
 namespace detail {
@@ -151,6 +118,32 @@ static_assert(to_integer_u64(u"18446744073709551616") == std::nullopt);
 static_assert(to_integer_u64(u"36893488147419103231") == std::nullopt);
 static_assert(to_integer_u64(u"92233720368547758079") == std::nullopt);
 static_assert(to_integer_u64(u"110680464442257309695") == std::nullopt);
+
+#if 0
+void test_ints()
+{
+    check_integer<int64_t>(u"-9223372036854775809", std::nullopt);
+    check_integer<int64_t>(u"-9223372036854775808", i64_min);
+    check_integer<int64_t>(u"-1", -1);
+    check_integer<int64_t>(u"0", 0);
+    check_integer<int64_t>(u"1", 1);
+    check_integer<int64_t>(u"9223372036854775807", i64_max);
+    check_integer<int64_t>(u"9223372036854775808", std::nullopt);
+
+    check_integer<uint64_t>(u"0", 0);
+    check_integer<uint64_t>(u"1", 1);
+    check_integer<uint64_t>(u"18446744073709551615", u64_max);
+    check_integer<uint64_t>(u"18446744073709551616", std::nullopt);
+}
+
+NODISCARD int test()
+{
+    test_ints();
+    return 42;
+}
+
+MAYBE_UNUSED static const auto test_result = test();
+#endif
 
 } // namespace detail
 } // namespace

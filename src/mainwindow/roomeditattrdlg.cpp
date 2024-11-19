@@ -6,31 +6,41 @@
 
 #include "roomeditattrdlg.h"
 
+#include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
 #include "../display/mapcanvas.h"
+#include "../global/AnsiOstream.h"
+#include "../global/Consts.h"
+#include "../global/PrintUtils.h"
 #include "../global/SignalBlocker.h"
 #include "../global/utils.h"
+#include "../map/Diff.h"
 #include "../map/ExitFieldVariant.h"
+#include "../map/RoomFieldVariant.h"
 #include "../map/enums.h"
 #include "../map/exit.h"
 #include "../map/mmapper2room.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
-#include "../mapdata/customaction.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
-#include "../mapfrontend/mapaction.h"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <optional>
+#include <sstream>
 
 #include <QMessageLogContext>
 #include <QString>
 #include <QVariant>
 #include <QtGui>
 #include <QtWidgets>
+
+namespace { // anonymous
+
+volatile bool auto_apply_note_on_close = false;
 
 using UniqueRoomListWidgetItem = std::unique_ptr<RoomListWidgetItem>;
 
@@ -62,109 +72,8 @@ void installWidgets(T &array,
     }
 }
 
-/* TODO: merge this with human-readable names used in parser output */
-NODISCARD static QString getName(const RoomMobFlagEnum flag)
-{
-#define CASE2(UPPER, desc) \
-    do { \
-    case RoomMobFlagEnum::UPPER: \
-        return desc; \
-    } while (false)
-    switch (flag) {
-        CASE2(RENT, "Rent place");
-        CASE2(SHOP, "Generic shop");
-        CASE2(WEAPON_SHOP, "Weapon shop");
-        CASE2(ARMOUR_SHOP, "Armour shop");
-        CASE2(FOOD_SHOP, "Food shop");
-        CASE2(PET_SHOP, "Pet shop");
-        CASE2(GUILD, "Generic guild");
-        CASE2(SCOUT_GUILD, "Scout guild");
-        CASE2(MAGE_GUILD, "Mage guild");
-        CASE2(CLERIC_GUILD, "Cleric guild");
-        CASE2(WARRIOR_GUILD, "Warrior guild");
-        CASE2(RANGER_GUILD, "Ranger guild");
-        CASE2(AGGRESSIVE_MOB, "Aggressive mob");
-        CASE2(QUEST_MOB, "Quest mob");
-        CASE2(PASSIVE_MOB, "Passive mob");
-        CASE2(ELITE_MOB, "Elite mob");
-        CASE2(SUPER_MOB, "Super mob");
-        CASE2(MILKABLE, "Milkable mob");
-        CASE2(RATTLESNAKE, "Rattlesnake mob");
-    }
-    return QString::asprintf("(RoomMobFlagEnum)%d", static_cast<int>(flag));
-#undef CASE2
-}
-
-/* TODO: merge this with human-readable names used in parser output */
-NODISCARD static QString getName(const RoomLoadFlagEnum flag)
-{
-#define CASE2(UPPER, desc) \
-    do { \
-    case RoomLoadFlagEnum::UPPER: \
-        return desc; \
-    } while (false)
-    switch (flag) {
-        CASE2(TREASURE, "Treasure");
-        CASE2(ARMOUR, "Armour");
-        CASE2(WEAPON, "Weapon");
-        CASE2(WATER, "Water");
-        CASE2(FOOD, "Food");
-        CASE2(HERB, "Herb");
-        CASE2(KEY, "Key");
-        CASE2(MULE, "Mule");
-        CASE2(HORSE, "Horse");
-        CASE2(PACK_HORSE, "Pack horse");
-        CASE2(TRAINED_HORSE, "Trained horse");
-        CASE2(ROHIRRIM, "Rohirrim");
-        CASE2(WARG, "Warg");
-        CASE2(BOAT, "Boat");
-        CASE2(ATTENTION, "Attention");
-        CASE2(TOWER, "Tower");
-        CASE2(CLOCK, "Clock");
-        CASE2(MAIL, "Mail");
-        CASE2(STABLE, "Stable");
-        CASE2(WHITE_WORD, "White word");
-        CASE2(DARK_WORD, "Dark word");
-        CASE2(EQUIPMENT, "Equipment");
-        CASE2(COACH, "Coach");
-        CASE2(FERRY, "Ferry");
-    }
-    return QString::asprintf("(RoomLoadFlagEnum)%d", static_cast<int>(flag));
-#undef CASE2
-}
-
-/* TODO: merge this with human-readable names used in parser output */
-NODISCARD static QString getName(const ExitFlagEnum flag)
-{
-#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
-    do { \
-    case ExitFlagEnum::UPPER_CASE: \
-        return friendly; \
-    } while (false);
-    switch (flag) {
-        XFOREACH_EXIT_FLAG(X_CASE)
-    }
-    return QString::asprintf("(ExitFlagEnum)%d", static_cast<int>(flag));
-#undef X_CASE
-}
-
-/* TODO: merge this with human-readable names used in parser output */
-NODISCARD static QString getName(const DoorFlagEnum flag)
-{
-#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
-    do { \
-    case DoorFlagEnum::UPPER_CASE: \
-        return friendly; \
-    } while (false);
-    switch (flag) {
-        XFOREACH_DOOR_FLAG(X_CASE)
-    }
-    return QString::asprintf("(DoorFlagEnum)%d", static_cast<int>(flag));
-#undef X_CASE
-}
-
 template<typename T>
-NODISCARD static QIcon getIcon(T flag)
+NODISCARD QIcon getIcon(T flag)
 {
     const QString filename = getPixmapFilename(flag);
     try {
@@ -180,7 +89,7 @@ NODISCARD static QIcon getIcon(T flag)
     }
 }
 
-NODISCARD static int getPriority(const RoomMobFlagEnum flag)
+NODISCARD int getPriority(const RoomMobFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
@@ -198,7 +107,7 @@ NODISCARD static int getPriority(const RoomMobFlagEnum flag)
     return static_cast<int>(flag);
 }
 
-NODISCARD static int getPriority(const RoomLoadFlagEnum flag)
+NODISCARD int getPriority(const RoomLoadFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
@@ -234,6 +143,19 @@ void setFlags(T &array, const QFlags<Qt::ItemFlag> flags)
     }
 }
 
+// NOTE: the multi-line strings are all normalized to contain a trailing newline
+// if they contain any text, and appending text includes an implicit newline,
+// so we have to remove the trailing newline.
+template<typename T>
+void add_boxed_string(QTextEdit *const textEdit, const T &boxed)
+{
+    std::string_view sv = boxed.getStdStringViewUtf8();
+    trim_newline_inplace(sv);
+    deref(textEdit).append(mmqt::toQStringUtf8(sv));
+}
+
+} // namespace
+
 RoomListWidgetItem::RoomListWidgetItem(const QString &text, const int priority)
     : QListWidgetItem(text)
 {
@@ -260,7 +182,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     static_assert(NUM_ELEMENTS(m_mobListItems) <= 32u);
     static_assert(NUM_ELEMENTS(m_exitListItems) <= 16u);
     static_assert(NUM_ELEMENTS(m_doorListItems) <= 16u);
-    static_assert(NUM_ELEMENTS(roomTerrainButtons) == NUM_ROOM_TERRAIN_TYPES);
+    static_assert(NUM_ELEMENTS(m_roomTerrainButtons) == NUM_ROOM_TERRAIN_TYPES);
     static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
 #undef NUM_ELEMENTS
 
@@ -271,7 +193,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     // or get rid of the function entirely.
     for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
         const auto rtt = static_cast<RoomTerrainEnum>(i);
-        roomTerrainButtons[rtt] = getTerrainToolButton(rtt);
+        m_roomTerrainButtons[rtt] = getTerrainToolButton(rtt);
     }
 
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
@@ -299,7 +221,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
     for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
-        m_exitListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+        m_exitListItems[flag] = std::make_unique<RoomListWidgetItem>(
+            mmqt::toQStringUtf8(getName(flag)));
     }
 
     installWidgets(m_exitListItems,
@@ -307,8 +230,13 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
+    if (auto &ex = m_exitListItems[ExitFlagEnum::EXIT]) {
+        ex->setFlags(ex->flags() & ~(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled));
+    }
+
     for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
-        m_doorListItems[flag] = std::make_unique<RoomListWidgetItem>(getName(flag));
+        m_doorListItems[flag] = std::make_unique<RoomListWidgetItem>(
+            mmqt::toQStringUtf8(getName(flag)));
     }
 
     installWidgets(m_doorListItems,
@@ -319,9 +247,6 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     m_hiddenShortcut = std::make_unique<QShortcut>(QKeySequence(
                                                        tr("Ctrl+H", "Room edit > hidden flag")),
                                                    this);
-
-    updatedCheckBox->setCheckable(false);
-    updatedCheckBox->setText("Room has not been online updated yet!!!");
 
     readSettings();
 
@@ -464,27 +389,90 @@ void RoomEditAttrDlg::connectAll()
                              this,
                              &RoomEditAttrDlg::doorNameLineEditTextChanged);
 
-    for (QToolButton *const toolButton : roomTerrainButtons) {
+    for (QToolButton *const toolButton : m_roomTerrainButtons) {
+        std::ignore = deref(toolButton);
         m_connections += connect(toolButton,
                                  &QAbstractButton::toggled,
                                  this,
                                  &RoomEditAttrDlg::terrainToolButtonToggled);
     }
 
+    m_connections += connect(roomNoteTextEdit, &QTextEdit::textChanged, this, [this]() {
+        // This doesn't actually check if you've modified it back to the original text.
+        // (Workaround: press the "Revert" button.)
+        setRoomNoteDirty(true);
+    });
+
     m_connections += connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         auto to = tabWidget->widget(index);
         if (to == noteTab) {
             m_noteSelected = true;
         } else if (m_noteSelected) {
-            roomNoteChanged();
-            m_noteSelected = false;
+            if (!m_noteDirty) {
+                m_noteSelected = false;
+            } else {
+                tabWidget->setCurrentWidget(noteTab);
+                assert(tabWidget->currentWidget() == noteTab);
+                assert(m_noteSelected);
+            }
         }
     });
+
     m_connections += connect(this, &QDialog::finished, this, [this](int /*result*/) {
-        if (m_noteSelected) {
-            roomNoteChanged();
+        if (!m_noteSelected) {
+            return;
         }
+
+        if (m_noteDirty) {
+            // this shouldn't happen for "Close" and "X", but it can still happen by hitting ESCAPE.
+            if (auto_apply_note_on_close) {
+                roomNoteChanged();
+            } else {
+                const QString title = "[mmapper] warning: ignored note";
+                const QString qnote = deref(deref(roomNoteTextEdit).document()).toPlainText();
+
+                // title is cut off, and stack-overflow solutions don't work.
+                // we need a generic message box class that actually works.
+                // let's hope nobody actually has to see this message.
+                QMessageBox box(this);
+                box.setWindowTitle(title);
+                box.setText(qnote);
+                box.exec();
+            }
+        }
+
         m_noteSelected = false;
+        setRoomNoteDirty(false);
+    });
+
+    m_connections += connect(roomNoteApplyButton, &QPushButton::clicked, this, [this]() {
+        roomNoteChanged();
+        {
+            // lie about room note being selected for the duration of this call
+            m_noteSelected = false;
+            updateDialog(this->getSelectedRoom());
+            m_noteSelected = true;
+        }
+    });
+
+    m_connections += connect(roomNoteClearButton, &QPushButton::clicked, this, [this]() {
+        auto &rnte = deref(roomNoteTextEdit);
+        rnte.clear();
+        setRoomNoteDirty(false);
+        if (auto r = this->getSelectedRoom()) {
+            if (!r->getNote().empty()) {
+                setRoomNoteDirty(true);
+            }
+        }
+    });
+
+    m_connections += connect(roomNoteRevertButton, &QPushButton::clicked, this, [this]() {
+        auto &rnte = deref(roomNoteTextEdit);
+        rnte.clear();
+        if (auto r = this->getSelectedRoom()) {
+            add_boxed_string(roomNoteTextEdit, r->getNote());
+        }
+        setRoomNoteDirty(false);
     });
 
     m_connections += connect(m_hiddenShortcut.get(),
@@ -496,15 +484,6 @@ void RoomEditAttrDlg::connectAll()
                              QOverload<int>::of(&QComboBox::currentIndexChanged),
                              this,
                              &RoomEditAttrDlg::roomListCurrentIndexChanged);
-
-    m_connections += connect(updatedCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
-        updateCommon(std::make_unique<ModifyRoomUpToDate>(checked));
-        if (checked) {
-            updatedCheckBox->setText("Room has been forced updated.");
-        } else {
-            updatedCheckBox->setText("Room has been forced outdated.");
-        }
-    });
 }
 
 void RoomEditAttrDlg::disconnectAll()
@@ -512,42 +491,52 @@ void RoomEditAttrDlg::disconnectAll()
     m_connections.disconnectAll();
 }
 
-const Room *RoomEditAttrDlg::getSelectedRoom()
+std::optional<RoomHandle> RoomEditAttrDlg::getSelectedRoom()
 {
     if (m_roomSelection == nullptr || m_roomSelection->empty()) {
-        return nullptr;
+        return std::nullopt;
     }
     if (m_roomSelection->size() == 1) {
-        return m_roomSelection->getFirstRoom();
+        return m_mapData->getCurrentMap().tryGetRoomHandle(m_roomSelection->getFirstRoomId());
     }
-    auto it = m_roomSelection->find(
-        RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
-    if (it == m_roomSelection->end()) {
-        return nullptr;
+    const auto target = RoomId{
+        roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()};
+    if (m_roomSelection->contains(target)) {
+        return m_mapData->getCurrentMap().tryGetRoomHandle(target);
     }
-    return it->second;
+    return std::nullopt;
 }
 
 ExitDirEnum RoomEditAttrDlg::getSelectedExit()
 {
-    if (exitNButton->isChecked()) {
-        return ExitDirEnum::NORTH;
+    EnumIndexedArray<QPushButton *, ExitDirEnum, NUM_EXITS_NESWUD> buttons;
+    buttons[ExitDirEnum::NORTH] = exitNButton;
+    buttons[ExitDirEnum::SOUTH] = exitSButton;
+    buttons[ExitDirEnum::EAST] = exitEButton;
+    buttons[ExitDirEnum::WEST] = exitWButton;
+    buttons[ExitDirEnum::UP] = exitUButton;
+    buttons[ExitDirEnum::DOWN] = exitDButton;
+
+    for (auto *const button : buttons) {
+        QPalette pal;
+        button->setAutoFillBackground(false);
+        button->setPalette(pal);
     }
-    if (exitSButton->isChecked()) {
-        return ExitDirEnum::SOUTH;
+
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+        auto *const button = buttons[dir];
+        if (!button->isChecked()) {
+            continue;
+        }
+
+        QColor bg = Qt::black;
+        QPalette pal;
+        pal.setColor(QPalette::Button, bg.rgb());
+        button->setPalette(pal);
+        button->setAutoFillBackground(true);
+        return dir;
     }
-    if (exitEButton->isChecked()) {
-        return ExitDirEnum::EAST;
-    }
-    if (exitWButton->isChecked()) {
-        return ExitDirEnum::WEST;
-    }
-    if (exitUButton->isChecked()) {
-        return ExitDirEnum::UP;
-    }
-    if (exitDButton->isChecked()) {
-        return ExitDirEnum::DOWN;
-    }
+
     return ExitDirEnum::UNKNOWN;
 }
 
@@ -568,24 +557,42 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
 
     if (rs == nullptr) {
         return;
-    } else if (rs->size() == 1) {
-        tabWidget->setCurrentWidget(attributesTab);
-        const auto room = m_roomSelection->getFirstRoom();
-        roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
+    }
+
+    tabWidget->setCurrentWidget(attributesTab);
+
+    auto &mapData = deref(m_mapData);
+    const auto &map = mapData.getCurrentMap();
+    auto addToCombo = [this, &map](RoomId id) -> RoomHandle {
+        RoomHandle room = map.getRoomHandle(id);
+        const QString shown = QString("Room %1: %2")
+                                  .arg(room.getIdExternal().asUint32())
+                                  .arg(room.getName().toQString());
+        // REVISIT: Should this be ExternalRoomId?
+        roomListComboBox->addItem(shown, room.getId().asUint32());
+        return room;
+    };
+
+    auto &sel = deref(rs);
+    sel.removeMissing(mapData);
+    if (sel.size() == 1) {
+        const RoomHandle &room = addToCombo(sel.getFirstRoomId());
         updateDialog(room);
     } else {
-        tabWidget->setCurrentWidget(selectionTab);
+        // REVISIT: Does the zero here mean that RoomId{0} won't work properly?
+        // Should we change this to INVALID_ROOMID.value()?
         roomListComboBox->addItem("All", 0);
-        for (const auto &[rid, room] : *m_roomSelection) {
-            roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
+        for (const RoomId id : sel) {
+            MAYBE_UNUSED const auto room = //
+                addToCombo(id);
         }
-        updateDialog(nullptr);
+        updateDialog(std::nullopt);
     }
 
     connect(this, &RoomEditAttrDlg::sig_requestUpdate, m_mapCanvas, &MapCanvas::slot_requestUpdate);
 }
 
-void RoomEditAttrDlg::updateDialog(const Room *r)
+void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
 {
     class NODISCARD DisconnectReconnectAntiPattern final
     {
@@ -603,15 +610,19 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         ~DisconnectReconnectAntiPattern() { m_self.connectAll(); }
     } antiPattern{*this};
 
-    if (r == nullptr) {
+    constexpr auto CHECKABLE_AND_ENABLED = Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
+    if (r == std::nullopt || !r->exists()) {
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(false);
 
-        updatedCheckBox->setCheckable(true);
-        updatedCheckBox->setText("Online update status has not been changed.");
-
         clearRoomNote();
         roomNoteTextEdit->setEnabled(false);
+
+        roomStatTextEdit->clear();
+        roomStatTextEdit->setEnabled(false);
+
+        roomDiffTextEdit->clear();
+        roomDiffTextEdit->setEnabled(false);
 
         terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainEnum::UNDEFINED)));
 
@@ -624,48 +635,46 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         sunGroupBox->setChecked(false);
 
         for (const auto &x : m_loadListItems) {
-            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
+            x->setFlags(CHECKABLE_AND_ENABLED | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
 
         for (const auto &x : m_mobListItems) {
-            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
+            x->setFlags(CHECKABLE_AND_ENABLED | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
     } else {
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(true);
 
-        updatedCheckBox->setCheckable(true);
-        updatedCheckBox->setChecked(r->isUpToDate());
-        if (r->isUpToDate()) {
-            updatedCheckBox->setText("Room has been online updated.");
-        } else {
-            updatedCheckBox->setText("Room has not been online updated yet!!!");
-        }
-
         exitsFrame->setEnabled(true);
 
-        const Exit &e = r->exit(getSelectedExit());
+        const auto &e = r->getExit(getSelectedExit());
         setCheckStates(m_exitListItems, e.getExitFlags());
 
-        if (e.isDoor()) {
+        if (e.exitIsDoor()) {
             doorNameLineEdit->setEnabled(true);
             doorFlagsListWidget->setEnabled(true);
             doorNameLineEdit->setText(e.getDoorName().toQString());
             setCheckStates(m_doorListItems, e.getDoorFlags());
-
         } else {
             doorNameLineEdit->clear();
             doorNameLineEdit->setEnabled(false);
             doorFlagsListWidget->setEnabled(false);
         }
 
-        roomNoteTextEdit->clear();
-        roomNoteTextEdit->setEnabled(false);
+        const bool shouldEnableDoorCheck = !e.exitIsDoor()
+                                           || (e.getDoorFlags().empty() && e.getDoorName().empty());
+        if (auto &ex = m_exitListItems[ExitFlagEnum::DOOR]) {
+            if (shouldEnableDoorCheck) {
+                ex->setFlags(ex->flags() | CHECKABLE_AND_ENABLED);
+            } else {
+                ex->setFlags(ex->flags() & ~CHECKABLE_AND_ENABLED);
+            }
+        }
 
-        setFlags(m_loadListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-        setFlags(m_mobListItems, Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        setFlags(m_loadListItems, CHECKABLE_AND_ENABLED);
+        setFlags(m_mobListItems, CHECKABLE_AND_ENABLED);
 
         setCheckStates(m_mobListItems, r->getMobFlags());
         setCheckStates(m_loadListItems, r->getLoadFlags());
@@ -673,24 +682,66 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->setEnabled(true);
         roomNoteTextEdit->setEnabled(true);
 
-        roomDescriptionTextEdit->clear();
-        roomDescriptionTextEdit->setFontItalic(false);
-        {
-            QString str = r->getDescription().toQString();
-            // note: older rooms may not have a trailing newline
-            // REVISIT: what if they have \r\n?
-            if (str.endsWith("\n")) {
-                str = str.left(str.length() - 1);
-            }
-            roomDescriptionTextEdit->append(str);
-        }
-        roomDescriptionTextEdit->setFontItalic(true);
-        roomDescriptionTextEdit->append(r->getContents().toQString());
+        setAnsiText(roomDescriptionTextEdit, previewRoom(*r));
 
         {
             assert(!m_noteSelected);
             clearRoomNote();
-            roomNoteTextEdit->append(r->getNote().toQString());
+            add_boxed_string(roomNoteTextEdit, r->getNote());
+            setRoomNoteDirty(false);
+        }
+
+        // can this ever be nullptr?
+        if (roomStatTextEdit != nullptr) {
+            const auto s = [r]() -> std::string {
+                try {
+                    std::ostringstream os;
+                    {
+                        AnsiOstream aos{os};
+                        r->getMap().statRoom(aos, r->getId());
+                    }
+                    return std::move(os).str();
+                } catch (const std::exception &ex) {
+                    return std::string("Exception: ") + ex.what();
+                }
+            }();
+            setAnsiText(roomStatTextEdit, s);
+        }
+
+        // can this ever be nullptr?
+        if (roomDiffTextEdit != nullptr) {
+            const auto s = [this, r]() -> std::string {
+                auto saved = m_mapData->getSavedMap();
+                auto current = m_mapData->getCurrentMap();
+
+                const ExternalRoomId ext = r->getIdExternal();
+                auto pOld = saved.findRoomHandle(ext);
+                auto pNew = current.findRoomHandle(ext);
+                if (!pOld) {
+                    return "The room was created since the last save.";
+                }
+                if (!pNew) {
+                    return "This should be impossible, but the room does not exist?";
+                }
+
+                try {
+                    std::ostringstream os;
+                    {
+                        AnsiOstream aos{os};
+                        OstreamDiffReporter odr{aos};
+                        compare(odr, *pOld, *pNew);
+                    }
+                    auto str = std::move(os).str();
+                    if (str.empty()) {
+                        return "No changes since the last save.";
+                    }
+                    return str;
+                } catch (const std::exception &ex) {
+                    return std::string("Exception: ") + ex.what();
+                }
+            }();
+
+            setAnsiText(roomDiffTextEdit, s);
         }
 
         const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
@@ -718,7 +769,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         if (auto *const button = getSundeathRadioButton(r->getSundeathType())) {
             button->setChecked(true);
         }
-        if (auto button = getTerrainToolButton(r->getTerrainType())) {
+        if (auto *const button = getTerrainToolButton(r->getTerrainType())) {
             button->setChecked(true);
         }
     }
@@ -834,28 +885,50 @@ void RoomEditAttrDlg::exitButtonToggled(bool /*unused*/)
     updateDialog(getSelectedRoom());
 }
 
-void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action,
-                                   bool onlyExecuteAction)
+void RoomEditAttrDlg::updateCommon(const std::function<Change(const RawRoom &)> &getChange,
+                                   const bool onlyExecuteAction)
 {
-    if (const Room *const r = getSelectedRoom()) {
-        m_mapData->execute(std::make_unique<SingleRoomAction>(std::exchange(moved_action, {}),
-                                                              r->getId()),
-                           m_roomSelection);
+    if (const auto &r = getSelectedRoom()) {
+        m_mapData->applySingleChange(getChange(r->getRaw()));
+
     } else {
-        m_mapData->execute(std::make_unique<GroupMapAction>(std::exchange(moved_action, {}),
-                                                            m_roomSelection),
-                           m_roomSelection);
+        m_mapData->applyChangesToList(*m_roomSelection, getChange);
     }
 
+    // REVISIT: Why don't we want this to happen every time?
     if (!onlyExecuteAction) {
         updateDialog(getSelectedRoom());
-        emit sig_requestUpdate();
+        requestUpdate();
+    }
+}
+
+void RoomEditAttrDlg::setFieldCommon(const RoomFieldVariant &var,
+                                     const FlagModifyModeEnum mode,
+                                     const bool onlyExecuteAction)
+{
+    updateCommon(
+        [&var, mode](const RawRoom &room) -> Change {
+            return Change{room_change_types::ModifyRoomFlags{room.getId(), var, mode}};
+        },
+        onlyExecuteAction);
+}
+
+void RoomEditAttrDlg::setSelectedRoomExitField(const ExitFieldVariant &var,
+                                               const ExitDirEnum dir,
+                                               const FlagModifyModeEnum mode)
+{
+    const auto id = getSelectedRoom()->getId();
+    const bool changed = m_mapData->applySingleChange(
+        Change{exit_change_types::ModifyExitFlags{id, dir, var, mode}});
+
+    if (changed) {
+        updateDialog(getSelectedRoom());
     }
 }
 
 void RoomEditAttrDlg::updateRoomAlign(const RoomAlignEnum value)
 {
-    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
+    setFieldCommon(RoomFieldVariant{value}, FlagModifyModeEnum::ASSIGN);
 }
 
 void RoomEditAttrDlg::neutralRadioButtonToggled(const bool val)
@@ -888,7 +961,7 @@ void RoomEditAttrDlg::alignUndefRadioButtonToggled(const bool val)
 
 void RoomEditAttrDlg::updateRoomPortable(const RoomPortableEnum value)
 {
-    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
+    setFieldCommon(RoomFieldVariant{value}, FlagModifyModeEnum::ASSIGN);
 }
 
 void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
@@ -914,7 +987,7 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(const bool val)
 
 void RoomEditAttrDlg::updateRoomRideable(const RoomRidableEnum value)
 {
-    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
+    setFieldCommon(RoomFieldVariant{value}, FlagModifyModeEnum::ASSIGN);
 }
 
 void RoomEditAttrDlg::noRideRadioButtonToggled(const bool val)
@@ -940,7 +1013,7 @@ void RoomEditAttrDlg::rideUndefRadioButtonToggled(const bool val)
 
 void RoomEditAttrDlg::updateRoomLight(const RoomLightEnum value)
 {
-    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
+    setFieldCommon(RoomFieldVariant{value}, FlagModifyModeEnum::ASSIGN);
 }
 
 void RoomEditAttrDlg::litRadioButtonToggled(const bool val)
@@ -966,7 +1039,7 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(const bool val)
 
 void RoomEditAttrDlg::updateRoomSundeath(const RoomSundeathEnum value)
 {
-    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
+    setFieldCommon(RoomFieldVariant{value}, FlagModifyModeEnum::ASSIGN);
 }
 
 void RoomEditAttrDlg::sundeathRadioButtonToggled(const bool val)
@@ -1003,12 +1076,12 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
     const RoomMobFlags flags{optFlag.value()};
     switch (item->checkState()) {
     case Qt::Unchecked:
-        updateCommon(std::make_unique<ModifyRoomFlags>(flags, FlagModifyModeEnum::UNSET));
+        setFieldCommon(RoomFieldVariant{flags}, FlagModifyModeEnum::REMOVE);
         break;
     case Qt::PartiallyChecked:
         break;
     case Qt::Checked:
-        updateCommon(std::make_unique<ModifyRoomFlags>(flags, FlagModifyModeEnum::SET));
+        setFieldCommon(RoomFieldVariant{flags}, FlagModifyModeEnum::INSERT);
         break;
     }
 }
@@ -1028,12 +1101,12 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 
     switch (item->checkState()) {
     case Qt::Unchecked:
-        updateCommon(std::make_unique<ModifyRoomFlags>(flags, FlagModifyModeEnum::UNSET));
+        setFieldCommon(RoomFieldVariant{flags}, FlagModifyModeEnum::REMOVE);
         break;
     case Qt::PartiallyChecked:
         break;
     case Qt::Checked:
-        updateCommon(std::make_unique<ModifyRoomFlags>(flags, FlagModifyModeEnum::SET));
+        setFieldCommon(RoomFieldVariant{flags}, FlagModifyModeEnum::INSERT);
         break;
     }
 }
@@ -1050,24 +1123,21 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
     }
 
     const ExitFlags flags{optFlag.value()};
-    auto dir = getSelectedExit();
+    const ExitDirEnum dir = getSelectedExit();
+
+    const auto modifyExit = [this, flags, dir](const FlagModifyModeEnum mode) {
+        this->setSelectedRoomExitField(ExitFieldVariant{flags}, dir, mode);
+        requestUpdate();
+    };
+
     switch (item->checkState()) {
     case Qt::Unchecked:
-        if (flags.isExit()) {
-            // Remove connections when the exit is removed
-            const auto &from = getSelectedRoom()->getId();
-            const auto &e = getSelectedRoom()->exit(dir);
-            for (const auto &to : e.outClone()) {
-                m_mapData->execute(std::make_unique<RemoveOneWayExit>(from, to, dir),
-                                   m_roomSelection);
-            }
-        }
-        updateCommon(std::make_unique<ModifyExitFlags>(flags, dir, FlagModifyModeEnum::UNSET));
+        modifyExit(FlagModifyModeEnum::REMOVE);
         break;
     case Qt::PartiallyChecked:
         break;
     case Qt::Checked:
-        updateCommon(std::make_unique<ModifyExitFlags>(flags, dir, FlagModifyModeEnum::SET));
+        modifyExit(FlagModifyModeEnum::INSERT);
         break;
     }
 
@@ -1076,15 +1146,12 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 
 void RoomEditAttrDlg::doorNameLineEditTextChanged()
 {
-    const Room *const r = getSelectedRoom();
+    const QString &doorName = doorNameLineEdit->text();
+    this->setSelectedRoomExitField(ExitFieldVariant{mmqt::makeDoorName(doorName)},
+                                   getSelectedExit(),
+                                   FlagModifyModeEnum::ASSIGN);
 
-    m_mapData->execute(std::make_unique<SingleRoomAction>(
-                           std::make_unique<ModifyExitFlags>(DoorName{doorNameLineEdit->text()},
-                                                             getSelectedExit(),
-                                                             FlagModifyModeEnum::SET),
-                           r->getId()),
-                       m_roomSelection);
-    emit sig_requestUpdate();
+    requestUpdate();
 }
 
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
@@ -1102,32 +1169,34 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
     const auto dir = getSelectedExit();
 
     const auto modifyExit = [this, flags, dir](const FlagModifyModeEnum mode) {
-        m_mapData->execute(
-            std::make_unique<SingleRoomAction>(std::make_unique<ModifyExitFlags>(flags, dir, mode),
-                                               deref(getSelectedRoom()).getId()),
-            m_roomSelection);
-        emit sig_requestUpdate();
+        this->setSelectedRoomExitField(ExitFieldVariant{flags}, dir, mode);
+        requestUpdate();
     };
 
     switch (item->checkState()) {
     case Qt::Unchecked:
-        modifyExit(FlagModifyModeEnum::UNSET);
+        modifyExit(FlagModifyModeEnum::REMOVE);
         break;
     case Qt::PartiallyChecked:
         break;
     case Qt::Checked:
-        modifyExit(FlagModifyModeEnum::SET);
+        modifyExit(FlagModifyModeEnum::INSERT);
         break;
     }
+
+    updateDialog(getSelectedRoom());
 }
 
+// REVISIT: Remove this feature?
 void RoomEditAttrDlg::toggleHiddenDoor()
 {
-    if (doorFlagsListWidget->isEnabled()) {
-        m_doorListItems[DoorFlagEnum::HIDDEN]->setCheckState(
-            m_doorListItems[DoorFlagEnum::HIDDEN]->checkState() == Qt::Unchecked ? Qt::Checked
-                                                                                 : Qt::Unchecked);
+    if (!doorFlagsListWidget->isEnabled()) {
+        return;
     }
+
+    auto &hidden = deref(m_doorListItems[DoorFlagEnum::HIDDEN]);
+    hidden.setCheckState(hidden.checkState() == Qt::Unchecked ? Qt::Checked : Qt::Unchecked);
+    updateDialog(getSelectedRoom());
 }
 
 // terrain tab
@@ -1141,7 +1210,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
         // returns the first one that's checked, or UNDEFINED.
         for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
             const auto tmp = static_cast<RoomTerrainEnum>(i);
-            if (const QToolButton *const ptr = roomTerrainButtons[tmp]) {
+            if (const QToolButton *const ptr = m_roomTerrainButtons[tmp]) {
                 if (ptr->isChecked()) {
                     return tmp;
                 }
@@ -1151,23 +1220,40 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
         // oops
         return RoomTerrainEnum::UNDEFINED;
     }();
+
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
-    updateCommon(std::make_unique<ModifyRoomFlags>(rtt, FlagModifyModeEnum::SET));
+    this->setFieldCommon(RoomFieldVariant{rtt}, FlagModifyModeEnum::ASSIGN);
 }
 
 // note tab
 void RoomEditAttrDlg::roomNoteChanged()
 {
-    // TODO: Change this so you can't leave the tab without clicking "Update" or "Cancel",
-    // and then only modify the note on update.
-    const RoomNote note{roomNoteTextEdit->document()->toPlainText()};
-    updateCommon(std::make_unique<ModifyRoomFlags>(note, FlagModifyModeEnum::SET), true);
+    auto &rnte = deref(roomNoteTextEdit);
+    const auto qnote = deref(rnte.document()).toPlainText();
+    const auto note = mmqt::makeRoomNote(qnote);
+    setFieldCommon(RoomFieldVariant{note}, FlagModifyModeEnum::ASSIGN, true);
+    setRoomNoteDirty(false);
 }
 
 // all tabs
 void RoomEditAttrDlg::closeClicked()
 {
-    accept();
+    if (m_noteSelected && m_noteDirty) {
+        // ignore
+        // Should we flash the window or create a popup?
+    } else {
+        accept();
+    }
+}
+
+void RoomEditAttrDlg::closeEvent(QCloseEvent *const ev)
+{
+    if (m_noteSelected && m_noteDirty) {
+        deref(ev).ignore();
+        // Should we flash the window or create a popup?
+        return;
+    }
+    QDialog::closeEvent(ev);
 }
 
 void RoomEditAttrDlg::clearRoomNote()
@@ -1176,5 +1262,18 @@ void RoomEditAttrDlg::clearRoomNote()
         roomNoteChanged();
         m_noteSelected = false;
     }
-    roomNoteTextEdit->clear();
+    auto &rnte = deref(roomNoteTextEdit);
+    rnte.clear();
+    setRoomNoteDirty(false);
+}
+
+void RoomEditAttrDlg::setRoomNoteDirty(const bool dirty)
+{
+    const bool noteIsEmpty = deref(deref(roomNoteTextEdit).document()).isEmpty();
+
+    m_noteDirty = dirty;
+    deref(closeButton).setEnabled(!dirty);
+    deref(roomNoteApplyButton).setEnabled(dirty);
+    deref(roomNoteRevertButton).setEnabled(dirty);
+    deref(roomNoteClearButton).setEnabled(!noteIsEmpty);
 }

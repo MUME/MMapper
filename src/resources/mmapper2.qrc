@@ -33,6 +33,7 @@
         <file>icons/cut.png</file>
         <file>icons/exit.png</file>
         <file>icons/force.png</file>
+        <file>icons/goto.png</file>
         <file>icons/generalcfg.png</file>
         <file>icons/graphicscfg.png</file>
         <file>icons/groupcfg.png</file>
@@ -163,6 +164,7 @@
         <file>pixmaps/room-sel-move-good.png</file>
         <file>pixmaps/room-sel.png</file>
         <file>pixmaps/room-modified.png</file>
+        <file>pixmaps/room-needs-update.png</file>
         <file>pixmaps/stream-in-down.png</file>
         <file>pixmaps/stream-in-east.png</file>
         <file>pixmaps/stream-in-north.png</file>
@@ -207,7 +209,6 @@
         <file>pixmaps/trail-s.png</file>
         <file>pixmaps/trail-sw.png</file>
         <file>pixmaps/trail-w.png</file>
-        <file>pixmaps/update0.png</file>
         <file>pixmaps/wall-east.png</file>
         <file>pixmaps/wall-north.png</file>
         <file>pixmaps/wall-south.png</file>

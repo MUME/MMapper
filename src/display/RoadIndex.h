@@ -5,10 +5,9 @@
 
 #include "../global/Flags.h"
 #include "../map/ExitDirection.h"
+#include "../map/RoomHandle.h"
 
 #include <cstdint>
-
-class Room;
 
 static constexpr const int NUM_COMPASS_DIRS = 4;
 static constexpr const int NUM_ROAD_INDICES = 1 << NUM_COMPASS_DIRS;
@@ -50,7 +49,7 @@ static_assert(~RoadIndexMaskEnum::ALL == RoadIndexMaskEnum::NONE);
 static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
 
 NODISCARD RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
-NODISCARD RoadIndexMaskEnum getRoadIndex(const Room &room);
+NODISCARD RoadIndexMaskEnum getRoadIndex(const RawRoom &room);
 
 enum class NODISCARD RoadTagEnum { ROAD, TRAIL };
 template<RoadTagEnum Tag>

@@ -21,7 +21,7 @@
 #include <QString>
 
 ClientTelnet::ClientTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, "MMapper")
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, parent, TelnetTermTypeBytes{"MMapper"})
 {
     auto &socket = m_socket;
     connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
@@ -87,13 +87,13 @@ void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
 
 void ClientTelnet::slot_sendToMud(const QString &data)
 {
-    submitOverTelnet(mmqt::toStdStringLatin1(data), false);
+    submitOverTelnet(data, false);
 }
 
-void ClientTelnet::virt_sendRawData(const std::string_view data)
+void ClientTelnet::virt_sendRawData(const TelnetIacBytes &data)
 {
     m_sentBytes += data.length();
-    m_socket.write(mmqt::toQByteArrayLatin1(data));
+    m_socket.write(data.getQByteArray());
 }
 
 void ClientTelnet::slot_onWindowSizeChanged(const int width, const int height)
@@ -120,22 +120,14 @@ void ClientTelnet::slot_onReadyRead()
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
         assert(!byteArray.isEmpty());
-        onReadInternal(byteArray);
+        onReadInternal(TelnetIacBytes{byteArray});
     });
 }
 
-void ClientTelnet::virt_sendToMapper(const QByteArray &data, bool /*goAhead*/)
+void ClientTelnet::virt_sendToMapper(const RawBytes &data, bool /*goAhead*/)
 {
-    QString out = [&data] {
-        switch (getConfig().general.characterEncoding) {
-        case CharacterEncodingEnum::UTF8:
-            return QString::fromUtf8(data);
-        case CharacterEncodingEnum::LATIN1:
-        case CharacterEncodingEnum::ASCII:
-        default:
-            return QString::fromLatin1(data);
-        }
-    }();
+    // FIXME FIXME FIXME: specifiy the charset conversion using getEncoding() ...
+    QString out = data.getQByteArray();
 
     // Replace BEL character with an application beep
     static constexpr const QChar BEL = mmqt::QC_ALERT;

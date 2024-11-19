@@ -6,7 +6,6 @@
 
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
-#include "../global/AnsiTextUtils.h"
 #include "../global/Array.h"
 #include "../global/ConfigConsts.h"
 #include "../global/EnumIndexedArray.h"
@@ -16,6 +15,7 @@
 #include "../map/DoorFlags.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitFlags.h"
+#include "../map/Map.h"
 #include "../map/coordinate.h"
 #include "../map/enums.h"
 #include "../map/exit.h"
@@ -33,9 +33,11 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <memory>
 #include <optional>
 #include <set>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,12 +48,32 @@
 #include <QtGui/qopengl.h>
 #include <QtGui>
 
+struct NODISCARD VisitRoomOptions final
+{
+    SharedCanvasNamedColorOptions canvasColors;
+    SharedNamedColorOptions colorSettings;
+    bool drawNotMappedExits = false;
+};
+
 enum class NODISCARD StreamTypeEnum { OutFlow, InFlow };
 enum class NODISCARD WallTypeEnum { SOLID, DOTTED, DOOR };
 static constexpr const size_t NUM_WALL_TYPES = 3;
 DEFINE_ENUM_COUNT(WallTypeEnum, NUM_WALL_TYPES)
 
-#define LOOKUP_COLOR(X) (getConfig().colorSettings.X)
+#define LOOKUP_COLOR(X) (getNamedColorOptions().X)
+
+// must be called from the main thread
+NODISCARD static VisitRoomOptions getVisitRoomOptions()
+{
+    const auto &config = getConfig();
+    auto &canvas = config.canvas;
+    VisitRoomOptions result;
+    result.canvasColors = static_cast<const Configuration::CanvasNamedColorOptions &>(canvas).clone();
+    result.colorSettings
+        = static_cast<const Configuration::NamedColorOptions &>(config.colorSettings).clone();
+    result.drawNotMappedExits = canvas.drawNotMappedExits;
+    return result;
+}
 
 NODISCARD static bool isTransparent(const XNamedColor &namedColor)
 {
@@ -116,42 +138,19 @@ NODISCARD static XNamedColor getVerticalNamedColor(const ExitFlags flags)
     return getWallNamedColorCommon(flags, WallOrientationEnum::VERTICAL);
 }
 
-// All layers
-static void generateAllLayerMeshes(MapBatches &batches,
-                                   OpenGL &gl,
-                                   GLFont &font,
-                                   const LayerToRooms &layerToRooms,
-                                   const RoomIndex &roomIndex,
-                                   const mctp::MapCanvasTexturesProxy &textures,
-                                   const OptBounds &bounds);
+struct LayerBatchData;
 
-void MapCanvasRoomDrawer::generateBatches(const LayerToRooms &layerToRooms,
-                                          const RoomIndex &roomIndex,
-                                          const OptBounds &bounds)
-{
-    m_batches.reset();   // dtor, if necessary
-    m_batches.emplace(); // ctor
-
-    generateAllLayerMeshes(m_batches.value(),
-                           getOpenGL(),
-                           getFont(),
-                           layerToRooms,
-                           roomIndex,
-                           mctp::getProxy(m_textures),
-                           bounds);
-}
-
-struct NODISCARD TerrainAndTrail
+struct NODISCARD TerrainAndTrail final
 {
     MMTextureId terrain = INVALID_MM_TEXTURE_ID;
     MMTextureId trail = INVALID_MM_TEXTURE_ID;
 };
 
 NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const mctp::MapCanvasTexturesProxy &textures,
-                                                        const Room *const room)
+                                                        const RawRoom &room)
 {
-    const auto roomTerrainType = room->getTerrainType();
-    const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
+    const auto roomTerrainType = room.getTerrainType();
+    const RoadIndexMaskEnum roadIndex = getRoadIndex(room);
 
     TerrainAndTrail result;
     result.terrain = (roomTerrainType == RoomTerrainEnum::ROAD) ? textures.road[roadIndex]
@@ -168,42 +167,46 @@ struct NODISCARD IRoomVisitorCallbacks
     virtual ~IRoomVisitorCallbacks();
 
 private:
-    NODISCARD virtual bool virt_acceptRoom(const Room *) const = 0;
-
-public:
-    NODISCARD bool acceptRoom(const Room *const pRoom) const { return virt_acceptRoom(pRoom); }
+    NODISCARD virtual bool virt_acceptRoom(const RoomPtr &) const = 0;
 
 private:
     // Rooms
-    virtual void virt_visitTerrainTexture(const Room *, MMTextureId) = 0;
-    virtual void virt_visitOverlayTexture(const Room *, MMTextureId) = 0;
-    virtual void virt_visitNamedColorTint(const Room *, RoomTintEnum) = 0;
+    virtual void virt_visitTerrainTexture(const RoomPtr &, MMTextureId) = 0;
+    virtual void virt_visitTrailTexture(const RoomPtr &, MMTextureId) = 0;
+    virtual void virt_visitOverlayTexture(const RoomPtr &, MMTextureId) = 0;
+    virtual void virt_visitNamedColorTint(const RoomPtr &, RoomTintEnum) = 0;
 
     // Walls
     virtual void virt_visitWall(
-        const Room *, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
+        const RoomPtr &, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
         = 0;
 
     // Streams
-    virtual void virt_visitStream(const Room *, ExitDirEnum, StreamTypeEnum) = 0;
+    virtual void virt_visitStream(const RoomPtr &, ExitDirEnum, StreamTypeEnum) = 0;
 
 public:
+    NODISCARD bool acceptRoom(const RoomPtr &room) const { return virt_acceptRoom(room); }
+
     // Rooms
-    void visitTerrainTexture(const Room *const room, const MMTextureId tex)
+    void visitTerrainTexture(const RoomPtr &room, const MMTextureId tex)
     {
         virt_visitTerrainTexture(room, tex);
     }
-    void visitOverlayTexture(const Room *const room, const MMTextureId tex)
+    void visitTrailTexture(const RoomPtr &room, const MMTextureId tex)
+    {
+        virt_visitTrailTexture(room, tex);
+    }
+    void visitOverlayTexture(const RoomPtr &room, const MMTextureId tex)
     {
         virt_visitOverlayTexture(room, tex);
     }
-    void visitNamedColorTint(const Room *const room, const RoomTintEnum tint)
+    void visitNamedColorTint(const RoomPtr &room, const RoomTintEnum tint)
     {
         virt_visitNamedColorTint(room, tint);
     }
 
     // Walls
-    void visitWall(const Room *const room,
+    void visitWall(const RoomPtr &room,
                    const ExitDirEnum dir,
                    const XNamedColor &color,
                    const WallTypeEnum wallType,
@@ -213,7 +216,7 @@ public:
     }
 
     // Streams
-    void visitStream(const Room *const room, const ExitDirEnum dir, const StreamTypeEnum streamType)
+    void visitStream(const RoomPtr &room, const ExitDirEnum dir, StreamTypeEnum streamType)
     {
         virt_visitStream(room, dir, streamType);
     }
@@ -221,10 +224,10 @@ public:
 
 IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
 
-static void visitRoom(const Room *const room,
-                      const RoomIndex &roomIndex,
+static void visitRoom(const RoomPtr &room,
                       const mctp::MapCanvasTexturesProxy &textures,
-                      IRoomVisitorCallbacks &callbacks)
+                      IRoomVisitorCallbacks &callbacks,
+                      const VisitRoomOptions &visitRoomOptions)
 {
     if (!callbacks.acceptRoom(room)) {
         return;
@@ -234,13 +237,9 @@ static void visitRoom(const Room *const room,
     const bool isDark = room->getLightType() == RoomLightEnum::DARK;
     const bool hasNoSundeath = room->getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
     const bool notRideable = room->getRidableType() == RoomRidableEnum::NOT_RIDABLE;
-    const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room);
+    const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room->getRaw());
     const RoomMobFlags mf = room->getMobFlags();
     const RoomLoadFlags lf = room->getLoadFlags();
-
-    // FIXME: This requires a map update.
-    // TODO: make this a separate mesh.
-    const bool needsUpdate = getConfig().canvas.showUpdated && !room->isUpToDate();
 
     callbacks.visitTerrainTexture(room, terrainAndTrail.terrain);
 
@@ -266,21 +265,14 @@ static void visitRoom(const Room *const room,
         callbacks.visitOverlayTexture(room, textures.no_ride);
     }
 
-    // FIXME: This requires a map update.
-    if (needsUpdate) {
-        callbacks.visitOverlayTexture(room, textures.update);
-    }
-
-    const auto drawInFlow = [room, &roomIndex, &callbacks](const Exit &exit,
-                                                           const ExitDirEnum &dir) -> void {
+    const Map &map = room->getMap();
+    const auto drawInFlow = [&map, &room, &callbacks](const RawExit &exit,
+                                                      const ExitDirEnum &dir) -> void {
         // For each incoming connections
-        for (const auto &targetId : exit.inRange()) {
-            const SharedConstRoom &targetRoom = roomIndex[targetId];
-            if (targetRoom == nullptr) {
-                continue;
-            }
+        for (const RoomId targetRoomId : exit.getIncomingSet()) {
+            const auto &targetRoom = map.getRoomHandle(targetRoomId);
             for (const ExitDirEnum targetDir : ALL_EXITS_NESWUD) {
-                const Exit &targetExit = targetRoom->exit(targetDir);
+                const auto &targetExit = targetRoom.getExit(targetDir);
                 const ExitFlags flags = targetExit.getExitFlags();
                 if (flags.isFlow() && targetExit.containsOut(room->getId())) {
                     callbacks.visitStream(room, dir, StreamTypeEnum::InFlow);
@@ -294,9 +286,8 @@ static void visitRoom(const Room *const room,
 
     // FIXME: This requires a map update.
     // REVISIT: The logic of drawNotMappedExits seems a bit wonky.
-    const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
     for (const ExitDirEnum dir : ALL_EXITS_NESW) {
-        const Exit &exit = room->exit(dir);
+        const auto &exit = room->getExit(dir);
         const ExitFlags flags = exit.getExitFlags();
         const auto isExit = flags.isExit();
         const auto isDoor = flags.isDoor();
@@ -306,7 +297,8 @@ static void visitRoom(const Room *const room,
         // FIXME: This requires a map update.
         // TODO: make "not mapped" exits a separate mesh;
         // except what should we do for the "else" case?
-        if (isExit && drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
+        if (isExit && visitRoomOptions.drawNotMappedExits
+            && exit.outIsEmpty()) { // zero outgoing connections
             callbacks.visitWall(room,
                                 dir,
                                 LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
@@ -355,7 +347,7 @@ static void visitRoom(const Room *const room,
 
     // drawVertical
     for (const ExitDirEnum dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
-        const Exit &exit = room->exit(dir);
+        const auto &exit = room->getExit(dir);
         const auto &flags = exit.getExitFlags();
         if (!flags.isExit()) {
             continue;
@@ -364,7 +356,7 @@ static void visitRoom(const Room *const room,
         const bool isClimb = flags.isClimb();
 
         // FIXME: This requires a map update.
-        if (drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
+        if (visitRoomOptions.drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
             callbacks.visitWall(room,
                                 dir,
                                 LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
@@ -405,21 +397,22 @@ static void visitRoom(const Room *const room,
 }
 
 static void visitRooms(const RoomVector &rooms,
-                       const RoomIndex &roomIndex,
                        const mctp::MapCanvasTexturesProxy &textures,
-                       IRoomVisitorCallbacks &callbacks)
+                       IRoomVisitorCallbacks &callbacks,
+                       const VisitRoomOptions &visitRoomOptions)
 {
+    DECL_TIMER(t, __FUNCTION__);
     for (const auto &room : rooms) {
-        visitRoom(room, roomIndex, textures, callbacks);
+        visitRoom(room, textures, callbacks, visitRoomOptions);
     }
 }
 
 struct NODISCARD RoomTex
 {
-    const Room *room = nullptr;
+    RoomPtr room = std::nullopt;
     MMTextureId tex = INVALID_MM_TEXTURE_ID;
 
-    explicit RoomTex(const Room *const room_, const MMTextureId tex_)
+    explicit RoomTex(const RoomPtr &room_, const MMTextureId tex_)
         : room{room_}
         , tex{tex_}
     {
@@ -441,17 +434,12 @@ struct NODISCARD RoomTex
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
+    ColoredRoomTex(const RoomPtr &room, const MMTextureId tex) = delete;
 
-    ColoredRoomTex(const Room *const room, MMTextureId tex) = delete;
-
-    explicit ColoredRoomTex(const Room *const room_, const MMTextureId tex_, const Color &color_)
+    explicit ColoredRoomTex(const RoomPtr &room_, const MMTextureId tex_, const Color &color_)
         : RoomTex{room_, tex_}
         , color{color_}
-    {
-        if (tex_ == INVALID_MM_TEXTURE_ID) {
-            throw std::invalid_argument("tex_");
-        }
-    }
+    {}
 };
 
 // Caution: Although O(n) partitioning into an array indexed by constant number of texture IDs
@@ -549,7 +537,8 @@ static void foreach_texture(const T &textures, Callback &&callback)
     }
 }
 
-NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
+NODISCARD static UniqueMeshVector createSortedTexturedMeshes(const std::string_view /*what*/,
+                                                             OpenGL &gl,
                                                              const RoomTexVector &textures)
 {
     if (textures.empty()) {
@@ -596,7 +585,7 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
 }
 
 NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
-    OpenGL &gl, const ColoredRoomTexVector &textures)
+    const std::string_view /*what*/, OpenGL &gl, const ColoredRoomTexVector &textures)
 {
     if (textures.empty()) {
         return UniqueMeshVector{};
@@ -650,6 +639,7 @@ using PlainQuadBatch = std::vector<glm::vec3>;
 struct NODISCARD LayerBatchData final
 {
     RoomTexVector roomTerrains;
+    RoomTexVector roomTrails;
     RoomTexVector roomOverlays;
     // REVISIT: Consider storing up/down door lines in a separate batch,
     // so they can be rendered thicker.
@@ -664,12 +654,16 @@ struct NODISCARD LayerBatchData final
 
     explicit LayerBatchData() = default;
     ~LayerBatchData() = default;
-    DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchData);
+    DEFAULT_MOVES(LayerBatchData);
+    DELETE_COPIES(LayerBatchData);
 
     void sort()
     {
+        DECL_TIMER(t, "sort");
+
         /* TODO: Only sort on 2.1 path, since 3.0 can use GL_TEXTURE_2D_ARRAY. */
         roomTerrains.sortByTexture();
+        roomTrails.sortByTexture();
         roomOverlays.sortByTexture();
 
         // REVISIT: We could just make two separate lists and avoid the sort.
@@ -683,20 +677,24 @@ struct NODISCARD LayerBatchData final
         streamOuts.sortByTexture();
     }
 
-    NODISCARD LayerMeshes getMeshes(OpenGL &gl)
+    NODISCARD LayerMeshes getMeshes(OpenGL &gl) const
     {
+        DECL_TIMER(t, "getMeshes");
+
         LayerMeshes meshes;
-        meshes.terrain = ::createSortedTexturedMeshes(gl, roomTerrains);
+        meshes.terrain = ::createSortedTexturedMeshes("terrain", gl, roomTerrains);
+        meshes.trails = ::createSortedTexturedMeshes("trails", gl, roomTrails);
+        // REVISIT: Can tints be combined now?
         for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
             meshes.tints[tint] = gl.createPlainQuadBatch(roomTints[tint]);
         }
-        meshes.overlays = ::createSortedTexturedMeshes(gl, roomOverlays);
-        meshes.doors = ::createSortedColoredTexturedMeshes(gl, doors);
-        meshes.walls = ::createSortedColoredTexturedMeshes(gl, solidWallLines);
-        meshes.dottedWalls = ::createSortedColoredTexturedMeshes(gl, dottedWallLines);
-        meshes.upDownExits = ::createSortedColoredTexturedMeshes(gl, roomUpDownExits);
-        meshes.streamIns = ::createSortedColoredTexturedMeshes(gl, streamIns);
-        meshes.streamOuts = ::createSortedColoredTexturedMeshes(gl, streamOuts);
+        meshes.overlays = ::createSortedTexturedMeshes("overlays", gl, roomOverlays);
+        meshes.doors = ::createSortedColoredTexturedMeshes("doors", gl, doors);
+        meshes.walls = ::createSortedColoredTexturedMeshes("solidWalls", gl, solidWallLines);
+        meshes.dottedWalls = ::createSortedColoredTexturedMeshes("dottedWalls", gl, dottedWallLines);
+        meshes.upDownExits = ::createSortedColoredTexturedMeshes("upDownExits", gl, roomUpDownExits);
+        meshes.streamIns = ::createSortedColoredTexturedMeshes("streamIns", gl, streamIns);
+        meshes.streamOuts = ::createSortedColoredTexturedMeshes("streamOuts", gl, streamOuts);
         meshes.layerBoost = gl.createPlainQuadBatch(roomLayerBoostQuads);
         meshes.isValid = true;
         return meshes;
@@ -719,16 +717,17 @@ public:
         , m_bounds{bounds}
     {}
 
-    ~LayerBatchBuilder() override;
+    ~LayerBatchBuilder() final;
 
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchBuilder);
 
-    NODISCARD bool virt_acceptRoom(const Room *const room) const override
+private:
+    NODISCARD bool virt_acceptRoom(const RoomPtr &room) const final
     {
         return m_bounds.contains(room->getPosition());
     }
 
-    void virt_visitTerrainTexture(const Room *const room, const MMTextureId terrain) final
+    void virt_visitTerrainTexture(const RoomPtr &room, const MMTextureId terrain) final
     {
         if (terrain == INVALID_MM_TEXTURE_ID) {
             return;
@@ -745,14 +744,21 @@ public:
 #undef EMIT
     }
 
-    void virt_visitOverlayTexture(const Room *const room, const MMTextureId overlay) final
+    void virt_visitTrailTexture(const RoomPtr &room, const MMTextureId trail) final
+    {
+        if (trail != INVALID_MM_TEXTURE_ID) {
+            m_data.roomTrails.emplace_back(room, trail);
+        }
+    }
+
+    void virt_visitOverlayTexture(const RoomPtr &room, const MMTextureId overlay) final
     {
         if (overlay != INVALID_MM_TEXTURE_ID) {
             m_data.roomOverlays.emplace_back(room, overlay);
         }
     }
 
-    void virt_visitNamedColorTint(const Room *const room, const RoomTintEnum tint) final
+    void virt_visitNamedColorTint(const RoomPtr &room, const RoomTintEnum tint) final
     {
         const auto v0 = room->getPosition().to_vec3();
 #define EMIT(x, y) m_data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
@@ -763,7 +769,7 @@ public:
 #undef EMIT
     }
 
-    void virt_visitWall(const Room *const room,
+    void virt_visitWall(const RoomPtr &room,
                         const ExitDirEnum dir,
                         const XNamedColor &color,
                         const WallTypeEnum wallType,
@@ -809,7 +815,7 @@ public:
         }
     }
 
-    void virt_visitStream(const Room *const room,
+    void virt_visitStream(const RoomPtr &room,
                           const ExitDirEnum dir,
                           const StreamTypeEnum type) final
     {
@@ -831,55 +837,76 @@ public:
 
 LayerBatchBuilder::~LayerBatchBuilder() = default;
 
-NODISCARD static LayerMeshes generateLayerMeshes(OpenGL &gl,
-                                                 const RoomVector &rooms,
-                                                 const RoomIndex &roomIndex,
-                                                 const mctp::MapCanvasTexturesProxy &textures,
-                                                 const OptBounds &bounds)
+NODISCARD static LayerBatchData generateLayerMeshes(const RoomVector &rooms,
+                                                    const mctp::MapCanvasTexturesProxy &textures,
+                                                    const OptBounds &bounds,
+                                                    const VisitRoomOptions &visitRoomOptions)
 {
+    DECL_TIMER(t, "generateLayerMeshes");
+
     LayerBatchData data;
     LayerBatchBuilder builder{data, textures, bounds};
-    visitRooms(rooms, roomIndex, textures, builder);
+    visitRooms(rooms, textures, builder, visitRoomOptions);
+
     data.sort();
-    return data.getMeshes(gl);
+    return data;
 }
 
-static void generateAllLayerMeshes(MapBatches &batches,
-                                   OpenGL &gl,
-                                   GLFont &font,
-                                   const LayerToRooms &layerToRooms,
-                                   const RoomIndex &roomIndex,
-                                   const mctp::MapCanvasTexturesProxy &textures,
-                                   const OptBounds &bounds)
+struct NODISCARD InternalData final : public IMapBatchesFinisher
 {
-    auto &batchedMeshes = batches.batchedMeshes;
-    auto &connectionDrawerBuffers = batches.connectionDrawerBuffers;
-    auto &roomNameBatches = batches.roomNameBatches;
-    auto &connectionMeshes = batches.connectionMeshes;
+public:
+    std::unordered_map<int, LayerBatchData> batchedMeshes;
+    BatchedConnections connectionDrawerBuffers;
+    std::unordered_map<int, RoomNameBatch> roomNameBatches;
+
+private:
+    void virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const final;
+};
+
+static void generateAllLayerMeshes(InternalData &internalData,
+                                   const LayerToRooms &layerToRooms,
+                                   const mctp::MapCanvasTexturesProxy &textures,
+                                   const VisitRoomOptions &visitRoomOptions)
+
+{
+    // This feature has been removed, but it's passed to a lot of functions,
+    // so it would be annoying to have to add it back if we decide the feature was
+    // actually necessary.
+    const OptBounds bounds{};
+
+    DECL_TIMER(t, "generateAllLayerMeshes");
+    auto &batchedMeshes = internalData.batchedMeshes;
+    auto &connectionDrawerBuffers = internalData.connectionDrawerBuffers;
+    auto &roomNameBatches = internalData.roomNameBatches;
 
     for (const auto &layer : layerToRooms) {
+        DECL_TIMER(t2, "generateAllLayerMeshes.loop");
         const int thisLayer = layer.first;
         auto &layerMeshes = batchedMeshes[thisLayer];
-        auto &layerRoomNames = roomNameBatches[thisLayer];
-        auto &layerConnections = connectionMeshes[thisLayer];
-        auto &rooms = layer.second;
-
-        layerMeshes = ::generateLayerMeshes(gl, rooms, roomIndex, textures, bounds);
+        ConnectionDrawerBuffers &cdb = connectionDrawerBuffers[thisLayer];
+        RoomNameBatch &rnb = roomNameBatches[thisLayer];
+        const auto &rooms = layer.second;
 
         {
-            auto &cdb = connectionDrawerBuffers[thisLayer];
+            DECL_TIMER(t3, "generateAllLayerMeshes.loop.part2");
+            layerMeshes = ::generateLayerMeshes(rooms, textures, bounds, visitRoomOptions);
+        }
+
+        {
+            DECL_TIMER(t4, "generateAllLayerMeshes.loop.part3");
+
+            // TODO: move everything in the same layer to the same internal struct?
             cdb.clear();
+            rnb.clear();
 
-            const auto currentLayer = thisLayer;
-
-            RoomNameBatch rnb;
-            ConnectionDrawer cd{cdb, rnb, currentLayer, bounds};
-            for (const auto &room : rooms) {
-                cd.drawRoomConnectionsAndDoors(room, roomIndex);
+            ConnectionDrawer cd{cdb, rnb, thisLayer, bounds};
+            {
+                DECL_TIMER(t7, "generateAllLayerMeshes.loop.part3b");
+                // pass 2: add to buffers
+                for (const auto &room : rooms) {
+                    cd.drawRoomConnectionsAndDoors(room);
+                }
             }
-
-            layerRoomNames = rnb.getMesh(font);
-            layerConnections = cdb.getMeshes(gl);
         }
     }
 }
@@ -950,6 +977,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
         streamIns.render(lequal_blended.withColor(color));
         streamOuts.render(lequal_blended.withColor(color));
 
+        trails.render(equal_blended.withColor(color));
         overlays.render(equal_blended.withColor(color));
     }
 
@@ -976,4 +1004,67 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
                                                                                : Colors::white;
         layerBoost.render(equal_blended.withColor(baseColor.withAlpha(alpha)));
     }
+}
+
+void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const
+{
+    for (const auto &kv : batchedMeshes) {
+        const LayerBatchData &data = kv.second;
+        output.batchedMeshes[kv.first] = data.getMeshes(gl);
+    }
+
+    for (const auto &kv : connectionDrawerBuffers) {
+        const ConnectionDrawerBuffers &data = kv.second;
+        output.connectionMeshes[kv.first] = data.getMeshes(gl);
+    }
+
+    for (const auto &kv : roomNameBatches) {
+        const RoomNameBatch &rnb = kv.second;
+        output.roomNameBatches[kv.first] = rnb.getMesh(font);
+    }
+}
+
+// NOTE: All of the lamda captures are copied, including the texture data!
+FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTexturesProxy &textures,
+                                                     const Map &map)
+{
+    const auto visitRoomOptions = getVisitRoomOptions();
+
+    return std::async(std::launch::async,
+                      [textures, map, visitRoomOptions]() -> SharedMapBatchFinisher {
+                          ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
+                                                           visitRoomOptions.colorSettings};
+                          DECL_TIMER(t, "[ASYNC] generateAllLayerMeshes");
+
+                          const LayerToRooms layerToRooms = [map]() -> LayerToRooms {
+                              DECL_TIMER(t2, "[ASYNC] generateBatches.layerToRooms");
+                              LayerToRooms ltr;
+                              for (const RoomId id : map.getRooms()) {
+                                  const auto &r = map.getRoomHandle(id);
+                                  const auto z = r.getPosition().z;
+                                  auto &layer = ltr[z];
+                                  layer.emplace_back(r);
+                              }
+                              return ltr;
+                          }();
+
+                          auto result = std::make_shared<InternalData>();
+                          auto &data = deref(result);
+                          generateAllLayerMeshes(data, layerToRooms, textures, visitRoomOptions);
+                          return SharedMapBatchFinisher{result};
+                      });
+}
+
+void finish(const IMapBatchesFinisher &finisher,
+            std::optional<MapBatches> &opt_batches,
+            OpenGL &gl,
+            GLFont &font)
+{
+    opt_batches.reset();
+    MapBatches &batches = opt_batches.emplace();
+
+    // Note: This will call InternalData::finish;
+    // if necessary for claritiy, we could replace this with Pimpl to make it a direct call,
+    // but that won't change the cost of the virtual call.
+    finisher.finish(batches, gl, font);
 }

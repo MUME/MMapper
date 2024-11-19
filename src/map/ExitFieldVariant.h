@@ -16,10 +16,12 @@
 
 namespace tags {
 struct NODISCARD DoorNameTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 } // namespace tags
 
-using DoorName = TaggedStringLatin1<tags::DoorNameTag>;
+using DoorName = TaggedBoxedStringUtf8<tags::DoorNameTag>;
 
 //
 // X(UPPER_CASE, CamelCase)
@@ -81,7 +83,7 @@ public:
                            CamelCase>); \
         return ExitFieldEnum::UPPER_CASE; \
     }
-        switch (const auto index = m_data.index()) {
+        switch (m_data.index()) {
             XFOREACH_EXIT_FIELD(X_CASE, X_NOP)
         }
 #undef X_CASE
@@ -107,3 +109,8 @@ public:
         return !operator==(other);
     }
 };
+
+NODISCARD extern DoorName makeDoorName(std::string doorName);
+namespace mmqt {
+NODISCARD extern DoorName makeDoorName(const QString &doorName);
+}

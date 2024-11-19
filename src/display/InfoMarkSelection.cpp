@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <vector>
 
 // Assumes arguments are pre-scaled by INFOMARK_SCALE;
 // TODO: add a new type to avoid accidental conversion
@@ -18,11 +19,17 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
                                      MapData &mapData,
                                      const Coordinate &c1,
                                      const Coordinate &c2)
-{
-    const auto z = c1.z;
+    : m_mapData{mapData}
+    , m_sel1{c1}
+    , m_sel2{c2}
+{}
 
-    m_sel1 = c1;
-    m_sel2 = c2;
+void InfoMarkSelection::init()
+{
+    const auto &c1 = m_sel1;
+    const auto &c2 = m_sel2;
+
+    const auto z = c1.z;
 
     if (c2.z != z) {
         assert(false);
@@ -38,8 +45,8 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
         return isClamped(c.x, bx1, bx2) && isClamped(c.y, by1, by2);
     };
 
-    const auto isMarkerInSelection = [z, &isCoordInSelection](const auto &marker) -> bool {
-        const Coordinate &pos1 = marker->getPosition1();
+    const auto isMarkerInSelection = [z, &isCoordInSelection](const InfomarkHandle &marker) -> bool {
+        const Coordinate &pos1 = marker.getPosition1();
         if (z != pos1.z) {
             return false;
         }
@@ -48,11 +55,11 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
             return true;
         }
 
-        if (marker->getType() == InfoMarkTypeEnum::TEXT) {
+        if (marker.getType() == InfoMarkTypeEnum::TEXT) {
             return false;
         }
 
-        const Coordinate &pos2 = marker->getPosition2();
+        const Coordinate &pos2 = marker.getPosition2();
         if (z != pos2.z) {
             return false;
         }
@@ -60,9 +67,41 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
         return isCoordInSelection(pos2);
     };
 
-    for (const auto &marker : mapData.getMarkersList()) {
-        if (isMarkerInSelection(marker)) {
-            emplace_back(marker);
+    const auto &db = m_mapData.getInfomarkDb();
+    for (const InfomarkId id : db.getIdSet()) {
+        if (isMarkerInSelection(InfomarkHandle{db, id})) {
+            m_markerList.emplace_back(id);
         }
+    }
+}
+
+void InfoMarkSelection::applyOffset(const Coordinate &offset) const
+{
+    if (m_markerList.empty()) {
+        qWarning() << "No markers selected.";
+        return;
+    }
+
+    const auto updates = [this, &offset]() {
+        std::vector<InformarkChange> result_updates;
+        const auto oldDb = m_mapData.getInfomarkDb();
+        for (const InfomarkId marker : m_markerList) {
+            InfoMarkFields copy = oldDb.getRawCopy(marker);
+            copy.offsetBy(offset);
+            result_updates.emplace_back(marker, copy);
+        }
+        return result_updates;
+    }();
+
+    if (updates.empty()) {
+        qWarning() << "Failed to move any markers.";
+        return;
+    }
+
+    const auto count = updates.size();
+    if (m_mapData.updateMarkers(updates)) {
+        qInfo() << "Moved" << count << "marker(s).";
+    } else {
+        qWarning() << "Failed to move" << count << "marker(s).";
     }
 }

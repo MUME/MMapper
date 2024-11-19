@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/io.h"
+#include "TaggedBytes.h"
 
 #include <QAbstractSocket>
 #include <QByteArray>
@@ -29,7 +30,7 @@ public:
 private:
     virtual void virt_disconnectFromHost() = 0;
     virtual void virt_connectToHost() = 0;
-    virtual void virt_sendToMud(const QByteArray &ba) = 0;
+    virtual void virt_sendToMud(const TelnetIacBytes &) = 0;
     NODISCARD virtual QAbstractSocket::SocketState virt_state() = 0;
     virtual void virt_onConnect();
     virtual void virt_onDisconnect();
@@ -37,12 +38,16 @@ private:
     virtual void virt_onError2(QAbstractSocket::SocketError e, const QString &errorString);
 
 protected:
+    void fakeMessageFromMud(const QString &msg);
+
+protected:
     void proxy_log(const QString &msg) { emit sig_log("Proxy", msg); }
 
 public:
     void disconnectFromHost() { virt_disconnectFromHost(); }
     void connectToHost() { virt_connectToHost(); }
-    void sendToMud(const QByteArray &ba) { virt_sendToMud(ba); }
+    void sendToMud(const TelnetIacBytes &ba) { virt_sendToMud(ba); }
+    void sendToMud(const QString &s) { sendToMud(TelnetIacBytes{s.toUtf8()}); }
     NODISCARD QAbstractSocket::SocketState state() { return virt_state(); }
     NODISCARD bool isConnectedOrConnecting()
     {
@@ -64,7 +69,7 @@ signals:
     void sig_connected();
     void sig_disconnected();
     void sig_socketError(const QString &errorString);
-    void sig_processMudStream(const QByteArray &buffer);
+    void sig_processMudStream(const TelnetIacBytes &buffer);
     void sig_log(const QString &, const QString &);
 
 protected slots:
@@ -93,7 +98,7 @@ public:
 private:
     void virt_disconnectFromHost() final;
     void virt_connectToHost() override;
-    void virt_sendToMud(const QByteArray &ba) final;
+    void virt_sendToMud(const TelnetIacBytes &ba) final;
     NODISCARD QAbstractSocket::SocketState virt_state() final { return m_socket.state(); }
     void virt_onConnect() override;
     void virt_onError(QAbstractSocket::SocketError e) final;

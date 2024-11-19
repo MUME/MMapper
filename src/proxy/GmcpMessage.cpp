@@ -33,7 +33,7 @@ NODISCARD static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum typ
 NODISCARD static GmcpMessageTypeEnum toGmcpMessageType(const std::string_view str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    if (areEqualAsLowerLatin1(str, (normalized))) { \
+    if (areEqualAsLowerUtf8(str, (normalized))) { \
         return GmcpMessageTypeEnum::UPPER_CASE; \
     }
 
@@ -51,14 +51,14 @@ GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type)
 
 GmcpMessage::GmcpMessage(GmcpMessageName moved_package)
     : m_name{std::move(moved_package)}
-    , m_type{toGmcpMessageType(m_name.getStdStringLatin1())}
+    , m_type{toGmcpMessageType(m_name.getStdStringUtf8())}
 {}
 
 GmcpMessage::GmcpMessage(GmcpMessageName moved_package, GmcpJson moved_json)
     : m_name{std::move(moved_package)}
     , m_json{std::move(moved_json)}
     , m_document(GmcpJsonDocument::fromJson(m_json->toQByteArray()))
-    , m_type{toGmcpMessageType(m_name.getStdStringLatin1())}
+    , m_type{toGmcpMessageType(m_name.getStdStringUtf8())}
 {}
 
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, GmcpJson moved_json)
@@ -67,9 +67,8 @@ GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, GmcpJson moved_json)
 
 QByteArray GmcpMessage::toRawBytes() const
 {
-    // FIXME: Mixing Latin1 and UTF8 is asking for trouble.
     std::ostringstream oss;
-    oss << m_name.getStdStringLatin1();
+    oss << m_name.getStdStringUtf8();
     if (m_json) {
         oss << char_consts::C_SPACE << m_json->getStdStringUtf8();
     }
@@ -78,15 +77,12 @@ QByteArray GmcpMessage::toRawBytes() const
 
 GmcpMessage GmcpMessage::fromRawBytes(const QByteArray &ba)
 {
-    // FIXME: Mixing Latin1 and UTF8 is asking for trouble.
-    // Throw if the message name isn't ASCII?
-
     const int pos = ba.indexOf(char_consts::C_SPACE);
     // <data> is optional
     if (pos == -1) {
-        return GmcpMessage{GmcpMessageName{mmqt::toStdStringLatin1(ba)}};
+        return GmcpMessage{GmcpMessageName{mmqt::toStdStringUtf8(ba)}};
     }
-    auto package = GmcpMessageName{mmqt::toStdStringLatin1(ba.mid(0, pos))}; // Latin-1
-    auto json = GmcpJson{mmqt::toStdStringUtf8(ba.mid(pos + 1))};            // UTF-8
+    auto package = GmcpMessageName{mmqt::toStdStringUtf8(ba.mid(0, pos))};
+    auto json = GmcpJson{mmqt::toStdStringUtf8(ba.mid(pos + 1))};
     return GmcpMessage(std::move(package), std::move(json));
 }

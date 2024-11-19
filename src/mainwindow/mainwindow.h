@@ -10,6 +10,7 @@
 #include "../global/Connections.h"
 #include "../global/Signal2.h"
 #include "../global/macros.h"
+#include "../map/Changes.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
 
@@ -27,10 +28,10 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class AutoLogger;
-class AbstractAction;
+class AbstractMapStorage;
 class AdventureTracker;
 class AdventureWidget;
+class AutoLogger;
 class ClientWidget;
 class ConfigDialog;
 class ConnectionListener;
@@ -63,6 +64,11 @@ class RoomManager;
 class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
+
+struct InfomarkDb;
+struct MapLoadData;
+
+enum class NODISCARD AsyncTypeEnum : uint8_t { Load, Merge, Save };
 
 class NODISCARD_QOBJECT MainWindow final : public QMainWindow
 {
@@ -226,6 +232,7 @@ private:
     QAction *clientAct = nullptr;
     QAction *saveLogAct = nullptr;
 
+    QAction *gotoRoomAct = nullptr;
     QAction *forceRoomAct = nullptr;
     QAction *releaseAllPathsAct = nullptr;
     QAction *rebuildMeshesAct = nullptr;
@@ -234,6 +241,36 @@ private:
     mmqt::SingleConnection m_createRoomConnection;
     mmqt::SingleConnection m_scheduleActionConnection;
 
+    struct AsyncBase;
+    struct AsyncHelper;
+    struct AsyncLoader;
+    struct AsyncMerge;
+    struct AsyncSaver;
+
+    struct NODISCARD AsyncTask final : public QObject
+    {
+    private:
+        std::unique_ptr<AsyncBase> m_task;
+        std::optional<QTimer> m_timer;
+
+    public:
+        explicit AsyncTask(QObject *parent);
+        ~AsyncTask() final;
+
+    public:
+        NODISCARD bool isWorking() const { return m_task != nullptr; }
+        NODISCARD explicit operator bool() const { return isWorking(); }
+
+    public:
+        void begin(std::unique_ptr<AsyncBase> task);
+        void tick();
+        void request_cancel();
+
+    private:
+        void reset();
+    };
+
+    AsyncTask m_asyncTask;
     Signal2Lifetime m_lifetime;
 
 public:
@@ -242,16 +279,24 @@ public:
 
     enum class NODISCARD SaveModeEnum { FULL, BASEMAP };
     enum class NODISCARD SaveFormatEnum { MM2, MM2XML, WEB, MMP };
-    bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
+    NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
+    void percentageChanged(uint32_t);
+
+private:
+    void showAsyncFailure(const QString &fileName, AsyncTypeEnum mode, bool wasCanceled);
+    NODISCARD std::unique_ptr<AbstractMapStorage> getLoadOrMergeMapStorage(
+        const std::shared_ptr<ProgressCounter> &pc,
+        const QString &fileName,
+        std::shared_ptr<QFile> &pFile);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void showEvent(QShowEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *event) override;
+    NODISCARD bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     void startServices();
@@ -261,6 +306,7 @@ private:
     void showStatusShort(const QString &txt) { showStatusInternal(txt, 2000); }
     void showStatusLong(const QString &txt) { showStatusInternal(txt, 5000); }
     void showStatusForever(const QString &txt) { showStatusInternal(txt, 0); }
+    NODISCARD bool tryStartNewAsync();
 
 private:
     void wireConnections();
@@ -274,7 +320,6 @@ private:
     void writeSettings();
 
     NODISCARD bool maybeSave();
-    NODISCARD std::unique_ptr<QFileDialog> createDefaultSaveDialog();
 
     struct NODISCARD ActionDisabler final
     {
@@ -329,12 +374,20 @@ private:
     public:
         void reset() { m_self.endProgressDialog(); }
     };
-    NODISCARD ProgressDialogLifetime createNewProgressDialog(const QString &text);
+    NODISCARD ProgressDialogLifetime createNewProgressDialog(const QString &text, bool allow_cancel);
     void endProgressDialog();
     NODISCARD MapCanvas *getCanvas() const;
     void mapChanged() const;
     void setCanvasMouseMode(CanvasMouseModeEnum mode);
-    void execSelectionGroupMapAction(std::unique_ptr<AbstractAction> action);
+    void setMapModified(bool);
+    void updateMapModified();
+
+private:
+    void applyGroupAction(const std::function<Change(const RawRoom &)> &getChange);
+    NODISCARD QString chooseLoadOrMergeFileName();
+    void onSuccessfulLoad(const MapLoadData &mapLoadData);
+    void onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks);
+    void onSuccessfulSave(SaveModeEnum mode, SaveFormatEnum format, const QString &fileName);
 
 private:
     void connectCreateRoomConnection();
@@ -352,15 +405,16 @@ public slots:
     void slot_open();
     void slot_reload();
     void slot_merge();
-    bool slot_save();
-    bool slot_saveAs();
-    bool slot_exportBaseMap();
-    bool slot_exportMm2xmlMap();
-    bool slot_exportWebMap();
-    bool slot_exportMmpMap();
+    NODISCARD bool slot_save();
+    NODISCARD bool slot_saveAs();
+    NODISCARD bool slot_exportBaseMap();
+    NODISCARD bool slot_exportMm2xmlMap();
+    NODISCARD bool slot_exportWebMap();
+    NODISCARD bool slot_exportMmpMap();
     void slot_about();
 
-    void slot_percentageChanged(uint32_t);
+    NODISCARD bool slot_checkMapConsistency();
+    NODISCARD bool slot_generateBaseMap();
 
     void slot_log(const QString &, const QString &);
 
@@ -382,11 +436,14 @@ public slots:
     void slot_onDeleteInfoMarkSelection();
     void slot_onDeleteRoomSelection();
     void slot_onDeleteConnectionSelection();
+    NODISCARD bool slot_moveRoomSelection(const Coordinate &offset);
     void slot_onMoveUpRoomSelection();
     void slot_onMoveDownRoomSelection();
+    NODISCARD bool slot_mergeRoomSelection(const Coordinate &offset);
     void slot_onMergeUpRoomSelection();
     void slot_onMergeDownRoomSelection();
     void slot_onConnectToNeighboursRoomSelection();
+    void slot_forceMapperToRoom();
     void slot_onFindRoom();
     void slot_onLaunchClient();
     void slot_onPreferences();

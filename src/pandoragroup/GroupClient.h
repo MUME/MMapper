@@ -17,7 +17,7 @@ private:
     friend class GroupSocket;
 
 private:
-    ProtocolVersion m_proposedProtocolVersion = PROTOCOL_VERSION_102;
+    ProtocolVersion m_proposedProtocolVersion = PROTOCOL_VERSION_104_insecure;
     bool m_clientConnected = false;
     int m_reconnectAttempts = 3;
     GroupSocket m_socket;
@@ -32,7 +32,7 @@ private:
 
 private:
     void virt_connectionClosed(GroupSocket &socket) final;
-    void virt_kickCharacter(const QByteArray &) final;
+    void virt_kickCharacter(const QString &) final;
     void virt_retrieveData(GroupSocket &socket, MessagesEnum message, const QVariantMap &data) final;
     void virt_sendCharRename(const QVariantMap &map) final;
     void virt_sendCharUpdate(const QVariantMap &map) final;

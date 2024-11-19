@@ -4,6 +4,7 @@
 #include "metatypes.h"
 
 #include "../global/ConfigEnums.h"
+#include "../map/ChangeList.h"
 #include "../map/ExitDirection.h"
 #include "../map/parseevent.h"
 #include "../map/roomid.h"
@@ -15,6 +16,7 @@
 #include "../parser/DoorAction.h"
 #include "../proxy/GmcpMessage.h"
 #include "../proxy/telnetfilter.h"
+#include "./proxy/TaggedBytes.h"
 
 #include <type_traits>
 
@@ -35,6 +37,9 @@ void registerMetatypes()
     } while (false)
 
     REGISTER_METATYPE(RoomId);
+    REGISTER_METATYPE(ExternalRoomId);
+    REGISTER_METATYPE(ServerRoomId);
+    REGISTER_METATYPE(SigMapChangeList);
     REGISTER_METATYPE(TelnetData);
     REGISTER_METATYPE(CommandQueue);
     REGISTER_METATYPE(DoorActionEnum);
@@ -47,6 +52,10 @@ void registerMetatypes()
     REGISTER_METATYPE(GmcpMessage);
     REGISTER_METATYPE(GroupSecret);
     REGISTER_METATYPE(RemoteSession);
+
+#define X_REGISTER_METATYPE(name) REGISTER_METATYPE(name##Bytes);
+    XFOREACH_TAGGED_BYTE_TYPES(X_REGISTER_METATYPE)
+#undef X_REGISTER_METATYPE
 
 #undef REGISTER_METATYPE
 }

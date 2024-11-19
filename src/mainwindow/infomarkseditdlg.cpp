@@ -103,19 +103,20 @@ void InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged(int /*unused*/)
 void InfoMarksEditDlg::slot_createClicked()
 {
     auto &mapData = deref(m_mapData);
-    auto im = InfoMark::alloc(mapData);
-    updateMark(*im);
+    InfoMarkFields im;
+    updateMark(im);
 
-    mapData.addMarker(im);
-    m_selection->emplace_back(im);
+    const InfomarkId id = mapData.addMarker(im);
+    m_selection->emplace_back(id);
     updateMarkers();
-    setCurrentInfoMark(im.get());
+
+    setCurrentInfoMark(id);
     updateDialog();
 
     emit sig_infomarksChanged();
 }
 
-void InfoMarksEditDlg::updateMark(InfoMark &im)
+void InfoMarksEditDlg::updateMark(InfoMarkFields &im)
 {
     const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
@@ -123,21 +124,25 @@ void InfoMarksEditDlg::updateMark(InfoMark &im)
     const int angle = static_cast<int>(std::lround(m_rotationAngle->value()));
     const InfoMarkTypeEnum type = getType();
 
-    QString text = objectText->text();
-    if (type == InfoMarkTypeEnum::TEXT) {
-        if (text.isEmpty()) {
-            text = "New Marker";
-            objectText->setText(text);
+    auto get_text = [this, type]() -> InfoMarkText {
+        QString text = objectText->text();
+        if (type == InfoMarkTypeEnum::TEXT) {
+            if (text.isEmpty()) {
+                text = "New Marker";
+                objectText->setText(text);
+            }
+        } else {
+            if (!text.isEmpty()) {
+                text = "";
+                objectText->setText(text);
+            }
         }
-    } else {
-        if (!text.isEmpty()) {
-            text = "";
-            objectText->setText(text);
-        }
-    }
+        // REVISIT: sanitize before calling objectText->setText(), or after?
+        return mmqt::makeInfoMarkText(text);
+    };
 
     im.setType(type);
-    im.setText(InfoMarkText{text});
+    im.setText(get_text());
     im.setClass(getClass());
     im.setPosition1(pos1);
     im.setPosition2(pos2);
@@ -146,13 +151,18 @@ void InfoMarksEditDlg::updateMark(InfoMark &im)
 
 void InfoMarksEditDlg::slot_modifyClicked()
 {
-    InfoMark *const im = getCurrentInfoMark();
-    if (im == nullptr) {
+    const InfomarkHandle &current = getCurrentInfoMark();
+    if (!current) {
         return;
     }
 
-    updateMark(*im);
-    emit sig_infomarksChanged();
+    InfoMarkFields mark = current.getRawCopy();
+    updateMark(mark);
+
+    if (m_mapData->updateMarker(current.getId(), mark)) {
+        // REVISIT: The canvas will find out from the MapData, so this is not our responsibility.
+        emit sig_infomarksChanged();
+    }
 }
 
 void InfoMarksEditDlg::disconnectAll()
@@ -171,19 +181,21 @@ void InfoMarksEditDlg::updateMarkers()
     objectsList->addItem("Create New Marker", QVariant(-1));
 
     assert(m_selection);
-    int n = 0;
-    for (const auto &marker : *m_selection) {
-        switch (marker->getType()) {
+    const InfoMarkSelection &sel = deref(m_selection);
+
+    // note: mutable lambda is reqquired for the "n" counter variable to be modified.
+    sel.for_each([this, n = 0](const InfomarkHandle &marker) mutable {
+        switch (marker.getType()) {
         case InfoMarkTypeEnum::TEXT:
         case InfoMarkTypeEnum::LINE:
         case InfoMarkTypeEnum::ARROW:
             assert(m_markers.size() == static_cast<size_t>(n));
-            m_markers.emplace_back(marker);
-            objectsList->addItem(marker->getText().toQString(), QVariant(n));
+            m_markers.emplace_back(marker.getId());
+            objectsList->addItem(marker.getText().toQString(), QVariant(n));
             ++n;
             break;
         }
-    }
+    });
 
     if (m_selection->size() == 1) {
         objectsList->setCurrentIndex(1);
@@ -206,10 +218,10 @@ void InfoMarksEditDlg::updateDialog()
         ~DisconnectReconnectAntiPattern() { m_self.connectAll(); }
     } antiPattern{*this};
 
-    InfoMark *const im = getCurrentInfoMark();
-    if (im != nullptr) {
-        objectType->setCurrentIndex(static_cast<int>(im->getType()));
-        objectClassesList->setCurrentIndex(static_cast<int>(im->getClass()));
+    const InfomarkHandle &marker = getCurrentInfoMark();
+    if (marker) {
+        objectType->setCurrentIndex(static_cast<int>(marker.getType()));
+        objectClassesList->setCurrentIndex(static_cast<int>(marker.getClass()));
     }
 
     switch (getType()) {
@@ -233,9 +245,7 @@ void InfoMarksEditDlg::updateDialog()
         break;
     }
 
-    InfoMark *marker = getCurrentInfoMark();
-
-    if (marker == nullptr) {
+    if (!marker) {
         objectText->clear();
         m_x1->setValue(m_selection->getPosition1().x);
         m_y1->setValue(m_selection->getPosition1().y);
@@ -247,13 +257,13 @@ void InfoMarksEditDlg::updateDialog()
         objectCreate->setEnabled(true);
         objectModify->setEnabled(false);
     } else {
-        objectText->setText(marker->getText().toQString());
-        m_x1->setValue(marker->getPosition1().x);
-        m_y1->setValue(marker->getPosition1().y);
-        m_x2->setValue(marker->getPosition2().x);
-        m_y2->setValue(marker->getPosition2().y);
-        m_rotationAngle->setValue(static_cast<double>(marker->getRotationAngle()));
-        m_layer->setValue(marker->getPosition1().z);
+        objectText->setText(marker.getText().toQString());
+        m_x1->setValue(marker.getPosition1().x);
+        m_y1->setValue(marker.getPosition1().y);
+        m_x2->setValue(marker.getPosition2().x);
+        m_y2->setValue(marker.getPosition2().y);
+        m_rotationAngle->setValue(static_cast<double>(marker.getRotationAngle()));
+        m_layer->setValue(marker.getPosition1().z);
 
         objectCreate->setEnabled(false);
         objectModify->setEnabled(true);
@@ -272,22 +282,22 @@ InfoMarkClassEnum InfoMarksEditDlg::getClass()
     return static_cast<InfoMarkClassEnum>(objectClassesList->currentIndex());
 }
 
-InfoMark *InfoMarksEditDlg::getCurrentInfoMark()
+InfomarkHandle InfoMarksEditDlg::getCurrentInfoMark()
 {
     bool ok = false;
     int n = objectsList->itemData(objectsList->currentIndex()).toInt(&ok);
     if (!ok || n == -1 || n >= static_cast<int>(m_markers.size())) {
-        return nullptr;
+        return InfomarkHandle{m_mapData->getMarkersList(), INVALID_INFOMARK_ID};
     }
-    return m_markers.at(static_cast<size_t>(n)).get();
+    auto id = m_markers.at(static_cast<size_t>(n));
+    return m_mapData->getMarkersList().find(id);
 }
 
-void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
+void InfoMarksEditDlg::setCurrentInfoMark(InfomarkId id)
 {
-    auto sm = m->shared_from_this();
     int i = 0;
     for (size_t j = 0, len = m_markers.size(); j < len; ++j) {
-        if (m_markers[j] == sm) {
+        if (m_markers[j] == id) {
             i = static_cast<int>(j) + 1;
             break;
         }

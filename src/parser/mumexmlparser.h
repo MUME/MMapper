@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Charset.h"
 #include "../map/CommandId.h"
 #include "LineFlags.h"
 #include "abstractparser.h"
@@ -20,6 +21,7 @@
 
 class GmcpMessage;
 class GroupManagerApi;
+class JsonObj;
 class MapData;
 class MumeClock;
 class ProxyParserApi;
@@ -35,8 +37,7 @@ enum class NODISCARD XmlModeEnum : uint8_t {
     EXITS,
     PROMPT,
     TERRAIN,
-    HEADER,
-    CHARACTER
+    HEADER
 };
 
 class NODISCARD_QOBJECT MumeXmlParser final : public AbstractParser
@@ -46,11 +47,14 @@ class NODISCARD_QOBJECT MumeXmlParser final : public AbstractParser
 private:
     XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
     LineFlags m_lineFlags;
-    QByteArray m_lineToUser;
-    QByteArray m_tempCharacters;
-    QByteArray m_tempTag;
+    QString m_lineToUser;
+    QString m_tempCharacters;
+    QString m_tempTag;
     QString m_stringBuffer;
-    std::optional<char> m_snoopChar;
+    CommandEnum m_move = CommandEnum::NONE;
+    ServerRoomId m_serverId = INVALID_SERVER_ROOMID;
+    std::optional<RoomId> m_expectedMove;
+    std::optional<ServerExitIds> m_exitIds;
     bool m_readingTag = false;
     bool m_gratuitous = false;
     bool m_exitsReady = false;
@@ -91,8 +95,13 @@ public:
 
 private:
     void parseMudCommands(const QString &str);
-    NODISCARD QByteArray characters(QByteArray &ch);
-    NODISCARD bool element(const QByteArray &);
+    NODISCARD QString characters(QString &ch);
+    NODISCARD bool element(const QString &);
+    void maybeUpdate(RoomId expectedId, const ParseEvent &ev);
+    void setMove(CommandEnum dir);
     void move();
-    NODISCARD std::string snoopToUser(std::string_view str);
+    void parseGmcpStatusVars(const JsonObj &obj);
+    void parseGmcpCharVitals(const JsonObj &obj);
+    void parseGmcpEventMoved(const JsonObj &obj);
+    void parseGmcpRoomInfo(const JsonObj &obj);
 };

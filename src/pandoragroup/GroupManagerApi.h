@@ -22,12 +22,12 @@ public:
     {}
 
 public:
-    void kickCharacter(const QByteArray &name) const;
-    void sendGroupTell(const QByteArray &msg) const;
+    void kickCharacter(const QString &name) const;
+    void sendGroupTell(const QString &msg) const;
 
 public:
-    void sendScoreLineEvent(const QByteArray &arr) const;
-    void sendPromptLineEvent(const QByteArray &arr) const;
+    void sendScoreLineEvent(const QString &arr) const;
+    void sendPromptLineEvent(const QString &arr) const;
     void sendEvent(CharacterPositionEnum position) const;
     void sendEvent(CharacterAffectEnum affect, bool enable) const;
 };

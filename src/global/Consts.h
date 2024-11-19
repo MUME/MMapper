@@ -31,7 +31,6 @@
     X(GREATER_THAN, '>') \
     X(LESS_THAN, '<') \
     X(MINUS_SIGN, '-') \
-    X(NBSP, static_cast<char>('\xA0')) \
     X(NEWLINE, '\n') \
     X(OPEN_BRACKET, '[') \
     X(OPEN_CURLY, '{') \
@@ -55,10 +54,20 @@ namespace char_consts {
 static inline constexpr const char C_NUL = 0;
 static inline constexpr const auto C_CTRL_U = '\x15';
 static inline constexpr const auto C_CTRL_W = '\x17';
+static inline constexpr const auto C_NBSP = static_cast<char>('\xA0');
 
 #define X_DEFINE_CHAR_CONST(NAME, val) static inline constexpr const char C_##NAME{(val)};
 XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 #undef X_DEFINE_CHAR_CONST
+} // namespace char_consts
+
+namespace char_consts {
+static inline constexpr uint16_t UNICODE_LSQUO = 0x2018u;
+static inline constexpr uint16_t UNICODE_RSQUO = 0x2019u;
+static inline constexpr uint16_t UNICODE_LDQUO = 0x201Cu;
+static inline constexpr uint16_t UNICODE_RDQUO = 0x201Du;
+static inline constexpr char32_t byte_order_mark = 0xFEFFu;
+static inline constexpr char32_t thumbs_up = 0x1F44Du;
 } // namespace char_consts
 
 namespace string_consts {
@@ -74,6 +83,8 @@ XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
     static inline constexpr const std::string_view SV_##NAME{ARR_##NAME, 1};
 XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 #undef X_DEFINE_CHAR_CONST
+static inline constexpr const char *const S_NBSP = "\u00A0";
+static inline constexpr const auto SV_NBSP = std::string_view{"\u00A0"};
 } // namespace string_consts
 
 namespace mmqt {
@@ -82,9 +93,13 @@ namespace mmqt {
 XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 #undef X_DEFINE_CHAR_CONST
 #define X_DEFINE_CHAR_CONST(NAME, val) \
-    static inline const QString QS_##NAME = QString::fromLatin1(string_consts::S_##NAME);
+    static inline const QString QS_##NAME = QString::fromUtf8(string_consts::S_##NAME);
 XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 #undef X_DEFINE_CHAR_CONST
+
+static inline constexpr const QChar QC_NBSP = 0xA0u;
+static inline const QString QS_NBSP = "\u00A0";
+
 } // namespace mmqt
 
 namespace string_consts {

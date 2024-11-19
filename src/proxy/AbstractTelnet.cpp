@@ -7,6 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/CharUtils.h"
+#include "../global/Charset.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
@@ -116,7 +117,8 @@ public:
     ~TelnetFormatter()
     {
         try {
-            m_telnet.sendRawData(m_os.str());
+            auto str = m_os.str();
+            m_telnet.sendRawData(TelnetIacBytes{mmqt::toQByteArrayRaw(str)});
         } catch (const std::exception &ex) {
             qWarning() << "Exception while sending raw data:" << ex.what();
         } catch (...) {
@@ -219,7 +221,7 @@ void AbstractTelnet::ZstreamPimpl::reset()
 
 AbstractTelnet::AbstractTelnet(const TextCodecStrategyEnum strategy,
                                QObject *const parent,
-                               QByteArray defaultTermType)
+                               TelnetTermTypeBytes defaultTermType)
     : QObject(parent)
     , m_defaultTermType(std::move(defaultTermType))
     , m_textCodec{strategy}
@@ -278,7 +280,27 @@ static void doubleIacs(std::ostream &os, const std::string_view input)
         });
 }
 
-void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool goAhead)
+void AbstractTelnet::submitOverTelnet(const QString &s, const bool goAhead)
+{
+    const auto data = [this, &s]() -> std::string {
+        switch (getEncoding()) {
+        case CharacterEncodingEnum::UTF8:
+            return mmqt::toStdStringUtf8(s);
+        case CharacterEncodingEnum::LATIN1:
+            return mmqt::toStdStringLatin1(s); // conversion to user charset
+        case CharacterEncodingEnum::ASCII: {
+            auto ascii = mmqt::toStdStringLatin1(s);          // conversion to user charset
+            charset::conversion::latin1ToAsciiInPlace(ascii); // conversion to user charset
+            return ascii;
+        }
+        default:
+            abort();
+        }
+    }();
+    submitOverTelnet(RawBytes{mmqt::toQByteArrayRaw(data)}, goAhead);
+}
+
+void AbstractTelnet::submitOverTelnet(const RawBytes &data, const bool goAhead)
 {
     auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
         const auto &myOptionState = m_options.myOptionState;
@@ -289,16 +311,17 @@ void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool go
         return std::nullopt;
     };
 
-    if (!containsIAC(data)) {
-        sendRawData(data);
+    const auto sv = mmqt::toStdStringViewRaw(data.getQByteArray());
+    if (!containsIAC(sv)) {
+        sendRawData(TelnetIacBytes{data.getQByteArray()});
         if (auto ga = getGoAhead()) {
-            sendRawData(std::string_view{ga->data(), ga->size()});
+            sendRawData(TelnetIacBytes{QByteArray{ga->data(), static_cast<int>(ga->size())}});
         }
         return;
     }
 
     std::ostringstream os;
-    doubleIacs(os, data);
+    doubleIacs(os, sv);
 
     // Add IAC GA unless they are suppressed
     if (auto ga = getGoAhead()) {
@@ -306,7 +329,7 @@ void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool go
     }
 
     // data ready, send it
-    sendRawData(os.str());
+    sendRawData(TelnetIacBytes{mmqt::toQByteArrayRaw(os.str())});
 }
 
 void AbstractTelnet::sendWindowSizeChanged(const int width, const int height)
@@ -362,7 +385,7 @@ void AbstractTelnet::sendCharsetRequest()
 
     QStringList myCharacterSets;
     for (const auto &encoding : m_textCodec.supportedEncodings()) {
-        myCharacterSets << mmqt::toQByteArrayLatin1(encoding);
+        myCharacterSets << mmqt::toQByteArrayUtf8(encoding);
     }
     if (m_debug) {
         qDebug() << "Sending Charset request" << myCharacterSets;
@@ -375,7 +398,7 @@ void AbstractTelnet::sendCharsetRequest()
     s.addRaw(TNSB_REQUEST);
     for (const auto &characterSet : myCharacterSets) {
         s.addEscapedBytes(delimeter);
-        s.addEscapedBytes(characterSet.toLatin1());
+        s.addEscapedBytes(characterSet.toUtf8());
     }
     s.addSubnegEnd();
 }
@@ -393,7 +416,7 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
     s.addSubnegEnd();
 }
 
-void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
+void AbstractTelnet::sendMudServerStatus(const TelnetMsspBytes &data)
 {
     if (m_debug) {
         qDebug() << "Sending MSSP:" << data;
@@ -401,7 +424,7 @@ void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_MSSP);
-    s.addEscapedBytes(data);
+    s.addEscapedBytes(data.getQByteArray());
     s.addSubnegEnd();
 }
 
@@ -418,7 +441,7 @@ void AbstractTelnet::sendLineModeEdit()
     s.addSubnegEnd();
 }
 
-void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
+void AbstractTelnet::sendTerminalType(const TelnetTermTypeBytes &terminalType)
 {
     if (m_debug) {
         qDebug() << "Sending Terminal Type:" << terminalType;
@@ -428,7 +451,7 @@ void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
     s.addEscaped(TNSB_IS); /* NOTE: "IS" will never actually be escaped */
-    s.addEscapedBytes(terminalType);
+    s.addEscapedBytes(terminalType.getQByteArray());
     s.addSubnegEnd();
 }
 
@@ -440,7 +463,7 @@ void AbstractTelnet::sendCharsetRejected()
     s.addSubnegEnd();
 }
 
-void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
+void AbstractTelnet::sendCharsetAccepted(const TelnetCharsetBytes &characterSet)
 {
     if (m_debug) {
         qDebug() << "Accepted Charset" << characterSet;
@@ -449,7 +472,7 @@ void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_ACCEPTED);
-    s.addEscapedBytes(characterSet);
+    s.addEscapedBytes(characterSet.getQByteArray());
     s.addSubnegEnd();
 }
 
@@ -667,7 +690,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             case TNSB_IS:
                 // Extract sender's terminal type
                 // TERMINAL_TYPE IS <...>
-                receiveTerminalType(payload.mid(2));
+                receiveTerminalType(TelnetTermTypeBytes{payload.getQByteArray().mid(2)});
                 break;
             }
         }
@@ -683,18 +706,19 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     // Split remainder into delim and IAC
                     // CHARSET REQUEST <sep> <charsets>
                     const auto sep = payload[2];
-                    const auto characterSets = payload.mid(3).split(sep);
+                    const auto characterSets = payload.getQByteArray().mid(3).split(sep);
                     if (m_debug) {
                         qDebug() << "Received encoding options" << characterSets;
                     }
                     for (const auto &characterSet : characterSets) {
-                        const auto name = mmqt::toStdStringLatin1(characterSet.simplified());
+                        // expected to be ASCII
+                        const auto name = mmqt::toStdStringUtf8(characterSet.simplified());
                         if (m_textCodec.supports(name)) {
                             accepted = true;
                             m_textCodec.setEncodingForName(name);
 
                             // Reply to server that we accepted this encoding
-                            sendCharsetAccepted(characterSet);
+                            sendCharsetAccepted(TelnetCharsetBytes{characterSet});
                             break;
                         }
                     }
@@ -711,8 +735,9 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             case TNSB_ACCEPTED:
                 if (payload.length() > 3) {
                     // CHARSET ACCEPTED <charset>
-                    const auto characterSet = payload.mid(2).simplified();
-                    m_textCodec.setEncodingForName(mmqt::toStdStringLatin1(characterSet));
+                    const auto characterSet = payload.getQByteArray().mid(2).simplified();
+                    // expected to be ASCII
+                    m_textCodec.setEncodingForName(mmqt::toStdStringUtf8(characterSet));
                     if (m_debug) {
                         qDebug() << "He accepted charset" << characterSet;
                     }
@@ -756,7 +781,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 break;
             }
             try {
-                GmcpMessage msg = GmcpMessage::fromRawBytes(payload.mid(1));
+                GmcpMessage msg = GmcpMessage::fromRawBytes(payload.getQByteArray().mid(1));
                 if (m_debug) {
                     qDebug() << "Received GMCP message" << msg.getName().toQString()
                              << (msg.getJson() ? msg.getJson()->toQString() : "");
@@ -777,7 +802,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 qDebug() << "Received MSSP message" << payload;
             }
 
-            receiveMudServerStatus(payload);
+            receiveMudServerStatus(TelnetMsspBytes{payload.getQByteArray()});
         }
         break;
 
@@ -804,7 +829,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     }
 }
 
-void AbstractTelnet::onReadInternal(const QByteArray &data)
+void AbstractTelnet::onReadInternal(const TelnetIacBytes &data)
 {
     if (data.isEmpty()) {
         return;
@@ -820,7 +845,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     int pos = 0;
     while (pos < data.size()) {
         if (m_inflateTelnet) {
-            const int remaining = onReadInternalInflate(data.data() + pos,
+            const int remaining = onReadInternalInflate(data.getQByteArray().data() + pos,
                                                         data.size() - pos,
                                                         cleanData);
             pos = data.length() - remaining;

@@ -256,7 +256,7 @@ NODISCARD static inline QString getMetadataKey(const GroupSecret &secret,
             abort();
         }
     };
-    return QString("%1-%2").arg(get_prefix(), secret.toLower().constData());
+    return QString("%1-%2").arg(get_prefix(), secret.getQByteArray().constData());
 }
 
 GroupAuthority::GroupAuthority(QObject *const parent)
@@ -297,7 +297,7 @@ GroupAuthority::GroupAuthority(QObject *const parent)
 GroupSecret GroupAuthority::getSecret() const
 {
     // SHA-1 isn't very secure but at 40 characters it fits within a line for tells
-    return certificate.digest(QCryptographicHash::Algorithm::Sha1).toHex();
+    return GroupSecret{certificate.digest(QCryptographicHash::Algorithm::Sha1).toHex().toLower()};
 }
 
 void GroupAuthority::add(const GroupSecret &secret)
@@ -310,9 +310,8 @@ void GroupAuthority::add(const GroupSecret &secret)
     if (!model.insertRow(model.rowCount())) {
         return; // not added
     }
-
     QModelIndex index = model.index(model.rowCount() - 1, 0);
-    model.setData(index, secret.toLower(), Qt::DisplayRole);
+    model.setData(index, secret.getQByteArray(), Qt::DisplayRole);
 
     // Update configuration
     setConfig().groupManager.authorizedSecrets = model.stringList();
@@ -329,8 +328,8 @@ void GroupAuthority::remove(const GroupSecret &secret)
     // Remove from model
     for (int i = 0; i <= model.rowCount(); i++) {
         QModelIndex index = model.index(i);
-        const QString targetSecret = model.data(index, Qt::DisplayRole).toString();
-        if (targetSecret.compare(secret, Qt::CaseInsensitive) == 0) {
+        const QString targetSecret = model.data(index, Qt::DisplayRole).toString().toUtf8().toLower();
+        if (targetSecret == secret.getQByteArray()) {
             model.removeRow(i);
 
             // Update configuration
@@ -344,12 +343,12 @@ void GroupAuthority::remove(const GroupSecret &secret)
         }
     }
 
-    return; // not removed
+    // not removed
 }
 
 bool GroupAuthority::validSecret(const GroupSecret &secret) const
 {
-    return model.stringList().contains(secret.toLower());
+    return model.stringList().contains(secret.getQByteArray());
 }
 
 bool GroupAuthority::validCertificate(const GroupSocket &connection)

@@ -24,11 +24,16 @@ ICharTokenStream::~ICharTokenStream() = default;
 PassThruCharTokenStream::~PassThruCharTokenStream() = default;
 CallbackCharTokenStream::~CallbackCharTokenStream() = default;
 
-/* lvalue version */
 void print_char(ICharTokenStream &os, const char c, const bool doubleQuote)
 {
+    print_char(os, static_cast<char32_t>(static_cast<uint8_t>(c)), doubleQuote);
+}
+
+/* lvalue version */
+void print_char(ICharTokenStream &os, const char32_t codepoint, const bool doubleQuote)
+{
     using namespace char_consts;
-    switch (c) {
+    switch (codepoint) {
     case C_ESC:
         os.getEsc() << "\\e"; // Not valid C++, but borrowed from /bin/echo.
         break;
@@ -62,18 +67,31 @@ void print_char(ICharTokenStream &os, const char c, const bool doubleQuote)
         os.getEsc() << "\\0";
         break;
     default:
-        if (isPrintLatin1(c)) {
+        if (codepoint < charset::charset_detail::NUM_LATIN1_CODEPOINTS
+            && isPrintLatin1(static_cast<char>(static_cast<uint8_t>(codepoint)))) {
+            const auto c = static_cast<char>(static_cast<uint8_t>(codepoint));
             if (c == (doubleQuote ? C_DQUOTE : C_SQUOTE)) {
                 auto esc = os.getEsc();
                 esc << C_BACKSLASH;
                 esc << c;
-            } else {
+            } else if (isAscii(c)) {
                 os.getNormal() << c;
+            } else {
+                // note: we can be confident that 128-255 will never fail the conversion.
+                // If it somehow did fail, calling value() would throw.
+                const auto utf8 = charset::conversion::try_encode_utf8(codepoint);
+                os.getNormal() << utf8.value();
             }
         } else {
             // NOTE: This form can generate invalid C++.
-            char buf[8];
-            std::sprintf(buf, "\\x%02X", (c & 0xFF)); // max 5 bytes including C_NUL
+            char buf[16];
+            if (codepoint > 0xFFFFu) {
+                // max 11 bytes (including  C_NUL)
+                std::sprintf(buf, "\\U%08X", (codepoint & 0xFFFF'FFFFu));
+            } else {
+                // max 7 bytes (including C_NUL)
+                std::sprintf(buf, "\\u%04X", (codepoint & 0xFFFFu));
+            }
             os.getEsc() << buf;
         }
         break;
@@ -85,9 +103,9 @@ void print_string_quoted(ICharTokenStream &os, const std::string_view sv, const 
     if (includeQuotes) {
         os.getEsc() << char_consts::C_DQUOTE;
     }
-    for (const auto &c : sv) {
-        print_char(os, c, true);
-    }
+    charset::foreach_codepoint_utf8(sv,
+                                    [&os](char32_t codepoint) { print_char(os, codepoint, true); });
+
     if (includeQuotes) {
         os.getEsc() << char_consts::C_DQUOTE;
     }

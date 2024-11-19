@@ -15,6 +15,7 @@
 #include "../map/ExitsFlags.h"
 #include "../map/PromptFlags.h"
 #include "../map/RoomFieldVariant.h"
+#include "../map/RoomHandle.h"
 #include "../map/mmapper2room.h"
 #include "../map/parseevent.h"
 #include "../mapdata/roomselection.h"
@@ -44,8 +45,6 @@
 class Coordinate;
 class MapData;
 class MumeClock;
-class ParseEvent;
-class Room;
 class RoomFieldVariant;
 class RoomFilter;
 class CTimers;
@@ -58,18 +57,27 @@ class NODISCARD_QOBJECT AbstractParser : public QObject
 {
     Q_OBJECT
 
+private:
+    class ParseRoomHelper;
+
 protected:
     static const QString nullString;
     static const QByteArray emptyByteArray;
 
 protected:
     MumeClock &m_mumeClock;
+    MapData &m_mapData;
     CTimers &m_timers;
 
 private:
-    MapData &m_mapData;
     const ProxyParserApi m_proxy;
     const GroupManagerApi m_group;
+
+private:
+    // NOTE: This is only shared because std::unique_ptr<> does not play nice with opaque types,
+    // and the definition of ParseRoomHelper is not visible to the ctor. Nothing besides
+    // parseRoom() should ever have any reason to use this pointer!
+    std::shared_ptr<ParseRoomHelper> m_parseRoomHelper;
 
 public:
     using HelpCallback = std::function<void(const std::string &name)>;
@@ -102,8 +110,7 @@ protected:
     RoomTerrainEnum m_terrain;
 
 protected:
-    CommandEnum m_move = CommandEnum::LOOK;
-    QByteArray m_lastPrompt;
+    QString m_lastPrompt;
     CommandQueue m_queue;
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
@@ -119,21 +126,22 @@ public:
 
     void doMove(CommandEnum cmd);
     void sendPromptToUser();
-    void sendScoreLineEvent(const QByteArray &arr);
-    void sendPromptLineEvent(const QByteArray &arr);
+    void sendScoreLineEvent(const QString &arr);
+    void sendPromptLineEvent(const QString &arr);
 
 protected:
     void offlineCharacterMove(CommandEnum direction);
     void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
-    void sendRoomInfoToUser(const Room *);
-    void sendPromptToUser(const Room &r);
+    void sendRoomInfoToUser(const RoomPtr &);
+    void sendPromptToUser(const RoomHandle &r);
     void sendPromptToUser(char light, char terrain);
     void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
 
-    void sendRoomExitsInfoToUser(std::ostream &, const Room *r);
-    void sendRoomExitsInfoToUser(const Room *r);
-    NODISCARD Coordinate getNextPosition() const;
-    NODISCARD Coordinate getTailPosition() const;
+    void sendRoomExitsInfoToUser(AnsiOstream &, const RoomPtr &r);
+    void sendRoomExitsInfoToUser(const RoomPtr &r);
+
+    NODISCARD RoomId getNextPosition() const;
+    NODISCARD RoomId getTailPosition() const;
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
@@ -143,14 +151,8 @@ public:
     void setExitFlags(ExitFlags flag, ExitDirEnum dir);
     void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
 
-    void printRoomInfo(RoomFieldFlags fieldset);
-    void printRoomInfo(RoomFieldEnum field);
-
-    void emulateExits(std::ostream &, CommandEnum move);
-    NODISCARD QByteArray enhanceExits(const Room *);
-
+    void emulateExits(AnsiOstream &, CommandEnum move);
     void parseExits(std::ostream &);
-    void parsePrompt(const QString &prompt);
     NODISCARD bool parseUserCommands(const QString &command);
     NODISCARD static QString normalizeStringCopy(QString str);
 
@@ -161,7 +163,6 @@ public:
 
 private:
     void setMode(MapModeEnum mode);
-    NODISCARD bool tryParseGenericDoorCommand(const QString &str);
     void parseSpecialCommand(StringView);
     NODISCARD bool parseSimpleCommand(const QString &str);
 
@@ -169,15 +170,13 @@ private:
     void showMumeTime();
     void showHelp();
     void showMiscHelp();
-    void showDoorVariableHelp();
     void showCommandPrefix();
-    void showNote();
     void showSyntax(const char *rest);
     void showHelpCommands(bool showAbbreviations);
 
     void showHeader(const QString &s);
 
-    void receiveMudServerStatus(const QByteArray &);
+    void receiveMudServerStatus(const TelnetMsspBytes &);
 
     NODISCARD ExitDirEnum tryGetDir(StringView &words);
 
@@ -192,7 +191,10 @@ private:
     void doConfig(StringView view);
     void doConnectToHost();
     void doDisconnectFromHost();
+    void doMapCommand(StringView rest);
     void doRemoveDoorNamesCommand();
+    void doMapDiff();
+    void doGenerateBaseMap();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
 
@@ -214,10 +216,16 @@ private:
     NODISCARD bool parseDoorAction(DoorActionEnum dat, StringView words);
 
 public:
-    inline void sendToUser(const QByteArray &arr) { sendToUser(arr, false); }
-    inline void sendToUser(const std::string_view s) { sendToUser(mmqt::toQByteArrayLatin1(s)); }
-    inline void sendToUser(const char *const s) { sendToUser(std::string_view{s}); }
-    inline void sendToUser(const QString &s) { sendToUser(mmqt::toQByteArrayLatin1(s)); }
+    inline void sendToUser(const QByteArray &arr) { sendToUser(QString::fromUtf8(arr), false); }
+    inline void sendToUser(const std::string_view s) { sendToUser(mmqt::toQStringUtf8(s)); }
+    inline void sendToUser(const char *const s)
+    {
+        assert(s != nullptr);
+        if (s != nullptr) {
+            sendToUser(std::string_view{s});
+        }
+    }
+    inline void sendToUser(const QString &s) { sendToUser(s, false); }
     friend AbstractParser &operator<<(AbstractParser &self, const std::string_view s)
     {
         self.sendToUser(s);
@@ -226,9 +234,9 @@ public:
     inline void sendOkToUser() { send_ok(*this); }
 
 protected:
-    inline void sendToUser(const QByteArray &arr, const bool goAhead)
+    inline void sendToUser(const QString &s, const bool goAhead)
     {
-        emit sig_sendToUser(arr, goAhead);
+        emit sig_sendToUser(s, goAhead);
     }
     void pathChanged() { emit sig_showPath(m_queue); }
     void mapChanged() { emit sig_mapChanged(); }
@@ -238,17 +246,28 @@ protected:
 
 private:
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
-    void sendToMud(const QByteArray &msg) { emit sig_sendToMud(msg); }
+
+    void sendToMud(const QByteArray &msg) = delete;
+    void sendToMud(const QString &msg) { emit sig_sendToMud(msg); }
 
 private:
-    void eval(const std::string &name,
+    void eval(std::string_view name,
               const std::shared_ptr<const syntax::Sublist> &syntax,
               StringView input);
 
+private:
+    NODISCARD RoomId getCurrentRoomId() const;
+    NODISCARD RoomId getOtherRoom(int otherRoomId) const;
+    NODISCARD RoomId getOptionalOtherRoom(const Vector &v, size_t index) const;
+
+    void applySingleChange(const Change &change);
+    void applyChanges(const ChangeList &changes);
+    void clearQueue();
+
 signals:
     // telnet
-    void sig_sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &, bool goAhead);
+    void sig_sendToMud(const QString &);
+    void sig_sendToUser(const QString &, bool goAhead);
     void sig_mapChanged();
     void sig_graphicsSettingsChanged();
     void sig_releaseAllPaths();
@@ -258,13 +277,14 @@ signals:
 
     // for main move/search algorithm
     void sig_handleParseEvent(const SigParseEvent &);
+    void sig_setCharRoomIdFromServer(ServerRoomId id);
 
     // for map
     void sig_showPath(CommandQueue);
     void sig_newRoomSelection(const SigRoomSelection &rs);
 
     // for user commands
-    void sig_command(const QByteArray &, const Coordinate &);
+    void sig_command(const QString &, const Coordinate &);
 
     // for commands that set the mode (emulation, play, map)
     // these are connected to MainWindow
@@ -275,6 +295,7 @@ signals:
 
 public slots:
     void slot_parseNewUserInput(const TelnetData &);
+    void slot_onForcedPositionChange();
 
     void slot_reset();
     void slot_sendGTellToUser(const QString &, const QString &, const QString &);

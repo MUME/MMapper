@@ -42,6 +42,11 @@
 
 using mmqt::makeQPointer;
 
+namespace { // anonymous
+constexpr const auto whiteOnCyan = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::cyan);
+constexpr const auto boldWhiteOnCyan = whiteOnCyan.withBold();
+} // namespace
+
 Proxy::Proxy(MapData &md,
              Mmapper2PathMachine &pm,
              PrespammedPath &pp,
@@ -181,10 +186,9 @@ void Proxy::slot_start()
             &MudTelnetFilter::sig_parseNewMudInput,
             mpiFilter,
             &MpiFilter::slot_analyzeNewMudInput);
-    connect(mpiFilter, &MpiFilter::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
     connect(mpiFilter, &MpiFilter::sig_editMessage, remoteEdit, &RemoteEdit::slot_remoteEdit);
     connect(mpiFilter, &MpiFilter::sig_viewMessage, remoteEdit, &RemoteEdit::slot_remoteView);
-    connect(remoteEdit, &RemoteEdit::sig_sendToSocket, mudTelnet, &MudTelnet::slot_onSendToMud);
+    connect(remoteEdit, &RemoteEdit::sig_sendToSocket, mudTelnet, &MudTelnet::slot_onSendRawToMud);
 
     connect(mpiFilter,
             &MpiFilter::sig_parseNewMudInput,
@@ -210,7 +214,7 @@ void Proxy::slot_start()
             &AbstractParser::sig_showPath,
             &m_prespammedPath,
             &PrespammedPath::slot_setPath);
-    connect(parserXml, &AbstractParser::sig_mapChanged, &m_mapCanvas, &MapCanvas::mapChanged);
+    connect(parserXml, &AbstractParser::sig_mapChanged, &m_mapCanvas, &MapCanvas::slot_mapChanged);
     connect(parserXml,
             &AbstractParser::sig_graphicsSettingsChanged,
             &m_mapCanvas,
@@ -222,6 +226,11 @@ void Proxy::slot_start()
             &MapCanvas::slot_setRoomSelection);
 
     connect(userSocket, &QAbstractSocket::disconnected, parserXml, &AbstractParser::slot_reset);
+
+    connect(&m_mapData,
+            &MapData::sig_onForcedPositionChange,
+            parserXml,
+            &AbstractParser::slot_onForcedPositionChange);
 
     // Group Manager Support
     connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
@@ -242,13 +251,13 @@ void Proxy::slot_start()
     connect(mudSocket, &MumeSocket::sig_connected, this, [this]() {
         m_gameObserver.slot_observeConnected();
     });
-    connect(parserXml, &MumeXmlParser::sig_sendToMud, this, [this](const QByteArray &msg) {
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, this, [this](const QString &msg) {
         m_gameObserver.slot_observeSentToMud(msg);
     });
     connect(parserXml,
             &MumeXmlParser::sig_sendToUser,
             this,
-            [this](const QByteArray &msg, auto goAhead) {
+            [this](const QString &msg, auto goAhead) {
                 m_gameObserver.slot_observeSentToUser(msg, goAhead);
             });
     // note the polarity, unlike above: MudTelnet::relay is SentToUser, UserTelnet::relay is SentToMud
@@ -265,25 +274,13 @@ void Proxy::slot_start()
     global::registerSendToUser(m_lifetime, [this](const QString &str) {
         // REVISIT: We don't know if we're at a prompt or not.
         sendToUser("\n");
-        sendToUser(mmqt::toQByteArrayLatin1(str));
+        sendToUser(str);
         deref(m_parserXml).sendPromptToUser();
     });
 
     log("Connection to client established ...");
-
-    QByteArray ba = QString("\033[0;1;37;46m"
-                            "Welcome to MMapper!"
-                            "\033[0;37;46m"
-                            "   Type "
-                            "\033[1m"
-                            "%1help"
-                            "\033[0;37;46m"
-                            " for help."
-                            "\033[0m"
-                            "\n")
-                        .arg(getConfig().parser.prefixChar)
-                        .toLatin1();
-    sendToUser(ba);
+    sendWelcomeToUser();
+    sendSyntaxHintToUser("Type", "help", "for help.");
 
     connect(mudSocket, &MumeSocket::sig_connected, userTelnet, &UserTelnet::slot_onConnected);
     connect(mudSocket, &MumeSocket::sig_connected, this, &Proxy::slot_onMudConnected);
@@ -328,12 +325,12 @@ void Proxy::slot_onMudConnected()
     log("Connection to server established ...");
 
     // send gratuitous XML request
-    sendToMud(QByteArray("~$#EX2\n3G\n"));
+    sendToMud("~$#EX2\n3G\n");
     log("Sent MUME Protocol Initiator XML request");
 
     // send Remote Editing request
     if (settings.remoteEditing) {
-        sendToMud(QByteArray("~$#EI\n"));
+        sendToMud("~$#EI\n");
         log("Sent MUME Protocol Initiator remote editing request");
     }
 
@@ -348,32 +345,17 @@ void Proxy::slot_onMudError(const QString &errorStr)
     qWarning() << "Mud socket error" << errorStr;
     log(errorStr);
 
-    sendToUser("\n"
-               "\033[0;37;46m"
-               + errorStr.toLocal8Bit()
-               + "\033[0m"
-                 "\n");
+    sendNewlineToUser();
+    sendErrorToUser(mmqt::toStdStringUtf8(errorStr));
 
     if (!getConfig().connection.proxyConnectionStatus) {
-        sendToUser(QString("\n"
-                           "\033[0;37;46m"
-                           "You can type "
-                           "\033[1m"
-                           "%1connect"
-                           "\033[0m\033[37;46m"
-                           " to reconnect again."
-                           "\033[0m"
-                           "\n")
-                       .arg(getConfig().parser.prefixChar)
-                       .toLatin1());
+        sendNewlineToUser();
+        sendSyntaxHintToUser("You can type", "connect", "to reconnect again.");
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::Offline;
     } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-        sendToUser("\n"
-                   "\033[0;37;46m"
-                   "You are now exploring the map offline."
-                   "\033[0m"
-                   "\n");
+        sendNewlineToUser();
+        sendStatusToUser("You are now exploring the map offline.");
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::Offline;
     } else {
@@ -400,37 +382,20 @@ void Proxy::slot_mudTerminatedConnection()
 
     log("Mud terminated connection ...");
 
-    sendToUser("\n"
-               "\033[0;37;46m"
-               "MUME closed the connection."
-               "\033[0m"
-               "\n");
+    sendNewlineToUser();
+    sendStatusToUser("MUME closed the connection.");
 
-    if (getConfig().connection.proxyConnectionStatus) {
-        if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-            sendToUser("\n"
-                       "\033[0;37;46m"
-                       "You are now exploring the map offline."
-                       "\033[0m"
-                       "\n");
-            m_parserXml->sendPromptToUser();
-        } else {
-            // Terminate connection
-            deleteLater();
-        }
-    } else {
-        sendToUser(QString("\n"
-                           "\033[0;37;46m"
-                           "You can type "
-                           "\033[1m"
-                           "%1connect"
-                           "\033[0;37;46m"
-                           " to reconnect again."
-                           "\033[0m"
-                           "\n")
-                       .arg(getConfig().parser.prefixChar)
-                       .toLatin1());
+    if (!getConfig().connection.proxyConnectionStatus) {
+        sendNewlineToUser();
+        sendSyntaxHintToUser("You can type", "connect", "to reconnect again.");
         m_parserXml->sendPromptToUser();
+    } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
+        sendNewlineToUser();
+        sendStatusToUser("You are now exploring the map offline.");
+        m_parserXml->sendPromptToUser();
+    } else {
+        // Terminate connection
+        deleteLater();
     }
 }
 
@@ -443,41 +408,35 @@ void Proxy::slot_processUserStream()
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
         assert(!byteArray.isEmpty());
-        emit sig_analyzeUserStream(byteArray);
+        emit sig_analyzeUserStream(TelnetIacBytes{byteArray});
     });
 }
 
-void Proxy::slot_onSendToMudSocket(const QByteArray &ba)
+void Proxy::slot_onSendToMudSocket(const TelnetIacBytes &s)
 {
-    if (m_mudSocket != nullptr) {
-        if (!m_mudSocket->isConnectedOrConnecting()) {
-            sendToUser(QString("\033[0;37;46m"
-                               "MMapper is not connected to MUME. Please type "
-                               "\033[1m"
-                               "%1connect"
-                               "\033[0;37;46m"
-                               " to play."
-                               "\033[0m"
-                               "\n")
-                           .arg(getConfig().parser.prefixChar)
-                           .toLatin1());
-
-            m_parserXml->sendPromptToUser();
-        } else {
-            m_mudSocket->sendToMud(ba);
-        }
-    } else {
+    if (m_mudSocket == nullptr) {
         qWarning() << "Mud socket not available";
+        return;
     }
+
+    if (!m_mudSocket->isConnectedOrConnecting()) {
+        sendStatusToUser("MMapper is not connected to MUME.");
+        sendSyntaxHintToUser("You can type", "connect", "to play.");
+        m_parserXml->sendPromptToUser();
+        return;
+    }
+
+    m_mudSocket->sendToMud(s);
 }
 
-void Proxy::slot_onSendToUserSocket(const QByteArray &ba)
+void Proxy::slot_onSendToUserSocket(const TelnetIacBytes &s)
 {
-    if (m_userSocket != nullptr) {
-        m_userSocket->write(ba);
-    } else {
+    if (m_userSocket == nullptr) {
         qWarning() << "User socket not available";
+        return;
     }
+
+    m_userSocket->write(s.getQByteArray());
 }
 
 bool Proxy::isConnected() const
@@ -489,15 +448,15 @@ void Proxy::connectToMud()
 {
     switch (m_serverState) {
     case ServerStateEnum::Connecting:
-        sendToUser("Error: You're still connecting.\n");
+        sendErrorToUser("You're still connecting.");
         break;
 
     case ServerStateEnum::Connected:
-        sendToUser("Error: You're already connected.\n");
+        sendErrorToUser("You're already connected.");
         break;
 
     case ServerStateEnum::Disconnecting:
-        sendToUser("Error: You're still disconnecting.\n");
+        sendErrorToUser("You're still disconnecting.");
         break;
 
     case ServerStateEnum::Initialized:
@@ -505,13 +464,11 @@ void Proxy::connectToMud()
     case ServerStateEnum::Disconnected:
     case ServerStateEnum::Error: {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
+            sendNewlineToUser();
+            sendStatusToUser("MMapper is running in offline mode.");
+            sendSyntaxHintToUser("Switch modes and", "connect", "to play MUME.");
             sendToUser(
-                "\n"
-                "\033[37;46m"
-                "MMapper is running in offline mode. Switch modes and reconnect to play MUME."
-                "\033[0m"
-                "\n"
-                "\n"
+                "\n\n"
                 "Welcome to the land of Middle-earth. May your visit here be... interesting.\n"
                 "Never forget! Try to role-play...\n");
             m_parserXml->doMove(CommandEnum::LOOK);
@@ -520,11 +477,11 @@ void Proxy::connectToMud()
         }
 
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Connecting...\n");
+            sendStatusToUser("Connecting...");
             m_serverState = ServerStateEnum::Connecting;
             sock->connectToHost();
         } else {
-            sendToUser("Internal error while trying to connect.\n");
+            sendErrorToUser("Internal error while trying to connect.");
         }
         break;
     }
@@ -537,35 +494,35 @@ void Proxy::disconnectFromMud()
 
     switch (m_serverState) {
     case ServerStateEnum::Connecting:
-        sendToUser("Error: You're still connecting.\n");
+        sendErrorToUser("You're still connecting.");
         break;
 
     case ServerStateEnum::Offline:
         m_serverState = ServerStateEnum::Initialized;
-        sendToUser("You disconnect your simulated link.\n");
+        sendStatusToUser("You disconnect your simulated link.");
         break;
 
     case ServerStateEnum::Connected: {
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Disconnecting...\n");
+            sendStatusToUser("Disconnecting...");
             m_serverState = ServerStateEnum::Disconnecting;
             sock->disconnectFromHost();
-            sendToUser("Disconnected.\n");
+            sendStatusToUser("Disconnected.");
             m_serverState = ServerStateEnum::Disconnected;
         } else {
-            sendToUser("Internal error while trying to disconnect.\n");
+            sendErrorToUser("Internal error while trying to disconnect.");
         }
         break;
     }
 
     case ServerStateEnum::Disconnecting:
-        sendToUser("Error: You're still disconnecting.\n");
+        sendErrorToUser("You're still disconnecting.");
         break;
 
     case ServerStateEnum::Initialized:
     case ServerStateEnum::Disconnected:
     case ServerStateEnum::Error:
-        sendToUser("Error: You're not connected.\n");
+        sendErrorToUser("You're not connected.");
         break;
     }
 }
@@ -581,6 +538,57 @@ void Proxy::slot_onSendGameTimeToClock(const int year,
                                        const int hour)
 {
     // Month from MSSP comes as a string, so fetch the month index.
-    const int month = MumeClock::getMumeMonth(mmqt::toQStringLatin1(monthStr));
+    const int month = MumeClock::getMumeMonth(mmqt::toQStringUtf8(monthStr));
     m_mumeClock.parseMSSP(year, month, day, hour);
+}
+
+auto Proxy::getSendToUserAnsiOstream() -> AnsiHelper
+{
+    return AnsiHelper{m_lifetime,
+                      [this](const std::string &s) -> void { sendToUser(mmqt::toQStringUtf8(s)); }};
+}
+
+void Proxy::sendWelcomeToUser()
+{
+    auto aos = getSendToUserAnsiOstream();
+    aos.writeWithColor(boldWhiteOnCyan, "=== Welcome to MMapper! ===");
+    aos.write("\n");
+}
+
+void Proxy::sendErrorToUser(const std::string_view msg)
+{
+    auto aos = getSendToUserAnsiOstream();
+    aos.writeWithColor(boldWhiteOnCyan, "Error");
+    aos.writeWithColor(whiteOnCyan, ": ");
+    aos.writeWithColor(whiteOnCyan, msg);
+    aos.write("\n");
+}
+
+void Proxy::sendStatusToUser(const std::string_view msg)
+{
+    auto aos = getSendToUserAnsiOstream();
+    if (true) {
+        aos.writeWithColor(boldWhiteOnCyan, "Status");
+        aos.writeWithColor(whiteOnCyan, ": ");
+    }
+    aos.writeWithColor(whiteOnCyan, msg);
+    aos.write("\n");
+}
+
+void Proxy::sendSyntaxHintToUser(const std::string_view before,
+                                 const std::string_view cmd,
+                                 const std::string_view after)
+{
+    auto aos = getSendToUserAnsiOstream();
+    if (true) {
+        aos.writeWithColor(boldWhiteOnCyan, "Hint");
+        aos.writeWithColor(whiteOnCyan, ": ");
+    }
+    aos.writeWithColor(whiteOnCyan, before);
+    aos.writeWithColor(whiteOnCyan, " ");
+    aos.writeWithColor(boldWhiteOnCyan, getConfig().parser.prefixChar);
+    aos.writeWithColor(boldWhiteOnCyan, cmd);
+    aos.writeWithColor(whiteOnCyan, " ");
+    aos.writeWithColor(whiteOnCyan, after);
+    aos.write("\n");
 }

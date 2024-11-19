@@ -3,9 +3,12 @@
 // Copyright (C) 2021 The MMapper Authors
 
 #include "AnsiTextUtils.h"
+#include "Charset.h"
 #include "utils.h"
 
 #include <ostream>
+
+class AnsiOstream;
 
 NODISCARD extern bool requiresQuote(std::string_view str);
 
@@ -14,7 +17,7 @@ std::ostream &print_char_quoted(std::ostream &os, char c);
 std::ostream &print_string_quoted(std::ostream &os, std::string_view sv);
 std::ostream &print_string_smartquote(std::ostream &os, std::string_view sv);
 
-struct NODISCARD QuotedChar final
+class NODISCARD QuotedChar final
 {
 private:
     char m_c = char_consts::C_NUL;
@@ -32,9 +35,10 @@ public:
 
 // Use this instead of std::quoted()
 // NOTE: The reason there's no QuotedStringView is because it's not possible to guard against xvalues.
-struct NODISCARD QuotedString final
+class NODISCARD QuotedString final
 {
 private:
+    friend AnsiOstream;
     std::string m_str;
 
 public:
@@ -48,9 +52,10 @@ public:
     }
 };
 
-struct NODISCARD SmartQuotedString final
+class NODISCARD SmartQuotedString final
 {
 private:
+    friend AnsiOstream;
     std::string m_str;
 
 public:
@@ -71,6 +76,7 @@ struct NODISCARD ICharTokenStream
 {
 private:
     virtual void virt_append(CharTokenTypeEnum, char) = 0;
+    virtual void virt_append(CharTokenTypeEnum, char32_t) = 0;
     virtual void virt_append(CharTokenTypeEnum, std::string_view) = 0;
 
 public:
@@ -78,8 +84,10 @@ public:
 
 public:
     void appendNormal(char c) { virt_append(CharTokenTypeEnum::Normal, c); }
+    void appendNormal(char32_t c) { virt_append(CharTokenTypeEnum::Normal, c); }
     void appendNormal(std::string_view sv) { virt_append(CharTokenTypeEnum::Normal, sv); }
     void appendEscaped(char c) { virt_append(CharTokenTypeEnum::Escaped, c); }
+    void appendEscaped(char32_t c) { virt_append(CharTokenTypeEnum::Escaped, c); }
     void appendEscaped(std::string_view sv) { virt_append(CharTokenTypeEnum::Escaped, sv); }
 
     class NODISCARD Helper final
@@ -97,6 +105,11 @@ public:
 
     public:
         Helper &operator<<(char c)
+        {
+            m_stream.virt_append(m_type, c);
+            return *this;
+        }
+        Helper &operator<<(char32_t c)
         {
             m_stream.virt_append(m_type, c);
             return *this;
@@ -123,7 +136,19 @@ public:
     ~PassThruCharTokenStream() final;
 
 private:
-    void virt_append(CharTokenTypeEnum, char c) final { m_os << c; }
+    void virt_append(CharTokenTypeEnum, const char c) final
+    {
+        if (isAscii(c)) {
+            m_os << c;
+        } else {
+            assert(false);
+            charset::conversion::latin1ToUtf8(m_os, c);
+        }
+    }
+    void virt_append(CharTokenTypeEnum, const char32_t c) final
+    {
+        charset::conversion::utf32toUtf8(m_os, c);
+    }
     void virt_append(CharTokenTypeEnum, std::string_view sv) final { m_os << sv; }
 };
 
@@ -131,21 +156,34 @@ struct NODISCARD CallbackCharTokenStream final : public ICharTokenStream
 {
 private:
     using CharFn = std::function<void(CharTokenTypeEnum, char)>;
+    using CodepointFn = std::function<void(CharTokenTypeEnum, char32_t)>;
     using StringFn = std::function<void(CharTokenTypeEnum, std::string_view)>;
     CharFn m_charFn;
+    CodepointFn m_codepointFn;
     StringFn m_stringFn;
 
 public:
-    NODISCARD explicit CallbackCharTokenStream(CharFn cfn, StringFn sfn)
-        : m_charFn{cfn}
-        , m_stringFn{sfn}
+    NODISCARD explicit CallbackCharTokenStream(CharFn cfn, CodepointFn xfn, StringFn sfn)
+        : m_charFn{std::move(cfn)}
+        , m_codepointFn{std::move(xfn)}
+        , m_stringFn{std::move(sfn)}
     {}
     ~CallbackCharTokenStream() final;
 
 private:
     void virt_append(CharTokenTypeEnum type, char c) final { m_charFn(type, c); }
+    void virt_append(CharTokenTypeEnum type, char32_t c) final { m_codepointFn(type, c); }
     void virt_append(CharTokenTypeEnum type, std::string_view sv) final { m_stringFn(type, sv); }
 };
+
+/* lvalue version */
+void print_char(ICharTokenStream &os, char32_t codepoint, bool doubleQuote);
+/* rvalue version */
+inline void print_char(ICharTokenStream &&os, char32_t codepoint, bool doubleQuote)
+{
+    /* lvalue version */
+    print_char(os, codepoint, doubleQuote);
+}
 
 /* lvalue version */
 void print_char(ICharTokenStream &os, char c, bool doubleQuote);

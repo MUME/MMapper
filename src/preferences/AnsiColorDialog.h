@@ -23,7 +23,7 @@ public:
     NODISCARD static QString getColor(const QString &ansiString, QWidget *parent);
 
 private:
-    QString m_ansiString;
+    QString m_resultAnsiString;
     const std::unique_ptr<Ui::AnsiColorDialog> m_ui;
 
 public:
@@ -32,7 +32,7 @@ public:
     ~AnsiColorDialog() final;
 
 public:
-    NODISCARD QString getAnsiString() const { return m_ansiString; }
+    NODISCARD QString getAnsiString() const { return m_resultAnsiString; }
 
 private:
     void ansiComboChange();

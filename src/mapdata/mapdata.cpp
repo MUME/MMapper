@@ -6,31 +6,46 @@
 
 #include "mapdata.h"
 
+#include "../display/MapCanvasRoomDrawer.h"
+#include "../display/Textures.h"
+#include "../global/AnsiOstream.h"
+#include "../global/Timer.h"
+#include "../global/logging.h"
+#include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/CommandId.h"
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
+#include "../map/RawRoom.h"
 #include "../map/RoomRecipient.h"
+#include "../map/World.h"
 #include "../map/coordinate.h"
 #include "../map/exit.h"
 #include "../map/infomark.h"
 #include "../map/mmapper2room.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
-#include "../mapfrontend/mapaction.h"
 #include "../mapfrontend/mapfrontend.h"
-#include "customaction.h"
-#include "drawstream.h"
+#include "../mapstorage/RawMapData.h"
+#include "GenericFind.h"
 #include "roomfilter.h"
 #include "roomselection.h"
 
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
+#include <iostream>
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <set>
+#include <sstream>
+#include <tuple>
+#include <vector>
 
+#include <QApplication>
 #include <QList>
 #include <QString>
 
@@ -38,14 +53,11 @@ MapData::MapData(QObject *const parent)
     : MapFrontend(parent)
 {}
 
-const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
+DoorName MapData::getDoorName(const RoomId id, const ExitDirEnum dir)
 {
-    // REVISIT: Could this function could be made const if we make mapLock mutable?
-    // Alternately, WTF are we accessing this from multiple threads?
-    QMutexLocker locker(&mapLock);
-    if (const Room *const room = map.get(pos)) {
-        if (dir < ExitDirEnum::UNKNOWN) {
-            return room->exit(dir).getDoorName();
+    if (dir < ExitDirEnum::UNKNOWN) {
+        if (auto optDoorName = getCurrentMap().findDoorName(id, dir)) {
+            return *optDoorName;
         }
     }
 
@@ -55,230 +67,348 @@ const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum di
 
 ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
 {
-    ExitDirFlags result;
-    QMutexLocker locker(&mapLock);
-    if (const Room *const room = map.get(pos)) {
-        for (const ExitDirEnum dir : ALL_EXITS7) {
-            if (room->exit(dir).isExit()) {
-                result |= dir;
-            }
-        }
+    if (const auto room = findRoomHandle(pos)) {
+        return computeExitDirections(room->getRaw());
     }
-    return result;
+    return {};
 }
 
-bool MapData::getExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFieldVariant var)
+template<typename Callback>
+static void walk_path(const RoomHandle input_room, const CommandQueue &dirs, Callback &&callback)
 {
-    assert(var.getType() != ExitFieldEnum::DOOR_NAME);
-
-    QMutexLocker locker(&mapLock);
-    if (const Room *const room = map.get(pos)) {
-        if (dir < ExitDirEnum::NONE) {
-            switch (var.getType()) {
-            case ExitFieldEnum::DOOR_NAME:
-                if (var.getDoorName() == room->exit(dir).getDoorName()) {
-                    return true;
-                }
-                break;
-            case ExitFieldEnum::EXIT_FLAGS:
-                if (room->exit(dir).getExitFlags().containsAny(var.getExitFlags())) {
-                    return true;
-                }
-                break;
-            case ExitFieldEnum::DOOR_FLAGS:
-                if (room->exit(dir).getDoorFlags().containsAny(var.getDoorFlags())) {
-                    return true;
-                }
-                break;
-            }
+    const auto &map = input_room.getMap();
+    auto room = input_room;
+    for (const CommandEnum cmd : dirs) {
+        if (cmd == CommandEnum::LOOK) {
+            continue;
         }
+
+        if (!isDirectionNESWUD(cmd)) {
+            break;
+        }
+
+        const auto &e = room.getExit(getDirection(cmd));
+        if (!e.exitIsExit()) {
+            // REVISIT: why does this continue but all of the others break?
+            continue;
+        }
+
+        // REVISIT: if it's more than one, why not just pick one?
+        if (e.getOutgoingSet().size() != 1) {
+            break;
+        }
+
+        const RoomId next = e.getOutgoingSet().first();
+
+        // NOTE: reassignment.
+        room = map.getRoomHandle(next);
+
+        callback(room.getRaw());
     }
-    return false;
 }
 
-const Room *MapData::getRoom(const Coordinate &pos)
+std::vector<Coordinate> MapData::getPath(const RoomId start, const CommandQueue &dirs) const
 {
-    QMutexLocker locker(&mapLock);
-    return map.get(pos);
-}
+    if (start == INVALID_ROOMID) {
+        return {};
+    }
 
-QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &dirs)
-{
-    QMutexLocker locker(&mapLock);
-    QList<Coordinate> ret;
+    std::vector<Coordinate> ret;
+    ret.reserve(static_cast<size_t>(dirs.size()));
 
-    // NOTE: room is used and then reassigned inside the loop.
-    if (const Room *room = map.get(start)) {
-        for (const CommandEnum cmd : dirs) {
-            if (cmd == CommandEnum::LOOK) {
-                continue;
-            }
-
-            if (!isDirectionNESWUD(cmd)) {
-                break;
-            }
-
-            const Exit &e = room->exit(getDirection(cmd));
-            if (!e.isExit()) {
-                // REVISIT: why does this continue but all of the others break?
-                continue;
-            }
-
-            if (!e.outIsUnique()) {
-                break;
-            }
-
-            const SharedConstRoom &tmp = roomIndex[e.outFirst()];
-
-            // WARNING: room is reassigned here!
-            room = tmp.get();
-
-            if (room == nullptr) {
-                break;
-            }
-            ret.append(room->getPosition());
-        }
+    const Map &map = getCurrentMap();
+    if (const auto &optRoom = map.findRoomHandle(start)) {
+        walk_path(*optRoom, dirs, [&ret](const RawRoom &room) {
+            ret.push_back(room.getPosition());
+        });
     }
     return ret;
 }
 
-// the room will be inserted in the given selection. the selection must have been created by mapdata
-const Room *MapData::getRoom(const Coordinate &pos, RoomSelection &selection)
+std::optional<RoomId> MapData::getLast(const RoomId start, const CommandQueue &dirs) const
 {
-    QMutexLocker locker(&mapLock);
-    if (Room *const room = map.get(pos)) {
-        auto id = room->getId();
-        lockRoom(&selection, id);
-        selection.emplace(id, room);
-        return room;
+    if (start == INVALID_ROOMID) {
+        return std::nullopt;
     }
-    return nullptr;
+
+    std::optional<RoomId> ret;
+    const Map &map = getCurrentMap();
+    if (const auto &pRoom = map.findRoomHandle(start)) {
+        walk_path(*pRoom, dirs, [&ret](const RawRoom &room) { ret = room.getId(); });
+    }
+    return ret;
 }
 
-const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
+FutureSharedMapBatchFinisher MapData::generateBatches(const mctp::MapCanvasTexturesProxy &textures)
 {
-    QMutexLocker locker(&mapLock);
-    if (const SharedRoom &room = roomIndex[id]) {
-        const RoomId roomId = room->getId();
-        assert(id == roomId);
-
-        lockRoom(&selection, roomId);
-        Room *const pRoom = room.get();
-        selection.emplace(roomId, pRoom);
-        return pRoom;
-    }
-    return nullptr;
+    return generateMapDataFinisher(textures, getCurrentMap());
 }
 
-void MapData::generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds)
+void MapData::applyChangesToList(const RoomSelection &sel,
+                                 const std::function<Change(const RawRoom &)> &callback)
 {
-    QMutexLocker locker(&mapLock);
-    const LayerToRooms layerToRooms = [this]() -> LayerToRooms {
-        LayerToRooms ltr;
-        DrawStream drawer(ltr);
-        map.getRooms(drawer);
-        return ltr;
-    }();
-    screen.generateBatches(layerToRooms, roomIndex, bounds);
-}
-
-bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &selection)
-{
-    QMutexLocker locker(&mapLock);
-    action->schedule(this);
-    std::list<RoomId> selectedIds;
-
-    for (auto i = selection->begin(); i != selection->end(); i++) {
-        const Room *room = i->second;
-        const auto id = room->getId();
-        locks[id].erase(selection.get());
-        selectedIds.push_back(id);
-    }
-    selection->clear();
-
-    MapAction *const pAction = action.get();
-    const bool executable = isExecutable(pAction);
-    if (executable) {
-        executeAction(pAction);
-    } else {
-        qWarning() << "Unable to execute action" << pAction;
-    }
-
-    for (auto id : selectedIds) {
-        if (const SharedRoom &room = roomIndex[id]) {
-            locks[id].insert(selection.get());
-            selection->emplace(id, room.get());
+    ChangeList changes;
+    for (const RoomId id : sel) {
+        if (const auto &ptr = findRoomHandle(id)) {
+            changes.add(callback(ptr->getRaw()));
         }
     }
-    return executable;
+    applyChanges(changes);
 }
 
 void MapData::virt_clear()
 {
-    m_markers.clear();
     log("cleared MapData");
 }
 
-void MapData::removeDoorNames()
+void MapData::removeDoorNames(ProgressCounter &pc)
 {
-    QMutexLocker locker(&mapLock);
-
-    const auto noName = DoorName{};
-    for (auto &room : roomIndex) {
-        if (room != nullptr) {
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                scheduleAction(std::make_unique<SingleRoomAction>(
-                    std::make_unique<ModifyExitFlags>(noName, dir, FlagModifyModeEnum::UNSET),
-                    room->getId()));
-            }
-        }
-    }
+    this->applySingleChange(pc, Change{world_change_types::RemoveAllDoorNames{}});
 }
 
-void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
+void MapData::generateBaseMap(ProgressCounter &pc)
 {
-    QMutexLocker locker(&mapLock);
-    for (const SharedRoom &room : roomIndex) {
-        if (room == nullptr) {
-            continue;
-        }
-        Room *const r = room.get();
-        if (!f.filter(r)) {
-            continue;
-        }
-        locks[room->getId()].insert(recipient);
-        recipient->receiveRoom(this, r);
-    }
+    this->applySingleChange(pc, Change{world_change_types::GenerateBaseMap{}});
+}
+
+NODISCARD RoomIdSet MapData::genericFind(const RoomFilter &f) const
+{
+    return ::genericFind(getCurrentMap(), f);
 }
 
 MapData::~MapData() = default;
 
-void MapData::removeMarker(const std::shared_ptr<InfoMark> &im)
+bool MapData::removeMarker(const InfomarkId id)
 {
-    if (im != nullptr) {
-        auto it = std::find_if(m_markers.begin(), m_markers.end(), [&im](const auto &target) {
-            return target == im;
-        });
-        if (it != m_markers.end()) {
-            m_markers.erase(it);
-            setDataChanged();
-        }
+    try {
+        auto db = getInfomarkDb();
+        db.removeMarker(id);
+        setCurrentMarks(db);
+        return true;
+    } catch (const std::runtime_error & /*ex*/) {
+        return false;
     }
 }
 
 void MapData::removeMarkers(const MarkerList &toRemove)
 {
-    // If toRemove is short, this is probably "good enough." However, it may become
-    // very painful if both toRemove.size() and m_markers.size() are in the thousands.
-    for (const auto &im : toRemove) {
-        removeMarker(im);
+    try {
+        auto db = getInfomarkDb();
+        for (const InfomarkId id : toRemove) {
+            // REVISIT: try-catch around each one and report if any failed, instead of this all-or-nothing approach?
+            db.removeMarker(id);
+        }
+        setCurrentMarks(db);
+    } catch (const std::runtime_error &ex) {
+        MMLOG() << "ERROR removing multiple infomarks: " << ex.what();
     }
 }
 
-void MapData::addMarker(const std::shared_ptr<InfoMark> &im)
+InfomarkId MapData::addMarker(const InfoMarkFields &im)
 {
-    if (im != nullptr) {
-        m_markers.emplace_back(im);
-        setDataChanged();
+    try {
+        auto db = getInfomarkDb();
+        auto id = db.addMarker(im);
+        setCurrentMarks(db);
+        return id;
+    } catch (const std::runtime_error &ex) {
+        MMLOG() << "ERROR adding infomark: " << ex.what();
+        return INVALID_INFOMARK_ID;
     }
+}
+
+bool MapData::updateMarker(const InfomarkId id, const InfoMarkFields &im)
+{
+    try {
+        auto db = getInfomarkDb();
+        auto modified = db.updateMarker(id, im);
+        if (modified) {
+            setCurrentMarks(db, modified);
+        }
+        return true;
+    } catch (const std::runtime_error &ex) {
+        MMLOG() << "ERROR updating infomark: " << ex.what();
+        return false;
+    }
+}
+
+bool MapData::updateMarkers(const std::vector<InformarkChange> &updates)
+{
+    try {
+        auto db = getInfomarkDb();
+        auto modified = db.updateMarkers(updates);
+        if (modified) {
+            setCurrentMarks(db, modified);
+        }
+        return true;
+    } catch (const std::runtime_error &ex) {
+        MMLOG() << "ERROR updating infomarks: " << ex.what();
+        return false;
+    }
+}
+
+void MapData::slot_scheduleAction(const SigMapChangeList &change)
+{
+    this->applyChanges(change.deref());
+}
+
+bool MapData::isEmpty() const
+{
+    // return (greatestUsedId == INVALID_ROOMID) && m_markers.empty();
+    return getCurrentMap().empty() && getInfomarkDb().empty();
+}
+
+void MapData::removeMissing(RoomIdSet &set) const
+{
+    RoomIdSet invalid;
+
+    for (const RoomId id : set) {
+        if (!findRoomHandle(id)) {
+            invalid.insert(id);
+        }
+    }
+
+    for (const RoomId id : invalid) {
+        set.erase(id);
+    }
+}
+
+void MapData::setMapData(const MapLoadData &mapLoadData)
+{
+    // TODO: make all of this an all-or-nothing commit;
+    // for now the catch + abort has that effect.
+    try {
+        MapFrontend &mf = *this;
+        mf.block();
+        {
+            InfomarkDb markers = mapLoadData.markerData;
+            setFileName(mapLoadData.filename, mapLoadData.readonly);
+            setSavedMap(mapLoadData.mapPair.base);
+            setCurrentMap(mapLoadData.mapPair.modified);
+            setCurrentMarks(markers);
+            setSavedMarks(markers);
+            forcePosition(mapLoadData.position);
+
+            // NOTE: The map may immediately report changes.
+        }
+        mf.unblock();
+    } catch (...) {
+        // REVISIT: should this be fatal, or just throw?
+        qFatal("An exception occured while setting the map data.");
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
+        // the following is in case qFatal() isn't actually noreturn.
+        // NOLINTNEXTLINE
+        std::abort();
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+    }
+}
+
+// TODO: implement a better merge!
+// The old "merge" algorithm was really unsophisticated;
+// it just inserted map into with a position and ID offset.
+//
+// A better approach would be to look for the common subset,
+// and then look for and prompt the user to approve changes like:
+//  * typo-fixes
+//  * flag changes
+//  * added or removed door names
+//  * added / removed connections within the common subset
+//
+// Finally, accept any additions, but do so at offset and nextid.
+std::pair<Map, InfomarkDb> MapData::mergeMapData(ProgressCounter &counter,
+                                                 const Map &currentMap,
+                                                 const InfomarkDb &currentMarks,
+                                                 RawMapLoadData newMapData)
+{
+    const Bounds newBounds = [&newMapData]() {
+        const auto &rooms = newMapData.rooms;
+        const auto &front = rooms.front().position;
+        Bounds bounds{front, front};
+        for (const auto &room : rooms) {
+            bounds.insert(room.getPosition());
+        }
+        return bounds;
+    }();
+
+    const Coordinate mapOffset = [&currentMap, &newBounds]() -> Coordinate {
+        const auto currentBounds = currentMap.getBounds().value();
+
+        // NOTE: current and new map origins may not be at the same place relative to the bounds,
+        // so we'll use the upper bound of the current map and the lower bound of the new map
+        // to compute the offset.
+
+        constexpr int margin = 1;
+        Coordinate tmp = currentBounds.max - newBounds.min + Coordinate{1, 1, 0} * margin;
+        // NOTE: The reason it's at a z=-1 offset is so the manual "merge up" command will work.
+        tmp.z = -1;
+
+        return tmp;
+    }();
+
+    const auto infomarkOffset = [&mapOffset]() -> Coordinate {
+        const auto tmp = mapOffset.to_ivec3() * glm::ivec3{INFOMARK_SCALE, INFOMARK_SCALE, 1};
+        return Coordinate{tmp.x, tmp.y, tmp.z};
+    }();
+
+    const Map newMap = Map::merge(counter, currentMap, std::move(newMapData.rooms), mapOffset);
+
+    const InfomarkDb newMarks = [&newMapData, &currentMarks, &infomarkOffset, &counter]() {
+        auto tmp = currentMarks;
+        if (newMapData.markerData) {
+            const auto &markers = newMapData.markerData.value().markers;
+            counter.setNewTask(ProgressMsg{"adding infomarks"}, markers.size());
+            for (const InfoMarkFields &mark : markers) {
+                auto copy = mark.getOffsetCopy(infomarkOffset);
+                std::ignore = tmp.addMarker(copy);
+                counter.step();
+            }
+        }
+        return tmp;
+    }();
+
+    return std::pair<Map, InfomarkDb>(newMap, newMarks);
+}
+
+void MapData::describeChanges(std::ostream &os) const
+{
+    if (!MapFrontend::isModified()) {
+        os << "No changes since the last save.\n";
+        return;
+    }
+
+    {
+        const Map &savedMap = getSavedMap();
+        const Map &currentMap = getCurrentMap();
+        if (savedMap != currentMap) {
+            const auto stats = getBasicDiffStats(savedMap, currentMap);
+            auto printRoomDiff = [&os](const std::string_view what, const size_t count) {
+                if (count == 0) {
+                    return;
+                }
+                os << "Rooms " << what << ": " << count << ".\n";
+            };
+            printRoomDiff("removed", stats.numRoomsRemoved);
+            printRoomDiff("added", stats.numRoomsAdded);
+            printRoomDiff("changed", stats.numRoomsChanged);
+        }
+
+        if (getSavedMarks() != getCurrentMarks()) {
+            // REVISIT: Can we get a better description of what changed?
+            os << "Infomarks have changed.\n";
+        }
+
+        // REVISIT: Should we also include the time of the last update?
+    }
+}
+
+std::string MapData::describeChanges() const
+{
+    std::ostringstream os;
+    describeChanges(os);
+    return std::move(os).str();
 }

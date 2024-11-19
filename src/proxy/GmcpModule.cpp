@@ -28,13 +28,13 @@ GmcpModule::NameVersion GmcpModule::NameVersion::fromStdString(std::string moved
 {
     const auto found = moved_moduleVersion.find(char_consts::C_SPACE);
     if (found == std::string::npos) {
-        return NameVersion{::toLowerLatin1(std::move(moved_moduleVersion))};
+        return NameVersion{::toLowerUtf8(std::move(moved_moduleVersion))};
     }
 
     const auto version = static_cast<uint32_t>(
         utils::clampNonNegative(std::stoi(moved_moduleVersion.substr(found + 1))));
 
-    return NameVersion{::toLowerLatin1(moved_moduleVersion.substr(0, found)),
+    return NameVersion{::toLowerUtf8(moved_moduleVersion.substr(0, found)),
                        GmcpModuleVersion{version}};
 }
 
@@ -45,7 +45,7 @@ GmcpModule::GmcpModule(std::string moved_moduleVersion)
 
 GmcpModule::GmcpModule(const std::string &mod, const GmcpModuleVersion version)
 {
-    m_nameVersion.normalizedName = ::toLowerLatin1(mod);
+    m_nameVersion.normalizedName = ::toLowerUtf8(mod);
     m_nameVersion.version = version;
     m_type = toGmcpModuleType(m_nameVersion.normalizedName);
 }

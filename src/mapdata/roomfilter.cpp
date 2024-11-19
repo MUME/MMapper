@@ -59,7 +59,7 @@ RoomFilter::RoomFilter(const std::string_view sv,
                        const Qt::CaseSensitivity cs,
                        const bool regex,
                        const PatternKindsEnum kind)
-    : m_regex(createRegex(::latin1ToAscii(sv), cs, regex))
+    : m_regex(createRegex(charset::conversion::utf8ToAscii(sv), cs, regex))
     , m_kind(kind)
 {}
 
@@ -112,58 +112,58 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
     return RoomFilter{view.toStdString(), Qt::CaseInsensitive, false, kind};
 }
 
-bool RoomFilter::filter(const Room *const pr) const
+bool RoomFilter::filter_kind(const RawRoom &r, const PatternKindsEnum pat) const
 {
-    const auto filter_kind = [this](const Room &r, const PatternKindsEnum pat) -> bool {
-        switch (pat) {
-        case PatternKindsEnum::ALL:
-            break;
+    switch (pat) {
+    case PatternKindsEnum::ALL:
+        break;
 
-        case PatternKindsEnum::DESC:
-            return matches(r.getDescription());
+    case PatternKindsEnum::DESC:
+        return matches(r.getDescription());
 
-        case PatternKindsEnum::CONTENTS:
-            return matches(r.getContents());
+    case PatternKindsEnum::CONTENTS:
+        return matches(r.getContents());
 
-        case PatternKindsEnum::NAME:
-            return matches(r.getName());
+    case PatternKindsEnum::NAME:
+        return matches(r.getName());
 
-        case PatternKindsEnum::NOTE:
-            return matches(r.getNote());
+    case PatternKindsEnum::NOTE:
+        return matches(r.getNote());
 
-        case PatternKindsEnum::EXITS:
-            for (const auto &e : r.getExitsList()) {
-                if (matches(e.getDoorName())) {
-                    return true;
-                }
+    case PatternKindsEnum::EXITS:
+        for (const auto &e : r.getExits()) {
+            if (matches(e.getDoorName())) {
+                return true;
             }
-            return false;
+        }
+        return false;
 
-        case PatternKindsEnum::FLAGS: {
-            for (const auto &e : r.getExitsList()) {
-                if (this->matchesAny(e.getDoorFlags()) //
-                    || this->matchesAny(e.getExitFlags())) {
-                    return true;
-                }
+    case PatternKindsEnum::FLAGS: {
+        for (const auto &e : r.getExits()) {
+            if (this->matchesAny(e.getDoorFlags()) //
+                || this->matchesAny(e.getExitFlags())) {
+                return true;
             }
-
-            return this->matchesAny(r.getMobFlags())            //
-                   || this->matchesAny(r.getLoadFlags())        //
-                   || this->matchesDefined(r.getLightType())    //
-                   || this->matchesDefined(r.getSundeathType()) //
-                   || this->matchesDefined(r.getPortableType()) //
-                   || this->matchesDefined(r.getRidableType())  //
-                   || this->matchesDefined(r.getAlignType());
         }
 
-        case PatternKindsEnum::NONE:
-            return false;
-        }
+        return this->matchesAny(r.getMobFlags())            //
+               || this->matchesAny(r.getLoadFlags())        //
+               || this->matchesDefined(r.getLightType())    //
+               || this->matchesDefined(r.getSundeathType()) //
+               || this->matchesDefined(r.getPortableType()) //
+               || this->matchesDefined(r.getRidableType())  //
+               || this->matchesDefined(r.getAlignType());
+    }
 
-        throw std::invalid_argument("pat");
-    };
+    case PatternKindsEnum::NONE:
+        return false;
+    }
 
-    auto &r = deref(pr);
+    throw std::invalid_argument("pat");
+};
+
+bool RoomFilter::filter(const RawRoom &r) const
+{
     if (m_kind != PatternKindsEnum::ALL) {
         return filter_kind(r, m_kind);
     }

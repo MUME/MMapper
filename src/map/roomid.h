@@ -3,77 +3,90 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/TaggedInt.h"
 #include "../global/hash.h"
+#include "../global/macros.h"
 
 #include <climits>
 #include <cstdint>
-#include <functional>
-#include <memory>
-#include <set>
-#include <vector>
+#include <ostream>
 
-struct NODISCARD RoomId final
+class AnsiOstream;
+
+namespace tags {
+struct NODISCARD RoomIdTag final
+{};
+struct NODISCARD ExternalRoomIdTag final
+{};
+struct NODISCARD ServerRoomIdTag final
+{};
+} // namespace tags
+
+struct NODISCARD RoomId final : public TaggedInt<RoomId, tags::RoomIdTag, uint32_t>
 {
-private:
-    uint32_t m_value = 0;
-
-public:
-    RoomId() = default;
-    constexpr explicit RoomId(uint32_t value) noexcept
-        : m_value{value}
+    using TaggedInt::TaggedInt;
+    constexpr RoomId()
+        : RoomId{UINT_MAX}
     {}
-    NODISCARD inline constexpr explicit operator uint32_t() const { return m_value; }
-    NODISCARD inline constexpr uint32_t asUint32() const { return m_value; }
-    NODISCARD inline constexpr bool operator<(RoomId rhs) const { return m_value < rhs.m_value; }
-    NODISCARD inline constexpr bool operator>(RoomId rhs) const { return m_value > rhs.m_value; }
-    NODISCARD inline constexpr bool operator<=(RoomId rhs) const { return m_value <= rhs.m_value; }
-    NODISCARD inline constexpr bool operator>=(RoomId rhs) const { return m_value >= rhs.m_value; }
-    NODISCARD inline constexpr bool operator==(RoomId rhs) const { return m_value == rhs.m_value; }
-    NODISCARD inline constexpr bool operator!=(RoomId rhs) const { return m_value != rhs.m_value; }
-
-public:
-    // TODO: Is this still needed?
-    NODISCARD friend inline uint32_t qHash(RoomId id) { return id.asUint32(); }
+    NODISCARD constexpr uint32_t asUint32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, RoomId id);
+    friend AnsiOstream &operator<<(AnsiOstream &os, RoomId id);
 };
-static constexpr const RoomId INVALID_ROOMID{UINT_MAX};
-static constexpr const RoomId DEFAULT_ROOMID{0};
 
-using RoomIdSet = std::set<RoomId>;
+struct NODISCARD ExternalRoomId final
+    : public TaggedInt<ExternalRoomId, tags::ExternalRoomIdTag, uint32_t>
+{
+    using TaggedInt::TaggedInt;
+    constexpr ExternalRoomId()
+        : ExternalRoomId{UINT_MAX}
+    {}
+    NODISCARD constexpr uint32_t asUint32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, ExternalRoomId id);
+    friend AnsiOstream &operator<<(AnsiOstream &os, ExternalRoomId id);
+};
+
+struct NODISCARD ServerRoomId final
+    : public TaggedInt<ServerRoomId, tags::ServerRoomIdTag, uint32_t>
+{
+    using TaggedInt::TaggedInt;
+    constexpr ServerRoomId()
+        : ServerRoomId{0}
+    {}
+    NODISCARD constexpr uint32_t asUint32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, ServerRoomId id);
+    friend AnsiOstream &operator<<(AnsiOstream &os, ServerRoomId id);
+};
+
+static_assert(sizeof(RoomId) == sizeof(uint32_t));
+static constexpr const RoomId INVALID_ROOMID{UINT_MAX};
+static_assert(RoomId{} == INVALID_ROOMID);
+
+static_assert(sizeof(ExternalRoomId) == sizeof(uint32_t));
+static constexpr const ExternalRoomId INVALID_EXTERNAL_ROOMID{UINT_MAX};
+static_assert(ExternalRoomId{} == INVALID_EXTERNAL_ROOMID);
+
+static_assert(sizeof(ServerRoomId) == sizeof(uint32_t));
+static constexpr const ServerRoomId INVALID_SERVER_ROOMID{0};
+static_assert(ServerRoomId{} == INVALID_SERVER_ROOMID);
 
 template<>
 struct std::hash<RoomId>
 {
     std::size_t operator()(const RoomId id) const noexcept { return numeric_hash(id.asUint32()); }
 };
-
-template<typename T>
-class NODISCARD roomid_vector : private std::vector<T>
+template<>
+struct std::hash<ExternalRoomId>
 {
-private:
-    using base = std::vector<T>;
-
-public:
-    using std::vector<T>::vector;
-
-public:
-    NODISCARD decltype(auto) operator[](RoomId roomId) { return base::at(roomId.asUint32()); }
-    NODISCARD decltype(auto) operator[](RoomId roomId) const { return base::at(roomId.asUint32()); }
-
-public:
-    using base::begin;
-    using base::end;
-
-public:
-    using base::resize;
-    using base::size;
+    std::size_t operator()(const ExternalRoomId &id) const noexcept
+    {
+        return numeric_hash(id.asUint32());
+    }
 };
-
-class Room;
-using RoomIndex = roomid_vector<std::shared_ptr<Room>>;
-
-class RoomRecipient;
-using RoomLocks = roomid_vector<std::set<RoomRecipient *>>;
-
-class RoomCollection;
-using SharedRoomCollection = std::shared_ptr<RoomCollection>;
-using RoomHomes = roomid_vector<SharedRoomCollection>;
+template<>
+struct std::hash<ServerRoomId>
+{
+    std::size_t operator()(const ServerRoomId &id) const noexcept
+    {
+        return numeric_hash(id.asUint32());
+    }
+};

@@ -16,13 +16,10 @@
 #include <QJsonDocument>
 
 // REVISIT: Does this belong somewhere else?
-static void normalizeForUser(std::ostream &os,
-                             const CharacterEncodingEnum encoding,
-                             const bool goAhead,
-                             const std::string_view sv)
+static void normalizeForUser(std::ostream &os, const bool goAhead, const std::string_view sv)
 {
     // REVISIT: perform ANSI normalization in this function, too?
-    foreachLine(sv, [&os, encoding, &goAhead](std::string_view line) {
+    foreachLine(sv, [&os, &goAhead](std::string_view line) {
         using char_consts::C_CARRIAGE_RETURN;
         using char_consts::C_NEWLINE;
         if (line.empty()) {
@@ -39,14 +36,13 @@ static void normalizeForUser(std::ostream &os,
         }
 
         if (!line.empty()) {
-            foreachCharMulti2(line,
-                              C_CARRIAGE_RETURN,
-                              [&os, encoding, &goAhead](std::string_view txt) {
-                                  if (!txt.empty()
-                                      && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
-                                      convertFromLatin1(os, encoding, txt);
-                                  }
-                              });
+            foreachCharMulti2(line, C_CARRIAGE_RETURN, [&os, &goAhead](std::string_view txt) {
+                // so it's only allowed to contain carriage returns if goAhead is true?
+                // why not just remove all of the extra carriage returns?
+                if (!txt.empty() && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
+                    os << txt;
+                }
+            });
         }
 
         if (hasNewline) {
@@ -56,43 +52,48 @@ static void normalizeForUser(std::ostream &os,
     });
 }
 
-NODISCARD static std::string encodeForUser(const CharacterEncodingEnum encoding,
-                                           const QByteArray &ba,
-                                           const bool goAhead)
+NODISCARD static QString encodeForUser(const CharacterEncodingEnum userEncoding,
+                                       const QString &s,
+                                       const bool goAhead)
 {
-    std::ostringstream oss;
-    normalizeForUser(oss, encoding, goAhead, mmqt::toStdStringViewLatin1(ba));
-    return oss.str();
+    // step 1: normalize lines
+    auto out = [goAhead, &s]() -> std::string {
+        std::ostringstream oss;
+        normalizeForUser(oss, goAhead, mmqt::toStdStringUtf8(s));
+        return std::move(oss).str();
+    }();
+
+    // encoding is done in the base class, so why isn't this done in the base class too?
+    if (false) {
+        // step 2: convert charset, if necessary
+        if (userEncoding != CharacterEncodingEnum::UTF8) {
+            std::ostringstream oss;
+            charset::conversion::convert(oss, out, CharacterEncodingEnum::UTF8, userEncoding);
+            out = std::move(oss).str();
+        }
+    }
+
+    return mmqt::toQStringUtf8(out);
 }
 
-NODISCARD static QByteArray decodeFromUser(const CharacterEncodingEnum encoding,
-                                           const QByteArray &ba)
+NODISCARD static RawBytes decodeFromUser(const CharacterEncodingEnum userEncoding,
+                                         const RawBytes &raw)
 {
-    switch (encoding) {
-    case CharacterEncodingEnum::ASCII:
-        return ba;
-    case CharacterEncodingEnum::LATIN1:
-        return ba;
-    case CharacterEncodingEnum::UTF8: {
-        std::ostringstream oss;
-        for (const QChar qc : QString::fromUtf8(ba)) {
-            const auto codepoint = qc.unicode();
-            if (codepoint < 256) {
-                oss << static_cast<char>(codepoint & 0xFF);
-            } else {
-                oss << "?";
-            }
-        }
-        return mmqt::toQByteArrayLatin1(oss.str());
+    if (userEncoding == CharacterEncodingEnum::UTF8) {
+        return raw;
     }
-    default:
-        break;
-    }
-    abort();
+    std::ostringstream oss;
+    charset::conversion::convert(oss,
+                                 mmqt::toStdStringViewRaw(raw.getQByteArray()),
+                                 userEncoding,
+                                 CharacterEncodingEnum::UTF8);
+    return RawBytes{mmqt::toQByteArrayUtf8(oss.str())};
 }
 
 UserTelnet::UserTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "unknown")
+    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC,
+                     parent,
+                     TelnetTermTypeBytes{"unknown"})
 {}
 
 void UserTelnet::slot_onConnected()
@@ -110,15 +111,15 @@ void UserTelnet::slot_onConnected()
     requestTelnetOption(TN_WILL, OPT_EOR);
 }
 
-void UserTelnet::slot_onAnalyzeUserStream(const QByteArray &data)
+void UserTelnet::slot_onAnalyzeUserStream(const TelnetIacBytes &data)
 {
     onReadInternal(data);
 }
 
-void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
+void UserTelnet::slot_onSendToUser(const QString &s, const bool goAhead)
 {
     // NOTE: We could avoid some overhead by sending one line at a time with a custom ostream.
-    auto outdata = encodeForUser(getEncoding(), ba, goAhead);
+    auto outdata = encodeForUser(getEncoding(), s, goAhead);
     submitOverTelnet(outdata, goAhead);
 }
 
@@ -128,7 +129,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
         return;
     }
 
-    const auto name = msg.getName().getStdStringLatin1();
+    const auto name = msg.getName().getStdStringUtf8();
     const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
     try {
         const GmcpModule mod{name.substr(0, found)};
@@ -141,7 +142,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     }
 }
 
-void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
+void UserTelnet::slot_onSendMSSPToUser(const TelnetMsspBytes &data)
 {
     if (!getOptions().myOptionState[OPT_MSSP]) {
         return;
@@ -150,12 +151,9 @@ void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
     sendMudServerStatus(data);
 }
 
-void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
+void UserTelnet::virt_sendToMapper(const RawBytes &data, const bool goAhead)
 {
-    // MMapper requires all data to be Latin-1 internally
-    // REVISIT: This will break things if the client is handling MPI itself
-    auto indata = decodeFromUser(getEncoding(), data);
-    emit sig_analyzeUserStream(indata, goAhead);
+    emit sig_analyzeUserStream(decodeFromUser(getEncoding(), data), goAhead);
 }
 
 void UserTelnet::slot_onRelayEchoMode(const bool isDisabled)
@@ -190,7 +188,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
             }
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule mod{mmqt::toStdStringLatin1(moduleStr)};
+                const GmcpModule mod{mmqt::toStdStringUtf8(moduleStr)};
                 receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
@@ -231,7 +229,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
     emit sig_relayGmcp(msg);
 }
 
-void UserTelnet::virt_receiveTerminalType(const QByteArray &data)
+void UserTelnet::virt_receiveTerminalType(const TelnetTermTypeBytes &data)
 {
     if (getDebug()) {
         qDebug() << "Received Terminal Type" << data;
@@ -247,10 +245,10 @@ void UserTelnet::virt_receiveWindowSize(const int x, const int y)
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void UserTelnet::virt_sendRawData(const std::string_view data)
+void UserTelnet::virt_sendRawData(const TelnetIacBytes &data)
 {
     m_sentBytes += data.length();
-    emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
+    emit sig_sendToSocket(data);
 }
 
 bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)

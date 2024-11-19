@@ -14,8 +14,8 @@ class NODISCARD_QOBJECT GameObserver final
 public:
     Signal2<> sig_connected;
     Signal2<> sig_disconnected;
-    Signal2<QByteArray> sig_sentToMudBytes;
-    Signal2<QByteArray, bool /* go ahead */> sig_sentToUserBytes;
+    // Signal2<QByteArray> sig_sentToMudBytes;
+    // Signal2<QByteArray, bool /* go ahead */> sig_sentToUserBytes;
 
     // Helper versions of the above, which remove ANSI in place and create QString
     Signal2<QString> sig_sentToMudString;
@@ -28,8 +28,8 @@ public:
     void slot_observeConnected();
     void slot_observeDisconnected();
 
-    void slot_observeSentToMud(const QByteArray &ba);
-    void slot_observeSentToUser(const QByteArray &ba, bool goAhead);
+    void slot_observeSentToMud(const QString &ba);
+    void slot_observeSentToUser(const QString &ba, bool goAhead);
 
     void slot_observeSentToMudGmcp(const GmcpMessage &m);
     void slot_observeSentToUserGmcp(const GmcpMessage &m);

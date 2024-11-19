@@ -2,20 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../global/AnsiOstream.h"
 #include "../global/macros.h"
-
-#include <iosfwd>
-#include <ostream>
 
 struct NODISCARD User
 {
 private:
-    std::ostream &m_os;
+    AnsiOstream &m_aos;
 
 public:
-    explicit User(std::ostream &os)
-        : m_os{os}
+    explicit User(AnsiOstream &aos)
+        : m_aos{aos}
     {}
 
-    NODISCARD std::ostream &getOstream() const { return m_os; }
+    NODISCARD AnsiOstream &getOstream() const { return m_aos; }
 };

@@ -18,6 +18,7 @@
 #include "mmapper2group.h"
 
 #include <map>
+#include <optional>
 
 #include <QAction>
 #include <QHeaderView>
@@ -232,6 +233,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
                                       const int role) const
 {
     const CGroupChar &character = deref(pCharacter);
+
     // Map column to data
     switch (role) {
     case Qt::DisplayRole:
@@ -240,8 +242,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
             if (character.getLabel().isEmpty() || character.getName() == character.getLabel()) {
                 return character.getName();
             } else {
-                return QString("%1 (%2)").arg(QString::fromLatin1(character.getName()),
-                                              QString::fromLatin1(character.getLabel()));
+                return QString("%1 (%2)").arg(character.getName(), character.getLabel());
             }
         case ColumnTypeEnum::HP_PERCENT:
             return calculatePercentage(character.hp, character.maxhp);
@@ -258,15 +259,21 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         case ColumnTypeEnum::STATE:
             return QVariant::fromValue(
                 GroupStateData(character.getColor(), character.position, character.affects));
-        case ColumnTypeEnum::ROOM_NAME:
-            if (character.roomId != INVALID_ROOMID && !m_map->isEmpty() && m_mapLoaded
-                && character.roomId <= m_map->getMaxId()) {
-                auto roomSelection = RoomSelection(*m_map);
-                if (const Room *const r = roomSelection.getRoom(character.roomId)) {
+        case ColumnTypeEnum::ROOM_NAME: {
+            const ServerRoomId srvId = character.getServerId();
+            if (srvId != INVALID_SERVER_ROOMID && m_mapLoaded) {
+                if (const auto &r = m_map->findRoomHandle(srvId)) {
+                    return r->getName().toQString();
+                }
+            }
+            const ExternalRoomId extId = character.getExternalId();
+            if (extId != INVALID_EXTERNAL_ROOMID && m_mapLoaded) {
+                if (const auto &r = m_map->findRoomHandle(extId)) {
                     return r->getName().toQString();
                 }
             }
             return "Unknown";
+        }
 
         default:
             qWarning() << "Unsupported column" << static_cast<int>(column);
@@ -406,7 +413,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         try {
             m_group->getGroupManagerApi().kickCharacter(selectedCharacter);
         } catch (const std::exception &ex) {
-            slot_messageBox("Group Manager", QString::fromLatin1(ex.what()));
+            slot_messageBox("Group Manager", QString::fromUtf8(ex.what()));
         }
     });
 
@@ -421,18 +428,29 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
                 const SharedGroupChar &pCharacter = selection->at(index.row());
-                const CGroupChar &character = deref(pCharacter);
+                auto &character = deref(pCharacter);
                 selectedCharacter = character.getName();
 
                 // Center map on the clicked character
-                if (character.roomId != INVALID_ROOMID && !m_map->isEmpty()
-                    && character.roomId <= m_map->getMaxId()) {
-                    auto roomSelection = RoomSelection(*m_map);
-                    if (const Room *const r = roomSelection.getRoom(character.roomId)) {
-                        const Coordinate &c = r->getPosition();
-                        const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
-                        emit sig_center(worldPos); // connects to MapWindow
+                const auto worldPos = [&character, this]() -> std::optional<glm::vec2> {
+                    const ServerRoomId srvId = character.getServerId();
+                    if (srvId != INVALID_SERVER_ROOMID) {
+                        if (const auto &r = m_map->findRoomHandle(srvId)) {
+                            const Coordinate &c = r->getPosition();
+                            return c.to_vec2() + glm::vec2{0.5f, 0.5f};
+                        }
                     }
+                    const ExternalRoomId extId = character.getExternalId();
+                    if (extId != INVALID_EXTERNAL_ROOMID) {
+                        if (const auto &r = m_map->findRoomHandle(extId)) {
+                            const Coordinate &c = r->getPosition();
+                            return c.to_vec2() + glm::vec2{0.5f, 0.5f};
+                        }
+                    }
+                    return std::nullopt;
+                }();
+                if (worldPos.has_value()) {
+                    emit sig_center(worldPos.value()); // connects to MapWindow
                 }
             }
 
@@ -441,7 +459,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             const bool selectedSelf = (index.row() == 0);
             if (isServer && !selectedSelf) {
                 // All context menu actions are only actionable by the server right now
-                m_kick->setText(QString("&Kick %1").arg(QString::fromLatin1(selectedCharacter)));
+                m_kick->setText(QString("&Kick %1").arg(selectedCharacter));
                 QMenu contextMenu(tr("Context menu"), this);
                 contextMenu.addAction(m_kick);
                 contextMenu.exec(QCursor::pos());

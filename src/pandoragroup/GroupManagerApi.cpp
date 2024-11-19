@@ -9,7 +9,7 @@
 
 #include <QByteArray>
 
-void GroupManagerApi::kickCharacter(const QByteArray &name) const
+void GroupManagerApi::kickCharacter(const QString &name) const
 {
     if (name.isEmpty()) {
         throw std::invalid_argument("name");
@@ -18,7 +18,7 @@ void GroupManagerApi::kickCharacter(const QByteArray &name) const
     m_group.acceptVisitor([&name](Mmapper2Group &group) { group.kickCharacter(name); });
 }
 
-void GroupManagerApi::sendGroupTell(const QByteArray &msg) const
+void GroupManagerApi::sendGroupTell(const QString &msg) const
 {
     if (msg.isEmpty()) {
         throw std::invalid_argument("msg");
@@ -27,12 +27,12 @@ void GroupManagerApi::sendGroupTell(const QByteArray &msg) const
     m_group.acceptVisitor([&msg](Mmapper2Group &group) { group.sendGroupTell(msg); });
 }
 
-void GroupManagerApi::sendScoreLineEvent(const QByteArray &arr) const
+void GroupManagerApi::sendScoreLineEvent(const QString &arr) const
 {
     m_group.acceptVisitor([&arr](Mmapper2Group &group) { group.parseScoreInformation(arr); });
 }
 
-void GroupManagerApi::sendPromptLineEvent(const QByteArray &arr) const
+void GroupManagerApi::sendPromptLineEvent(const QString &arr) const
 {
     m_group.acceptVisitor([&arr](Mmapper2Group &group) { group.parsePromptInformation(arr); });
 }

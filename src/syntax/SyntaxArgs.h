@@ -7,6 +7,7 @@
 #include "TokenMatcher.h"
 
 #include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -56,11 +57,20 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
+struct NODISCARD IntRange final
+{
+    std::optional<int> min;
+    std::optional<int> max;
+};
+
+std::optional<int32_t> tryMatchInt(StringView input_sv,
+                                   const IntRange &range,
+                                   IMatchErrorLogger *logger);
+
 class NODISCARD ArgInt final : public IArgument
 {
 private:
-    std::optional<int> min;
-    std::optional<int> max;
+    IntRange range;
 
 public:
     ArgInt() = default;

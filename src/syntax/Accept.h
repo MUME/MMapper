@@ -16,6 +16,7 @@ class NODISCARD Accept final
 {
 public:
     using Function = std::function<void(User &user, const Pair *)>;
+    using Function2 = std::function<void(User &user, const Vector &argv)>;
 
 private:
     std::shared_ptr<const Function> m_function;
@@ -26,6 +27,8 @@ public:
     DEFAULT_RULE_OF_5(Accept);
 
     explicit Accept(Function fn, std::string help);
+    NODISCARD static Accept convert(Function2 fn, std::string help);
+
     void operator()(User &user, const Pair *const matched) const { call(user, matched); }
     void call(User &user, const Pair *matched) const;
     NODISCARD const std::string &getHelp() const { return m_help; }

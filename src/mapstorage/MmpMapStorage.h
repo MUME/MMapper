@@ -3,8 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/macros.h"
+#include "../map/RawRoom.h"
 #include "abstractmapstorage.h"
+
+#include <optional>
 
 #include <QString>
 #include <QtCore>
@@ -23,22 +25,21 @@ class NODISCARD_QOBJECT MmpMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit MmpMapStorage(MapData &, const QString &, QFile *, QObject *parent);
+    explicit MmpMapStorage(const AbstractMapStorage::Data &, QObject *parent);
     ~MmpMapStorage() final;
 
 public:
     MmpMapStorage() = delete;
 
 private:
-    NODISCARD bool canLoad() const override { return false; }
-    NODISCARD bool canSave() const override { return true; }
-
-    void newData() override;
-    NODISCARD bool loadData() override;
-    NODISCARD bool saveData(bool baseMapOnly) override;
-    NODISCARD bool mergeData() override;
+    NODISCARD bool virt_canLoad() const final { return false; }
+    NODISCARD std::optional<RawMapLoadData> virt_loadData() final { return std::nullopt; }
 
 private:
-    static void saveRoom(const Room &room, QXmlStreamWriter &stream);
+    NODISCARD bool virt_canSave() const final { return true; }
+    NODISCARD bool virt_saveData(const RawMapData &map) final;
+
+private:
+    static void saveRoom(const ExternalRawRoom &room, QXmlStreamWriter &stream);
     void log(const QString &msg) { emit sig_log("MmpMapStorage", msg); }
 };

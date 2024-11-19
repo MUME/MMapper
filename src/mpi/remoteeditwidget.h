@@ -6,6 +6,8 @@
 #include "../global/macros.h"
 #include "remoteeditsession.h"
 
+#include <memory>
+
 #include <QAction>
 #include <QMainWindow>
 #include <QPlainTextEdit>
@@ -19,6 +21,7 @@
 struct EditViewCommand;
 struct EditCommand2;
 
+class AnsiViewWindow;
 class QCloseEvent;
 class QMenu;
 class QMenuBar;
@@ -77,6 +80,11 @@ enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
       "&Quote Lines", \
       "Add a quote prefix to all partly-selected lines.", \
       "Ctrl+>" /* aka "Ctrl+Shift+." */) \
+    X(previewAnsi, \
+      EditViewCmdEnum::VIEW_OPTION, \
+      "&Preview Ansi Codes", \
+      "Preview message with ansi coloring.", \
+      "Ctrl+P") \
     X(toggleWhitespace, \
       EditViewCmdEnum::VIEW_OPTION, \
       "Toggle &Whitespace", \
@@ -136,6 +144,7 @@ private:
 
     bool m_submitted = false;
     QScopedPointer<Editor> m_textEdit;
+    std::unique_ptr<AnsiViewWindow> m_preview;
 
 public:
     explicit RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent);

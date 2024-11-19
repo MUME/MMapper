@@ -3,6 +3,7 @@
 
 #include "Color.h"
 
+#include "AnsiOstream.h"
 #include "Consts.h"
 #include "TextUtils.h"
 #include "tests.h"
@@ -135,8 +136,9 @@ Color Color::fromHex(const std::string_view sv)
 
 Color mmqt::toColor(const QString &s)
 {
-    if (false) {
-        return Color::fromHex(mmqt::toStdStringLatin1(s));
+    // consider enabling this to reduce dependence on Qt
+    if ((false)) {
+        return Color::fromHex(mmqt::toStdStringUtf8(s)); // expects 6 ASCII hex digits
     } else {
         return Color(QColor(s));
     }
@@ -175,6 +177,21 @@ Color Color::fromRGB(const uint32_t rgb)
     Color c;
     c.m_color = (rgb & MASK_RGB) | MASK_ALPHA;
     return c;
+}
+
+AnsiOstream &operator<<(AnsiOstream &os, const Color &c)
+{
+    // These may not display as RGB on the client's terminal, but they'll
+    // probably look better than showing them all in the default color.
+    AnsiColorRGB rgb;
+    rgb.r = static_cast<uint8_t>(c.getRed());
+    rgb.g = static_cast<uint8_t>(c.getGreen());
+    rgb.b = static_cast<uint8_t>(c.getBlue());
+    const RawAnsi fancy = RawAnsi().withForeground(AnsiColorVariant{rgb});
+    os << char_consts::C_DQUOTE;
+    os.writeWithColor(fancy, c.toHex());
+    os << char_consts::C_DQUOTE;
+    return os;
 }
 
 namespace Colors {

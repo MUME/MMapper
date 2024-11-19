@@ -3,18 +3,39 @@
 
 #include "testparser.h"
 
-#include "../src/expandoracommon/property.h"
 #include "../src/global/Charset.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/parserutils.h"
 #include "../src/map/mmapper2room.h"
 #include "../src/map/parseevent.h"
+#include "../src/map/sanitizer.h"
 
 #include <memory>
 
 #include <QDebug>
 #include <QString>
 #include <QtTest/QtTest>
+
+// FIXME: This is effectively a duplication of the map sanitizer functions.
+namespace { // anonymous
+template<typename T>
+T sanitize(const T &input) = delete;
+template<>
+RoomName sanitize<>(const RoomName &nameStr)
+{
+    return RoomName{sanitizer::sanitizeOneLine(nameStr.toStdStringUtf8())};
+}
+template<>
+RoomDesc sanitize(const RoomDesc &descStr)
+{
+    return RoomDesc{sanitizer::sanitizeMultiline(descStr.toStdStringUtf8())};
+}
+template<>
+RoomContents sanitize(const RoomContents &descStr)
+{
+    return RoomContents{sanitizer::sanitizeMultiline(descStr.toStdStringUtf8())};
+}
+} // namespace
 
 TestParser::TestParser() = default;
 
@@ -41,7 +62,7 @@ void TestParser::toAsciiTest()
         QCOMPARE(copy, expectedAscii);
     }
     {
-        const auto latin1 = mmqt::toStdStringLatin1(qs);
+        const auto latin1 = mmqt::toStdStringLatin1(qs); // sanity checking
         QCOMPARE(latin1.length(), 11);
         QCOMPARE(latin1[1], '\xF3');
         QCOMPARE(latin1[7], '\xED');
@@ -59,42 +80,64 @@ void TestParser::toAsciiTest()
 
 void TestParser::createParseEventTest()
 {
-    RoomName roomName{"Room"};
-    RoomDesc parsedRoomDescription{"Description"};
-    RoomContents roomContents{"Contents"};
-    auto terrain = RoomTerrainEnum::INDOORS;
-    ExitsFlagsType eFlags;
-    eFlags.setValid();
-    PromptFlagsType pFlags;
-    pFlags.setValid();
-    ConnectedRoomFlagsType cFlags;
-    cFlags.setValid();
-    auto event = ParseEvent::createEvent(CommandEnum::NORTH,
-                                         roomName,
-                                         parsedRoomDescription,
-                                         roomContents,
-                                         terrain,
-                                         eFlags,
-                                         pFlags,
-                                         cFlags);
+    static constexpr auto terrain = RoomTerrainEnum::INDOORS;
+    auto check = [](const RoomName &roomName,
+                    const RoomDesc &parsedRoomDescription,
+                    const PromptFlagsType pFlags,
+                    const size_t expectSkipped) {
+        RoomContents roomContents = mmqt::makeRoomContents("Contents");
+        ExitsFlagsType eFlags;
+        eFlags.setValid();
+        ConnectedRoomFlagsType cFlags;
+        cFlags.setValid();
+        const ParseEvent e = ParseEvent::createEvent(CommandEnum::NORTH,
+                                                     INVALID_SERVER_ROOMID,
+                                                     roomName,
+                                                     parsedRoomDescription,
+                                                     roomContents,
+                                                     ServerExitIds{},
+                                                     terrain,
+                                                     eFlags,
+                                                     pFlags,
+                                                     cFlags);
 
-    const ParseEvent &e = *event;
-    if (false) {
-        qDebug() << e;
-    }
-    QCOMPARE(e.getRoomName(), roomName);
-    QCOMPARE(e.getRoomDesc(), parsedRoomDescription);
-    QCOMPARE(e.getRoomContents(), roomContents);
-    QCOMPARE(e.getExitsFlags(), eFlags);
-    QCOMPARE(e.getPromptFlags(), pFlags);
-    QCOMPARE(e.getConnectedRoomFlags(), cFlags);
+        if ((false)) {
+            qDebug() << e;
+        }
+        QCOMPARE(e.getRoomName(), sanitize(roomName));
+        QCOMPARE(e.getRoomDesc(), sanitize(parsedRoomDescription));
+        QCOMPARE(e.getRoomContents(), sanitize(roomContents));
+        QCOMPARE(e.getExitsFlags(), eFlags);
+        QCOMPARE(e.getPromptFlags(), pFlags);
+        QCOMPARE(e.getConnectedRoomFlags(), cFlags);
 
-    QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
-    QCOMPARE(e.getNumSkipped(), 0u);
-    QCOMPARE(RoomName(e[0].getStdString()), roomName);
-    QCOMPARE(RoomDesc(e[1].getStdString()), parsedRoomDescription);
-    QCOMPARE(mmqt::toQStringLatin1(e[2].getStdString()),
-             mmqt::toQStringLatin1(std::string(1, static_cast<char>(terrain))));
+        QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
+        QCOMPARE(e.getNumSkipped(), expectSkipped);
+    };
+
+    const auto name = RoomName{"Room"};
+    const auto desc = makeRoomDesc("Description");
+    const auto promptFlags = []() {
+        PromptFlagsType pf{};
+        pf.setValid();
+        return pf;
+    }();
+
+    // all 3 valid
+    check(name, desc, promptFlags, 0);
+
+    // one missing
+    check(name, desc, {}, 1);
+    check(name, {}, promptFlags, 1);
+    check({}, desc, promptFlags, 1);
+
+    // two missing
+    check(name, {}, {}, 2);
+    check({}, desc, {}, 2);
+    check({}, {}, promptFlags, 2);
+
+    // all three missing
+    check({}, {}, {}, 3);
 }
 
 QTEST_MAIN(TestParser)

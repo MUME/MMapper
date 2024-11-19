@@ -97,12 +97,12 @@ NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDesc
     return deref(cd.room).getPosition().to_vec3() + getConnectionOffset(cd.direction);
 }
 
-NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getDoorPostFix(const RoomPtr &room, const ExitDirEnum dir)
 {
     static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
                                               | DoorFlagEnum::DELAYED;
 
-    const DoorFlags flags = room->exit(dir).getDoorFlags();
+    const DoorFlags flags = room->getExit(dir).getDoorFlags();
     if (!flags.containsAny(SHOWN_FLAGS)) {
         return QString{};
     }
@@ -113,31 +113,28 @@ NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnu
                              flags.isDelayed() ? "d" : "");
 }
 
-NODISCARD static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getPostfixedDoorName(const RoomPtr &room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
-    return room->exit(dir).getDoorName().toQString() + postFix;
+    return room->getExit(dir).getDoorName().toQString() + postFix;
 }
 
-UniqueMesh RoomNameBatch::getMesh(GLFont &font)
+UniqueMesh RoomNameBatch::getMesh(GLFont &font) const
 {
     return font.getFontMesh(m_names);
 }
 
-void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
+void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
                                         const ExitDirEnum sourceDir,
-                                        const Room *const targetRoom,
+                                        const RoomHandle &targetRoom,
                                         const ExitDirEnum targetDir)
 {
     static const auto isShortDistance = [](const Coordinate &a, const Coordinate &b) -> bool {
         return glm::all(glm::lessThanEqual(glm::abs(b.to_ivec2() - a.to_ivec2()), glm::ivec2(1)));
     };
 
-    assert(sourceRoom != nullptr);
-    assert(targetRoom != nullptr);
-
-    const Coordinate &sourcePos = sourceRoom->getPosition();
-    const Coordinate &targetPos = targetRoom->getPosition();
+    const Coordinate &sourcePos = sourceRoom.getPosition();
+    const Coordinate &targetPos = targetRoom.getPosition();
 
     if (sourcePos.z != m_currentLayer && targetPos.z != m_currentLayer) {
         return;
@@ -147,11 +144,12 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
     QString name;
     bool together = false;
 
-    if (targetRoom->exit(targetDir).isDoor()          // the other room has a door?
-        && targetRoom->exit(targetDir).hasDoorName()  // has a door on both sides...
-        && targetRoom->exit(targetDir).isHiddenExit() // is hidden
+    const auto &targetExit = targetRoom.getExit(targetDir);
+    if (targetExit.exitIsDoor()      // the other room has a door?
+        && targetExit.hasDoorName()  // has a door on both sides...
+        && targetExit.doorIsHidden() // is hidden
         && isShortDistance(sourcePos, targetPos)) {
-        if (sourceRoom->getId() > targetRoom->getId() && sourcePos.z == targetPos.z) {
+        if (sourceRoom.getId() > targetRoom.getId() && sourcePos.z == targetPos.z) {
             // NOTE: This allows wrap-around connections to the same room (allows source <= target).
             // Avoid drawing duplicate door names for each side by only drawing one side unless
             // the doors are on different z-layers
@@ -213,45 +211,52 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
     static const auto bg = Colors::black.withAlpha(0.4f);
     const glm::vec3 pos{xy, m_currentLayer};
     m_roomNameBatch.emplace_back(GLText{pos,
-                                        mmqt::toStdStringLatin1(name),
+                                        mmqt::toStdStringLatin1(name), // GL font is latin1
                                         Colors::white,
                                         bg,
                                         FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}});
 }
 
-void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)
+void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
 {
+    const Map &map = room.getMap();
+
     // Ooops, this is wrong since we may reject a connection that would be visible
     // if we looked at the other side.
-    const bool sourceWithinBounds = m_bounds.contains(room->getPosition());
+    const auto room_pos = room.getPosition();
+    const bool sourceWithinBounds = m_bounds.contains(room_pos);
 
-    const auto sourceId = room->getId();
-    const ExitsList &exitslist = room->getExitsList();
+    const auto sourceId = room.getId();
 
     for (const ExitDirEnum sourceDir : ALL_EXITS7) {
-        const Exit &sourceExit = exitslist[sourceDir];
+        const auto &sourceExit = room.getExit(sourceDir);
         // outgoing connections
         if (sourceWithinBounds) {
-            for (const auto &outTargetId : sourceExit.outRange()) {
-                const SharedConstRoom &sharedTargetRoom = rooms[outTargetId];
-                if (!sharedTargetRoom) {
+            for (const RoomId outTargetId : sourceExit.getOutgoingSet()) {
+                const auto &targetRoom = map.getRoomHandle(outTargetId);
+                if (!targetRoom) {
+                    /* DEAD CODE */
                     qWarning() << "Source room" << sourceId.asUint32() << "("
-                               << room->getName().toQString() << ") has target room"
+                               << room.getName().toQString()
+                               << ") dir=" << mmqt::toQStringUtf8(to_string_view(sourceDir))
+                               << "has target room with internal identifier"
                                << outTargetId.asUint32() << "which does not exist!";
+                    // This would cause a segfault in the old map scheme, but maps are now rigorously
+                    // validated, so it should be impossible to have an exit to a room that does
+                    // not exist.
+                    assert(false);
                     continue;
                 }
-
-                const Room *const targetRoom = sharedTargetRoom.get();
-
-                const bool targetOutsideBounds = !m_bounds.contains(targetRoom->getPosition());
+                const auto &target_coord = targetRoom.getPosition();
+                const bool targetOutsideBounds = !m_bounds.contains(target_coord);
 
                 // Two way means that the target room directly connects back to source room
                 const ExitDirEnum targetDir = opposite(sourceDir);
-                const Exit &targetExit = targetRoom->exit(targetDir);
+                const auto &targetExit = targetRoom.getExit(targetDir);
                 const bool twoway = targetExit.containsOut(sourceId)
                                     && sourceExit.containsIn(outTargetId) && !targetOutsideBounds;
 
-                const bool drawBothZLayers = room->getPosition().z != targetRoom->getPosition().z;
+                const bool drawBothZLayers = room_pos.z != target_coord.z;
 
                 if (!twoway) {
                     // Always draw exits for rooms that are not twoway exits
@@ -260,7 +265,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
                                    sourceDir,
                                    targetDir,
                                    !twoway,
-                                   sourceExit.isExit() && !targetOutsideBounds);
+                                   sourceExit.exitIsExit() && !targetOutsideBounds);
 
                 } else if (sourceId <= outTargetId || drawBothZLayers) {
                     // Avoid drawing duplicate exits for each side by only drawing one side
@@ -269,57 +274,64 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
                                    sourceDir,
                                    targetDir,
                                    !twoway,
-                                   sourceExit.isExit() && targetExit.isExit());
+                                   sourceExit.exitIsExit() && targetExit.exitIsExit());
                 }
 
                 // Draw door names
-                if (sourceExit.isDoor() && sourceExit.hasDoorName() && sourceExit.isHiddenExit()) {
+                if (sourceExit.exitIsDoor() && sourceExit.hasDoorName()
+                    && sourceExit.doorIsHidden()) {
                     drawRoomDoorName(room, sourceDir, targetRoom, targetDir);
                 }
             }
         }
 
         // incoming connections
-        for (const auto &inTargetId : sourceExit.inRange()) {
-            const SharedConstRoom &sharedTargetRoom = rooms[inTargetId];
-            if (!sharedTargetRoom) {
+        for (const RoomId inTargetId : sourceExit.getIncomingSet()) {
+            const auto &targetRoom = map.getRoomHandle(inTargetId);
+            if (!targetRoom) {
+                /* DEAD CODE */
                 qWarning() << "Source room" << sourceId.asUint32() << "("
-                           << room->getName().toQString() << ") has target room"
-                           << inTargetId.asUint32() << "which does not exist!";
+                           << room.getName().toQString() << ") fromdir="
+                           << mmqt::toQStringUtf8(to_string_view(opposite(sourceDir)))
+                           << " has target room with internal identifier" << inTargetId.asUint32()
+                           << "which does not exist!";
+                // This would cause a segfault in the old map scheme, but maps are now rigorously
+                // validated, so it should be impossible to have an exit to a room that does
+                // not exist.
+                assert(false);
                 continue;
             }
 
-            const Room *const targetRoom = sharedTargetRoom.get();
-
             // Only draw the connection if the target room is within the bounds
-            if (!m_bounds.contains(targetRoom->getPosition())) {
+            const Coordinate &target_coord = targetRoom.getPosition();
+            if (!m_bounds.contains(target_coord)) {
                 continue;
             }
 
             // Only draw incoming connections if they are on a different layer
-            if (room->getPosition().z == targetRoom->getPosition().z) {
+            if (room_pos.z == target_coord.z) {
                 continue;
             }
 
             // Detect if this is a oneway
             bool oneway = true;
-            for (const ExitDirEnum tempSourceDir : ALL_EXITS7) {
-                const Exit &tempSourceExit = exitslist[tempSourceDir];
+            for (const auto &tempSourceExit : room.getExits()) {
                 if (tempSourceExit.containsOut(inTargetId)) {
                     oneway = false;
+                    break;
                 }
             }
             if (oneway) {
                 // Always draw one way connections for each target exit to the source room
                 for (const ExitDirEnum targetDir : ALL_EXITS7) {
-                    const Exit &targetExit = targetRoom->exit(targetDir);
+                    const auto &targetExit = targetRoom.getExit(targetDir);
                     if (targetExit.containsOut(sourceId)) {
                         drawConnection(targetRoom,
                                        room,
                                        targetDir,
                                        sourceDir,
                                        oneway,
-                                       targetExit.isExit());
+                                       targetExit.exitIsExit());
                     }
                 }
             }
@@ -327,19 +339,16 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
     }
 }
 
-void ConnectionDrawer::drawConnection(const Room *leftRoom,
-                                      const Room *rightRoom,
-                                      ExitDirEnum startDir,
-                                      ExitDirEnum endDir,
-                                      bool oneway,
-                                      bool inExitFlags)
+void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
+                                      const RoomHandle &rightRoom,
+                                      const ExitDirEnum startDir,
+                                      const ExitDirEnum endDir,
+                                      const bool oneway,
+                                      const bool inExitFlags)
 {
-    assert(leftRoom != nullptr);
-    assert(rightRoom != nullptr);
-
     /* WARNING: attempts to write to a different layer may result in weird graphical bugs. */
-    const Coordinate &leftPos = leftRoom->getPosition();
-    const Coordinate &rightPos = rightRoom->getPosition();
+    const Coordinate &leftPos = leftRoom.getPosition();
+    const Coordinate &rightPos = rightRoom.getPosition();
     const int leftX = leftPos.x;
     const int leftY = leftPos.y;
     const int leftZ = leftPos.z;
@@ -596,7 +605,7 @@ void ConnectionDrawer::drawConnEndTriUpDownUnknown(float dX, float dY, float dst
                              glm::vec3{dX + 0.7f, dY + 0.45f, dstZ});
 }
 
-ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl)
+ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl) const
 {
     ConnectionMeshes result;
     result.normalLines = gl.createColoredLineBatch(normal.lineVerts);
@@ -606,11 +615,11 @@ ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl)
     return result;
 }
 
-void ConnectionMeshes::render(const int thisLayer, const int focusedLayer)
+void ConnectionMeshes::render(const int thisLayer, const int focusedLayer) const
 {
     const auto color = [&thisLayer, &focusedLayer]() {
         if (thisLayer == focusedLayer) {
-            return getConfig().canvas.connectionNormalColor.getColor();
+            return getCanvasNamedColorOptions().connectionNormalColor.getColor();
         }
         return Colors::gray70.withAlpha(FAINT_CONNECTION_ALPHA);
     }();
@@ -644,7 +653,7 @@ void MapCanvas::paintNearbyConnectionPoints()
 
     std::vector<ColorVert> points;
     const auto addPoint = [isSelection, &points](const Coordinate &roomCoord,
-                                                 const Room *const room,
+                                                 const RoomHandle &room,
                                                  const ExitDirEnum dir,
                                                  const std::optional<CD> &optFirst) -> void {
         if (!isNESWUD(dir) && dir != ExitDirEnum::UNKNOWN) {
@@ -671,9 +680,9 @@ void MapCanvas::paintNearbyConnectionPoints()
         const auto mouse = sel->getCoordinate();
         for (int dy = -1; dy <= 1; ++dy) {
             for (int dx = -1; dx <= 1; ++dx) {
-                const auto roomCoord = mouse + Coordinate(dx, dy, 0);
-                const Room *const room = m_data.getRoom(roomCoord);
-                if (room == nullptr) {
+                const Coordinate roomCoord = mouse + Coordinate(dx, dy, 0);
+                const auto &room = m_data.findRoomHandle(roomCoord);
+                if (room == std::nullopt) {
                     continue;
                 }
 
@@ -682,8 +691,8 @@ void MapCanvas::paintNearbyConnectionPoints()
                     dirs |= ExitDirEnum::UNKNOWN;
                 }
 
-                dirs.for_each([&addPoint, &optFirst, &roomCoord, room](ExitDirEnum dir) -> void {
-                    addPoint(roomCoord, room, dir, optFirst);
+                dirs.for_each([&addPoint, &optFirst, &roomCoord, &room](ExitDirEnum dir) -> void {
+                    addPoint(roomCoord, *room, dir, optFirst);
                 });
             }
         }
@@ -694,7 +703,7 @@ void MapCanvas::paintNearbyConnectionPoints()
         && (m_connectionSelection->isFirstValid() || m_connectionSelection->isSecondValid())) {
         const CD valid = m_connectionSelection->isFirstValid() ? m_connectionSelection->getFirst()
                                                                : m_connectionSelection->getSecond();
-        const Coordinate &c = deref(valid.room).getPosition();
+        const Coordinate &c = valid.room->getPosition();
         const glm::vec3 &pos = c.to_vec3();
         points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.direction));
 
@@ -764,7 +773,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
                                                       const glm::vec3 &b,
                                                       const glm::vec3 &c)
 {
-    const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
+    const auto &color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor.getColor()
                                    : Colors::red;
     auto &verts = deref(m_currentBuffer).triVerts;
     verts.emplace_back(color, a + m_offset);
@@ -774,9 +783,8 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
-    const auto &connectionNormalColor = isNormal()
-                                            ? getConfig().canvas.connectionNormalColor.getColor()
-                                            : Colors::red;
+    const auto &connectionNormalColor
+        = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor.getColor() : Colors::red;
 
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     auto &verts = deref(m_currentBuffer).lineVerts;

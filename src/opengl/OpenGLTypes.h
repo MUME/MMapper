@@ -33,6 +33,8 @@ struct NODISCARD TexVert final
     {}
 };
 
+using TexVertVector = std::vector<TexVert>;
+
 struct NODISCARD ColoredTexVert final
 {
     Color color;
@@ -336,7 +338,7 @@ public:
     ~UniqueMesh() = default;
     DEFAULT_MOVES_DELETE_COPIES(UniqueMesh);
 
-    void render(const GLRenderState &rs) { deref(m_mesh).render(rs); }
+    void render(const GLRenderState &rs) const { deref(m_mesh).render(rs); }
 };
 
 struct NODISCARD UniqueMeshVector final

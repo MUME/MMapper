@@ -69,8 +69,8 @@ NODISCARD static AnsiCombo::AnsiItem initAnsiItem(const AnsiColor16 ansiCode,
     retVal.color = ansiCode;
     retVal.loc = mode;
     retVal.picture = make_pix();
-    retVal.description = mmqt::toQStringLatin1(ansiCode.isDefault() ? "none"
-                                                                    : ansiCode.to_string_view());
+    retVal.description = mmqt::toQStringUtf8(ansiCode.isDefault() ? "none"
+                                                                  : ansiCode.to_string_view());
     return retVal;
 }
 

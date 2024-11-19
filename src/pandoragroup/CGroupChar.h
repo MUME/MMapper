@@ -27,8 +27,20 @@ class NODISCARD GroupVector : public std::vector<SharedGroupChar>
 
 class NODISCARD CGroupChar final : public std::enable_shared_from_this<CGroupChar>
 {
+private:
+    struct NODISCARD Internal final
+    {
+        QString name;
+        QString label;
+        QColor color;
+        ServerRoomId serverId = INVALID_SERVER_ROOMID;
+        ExternalRoomId externalId = INVALID_EXTERNAL_ROOMID;
+    };
+
+private:
+    Internal m_internal;
+
 public:
-    RoomId roomId = INVALID_ROOMID;
     int hp = 0;
     int maxhp = 0;
     int mana = 0;
@@ -38,15 +50,6 @@ public:
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
     CharacterAffectFlags affects;
     CommandQueue prespam;
-
-private:
-    struct NODISCARD Internal final
-    {
-        QByteArray name;
-        QByteArray label;
-        QColor color;
-    };
-    Internal m_internal;
 
 public:
     CGroupChar() = delete;
@@ -59,30 +62,32 @@ private:
     DEFAULT_MOVE_ASSIGN_OP(CGroupChar);
 
 public:
-    // uses private move assignment operator
-    // TODO: encapsulate the public members in a struct so they can be reset separately.
-    void reset()
+    NODISCARD static SharedGroupChar alloc()
     {
-        const Internal saved = m_internal;
-        *this = CGroupChar{Badge<CGroupChar>{}};
-        m_internal = saved;
+        return std::make_shared<CGroupChar>(Badge<CGroupChar>{});
     }
 
 public:
-    static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(Badge<CGroupChar>{}); }
+    void init(QByteArray name, QColor color) = delete;
+    void init(QString name, QColor color);
+    void reset();
 
 public:
-    NODISCARD const QByteArray &getName() const { return m_internal.name; }
-    void setName(QByteArray name) { m_internal.name = std::move(name); }
-    NODISCARD const QByteArray &getLabel() const { return m_internal.label; }
-    void setLabel(QByteArray label) { m_internal.label = std::move(label); }
+    NODISCARD const QString &getName() const { return m_internal.name; }
+    void setName(QByteArray name) = delete;
+    void setName(QString name) { m_internal.name = std::move(name); }
+    NODISCARD const QString &getLabel() const { return m_internal.label; }
+    void setLabel(QByteArray name) = delete;
+    void setLabel(QString label) { m_internal.label = std::move(label); }
     void setColor(QColor col) { m_internal.color = std::move(col); }
+    void setExternalId(ExternalRoomId id) { m_internal.externalId = id; }
+    void setServerId(ServerRoomId id) { m_internal.serverId = id; }
     NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD QVariantMap toVariantMap() const;
     NODISCARD bool updateFromVariantMap(const QVariantMap &);
-    void setRoomId(RoomId id) { roomId = id; }
-    NODISCARD RoomId getRoomId() const { return roomId; }
-    NODISCARD static QByteArray getNameFromUpdateChar(const QVariantMap &);
+    NODISCARD ExternalRoomId getExternalId() const { return m_internal.externalId; }
+    NODISCARD ServerRoomId getServerId() const { return m_internal.serverId; }
+    NODISCARD static QString getNameFromUpdateChar(const QVariantMap &);
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {

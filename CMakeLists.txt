@@ -32,6 +32,9 @@ endif()
 
 find_package(Qt5 COMPONENTS REQUIRED Core Widgets Network OpenGL Test)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -307,11 +310,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-global-constructors -Wno-exit-time-destructors) # these go together.
         add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
         add_compile_options(-Wno-redundant-parens) # MOCs spam this.
+        # add_compile_options(-Wno-return-std-move-in-c++11)
         add_compile_options(-Wno-unreachable-code-break) # break after [[noreturn]] function is not a mistake; omitting the break is a recipe for future disaster.
         add_compile_options(-Wno-switch-default)
         if(APPLE)
             add_compile_options(-Wno-poison-system-directories)
         endif()
+
+        add_compile_options(-Wno-extra-semi-stmt) # enabled only for src/ directory
+
+        # require explicit template parameters when deduction guides are missing
+        add_compile_options(-Werror=ctad-maybe-unsupported)
 
         # always errors
         add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.
@@ -342,6 +351,7 @@ if(MSVC)
     add_definitions(-DNOMINMAX)
     # modernize the __cplusplus value
     add_compile_options(/Zc:__cplusplus)
+    add_compile_options(/utf-8)
 endif()
 
 # Download arda.mm2

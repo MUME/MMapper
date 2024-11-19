@@ -16,12 +16,13 @@
 #include <QtCore>
 
 class Coordinate;
+class InfoMarkSelection;
 class MapCanvas;
 class MapData;
 class QCloseEvent;
 class QObject;
 class QWidget;
-class InfoMarkSelection;
+struct InfoMarkFields;
 
 class NODISCARD_QOBJECT InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
 {
@@ -30,7 +31,7 @@ class NODISCARD_QOBJECT InfoMarksEditDlg final : public QDialog, private Ui::Inf
 private:
     mmqt::Connections m_connections;
     std::shared_ptr<InfoMarkSelection> m_selection;
-    std::vector<std::shared_ptr<InfoMark>> m_markers;
+    std::vector<InfomarkId> m_markers;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
 
@@ -51,12 +52,12 @@ private:
 
     NODISCARD InfoMarkTypeEnum getType();
     NODISCARD InfoMarkClassEnum getClass();
-    NODISCARD InfoMark *getCurrentInfoMark();
-    void setCurrentInfoMark(InfoMark *m);
+    NODISCARD InfomarkHandle getCurrentInfoMark();
+    void setCurrentInfoMark(InfomarkId m);
 
     void updateMarkers();
     void updateDialog();
-    void updateMark(InfoMark &im);
+    void updateMark(InfoMarkFields &im);
 
 signals:
     void sig_infomarksChanged();

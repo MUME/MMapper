@@ -3,6 +3,7 @@
 
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
+#include "../global/AnsiOstream.h"
 #include "../global/CaseUtils.h"
 #include "../global/TextUtils.h"
 #include "../map/DoorFlags.h"
@@ -12,7 +13,6 @@
 #include "../map/infomark.h"
 #include "../map/mmapper2room.h"
 #include "../map/room.h"
-#include "../mapdata/customaction.h"
 #include "../mapdata/mapdata.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -59,7 +59,8 @@ syntax::MatchResult ArgMarkClass::virt_match(const syntax::ParserInput &input,
         return syntax::MatchResult::failure(input);
     }
 
-    const auto arg = toLowerLatin1(input.front());
+    static_assert(std::is_same_v<const std::string &, decltype(input.front())>);
+    const auto arg = ::toLowerUtf8(input.front());
     StringView sv(arg);
 
     for (const auto &clazz : ::enums::getAllInfoMarkClasses()) {
@@ -96,7 +97,11 @@ void AbstractParser::parseMark(StringView input)
         const Coordinate halfRoomOffset{INFOMARK_SCALE / 2, INFOMARK_SCALE / 2, 0};
 
         // do not scale the z-coordinate!  only x,y should get scaled.
-        const Coordinate pos = m_mapData.getPosition();
+        const auto opt_pos = m_mapData.tryGetPosition();
+        if (!opt_pos) {
+            throw std::runtime_error("current position is unknown");
+        }
+        const Coordinate pos = opt_pos.value();
         Coordinate c{pos.x * INFOMARK_SCALE, pos.y * INFOMARK_SCALE, pos.z};
         c += halfRoomOffset;
         return c;
@@ -123,45 +128,68 @@ void AbstractParser::parseMark(StringView input)
 
     auto listMark = Accept(
         [getPositionCoordinate, getInfoMarkSelection](User &user, const Pair * /*args*/) {
-            auto &os = user.getOstream();
+            AnsiOstream &aos = user.getOstream();
 
-            auto printCoordinate = [&os](const Coordinate c) {
-                os << "(" << c.x << ", " << c.y << ", " << c.z << ")";
+            auto printCoordinate = [&aos](const Coordinate c) {
+                aos << "(" << c.x << ", " << c.y << ", " << c.z << ")";
             };
 
             const Coordinate c = getPositionCoordinate();
-            os << "Marks near coordinate ";
+            aos << "Marks near coordinate ";
             printCoordinate(c);
-            os << std::endl;
+            aos << "\n";
 
-            int n = 0;
+            static const auto green = getRawAnsi(AnsiColor16Enum::GREEN);
+            static const auto yellow = getRawAnsi(AnsiColor16Enum::YELLOW);
+
+            int count = 0;
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
-            for (const auto &mark : *is) {
-                if (n != 0) {
-                    os << std::endl;
-                }
-                os << "\x1b[32m" << ++n << "\x1b[0m: " << getTypeName(mark->getType()) << std::endl;
-                os << "  angle: " << mark->getRotationAngle() << std::endl;
-                os << "  class: " << getParserCommandName(mark->getClass()).getCommand()
-                   << std::endl;
-                if (mark->getType() == InfoMarkTypeEnum::TEXT) {
-                    os << "  text: " << mark->getText().getStdStringLatin1() << std::endl;
+            is->for_each([&aos, &count, &printCoordinate](const InfomarkHandle &mark) {
+                count += 1;
+                aos << "Mark type: " << getTypeName(mark.getType()) << "\n";
+                aos << "  id: ";
+                aos.writeWithColor(green, mark.getId().value());
+                aos << "\n";
+                aos << "  angle: " << mark.getRotationAngle() << "\n";
+                aos << "  class: " << getParserCommandName(mark.getClass()).getCommand() << "\n";
+                if (mark.getType() == InfoMarkTypeEnum::TEXT) {
+                    aos << "  text: ";
+                    aos.writeQuotedWithColor(green, yellow, mark.getText().getStdStringViewUtf8());
+                    aos << "\n";
                 } else {
-                    os << "  pos1: ";
-                    printCoordinate(mark->getPosition1());
-                    os << std::endl;
-                    os << "  pos2: ";
-                    printCoordinate(mark->getPosition2());
-                    os << std::endl;
+                    aos << "  pos1: ";
+                    printCoordinate(mark.getPosition1());
+                    aos << "\n";
+                    aos << "  pos2: ";
+                    printCoordinate(mark.getPosition2());
+                    aos << "\n";
                 }
+            });
+            if (count == 0) {
+                aos << "None.\n";
+            } else {
+                aos << "Total: " << count << "\n";
             }
         },
         "list marks");
 
     auto listSyntax = buildSyntax(abb("list"), listMark);
 
+    auto lookup_mark = [this](int n) -> InfomarkId {
+        if (n < 0) {
+            throw std::runtime_error("invalid mark");
+        }
+        auto id = static_cast<InfomarkId>(static_cast<uint32_t>(n));
+        auto mark = m_mapData.getInfomarkDb().find(id);
+        if (!mark.exists()) {
+            throw std::runtime_error("invalid mark");
+        }
+        return id;
+    };
+
     auto removeMark = Accept(
-        [this, getPositionCoordinate, getInfoMarkSelection](User &user, const Pair *args) {
+        [this, getPositionCoordinate, getInfoMarkSelection, lookup_mark](User &user,
+                                                                         const Pair *args) {
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
@@ -173,17 +201,12 @@ void AbstractParser::parseMark(StringView input)
             const Coordinate c = getPositionCoordinate();
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
 
-            const auto index = static_cast<size_t>(v[1].getInt() - 1);
-            assert(index >= 0);
-            if (index >= is->size()) {
-                throw std::runtime_error("unable to select mark");
+            const auto id = lookup_mark(v[1].getInt());
+            if (!m_mapData.removeMarker(id)) {
+                os << "Unable to remove marker.\n";
+                return;
             }
-
-            // delete the infomark
-            const auto &mark = is->at(index);
-            m_mapData.removeMarker(mark);
-
-            emit sig_infoMarksChanged();
+            emit sig_infoMarksChanged(); // is this necessary?
             send_ok(os);
         },
         "remove mark");
@@ -204,20 +227,24 @@ void AbstractParser::parseMark(StringView input)
 
             const std::string text = concatenate_unquoted(v[1].getVector());
             if (text.empty()) {
-                os << "What do you want to set the mark to?" << std::endl;
+                os << "What do you want to set the mark to?\n";
                 return;
             }
 
             // create a text infomark above this room
             const Coordinate c = getPositionCoordinate();
 
-            auto mark = InfoMark::alloc(m_mapData);
-            mark->setType(InfoMarkTypeEnum::TEXT);
-            mark->setText(InfoMarkText{text});
-            mark->setClass(InfoMarkClassEnum::COMMENT);
-            mark->setPosition1(c);
+            InfoMarkFields mark;
+            mark.setType(InfoMarkTypeEnum::TEXT);
+            mark.setText(InfoMarkText{text});
+            mark.setClass(InfoMarkClassEnum::COMMENT);
+            mark.setPosition1(c);
 
-            m_mapData.addMarker(mark);
+            auto added = m_mapData.addMarker(mark);
+            if (added == INVALID_INFOMARK_ID) {
+                os << "Unable to add mark.\n";
+                return;
+            }
 
             emit sig_infoMarksChanged();
             send_ok(os);
@@ -226,8 +253,24 @@ void AbstractParser::parseMark(StringView input)
 
     auto addSyntax = buildSyntax(abb("add"), TokenMatcher::alloc<ArgRest>(), addRoomMark);
 
+    using Callback = std::function<void(InfoMarkFields & mark)>;
+    auto modify_mark = [this](InfomarkId id, const Callback &callback) {
+        auto marks = m_mapData.getMarkersList();
+        auto mark = marks.getRawCopy(id);
+        callback(mark);
+        auto result = this->m_mapData.updateMarker(id, mark);
+        if (result) {
+            emit sig_infoMarksChanged(); // is this necessary?
+        }
+        return result;
+    };
+
     auto modifyText = Accept(
-        [this, getPositionCoordinate, getInfoMarkSelection](User &user, const Pair *const args) {
+        [this,
+         getPositionCoordinate,
+         getInfoMarkSelection,
+         lookup_mark,
+         modify_mark](User &user, const Pair *const args) {
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
@@ -241,32 +284,34 @@ void AbstractParser::parseMark(StringView input)
             const Coordinate c = getPositionCoordinate();
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
 
-            const auto index = static_cast<size_t>(v[1].getInt() - 1);
-            assert(index >= 0);
-            if (index >= is->size()) {
-                throw std::runtime_error("unable to select mark");
-            }
+            const auto id = lookup_mark(v[1].getInt());
 
-            const auto &mark = is->at(index);
-            if (mark->getType() != InfoMarkTypeEnum::TEXT) {
-                throw std::runtime_error("unable to set text to this mark");
+            {
+                const auto marks = m_mapData.getMarkersList();
+                const auto mark = marks.getRawCopy(id);
+                if (mark.getType() != InfoMarkTypeEnum::TEXT) {
+                    throw std::runtime_error("unable to set text to this mark");
+                }
             }
 
             // update text of the first existing text infomark in this room
             const std::string text = concatenate_unquoted(v[3].getVector());
             if (text.empty()) {
-                os << "What do you want to set the mark's text to?" << std::endl;
+                os << "What do you want to set the mark's text to?\n";
                 return;
             }
-            mark->setText(InfoMarkText{text});
 
-            emit sig_infoMarksChanged();
-            send_ok(os);
+            if (modify_mark(id,
+                            [text](InfoMarkFields &mark) { mark.setText(InfoMarkText{text}); })) {
+                send_ok(os);
+            } else {
+                os << "Error setting mark text.\n";
+            }
         },
         "modify mark text");
 
     auto modifyClass = Accept(
-        [this, getPositionCoordinate, getInfoMarkSelection](User &user, const Pair *const args) {
+        [lookup_mark, modify_mark](User &user, const Pair *const args) {
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
@@ -277,26 +322,21 @@ void AbstractParser::parseMark(StringView input)
                 assert(clazz == "class");
             }
 
-            const Coordinate c = getPositionCoordinate();
-            std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
-
-            const auto index = static_cast<size_t>(v[1].getInt() - 1);
-            assert(index >= 0);
-            if (index >= is->size()) {
-                throw std::runtime_error("unable to select mark");
+            const auto id = lookup_mark(v[1].getInt());
+            const InfoMarkClassEnum clazz = v[3].getInfoMarkClass();
+            if (modify_mark(id, [clazz](InfoMarkFields &mark) { mark.setClass(clazz); })) {
+                send_ok(os);
+            } else {
+                os << "Error setting mark class.\n";
             }
-
-            const auto clazz = v[3].getInfoMarkClass();
-            const auto &mark = is->at(index);
-            mark->setClass(clazz);
-
-            emit sig_infoMarksChanged();
-            send_ok(os);
         },
         "modify mark class");
 
     auto modifyAngle = Accept(
-        [this, getPositionCoordinate, getInfoMarkSelection](User &user, const Pair *const args) {
+        [getPositionCoordinate,
+         getInfoMarkSelection,
+         lookup_mark,
+         modify_mark](User &user, const Pair *const args) {
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
@@ -310,22 +350,14 @@ void AbstractParser::parseMark(StringView input)
             const Coordinate c = getPositionCoordinate();
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
 
-            const auto index = static_cast<size_t>(v[1].getInt() - 1);
-            assert(index >= 0);
-            if (index >= is->size()) {
-                throw std::runtime_error("unable to select mark");
+            const auto id = lookup_mark(v[1].getInt());
+            const int degrees = v[3].getInt();
+            if (modify_mark(id,
+                            [degrees](InfoMarkFields &mark) { mark.setRotationAngle(degrees); })) {
+                send_ok(os);
+            } else {
+                os << "Error setting mark angle.\n";
             }
-
-            const auto &mark = is->at(index);
-            if (mark->getType() != InfoMarkTypeEnum::TEXT) {
-                throw std::runtime_error("unable to set angle to this mark");
-            }
-
-            const auto angle = v[3].getInt();
-            mark->setRotationAngle(angle);
-
-            emit sig_infoMarksChanged();
-            send_ok(os);
         },
         "modify mark angle");
 

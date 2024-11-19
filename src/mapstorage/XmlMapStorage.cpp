@@ -5,13 +5,27 @@
 
 #include "XmlMapStorage.h"
 
+#include "../global/TextUtils.h"
+#include "../global/progresscounter.h"
 #include "../global/string_view_utils.h"
+#include "../global/utils.h"
 #include "../mainwindow/UpdateDialog.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFlags.h"
+#include "../map/coordinate.h"
 #include "../map/enums.h"
+#include "../map/exit.h"
+#include "../map/mmapper2room.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
+#include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
-#include "basemapsavefilter.h"
-#include "roomsaver.h"
 
+#include <cassert>
+#include <cstddef>
+#include <memory>
+#include <optional>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -21,6 +35,7 @@
 #include <QString>
 #include <QStringView>
 #include <QXmlStreamReader>
+#include <QXmlStreamWriter>
 
 // ---------------------------- XmlMapStorage::TypeEnum ------------------------
 // list know enum types
@@ -66,7 +81,7 @@ public:
     template<typename T>
     NODISCARD static std::optional<T> toInteger(const QStringView str)
     {
-        return ::to_integer<T>(as_u16string_view(str));
+        return ::to_integer<T>(mmqt::as_u16string_view(str));
     }
 
     // parse string containing the name of an enum.
@@ -81,10 +96,22 @@ public:
     }
 
     template<typename ENUM>
-    NODISCARD const QString &toString(const ENUM val) const
+    NODISCARD QString toString(const ENUM val) const
     {
         static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
-        return enumToString(enumToType(val), static_cast<uint32_t>(val));
+        if constexpr (std::is_same_v<ENUM, TypeEnum>) {
+#define X_CASE(x) \
+    case TypeEnum::x: \
+        return #x;
+            //
+            switch (val) {
+                XFOREACH_TYPE_ENUM(X_CASE)
+            }
+            return "unknown";
+#undef X_CASE
+        } else {
+            return enumToString(enumToType(val), static_cast<uint32_t>(val));
+        }
     }
 
 private:
@@ -228,58 +255,52 @@ NODISCARD ExitDirEnum directionForLowercase(const QStringRef &lowcase)
 
     return ExitDirEnum::UNKNOWN;
 }
-
 } // namespace
 
+NODISCARD static QString externalRoomIdToString(const ExternalRoomId id)
+{
+    // what about INVALID_EXTERNAL_ROOMID?
+    return QString("%1").arg(id.asUint32());
+}
+
+NODISCARD static QString serverRoomIdToString(const ServerRoomId id)
+{
+    if (id == INVALID_SERVER_ROOMID) {
+        return QString{};
+    }
+
+    return QString("%1").arg(id.asUint32());
+}
+
 // ---------------------------- XmlMapStorage ----------------------------------
-XmlMapStorage::XmlMapStorage(MapData &mapdata,
-                             const QString &filename,
-                             QFile *const file,
-                             QObject *const parent)
-    : AbstractMapStorage(mapdata, filename, file, parent)
+XmlMapStorage::XmlMapStorage(const AbstractMapStorage::Data &mapData, QObject *const parent)
+    : AbstractMapStorage(mapData, parent)
 {}
 
 XmlMapStorage::~XmlMapStorage() = default;
 
-void XmlMapStorage::newData()
-{
-    qWarning() << "XmlMapStorage does not implement newData()";
-}
-
-bool XmlMapStorage::mergeData()
-{
-    return false;
-}
-
 // ---------------------------- XmlMapStorage::loadData() ----------------------
-bool XmlMapStorage::loadData()
+std::optional<RawMapLoadData> XmlMapStorage::virt_loadData()
 {
-    // clear previous map
-    m_mapData.clear();
     try {
         log("Loading data ...");
-        QXmlStreamReader stream(m_file);
-        m_loadProgressDivisor = std::max<uint64_t> //
-            (1, static_cast<uint64_t>(m_file->size()) / LOAD_PROGRESS_MAX);
+        QFile &file = deref(getFile());
+        QXmlStreamReader stream(&file);
+
+        m_loading = std::make_unique<Loading>();
+        m_loading->loadProgressDivisor = static_cast<uint64_t>(
+            std::max<int64_t>(1, file.size() / LOAD_PROGRESS_MAX));
+
         loadWorld(stream);
         log("Finished loading.");
+        return std::exchange(m_loading->result, {});
 
-        m_mapData.checkSize();
-        m_mapData.setFileName(QString(), false);
-
-        emit sig_onDataLoaded();
-        return true;
     } catch (const std::exception &ex) {
+        m_loading.reset();
         const auto msg = QString::asprintf("Exception: %s", ex.what());
         log(msg);
         qWarning().noquote() << msg;
-
-        QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
-                              tr("XmlMapStorage Error"),
-                              msg);
-
-        m_mapData.clear();
-        return false;
+        return std::nullopt;
     }
 }
 
@@ -289,9 +310,6 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     progressCounter.reset();
     progressCounter.increaseTotalStepsBy(LOAD_PROGRESS_MAX);
 
-    MapFrontendBlocker blocker(m_mapData);
-    m_mapData.setDataChanged();
-
     while (stream.readNextStartElement() && !stream.hasError()) {
         if (stream.name() == "map") {
             loadMap(stream);
@@ -299,13 +317,27 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
         }
         skipXmlElement(stream);
     }
+    if (stream.hasError()) {
+        switch (stream.error()) {
+        case QXmlStreamReader::NoError:
+            break;
+        case QXmlStreamReader::UnexpectedElementError:
+            throw std::runtime_error("unexpected element");
+        case QXmlStreamReader::NotWellFormedError:
+            throw std::runtime_error("invalid data");
+        case QXmlStreamReader::PrematureEndOfDocumentError:
+            throw std::runtime_error("premature end of document");
+        default:
+        case QXmlStreamReader::CustomError:
+            throw std::runtime_error("unknown error");
+        }
+    }
     loadNotifyProgress(stream);
 }
 
 // load current <map> element
 void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 {
-    m_loadedRooms.clear();
     {
         const QXmlStreamAttributes attrs = stream.attributes();
         const QString type = attrs.value("type").toString();
@@ -334,7 +366,7 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
         } else if (name == "marker") {
             loadMarker(stream);
         } else if (name == "position") {
-            m_mapData.setPosition(loadCoordinate(stream));
+            m_loading->result.position = loadCoordinate(stream);
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
@@ -343,31 +375,35 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
         skipXmlElement(stream);
         loadNotifyProgress(stream);
     }
-    connectRoomsExitFrom(stream);
-    moveRoomsToMapData();
 }
 
 // load current <room> element
-void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
+void XmlMapStorage::loadRoom(QXmlStreamReader &stream) const
 {
-    const SharedRoom sharedroom = Room::createPermanentRoom(m_mapData);
-    Room &room = deref(sharedroom);
+    ExternalRawRoom room{};
 
     const QXmlStreamAttributes attrs = stream.attributes();
-    const QStringView idstr = attrs.value("id");
-    const RoomId roomId = loadRoomId(stream, idstr);
-    if (m_loadedRooms.count(roomId) != 0) {
-        throwErrorFmt(stream, "duplicate room id \"%1\"", idstr.toString());
+    const QStringView externalidstr = attrs.value("id");
+    const ExternalRoomId externalId = loadExternalRoomId(stream, externalidstr);
+    const QStringView serveridstr = attrs.value("server_id");
+    const ServerRoomId serverId = loadServerRoomId(stream, serveridstr);
+    auto &loadedExternalIds = m_loading->loadedExternalRoomIds;
+    if (loadedExternalIds.find(externalId) != loadedExternalIds.end()) {
+        throwErrorFmt(stream, R"(duplicate room id "%1")", externalidstr.toString());
     }
-    room.setId(roomId);
-    if (attrs.value("uptodate") == "false") {
-        room.setOutDated();
-    } else {
-        room.setUpToDate();
+    loadedExternalIds.emplace(externalId);
+    if (serverId != INVALID_SERVER_ROOMID) {
+        auto &loadedServerIds = m_loading->loadedServerIds;
+        if (loadedServerIds.find(serverId) != loadedServerIds.end()) {
+            throwErrorFmt(stream, R"(duplicate room server_id "%1")", serveridstr.toString());
+        }
+        loadedServerIds.emplace(serverId);
     }
-    room.setName(RoomName{attrs.value("name").toString()});
+    room.setId(externalId);
+    room.setServerId(serverId);
+    room.setName(mmqt::makeRoomName(attrs.value("name").toString()));
 
-    ExitsList exitList;
+    auto &exitList = room.exits;
     RoomLoadFlags loadFlags;
     RoomMobFlags mobFlags;
     RoomElementEnum found = RoomElementEnum::NONE;
@@ -379,13 +415,13 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
         } else if (name == "contents") {
             throwIfDuplicate(stream, found, RoomElementEnum::CONTENTS);
-            room.setContents(RoomContents{loadString(stream)});
+            room.setContents(mmqt::makeRoomContents(loadString(stream)));
         } else if (name == "coord") {
             throwIfDuplicate(stream, found, RoomElementEnum::POSITION);
             room.setPosition(loadCoordinate(stream));
         } else if (name == "description") {
             throwIfDuplicate(stream, found, RoomElementEnum::DESCRIPTION);
-            room.setDescription(RoomDesc{loadString(stream)});
+            room.setDescription(mmqt::makeRoomDesc(loadString(stream)));
         } else if (name == "exit") {
             loadExit(stream, exitList);
         } else if (name == "light") {
@@ -397,7 +433,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
             mobFlags |= loadEnum<RoomMobFlagEnum>(stream);
         } else if (name == "note") {
             throwIfDuplicate(stream, found, RoomElementEnum::NOTE);
-            room.setNote(RoomNote{loadString(stream)});
+            room.setNote(mmqt::makeRoomNote(loadString(stream)));
         } else if (name == "portable") {
             throwIfDuplicate(stream, found, RoomElementEnum::PORTABLE);
             room.setPortableType(loadEnum<RoomPortableEnum>(stream));
@@ -413,27 +449,61 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
         } else {
             qWarning().noquote().nospace()
                 << "At line " << stream.lineNumber() << ": ignoring unexpected XML element <"
-                << stream.name() << "> inside <room id=\"" << idstr << "\">";
+                << stream.name() << "> inside <room id=\"" << externalidstr << "\">";
         }
         skipXmlElement(stream);
     }
-    room.setExitsList(exitList);
     room.setLoadFlags(loadFlags);
     room.setMobFlags(mobFlags);
 
-    m_loadedRooms.emplace(roomId, sharedroom);
+    m_loading->result.rooms.emplace_back(std::move(room));
 }
 
 // convert string to RoomId
-RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringView idstr)
+ExternalRoomId XmlMapStorage::loadExternalRoomId(QXmlStreamReader &stream, const QStringView idstr)
 {
-    const std::optional<RoomId> id{Converter::toInteger<uint32_t>(idstr)};
+    auto fail = [&stream, idstr]() {
+        throwErrorFmt(stream, R"(invalid room id "%1")", idstr.toString());
+    };
+
+    std::optional<uint32_t> id = Converter::toInteger<uint32_t>(idstr);
+    if (!id.has_value()) {
+        fail();
+    }
+
     // convert number back to string, and compare the two:
     // if they differ, room ID is invalid.
-    if (!id.has_value() || idstr != roomIdToString(id.value())) {
-        throwErrorFmt(stream, "invalid room id \"%1\"", idstr.toString());
+    const ExternalRoomId result{id.value()};
+    if (idstr != externalRoomIdToString(result)) {
+        fail();
     }
-    return id.value();
+    return result;
+}
+
+// convert string to RoomId
+ServerRoomId XmlMapStorage::loadServerRoomId(QXmlStreamReader &stream, const QStringView idstr)
+{
+    // convert number back to string, and compare the two:
+    // if they differ, server ID is invalid.
+
+    if (idstr.empty()) {
+        return INVALID_SERVER_ROOMID;
+    }
+
+    auto fail = [&stream, idstr] {
+        throwErrorFmt(stream, R"(invalid room server_id "%1")", idstr.toString());
+    };
+
+    const std::optional<uint32_t> id = Converter::toInteger<uint32_t>(idstr);
+    if (!id.has_value()) {
+        fail();
+    }
+
+    ServerRoomId result{id.value()};
+    if (idstr != serverRoomIdToString(result)) {
+        fail();
+    }
+    return result;
 }
 
 // load current <coord> element
@@ -454,19 +524,19 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 }
 
 // load current <exit> element
-void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
+void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExternalRawRoom::Exits &exitList)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
     const ExitDirEnum dir = directionForLowercase(attrs.value("dir"));
     DoorFlags doorFlags;
     ExitFlags exitFlags;
-    Exit &exit = exitList[dir];
+    ExternalRawExit &exit = exitList[dir];
     exit.setDoorName(DoorName{attrs.value("doorname").toString()});
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
         if (name == "to") {
-            exit.addOut(loadRoomId(stream, loadStringView(stream)));
+            exit.outgoing.insert(loadExternalRoomId(stream, loadStringView(stream)));
         } else if (name == "doorflag") {
             doorFlags |= loadEnum<DoorFlagEnum>(stream);
         } else if (name == "exitflag") {
@@ -483,51 +553,7 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
     exit.setExitFlags(exitFlags ^ ExitFlagEnum::EXIT);
 }
 
-// check that all rooms' exits "to" actually point to an existing room,
-// and add matching exits "from"
-void XmlMapStorage::connectRoomsExitFrom(QXmlStreamReader &stream)
-{
-    for (auto &elem : m_loadedRooms) {
-        const Room &room = deref(elem.second);
-        for (const ExitDirEnum dir : ALL_EXITS7) {
-            connectRoomExitFrom(stream, room, dir);
-        }
-    }
-}
-
-void XmlMapStorage::connectRoomExitFrom(QXmlStreamReader &stream,
-                                        const Room &fromRoom,
-                                        const ExitDirEnum dir)
-{
-    const Exit &fromE = fromRoom.exit(dir);
-    if (fromE.outIsEmpty()) {
-        return;
-    }
-    const RoomId fromId = fromRoom.getId();
-    for (const RoomId toId : fromE.outRange()) {
-        const auto iter = m_loadedRooms.find(toId);
-        if (iter == m_loadedRooms.end()) {
-            throwErrorFmt(stream,
-                          "room %1 has exit %2 to non-existing room %3",
-                          roomIdToString(fromId),
-                          lowercaseDirection(dir),
-                          roomIdToString(toId));
-        }
-        Room &toRoom = deref(iter->second);
-        toRoom.addInExit(opposite(dir), fromId);
-    }
-}
-
-// add all loaded rooms to m_mapData
-void XmlMapStorage::moveRoomsToMapData()
-{
-    for (const auto &elem : m_loadedRooms) {
-        m_mapData.insertPredefinedRoom(elem.second);
-    }
-    m_loadedRooms.clear();
-}
-
-void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
+void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
 {
     const QXmlStreamAttributes attrs = stream.attributes();
     const auto type = conv.toEnum<InfoMarkTypeEnum>(attrs.value("type"));
@@ -548,8 +574,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         angle = opt_angle.value();
     }
 
-    SharedInfoMark sharedmarker = InfoMark::alloc(m_mapData);
-    InfoMark &marker = deref(sharedmarker);
+    InfoMarkFields marker{};
     size_t foundPos1 = 0;
     size_t foundPos2 = 0;
 
@@ -568,7 +593,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         } else if (name == "text") {
             // load text only if type == TEXT
             if (type == InfoMarkTypeEnum::TEXT) {
-                marker.setText(InfoMarkText{loadString(stream)});
+                marker.setText(mmqt::makeInfoMarkText(loadString(stream)));
             }
         } else {
             qWarning().noquote().nospace()
@@ -594,10 +619,14 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
 
     // REVISIT: Just discard empty text markers?
     if (type == InfoMarkTypeEnum::TEXT && marker.getText().isEmpty()) {
-        marker.setText(InfoMarkText{"New Marker"});
+        marker.setText(mmqt::makeInfoMarkText("New Marker"));
     }
 
-    m_mapData.addMarker(sharedmarker);
+    if (!m_loading->result.markerData) {
+        m_loading->result.markerData.emplace();
+    }
+    RawMarkerData &data = *m_loading->result.markerData;
+    data.markers.emplace_back(std::move(marker));
 }
 
 // load current element, which is expected to contain ONLY the name of an enum value
@@ -633,27 +662,26 @@ QStringView XmlMapStorage::loadStringView(QXmlStreamReader &stream)
     return stream.text();
 }
 
-QString XmlMapStorage::roomIdToString(const RoomId id)
-{
-    return QString("%1").arg(id.asUint32());
-}
-
 void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
 {
     if (stream.tokenType() != QXmlStreamReader::EndElement) {
         stream.skipCurrentElement();
     }
+    if (stream.tokenType() != QXmlStreamReader::EndElement) {
+        throw std::runtime_error("missing end tag");
+    }
 }
 
 void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
 {
-    auto loadProgressNew = static_cast<uint32_t>(static_cast<uint64_t>(stream.characterOffset())
-                                                 / m_loadProgressDivisor);
-    if (loadProgressNew <= m_loadProgress) {
+    auto &loading = *m_loading;
+    const auto loadProgressNew = static_cast<uint32_t>(
+        static_cast<uint64_t>(stream.characterOffset()) / loading.loadProgressDivisor);
+    if (loadProgressNew <= loading.loadProgress) {
         return;
     }
-    getProgressCounter().step(loadProgressNew - m_loadProgress);
-    m_loadProgress = loadProgressNew;
+    getProgressCounter().step(loadProgressNew - loading.loadProgress);
+    loading.loadProgress = loadProgressNew;
 }
 
 void XmlMapStorage::throwError(QXmlStreamReader &stream, const QString &msg)
@@ -673,40 +701,41 @@ void XmlMapStorage::throwIfDuplicate(QXmlStreamReader &stream,
 }
 
 // ---------------------------- XmlMapStorage::saveData() ----------------------
-bool XmlMapStorage::saveData(bool baseMapOnly)
+bool XmlMapStorage::virt_saveData(const RawMapData &map)
 {
-    log("Writing data to file ...");
-    QXmlStreamWriter stream(m_file);
-    saveWorld(stream, baseMapOnly);
-    stream.writeEndDocument();
-    log("Writing data finished.");
-
-    m_mapData.unsetDataChanged();
-    emit sig_onDataSaved();
-    return true;
+    m_saving = std::make_unique<Saving>(map);
+    try {
+        log("Writing data to file ...");
+        QXmlStreamWriter stream(getFile());
+        saveWorld(stream);
+        stream.writeEndDocument();
+        log("Writing data finished.");
+        return true;
+    } catch (...) {
+        m_saving.reset();
+        throw;
+    }
 }
 
-void XmlMapStorage::saveWorld(QXmlStreamWriter &stream, bool baseMapOnly)
+void XmlMapStorage::saveWorld(QXmlStreamWriter &stream)
 {
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
-    const uint32_t roomsCount = m_mapData.getRoomsCount();
-
-    ConstRoomList roomList;
-    roomList.reserve(roomsCount);
-
-    RoomSaver saver(m_mapData, roomList);
-    for (uint32_t i = 0; i < roomsCount; ++i) {
-        m_mapData.lookingForRooms(saver, RoomId{i});
+    auto &map = m_saving->map.mapPair.modified;
+    const auto trueRoomCount = map.getRoomsCount();
+    const auto roomsCount = static_cast<uint32_t>(trueRoomCount);
+    if (trueRoomCount != roomsCount) {
+        throw std::runtime_error("too many rooms");
     }
-    const MarkerList &markerList = m_mapData.getMarkersList();
+
+    const auto &opt_markers = m_saving->map.markerData;
+    const auto markerCount = static_cast<uint32_t>(opt_markers ? opt_markers->size() : 0u);
 
     ProgressCounter &progressCounter = getProgressCounter();
     progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(saver.getRoomsCount()
-                                         + static_cast<uint32_t>(markerList.size()));
+    progressCounter.increaseTotalStepsBy(roomsCount + markerCount);
 
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
@@ -715,39 +744,41 @@ void XmlMapStorage::saveWorld(QXmlStreamWriter &stream, bool baseMapOnly)
     saveXmlAttribute(stream, "type", "mmapper2xml");
     saveXmlAttribute(stream, "version", "1.0.0");
 
-    saveRooms(stream, baseMapOnly, roomList);
-    saveMarkers(stream, markerList);
+    progressCounter.setCurrentTask(ProgressMsg{"Saving rooms..."});
+    saveRooms(stream, map.getRooms());
+    if (opt_markers && !opt_markers->empty()) {
+        progressCounter.setCurrentTask(ProgressMsg{"Saving markers..."});
+        saveMarkers(stream, *opt_markers);
+    }
     // write selected room x,y,z
-    saveCoordinate(stream, "position", m_mapData.getPosition());
+    saveCoordinate(stream, "position", m_saving->map.position);
 
     stream.writeEndElement(); // end map
 }
 
-void XmlMapStorage::saveRooms(QXmlStreamWriter &stream,
-                              bool baseMapOnly,
-                              const ConstRoomList &roomList)
+void XmlMapStorage::saveRooms(QXmlStreamWriter &stream, const RoomIdSet &roomList)
 {
+    const Map &map = m_saving->map.mapPair.modified;
     ProgressCounter &progressCounter = getProgressCounter();
-    BaseMapSaveFilter filter;
-    if (baseMapOnly) {
-        filter.setMapData(&m_mapData);
-        progressCounter.increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(progressCounter);
-    }
-    auto saveOne = [&stream](const Room &room) { saveRoom(stream, room); };
-    for (const auto &pRoom : roomList) {
-        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
+
+    for (const RoomId id : roomList) {
+        if (auto handle = map.getRoomHandle(id)) {
+            saveRoom(stream, handle.getRawCopyExternal());
+        }
         progressCounter.step();
     }
 }
 
-void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
+void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &room)
 {
     stream.writeStartElement("room");
 
-    saveXmlAttribute(stream, "id", QString("%1").arg(room.getId().asUint32()));
+    const ExternalRoomId externalId = room.getId();
+    saveXmlAttribute(stream, "id", externalRoomIdToString(externalId));
+    const ServerRoomId serverId = room.getServerId();
+    saveXmlAttribute(stream, "server_id", serverRoomIdToString(serverId));
     saveXmlAttribute(stream, "name", room.getName().toQString());
-    if (!room.isUpToDate()) {
+    if (false /*!room.isUpToDate()*/) {
         saveXmlAttribute(stream, "uptodate", "false");
     }
     saveXmlElement(stream, "align", conv.toString(room.getAlignType()));
@@ -761,7 +792,8 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const Room &room)
     saveRoomMobFlags(stream, room.getMobFlags());
 
     for (const ExitDirEnum dir : ALL_EXITS7) {
-        saveExit(stream, room.exit(dir), dir);
+        // REVISIT: if (room.hasExit(dir)) ?
+        saveExit(stream, room.getExit(dir), dir);
     }
     saveXmlElement(stream, "description", room.getDescription().toQString());
     saveXmlElement(stream, "contents", room.getContents().toQString());
@@ -781,12 +813,18 @@ void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
     stream.writeEndElement(); // end coordinate
 }
 
-void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, const ExitDirEnum dir)
+void XmlMapStorage::saveExit(QXmlStreamWriter &stream,
+                             const ExternalRawExit &e,
+                             const ExitDirEnum dir)
 {
+    // was !e.exitIsExit() || e.outIsEmpty()
+    // now it saves a TON of extra (NO_EXIT | NO_MATCH) exits
+    // is that a bug or a misguided feature?
     if (e.getDoorFlags().isEmpty() && e.getExitFlags().isEmpty() && e.outIsEmpty()
         && e.getDoorName().isEmpty()) {
         return;
     }
+    // TODO: RAII writeStartElement() + writeEndElement()
     stream.writeStartElement("exit");
     saveXmlAttribute(stream, "dir", lowercaseDirection(dir));
     saveXmlAttribute(stream, "doorname", e.getDoorName().toQString());
@@ -796,23 +834,27 @@ void XmlMapStorage::saveExit(QXmlStreamWriter &stream, const Exit &e, const Exit
     stream.writeEndElement(); // end exit
 }
 
-void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const Exit &e)
+void XmlMapStorage::saveExitTo(QXmlStreamWriter &stream, const ExternalRawExit &e)
 {
-    for (const RoomId id : e.outRange()) {
-        saveXmlElement(stream, "to", roomIdToString(id));
+    for (const ExternalRoomId id : e.outgoing) {
+        saveXmlElement(stream, "to", externalRoomIdToString(id));
     }
 }
 
-void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList)
+void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const RawMarkerData &markerList)
 {
+    if (markerList.empty()) {
+        return;
+    }
+
     ProgressCounter &progressCounter = getProgressCounter();
-    for (const auto &marker : markerList) {
-        saveMarker(stream, deref(marker));
+    for (const auto &marker : markerList.markers) {
+        saveMarker(stream, marker);
         progressCounter.step();
     }
 }
 
-void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMark &marker)
+void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMarkFields &marker)
 {
     const InfoMarkTypeEnum type = marker.getType();
     stream.writeStartElement("marker");

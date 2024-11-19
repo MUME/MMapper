@@ -20,7 +20,7 @@
 #include <QByteArray>
 #include <QSysInfo>
 
-NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
+NODISCARD static TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefix)
 {
     const auto get_os_string = []() {
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
@@ -34,19 +34,21 @@ NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
             return "Unknown";
         }
     };
-    const auto arch = QSysInfo::currentCpuArchitecture().toLatin1();
+
+    // It's probably required to be ASCII.
+    const auto arch = QSysInfo::currentCpuArchitecture().toUtf8();
 
     std::ostringstream ss;
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
        << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << get_os_string() << "/"
        << arch.constData();
-    return mmqt::toQByteArrayLatin1(ss.str());
+    return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(ss.str())};
 }
 
 MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, addTerminalTypeSuffix("unknown"))
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, parent, addTerminalTypeSuffix("unknown"))
 {
-    // RFC 2066 states we can provide many character sets but we force Latin-1 when
+    // RFC 2066 states we can provide many character sets but we force UTF-8 when
     // communicating with MUME
     resetGmcpModules();
 }
@@ -57,15 +59,19 @@ void MudTelnet::slot_onDisconnected()
     reset();
 }
 
-void MudTelnet::slot_onAnalyzeMudStream(const QByteArray &data)
+void MudTelnet::slot_onAnalyzeMudStream(const TelnetIacBytes &data)
 {
     onReadInternal(data);
 }
 
-void MudTelnet::slot_onSendToMud(const QByteArray &ba)
+void MudTelnet::slot_onSendRawToMud(const RawBytes &s)
 {
-    // Bytes are already Latin-1 so we just send it to MUME
-    submitOverTelnet(mmqt::toStdStringViewLatin1(ba), false);
+    submitOverTelnet(s, false);
+}
+
+void MudTelnet::slot_onSendToMud(const QString &s)
+{
+    submitOverTelnet(s, false);
 }
 
 void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
@@ -87,7 +93,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
             }
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule mod(mmqt::toStdStringLatin1(moduleStr));
+                const GmcpModule mod(mmqt::toStdStringUtf8(moduleStr));
                 receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
@@ -130,21 +136,25 @@ void MudTelnet::slot_onRelayNaws(const int width, const int height)
     }
 }
 
-void MudTelnet::slot_onRelayTermType(const QByteArray &terminalType)
+void MudTelnet::slot_onRelayTermType(const TelnetTermTypeBytes &terminalType)
 {
     // Append the MMapper version suffix to the terminal type
-    setTerminalType(addTerminalTypeSuffix(terminalType.constData()));
+    setTerminalType(addTerminalTypeSuffix(terminalType.getQByteArray().constData()));
     if (getOptions().myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(getTerminalType());
     }
 }
 
-void MudTelnet::virt_sendToMapper(const QByteArray &data, bool goAhead)
+void MudTelnet::virt_sendToMapper(const RawBytes &data, const bool goAhead)
 {
+    if (getDebug()) {
+        qDebug() << "MudTelnet::virt_sendToMapper" << data;
+    }
+
     emit sig_analyzeMudStream(data, goAhead);
 }
 
-void MudTelnet::virt_receiveEchoMode(bool toggle)
+void MudTelnet::virt_receiveEchoMode(const bool toggle)
 {
     emit sig_relayEchoMode(toggle);
 }
@@ -158,7 +168,7 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
     emit sig_relayGmcp(msg);
 }
 
-void MudTelnet::virt_receiveMudServerStatus(const QByteArray &ba)
+void MudTelnet::virt_receiveMudServerStatus(const TelnetMsspBytes &ba)
 {
     parseMudServerStatus(ba);
     emit sig_sendMSSPToUser(ba);
@@ -186,10 +196,10 @@ void MudTelnet::virt_onGmcpEnabled()
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void MudTelnet::virt_sendRawData(const std::string_view data)
+void MudTelnet::virt_sendRawData(const TelnetIacBytes &data)
 {
     m_sentBytes += data.length();
-    emit sig_sendToSocket(mmqt::toQByteArrayLatin1(data));
+    emit sig_sendToSocket(data);
 }
 
 void MudTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
@@ -210,6 +220,7 @@ void MudTelnet::resetGmcpModules()
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EVENT, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EXTERNAL_DISCORD, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM_CHARS, GmcpModuleVersion{1}}, true);
+    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM, GmcpModuleVersion{1}}, true);
 }
 
 void MudTelnet::sendCoreSupports()
@@ -233,13 +244,12 @@ void MudTelnet::sendCoreSupports()
     const std::string set = oss.str();
 
     if (getDebug()) {
-        qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
+        qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayUtf8(set);
     }
-
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, GmcpJson{set}));
 }
 
-void MudTelnet::parseMudServerStatus(const QByteArray &data)
+void MudTelnet::parseMudServerStatus(const TelnetMsspBytes &data)
 {
     std::map<std::string, std::list<std::string>> map;
 
@@ -261,27 +271,27 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
     const auto addValue([&map, &vals, &varName, &buffer, this]() {
         // Put it into the map.
         if (getDebug()) {
-            qDebug() << "MSSP received value" << mmqt::toQByteArrayLatin1(buffer.toStdString())
-                     << "for variable" << mmqt::toQByteArrayLatin1(varName.value());
+            qDebug() << "MSSP received value" << buffer << "for variable"
+                     << mmqt::toQByteArrayRaw(varName.value());
         }
 
-        vals.push_back(buffer.toStdString());
+        vals.push_back(buffer.getQByteArray().toStdString());
         map[varName.value()] = vals;
 
         buffer.clear();
     });
 
-    for (int i = 0; i < data.size(); i++) {
+    for (const char c : data) {
         switch (state) {
         case MSSPStateEnum::BEGIN:
-            if (data.at(i) != TNSB_MSSP_VAR) {
+            if (c != TNSB_MSSP_VAR) {
                 continue;
             }
             state = MSSPStateEnum::IN_VAR;
             break;
 
         case MSSPStateEnum::IN_VAR:
-            switch (data.at(i)) {
+            switch (c) {
             case TNSB_MSSP_VAR:
             case TN_IAC:
             case 0:
@@ -296,11 +306,10 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
                 }
 
                 if (getDebug()) {
-                    qDebug() << "MSSP received variable"
-                             << mmqt::toQByteArrayLatin1(buffer.toStdString());
+                    qDebug() << "MSSP received variable" << buffer;
                 }
 
-                varName = buffer.toStdString();
+                varName = buffer.getQByteArray().toStdString();
                 state = MSSPStateEnum::IN_VAL;
 
                 vals.clear(); // Which means this is a new value, so clear the list.
@@ -308,14 +317,14 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
             } break;
 
             default:
-                buffer.append(static_cast<uint8_t>(data.at(i)));
+                buffer.append(static_cast<uint8_t>(c));
             }
             break;
 
         case MSSPStateEnum::IN_VAL: {
             assert(varName.has_value());
 
-            switch (data.at(i)) {
+            switch (c) {
             case TN_IAC:
             case 0:
                 continue;
@@ -328,7 +337,7 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
                 break;
 
             default:
-                buffer.append(static_cast<uint8_t>(data.at(i)));
+                buffer.append(static_cast<uint8_t>(c));
                 break;
             }
             break;
@@ -351,10 +360,10 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
     const auto hourStr = firstElement(map["GAME HOUR"]);
 
     qInfo() << "MSSP game time received with"
-            << "year:" << mmqt::toQByteArrayLatin1(yearStr.value_or("unknown"))
-            << "month:" << mmqt::toQByteArrayLatin1(monthStr.value_or("unknown"))
-            << "day:" << mmqt::toQByteArrayLatin1(dayStr.value_or("unknown"))
-            << "hour:" << mmqt::toQByteArrayLatin1(hourStr.value_or("unknown"));
+            << "year:" << mmqt::toQByteArrayUtf8(yearStr.value_or("unknown"))
+            << "month:" << mmqt::toQByteArrayUtf8(monthStr.value_or("unknown"))
+            << "day:" << mmqt::toQByteArrayUtf8(dayStr.value_or("unknown"))
+            << "hour:" << mmqt::toQByteArrayUtf8(hourStr.value_or("unknown"));
 
     if (yearStr.has_value() && monthStr.has_value() && dayStr.has_value() && hourStr.has_value()) {
         const int year = stoi(yearStr.value());

@@ -28,7 +28,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <QLatin1String>
 #include <QtCore>
 #include <QtGui>
 
@@ -364,7 +363,7 @@ QString FontMetrics::init(const QString &fontFilename)
     while (!xml.atEnd() && !xml.hasError()) {
         if (xml.readNextStartElement()) {
             const auto &attr = xml.attributes();
-            if (xml.name() == QLatin1String("common")) {
+            if (xml.name() == "common") {
                 if (hasCommon) {
                     assert(false);
                     continue;
@@ -383,7 +382,7 @@ QString FontMetrics::init(const QString &fontFilename)
                 }
                 common = Common{lineHeight, base, scaleW, scaleH, marginX, marginY};
 
-            } else if (xml.name() == QLatin1String("char")) {
+            } else if (xml.name() == "char") {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -416,7 +415,7 @@ QString FontMetrics::init(const QString &fontFilename)
 
                 raw_glyphs.emplace_back(id, x, y2, width, height, xoffset, yoffset2, xadvance);
 
-            } else if (xml.name() == QLatin1String("kerning")) {
+            } else if (xml.name() == "kerning") {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -430,7 +429,7 @@ QString FontMetrics::init(const QString &fontFilename)
                     qDebug() << "Kerning" << PrintedChar{first} << PrintedChar{second} << amount;
                 }
                 raw_kernings.emplace_back(first, second, amount);
-            } else if (xml.name() == QLatin1String("page")) {
+            } else if (xml.name() == "page") {
                 const int id = attr.value("id").toInt();
                 if (id != 0) {
                     continue;
@@ -865,10 +864,11 @@ void GLFont::renderTextCentered(const QString &text,
                                 const Color &color,
                                 const std::optional<Color> &bgcolor)
 {
+    // here we're converting to latin1 because we cannot display unicode codepoints above 255
     const auto center = glm::vec2{getScreenCenter()};
     render2dTextImmediate(
         std::vector<GLText>{GLText{glm::vec3{center, 0.f},
-                                   mmqt::toStdStringLatin1(text),
+                                   mmqt::toStdStringLatin1(text), // GL font is latin1
                                    color,
                                    bgcolor,
                                    FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}}});

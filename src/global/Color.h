@@ -10,6 +10,7 @@
 
 #include <glm/glm.hpp>
 
+class AnsiOstream;
 class QColor;
 class QString;
 
@@ -86,6 +87,7 @@ public:
     NODISCARD std::string toHex() const;
     std::ostream &toHex(std::ostream &os) const;
     friend std::ostream &operator<<(std::ostream &os, const Color &c) { return c.toHex(os); }
+    friend AnsiOstream &operator<<(AnsiOstream &os, const Color &c);
 };
 
 static_assert(sizeof(Color) == sizeof(uint32_t));

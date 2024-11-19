@@ -13,8 +13,6 @@
 
 #include <QtGlobal>
 
-class Room;
-class RoomAdmin;
 class RoomSignalHandler;
 struct PathParameters;
 
@@ -36,11 +34,11 @@ public:
 public:
     Syncing() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Syncing);
+    ~Syncing() final;
 
 private:
-    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+    void virt_receiveRoom(const RoomHandle &) final;
 
 public:
-    NODISCARD std::shared_ptr<PathList> evaluate();
-    ~Syncing() override;
+    std::shared_ptr<PathList> evaluate();
 };

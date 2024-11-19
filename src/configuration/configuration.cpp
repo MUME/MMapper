@@ -11,6 +11,7 @@
 #include <cassert>
 #include <mutex>
 #include <optional>
+#include <thread>
 
 #include <QByteArray>
 #include <QChar>
@@ -22,9 +23,15 @@
 
 #undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 
-static std::atomic_bool config_enteredMain{false};
+namespace { // anonymous
 
-NODISCARD static const char *getPlatformEditor()
+std::thread::id g_thread{};
+std::atomic_bool g_config_enteredMain{false};
+
+thread_local SharedCanvasNamedColorOptions tl_canvas_named_color_options;
+thread_local SharedNamedColorOptions tl_named_color_options;
+
+NODISCARD const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
     case PlatformEnum::Windows:
@@ -44,6 +51,57 @@ NODISCARD static const char *getPlatformEditor()
         return "";
     }
 }
+
+NODISCARD QString getUnicodeString(const QVariant &variant, const QString &defaultValue)
+{
+    if (variant.type() == QVariant::String) {
+        const QString s = variant.toString();
+        if (!s.isNull() && !s.isEmpty()) {
+            return s;
+        }
+    }
+    return defaultValue;
+}
+
+NODISCARD QString getUnicodeStringFromLatin1ByteArray(const QVariant &variant,
+                                                      const QString &defaultValue)
+{
+    if (variant.type() == QVariant::ByteArray) {
+        // the default QString(const QByteArray&) assumes utf8,
+        // but this was saved as latin1.
+        const auto ba = variant.toByteArray();
+        return QString::fromLatin1(ba); // legacy case: latin1-encoded data
+    }
+
+    return getUnicodeString(variant, defaultValue);
+}
+
+NODISCARD QString readConfigWithFallback(const QSettings &conf,
+                                         const QString &unicodeStringKey,
+                                         const QString &latinByteArrayKey,
+                                         const QString &defaultValue)
+{
+    if (conf.contains(unicodeStringKey)) {
+        const auto &variant = conf.value(unicodeStringKey);
+        return getUnicodeString(variant, defaultValue);
+    }
+
+    if (conf.contains(latinByteArrayKey)) {
+        const auto &variant = conf.value(latinByteArrayKey);
+        return getUnicodeStringFromLatin1ByteArray(variant, defaultValue);
+    }
+
+    return defaultValue;
+}
+
+void removeIfExists(QSettings &conf, const QString &key)
+{
+    if (conf.contains(key)) {
+        conf.remove(key);
+    }
+}
+
+} // namespace
 
 Configuration::Configuration()
 {
@@ -211,7 +269,8 @@ ConstString KEY_AUTO_START_GROUP_MANAGER = "Auto start group manager";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_RSA_X509_CERTIFICATE = "RSA X509 certificate";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
-ConstString KEY_CHARACTER_NAME = "character name";
+ConstString KEY_CHARACTER_NAME_LATIN1_BYTEARRAY = "character name";
+ConstString KEY_CHARACTER_NAME_STRING = "unicode character name";
 ConstString KEY_CHECK_FOR_UPDATE = "Check for update";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
 ConstString KEY_COLOR = "color";
@@ -245,7 +304,8 @@ ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
 ConstString KEY_3D_LAYER_HEIGHT = "canvas.advanced.layerHeight";
 ConstString KEY_GROUP_TELL_ANSI_COLOR = "Group tell ansi color";
 ConstString KEY_GROUP_TELL_USE_256_ANSI_COLOR = "Use group tell 256 ansi color";
-ConstString KEY_HOST = "host";
+ConstString KEY_HOST_LATIN1_BYTEARRAY = "host";
+ConstString KEY_HOST_STRING = "unicode host name";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
@@ -283,7 +343,7 @@ ConstString KEY_SERVER_NAME = "Server name";
 ConstString KEY_SHARE_SELF = "share self";
 ConstString KEY_SHOW_HIDDEN_EXIT_FLAGS = "Show hidden exit flags";
 ConstString KEY_SHOW_NOTES = "Show notes";
-ConstString KEY_SHOW_UPDATED_ROOMS = "Show updated rooms";
+ConstString KEY_DRAW_NEEDS_UPDATE = "Show updated rooms";
 ConstString KEY_STATE = "state";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
@@ -611,7 +671,7 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
                                         .append(DEFAULT_MMAPPER_SUBDIR)
                                         .append(DEFAULT_RESOURCES_SUBDIR))
                              .toString();
-    showUpdated = conf.value(KEY_SHOW_UPDATED_ROOMS, false).toBool();
+    drawNeedsUpdate.set(conf.value(KEY_DRAW_NEEDS_UPDATE, false).toBool());
     drawNotMappedExits = conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
@@ -716,8 +776,21 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     localPort = sanitizeUint16(conf.value(KEY_GROUP_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
     remotePort = sanitizeUint16(conf.value(KEY_GROUP_REMOTE_PORT, DEFAULT_PORT).toInt(),
                                 DEFAULT_PORT);
-    host = conf.value(KEY_HOST, "localhost").toByteArray();
-    charName = conf.value(KEY_CHARACTER_NAME, QHostInfo::localHostName()).toByteArray();
+
+    const QString defaultHostName = "localhost";
+    const QString defaultCharName = []() -> QString {
+        if ((false)) {
+            return QHostInfo::localHostName();
+        }
+        return "Unknown";
+    }();
+
+    host = readConfigWithFallback(conf, KEY_HOST_STRING, KEY_HOST_LATIN1_BYTEARRAY, defaultHostName);
+    charName = readConfigWithFallback(conf,
+                                      KEY_CHARACTER_NAME_STRING,
+                                      KEY_CHARACTER_NAME_LATIN1_BYTEARRAY,
+                                      defaultCharName);
+
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
     color = QColor(conf.value(KEY_COLOR, "#FFFF00").toString());
     rulesWarning = conf.value(KEY_RULES_WARNING, true).toBool();
@@ -813,7 +886,7 @@ NODISCARD static auto getQColorName(const XNamedColor &color)
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_RESOURCES_DIRECTORY, resourcesDirectory);
-    conf.setValue(KEY_SHOW_UPDATED_ROOMS, showUpdated);
+    conf.setValue(KEY_DRAW_NEEDS_UPDATE, drawNeedsUpdate.get());
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, drawNotMappedExits);
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
     conf.setValue(KEY_DRAW_DOOR_NAMES, drawDoorNames);
@@ -891,8 +964,13 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     // Note: There's no QVariant(uint16_t) constructor.
     conf.setValue(KEY_GROUP_LOCAL_PORT, static_cast<int>(localPort));
     conf.setValue(KEY_GROUP_REMOTE_PORT, static_cast<int>(remotePort));
-    conf.setValue(KEY_HOST, host);
-    conf.setValue(KEY_CHARACTER_NAME, charName);
+    //
+    removeIfExists(conf, KEY_HOST_LATIN1_BYTEARRAY);
+    conf.setValue(KEY_HOST_STRING, host);
+    //
+    removeIfExists(conf, KEY_CHARACTER_NAME_LATIN1_BYTEARRAY);
+    conf.setValue(KEY_CHARACTER_NAME_STRING, charName);
+    //
     conf.setValue(KEY_SHARE_SELF, shareSelf);
     conf.setValue(KEY_COLOR, color.name());
     conf.setValue(KEY_RULES_WARNING, rulesWarning);
@@ -956,7 +1034,8 @@ void Configuration::FindRoomsDialog::write(QSettings &conf) const
 
 Configuration &setConfig()
 {
-    assert(config_enteredMain);
+    assert(g_config_enteredMain);
+    assert(g_thread == std::this_thread::get_id());
     static Configuration conf;
     return conf;
 }
@@ -966,7 +1045,7 @@ const Configuration &getConfig()
     return setConfig();
 }
 
-void Configuration::ColorSettings::resetToDefaults()
+void Configuration::NamedColorOptions::resetToDefaults()
 {
     assert(Colors::black.getRGB() == 0 && Colors::black.getRGBA() != 0);
     static const auto fromHashHex = [](std::string_view sv) {
@@ -1043,5 +1122,41 @@ ConnectionSet Configuration::CanvasSettings::Advanced::registerChangeCallback(
 
 void setEnteredMain()
 {
-    config_enteredMain = true;
+    g_thread = std::this_thread::get_id();
+    g_config_enteredMain = true;
+}
+
+const Configuration::NamedColorOptions &getNamedColorOptions()
+{
+    assert(g_config_enteredMain);
+    if (g_thread == std::this_thread::get_id()) {
+        return getConfig().colorSettings;
+    }
+
+    return deref(tl_named_color_options);
+}
+
+const Configuration::CanvasNamedColorOptions &getCanvasNamedColorOptions()
+{
+    assert(g_config_enteredMain);
+    if (g_thread == std::this_thread::get_id()) {
+        return getConfig().canvas;
+    }
+
+    return deref(tl_canvas_named_color_options);
+}
+
+ThreadLocalNamedColorRaii::ThreadLocalNamedColorRaii(
+    SharedCanvasNamedColorOptions canvasNamedColorOptions, SharedNamedColorOptions namedColorOptions)
+{
+    assert(g_config_enteredMain);
+    assert(g_thread != std::this_thread::get_id());
+    tl_canvas_named_color_options = std::move(canvasNamedColorOptions);
+    tl_named_color_options = std::move(namedColorOptions);
+}
+
+ThreadLocalNamedColorRaii::~ThreadLocalNamedColorRaii()
+{
+    tl_canvas_named_color_options.reset();
+    tl_named_color_options.reset();
 }

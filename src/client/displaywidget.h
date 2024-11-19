@@ -12,6 +12,7 @@
 #include <QFont>
 #include <QSize>
 #include <QString>
+#include <QTextBrowser>
 #include <QTextCursor>
 #include <QTextEdit>
 #include <QTextFormat>
@@ -48,7 +49,6 @@ struct NODISCARD AnsiTextHelper final
     QTextCharFormat format;
     const FontDefaults defaults;
     RawAnsi currentAnsi;
-    bool backspace = false;
 
     explicit AnsiTextHelper(QTextEdit &input_textEdit, FontDefaults def)
         : textEdit{input_textEdit}
@@ -66,12 +66,14 @@ struct NODISCARD AnsiTextHelper final
     void limitScrollback(int lineLimit);
 };
 
-class NODISCARD_QOBJECT DisplayWidget final : public QTextEdit
+extern void setAnsiText(QTextEdit *pEdit, std::string_view text);
+
+class NODISCARD_QOBJECT DisplayWidget final : public QTextBrowser
 {
     Q_OBJECT
 
 private:
-    using base = QTextEdit;
+    using base = QTextBrowser;
 
 private:
     AnsiTextHelper m_ansiTextHelper;

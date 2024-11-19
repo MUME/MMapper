@@ -3,7 +3,6 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
-#include "../expandoracommon/RoomAdmin.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
@@ -13,12 +12,9 @@
 #include <QSet>
 #include <QVector>
 
-class Room;
-class RoomAdmin;
-
 struct NODISCARD SPNode final
 {
-    const Room *r = nullptr;
+    RoomPtr r = std::nullopt;
     int parent = 0;
     double dist = 0.0;
     ExitDirEnum lastdir = ExitDirEnum::NONE;
@@ -30,12 +26,11 @@ public:
     virtual ~ShortestPathRecipient();
 
 private:
-    virtual void virt_receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint)
-        = 0;
+    virtual void virt_receiveShortestPath(QVector<SPNode> spnodes, int endpoint) = 0;
 
 public:
-    void receiveShortestPath(RoomAdmin *const admin, QVector<SPNode> spnodes, const int endpoint)
+    void receiveShortestPath(QVector<SPNode> spnodes, const int endpoint)
     {
-        virt_receiveShortestPath(admin, std::move(spnodes), endpoint);
+        virt_receiveShortestPath(spnodes, endpoint);
     }
 };

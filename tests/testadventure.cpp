@@ -24,19 +24,19 @@ NODISCARD std::string_view arrToStdSv(const std::array<char, N> &arr)
 
 void testQStringAsAscii(const QString &qs, std::string_view expected_ascii)
 {
-    const auto latin1 = mmqt::toStdStringLatin1(qs);
-    const auto ascii = latin1ToAscii(latin1);
+    const auto utf8 = mmqt::toStdStringUtf8(qs);
+    const auto ascii = charset::conversion::utf8ToAscii(utf8);
     TEST_ASSERT(ascii == expected_ascii);
 }
 
 const QString dunadan = []() -> QString {
     const std::array<char, 7> latin1_bytes = {'D', '\xFA', 'n', 'a', 'd', 'a', 'n'};
     const std::array<char, 8> utf8_bytes = {'D', '\xC3', '\xBA', 'n', 'a', 'd', 'a', 'n'};
-    TEST_ASSERT(latin1ToAscii('\xFA') == 'u');
+    TEST_ASSERT(charset::conversion::latin1ToAscii('\xFA') == 'u'); // sanity checking
 
     const QString result = "D\u00FAnadan";
     TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
-    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
+    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes)); // sanity checking
     testQStringAsAscii(result, "Dunadan");
 
     return result;
@@ -48,7 +48,7 @@ const auto gomgal = []() {
 
     const QString result = "Gomg\u00E2l";
     TEST_ASSERT(mmqt::toStdStringUtf8(result) == arrToStdSv(utf8_bytes));
-    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes));
+    TEST_ASSERT(mmqt::toStdStringLatin1(result) == arrToStdSv(latin1_bytes)); // sanity checking
     testQStringAsAscii(result, "Gomgal");
 
     return result;
@@ -276,7 +276,7 @@ void TestAdventure::testE2E()
     auto pump = [&observer](const std::vector<TestLine> &lines) {
         mmqt::HideQDebug forThisFunction;
         for (const TestLine &tl : lines) {
-            observer.slot_observeSentToUser(mmqt::toQByteArrayLatin1(tl.line), true);
+            observer.slot_observeSentToUser(tl.line, true);
         }
     };
 
@@ -296,14 +296,14 @@ void TestAdventure::testE2E()
 
     QCOMPARE(hints, std::vector<QString>{QString{"Type unlock hatch to unlatch the hatch."}});
 
-    QCOMPARE(killedMobs,
-             (std::vector<QString>{QString{"A husky smuggler"},
-                                   QString{"A wild bull (x)"},
-                                   QString{"A tree-snake"},
-                                   QString{"A spirit"},
-                                   QString{"*an Elf* (k)"},
-                                   QString{"*a Half-Elf*"},
-                                   QString{"*Gaer the " + dunadan + " Man*"}}));
+    const auto expectedMobs = std::vector<QString>{QString{"A husky smuggler"},
+                                                   QString{"A wild bull (x)"},
+                                                   QString{"A tree-snake"},
+                                                   QString{"A spirit"},
+                                                   QString{"*an Elf* (k)"},
+                                                   QString{"*a Half-Elf*"},
+                                                   QString{"*Gaer the " + dunadan + " Man*"}};
+    QCOMPARE(killedMobs, expectedMobs);
 }
 
 QTEST_MAIN(TestAdventure)

@@ -61,7 +61,10 @@ GraphicsPage::GraphicsPage(QWidget *parent)
         setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
     });
 
-    connect(ui->updated, &QCheckBox::stateChanged, this, &GraphicsPage::slot_updatedStateChanged);
+    connect(ui->drawNeedsUpdate,
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::slot_drawNeedsUpdateStateChanged);
     connect(ui->drawNotMappedExits,
             &QCheckBox::stateChanged,
             this,
@@ -120,7 +123,7 @@ void GraphicsPage::slot_loadConfig()
         ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
     }
 
-    ui->updated->setChecked(settings.showUpdated);
+    ui->drawNeedsUpdate->setChecked(settings.drawNeedsUpdate.get());
     ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);
     ui->drawUpperLayersTextured->setChecked(settings.drawUpperLayersTextured);
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
@@ -150,9 +153,9 @@ void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)
     graphicsSettingsChanged();
 }
 
-void GraphicsPage::slot_updatedStateChanged(int /*unused*/)
+void GraphicsPage::slot_drawNeedsUpdateStateChanged(int /*unused*/)
 {
-    setConfig().canvas.showUpdated = ui->updated->isChecked();
+    setConfig().canvas.drawNeedsUpdate.set(ui->drawNeedsUpdate->isChecked());
     graphicsSettingsChanged();
 }
 

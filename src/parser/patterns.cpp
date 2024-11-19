@@ -17,29 +17,29 @@ bool Patterns::matchPattern(const QString &pattern, const QString &str)
         return false;
     }
 
-    switch (static_cast<int>((pattern.at(1)).toLatin1())) {
+    switch (pattern.at(1).unicode()) {
     case C_EXCLAMATION: // !
         if (QRegularExpression(pattern.mid(2)).match(str).hasMatch()) {
             return true;
         }
         break;
     case C_LESS_THAN: // <
-        if (str.startsWith(pattern.mid(2))) {
+        if (str.startsWith(pattern.midRef(2))) {
             return true;
         }
         break;
     case C_EQUALS: // =
-        if (str == (pattern.mid(2))) {
+        if (str == (pattern.midRef(2))) {
             return true;
         }
         break;
     case C_GREATER_THAN: // >
-        if (str.endsWith(pattern.mid(2))) {
+        if (str.endsWith(pattern.midRef(2))) {
             return true;
         }
         break;
     case C_QUESTION_MARK: // ?
-        if (str.contains(pattern.mid(2))) {
+        if (str.contains(pattern.midRef(2))) {
             return true;
         }
         break;

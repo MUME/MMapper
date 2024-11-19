@@ -6,7 +6,7 @@
 #include "RoomWidget.h"
 
 #include "../configuration/configuration.h"
-#include "../global/AnsiTextUtils.h"
+#include "../mapdata/mapdata.h"
 #include "RoomManager.h"
 
 #include <QAction>

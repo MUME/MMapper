@@ -15,8 +15,55 @@
 #include <QToolTip>
 #include <QtGui>
 
-static const constexpr int SCROLLBAR_BUFFER = 1;
-static const constexpr int TAB_WIDTH_SPACES = 8;
+namespace { // anonymous
+
+const constexpr int SCROLLBAR_BUFFER = 1;
+const constexpr int TAB_WIDTH_SPACES = 8;
+const volatile bool ignore_non_default_underline_colors = false;
+
+void foreach_regex(const QRegularExpression &regex,
+                   const QStringView text,
+                   const std::function<void(const QStringView match)> &callback_match,
+                   const std::function<void(const QStringView between)> &callback_between)
+{
+    auto it = regex.globalMatch(text);
+    int pos = 0;
+    int end = text.length();
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        const auto match_start = match.capturedStart(0);
+        const auto match_end = match.capturedEnd(0);
+        if (match_start != pos) {
+            callback_between(text.mid(pos, match_start - pos));
+        }
+        callback_match(text.mid(match_start, match_end - match_start));
+        pos = match_end;
+    }
+    if (pos != end) {
+        callback_between(text.mid(pos));
+    }
+}
+
+void foreach_backspace(const QStringView text,
+                       const std::function<void()> &callback_backspace,
+                       const std::function<void(const QStringView nonBackspace)> &callback_between)
+{
+    qsizetype pos = 0;
+    const qsizetype end = text.length();
+    while (pos != end) {
+        const qsizetype backspaceIndex = text.indexOf(char_consts::C_BACKSPACE, pos);
+        if (backspaceIndex < 0) {
+            callback_between(text.mid(pos));
+            break;
+        }
+
+        callback_between(text.mid(pos, backspaceIndex - pos));
+        callback_backspace();
+        pos = backspaceIndex + 1;
+    }
+}
+
+} // namespace
 
 FontDefaults::FontDefaults()
 {
@@ -43,14 +90,15 @@ void AnsiTextHelper::init()
 }
 
 DisplayWidget::DisplayWidget(QWidget *const parent)
-    : QTextEdit(parent)
+    : QTextBrowser(parent)
     , m_ansiTextHelper{static_cast<QTextEdit &>(*this)}
 {
     setReadOnly(true);
     setOverwriteMode(true);
     setUndoRedoEnabled(false);
     setDocumentTitle("MMapper Mud Client");
-    setTextInteractionFlags(Qt::TextSelectableByMouse);
+    setTextInteractionFlags(Qt::TextBrowserInteraction);
+    setOpenExternalLinks(true);
     setTabChangesFocus(false);
 
     // REVISIT: Is this necessary to do in both places?
@@ -132,55 +180,147 @@ void setDefaultFormat(QTextCharFormat &format, const FontDefaults &defaults)
 
 void AnsiTextHelper::displayText(const QString &str)
 {
-    // Split ansi from this text
-    QStringList textList, ansiList;
-    int textIndex = 0, ansiIndex = 0;
     // ANSI codes are formatted as the following:
     // escape + [ + n1 (+ n2) + m
-    static const QRegularExpression ansiRx(R"(\x1B\[((?:\d+;?)*)m)");
-    QRegularExpressionMatchIterator it = ansiRx.globalMatch(str);
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        ansiIndex = match.capturedStart(0);
-        textList << str.mid(textIndex, ansiIndex - textIndex);
-        ansiList << match.captured(0);
-        textIndex = match.capturedEnd(0);
-    }
-    if (textIndex < str.length()) {
-        textList << str.mid(textIndex);
-    }
+    static const QRegularExpression ansi_regex{R"regex(\x1B[^A-Za-z\x1B]*[A-Za-z]?)regex"};
+    static const QRegularExpression url_regex{
+        R"regex(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))regex"};
+
+    // REVISIT: should we even bother supporting backspaces?
+    //
+    // QTextEdit is not a terminal, so it doesn't really have the concept of a mutable text buffer
+    // where you can backspace and then later overwrite the previous letter with something else.
+    //
+    // (Yes, technically we could abuse the cursor this to achieve a similar result, but the
+    // cursor is used in multiple functions, so that might be too fragile.)
+    //
+    // Current solution: simulate the backspace operation by adding a backspace character to the
+    // buffer, and then later remove the backspace and previous character.
+    //
+    // MUME could send a telnet event that signals that the player is waiting,
+    // and then we could display the waiting state some other way.
+    //
+    // Or we could just ignore the backspaces and display "\|/-" instead of the animation.
+    //
+    // It might also be worth considering using an emoji or an icon instead of C_BACKSPACE.
+    static const volatile bool allow_backspaces = true;
+
+    // note: debug_backspaces effectively implies allow_backspaces == false,
+    // because writes "(Backspace)" instead of a backspace character, and then it leaves both
+    // "(Backspace)" and the letter that would have been removed by the backspace operation.
+    static const volatile bool debug_backspaces = false;
+
+    auto try_remove_backspace = [this]() {
+        if (!allow_backspaces) {
+            return;
+        }
+
+        const auto block = cursor.block();
+        if (!block.isValid() || cursor.block().length() == 0) {
+            return;
+        }
+
+        const auto text = block.text();
+        if (text.isNull() || text.isEmpty() || text.back() != char_consts::C_BACKSPACE) {
+            return;
+        }
+
+        cursor.deletePreviousChar();
+        if (block.length() > 0) {
+            cursor.deletePreviousChar();
+        }
+    };
+
+    auto add_raw = [this, &try_remove_backspace](const QStringView text,
+                                                 const QTextCharFormat &withFmt) {
+        try_remove_backspace();
+        cursor.insertText(text.toString(), withFmt);
+    };
+
+    auto try_add_backspace = [this, &add_raw]() {
+        if (debug_backspaces) {
+            add_raw(u"(BACKSPACE)", {});
+            return;
+        }
+
+        if (!allow_backspaces || cursor.position() < 1) {
+            return;
+        }
+
+        auto isTwiddler = [](const QChar c) -> bool {
+            using namespace char_consts;
+            switch (c.unicode()) {
+            case C_BACKSLASH:
+            case C_MINUS_SIGN:
+            case C_SLASH:
+            case C_SPACE:
+            case C_VERTICAL_BAR:
+                return true;
+            default:
+                return false;
+            }
+        };
+
+        const auto block = cursor.block();
+        if (!block.isValid() && block.length() < 1) {
+            return;
+        }
+
+        const auto text = block.text();
+        if (text.isNull() || text.isEmpty()) {
+            return;
+        }
+
+        if (!isTwiddler(text.back())) {
+            const auto max_shown = 20;
+            const auto shown = (text.length() < max_shown)
+                                   ? text
+                                   : "..." + text.mid(text.length() - max_shown);
+            qWarning() << "refusing to backspace over non-twiddler:" << shown;
+        }
+
+        add_raw(mmqt::QS_BACKSPACE, {});
+    };
+
+    auto add_formatted = [this, &add_raw, &try_remove_backspace](const QStringView text) {
+        foreach_regex(
+            url_regex,
+            text,
+            [this, &try_remove_backspace](const QStringView url) {
+                const auto s = url.toString();
+                // TODO: override the document's CSS for URLs
+                const auto link
+                    = QString(
+                          R"(<a href="%1" style="color: cyan; background-color: #003333; font-weight: normal;">%2</a>)")
+                          .arg(QString::fromUtf8(QUrl::fromUserInput(s).toEncoded()),
+                               s.toHtmlEscaped());
+
+                try_remove_backspace();
+                cursor.insertHtml(link);
+            },
+            [this, &add_raw](const QStringView &non_url) { add_raw(non_url, format); });
+    };
 
     // Display text using a cursor
-    QStringListIterator textIterator(textList), ansiIterator(ansiList);
-    while (textIterator.hasNext()) {
-        QString textStr = textIterator.next();
-
-        if (textStr.length() != 0) {
-            // Backspaces occur on the next character being drawn
-            if (backspace) {
-                cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 1);
-                backspace = false;
-            }
-            int backspaceIndex = textStr.indexOf(char_consts::C_BACKSPACE);
-            if (backspaceIndex == -1) {
-                // No backspace
-                cursor.insertText(textStr, format);
-
+    foreach_regex(
+        ansi_regex,
+        str,
+        [this, &add_raw](const QStringView ansiStr) {
+            assert(!ansiStr.isEmpty() && ansiStr.front() == char_consts::C_ESC);
+            if (mmqt::isAnsiColor(ansiStr)) {
+                if (auto optNewColor = mmqt::parseAnsiColor(currentAnsi, ansiStr)) {
+                    currentAnsi = updateFormat(format, defaults, currentAnsi, *optNewColor);
+                }
             } else {
-                backspace = true;
-                cursor.insertText(textStr.mid(0, backspaceIndex), format);
-                cursor.insertText(textStr.mid(backspaceIndex + 1), format);
+                add_raw(u"<ESC>", {});
+                if (ansiStr.length() > 1) {
+                    add_raw(ansiStr.mid(1), format);
+                }
             }
-        }
-
-        // Change format according to ansi codes
-        if (ansiIterator.hasNext()) {
-            auto ansiStr = ansiIterator.next();
-            if (auto optNewColor = mmqt::parseAnsiColor(currentAnsi, ansiStr)) {
-                currentAnsi = updateFormat(format, defaults, currentAnsi, *optNewColor);
-            }
-        }
-    }
+        },
+        [&try_add_backspace, &add_formatted](const QStringView textStr) {
+            foreach_backspace(textStr, try_add_backspace, add_formatted);
+        });
 }
 
 void AnsiTextHelper::limitScrollback(int lineLimit)
@@ -261,7 +401,7 @@ RawAnsi updateFormat(QTextCharFormat &format,
                      const RawAnsi &before,
                      RawAnsi updated)
 {
-    if (!updated.ul.hasDefaultColor()) {
+    if (ignore_non_default_underline_colors && !updated.ul.hasDefaultColor()) {
         // Ignore underline color.
         updated.ul = AnsiColorVariant{};
     }
@@ -277,16 +417,35 @@ RawAnsi updateFormat(QTextCharFormat &format,
 
     // auto removed = before.flags & ~updated.flags;
     // auto added = updated.flags & ~before.flags;
-    auto diff = before.getFlags() ^ updated.getFlags();
+    const auto diff = before.getFlags() ^ updated.getFlags();
 
     for (const auto flag : diff) {
         switch (flag) {
         case AnsiStyleFlagEnum::Italic:
             format.setFontItalic(updated.hasItalic());
             break;
-        case AnsiStyleFlagEnum::Underline:
+        case AnsiStyleFlagEnum::Underline: {
+            // QTextCharFormat doesn't support other underline styles.
             format.setFontUnderline(updated.hasUnderline());
+            using ULS = QTextCharFormat::UnderlineStyle;
+            const auto style = [&updated]() -> QTextCharFormat::UnderlineStyle {
+                switch (updated.getUnderlineStyle()) {
+                case AnsiUnderlineStyle::Dotted:
+                    return ULS::DotLine;
+                case AnsiUnderlineStyle::Curly:
+                    return ULS::WaveUnderline;
+                case AnsiUnderlineStyle::Dashed:
+                    return ULS::DashUnderline;
+                case AnsiUnderlineStyle::None:
+                case AnsiUnderlineStyle::Normal:
+                case AnsiUnderlineStyle::Double: // not supported by Qt
+                default:
+                    return ULS::SingleUnderline;
+                }
+            }();
+            format.setUnderlineStyle(style);
             break;
+        }
         case AnsiStyleFlagEnum::Strikeout:
             format.setFontStrikeOut(updated.hasStrikeout());
             break;
@@ -300,10 +459,9 @@ RawAnsi updateFormat(QTextCharFormat &format,
                 format.setFontWeight(QFont::Normal);
             }
             break;
-        case AnsiStyleFlagEnum::Blink:
-            break;
-        case AnsiStyleFlagEnum::Reverse:
-        case AnsiStyleFlagEnum::Conceal:
+        case AnsiStyleFlagEnum::Blink:   // ignored
+        case AnsiStyleFlagEnum::Reverse: // handled below
+        case AnsiStyleFlagEnum::Conceal: // handled below
             break;
         }
     }
@@ -333,4 +491,27 @@ RawAnsi updateFormat(QTextCharFormat &format,
     format.setForeground(fg);
     format.setUnderlineColor(ul);
     return updated;
+}
+
+void setAnsiText(QTextEdit *const pEdit, const std::string_view text)
+{
+    QTextEdit &edit = deref(pEdit);
+
+    edit.clear();
+    edit.setReadOnly(true);
+    edit.setOverwriteMode(true);
+    edit.setUndoRedoEnabled(false);
+    edit.setTextInteractionFlags(Qt::TextSelectableByMouse);
+
+    // REVISIT: Is this necessary to do in both places?
+    deref(edit.document()).setUndoRedoEnabled(false);
+
+    AnsiTextHelper helper{edit};
+    helper.init();
+    helper.displayText(mmqt::toQStringUtf8(text));
+
+    // FIXME: why don't the scroll bars work?
+    if (QScrollBar *const vs = edit.verticalScrollBar()) {
+        vs->setEnabled(true);
+    }
 }

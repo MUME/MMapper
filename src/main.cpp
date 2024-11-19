@@ -63,7 +63,7 @@ public:
         : pixmap(getPixmapFilenameRaw("splash.png"))
         , splash(pixmap)
     {
-        const auto message = QString("%1").arg(QLatin1String(getMMapperVersion()), -9);
+        const auto message = QString("%1").arg(QString::fromUtf8(getMMapperVersion()), -9);
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
@@ -95,7 +95,7 @@ static void tryInitDrMingw()
     QString logFile = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
                           .replace(L'/', L'\\')
                       + QStringLiteral("\\mmappercrash.log");
-    ExcHndlSetLogFileNameA(logFile.toLocal8Bit());
+    ExcHndlSetLogFileNameA(logFile.toUtf8().constData());
 #endif
 }
 

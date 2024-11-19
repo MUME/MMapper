@@ -95,12 +95,12 @@ struct NODISCARD XmlEntity final
     XmlEntityEnum id = XmlEntityEnum::INVALID;
 
     XmlEntity() = default;
-    explicit XmlEntity(const char *const _short_name,
-                       const char *const _full_name,
-                       const XmlEntityEnum _id)
-        : short_name{_short_name}
-        , full_name{_full_name}
-        , id{_id}
+    explicit XmlEntity(const char *const input_short_name,
+                       const char *const input_full_name,
+                       const XmlEntityEnum input_id)
+        : short_name{input_short_name}
+        , full_name{input_full_name}
+        , id{input_id}
     {}
     DEFAULT_RULE_OF_5(XmlEntity);
 };
@@ -138,8 +138,8 @@ NODISCARD static EntityTable initEntityTable()
 
     EntityTable entityTable;
     for (const auto &ent : all_entities) {
-        entityTable.by_short_name[QString::fromLatin1(ent.short_name)] = ent;
-        entityTable.by_full_name[QString::fromLatin1(ent.full_name)] = ent;
+        entityTable.by_short_name[QString::fromUtf8(ent.short_name)] = ent;
+        entityTable.by_full_name[QString::fromUtf8(ent.full_name)] = ent;
         entityTable.by_id[ent.id] = ent;
     }
 
@@ -199,6 +199,10 @@ NODISCARD static const char *translit(const QChar qc)
     // not fully implemented
     // note: some of these might be better off just giving the entity
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
     switch (static_cast<XmlEntityEnum>(qc.unicode())) {
     case XmlEntityEnum::XID_lang:
     case XmlEntityEnum::XID_laquo:
@@ -265,7 +269,9 @@ NODISCARD static const char *translit(const QChar qc)
 
     case XmlEntityEnum::XID_empty: {
         static_assert(static_cast<uint16_t>(XmlEntityEnum::XID_oslash) == 0xF8);
-        return "\xF8";
+        // TODO: add a unit test for this (latin1 vs utf8 issue).
+        // return "\xF8";
+        return "\u00F8";
     }
 
     case XmlEntityEnum::XID_lowast:
@@ -287,15 +293,18 @@ NODISCARD static const char *translit(const QChar qc)
     default:
         break;
     }
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
     return nullptr;
 }
 
-auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingType) -> EncodedLatin1
+auto entities::encode(const DecodedString &name, const EncodingEnum encodingType) -> EncodedString
 {
     const auto &tab = getEntityTable();
 
-    EncodedLatin1 out;
+    EncodedString out;
     out.reserve(name.length());
 
     for (const QChar qc : name) {
@@ -529,18 +538,18 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
     }
 }
 
-auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
+auto entities::decode(const EncodedString &input) -> DecodedString
 {
     static constexpr const char unprintable = C_QUESTION_MARK;
     struct NODISCARD MyEntityCallback final : public EntityCallback
     {
     public:
-        const EncodedLatin1 &input;
-        DecodedUnicode out;
+        const EncodedString &input;
+        DecodedString out;
         int pos = 0;
 
     public:
-        explicit MyEntityCallback(const EncodedLatin1 &_input)
+        explicit MyEntityCallback(const EncodedString &_input)
             : input{_input}
         {
             out.reserve(input.size());
@@ -566,10 +575,10 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
                 return;
             }
 
-            const char *const pos_it = input.begin() + pos;
-            const char *const start_it = input.begin() + start;
+            const auto *const pos_it = input.begin() + pos;
+            const auto *const start_it = input.begin() + start;
 
-            for (const char *it = pos_it; it != start_it; ++it) {
+            for (const auto *it = pos_it; it != start_it; ++it) {
                 out += *it;
             }
             pos = start;
@@ -589,9 +598,9 @@ namespace { // anonymous
 void testEncode(const char *const raw_in, const char *const raw_expect)
 {
     using namespace entities;
-    const auto in = DecodedUnicode{raw_in};
+    const auto in = DecodedString{raw_in};
     const auto out = encode(in);
-    const auto expected = EncodedLatin1{raw_expect};
+    const auto expected = EncodedString{raw_expect};
     if (out != expected) {
         throw std::runtime_error("test failed");
     }
@@ -599,9 +608,11 @@ void testEncode(const char *const raw_in, const char *const raw_expect)
 void testDecode(const char *const raw_in, const char *const raw_expect)
 {
     using namespace entities;
-    const auto in = EncodedLatin1{raw_in};
+    const auto in = EncodedString{raw_in};
     const auto out = decode(in);
-    const auto expected = DecodedUnicode{raw_expect};
+    auto outs = out.toUtf8().toStdString();
+    MAYBE_UNUSED auto outcs = outs.c_str();
+    const auto expected = DecodedString{raw_expect};
     if (out != expected) {
         throw std::runtime_error("test failed");
     }
@@ -630,8 +641,8 @@ void test_entities()
     testDecode("&#xA;", S_NEWLINE);
     testDecode("&#x20;", S_SPACE);
     testDecode("&#32;", S_SPACE);
-    testDecode("&#xFF;", "\xFF");
-    testDecode("&#255;", "\xFF");
+    testDecode("&#xFF;", "\u00FF");
+    testDecode("&#255;", "\u00FF");
 
     //
     testEncode("", "");
@@ -650,8 +661,8 @@ void test_entities()
     {
         QString in;
         in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
-        const auto out = encode(DecodedUnicode{in});
-        const auto expected = EncodedLatin1{"TM"};
+        const auto out = encode(DecodedString{in});
+        const auto expected = EncodedString{"TM"};
         if (out != expected) {
             throw std::runtime_error("test failed");
         }
@@ -659,14 +670,14 @@ void test_entities()
     {
         QString in;
         in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
-        const auto out = encode(DecodedUnicode{in}, EncodingEnum::Lossless);
-        const auto expected = EncodedLatin1{"&trade;"};
+        const auto out = encode(DecodedString{in}, EncodingEnum::Lossless);
+        const auto expected = EncodedString{"&trade;"};
         if (out != expected) {
             throw std::runtime_error("test failed");
         }
     }
     {
-        const auto in = EncodedLatin1{"&#xFFFF;"};
+        const auto in = EncodedString{"&#xFFFF;"};
         const auto out = decode(in);
         assert(out.length() == 1);
         assert(out.at(0).unicode() == 0xFFFF);
@@ -678,12 +689,12 @@ void test_entities()
 
     {
         // Demonstration that values above U+FFFF are mangled.
-        const auto in = EncodedLatin1{"&#x10FFFF;"};
+        const auto in = EncodedString{"&#x10FFFF;"};
         const auto out = decode(in);
         assert(out.length() == 1);
         assert(out.at(0).unicode() == 0xFFFF); // wrong since QT only stores 16 bits
         const auto roundtrip = encode(out);
-        if (roundtrip != EncodedLatin1{"&#xFFFF;"}) { // also wrong, but expected.
+        if (roundtrip != EncodedString{"&#xFFFF;"}) { // also wrong, but expected.
             throw std::runtime_error("test failed");
         }
     }

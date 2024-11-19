@@ -45,8 +45,7 @@ bool TreeParser::parse(const ParserInput &input)
         copy = input.rmid(1);
     }
 
-    m_user.getOstream() << (isFull ? "Full" : "Basic") << " syntax help for [" << copy << "]"
-                        << std::endl;
+    m_user.getOstream() << (isFull ? "Full" : "Basic") << " syntax help for [" << copy << "]\n";
 
     help(copy, isFull);
     return false;
@@ -128,8 +127,8 @@ ParseResult TreeParser::recurseAccept(const Sublist &node,
 
 struct NODISCARD HelpFrame final : IMatchErrorLogger
 {
-public:
-    std::ostream &os; // prevents move ctor and operator=
+private:
+    AnsiOstream &m_aos; // prevents move ctor and operator=
 
 private:
     size_t m_indent = 0;
@@ -139,8 +138,8 @@ private:
     bool m_failed = false;
 
 public:
-    explicit HelpFrame(std::ostream &os_)
-        : os{os_}
+    explicit HelpFrame(AnsiOstream &aos)
+        : m_aos{aos}
     {}
     DEFAULT_COPY_CTOR(HelpFrame);
     // TODO: change this to DELETE_MOVE_CTOR (compiler bug: g++ 7.4 uses move ctor in NRVO).
@@ -161,7 +160,7 @@ public:
         }
         m_accept = std::move(acc);
     }
-    void addHelp(std::string help) { m_helps.emplace_back(help); }
+    void addHelp(std::string help) { m_helps.emplace_back(std::move(help)); }
     void addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTypeEnum> type);
     void flush();
     NODISCARD HelpFrame makeChild();
@@ -183,7 +182,10 @@ void HelpFrame::flush()
         return;
     }
 
+    auto &os = m_aos;
+
     if (!m_helps.empty() || m_accept) {
+        // REVISIT: can we send directly to the ansi ostream?
         std::ostringstream ss;
 
         ss << std::string(2 * m_indent, C_SPACE);
@@ -201,7 +203,7 @@ void HelpFrame::flush()
         }
 
         auto str = ss.str();
-        os << str;
+        os.writeWithEmbeddedAnsi(str);
 
         // TODO: convert QString ansi stuff to std::string_view instead of QStringView
         static const auto getLengthAnsiAware = [](const std::string_view sv) -> size_t {
@@ -239,25 +241,25 @@ void HelpFrame::flush()
             if (wouldEndAt <= rightMargin) {
                 os << std::string(rightMargin - wouldEndAt, C_SPACE);
             } else if (accLen + 2 <= rightMargin) {
-                os << std::endl;
+                os << AnsiOstream::endl;
                 os << std::string(rightMargin - accLen - 2, C_SPACE);
                 os << "# ";
             } else {
-                os << std::endl;
+                os << AnsiOstream::endl;
                 os << "# ";
             }
             os << acc;
         }
-        os << std::endl;
+        os << AnsiOstream::endl;
     }
 
     if (!m_errors.empty()) {
         for (const std::string &w : m_errors) {
             os << std::string(2 * m_indent, C_SPACE);
-            os << " ^ warning: " << w << std::endl;
+            os << " ^ warning: " << w << AnsiOstream::endl;
         }
 
-        os << std::endl; // blank line
+        os << AnsiOstream::endl; // blank line
     }
 
     m_helps.clear();
@@ -442,14 +444,16 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
 
     const ParserInput input(shared_vec);
     std::ostringstream ss;
-    User u{ss};
-    TreeParser parser{syntax, u};
-
     {
-        // REVISIT: check return value?
-        std::ignore = parser.parse(input);
-    }
+        AnsiOstream aos{ss};
+        User u{aos};
+        TreeParser parser{syntax, u};
 
+        {
+            // REVISIT: check return value?
+            std::ignore = parser.parse(input);
+        }
+    }
     return ss.str();
 }
 

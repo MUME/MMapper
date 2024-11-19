@@ -5,76 +5,76 @@
 
 #include "approved.h"
 
-#include "../expandoracommon/RoomAdmin.h"
+#include "../map/Compare.h"
 #include "../map/room.h"
-#include "../mapfrontend/mapaction.h"
+#include "../mapdata/mapdata.h"
 
-Approved::Approved(const SigParseEvent &sigParseEvent, const int tolerance)
+Approved::Approved(MapFrontend &map, const SigParseEvent &sigParseEvent, const int tolerance)
     : myEvent{sigParseEvent.requireValid()}
+    , m_map{map}
     , matchingTolerance{tolerance}
+
 {}
 
 Approved::~Approved()
 {
-    if (owner != nullptr) {
+    if (matchedRoom != std::nullopt) {
         if (moreThanOne) {
-            owner->releaseRoom(*this, matchedRoom->getId());
+            m_map.releaseRoom(*this, matchedRoom->getId());
         } else {
-            owner->keepRoom(*this, matchedRoom->getId());
+            m_map.keepRoom(*this, matchedRoom->getId());
         }
     }
 }
 
-void Approved::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
+void Approved::virt_receiveRoom(const RoomHandle &perhaps)
 {
     auto &event = myEvent.deref();
 
-    const auto id = perhaps->getId();
+    const auto id = perhaps.getId();
     const auto cmp = [this, &event, &id, &perhaps]() {
         // Cache comparisons because we regularly call releaseMatch() and try the same rooms again
         auto it = compareCache.find(id);
         if (it != compareCache.end()) {
             return it->second;
         }
-        const auto result = Room::compare(perhaps, event, matchingTolerance);
+        const auto result = ::compare(perhaps.getRaw(), event, matchingTolerance);
         compareCache.emplace(id, result);
         return result;
     }();
 
     if (cmp == ComparisonResultEnum::DIFFERENT) {
-        sender->releaseRoom(*this, id);
+        m_map.releaseRoom(*this, id);
         return;
     }
 
-    if (matchedRoom != nullptr) {
+    if (matchedRoom != std::nullopt) {
         // moreThanOne should only take effect if multiple distinct rooms match
         if (matchedRoom->getId() != id) {
             moreThanOne = true;
         }
-        sender->releaseRoom(*this, id);
+        m_map.releaseRoom(*this, id);
         return;
     }
 
     matchedRoom = perhaps;
-    owner = sender;
-    if (cmp == ComparisonResultEnum::TOLERANCE && event.getNumSkipped() == 0) {
+    if (cmp == ComparisonResultEnum::TOLERANCE && event.hasNameDescFlags()) {
         update = true;
     }
 }
 
-const Room *Approved::oneMatch() const
+RoomPtr Approved::oneMatch() const
 {
-    return moreThanOne ? nullptr : matchedRoom;
+    return moreThanOne ? std::nullopt : matchedRoom;
 }
 
 void Approved::releaseMatch()
 {
     // Release the current candidate in order to receive additional candidates
-    if (matchedRoom != nullptr) {
-        owner->releaseRoom(*this, matchedRoom->getId());
+    if (matchedRoom != std::nullopt) {
+        m_map.releaseRoom(*this, matchedRoom->getId());
     }
     update = false;
-    matchedRoom = nullptr;
+    matchedRoom = std::nullopt;
     moreThanOne = false;
-    owner = nullptr;
 }

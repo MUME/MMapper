@@ -30,7 +30,7 @@ NODISCARD static QString getBuildInformation()
     };
 
     return QString("Built on branch %1 using %2<br>")
-        .arg(QLatin1String(getMMapperBranch()))
+        .arg(QString::fromUtf8(getMMapperBranch()))
         .arg(get_compiler());
 }
 
@@ -47,7 +47,7 @@ AboutDialog::AboutDialog(QWidget *parent)
         return "<p align=\"center\">"
                "<h3>"
                "<u>"
-               + tr("MMapper %1").arg(QLatin1String(getMMapperVersion()))
+               + tr("MMapper %1").arg(QString::fromUtf8(getMMapperVersion()))
                + "</h3>"
                  "</u>"
                  "</p>"

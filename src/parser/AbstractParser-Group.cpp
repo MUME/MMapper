@@ -12,7 +12,7 @@
 
 #include <QByteArray>
 
-NODISCARD static QByteArray simplify(const std::string &s)
+NODISCARD static QString simplify(const std::string &s)
 {
     return QByteArray::fromStdString(s).simplified();
 }
@@ -61,7 +61,7 @@ void AbstractParser::parseGroup(StringView input)
                 const auto name = simplify(v[1].getString());
 
                 if (name.isEmpty()) {
-                    os << "Who do you want to kick?" << std::endl;
+                    os << "Who do you want to kick?\n";
                     return;
                 }
 
@@ -82,12 +82,12 @@ void AbstractParser::parseGroup(StringView input)
                 const auto msg = (value ? "locked" : "unlocked");
                 bool &lockGroup = setConfig().groupManager.lockGroup;
                 if (value == lockGroup) {
-                    os << "Group was already " << msg << std::endl;
+                    os << "Group was already " << msg << AnsiOstream::endl;
                     return;
                 }
 
                 lockGroup = value;
-                os << "Group has been " << msg << std::endl;
+                os << "Group has been " << msg << AnsiOstream::endl;
             },
             "modify group lock");
         return buildSyntax(abb("lock"), argBool, acceptLock);
@@ -107,7 +107,7 @@ void AbstractParser::parseGroup(StringView input)
 
                 const auto message = simplify(concatenate_unquoted(v[1].getVector()));
                 if (message.isEmpty()) {
-                    os << "What do you want to tell the group?" << std::endl;
+                    os << "What do you want to tell the group?\n";
                     return;
                 }
 
@@ -123,12 +123,12 @@ void AbstractParser::parseGroup(StringView input)
     eval("group", groupSyntax, input);
 }
 
-void AbstractParser::sendScoreLineEvent(const QByteArray &arr)
+void AbstractParser::sendScoreLineEvent(const QString &arr)
 {
     m_group.sendScoreLineEvent(arr);
 }
 
-void AbstractParser::sendPromptLineEvent(const QByteArray &arr)
+void AbstractParser::sendPromptLineEvent(const QString &arr)
 {
     m_group.sendPromptLineEvent(arr);
 }

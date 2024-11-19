@@ -6,15 +6,23 @@
 #include "../global/CaseUtils.h"
 #include "../global/Charset.h"
 #include "../global/PrintUtils.h"
-#include "../global/TextUtils.h"
 #include "IMatchErrorLogger.h"
 #include "ParserInput.h"
 #include "TokenMatcher.h"
 
 #include <cmath>
+#include <optional>
+#include <ostream>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace { // anonymous
+NODISCARD static bool compareIgnoreCase(const std::string_view &a, const std::string_view &b)
+{
+    return areEqualAsLowerUtf8(a, b);
+}
+} // namespace
 
 namespace syntax {
 
@@ -52,10 +60,8 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
         return MatchResult::failure(input);
     }
 
-    for (size_t i = 0; i < inputLen; ++i) {
-        if (toLowerLatin1(m_str[i]) != toLowerLatin1(input_sv[i])) {
-            return MatchResult::failure(input);
-        }
+    if (!compareIgnoreCase(m_str, input_sv.getStdStringView())) {
+        return MatchResult::failure(input);
     }
 
     return MatchResult::success(1, input, Value{m_str});
@@ -63,7 +69,7 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
 
 std::ostream &ArgAbbrev::virt_to_stream(std::ostream &os) const
 {
-    return print_string_smartquote(os, toLowerLatin1(m_str));
+    return print_string_smartquote(os, toLowerUtf8(m_str));
 }
 
 MatchResult ArgBool::virt_match(const syntax::ParserInput &input,
@@ -73,7 +79,8 @@ MatchResult ArgBool::virt_match(const syntax::ParserInput &input,
         return MatchResult::failure(input);
     }
 
-    const auto first = toLowerLatin1(input.front());
+    static_assert(std::is_same_v<const std::string &, decltype(input.front())>);
+    const auto first = toLowerUtf8(input.front());
 
     if (first == "true" || first == "yes" || first == "1") {
         return MatchResult::success(1, input, Value{true});
@@ -147,14 +154,14 @@ std::ostream &ArgChoice::virt_to_stream(std::ostream &os) const
 ArgInt ArgInt::withMax(int n)
 {
     ArgInt result;
-    result.max = n;
+    result.range.max = n;
     return result;
 }
 
 ArgInt ArgInt::withMin(int n)
 {
     ArgInt result;
-    result.min = n;
+    result.range.min = n;
     return result;
 }
 
@@ -164,20 +171,15 @@ ArgInt ArgInt::withMinMax(int min, int max)
         throw std::invalid_argument("max");
     }
     ArgInt result;
-    result.min = min;
-    result.max = max;
+    result.range.min = min;
+    result.range.max = max;
     return result;
 }
 
-MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logger) const
+std::optional<int> tryMatchInt(StringView input_sv,
+                               const IntRange &range,
+                               IMatchErrorLogger *const logger)
 {
-    auto &arg = *this;
-    if (input.empty()) {
-        return MatchResult::failure(input);
-    }
-
-    const auto input_sv = StringView{input.front()};
-
     // early validation
     {
         auto stringView = input_sv;
@@ -186,24 +188,24 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         const char firstChar = stringView.firstChar();
         if (!std::isdigit(firstChar) && firstChar != char_consts::C_MINUS_SIGN
             && firstChar != char_consts::C_PLUS_SIGN) {
-            return MatchResult::failure(input);
+            return std::nullopt;
         }
 
         ++stringView;
         for (char c : stringView) {
             if (!std::isdigit(c)) {
-                return MatchResult::failure(input);
+                return std::nullopt;
             }
         }
 
         if (!std::isdigit(input_sv.lastChar())) {
-            return MatchResult::failure(input);
+            return std::nullopt;
         }
     }
 
     using Limits = std::numeric_limits<int>;
-    const int minVal = arg.min.value_or(Limits::min());
-    const int maxVal = arg.max.value_or(Limits::max());
+    const int minVal = range.min.value_or(Limits::min());
+    const int maxVal = range.max.value_or(Limits::max());
 
     auto sv = input_sv;
     bool negative = false;
@@ -259,18 +261,33 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
     }
 
     if (fail) {
+        return std::nullopt;
+    }
+
+    return static_cast<int>(result);
+}
+
+MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logger) const
+{
+    // MAYBE_UNUSED auto &arg = *this;
+    if (input.empty()) {
         return MatchResult::failure(input);
     }
 
-    return MatchResult::success(1, input, Value(static_cast<int32_t>(result)));
+    const auto input_sv = StringView{input.front()};
+
+    if (auto optInt = syntax::tryMatchInt(input_sv, range, logger)) {
+        return MatchResult::success(1, input, Value{optInt.value()});
+    }
+
+    return MatchResult::failure(input);
 }
 
 std::ostream &ArgInt::virt_to_stream(std::ostream &os) const
 {
-    auto &arg = *this;
-    const bool hasMin = arg.min.has_value();
-    const bool hasMax = arg.max.has_value();
-    const bool singleValue = (hasMin && hasMax && arg.min == arg.max);
+    const bool hasMin = range.min.has_value();
+    const bool hasMax = range.max.has_value();
+    const bool singleValue = (hasMin && hasMax && range.min == range.max);
 
     os << "<integer";
 
@@ -279,7 +296,7 @@ std::ostream &ArgInt::virt_to_stream(std::ostream &os) const
     }
 
     if (hasMin) {
-        os << " " << arg.min.value();
+        os << " " << range.min.value();
     }
 
     if (!singleValue) {
@@ -288,7 +305,7 @@ std::ostream &ArgInt::virt_to_stream(std::ostream &os) const
         }
 
         if (hasMax) {
-            os << " " << arg.max.value();
+            os << " " << range.max.value();
         }
     }
 
@@ -498,22 +515,6 @@ std::ostream &ArgString::virt_to_stream(std::ostream &os) const
     return os << "<string>";
 }
 
-NODISCARD static bool compareIgnoreCase(const std::string &a, const std::string &b)
-{
-    const auto size = a.size();
-    if (size != b.size()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < size; ++i) {
-        if (toLowerLatin1(a[i]) != toLowerLatin1(b[i])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 MatchResult ArgStringExact::virt_match(const ParserInput &input,
                                        IMatchErrorLogger * /*logger*/) const
 {
@@ -542,7 +543,7 @@ MatchResult ArgStringIgnoreCase::virt_match(const ParserInput &input,
 
 std::ostream &ArgStringIgnoreCase::virt_to_stream(std::ostream &os) const
 {
-    return print_string_smartquote(os, toLowerLatin1(m_str));
+    return print_string_smartquote(os, toLowerUtf8(m_str));
 }
 
 TokenMatcher abbrevToken(std::string s)

@@ -74,13 +74,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="updatedCheckBox">
-         <property name="text">
-          <string>Room has not been updated yet!</string>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <spacer>
          <property name="orientation">
@@ -1415,6 +1408,111 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="roomNoteApplyButton">
+         <property name="text">
+          <string>Apply</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="roomNoteRevertButton">
+         <property name="text">
+          <string>Revert</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="roomNoteClearButton">
+         <property name="text">
+          <string>Clear</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="statTab">
+      <attribute name="title">
+       <string>Room Stat</string>
+      </attribute>
+      <layout class="QVBoxLayout">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="leftMargin">
+        <number>9</number>
+       </property>
+       <property name="topMargin">
+        <number>9</number>
+       </property>
+       <property name="rightMargin">
+        <number>9</number>
+       </property>
+       <property name="bottomMargin">
+        <number>9</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_stat">
+         <property name="text">
+          <string>Room Stat:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="roomStatTextEdit">
+         <property name="documentTitle">
+          <string>Stat</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="acceptRichText">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="diffTab">
+      <attribute name="title">
+       <string>Room Diff</string>
+      </attribute>
+      <layout class="QVBoxLayout">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="leftMargin">
+        <number>9</number>
+       </property>
+       <property name="topMargin">
+        <number>9</number>
+       </property>
+       <property name="rightMargin">
+        <number>9</number>
+       </property>
+       <property name="bottomMargin">
+        <number>9</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_diff">
+         <property name="text">
+          <string>Room Diff:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="roomDiffTextEdit">
+         <property name="documentTitle">
+          <string>Stat</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="acceptRichText">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
@@ -1492,6 +1590,8 @@
   <tabstop>toolButton14</tabstop>
   <tabstop>toolButton15</tabstop>
   <tabstop>roomNoteTextEdit</tabstop>
+  <tabstop>roomStatTextEdit</tabstop>
+  <tabstop>roomDiffTextEdit</tabstop>
   <tabstop>closeButton</tabstop>
   <tabstop>roomDescriptionTextEdit</tabstop>
  </tabstops>

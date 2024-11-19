@@ -98,7 +98,7 @@ void foreachAsciiCharSingle(const std::string_view input,
                             NonMatchingFn &&nonMatching)
 {
     // Consider asserting that the input is ascii.
-    assert(::isAscii(c));
+    assert(charset::isAscii(c));
     char_utils_detail::foreachCharSingle(input,
                                          c,
                                          std::forward<MatchingCharFn>(matching),
@@ -114,7 +114,7 @@ void foreachUtf8CharSingle(const std::string_view input,
                            NonMatchingFn &&nonMatching)
 {
     // Consider also asserting that the input is utf8.
-    assert(::isAscii(c));
+    assert(charset::isAscii(c));
     char_utils_detail::foreachCharSingle(input,
                                          c,
                                          std::forward<MatchingCharFn>(matching),

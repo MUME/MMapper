@@ -6,29 +6,69 @@
 
 #include <QObject>
 
-ProgressCounter::~ProgressCounter() = default;
-
-ProgressCounter::ProgressCounter(QObject *parent)
-    : QObject(parent)
+ProgressCanceledException::ProgressCanceledException()
+    : std::runtime_error("ProgressCanceledException")
 {}
+ProgressCanceledException::~ProgressCanceledException() = default;
 
-void ProgressCounter::increaseTotalStepsBy(size_t steps)
+void ProgressCounter::setNewTask(const ProgressMsg &currentTask, const size_t newTotalSteps)
 {
-    m_totalSteps += steps;
-    step(0u);
+    checkCancel();
+
+    std::lock_guard<std::mutex> lock{m_mutex};
+    m_status.msg = currentTask;
+    m_status.reset(newTotalSteps);
+}
+
+void ProgressCounter::setCurrentTask(const ProgressMsg &currentTask)
+{
+    checkCancel();
+
+    std::lock_guard<std::mutex> lock{m_mutex};
+    m_status.msg = currentTask;
+}
+
+void ProgressCounter::increaseTotalStepsBy(const size_t steps)
+{
+    checkCancel();
+
+    std::lock_guard<std::mutex> lock{m_mutex};
+    m_status.expected += steps;
 }
 
 void ProgressCounter::step(const size_t steps)
 {
-    m_steps += steps;
-    const size_t percentage = (m_totalSteps == 0u) ? 0u : (100u * m_steps / m_totalSteps);
-    if (percentage != m_percentage) {
-        m_percentage = percentage;
-        emit sig_onPercentageChanged(percentage);
-    }
+    checkCancel();
+
+    std::lock_guard<std::mutex> lock{m_mutex};
+    m_status.seen += steps;
+}
+
+ProgressMsg ProgressCounter::getCurrentTask() const
+{
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return m_status.msg;
+}
+
+size_t ProgressCounter::getPercentage() const
+{
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return m_status.percent();
+}
+
+ProgressCounter::Status ProgressCounter::getStatus() const
+{
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return m_status;
 }
 
 void ProgressCounter::reset()
 {
-    m_totalSteps = m_steps = m_percentage = 0u;
+    std::lock_guard<std::mutex> lock{m_mutex};
+    m_status.reset();
+}
+
+bool tags::TagProgressMsg::isValid(std::string_view /*sv*/)
+{
+    return true;
 }

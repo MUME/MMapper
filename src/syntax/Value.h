@@ -4,13 +4,14 @@
 
 #include "../global/RuleOf5.h"
 #include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
 #include "../map/ExitFlags.h"
 #include "../map/infomark.h"
 
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <variant>
 #include <vector>
@@ -62,6 +63,7 @@ public:
     X(Vector, const Vector &, Vector) \
     X(DoorFlagEnum, DoorFlagEnum, DoorFlag) \
     X(ExitFlagEnum, ExitFlagEnum, ExitFlag) \
+    X(ExitDirEnum, ExitDirEnum, Direction) \
     X(InfoMarkClassEnum, InfoMarkClassEnum, InfoMarkClass)
 
 #define X_DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,

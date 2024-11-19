@@ -11,42 +11,46 @@
 #include "../map/mmapper2room.h"
 #include "../map/room.h"
 #include "../mapdata/mapdata.h"
-#include "mapstorage.h"
 
 #include <cassert>
+#include <map>
+#include <optional>
+#include <vector>
 
-#include <QLatin1String>
 #include <QRegularExpression>
 #include <QXmlStreamReader>
 
-PandoraMapStorage::PandoraMapStorage(MapData &mapdata,
-                                     const QString &filename,
-                                     QFile *const file,
-                                     QObject *parent)
-    : AbstractMapStorage(mapdata, filename, file, parent)
+struct NODISCARD ExitToUnknown final
+{
+    ExternalRoomId from;
+    ExitDirEnum dir = ExitDirEnum::NONE;
+    RoomTerrainEnum type = RoomTerrainEnum::UNDEFINED;
+};
+
+struct NODISCARD PandoraMapStorage::LoadRoomHelper final
+{
+private:
+    std::vector<ExitToUnknown> &m_exitsToUnknown;
+
+public:
+    explicit LoadRoomHelper(std::vector<ExitToUnknown> &exitsToUnknown)
+        : m_exitsToUnknown{exitsToUnknown}
+    {}
+
+public:
+    void addExitToUnknown(const ExternalRoomId from,
+                          const ExitDirEnum dirEnum,
+                          const RoomTerrainEnum type)
+    {
+        m_exitsToUnknown.emplace_back(ExitToUnknown{from, dirEnum, type});
+    }
+};
+
+PandoraMapStorage::PandoraMapStorage(const AbstractMapStorage::Data &data, QObject *parent)
+    : AbstractMapStorage{data, parent}
 {}
 
 PandoraMapStorage::~PandoraMapStorage() = default;
-
-void PandoraMapStorage::newData()
-{
-    qWarning() << "PandoraMapStorage does not implement newData()";
-}
-
-bool PandoraMapStorage::loadData()
-{
-    // clear previous map
-    m_mapData.clear();
-    try {
-        return mergeData();
-    } catch (const std::exception &ex) {
-        const auto msg = QString::asprintf("Exception: %s", ex.what());
-        log(msg);
-        qWarning().noquote() << msg;
-        m_mapData.clear();
-        return false;
-    }
-}
 
 NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
 {
@@ -76,35 +80,39 @@ NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
     return RoomTerrainEnum::UNDEFINED;
 }
 
-SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
+ExternalRawRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml, LoadRoomHelper &helper)
 {
-    SharedRoom room = Room::createPermanentRoom(m_mapData);
-    room->setContents(RoomContents{});
-    room->setUpToDate();
-    while (
-        !(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("room"))) {
+    ExternalRawRoom room;
+    if ((false)) {
+        // Not necessary
+        room.setContents(RoomContents{});
+    }
+
+    room.status = RoomStatusEnum::Permanent;
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room")) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == QLatin1String("room")) {
-                room->setId(RoomId{static_cast<uint32_t>(xml.attributes().value("id").toInt())});
+            if (xml.name() == "room") {
+                room.setId(
+                    ExternalRoomId{static_cast<uint32_t>(xml.attributes().value("id").toInt())});
 
                 // Terrain
                 const auto terrainString = xml.attributes().value("terrain").toString().toLower();
-                room->setTerrainType(toTerrainType(terrainString));
+                room.setTerrainType(toTerrainType(terrainString));
 
                 // Coordinate
                 const auto x = xml.attributes().value("x").toInt();
                 const auto y = xml.attributes().value("y").toInt();
                 const auto z = xml.attributes().value("z").toInt();
-                room->setPosition(Coordinate{x, y, z} + basePosition);
+                room.setPosition(Coordinate{x, y, z});
 
-            } else if (xml.name() == QLatin1String("roomname")) {
-                room->setName(RoomName{xml.readElementText()});
-            } else if (xml.name() == QLatin1String("desc")) {
-                room->setDescription(RoomDesc{xml.readElementText().replace("|", "\n")});
-            } else if (xml.name() == QLatin1String("note")) {
-                room->setNote(RoomNote{xml.readElementText()});
-            } else if (xml.name() == QLatin1String("exits")) {
-                loadExits(*room, xml);
+            } else if (xml.name() == "roomname") {
+                room.setName(mmqt::makeRoomName(xml.readElementText()));
+            } else if (xml.name() == "desc") {
+                room.setDescription(mmqt::makeRoomDesc(xml.readElementText().replace("|", "\n")));
+            } else if (xml.name() == "note") {
+                room.setNote(mmqt::makeRoomNote(xml.readElementText()));
+            } else if (xml.name() == "exits") {
+                loadExits(room, xml, helper);
             }
         }
         xml.readNext();
@@ -112,111 +120,177 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
     return room;
 }
 
-void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
+void PandoraMapStorage::loadExits(ExternalRawRoom &room,
+                                  QXmlStreamReader &xml,
+                                  LoadRoomHelper &helper)
 {
-    ExitsList copiedExits = room.getExitsList();
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement
-             && xml.name() == QLatin1String("exits"))) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "exits")) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == QLatin1String("exit")) {
+            if (xml.name() == "exit") {
                 const auto attr = xml.attributes();
                 if (attr.hasAttribute("dir") && attr.hasAttribute("to")
                     && attr.hasAttribute("door")) {
                     const auto dirStr = xml.attributes().value("dir").toString();
                     const auto dir = Mmapper2Exit::dirForChar(dirStr.at(0).toLatin1());
-                    Exit &exit = copiedExits[dir];
-                    exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::EXIT);
+
+                    ExternalRawExit &exit = room.exits[dir];
+                    // REVISIT: This is now controlled by the map
+                    if (true) {
+                        exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::EXIT);
+                    }
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
-                        // REVISIT: Create a room for the death trap?
-                    } else if (to != "UNDEFINED") {
-                        exit.addOut(RoomId{static_cast<uint32_t>(to.toInt())});
+                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::DEATHTRAP);
+                    } else if (to == "UNDEFINED") {
+                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::UNDEFINED);
+                    } else {
+                        bool ok = false;
+                        const int id = to.toInt(&ok);
+                        if (!ok || id < 0) {
+                            throw std::runtime_error("invalid room");
+                        }
+
+                        exit.outgoing.insert(ExternalRoomId{static_cast<uint32_t>(id)});
                     }
 
                     const auto doorName = xml.attributes().value("door").toString();
                     if (doorName != nullptr && !doorName.isEmpty()) {
-                        exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::DOOR);
+                        // REVISIT: This is now controlled by the map
+                        if (true) {
+                            exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::DOOR);
+                        }
                         if (doorName != "exit") {
+                            // REVISIT: why do we assume it's hidden?
+                            // Does the map format only store hidden door names?
                             exit.setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
-                            exit.setDoorName(DoorName{doorName});
+                            exit.setDoorName(mmqt::makeDoorName(doorName));
                         }
                     }
                 } else {
-                    qDebug() << "Room" << room.getId().asUint32() << "was missing attributes";
+                    qDebug() << "Room" << room.getId().asUint32() << "was missing exit attributes";
                 }
             }
         }
         xml.readNext();
     }
-    room.setExitsList(copiedExits);
 }
 
-bool PandoraMapStorage::mergeData()
+std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
 {
-    {
-        MapFrontendBlocker blocker(m_mapData);
+    log("Loading data ...");
 
-        basePosition = m_mapData.getMax();
-        if (basePosition.x + basePosition.y + basePosition.z != 0) {
-            basePosition.y = 0;
-            basePosition.x = 0;
-            basePosition.z = -1;
-        }
+    RawMapLoadData result;
+    result.filename = getFilename();
+    result.readonly = true;
 
-        log("Loading data ...");
+    auto &progressCounter = getProgressCounter();
+    progressCounter.reset();
 
-        auto &progressCounter = getProgressCounter();
-        progressCounter.reset();
+    QFile *const file = getFile();
+    QXmlStreamReader xml{file};
 
-        QXmlStreamReader xml(m_file);
-        m_mapData.setDataChanged();
-
-        // Discover total number of rooms
-        if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
-            qWarning() << "File cannot be read" << m_file->fileName();
-            return false;
-        } else if (xml.name() != QLatin1String("map")) {
-            qWarning() << "File does not start with element 'map'" << m_file->fileName();
-            return false;
-        } else if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
-            qWarning() << "'map' element did not have a 'rooms' attribute" << m_file->fileName();
-            return false;
-        }
-        const uint32_t roomsCount = static_cast<uint32_t>(xml.attributes().value("rooms").toInt());
-        progressCounter.increaseTotalStepsBy(roomsCount);
-        log(QString("Number of rooms: %1").arg(roomsCount));
-
-        for (uint32_t i = 0; i < roomsCount; i++) {
-            while (xml.readNextStartElement() && !xml.hasError()) {
-                if (xml.name() == QLatin1String("room")) {
-                    SharedRoom room = loadRoom(xml);
-                    progressCounter.step();
-                    m_mapData.insertPredefinedRoom(room);
-                }
-            }
-        }
-
-        // Set base position
-        m_mapData.setPosition(Coordinate{});
-
-        log("Finished loading.");
-        m_file->close();
-
-        if (m_mapData.getRoomsCount() == 0u) {
-            return false;
-        }
-
-        m_mapData.setFileName(m_fileName, true);
-        m_mapData.unsetDataChanged();
+    // Discover total number of rooms
+    const QString &file_fileName = file->fileName();
+    if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
+        qWarning() << "File cannot be read" << file_fileName;
+        return std::nullopt;
+    } else if (xml.name() != "map") {
+        qWarning() << "File does not start with element 'map'" << file_fileName;
+        return std::nullopt;
+    } else if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
+        qWarning() << "'map' element did not have a 'rooms' attribute" << file_fileName;
+        return std::nullopt;
     }
 
-    m_mapData.checkSize();
-    emit sig_onDataLoaded();
-    return true;
+    const uint32_t roomsCount = static_cast<uint32_t>(xml.attributes().value("rooms").toInt());
+    progressCounter.increaseTotalStepsBy(roomsCount);
+    log(QString("Expected number of rooms: %1").arg(roomsCount));
+
+    std::vector<ExternalRawRoom> loading;
+    loading.reserve(roomsCount);
+
+    std::vector<ExitToUnknown> exitsToUnknown;
+    LoadRoomHelper helper{exitsToUnknown};
+
+    progressCounter.setCurrentTask(ProgressMsg{"reading rooms"});
+    for (uint32_t i = 0; i < roomsCount; i++) {
+        while (xml.readNextStartElement() && !xml.hasError()) {
+            if (xml.name() == "room") {
+                loading.emplace_back(loadRoom(xml, helper));
+                progressCounter.step();
+            }
+        }
+    }
+
+    log(QString("Finished reading %1 rooms.").arg(loading.size()));
+    file->close();
+
+    if (!exitsToUnknown.empty()) {
+        log(QString("Adding %1 undefined rooms").arg(exitsToUnknown.size()));
+
+        loading.reserve(loading.size() + exitsToUnknown.size());
+
+        struct NODISCARD Map final : std::map<ExternalRoomId, uint32_t>
+        {
+            NODISCARD bool contains(const ExternalRoomId id) const { return find(id) != end(); }
+        };
+
+        Map index;
+        ExternalRoomId max{0};
+        for (uint32_t i = 0; i < roomsCount; i++) {
+            const auto xid = loading[i].getId();
+            if (xid == INVALID_EXTERNAL_ROOMID) {
+                throw std::runtime_error("invalid room ID detected");
+            }
+
+            if (xid > max) {
+                max = xid;
+            }
+
+            if (index.contains(xid)) {
+                // This isn't our responsibility to enforce, but...
+                throw std::runtime_error("duplicate room ID detected");
+            }
+
+            index[xid] = i;
+        }
+
+        // note: mutable lambda is required for "next" to be writable.
+        auto allocId = [next = max.next()]() mutable -> ExternalRoomId {
+            auto result_id = next;
+            next = next.next();
+            return result_id;
+        };
+
+        auto newRoom = [](const ExternalRoomId id,
+                          const Coordinate &pos,
+                          const RoomTerrainEnum type) -> ExternalRawRoom {
+            ExternalRawRoom result_room;
+            result_room.setId(id);
+            result_room.setPosition(pos);
+            result_room.setTerrainType(type);
+            return result_room;
+        };
+
+        for (const auto &x : exitsToUnknown) {
+            ExternalRawRoom &from = loading.at(index.at(x.from));
+            // REVISIT: Should this be 2 * exitDir for NESW?
+            const Coordinate pos = from.getPosition() + exitDir(x.dir);
+            const auto id = allocId();
+            from.getExit(x.dir).outgoing.insert(id);
+            loading.emplace_back(newRoom(id, pos, x.type));
+        }
+    }
+
+    result.rooms = std::move(loading);
+    log("Finished loading.");
+
+    return result;
 }
 
-bool PandoraMapStorage::saveData(bool /* baseMapOnly */)
+void PandoraMapStorage::log(const QString &msg)
 {
-    return false;
+    emit sig_log("PandoraMapStorage", msg);
+    qInfo() << msg;
 }

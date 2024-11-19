@@ -17,8 +17,6 @@
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
-#include "basemapsavefilter.h"
-#include "roomsaver.h"
 
 #include <cassert>
 #include <cstddef>
@@ -27,29 +25,11 @@
 #include <QString>
 #include <QXmlStreamWriter>
 
-MmpMapStorage::MmpMapStorage(MapData &mapdata,
-                             const QString &filename,
-                             QFile *const file,
-                             QObject *parent)
-    : AbstractMapStorage(mapdata, filename, file, parent)
+MmpMapStorage::MmpMapStorage(const AbstractMapStorage::Data &data, QObject *parent)
+    : AbstractMapStorage{data, parent}
 {}
 
 MmpMapStorage::~MmpMapStorage() = default;
-
-void MmpMapStorage::newData()
-{
-    qWarning() << "MmpMapStorage does not implement newData()";
-}
-
-bool MmpMapStorage::loadData()
-{
-    return false;
-}
-
-bool MmpMapStorage::mergeData()
-{
-    return false;
-}
 
 NODISCARD static QString getTerrainTypeName(const RoomTerrainEnum x)
 {
@@ -109,39 +89,39 @@ NODISCARD static QString getTerrainTypeColor(const RoomTerrainEnum x)
 #undef CASE2
 }
 
-NODISCARD static QString toMmpRoomId(const RoomId &roomId)
+NODISCARD static QString toMmpRoomId(const ExternalRoomId &roomId)
 {
-    return QString("%1").arg(roomId.asUint32() + 1);
+    // Not to be confused with roomId.next().asUint32()
+    const auto serialId = roomId.asUint32() + 1;
+    return QString("%1").arg(serialId);
 }
 
-bool MmpMapStorage::saveData(bool baseMapOnly)
+bool MmpMapStorage::virt_saveData(const RawMapData &mapData)
 {
     log("Writing data to file ...");
+
+    const auto &map = mapData.mapPair.modified;
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
-    // The RoomSaver acts as a lock on the rooms.
+
     ConstRoomList roomList;
-    RoomSaver saver(m_mapData, roomList);
-    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
-        m_mapData.lookingForRooms(saver, RoomId{i});
+    roomList.reserve(map.getRoomsCount());
+    for (const RoomId id : map.getRooms()) {
+        const auto &room = map.getRoomHandle(id);
+        if (!room.isTemporary()) {
+            roomList.emplace_back(room);
+        }
     }
 
-    uint32_t roomsCount = saver.getRoomsCount();
+    const auto roomsCount = static_cast<uint32_t>(roomList.size());
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();
     progressCounter.increaseTotalStepsBy(roomsCount + 3);
 
-    BaseMapSaveFilter filter;
-    if (baseMapOnly) {
-        filter.setMapData(&m_mapData);
-        progressCounter.increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(progressCounter);
-    }
-
-    QXmlStreamWriter stream(m_file);
+    QXmlStreamWriter stream(getFile());
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
 
@@ -159,17 +139,15 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     // save rooms
     stream.writeStartElement("rooms");
-    auto saveOne = [&stream](const Room &room) { saveRoom(room, stream); };
-
-    for (const auto &pRoom : roomList) {
-        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
+    for (const RoomPtr &pRoom : roomList) {
+        saveRoom(pRoom->getRawCopyExternal(), stream);
         progressCounter.step();
     }
     stream.writeEndElement(); // end rooms
 
     // save environments
     stream.writeStartElement("environments");
-    for (auto terrainType : ALL_TERRAIN_TYPES) {
+    for (const RoomTerrainEnum terrainType : ALL_TERRAIN_TYPES) {
         stream.writeStartElement("environment");
         stream.writeAttribute("id", QString("%1").arg(static_cast<int>(terrainType)));
         stream.writeAttribute("name", getTerrainTypeName(terrainType));
@@ -184,13 +162,10 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     log("Writing data finished.");
 
-    m_mapData.unsetDataChanged();
-    emit sig_onDataSaved();
-
     return true;
 }
 
-void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
+void MmpMapStorage::saveRoom(const ExternalRawRoom &room, QXmlStreamWriter &stream)
 {
     stream.writeStartElement("room");
     stream.writeAttribute("id", toMmpRoomId(room.getId()));
@@ -209,16 +184,16 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeEndElement(); // end coord
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const Exit &e = room.exit(dir);
-        if (e.isExit() && !e.outIsEmpty()) {
+        const auto &e = room.getExit(dir);
+        if (e.exitIsExit() && !e.outIsEmpty()) {
             stream.writeStartElement("exit");
             stream.writeAttribute("direction", lowercaseDirection(dir));
             // REVISIT: Can MMP handle multiple exits in the same direction?
             stream.writeAttribute("target", toMmpRoomId(e.outFirst()));
-            if (e.isHiddenExit()) {
+            if (e.doorIsHidden()) {
                 stream.writeAttribute("hidden", "1");
             }
-            if (e.isDoor()) {
+            if (e.exitIsDoor()) {
                 stream.writeAttribute("door", "2");
             }
             stream.writeEndElement(); // end exit

@@ -40,7 +40,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 
 public:
-    NODISCARD bool isNamePresent(const QByteArray &name) const;
+    NODISCARD bool isNamePresent(const QString &name) const;
 
 private:
     // Interactions with group characters should occur through CGroupSelection due to threading
@@ -48,7 +48,7 @@ private:
 
 public:
     NODISCARD std::unique_ptr<GroupSelection> selectAll();
-    NODISCARD std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
+    NODISCARD std::unique_ptr<GroupSelection> selectByName(const QString &);
 
 private:
     void log(const QString &msg) { emit sig_log(msg); }
@@ -62,11 +62,11 @@ public:
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
-    void removeChar(const QByteArray &name);
+    void removeChar(const QString &name);
     void addChar(const QVariantMap &node);
 
 public:
-    NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
+    NODISCARD SharedGroupChar getCharByName(const QString &name) const;
 
 signals:
     void sig_log(const QString &);

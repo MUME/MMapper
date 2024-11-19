@@ -8,7 +8,18 @@
 
 #include <cstdint>
 
-enum class NODISCARD ExitDirEnum { NORTH = 0, SOUTH, EAST, WEST, UP, DOWN, UNKNOWN, NONE };
+class Coordinate;
+
+enum class NODISCARD ExitDirEnum : uint8_t {
+    NORTH = 0,
+    SOUTH,
+    EAST,
+    WEST,
+    UP,
+    DOWN,
+    UNKNOWN,
+    NONE
+};
 
 static constexpr const uint32_t NUM_EXITS_NESW = 4u;
 static constexpr const uint32_t NUM_EXITS_NESWUD = 6u;
@@ -35,7 +46,7 @@ NODISCARD extern ExitDirEnum opposite(ExitDirEnum in);
 NODISCARD extern const char *lowercaseDirection(ExitDirEnum dir);
 
 struct NODISCARD ExitDirFlags final
-    : enums::Flags<ExitDirFlags, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>
+    : public enums::Flags<ExitDirFlags, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>
 {
 public:
     using Flags::Flags;
@@ -47,3 +58,6 @@ NODISCARD ExitDirEnum dirForChar(char dir);
 
 NODISCARD char charForDir(ExitDirEnum dir);
 } // namespace Mmapper2Exit
+
+NODISCARD extern const Coordinate &exitDir(ExitDirEnum dir);
+NODISCARD extern const std::string_view to_string_view(ExitDirEnum dir);

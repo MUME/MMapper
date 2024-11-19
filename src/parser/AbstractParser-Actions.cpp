@@ -4,6 +4,7 @@
 
 #include "../clock/mumeclock.h"
 #include "../global/Consts.h"
+#include "../mapdata/mapdata.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "Action.h"
 #include "abstractparser.h"
@@ -78,7 +79,7 @@ void AbstractParser::initActionMap()
         emit sig_releaseAllPaths();
 
         // Highlight the current room
-        const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
+        const auto tmpSel = RoomSelection::createSelection(RoomIdSet{getTailPosition()});
         emit sig_newRoomSelection(SigRoomSelection{tmpSel});
 
         m_group.sendEvent(CharacterPositionEnum::DEAD);
@@ -207,8 +208,7 @@ void AbstractParser::initActionMap()
     /// Path Machine: Prespam
     auto failedMovement = [this](StringView /*view*/) {
         if (!m_queue.isEmpty()) {
-            MAYBE_UNUSED const auto ignored = //
-                m_queue.dequeue();
+            m_queue.pop_front();
         }
         pathChanged();
     };
@@ -237,8 +237,7 @@ void AbstractParser::initActionMap()
     addEndsWith("is too exhausted.", failedMovement);
     auto zblam = [this](StringView /*view*/) {
         if (!m_queue.isEmpty()) {
-            MAYBE_UNUSED const auto ignored = //
-                m_queue.dequeue();
+            m_queue.pop_front();
         }
         pathChanged();
         m_group.sendEvent(CharacterPositionEnum::RESTING);
@@ -246,8 +245,10 @@ void AbstractParser::initActionMap()
     addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", zblam);
 
     auto look = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::LOOK); };
-    addStartsWith("You flee head", look);
     addStartsWith("You follow", look);
+
+    auto flee = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::FLEE); };
+    addStartsWith("You flee head", flee);
 
     auto scout = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::SCOUT); };
     addStartsWith("You quietly scout", scout);

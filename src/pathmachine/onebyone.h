@@ -11,8 +11,6 @@
 
 class ParseEvent;
 class Path;
-class Room;
-class RoomAdmin;
 class RoomSignalHandler;
 struct PathParameters;
 
@@ -28,7 +26,7 @@ public:
                       RoomSignalHandler *handler);
 
 private:
-    void virt_receiveRoom(RoomAdmin *admin, const Room *room) final;
+    void virt_receiveRoom(const RoomHandle &room) final;
 
 public:
     void addPath(std::shared_ptr<Path> path);

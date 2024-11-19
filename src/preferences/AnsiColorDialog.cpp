@@ -12,7 +12,7 @@
 
 AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
     : QDialog(parent)
-    , m_ansiString{ansiString}
+    , m_resultAnsiString{ansiString}
     , m_ui(new Ui::AnsiColorDialog)
 {
     auto &ui = deref(m_ui);
@@ -31,7 +31,7 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
                 QOverload<const QString &>::of(&QComboBox::textActivated),
                 this,
                 &AnsiColorDialog::ansiComboChange);
-        if (false) {
+        if ((false)) {
             connect(combo,
                     QOverload<int>::of(&QComboBox::currentIndexChanged),
                     this,
@@ -81,15 +81,15 @@ void AnsiColorDialog::ansiComboChange()
 void AnsiColorDialog::slot_updateColors()
 {
     auto &ui = deref(m_ui);
-    AnsiCombo::makeWidgetColoured(ui.exampleLabel, m_ansiString, false);
+    AnsiCombo::makeWidgetColoured(ui.exampleLabel, m_resultAnsiString, false);
 
-    AnsiCombo::AnsiColor color = AnsiCombo::colorFromString(m_ansiString);
+    AnsiCombo::AnsiColor color = AnsiCombo::colorFromString(m_resultAnsiString);
 
     ui.boldCheckBox->setChecked(color.bold);
     ui.italicCheckBox->setChecked(color.italic);
     ui.underlineCheckBox->setChecked(color.underline);
 
-    QString toolTipString = m_ansiString.isEmpty() ? "[0m" : m_ansiString;
+    QString toolTipString = m_resultAnsiString.isEmpty() ? "[0m" : m_resultAnsiString;
     ui.exampleLabel->setToolTip(toolTipString);
 
     ui.backgroundAnsiCombo->setAnsiCode(color.bg);
@@ -131,17 +131,17 @@ void AnsiColorDialog::slot_generateNewAnsiColor()
         assert(sv.front() == char_consts::C_ESC);
         assert(sv.back() == 'm');
         sv.remove_prefix(1);
-        return mmqt::toQStringLatin1(sv);
+        return mmqt::toQStringUtf8(sv);
     };
 
     auto &ui = deref(m_ui);
-    m_ansiString = getColor(ui.foregroundAnsiCombo,
-                            ui.backgroundAnsiCombo,
-                            ui.boldCheckBox,
-                            ui.italicCheckBox,
-                            ui.underlineCheckBox);
+    m_resultAnsiString = getColor(ui.foregroundAnsiCombo,
+                                  ui.backgroundAnsiCombo,
+                                  ui.boldCheckBox,
+                                  ui.italicCheckBox,
+                                  ui.underlineCheckBox);
 
-    if (false) {
-        MMLOG() << "new ansi string " << mmqt::toStdStringLatin1(m_ansiString);
+    if ((false)) {
+        MMLOG() << "new ansi string " << mmqt::toStdStringUtf8(m_resultAnsiString);
     }
 }

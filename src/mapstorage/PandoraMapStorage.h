@@ -3,10 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../map/RawRoom.h"
 #include "../map/coordinate.h"
 #include "abstractmapstorage.h"
 
 #include <memory>
+#include <optional>
 
 #include <QString>
 #include <QtCore>
@@ -24,26 +26,23 @@ class NODISCARD_QOBJECT PandoraMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent);
+    explicit PandoraMapStorage(const AbstractMapStorage::Data &data, QObject *parent);
     ~PandoraMapStorage() final;
 
 public:
     PandoraMapStorage() = delete;
 
 private:
-    NODISCARD bool canLoad() const override { return true; }
-    NODISCARD bool canSave() const override { return false; }
-
-    void newData() override;
-    NODISCARD bool loadData() override;
-    NODISCARD bool saveData(bool baseMapOnly) override;
-    NODISCARD bool mergeData() override;
+    NODISCARD bool virt_canLoad() const final { return true; }
+    NODISCARD std::optional<RawMapLoadData> virt_loadData() final;
 
 private:
-    std::shared_ptr<Room> loadRoom(QXmlStreamReader &);
-    void loadExits(Room &, QXmlStreamReader &);
-    void log(const QString &msg) { emit sig_log("PandoraMapStorage", msg); }
+    NODISCARD bool virt_canSave() const final { return false; }
+    NODISCARD bool virt_saveData(const RawMapData & /*mapData*/) final { return false; }
 
 private:
-    Coordinate basePosition;
+    struct LoadRoomHelper;
+    NODISCARD ExternalRawRoom loadRoom(QXmlStreamReader &, LoadRoomHelper &);
+    void loadExits(ExternalRawRoom &, QXmlStreamReader &, LoadRoomHelper &);
+    void log(const QString &msg);
 };

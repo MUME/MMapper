@@ -4,32 +4,30 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/RuleOf5.h"
+#include "../map/RoomHandle.h"
 #include "../map/RoomRecipient.h"
 #include "../map/parseevent.h"
 
 class ParseEvent;
-class Room;
-class RoomAdmin;
+class MapFrontend;
 
 class NODISCARD Forced final : public RoomRecipient
 {
 private:
-    RoomAdmin *m_owner = nullptr;
-    const Room *m_matchedRoom = nullptr;
+    MapFrontend &m_map;
+    RoomPtr m_matchedRoom = std::nullopt;
     SigParseEvent m_myEvent;
     bool m_update = false;
 
 public:
-    explicit Forced(const SigParseEvent &sigParseEvent, bool update = false);
-    ~Forced() override;
-
-public:
+    explicit Forced(MapFrontend &map, const SigParseEvent &sigParseEvent, bool update = false);
     Forced() = delete;
+    ~Forced() final;
     DELETE_CTORS_AND_ASSIGN_OPS(Forced);
 
 private:
-    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+    void virt_receiveRoom(const RoomHandle &) final;
 
 public:
-    NODISCARD const Room *oneMatch() const { return m_matchedRoom; }
+    NODISCARD RoomPtr oneMatch() const { return m_matchedRoom; }
 };

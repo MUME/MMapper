@@ -5,19 +5,18 @@
 
 #include "roomsignalhandler.h"
 
-#include "../expandoracommon/RoomAdmin.h"
+#include "../map/AbstractChangeVisitor.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
-#include "../mapfrontend/mapaction.h"
+#include "../mapdata/mapdata.h"
 
 #include <cassert>
 #include <memory>
 
-void RoomSignalHandler::hold(const Room *const room,
-                             RoomAdmin *const owner,
-                             RoomRecipient *const locker)
+void RoomSignalHandler::hold(const RoomId room, RoomRecipient *const locker)
 {
-    owners[room] = owner;
+    // REVISIT: why do we allow locker to be null?
+    owners.insert(room);
     if (lockers[room].empty()) {
         holdCount[room] = 0;
     }
@@ -25,14 +24,14 @@ void RoomSignalHandler::hold(const Room *const room,
     ++holdCount[room];
 }
 
-void RoomSignalHandler::release(const Room *const room)
+void RoomSignalHandler::release(const RoomId room)
 {
     assert(holdCount[room]);
     if (--holdCount[room] == 0) {
-        if (RoomAdmin *const rcv = owners[room]) {
+        if (owners.contains(room)) {
             for (auto i = lockers[room].begin(); i != lockers[room].end(); ++i) {
                 if (RoomRecipient *const recipient = *i) {
-                    rcv->releaseRoom(*recipient, room->getId());
+                    m_map.releaseRoom(*recipient, room);
                 }
             }
         } else {
@@ -44,19 +43,26 @@ void RoomSignalHandler::release(const Room *const room)
     }
 }
 
-void RoomSignalHandler::keep(const Room *const room, const ExitDirEnum dir, const RoomId fromId)
+void RoomSignalHandler::keep(const RoomId room, const ExitDirEnum dir, const RoomId fromId)
 {
-    std::ignore = deref(room);
     assert(holdCount[room] != 0);
+    assert(owners.contains(room));
 
-    RoomAdmin *const rcv = owners[room];
-    if (static_cast<uint32_t>(dir) < NUM_EXITS) {
-        emit sig_scheduleAction(std::make_shared<AddExit>(fromId, room->getId(), dir));
+    static_assert(static_cast<uint32_t>(ExitDirEnum::UNKNOWN) + 1 == NUM_EXITS);
+    if (isNESWUD(dir) || dir == ExitDirEnum::UNKNOWN) {
+        ChangeList changes;
+        changes.add(exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
+                                                            fromId,
+                                                            dir,
+                                                            room,
+                                                            WaysEnum::OneWay});
+        const auto wrapped = SigMapChangeList{std::make_shared<ChangeList>(changes)};
+        emit sig_scheduleAction(wrapped);
     }
 
     if (!lockers[room].empty()) {
         if (RoomRecipient *const locker = *(lockers[room].begin())) {
-            rcv->keepRoom(*locker, room->getId());
+            m_map.keepRoom(*locker, room);
             lockers[room].erase(locker);
         } else {
             assert(false);

@@ -17,6 +17,12 @@
 // NOTE: SEP() is required because of the use in std::variant<> declaration,
 // which cannot accept trailing commas.
 #define XFOREACH_ROOM_FIELD(X, SEP) \
+    X(NAME, Name, RoomName) \
+    SEP() \
+    X(DESC, Description, RoomDesc) \
+    SEP() \
+    X(CONTENTS, Contents, RoomContents) \
+    SEP() \
     X(NOTE, Note, RoomNote) \
     SEP() \
     X(MOB_FLAGS, MobFlags, RoomMobFlags) \
@@ -73,7 +79,7 @@ public:
     NODISCARD RoomFieldEnum getType() const noexcept
     {
 #define X_NOP()
-#define CASE(UPPER_CASE, CamelCase, Type) \
+#define X_CASE(UPPER_CASE, CamelCase, Type) \
     case static_cast<size_t>(RoomFieldVariantOrderEnum::UPPER_CASE): { \
         static_assert( \
             std::is_same_v<std::variant_alternative_t<static_cast<size_t>( \
@@ -82,10 +88,10 @@ public:
                            Type>); \
         return RoomFieldEnum::UPPER_CASE; \
     }
-        switch (const auto index = m_data.index()) {
-            XFOREACH_ROOM_FIELD(CASE, X_NOP)
+        switch (m_data.index()) {
+            XFOREACH_ROOM_FIELD(X_CASE, X_NOP)
         }
-#undef CASE
+#undef X_CASE
 #undef X_NOP
 
         std::abort(); /* crash */

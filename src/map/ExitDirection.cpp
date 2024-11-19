@@ -6,7 +6,9 @@
 
 #include "../global/Array.h"
 #include "../global/Consts.h"
+#include "../global/EnumIndexedArray.h"
 #include "../global/enums.h"
+#include "coordinate.h"
 
 namespace enums {
 const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()
@@ -165,3 +167,27 @@ char charForDir(const ExitDirEnum dir)
     return char_consts::C_QUESTION_MARK;
 }
 } // namespace Mmapper2Exit
+
+using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;
+NODISCARD static ExitCoordinates initExitCoordinates()
+{
+    ExitCoordinates exitDirs;
+    exitDirs[ExitDirEnum::NORTH] = Coordinate(0, 1, 0);
+    exitDirs[ExitDirEnum::SOUTH] = Coordinate(0, -1, 0);
+    exitDirs[ExitDirEnum::EAST] = Coordinate(1, 0, 0);
+    exitDirs[ExitDirEnum::WEST] = Coordinate(-1, 0, 0);
+    exitDirs[ExitDirEnum::UP] = Coordinate(0, 0, 1);
+    exitDirs[ExitDirEnum::DOWN] = Coordinate(0, 0, -1);
+    return exitDirs;
+}
+
+const Coordinate &exitDir(const ExitDirEnum dir)
+{
+    static const auto exitDirs = initExitCoordinates();
+    return exitDirs[dir];
+}
+
+const std::string_view to_string_view(const ExitDirEnum dir)
+{
+    return lowercaseDirection(dir);
+}

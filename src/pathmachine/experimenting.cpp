@@ -15,7 +15,7 @@
 Experimenting::Experimenting(std::shared_ptr<PathList> pat,
                              const ExitDirEnum in_dirCode,
                              PathParameters &in_params)
-    : direction(Room::exitDir(in_dirCode))
+    : direction(::exitDir(in_dirCode))
     , dirCode(in_dirCode)
     , paths(PathList::alloc())
     , params(in_params)
@@ -24,12 +24,10 @@ Experimenting::Experimenting(std::shared_ptr<PathList> pat,
 
 Experimenting::~Experimenting() = default;
 
-void Experimenting::augmentPath(const std::shared_ptr<Path> &path,
-                                RoomAdmin *const map,
-                                const Room *const room)
+void Experimenting::augmentPath(const std::shared_ptr<Path> &path, const RoomHandle &room)
 {
     const Coordinate c = path->getRoom()->getPosition() + direction;
-    const auto working = path->fork(room, c, map, params, this, dirCode);
+    const auto working = path->fork(room, c, params, this, dirCode);
     if (best == nullptr) {
         best = working;
     } else if (working->getProb() > best->getProb()) {

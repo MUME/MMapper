@@ -38,7 +38,7 @@ RemoveCharacter::RemoveCharacter(const QVariantMap &map)
  * @brief RemoveCharacter::RemoveCharacter
  * @param name of the character to delete
  */
-RemoveCharacter::RemoveCharacter(QByteArray name)
+RemoveCharacter::RemoveCharacter(QString name)
     : m_name{std::move(name)}
 {}
 

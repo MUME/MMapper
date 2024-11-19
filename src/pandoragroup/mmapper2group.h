@@ -6,6 +6,7 @@
 
 #include "../global/ConfigEnums.h"
 #include "../global/WeakHandle.h"
+#include "../map/Map.h"
 #include "../map/roomid.h"
 #include "GroupManagerApi.h"
 #include "mmapper2character.h"
@@ -32,9 +33,9 @@ class NODISCARD_QOBJECT Mmapper2Group final : public QObject
 private:
     struct NODISCARD LastPrompt final
     {
-        QByteArray textHP;
-        QByteArray textMoves;
-        QByteArray textMana;
+        QString textHP;
+        QString textMoves;
+        QString textMana;
 
         void reset() { *this = LastPrompt{}; }
     };
@@ -47,11 +48,6 @@ private:
     std::unique_ptr<GroupAuthority> m_authority;
     QPointer<CGroupCommunicator> m_network;
     std::unique_ptr<CGroup> m_group;
-
-private:
-    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
-    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
-    friend GroupManagerApi;
 
 public:
     NODISCARD static GroupManagerStateEnum getConfigState();
@@ -76,20 +72,29 @@ public:
 public:
     NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
 
+private:
+    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
+    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
+    friend GroupManagerApi;
+
 protected:
-    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
-    void kickCharacter(const QByteArray &character);
-    void parseScoreInformation(const QByteArray &score);
-    void parsePromptInformation(const QByteArray &prompt);
+    void sendGroupTell(const QString &tell); // sends gtell from local user
+    void kickCharacter(const QString &character);
+    void parseScoreInformation(const QString &score);
+    void parsePromptInformation(const QString &prompt);
     void updateCharacterPosition(CharacterPositionEnum);
     void updateCharacterAffect(CharacterAffectEnum, bool);
+
+private:
+    void setCharRoomId(ServerRoomId srvId, ExternalRoomId extId);
 
 private:
     void init();
     void issueLocalCharUpdate();
     NODISCARD bool setCharacterPosition(CharacterPositionEnum pos);
     NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
-    void renameCharacter(QByteArray newname);
+    void renameCharacter(QByteArray newname) = delete;
+    void renameCharacter(QString newname);
 
 signals:
     // MainWindow::log (via MainWindow)
@@ -110,16 +115,23 @@ signals:
     void sig_updateWidget(); // update group widget
 
     // CGroupCommunicator::sendGroupTell
-    void sig_sendGroupTell(const QByteArray &tell);
+    void sig_sendGroupTell(const QString &tell);
     // CGroupCommunicator::kickCharacter
-    void sig_kickCharacter(const QByteArray &character);
+    void sig_kickCharacter(const QString &character);
     // CGroupCommunicator::sendCharUpdate
     void sig_sendCharUpdate(const QVariantMap &map);
     // CGroupCommunicator::sendSelfRename
-    void sig_sendSelfRename(const QByteArray &, const QByteArray &);
+    void sig_sendSelfRename(const QString &, const QString &);
 
 public slots:
-    void slot_setCharacterRoomId(RoomId pos);
+    void slot_setCharRoomIdFromServer(ServerRoomId srvId, ExternalRoomId extId)
+    {
+        setCharRoomId(srvId, extId);
+    }
+    void slot_setCharRoomIdEstimated(ServerRoomId srvId, ExternalRoomId extId)
+    {
+        setCharRoomId(srvId, extId);
+    }
     void slot_setMode(GroupManagerStateEnum newState);
     void slot_startNetwork();
     void slot_stopNetwork();

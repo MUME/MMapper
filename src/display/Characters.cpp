@@ -104,10 +104,10 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color &color, bool
 }
 
 void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
-                                        const QList<Coordinate> &path,
+                                        const std::vector<Coordinate> &path,
                                         const Color &color)
 {
-    if (path.isEmpty()) {
+    if (path.empty()) {
         return;
     }
 
@@ -384,20 +384,34 @@ void MapCanvas::paintCharacters()
     }
 
     CharacterBatch characterBatch{m_mapScreen, m_currentLayer, getTotalScaleFactor()};
-    const Coordinate &pos = m_data.getPosition();
 
-    // draw the characters before the current position
-    characterBatch.incrementCount(pos);
-    drawGroupCharacters(characterBatch);
-    characterBatch.resetCount(pos);
+    // IIFE to abuse return to avoid duplicate else branches
+    [this, &characterBatch]() {
+        if (const std::optional<RoomId> opt_pos = m_data.getCurrentRoomId()) {
+            const auto &id = opt_pos.value();
+            if (const auto &room = m_data.findRoomHandle(id)) {
+                const auto &pos = room->getPosition();
+                // draw the characters before the current position
+                characterBatch.incrementCount(pos);
+                drawGroupCharacters(characterBatch);
+                characterBatch.resetCount(pos);
 
-    // paint char current position
-    const Color color{getConfig().groupManager.color};
-    characterBatch.drawCharacter(pos, color);
+                // paint char current position
+                const Color color{getConfig().groupManager.color};
+                characterBatch.drawCharacter(pos, color);
 
-    // paint prespam
-    const auto prespam = m_data.getPath(pos, m_prespammedPath.getQueue());
-    characterBatch.drawPreSpammedPath(pos, prespam, color);
+                // paint prespam
+                const auto prespam = m_data.getPath(id, m_prespammedPath.getQueue());
+                characterBatch.drawPreSpammedPath(pos, prespam, color);
+                return;
+            } else {
+                // this can happen if the "current room" is deleted
+                // and we failed to clear it elsewhere.
+                m_data.clearSelectedRoom();
+            }
+        }
+        drawGroupCharacters(characterBatch);
+    }();
 
     characterBatch.reallyDraw(getOpenGL(), m_textures);
 }
@@ -412,27 +426,48 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 
     CGroup &group = deref(pGroup);
     const CGroupChar &self = deref(group.getSelf());
+    const auto &charName = getConfig().groupManager.charName;
 
-    // Omit player so that they know group members are below them
-    QSet<RoomId> drawnRoomIds;
+    RoomIdSet drawnRoomIds;
+    const Map &map = m_data.getCurrentMap();
     const auto pSelection = group.selectAll();
     for (const auto &pCharacter : deref(pSelection)) {
         const CGroupChar &character = deref(pCharacter);
-        const RoomId id = character.getRoomId();
-        // Do not draw the character if they're in an "Unknown" room
-        if (id == INVALID_ROOMID || id > m_data.getMaxId() || &character == &self) {
+
+        // Omit player so that they know group members are below them
+        if (&character == &self || character.getName() == charName) {
             continue;
         }
 
-        auto roomSelection = RoomSelection(m_data);
-        if (const Room *const r = roomSelection.getRoom(id)) {
-            const auto pos = r->getPosition();
-            const auto color = Color{character.getColor()};
-            const bool fill = !drawnRoomIds.contains(r->getId());
-            batch.drawCharacter(pos, color, fill);
-            const auto prespam = m_data.getPath(pos, character.prespam);
-            batch.drawPreSpammedPath(pos, prespam, color);
-            drawnRoomIds.insert(r->getId());
+        const auto &r = [&character, &map]() -> RoomPtr {
+            const ServerRoomId srvId = character.getServerId();
+            if (srvId != INVALID_SERVER_ROOMID) {
+                if (const auto &room = map.findRoomHandle(srvId)) {
+                    return room;
+                }
+            }
+            const ExternalRoomId extId = character.getExternalId();
+            if (extId != INVALID_EXTERNAL_ROOMID) {
+                if (const auto &room = map.findRoomHandle(extId)) {
+                    return room;
+                }
+            }
+            return std::nullopt;
+        }();
+
+        // Do not draw the character if they're in an "Unknown" room
+        if (!r.has_value()) {
+            continue;
         }
+
+        const RoomId id = r->getId();
+        const auto &pos = r->getPosition();
+        const auto color = Color{character.getColor()};
+        const bool fill = !drawnRoomIds.contains(id);
+        const auto prespam = m_data.getPath(id, character.prespam);
+
+        batch.drawCharacter(pos, color, fill);
+        batch.drawPreSpammedPath(pos, prespam, color);
+        drawnRoomIds.insert(id);
     }
 }

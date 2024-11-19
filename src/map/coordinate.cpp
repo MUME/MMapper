@@ -98,3 +98,53 @@ Coordinate Coordinate::operator/(const int scalar) const
     ret.z /= scalar;
     return ret;
 }
+
+bool Coordinate::operator<(const Coordinate &rhs) const
+{
+    if (z < rhs.z) {
+        return true;
+    }
+    if (rhs.z < z) {
+        return false;
+    }
+
+    // REVISIT: use morton "z-ordering" (interleaved bits) for x/y axes?
+    if (y < rhs.y) {
+        return true;
+    }
+    if (rhs.y < y) {
+        return false;
+    }
+    return x < rhs.x;
+}
+bool Coordinate::operator>(const Coordinate &rhs) const
+{
+    return rhs < *this;
+}
+bool Coordinate::operator<=(const Coordinate &rhs) const
+{
+    return !(rhs < *this);
+}
+bool Coordinate::operator>=(const Coordinate &rhs) const
+{
+    return !(*this < rhs);
+}
+
+// Technically we could init a, and then insert b.
+Bounds::Bounds(const Coordinate &a, const Coordinate &b)
+    : min{Coordinate::min(a, b)}
+    , max{Coordinate::max(a, b)}
+{}
+
+void Bounds::insert(const Coordinate &c)
+{
+#define ONE(_type, _xyz) ((_type)._xyz) = std::_type(((_type)._xyz), (c._xyz))
+#define THREE(_type) \
+    ONE(_type, x); \
+    ONE(_type, y); \
+    ONE(_type, z)
+    THREE(min);
+    THREE(max);
+#undef THREE
+#undef ONE
+}

@@ -21,6 +21,7 @@
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
     X(MMAPPER_COMM, MmapperComm, "mmapper.comm", "MMapper.Comm") \
     X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
+    X(ROOM, Room, "room", "Room") \
     /* define gmcp module types above */
 
 enum class NODISCARD GmcpModuleTypeEnum {
@@ -30,8 +31,10 @@ enum class NODISCARD GmcpModuleTypeEnum {
 #undef X_DECL_GMCP_MODULE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MODULES = 5u;
-static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::ROOM_CHARS) + 1);
+#define X_COUNT(...) +1
+static constexpr const size_t NUM_GMCP_MODULES = XFOREACH_GMCP_MODULE_TYPE(X_COUNT);
+#undef X_COUNT
+static_assert(NUM_GMCP_MODULES == 6);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 namespace tags {
@@ -54,10 +57,9 @@ using GmcpModuleVersionList
 class NODISCARD GmcpModule final
 {
 private:
-    // FIXME: Tag this as Latin1 or Utf8.
     struct NODISCARD NameVersion final
     {
-        std::string normalizedName;
+        std::string normalizedName; // utf8
         GmcpModuleVersion version = DEFAULT_GMCP_MODULE_VERSION;
 
         NODISCARD static NameVersion fromStdString(std::string);

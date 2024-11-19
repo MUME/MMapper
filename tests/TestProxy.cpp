@@ -40,29 +40,29 @@ void TestProxy::gmcpMessageSerializeTest()
     GmcpMessage gmcp1(GmcpMessageTypeEnum::CORE_HELLO);
     QCOMPARE(gmcp1.toRawBytes(), QByteArray("Core.Hello"));
 
-    GmcpMessage gmcp2(GmcpMessageTypeEnum::CORE_HELLO, GmcpJson{std::string{"{}"}});
+    GmcpMessage gmcp2(GmcpMessageTypeEnum::CORE_HELLO, GmcpJson{"{}"});
     QCOMPARE(gmcp2.toRawBytes(), QByteArray("Core.Hello {}"));
 }
 
 void TestProxy::gmcpModuleTest()
 {
     GmcpModule module1("Char 1");
-    QCOMPARE(mmqt::toQByteArrayLatin1(module1.getNormalizedName()), QByteArray("char"));
+    QCOMPARE(mmqt::toQByteArrayUtf8(module1.getNormalizedName()), QByteArray("char"));
     QCOMPARE(module1.getVersion().asUint32(), 1u);
     QVERIFY(module1.isSupported());
 
     GmcpModule module2("Char.Skills 1");
-    QCOMPARE(mmqt::toQByteArrayLatin1(module2.getNormalizedName()), QByteArray("char.skills"));
+    QCOMPARE(mmqt::toQByteArrayUtf8(module2.getNormalizedName()), QByteArray("char.skills"));
     QCOMPARE(module2.getVersion().asUint32(), 1u);
     QVERIFY(!module2.isSupported());
 
     GmcpModule module3("Room");
-    QCOMPARE(mmqt::toQByteArrayLatin1(module3.getNormalizedName()), QByteArray("room"));
+    QCOMPARE(mmqt::toQByteArrayUtf8(module3.getNormalizedName()), QByteArray("room"));
     QCOMPARE(module3.getVersion().asUint32(), 0u);
-    QVERIFY(!module3.isSupported());
+    QVERIFY(module3.isSupported());
 
     GmcpModule module4("MMapper.Comm 1");
-    QCOMPARE(mmqt::toQByteArrayLatin1(module4.getNormalizedName()), QByteArray("mmapper.comm"));
+    QCOMPARE(mmqt::toQByteArrayUtf8(module4.getNormalizedName()), QByteArray("mmapper.comm"));
     QCOMPARE(module4.getVersion().asUint32(), 1u);
     QVERIFY(module4.isSupported());
 }

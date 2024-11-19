@@ -9,6 +9,8 @@
 #include <ostream>
 #include <vector>
 
+class AnsiOstream;
+
 namespace syntax {
 class NODISCARD ParserInput final
 {
@@ -44,9 +46,11 @@ public:
     NODISCARD ParserInput left(size_t n) const;
     NODISCARD ParserInput mid(size_t n) const;
     NODISCARD ParserInput right(size_t n) const;
+    // aka drop(n) by other APIs; removes the rightmost n, so it's the complement of right().
     NODISCARD ParserInput rmid(size_t n) const;
 
     void concatenate_into(std::ostream &os) const;
+    void concatenate_into(AnsiOstream &os) const;
 
     NODISCARD std::string concatenate() const;
 
@@ -54,6 +58,7 @@ public:
     NODISCARD bool isSubsetOf(const ParserInput &parent) const;
 
     friend std::ostream &operator<<(std::ostream &os, const ParserInput &parserInput);
+    friend AnsiOstream &operator<<(AnsiOstream &os, const ParserInput &parserInput);
 };
 
 } // namespace syntax

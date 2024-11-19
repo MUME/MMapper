@@ -120,8 +120,8 @@ public:
         NODISCARD QColor getBgColor() const { return mmqt::toQColor(getBg()); }
         NODISCARD QColor getFgColor() const { return mmqt::toQColor(getFg()); }
 
-        NODISCARD QString getBgName() const { return mmqt::toQStringLatin1(bg.to_string_view()); }
-        NODISCARD QString getFgName() const { return mmqt::toQStringLatin1(fg.to_string_view()); }
+        NODISCARD QString getBgName() const { return mmqt::toQStringUtf8(bg.to_string_view()); }
+        NODISCARD QString getFgName() const { return mmqt::toQStringUtf8(fg.to_string_view()); }
     };
 
     /// \return true if string is valid ANSI color code

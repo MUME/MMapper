@@ -152,13 +152,13 @@ void ClientWidget::slot_saveLog()
         return;
     }
 
-    const auto getDocString8bit = [](const QTextDocument *const pDoc,
+    const auto getDocStringUtf8 = [](const QTextDocument *const pDoc,
                                      const bool isHtml) -> QByteArray {
         auto &doc = deref(pDoc);
         const QString string = isHtml ? doc.toHtml() : doc.toPlainText();
-        return string.toLocal8Bit();
+        return string.toUtf8();
     };
-    document.write(getDocString8bit(deref(deref(m_ui).display).document(), result.isHtml));
+    document.write(getDocStringUtf8(deref(deref(m_ui).display).document(), result.isHtml));
     document.close();
 }
 

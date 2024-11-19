@@ -22,7 +22,7 @@ private:
 
     char m_command = char_consts::C_NUL;
     int m_remaining = 0;
-    QByteArray m_buffer;
+    RawBytes m_buffer;
 
 public:
     explicit MpiFilter(QObject *const parent)
@@ -30,12 +30,14 @@ public:
     {}
 
 protected:
-    void parseMessage(char command, const QByteArray &buffer);
-    void parseEditMessage(const QByteArray &buffer);
-    void parseViewMessage(const QByteArray &buffer);
+    void parseMessage(char command, const RawBytes &buffer);
+    void parseEditMessage(const RawBytes &buffer);
+    void parseViewMessage(const RawBytes &buffer);
+
+private:
+    void parseNewMudInput(const TelnetData &data);
 
 signals:
-    void sig_sendToMud(const QByteArray &);
     void sig_parseNewMudInput(const TelnetData &data);
     void sig_editMessage(const RemoteSession &, const QString &, const QString &);
     void sig_viewMessage(const QString &, const QString &);

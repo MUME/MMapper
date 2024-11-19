@@ -26,6 +26,7 @@ class ParseEvent;
     X(CORE_SUPPORTS_REMOVE, CoreSupportsRemove, "core.supports.remove", "Core.Supports.Remove") \
     X(CORE_SUPPORTS_SET, CoreSupportsSet, "core.supports.set", "Core.Supports.Set") \
     X(EVENT_DARKNESS, EventDarkness, "event.darkness", "Event.Darkness") \
+    X(EVENT_MOVED, EventMoved, "event.moved", "Event.Moved") \
     X(EVENT_MOON, EventMoon, "event.moon", "Event.Moon") \
     X(EVENT_SUN, EventSun, "event.sun", "Event.Sun") \
     X(EXTERNAL_DISCORD_HELLO, \
@@ -40,6 +41,8 @@ class ParseEvent;
     X(ROOM_CHARS_REMOVE, RoomCharsRemove, "room.chars.remove", "Room.Chars.Remove") \
     X(ROOM_CHARS_SET, RoomCharsSet, "room.chars.set", "Room.Chars.Set") \
     X(ROOM_CHARS_UPDATE, RoomCharsUpdate, "room.chars.update", "Room.Chars.Update") \
+    X(ROOM_INFO, RoomInfo, "room.info", "Room.Info") \
+    X(ROOM_UPDATE_EXITS, RoomUpdateExits, "room.update.exits", "Room.Update.Exits") \
     /* define gmcp message types above */
 
 enum class NODISCARD GmcpMessageTypeEnum {
@@ -49,20 +52,26 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MESSAGES = 17u;
-static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE) + 1);
+#define X_COUNT(...) +1
+static constexpr const size_t NUM_GMCP_MESSAGES = XFOREACH_GMCP_MESSAGE_TYPE(X_COUNT);
+#undef X_COUNT
+static_assert(NUM_GMCP_MESSAGES == 20);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {
 struct NODISCARD GmcpMessageNameTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view) { return true; }
+};
 } // namespace tags
 
-using GmcpMessageName = TaggedStringLatin1<tags::GmcpMessageNameTag>;
+using GmcpMessageName = TaggedStringUtf8<tags::GmcpMessageNameTag>;
 
 namespace tags {
 struct NODISCARD GmcpJsonTag final
-{};
+{
+    NODISCARD static bool isValid(std::string_view) { return true; }
+};
 } // namespace tags
 
 using GmcpJson = TaggedStringUtf8<tags::GmcpJsonTag>;

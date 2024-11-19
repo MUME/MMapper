@@ -5,8 +5,9 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/macros.h"
 #include "abstractmapstorage.h"
+
+#include <optional>
 
 #include <QString>
 #include <QtCore>
@@ -26,20 +27,20 @@ class NODISCARD_QOBJECT JsonMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit JsonMapStorage(MapData &, const QString &, QObject *parent);
+    explicit JsonMapStorage(const AbstractMapStorage::Data &data, QObject *parent);
     ~JsonMapStorage() final;
 
 public:
     JsonMapStorage() = delete;
 
 private:
-    NODISCARD bool canLoad() const override { return false; }
-    NODISCARD bool canSave() const override { return true; }
+    NODISCARD bool virt_canLoad() const final { return false; }
+    NODISCARD std::optional<RawMapLoadData> virt_loadData() final { return std::nullopt; }
 
-    void newData() override;
-    NODISCARD bool loadData() override;
-    NODISCARD bool saveData(bool baseMapOnly) override;
-    NODISCARD bool mergeData() override;
+private:
+    NODISCARD bool virt_canSave() const final { return true; }
+    NODISCARD bool virt_saveData(const RawMapData &map) final;
+
+private:
     void log(const QString &msg) { emit sig_log("JsonMapStorage", msg); }
-    // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };

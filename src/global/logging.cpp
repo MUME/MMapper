@@ -21,7 +21,7 @@ AbstractDebugOStream::~AbstractDebugOStream()
     }
 
     // Try to detect accidentally passing latin1
-    assert(charset::isProbablyUtf8(str_utf8));
+    assert(charset::validateUtf8(str_utf8) == charset::Utf8Validation::Valid);
 
     auto &debug = m_debug;
 
@@ -51,7 +51,7 @@ AbstractDebugOStream::~AbstractDebugOStream()
 
 void AbstractDebugOStream::writeLatin1(const std::string_view sv)
 {
-    latin1ToUtf8(m_os_utf8, sv);
+    charset::conversion::latin1ToUtf8(m_os_utf8, sv); // text was specified as latin1
 }
 
 void AbstractDebugOStream::writeUtf8(const std::string_view sv)

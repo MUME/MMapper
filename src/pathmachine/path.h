@@ -10,6 +10,7 @@
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitFlags.h"
+#include "../map/RoomHandle.h"
 #include "pathparameters.h"
 
 #include <cassert>
@@ -22,8 +23,6 @@
 #include <QtGlobal>
 
 class Coordinate;
-class Room;
-class RoomAdmin;
 class RoomRecipient;
 class RoomSignalHandler;
 struct PathParameters;
@@ -31,16 +30,14 @@ struct PathParameters;
 class NODISCARD Path final : public std::enable_shared_from_this<Path>
 {
 public:
-    static std::shared_ptr<Path> alloc(const Room *room,
-                                       RoomAdmin *owner,
+    static std::shared_ptr<Path> alloc(const RoomPtr &room,
                                        RoomRecipient *locker,
                                        RoomSignalHandler *signaler,
                                        std::optional<ExitDirEnum> direction);
 
 public:
     explicit Path(Badge<Path>,
-                  const Room *room,
-                  RoomAdmin *owner,
+                  const RoomPtr &room,
                   RoomRecipient *locker,
                   RoomSignalHandler *signaler,
                   std::optional<ExitDirEnum> direction);
@@ -54,16 +51,15 @@ public:
         assert(!m_zombie);
         return !m_children.empty();
     }
-    NODISCARD const Room *getRoom() const
+    NODISCARD RoomPtr getRoom() const
     {
         assert(!m_zombie);
         return m_room;
     }
 
     // new Path is created, distance between rooms is calculated and probability is set accordingly
-    NODISCARD std::shared_ptr<Path> fork(const Room *room,
+    NODISCARD std::shared_ptr<Path> fork(const RoomPtr &room,
                                          const Coordinate &expectedCoordinate,
-                                         RoomAdmin *owner,
                                          const PathParameters &params,
                                          RoomRecipient *locker,
                                          ExitDirEnum dir);
@@ -93,7 +89,7 @@ private:
     std::vector<std::weak_ptr<Path>> m_children;
     double m_probability = 1.0;
     // in fact a path only has one room, one parent and some children (forks).
-    const Room *const m_room;
+    const RoomPtr m_room;
     RoomSignalHandler *const m_signaler;
     const std::optional<ExitDirEnum> m_dir;
     bool m_zombie = false;

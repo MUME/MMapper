@@ -109,7 +109,7 @@ private:
 
 private:
     QAction *m_kick = nullptr;
-    QByteArray selectedCharacter;
+    QString selectedCharacter;
 
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
@@ -120,7 +120,7 @@ private:
     void writeSettings();
 
 signals:
-    void sig_kickCharacter(const QByteArray &);
+    void sig_kickCharacter(const QString &);
     void sig_center(glm::vec2);
 
 public slots:

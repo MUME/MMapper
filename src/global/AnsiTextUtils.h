@@ -819,6 +819,41 @@ NODISCARD std::string_view to_hex_color_string_view(AnsiColor16Enum ansi);
 NODISCARD Color toColor(AnsiColor16Enum ansi);
 NODISCARD int rgbToAnsi256(int r, int g, int b);
 
+NODISCARD size_t ansiCodeLen(std::string_view input);
+NODISCARD bool isAnsiColor(std::string_view input);
+NODISCARD std::optional<RawAnsi> ansi_parse(RawAnsi ansi, std::string_view input);
+
+template<typename ValidAnsiColorCallback, typename InvalidEscapeCallback, typename NonAnsiCallback>
+void foreachAnsi(const std::string_view input,
+                 ValidAnsiColorCallback &&validAnsiColor,
+                 InvalidEscapeCallback &&invalidEscape,
+                 NonAnsiCallback &&nonAnsi)
+{
+    std::string_view sv = input;
+    while (!sv.empty()) {
+        const auto esc_pos = sv.find(char_consts::C_ESC);
+        if (esc_pos == std::string_view::npos) {
+            nonAnsi(sv);
+            break;
+        }
+        if (esc_pos > 0) {
+            nonAnsi(sv.substr(0, esc_pos));
+            sv.remove_prefix(esc_pos);
+        }
+
+        const auto len = ansiCodeLen(sv);
+        assert(len > 0);
+        const auto ansi = sv.substr(0, len);
+        sv.remove_prefix(len);
+
+        if (isAnsiColor(ansi)) {
+            validAnsiColor(ansi);
+        } else {
+            invalidEscape(ansi);
+        }
+    }
+}
+
 namespace mmqt {
 enum class NODISCARD TokenTypeEnum { Ansi, Control, Newline, Space, Word };
 class NODISCARD AnsiStringToken final

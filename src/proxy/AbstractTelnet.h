@@ -7,6 +7,7 @@
 #include "../global/Array.h"
 #include "GmcpMessage.h"
 #include "GmcpModule.h"
+#include "TaggedBytes.h"
 #include "TextCodec.h"
 
 #include <cassert>
@@ -65,26 +66,32 @@ static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
 static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
 static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
 
-struct NODISCARD AppendBuffer : public QByteArray
+struct NODISCARD AppendBuffer : public RawBytes
 {
-    explicit AppendBuffer(QByteArray &&rhs)
-        : QByteArray{std::move(rhs)}
+    explicit AppendBuffer(RawBytes &&rhs)
+        : RawBytes{std::move(rhs)}
     {}
-    explicit AppendBuffer(const QByteArray &rhs)
-        : QByteArray{rhs}
+    explicit AppendBuffer(const RawBytes &rhs)
+        : RawBytes{rhs}
     {}
 
-    using QByteArray::QByteArray;
-    using QByteArray::size;
-    using QByteArray::operator=;
+    using RawBytes ::RawBytes;
+    using RawBytes ::size;
+    using RawBytes ::operator=;
 
-    void append(const uint8_t c) { QByteArray::append(static_cast<char>(c)); }
-    void operator+=(const uint8_t c) { QByteArray::operator+=(static_cast<char>(c)); }
+    void append(const uint8_t c) { RawBytes::append(static_cast<char>(c)); }
+    void operator+=(const uint8_t c) { RawBytes::operator+=(static_cast<char>(c)); }
+
+    void reserve(const int at_least)
+    {
+        assert(at_least >= 0);
+        RawBytes::getQByteArray().reserve(at_least);
+    }
 
     NODISCARD unsigned char unsigned_at(int pos) const
     {
         assert(size() > pos);
-        return static_cast<unsigned char>(QByteArray::at(pos));
+        return static_cast<unsigned char>(RawBytes::at(pos));
     }
 };
 
@@ -129,8 +136,8 @@ protected:
 
 private:
     /* Terminal Type */
-    const QByteArray m_defaultTermType;
-    QByteArray m_termType;
+    const TelnetTermTypeBytes m_defaultTermType;
+    TelnetTermTypeBytes m_termType;
 
     /** amount of bytes sent up to now */
     TextCodec m_textCodec;
@@ -165,7 +172,7 @@ private:
 public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
                             QObject *parent,
-                            QByteArray defaultTermType);
+                            TelnetTermTypeBytes defaultTermType);
     ~AbstractTelnet() override;
 
 protected:
@@ -173,7 +180,7 @@ protected:
     NODISCARD bool getDebug() const { return m_debug; }
 
 public:
-    NODISCARD QByteArray getTerminalType() const { return m_termType; }
+    NODISCARD TelnetTermTypeBytes getTerminalType() const { return m_termType; }
     /* unused */
     NODISCARD int64_t getSentBytes() const { return m_sentBytes; }
 
@@ -184,61 +191,63 @@ public:
 
 protected:
     void sendCharsetRequest();
-    void sendTerminalType(const QByteArray &terminalType);
+    void sendTerminalType(const TelnetTermTypeBytes &terminalType);
     void sendCharsetRejected();
-    void sendCharsetAccepted(const QByteArray &characterSet);
+    void sendCharsetAccepted(const TelnetCharsetBytes &characterSet);
     void sendOptionStatus();
     void sendWindowSizeChanged(int, int);
     void sendTerminalTypeRequest();
     void sendGmcpMessage(const GmcpMessage &msg);
-    void sendMudServerStatus(const QByteArray &);
+    void sendMudServerStatus(const TelnetMsspBytes &);
     void sendLineModeEdit();
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void submitOverTelnet(std::string_view data, bool goAhead);
+    void submitOverTelnet(const QString &s, bool goAhead);
+    void submitOverTelnet(const RawBytes &s, bool goAhead);
 
 private:
     NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
-    virtual void virt_receiveTerminalType(const QByteArray &) {}
-    virtual void virt_receiveMudServerStatus(const QByteArray &) {}
+    virtual void virt_receiveTerminalType(const TelnetTermTypeBytes &) {}
+    virtual void virt_receiveMudServerStatus(const TelnetMsspBytes &) {}
     virtual void virt_receiveWindowSize(int, int) {}
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    virtual void virt_sendRawData(std::string_view data) = 0;
-    virtual void virt_sendToMapper(const QByteArray &, bool goAhead) = 0;
+    virtual void virt_sendRawData(const TelnetIacBytes &data) = 0;
+    virtual void virt_sendToMapper(const RawBytes &, bool goAhead) = 0;
 
 protected:
     void onGmcpEnabled() { virt_onGmcpEnabled(); }
     void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
     void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
-    void receiveTerminalType(const QByteArray &ba) { virt_receiveTerminalType(ba); }
-    void receiveMudServerStatus(const QByteArray &ba) { virt_receiveMudServerStatus(ba); }
+    void receiveTerminalType(const TelnetTermTypeBytes &ba) { virt_receiveTerminalType(ba); }
+    void receiveMudServerStatus(const TelnetMsspBytes &ba) { virt_receiveMudServerStatus(ba); }
     void receiveWindowSize(int x, int y) { virt_receiveWindowSize(x, y); }
 
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    void sendRawData(const std::string_view ba) { virt_sendRawData(ba); }
+    void sendRawData(const TelnetIacBytes &ba) { virt_sendRawData(ba); }
     void sendRawData(const char *s) = delete;
 
 private:
     // DEPRECATED_MSG("use STL functions")
-    void sendRawData(const QByteArray &arr) { sendRawData(mmqt::toStdStringViewLatin1(arr)); }
+    void sendRawData(const QByteArray &arr) = delete;
+    void sendRawData(const QString &s) = delete;
 
 protected:
-    void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
+    void sendToMapper(const RawBytes &ba, const bool goAhead) { virt_sendToMapper(ba, goAhead); }
 
 protected:
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
     void reset();
-    void onReadInternal(const QByteArray &);
-    void setTerminalType(const QByteArray &terminalType) { m_termType = terminalType; }
+    void onReadInternal(const TelnetIacBytes &);
+    void setTerminalType(const TelnetTermTypeBytes &terminalType) { m_termType = terminalType; }
 
     NODISCARD CharacterEncodingEnum getEncoding() const { return m_textCodec.getEncoding(); }
 
@@ -252,7 +261,7 @@ private:
     void processTelnetSubnegotiation(const AppendBuffer &payload);
 
 private:
-    NODISCARD int onReadInternalInflate(const char *, const int, AppendBuffer &);
+    NODISCARD int onReadInternalInflate(const char *, int, AppendBuffer &);
     void resetCompress();
     void processGA(AppendBuffer &cleanData);
 };

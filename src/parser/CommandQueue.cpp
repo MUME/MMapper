@@ -6,22 +6,47 @@
 
 #include "../map/ExitDirection.h"
 
-QByteArray CommandQueue::toByteArray() const
+NODISCARD static CommandEnum toCommandEnum(const ExitDirEnum dir)
+{
+#define CASE(X) \
+    case ExitDirEnum::X: \
+        return CommandEnum::X
+    switch (dir) {
+        CASE(NORTH);
+        CASE(SOUTH);
+        CASE(EAST);
+        CASE(WEST);
+        CASE(UP);
+        CASE(DOWN);
+        CASE(UNKNOWN);
+        CASE(NONE);
+    default:
+        break;
+    }
+
+    return CommandEnum::UNKNOWN;
+}
+
+namespace mmqt {
+QByteArray toQByteArray(const CommandQueue &queue)
 {
     QByteArray dirs;
-    for (int i = 0; i < base::size(); i++) {
-        const auto cmd = base::at(i);
+    for (const CommandEnum cmd : queue) {
         // REVISIT: Serialize/deserialize directions more intelligently
-        dirs.append(Mmapper2Exit::charForDir(getDirection(cmd)));
+        const ExitDirEnum dir = getDirection(cmd);
+        dirs.append(Mmapper2Exit::charForDir(dir));
     }
     return dirs;
 }
 
-CommandQueue &CommandQueue::operator=(const QByteArray &dirs)
+CommandQueue toCommandQueue(const QByteArray &dirs)
 {
-    base::clear();
-    for (int i = 0; i < dirs.length(); i++) {
-        base::enqueue(static_cast<CommandEnum>(Mmapper2Exit::dirForChar(dirs.at(i))));
+    CommandQueue queue;
+    for (const char c : dirs) {
+        const ExitDirEnum dir = Mmapper2Exit::dirForChar(c);
+        queue.push_back(toCommandEnum(dir));
     }
-    return *this;
+    return queue;
 }
+
+} // namespace mmqt

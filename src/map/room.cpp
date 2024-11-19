@@ -6,330 +6,21 @@
 #include "room.h"
 
 #include "../global/StringView.h"
-#include "../global/random.h"
-#include "ExitFieldVariant.h"
+#include "Compare.h"
+#include "RoomHandle.h"
 #include "parseevent.h"
 
-#include <memory>
 #include <sstream>
 #include <vector>
 
-static constexpr const auto default_updateFlags = RoomUpdateFlags{}; /* none */
-static constexpr const auto mesh_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Mesh};
-static constexpr const auto key_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey};
-static constexpr const auto borked_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Borked}
-                                                 | RoomUpdateEnum::Mesh;
-
-static constexpr auto RoomName_updateFlags = key_updateFlags | RoomUpdateEnum::Name;
-static constexpr auto RoomDesc_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
-                                             | RoomUpdateEnum::Desc;
-static constexpr auto RoomContents_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
-                                                 | RoomUpdateEnum::Contents;
-static constexpr auto RoomNote_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Note};
-static constexpr auto RoomMobFlags_updateFlags = mesh_updateFlags | RoomUpdateEnum::MobFlags;
-static constexpr auto RoomLoadFlags_updateFlags = mesh_updateFlags | RoomUpdateEnum::LoadFlags;
-static constexpr auto RoomTerrainEnum_updateFlags = mesh_updateFlags | key_updateFlags
-                                                    | RoomUpdateEnum::Terrain;
-
-static constexpr auto RoomPortableEnum_updateFlags = default_updateFlags;
-static constexpr auto RoomLightEnum_updateFlags = mesh_updateFlags;
-static constexpr auto RoomAlignEnum_updateFlags = default_updateFlags;
-static constexpr auto RoomRidableEnum_updateFlags = mesh_updateFlags;
-static constexpr auto RoomSundeathEnum_updateFlags = mesh_updateFlags;
-
-static constexpr const auto doorNameUpdateFlags = mesh_updateFlags | RoomUpdateEnum::DoorName;
-// REVISIT: Do these actually need to trigger a map update?
-static constexpr const auto doorFlagUpdateFlags = mesh_updateFlags | RoomUpdateEnum::DoorFlags;
-static constexpr const auto exitFlagUpdateFlags = mesh_updateFlags | key_updateFlags
-                                                  | RoomUpdateEnum::ExitFlags;
-static constexpr const auto incomingUpdateFlags = mesh_updateFlags | RoomUpdateEnum::ConnectionsIn;
-static constexpr const auto outgoingUpdateFlags = mesh_updateFlags | key_updateFlags
-                                                  | RoomUpdateEnum::ConnectionsOut;
-
 RoomModificationTracker::~RoomModificationTracker() = default;
 
-void RoomModificationTracker::notifyModified(Room &room, RoomUpdateFlags updateFlags)
+void RoomModificationTracker::notifyModified(const RoomUpdateFlags updateFlags)
 {
-    m_isModified = true;
-    if (updateFlags.contains(RoomUpdateEnum::Mesh)) {
+    if (!updateFlags.empty()) {
         m_needsMapUpdate = true;
     }
-    virt_onNotifyModified(room, updateFlags);
-}
-
-ExitDirConstRef::ExitDirConstRef(const ExitDirEnum dir_, const Exit &exit_)
-    : dir{dir_}
-    , exit{exit_}
-{}
-
-Room::Room(this_is_private, RoomModificationTracker &tracker, const RoomStatusEnum status)
-    : m_tracker{tracker}
-    , m_status{status}
-{
-    assert(status == RoomStatusEnum::Temporary || status == RoomStatusEnum::Permanent);
-}
-
-Room::~Room()
-{
-    // This fails for JsonWorld::writeZones
-    if ((false)) {
-        assert(m_status == RoomStatusEnum::Zombie);
-    }
-}
-
-ExitDirFlags Room::getOutExits() const
-{
-    ExitDirFlags result;
-    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const Exit &e = this->exit(dir);
-        if (e.isExit() && !e.outIsEmpty()) {
-            result |= dir;
-        }
-    }
-    return result;
-}
-
-OptionalExitDirConstRef Room::getRandomExit() const
-{
-    // Pick an alternative direction to randomly wander into
-    const auto outExits = this->getOutExits();
-    if (outExits.empty()) {
-        return OptionalExitDirConstRef{};
-    }
-
-    const auto randomDir = chooseRandomElement(outExits);
-    return OptionalExitDirConstRef{ExitDirConstRef{randomDir, this->exit(randomDir)}};
-}
-
-ExitDirConstRef Room::getExitMaybeRandom(const ExitDirEnum dir) const
-{
-    // REVISIT: The whole room (not just exits) can be flagged as random in MUME.
-    const Exit &e = this->exit(dir);
-
-    if (e.exitIsRandom()) {
-        if (auto opt = getRandomExit()) {
-            return opt.value();
-        }
-    }
-
-    return ExitDirConstRef{dir, e};
-}
-
-template<typename T>
-inline bool maybeModify(T &ours, T &&value)
-{
-    if (ours == value) {
-        return false;
-    }
-
-    ours = std::forward<T>(value);
-    return true;
-}
-
-#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void Room::set##_Prop(_Type value) \
-    { \
-        if (maybeModify<_Type>((m_fields._Prop), std::move(value))) { \
-            setModified(_Type##_updateFlags); \
-        } \
-    }
-
-XFOREACH_ROOM_PROPERTY(X_DEFINE_SETTERS)
-#undef X_DEFINE_SETTERS
-
-#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void Room::set##_Type(ExitDirEnum dir, _Type value) \
-    { \
-        ExitsList exits = getExitsList(); \
-        exits[dir].set##_Type(std::move(value)); \
-        setExitsList(exits); \
-    }
-
-XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
-#undef X_DEFINE_SETTERS
-
-void Room::setExitsList(const ExitsList &newExits)
-{
-    static const auto getDifferences = [](const Exit &a, const Exit &b) -> RoomUpdateFlags {
-        RoomUpdateFlags flags;
-        if (a.getDoorName() != b.getDoorName()) {
-            flags |= doorNameUpdateFlags;
-        }
-
-        if (a.getDoorFlags() != b.getDoorFlags()) {
-            flags |= doorFlagUpdateFlags;
-        }
-
-        if (a.getExitFlags() != b.getExitFlags()) {
-            flags |= exitFlagUpdateFlags;
-        }
-
-        if (a.getIncoming() != b.getIncoming()) {
-            flags |= incomingUpdateFlags;
-        }
-
-        if (a.getOutgoing() != b.getOutgoing()) {
-            flags |= outgoingUpdateFlags;
-        }
-        return flags;
-    };
-
-    RoomUpdateFlags flags;
-
-    for (const ExitDirEnum dir : ALL_EXITS7) {
-        Exit &ex = m_exits[dir];
-        const Exit &newValue = newExits[dir];
-        if (ex == newValue) {
-            continue;
-        }
-
-        const auto diff = getDifferences(ex, newValue);
-        assert(!diff.empty());
-        flags |= diff;
-        ex = newValue;
-        assert(ex == newValue);
-    }
-
-    if (!flags.empty()) {
-        setModified(flags);
-    }
-}
-
-void Room::addInExit(const ExitDirEnum dir, const RoomId id)
-{
-    Exit &ex = exit(dir);
-    if (ex.containsIn(id)) {
-        return;
-    }
-    ex.addIn(id);
-    setModified(incomingUpdateFlags);
-}
-
-void Room::addOutExit(const ExitDirEnum dir, const RoomId id)
-{
-    Exit &ex = exit(dir);
-    if (ex.containsOut(id)) {
-        return;
-    }
-    ex.addOut(id);
-    setModified(outgoingUpdateFlags);
-}
-
-void Room::removeInExit(const ExitDirEnum dir, const RoomId id)
-{
-    Exit &ex = exit(dir);
-    if (!ex.containsIn(id)) {
-        return;
-    }
-    ex.removeIn(id);
-    setModified(incomingUpdateFlags);
-}
-
-void Room::removeOutExit(const ExitDirEnum dir, const RoomId id)
-{
-    Exit &ex = exit(dir);
-    if (!ex.containsOut(id)) {
-        return;
-    }
-    // REVISIT: check if it was actually there?
-    ex.removeOut(id);
-    setModified(outgoingUpdateFlags);
-}
-
-void Room::setId(const RoomId id)
-{
-    if (m_id == id) {
-        return;
-    }
-
-    m_id = id;
-    setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
-}
-
-void Room::setPosition(const Coordinate &c)
-{
-    if (c == m_position) {
-        return;
-    }
-
-    m_position = c;
-    setModified(mesh_updateFlags | RoomUpdateEnum::Coord);
-}
-
-void Room::setPermanent()
-{
-    if (m_status == RoomStatusEnum::Zombie) {
-        throw std::runtime_error("Attempt to resurrect a zombie");
-    }
-
-    const bool wasTemporary = std::exchange(m_status, RoomStatusEnum::Permanent)
-                              == RoomStatusEnum::Temporary;
-    if (wasTemporary) {
-        setModified(mesh_updateFlags);
-    }
-}
-
-void Room::setAboutToDie()
-{
-    // REVISIT: m_id = INVALID_ROOMID; ?
-    m_status = RoomStatusEnum::Zombie;
-}
-
-void Room::setUpToDate()
-{
-    if (isUpToDate()) {
-        return;
-    }
-
-    m_borked = false;
-    setModified(borked_updateFlags);
-}
-
-void Room::setOutDated()
-{
-    if (!isUpToDate()) {
-        return;
-    }
-
-    m_borked = true;
-    setModified(borked_updateFlags);
-}
-
-void Room::setModified(const RoomUpdateFlags updateFlags)
-{
-    m_tracker.notifyModified(*this, updateFlags);
-}
-
-std::shared_ptr<Room> Room::createPermanentRoom(RoomModificationTracker &tracker)
-{
-    return std::make_shared<Room>(this_is_private{0}, tracker, RoomStatusEnum::Permanent);
-}
-
-SharedRoom Room::createTemporaryRoom(RoomModificationTracker &tracker, const ParseEvent &ev)
-{
-    auto room = std::make_shared<Room>(this_is_private{0}, tracker, RoomStatusEnum::Temporary);
-    Room::update(*room, ev);
-    return room;
-}
-
-SharedParseEvent Room::getEvent(const Room *const room)
-{
-    ExitsFlagsType exitFlags;
-    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const Exit &e = room->exit(dir);
-        const ExitFlags eFlags = e.getExitFlags();
-        exitFlags.set(dir, eFlags);
-    }
-    exitFlags.setValid();
-
-    return ParseEvent::createEvent(CommandEnum::UNKNOWN,
-                                   room->getName(),
-                                   room->getDescription(),
-                                   room->getContents(),
-                                   room->getTerrainType(),
-                                   exitFlags,
-                                   PromptFlagsType{},
-                                   ConnectedRoomFlagsType{});
+    virt_onNotifyModified(updateFlags);
 }
 
 NODISCARD static int wordDifference(StringView a, StringView b)
@@ -343,10 +34,10 @@ NODISCARD static int wordDifference(StringView a, StringView b)
     return static_cast<int>(diff + a.size() + b.size());
 }
 
-ComparisonResultEnum Room::compareStrings(const std::string &room,
-                                          const std::string &event,
-                                          int prevTolerance,
-                                          const bool updated)
+ComparisonResultEnum compareStrings(const std::string_view room,
+                                    const std::string_view event,
+                                    int prevTolerance,
+                                    const bool upToDate)
 {
     prevTolerance = utils::clampNonNegative(prevTolerance);
     prevTolerance *= static_cast<int>(room.size());
@@ -356,15 +47,18 @@ ComparisonResultEnum Room::compareStrings(const std::string &room,
     auto descWords = StringView{room}.trim();
     auto eventWords = StringView{event}.trim();
 
-    if (!eventWords.isEmpty()) { // if event is empty we don't compare (due to blindness)
+    if (!eventWords.isEmpty()) {
+        // if event is empty we don't compare (due to blindness)
         while (tolerance >= 0) {
             if (descWords.isEmpty()) {
-                if (updated) { // if notUpdated the desc is allowed to be shorter than the event
+                if (upToDate) {
+                    // the desc is allowed to be shorter than the event
                     tolerance -= eventWords.countNonSpaceChars();
                 }
                 break;
             }
-            if (eventWords.isEmpty()) { // if we get here the event isn't empty
+            if (eventWords.isEmpty()) {
+                // if we get here the event isn't empty
                 tolerance -= descWords.countNonSpaceChars();
                 break;
             }
@@ -377,78 +71,87 @@ ComparisonResultEnum Room::compareStrings(const std::string &room,
         return ComparisonResultEnum::DIFFERENT;
     } else if (prevTolerance != tolerance) {
         return ComparisonResultEnum::TOLERANCE;
-    } else if (event.size() != room.size()) { // differences in amount of whitespace
+    } else if (event.size() != room.size()) {
+        // differences in amount of whitespace
         return ComparisonResultEnum::TOLERANCE;
     }
     return ComparisonResultEnum::EQUAL;
 }
 
-ComparisonResultEnum Room::compare(const Room *const room,
-                                   const ParseEvent &event,
-                                   const int tolerance)
+ComparisonResultEnum compare(const RawRoom &room, const ParseEvent &event, const int tolerance)
 {
-    const auto &name = room->getName();
-    const auto &desc = room->getDescription();
-    const RoomTerrainEnum terrainType = room->getTerrainType();
-    bool updated = room->isUpToDate();
+    const auto &name = room.getName();
+    const auto &desc = room.getDescription();
+    const RoomTerrainEnum terrainType = room.getTerrainType();
+    bool mapIdMatch = false;
+    bool upToDate = true;
 
     //    if (event == nullptr) {
     //        return ComparisonResultEnum::EQUAL;
     //    }
 
-    if (name.isEmpty() && desc.isEmpty() && (!updated)) {
+    if (name.isEmpty() && desc.isEmpty() && terrainType == RoomTerrainEnum::UNDEFINED) {
         // user-created
         return ComparisonResultEnum::TOLERANCE;
     }
 
-    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+    if (event.getServerId() == INVALID_SERVER_ROOMID // fog/darkness results in no MapId
+        || room.getServerId() == INVALID_SERVER_ROOMID) {
+        mapIdMatch = false;
+    } else if (event.getServerId() == room.getServerId()) {
+        mapIdMatch = true;
+    } else {
         return ComparisonResultEnum::DIFFERENT;
     }
 
-    switch (compareStrings(name.getStdStringLatin1(),
-                           event.getRoomName().getStdStringLatin1(),
+    if (event.getTerrainType() != terrainType) {
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
+    }
+
+    switch (compareStrings(name.getStdStringViewUtf8(),
+                           event.getRoomName().getStdStringViewUtf8(),
                            tolerance)) {
-    case ComparisonResultEnum::TOLERANCE:
-        updated = false;
-        break;
     case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
     case ComparisonResultEnum::EQUAL:
+        break;
+    case ComparisonResultEnum::TOLERANCE:
+        upToDate = false;
         break;
     }
 
-    switch (compareStrings(desc.getStdStringLatin1(),
-                           event.getRoomDesc().getStdStringLatin1(),
+    switch (compareStrings(desc.getStdStringViewUtf8(),
+                           event.getRoomDesc().getStdStringViewUtf8(),
                            tolerance,
-                           updated)) {
-    case ComparisonResultEnum::TOLERANCE:
-        updated = false;
-        break;
+                           upToDate)) {
     case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
     case ComparisonResultEnum::EQUAL:
+        break;
+    case ComparisonResultEnum::TOLERANCE:
+        upToDate = false;
         break;
     }
 
     switch (compareWeakProps(room, event)) {
     case ComparisonResultEnum::DIFFERENT:
-        return ComparisonResultEnum::DIFFERENT;
-    case ComparisonResultEnum::TOLERANCE:
-        updated = false;
-        break;
+        return mapIdMatch ? ComparisonResultEnum::TOLERANCE : ComparisonResultEnum::DIFFERENT;
     case ComparisonResultEnum::EQUAL:
+        break;
+    case ComparisonResultEnum::TOLERANCE:
+        upToDate = false;
         break;
     }
 
-    if (updated) {
+    if (upToDate) {
         return ComparisonResultEnum::EQUAL;
     }
     return ComparisonResultEnum::TOLERANCE;
 }
 
-ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseEvent &event)
+ComparisonResultEnum compareWeakProps(const RawRoom &room, const ParseEvent &event)
 {
-    bool exitsValid = room->isUpToDate();
+    bool exitsValid = true;
     // REVISIT: Should tolerance be an integer given known 'weak' params like hidden
     // exits or undefined flags?
     bool tolerance = false;
@@ -456,8 +159,8 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
     const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
     const PromptFlagsType pFlags = event.getPromptFlags();
     if (pFlags.isValid() && connectedRoomFlags.isValid() && connectedRoomFlags.isTrollMode()) {
-        const RoomLightEnum lightType = room->getLightType();
-        const RoomSundeathEnum sunType = room->getSundeathType();
+        const RoomLightEnum lightType = room.getLightType();
+        const RoomSundeathEnum sunType = room.getSundeathType();
         if (pFlags.isLit() && lightType != RoomLightEnum::LIT
             && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             // Allow prompt sunlight to override rooms without LIT flag if we know the room
@@ -478,7 +181,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
     if (eventExitsFlags.isValid()) {
         bool previousDifference = false;
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-            const Exit &roomExit = room->exit(dir);
+            const auto &roomExit = room.getExit(dir);
             const ExitFlags roomExitFlags = roomExit.getExitFlags();
             if (roomExitFlags) {
                 // exits are considered valid as soon as one exit is found (or if the room is updated)
@@ -513,7 +216,8 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
                 } else {
                     if (tolerance) {
                         // Do not be tolerant for multiple differences
-                        qDebug() << "Found too many differences" << event << *room;
+                        qDebug() << "Found too many differences" << event
+                                 << mmqt::toQStringUtf8(room.toStdStringUtf8());
                         return ComparisonResultEnum::DIFFERENT;
 
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
@@ -522,9 +226,9 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
                                  << event;
                         tolerance = true;
 
-                    } else if (roomExit.isHiddenExit() && !eventExitFlags.isDoor()) {
+                    } else if (roomExit.doorIsHidden() && !eventExitFlags.isDoor()) {
                         qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
-
+                        // REVISIT: why doesn't this set tolerance?
                     } else if (roomExitFlags.isExit() && roomExitFlags.isDoor()
                                && !eventExitFlags.isExit()) {
                         qDebug() << "Door to the" << lowercaseDirection(dir)
@@ -533,7 +237,8 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
                     } else {
                         qWarning() << "Unknown exit/door tolerance condition to the"
-                                   << lowercaseDirection(dir) << event << *room;
+                                   << lowercaseDirection(dir) << event
+                                   << mmqt::toQStringUtf8(room.toStdStringUtf8());
                         return ComparisonResultEnum::DIFFERENT;
                     }
                 }
@@ -556,7 +261,8 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
                 } else {
                     qWarning() << "Unknown road tolerance condition to the"
-                               << lowercaseDirection(dir) << event << *room;
+                               << lowercaseDirection(dir) << event
+                               << mmqt::toQStringUtf8(room.toStdStringUtf8());
                     tolerance = true;
                 }
             } else if (diff.isClimb()) {
@@ -566,7 +272,8 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
                 } else {
                     qWarning() << "Unknown climb tolerance condition to the"
-                               << lowercaseDirection(dir) << event << *room;
+                               << lowercaseDirection(dir) << event
+                               << mmqt::toQStringUtf8(room.toStdStringUtf8());
                     tolerance = true;
                 }
             }
@@ -576,260 +283,4 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
         return ComparisonResultEnum::TOLERANCE;
     }
     return ComparisonResultEnum::EQUAL;
-}
-
-void Room::update(Room &room, const ParseEvent &event)
-{
-    room.setContents(event.getRoomContents());
-    bool isUpToDate = room.isUpToDate();
-
-    const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
-    ExitsFlagsType eventExitsFlags = event.getExitsFlags();
-    if (!eventExitsFlags.isValid()) {
-        isUpToDate = false;
-    } else {
-        eventExitsFlags.removeValid();
-        ExitsList copiedExits = room.getExitsList();
-        if (room.isUpToDate()) {
-            // Append exit flags if target room is up to date
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                Exit &roomExit = copiedExits[dir];
-                const ExitFlags &roomExitFlags = roomExit.getExitFlags();
-                const ExitFlags &eventExitFlags = eventExitsFlags.get(dir);
-                if (eventExitFlags ^ roomExitFlags) {
-                    roomExit.setExitFlags(roomExitFlags | eventExitFlags);
-                }
-            }
-
-        } else {
-            // Replace exit flags if target room is not up to date
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                Exit &roomExit = copiedExits[dir];
-                ExitFlags eventExitFlags = eventExitsFlags.get(dir);
-                // ... but take care of the following exceptions
-                if (roomExit.isDoor() && !eventExitFlags.isDoor()) {
-                    // Prevent room hidden exits from being overridden
-                    eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
-                }
-                if (roomExit.exitIsRoad() && !eventExitFlags.isRoad()
-                    && connectedRoomFlags.isValid() && connectedRoomFlags.hasDirectSunlight(dir)) {
-                    // Prevent orcs/trolls from removing roads/trails if they're sunlit
-                    eventExitFlags |= ExitFlagEnum::ROAD;
-                }
-                roomExit.setExitFlags(eventExitFlags);
-            }
-        }
-        room.setExitsList(copiedExits);
-        isUpToDate = true;
-    }
-
-    const PromptFlagsType pFlags = event.getPromptFlags();
-    if (pFlags.isValid() && connectedRoomFlags.isValid() && connectedRoomFlags.isTrollMode()) {
-        const RoomSundeathEnum sunType = room.getSundeathType();
-        if (pFlags.isLit() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
-            room.setLightType(RoomLightEnum::LIT);
-        } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
-            room.setLightType(RoomLightEnum::DARK);
-        }
-    }
-
-    const auto &terrain = event.getTerrainType();
-    if (terrain == RoomTerrainEnum::UNDEFINED) {
-        isUpToDate = false;
-    } else {
-        room.setTerrainType(terrain);
-    }
-
-    const auto &desc = event.getRoomDesc();
-    if (desc.isEmpty()) {
-        isUpToDate = false;
-    } else {
-        room.setDescription(desc);
-    }
-
-    const auto &name = event.getRoomName();
-    if (name.isEmpty()) {
-        isUpToDate = false;
-    } else {
-        room.setName(name);
-    }
-
-    if (isUpToDate) {
-        room.setUpToDate();
-    } else {
-        room.setOutDated();
-    }
-}
-
-void Room::update(Room *const target, const Room *const source)
-{
-    const auto &name = source->getName();
-    if (!name.isEmpty()) {
-        target->setName(name);
-    }
-    const auto &desc = source->getDescription();
-    if (!desc.isEmpty()) {
-        target->setDescription(desc);
-    }
-    const auto &contents = source->getContents();
-    if (!contents.isEmpty()) {
-        target->setContents(contents);
-    }
-
-    if (target->getAlignType() == RoomAlignEnum::UNDEFINED) {
-        target->setAlignType(source->getAlignType());
-    }
-    if (target->getLightType() == RoomLightEnum::UNDEFINED) {
-        target->setLightType(source->getLightType());
-    }
-    if (target->getSundeathType() == RoomSundeathEnum::UNDEFINED) {
-        target->setSundeathType(source->getSundeathType());
-    }
-    if (target->getPortableType() == RoomPortableEnum::UNDEFINED) {
-        target->setPortableType(source->getPortableType());
-    }
-    if (target->getRidableType() == RoomRidableEnum::UNDEFINED) {
-        target->setRidableType(source->getRidableType());
-    }
-    if (source->getTerrainType() != RoomTerrainEnum::UNDEFINED) {
-        target->setTerrainType(source->getTerrainType());
-    }
-
-    // REVISIT: why are these append operations, while the others replace?
-    // REVISIT: And even if we accept appending, why is the target prepended?
-    target->setNote(
-        RoomNote{target->getNote().getStdStringLatin1() + source->getNote().getStdStringLatin1()});
-    target->setMobFlags(target->getMobFlags() | source->getMobFlags());
-    target->setLoadFlags(target->getLoadFlags() | source->getLoadFlags());
-
-    if (!target->isUpToDate()) {
-        // Replace data if target room is not up to date
-        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-            const Exit &sourceExit = source->exit(dir);
-            Exit &targetExit = target->exit(dir);
-            ExitFlags sourceExitFlags = sourceExit.getExitFlags();
-            if (targetExit.isDoor()) {
-                if (!sourceExitFlags.isDoor()) {
-                    // Prevent target hidden exits from being overridden
-                    sourceExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
-                } else {
-                    targetExit.setDoorName(sourceExit.getDoorName());
-                    targetExit.setDoorFlags(sourceExit.getDoorFlags());
-                }
-            }
-            targetExit.setExitFlags(sourceExitFlags);
-        }
-    } else {
-        // Combine data if target room is up to date
-        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-            const Exit &soureExit = source->exit(dir);
-            Exit &targetExit = target->exit(dir);
-            const ExitFlags sourceExitFlags = soureExit.getExitFlags();
-            const ExitFlags targetExitFlags = targetExit.getExitFlags();
-            if (targetExitFlags != sourceExitFlags) {
-                targetExit.setExitFlags(targetExitFlags | sourceExitFlags);
-            }
-            const auto &sourceDoorName = soureExit.getDoorName();
-            if (!sourceDoorName.isEmpty()) {
-                targetExit.setDoorName(sourceDoorName);
-            }
-            const DoorFlags doorFlags = soureExit.getDoorFlags() | targetExit.getDoorFlags();
-            targetExit.setDoorFlags(doorFlags);
-        }
-    }
-    if (source->isUpToDate()) {
-        target->setUpToDate();
-    }
-}
-
-// Latin1
-std::string Room::toStdString() const
-{
-    std::ostringstream ss;
-    ss << getName().getStdStringLatin1() << "\n"
-       << getDescription().getStdStringLatin1() << getContents().getStdStringLatin1();
-
-    ss << "Exits:";
-    for (const ExitDirEnum j : ALL_EXITS7) {
-        const ExitFlags &exitFlags = exit(j).getExitFlags();
-        if (!exitFlags.isExit()) {
-            continue;
-        }
-        ss << " ";
-
-        bool climb = exit(j).getExitFlags().isClimb();
-        if (climb) {
-            ss << "|";
-        }
-        bool door = exit(j).isDoor();
-        if (door) {
-            ss << "(";
-        }
-        ss << lowercaseDirection(j);
-        if (door) {
-            const auto doorName = exit(j).getDoorName();
-            if (!doorName.isEmpty()) {
-                ss << "/" << doorName.getStdStringLatin1();
-            }
-            ss << ")";
-        }
-        if (climb) {
-            ss << "|";
-        }
-    }
-    ss << ".\n";
-    if (!getNote().isEmpty()) {
-        ss << "Note: " << getNote().getStdStringLatin1();
-    }
-
-    return ss.str();
-}
-
-using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;
-NODISCARD static ExitCoordinates initExitCoordinates()
-{
-    ExitCoordinates exitDirs;
-    exitDirs[ExitDirEnum::NORTH] = Coordinate(0, 1, 0);
-    exitDirs[ExitDirEnum::SOUTH] = Coordinate(0, -1, 0);
-    exitDirs[ExitDirEnum::EAST] = Coordinate(1, 0, 0);
-    exitDirs[ExitDirEnum::WEST] = Coordinate(-1, 0, 0);
-    exitDirs[ExitDirEnum::UP] = Coordinate(0, 0, 1);
-    exitDirs[ExitDirEnum::DOWN] = Coordinate(0, 0, -1);
-    return exitDirs;
-}
-
-const Coordinate &Room::exitDir(ExitDirEnum dir)
-{
-    static const auto exitDirs = initExitCoordinates();
-    return exitDirs[dir];
-}
-
-std::shared_ptr<Room> Room::clone(RoomModificationTracker &tracker) const
-{
-    if (m_status == RoomStatusEnum::Zombie) {
-        throw std::runtime_error("Attempt to clone a zombie");
-    }
-
-    const auto copy = std::make_shared<Room>(this_is_private{0}, tracker, RoomStatusEnum::Temporary);
-#define COPY(x) \
-    do { \
-        copy->x = this->x; \
-    } while (false)
-    COPY(m_position);
-    COPY(m_fields);
-    COPY(m_exits);
-    COPY(m_id);
-    COPY(m_status);
-    COPY(m_borked);
-#undef COPY
-    switch (copy->m_status) {
-    case RoomStatusEnum::Permanent:
-        copy->m_status = RoomStatusEnum::Temporary;
-        break;
-    case RoomStatusEnum::Temporary:
-    case RoomStatusEnum::Zombie:
-        // no change
-        break;
-    }
-    return copy;
 }

@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "../proxy/TaggedBytes.h"
 #include "remoteeditsession.h"
 
 #include <climits>
@@ -46,7 +47,7 @@ private:
     void removeSession(const RemoteEditSession *session);
 
 signals:
-    void sig_sendToSocket(const QByteArray &);
+    void sig_sendToSocket(const RawBytes &);
 
 public slots:
     void slot_remoteView(const QString &, const QString &);

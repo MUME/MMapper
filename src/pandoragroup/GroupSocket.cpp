@@ -8,6 +8,7 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/io.h"
+#include "../proxy/TaggedBytes.h"
 #include "groupauthority.h"
 
 #include <cassert>
@@ -66,10 +67,8 @@ GroupSocket::GroupSocket(GroupAuthority *const authority, QObject *const parent)
     });
     connect(&socket, &QSslSocket::encrypted, this, [this]() {
         m_timer.stop();
-        m_secret = m_socket.peerCertificate()
-                       .digest(QCryptographicHash::Algorithm::Sha1)
-                       .toHex()
-                       .toLower();
+        m_secret = GroupSecret{
+            m_socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex().toLower()};
         emit sig_sendLog("Connection successfully encrypted...");
         emit sig_connectionEncrypted(this);
     });
@@ -106,7 +105,7 @@ void GroupSocket::connectToHost()
     const auto remotePort = static_cast<uint16_t>(groupConfig.remotePort);
     sendLog(QString("%1 to remote host %2:%3")
                 .arg(retry ? "Reconnecting" : "Connecting")
-                .arg(remoteHost.simplified().constData())
+                .arg(remoteHost.simplified())
                 .arg(remotePort));
     socket.connectToHost(remoteHost, remotePort);
 }
@@ -125,7 +124,7 @@ void GroupSocket::disconnectFromHost()
 
 QString GroupSocket::getPeerName() const
 {
-    const auto s = m_socket.peerName();
+    auto s = m_socket.peerName();
     if (!s.isEmpty()) {
         return s;
     }
@@ -274,7 +273,7 @@ void GroupSocket::onReadInternal(const char c)
             if (DEBUG) {
                 qDebug() << "Incoming message:" << buffer;
             }
-            emit sig_incomingData(this, buffer);
+            emit sig_incomingData(this, QString::fromUtf8(buffer.getQByteArray()));
 
             // Reset state machine
             buffer.clear();
@@ -288,16 +287,18 @@ void GroupSocket::onReadInternal(const char c)
 /*
  * Protocol is <message length as string> <space> <message XML>
  */
-void GroupSocket::sendData(const QByteArray &data)
+void GroupSocket::sendData(const QString &data)
 {
     if (m_socket.state() != QAbstractSocket::ConnectedState) {
         qWarning() << "Socket is not connected";
         return;
     }
 
-    QString len = QString("%1 ").arg(data.size());
-    QByteArray buff = mmqt::toQByteArrayLatin1(len);
-    buff += data;
+    // This is a special case; we're formatting the bytes to be sent to the socket,
+    auto utf8 = data.toUtf8();
+    QString len = QString("%1 ").arg(utf8.size());
+    QByteArray buff = len.toUtf8(); // it's actually ASCII
+    buff += utf8;
     if (DEBUG) {
         qDebug() << "Sending message:" << buff;
     }
@@ -307,7 +308,7 @@ void GroupSocket::sendData(const QByteArray &data)
 void GroupSocket::reset()
 {
     m_protocolState = ProtocolStateEnum::Unconnected;
-    m_protocolVersion = 102;
+    m_protocolVersion = defaultProtocolVersion;
     m_buffer.clear();
     m_secret.clear();
     m_name.clear();

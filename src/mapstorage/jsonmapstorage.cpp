@@ -20,8 +20,6 @@
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
-#include "basemapsavefilter.h"
-#include "roomsaver.h"
 
 #include <cassert>
 #include <cstddef>
@@ -62,12 +60,11 @@ public:
         // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces makes the hash more resilient.
-        auto desc = mmqt::toQStringLatin1(
-            ParserUtils::normalizeWhitespace(roomDesc.getStdStringLatin1()));
+        auto desc = mmqt::toQStringUtf8(
+            ParserUtils::normalizeWhitespace(roomDesc.toStdStringUtf8()));
         mmqt::toAsciiInPlace(desc);
 
-        // REVISIT: should this be latin1 or utf8?
-        m_hash.addData(name.toLatin1() + char_consts::C_NEWLINE + desc.toLatin1());
+        m_hash.addData(name.toLatin1() + char_consts::C_NEWLINE + desc.toLatin1()); // ASCII
     }
 
     NODISCARD QByteArray result() const { return m_hash.result(); }
@@ -87,7 +84,7 @@ private:
     WebHasher m_hasher;
 
 public:
-    void addRoom(const Room &room)
+    void addRoom(const RoomHandle &room)
     {
         m_hasher.add(room.getName(), room.getDescription());
         m_index.insert(m_hasher.result().toHex(), room.getPosition());
@@ -124,16 +121,16 @@ private:
     Index m_index;
 
 public:
-    void addRoom(const Room &room)
+    void addRoom(const RoomHandle &room)
     {
         const auto zone = getZoneKey(room.getPosition());
         const auto iter = m_index.find(zone);
         if (iter == m_index.end()) {
             ConstRoomList list;
-            list.emplace_back(room.shared_from_this());
+            list.emplace_back(room);
             m_index.emplace(zone, std::move(list));
         } else {
-            iter->second.emplace_back(room.shared_from_this());
+            iter->second.emplace_back(room);
         }
     }
 
@@ -218,22 +215,22 @@ public:
 using JsonRoomId = uint32_t;
 
 // Maps MM2 room IDs -> hole-free JSON room IDs
-class JsonRoomIdsCache
+class NODISCARD JsonRoomIdsCache final
 {
-    using CacheT = QMap<RoomId, JsonRoomId>;
+    using CacheT = QMap<ExternalRoomId, JsonRoomId>;
     CacheT m_cache;
     JsonRoomId m_nextJsonId = 0u;
 
 public:
     JsonRoomIdsCache();
-    void addRoom(RoomId mm2RoomId) { m_cache[mm2RoomId] = m_nextJsonId++; }
-    JsonRoomId operator[](RoomId roomId) const;
-    uint32_t size() const;
+    void addRoom(const ExternalRoomId mm2RoomId) { m_cache[mm2RoomId] = m_nextJsonId++; }
+    NODISCARD JsonRoomId operator[](ExternalRoomId roomId) const;
+    NODISCARD uint32_t size() const;
 };
 
 JsonRoomIdsCache::JsonRoomIdsCache() = default;
 
-JsonRoomId JsonRoomIdsCache::operator[](RoomId roomId) const
+JsonRoomId JsonRoomIdsCache::operator[](const ExternalRoomId roomId) const
 {
     CacheT::const_iterator it = m_cache.find(roomId);
     assert(it != m_cache.end());
@@ -246,51 +243,34 @@ uint32_t JsonRoomIdsCache::size() const
 }
 
 // Expects that a RoomSaver locks the Rooms for the lifetime of this object!
-class JsonWorld final
+class NODISCARD JsonWorld final
 {
     JsonRoomIdsCache m_jRoomIds;
     RoomHashIndex m_roomHashIndex;
     ZoneIndex m_zoneIndex;
 
-    void addRoom(QJsonArray &jRooms, const Room &room) const;
-    void addExits(const Room &room, QJsonObject &jr) const;
+    void addRoom(QJsonArray &jRooms, const ExternalRawRoom &room) const;
+    void addExits(const ExternalRawRoom &room, QJsonObject &jr) const;
 
 public:
     JsonWorld();
     ~JsonWorld();
-    void addRooms(const ConstRoomList &roomList,
-                  BaseMapSaveFilter &filter,
-                  ProgressCounter &progressCounter,
-                  bool baseMapOnly);
-    void writeMetadata(const QFileInfo &path, const MapData &mapData) const;
+    void addRooms(const ConstRoomList &roomList, ProgressCounter &progressCounter);
+    void writeMetadata(const QFileInfo &path, const Bounds &bounds) const;
     void writeRoomIndex(const QDir &dir) const;
-    void writeZones(const QDir &dir,
-                    BaseMapSaveFilter &filter,
-                    ProgressCounter &progressCounter,
-                    bool baseMapOnly) const;
+    void writeZones(const QDir &dir, ProgressCounter &progressCounter) const;
 };
 
 JsonWorld::JsonWorld() = default;
 
 JsonWorld::~JsonWorld() = default;
 
-void JsonWorld::addRooms(const ConstRoomList &roomList,
-                         BaseMapSaveFilter &filter,
-                         ProgressCounter &progressCounter,
-                         bool baseMapOnly)
+void JsonWorld::addRooms(const ConstRoomList &roomList, ProgressCounter &progressCounter)
 {
-    for (const SharedConstRoom &pRoom : roomList) {
-        const Room &room = deref(pRoom);
+    for (const auto &pRoom : roomList) {
+        const auto &room = deref(pRoom);
         progressCounter.step();
-
-        if (baseMapOnly) {
-            BaseMapSaveFilter::ActionEnum action = filter.filter(room);
-            if (room.isTemporary() || action == BaseMapSaveFilter::ActionEnum::REJECT) {
-                continue;
-            }
-        }
-
-        m_jRoomIds.addRoom(room.getId());
+        m_jRoomIds.addRoom(room.getIdExternal());
         m_roomHashIndex.addRoom(room);
         m_zoneIndex.addRoom(room);
     }
@@ -319,11 +299,11 @@ NODISCARD static constexpr const char *getNameUpper(const ExitDirEnum dir)
 #undef CASE
 }
 
-void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) const
+void JsonWorld::writeMetadata(const QFileInfo &path, const Bounds &bounds) const
 {
     // This can give bogus data if the bounds aren't set.
-    const Coordinate &min = mapData.getMin();
-    const Coordinate &max = mapData.getMax();
+    const Coordinate &min = bounds.min;
+    const Coordinate &max = bounds.max;
 
     QJsonObject meta;
     meta["roomsCount"] = static_cast<qint64>(m_jRoomIds.size());
@@ -361,7 +341,7 @@ void JsonWorld::writeRoomIndex(const QDir &dir) const
     store.close();
 }
 
-void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
+void JsonWorld::addRoom(QJsonArray &jRooms, const ExternalRawRoom &room) const
 {
     /*
           x: 5, y: 5, z: 0,
@@ -378,7 +358,7 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     jr["y"] = -pos.y;
     jr["z"] = pos.z;
 
-    uint32_t jsonId = m_jRoomIds[room.getId()];
+    const uint32_t jsonId = m_jRoomIds[room.getId()];
     jr["id"] = QString::number(jsonId);
     jr["name"] = room.getName().toQString();
     jr["desc"] = room.getDescription().toQString();
@@ -395,24 +375,23 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     jRooms.push_back(jr);
 }
 
-void JsonWorld::addExits(const Room &room, QJsonObject &jr) const
+void JsonWorld::addExits(const ExternalRawRoom &room, QJsonObject &jr) const
 {
-    const ExitsList &exitList = room.getExitsList();
     QJsonArray jExits; // Direction-indexed
-    for (const Exit &e : exitList) {
+    for (const ExternalRawExit &e : room.exits) {
         QJsonObject je;
         je["flags"] = static_cast<qint64>(e.getExitFlags().asUint32());
         je["dflags"] = static_cast<qint64>(e.getDoorFlags().asUint32());
         je["name"] = e.getDoorName().toQString();
 
         QJsonArray jin;
-        for (auto idx : e.inRange()) {
+        for (const ExternalRoomId idx : e.getIncomingSet()) {
             jin << QString::number(m_jRoomIds[idx]);
         }
         je["in"] = jin;
 
         QJsonArray jout;
-        for (auto idx : e.outRange()) {
+        for (const ExternalRoomId idx : e.getOutgoingSet()) {
             jout << QString::number(m_jRoomIds[idx]);
         }
         je["out"] = jout;
@@ -423,19 +402,15 @@ void JsonWorld::addExits(const Room &room, QJsonObject &jr) const
     jr["exits"] = jExits;
 }
 
-void JsonWorld::writeZones(const QDir &dir,
-                           BaseMapSaveFilter &filter,
-                           ProgressCounter &progressCounter,
-                           bool baseMapOnly) const
+void JsonWorld::writeZones(const QDir &dir, ProgressCounter &progressCounter) const
 {
     const ZoneIndex::Index &index = m_zoneIndex.index();
 
     for (const auto &kv : index) {
         const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
-        auto saveOne = [this, &jRooms](const Room &room) { addRoom(jRooms, room); };
-        for (const auto &pRoom : rooms) {
-            filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
+        for (const RoomPtr &pRoom : rooms) {
+            addRoom(jRooms, deref(pRoom).getRawCopyExternal());
             progressCounter.step();
         }
 
@@ -446,62 +421,46 @@ void JsonWorld::writeZones(const QDir &dir,
 
 } // namespace
 
-JsonMapStorage::JsonMapStorage(MapData &mapdata, const QString &filename, QObject *parent)
-    : AbstractMapStorage(mapdata, filename, parent)
+JsonMapStorage::JsonMapStorage(const AbstractMapStorage::Data &data, QObject *parent)
+    : AbstractMapStorage{data, parent}
 {}
 
 JsonMapStorage::~JsonMapStorage() = default;
 
-void JsonMapStorage::newData()
-{
-    qWarning() << "JsonMapStorage does not implement newData()";
-}
-
-bool JsonMapStorage::loadData()
-{
-    return false;
-}
-
-bool JsonMapStorage::mergeData()
-{
-    return false;
-}
-
-bool JsonMapStorage::saveData(bool baseMapOnly)
+bool JsonMapStorage::virt_saveData(const RawMapData &mapData)
 {
     log("Writing data to files ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
-    // The RoomSaver acts as a lock on the rooms.
     ConstRoomList roomList;
-    roomList.reserve(m_mapData.getRoomsCount());
 
-    const MarkerList &markerList = m_mapData.getMarkersList();
-    RoomSaver saver(m_mapData, roomList);
-    for (uint32_t i = 0; i < m_mapData.getRoomsCount(); ++i) {
-        m_mapData.lookingForRooms(saver, RoomId{i});
+    const auto &map = mapData.mapPair.modified;
+    const RawMarkerData noMarkers;
+    const RawMarkerData &markerList = mapData.markerData.has_value() ? mapData.markerData.value()
+                                                                     : noMarkers;
+
+    // REVISIT: This only excludes temporary rooms from being written,
+    // but it doesn't exclude temporary rooms from connections.
+    roomList.reserve(map.getRoomsCount());
+    for (const RoomId id : map.getRooms()) {
+        const RoomHandle &room = map.getRoomHandle(id);
+        if (!room.isTemporary()) {
+            roomList.push_back(room);
+        }
     }
 
-    uint32_t roomsCount = saver.getRoomsCount();
-    auto marksCount = static_cast<uint32_t>(markerList.size());
+    const auto roomsCount = static_cast<uint32_t>(roomList.size());
+    const auto marksCount = static_cast<uint32_t>(markerList.size());
 
     auto &progressCounter = getProgressCounter();
-    progressCounter.reset();
-    progressCounter.increaseTotalStepsBy(roomsCount * 2 + marksCount);
-
-    BaseMapSaveFilter filter;
-    if (baseMapOnly) {
-        filter.setMapData(&m_mapData);
-        progressCounter.increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(progressCounter);
-    }
+    progressCounter.setNewTask(ProgressMsg{}, roomsCount * 2 + marksCount);
 
     JsonWorld world;
-    world.addRooms(roomList, filter, progressCounter, baseMapOnly);
+    world.addRooms(roomList, progressCounter);
 
-    QDir saveDir(m_fileName);
+    QDir saveDir(getFilename());
     QDir destDir(QFileInfo(saveDir, "v1").filePath());
     QDir roomIndexDir(QFileInfo(destDir, "roomindex").filePath());
     QDir zoneDir(QFileInfo(destDir, "zone").filePath());
@@ -517,18 +476,15 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
             throw std::runtime_error("error creating dir v1/zone");
         }
 
-        world.writeMetadata(QFileInfo(destDir, "arda.json"), m_mapData);
+        world.writeMetadata(QFileInfo(destDir, "arda.json"), map.getBounds().value_or(Bounds{}));
         world.writeRoomIndex(roomIndexDir);
-        world.writeZones(zoneDir, filter, progressCounter, baseMapOnly);
+        world.writeZones(zoneDir, progressCounter);
     } catch (const std::exception &e) {
         log(e.what());
         return false;
     }
 
     log("Writing data finished.");
-
-    m_mapData.unsetDataChanged();
-    emit sig_onDataSaved();
 
     return true;
 }

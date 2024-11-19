@@ -6,19 +6,20 @@
 
 #include "mapfrontend.h"
 
+#include "../global/Timer.h"
+#include "../global/logging.h"
+#include "../global/progresscounter.h"
+#include "../map/ChangeTypes.h"
 #include "../map/RoomRecipient.h"
 #include "../map/coordinate.h"
 #include "../map/parseevent.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
-#include "ParseTree.h"
-#include "mapaction.h"
-#include "roomcollection.h"
-#include "roomlocker.h"
 
 #include <cassert>
 #include <memory>
 #include <set>
+#include <tuple>
 #include <utility>
 
 MapFrontend::MapFrontend(QObject *const parent)
@@ -27,238 +28,56 @@ MapFrontend::MapFrontend(QObject *const parent)
 
 MapFrontend::~MapFrontend()
 {
-    QMutexLocker locker(&mapLock);
     emit sig_clearingMap();
 }
 
 void MapFrontend::block()
 {
-    mapLock.lock();
     blockSignals(true);
 }
 
 void MapFrontend::unblock()
 {
-    mapLock.unlock();
     blockSignals(false);
 }
 
 void MapFrontend::checkSize()
 {
-    emit sig_mapSizeChanged(getMin(), getMax());
+    const auto bounds = getCurrentMap().getBounds().value_or(Bounds{});
+    emit sig_mapSizeChanged(bounds.min, bounds.max);
 }
 
-void MapFrontend::scheduleAction(const std::shared_ptr<MapAction> &action)
+void MapFrontend::scheduleAction(const Change &change)
 {
-    QMutexLocker locker(&mapLock);
-    action->schedule(this);
-
-    bool executable = true;
-    for (auto roomId : action->getAffectedRooms()) {
-        actionSchedule[roomId].insert(action);
-        if (!locks[roomId].empty()) {
-            executable = false;
-        }
-    }
-    if (executable) {
-        executeAction(action.get());
-        removeAction(action);
-    }
+    std::ignore = applySingleChange(change);
 }
 
-void MapFrontend::executeAction(MapAction *const action)
+void MapFrontend::revert()
 {
-    action->exec();
-}
-
-void MapFrontend::removeAction(const std::shared_ptr<MapAction> &action)
-{
-    for (auto roomId : action->getAffectedRooms()) {
-        actionSchedule[roomId].erase(action);
-    }
-}
-
-bool MapFrontend::isExecutable(MapAction *const action)
-{
-    for (auto roomId : action->getAffectedRooms()) {
-        if (!locks[roomId].empty()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void MapFrontend::executeActions(const RoomId roomId)
-{
-    std::set<std::shared_ptr<MapAction>> executedActions;
-    for (const auto &action : actionSchedule[roomId]) {
-        if (isExecutable(action.get())) {
-            executeAction(action.get());
-            executedActions.insert(action);
-        }
-    }
-    for (const auto &action : executedActions) {
-        removeAction(action);
-    }
-}
-
-void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Coordinate &pos)
-{
-    QMutexLocker locker(&mapLock);
-    if (Room *const r = map.get(pos)) {
-        locks[r->getId()].insert(&recipient);
-        recipient.receiveRoom(this, r);
-    }
+    emit sig_clearingMap();
+    setCurrentMarks(m_saved.marks);
+    setCurrentMap(m_saved.map);
 }
 
 void MapFrontend::clear()
 {
-    QMutexLocker locker(&mapLock);
     emit sig_clearingMap();
-
-    for (size_t i = 0, size = roomIndex.size(); i < size; ++i) {
-        const auto roomId = RoomId{static_cast<uint32_t>(i)};
-
-        auto &ref = roomIndex[roomId];
-        if (ref == nullptr) {
-            continue;
-        }
-
-        std::exchange(ref, nullptr)->setAboutToDie();
-
-        if (SharedRoomCollection h = std::exchange(roomHomes[roomId], nullptr)) {
-            h->clear();
-        }
-        locks[roomId].clear();
-    }
-
-    map.clear();
-
-    while (!unusedIds.empty()) {
-        unusedIds.pop();
-    }
-    greatestUsedId = INVALID_ROOMID;
-    m_bounds.reset();
+    setCurrentMap(Map{});
+    setCurrentMarks(InfomarkDb{});
+    currentHasBeenSaved();
     checkSize(); // called for side effect of sending signal
-
-    // REVISIT: should this occur inside of the lock?
     virt_clear();
 }
 
-void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
+bool MapFrontend::createEmptyRoom(const Coordinate &c)
 {
-    QMutexLocker locker(&mapLock);
-    if (greatestUsedId >= id) {
-        if (const SharedRoom &r = roomIndex[id]) {
-            locks[id].insert(&recipient);
-            recipient.receiveRoom(this, r.get());
-        }
-    }
-}
-
-RoomId MapFrontend::assignId(const SharedRoom &room, const SharedRoomCollection &roomHome)
-{
-    /* REVISIT: move all of the objects modified in this function to a sub-object? */
-
-    const RoomId id = [this]() {
-        if (unusedIds.empty()) {
-            /* avoid adding operator++ to RoomId, to help avoid mistakes */
-            return greatestUsedId = RoomId{greatestUsedId.asUint32() + 1u};
-        } else {
-            const auto next_id = unusedIds.top();
-            unusedIds.pop();
-            if (next_id > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
-                greatestUsedId = next_id;
-            }
-            return next_id;
-        }
-    }();
-
-    room->setId(id);
-
-    if (roomIndex.size() <= id.asUint32()) {
-        const auto bigger = id.asUint32() * 2u + 1u;
-        roomIndex.resize(bigger, nullptr);
-        locks.resize(bigger);
-        roomHomes.resize(bigger, nullptr);
-    }
-    roomIndex[id] = room;
-    roomHomes[id] = roomHome;
-    return id;
-}
-
-void MapFrontend::lookingForRooms(RoomRecipient &recipient,
-                                  const Coordinate &input_min,
-                                  const Coordinate &input_max)
-{
-    QMutexLocker locker(&mapLock);
-    RoomLocker ret(recipient, *this);
-    map.getRooms(ret, input_min, input_max);
-}
-
-void MapFrontend::insertPredefinedRoom(const SharedRoom &sharedRoom)
-{
-    Room &room = deref(sharedRoom);
-
-    QMutexLocker locker(&mapLock);
-    assert(signalsBlocked());
-    const auto id = room.getId();
-    const Coordinate &c = room.getPosition();
-    auto event = Room::getEvent(&room);
-
-    assert(roomIndex.size() <= id.asUint32() || roomIndex[id] == nullptr);
-
-    auto roomHome = parseTree.insertRoom(*event);
-    map.setNearest(c, room);
-    checkSize(room.getPosition());
-    unusedIds.push(id);
-    MAYBE_UNUSED const auto ignored = assignId(sharedRoom, roomHome);
-    if (roomHome != nullptr) {
-        roomHome->addRoom(sharedRoom);
-    }
-}
-
-RoomId MapFrontend::createEmptyRoom(const Coordinate &c)
-{
-    QMutexLocker locker(&mapLock);
-    SharedRoom room = Room::createPermanentRoom(*this);
-    map.setNearest(c, *room);
-    checkSize(room->getPosition());
-    return assignId(room, nullptr);
-}
-
-void MapFrontend::checkSize(const Coordinate &c)
-{
-    if (!m_bounds) {
-        m_bounds.emplace();
-        m_bounds->min = m_bounds->max = c;
-        emit sig_mapSizeChanged(c, c);
-        return;
+    const auto &map = getCurrentMap();
+    if (map.findRoomHandle(c)) {
+        qWarning() << "A room already exists at the chosen position.";
+        return false;
     }
 
-#define MINMAX(xyz) \
-    do { \
-        auto &lo = min.xyz; \
-        auto &hi = max.xyz; \
-        lo = std::min(lo, c.xyz); \
-        hi = std::max(hi, c.xyz); \
-    } while (false)
-
-    auto &min = m_bounds->min;
-    auto &max = m_bounds->max;
-
-    const Coordinate oldMin{min};
-    const Coordinate oldMax{max};
-
-    MINMAX(x);
-    MINMAX(y);
-    MINMAX(z);
-
-    if (min != oldMin || max != oldMax) {
-        emit sig_mapSizeChanged(min, max);
-    }
-
-#undef MINMAX
+    return applySingleChange(Change{room_change_types::AddPermanentRoom{c}});
 }
 
 void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
@@ -266,68 +85,195 @@ void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
 {
     const ParseEvent &event = sigParseEvent.deref();
 
-    QMutexLocker locker(&mapLock);
-    checkSize(expectedPosition); // still hackish but somewhat better
-    if (SharedRoomCollection roomHome = parseTree.insertRoom(event)) {
-        SharedRoom room = Room::createTemporaryRoom(*this, event);
-        roomHome->addRoom(room);
-        map.setNearest(expectedPosition, *room);
-        MAYBE_UNUSED const auto ignored = assignId(room, roomHome);
+    MMLOG() << "[mapfrontend] Adding new room from parseEvent";
+
+    const bool success = applySingleChange(
+        Change{room_change_types::AddRoom2{expectedPosition, event}});
+
+    if (success) {
+        MMLOG() << "[mapfrontend] Added new room.";
+    } else {
+        MMLOG() << "[mapfrontend] Failed to add new room.";
     }
+}
+
+RoomPtr MapFrontend::findRoomHandle(RoomId id) const
+{
+    return getCurrentMap().findRoomHandle(id);
+}
+
+RoomPtr MapFrontend::findRoomHandle(const Coordinate &coord) const
+{
+    return getCurrentMap().findRoomHandle(coord);
+}
+
+RoomPtr MapFrontend::findRoomHandle(const ExternalRoomId id) const
+{
+    return getCurrentMap().findRoomHandle(id);
+}
+
+RoomPtr MapFrontend::findRoomHandle(const ServerRoomId id) const
+{
+    return getCurrentMap().findRoomHandle(id);
+}
+
+RoomHandle MapFrontend::getRoomHandle(const RoomId id) const
+{
+    return getCurrentMap().getRoomHandle(id);
+}
+
+const RawRoom &MapFrontend::getRawRoom(const RoomId id) const
+{
+    return getCurrentMap().getRawRoom(id);
+}
+
+RoomIdSet MapFrontend::findAllRooms(const Coordinate &coord) const
+{
+    if (auto pRoom = findRoomHandle(coord)) {
+        return RoomIdSet{deref(pRoom).getId()};
+    }
+    return RoomIdSet{};
+}
+
+RoomIdSet MapFrontend::findAllRooms(const SigParseEvent &event) const
+{
+    if (!event.isValid()) {
+        return RoomIdSet{};
+    }
+
+    return getCurrentMap().findAllRooms(event.deref());
+}
+
+RoomIdSet MapFrontend::findAllRooms(const Coordinate &input_min, const Coordinate &input_max) const
+{
+    Bounds bounds{input_min, input_max};
+    RoomIdSet result;
+    const auto &map = getCurrentMap();
+    for (const RoomId id : map.getRooms()) {
+        const auto &r = map.getRoomHandle(id);
+        if (bounds.contains(r.getPosition())) {
+            result.insert(r.getId());
+        }
+    }
+    return result;
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent &sigParseEvent)
 {
     const ParseEvent &event = sigParseEvent.deref();
-    QMutexLocker locker(&mapLock);
-    if (greatestUsedId == INVALID_ROOMID) {
-        Coordinate c(0, 0, 0);
-        slot_createRoom(sigParseEvent, c);
-        if (greatestUsedId != INVALID_ROOMID) {
-            roomIndex[DEFAULT_ROOMID]->setPermanent();
+    if (getCurrentMap().empty()) {
+        if ((false)) {
+            // what was going on in this case?
+            Coordinate c(0, 0, 0);
+            slot_createRoom(sigParseEvent, c);
+            std::abort();
         }
+        return;
     }
 
-    RoomLocker ret(recipient, *this, &event);
-    parseTree.getRooms(ret, event);
+    getCurrentMap().getRooms(recipient, event);
 }
 
-void MapFrontend::lockRoom(RoomRecipient *const recipient, const RoomId id)
+void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
 {
-    locks[id].insert(recipient);
-}
-
-// removes the lock on a room
-// after the last lock is removed, the room is deleted
-void MapFrontend::releaseRoom(RoomRecipient &sender, const RoomId id)
-{
-    QMutexLocker lock(&mapLock);
-    auto &room_locks_ref = locks[id];
-    room_locks_ref.erase(&sender);
-    if (room_locks_ref.empty()) {
-        executeActions(id);
-        if (const SharedRoom &room = roomIndex[id]) {
-            // REVISIT: Why do temporary rooms exist?
-            // Also, note: After the conversion to SharedRoom, it's no longer necessary
-            // to explicitly delete rooms. Just release all references to them.
-            if (room->isTemporary()) {
-                scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<Remove>(), id));
-            }
-        }
+    if (const auto &pRoom = findRoomHandle(id)) {
+        recipient.receiveRoom(*pRoom);
     }
 }
 
-// REVISIT: This is sent too often. Hunt down and kill the unnecessary cases (probably most of them).
-//
-// makes a lock on a room permanent and anonymous.
-// Like that the room can't be deleted via releaseRoom anymore.
-void MapFrontend::keepRoom(RoomRecipient &sender, const RoomId id)
+void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Coordinate &pos)
 {
-    QMutexLocker lock(&mapLock);
-    auto &lock_ref = locks[id];
-    lock_ref.erase(&sender);
-    scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<MakePermanent>(), id));
-    if (lock_ref.empty()) {
-        executeActions(id);
+    if (const auto &pRoom = findRoomHandle(pos)) {
+        recipient.receiveRoom(*pRoom);
+    }
+}
+
+void MapFrontend::setSavedMap(Map map)
+{
+    m_saved.map = map;
+}
+
+void MapFrontend::setSavedMarks(InfomarkDb marks)
+{
+    m_saved.marks = marks;
+}
+
+// REVISIT: we probably don't want to take the caller's word for it about what changed?
+void MapFrontend::setCurrentMarks(InfomarkDb marks, const InfoMarkUpdateFlags modified)
+{
+    m_current.marks = marks;
+    this->InfoMarkModificationTracker::notifyModified(modified);
+}
+
+void MapFrontend::setCurrentMap(const MapApplyResult &result)
+{
+    // NOTE: This is very important: it's where the map is actually changed!
+    m_current.map = result.map;
+    const auto roomUpdateFlags = result.roomUpdateFlags;
+
+    this->RoomModificationTracker::notifyModified(roomUpdateFlags);
+    // TODO: move checkSize() into the notifyModified().
+    if (roomUpdateFlags.contains(RoomUpdateEnum::BoundsChanged)) {
+        checkSize();
+    }
+}
+
+void MapFrontend::setCurrentMap(Map map)
+{
+    // Always update everything when the map is changed like this.
+    setCurrentMap(MapApplyResult{map, ~RoomUpdateFlags{}});
+}
+
+bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
+{
+    MapApplyResult result;
+    try {
+        result = m_current.map.applySingleChange(pc, change);
+    } catch (const std::exception &e) {
+        MMLOG_ERROR() << "Exception: " << e.what();
+        return false;
+    }
+
+    setCurrentMap(result);
+    return true;
+}
+
+bool MapFrontend::applySingleChange(const Change &change)
+{
+    ProgressCounter dummyPc;
+    return applySingleChange(dummyPc, change);
+}
+
+bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
+{
+    MapApplyResult result;
+    try {
+        result = m_current.map.apply(pc, changes);
+    } catch (const std::exception &e) {
+        MMLOG_ERROR() << "Exception: " << e.what();
+        return false;
+    }
+
+    setCurrentMap(result);
+    return true;
+}
+
+bool MapFrontend::applyChanges(const ChangeList &changes)
+{
+    ProgressCounter dummyPc;
+    return applyChanges(dummyPc, changes);
+}
+
+void MapFrontend::keepRoom(RoomRecipient &, const RoomId id)
+{
+    if (const auto &room = findRoomHandle(id); room.has_value() && room->isTemporary()) {
+        applySingleChange(Change{room_change_types::MakePermanent{id}});
+    }
+}
+
+void MapFrontend::releaseRoom(RoomRecipient &, const RoomId id)
+{
+    if (const auto &room = findRoomHandle(id); room.has_value() && room->isTemporary()) {
+        applySingleChange(Change{room_change_types::RemoveRoom{id}});
     }
 }

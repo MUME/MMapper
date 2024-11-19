@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/ChangeMonitor.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
@@ -35,7 +36,6 @@
 class CharacterBatch;
 class ConnectionSelection;
 class Coordinate;
-class InfoMark;
 class InfoMarkSelection;
 class MapData;
 class Mmapper2Group;
@@ -45,8 +45,6 @@ class QOpenGLDebugLogger;
 class QOpenGLDebugMessage;
 class QWheelEvent;
 class QWidget;
-class Room;
-struct RoomId;
 class RoomSelFakeGL;
 
 class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
@@ -60,21 +58,49 @@ public:
     static constexpr const int SCROLL_SCALE = 64;
 
 private:
+    struct NODISCARD OptionStatus final
+    {
+        std::optional<int> multisampling;
+        std::optional<bool> trilinear;
+    };
+
+    struct NODISCARD Diff final
+    {
+        struct NODISCARD HighlightDiff final
+        {
+            Map saved;
+            Map current;
+            TexVertVector needsUpdate;
+            TexVertVector diff;
+        };
+
+        std::optional<std::future<HighlightDiff>> futureHighlight;
+        std::optional<HighlightDiff> highlight;
+
+        NODISCARD bool isUpToDate(const Map &saved, const Map &current) const;
+        NODISCARD bool hasRelatedDiff(const Map &save) const;
+        void cancelUpdates(const Map &saved);
+        void maybeAsyncUpdate(const Map &saved, const Map &current);
+
+        void resetExistingMeshesAndIgnorePendingRemesh()
+        {
+            futureHighlight.reset();
+            highlight.reset();
+        }
+    };
+
+private:
     MapScreen m_mapScreen;
     OpenGL m_opengl;
     GLFont m_glFont;
     Batches m_batches;
     MapCanvasTextures m_textures;
     MapData &m_data;
-
     Mmapper2Group &m_groupManager;
-    struct NODISCARD OptionStatus final
-    {
-        std::optional<int> multisampling;
-        std::optional<bool> trilinear;
-    } graphicsOptionsStatus;
-
+    OptionStatus m_graphicsOptionsStatus;
+    Diff m_diff;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
+    ConnectionSet m_connections;
 
 public:
     explicit MapCanvas(MapData &mapData,
@@ -107,6 +133,9 @@ public:
     NODISCARD auto width() const { return QOpenGLWidget::width(); }
     NODISCARD auto height() const { return QOpenGLWidget::height(); }
     NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
+
+private:
+    void onMovement();
 
 private:
     void reportGLVersion();
@@ -147,11 +176,12 @@ private:
 
     NODISCARD BatchedInfomarksMeshes getInfoMarksMeshes();
     void drawInfoMark(InfomarksBatch &batch,
-                      InfoMark *marker,
+                      const InfomarkHandle &marker,
                       int currentLayer,
                       const glm::vec2 &offset = {},
                       const std::optional<Color> &overrideColor = std::nullopt);
     void updateBatches();
+    void finishPendingMapBatches();
     void updateMapBatches();
     void updateInfomarkBatches();
 
@@ -163,17 +193,19 @@ private:
     void paintSelectionArea();
     void paintNewInfomarkSelection();
     void paintSelectedRooms();
-    void paintSelectedRoom(RoomSelFakeGL &, const Room &room);
+    void paintSelectedRoom(RoomSelFakeGL &, const RawRoom &room);
     void paintSelectedConnection();
     void paintNearbyConnectionPoints();
     void paintSelectedInfoMarks();
     void paintCharacters();
+    void paintDifferences();
+    void forceUpdateMeshes();
 
 public:
-    void mapAndInfomarksChanged();
+    void slot_rebuildMeshes() { forceUpdateMeshes(); }
     void infomarksChanged();
     void layerChanged();
-    void mapChanged();
+    void slot_mapChanged();
     void slot_requestUpdate();
     void screenChanged();
     void selectionChanged();
@@ -202,7 +234,7 @@ signals:
     void sig_zoomChanged(float);
 
 public slots:
-    void slot_forceMapperToRoom();
+    void slot_onForcedPositionChange();
     void slot_createRoom();
 
     void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
@@ -236,7 +268,7 @@ public slots:
     }
 
     void slot_dataLoaded();
-    void slot_moveMarker(const Coordinate &coord);
+    void slot_moveMarker(RoomId id);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
     void slot_infomarksChanged() { infomarksChanged(); }

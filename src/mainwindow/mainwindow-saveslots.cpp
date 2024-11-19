@@ -8,9 +8,11 @@
 
 #include <QMessageBox>
 
-NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
+namespace { // anonymous
+
+NODISCARD QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
 {
-    if (const auto pSaveDialog = ptr.get()) {
+    if (const auto &pSaveDialog = ptr.get()) {
         if (pSaveDialog->exec() == QDialog::Accepted) {
             return pSaveDialog->selectedFiles();
         }
@@ -19,16 +21,68 @@ NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr
     throw NullPointerException();
 }
 
+namespace mwss_detail {
+
+NODISCARD QDir getLastMapDir()
+{
+    const QString &path = getConfig().autoLoad.lastMapDirectory;
+    QDir dir;
+    if (dir.mkpath(path)) {
+        dir.setPath(path);
+    } else {
+        dir.setPath(QDir::homePath());
+    }
+    return dir;
+}
+
+NODISCARD std::unique_ptr<QFileDialog> createCommonSaveDialog(MainWindow &mainWindow)
+{
+    auto save = std::make_unique<QFileDialog>(&mainWindow, "Choose map file name ...");
+    save->setAcceptMode(QFileDialog::AcceptSave);
+    save->setDirectory(getLastMapDir());
+    return save;
+}
+
+NODISCARD std::unique_ptr<QFileDialog> createDirectorySaveDialog(MainWindow &mainWindow)
+{
+    auto save = createCommonSaveDialog(mainWindow);
+    save->setFileMode(QFileDialog::Directory);
+    save->setOption(QFileDialog::ShowDirsOnly, true);
+    return save;
+}
+
+NODISCARD std::unique_ptr<QFileDialog> createFileSaveDialog(MainWindow &mainWindow,
+                                                            const QString &nameFilter,
+                                                            const QString &defaultSuffix)
+{
+    auto save = createCommonSaveDialog(mainWindow);
+    save->setFileMode(QFileDialog::AnyFile);
+    save->setNameFilter(nameFilter);
+    save->setDefaultSuffix(defaultSuffix);
+    return save;
+}
+
+NODISCARD std::unique_ptr<QFileDialog> createDefaultSaveDialog(MainWindow &mainWindow)
+{
+    return mwss_detail::createFileSaveDialog(mainWindow, "MMapper maps (*.mm2)", "mm2");
+}
+
+} // namespace mwss_detail
+} // namespace
+
 bool MainWindow::maybeSave()
 {
-    if (!m_mapData->dataChanged()) {
+    auto &mapData = deref(m_mapData);
+    if (!mapData.dataChanged()) {
         return true;
     }
 
+    const QString changes = mmqt::toQStringUtf8(mapData.describeChanges());
+
     const int ret = QMessageBox::warning(this,
                                          tr("mmapper"),
-                                         tr("The document has been modified.\n"
-                                            "Do you want to save your changes?"),
+                                         tr("The current map has been modified:\n\n") + changes
+                                             + tr("\nDo you want to save the changes?"),
                                          QMessageBox::Yes | QMessageBox::Default,
                                          QMessageBox::No,
                                          QMessageBox::Cancel | QMessageBox::Escape);
@@ -41,24 +95,6 @@ bool MainWindow::maybeSave()
     return ret != QMessageBox::Cancel;
 }
 
-std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
-{
-    const auto &path = getConfig().autoLoad.lastMapDirectory;
-    QDir dir;
-    if (dir.mkpath(path)) {
-        dir.setPath(path);
-    } else {
-        dir.setPath(QDir::homePath());
-    }
-    auto save = std::make_unique<QFileDialog>(this, "Choose map file name ...");
-    save->setFileMode(QFileDialog::AnyFile);
-    save->setDirectory(dir);
-    save->setNameFilter("MMapper Maps (*.mm2)");
-    save->setDefaultSuffix("mm2");
-    save->setAcceptMode(QFileDialog::AcceptSave);
-    return save;
-}
-
 bool MainWindow::slot_save()
 {
     if (m_mapData->getFileName().isEmpty() || m_mapData->isFileReadOnly()) {
@@ -69,8 +105,12 @@ bool MainWindow::slot_save()
 
 bool MainWindow::slot_saveAs()
 {
+    if (!tryStartNewAsync()) {
+        return false;
+    }
+
     const auto makeSaveDialog = [this]() {
-        auto saveDialog = createDefaultSaveDialog();
+        auto saveDialog = mwss_detail::createDefaultSaveDialog(*this);
         QFileInfo currentFile(m_mapData->getFileName());
         if (currentFile.exists()) {
             QString suggestedFileName = currentFile.fileName()
@@ -87,30 +127,13 @@ bool MainWindow::slot_saveAs()
     }
 
     QFileInfo file(fileNames[0]);
-    bool success = saveFile(file.absoluteFilePath(), SaveModeEnum::FULL, SaveFormatEnum::MM2);
-    if (success) {
-        // Update last directory
-        auto &config = setConfig().autoLoad;
-        config.lastMapDirectory = file.absoluteDir().absolutePath();
-
-        // Check if this should be the new autoload map
-        QMessageBox dlg(QMessageBox::Question,
-                        "Autoload Map?",
-                        "Autoload this map when MMapper starts?",
-                        QMessageBox::StandardButtons{QMessageBox::Yes | QMessageBox::No},
-                        this);
-        if (dlg.exec() == QMessageBox::Yes) {
-            config.autoLoadMap = true;
-            config.fileName = file.absoluteFilePath();
-        }
-    }
-    return success;
+    return saveFile(file.absoluteFilePath(), SaveModeEnum::FULL, SaveFormatEnum::MM2);
 }
 
 bool MainWindow::slot_exportBaseMap()
 {
     const auto makeSaveDialog = [this]() {
-        auto saveDialog = createDefaultSaveDialog();
+        auto saveDialog = mwss_detail::createDefaultSaveDialog(*this);
         QFileInfo currentFile(m_mapData->getFileName());
         if (currentFile.exists()) {
             saveDialog->selectFile(
@@ -131,19 +154,17 @@ bool MainWindow::slot_exportBaseMap()
 bool MainWindow::slot_exportMm2xmlMap()
 {
     const auto makeSaveDialog = [this]() {
-        // FIXME: code duplication
-        auto save = std::make_unique<QFileDialog>(this,
-                                                  "Choose map file name ...",
-                                                  QDir::current().absolutePath());
-        save->setFileMode(QFileDialog::AnyFile);
-        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
-        save->setNameFilter("MM2XML Maps (*.mm2xml)");
-        save->setDefaultSuffix("mm2xml");
-        save->setAcceptMode(QFileDialog::AcceptSave);
-        save->selectFile(QFileInfo(m_mapData->getFileName())
-                             .fileName()
-                             .replace(QRegularExpression(R"(\.mm2$)"), ".mm2xml"));
+        const auto filename = QFileInfo(m_mapData->getFileName()).fileName();
+        const auto suggestedFileName = QString(filename)
+                                           .replace(QRegularExpression(R"(\.mm2$)"), ".xml")
+                                           .replace(QRegularExpression(R"(\.mm2xml$)"), ".xml");
 
+        // FIXME: Why is the filename set correctly sometimes but not others?
+        qDebug() << "filename = " << filename;
+        qDebug() << "suggestedFileName = " << suggestedFileName;
+
+        auto save = mwss_detail::createFileSaveDialog(*this, "MMapper2 XML maps (*.xml)", "xml");
+        save->selectFile(suggestedFileName);
         return save;
     };
 
@@ -157,17 +178,7 @@ bool MainWindow::slot_exportMm2xmlMap()
 
 bool MainWindow::slot_exportWebMap()
 {
-    const auto makeSaveDialog = [this]() {
-        // FIXME: code duplication
-        auto save = std::make_unique<QFileDialog>(this,
-                                                  "Choose map file name ...",
-                                                  QDir::current().absolutePath());
-        save->setFileMode(QFileDialog::Directory);
-        save->setOption(QFileDialog::ShowDirsOnly, true);
-        save->setAcceptMode(QFileDialog::AcceptSave);
-        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
-        return save;
-    };
+    const auto makeSaveDialog = [this]() { return mwss_detail::createDirectorySaveDialog(*this); };
 
     const QStringList fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
@@ -181,18 +192,13 @@ bool MainWindow::slot_exportWebMap()
 bool MainWindow::slot_exportMmpMap()
 {
     const auto makeSaveDialog = [this]() {
-        // FIXME: code duplication
-        auto save = std::make_unique<QFileDialog>(this,
-                                                  "Choose map file name ...",
-                                                  QDir::current().absolutePath());
-        save->setFileMode(QFileDialog::AnyFile);
-        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
-        save->setNameFilter("MMP Maps (*.xml)");
-        save->setDefaultSuffix("xml");
+        const auto suggestedFileName = QFileInfo(m_mapData->getFileName())
+                                           .fileName()
+                                           .replace(QRegularExpression(R"(\.mm2$)"), "-mmp.xml");
+
+        auto save = mwss_detail::createFileSaveDialog(*this, "MMP maps (*.xml)", "xml");
         save->setAcceptMode(QFileDialog::AcceptSave);
-        save->selectFile(QFileInfo(m_mapData->getFileName())
-                             .fileName()
-                             .replace(QRegularExpression(R"(\.mm2$)"), "-mmp.xml"));
+        save->selectFile(suggestedFileName);
 
         return save;
     };

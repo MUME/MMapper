@@ -4,18 +4,24 @@
 
 #include "AbstractParser-Commands.h"
 
+#include "../global/AsyncTasks.h"
 #include "../global/CaseUtils.h"
 #include "../global/Consts.h"
+#include "../global/LineUtils.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
+#include "../global/progresscounter.h"
 #include "../map/CommandId.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitFlags.h"
 #include "../map/enums.h"
 #include "../map/infomark.h"
-#include "../map/mmapper2room.h"
+#include "../mapdata/mapdata.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
+#include "../viewers/AnsiViewWindow.h"
+#include "../viewers/LaunchAsyncViewer.h"
+#include "../viewers/TopLevelWindows.h"
 #include "Abbrev.h"
 #include "AbstractParser-Utils.h"
 #include "DoorAction.h"
@@ -23,7 +29,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <map>
+#include <iostream>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -40,17 +46,19 @@ const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
 const Abbrev cmdDoorHelp{"doorhelp", 5};
-const Abbrev cmdGroup{"group", 5};
+const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroupTell{"gtell", 2};
+const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdHelp{"help", 2};
-const Abbrev cmdMark{"mark", 2};
+const Abbrev cmdMap{"map"};
+const Abbrev cmdMark{"mark", 3};
 const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
-const Abbrev cmdVote{"vote", 2};
 const Abbrev cmdTimer{"timer", 5};
+const Abbrev cmdVote{"vote", 2};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -403,7 +411,7 @@ NODISCARD static bool isCommand(const std::string &str, const CommandEnum cmd)
 bool AbstractParser::parseUserCommands(const QString &input)
 {
     if (input.startsWith(getPrefixChar())) {
-        std::string s = mmqt::toStdStringLatin1(input);
+        std::string s = mmqt::toStdStringUtf8(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar()) {
             sendToUser("Internal error. Sorry.\n");
@@ -414,16 +422,12 @@ bool AbstractParser::parseUserCommands(const QString &input)
         return false;
     }
 
-    if (tryParseGenericDoorCommand(input)) {
-        return false;
-    }
-
     return parseSimpleCommand(input);
 }
 
 bool AbstractParser::parseSimpleCommand(const QString &qstr)
 {
-    const std::string str = mmqt::toStdStringLatin1(qstr);
+    const std::string str = mmqt::toStdStringUtf8(qstr);
     const auto isOnline = ::isOnline();
 
     for (const CommandEnum cmd : ALL_COMMANDS) {
@@ -466,7 +470,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                 auto view = StringView{str}.trim();
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
                     const auto dir = static_cast<CommandEnum>(tryGetDir(view));
-                    if (dir >= CommandEnum::UNKNOWN) {
+                    if (!isDirectionNESWUD(dir)) {
                         sendToUser("In which direction do you want to scout?\n");
                         sendPromptToUser();
 
@@ -660,6 +664,226 @@ void AbstractParser::parseHelp(StringView words)
     eval("help", syntax, words);
 }
 
+void AbstractParser::doMapDiff()
+{
+    auto &mapData = m_mapData;
+
+    if (mapData.getSavedMarks() != mapData.getCurrentMarks()) {
+        sendToUser("Note: Map markers have changed, but marker diff is not yet supported.\n");
+    }
+
+    const Map &origin = mapData.getSavedMap();
+    const Map &map = mapData.getCurrentMap();
+
+    if (map == origin) {
+        sendToUser("The map has not been modified since the last save.\n");
+        return;
+    }
+
+    struct NODISCARD MapPair final
+    {
+        Map origin;
+        Map current;
+    };
+    launchAsyncAnsiViewerWorker<MapPair>("map show diff",
+                                         "Map Diff",
+                                         {origin, map},
+                                         [](ProgressCounter &pc, AnsiOstream &aos, MapPair &pair) {
+                                             Map::diff(pc, aos, pair.origin, pair.current);
+                                         });
+}
+
+void AbstractParser::doMapCommand(StringView input)
+{
+    auto compact = [this]() {
+        auto &map = m_mapData;
+        if (map.applySingleChange(Change{world_change_types::CompactRoomIds{}})) {
+            // Mark *everything* as changed.
+            map.setSavedMap(Map{});
+            map.setSavedMarks({});
+            sendOkToUser();
+            sendToUser("WARNING: You should save the map immediately.\n");
+            sendToUser("Note: Group manager will probably display very strange results"
+                       " until you save the map and share it with your groupmates.\n");
+
+        } else {
+            sendToUser("Ooops.\n");
+        }
+    };
+    auto removeDoorNames = [this]() { this->doRemoveDoorNamesCommand(); };
+    auto generateBaseMap = [this]() {
+        //std::ostream &os = std::cout;
+        this->doGenerateBaseMap();
+    };
+
+    auto diff = [this]() { doMapDiff(); };
+
+    auto printMulti = [this]() {
+        // TODO: multi should probably select the rooms in question.
+        launchAsyncAnsiViewerWorker<Map>("map show multi",
+                                         "Exits with Multiple Connections",
+                                         m_mapData.getCurrentMap(),
+                                         [](ProgressCounter &pc, AnsiOstream &aos, Map &map) {
+                                             map.printMulti(pc, aos);
+                                         });
+    };
+    auto printStats = [this]() {
+        launchAsyncAnsiViewerWorker<Map>("map show stats",
+                                         "Map Stats",
+                                         m_mapData.getCurrentMap(),
+                                         [](ProgressCounter &pc, AnsiOstream &aos, Map &map) {
+                                             map.printStats(pc, aos);
+                                         });
+    };
+
+    auto printUnknown = [this]() {
+        // TODO: unknown should probably select the rooms in question.
+        launchAsyncAnsiViewerWorker<Map>("map show unknowns",
+                                         "Rooms with Unknown Connections",
+                                         m_mapData.getCurrentMap(),
+                                         [](ProgressCounter &pc, AnsiOstream &aos, Map &map) {
+                                             map.printUnknown(pc, aos);
+                                         });
+    };
+
+    auto checkConsistency = [this]() {
+        sendToUser("Attempting to check map consistency...\n");
+        emit m_mapData.sig_checkMapConsistency();
+    };
+
+    auto revert = [this]() {
+        MapData &map = m_mapData;
+
+        try {
+            map.revert();
+        } catch (const std::exception &ex) {
+            sendToUser(std::string{"Exception: "} + ex.what());
+            return;
+        }
+
+        sendOkToUser();
+    };
+
+    auto syn = [](std::string name, std::string help, std::function<void()> input_callback) {
+        auto token = syntax::stringToken(std::move(name));
+        auto fn = [callback = std::move(input_callback)](User & /*user*/,
+                                                         const Pair *const /*args*/) { callback(); };
+        return syntax::buildSyntax(token, syntax::Accept(fn, std::move(help)));
+    };
+
+    auto destructiveSyntax
+        = syntax::buildSyntax(syntax::stringToken("destructive"),
+                              syn("remove-hidden-door-names",
+                                  "removes hidden door names",
+                                  removeDoorNames),
+                              syn("generate-base-map", "generate the base map", generateBaseMap),
+                              syn("compact-ids", "compact the map IDs", compact),
+                              syn("really-revert", "revert to the saved map", revert));
+
+    auto diffSyntax = syn("diff", "show changes since the last save", diff);
+    auto statsSynax = syn("stats", "print some statistics", printStats);
+
+    auto showSyntax = syntax::buildSyntax(syntax::stringToken("show"),
+                                          syn("multi",
+                                              "show non-random exits with multiple connections",
+                                              printMulti),
+                                          syn("unknowns",
+                                              "show rooms with legacy UNKNOWN exit directions",
+                                              printUnknown));
+
+    auto consistSyntax = syn("check-consistency", "checks map consistency", checkConsistency);
+
+    auto gotoFn = [this](User &user, const Pair *const args) {
+        auto &os = user.getOstream();
+        const auto v = getAnyVectorReversed(args);
+
+        if constexpr (IS_DEBUG_BUILD) {
+            const auto &gotoString = v[0].getString();
+            assert(gotoString == "goto");
+        }
+
+        const RoomId id = getOtherRoom(v[1].getInt());
+
+        auto &mapData = m_mapData;
+        RoomPtr optOther = mapData.findRoomHandle(id);
+        if (!optOther) {
+            os << "To what RoomId?\n";
+            return;
+        }
+
+        mapData.forceToRoom(id);
+        doMove(CommandEnum::LOOK);
+        send_ok(os);
+    };
+
+    auto gotoSyntax = syntax::buildSyntax(syntax::abbrevToken("goto"),
+                                          syntax::TokenMatcher::alloc<syntax::ArgInt>(),
+                                          syntax::Accept(gotoFn, "go to room #"));
+
+    auto undeleteFn = [this](User &user, const Pair *const args) {
+        auto &os = user.getOstream();
+        const auto v = getAnyVectorReversed(args);
+
+        if constexpr (IS_DEBUG_BUILD) {
+            const auto &gotoString = v[0].getString();
+            assert(gotoString == "undelete");
+        }
+
+        auto &mapData = m_mapData;
+        const auto &saved = mapData.getSavedMap();
+        const auto &current = mapData.getCurrentMap();
+
+        // compare to RoomId AbstractParser::getOtherRoom() const
+        // Here we're getting a room from the saved map, instead of from the current map.
+        const int otherRoomId = v[1].getInt();
+        if (otherRoomId < 0) {
+            os << "RoomId cannot be negative.\n";
+            return;
+        }
+        const auto otherExt = ExternalRoomId{static_cast<uint32_t>(otherRoomId)};
+
+        if (current.findRoomHandle(otherExt)) {
+            os << "That room is not deleted.\n";
+            return;
+        }
+
+        const RoomPtr optOther = saved.findRoomHandle(otherExt);
+        if (!optOther) {
+            os << "That room does not exist in the saved copy of the map.\n";
+            return;
+        }
+
+        auto &other = deref(optOther);
+        auto rawCopy = other.getRaw();
+        for (auto &e : rawCopy.exits) {
+            e.incoming = {};
+            e.outgoing = {};
+        }
+
+        if (!mapData.applySingleChange(Change{room_change_types::UndeleteRoom{otherExt, rawCopy}})) {
+            os << "Failed to undelete the room.\n";
+            return;
+        }
+
+        os << "Successfully undeleted room " << otherExt.asUint32() << ".\n";
+    };
+
+    auto undeleteSyntax = syntax::buildSyntax(syntax::abbrevToken("undelete"),
+                                              syntax::TokenMatcher::alloc<syntax::ArgInt>(),
+                                              syntax::Accept(undeleteFn,
+                                                             "undelete room # (if possible)"));
+
+    auto mapSyntax = syntax::buildSyntax(gotoSyntax,
+                                         diffSyntax,
+                                         statsSynax,
+                                         showSyntax,
+                                         destructiveSyntax,
+                                         undeleteSyntax,
+                                         consistSyntax);
+
+    eval("map", mapSyntax, input);
+}
+
 void AbstractParser::initSpecialCommandMap()
 {
     auto &map = m_specialCommandMap;
@@ -675,8 +899,8 @@ void AbstractParser::initSpecialCommandMap()
                                "  %3\n"
                                "\n")
                            .arg(getPrefixChar())
-                           .arg(mmqt::toQStringLatin1(name))
-                           .arg(mmqt::toQStringLatin1(help)));
+                           .arg(mmqt::toQStringUtf8(name))
+                           .arg(mmqt::toQStringUtf8(help)));
         };
     };
 
@@ -772,8 +996,24 @@ void AbstractParser::initSpecialCommandMap()
             this->doRemoveDoorNamesCommand();
             return true;
         },
-        makeSimpleHelp(
-            "Removes all secret door names from the current map (WARNING: destructive)!"));
+        makeSimpleHelp("Remove hidden door names."));
+    add(
+        cmdGenerateBaseMap,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            if (!rest.isEmpty()) {
+                return false;
+            }
+            this->doGenerateBaseMap();
+            return true;
+        },
+        makeSimpleHelp("Generate the base map."));
+    add(
+        cmdMap,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            doMapCommand(rest);
+            return true;
+        },
+        makeSimpleHelp("Print the changes changes since the last save"));
     add(
         cmdSearch,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -813,8 +1053,8 @@ void AbstractParser::initSpecialCommandMap()
                                "%3\n"
                                "\n")
                            .arg(getPrefixChar())
-                           .arg(mmqt::toQStringLatin1(name))
-                           .arg(mmqt::toQStringLatin1(help)));
+                           .arg(mmqt::toQStringUtf8(name))
+                           .arg(mmqt::toQStringUtf8(help)));
         });
     add(
         cmdTime,
@@ -898,7 +1138,7 @@ void AbstractParser::addSpecialCommand(const char *const s,
         if (it == map.end()) {
             map.emplace(key, ParserRecord{fullName, callback, help});
         } else {
-            qWarning() << ("unable to add " + mmqt::toQStringLatin1(key) + " for " + abb.describe());
+            qWarning() << ("unable to add " + mmqt::toQStringUtf8(key) + " for " + abb.describe());
         }
     }
 }
@@ -912,7 +1152,7 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     auto first = args.takeFirstWord();
     auto &map = m_specialCommandMap;
 
-    const std::string key = toLowerLatin1(first.getStdStringView());
+    const std::string key = toLowerUtf8(first.getStdStringView());
     auto it = map.find(key);
     if (it == map.end()) {
         return false;

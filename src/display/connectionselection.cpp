@@ -6,7 +6,6 @@
 #include "connectionselection.h"
 
 #include "../configuration/NamedConfig.h"
-#include "../expandoracommon/RoomAdmin.h"
 #include "../map/coordinate.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
@@ -15,42 +14,36 @@
 #include <cassert>
 #include <utility>
 
-ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>)
+ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>, MapFrontend &map)
+    : m_map{map}
 {
     for (const auto &x : m_connectionDescriptor) {
-        assert(x.room == nullptr);
+        assert(x.room == std::nullopt);
     }
 }
 
 ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
-                                         MapFrontend *mf,
+                                         MapFrontend &map,
                                          const MouseSel &sel)
+    : m_map{map}
 {
     for (const auto &x : m_connectionDescriptor) {
-        assert(x.room == nullptr);
+        assert(x.room == std::nullopt);
     }
 
     const Coordinate c = sel.getCoordinate();
-    mf->lookingForRooms(*this, c, c);
+    if (const auto room = m_map.findRoomHandle(c)) {
+        this->receiveRoom(deref(room));
+    }
     m_connectionDescriptor[0].direction = computeDirection(sel.pos);
 }
 
-ConnectionSelection::~ConnectionSelection()
-{
-    // for all rooms remove them internaly and call release room
-    if (auto *const admin = std::exchange(m_admin, nullptr)) {
-        for (const auto &x : m_connectionDescriptor) {
-            if (auto *const room = x.room) {
-                admin->releaseRoom(*this, room->getId());
-            }
-        }
-    }
-}
+ConnectionSelection::~ConnectionSelection() = default;
 
 bool ConnectionSelection::isValid() const
 {
     for (const auto &x : m_connectionDescriptor) {
-        if (x.room == nullptr) {
+        if (x.room == std::nullopt) {
             return false;
         }
     }
@@ -90,57 +83,40 @@ ExitDirEnum ConnectionSelection::computeDirection(const Coordinate2f &c)
               : (nw ? ExitDirEnum::WEST : ExitDirEnum::SOUTH);
 }
 
-void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirEnum dir)
+void ConnectionSelection::setFirst(const RoomId id, const ExitDirEnum dir)
 {
     m_first = true;
-    if (m_connectionDescriptor[0].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[0].room->getId());
-        }
-        m_connectionDescriptor[0].room = nullptr;
+    m_connectionDescriptor[0].room.reset();
+    if (const auto &room = m_map.findRoomHandle(id)) {
+        this->receiveRoom(deref(room));
     }
-    mf->lookingForRooms(*this, id);
     m_connectionDescriptor[0].direction = dir;
-    // if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
 
-void ConnectionSelection::setSecond(MapFrontend *const mf, const MouseSel &sel)
+void ConnectionSelection::setSecond(const MouseSel &sel)
 {
     m_first = false;
     const Coordinate c = sel.getCoordinate();
-    if (m_connectionDescriptor[1].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[1].room->getId());
-        }
-        m_connectionDescriptor[1].room = nullptr;
+    m_connectionDescriptor[1].room.reset();
+    if (const auto &room = m_map.findRoomHandle(c)) {
+        this->receiveRoom(deref(room));
     }
-    mf->lookingForRooms(*this, c, c);
     m_connectionDescriptor[1].direction = computeDirection(sel.pos);
-    // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
-void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, const ExitDirEnum dir)
+void ConnectionSelection::setSecond(const RoomId id, const ExitDirEnum dir)
 {
     m_first = false;
-    if (m_connectionDescriptor[1].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[1].room->getId());
-        }
-        m_connectionDescriptor[1].room = nullptr;
+    m_connectionDescriptor[1].room.reset();
+    if (const auto &room = m_map.findRoomHandle(id)) {
+        this->receiveRoom(deref(room));
     }
-    mf->lookingForRooms(*this, id);
     m_connectionDescriptor[1].direction = dir;
-    // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
 void ConnectionSelection::removeSecond()
 {
-    if (m_connectionDescriptor[1].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[1].room->getId());
-        }
-        m_connectionDescriptor[1].room = nullptr;
-    }
+    m_connectionDescriptor[1].room.reset();
 }
 
 ConnectionSelection::ConnectionDescriptor ConnectionSelection::getFirst() const
@@ -153,40 +129,18 @@ ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond() const
     return m_connectionDescriptor[1];
 }
 
-void ConnectionSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
+void ConnectionSelection::receiveRoom(const RoomHandle &room)
 {
-    m_admin = admin;
-    // addroom to internal map
-    // uint32_t id = aRoom->getId();
-
-    if (m_first) {
-        if (m_connectionDescriptor[0].room != nullptr) {
-            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-                m_admin->releaseRoom(*this, m_connectionDescriptor[0].room->getId());
-            }
-            m_connectionDescriptor[0].room = aRoom;
-        } else {
-            m_connectionDescriptor[0].room = aRoom;
-        }
-    } else {
-        if (m_connectionDescriptor[1].room != nullptr) {
-            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-                m_admin->releaseRoom(*this, m_connectionDescriptor[1].room->getId());
-            }
-            m_connectionDescriptor[1].room = aRoom;
-        } else {
-            m_connectionDescriptor[1].room = aRoom;
-        }
-    }
+    m_connectionDescriptor[m_first ? 0 : 1].room = room;
 }
 
 bool ConnectionSelection::ConnectionDescriptor::isTwoWay(const ConnectionDescriptor &first,
                                                          const ConnectionDescriptor &second)
 {
-    const Room &r1 = deref(first.room);
-    const Room &r2 = deref(second.room);
-    const Exit &exit1 = r1.exit(first.direction);
-    const Exit &exit2 = r2.exit(second.direction);
+    const auto &r1 = deref(first.room);
+    const auto &r2 = deref(second.room);
+    const auto &exit1 = r1.getExit(first.direction);
+    const auto &exit2 = r2.getExit(second.direction);
     const RoomId &id1 = r1.getId();
     const RoomId &id2 = r2.getId();
     return exit1.containsOut(id2) && exit2.containsOut(id1);
@@ -195,11 +149,11 @@ bool ConnectionSelection::ConnectionDescriptor::isTwoWay(const ConnectionDescrip
 bool ConnectionSelection::ConnectionDescriptor::isOneWay(const ConnectionDescriptor &first,
                                                          const ConnectionDescriptor &second)
 {
-    const Room &r1 = deref(first.room);
-    const Room &r2 = deref(second.room);
+    const auto &r1 = deref(first.room);
+    const auto &r2 = deref(second.room);
     const ExitDirEnum dir2 = second.direction;
-    const Exit &exit1 = r1.exit(first.direction);
-    const Exit &exit2 = r2.exit(dir2);
+    const auto &exit1 = r1.getExit(first.direction);
+    const auto &exit2 = r2.getExit(dir2);
     const RoomId &id1 = r1.getId();
     const RoomId &id2 = r2.getId();
     return exit1.containsOut(id2) && dir2 == ExitDirEnum::UNKNOWN && !exit2.containsOut(id1)

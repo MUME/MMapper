@@ -59,7 +59,7 @@ private:
     }
 
 protected:
-    void sendRemoveUserNotification(GroupSocket &socket, const QByteArray &name);
+    void sendRemoveUserNotification(GroupSocket &socket, const QString &name);
 
 private:
     NODISCARD bool virt_start() final;
@@ -67,7 +67,7 @@ private:
 
 private:
     void virt_connectionClosed(GroupSocket &socket) final;
-    void virt_kickCharacter(const QByteArray &) final;
+    void virt_kickCharacter(const QString &) final;
     void virt_retrieveData(GroupSocket &socket, MessagesEnum message, const QVariantMap &data) final;
     void virt_sendCharRename(const QVariantMap &map) final;
     void virt_sendCharUpdate(const QVariantMap &map) final;
@@ -80,8 +80,8 @@ private:
     void kickConnection(GroupSocket &socket, const QString &message);
 
 private:
-    void sendToAll(const QByteArray &);
-    void sendToAllExceptOne(GroupSocket *exception, const QByteArray &);
+    void sendToAll(const QString &);
+    void sendToAllExceptOne(GroupSocket *exception, const QString &);
     void closeAll();
     void closeOne(GroupSocket &target);
     void connectAll(GroupSocket &);
@@ -90,7 +90,7 @@ private:
 protected slots:
     void slot_relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
     void slot_connectionEstablished(GroupSocket *socket);
-    void slot_onRevokeWhitelist(const QByteArray &secret);
+    void slot_onRevokeWhitelist(const GroupSecret &secret);
     void slot_onIncomingConnection(qintptr socketDescriptor);
     void slot_errorInConnection(GroupSocket *, const QString &);
 };
