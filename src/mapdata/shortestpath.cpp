@@ -15,6 +15,7 @@
 #include "mapdata.h"
 #include "roomfilter.h"
 
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -100,8 +101,18 @@ void MapData::shortestPathSearch(const Room *origin,
                                  ShortestPathRecipient *recipient,
                                  const RoomFilter &f,
                                  int max_hits,
-                                 double max_dist)
+                                 const double max_dist)
 {
+    // the search stops if --max_hits == 0, so max_hits must be greater than 0,
+    // but the default parameter is -1.
+    assert(max_hits > 0 || max_hits == -1);
+
+    // although the data probably won't ever contain more than 2 billion results,
+    // let's at least pretend to care about potential signed integer underflow (UB)
+    if (max_hits <= 0) {
+        max_hits = std::numeric_limits<int>::max();
+    }
+
     QMutexLocker locker(&mapLock);
     QVector<SPNode> sp_nodes;
     QSet<RoomId> visited;
