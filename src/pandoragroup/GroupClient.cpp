@@ -225,17 +225,11 @@ void GroupClient::sendHandshake(const QVariantMap &data)
 
     emit sig_sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
 
-    m_proposedProtocolVersion = [&serverProtocolVersion]() {
+    m_proposedProtocolVersion =
         // Ensure we only pick a protocol within the bounds we understand
-        if (!QSslSocket::supportsSsl()) {
-            return PROTOCOL_VERSION_102;
-        } else if (serverProtocolVersion >= PROTOCOL_VERSION_103) {
-            return PROTOCOL_VERSION_103;
-        } else if (serverProtocolVersion <= PROTOCOL_VERSION_102) {
-            return PROTOCOL_VERSION_102;
-        }
-        return serverProtocolVersion;
-    }();
+        (QSslSocket::supportsSsl() && serverProtocolVersion >= PROTOCOL_VERSION_103)
+            ? PROTOCOL_VERSION_103
+            : PROTOCOL_VERSION_102;
 
     if (serverProtocolVersion == PROTOCOL_VERSION_102
         || m_proposedProtocolVersion == PROTOCOL_VERSION_102) {
