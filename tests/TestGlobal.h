@@ -15,7 +15,7 @@ private Q_SLOTS:
     void ansi256ColorTest();
     void ansiToRgbTest();
     void stringViewTest();
-    void unquoteTest();
     void toLowerLatin1Test();
     void to_numberTest();
+    void unquoteTest();
 };

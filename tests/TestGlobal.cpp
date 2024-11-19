@@ -75,12 +75,6 @@ void TestGlobal::stringViewTest()
     test::testStringView();
 }
 
-void TestGlobal::unquoteTest()
-{
-    // REVISIT: Test is meaningless during release builds
-    test::test_unquote();
-}
-
 void TestGlobal::toLowerLatin1Test()
 {
     // Visible Latin-1 characters
@@ -120,6 +114,12 @@ void TestGlobal::to_numberTest()
     QCOMPARE(ok, false);
     QCOMPARE(to_integer<uint64_t>(u"110680464442257309695", ok), 0);
     QCOMPARE(ok, false);
+}
+
+void TestGlobal::unquoteTest()
+{
+    // REVISIT: Test is meaningless during release builds
+    test::test_unquote();
 }
 
 QTEST_MAIN(TestGlobal)
