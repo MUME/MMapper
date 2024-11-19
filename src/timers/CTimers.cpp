@@ -22,10 +22,10 @@ NODISCARD static inline int64_t nowMs()
 }
 
 TTimer::TTimer(const std::string &name, const std::string &desc, int64_t durationMs)
-    : name(name)
-    , desc(desc)
-    , start(nowMs())
-    , duration(durationMs)
+    : m_name{name}
+    , m_desc{desc}
+    , m_start{nowMs()}
+    , m_duration{durationMs}
 {}
 
 TTimer::TTimer(const std::string &name, const std::string &desc)
@@ -34,7 +34,7 @@ TTimer::TTimer(const std::string &name, const std::string &desc)
 
 int64_t TTimer::elapsedMs() const
 {
-    return nowMs() - start;
+    return nowMs() - m_start;
 }
 
 CTimers::CTimers(QObject *const parent)

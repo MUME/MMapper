@@ -14,23 +14,23 @@
 
 class NODISCARD TTimer final
 {
+private:
+    std::string m_name;
+    std::string m_desc;
+    int64_t m_start = 0;
+    int64_t m_duration = 0;
+
 public:
     explicit TTimer(const std::string &name, const std::string &desc, int64_t durationMs);
     explicit TTimer(const std::string &name, const std::string &desc);
 
 public:
-    const std::string &getName() const { return name; }
-    const std::string &getDescription() const { return desc; }
+    NODISCARD const std::string &getName() const { return m_name; }
+    NODISCARD const std::string &getDescription() const { return m_desc; }
 
 public:
-    int64_t durationMs() const { return duration; }
-    int64_t elapsedMs() const;
-
-private:
-    std::string name;
-    std::string desc;
-    int64_t start;
-    int64_t duration;
+    NODISCARD int64_t durationMs() const { return m_duration; }
+    NODISCARD int64_t elapsedMs() const;
 };
 
 class CTimers final : public QObject
@@ -61,7 +61,7 @@ public:
     bool removeCountdown(const std::string &name);
 
     // for stat command representation
-    std::string getStatCommandEntry();
+    NODISCARD std::string getStatCommandEntry();
 
     void clear();
 
