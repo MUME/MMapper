@@ -150,6 +150,8 @@ set(mmapper_SRCS
     global/string_view_utils.h
     global/tests.cpp
     global/tests.h
+    global/thread_utils.cpp
+    global/thread_utils.h
     global/unquote.cpp
     global/unquote.h
     global/utils.cpp
