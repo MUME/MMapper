@@ -58,7 +58,7 @@ NODISCARD static Coordinate convertESUtoENU(Coordinate c)
 
 NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
 {
-    if (version <= MMAPPER_2_5_1_SCHEMA) {
+    if (version < MMAPPER_19_10_0_SCHEMA) {
         return convertESUtoENU(c);
     }
     return c;
@@ -66,7 +66,7 @@ NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordina
 
 static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
 {
-    if (version > MMAPPER_2_5_1_SCHEMA) {
+    if (version >= MMAPPER_19_10_0_SCHEMA) {
         return;
     }
 
@@ -420,7 +420,7 @@ bool MapStorage::mergeData()
         QBuffer buffer;
         const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
         const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
-                                     && version <= MMAPPER_2_4_0_SCHEMA);
+                                     && version < MMAPPER_2_4_3_SCHEMA);
         if (qCompressed || (!NO_ZLIB && zlibCompressed)) {
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qCompressed
@@ -496,13 +496,15 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
 
-    if (version <= MMAPPER_2_5_1_SCHEMA) {
+    if (version < MMAPPER_19_10_0_SCHEMA) {
+        // was name
         std::ignore = helper.read_string(); /* value ignored; called for side effect */
     }
 
     mark.setText(InfoMarkText(helper.read_string()));
 
-    if (version <= MMAPPER_2_5_1_SCHEMA) {
+    if (version < MMAPPER_19_10_0_SCHEMA) {
+        // was timestamp
         std::ignore = helper.read_datetime(); /* value ignored; called for side effect */
     }
 
