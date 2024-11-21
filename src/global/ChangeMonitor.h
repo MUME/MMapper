@@ -14,7 +14,7 @@ public:
     using CallbackLifetime = Signal::SharedConnection;
 
 public:
-    NODISCARD CallbackLifetime registerChangeCallback(Base::Function callback)
+    NODISCARD CallbackLifetime registerChangeCallback(Function callback)
     {
         return Base::connect(std::move(callback));
     }
@@ -31,7 +31,7 @@ private:
 public:
     ConnectionSet &operator+=(ChangeMonitor::CallbackLifetime lifetime)
     {
-        m_lifetimes.emplace_back(lifetime);
+        m_lifetimes.emplace_back(std::move(lifetime));
         return *this;
     }
 };
