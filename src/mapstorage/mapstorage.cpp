@@ -40,15 +40,24 @@
 #include <QtCore>
 #include <QtWidgets>
 
-static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
-static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag
-static constexpr const int MMAPPER_2_0_4_SCHEMA = 25; // zlib compression
-static constexpr const int MMAPPER_2_3_7_SCHEMA = 32; // 16bit DoorFlags, NoMatch
-static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit MobFlags/LoadFlags
-static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
-static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
-static constexpr const int MMAPPER_19_10_0_SCHEMA = 36; // switches to new coordinate system
-static constexpr const int CURRENT_SCHEMA = MMAPPER_19_10_0_SCHEMA;
+namespace { // anonymous
+namespace schema {
+
+constexpr const int v2_0_0_initial = 17;          // Initial schema (Apr 2006)
+constexpr const int v2_0_2_ridable = 24;          // Ridable flag (Oct 2006)
+constexpr const int v2_0_4_zlib = 25;             // zlib compression (Jun 2009)
+constexpr const int v2_3_7_doorFlagsNomatch = 32; // 16-bit DoorFlags, NoMatch (Dec 2016)
+constexpr const int v2_4_0_largerFlags = 33;      // 16-bit Exits, 32-bit Mob/Load Flags (Dec 2017)
+constexpr const int v2_4_3_qCompress = 34;        // qCompress, SunDeath flag (Jan 2018)
+constexpr const int v2_5_1_discardNoMatch = 35;   // discard previous NoMatch flags (Aug 2018)
+
+// starting in 2019, versions are date based: v${YY}_${MM}_${rev}.
+constexpr const int v19_10_0_newCoords = 36; // switches to new coordinate system
+
+constexpr const int CURRENT = v19_10_0_newCoords;
+
+} // namespace schema
+} // namespace
 
 NODISCARD static Coordinate convertESUtoENU(Coordinate c)
 {
@@ -58,7 +67,7 @@ NODISCARD static Coordinate convertESUtoENU(Coordinate c)
 
 NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
 {
-    if (version < MMAPPER_19_10_0_SCHEMA) {
+    if (version < schema::v19_10_0_newCoords) {
         return convertESUtoENU(c);
     }
     return c;
@@ -66,7 +75,7 @@ NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordina
 
 static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
 {
-    if (version >= MMAPPER_19_10_0_SCHEMA) {
+    if (version >= schema::v19_10_0_newCoords) {
         return;
     }
 
@@ -265,13 +274,13 @@ SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
     room->setAlignType(serialize<RoomAlignEnum>(helper.read_u8()));
     room->setPortableType(serialize<RoomPortableEnum>(helper.read_u8()));
     room->setRidableType(serialize<RoomRidableEnum>(
-        (version >= MMAPPER_2_0_2_SCHEMA) ? helper.read_u8() : uint8_t{0}));
+        (version >= schema::v2_0_2_ridable) ? helper.read_u8() : uint8_t{0}));
     room->setSundeathType(serialize<RoomSundeathEnum>(
-        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u8() : uint8_t{0}));
+        (version >= schema::v2_4_0_largerFlags) ? helper.read_u8() : uint8_t{0}));
     room->setMobFlags(serialize<RoomMobFlags>(
-        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
+        (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
     room->setLoadFlags(serialize<RoomLoadFlags>(
-        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
+        (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
     if (helper.read_u8() /*roomUpdated*/ != 0u) {
         room->setUpToDate();
     }
@@ -290,7 +299,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
         Exit &e = eList[i];
 
         // Read the exit flags
-        if (version >= MMAPPER_2_4_0_SCHEMA) {
+        if (version >= schema::v2_4_0_largerFlags) {
             e.setExitFlags(serialize<ExitFlags>(helper.read_u16()));
         } else {
             auto flags = serialize<ExitFlags>(helper.read_u8());
@@ -300,13 +309,14 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
             e.setExitFlags(flags);
         }
 
-        // Exits saved after MMAPPER_2_0_4_SCHEMA were offset by 1 bit causing
-        // corruption and excessive NO_MATCH exits. We need to clean them and version the schema.
-        if (version >= MMAPPER_2_0_4_SCHEMA && version < MMAPPER_2_5_1_SCHEMA) {
+        // Exits saved starting with schema::v2_0_4_zlib were offset by 1 bit causing
+        // corruption and excessive NO_MATCH exits;
+        // this was finally fixed with schema::v2_5_1_discardNoMatch.
+        if (version >= schema::v2_0_4_zlib && version < schema::v2_5_1_discardNoMatch) {
             e.setExitFlags(e.getExitFlags() & ~ExitFlags{ExitFlagEnum::NO_MATCH});
         }
 
-        e.setDoorFlags(serialize<DoorFlags>((version >= MMAPPER_2_3_7_SCHEMA)
+        e.setDoorFlags(serialize<DoorFlags>((version >= schema::v2_3_7_doorFlagsNomatch)
                                                 ? helper.read_u16()
                                                 : static_cast<uint16_t>(helper.read_u8())));
 
@@ -383,14 +393,14 @@ bool MapStorage::mergeData()
         const auto version = helper.read_u32();
         const bool supported = [version]() -> bool {
             switch (version) {
-            case MMAPPER_2_0_0_SCHEMA:
-            case MMAPPER_2_0_2_SCHEMA:
-            case MMAPPER_2_0_4_SCHEMA:
-            case MMAPPER_2_3_7_SCHEMA:
-            case MMAPPER_2_4_0_SCHEMA:
-            case MMAPPER_2_4_3_SCHEMA:
-            case MMAPPER_2_5_1_SCHEMA:
-            case MMAPPER_19_10_0_SCHEMA:
+            case schema::v2_0_0_initial:
+            case schema::v2_0_2_ridable:
+            case schema::v2_0_4_zlib:
+            case schema::v2_3_7_doorFlagsNomatch:
+            case schema::v2_4_0_largerFlags:
+            case schema::v2_4_3_qCompress:
+            case schema::v2_5_1_discardNoMatch:
+            case schema::v19_10_0_newCoords:
                 return true;
             default:
                 break;
@@ -399,7 +409,7 @@ bool MapStorage::mergeData()
         }();
 
         if (!supported) {
-            const bool isNewer = version >= CURRENT_SCHEMA;
+            const bool isNewer = version >= schema::CURRENT;
             critical(QString("This map has schema version %1 which is too %2.\n"
                              "\n"
                              "Please %3 MMapper.")
@@ -418,9 +428,9 @@ bool MapStorage::mergeData()
          * so don't be tempted to move this inside the scope. */
         // Then shouldn't buffer be declared before stream, so it will outlive the stream?
         QBuffer buffer;
-        const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
-        const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
-                                     && version < MMAPPER_2_4_3_SCHEMA);
+        const bool qCompressed = (version >= schema::v2_4_3_qCompress);
+        const bool zlibCompressed = (version >= schema::v2_0_4_zlib
+                                     && version < schema::v2_4_3_qCompress);
         if (qCompressed || (!NO_ZLIB && zlibCompressed)) {
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qCompressed
@@ -496,14 +506,14 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
 
-    if (version < MMAPPER_19_10_0_SCHEMA) {
+    if (version < schema::v19_10_0_newCoords) {
         // was name
         std::ignore = helper.read_string(); /* value ignored; called for side effect */
     }
 
     mark.setText(InfoMarkText(helper.read_string()));
 
-    if (version < MMAPPER_19_10_0_SCHEMA) {
+    if (version < schema::v19_10_0_newCoords) {
         // was timestamp
         std::ignore = helper.read_datetime(); /* value ignored; called for side effect */
     }
@@ -518,7 +528,7 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
     }(helper.read_u8());
     mark.setType(type);
 
-    if (version >= MMAPPER_2_3_7_SCHEMA) {
+    if (version >= schema::v2_3_7_doorFlagsNomatch) {
         const auto clazz = [](const uint8_t value) {
             if (value >= NUM_INFOMARK_CLASSES) {
                 static std::once_flag flag;
@@ -529,7 +539,7 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
             return static_cast<InfoMarkClassEnum>(value);
         }(helper.read_u8());
         mark.setClass(clazz);
-        if (version < MMAPPER_19_10_0_SCHEMA) {
+        if (version < schema::v19_10_0_newCoords) {
             mark.setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
         } else {
             mark.setRotationAngle(helper.read_i32());
@@ -634,7 +644,7 @@ bool MapStorage::saveData(bool baseMapOnly)
 
     // Write a header with a "magic number" and a version
     fileStream << static_cast<uint32_t>(0xFFB2AF01);
-    fileStream << static_cast<int32_t>(CURRENT_SCHEMA);
+    fileStream << static_cast<int32_t>(schema::CURRENT);
 
     // Serialize the data
     QBuffer buffer;
