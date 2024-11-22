@@ -82,7 +82,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
 
     for (const char c : line) {
         if (m_readingTag) {
-            if (c == C_GREATER_THAN) {
+            if (c == char_consts::C_GREATER_THAN) {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
                     MAYBE_UNUSED const auto ignored = //
@@ -97,7 +97,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
             m_tempTag.append(c);
 
         } else {
-            if (c == C_LESS_THAN) {
+            if (c == char_consts::C_LESS_THAN) {
                 m_lineToUser.append(characters(m_tempCharacters));
                 m_tempCharacters.clear();
 
@@ -133,6 +133,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
 
 bool MumeXmlParser::element(const QByteArray &line)
 {
+    using namespace char_consts;
     const int length = line.length();
 
     // REVISIT: Merge this logic with the state machine in parse()

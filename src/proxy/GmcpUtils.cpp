@@ -16,22 +16,32 @@ namespace GmcpUtils {
 
 QString escapeGmcpStringData(const QString &str)
 {
+    using namespace char_consts;
     QString result;
     for (const QChar c : str) {
         if (c == C_DQUOTE) {
-            result.append(R"(\")");
+            result.append(C_BACKSLASH);
+            result.append(C_DQUOTE);
         } else if (c == C_BACKSLASH) {
-            result.append(R"(\\)");
+            result.append(C_BACKSLASH);
+            result.append(C_BACKSLASH);
         } else if (c == C_NEWLINE) {
-            result.append(R"(\n)");
+            result.append(C_BACKSLASH);
+            result.append('n');
         } else if (c == C_CARRIAGE_RETURN) {
-            result.append(R"(\r)");
+            result.append(C_BACKSLASH);
+            result.append('r');
         } else if (c == C_BACKSPACE) {
-            result.append(R"(\b)");
+            // this should probably *NEVER* be sent
+            result.append(C_BACKSLASH);
+            result.append('b');
         } else if (c == C_FORM_FEED) {
-            result.append(R"(\f)");
+            // this should probably *NEVER* be sent
+            result.append(C_BACKSLASH);
+            result.append('f');
         } else if (c == C_TAB) {
-            result.append(R"(\t)");
+            result.append(C_BACKSLASH);
+            result.append('t');
         } else {
             result.append(c);
         }
@@ -43,6 +53,7 @@ namespace { // anonymous
 namespace test {
 NODISCARD static int testing()
 {
+    using namespace char_consts;
     QString s;
     s.append(C_DQUOTE);
     s.append(C_BACKSLASH);
