@@ -316,18 +316,22 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 void GroupManagerPage::slot_remoteHostTextChanged()
 {
     const auto currentText = ui->remoteHost->currentText().simplified().toLatin1();
+
     const auto parts = currentText.split(char_consts::C_COLON);
-    if (parts.size() == 2) {
-        const auto currentHost = parts[0];
-        auto &savedHost = setConfig().groupManager.host;
-        if (currentHost != savedHost) {
-            savedHost = currentHost;
-        }
-        auto &savedRemotePort = setConfig().groupManager.remotePort;
-        const auto currentRemotePort = static_cast<uint16_t>(QString(parts[1]).toInt());
-        if (currentRemotePort != savedRemotePort) {
-            savedRemotePort = currentRemotePort;
-        }
+    if (parts.size() != 2) {
+        // should this warn?
+        return;
+    }
+
+    const QByteArray &currentHost = parts[0];
+    if (QByteArray &savedHost = setConfig().groupManager.host; currentHost != savedHost) {
+        savedHost = currentHost;
+    }
+
+    const auto currentRemotePort = static_cast<uint16_t>(QString(parts[1]).toInt());
+    if (uint16_t &savedRemotePort = setConfig().groupManager.remotePort;
+        currentRemotePort != savedRemotePort) {
+        savedRemotePort = currentRemotePort;
     }
 }
 
