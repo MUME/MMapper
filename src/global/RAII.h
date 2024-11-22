@@ -30,8 +30,8 @@ class NODISCARD RAIICallback final
 {
 private:
     using Callback = std::function<void()>;
-    Callback callback;
-    bool moved = false;
+    Callback m_callback;
+    bool m_was_moved = false;
 
 public:
     /* move ctor */

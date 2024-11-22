@@ -45,8 +45,8 @@ private:
     }
 
 public:
-    explicit FixedPoint(const int min, const int max, const int defaultValue)
-        : FixedPoint(min, max, defaultValue, defaultValue)
+    explicit FixedPoint(const int min_, const int max_, const int defaultValue_)
+        : FixedPoint(min_, max_, defaultValue_, defaultValue_)
     {}
 
     ~FixedPoint() = default;

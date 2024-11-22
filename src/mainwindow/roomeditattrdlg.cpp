@@ -1113,10 +1113,10 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     const RoomTerrainEnum rtt = [this]() -> RoomTerrainEnum {
         // returns the first one that's checked, or UNDEFINED.
         for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
-            const auto rtt = static_cast<RoomTerrainEnum>(i);
-            if (const QToolButton *const ptr = roomTerrainButtons[rtt])
+            const auto tmp = static_cast<RoomTerrainEnum>(i);
+            if (const QToolButton *const ptr = roomTerrainButtons[tmp])
                 if (ptr->isChecked())
-                    return rtt;
+                    return tmp;
         }
 
         // oops

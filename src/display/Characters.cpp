@@ -151,10 +151,10 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
     if (::utils::isSet(options, QuadOptsEnum::FILL)) {
         const auto color = m_color.withAlpha(FILL_ALPHA);
         auto emitVert = [this, &color](const auto &x) -> void { m_charTris.emplace_back(color, x); };
-        auto emitTri = [&emitVert](const auto &a, const auto &b, const auto &c) -> void {
-            emitVert(a);
-            emitVert(b);
-            emitVert(c);
+        auto emitTri = [&emitVert](const auto &v0, const auto &v1, const auto &v2) -> void {
+            emitVert(v0);
+            emitVert(v1);
+            emitVert(v2);
         };
         emitTri(a, b, c);
         emitTri(a, c, d);
@@ -182,11 +182,11 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
             m_charBeaconQuads.emplace_back(color, x);
         };
         auto emitQuad =
-            [&emitVert](const auto &a, const auto &b, const auto &c, const auto &d) -> void {
-            emitVert(a);
-            emitVert(b);
-            emitVert(c);
-            emitVert(d);
+            [&emitVert](const auto &v0, const auto &v1, const auto &v2, const auto &v3) -> void {
+            emitVert(v0);
+            emitVert(v1);
+            emitVert(v2);
+            emitVert(v3);
         };
         // draw the *inner* faces
         emitQuad(a, e, f, b);
@@ -200,9 +200,9 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
         auto emitVert = [this, &color](const auto &x) -> void {
             m_charLines.emplace_back(color, x);
         };
-        auto emitLine = [&emitVert](auto &a, auto &b) -> void {
-            emitVert(a);
-            emitVert(b);
+        auto emitLine = [&emitVert](const auto &v0, const auto &v1) -> void {
+            emitVert(v0);
+            emitVert(v1);
         };
         emitLine(a, b);
         emitLine(b, c);

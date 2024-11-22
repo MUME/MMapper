@@ -210,16 +210,17 @@ void GroupClient::virt_retrieveData(GroupSocket *const /* socket */,
 //
 void GroupClient::sendHandshake(const QVariantMap &data)
 {
-    const auto get_server_protocol_version = [](const auto &data) {
+    const auto serverProtocolVersion = [&data]() {
         if (!data.contains("protocolVersion")
             || !data["protocolVersion"].canConvert(QMetaType::UInt)) {
             return PROTOCOL_VERSION_102;
         }
         return data["protocolVersion"].toUInt();
-    };
-    const auto serverProtocolVersion = get_server_protocol_version(data);
+    }();
+
     emit sig_sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
-    const auto get_proposed_protocol_version = [](const auto serverProtocolVersion) {
+
+    proposedProtocolVersion = [&serverProtocolVersion]() {
         // Ensure we only pick a protocol within the bounds we understand
         if (!QSslSocket::supportsSsl()) {
             return PROTOCOL_VERSION_102;
@@ -229,8 +230,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
             return PROTOCOL_VERSION_102;
         }
         return serverProtocolVersion;
-    };
-    proposedProtocolVersion = get_proposed_protocol_version(serverProtocolVersion);
+    }();
 
     if (serverProtocolVersion == PROTOCOL_VERSION_102
         || proposedProtocolVersion == PROTOCOL_VERSION_102) {

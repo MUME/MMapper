@@ -196,7 +196,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     const int length = line.length();
 
     // REVISIT: Merge this logic with the state machine in parse()
-    const auto attributes = [&line]() {
+    const auto attrs = [&line]() {
         std::list<std::pair<std::string, std::string>> attributes;
 
         std::ostringstream os;
@@ -335,7 +335,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_connectedRoomFlags.reset();
                     m_lineFlags.insert(LineFlagEnum::ROOM);
 
-                    for (const auto &pair : attributes) {
+                    for (const auto &pair : attrs) {
                         if (pair.first.empty() || pair.second.empty())
                             continue;
                         switch (pair.first.at(0)) {
@@ -409,12 +409,12 @@ bool MumeXmlParser::element(const QByteArray &line)
                         // We are most likely in a fall room where the prompt is not shown
                         move();
                     }
-                    if (attributes.empty()) {
+                    if (attrs.empty()) {
                         // movement/
                         m_move = CommandEnum::NONE;
                         break;
                     }
-                    for (const auto &pair : attributes) {
+                    for (const auto &pair : attrs) {
                         if (pair.first.empty() || pair.second.empty())
                             continue;
                         switch (pair.first.at(0)) {

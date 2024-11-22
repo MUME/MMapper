@@ -121,13 +121,13 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     const auto tryUpdateInt = [&playerData, &updated](const char *const attr, int &n) {
         if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::Int)) {
             const auto i = [&playerData, attr]() {
-                auto i = playerData[attr].toInt();
-                if (i < 0) {
-                    qWarning() << "[tryUpdateInt] Input" << attr << "(" << i
+                const auto tmp = playerData[attr].toInt();
+                if (tmp < 0) {
+                    qWarning() << "[tryUpdateInt] Input" << attr << "(" << tmp
                                << ") has been raised to 0.";
-                    i = 0;
+                    return 0;
                 }
-                return i;
+                return tmp;
             }();
 
             if (i != n) {

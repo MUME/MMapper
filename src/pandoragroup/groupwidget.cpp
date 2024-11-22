@@ -61,15 +61,15 @@ void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
 
     const bool invert = mmqt::textColor(m_color) == Qt::white;
 
-    const auto drawOne = [&painter, invert](auto &&filename) -> void {
-        const auto getImage = [invert](auto &filename) {
+    const auto drawOne = [&painter, invert](QString filename) -> void {
+        const auto getImage = [invert, &filename]() {
             QImage image{filename};
             if (invert)
                 image.invertPixels();
             return image;
         };
 
-        painter.drawImage(QRect{0, 0, 1, 1}, getImage(filename));
+        painter.drawImage(QRect{0, 0, 1, 1}, getImage());
         painter.translate(1, 0);
     };
 
@@ -372,8 +372,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
 
         // Identify target
-        if (auto group = m_group->getGroup()) {
-            auto selection = group->selectAll();
+        if (auto *const g = m_group->getGroup()) {
+            auto selection = g->selectAll();
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
                 const SharedGroupChar &pCharacter = selection->at(index.row());

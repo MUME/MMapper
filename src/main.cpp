@@ -101,8 +101,7 @@ static void tryInitDrMingw()
 
 NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
 {
-    const auto getAbsoluteFileName = [](const QDir &dir,
-                                        const QString &input_filename) -> std::optional<QString> {
+    const auto getAbsoluteFileName = [&dir, &input_filename]() -> std::optional<QString> {
         if (QFileInfo{input_filename}.isAbsolute())
             return input_filename;
 
@@ -114,7 +113,7 @@ NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &in
         return dir.absoluteFilePath(input_filename);
     };
 
-    const auto maybeFilename = getAbsoluteFileName(dir, input_filename);
+    const auto maybeFilename = getAbsoluteFileName();
     if (!maybeFilename)
         return false;
 

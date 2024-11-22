@@ -49,11 +49,12 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
     xml.writeAttribute("message", QString::number(static_cast<int>(message)));
     xml.writeStartElement("data");
 
-    const auto write_player_data = [](auto &xml, const auto &data) {
-        if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
+    const auto write_player_data = [&xml](const QVariantMap &output_data) {
+        if (!output_data.contains("playerData")
+            || !output_data["playerData"].canConvert(QMetaType::QVariantMap)) {
             abort();
         }
-        const QVariantMap &playerData = data["playerData"].toMap();
+        const QVariantMap &playerData = output_data["playerData"].toMap();
         xml.writeStartElement("playerData");
         xml.writeAttribute("maxhp", playerData["maxhp"].toString());
         xml.writeAttribute("moves", playerData["moves"].toString());
@@ -87,11 +88,11 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
             xml.writeStartElement("loginData");
             const QVariantMap &loginData = data["loginData"].toMap();
             xml.writeAttribute("protocolVersion", loginData["protocolVersion"].toString());
-            write_player_data(xml, loginData);
+            write_player_data(loginData);
             xml.writeEndElement();
         } else {
             // Server just submits playerData
-            write_player_data(xml, data);
+            write_player_data(data);
         }
         break;
 
@@ -104,7 +105,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
 
     case MessagesEnum::REMOVE_CHAR:
     case MessagesEnum::ADD_CHAR:
-        write_player_data(xml, data);
+        write_player_data(data);
         break;
 
     case MessagesEnum::RENAME_CHAR:

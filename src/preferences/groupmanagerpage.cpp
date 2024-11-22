@@ -23,7 +23,9 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
     , ui(new Ui::GroupManagerPage)
 {
     ui->setupUi(this);
-    auto authority = m_groupManager->getAuthority();
+    GroupAuthority *const authority = m_groupManager->getAuthority();
+    std::ignore = deref(authority);
+
     connect(this, &GroupManagerPage::sig_refresh, authority, &GroupAuthority::slot_refresh);
     connect(authority, &GroupAuthority::sig_secretRefreshed, this, [this](const GroupSecret &secret) {
         ui->secretLineEdit->setText(secret);
@@ -61,14 +63,19 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
     connect(authority->getItemModel(), &QAbstractItemModel::dataChanged, this, [this]() {
         slot_allowedSecretsChanged();
     });
-    connect(ui->allowSecret, &QPushButton::pressed, this, [this]() {
-        auto authority = m_groupManager->getAuthority();
-        auto secret = ui->allowedComboBox->currentText().simplified().toLatin1();
+
+    static auto get_secret = [](GroupManagerPage *const self) {
+        GroupManagerPage &page = deref(self);
+        Ui::GroupManagerPage &page_ui = deref(page.ui);
+        QComboBox &combo = deref(page_ui.allowedComboBox);
+        return combo.currentText().simplified().toLatin1();
+    };
+    connect(ui->allowSecret, &QPushButton::pressed, this, [this, authority]() {
+        auto secret = get_secret(this);
         authority->add(secret);
     });
-    connect(ui->revokeSecret, &QPushButton::pressed, this, [this]() {
-        auto authority = m_groupManager->getAuthority();
-        auto secret = ui->allowedComboBox->currentText().simplified().toLatin1();
+    connect(ui->revokeSecret, &QPushButton::pressed, this, [this, authority]() {
+        auto secret = get_secret(this);
         authority->remove(secret);
     });
 

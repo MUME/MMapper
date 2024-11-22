@@ -67,7 +67,7 @@ protected:
     void sendMessage(GroupSocket *, MessagesEnum, const QByteArray & = "");
     void sendMessage(GroupSocket *, MessagesEnum, const QVariantMap &);
 
-    NODISCARD QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
+    NODISCARD static QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
     NODISCARD CGroup *getGroup();
     NODISCARD GroupAuthority *getAuthority();
 

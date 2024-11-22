@@ -22,24 +22,24 @@ static void normalizeForUser(std::ostream &os,
                              const std::string_view sv)
 {
     // REVISIT: perform ANSI normalization in this function, too?
-    foreachLine(sv, [&os, encoding, &goAhead](std::string_view sv) {
+    foreachLine(sv, [&os, encoding, &goAhead](std::string_view line) {
         using char_consts::C_CARRIAGE_RETURN;
         using char_consts::C_NEWLINE;
 
-        if (sv.empty())
+        if (line.empty())
             return;
 
-        const bool hasNewline = sv.back() == C_NEWLINE;
+        const bool hasNewline = line.back() == C_NEWLINE;
         if (hasNewline) {
-            sv.remove_suffix(1);
+            line.remove_suffix(1);
         }
 
-        if (!sv.empty() && sv.back() == C_CARRIAGE_RETURN) {
-            sv.remove_suffix(1);
+        if (!line.empty() && line.back() == C_CARRIAGE_RETURN) {
+            line.remove_suffix(1);
         }
 
-        if (!sv.empty()) {
-            foreachChar(sv, C_CARRIAGE_RETURN, [&os, encoding, &goAhead](std::string_view txt) {
+        if (!line.empty()) {
+            foreachChar(line, C_CARRIAGE_RETURN, [&os, encoding, &goAhead](std::string_view txt) {
                 if (!txt.empty() && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
                     convertFromLatin1(os, encoding, txt);
                 }

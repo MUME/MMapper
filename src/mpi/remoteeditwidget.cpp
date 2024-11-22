@@ -1070,7 +1070,7 @@ void RemoteEditWidget::slot_updateStatusBar()
         status.append(QString(", AnsiCode: {%1}").arg(ansi.buffer.getQString()));
     }
 
-    const auto report_errors = [&status](QTextCursor cur) {
+    const auto report_errors = [&cur, &status]() {
         const bool hasSelection = cur.hasSelection();
         if (!hasSelection) {
             cur.select(QTextCursor::Document);
@@ -1099,7 +1099,7 @@ void RemoteEditWidget::slot_updateStatusBar()
         if (first)
             status.append(hasSelection ? ", Selected-Lines: Ok" : ", Document: Ok");
     };
-    report_errors(cur);
+    report_errors();
     statusBar()->showMessage(status);
 }
 

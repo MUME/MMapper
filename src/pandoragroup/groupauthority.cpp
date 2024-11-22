@@ -225,7 +225,7 @@ void GroupAuthority::refresh()
 NODISCARD static inline QString getMetadataKey(const GroupSecret &secret,
                                                const GroupMetadataEnum meta)
 {
-    const auto get_prefix = [](auto meta) {
+    const auto get_prefix = [&meta]() {
         switch (meta) {
         case GroupMetadataEnum::CERTIFICATE:
             return "certificate";
@@ -241,7 +241,7 @@ NODISCARD static inline QString getMetadataKey(const GroupSecret &secret,
             abort();
         }
     };
-    return QString("%1-%2").arg(get_prefix(meta)).arg(secret.toLower().constData());
+    return QString("%1-%2").arg(get_prefix(), secret.toLower().constData());
 }
 
 GroupAuthority::GroupAuthority(QObject *const parent)
