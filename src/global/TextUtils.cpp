@@ -5,12 +5,30 @@
 #include "TextUtils.h"
 
 #include "Charset.h"
+#include "Consts.h"
 
 #include <cstring>
 #include <iostream>
 
 #include <QRegularExpression>
 #include <QString>
+
+namespace { // anonymous
+
+void maybe_remove_suffix_inplace(std::string_view &sv, const char c)
+{
+    if (!sv.empty() && sv.back() == c) {
+        sv.remove_suffix(1);
+    }
+}
+
+} // namespace
+
+void trim_newline_inplace(std::string_view &sv)
+{
+    maybe_remove_suffix_inplace(sv, char_consts::C_NEWLINE);
+    maybe_remove_suffix_inplace(sv, char_consts::C_CARRIAGE_RETURN);
+}
 
 namespace mmqt {
 static const QRegularExpression trailingWhitespaceRegex(R"([[:space:]]+$)");

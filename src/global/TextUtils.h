@@ -24,6 +24,8 @@ NODISCARD static inline bool isSpace(const char c)
     return std::isspace(static_cast<uint8_t>(c));
 }
 
+extern void trim_newline_inplace(std::string_view &sv);
+
 namespace mmqt {
 NODISCARD extern int findTrailingWhitespace(QStringView line);
 NODISCARD extern int findTrailingWhitespace(const QString &line);

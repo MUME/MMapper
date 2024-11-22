@@ -37,12 +37,8 @@ AbstractDebugOStream::~AbstractDebugOStream()
         if (needsNewline) {
             debug << char_consts::C_NEWLINE;
         }
-        if (!line.empty() && line.back() == char_consts::C_NEWLINE) {
-            line.remove_suffix(1);
-        }
-        if (!line.empty() && line.back() == char_consts::C_CARRIAGE_RETURN) {
-            line.remove_suffix(1);
-        }
+
+        trim_newline_inplace(line);
 
         if (!line.empty()) {
             debug << mmqt::toQByteArrayUtf8(line);
