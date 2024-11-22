@@ -211,16 +211,16 @@ bool MumeXmlParser::element(const QByteArray &line)
             os.str(std::string());
             state = XmlAttributeStateEnum::ATTRIBUTE;
         };
-        for (const auto &c : line) {
+        for (const char c : line) {
             switch (state) {
             case XmlAttributeStateEnum::ELEMENT:
-                if (std::isspace(c))
+                if (isSpace(c))
                     state = XmlAttributeStateEnum::ATTRIBUTE;
                 else
                     continue;
                 break;
             case XmlAttributeStateEnum::ATTRIBUTE:
-                if (std::isspace(c))
+                if (isSpace(c))
                     continue;
                 else if (c == C_EQUALS) {
                     key = os.str();
@@ -230,7 +230,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     os << c;
                 break;
             case XmlAttributeStateEnum::EQUALS:
-                if (std::isspace(c))
+                if (isSpace(c))
                     continue;
                 else if (c == C_SQUOTE)
                     state = XmlAttributeStateEnum::SINGLE_QUOTED_VALUE;
@@ -243,7 +243,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case XmlAttributeStateEnum::UNQUOTED_VALUE:
                 // Note: This format is not valid according to the W3C XML standard
-                if (std::isspace(c) || c == C_SLASH)
+                if (isSpace(c) || c == C_SLASH)
                     makeAttribute();
                 else
                     os << c;

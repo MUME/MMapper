@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "Consts.h"
+#include "macros.h"
 #include "utils.h"
 
 #include <cassert>
@@ -17,6 +18,11 @@
 
 #include <QRegularExpression>
 #include <QString>
+
+NODISCARD static inline bool isSpace(const char c)
+{
+    return std::isspace(static_cast<uint8_t>(c));
+}
 
 namespace mmqt {
 NODISCARD bool containsAnsi(QStringView str);

@@ -29,8 +29,8 @@ NODISCARD static Vector toVector(const ParserInput &input)
 ArgAbbrev::ArgAbbrev(std::string moved_str)
     : m_str(std::move(moved_str))
 {
-    for (char c : m_str) {
-        if (std::isspace(c) || !isPrintLatin1(c))
+    for (const char c : m_str) {
+        if (isSpace(c) || !isPrintLatin1(c))
             throw std::invalid_argument("string");
     }
 }

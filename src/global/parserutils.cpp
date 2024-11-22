@@ -8,6 +8,7 @@
 
 #include "Charset.h"
 #include "Consts.h"
+#include "TextUtils.h"
 
 #include <QRegularExpression>
 
@@ -20,12 +21,6 @@ QString &removeAnsiMarksInPlace(QString &str)
     return str;
 }
 
-// copied from StringView.cpp
-NODISCARD static bool is_space(char c)
-{
-    return std::isspace(static_cast<uint8_t>(c) & 0xff);
-}
-
 NODISCARD bool isWhitespaceNormalized(const std::string_view sv)
 {
     bool last_was_space = false;
@@ -36,7 +31,7 @@ NODISCARD bool isWhitespaceNormalized(const std::string_view sv)
             } else {
                 last_was_space = true;
             }
-        } else if (is_space(c)) {
+        } else if (isSpace(c)) {
             return false;
         } else {
             last_was_space = false;
@@ -54,7 +49,7 @@ std::string normalizeWhitespace(std::string str)
         size_t out = 0;
         for (size_t in = 0; in < len; ++in) {
             const char c = str[in];
-            if (is_space(c)) {
+            if (isSpace(c)) {
                 if (!last_was_space) {
                     last_was_space = true;
                     str[out++] = char_consts::C_SPACE;

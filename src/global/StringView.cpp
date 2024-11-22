@@ -14,11 +14,6 @@
 
 #include <QString>
 
-NODISCARD static bool is_space(char c)
-{
-    return std::isspace(static_cast<uint8_t>(c) & 0xff);
-}
-
 StringView::StringView(const std::string_view sv) noexcept
     : m_sv{sv}
 {}
@@ -57,7 +52,7 @@ void StringView::eatLast()
 StringView &StringView::trimLeft() noexcept
 {
     for (; !isEmpty(); eatFirst())
-        if (!is_space(firstChar()))
+        if (!isSpace(firstChar()))
             break;
     return *this;
 }
@@ -65,7 +60,7 @@ StringView &StringView::trimLeft() noexcept
 StringView &StringView::trimRight() noexcept
 {
     for (; !isEmpty(); eatLast())
-        if (!is_space(lastChar()))
+        if (!isSpace(lastChar()))
             break;
     return *this;
 }
@@ -94,7 +89,7 @@ char StringView::takeFirstLetter()
     mustNotBeEmpty();
 
     const auto c = firstChar();
-    if (is_space(c))
+    if (isSpace(c))
         throw std::runtime_error("space");
 
     m_sv.remove_prefix(1);
@@ -106,12 +101,12 @@ StringView StringView::takeFirstWordNoPostTrim()
     trimLeft();
     mustNotBeEmpty();
 
-    assert(!is_space(lastChar()));
+    assert(!isSpace(lastChar()));
 
     size_t len = 0;
     const auto before = m_sv;
     for (; !isEmpty(); eatFirst(), ++len)
-        if (is_space(firstChar()))
+        if (isSpace(firstChar()))
             break;
 
     return StringView{before.substr(0, len)};
@@ -128,7 +123,7 @@ int StringView::countNonSpaceChars() const noexcept
 {
     int result = 0;
     for (char c : m_sv)
-        if (!is_space(c))
+        if (!isSpace(c))
             ++result;
     return result;
 }

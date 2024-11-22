@@ -122,7 +122,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             const char c = *it++;
 
             if (mode == ModeEnum::Space) {
-                if (std::isspace(c))
+                if (isSpace(c))
                     continue;
 
                 visit(TokenEnum::BeginString);
@@ -136,7 +136,7 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             } else if (mode == ModeEnum::Other) {
                 if (c == C_DQUOTE) {
                     mode = ModeEnum::DoubleQuote;
-                } else if (std::isspace(c)) {
+                } else if (isSpace(c)) {
                     mode = ModeEnum::Space;
                     visit(TokenEnum::EndString);
                 } else {

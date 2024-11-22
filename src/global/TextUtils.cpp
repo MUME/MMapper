@@ -946,7 +946,7 @@ bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 bool requiresQuote(const std::string_view str)
 {
     for (const char c : str) {
-        if (std::isspace(c) || !isPrintLatin1(c))
+        if (isSpace(c) || !isPrintLatin1(c))
             return true;
     }
     return false;

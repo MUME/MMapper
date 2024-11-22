@@ -258,7 +258,7 @@ public:
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
                         setFormat(pos - 1, 2, get_utf8_fmt());
-                    } else if (std::iscntrl(c) || (!std::isprint(c) && !std::isspace(c))) {
+                    } else if (std::iscntrl(c) || (!std::isprint(c) && !isSpace(c))) {
                         setFormat(pos, 1, get_unprintable_fmt());
                     }
                 }
