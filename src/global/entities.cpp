@@ -303,11 +303,17 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
             case C_AMPERSAND:
                 out += "&amp;";
                 continue;
-            case C_LESS_THAN:
-                out += "&lt;";
+            case C_DQUOTE:
+                out += "&quot;";
                 continue;
             case C_GREATER_THAN:
                 out += "&gt;";
+                continue;
+            case C_LESS_THAN:
+                out += "&lt;";
+                continue;
+            case C_SQUOTE:
+                out += "&apos;";
                 continue;
 
             case C_NUL:
@@ -602,9 +608,14 @@ static const bool self_test = []() -> bool {
 
     //
     testDecode("", "");
-    testDecode("&amp;", S_AMPERSAND);
-    testDecode("&nbsp;", S_NBSP);
 
+    testDecode("&amp;", S_AMPERSAND);
+    testDecode("&apos;", S_SQUOTE);
+    testDecode("&gt;", S_GREATER_THAN);
+    testDecode("&lt;", S_LESS_THAN);
+    testDecode("&quot;", S_DQUOTE);
+
+    testDecode("&nbsp;", S_NBSP);
     testDecode("&#9;", S_TAB);
     testDecode("&#x9;", S_TAB);
     testDecode("&#10;", S_NEWLINE);
@@ -616,6 +627,14 @@ static const bool self_test = []() -> bool {
 
     //
     testEncode("", "");
+
+    testEncode(S_AMPERSAND, "&amp;");
+    testEncode(S_DQUOTE, "&quot;");
+    testEncode(S_GREATER_THAN, "&gt;");
+    testEncode(S_LESS_THAN, "&lt;");
+    testEncode(S_SQUOTE, "&apos;");
+
+    testEncode(S_NBSP, "&nbsp;");
     testEncode("&amp;", "&amp;amp;");
     testEncode(S_TAB, "&#9;");        // Note: chooses dec (#9) over hex (#x9).
     testEncode(S_NEWLINE, S_NEWLINE); // Note: chooses literal instead of dec (#10) or hex (#xA).
