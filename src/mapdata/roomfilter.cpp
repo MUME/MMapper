@@ -6,6 +6,7 @@
 
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/Charset.h"
 #include "../global/StringView.h"
 #include "../global/TaggedString.h"
 #include "../global/parserutils.h"
@@ -54,7 +55,7 @@ RoomFilter::RoomFilter(const std::string_view sv,
                        const Qt::CaseSensitivity cs,
                        const bool regex,
                        const PatternKindsEnum kind)
-    : m_regex(createRegex(ParserUtils::latin1ToAscii(sv), cs, regex))
+    : m_regex(createRegex(::latin1ToAscii(sv), cs, regex))
     , m_kind(kind)
 {}
 

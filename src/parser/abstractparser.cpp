@@ -14,6 +14,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/CharBuffer.h"
+#include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/RAII.h"
 #include "../global/StringView.h"
@@ -471,7 +472,7 @@ QString AbstractParser::normalizeStringCopy(QString string)
     // Remove ANSI first, since we don't want Latin1
     // transliterations to accidentally count as ANSI.
     ParserUtils::removeAnsiMarksInPlace(string);
-    ParserUtils::toAsciiInPlace(string);
+    mmqt::toAsciiInPlace(string);
     string.remove(C_CARRIAGE_RETURN);
     return string;
 }

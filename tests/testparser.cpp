@@ -5,6 +5,7 @@
 
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
+#include "../src/global/Charset.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/parserutils.h"
 #include "../src/mapdata/mmapper2room.h"
@@ -31,7 +32,7 @@ void TestParser::latinToAsciiTest()
 {
     QString utf8("Nórui Nínui");
     const QString expectedAscii("Norui Ninui");
-    ParserUtils::toAsciiInPlace(utf8);
+    mmqt::toAsciiInPlace(utf8);
     QCOMPARE(utf8, expectedAscii);
 }
 

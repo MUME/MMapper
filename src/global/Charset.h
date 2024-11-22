@@ -6,12 +6,39 @@
 #include "macros.h"
 
 #include <iosfwd>
+#include <ostream>
 #include <string>
 
-void latin1ToUtf8(std::ostream &os, char c);
-void latin1ToUtf8(std::ostream &os, const std::string_view sv);
+#include <QString>
+
+NODISCARD extern bool isAscii(char c) noexcept;
+NODISCARD extern bool isAscii(std::string_view sv);
+
+NODISCARD extern bool isPrintLatin1(char c);
+
+NODISCARD extern char latin1ToAscii(char c) noexcept;
+
+extern std::string &latin1ToAsciiInPlace(std::string &str);
+NODISCARD extern std::string latin1ToAscii(std::string_view sv);
+
+namespace mmqt {
+QString &toAsciiInPlace(QString &str);
+}
+
+extern void latin1ToUtf8(std::ostream &os, char c);
+
+extern void latin1ToAscii(std::ostream &os, std::string_view sv);
+extern void latin1ToUtf8(std::ostream &os, std::string_view sv);
+
 // Converts input string_view sv from latin1 to the specified encoding
 // by writing "raw bytes" to the output stream os.
-void convertFromLatin1(std::ostream &os,
-                       const CharacterEncodingEnum encoding,
-                       const std::string_view sv);
+extern void convertFromLatin1(std::ostream &os, CharacterEncodingEnum encoding, std::string_view sv);
+
+namespace charset {
+extern void utf8ToAscii(std::ostream &os, std::string_view sv);
+extern void utf8ToLatin1(std::ostream &os, std::string_view sv);
+extern void convert(std::ostream &os,
+                    std::string_view sv,
+                    CharacterEncodingEnum from,
+                    CharacterEncodingEnum to);
+} // namespace charset

@@ -11,6 +11,8 @@ set(clock_SRCS
     ../src/clock/mumemoment.cpp
     ../src/clock/mumemoment.h
     ../src/global/CaseUtils.cpp
+    ../src/global/Charset.cpp
+    ../src/global/Charset.h
     ../src/global/TabUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
@@ -36,6 +38,8 @@ add_test(NAME TestClock COMMAND TestClock)
 # Expandora
 file(GLOB_RECURSE expandoracommon_SRCS
     ../src/expandoracommon/*.cpp
+    ../src/global/Charset.cpp
+    ../src/global/Charset.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
     ../src/global/StringView.cpp
@@ -81,6 +85,8 @@ set(parser_SRCS
     ../src/expandoracommon/property.cpp
     ../src/expandoracommon/property.h
     ../src/global/CaseUtils.cpp
+    ../src/global/Charset.cpp
+    ../src/global/Charset.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
     ../src/global/TabUtils.cpp
@@ -120,6 +126,8 @@ set(proxy_SRCS
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
     ../src/global/CaseUtils.cpp
+    ../src/global/Charset.cpp
+    ../src/global/Charset.h
     ../src/global/TabUtils.cpp
     ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
@@ -161,6 +169,8 @@ add_test(NAME TestMainWindow COMMAND TestMainWindow)
 set(global_SRCS
     ../src/global/AnsiColor.h
     ../src/global/CaseUtils.cpp
+    ../src/global/Charset.cpp
+    ../src/global/Charset.h
     ../src/global/StringView.cpp
     ../src/global/StringView.h
     ../src/global/TabUtils.cpp
@@ -286,6 +296,8 @@ set(room_manager
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
         ../src/global/CaseUtils.cpp
+        ../src/global/Charset.cpp
+        ../src/global/Charset.h
         ../src/global/TabUtils.cpp
         ../src/global/TabUtils.h
         ../src/global/TextUtils.cpp

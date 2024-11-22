@@ -943,13 +943,6 @@ bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
            && abbr == fullText.substr(0, abbr.size()); //
 }
 
-// std::isprint is only ASCII
-bool isPrintLatin1(char c)
-{
-    const auto uc = static_cast<uint8_t>(c);
-    return uc >= ((uc < 0x7f) ? 0x20 : 0xa0);
-}
-
 bool requiresQuote(const std::string_view str)
 {
     for (const char c : str) {

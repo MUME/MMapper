@@ -9,6 +9,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/Charset.h"
 #include "../global/parserutils.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
@@ -109,7 +110,7 @@ void FindRoomsDlg::slot_findClicked()
     const bool regex = regexCheckBox->isChecked();
     std::string text = lineEdit->text().toLatin1().toStdString();
     // remove latin1
-    text = ParserUtils::latin1ToAsciiInPlace(text);
+    text = ::latin1ToAsciiInPlace(text);
     resultTable->clear();
     roomsFoundLabel->clear();
 
