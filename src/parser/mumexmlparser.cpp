@@ -27,12 +27,28 @@ using namespace char_consts;
 
 class MapData;
 
-static const QByteArray greaterThanChar(">");
-static const QByteArray lessThanChar("<");
-static const QByteArray greaterThanTemplate("&gt;");
-static const QByteArray lessThanTemplate("&lt;");
-static const QByteArray ampersand("&");
-static const QByteArray ampersandTemplate("&amp;");
+namespace { // anonymous
+const QByteArray greaterThanChar(">");
+const QByteArray lessThanChar("<");
+const QByteArray greaterThanTemplate("&gt;");
+const QByteArray lessThanTemplate("&lt;");
+const QByteArray ampersand("&");
+const QByteArray ampersandTemplate("&amp;");
+
+void decodeXmlEntities(QByteArray &ch)
+{
+    ch.replace(greaterThanTemplate, greaterThanChar);
+    ch.replace(lessThanTemplate, lessThanChar);
+    ch.replace(ampersandTemplate, ampersand);
+}
+
+void encodeXmlEntities(QByteArray &ch)
+{
+    ch.replace(ampersand, ampersandTemplate);
+    ch.replace(greaterThanChar, greaterThanTemplate);
+    ch.replace(lessThanChar, lessThanTemplate);
+}
+} // namespace
 
 MumeXmlParser::MumeXmlParser(MapData &md,
                              MumeClock &mc,
@@ -52,7 +68,7 @@ void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
     if (isTwiddlers) {
         m_lastPrompt = data.line;
         if (getConfig().parser.removeXmlTags) {
-            stripXmlEntities(m_lastPrompt);
+            decodeXmlEntities(m_lastPrompt);
         }
     }
     parse(data, isPrompt || isTwiddlers);
@@ -119,7 +135,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         // Simplify the output and run actions
         QByteArray temp = m_lineToUser;
         if (!getConfig().parser.removeXmlTags) {
-            stripXmlEntities(temp);
+            decodeXmlEntities(temp);
         }
         QString tempStr = temp;
         tempStr = normalizeStringCopy(tempStr.trimmed());
@@ -542,9 +558,7 @@ bool MumeXmlParser::element(const QByteArray &line)
 
                     const auto &config = getConfig();
                     if (!config.parser.removeXmlTags) {
-                        m_lastPrompt.replace(ampersand, ampersandTemplate);
-                        m_lastPrompt.replace(greaterThanChar, greaterThanTemplate);
-                        m_lastPrompt.replace(lessThanChar, lessThanTemplate);
+                        encodeXmlEntities(m_lastPrompt);
                         m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
                     }
 
@@ -611,13 +625,6 @@ bool MumeXmlParser::element(const QByteArray &line)
     return true;
 }
 
-void MumeXmlParser::stripXmlEntities(QByteArray &ch)
-{
-    ch.replace(greaterThanTemplate, greaterThanChar);
-    ch.replace(lessThanTemplate, lessThanChar);
-    ch.replace(ampersandTemplate, ampersand);
-}
-
 QByteArray MumeXmlParser::characters(QByteArray &ch)
 {
     if (ch.isEmpty()) {
@@ -625,7 +632,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     // replace > and < chars
-    stripXmlEntities(ch);
+    decodeXmlEntities(ch);
 
     const auto &config = getConfig();
     m_stringBuffer = QString::fromLatin1(ch);
@@ -711,9 +718,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     if (!getConfig().parser.removeXmlTags) {
-        toUser.replace(ampersand, ampersandTemplate);
-        toUser.replace(greaterThanChar, greaterThanTemplate);
-        toUser.replace(lessThanChar, lessThanTemplate);
+        encodeXmlEntities(toUser);
     }
     return toUser;
 }
