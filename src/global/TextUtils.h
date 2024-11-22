@@ -23,57 +23,7 @@ NODISCARD bool containsAnsi(QStringView str);
 NODISCARD bool containsAnsi(const QString &str);
 } // namespace mmqt
 
-// Callback = void(string_view);
-template<typename Callback>
-void foreachLine(const std::string_view input, Callback &&callback)
-{
-    using char_consts::C_NEWLINE;
-
-    const size_t len = input.size();
-    size_t pos = 0;
-    while (pos < len) {
-        const auto next = input.find(C_NEWLINE, pos);
-        if (next == std::string_view::npos)
-            break;
-        assert(next >= pos);
-        assert(input[next] == C_NEWLINE);
-        callback(input.substr(pos, next - pos + 1));
-        pos = next + 1;
-    }
-    if (pos < len)
-        callback(input.substr(pos, len - pos));
-}
-
 namespace mmqt {
-// Callback can be:
-// void(const QStringView line, bool hasNewline), or
-// void(QStringView line, bool hasNewline)
-template<typename Callback>
-void foreachLine(const QStringView input, Callback &&callback)
-{
-    using char_consts::C_NEWLINE;
-
-    const auto len = input.size();
-    int pos = 0;
-    while (pos < len) {
-        const auto next = input.indexOf(C_NEWLINE, pos);
-        if (next < 0)
-            break;
-        assert(next >= pos);
-        assert(input[next] == C_NEWLINE);
-        callback(input.mid(pos, next - pos), true);
-        pos = static_cast<int>(next + 1);
-    }
-    if (pos < len)
-        callback(input.mid(pos, len - pos), false);
-}
-
-template<typename Callback>
-inline void foreachLine(const QString &input, Callback &&callback)
-{
-    foreachLine(QStringView{input}, std::forward<Callback>(callback));
-}
-
 extern const QRegularExpression weakAnsiRegex;
 
 // Reports any potential ANSI sequence, including invalid sequences.
@@ -164,9 +114,6 @@ void ansiForeachColorCode(const QString &ansi, Callback &&callback)
 
 NODISCARD extern bool isValidAnsiColor(QStringView ansi);
 NODISCARD extern bool isValidAnsiColor(const QString &ansi);
-
-NODISCARD extern int countLines(const QString &input);
-NODISCARD extern int countLines(QStringView input);
 
 NODISCARD extern int measureExpandedTabsOneLine(QStringView line, int starting_at);
 NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);

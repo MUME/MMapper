@@ -4,6 +4,7 @@
 
 #include "TextUtils.h"
 
+#include "LineUtils.h"
 #include "utils.h"
 
 #include <cassert>
@@ -150,18 +151,6 @@ void AnsiColorParser::for_each(QStringView ansi) const
     }
 
     try_report(len);
-}
-
-int countLines(const QStringView input)
-{
-    int count = 0;
-    foreachLine(input, [&count](const QStringView, bool) { ++count; });
-    return count;
-}
-
-int countLines(const QString &input)
-{
-    return countLines(QStringView{input});
 }
 
 int measureExpandedTabsOneLine(const QStringView line, const int startingColumn)

@@ -96,6 +96,8 @@ set(mmapper_SRCS
     global/Consts.h
     global/EnumIndexedArray.h
     global/Flags.h
+    global/LineUtils.cpp
+    global/LineUtils.h
     global/NamedColors.cpp
     global/NamedColors.h
     global/NullPointerException.cpp
