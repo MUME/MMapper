@@ -4,7 +4,9 @@
 // Author: Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
+
+#include <vector>
 
 #include <QColor>
 #include <QComboBox>
@@ -16,54 +18,106 @@
 class QObject;
 class QWidget;
 
-enum class NODISCARD AnsiModeEnum { ANSI_FG, ANSI_BG };
-
 class AnsiCombo : public QComboBox
 {
     using super = QComboBox;
     Q_OBJECT
 
 public:
-    static void makeWidgetColoured(QWidget *,
-                                   const QString &ansiColor,
-                                   const bool changeText = true);
+    struct NODISCARD AnsiItem final
+    {
+        QString description;
+        QIcon picture;
 
-    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent);
+        size_t ui_index = 0;
+        AnsiColor16 color;
+        AnsiColor16LocationEnum loc = AnsiColor16LocationEnum::Foreground;
+    };
+
+private:
+    struct NODISCARD FlatMap final
+    {
+    private:
+        std::vector<AnsiItem> values;
+
+    private:
+        NODISCARD size_t getInternalIndex(const AnsiColor16 color) const
+        {
+            const auto &opt = color.color;
+            if (opt.has_value())
+                return static_cast<size_t>(opt.value());
+            return 16; // default
+        }
+
+    public:
+        NODISCARD const AnsiItem &getItemAtUiIndex(const size_t idx) const
+        {
+            const auto &item = values.at(idx);
+            assert(item.ui_index == idx);
+            return item;
+        }
+
+        NODISCARD const AnsiItem &getItem(AnsiColor16 color) const
+        {
+            for (auto &item : values)
+                if (item.color == color)
+                    return item;
+
+            assert(false);
+            std::abort();
+        }
+
+        void insert(AnsiItem item)
+        {
+            assert(values.size() < 17);
+            item.ui_index = values.size();
+            values.emplace_back(item);
+        }
+        void clear() { values.clear(); }
+    };
+
+private:
+    // There's not really a good default value for this.
+    AnsiColor16LocationEnum m_mode = AnsiColor16LocationEnum::Foreground;
+    FlatMap m_map;
+
+public:
+    static void makeWidgetColoured(QWidget *, const QString &ansiColor, bool changeText = true);
+
+    explicit AnsiCombo(AnsiColor16LocationEnum mode, QWidget *parent);
     explicit AnsiCombo(QWidget *parent);
 
-    void initColours(AnsiModeEnum mode);
+    void initColours(AnsiColor16LocationEnum mode);
 
-    NODISCARD AnsiModeEnum getMode() const { return mode; }
+    NODISCARD AnsiColor16LocationEnum getMode() const { return m_mode; }
 
-    /// get currently selected ANSI code like 32 for green colour
-    NODISCARD int getAnsiCode() const;
-
-    void setAnsiCode(int);
-
-    static constexpr const char *NONE = "none";
-    static constexpr const int DEFAULT_FG = 254;
-    static constexpr const int DEFAULT_BG = 255;
+    NODISCARD AnsiColor16 getAnsiCode() const;
+    void setAnsiCode(AnsiColor16);
 
     struct NODISCARD AnsiColor final
     {
-        QColor colFg = mmqt::ansiColor(AnsiColorTableEnum::white);
-        QColor colBg = mmqt::ansiColor(AnsiColorTableEnum::black);
-        int ansiCodeFg = DEFAULT_FG;
-        int ansiCodeBg = DEFAULT_BG;
-        QString intelligibleNameFg = NONE;
-        QString intelligibleNameBg = NONE;
+        AnsiColor16 bg;
+        AnsiColor16 fg;
         bool bold = false;
         bool italic = false;
         bool underline = false;
+
+    public:
+        NODISCARD AnsiColor16Enum getBg() const
+        {
+            return bg.color.value_or(AnsiColor16Enum::white);
+        }
+        NODISCARD AnsiColor16Enum getFg() const
+        {
+            return fg.color.value_or(AnsiColor16Enum::black);
+        }
+        NODISCARD QColor getBgColor() const { return mmqt::toQColor(getBg()); }
+        NODISCARD QColor getFgColor() const { return mmqt::toQColor(getFg()); }
+
+        NODISCARD QString getBgName() const { return mmqt::toQStringLatin1(bg.to_string_view()); }
+        NODISCARD QString getFgName() const { return mmqt::toQStringLatin1(fg.to_string_view()); }
     };
 
     /// \return true if string is valid ANSI color code
     NODISCARD static AnsiColor colorFromString(const QString &ansiString);
-
-    ///\return true, if index is valid color code
-    NODISCARD static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
-
-private:
-    // There's not really a good default value for this.
-    AnsiModeEnum mode = AnsiModeEnum::ANSI_FG;
 };

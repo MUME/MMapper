@@ -5,7 +5,7 @@
 #include "displaywidget.h"
 
 #include "../configuration/configuration.h"
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
 
 #include <QMessageLogContext>
 #include <QRegularExpression>
@@ -18,11 +18,34 @@
 static const constexpr int SCROLLBAR_BUFFER = 1;
 static const constexpr int TAB_WIDTH_SPACES = 8;
 
-DisplayWidget::DisplayWidget(QWidget *const parent)
-    : QTextEdit(parent)
+FontDefaults::FontDefaults()
 {
     const auto &settings = getConfig().integratedClient;
 
+    // Default Colors
+    defaultBg = settings.backgroundColor;
+    defaultFg = settings.foregroundColor;
+
+    // Default Font
+    serverOutputFont.fromString(settings.font);
+}
+
+void AnsiTextHelper::init()
+{
+    QTextFrameFormat frameFormat = textEdit.document()->rootFrame()->frameFormat();
+    frameFormat.setBackground(defaults.defaultBg);
+    frameFormat.setForeground(defaults.defaultFg);
+    textEdit.document()->rootFrame()->setFrameFormat(frameFormat);
+
+    format = cursor.charFormat();
+    setDefaultFormat(format, defaults);
+    cursor.setCharFormat(format);
+}
+
+DisplayWidget::DisplayWidget(QWidget *const parent)
+    : QTextEdit(parent)
+    , m_ansiTextHelper{static_cast<QTextEdit &>(*this)}
+{
     setReadOnly(true);
     setOverwriteMode(true);
     setUndoRedoEnabled(false);
@@ -30,37 +53,26 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
     setTextInteractionFlags(Qt::TextSelectableByMouse);
     setTabChangesFocus(false);
 
+    // REVISIT: Is this necessary to do in both places?
     document()->setUndoRedoEnabled(false);
+    m_ansiTextHelper.init();
 
-    // Default Colors
-    m_foregroundColor = settings.foregroundColor;
-    m_backgroundColor = settings.backgroundColor;
+    {
+        const auto &settings = getConfig().integratedClient;
 
-    // Default Font
-    m_serverOutputFont.fromString(settings.font);
+        // Add an extra character for the scrollbars
+        QFontMetrics fm{getDefaultFont()};
+        int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER);
+        setLineWrapMode(QTextEdit::FixedColumnWidth);
+        setLineWrapColumnOrWidth(settings.columns);
+        setWordWrapMode(QTextOption::WordWrap);
+        setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
+        setTabStopDistance(fm.horizontalAdvance(" ") * TAB_WIDTH_SPACES);
 
-    QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
-    frameFormat.setBackground(m_backgroundColor);
-    frameFormat.setForeground(m_foregroundColor);
-    document()->rootFrame()->setFrameFormat(frameFormat);
-
-    m_cursor = document()->rootFrame()->firstCursorPosition();
-    m_format = m_cursor.charFormat();
-    setDefaultFormat(m_format);
-    m_cursor.setCharFormat(m_format);
-
-    // Add an extra character for the scrollbars
-    QFontMetrics fm(m_serverOutputFont);
-    int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER);
-    setLineWrapMode(QTextEdit::FixedColumnWidth);
-    setLineWrapColumnOrWidth(settings.columns);
-    setWordWrapMode(QTextOption::WordWrap);
-    setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-    setTabStopDistance(fm.horizontalAdvance(" ") * TAB_WIDTH_SPACES);
-
-    QScrollBar *const scrollbar = verticalScrollBar();
-    scrollbar->setSingleStep(fm.lineSpacing());
-    scrollbar->setPageStep(y);
+        QScrollBar *const scrollbar = verticalScrollBar();
+        scrollbar->setSingleStep(fm.lineSpacing());
+        scrollbar->setPageStep(y);
+    }
 
     connect(this, &DisplayWidget::copyAvailable, this, [this](const bool available) {
         m_canCopy = available;
@@ -73,18 +85,18 @@ QSize DisplayWidget::sizeHint() const
 {
     const auto &settings = getConfig().integratedClient;
     const auto &margins = contentsMargins();
-    QFontMetrics fm(m_serverOutputFont);
-    int x = fm.averageCharWidth() * (settings.columns + SCROLLBAR_BUFFER) + margins.left()
-            + margins.right();
-    int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER) + margins.top()
-            + margins.bottom();
+    QFontMetrics fm{getDefaultFont()};
+    const int x = fm.averageCharWidth() * (settings.columns + SCROLLBAR_BUFFER) + margins.left()
+                  + margins.right();
+    const int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER) + margins.top()
+                  + margins.bottom();
     return QSize(x, y);
 }
 
 void DisplayWidget::resizeEvent(QResizeEvent *const event)
 {
     const auto &margins = contentsMargins();
-    QFontMetrics fm(m_serverOutputFont);
+    QFontMetrics fm{getDefaultFont()};
     int x = (size().width() - margins.left() - margins.right()) / fm.averageCharWidth();
     int y = (size().height() - margins.top() - margins.bottom()) / fm.lineSpacing();
     // We subtract an extra character for the scrollbars
@@ -107,18 +119,18 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     QTextEdit::resizeEvent(event);
 }
 
-void DisplayWidget::setDefaultFormat(QTextCharFormat &format)
+void setDefaultFormat(QTextCharFormat &format, const FontDefaults &defaults)
 {
-    format.setFont(m_serverOutputFont);
-    format.setBackground(m_backgroundColor);
-    format.setForeground(m_foregroundColor);
+    format.setFont(defaults.serverOutputFont);
+    format.setBackground(defaults.defaultBg);
+    format.setForeground(defaults.defaultFg);
     format.setFontWeight(QFont::Normal);
     format.setFontUnderline(false);
     format.setFontItalic(false);
     format.setFontStrikeOut(false);
 }
 
-void DisplayWidget::slot_displayText(const QString &str)
+void AnsiTextHelper::displayText(const QString &str)
 {
     // Split ansi from this text
     QStringList textList, ansiList;
@@ -131,7 +143,7 @@ void DisplayWidget::slot_displayText(const QString &str)
         QRegularExpressionMatch match = it.next();
         ansiIndex = match.capturedStart(0);
         textList << str.mid(textIndex, ansiIndex - textIndex);
-        ansiList << match.captured(1);
+        ansiList << match.captured(0);
         textIndex = match.capturedEnd(0);
     }
     if (textIndex < str.length()) {
@@ -145,282 +157,177 @@ void DisplayWidget::slot_displayText(const QString &str)
 
         if (textStr.length() != 0) {
             // Backspaces occur on the next character being drawn
-            if (m_backspace) {
-                m_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 1);
-                m_backspace = false;
+            if (backspace) {
+                cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, 1);
+                backspace = false;
             }
             int backspaceIndex = textStr.indexOf(char_consts::C_BACKSPACE);
             if (backspaceIndex == -1) {
                 // No backspace
-                m_cursor.insertText(textStr, m_format);
+                cursor.insertText(textStr, format);
 
             } else {
-                m_backspace = true;
-                m_cursor.insertText(textStr.mid(0, backspaceIndex), m_format);
-                m_cursor.insertText(textStr.mid(backspaceIndex + 1), m_format);
+                backspace = true;
+                cursor.insertText(textStr.mid(0, backspaceIndex), format);
+                cursor.insertText(textStr.mid(backspaceIndex + 1), format);
             }
         }
 
         // Change format according to ansi codes
         if (ansiIterator.hasNext()) {
-            // split several semicoloned ansi codes into individual codes
-            QStringList subAnsi = ansiIterator.next().split(char_consts::C_SEMICOLON);
-            QStringListIterator ansiCodeIterator(subAnsi);
-            while (ansiCodeIterator.hasNext()) {
-                int ansiCode = ansiCodeIterator.next().toInt();
-                updateFormat(m_format, ansiCode);
+            auto ansiStr = ansiIterator.next();
+            if (auto optNewColor = mmqt::parseAnsiColor(currentAnsi, ansiStr)) {
+                currentAnsi = updateFormat(format, defaults, currentAnsi, *optNewColor);
             }
         }
     }
+}
 
-    // Ensure we limit the scrollback history
-    const int lineLimit = getConfig().integratedClient.linesOfScrollback;
-    const int lineCount = document()->lineCount();
+void AnsiTextHelper::limitScrollback(int lineLimit)
+{
+    const int lineCount = textEdit.document()->lineCount();
     if (lineCount > lineLimit) {
         const int trimLines = lineCount - lineLimit;
-        m_cursor.movePosition(QTextCursor::Start);
-        m_cursor.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, trimLines);
-        m_cursor.removeSelectedText();
-        m_cursor.movePosition(QTextCursor::End);
+        cursor.movePosition(QTextCursor::Start);
+        cursor.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, trimLines);
+        cursor.removeSelectedText();
+        cursor.movePosition(QTextCursor::End);
     }
-
-    verticalScrollBar()->setSliderPosition(verticalScrollBar()->maximum());
 }
 
-void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
+void DisplayWidget::slot_displayText(const QString &str)
 {
-    if (m_ansi256Foreground) {
-        if (ansiCode == 5)
-            return;
-        format.setForeground(mmqt::ansi256toRgb(ansiCode));
-        m_ansi256Foreground = false;
-        return;
+    const int lineLimit = getConfig().integratedClient.linesOfScrollback;
+
+    auto &vscroll = deref(verticalScrollBar());
+    constexpr int ALMOST_ALL_THE_WAY = 4;
+    const bool wasAtBottom = (vscroll.sliderPosition() >= vscroll.maximum() - ALMOST_ALL_THE_WAY);
+
+    m_ansiTextHelper.displayText(str);
+
+    // REVISIT: include option to limit scrollback in the displayText function,
+    // so it can choose to remove lines from the top when the overflow occurs,
+    // to improve performance for massive inserts.
+    m_ansiTextHelper.limitScrollback(lineLimit);
+
+    // Detecting the keyboard Scroll Lock status would be preferable, but we'll have to live with
+    // this because Qt is apparently the only windowing system in existence that doesn't provide
+    // a way to query CapsLock/NumLock/ScrollLock ?!?
+    //
+    // REVISIT: should this be user-configurable?
+    if (wasAtBottom) {
+        vscroll.setSliderPosition(vscroll.maximum());
     }
-    if (m_ansi256Background) {
-        if (ansiCode == 5)
-            return;
-        format.setBackground(mmqt::ansi256toRgb(ansiCode));
-        m_ansi256Background = false;
-        return;
+}
+
+NODISCARD static QColor decodeColor(const AnsiColorRGB var)
+{
+    return QColor::fromRgb(var.r, var.g, var.b);
+}
+
+NODISCARD static QColor decodeColor(AnsiColor256 var, const bool intense)
+{
+    if (var.color < 8 && intense) {
+        var.color += 8;
     }
-    switch (ansiCode) {
-    case 0:
-        // turn ANSI off (i.e. return to normal defaults)
-        setDefaultFormat(format);
-        m_ansi256Background = false;
-        m_ansi256Foreground = false;
-        break;
-    case 1:
-        // bold
-        format.setFontWeight(QFont::Bold);
-        updateFormatBoldColor(format);
-        break;
-    case 2:
-        // dim
-        format.setFontWeight(QFont::Light);
-        break;
-    case 3:
-        // italic
-        format.setFontItalic(true);
-        break;
-    case 4:
-        // underline
-        format.setFontUnderline(true);
-        break;
-    case 5:
-        // blink slow
-        format.setFontWeight(QFont::Bold);
-        break;
-    case 6:
-        // blink fast
-        format.setFontWeight(QFont::Bold);
-        updateFormatBoldColor(format);
-        break;
-    case 7:
-    case 27:
-        // inverse
-        {
-            QBrush tempBrush = format.background();
-            format.setBackground(format.foreground());
-            format.setForeground(tempBrush);
+
+    return mmqt::ansi256toRgb(var.color);
+}
+
+NODISCARD static QColor decodeColor(const AnsiColorVariant var,
+                                    const QColor defaultColor,
+                                    const bool intense)
+{
+    if (var.hasRGB())
+        return decodeColor(var.getRGB());
+
+    if (var.has256())
+        return decodeColor(var.get256(), intense);
+
+    return defaultColor;
+}
+
+static void reverseInPlace(QColor &color)
+{
+    color.setRed(255 - color.red());
+    color.setGreen(255 - color.green());
+    color.setBlue(255 - color.blue());
+}
+
+RawAnsi updateFormat(QTextCharFormat &format,
+                     const FontDefaults &defaults,
+                     const RawAnsi &before,
+                     RawAnsi updated)
+{
+    if (!updated.ul.hasDefaultColor()) {
+        // Ignore underline color.
+        updated.ul = AnsiColorVariant{};
+    }
+
+    if (before == updated)
+        return updated;
+
+    if (updated == RawAnsi{}) {
+        setDefaultFormat(format, defaults);
+        return updated;
+    }
+
+    // auto removed = before.flags & ~updated.flags;
+    // auto added = updated.flags & ~before.flags;
+    auto diff = before.getFlags() ^ updated.getFlags();
+
+    for (const auto flag : diff) {
+        switch (flag) {
+        case AnsiStyleFlagEnum::Italic:
+            format.setFontItalic(updated.hasItalic());
+            break;
+        case AnsiStyleFlagEnum::Underline:
+            format.setFontUnderline(updated.hasUnderline());
+            break;
+        case AnsiStyleFlagEnum::Strikeout:
+            format.setFontStrikeOut(updated.hasStrikeout());
+            break;
+        case AnsiStyleFlagEnum::Bold:
+        case AnsiStyleFlagEnum::Faint:
+            if (updated.hasBold()) {
+                format.setFontWeight(QFont::Bold);
+            } else if (updated.hasFaint()) {
+                format.setFontWeight(QFont::Light);
+            } else {
+                format.setFontWeight(QFont::Normal);
+            }
+            break;
+        case AnsiStyleFlagEnum::Blink:
+            break;
+        case AnsiStyleFlagEnum::Reverse:
+        case AnsiStyleFlagEnum::Conceal:
             break;
         }
-    case 8:
-        // conceal
-        format.setForeground(format.background());
-        break;
-    case 9:
-        // strike-through
-        format.setFontStrikeOut(true);
-        break;
-    case 21:
-    case 22:
-    case 25:
-        // bold off
-        format.setFontWeight(QFont::Normal);
-        break;
-    case 23:
-        // italic off
-        format.setFontItalic(false);
-        break;
-    case 24:
-        // underline off
-        format.setFontUnderline(false);
-        break;
-    case 28:
-        // conceal off
-        format.setForeground(m_foregroundColor);
-        break;
-    case 29:
-        // not crossed out
-        format.setFontStrikeOut(false);
-        break;
-    case 30:
-        // black foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 31:
-        // red foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 32:
-        // green foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 33:
-        // yellow foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 34:
-        // blue foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 35:
-        // magenta foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 36:
-        // cyan foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 37:
-        // gray foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 38:
-        // 256 color foreground
-        m_ansi256Foreground = true;
-        break;
-    case 40:
-        // black background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 41:
-        // red background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 42:
-        // green background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 43:
-        // yellow background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 44:
-        // blue background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 45:
-        // magenta background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 46:
-        // cyan background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 47:
-        // gray background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 48:
-        // 256 color background
-        m_ansi256Background = true;
-        break;
-    case 90:
-        // high-black foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 91:
-        // high-red foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 92:
-        // high-green foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 93:
-        // high-yellow foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 94:
-        // high-blue foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 95:
-        // high-magenta foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 96:
-        // high-cyan foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 97:
-        // high-white foreground
-        format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 30)));
-        break;
-    case 100:
-        // high-black background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 101:
-        // high-red background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 102:
-        // high-green background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 103:
-        // high-yellow background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 104:
-        // high-blue background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 105:
-        // high-magenta background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 106:
-        // high-cyan background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    case 107:
-        // high-white background
-        format.setBackground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(ansiCode - 40)));
-        break;
-    default:
-        qWarning() << "Unknown ansicode" << ansiCode;
-        format.setBackground(Qt::gray);
     }
-}
 
-void DisplayWidget::updateFormatBoldColor(QTextCharFormat &format)
-{
-    for (int i = 0; i <= static_cast<int>(AnsiColorTableEnum::white); i++) {
-        if (format.foreground().color() == mmqt::ansiColor(static_cast<AnsiColorTableEnum>(i)))
-            format.setForeground(mmqt::ansiColor(static_cast<AnsiColorTableEnum>(i + 60)));
+    const bool conceal = updated.hasConceal();
+    const bool reverse = updated.hasReverse();
+    const bool intense = updated.hasBold();
+
+    auto bg = decodeColor(updated.bg, defaults.defaultBg, false);
+    auto fg = decodeColor(updated.fg, defaults.defaultFg, intense);
+    auto ul = decodeColor(updated.ul, defaults.getDefaultUl(), intense);
+
+    if (reverse) {
+        // was swap(fg, bg) before we supported underline color
+        ::reverseInPlace(fg);
+        ::reverseInPlace(bg);
+        ::reverseInPlace(ul);
     }
+
+    // Create a config setting and use it here if you really want to miss text that others will see!
+    bool userExplicitlyOptedInForConceal = false;
+    if (conceal && userExplicitlyOptedInForConceal) {
+        ul = fg = bg;
+    }
+
+    format.setBackground(bg);
+    format.setForeground(fg);
+    format.setUnderlineColor(ul);
+    return updated;
 }

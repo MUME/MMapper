@@ -3,6 +3,8 @@
 
 #include "Sublist.h"
 
+#include "../global/PrintUtils.h"
+
 namespace syntax {
 Sublist::Sublist(TokenMatcher car, SharedConstSublist cdr)
     : m_car(std::move(car))

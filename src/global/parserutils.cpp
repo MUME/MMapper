@@ -16,7 +16,7 @@ namespace ParserUtils {
 
 QString &removeAnsiMarksInPlace(QString &str)
 {
-    static const QRegularExpression ansi("\x1b\\[[0-9;]*[A-Za-z]");
+    static const QRegularExpression ansi("\x1B\\[[0-9;:]*[A-Za-z]");
     str.remove(ansi);
     return str;
 }

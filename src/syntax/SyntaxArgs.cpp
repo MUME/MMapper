@@ -4,6 +4,7 @@
 #include "SyntaxArgs.h"
 
 #include "../global/CaseUtils.h"
+#include "../global/PrintUtils.h"
 #include "../global/TextUtils.h"
 #include "IMatchErrorLogger.h"
 #include "ParserInput.h"

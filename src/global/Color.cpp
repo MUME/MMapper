@@ -4,9 +4,11 @@
 #include "Color.h"
 
 #include "Consts.h"
+#include "TextUtils.h"
 #include "utils.h"
 
 #include <iomanip>
+#include <ostream>
 #include <sstream>
 
 #include <QColor>
@@ -129,11 +131,19 @@ Color Color::fromHex(const std::string_view sv)
     return Color(r, g, b);
 }
 
+Color mmqt::toColor(const QString &s)
+{
+    if (false)
+        return Color::fromHex(mmqt::toStdStringLatin1(s));
+    else
+        return Color(QColor(s));
+}
+
 std::string Color::toHex() const
 {
     std::ostringstream oss;
     toHex(oss);
-    return oss.str();
+    return std::move(oss).str();
 }
 
 std::ostream &Color::toHex(std::ostream &os) const
@@ -171,6 +181,29 @@ XFOREACH_COLOR(DECL)
 #undef DECL
 
 } // namespace Colors
+
+Color textColor(const Color color)
+{
+    // Dynamically select text color according to the background color
+    // http://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
+    constexpr const auto redMagic = 241;
+    constexpr const auto greenMagic = 691;
+    constexpr const auto blueMagic = 68;
+    constexpr const auto divisor = redMagic + greenMagic + blueMagic;
+
+    // Calculate a brightness value in 3d color space between 0 and 255
+    const auto brightness = std::sqrt(((std::pow(color.getRed(), 2) * redMagic)
+                                       + (std::pow(color.getGreen(), 2) * greenMagic)
+                                       + (std::pow(color.getBlue(), 2) * blueMagic))
+                                      / divisor);
+    const auto percentage = 100 * brightness / 255;
+    return percentage < 50 ? Colors::white : Colors::black;
+}
+
+QColor mmqt::textColor(const QColor color)
+{
+    return static_cast<QColor>(::textColor(Color(color)));
+}
 
 static const int color_self_test = []() -> int {
     const Color redf{1.f, 0.f, 0.f};

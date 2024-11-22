@@ -6,7 +6,7 @@
 #include "mmapper2group.h"
 
 #include "../configuration/configuration.h"
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
 #include "../global/roomid.h"
 #include "../parser/CommandQueue.h"
 #include "../proxy/GmcpMessage.h"
@@ -267,7 +267,8 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
             name = QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
                                           QString::fromLatin1(character->getLabel()));
         if (getConfig().groupManager.useGroupTellAnsi256Color)
-            color = mmqt::rgbToAnsi256String(character->getColor(), false);
+            color = mmqt::rgbToAnsi256String(character->getColor(),
+                                             AnsiColor16LocationEnum::Background);
     }
     log(QString("GTell from %1 arrived: %2").arg(from, text));
 

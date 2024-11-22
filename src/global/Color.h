@@ -5,12 +5,13 @@
 #include "RuleOf5.h"
 #include "macros.h"
 
-#include <iostream>
+#include <ostream>
 #include <string_view>
 
 #include <glm/glm.hpp>
 
 class QColor;
+class QString;
 
 struct NODISCARD Color final
 {
@@ -113,3 +114,10 @@ namespace Colors {
 XFOREACH_COLOR(DECL)
 #undef DECL
 } // namespace Colors
+
+NODISCARD Color textColor(Color color);
+
+namespace mmqt {
+NODISCARD QColor textColor(QColor color);
+NODISCARD Color toColor(const QString &);
+} // namespace mmqt

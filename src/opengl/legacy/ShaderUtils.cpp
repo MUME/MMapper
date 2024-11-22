@@ -4,6 +4,8 @@
 #include "ShaderUtils.h"
 
 #include "../../global/ConfigConsts.h"
+#include "../../global/Consts.h"
+#include "../../global/PrintUtils.h"
 #include "../../global/TextUtils.h"
 
 #include <array>

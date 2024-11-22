@@ -7,7 +7,7 @@
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
 #include "../expandoracommon/room.h"
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
 #include "../global/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"

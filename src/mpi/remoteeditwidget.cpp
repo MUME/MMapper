@@ -5,16 +5,20 @@
 #include "remoteeditwidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiTextUtils.h"
 #include "../global/CharUtils.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
+#include "../global/RAII.h"
 #include "../global/TabUtils.h"
+#include "../global/TextUtils.h"
 #include "../global/entities.h"
 
 #include <cassert>
 #include <cctype>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -25,6 +29,7 @@
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
 #include <QRegularExpression>
+#include <QScopedPointer>
 #include <QSize>
 #include <QStatusBar>
 #include <QString>
@@ -37,23 +42,22 @@ using namespace char_consts;
 static constexpr const bool USE_TOOLTIPS = false;
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
-
 namespace mmqt {
 NODISCARD static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
     for (auto token : mmqt::AnsiTokenizer{s}) {
-        using Type = mmqt::AnsiStringToken::TokenTypeEnum;
+        using Type = decltype(token.type);
         switch (token.type) {
-        case Type::ANSI:
+        case Type::Ansi:
             break;
-        case Type::NEWLINE:
+        case Type::Newline:
             /* unexpected */
             col = 0;
             break;
-        case Type::SPACE:
-        case Type::CONTROL:
-        case Type::WORD:
+        case Type::Space:
+        case Type::Control:
+        case Type::Word:
             col = mmqt::measureExpandedTabsOneLine(token.getQStringView(), col);
             break;
         }
@@ -155,10 +159,8 @@ public:
         const auto red = getBackgroundFormat(Qt::red);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        mmqt::foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
-            setFormat(static_cast<int>(start),
-                      static_cast<int>(sv.length()),
-                      mmqt::isValidAnsiColor(sv) ? cyan : red);
+        mmqt::foreachAnsi(line, [this, &red, &cyan](const int start, const QStringView sv) {
+            setFormat(start, static_cast<int>(sv.length()), mmqt::isValidAnsiColor(sv) ? cyan : red);
         });
     }
 
@@ -250,17 +252,18 @@ public:
                 case C_TAB: // REVISIT: move tab handler to here?
                     /* handled elsewhere */
                     break;
-                default:
+                default: {
+                    const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(static_cast<unsigned char>(c), 0x80, 0xbf)
-                            && (last == 0xc2 || last == 0xc3))) {
+                        && (isClamped<int>(uc, 0x80, 0xbf) && (last == 0xc2 || last == 0xc3))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
                         setFormat(pos - 1, 2, get_utf8_fmt());
-                    } else if (std::iscntrl(c) || (!std::isprint(c) && !isSpace(c))) {
+                    } else if (std::iscntrl(uc) || (!std::isprint(uc) && !std::isspace(uc))) {
                         setFormat(pos, 1, get_unprintable_fmt());
                     }
+                }
                 }
             }
 
@@ -553,9 +556,9 @@ void RemoteTextEdit::joinLines()
     }
 
     mmqt::TextBuffer buffer;
-    foreach_partly_selected_block(cur, [&buffer](const auto &line) -> void {
-        const auto &block = line.block();
-        const auto &text = block.text();
+    foreach_partly_selected_block(cur, [&buffer](const QTextCursor line) -> void {
+        const QTextBlock block = line.block();
+        const QString text = block.text();
         if (text.isEmpty())
             return;
         if (!buffer.isEmpty())
@@ -974,7 +977,7 @@ NODISCARD static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
 struct NODISCARD CursorAnsiInfo final
 {
     mmqt::TextBuffer buffer;
-    raw_ansi ansi;
+    // RawAnsi ansi;
 
     explicit operator bool() const { return !buffer.isEmpty(); }
 };
@@ -985,26 +988,31 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 
     CursorAnsiInfo result;
     const auto &line = cursor.block().text();
-    mmqt::foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
+    mmqt::foreachAnsi(line, [pos, &result](int start, const QStringView sv) {
         if (result || pos < start || pos >= start + sv.length())
             return;
 
         if (!mmqt::isValidAnsiColor(sv)) {
             result.buffer.append("*invalid*");
+            // result.ansi = {};
             return;
         }
 
-        bool first = true;
-        Ansi ansi;
-        mmqt::AnsiColorParser::for_each_code(sv, [&ansi, &first, &result](int code) {
-            ansi.process_code(code);
-            if (first)
-                first = false;
-            else
-                result.buffer.append(", ");
-            result.buffer.append(raw_ansi::describe(code));
-        });
-        result.ansi = ansi.get_raw();
+        auto &buffer = result.buffer;
+        if (const auto optAnsi = mmqt::parseAnsiColor(RawAnsi{}, sv)) {
+            const auto &ansi = *optAnsi;
+            // result.ansi = ansi;
+            if (ansi == RawAnsi{}) {
+                buffer.append("reset");
+            } else {
+                std::ostringstream oss;
+                to_stream(oss, ansi);
+                buffer.append(mmqt::toQStringUtf8(oss.str()));
+            }
+        } else {
+            result.buffer.append("*error");
+            // result.ansi = {};
+        }
     });
     return result;
 }
@@ -1164,7 +1172,7 @@ void RemoteEditWidget::slot_normalizeAnsi()
     if (!mmqt::containsAnsi(old))
         return;
 
-    mmqt::TextBuffer output = mmqt::normalizeAnsi(old);
+    mmqt::TextBuffer output = mmqt::normalizeAnsi(ANSI_COLOR_SUPPORT_HI, old);
     if (!output.hasTrailingNewline())
         output.append(C_NEWLINE);
 
@@ -1173,7 +1181,8 @@ void RemoteEditWidget::slot_normalizeAnsi()
 
 void RemoteEditWidget::slot_insertAnsiReset()
 {
-    m_textEdit->insertPlainText(AnsiString::get_reset_string().c_str());
+    const auto reset = AnsiString::get_reset_string();
+    m_textEdit->insertPlainText(reset.c_str());
 }
 
 void RemoteEditWidget::slot_joinLines()

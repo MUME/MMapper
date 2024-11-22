@@ -3,6 +3,8 @@
 
 #include "ParserInput.h"
 
+#include "../global/PrintUtils.h"
+
 #include <memory>
 #include <sstream>
 #include <vector>

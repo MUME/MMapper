@@ -3,14 +3,16 @@
 
 #include "TreeParser.h"
 
+#include "../global/AnsiTextUtils.h"
 #include "../global/Consts.h"
+#include "../global/PrintUtils.h"
 #include "../global/unquote.h"
 #include "SyntaxArgs.h"
 #include "TokenMatcher.h"
 
-#include <iostream>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <sstream>
 #include <vector>
 
@@ -204,7 +206,8 @@ void HelpFrame::flush()
                     if (c == 'm')
                         inEsc = false;
                     else
-                        assert(std::isdigit(c) || c == C_OPEN_BRACKET || c == C_SEMICOLON);
+                        assert(std::isdigit(c) || c == C_OPEN_BRACKET || c == C_SEMICOLON
+                               || c == C_COLON);
                 } else {
                     ++len;
                 }
@@ -298,26 +301,27 @@ void HelpFrame::addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTyp
         return;
     }
 
-    Ansi ansi;
-    ansi.process_code(1);
+    RawAnsi raw;
+    raw.setBold();
+
     switch (type.value()) {
     case MatchTypeEnum::Fail:
-        ansi.process_code(31);
+        raw.fg = AnsiColorVariant{AnsiColor16Enum::red};
         break;
     case MatchTypeEnum::Partial:
-        ansi.process_code(33);
+        raw.fg = AnsiColorVariant{AnsiColor16Enum::yellow};
         break;
     case MatchTypeEnum::Pass:
-        ansi.process_code(36);
+        raw.fg = AnsiColorVariant{AnsiColor16Enum::cyan};
         break;
     }
 
     // REVISIT: store this as Ansi instead of the string version.
     std::stringstream ss;
-    ss << ansi.get_raw().asAnsiString().copy_as_reset().c_str();
+    to_stream_as_reset(ss, ANSI_COLOR_SUPPORT_HI, raw);
     ss << tokenMatcher;
-    ss << AnsiString::get_reset_string().c_str();
-    addHelp(ss.str());
+    ss << reset_ansi;
+    addHelp(std::move(ss).str());
 }
 
 ParseResult TreeParser::HelpCommon::syntaxRecurseFirst(const Sublist &node,

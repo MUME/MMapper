@@ -5,7 +5,7 @@
 
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
@@ -244,8 +244,7 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
     case InfoMarkTypeEnum::TEXT: {
         batch.renderText(pos,
                          marker->getText().getStdString(),
-                         // TODO: add Color overload for textColor()
-                         Color{mmqt::textColor(color.getQColor())},
+                         Color{color.getQColor()},
                          color,
                          fontFormatFlag,
                          marker->getRotationAngle());

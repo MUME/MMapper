@@ -9,7 +9,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
-#include "../global/AnsiColor.h"
+#include "../global/AnsiTextUtils.h"
 #include "../global/Array.h"
 #include "../global/ConfigConsts.h"
 #include "../global/EnumIndexedArray.h"

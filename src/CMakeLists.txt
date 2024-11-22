@@ -77,7 +77,8 @@ set(mmapper_SRCS
     expandoracommon/property.h
     expandoracommon/room.cpp
     expandoracommon/room.h
-    global/AnsiColor.h
+    global/AnsiTextUtils.cpp
+    global/AnsiTextUtils.h
     global/Array.h
     global/CaseUtils.cpp
     global/CaseUtils.h
@@ -102,6 +103,8 @@ set(mmapper_SRCS
     global/NamedColors.h
     global/NullPointerException.cpp
     global/NullPointerException.h
+    global/PrintUtils.cpp
+    global/PrintUtils.h
     global/RAII.cpp
     global/RAII.h
     global/RuleOf5.h
@@ -116,6 +119,10 @@ set(mmapper_SRCS
     global/TabUtils.h
     global/TaggedInt.h
     global/TaggedString.h
+    global/TextBuffer.cpp
+    global/TextBuffer.cpp
+    global/TextBuffer.h
+    global/TextBuffer.h
     global/TextUtils.cpp
     global/TextUtils.h
     global/Version.h

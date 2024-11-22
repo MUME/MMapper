@@ -12,15 +12,12 @@ set(clock_SRCS
     ../src/clock/mumemoment.h
     ../src/global/CaseUtils.cpp
     ../src/global/Charset.cpp
-    ../src/global/Charset.h
-    ../src/global/TabUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/logging.cpp
     ../src/global/parserutils.cpp
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
-    ../src/global/parserutils.cpp
     ../src/proxy/GmcpMessage.cpp
     ../src/proxy/GmcpMessage.h
     )
@@ -41,7 +38,6 @@ add_test(NAME TestClock COMMAND TestClock)
 file(GLOB_RECURSE expandoracommon_SRCS
     ../src/expandoracommon/*.cpp
     ../src/global/Charset.cpp
-    ../src/global/Charset.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
     ../src/global/StringView.cpp
@@ -89,7 +85,6 @@ set(parser_SRCS
     ../src/expandoracommon/property.h
     ../src/global/CaseUtils.cpp
     ../src/global/Charset.cpp
-    ../src/global/Charset.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
     ../src/global/TabUtils.cpp
@@ -128,19 +123,24 @@ set(proxy_SRCS
     ../src/proxy/GmcpModule.h
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
+    ../src/global/AnsiTextUtils.cpp
     ../src/global/CaseUtils.cpp
     ../src/global/Charset.cpp
-    ../src/global/Charset.h
-    ../src/global/TabUtils.cpp
-    ../src/global/TabUtils.h
+    ../src/global/Color.cpp
+    ../src/global/NullPointerException.cpp
+    ../src/global/NullPointerException.h
+    ../src/global/PrintUtils.cpp
+    ../src/global/PrintUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/logging.cpp
+    ../src/global/tests.cpp
+    ../src/global/tests.h
     )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
 add_dependencies(TestProxy glm)
-target_link_libraries(TestProxy Qt5::Test coverage_config)
+target_link_libraries(TestProxy Qt5::Gui Qt5::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
   CXX_STANDARD 17
@@ -171,10 +171,14 @@ add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
 # Global
 set(global_SRCS
-    ../src/global/AnsiColor.h
+    ../src/global/AnsiTextUtils.cpp
     ../src/global/CaseUtils.cpp
     ../src/global/Charset.cpp
-    ../src/global/Charset.h
+    ../src/global/Color.cpp
+    ../src/global/NullPointerException.cpp
+    ../src/global/NullPointerException.h
+    ../src/global/PrintUtils.cpp
+    ../src/global/PrintUtils.h
     ../src/global/StringView.cpp
     ../src/global/StringView.h
     ../src/global/TabUtils.cpp
@@ -184,6 +188,8 @@ set(global_SRCS
     ../src/global/logging.cpp
     ../src/global/string_view_utils.cpp
     ../src/global/string_view_utils.h
+    ../src/global/tests.cpp
+    ../src/global/tests.h
     ../src/global/unquote.cpp
     ../src/global/unquote.h
     )
