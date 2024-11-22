@@ -19,11 +19,6 @@
 #include <QRegularExpression>
 #include <QString>
 
-NODISCARD static inline bool isSpace(const char c)
-{
-    return std::isspace(static_cast<uint8_t>(c));
-}
-
 extern void trim_newline_inplace(std::string_view &sv);
 
 namespace mmqt {
@@ -32,7 +27,6 @@ NODISCARD extern int findTrailingWhitespace(const QString &line);
 } // namespace mmqt
 
 NODISCARD extern bool isAbbrev(std::string_view abbr, std::string_view fullText);
-NODISCARD extern bool isPrintLatin1(char c);
 
 namespace mmqt {
 NODISCARD extern QString toQStringLatin1(std::string_view sv);

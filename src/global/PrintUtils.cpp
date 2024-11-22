@@ -12,7 +12,7 @@
 bool requiresQuote(const std::string_view str)
 {
     for (const char c : str) {
-        if (isSpace(c) || !isPrintLatin1(c)) {
+        if (ascii::isSpace(c) || !isPrintLatin1(c)) {
             return true;
         }
     }

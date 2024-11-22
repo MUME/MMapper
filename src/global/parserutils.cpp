@@ -31,7 +31,7 @@ NODISCARD bool isWhitespaceNormalized(const std::string_view sv)
             } else {
                 last_was_space = true;
             }
-        } else if (isSpace(c)) {
+        } else if (ascii::isSpace(c)) {
             return false;
         } else {
             last_was_space = false;
@@ -49,7 +49,7 @@ std::string normalizeWhitespace(std::string str)
         size_t out = 0;
         for (size_t in = 0; in < len; ++in) {
             const char c = str[in];
-            if (isSpace(c)) {
+            if (ascii::isSpace(c)) {
                 if (!last_was_space) {
                     last_was_space = true;
                     str[out++] = char_consts::C_SPACE;

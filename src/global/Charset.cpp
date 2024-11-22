@@ -6,22 +6,21 @@
 #include "Consts.h"
 #include "TextUtils.h"
 #include "parserutils.h"
+#include "tests.h"
 
 #include <array>
 #include <ostream>
 #include <sstream>
 
-using namespace char_consts;
-
 namespace { // anonymous
 namespace detail {
 
-static constexpr const size_t IDX_NBSP = 160;
-static constexpr const char LATIN1_UNDEFINED = 'z';
-static constexpr const size_t NUM_ASCII_CODEPOINTS = 128;
-static constexpr const size_t NUM_LATIN1_CODEPOINTS = 256;
+constexpr const size_t IDX_NBSP = 160;
+constexpr const char LATIN1_UNDEFINED = 'z';
+constexpr const size_t NUM_ASCII_CODEPOINTS = 128;
+constexpr const size_t NUM_LATIN1_CODEPOINTS = 256;
 // Taken from MUME's HELP LATIN to convert from Latin-1 to US-ASCII
-static constexpr const std::array g_latin1ToAscii = {
+constexpr const std::array g_latin1ToAscii = {
     /*160*/
     ' ', '!', 'c', 'L', '$',  'Y', '|', 'P', '"', 'C', 'a', '<', ',', '-', 'R', '-',
     'd', '+', '2', '3', '\'', 'u', 'P', '*', ',', '1', 'o', '>', '4', '2', '3', '?',
@@ -34,17 +33,17 @@ static_assert(
     std::is_same_v<char, std::remove_const_t<std::remove_reference_t<decltype(g_latin1ToAscii[0])>>>);
 static_assert(std::size(g_latin1ToAscii) == NUM_LATIN1_CODEPOINTS - IDX_NBSP);
 
-NODISCARD static inline constexpr size_t getIndex(const char c) noexcept
+NODISCARD inline constexpr size_t getIndex(const char c) noexcept
 {
     return static_cast<size_t>(static_cast<uint8_t>(c));
 }
 
-NODISCARD static inline constexpr bool isAscii(const char c) noexcept
+NODISCARD inline constexpr bool isAscii(const char c) noexcept
 {
     return getIndex(c) < NUM_ASCII_CODEPOINTS;
 }
 
-NODISCARD static inline constexpr char latin1ToAscii(const char c) noexcept
+NODISCARD inline constexpr char latin1ToAscii(const char c) noexcept
 {
     if (isAscii(c)) {
         return c;
@@ -79,14 +78,9 @@ char latin1ToAscii(const char c) noexcept
     return detail::latin1ToAscii(c);
 }
 
-bool isAscii(const std::string_view sv)
+bool isAscii(const std::string_view sv) noexcept
 {
-    for (const char c : sv) {
-        if (!isAscii(c)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(sv.begin(), sv.end(), static_cast<bool (*)(char)>(&isAscii));
 }
 
 std::string &latin1ToAsciiInPlace(std::string &str)
@@ -158,7 +152,7 @@ void latin1ToAscii(std::ostream &os, const std::string_view sv)
     }
 }
 
-bool isPrintLatin1(const char c)
+bool isPrintLatin1(const char c) noexcept
 {
     const auto uc = static_cast<uint8_t>(c);
     return uc >= ((uc < 0x7F) ? 0x20 : 0xA0);
@@ -330,7 +324,7 @@ namespace { // anonymous
 namespace detail {
 // This is a lenient tester; it just recognizes the format but doesn't check actual codepoints.
 // The goal is to detect accidentally passing latin1 to utf8.
-NODISCARD static constexpr bool isProbablyUtf8(const std::string_view sv)
+NODISCARD constexpr bool isProbablyUtf8(const std::string_view sv)
 {
     constexpr uint8_t allZeros = 0;
     constexpr uint8_t topBit = 0b1000'0000;
@@ -473,3 +467,146 @@ NODISCARD bool isProbablyUtf8(const std::string_view sv)
 }
 
 } // namespace charset
+
+namespace { // anonymous
+template<typename Callback>
+NODISCARD size_t countCharsMatching(Callback &&callback)
+{
+    size_t totalMatching = 0;
+    for (size_t i = 0; i < 256; ++i) {
+        if (callback(static_cast<char>(i))) {
+            ++totalMatching;
+        }
+    }
+    return totalMatching;
+}
+
+void testIsLowerIsUpper()
+{
+    using ascii::isLower;
+    using ascii::isUpper;
+    constexpr size_t NUM_LETTERS = 26;
+    TEST_ASSERT(countCharsMatching(isLower) == NUM_LETTERS);
+    TEST_ASSERT(countCharsMatching(isUpper) == NUM_LETTERS);
+
+    static const auto isEither = [](const char c) -> bool { return isLower(c) || isUpper(c); };
+    TEST_ASSERT(countCharsMatching(isEither) == 2 * NUM_LETTERS);
+
+    static_assert('a' + NUM_LETTERS == 'z' + 1);
+    for (char c = 'a'; c <= 'z'; ++c) {
+        TEST_ASSERT(isLower(c));
+    }
+
+    static_assert('A' + NUM_LETTERS == 'Z' + 1);
+    for (char c = 'A'; c <= 'Z'; ++c) {
+        TEST_ASSERT(isUpper(c));
+    }
+}
+
+void testIsCntrl()
+{
+    using ascii::isCntrl;
+    using namespace char_consts;
+
+    TEST_ASSERT(countCharsMatching(isCntrl) == 33);
+    {
+        // 00 to 1F, and 7F
+        for (size_t i = 0; i < 32; ++i) {
+            TEST_ASSERT(isCntrl(static_cast<char>(i)));
+        }
+        TEST_ASSERT(isCntrl(C_DELETE));
+    }
+    {
+        // not many have names...
+        const std::array<char, 10> expected{
+            C_ALERT,
+            C_BACKSPACE,
+            C_CARRIAGE_RETURN,
+            C_DELETE,
+            C_ESC,
+            C_FORM_FEED,
+            C_NEWLINE,
+            C_NUL,
+            C_TAB,
+            C_VERTICAL_TAB,
+        };
+        TEST_ASSERT(expected.size() == 10);
+
+        std::array<bool, 256> seen{};
+        size_t num_seen = 0;
+        for (const char c : expected) {
+            const auto uc = static_cast<uint8_t>(c);
+            TEST_ASSERT(isCntrl(c));
+            TEST_ASSERT(!seen[uc]);
+            seen[uc] = true;
+            ++num_seen;
+        }
+        TEST_ASSERT(num_seen == expected.size());
+    }
+}
+
+void testIsPunct()
+{
+    using ascii::isPunct;
+    using namespace char_consts;
+
+    TEST_ASSERT(countCharsMatching(isPunct) == 32);
+
+    const std::array<char, 32> expected{
+        C_AMPERSAND,     C_ASTERISK,      C_AT_SIGN,     C_BACKSLASH,    C_BACK_TICK,
+        C_CARET,         C_CLOSE_BRACKET, C_CLOSE_CURLY, C_CLOSE_PARENS, C_COLON,
+        C_COMMA,         C_DOLLAR_SIGN,   C_DQUOTE,      C_EQUALS,       C_EXCLAMATION,
+        C_GREATER_THAN,  C_LESS_THAN,     C_MINUS_SIGN,  C_OPEN_BRACKET, C_OPEN_CURLY,
+        C_OPEN_PARENS,   C_PERCENT_SIGN,  C_PERIOD,      C_PLUS_SIGN,    C_POUND_SIGN,
+        C_QUESTION_MARK, C_SEMICOLON,     C_SLASH,       C_SQUOTE,       C_TILDE,
+        C_UNDERSCORE,    C_VERTICAL_BAR,
+    };
+    std::array<bool, 256> seen{};
+    size_t num_seen = 0;
+    for (const char c : expected) {
+        const auto uc = static_cast<uint8_t>(c);
+        TEST_ASSERT(isPunct(c));
+        TEST_ASSERT(!seen[uc]);
+        seen[uc] = true;
+        ++num_seen;
+    }
+    TEST_ASSERT(num_seen == 32);
+}
+
+void testIsSpace()
+{
+    using ascii::isSpace;
+    using namespace char_consts;
+
+    TEST_ASSERT(countCharsMatching(isSpace) == 6);
+
+    // expected
+    TEST_ASSERT(isSpace(C_CARRIAGE_RETURN)); // '\r'
+    TEST_ASSERT(isSpace(C_FORM_FEED));       // '\f'
+    TEST_ASSERT(isSpace(C_NEWLINE));         // '\n'
+    TEST_ASSERT(isSpace(C_SPACE));           //
+    TEST_ASSERT(isSpace(C_TAB));             // '\t'
+    TEST_ASSERT(isSpace(C_VERTICAL_TAB));    // '\v'
+
+    // NOTE: this might be "unexpected" since its name is non-breaking space;
+    // if you need to test for NBSP, you'll need to use a different
+    // function (e.g. look for nbsp_aware::isAnySpace()).
+    TEST_ASSERT(!isSpace(C_NBSP));
+}
+
+void testAsciiCharTypes()
+{
+    testIsLowerIsUpper();
+    testIsCntrl();
+    testIsPunct();
+    testIsSpace();
+}
+
+} // namespace
+
+namespace test {
+void testCharset()
+{
+    testAsciiCharTypes();
+}
+} // namespace test

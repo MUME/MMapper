@@ -5,6 +5,7 @@
 
 #include "mumexmlparser.h"
 
+#include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/parserutils.h"
 #include "../map/ExitsFlags.h"
@@ -155,14 +156,14 @@ bool MumeXmlParser::element(const QByteArray &line)
         for (const char c : line) {
             switch (state) {
             case XmlAttributeStateEnum::ELEMENT:
-                if (isSpace(c)) {
+                if (ascii::isSpace(c)) {
                     state = XmlAttributeStateEnum::ATTRIBUTE;
                 } else {
                     continue;
                 }
                 break;
             case XmlAttributeStateEnum::ATTRIBUTE:
-                if (isSpace(c)) {
+                if (ascii::isSpace(c)) {
                     continue;
                 } else if (c == C_EQUALS) {
                     key = os.str();
@@ -173,7 +174,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 }
                 break;
             case XmlAttributeStateEnum::EQUALS:
-                if (isSpace(c)) {
+                if (ascii::isSpace(c)) {
                     continue;
                 } else if (c == C_SQUOTE) {
                     state = XmlAttributeStateEnum::SINGLE_QUOTED_VALUE;
@@ -186,7 +187,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case XmlAttributeStateEnum::UNQUOTED_VALUE:
                 // Note: This format is not valid according to the W3C XML standard
-                if (isSpace(c) || c == C_SLASH) {
+                if (ascii::isSpace(c) || c == C_SLASH) {
                     makeAttribute();
                 } else {
                     os << c;

@@ -11,10 +11,50 @@
 
 #include <QString>
 
-NODISCARD extern bool isAscii(char c) noexcept;
-NODISCARD extern bool isAscii(std::string_view sv);
+namespace ascii {
 
-NODISCARD extern bool isPrintLatin1(char c);
+// ASCII 00 to 1F, and 7F only; Latin1 control codes 80 to 9F don't count.
+NODISCARD static inline bool isCntrl(const char c)
+{
+    return std::iscntrl(static_cast<uint8_t>(c));
+}
+
+// ASCII only
+NODISCARD static inline bool isDigit(const char c)
+{
+    return std::isdigit(static_cast<uint8_t>(c));
+}
+
+// ASCII only; Latin1 letters don't count.
+NODISCARD static inline bool isLower(const char c)
+{
+    return std::islower(static_cast<uint8_t>(c));
+}
+
+// ASCII only; Latin1 punctuations don't count.
+NODISCARD static inline bool isPunct(const char c)
+{
+    return std::ispunct(static_cast<uint8_t>(c));
+}
+
+// ASCII only; Latin1 NBSP doesn't count.
+NODISCARD static inline bool isSpace(const char c)
+{
+    return std::isspace(static_cast<uint8_t>(c));
+}
+
+// ASCII only; Latin1 letters don't count.
+NODISCARD static inline bool isUpper(const char c)
+{
+    return std::isupper(static_cast<uint8_t>(c));
+}
+
+} // namespace ascii
+
+NODISCARD extern bool isAscii(char c) noexcept;
+NODISCARD extern bool isAscii(std::string_view sv) noexcept;
+
+NODISCARD extern bool isPrintLatin1(char c) noexcept;
 
 NODISCARD extern char latin1ToAscii(char c) noexcept;
 
@@ -51,3 +91,7 @@ extern void convert(std::ostream &os,
 NODISCARD extern bool isProbablyUtf8(std::string_view sv);
 
 } // namespace charset
+
+namespace test {
+extern void testCharset();
+} // namespace test

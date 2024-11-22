@@ -16,6 +16,8 @@
 
 #include <QString>
 
+using ascii::isSpace;
+
 StringView::StringView(const std::string_view sv) noexcept
     : m_sv{sv}
 {}

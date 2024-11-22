@@ -3,10 +3,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/CaseUtils.h"
-#include "../global/TextUtils.h"
-#include "../map/DoorFlags.h"
-#include "../map/ExitDirection.h"
-#include "../map/ExitFlags.h"
+#include "../global/Charset.h"
 #include "../map/enums.h"
 #include "../map/mmapper2room.h"
 #include "../map/room.h"

@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <vector>
 
+using ascii::isSpace;
 using namespace char_consts;
 
 enum class NODISCARD ReasonEnum {

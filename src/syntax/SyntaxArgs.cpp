@@ -4,6 +4,7 @@
 #include "SyntaxArgs.h"
 
 #include "../global/CaseUtils.h"
+#include "../global/Charset.h"
 #include "../global/PrintUtils.h"
 #include "../global/TextUtils.h"
 #include "IMatchErrorLogger.h"
@@ -31,7 +32,7 @@ ArgAbbrev::ArgAbbrev(std::string moved_str)
     : m_str(std::move(moved_str))
 {
     for (const char c : m_str) {
-        if (isSpace(c) || !isPrintLatin1(c)) {
+        if (ascii::isSpace(c) || !isPrintLatin1(c)) {
             throw std::invalid_argument("string");
         }
     }
