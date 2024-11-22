@@ -11,6 +11,7 @@ set(clock_SRCS
     ../src/clock/mumemoment.cpp
     ../src/clock/mumemoment.h
     ../src/global/CaseUtils.cpp
+    ../src/global/TabUtils.cpp
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/observer/gameobserver.cpp
@@ -39,6 +40,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/NullPointerException.h
     ../src/global/StringView.cpp
     ../src/global/StringView.h
+    ../src/global/TabUtils.cpp
+    ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/progresscounter.cpp
@@ -80,6 +83,8 @@ set(parser_SRCS
     ../src/global/CaseUtils.cpp
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
+    ../src/global/TabUtils.cpp
+    ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/random.cpp
@@ -115,6 +120,8 @@ set(proxy_SRCS
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
     ../src/global/CaseUtils.cpp
+    ../src/global/TabUtils.cpp
+    ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     )
@@ -156,6 +163,8 @@ set(global_SRCS
     ../src/global/CaseUtils.cpp
     ../src/global/StringView.cpp
     ../src/global/StringView.h
+    ../src/global/TabUtils.cpp
+    ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/string_view_utils.cpp
@@ -277,6 +286,8 @@ set(room_manager
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
         ../src/global/CaseUtils.cpp
+        ../src/global/TabUtils.cpp
+        ../src/global/TabUtils.h
         ../src/global/TextUtils.cpp
         ../src/proxy/GmcpMessage.cpp
 )

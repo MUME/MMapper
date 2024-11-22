@@ -5,6 +5,7 @@
 #include "TextUtils.h"
 
 #include "LineUtils.h"
+#include "TabUtils.h"
 #include "utils.h"
 
 #include <cassert>
@@ -151,25 +152,6 @@ void AnsiColorParser::for_each(QStringView ansi) const
     }
 
     try_report(len);
-}
-
-int measureExpandedTabsOneLine(const QStringView line, const int startingColumn)
-{
-    int col = startingColumn;
-    for (const auto &c : line) {
-        assert(c != C_NEWLINE);
-        if (c == C_TAB) {
-            col += 8 - (col % 8);
-        } else {
-            col += 1;
-        }
-    }
-    return col;
-}
-
-int measureExpandedTabsOneLine(const QString &line, const int startingColumn)
-{
-    return measureExpandedTabsOneLine(QStringView{line}, startingColumn);
 }
 
 int findTrailingWhitespace(const QStringView line)

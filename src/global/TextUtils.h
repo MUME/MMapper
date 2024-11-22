@@ -115,9 +115,6 @@ void ansiForeachColorCode(const QString &ansi, Callback &&callback)
 NODISCARD extern bool isValidAnsiColor(QStringView ansi);
 NODISCARD extern bool isValidAnsiColor(const QString &ansi);
 
-NODISCARD extern int measureExpandedTabsOneLine(QStringView line, int starting_at);
-NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);
-
 NODISCARD extern int findTrailingWhitespace(QStringView line);
 NODISCARD extern int findTrailingWhitespace(const QString &line);
 
@@ -389,22 +386,6 @@ struct NODISCARD AnsiTokenizer final
     NODISCARD auto end() { return nullptr; }
 };
 } // namespace mmqt
-
-NODISCARD static inline constexpr int tab_advance(int col)
-{
-    return 8 - (col % 8);
-}
-
-NODISCARD static inline constexpr int next_tab_stop(int col)
-{
-    return col + tab_advance(col);
-}
-static_assert(next_tab_stop(0) == 8);
-static_assert(next_tab_stop(1) == 8);
-static_assert(next_tab_stop(7) == 8);
-static_assert(next_tab_stop(8) == 16);
-static_assert(next_tab_stop(9) == 16);
-static_assert(next_tab_stop(15) == 16);
 
 NODISCARD extern bool isAbbrev(std::string_view abbr, std::string_view fullText);
 NODISCARD extern bool isPrintLatin1(char c);

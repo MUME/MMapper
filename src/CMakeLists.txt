@@ -112,6 +112,8 @@ set(mmapper_SRCS
     global/StorageUtils.h
     global/StringView.cpp
     global/StringView.h
+    global/TabUtils.cpp
+    global/TabUtils.h
     global/TaggedInt.h
     global/TaggedString.h
     global/TextUtils.cpp
