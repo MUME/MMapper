@@ -32,7 +32,8 @@ ArgAbbrev::ArgAbbrev(std::string moved_str)
     : m_str(std::move(moved_str))
 {
     for (const char c : m_str) {
-        if (ascii::isSpace(c) || !isPrintLatin1(c)) {
+        // use nbsp_aware::isAnySpace?
+        if (ascii::isSpace(c) || c == char_consts::C_NBSP || !isPrintLatin1(c)) {
             throw std::invalid_argument("string");
         }
     }
