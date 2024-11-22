@@ -5,7 +5,6 @@
 
 #include "../global/Consts.h"
 #include "../global/TextUtils.h"
-#include "GmcpMessage.h"
 
 #include <sstream>
 
@@ -41,7 +40,7 @@ QString escapeGmcpStringData(const QString &str)
 
 namespace { // anonymous
 namespace test {
-static int testing()
+NODISCARD static int testing()
 {
     QString s;
     s.append(C_DQUOTE);

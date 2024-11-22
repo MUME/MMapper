@@ -11,51 +11,51 @@
 #include <sstream>
 #include <string>
 
-#include <QString>
-
-GmcpModule::GmcpModule(const QString &moduleVersion)
-    : GmcpModule(mmqt::toStdStringLatin1(moduleVersion))
-{}
-
-NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
+NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string_view str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    do { \
-        if (str.compare(normalized) == 0) \
-            return GmcpModuleTypeEnum::UPPER_CASE; \
-    } while (false);
+    if (str == normalized) \
+        return GmcpModuleTypeEnum::UPPER_CASE;
+
     X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
+
     return GmcpModuleTypeEnum::UNKNOWN;
 }
 
-GmcpModule::GmcpModule(const std::string &moduleVersion)
+GmcpModule::NameVersion GmcpModule::NameVersion::fromStdString(std::string moved_moduleVersion)
 {
-    auto found = moduleVersion.find(char_consts::C_SPACE);
+    const auto found = moved_moduleVersion.find(char_consts::C_SPACE);
     if (found == std::string::npos) {
-        normalizedName = ::toLowerLatin1(moduleVersion);
-    } else {
-        normalizedName = ::toLowerLatin1(moduleVersion.substr(0, found));
-        const auto stoi = std::stoi(moduleVersion.substr(found + 1));
-        version = GmcpModuleVersion(static_cast<uint32_t>(utils::clampNonNegative(stoi)));
+        return NameVersion{::toLowerLatin1(std::move(moved_moduleVersion))};
     }
-    type = toGmcpModuleType(normalizedName);
+
+    const auto version = static_cast<uint32_t>(
+        utils::clampNonNegative(std::stoi(moved_moduleVersion.substr(found + 1))));
+
+    return NameVersion{::toLowerLatin1(moved_moduleVersion.substr(0, found)),
+                       GmcpModuleVersion{version}};
 }
+
+GmcpModule::GmcpModule(std::string moved_moduleVersion)
+    : m_nameVersion(NameVersion::fromStdString(std::move(moved_moduleVersion)))
+    , m_type(toGmcpModuleType(m_nameVersion.normalizedName))
+{}
 
 GmcpModule::GmcpModule(const std::string &mod, const GmcpModuleVersion version)
 {
-    normalizedName = ::toLowerLatin1(mod);
-    this->version = version;
-    type = toGmcpModuleType(normalizedName);
+    m_nameVersion.normalizedName = ::toLowerLatin1(mod);
+    m_nameVersion.version = version;
+    m_type = toGmcpModuleType(m_nameVersion.normalizedName);
 }
 
 GmcpModule::GmcpModule(const GmcpModuleTypeEnum type, const GmcpModuleVersion version)
+    : m_type{type}
 {
-    this->type = type;
-    this->version = version;
+    m_nameVersion.version = version;
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     case GmcpModuleTypeEnum::UPPER_CASE: \
-        normalizedName = normalized; \
+        m_nameVersion.normalizedName = normalized; \
         break;
     switch (type) {
         X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
@@ -68,8 +68,8 @@ GmcpModule::GmcpModule(const GmcpModuleTypeEnum type, const GmcpModuleVersion ve
 std::string GmcpModule::toStdString() const
 {
     std::ostringstream oss;
-    oss << normalizedName;
+    oss << m_nameVersion.normalizedName;
     if (hasVersion())
-        oss << char_consts::C_SPACE << version.asUint32();
-    return oss.str();
+        oss << char_consts::C_SPACE << m_nameVersion.version.asUint32();
+    return std::move(oss).str();
 }

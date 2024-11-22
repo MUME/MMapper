@@ -82,7 +82,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
                 continue;
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule mod(moduleStr);
+                const GmcpModule mod(mmqt::toStdStringLatin1(moduleStr));
                 receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
@@ -161,9 +161,10 @@ void MudTelnet::virt_onGmcpEnabled()
     if (debug)
         qDebug() << "Requesting GMCP from MUME";
 
-    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
-                                QString(R"({ "client": "MMapper", "version": "%1" })")
-                                    .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))));
+    sendGmcpMessage(
+        GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
+                    GmcpJson{QString(R"({ "client": "MMapper", "version": "%1" })")
+                                 .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))}));
 
     // Request GMCP modules that might have already been sent by the local client
     sendCoreSupports();
@@ -222,7 +223,7 @@ void MudTelnet::sendCoreSupports()
     if (debug)
         qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
 
-    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, set));
+    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, GmcpJson{set}));
 }
 
 void MudTelnet::parseMudServerStatus(const QByteArray &data)

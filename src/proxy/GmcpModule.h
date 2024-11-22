@@ -5,6 +5,7 @@
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
+#include "../global/TaggedInt.h"
 
 #include <cstdint>
 #include <functional>
@@ -33,56 +34,58 @@ static constexpr const size_t NUM_GMCP_MODULES = 5u;
 static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::ROOM_CHARS) + 1);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
-struct NODISCARD GmcpModuleVersion final
-{
-private:
-    uint32_t value = 0;
+namespace tags {
+struct NODISCARD TagGmcpModuleVersionTag final
+{};
+} // namespace tags
 
-public:
-    GmcpModuleVersion() = default;
-    constexpr explicit GmcpModuleVersion(uint32_t value) noexcept
-        : value{value}
-    {}
-    inline constexpr explicit operator uint32_t() const { return value; }
-    inline constexpr uint32_t asUint32() const { return value; }
-    inline constexpr bool operator<(GmcpModuleVersion rhs) const { return value < rhs.value; }
-    inline constexpr bool operator>(GmcpModuleVersion rhs) const { return value > rhs.value; }
-    inline constexpr bool operator<=(GmcpModuleVersion rhs) const { return value <= rhs.value; }
-    inline constexpr bool operator>=(GmcpModuleVersion rhs) const { return value >= rhs.value; }
-    inline constexpr bool operator==(GmcpModuleVersion rhs) const { return value == rhs.value; }
-    inline constexpr bool operator!=(GmcpModuleVersion rhs) const { return value != rhs.value; }
+struct NODISCARD GmcpModuleVersion final
+    : public TaggedInt<GmcpModuleVersion, tags::TagGmcpModuleVersionTag, uint32_t>
+{
+    using TaggedInt::TaggedInt;
+    NODISCARD uint32_t asUint32() const { return value(); }
 };
+
 static constexpr const GmcpModuleVersion DEFAULT_GMCP_MODULE_VERSION{0};
 
 using GmcpModuleVersionList
     = EnumIndexedArray<GmcpModuleVersion, GmcpModuleTypeEnum, NUM_GMCP_MODULES>;
 
-class QString;
-
 class NODISCARD GmcpModule final
 {
 private:
-    std::string normalizedName;
-    GmcpModuleVersion version = DEFAULT_GMCP_MODULE_VERSION;
-    GmcpModuleTypeEnum type = GmcpModuleTypeEnum::UNKNOWN;
+    // FIXME: Tag this as Latin1 or Utf8.
+    struct NODISCARD NameVersion final
+    {
+        std::string normalizedName;
+        GmcpModuleVersion version = DEFAULT_GMCP_MODULE_VERSION;
+
+        NODISCARD static NameVersion fromStdString(std::string);
+    };
+
+    NameVersion m_nameVersion;
+    GmcpModuleTypeEnum m_type = GmcpModuleTypeEnum::UNKNOWN;
 
 public:
-    explicit GmcpModule(const QString &);
-    explicit GmcpModule(const std::string &);
+    explicit GmcpModule(std::string);
     explicit GmcpModule(const std::string &, GmcpModuleVersion);
     explicit GmcpModule(GmcpModuleTypeEnum, GmcpModuleVersion);
     DEFAULT_RULE_OF_5(GmcpModule);
 
 public:
-    NODISCARD bool isSupported() const { return type != GmcpModuleTypeEnum::UNKNOWN; }
-    NODISCARD bool hasVersion() const { return version > DEFAULT_GMCP_MODULE_VERSION; }
+    NODISCARD bool isSupported() const { return m_type != GmcpModuleTypeEnum::UNKNOWN; }
+    NODISCARD bool hasVersion() const
+    {
+        return m_nameVersion.version > DEFAULT_GMCP_MODULE_VERSION;
+    }
 
 public:
-    NODISCARD GmcpModuleTypeEnum getType() const { return type; }
-    NODISCARD GmcpModuleVersion getVersion() const { return version; }
-    NODISCARD std::string getNormalizedName() const { return normalizedName; }
+    NODISCARD GmcpModuleTypeEnum getType() const { return m_type; }
+    NODISCARD GmcpModuleVersion getVersion() const { return m_nameVersion.version; }
+    NODISCARD const std::string &getNormalizedName() const { return m_nameVersion.normalizedName; }
 
 public:
+    // TODO: tag this as latin1 or utf8
     NODISCARD std::string toStdString() const;
 };
 

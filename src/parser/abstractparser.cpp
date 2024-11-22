@@ -1583,9 +1583,9 @@ void AbstractParser::slot_sendGTellToUser(const QString &color,
 
     if (m_proxy.isGmcpModuleEnabled(GmcpModuleTypeEnum::MMAPPER_COMM)) {
         m_proxy.gmcpToUser(GmcpMessage(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL,
-                                       QString(R"({ "name": "%1", "text": "%2" })")
-                                           .arg(GmcpUtils::escapeGmcpStringData(from),
-                                                GmcpUtils::escapeGmcpStringData(tell))));
+                                       GmcpJson{QString(R"({ "name": "%1", "text": "%2" })")
+                                                    .arg(GmcpUtils::escapeGmcpStringData(from),
+                                                         GmcpUtils::escapeGmcpStringData(tell))}));
         return;
     }
 

@@ -77,6 +77,7 @@ set(parser_SRCS
     ../src/expandoracommon/parseevent.h
     ../src/expandoracommon/property.cpp
     ../src/expandoracommon/property.h
+    ../src/global/CaseUtils.cpp
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
     ../src/global/TextUtils.cpp

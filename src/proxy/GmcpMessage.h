@@ -58,7 +58,7 @@ struct NODISCARD GmcpMessageNameTag final
 {};
 } // namespace tags
 
-using GmcpMessageName = TaggedString<tags::GmcpMessageNameTag>;
+using GmcpMessageName = TaggedString<tags::GmcpMessageNameTag>; // Latin1
 
 namespace tags {
 struct NODISCARD GmcpJsonTag final
@@ -66,30 +66,28 @@ struct NODISCARD GmcpJsonTag final
 } // namespace tags
 
 using GmcpJson = TaggedStringUtf8<tags::GmcpJsonTag>;
-
 using GmcpJsonDocument = QJsonDocument;
 
-class GmcpMessage final
+class NODISCARD GmcpMessage final
 {
 private:
-    GmcpMessageName name;
-    std::optional<GmcpJson> json;
-    std::optional<GmcpJsonDocument> document;
-    GmcpMessageTypeEnum type = GmcpMessageTypeEnum::UNKNOWN;
+    GmcpMessageName m_name;
+    std::optional<GmcpJson> m_json;
+    std::optional<GmcpJsonDocument> m_document;
+    GmcpMessageTypeEnum m_type = GmcpMessageTypeEnum::UNKNOWN;
 
 public:
-    explicit GmcpMessage();
-    explicit GmcpMessage(const std::string &package);
-    explicit GmcpMessage(const std::string &package, const std::string &json);
-    explicit GmcpMessage(const GmcpMessageTypeEnum type);
-    explicit GmcpMessage(const GmcpMessageTypeEnum type, const std::string &json);
-    explicit GmcpMessage(const GmcpMessageTypeEnum type, const QString &json);
+    explicit GmcpMessage() = default;
+    explicit GmcpMessage(GmcpMessageName package);
+    explicit GmcpMessage(GmcpMessageName package, GmcpJson json);
+    explicit GmcpMessage(GmcpMessageTypeEnum type);
+    explicit GmcpMessage(GmcpMessageTypeEnum type, GmcpJson json);
 
 public:
 #define DECL_GETTERS_AND_SETTERS(UPPER_CASE, CamelCase, normalized, friendly) \
-    inline bool is##CamelCase() const \
+    NODISCARD inline bool is##CamelCase() const \
     { \
-        return type == GmcpMessageTypeEnum::UPPER_CASE; \
+        return m_type == GmcpMessageTypeEnum::UPPER_CASE; \
     }
     X_FOREACH_GMCP_MESSAGE_TYPE(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
@@ -97,15 +95,15 @@ public:
 public:
     NODISCARD const GmcpMessageName &getName() const
     {
-        return name;
+        return m_name;
     }
     NODISCARD const std::optional<GmcpJson> &getJson() const
     {
-        return json;
+        return m_json;
     }
     NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const
     {
-        return document;
+        return m_document;
     }
 
 public:

@@ -123,7 +123,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     const auto name = msg.getName().getStdString();
     const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
     try {
-        const GmcpModule mod(name.substr(0, found));
+        const GmcpModule mod{name.substr(0, found)};
         if (gmcp.modules.find(mod) != gmcp.modules.end())
             sendGmcpMessage(msg);
 
@@ -174,7 +174,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
                 continue;
             const auto &moduleStr = e.toString();
             try {
-                const GmcpModule mod(moduleStr);
+                const GmcpModule mod{mmqt::toStdStringLatin1(moduleStr)};
                 receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
             } catch (const std::exception &e) {
@@ -203,7 +203,8 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
                 qDebug() << "All modules were supported or nothing was requested";
             return;
         }
-        GmcpMessage filteredMsg(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, oss.str());
+        GmcpMessage filteredMsg(GmcpMessageTypeEnum::CORE_SUPPORTS_SET,
+                                GmcpJson{std::move(oss).str()});
         emit sig_relayGmcp(filteredMsg);
         return;
     }
