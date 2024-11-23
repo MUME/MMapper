@@ -3,34 +3,28 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/ChangeMonitor.h"
+#include "../global/Signal2.h"
 #include "../proxy/GmcpMessage.h"
 
 #include <QObject>
 
-class NODISCARD_QOBJECT GameObserver : public QObject
+class NODISCARD_QOBJECT GameObserver final
 {
-    Q_OBJECT
-
 public:
-    explicit GameObserver(QObject *parent);
-
-signals:
-    void sig_connected();
-    void sig_disconnected();
-
-    void sig_sentToMudBytes(const QByteArray &);
-    void sig_sentToUserBytes(const QByteArray &, bool goAhead);
+    Signal2<> sig_connected;
+    Signal2<> sig_disconnected;
+    Signal2<QByteArray> sig_sentToMudBytes;
+    Signal2<QByteArray, bool /* go ahead */> sig_sentToUserBytes;
 
     // Helper versions of the above, which remove ANSI in place and create QString
-    void sig_sentToMudString(const QString &);
-    void sig_sentToUserString(const QString &);
+    Signal2<QString> sig_sentToMudString;
+    Signal2<QString> sig_sentToUserString;
+    Signal2<GmcpMessage> sig_sentToMudGmcp;
+    Signal2<GmcpMessage> sig_sentToUserGmcp;
+    Signal2<bool> sig_toggledEchoMode;
 
-    void sig_sentToMudGmcp(const GmcpMessage &);
-    void sig_sentToUserGmcp(const GmcpMessage &);
-
-    void sig_toggledEchoMode(bool echo);
-
-public slots:
+public:
     void slot_observeConnected();
     void slot_observeDisconnected();
 

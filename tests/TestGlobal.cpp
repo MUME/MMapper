@@ -9,6 +9,7 @@
 #include "../src/global/Flags.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/global/RAII.h"
+#include "../src/global/Signal2.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/WeakHandle.h"
@@ -239,6 +240,176 @@ void TestGlobal::hideQDebugTest()
         }
     }
     QCOMPARE(tmp, expected);
+
+    // new case: warnings can also be disabled.
+    const QString expected2 = "1{DI}\n2{D}\n3{DI}\n4{I}\n5{DI}\n";
+    tmp.clear();
+    {
+        const auto old = qInstallMessageHandler(localMessageHandler);
+        RAIICallback restoreOld{[old]() { qInstallMessageHandler(old); }};
+        mmqt::HideQDebug inThisScope{mmqt::HideQDebugOptions{false, false, true}};
+        testAlternations();
+    }
+    QCOMPARE(tmp, expected2);
+}
+
+namespace { // anonymous
+
+// Multiple signals can share the same lifetime
+void sig2_test_disconnects()
+{
+    const std::vector<int> expected = {1, 2, 2, 3, 2, 3};
+    std::vector<int> order;
+
+    Signal2<> sig;
+    std::optional<Signal2Lifetime> opt_lifetime;
+    opt_lifetime.emplace();
+
+    size_t calls = 0;
+
+    QCOMPARE(sig.getNumConnected(), 0);
+    sig.connect(opt_lifetime.value(), [&calls, &order]() {
+        ++calls;
+        order.push_back(1);
+    });
+    QCOMPARE(sig.getNumConnected(), 1);
+    QCOMPARE(calls, 0);
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(sig.getNumConnected(), 1); // the object doesn't know that #1 will on the next call.
+
+    opt_lifetime.reset();
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(sig.getNumConnected(), 0); // now it knows
+    opt_lifetime.emplace();
+    QCOMPARE(sig.getNumConnected(), 0); // creating a new lifetime doesn't reconnect.
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(sig.getNumConnected(), 0);
+
+    size_t calls2 = 0;
+    sig.connect(opt_lifetime.value(), [&calls2, &order]() {
+        ++calls2;
+        order.push_back(2);
+    });
+    QCOMPARE(calls2, 0);
+    QCOMPARE(sig.getNumConnected(), 1);
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 1);
+    QCOMPARE(sig.getNumConnected(), 1);
+
+    size_t calls3 = 0;
+    sig.connect(opt_lifetime.value(), [&calls3, &order]() {
+        ++calls3;
+        order.push_back(3);
+    });
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 1);
+    QCOMPARE(calls3, 0);
+    QCOMPARE(sig.getNumConnected(), 2);
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 2);
+    QCOMPARE(calls3, 1);
+    QCOMPARE(sig.getNumConnected(), 2);
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 3);
+    QCOMPARE(calls3, 2);
+    QCOMPARE(sig.getNumConnected(), 2);
+
+    opt_lifetime.reset();
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 3);
+    QCOMPARE(calls3, 2);
+    QCOMPARE(sig.getNumConnected(), 0);
+
+    QCOMPARE(order, expected);
+}
+
+// Exceptions disable signals and allow other signals to execute.
+void sig2_test_exceptions()
+{
+    Signal2<> sig;
+    std::optional<Signal2Lifetime> opt_lifetime;
+    opt_lifetime.emplace();
+
+    const std::vector<int> expected = {1, 2, 2};
+    std::vector<int> order;
+    size_t calls = 0;
+    sig.connect(opt_lifetime.value(), [&calls, &order]() {
+        ++calls;
+        order.push_back(1);
+        throw std::runtime_error("on purpose");
+    });
+    size_t calls2 = 0;
+    sig.connect(opt_lifetime.value(), [&calls2, &order]() {
+        ++calls2;
+        order.push_back(2);
+    });
+
+    QCOMPARE(calls, 0);
+    QCOMPARE(calls2, 0);
+    QCOMPARE(sig.getNumConnected(), 2);
+
+    {
+        // hide the warning about the purposely-thrown exception
+        mmqt::HideQDebug inThisScope{mmqt::HideQDebugOptions{true, true, true}};
+        sig();
+    }
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 1);
+    QCOMPARE(sig.getNumConnected(), 1); // exception immediately removed it
+
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(calls2, 2);
+    QCOMPARE(sig.getNumConnected(), 1);
+
+    QCOMPARE(order, expected);
+}
+
+void sig2_test_recursion()
+{
+    Signal2<> sig;
+    std::optional<Signal2Lifetime> opt_lifetime;
+    opt_lifetime.emplace();
+
+    const std::vector<int> expected = {1, 2, 2};
+    std::vector<int> order;
+    size_t calls = 0;
+    sig.connect(opt_lifetime.value(), [&calls, &order, &sig]() {
+        ++calls;
+        order.push_back(1);
+        sig();
+    });
+    {
+        // hide the warning about the recursion exception
+        mmqt::HideQDebug inThisScope{mmqt::HideQDebugOptions{true, true, true}};
+        sig();
+    }
+    QCOMPARE(calls, 1);
+    QCOMPARE(sig.getNumConnected(), 0);
+    sig();
+    QCOMPARE(calls, 1);
+    QCOMPARE(sig.getNumConnected(), 0);
+}
+
+} // namespace
+
+void TestGlobal::signal2Test()
+{
+    sig2_test_disconnects();
+    sig2_test_exceptions();
+    sig2_test_recursion();
 }
 
 void TestGlobal::stringViewTest()

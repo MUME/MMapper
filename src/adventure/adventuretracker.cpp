@@ -19,15 +19,13 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
     , m_observer{observer}
     , m_session{nullptr}
 {
-    connect(&m_observer,
-            &GameObserver::sig_sentToUserString,
-            this,
-            &AdventureTracker::slot_onUserText);
+    m_observer.sig_sentToUserString.connect(m_lifetime, [this](const QString &str) {
+        this->AdventureTracker::slot_onUserText(str);
+    });
 
-    connect(&m_observer,
-            &GameObserver::sig_sentToUserGmcp,
-            this,
-            &AdventureTracker::slot_onUserGmcp);
+    m_observer.sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+        this->AdventureTracker::slot_onUserGmcp(gmcp);
+    });
 }
 
 void AdventureTracker::slot_onUserText(const QString &line)

@@ -143,7 +143,7 @@ MainWindow::MainWindow()
     m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
-    m_gameObserver = new GameObserver(this);
+    m_gameObserver = std::make_unique<GameObserver>();
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
 
     // View -> Side Panels -> Client Panel
@@ -186,10 +186,9 @@ MainWindow::MainWindow()
     // View -> Side Panels -> Room Panel (Mobs)
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
-    connect(m_gameObserver,
-            &GameObserver::sig_sentToUserGmcp,
-            m_roomManager,
-            &RoomManager::slot_parseGmcpInput);
+    deref(m_gameObserver).sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+        deref(m_roomManager).slot_parseGmcpInput(gmcp);
+    });
     m_roomWidget = new RoomWidget(deref(m_roomManager), this);
     m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
     m_dockDialogRoom->setObjectName("DockWidgetRoom");
@@ -232,20 +231,22 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     m_logger = new AutoLogger(this);
-    // TODO move this connect() wiring into AutoLogger::ctor
-    connect(m_gameObserver, &GameObserver::sig_connected, m_logger, &AutoLogger::slot_onConnected);
-    connect(m_gameObserver,
-            &GameObserver::sig_toggledEchoMode,
-            m_logger,
-            &AutoLogger::slot_shouldLog);
-    connect(m_gameObserver,
-            &GameObserver::sig_sentToMudString,
-            m_logger,
-            &AutoLogger::slot_writeToLog);
-    connect(m_gameObserver,
-            &GameObserver::sig_sentToUserString,
-            m_logger,
-            &AutoLogger::slot_writeToLog);
+
+    // TODO move this connect() wiring into AutoLogger::ctor ?
+    GameObserver &observer = deref(m_gameObserver);
+    observer.sig_connected.connect(m_lifetime, [this]() {
+        //
+        deref(m_logger).slot_onConnected();
+    });
+    observer.sig_toggledEchoMode.connect(m_lifetime, [this](bool echo) {
+        deref(m_logger).slot_shouldLog(echo);
+    });
+    observer.sig_sentToMudString.connect(m_lifetime, [this](const QString &msg) {
+        deref(m_logger).slot_writeToLog(msg);
+    });
+    observer.sig_sentToUserString.connect(m_lifetime, [this](const QString &msg) {
+        deref(m_logger).slot_writeToLog(msg);
+    });
 
     m_listener = new ConnectionListener(mapData,
                                         deref(m_pathMachine),

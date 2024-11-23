@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
 #include "../global/macros.h"
 #include "../observer/gameobserver.h"
 #include "mumemoment.h"
@@ -78,6 +79,7 @@ private:
     int64_t m_mumeStartEpoch = 0;
     MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
     GameObserver &m_observer;
+    Signal2Lifetime m_lifetime;
 
 public:
     static inline constexpr const int NUM_MONTHS = 12;

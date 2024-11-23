@@ -3,6 +3,7 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/Signal2.h"
 #include "../observer/gameobserver.h"
 #include "adventuresession.h"
 #include "lineparsers.h"
@@ -20,6 +21,7 @@ private:
     std::shared_ptr<AdventureSession> m_session;
     KillAndXPParser m_killParser;
     QString m_prevLine = "";
+    Signal2Lifetime m_lifetime;
 
 public:
     explicit AdventureTracker(GameObserver &observer, QObject *parent);

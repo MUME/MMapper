@@ -22,7 +22,7 @@ NODISCARD static QString testMumeStartEpochTime(MumeClock &clock, int64_t time)
 
 void TestClock::mumeClockTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
     clock.setPrecision(MumeClockPrecisionEnum::HOUR);
 
@@ -62,7 +62,7 @@ void TestClock::mumeClockTest()
 
 void TestClock::parseMumeTimeTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     // Defaults to epoch time of zero
@@ -163,7 +163,7 @@ void TestClock::getMumeMonthTest()
 
 void TestClock::parseWeatherClockSkewTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     const QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
@@ -215,7 +215,7 @@ void TestClock::parseWeatherClockSkewTest()
 
 void TestClock::parseWeatherTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
@@ -248,7 +248,7 @@ void TestClock::parseWeatherTest()
 
 void TestClock::parseClockTimeTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     // Clock set to coarse
@@ -270,7 +270,7 @@ void TestClock::parseClockTimeTest()
 
 void TestClock::precsionTimeoutTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     QCOMPARE(clock.getPrecision(), MumeClockPrecisionEnum::UNSET);
@@ -287,7 +287,7 @@ void TestClock::precsionTimeoutTest()
 
 void TestClock::moonClockTest()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     MumeClock clock(observer);
 
     auto moment = clock.getMumeMoment(clock.getMumeStartEpoch());

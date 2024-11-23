@@ -8,6 +8,7 @@
 #include "../configuration/configuration.h"
 #include "../display/CanvasMouseModeEnum.h"
 #include "../global/Connections.h"
+#include "../global/Signal2.h"
 #include "../global/macros.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
@@ -76,7 +77,7 @@ private:
     QDockWidget *m_dockDialogClient = nullptr;
     QDockWidget *m_dockDialogAdventure = nullptr;
 
-    GameObserver *m_gameObserver = nullptr;
+    std::unique_ptr<GameObserver> m_gameObserver;
     AutoLogger *m_logger = nullptr;
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
@@ -230,6 +231,8 @@ private:
     std::unique_ptr<ConfigDialog> m_configDialog;
     mmqt::SingleConnection m_createRoomConnection;
     mmqt::SingleConnection m_scheduleActionConnection;
+
+    Signal2Lifetime m_lifetime;
 
 public:
     explicit MainWindow();

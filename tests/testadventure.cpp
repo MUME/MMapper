@@ -257,7 +257,7 @@ void TestAdventure::testKillAndXPParser()
 
 void TestAdventure::testE2E()
 {
-    GameObserver observer{nullptr};
+    GameObserver observer;
     AdventureTracker tracker{observer, nullptr};
     std::vector<QString> achievements;
     std::vector<QString> hints;

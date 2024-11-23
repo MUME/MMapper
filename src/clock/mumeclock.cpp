@@ -114,7 +114,9 @@ MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const p
     , m_precision(MumeClockPrecisionEnum::UNSET)
     , m_observer{observer}
 {
-    connect(&m_observer, &GameObserver::sig_sentToUserGmcp, this, &MumeClock::slot_onUserGmcp);
+    m_observer.sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+        this->MumeClock::slot_onUserGmcp(gmcp);
+    });
 }
 
 MumeClock::MumeClock(GameObserver &observer)
