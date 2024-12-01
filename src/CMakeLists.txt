@@ -87,6 +87,7 @@ set(mmapper_SRCS
     global/Connections.h
     global/Consts.cpp
     global/Consts.h
+    global/ConversionResult.h
     global/EnumIndexedArray.h
     global/Flags.h
     global/HideQDebug.cpp
@@ -128,11 +129,17 @@ set(mmapper_SRCS
     global/WinSock.cpp
     global/WinSock.h
     global/bits.h
+    global/cast_error.cpp
+    global/cast_error.h
     global/entities-xforeach.txt
     global/entities.cpp
     global/entities.h
     global/enums.h
+    global/float_cast.cpp
+    global/float_cast.h
     global/hash.h
+    global/int_cast.cpp
+    global/int_cast.h
     global/io.cpp
     global/io.h
     global/logging.cpp

@@ -7,7 +7,7 @@
 
 #include "zpipe.h"
 
-#include "checked_cast.h"
+#include "int_cast.h"
 #include "macros.h"
 
 #include <cassert>
@@ -76,7 +76,7 @@ int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
 
     /* compress until end of file */
     do {
-        auto got = strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, CHUNK));
         if (source.ferror()) {
             (void) deflateEnd(&strm);
             return Z_ERRNO;
@@ -141,7 +141,7 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
 
     /* decompress until deflate stream ends or end of file */
     do {
-        auto got = strm.avail_in = checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, CHUNK));
         if (source.ferror()) {
             (void) inflateEnd(&strm);
             return Z_ERRNO;

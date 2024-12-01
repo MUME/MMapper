@@ -20,6 +20,25 @@
 #include <queue>
 
 namespace utils {
+
+// This mainly exists to avoid float-equal warnings,
+// but it also checks that the floating point types are the same.
+template<typename A, typename B>
+NODISCARD constexpr bool isSameFloat(const A a, const B b) noexcept
+{
+    static_assert(std::is_floating_point_v<A>);
+    static_assert(std::is_floating_point_v<B>);
+    static_assert(std::is_same_v<std::decay_t<A>, std::decay_t<B>>);
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+#endif
+    return a == b;
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+}
+
 namespace details {
 template<typename T>
 NODISCARD constexpr bool isBitMask()

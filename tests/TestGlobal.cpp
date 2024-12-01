@@ -12,6 +12,8 @@
 #include "../src/global/TextUtils.h"
 #include "../src/global/WeakHandle.h"
 #include "../src/global/entities.h"
+#include "../src/global/float_cast.h"
+#include "../src/global/int_cast.h"
 #include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
 
@@ -123,6 +125,12 @@ void TestGlobal::ansiToRgbTest()
     testOne(8, "#555753", AnsiColor16Enum::BLACK);
     testOne(14, "#34E2E2", AnsiColor16Enum::CYAN);
     testOne(15, "#EEEEEC", AnsiColor16Enum::WHITE);
+}
+
+void TestGlobal::castTest()
+{
+    test::test_int_cast();
+    test::test_float_cast();
 }
 
 void TestGlobal::charUtilsTest()

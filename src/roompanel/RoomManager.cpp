@@ -6,6 +6,7 @@
 
 #include "../global/Consts.h"
 #include "../global/StringView.h"
+#include "../global/float_cast.h"
 #include "../proxy/GmcpMessage.h"
 #include "RoomMobs.h"
 
@@ -205,7 +206,7 @@ bool RoomManager::toMobId(const QJsonValue &value, RoomMobUpdate &data)
     const double d = value.toDouble(-1.0);
     data.setId(static_cast<RoomMob::Id>(d));
     // check for exact conversion
-    return std::equal_to<double>{}(d, static_cast<double>(data.getId()));
+    return utils::isSameFloat(d, static_cast<double>(data.getId()));
 }
 
 void RoomManager::toMobField(const QJsonValue &value, RoomMobUpdate &data, const MobFieldEnum i)

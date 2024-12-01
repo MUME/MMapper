@@ -18,6 +18,7 @@ private Q_SLOTS:
     static void ansi256ColorTest();
     static void ansiTextUtilsTest();
     static void ansiToRgbTest();
+    static void castTest();
     static void charUtilsTest();
     static void colorTest();
     static void entitiesTest();
