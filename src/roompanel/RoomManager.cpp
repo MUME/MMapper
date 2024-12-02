@@ -204,7 +204,12 @@ bool RoomManager::toMobId(const QJsonValue &value, RoomMobUpdate &data)
 {
     // RoomMob::Id cannot represent negative numbers
     const double d = value.toDouble(-1.0);
-    data.setId(static_cast<RoomMob::Id>(d));
+
+    // avoid UB when the result is -1, or if it's otherwise out of bounds.
+    if (auto tmp = float_cast::convert_float_to_int<RoomMob::Id>(d)) {
+        data.setId(tmp.get_value());
+    }
+
     // check for exact conversion
     return utils::isSameFloat(d, static_cast<double>(data.getId()));
 }
