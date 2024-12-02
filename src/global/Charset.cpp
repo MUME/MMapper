@@ -9,6 +9,7 @@
 
 #include <array>
 #include <ostream>
+#include <sstream>
 
 namespace { // anonymous
 namespace detail {
@@ -221,11 +222,34 @@ void charset::utf8ToAscii(std::ostream &os, const std::string_view sv)
     latin1ToAsciiInPlace(tmp);
     os << tmp;
 }
+
 void charset::utf8ToLatin1(std::ostream &os, const std::string_view sv)
 {
     // REVISIT: This can be made a lot more efficient, but it's not likely to be called.
     QString s = mmqt::toQStringUtf8(sv);
     os << mmqt::toStdStringLatin1(s);
+}
+
+std::string latin1ToUtf8(const std::string_view sv)
+{
+    if (isAscii(sv)) {
+        return std::string{sv};
+    }
+
+    std::ostringstream oss;
+    ::latin1ToUtf8(oss, sv);
+    return std::move(oss).str();
+}
+
+std::string charset::utf8ToLatin1(const std::string_view sv)
+{
+    if (isAscii(sv)) {
+        return std::string{sv};
+    }
+
+    std::ostringstream oss;
+    utf8ToLatin1(oss, sv);
+    return std::move(oss).str();
 }
 
 void charset::convert(std::ostream &os,

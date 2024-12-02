@@ -30,6 +30,8 @@ extern void latin1ToUtf8(std::ostream &os, char c);
 extern void latin1ToAscii(std::ostream &os, std::string_view sv);
 extern void latin1ToUtf8(std::ostream &os, std::string_view sv);
 
+NODISCARD extern std::string latin1ToUtf8(std::string_view sv);
+
 // Converts input string_view sv from latin1 to the specified encoding
 // by writing "raw bytes" to the output stream os.
 extern void convertFromLatin1(std::ostream &os, CharacterEncodingEnum encoding, std::string_view sv);
@@ -37,6 +39,7 @@ extern void convertFromLatin1(std::ostream &os, CharacterEncodingEnum encoding, 
 namespace charset {
 extern void utf8ToAscii(std::ostream &os, std::string_view sv);
 extern void utf8ToLatin1(std::ostream &os, std::string_view sv);
+NODISCARD extern std::string utf8ToLatin1(std::string_view sv);
 extern void convert(std::ostream &os,
                     std::string_view sv,
                     CharacterEncodingEnum from,
