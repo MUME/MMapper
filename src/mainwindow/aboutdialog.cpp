@@ -4,6 +4,7 @@
 
 #include "aboutdialog.h"
 
+#include "../global/TextUtils.h"
 #include "../global/Version.h"
 
 #include <QString>

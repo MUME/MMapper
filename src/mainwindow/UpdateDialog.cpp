@@ -5,6 +5,7 @@
 #include "UpdateDialog.h"
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/Version.h"
 
 #include <QDesktopServices>
