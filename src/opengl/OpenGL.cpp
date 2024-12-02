@@ -4,9 +4,9 @@
 
 #include "OpenGL.h"
 
+#include "./legacy/Legacy.h"
+#include "./legacy/ShaderUtils.h"
 #include "OpenGLTypes.h"
-#include "legacy/Legacy.h"
-#include "legacy/ShaderUtils.h"
 
 #include <cassert>
 #include <optional>
