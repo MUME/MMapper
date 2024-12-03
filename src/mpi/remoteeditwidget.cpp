@@ -39,6 +39,7 @@
 
 using namespace char_consts;
 
+static constexpr QColor darkOrangeQColor{0xFF, 0x8C, 0x00};
 static constexpr const bool USE_TOOLTIPS = false;
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
@@ -171,7 +172,7 @@ public:
     void highlightEntities(const QString &line)
     {
         const auto red = getBackgroundFormat(Qt::red);
-        const auto darkOrange = getBackgroundFormat(QColor{0xff, 0x8c, 0x00});
+        const auto darkOrange = getBackgroundFormat(darkOrangeQColor);
         const auto yellow = getBackgroundFormat(Qt::yellow);
 
         struct NODISCARD MyEntityCallback final : entities::EntityCallback
@@ -213,7 +214,7 @@ public:
     void highlightEncodingErrors(const QString &line)
     {
         const auto red = getBackgroundFormat(Qt::red);
-        const auto darkOrange = getBackgroundFormat(QColor{0xff, 0x8c, 0x00});
+        const auto darkOrange = getBackgroundFormat(darkOrangeQColor);
         const auto yellow = getBackgroundFormat(Qt::yellow);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
