@@ -112,7 +112,7 @@ MumeSeasonEnum MumeMoment::toSeason() const
     case WMN::Foreyule:
         return MumeSeasonEnum::AUTUMN;
 
-    case MumeClock::WestronMonthNamesEnum::UnknownWestronMonth:
+    case MumeClock::WestronMonthNamesEnum::Invalid:
         break;
     }
     return MumeSeasonEnum::UNKNOWN;

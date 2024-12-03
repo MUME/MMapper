@@ -20,6 +20,52 @@ class QMetaEnum;
 
 enum class NODISCARD MumeClockPrecisionEnum : int8_t { UNSET = -1, DAY, HOUR, MINUTE };
 
+#define XFOREACH_WestronMonthNamesEnum(X) \
+    X(Afteryule) \
+    X(Solmath) \
+    X(Rethe) \
+    X(Astron) \
+    X(Thrimidge) \
+    X(Forelithe) \
+    X(Afterlithe) \
+    X(Wedmath) \
+    X(Halimath) \
+    X(Winterfilth) \
+    X(Blotmath) \
+    X(Foreyule)
+
+#define XFOREACH_SindarinMonthNamesEnum(X) \
+    X(Narwain) \
+    X(Ninui) \
+    X(Gwaeron) \
+    X(Gwirith) \
+    X(Lothron) \
+    X(Norui) \
+    X(Cerveth) \
+    X(Urui) \
+    X(Ivanneth) \
+    X(Narbeleth) \
+    X(Hithui) \
+    X(Girithron)
+
+#define XFOREACH_WestronWeekDayNamesEnum(X) \
+    X(Sunday) \
+    X(Monday) \
+    X(Trewsday) \
+    X(Hevensday) \
+    X(Mersday) \
+    X(Highday) \
+    X(Sterday)
+
+#define XFOREACH_SindarinWeekDayNamesEnum(X) \
+    X(Oranor) \
+    X(Orithil) \
+    X(Orgaladhad) \
+    X(Ormenel) \
+    X(Orbelain) \
+    X(Oraearon) \
+    X(Orgilion)
+
 class NODISCARD_QOBJECT MumeClock final : public QObject
 {
     Q_OBJECT
@@ -34,7 +80,7 @@ private:
     GameObserver &m_observer;
 
 public:
-    static constexpr const int NUM_MONTHS = 12;
+    static inline constexpr const int NUM_MONTHS = 12;
     struct NODISCARD DawnDusk
     {
         int dawnHour = 6;
@@ -60,70 +106,37 @@ public:
     NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
     NODISCARD int64_t getLastSyncEpoch() const { return m_lastSyncEpoch; }
 
+#define X_DECL(X) X,
     enum class NODISCARD_QOBJECT WestronMonthNamesEnum : int8_t {
-        UnknownWestronMonth = -1,
-        Afteryule,
-        Solmath,
-        Rethe,
-        Astron,
-        Thrimidge,
-        Forelithe,
-        Afterlithe,
-        Wedmath,
-        Halimath,
-        Winterfilth,
-        Blotmath,
-        Foreyule
+        Invalid = -1,
+        XFOREACH_WestronMonthNamesEnum(X_DECL)
     };
-
     Q_ENUM(WestronMonthNamesEnum)
 
     enum class NODISCARD_QOBJECT SindarinMonthNamesEnum : int8_t {
-        UnknownSindarinMonth = -1,
-        Narwain,
-        Ninui,
-        Gwaeron,
-        Gwirith,
-        Lothron,
-        Norui,
-        Cerveth,
-        Urui,
-        Ivanneth,
-        Narbeleth,
-        Hithui,
-        Girithron
+        Invalid = -1,
+        XFOREACH_SindarinMonthNamesEnum(X_DECL)
     };
-
     Q_ENUM(SindarinMonthNamesEnum)
 
     enum class NODISCARD_QOBJECT WestronWeekDayNamesEnum : int8_t {
-        UnknownWestronWeekDay = -1,
-        Sunday,
-        Monday,
-        Trewsday,
-        Hevensday,
-        Mersday,
-        Highday,
-        Sterday
+        Invalid = -1,
+        XFOREACH_WestronWeekDayNamesEnum(X_DECL)
     };
-
     Q_ENUM(WestronWeekDayNamesEnum)
 
     enum class NODISCARD_QOBJECT SindarinWeekDayNamesEnum : int8_t {
-        UnknownSindarinWeekDay = -1,
-        Oranor,
-        Orithil,
-        Orgaladhad,
-        Ormenel,
-        Orbelain,
-        Oraearon,
-        Orgilion
+        Invalid = -1,
+        XFOREACH_SindarinWeekDayNamesEnum(X_DECL)
     };
-
     Q_ENUM(SindarinWeekDayNamesEnum)
+#undef X_DECL
 
 private:
-    void log(const QString &msg) { emit sig_log("MumeClock", msg); }
+    void log(const QString &msg)
+    {
+        emit sig_log("MumeClock", msg);
+    }
 
 signals:
     void sig_log(const QString &, const QString &);
@@ -135,9 +148,13 @@ public slots:
 
 public:
     void setPrecision(MumeClockPrecisionEnum state);
-    void setLastSyncEpoch(int64_t epoch) { m_lastSyncEpoch = epoch; }
+    void setLastSyncEpoch(int64_t epoch)
+    {
+        m_lastSyncEpoch = epoch;
+    }
 
     NODISCARD static int getMumeMonth(const QString &monthName);
+    NODISCARD static int getMumeWeekday(const QString &weekdayName);
     void parseMSSP(int year, int month, int day, int hour);
 
 protected:

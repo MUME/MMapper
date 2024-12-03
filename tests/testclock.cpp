@@ -4,6 +4,7 @@
 #include "testclock.h"
 
 #include "../src/clock/mumeclock.h"
+#include "../src/global/HideQDebug.h"
 #include "../src/observer/gameobserver.h"
 #include "../src/proxy/GmcpMessage.h"
 
@@ -113,53 +114,51 @@ void TestClock::parseMumeTimeTest()
 
 void TestClock::getMumeMonthTest()
 {
-    int month0 = MumeClock::getMumeMonth("Narwain");
-    int expected0 = 0;
-    QCOMPARE(month0, expected0);
+    {
+        using E = MumeClock::WestronMonthNamesEnum;
+        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
 
-    int month1 = MumeClock::getMumeMonth("Solmath");
-    int expected1 = 1;
-    QCOMPARE(month1, expected1);
+#define X_CASE(x) \
+    static_assert(static_cast<int8_t>(E::x) >= 0); \
+    QCOMPARE(MumeClock::getMumeMonth(#x), static_cast<int8_t>(E::x));
+        XFOREACH_WestronMonthNamesEnum(X_CASE)
+#undef X_CASE
+    }
 
-    int month2 = MumeClock::getMumeMonth("Gwaeron");
-    int expected2 = 2;
-    QCOMPARE(month2, expected2);
+    {
+        using E = MumeClock::SindarinMonthNamesEnum;
+        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
+#define X_CASE(x) \
+    static_assert(static_cast<int8_t>(E::x) >= 0); \
+    QCOMPARE(MumeClock::getMumeMonth(#x), static_cast<int8_t>(E::x));
+        XFOREACH_SindarinMonthNamesEnum(X_CASE)
+#undef X_CASE
+    }
 
-    int month3 = MumeClock::getMumeMonth("Astron");
-    int expected3 = 3;
-    QCOMPARE(month3, expected3);
+    {
+        using E = MumeClock::WestronWeekDayNamesEnum;
+        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
+#define X_CASE(x) \
+    static_assert(static_cast<int8_t>(E::x) >= 0); \
+    QCOMPARE(MumeClock::getMumeWeekday(#x), static_cast<int8_t>(E::x));
+        XFOREACH_WestronWeekDayNamesEnum(X_CASE)
+#undef X_CASE
+    }
 
-    int month4 = MumeClock::getMumeMonth("Lothron");
-    int expected4 = 4;
-    QCOMPARE(month4, expected4);
+    {
+        using E = MumeClock::SindarinWeekDayNamesEnum;
+        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
+#define X_CASE(x) \
+    static_assert(static_cast<int8_t>(E::x) >= 0); \
+    QCOMPARE(MumeClock::getMumeWeekday(#x), static_cast<int8_t>(E::x));
+        XFOREACH_SindarinWeekDayNamesEnum(X_CASE)
+#undef X_CASE
+    }
 
-    int month5 = MumeClock::getMumeMonth("Forelithe");
-    int expected5 = 5;
-    QCOMPARE(month5, expected5);
-
-    int month6 = MumeClock::getMumeMonth("Cerveth");
-    int expected6 = 6;
-    QCOMPARE(month6, expected6);
-
-    int month7 = MumeClock::getMumeMonth("Wedmath");
-    int expected7 = 7;
-    QCOMPARE(month7, expected7);
-
-    int month8 = MumeClock::getMumeMonth("Ivanneth");
-    int expected8 = 8;
-    QCOMPARE(month8, expected8);
-
-    int month9 = MumeClock::getMumeMonth("Winterfilth");
-    int expected9 = 9;
-    QCOMPARE(month9, expected9);
-
-    int month10 = MumeClock::getMumeMonth("Hithui");
-    int expected10 = 10;
-    QCOMPARE(month10, expected10);
-
-    int month11 = MumeClock::getMumeMonth("Foreyule");
-    int expected11 = 11;
-    QCOMPARE(month11, expected11);
+    // demonstrate that it no longer uses keyToValue()
+    QCOMPARE(MumeClock::getMumeMonth("Narwain"), 0);
+    QCOMPARE(MumeClock::getMumeMonth("Ninui"), 1);
+    QCOMPARE(MumeClock::getMumeMonth("Narwain|Ninui"), -1);
 }
 
 void TestClock::parseWeatherClockSkewTest()
@@ -170,7 +169,17 @@ void TestClock::parseWeatherClockSkewTest()
     const QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     auto realTime1 = 1513753407;
-    clock.parseMumeTime(snapShot1, realTime1);
+    {
+        // expect 3 warnings about out-of bounds values:
+        // WARNING: soft assertion failure: month(-1) is not in the half-open interval '[0..12)'
+        // WARNING: soft assertion failure: day(-12) is not in the half-open interval '[0..30)'
+        // WARNING: soft assertion failure: hour(-8) is not in the half-open interval '[0..24)'
+
+#if 0 // Enable this to hide the warnings...
+        mmqt::HideQDebug forThisFnCall{mmqt::HideQDebugOptions{true, true, true}};
+#endif
+        clock.parseMumeTime(snapShot1, realTime1);
+    }
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1)), snapShot1);
 
     // First sync

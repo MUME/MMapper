@@ -67,33 +67,46 @@ template<typename T>
 class NODISCARD QME final
 {
 private:
-    const QMetaEnum m_qme = QMetaEnum::fromType<T>();
-
-private:
-    NODISCARD static QByteArray getQByteArray(const QString &key)
-    {
-        return mmqt::toQByteArrayLatin1(key);
-    }
+    static_assert(std::is_enum_v<T>);
+    using U = std::underlying_type_t<T>;
+    static_assert(std::is_signed_v<U>);
+    static_assert(static_cast<U>(T::Invalid) == -1);
+    static inline const QMetaEnum g_qme = QMetaEnum::fromType<T>();
 
 public:
-    NODISCARD int keyToValue(const QString &key) const
+    NODISCARD static int keyToValue(const QString &key)
     {
-        //
-        return m_qme.keyToValue(getQByteArray(key));
+        return g_qme.keyToValue(mmqt::toQByteArrayLatin1(key));
     }
-    // REVISIT: Why do we use both keyToValue() and keysToValue()?
-    NODISCARD int keysToValue(const QString &key) const
-    {
-        return m_qme.keysToValue(getQByteArray(key));
-    }
-    NODISCARD QString valueToKey(const int value) const { return m_qme.valueToKey(value); }
+    NODISCARD static QString valueToKey(const int value) { return g_qme.valueToKey(value); }
+    NODISCARD static int keyCount() { return g_qme.keyCount(); }
 };
+
+template<typename A, typename B>
+NODISCARD static int parseTwoEnums(const QString &s)
+{
+    static_assert(!std::is_same_v<A, B>);
+    using First = mmqt::QME<A>;
+    using Second = mmqt::QME<B>;
+
+    assert(First::keyCount() == Second::keyCount());
+
+    // assume the enum name is actually ASCII, so Latin1 will give the correct result.
+    const QByteArray arr = s.toLatin1();
+    const char *const key = arr.data();
+
+    if (const int value = First::keyToValue(key); value != -1) {
+        return value;
+    }
+    return Second::keyToValue(key);
+}
+
 } // namespace mmqt
 
-static const mmqt::QME<MumeClock::WestronMonthNamesEnum> g_westronMonthNames;
-static const mmqt::QME<MumeClock::SindarinMonthNamesEnum> g_sindarinMonthNames;
-static const mmqt::QME<MumeClock::WestronWeekDayNamesEnum> g_westronWeekDayNames;
-static const mmqt::QME<MumeClock::SindarinWeekDayNamesEnum> g_sindarinWeekDayNames;
+using westronMonthNames = mmqt::QME<MumeClock::WestronMonthNamesEnum>;
+// using sindarinMonthNames = mmqt::QME<MumeClock::SindarinMonthNamesEnum>;
+using westronWeekDayNames = mmqt::QME<MumeClock::WestronWeekDayNamesEnum>;
+// using sindarinWeekDayNames = mmqt::QME<MumeClock::SindarinWeekDayNamesEnum>;
 
 MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const parent)
     : QObject(parent)
@@ -160,16 +173,10 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
             hour = 0;
         }
         const QString cap3 = match.captured(3);
-        weekDay = g_westronWeekDayNames.keyToValue(cap3);
-        if (weekDay == static_cast<int>(WestronWeekDayNamesEnum::UnknownWestronWeekDay)) {
-            weekDay = g_sindarinWeekDayNames.keysToValue(cap3);
-        }
+        weekDay = getMumeWeekday(cap3);
         day = match.captured(4).toInt() - 1;
         const QString cap5 = match.captured(5);
-        month = g_westronMonthNames.keyToValue(cap5);
-        if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-            month = g_sindarinMonthNames.keyToValue(cap5);
-        }
+        month = getMumeMonth(cap5);
         year = match.captured(6).toInt();
         if (m_precision <= MumeClockPrecisionEnum::DAY) {
             m_precision = MumeClockPrecisionEnum::HOUR;
@@ -185,16 +192,10 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         }
 
         const QString cap1 = match.captured(1);
-        weekDay = g_westronWeekDayNames.keyToValue(cap1.toLatin1().data());
-        if (weekDay == static_cast<int>(WestronWeekDayNamesEnum::UnknownWestronWeekDay)) {
-            weekDay = g_sindarinWeekDayNames.keysToValue(cap1.toLatin1().data());
-        }
+        weekDay = getMumeWeekday(cap1);
         day = match.captured(2).toInt() - 1;
         const QString cap3 = match.captured(3);
-        month = g_westronMonthNames.keyToValue(cap3.toLatin1().data());
-        if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-            month = g_sindarinMonthNames.keyToValue(cap3.toLatin1().data());
-        }
+        month = getMumeMonth(cap3);
         year = match.captured(4).toInt();
         if (m_precision <= MumeClockPrecisionEnum::UNSET) {
             m_precision = MumeClockPrecisionEnum::DAY;
@@ -413,7 +414,7 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
         period = "am";
     }
 
-    QString weekDay = g_westronWeekDayNames.valueToKey(moment.weekDay());
+    QString weekDay = westronWeekDayNames::valueToKey(moment.weekDay());
     QString time;
     switch (m_precision) {
     case MumeClockPrecisionEnum::HOUR:
@@ -435,7 +436,7 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
 
     const int day = moment.day + 1;
     // TODO: Detect what calendar the player is using
-    const QString monthName = g_westronMonthNames.valueToKey(moment.month);
+    const QString monthName = westronMonthNames::valueToKey(moment.month);
     return QString("%1, the %2%3 of %4, year %5 of the Third Age.")
         .arg(time)
         .arg(day)
@@ -480,9 +481,10 @@ MumeClock::DawnDusk MumeClock::getDawnDusk(const int month)
 
 int MumeClock::getMumeMonth(const QString &monthName)
 {
-    const int month = g_westronMonthNames.keyToValue(monthName.toLatin1().data());
-    if (month == static_cast<int>(WestronMonthNamesEnum::UnknownWestronMonth)) {
-        return g_sindarinMonthNames.keysToValue(monthName.toLatin1().data());
-    }
-    return month;
+    return mmqt::parseTwoEnums<WestronMonthNamesEnum, SindarinMonthNamesEnum>(monthName);
+}
+
+int MumeClock::getMumeWeekday(const QString &weekdayName)
+{
+    return mmqt::parseTwoEnums<WestronWeekDayNamesEnum, SindarinWeekDayNamesEnum>(weekdayName);
 }
