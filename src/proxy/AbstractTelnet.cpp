@@ -645,7 +645,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     }
 
     // subnegotiation - we analyze and respond...
-    const uint8_t option = static_cast<uint8_t>(payload[0]);
+    const auto option = static_cast<uint8_t>(payload[0]);
     switch (option) {
     case OPT_STATUS:
         // see OPT_TERMINAL_TYPE for explanation why I'm doing this
