@@ -94,7 +94,7 @@ jobs:
         arch: win64_mingw81
         cache: true
         tools: 'tools_mingw1310'
-    - if: runner.os == 'Windows"
+    - if: runner.os == 'Windows'
       name: Install Packages for Windows
       uses: crazy-max/ghaction-chocolatey@v3
       with:
