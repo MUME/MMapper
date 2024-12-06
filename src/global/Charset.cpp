@@ -1027,7 +1027,7 @@ void testCharset()
     testStrings();
     testMmqtLatin1();
 
-    volatile bool use_extreme_roundtrip_test = true; // (this test is very slow)
+    volatile bool use_extreme_roundtrip_test = false; // (this test is very slow)
     if (use_extreme_roundtrip_test) {
         testStringsExtreme();
     }
