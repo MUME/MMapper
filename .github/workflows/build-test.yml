@@ -101,8 +101,9 @@ jobs:
         args: install openssl --version=1.1.1.2100
     - if: runner.os == 'Windows'
       run: |
-        xcopy "C:\Program Files\OpenSSL" "C:\Qt\Tools" /E /I /H /K /Y
-        dir C:\Qt\Tools\OpenSSL
+        mkdir C:\OpenSSL
+        xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
+        dir C:\OpenSSL
 
 
       #
@@ -116,7 +117,7 @@ jobs:
         mkdir build
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}\artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR="C:/Qt/Tools/OpenSSL/" -DOPENSSL_INCLUDE_DIR="C:/Qt/Tools/OpenSSL/include" -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G "NMake Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}\artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\msvc2019_64" -DOPENSSL_ROOT_DIR="C:/OpenSSL/" -S .. || exit -1
         cmake --build . -j %NUMBER_OF_PROCESSORS%
     - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
       name: Build MMapper for Windows (MinGW)
@@ -127,7 +128,7 @@ jobs:
         cd build
         cmake --version
         set PATH=C:\Qt\Tools\mingw1310_64\bin;%PATH%
-        cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}\artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\mingw81_64" -DOPENSSL_ROOT_DIR="C:/Qt/Tools/OpenSSL/" -DOPENSSL_INCLUDE_DIR="C:/Qt/Tools/OpenSSL/include" -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}\artifact -DUSE_UNITY_BUILD=false -DCMAKE_PREFIX_PATH="C:\Qt\5.12.2\mingw81_64" -DOPENSSL_ROOT_DIR="C:/OpenSSL/" -S .. || exit -1
         cmake --build . -j %NUMBER_OF_PROCESSORS%
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
