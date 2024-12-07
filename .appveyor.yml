@@ -283,6 +283,9 @@ for:
 
     clone_folder: c:\Build\MMapper
 
+    cache:
+      - mingw_cache -> C:\Qt\Tools\mingw1310_64\**
+
     init:
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MinGW Makefiles"
       - cmd: if %ARCH%==x64 set OPENSSLDIR=C:\OpenSSL-v111-Win64
@@ -296,11 +299,19 @@ for:
       - cmd: if exist "C:\OpenSSL-Win64" move C:\OpenSSL-Win64 C:\OpenSSL-v102-Win64
 
     install:
-      - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
-      - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - cmd: python -m pip install --upgrade pip
-      - cmd: pip install aqtinstall
-      - cmd: python -m aqt install-tool windows desktop tools_mingw1310
+      - ps: |
+          $env:package_version = ("$(git describe --tags --always --long)").trim()
+          Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
+      - ps: |
+          $MingwPath = "C:\Qt\Tools\mingw1310_64"
+          if (-Not (Test-Path $MingwPath)) {
+              Write-Host "Mingw tools not found. Installing..."
+              python -m pip install --upgrade pip
+              pip install aqtinstall
+              python -m aqt install-tool windows desktop tools_mingw1310 --outputdir "C:\Qt"
+          } else {
+              Write-Host "Mingw tools already cached. Skipping download."
+          }
 
     before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=C:/Qt/Tools/mingw1310_64/bin;%PATH%
