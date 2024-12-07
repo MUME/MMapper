@@ -302,18 +302,18 @@ for:
       - ps: |
           $env:package_version = ("$(git describe --tags --always --long)").trim()
           Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - ps: |
-          $MingwPath = "C:\Qt\Tools\mingw1310_64"
-          if (-Not (Test-Path $MingwPath)) {
-              Write-Host "Mingw tools not found. Installing..."
-              pip install --disable-pip-version-check aqtinstall
-              aqt install-tool windows desktop tools_mingw1310 --outputdir "C:\Qt" 2>&1 | Out-Host
-          } else {
-              Write-Host "Mingw tools already cached. Skipping download."
-          }
+     - cmd: |
+         set MINGW_PATH=C:\Qt\Tools\mingw1310_64
+         if not exist "%MINGW_PATH%" (
+             echo Mingw tools not found. Installing...
+             pip install --disable-pip-version-check aqtinstall
+             python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:\Qt
+         ) else (
+             echo Mingw tools already cached. Skipping download.
+         )
 
     before_build:
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=C:/Qt/Tools/mingw1310_64/bin;%PATH%
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=%MINGW_PATH%;%PATH%
       - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
       - cmd: echo PATH=%PATH%
