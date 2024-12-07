@@ -31,9 +31,8 @@ image:
   # AppVeyor builds are ordered by the image list:
   - Visual Studio 2019
   - macos-monterey
+  - Ubuntu2204
   - Ubuntu1804
-  - Ubuntu2004
-  - Previous Ubuntu2004
   - Visual Studio 2022
 
 matrix:
@@ -55,13 +54,9 @@ matrix:
       COMPILER: MinGW
     - image: Ubuntu1804
       COMPILER: MSVC
-    - image: Ubuntu2004
+    - image: Ubuntu2204
       COMPILER: MinGW
-    - image: Ubuntu2004
-      COMPILER: MSVC
-    - image: Previous Ubuntu2004
-      COMPILER: MinGW
-    - image: Previous Ubuntu2004
+    - image: Ubuntu2204
       COMPILER: MSVC
     - image: macos-monterey
       COMPILER: GCC
@@ -72,19 +67,12 @@ matrix:
     # Following builds are disabled to prevent build timeouts
     - image: Ubuntu1804
       COMPILER: Clang
-    - image: Ubuntu2004
+    - image: Ubuntu2204
       COMPILER: Clang
-    - image: Previous Ubuntu2004
-      COMPILER: Clang
-    - image: Ubuntu2004
+    - image: Ubuntu2204
       ARCH: arm64 
-    - image: Previous Ubuntu2004
-      ARCH: arm64
     - image: Visual Studio 2022
       COMPILER: MSVC
-    # x64 .deb is either Ubuntu or Debian stable
-    - image: Ubuntu2004
-      ARCH: x64
     # Following builds are not supported by AppImage
     - image: Ubuntu1804
       ARCH: arm64
@@ -107,7 +95,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: sudo docker run --rm -v "$(pwd)":/root/mmapper --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse:mrw --security-opt apparmor:unconfined ubuntu:20.04 bash -c 'apt update -qq && apt install -y wget software-properties-common && add-apt-repository ppa:savoury1/gcc-defaults-13 && add-apt-repository ppa:ecal/cmake-3.25 && add-apt-repository ppa:beineri/opt-qt-5.15.4-focal -y && apt install -y qt515base libgl1-mesa-dev build-essential git zlib1g-dev libssl-dev wget zsync fuse cmake libminiupnpc-dev && source /opt/qt*/bin/qt*-env.sh && cd /root/mmapper && mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_UNITY_BUILD=ON -DCMAKE_INSTALL_PREFIX=/usr && make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2) && wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x linuxdeployqt-continuous-x86_64.AppImage && ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/org.mume.MMapper.desktop -updateinformation="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync" -appimage'
+      - sh: sudo docker run --rm -v "$(pwd)":/root/mmapper --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse:mrw --security-opt apparmor:unconfined ubuntu:20.04 bash -c 'export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y wget software-properties-common && add-apt-repository ppa:savoury1/gcc-defaults-13 && add-apt-repository ppa:ecal/cmake-3.25 && add-apt-repository ppa:beineri/opt-qt-5.15.4-focal -y && apt install -y qt515base libgl1-mesa-dev build-essential git zlib1g-dev libssl-dev wget zsync fuse cmake libminiupnpc-dev && source /opt/qt*/bin/qt*-env.sh && cd /root/mmapper && mkdir -p build && cd build && git config --global --add safe.directory /root/mmapper && cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_UNITY_BUILD=ON -DCMAKE_INSTALL_PREFIX=/usr && make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2) && wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x linuxdeployqt-continuous-x86_64.AppImage && ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/org.mume.MMapper.desktop -updateinformation="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync" -appimage'
       - sh: sudo mv build/*.AppImage* .
       - sh: export FILE=$(find . -type f -name MMapper*.AppImage | sed 's#./##')
       - sh: sha256sum $FILE > $FILE.sha256
@@ -130,55 +118,11 @@ for:
       - path: MMapper-*.AppImage.zsync
         name: MMapper AppImage Updateable
 
-  # Ubuntu
-  -
-    matrix:
-      only:
-        - image: Ubuntu2004
-
-    clone_folder: ~/mmapper
-
-    init:
-      - sh: echo _NPROCESSORS_ONLN=$(getconf _NPROCESSORS_ONLN)
-      - sh: if [[ $ARCH == x64 ]]; then export TARGET_ARCHITECTURE=amd64 ; fi
-      - sh: if [[ $ARCH == arm64 ]]; then export TARGET_ARCHITECTURE=arm64 ; fi
-      - sh: echo TARGET_ARCHITECTURE=$TARGET_ARCHITECTURE
-
-    install:
-      - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
-      - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - sh: sudo apt update -qq
-      - sh: sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
-
-    build_script:
-      - sh: mkdir build
-      - sh: cd build
-      - sh: cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_UNITY_BUILD=ON
-      - sh: cmake --build . -j$(getconf _NPROCESSORS_ONLN)
-      - sh: cpack
-      - sh: mv *.deb* ../
-
-    test_script:
-      - sh: QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test
-      # Transform test results from ctest to junit format
-      - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
-      - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
-      - ps: $XSLInputElement.Transform((Resolve-Path .\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
-      - ps: $wc = New-Object 'System.Net.WebClient'
-      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
-
-    artifacts:
-      - path: mmapper-*-Linux-*.deb
-        name: MMapper Debian Package
-
-      - path: mmapper-*-Linux-*.*.sha256
-        name: MMapper Checksums
-
   # Ubuntu (Debian)
   -
     matrix:
       only:
-        - image: Previous Ubuntu2004
+        - image: Ubuntu2204
 
     clone_folder: ~/mmapper
 
@@ -187,9 +131,9 @@ for:
 
     init:
       - sh: echo _NPROCESSORS_ONLN=$(getconf _NPROCESSORS_ONLN)
-      - sh: if [[ $ARCH == x64 ]]; then export DOCKER_IMAGE=multiarch/debian-debootstrap:amd64-bullseye ; fi
+      - sh: if [[ $ARCH == x64 ]]; then export DOCKER_IMAGE=ubuntu:jammy ; fi
       - sh: if [[ $ARCH == x64 ]]; then export TARGET_ARCHITECTURE=amd64 ; fi
-      - sh: if [[ $ARCH == arm64 ]]; then export DOCKER_IMAGE=multiarch/debian-debootstrap:arm64-bullseye ; fi
+      - sh: if [[ $ARCH == arm64 ]]; then export DOCKER_IMAGE=multiarch/debian-debootstrap:arm64-bookworm ; fi
       - sh: if [[ $ARCH == arm64 ]]; then export TARGET_ARCHITECTURE=arm64 ; fi
       - sh: echo TARGET_ARCHITECTURE=$TARGET_ARCHITECTURE
       - sh: echo DOCKER_IMAGE=$DOCKER_IMAGE
@@ -203,7 +147,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && git config --global --add safe.directory /root/mmapper && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_UNITY_BUILD=ON && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
       - sh: sudo mv build/*.deb* .
 
     test_script:
@@ -284,7 +228,7 @@ for:
     clone_folder: c:\Build\MMapper
 
     cache:
-      - mingw_cache -> C:\Qt\Tools\mingw1310_64\**
+      - C:\Qt\Tools\mingw1310_64
 
     init:
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MinGW Makefiles"
