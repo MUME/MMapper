@@ -306,9 +306,8 @@ for:
           $MingwPath = "C:\Qt\Tools\mingw1310_64"
           if (-Not (Test-Path $MingwPath)) {
               Write-Host "Mingw tools not found. Installing..."
-              python -m pip install --upgrade pip
               pip install aqtinstall
-              python -m aqt install-tool windows desktop tools_mingw1310 --outputdir "C:\Qt"
+              aqt install-tool windows desktop tools_mingw1310 --outputdir "C:\Qt"
           } else {
               Write-Host "Mingw tools already cached. Skipping download."
           }
