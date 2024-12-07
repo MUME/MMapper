@@ -83,7 +83,7 @@ matrix:
     - image: Visual Studio 2022
       COMPILER: MSVC
     # x64 .deb is either Ubuntu or Debian stable
-    - image: Ubuntu2004
+    - image: Previous Ubuntu2004
       ARCH: x64
     # Following builds are not supported by AppImage
     - image: Ubuntu1804
