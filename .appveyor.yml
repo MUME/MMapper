@@ -309,9 +309,9 @@ for:
       - cmd: if not exist "%MINGW_PATH%" python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:\Qt
 
     before_build:
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=%MINGW_PATH%;%PATH%
       - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=%MINGW_PATH%/bin;%PATH%
       - cmd: echo PATH=%PATH%
 
     build_script:
