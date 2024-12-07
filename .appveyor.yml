@@ -294,23 +294,19 @@ for:
       - cmd: echo PROCESSOR_IDENTIFIER=%PROCESSOR_IDENTIFIER%
       - cmd: echo QTDIR=%QTDIR%
       - cmd: echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
+      - cmd: if %COMPILER%==MinGW set MINGW_PATH=C:\Qt\Tools\mingw1310_64
+      - cmd: if %COMPILER%==MinGW echo MINGW_PATH=%MINGW_PATH%
       # Rename the OpenSSL 1.02 directory so CMake can't find it
       - cmd: if exist "C:\OpenSSL-Win32" move C:\OpenSSL-Win32 C:\OpenSSL-v102-Win32
       - cmd: if exist "C:\OpenSSL-Win64" move C:\OpenSSL-Win64 C:\OpenSSL-v102-Win64
+      # Install aqtinstall to fetch Qt and tools
+      - cmd: pip install --disable-pip-version-check aqtinstall
 
     install:
       - ps: |
           $env:package_version = ("$(git describe --tags --always --long)").trim()
           Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - cmd: |
-          set MINGW_PATH=C:\Qt\Tools\mingw1310_64
-          if not exist "%MINGW_PATH%" (
-              echo Mingw tools not found. Installing...
-              pip install --disable-pip-version-check aqtinstall
-              python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:\Qt
-          ) else (
-              echo Mingw tools already cached. Skipping download.
-          )
+      - cmd: if not exist "%MINGW_PATH%" python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:\Qt
 
     before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set PATH=%MINGW_PATH%;%PATH%
