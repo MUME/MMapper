@@ -29,10 +29,10 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
+  - Ubuntu2204
   - Visual Studio 2019
   - macos-monterey
   - Ubuntu1804
-  - Ubuntu2204
   - Visual Studio 2022
 
 matrix:
@@ -147,7 +147,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y wget software-properties-common && add-apt-repository ppa:ecal/cmake-3.25 && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
       - sh: sudo mv build/*.deb* .
 
     test_script:
