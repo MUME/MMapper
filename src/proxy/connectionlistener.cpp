@@ -120,7 +120,9 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
             tcpSocket.write(ba);
             tcpSocket.flush();
             tcpSocket.disconnectFromHost();
-            tcpSocket.waitForDisconnected();
+            if (tcpSocket.state() != QAbstractSocket::UnconnectedState) {
+                tcpSocket.waitForDisconnected();
+            }
         }
     }
 }
