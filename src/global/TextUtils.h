@@ -37,6 +37,7 @@ NODISCARD extern QString toQStringLatin1(std::string_view sv);
 NODISCARD extern QString toQStringUtf8(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayLatin1(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayUtf8(std::string_view sv);
+NODISCARD extern QByteArray toQByteArrayLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);

@@ -329,9 +329,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         affects.remove(CharacterAffectEnum::SEARCH);
 
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
-    textHP = match.captured(1).toLatin1();
-    textMana = match.captured(2).toLatin1();
-    textMoves = match.captured(3).toLatin1();
+    textHP = mmqt::toQByteArrayLatin1(match.captured(1));
+    textMana = mmqt::toQByteArrayLatin1(match.captured(2));
+    textMoves = mmqt::toQByteArrayLatin1(match.captured(3));
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
         && textMoves == lastPrompt.textMoves && !wasSearching) {

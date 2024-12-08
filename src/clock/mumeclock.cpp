@@ -42,7 +42,10 @@ private:
     const QMetaEnum m_qme = QMetaEnum::fromType<T>();
 
 private:
-    NODISCARD static QByteArray getQByteArray(const QString &key) { return key.toLatin1(); }
+    NODISCARD static QByteArray getQByteArray(const QString &key)
+    {
+        return mmqt::toQByteArrayLatin1(key);
+    }
 
 public:
     NODISCARD int keyToValue(const QString &key) const

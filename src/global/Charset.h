@@ -23,7 +23,8 @@ NODISCARD extern std::string latin1ToAscii(std::string_view sv);
 
 namespace mmqt {
 QString &toAsciiInPlace(QString &str);
-}
+QString &toLatin1InPlace(QString &str);
+} // namespace mmqt
 
 extern void latin1ToUtf8(std::ostream &os, char c);
 

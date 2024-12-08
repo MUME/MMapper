@@ -4,6 +4,8 @@
 
 #include "TextUtils.h"
 
+#include "Charset.h"
+
 #include <cstring>
 #include <iostream>
 
@@ -57,9 +59,16 @@ QByteArray toQByteArrayUtf8(const std::string_view sv)
     return toQStringUtf8(sv).toUtf8();
 }
 
+QByteArray toQByteArrayLatin1(const QString &input_qs)
+{
+    auto qs = input_qs;
+    mmqt::toLatin1InPlace(qs);
+    return qs.toLatin1();
+}
+
 std::string toStdStringLatin1(const QString &qs)
 {
-    return qs.toLatin1().toStdString();
+    return toQByteArrayLatin1(qs).toStdString();
 }
 
 std::string toStdStringUtf8(const QString &qs)

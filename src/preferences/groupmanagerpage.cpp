@@ -17,6 +17,20 @@
 #include <QtGui>
 #include <QtWidgets>
 
+namespace mmqt {
+// REVISIT: should this be latin1 or utf8, and should it use transliterations?
+static QByteArray getSecretBytes(const QString &secretText)
+{
+    if (false)
+        return secretText.toUtf8();
+
+    else if (false)
+        return mmqt::toQByteArrayLatin1(secretText); // includes some transliterations
+
+    return secretText.toLatin1(); // no transliterations
+}
+} // namespace mmqt
+
 GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const parent)
     : QWidget(parent)
     , m_groupManager(gm)
@@ -64,11 +78,12 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *const gm, QWidget *const paren
         slot_allowedSecretsChanged();
     });
 
-    static auto get_secret = [](GroupManagerPage *const self) {
+    static auto get_secret = [](GroupManagerPage *const self) -> QByteArray {
         GroupManagerPage &page = deref(self);
         Ui::GroupManagerPage &page_ui = deref(page.ui);
         QComboBox &combo = deref(page_ui.allowedComboBox);
-        return combo.currentText().simplified().toLatin1();
+        const QString s = combo.currentText().simplified();
+        return mmqt::getSecretBytes(s);
     };
     connect(ui->allowSecret, &QPushButton::pressed, this, [this, authority]() {
         auto secret = get_secret(this);
@@ -251,7 +266,7 @@ void GroupManagerPage::slot_charNameTextChanged()
     }
 
     // REVISIT: Rename this and other functions to charLabel
-    setConfig().groupManager.charName = newNameStr.toLatin1();
+    setConfig().groupManager.charName = mmqt::toQByteArrayLatin1(newNameStr);
     emit sig_updatedSelf();
 }
 
@@ -289,7 +304,7 @@ void GroupManagerPage::slot_allowedSecretsChanged()
     ui->revokeSecret->setEnabled(enableRevokeSecret);
 
     if (correctLength && alreadyPresent) {
-        const auto key = secretText.toLatin1();
+        const auto key = mmqt::getSecretBytes(secretText);
         const auto lastLogin = GroupAuthority::getMetadata(key, GroupMetadataEnum::LAST_LOGIN);
         QString line;
         if (lastLogin.isEmpty()) {
@@ -315,7 +330,8 @@ void GroupManagerPage::slot_allowedSecretsChanged()
 
 void GroupManagerPage::slot_remoteHostTextChanged()
 {
-    const auto currentText = ui->remoteHost->currentText().simplified().toLatin1();
+    const QByteArray currentText = mmqt::toQByteArrayLatin1(
+        ui->remoteHost->currentText().simplified());
 
     const auto parts = currentText.split(char_consts::C_COLON);
     if (parts.size() != 2) {

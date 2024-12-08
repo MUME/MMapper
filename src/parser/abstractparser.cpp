@@ -1005,7 +1005,7 @@ void AbstractParser::showMumeTime()
         } else {
             data += "\033[33mday\033[0m";
         }
-        data += " for " + m_mumeClock.toCountdown(moment).toLatin1() + " more ticks.\n";
+        data += " for " + mmqt::toQByteArrayLatin1(m_mumeClock.toCountdown(moment)) + " more ticks.\n";
 
         // Moon data
         data += moment.toMumeMoonTime().toLatin1() + "\n";
@@ -1017,7 +1017,8 @@ void AbstractParser::showMumeTime()
                 data += "will rise in";
             else
                 data += "will set in";
-            data += " " + moment.toMoonVisibilityCountDown().toLatin1() + " more ticks.\n";
+            data += " " + mmqt::toQByteArrayLatin1(moment.toMoonVisibilityCountDown())
+                    + " more ticks.\n";
         }
     }
     sendToUser(data);
@@ -1519,12 +1520,12 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         }
     }
     if (isNESWUD(direction)) {
-        QChar dirChar = Mmapper2Exit::charForDir(direction);
         cn += dn;
         if (needdir) {
             cn += " ";
-            cn += dirChar.toLatin1();
+            cn += Mmapper2Exit::charForDir(direction);
         }
+        const QChar dirChar = Mmapper2Exit::charForDir(direction);
         command = command.replace(QString("$$DOOR_%1$$").arg(dirChar.toUpper()), cn);
     } else if (direction == ExitDirEnum::UNKNOWN) {
         cn += dn;

@@ -96,8 +96,34 @@ std::string &latin1ToAsciiInPlace(std::string &str)
 }
 
 namespace mmqt {
+
+QString &toLatin1InPlace(QString &str)
+{
+    constexpr uint16_t UNICODE_LSQUO = 0x2018;
+    constexpr uint16_t UNICODE_RSQUO = 0x2019;
+    constexpr uint16_t UNICODE_LDQUO = 0x201c;
+    constexpr uint16_t UNICODE_RDQUO = 0x201d;
+
+    for (QChar &qc : str) {
+        switch (qc.unicode()) {
+        case UNICODE_LSQUO:
+        case UNICODE_RSQUO:
+            qc = QC_SQUOTE;
+            break;
+        case UNICODE_LDQUO:
+        case UNICODE_RDQUO:
+            qc = QC_DQUOTE;
+            break;
+        }
+    }
+
+    return str;
+}
+
 QString &toAsciiInPlace(QString &str)
 {
+    toLatin1InPlace(str);
+
     // NOTE: 128 (0x80) was not converted to 'z' before.
     for (QChar &qc : str) {
         // c++17 if statement with initializer
@@ -107,6 +133,7 @@ QString &toAsciiInPlace(QString &str)
     }
     return str;
 }
+
 } // namespace mmqt
 
 std::string latin1ToAscii(const std::string_view sv)

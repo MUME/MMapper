@@ -6,6 +6,7 @@
 #include "GroupSocket.h"
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/io.h"
 #include "groupauthority.h"
 
@@ -277,9 +278,9 @@ void GroupSocket::sendData(const QByteArray &data)
         qWarning() << "Socket is not connected";
         return;
     }
-    QByteArray buff;
+
     QString len = QString("%1 ").arg(data.size());
-    buff = len.toLatin1();
+    QByteArray buff = mmqt::toQByteArrayLatin1(len);
     buff += data;
     if (DEBUG)
         qDebug() << "Sending message:" << buff;

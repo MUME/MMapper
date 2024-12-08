@@ -6,6 +6,7 @@
 #include "parserpage.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Charset.h"
 #include "../parser/AbstractParser-Utils.h"
 #include "AnsiColorDialog.h"
 #include "ansicombo.h"
@@ -23,7 +24,7 @@ public:
     explicit CommandPrefixValidator(QObject *parent);
     ~CommandPrefixValidator() final;
 
-    void fixup(QString &input) const override { input = input.toLatin1(); }
+    void fixup(QString &input) const override { mmqt::toLatin1InPlace(input); }
 
     QValidator::State validate(QString &input, int & /* pos */) const override
     {
