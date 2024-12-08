@@ -691,9 +691,8 @@ void Mmapper2Group::slot_startNetwork()
 
         if (getConfig().groupManager.rulesWarning) {
             emit sig_messageBox("Warning: MUME Rules",
-                                "Using the GroupManager in PK situations is ILLEGAL "
-                                "according to RULES ACTIONS.\n\nBe sure to disable the "
-                                "GroupManager under such conditions.");
+                                "Please read and comply with RULES INTERRACE"
+                                " and RULES ACTIONS to use Group Manager.");
         }
         qDebug() << "Network up";
     } else {
