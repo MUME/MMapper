@@ -1056,14 +1056,8 @@ static void setConfigMapMode(const MapModeEnum mode)
 
 void MainWindow::slot_onPlayMode()
 {
-    disconnect(m_pathMachine,
-               &Mmapper2PathMachine::sig_createRoom,
-               m_mapData,
-               &MapData::slot_createRoom);
-    disconnect(m_pathMachine,
-               &Mmapper2PathMachine::sig_scheduleAction,
-               m_mapData,
-               &MapData::slot_scheduleAction);
+    disconnectCreateRoomConnection();
+    disconnectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::PLAY);
     modeMenu->setIcon(mapperMode.playModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -1074,14 +1068,8 @@ void MainWindow::slot_onMapMode()
 {
     slot_log("MainWindow",
              "Map mode selected - new rooms are created when entering unmapped areas.");
-    connect(m_pathMachine,
-            &Mmapper2PathMachine::sig_createRoom,
-            m_mapData,
-            &MapData::slot_createRoom);
-    connect(m_pathMachine,
-            &Mmapper2PathMachine::sig_scheduleAction,
-            m_mapData,
-            &MapData::slot_scheduleAction);
+    connectCreateRoomConnection();
+    connectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::MAP);
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -1091,14 +1079,8 @@ void MainWindow::slot_onMapMode()
 void MainWindow::slot_onOfflineMode()
 {
     slot_log("MainWindow", "Offline emulation mode selected - learn new areas safely.");
-    disconnect(m_pathMachine,
-               &Mmapper2PathMachine::sig_createRoom,
-               m_mapData,
-               &MapData::slot_createRoom);
-    disconnect(m_pathMachine,
-               &Mmapper2PathMachine::sig_scheduleAction,
-               m_mapData,
-               &MapData::slot_scheduleAction);
+    disconnectCreateRoomConnection();
+    disconnectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::OFFLINE);
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -2264,4 +2246,30 @@ void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> inp
 void MainWindow::showStatusInternal(const QString &text, int duration)
 {
     statusBar()->showMessage(text, duration);
+}
+
+void MainWindow::connectCreateRoomConnection()
+{
+    m_createRoomConnection = connect(m_pathMachine,
+                                     &Mmapper2PathMachine::sig_createRoom,
+                                     m_mapData,
+                                     &MapData::slot_createRoom);
+}
+
+void MainWindow::disconnectCreateRoomConnection()
+{
+    m_createRoomConnection.disconnect();
+}
+
+void MainWindow::connectScheduleActionConnection()
+{
+    m_scheduleActionConnection = connect(m_pathMachine,
+                                         &Mmapper2PathMachine::sig_scheduleAction,
+                                         m_mapData,
+                                         &MapData::slot_scheduleAction);
+}
+
+void MainWindow::disconnectScheduleActionConnection()
+{
+    m_scheduleActionConnection.disconnect();
 }

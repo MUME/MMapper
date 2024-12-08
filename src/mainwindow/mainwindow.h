@@ -7,6 +7,8 @@
 
 #include "../configuration/configuration.h"
 #include "../display/CanvasMouseModeEnum.h"
+#include "../global/Connections.h"
+#include "../global/macros.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
 
@@ -226,6 +228,8 @@ private:
     QAction *rebuildMeshesAct = nullptr;
 
     std::unique_ptr<ConfigDialog> m_configDialog;
+    mmqt::SingleConnection m_createRoomConnection;
+    mmqt::SingleConnection m_scheduleActionConnection;
 
 public:
     explicit MainWindow();
@@ -401,4 +405,10 @@ private:
     void mapChanged() const;
     void setCanvasMouseMode(CanvasMouseModeEnum mode);
     void execSelectionGroupMapAction(std::unique_ptr<AbstractAction> action);
+
+private:
+    void connectCreateRoomConnection();
+    void disconnectCreateRoomConnection();
+    void connectScheduleActionConnection();
+    void disconnectScheduleActionConnection();
 };
