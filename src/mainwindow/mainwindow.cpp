@@ -12,7 +12,6 @@
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
-#include "../configuration/configobserver.h"
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../display/MapCanvasData.h"
@@ -1466,10 +1465,7 @@ void MainWindow::setupStatusBar()
 
     XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
     xpStatus->setToolTip("Click to toggle the Adventure Panel.");
-    connect(&ConfigObserver::get(),
-            &ConfigObserver::sig_configChanged,
-            xpStatus,
-            &XPStatusWidget::slot_configChanged);
+
     connect(xpStatus, &QPushButton::clicked, [this]() {
         m_dockDialogAdventure->setVisible(!m_dockDialogAdventure->isVisible());
     });

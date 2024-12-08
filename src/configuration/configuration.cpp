@@ -742,7 +742,7 @@ void Configuration::MumeClockSettings::read(const QSettings &conf)
 
 void Configuration::AdventurePanelSettings::read(const QSettings &conf)
 {
-    displayXPStatus = conf.value(KEY_DISPLAY_XP_STATUS, true).toBool();
+    m_displayXPStatus = conf.value(KEY_DISPLAY_XP_STATUS, true).toBool();
 }
 
 void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
@@ -917,7 +917,7 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
 
 void Configuration::AdventurePanelSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_DISPLAY_XP_STATUS, displayXPStatus);
+    conf.setValue(KEY_DISPLAY_XP_STATUS, m_displayXPStatus);
 }
 
 void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const

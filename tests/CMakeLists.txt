@@ -162,7 +162,6 @@ set(adventure_SRCS
         ../src/adventure/adventuretracker.h
         ../src/adventure/lineparsers.cpp
         ../src/adventure/lineparsers.h
-        ../src/configuration/configobserver.h
         ../src/configuration/configuration.cpp
         ../src/configuration/configuration.h
         ../src/observer/gameobserver.cpp

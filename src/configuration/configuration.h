@@ -14,7 +14,6 @@
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
 #include "NamedConfig.h"
-#include "configobserver.h"
 
 #include <string_view>
 
@@ -278,16 +277,30 @@ public:
 
     struct NODISCARD AdventurePanelSettings final
     {
-        NODISCARD bool getDisplayXPStatus() const { return displayXPStatus; }
-        void setDisplayXPStatus(bool display)
+    private:
+        ChangeMonitor m_changeMonitor;
+        bool m_displayXPStatus = false;
+
+    public:
+        explicit AdventurePanelSettings() = default;
+        ~AdventurePanelSettings() = default;
+        DELETE_CTORS_AND_ASSIGN_OPS(AdventurePanelSettings);
+
+    public:
+        NODISCARD bool getDisplayXPStatus() const { return m_displayXPStatus; }
+        void setDisplayXPStatus(const bool display)
         {
-            displayXPStatus = display;
-            emit ConfigObserver::get().sig_configChanged(
-                typeid(Configuration::AdventurePanelSettings));
+            m_displayXPStatus = display;
+            m_changeMonitor.notifyAll();
+        }
+
+        NODISCARD ChangeMonitor::CallbackLifetime registerChangeCallback(
+            ChangeMonitor::Function callback)
+        {
+            return m_changeMonitor.registerChangeCallback(std::move(callback));
         }
 
     private:
-        bool displayXPStatus = false;
         SUBGROUP();
     } adventurePanel;
 

@@ -19,7 +19,6 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidg
     setStyleSheet("QPushButton { border: none; outline: none; }");
     setMouseTracking(true);
 
-    readConfig();
     updateContent();
 
     connect(&m_tracker,
@@ -31,16 +30,14 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidg
             &AdventureTracker::sig_endedSession,
             this,
             &XPStatusWidget::slot_updatedSession);
-}
 
-void XPStatusWidget::readConfig()
-{
-    m_showPreference = getConfig().adventurePanel.getDisplayXPStatus();
+    m_connections += setConfig().adventurePanel.registerChangeCallback(
+        [this]() { updateContent(); });
 }
 
 void XPStatusWidget::updateContent()
 {
-    if (m_showPreference && m_session) {
+    if (getConfig().adventurePanel.getDisplayXPStatus() && m_session != nullptr) {
         auto xpSession = m_session->xp().gainedSession();
         auto tpSession = m_session->tp().gainedSession();
         auto xpf = AdventureSession::formatPoints(xpSession);
@@ -55,16 +52,6 @@ void XPStatusWidget::updateContent()
     }
 }
 
-void XPStatusWidget::slot_configChanged(const std::type_info &configGroup)
-{
-    if (configGroup != typeid(Configuration::AdventurePanelSettings)) {
-        return;
-    }
-
-    readConfig();
-    updateContent();
-}
-
 void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession> &session)
 {
     m_session = session;
@@ -73,7 +60,7 @@ void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession>
 
 void XPStatusWidget::enterEvent(QEvent *event)
 {
-    if (m_session) {
+    if (m_session != nullptr) {
         auto xpHourly = m_session->calculateHourlyRateXP();
         auto tpHourly = m_session->calculateHourlyRateTP();
         auto xpf = AdventureSession::formatPoints(xpHourly);
