@@ -471,10 +471,21 @@ void RoomEditAttrDlg::connectAll()
                                  &RoomEditAttrDlg::terrainToolButtonToggled);
     }
 
-    m_connections += connect(roomNoteTextEdit,
-                             &QTextEdit::textChanged,
-                             this,
-                             &RoomEditAttrDlg::roomNoteChanged);
+    m_connections += connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
+        auto to = tabWidget->widget(index);
+        if (to == noteTab) {
+            m_noteSelected = true;
+        } else if (m_noteSelected) {
+            roomNoteChanged();
+            m_noteSelected = false;
+        }
+    });
+    m_connections += connect(this, &QDialog::finished, this, [this](int result) {
+        if (m_noteSelected) {
+            roomNoteChanged();
+        }
+        m_noteSelected = false;
+    });
 
     m_connections += connect(m_hiddenShortcut.get(),
                              &QShortcut::activated,
@@ -599,7 +610,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         updatedCheckBox->setCheckable(true);
         updatedCheckBox->setText("Online update status has not been changed.");
 
-        roomNoteTextEdit->clear();
+        clearRoomNote();
         roomNoteTextEdit->setEnabled(false);
 
         terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainEnum::UNDEFINED)));
@@ -676,8 +687,11 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->setFontItalic(true);
         roomDescriptionTextEdit->append(r->getContents().toQString());
 
-        roomNoteTextEdit->clear();
-        roomNoteTextEdit->append(r->getNote().toQString());
+        {
+            assert(!m_noteSelected);
+            clearRoomNote();
+            roomNoteTextEdit->append(r->getNote().toQString());
+        }
 
         const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
             if (type == RoomTerrainEnum::ROAD) {
@@ -1154,4 +1168,13 @@ void RoomEditAttrDlg::roomNoteChanged()
 void RoomEditAttrDlg::closeClicked()
 {
     accept();
+}
+
+void RoomEditAttrDlg::clearRoomNote()
+{
+    if (m_noteSelected) {
+        roomNoteChanged();
+        m_noteSelected = false;
+    }
+    roomNoteTextEdit->clear();
 }

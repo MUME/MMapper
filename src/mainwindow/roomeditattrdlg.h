@@ -59,6 +59,7 @@ private:
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
     std::unique_ptr<QShortcut> m_hiddenShortcut;
+    bool m_noteSelected = false;
 
 private:
     void requestUpdate() { emit sig_requestUpdate(); }
@@ -93,6 +94,7 @@ private:
     NODISCARD QRadioButton *getLightRadioButton(RoomLightEnum value) const;
     NODISCARD QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
     NODISCARD QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
+    void clearRoomNote();
 
 signals:
     void sig_requestUpdate();
