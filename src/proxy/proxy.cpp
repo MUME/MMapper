@@ -110,7 +110,8 @@ void Proxy::slot_start()
 
     m_userTelnet = makeQPointer<UserTelnet>(this);
     m_mudTelnet = makeQPointer<MudTelnet>(this);
-    m_telnetFilter = makeQPointer<TelnetFilter>(this);
+    m_userTelnetFilter = makeQPointer<UserTelnetFilter>(this);
+    m_mudTelnetFilter = makeQPointer<MudTelnetFilter>(this);
     m_mpiFilter = makeQPointer<MpiFilter>(this);
     m_timers = makeQPointer<CTimers>(this);
     m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
@@ -127,7 +128,8 @@ void Proxy::slot_start()
     auto *const userSocket = m_userSocket.data();
     auto *const userTelnet = m_userTelnet.data();
     auto *const mudTelnet = m_mudTelnet.data();
-    auto *const telnetFilter = m_telnetFilter.data();
+    auto *const userTelnetFilter = m_userTelnetFilter.data();
+    auto *const mudTelnetFilter = m_mudTelnetFilter.data();
     auto *const mpiFilter = m_mpiFilter.data();
     auto *const parserXml = m_parserXml.data();
     auto *const mudSocket = m_mudSocket.data();
@@ -143,8 +145,8 @@ void Proxy::slot_start()
 
     connect(userTelnet,
             &UserTelnet::sig_analyzeUserStream,
-            telnetFilter,
-            &TelnetFilter::slot_onAnalyzeUserStream);
+            userTelnetFilter,
+            &UserTelnetFilter::slot_onAnalyzeUserStream);
     connect(userTelnet, &UserTelnet::sig_sendToSocket, this, &Proxy::slot_onSendToUserSocket);
     connect(userTelnet, &UserTelnet::sig_relayGmcp, mudTelnet, &MudTelnet::slot_onGmcpToMud);
     connect(userTelnet, &UserTelnet::sig_relayNaws, mudTelnet, &MudTelnet::slot_onRelayNaws);
@@ -152,8 +154,8 @@ void Proxy::slot_start()
 
     connect(mudTelnet,
             &MudTelnet::sig_analyzeMudStream,
-            telnetFilter,
-            &TelnetFilter::slot_onAnalyzeMudStream);
+            mudTelnetFilter,
+            &MudTelnetFilter::slot_onAnalyzeMudStream);
     connect(mudTelnet, &MudTelnet::sig_sendToSocket, this, &Proxy::slot_onSendToMudSocket);
     connect(mudTelnet, &MudTelnet::sig_relayEchoMode, userTelnet, &UserTelnet::slot_onRelayEchoMode);
     connect(mudTelnet, &MudTelnet::sig_relayGmcp, userTelnet, &UserTelnet::slot_onGmcpToUser);
@@ -174,8 +176,8 @@ void Proxy::slot_start()
 
     connect(this, &Proxy::sig_analyzeUserStream, userTelnet, &UserTelnet::slot_onAnalyzeUserStream);
 
-    connect(telnetFilter,
-            &TelnetFilter::sig_parseNewMudInput,
+    connect(mudTelnetFilter,
+            &MudTelnetFilter::sig_parseNewMudInput,
             mpiFilter,
             &MpiFilter::slot_analyzeNewMudInput);
     connect(mpiFilter, &MpiFilter::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
@@ -187,8 +189,8 @@ void Proxy::slot_start()
             &MpiFilter::sig_parseNewMudInput,
             parserXml,
             &MumeXmlParser::slot_parseNewMudInput);
-    connect(telnetFilter,
-            &TelnetFilter::sig_parseNewUserInput,
+    connect(userTelnetFilter,
+            &UserTelnetFilter::sig_parseNewUserInput,
             parserXml,
             &MumeXmlParser::slot_parseNewUserInput);
 

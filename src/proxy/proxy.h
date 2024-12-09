@@ -23,6 +23,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class CTimers;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -30,6 +31,7 @@ class Mmapper2Group;
 class Mmapper2PathMachine;
 class MpiFilter;
 class MudTelnet;
+class MudTelnetFilter;
 class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
@@ -37,9 +39,8 @@ class PrespammedPath;
 class QTcpSocket;
 class RemoteEdit;
 class RoomManager;
-class TelnetFilter;
 class UserTelnet;
-class CTimers;
+class UserTelnetFilter;
 
 class NODISCARD_QOBJECT Proxy final : public QObject
 {
@@ -67,7 +68,8 @@ private:
     QPointer<QTcpSocket> m_userSocket;
     QPointer<UserTelnet> m_userTelnet;
     QPointer<MudTelnet> m_mudTelnet;
-    QPointer<TelnetFilter> m_telnetFilter;
+    QPointer<UserTelnetFilter> m_userTelnetFilter;
+    QPointer<MudTelnetFilter> m_mudTelnetFilter;
     QPointer<MpiFilter> m_mpiFilter;
     QPointer<MumeXmlParser> m_parserXml;
     QPointer<MumeSocket> m_mudSocket;

@@ -11,36 +11,20 @@
 #include <QByteArray>
 #include <QObject>
 
-static constexpr const char ASCII_DEL = char_consts::C_BACKSPACE;
-static constexpr const char ASCII_CR = char_consts::C_CARRIAGE_RETURN;
-static constexpr const char ASCII_LF = char_consts::C_NEWLINE;
+namespace { // anonymous
+
+constexpr const char ASCII_DEL = char_consts::C_BACKSPACE;
+constexpr const char ASCII_CR = char_consts::C_CARRIAGE_RETURN;
+constexpr const char ASCII_LF = char_consts::C_NEWLINE;
 
 static_assert(ASCII_DEL == 8);
 static_assert(ASCII_LF == 10);
 static_assert(ASCII_CR == 13);
 
-void TelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, const bool goAhead)
-{
-    TelnetIncomingDataQueue queue;
-    dispatchTelnetStream(ba, m_mudIncomingBuffer, queue, goAhead);
-    for (const auto &data : queue) {
-        emit sig_parseNewMudInput(data);
-    }
-}
-
-void TelnetFilter::slot_onAnalyzeUserStream(const QByteArray &ba, const bool goAhead)
-{
-    TelnetIncomingDataQueue queue;
-    dispatchTelnetStream(ba, m_userIncomingData, queue, goAhead);
-    for (const auto &data : queue) {
-        emit sig_parseNewUserInput(data);
-    }
-}
-
-void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
-                                        TelnetData &buffer,
-                                        TelnetIncomingDataQueue &queue,
-                                        const bool goAhead)
+static void dispatchTelnetStream(const QByteArray &stream,
+                                 TelnetData &buffer,
+                                 TelnetIncomingDataQueue &queue,
+                                 const bool goAhead)
 {
     for (const char c : stream) {
         switch (c) {
@@ -104,5 +88,24 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 buffer.type = TelnetDataEnum::Unknown;
             }
         }
+    }
+}
+} // namespace
+
+void MudTelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, const bool goAhead)
+{
+    TelnetIncomingDataQueue queue;
+    dispatchTelnetStream(ba, m_mudIncomingBuffer, queue, goAhead);
+    for (const auto &data : queue) {
+        emit sig_parseNewMudInput(data);
+    }
+}
+
+void UserTelnetFilter::slot_onAnalyzeUserStream(const QByteArray &ba, const bool goAhead)
+{
+    TelnetIncomingDataQueue queue;
+    dispatchTelnetStream(ba, m_userIncomingData, queue, goAhead);
+    for (const auto &data : queue) {
+        emit sig_parseNewUserInput(data);
     }
 }

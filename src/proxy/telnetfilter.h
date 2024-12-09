@@ -24,34 +24,44 @@ struct NODISCARD TelnetData final
     TelnetDataEnum type = TelnetDataEnum::Unknown;
 };
 
-class NODISCARD_QOBJECT TelnetFilter final : public QObject
+using TelnetIncomingDataQueue = QQueue<TelnetData>;
+
+class NODISCARD_QOBJECT MudTelnetFilter final : public QObject
 {
     Q_OBJECT
 
-public:
-    using TelnetIncomingDataQueue = QQueue<TelnetData>;
-
 private:
-    TelnetData m_userIncomingData;
     TelnetData m_mudIncomingBuffer;
 
 public:
-    explicit TelnetFilter(QObject *const parent)
+    explicit MudTelnetFilter(QObject *const parent)
         : QObject(parent)
     {}
-    ~TelnetFilter() final = default;
-
-private:
-    static void dispatchTelnetStream(const QByteArray &stream,
-                                     TelnetData &m_incomingData,
-                                     TelnetIncomingDataQueue &queue,
-                                     bool goAhead);
+    ~MudTelnetFilter() final = default;
 
 signals:
     void sig_parseNewMudInput(const TelnetData &);
-    void sig_parseNewUserInput(const TelnetData &);
 
 public slots:
     void slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
+};
+
+class NODISCARD_QOBJECT UserTelnetFilter final : public QObject
+{
+    Q_OBJECT
+
+private:
+    TelnetData m_userIncomingData;
+
+public:
+    explicit UserTelnetFilter(QObject *const parent)
+        : QObject(parent)
+    {}
+    ~UserTelnetFilter() final = default;
+
+signals:
+    void sig_parseNewUserInput(const TelnetData &);
+
+public slots:
     void slot_onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
 };
