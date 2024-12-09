@@ -34,8 +34,6 @@ public:
 private:
     TelnetData m_userIncomingData;
     TelnetData m_mudIncomingBuffer;
-    TelnetIncomingDataQueue m_mudIncomingQue;
-    TelnetIncomingDataQueue m_userIncomingQue;
 
 public:
     explicit TelnetFilter(QObject *const parent)
@@ -44,10 +42,10 @@ public:
     ~TelnetFilter() final = default;
 
 private:
-    void dispatchTelnetStream(const QByteArray &stream,
-                              TelnetData &m_incomingData,
-                              TelnetIncomingDataQueue &que,
-                              const bool &goAhead);
+    static void dispatchTelnetStream(const QByteArray &stream,
+                                     TelnetData &m_incomingData,
+                                     TelnetIncomingDataQueue &queue,
+                                     bool goAhead);
 
 signals:
     void sig_parseNewMudInput(const TelnetData &);
