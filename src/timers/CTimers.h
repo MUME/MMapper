@@ -51,9 +51,6 @@ public:
     NODISCARD std::string getTimers();
     NODISCARD std::string getCountdowns();
 
-signals:
-    void sig_sendTimersUpdateToUser(const std::string &str);
-
 public:
     explicit CTimers(QObject *parent);
     ~CTimers() final = default;
@@ -69,6 +66,9 @@ public:
     NODISCARD std::string getStatCommandEntry();
 
     void clear();
+
+signals:
+    void sig_sendTimersUpdateToUser(const std::string &str);
 
 public slots:
     void slot_finishCountdownTimer();

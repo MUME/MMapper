@@ -56,13 +56,6 @@ private:
     void log(const QString &msg) { emit sig_log(msg); }
     void characterChanged(bool updateCanvas) { emit sig_characterChanged(updateCanvas); }
 
-public slots:
-    void slot_scheduleAction(std::shared_ptr<GroupAction> action);
-
-signals:
-    void sig_log(const QString &);
-    void sig_characterChanged(bool updateCanvas);
-
 protected:
     void executeActions();
 
@@ -76,4 +69,11 @@ public:
 
 public:
     NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
+
+signals:
+    void sig_log(const QString &);
+    void sig_characterChanged(bool updateCanvas);
+
+public slots:
+    void slot_scheduleAction(std::shared_ptr<GroupAction> action);
 };

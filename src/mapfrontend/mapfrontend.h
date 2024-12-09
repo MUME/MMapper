@@ -100,6 +100,12 @@ public:
 public:
     void scheduleAction(const std::shared_ptr<MapAction> &action) final;
 
+signals:
+    // this signal is also sent out if a room is deleted. So any clients still
+    // working on this room can start some emergency action.
+    void sig_mapSizeChanged(const Coordinate &, const Coordinate &);
+    void sig_clearingMap();
+
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
     void lookingForRooms(RoomRecipient &, const SigParseEvent &);
@@ -114,10 +120,4 @@ public slots:
     void slot_createRoom(const SigParseEvent &, const Coordinate &);
 
     void slot_scheduleAction(std::shared_ptr<MapAction> action) { scheduleAction(action); }
-
-signals:
-    // this signal is also sent out if a room is deleted. So any clients still
-    // working on this room can start some emergency action.
-    void sig_mapSizeChanged(const Coordinate &, const Coordinate &);
-    void sig_clearingMap();
 };

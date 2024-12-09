@@ -35,9 +35,6 @@ public:
 private:
     void refresh();
 
-public slots:
-    void slot_refresh() { refresh(); }
-
 public:
     NODISCARD GroupSecret getSecret() const;
     NODISCARD QSslCertificate getLocalCertificate() const { return certificate; }
@@ -57,4 +54,7 @@ public:
 signals:
     void sig_secretRevoked(const GroupSecret &);
     void sig_secretRefreshed(const GroupSecret &);
+
+public slots:
+    void slot_refresh() { refresh(); }
 };

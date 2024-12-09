@@ -35,6 +35,9 @@ public:
 public:
     NODISCARD bool isUsingClient() const;
 
+protected:
+    NODISCARD bool eventFilter(QObject *obj, QEvent *event) override;
+
 signals:
     void sig_relayMessage(const QString &);
 
@@ -42,7 +45,4 @@ public slots:
     void slot_onVisibilityChanged(bool);
     void slot_onShowMessage(const QString &);
     void slot_saveLog();
-
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
 };

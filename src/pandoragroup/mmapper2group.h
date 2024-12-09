@@ -50,6 +50,11 @@ private:
     QPointer<CGroupCommunicator> m_network;
     std::unique_ptr<CGroup> m_group;
 
+private:
+    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
+    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
+    friend GroupManagerApi;
+
 public:
     NODISCARD static GroupManagerStateEnum getConfigState();
     static void setConfigState(GroupManagerStateEnum state);
@@ -57,6 +62,36 @@ public:
 private:
     void log(const QString &msg) { emit sig_log("GroupManager", msg); }
     void messageBox(const QString &msg) { emit sig_messageBox("GroupManager", msg); }
+
+public:
+    explicit Mmapper2Group(QObject *parent);
+    ~Mmapper2Group() final;
+
+    void start();
+    void stop();
+
+    NODISCARD GroupManagerStateEnum getMode();
+
+    NODISCARD GroupAuthority *getAuthority() { return m_authority.get(); }
+    NODISCARD CGroup *getGroup() { return m_group.get(); }
+
+public:
+    NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
+
+protected:
+    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
+    void kickCharacter(const QByteArray &character);
+    void parseScoreInformation(const QByteArray &score);
+    void parsePromptInformation(const QByteArray &prompt);
+    void updateCharacterPosition(CharacterPositionEnum);
+    void updateCharacterAffect(CharacterAffectEnum, bool);
+
+private:
+    void init();
+    void issueLocalCharUpdate();
+    NODISCARD bool setCharacterPosition(CharacterPositionEnum pos);
+    NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
+    void renameCharacter(QByteArray newname);
 
 signals:
     // MainWindow::log (via MainWindow)
@@ -85,34 +120,6 @@ signals:
     // CGroupCommunicator::sendSelfRename
     void sig_sendSelfRename(const QByteArray &, const QByteArray &);
 
-public:
-    explicit Mmapper2Group(QObject *parent);
-    ~Mmapper2Group() final;
-
-    void start();
-    void stop();
-
-    NODISCARD GroupManagerStateEnum getMode();
-
-    NODISCARD GroupAuthority *getAuthority() { return m_authority.get(); }
-    NODISCARD CGroup *getGroup() { return m_group.get(); }
-
-public:
-    NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
-
-private:
-    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
-    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
-    friend GroupManagerApi;
-
-protected:
-    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
-    void kickCharacter(const QByteArray &character);
-    void parseScoreInformation(const QByteArray &score);
-    void parsePromptInformation(const QByteArray &prompt);
-    void updateCharacterPosition(CharacterPositionEnum);
-    void updateCharacterAffect(CharacterAffectEnum, bool);
-
 public slots:
     void slot_setCharacterRoomId(RoomId pos);
     void slot_setMode(GroupManagerStateEnum newState);
@@ -131,11 +138,4 @@ protected slots:
     void slot_sendLog(const QString &);
     void slot_characterChanged(bool updateCanvas);
     void slot_onAffectTimeout();
-
-private:
-    void init();
-    void issueLocalCharUpdate();
-    NODISCARD bool setCharacterPosition(CharacterPositionEnum pos);
-    NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
-    void renameCharacter(QByteArray newname);
 };

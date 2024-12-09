@@ -122,44 +122,6 @@ public:
     void sendScoreLineEvent(const QByteArray &arr);
     void sendPromptLineEvent(const QByteArray &arr);
 
-signals:
-    // telnet
-    void sig_sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &, bool goAhead);
-    void sig_mapChanged();
-    void sig_graphicsSettingsChanged();
-    void sig_releaseAllPaths();
-
-    // used to log
-    void sig_log(const QString &, const QString &);
-
-    // for main move/search algorithm
-    void sig_handleParseEvent(const SigParseEvent &);
-
-    // for map
-    void sig_showPath(CommandQueue);
-    void sig_newRoomSelection(const SigRoomSelection &rs);
-
-    // for user commands
-    void sig_command(const QByteArray &, const Coordinate &);
-
-    // for commands that set the mode (emulation, play, map)
-    // these are connected to MainWindow
-    void sig_setMode(MapModeEnum);
-
-    // emitted when new infomark added by comand
-    void sig_infoMarksChanged();
-
-public slots:
-    void slot_parseNewUserInput(const TelnetData &);
-
-    void slot_reset();
-    void slot_sendGTellToUser(const QString &, const QString &, const QString &);
-    void slot_timersUpdate(const std::string &text);
-
-protected slots:
-    void slot_doOfflineCharacterMove();
-
 protected:
     void offlineCharacterMove(CommandEnum direction);
     void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
@@ -282,4 +244,42 @@ private:
     void eval(const std::string &name,
               const std::shared_ptr<const syntax::Sublist> &syntax,
               StringView input);
+
+signals:
+    // telnet
+    void sig_sendToMud(const QByteArray &);
+    void sig_sendToUser(const QByteArray &, bool goAhead);
+    void sig_mapChanged();
+    void sig_graphicsSettingsChanged();
+    void sig_releaseAllPaths();
+
+    // used to log
+    void sig_log(const QString &, const QString &);
+
+    // for main move/search algorithm
+    void sig_handleParseEvent(const SigParseEvent &);
+
+    // for map
+    void sig_showPath(CommandQueue);
+    void sig_newRoomSelection(const SigRoomSelection &rs);
+
+    // for user commands
+    void sig_command(const QByteArray &, const Coordinate &);
+
+    // for commands that set the mode (emulation, play, map)
+    // these are connected to MainWindow
+    void sig_setMode(MapModeEnum);
+
+    // emitted when new infomark added by comand
+    void sig_infoMarksChanged();
+
+public slots:
+    void slot_parseNewUserInput(const TelnetData &);
+
+    void slot_reset();
+    void slot_sendGTellToUser(const QString &, const QString &, const QString &);
+    void slot_timersUpdate(const std::string &text);
+
+protected slots:
+    void slot_doOfflineCharacterMove();
 };

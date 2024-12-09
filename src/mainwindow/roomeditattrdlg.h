@@ -63,6 +63,37 @@ private:
 private:
     void requestUpdate() { emit sig_requestUpdate(); }
 
+public:
+    explicit RoomEditAttrDlg(QWidget *parent);
+    ~RoomEditAttrDlg() final;
+
+    void readSettings();
+    void writeSettings();
+
+private:
+    void connectAll();
+    void disconnectAll();
+
+    NODISCARD const Room *getSelectedRoom();
+    NODISCARD ExitDirEnum getSelectedExit();
+    void updateDialog(const Room *r);
+
+private:
+    void updateCommon(std::unique_ptr<AbstractAction> moved_action, bool onlyExecuteAction = false);
+    void updateRoomAlign(RoomAlignEnum value);
+    void updateRoomPortable(RoomPortableEnum value);
+    void updateRoomRideable(RoomRidableEnum value);
+    void updateRoomLight(RoomLightEnum value);
+    void updateRoomSundeath(RoomSundeathEnum value);
+
+private:
+    NODISCARD QRadioButton *getAlignRadioButton(RoomAlignEnum value) const;
+    NODISCARD QRadioButton *getPortableRadioButton(RoomPortableEnum value) const;
+    NODISCARD QRadioButton *getRideableRadioButton(RoomRidableEnum value) const;
+    NODISCARD QRadioButton *getLightRadioButton(RoomLightEnum value) const;
+    NODISCARD QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
+    NODISCARD QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
+
 signals:
     void sig_requestUpdate();
 
@@ -114,35 +145,4 @@ public slots:
 
     // all tabs
     void closeClicked();
-
-public:
-    explicit RoomEditAttrDlg(QWidget *parent);
-    ~RoomEditAttrDlg() final;
-
-    void readSettings();
-    void writeSettings();
-
-private:
-    void connectAll();
-    void disconnectAll();
-
-    NODISCARD const Room *getSelectedRoom();
-    NODISCARD ExitDirEnum getSelectedExit();
-    void updateDialog(const Room *r);
-
-private:
-    void updateCommon(std::unique_ptr<AbstractAction> moved_action, bool onlyExecuteAction = false);
-    void updateRoomAlign(RoomAlignEnum value);
-    void updateRoomPortable(RoomPortableEnum value);
-    void updateRoomRideable(RoomRidableEnum value);
-    void updateRoomLight(RoomLightEnum value);
-    void updateRoomSundeath(RoomSundeathEnum value);
-
-private:
-    NODISCARD QRadioButton *getAlignRadioButton(RoomAlignEnum value) const;
-    NODISCARD QRadioButton *getPortableRadioButton(RoomPortableEnum value) const;
-    NODISCARD QRadioButton *getRideableRadioButton(RoomRidableEnum value) const;
-    NODISCARD QRadioButton *getLightRadioButton(RoomLightEnum value) const;
-    NODISCARD QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
-    NODISCARD QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
 };

@@ -38,13 +38,13 @@ public:
 protected:
     void showEvent(QShowEvent *event) override;
 
+private:
+    void createIcons();
+
 signals:
     void sig_graphicsSettingsChanged();
     void sig_loadConfig();
 
 public slots:
     void slot_changePage(QListWidgetItem *current, QListWidgetItem *previous);
-
-private:
-    void createIcons();
 };

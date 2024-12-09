@@ -149,21 +149,6 @@ public:
 public:
     void setVisible(bool visible) override;
 
-protected slots:
-    void slot_cancelEdit();
-    void slot_finishEdit();
-    NODISCARD bool slot_maybeCancel();
-    NODISCARD bool slot_contentsChanged() const;
-    void slot_updateStatusBar();
-
-#define X_DECLARE_SLOT(a, b, c, d, e) void slot_##a();
-    XFOREACH_REMOTE_EDIT_MENU_ITEM(X_DECLARE_SLOT)
-#undef X_DECLARE_SLOT
-
-signals:
-    void sig_cancel();
-    void sig_save(const QString &);
-
 private:
     NODISCARD Editor *createTextEdit();
 
@@ -175,4 +160,19 @@ private:
     void addSave(QMenu *fileMenu);
     void addExit(QMenu *fileMenu);
     void addStatusBar(const Editor *pTextEdit);
+
+signals:
+    void sig_cancel();
+    void sig_save(const QString &);
+
+protected slots:
+    void slot_cancelEdit();
+    void slot_finishEdit();
+    NODISCARD bool slot_maybeCancel();
+    NODISCARD bool slot_contentsChanged() const;
+    void slot_updateStatusBar();
+
+#define X_DECLARE_SLOT(a, b, c, d, e) void slot_##a();
+    XFOREACH_REMOTE_EDIT_MENU_ITEM(X_DECLARE_SLOT)
+#undef X_DECLARE_SLOT
 };

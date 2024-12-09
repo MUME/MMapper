@@ -99,6 +99,30 @@ public:
                    ConnectionListener &);
     ~Proxy() final;
 
+private:
+    friend ProxyParserApi;
+    NODISCARD bool isConnected() const;
+    void connectToMud();
+    void disconnectFromMud();
+    void sendToUser(const QByteArray &ba) { emit sig_sendToUser(ba, false); }
+    void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
+    void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
+    void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    void log(const QString &msg) { emit sig_log("Proxy", msg); }
+
+signals:
+    void sig_log(const QString &, const QString &);
+
+    void sig_analyzeUserStream(const QByteArray &);
+    void sig_analyzeMudStream(const QByteArray &);
+
+    void sig_sendToMud(const QByteArray &);
+    void sig_sendToUser(const QByteArray &, bool);
+
+    void sig_gmcpToMud(const GmcpMessage &);
+    void sig_gmcpToUser(const GmcpMessage &);
+
 public slots:
     void slot_start();
 
@@ -113,28 +137,4 @@ public slots:
     void slot_onMudConnected();
 
     void slot_onSendGameTimeToClock(int year, const std::string &month, int day, int hour);
-
-signals:
-    void sig_log(const QString &, const QString &);
-
-    void sig_analyzeUserStream(const QByteArray &);
-    void sig_analyzeMudStream(const QByteArray &);
-
-    void sig_sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &, bool);
-
-    void sig_gmcpToMud(const GmcpMessage &);
-    void sig_gmcpToUser(const GmcpMessage &);
-
-private:
-    friend ProxyParserApi;
-    bool isConnected() const;
-    void connectToMud();
-    void disconnectFromMud();
-    void sendToUser(const QByteArray &ba) { emit sig_sendToUser(ba, false); }
-    void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
-    void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
-    void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
-    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
-    void log(const QString &msg) { emit sig_log("Proxy", msg); }
 };

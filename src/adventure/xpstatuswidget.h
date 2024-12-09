@@ -26,13 +26,13 @@ private:
 public:
     explicit XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent);
 
-public slots:
-    void slot_updatedSession(const std::shared_ptr<AdventureSession> &session);
-
 protected:
     void enterEvent(QEvent *event) override;
     void leaveEvent(QEvent *event) override;
 
 private:
     void updateContent();
+
+public slots:
+    void slot_updatedSession(const std::shared_ptr<AdventureSession> &session);
 };

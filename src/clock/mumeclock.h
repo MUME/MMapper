@@ -138,14 +138,6 @@ private:
         emit sig_log("MumeClock", msg);
     }
 
-signals:
-    void sig_log(const QString &, const QString &);
-
-public slots:
-    void parseMumeTime(const QString &mumeTime);
-    void parseClockTime(const QString &clockTime);
-    void slot_onUserGmcp(const GmcpMessage &msg);
-
 public:
     void setPrecision(MumeClockPrecisionEnum state);
     void setLastSyncEpoch(int64_t epoch)
@@ -161,4 +153,12 @@ protected:
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
     void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);
     void parseWeather(MumeTimeEnum time, int64_t secsSinceEpoch);
+
+signals:
+    void sig_log(const QString &, const QString &);
+
+public slots:
+    void parseMumeTime(const QString &mumeTime);
+    void parseClockTime(const QString &clockTime);
+    void slot_onUserGmcp(const GmcpMessage &msg);
 };

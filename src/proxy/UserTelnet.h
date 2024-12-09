@@ -26,21 +26,6 @@ public:
     explicit UserTelnet(QObject *parent);
     ~UserTelnet() final = default;
 
-public slots:
-    void slot_onSendToUser(const QByteArray &data, bool goAhead);
-    void slot_onAnalyzeUserStream(const QByteArray &);
-    void slot_onConnected();
-    void slot_onRelayEchoMode(bool);
-    void slot_onGmcpToUser(const GmcpMessage &);
-    void slot_onSendMSSPToUser(const QByteArray &);
-
-signals:
-    void sig_analyzeUserStream(const QByteArray &, bool goAhead);
-    void sig_sendToSocket(const QByteArray &);
-    void sig_relayGmcp(const GmcpMessage &);
-    void sig_relayNaws(int, int);
-    void sig_relayTermType(QByteArray);
-
 private:
     NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) final;
     void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
@@ -52,4 +37,19 @@ private:
 private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
+
+signals:
+    void sig_analyzeUserStream(const QByteArray &, bool goAhead);
+    void sig_sendToSocket(const QByteArray &);
+    void sig_relayGmcp(const GmcpMessage &);
+    void sig_relayNaws(int, int);
+    void sig_relayTermType(QByteArray);
+
+public slots:
+    void slot_onSendToUser(const QByteArray &data, bool goAhead);
+    void slot_onAnalyzeUserStream(const QByteArray &);
+    void slot_onConnected();
+    void slot_onRelayEchoMode(bool);
+    void slot_onGmcpToUser(const GmcpMessage &);
+    void slot_onSendMSSPToUser(const QByteArray &);
 };

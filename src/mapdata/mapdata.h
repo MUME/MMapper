@@ -151,7 +151,6 @@ public:
     }
     void setPosition(const Coordinate &pos) { m_position = pos; }
 
-public:
 signals:
     void sig_log(const QString &, const QString &);
     void sig_onDataChanged();

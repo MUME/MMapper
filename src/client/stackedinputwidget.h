@@ -31,6 +31,11 @@ public:
 private:
     NODISCARD bool eventFilter(QObject *obj, QEvent *event) final;
 
+signals:
+    void sig_sendUserInput(const QString &);
+    void sig_displayMessage(const QString &);
+    void sig_showMessage(const QString &, int);
+
 public slots:
     void slot_toggleEchoMode(bool);
     void slot_gotPasswordInput();
@@ -38,9 +43,4 @@ public slots:
     void slot_cut();
     void slot_copy();
     void slot_paste();
-
-signals:
-    void sig_sendUserInput(const QString &);
-    void sig_displayMessage(const QString &);
-    void sig_showMessage(const QString &, int);
 };

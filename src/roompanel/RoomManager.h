@@ -32,13 +32,6 @@ public:
 public:
     NODISCARD const RoomMobs &getRoom() const { return m_room; }
 
-signals:
-    void sig_updateWidget(); // update RoomWidget
-
-public slots:
-    void slot_reset();
-    void slot_parseGmcpInput(const GmcpMessage &msg);
-
 private:
     void parseGmcpAdd(const GmcpMessage &msg);
     void parseGmcpRemove(const GmcpMessage &msg);
@@ -54,4 +47,11 @@ private:
     NODISCARD bool toMob(const QJsonObject &obj, RoomMobUpdate &mob) const;
     NODISCARD static bool toMobId(const QJsonValue &value, RoomMobUpdate &data);
     static void toMobField(const QJsonValue &value, RoomMobUpdate &data, MobFieldEnum i);
+
+signals:
+    void sig_updateWidget(); // update RoomWidget
+
+public slots:
+    void slot_reset();
+    void slot_parseGmcpInput(const GmcpMessage &msg);
 };

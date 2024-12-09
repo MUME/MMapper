@@ -58,13 +58,6 @@ private:
         slot_relayMessage(&socket, message, data);
     }
 
-protected slots:
-    void slot_relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
-    void slot_connectionEstablished(GroupSocket *socket);
-    void slot_onRevokeWhitelist(const QByteArray &secret);
-    void slot_onIncomingConnection(qintptr socketDescriptor);
-    void slot_errorInConnection(GroupSocket *, const QString &);
-
 protected:
     void sendRemoveUserNotification(GroupSocket &socket, const QByteArray &name);
 
@@ -93,4 +86,11 @@ private:
     void closeOne(GroupSocket &target);
     void connectAll(GroupSocket &);
     void disconnectAll(GroupSocket &);
+
+protected slots:
+    void slot_relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
+    void slot_connectionEstablished(GroupSocket *socket);
+    void slot_onRevokeWhitelist(const QByteArray &secret);
+    void slot_onIncomingConnection(qintptr socketDescriptor);
+    void slot_errorInConnection(GroupSocket *, const QString &);
 };

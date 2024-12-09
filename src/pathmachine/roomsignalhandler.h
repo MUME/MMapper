@@ -52,7 +52,7 @@ public:
        keepRoom: keep the room, but we don't need it anymore for now
        releaseRoom: delete the room, if you like */
 
-    auto getNumLockers(const Room *room) { return lockers[room].size(); }
+    NODISCARD auto getNumLockers(const Room *room) { return lockers[room].size(); }
 
 signals:
     void sig_scheduleAction(std::shared_ptr<MapAction>);

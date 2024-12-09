@@ -35,9 +35,9 @@ public:
     explicit MumeClockWidget(MumeClock *clock, QWidget *parent);
     ~MumeClockWidget() final;
 
-public slots:
-    void slot_updateLabel();
-
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+
+public slots:
+    void slot_updateLabel();
 };

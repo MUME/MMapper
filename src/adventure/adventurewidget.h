@@ -39,6 +39,10 @@ public:
 
     explicit AdventureWidget(AdventureTracker &at, QWidget *parent);
 
+private:
+    void addDefaultContent();
+    void addAdventureUpdate(const QString &msg);
+
 public slots:
     void slot_onAccomplishedTask(double xpGained);
     void slot_onAchievedSomething(const QString &achievement, double xpGained);
@@ -50,8 +54,4 @@ public slots:
 private slots:
     void slot_contextMenuRequested(const QPoint &pos);
     void slot_actionClearContent(bool checked = false);
-
-private:
-    void addDefaultContent();
-    void addAdventureUpdate(const QString &msg);
 };

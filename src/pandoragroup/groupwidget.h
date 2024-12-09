@@ -115,17 +115,17 @@ public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
     ~GroupWidget() final;
 
-public slots:
-    void slot_updateLabels();
-    void slot_messageBox(const QString &title, const QString &message);
-    void slot_mapUnloaded() { m_model.setMapLoaded(false); }
-    void slot_mapLoaded() { m_model.setMapLoaded(true); }
+private:
+    void readSettings();
+    void writeSettings();
 
 signals:
     void sig_kickCharacter(const QByteArray &);
     void sig_center(glm::vec2);
 
-private:
-    void readSettings();
-    void writeSettings();
+public slots:
+    void slot_updateLabels();
+    void slot_messageBox(const QString &title, const QString &message);
+    void slot_mapUnloaded() { m_model.setMapLoaded(false); }
+    void slot_mapLoaded() { m_model.setMapLoaded(true); }
 };

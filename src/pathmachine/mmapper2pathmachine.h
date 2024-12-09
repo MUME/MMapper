@@ -29,9 +29,9 @@ private:
 public:
     explicit Mmapper2PathMachine(MapData *mapData, QObject *parent);
 
-public slots:
-    void slot_handleParseEvent(const SigParseEvent &);
-
 signals:
     void sig_log(const QString &, const QString &);
+
+public slots:
+    void slot_handleParseEvent(const SigParseEvent &);
 };

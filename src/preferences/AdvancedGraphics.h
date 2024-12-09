@@ -33,10 +33,10 @@ public:
     explicit operator QGroupBox &() { return deref(m_groupBox); }
     NODISCARD QGroupBox *getGroupBox() { return m_groupBox; }
 
-signals:
-    void sig_graphicsSettingsChanged();
-
 private:
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
     void enableSsbs(bool enabled);
+
+signals:
+    void sig_graphicsSettingsChanged();
 };

@@ -108,61 +108,6 @@ public:
     NODISCARD auto height() const { return QOpenGLWidget::height(); }
     NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
 
-public slots:
-    void slot_forceMapperToRoom();
-    void slot_createRoom();
-
-    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
-
-    void slot_setScroll(const glm::vec2 &worldPos);
-    // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
-    void slot_setHorizontalScroll(float worldX);
-    void slot_setVerticalScroll(float worldY);
-
-    void slot_zoomIn();
-    void slot_zoomOut();
-    void slot_zoomReset();
-
-    void slot_layerUp();
-    void slot_layerDown();
-    void slot_layerReset();
-
-    void slot_setRoomSelection(const SigRoomSelection &);
-    void slot_setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
-    void slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
-
-    void slot_clearRoomSelection() { slot_setRoomSelection(SigRoomSelection{}); }
-    void slot_clearConnectionSelection() { slot_setConnectionSelection(nullptr); }
-    void slot_clearInfoMarkSelection() { slot_setInfoMarkSelection(nullptr); }
-
-    void slot_clearAllSelections()
-    {
-        slot_clearRoomSelection();
-        slot_clearConnectionSelection();
-        slot_clearInfoMarkSelection();
-    }
-
-    void slot_dataLoaded();
-    void slot_moveMarker(const Coordinate &coord);
-
-    void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
-    void slot_infomarksChanged() { infomarksChanged(); }
-
-signals:
-    void sig_onCenter(const glm::vec2 &worldCoord);
-    void sig_mapMove(int dx, int dy);
-    void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
-    void sig_continuousScroll(int, int);
-
-    void sig_log(const QString &, const QString &);
-
-    void sig_newRoomSelection(const SigRoomSelection &);
-    void sig_newConnectionSelection(ConnectionSelection *);
-    void sig_newInfoMarkSelection(InfoMarkSelection *);
-
-    void sig_setCurrentRoom(RoomId id, bool update);
-    void sig_zoomChanged(float);
-
 private:
     void reportGLVersion();
     NODISCARD bool isBlacklistedDriver();
@@ -240,4 +185,59 @@ public:
 
 private:
     void log(const QString &msg) { emit sig_log("MapCanvas", msg); }
+
+signals:
+    void sig_onCenter(const glm::vec2 &worldCoord);
+    void sig_mapMove(int dx, int dy);
+    void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
+    void sig_continuousScroll(int, int);
+
+    void sig_log(const QString &, const QString &);
+
+    void sig_newRoomSelection(const SigRoomSelection &);
+    void sig_newConnectionSelection(ConnectionSelection *);
+    void sig_newInfoMarkSelection(InfoMarkSelection *);
+
+    void sig_setCurrentRoom(RoomId id, bool update);
+    void sig_zoomChanged(float);
+
+public slots:
+    void slot_forceMapperToRoom();
+    void slot_createRoom();
+
+    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
+
+    void slot_setScroll(const glm::vec2 &worldPos);
+    // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
+    void slot_setHorizontalScroll(float worldX);
+    void slot_setVerticalScroll(float worldY);
+
+    void slot_zoomIn();
+    void slot_zoomOut();
+    void slot_zoomReset();
+
+    void slot_layerUp();
+    void slot_layerDown();
+    void slot_layerReset();
+
+    void slot_setRoomSelection(const SigRoomSelection &);
+    void slot_setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
+    void slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
+
+    void slot_clearRoomSelection() { slot_setRoomSelection(SigRoomSelection{}); }
+    void slot_clearConnectionSelection() { slot_setConnectionSelection(nullptr); }
+    void slot_clearInfoMarkSelection() { slot_setInfoMarkSelection(nullptr); }
+
+    void slot_clearAllSelections()
+    {
+        slot_clearRoomSelection();
+        slot_clearConnectionSelection();
+        slot_clearInfoMarkSelection();
+    }
+
+    void slot_dataLoaded();
+    void slot_moveMarker(const Coordinate &coord);
+
+    void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
+    void slot_infomarksChanged() { infomarksChanged(); }
 };

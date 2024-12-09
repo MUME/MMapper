@@ -29,6 +29,13 @@ public:
     explicit GroupManagerPage(Mmapper2Group *, QWidget *parent);
     ~GroupManagerPage() final;
 
+private:
+    void loadRemoteHostConfig();
+
+signals:
+    void sig_updatedSelf();
+    void sig_refresh();
+
 public slots:
     void slot_loadConfig();
     void slot_changeColorClicked();
@@ -38,11 +45,4 @@ public slots:
     void slot_localPortValueChanged(int);
     void slot_rulesWarningChanged(int);
     void slot_shareSelfChanged(int);
-
-signals:
-    void sig_updatedSelf();
-    void sig_refresh();
-
-private:
-    void loadRemoteHostConfig();
 };

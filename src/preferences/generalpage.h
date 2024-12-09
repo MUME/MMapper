@@ -28,6 +28,9 @@ public:
     explicit GeneralPage(QWidget *parent);
     ~GeneralPage() final;
 
+signals:
+    void sig_factoryReset();
+
 public slots:
     void slot_loadConfig();
     void slot_remoteNameTextChanged(const QString &);
@@ -45,7 +48,4 @@ public slots:
 
     void slot_displayMumeClockStateChanged(int);
     void slot_displayXPStatusStateChanged(int);
-
-signals:
-    void sig_factoryReset();
 };

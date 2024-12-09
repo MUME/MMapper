@@ -74,12 +74,10 @@ public:
     explicit RoomWidget(RoomManager &rm, QWidget *parent);
     ~RoomWidget() final;
 
-public slots:
-    void slot_update();
-
-signals:
-
 private:
     void readSettings();
     void writeSettings();
+
+public slots:
+    void slot_update();
 };

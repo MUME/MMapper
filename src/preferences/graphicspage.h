@@ -25,9 +25,17 @@ class NODISCARD_QOBJECT GraphicsPage final : public QWidget
 {
     Q_OBJECT
 
+private:
+    Ui::GraphicsPage *const ui;
+    std::unique_ptr<AdvancedGraphicsGroupBox> m_advanced;
+
 public:
     explicit GraphicsPage(QWidget *parent);
     ~GraphicsPage() final;
+
+private:
+    void changeColorClicked(XNamedColor &color, QPushButton *pushButton);
+    void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
 
 signals:
     void sig_graphicsSettingsChanged();
@@ -42,10 +50,4 @@ public slots:
     void slot_drawUpperLayersTexturedStateChanged(int);
     // this slot just calls the signal... not useful
     void slot_graphicsSettingsChanged() { graphicsSettingsChanged(); }
-
-private:
-    void changeColorClicked(XNamedColor &color, QPushButton *pushButton);
-    void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
-    Ui::GraphicsPage *const ui;
-    std::unique_ptr<AdvancedGraphicsGroupBox> m_advanced;
 };

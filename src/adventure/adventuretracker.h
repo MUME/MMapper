@@ -24,6 +24,12 @@ private:
 public:
     explicit AdventureTracker(GameObserver &observer, QObject *parent);
 
+private:
+    void parseIfGoodbye(const GmcpMessage &msg);
+    void parseIfUpdatedCharName(const GmcpMessage &msg);
+    void parseIfUpdatedVitals(const GmcpMessage &msg);
+    NODISCARD double checkpointXP();
+
 signals:
     void sig_accomplishedTask(double xpGained);
     void sig_achievedSomething(const QString &achievement, double xpGained);
@@ -37,10 +43,4 @@ signals:
 public slots:
     void slot_onUserText(const QString &line);
     void slot_onUserGmcp(const GmcpMessage &msg);
-
-private:
-    void parseIfGoodbye(const GmcpMessage &msg);
-    void parseIfUpdatedCharName(const GmcpMessage &msg);
-    void parseIfUpdatedVitals(const GmcpMessage &msg);
-    NODISCARD double checkpointXP();
 };

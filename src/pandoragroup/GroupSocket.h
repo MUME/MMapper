@@ -74,11 +74,10 @@ public:
 
     void sendData(const QByteArray &data);
 
-protected slots:
-    void slot_onError(QAbstractSocket::SocketError socketError);
-    void slot_onPeerVerifyError(const QSslError &error);
-    void slot_onReadyRead();
-    void slot_onTimeout();
+private:
+    void reset();
+    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
+    void onReadInternal(char c);
 
 signals:
     void sig_sendLog(const QString &);
@@ -88,8 +87,9 @@ signals:
     void sig_connectionEstablished(GroupSocket *);
     void sig_connectionEncrypted(GroupSocket *);
 
-private:
-    void reset();
-    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
-    void onReadInternal(char c);
+protected slots:
+    void slot_onError(QAbstractSocket::SocketError socketError);
+    void slot_onPeerVerifyError(const QSslError &error);
+    void slot_onReadyRead();
+    void slot_onTimeout();
 };

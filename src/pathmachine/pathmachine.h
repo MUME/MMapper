@@ -54,20 +54,6 @@ private:
     std::optional<Coordinate> m_pathRootPos;
     std::optional<Coordinate> m_mostLikelyRoomPos;
 
-public slots:
-    void slot_releaseAllPaths();
-    void slot_setCurrentRoom(RoomId id, bool update);
-    void slot_scheduleAction(const std::shared_ptr<MapAction> &action) { scheduleAction(action); }
-
-signals:
-    void sig_lookingForRooms(RoomRecipient &, const SigParseEvent &);
-    void sig_lookingForRooms(RoomRecipient &, RoomId);
-    void sig_lookingForRooms(RoomRecipient &, const Coordinate &);
-    void sig_playerMoved(const Coordinate &);
-    void sig_createRoom(const SigParseEvent &, const Coordinate &);
-    void sig_scheduleAction(std::shared_ptr<MapAction>);
-    void sig_setCharPosition(RoomId id);
-
 public:
     explicit PathMachine(MapData *mapData, QObject *parent);
 
@@ -96,4 +82,18 @@ protected:
     NODISCARD const Room *getMostLikelyRoom() const;
     NODISCARD RoomId getMostLikelyRoomId() const;
     NODISCARD const Coordinate &getMostLikelyRoomPosition() const;
+
+signals:
+    void sig_lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    void sig_lookingForRooms(RoomRecipient &, RoomId);
+    void sig_lookingForRooms(RoomRecipient &, const Coordinate &);
+    void sig_playerMoved(const Coordinate &);
+    void sig_createRoom(const SigParseEvent &, const Coordinate &);
+    void sig_scheduleAction(std::shared_ptr<MapAction>);
+    void sig_setCharPosition(RoomId id);
+
+public slots:
+    void slot_releaseAllPaths();
+    void slot_setCurrentRoom(RoomId id, bool update);
+    void slot_scheduleAction(const std::shared_ptr<MapAction> &action) { scheduleAction(action); }
 };

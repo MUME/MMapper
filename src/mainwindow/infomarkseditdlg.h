@@ -42,15 +42,6 @@ public:
                               MapData *md,
                               MapCanvas *mc);
 
-signals:
-    void sig_infomarksChanged();
-
-public slots:
-    void slot_objectListCurrentIndexChanged(int);
-    void slot_objectTypeCurrentIndexChanged(int);
-    void slot_createClicked();
-    void slot_modifyClicked();
-
 private:
     void connectAll();
     void disconnectAll();
@@ -66,4 +57,13 @@ private:
     void updateMarkers();
     void updateDialog();
     void updateMark(InfoMark &im);
+
+signals:
+    void sig_infomarksChanged();
+
+public slots:
+    void slot_objectListCurrentIndexChanged(int);
+    void slot_objectTypeCurrentIndexChanged(int);
+    void slot_createClicked();
+    void slot_modifyClicked();
 };

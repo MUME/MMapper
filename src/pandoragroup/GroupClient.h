@@ -26,11 +26,6 @@ public:
     explicit GroupClient(Mmapper2Group *parent);
     ~GroupClient() final;
 
-public slots:
-    void slot_errorInConnection(GroupSocket *socket, const QString &);
-    void slot_connectionEncrypted();
-    void slot_connectionEstablished();
-
 private:
     NODISCARD bool virt_start() final;
     void virt_stop() final;
@@ -48,4 +43,9 @@ private:
     void sendLoginInformation();
     void tryReconnecting();
     void receiveGroupInformation(const QVariantMap &data);
+
+public slots:
+    void slot_errorInConnection(GroupSocket *socket, const QString &);
+    void slot_connectionEncrypted();
+    void slot_connectionEstablished();
 };

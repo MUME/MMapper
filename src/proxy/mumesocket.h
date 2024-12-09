@@ -60,6 +60,13 @@ public:
         std::abort();
     }
 
+signals:
+    void sig_connected();
+    void sig_disconnected();
+    void sig_socketError(const QString &errorString);
+    void sig_processMudStream(const QByteArray &buffer);
+    void sig_log(const QString &, const QString &);
+
 protected slots:
     void slot_onConnect() { virt_onConnect(); }
     void slot_onDisconnect() { virt_onDisconnect(); }
@@ -68,13 +75,6 @@ protected slots:
     {
         virt_onError2(e, errorString);
     }
-
-signals:
-    void sig_connected();
-    void sig_disconnected();
-    void sig_socketError(const QString &errorString);
-    void sig_processMudStream(const QByteArray &buffer);
-    void sig_log(const QString &, const QString &);
 };
 
 class NODISCARD_QOBJECT MumeSslSocket : public MumeSocket

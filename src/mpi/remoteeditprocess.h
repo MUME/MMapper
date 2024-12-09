@@ -17,6 +17,15 @@ class NODISCARD_QOBJECT RemoteEditProcess final : public QObject
 {
     Q_OBJECT
 
+private:
+    const QString m_title;
+    const QString m_body;
+    const bool m_editSession;
+
+    QProcess m_process;
+    QString m_fileName;
+    QDateTime m_previousTime;
+
 public:
     explicit RemoteEditProcess(bool editSession,
                                const QString &title,
@@ -28,25 +37,17 @@ private:
     virtual void virt_onError(QProcess::ProcessError);
     virtual void virt_onFinished(int, QProcess::ExitStatus);
 
+private:
+    NODISCARD static QStringList splitCommandLine(const QString &cmdLine);
+
+signals:
+    void sig_cancel();
+    void sig_save(const QString &);
+
 protected slots:
     void slot_onError(QProcess::ProcessError err) { virt_onError(err); }
     void slot_onFinished(int exitCode, QProcess::ExitStatus status)
     {
         virt_onFinished(exitCode, status);
     }
-
-signals:
-    void sig_cancel();
-    void sig_save(const QString &);
-
-private:
-    NODISCARD static QStringList splitCommandLine(const QString &cmdLine);
-
-    const QString m_title;
-    const QString m_body;
-    const bool m_editSession;
-
-    QProcess m_process;
-    QString m_fileName;
-    QDateTime m_previousTime;
 };

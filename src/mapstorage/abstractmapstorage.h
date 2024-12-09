@@ -24,26 +24,6 @@ class NODISCARD_QOBJECT AbstractMapStorage : public QObject
 {
     Q_OBJECT
 
-public:
-    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent);
-    explicit AbstractMapStorage(MapData &, QString, QObject *parent);
-    ~AbstractMapStorage() override;
-
-    virtual bool canLoad() const = 0;
-    virtual bool canSave() const = 0;
-
-    virtual void newData() = 0;
-    virtual bool loadData() = 0;
-    virtual bool mergeData() = 0;
-    virtual bool saveData(bool baseMapOnly) = 0;
-    ProgressCounter &getProgressCounter() const;
-
-signals:
-    void sig_log(const QString &, const QString &);
-    void sig_onDataLoaded();
-    void sig_onDataSaved();
-    void sig_onNewData();
-
 protected:
     QFile *m_file = nullptr;
     MapData &m_mapData;
@@ -57,4 +37,24 @@ private:
     // be public if it's a regular member. If so, rename it to remove the
     // m_ protected/private member prefix, and remove getProgressCounter().
     std::unique_ptr<ProgressCounter> m_progressCounter;
+
+public:
+    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent);
+    explicit AbstractMapStorage(MapData &, QString, QObject *parent);
+    ~AbstractMapStorage() override;
+
+    virtual bool canLoad() const = 0;
+    virtual bool canSave() const = 0;
+
+    virtual void newData() = 0;
+    virtual bool loadData() = 0;
+    virtual bool mergeData() = 0;
+    virtual bool saveData(bool baseMapOnly) = 0;
+    NODISCARD ProgressCounter &getProgressCounter() const;
+
+signals:
+    void sig_log(const QString &, const QString &);
+    void sig_onDataLoaded();
+    void sig_onDataSaved();
+    void sig_onNewData();
 };

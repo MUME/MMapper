@@ -42,20 +42,6 @@ private:
     QTreeWidgetItem *item = nullptr;
     std::unique_ptr<QShortcut> m_showSelectedRoom;
 
-public:
-signals:
-    void sig_center(const glm::vec2 &worldPos);
-    void sig_newRoomSelection(const SigRoomSelection &);
-    void sig_editSelection();
-    void sig_log(const QString &, const QString &);
-
-public slots:
-    void slot_closeEvent(QCloseEvent *event)
-    {
-        /* virtual */
-        closeEvent(event);
-    }
-
 private:
     void closeEvent(QCloseEvent *event) final;
 
@@ -69,6 +55,18 @@ public:
 private:
     void adjustResultTable();
 
+signals:
+    void sig_center(const glm::vec2 &worldPos);
+    void sig_newRoomSelection(const SigRoomSelection &);
+    void sig_editSelection();
+    void sig_log(const QString &, const QString &);
+
+public slots:
+    void slot_closeEvent(QCloseEvent *event)
+    {
+        /* virtual */
+        closeEvent(event);
+    }
 private slots:
     QString slot_constructToolTip(const Room *);
     void slot_on_lineEdit_textChanged();

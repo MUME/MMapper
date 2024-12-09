@@ -26,6 +26,21 @@ public:
     void connectToHost();
     void disconnectFromHost();
 
+private:
+    void virt_sendToMapper(const QByteArray &, bool goAhead) final;
+    void virt_receiveEchoMode(bool) final;
+    void virt_sendRawData(std::string_view data) final;
+
+signals:
+    /** Submits Telnet/text data back to the client */
+    void sig_sendToUser(const QString &data);
+
+    /** toggles echo mode for passwords */
+    void sig_echoModeChanged(bool);
+    void sig_disconnected();
+    void sig_connected();
+    void sig_socketError(const QString &);
+
 public slots:
     /** Window size has changed - informs the server about it */
     void slot_onWindowSizeChanged(int width, int height);
@@ -40,19 +55,4 @@ protected slots:
 
     /** Reads, parses telnet, and so forth */
     void slot_onReadyRead();
-
-signals:
-    /** Submits Telnet/text data back to the client */
-    void sig_sendToUser(const QString &data);
-
-    /** toggles echo mode for passwords */
-    void sig_echoModeChanged(bool);
-    void sig_disconnected();
-    void sig_connected();
-    void sig_socketError(const QString &);
-
-private:
-    void virt_sendToMapper(const QByteArray &, bool goAhead) final;
-    void virt_receiveEchoMode(bool) final;
-    void virt_sendRawData(std::string_view data) final;
 };

@@ -33,14 +33,6 @@ public:
     explicit RemoteEdit(QObject *parent);
     ~RemoteEdit() final = default;
 
-public slots:
-    void slot_remoteView(const QString &, const QString &);
-    void slot_remoteEdit(const RemoteSession &, const QString &, const QString &);
-    void slot_onDisconnected();
-
-signals:
-    void sig_sendToSocket(const QByteArray &);
-
 protected:
     void cancel(const RemoteEditSession *);
     void save(const RemoteEditSession *);
@@ -52,4 +44,12 @@ private:
     }
     void addSession(const RemoteSession &, const QString &, const QString &);
     void removeSession(const RemoteEditSession *session);
+
+signals:
+    void sig_sendToSocket(const QByteArray &);
+
+public slots:
+    void slot_remoteView(const QString &, const QString &);
+    void slot_remoteEdit(const RemoteSession &, const QString &, const QString &);
+    void slot_onDisconnected();
 };

@@ -66,6 +66,14 @@ public:
 
     NODISCARD MapCanvas *getCanvas() const;
 
+public:
+    void updateScrollBars();
+    void setZoom(float zoom);
+    NODISCARD float getZoom() const;
+
+private:
+    void centerOnScrollPos(const glm::ivec2 &scrollPos);
+
 signals:
     void sig_setScroll(const glm::vec2 &worldPos);
     void sig_zoomChanged(float zoom);
@@ -78,12 +86,4 @@ public slots:
     void slot_scrollTimerTimeout();
     void slot_graphicsSettingsChanged();
     void slot_zoomChanged(const float zoom) { emit sig_zoomChanged(zoom); }
-
-public:
-    void updateScrollBars();
-    void setZoom(float zoom);
-    NODISCARD float getZoom() const;
-
-private:
-    void centerOnScrollPos(const glm::ivec2 &scrollPos);
 };

@@ -91,13 +91,13 @@ public:
     NODISCARD bool canCopy() const { return m_canCopy; }
     NODISCARD QSize sizeHint() const override;
 
-public slots:
-    void slot_displayText(const QString &str);
-
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
 signals:
     void sig_showMessage(const QString &, int);
     void sig_windowSizeChanged(int, int);
+
+public slots:
+    void slot_displayText(const QString &str);
 };

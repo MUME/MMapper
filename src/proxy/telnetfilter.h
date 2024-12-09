@@ -43,17 +43,17 @@ public:
     {}
     ~TelnetFilter() final = default;
 
-public slots:
-    void slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
-    void slot_onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
-
-signals:
-    void sig_parseNewMudInput(const TelnetData &);
-    void sig_parseNewUserInput(const TelnetData &);
-
 private:
     void dispatchTelnetStream(const QByteArray &stream,
                               TelnetData &m_incomingData,
                               TelnetIncomingDataQueue &que,
                               const bool &goAhead);
+
+signals:
+    void sig_parseNewMudInput(const TelnetData &);
+    void sig_parseNewUserInput(const TelnetData &);
+
+public slots:
+    void slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
+    void slot_onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
 };

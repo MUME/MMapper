@@ -29,6 +29,11 @@ public:
         : QObject(parent)
     {}
 
+protected:
+    void parseMessage(char command, const QByteArray &buffer);
+    void parseEditMessage(const QByteArray &buffer);
+    void parseViewMessage(const QByteArray &buffer);
+
 signals:
     void sig_sendToMud(const QByteArray &);
     void sig_parseNewMudInput(const TelnetData &data);
@@ -37,9 +42,4 @@ signals:
 
 public slots:
     void slot_analyzeNewMudInput(const TelnetData &data);
-
-protected:
-    void parseMessage(char command, const QByteArray &buffer);
-    void parseEditMessage(const QByteArray &buffer);
-    void parseViewMessage(const QByteArray &buffer);
 };

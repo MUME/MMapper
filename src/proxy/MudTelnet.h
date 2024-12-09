@@ -21,22 +21,6 @@ public:
     explicit MudTelnet(QObject *parent);
     ~MudTelnet() final = default;
 
-public slots:
-    void slot_onAnalyzeMudStream(const QByteArray &);
-    void slot_onSendToMud(const QByteArray &);
-    void slot_onDisconnected();
-    void slot_onRelayNaws(int, int);
-    void slot_onRelayTermType(const QByteArray &);
-    void slot_onGmcpToMud(const GmcpMessage &);
-
-signals:
-    void sig_analyzeMudStream(const QByteArray &, bool goAhead);
-    void sig_sendToSocket(const QByteArray &);
-    void sig_relayEchoMode(bool);
-    void sig_relayGmcp(const GmcpMessage &);
-    void sig_sendMSSPToUser(const QByteArray &);
-    void sig_sendGameTimeToClock(int year, const std::string &month, int day, int hour);
-
 private:
     void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
     void virt_receiveEchoMode(bool toggle) final;
@@ -52,4 +36,20 @@ private:
 
 private:
     void sendCoreSupports();
+
+signals:
+    void sig_analyzeMudStream(const QByteArray &, bool goAhead);
+    void sig_sendToSocket(const QByteArray &);
+    void sig_relayEchoMode(bool);
+    void sig_relayGmcp(const GmcpMessage &);
+    void sig_sendMSSPToUser(const QByteArray &);
+    void sig_sendGameTimeToClock(int year, const std::string &month, int day, int hour);
+
+public slots:
+    void slot_onAnalyzeMudStream(const QByteArray &);
+    void slot_onSendToMud(const QByteArray &);
+    void slot_onDisconnected();
+    void slot_onRelayNaws(int, int);
+    void slot_onRelayTermType(const QByteArray &);
+    void slot_onGmcpToMud(const GmcpMessage &);
 };

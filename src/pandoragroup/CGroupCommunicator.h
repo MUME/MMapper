@@ -79,6 +79,12 @@ private:
     virtual void virt_sendCharUpdate(const QVariantMap &map) = 0;
     virtual void virt_sendGroupTellMessage(const QVariantMap &map) = 0;
 
+protected:
+    void messageBox(const QString &message) { emit sig_messageBox(message); }
+    void scheduleAction(std::shared_ptr<GroupAction> action) { emit sig_scheduleAction(action); }
+    void gTellArrived(QVariantMap node) { emit sig_gTellArrived(node); }
+    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
+
 public slots:
     void slot_connectionClosed(GroupSocket *sock) { virt_connectionClosed(deref(sock)); }
     void slot_kickCharacter(const QByteArray &msg) { virt_kickCharacter(msg); }
@@ -90,21 +96,15 @@ public slots:
     void slot_sendCharUpdate(const QVariantMap &map) { virt_sendCharUpdate(map); }
     void slot_sendGroupTellMessage(const QVariantMap &map) { virt_sendGroupTellMessage(map); }
 
-protected:
-    void messageBox(const QString &message) { emit sig_messageBox(message); }
-    void scheduleAction(std::shared_ptr<GroupAction> action) { emit sig_scheduleAction(action); }
-    void gTellArrived(QVariantMap node) { emit sig_gTellArrived(node); }
-    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
+signals:
+    void sig_messageBox(QString message);
+    void sig_scheduleAction(std::shared_ptr<GroupAction> action);
+    void sig_gTellArrived(QVariantMap node);
+    void sig_sendLog(const QString &);
 
 public slots:
     void slot_incomingData(GroupSocket *, const QByteArray &);
     void slot_sendGroupTell(const QByteArray &);
     void slot_relayLog(const QString &);
     void slot_sendSelfRename(const QByteArray &, const QByteArray &);
-
-signals:
-    void sig_messageBox(QString message);
-    void sig_scheduleAction(std::shared_ptr<GroupAction> action);
-    void sig_gTellArrived(QVariantMap node);
-    void sig_sendLog(const QString &);
 };
