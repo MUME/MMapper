@@ -435,9 +435,8 @@ void Proxy::slot_processUserStream()
 
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
-        if (!byteArray.isEmpty()) {
-            emit sig_analyzeUserStream(byteArray);
-        }
+        assert(!byteArray.isEmpty());
+        emit sig_analyzeUserStream(byteArray);
     });
 }
 

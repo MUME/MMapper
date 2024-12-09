@@ -196,9 +196,8 @@ void MumeSslSocket::slot_onReadyRead()
 {
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-        if (!byteArray.isEmpty()) {
-            emit sig_processMudStream(byteArray);
-        }
+        assert(!byteArray.isEmpty());
+        emit sig_processMudStream(byteArray);
     });
 }
 

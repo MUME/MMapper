@@ -242,6 +242,7 @@ void GroupSocket::slot_onReadyRead()
 {
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_ioBuffer, [this](const QByteArray &byteArray) {
+        assert(!byteArray.isEmpty());
         for (const auto &c : byteArray) {
             onReadInternal(c);
         }

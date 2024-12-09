@@ -119,6 +119,7 @@ void ClientTelnet::slot_onReadyRead()
 {
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
+        assert(!byteArray.isEmpty());
         onReadInternal(byteArray);
     });
 }

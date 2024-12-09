@@ -50,15 +50,22 @@ public:
 
 enum class NODISCARD IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
 
+enum class NODISCARD WithEmptyCallback { No, Yes };
+
 template<size_t N, typename Callback>
-NODISCARD IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&callback)
+NODISCARD IOResultEnum readAllAvailable_ext(QIODevice &dev,
+                                            buffer<N> &buffer,
+                                            Callback &&callback,
+                                            const WithEmptyCallback withEmptyCallback)
 {
     static constexpr const auto MAX_SIZE = static_cast<qint64>(N);
     char *const data = buffer.data();
     while (dev.bytesAvailable() > 0) {
         const auto got = dev.read(data, MAX_SIZE);
         if (got <= 0) {
-            callback(QByteArray::fromRawData(data, 0));
+            if (withEmptyCallback == WithEmptyCallback::Yes) {
+                callback(QByteArray::fromRawData(data, 0));
+            }
             return IOResultEnum::FAILURE;
         }
 
@@ -70,8 +77,19 @@ NODISCARD IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callb
         // contents of data the next time we read into the buffer.
         callback(QByteArray::fromRawData(data, igot));
     }
-    callback(QByteArray::fromRawData(data, 0));
+    if (withEmptyCallback == WithEmptyCallback::Yes) {
+        callback(QByteArray::fromRawData(data, 0));
+    }
     return IOResultEnum::SUCCESS;
+}
+
+template<size_t N, typename Callback>
+NODISCARD IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&callback)
+{
+    return readAllAvailable_ext(dev,
+                                buffer,
+                                std::forward<Callback>(callback),
+                                WithEmptyCallback::No);
 }
 
 class NODISCARD IOException : public std::runtime_error
