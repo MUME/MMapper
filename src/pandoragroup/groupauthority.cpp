@@ -300,29 +300,28 @@ GroupSecret GroupAuthority::getSecret() const
     return certificate.digest(QCryptographicHash::Algorithm::Sha1).toHex();
 }
 
-bool GroupAuthority::add(const GroupSecret &secret)
+void GroupAuthority::add(const GroupSecret &secret)
 {
     if (validSecret(secret)) {
-        return false;
+        return; // not added
     }
 
     // Update model
-    if (model.insertRow(model.rowCount())) {
-        QModelIndex index = model.index(model.rowCount() - 1, 0);
-        model.setData(index, secret.toLower(), Qt::DisplayRole);
-
-        // Update configuration
-        setConfig().groupManager.authorizedSecrets = model.stringList();
-        return true;
+    if (!model.insertRow(model.rowCount())) {
+        return; // not added
     }
 
-    return false;
+    QModelIndex index = model.index(model.rowCount() - 1, 0);
+    model.setData(index, secret.toLower(), Qt::DisplayRole);
+
+    // Update configuration
+    setConfig().groupManager.authorizedSecrets = model.stringList();
 }
 
-bool GroupAuthority::remove(const GroupSecret &secret)
+void GroupAuthority::remove(const GroupSecret &secret)
 {
     if (!validSecret(secret)) {
-        return false;
+        return; // not removed
     }
 
     emit sig_secretRevoked(secret);
@@ -341,10 +340,11 @@ bool GroupAuthority::remove(const GroupSecret &secret)
             for (const GroupMetadataEnum type : ALL_GROUP_METADATA) {
                 conf.secretMetadata.remove(getMetadataKey(secret, type));
             }
-            return true;
+            return; // removed
         }
     }
-    return false;
+
+    return; // not removed
 }
 
 bool GroupAuthority::validSecret(const GroupSecret &secret) const

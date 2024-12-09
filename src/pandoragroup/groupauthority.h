@@ -45,8 +45,8 @@ public:
 
 public:
     NODISCARD QAbstractItemModel *getItemModel() { return &model; }
-    bool add(const GroupSecret &);
-    bool remove(const GroupSecret &);
+    void add(const GroupSecret &);
+    void remove(const GroupSecret &);
     NODISCARD bool validSecret(const GroupSecret &) const;
     NODISCARD static bool validCertificate(const GroupSocket &);
 

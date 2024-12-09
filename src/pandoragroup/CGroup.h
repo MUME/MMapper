@@ -72,7 +72,7 @@ public:
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
     void removeChar(const QByteArray &name);
-    bool addChar(const QVariantMap &node);
+    void addChar(const QVariantMap &node);
 
 public:
     NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
