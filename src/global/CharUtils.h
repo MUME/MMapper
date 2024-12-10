@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "Charset.h"
 #include "utils.h"
 
 #include <cassert>
@@ -13,6 +14,7 @@
 template<typename Callback>
 void foreachChar(const std::string_view input, const char c, Callback &&callback)
 {
+    assert(::isAscii(c));
     std::string_view sv = input;
     while (!sv.empty()) {
         if (const auto next = sv.find(c); next == std::string_view::npos) {
@@ -40,6 +42,7 @@ namespace mmqt {
 template<typename Callback>
 void foreachChar(const QStringView input, const char c, Callback &&callback)
 {
+    assert(::isAscii(c));
     const qsizetype len = input.size();
     qsizetype pos = 0;
     while (pos < len) {
