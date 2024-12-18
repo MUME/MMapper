@@ -801,17 +801,12 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 qWarning() << "Invalid GMCP received" << payload;
                 break;
             }
-            try {
-                GmcpMessage msg = GmcpMessage::fromRawBytes(payload.getQByteArray().mid(1));
-                if (m_debug) {
-                    qDebug() << "Received GMCP message" << msg.getName().toQString()
-                             << (msg.getJson() ? msg.getJson()->toQString() : "");
-                }
-                receiveGmcpMessage(msg);
-
-            } catch (const std::exception &e) {
-                qWarning() << "Corrupted GMCP received" << payload << e.what();
+            GmcpMessage msg = GmcpMessage::fromRawBytes(payload.getQByteArray().mid(1));
+            if (m_debug) {
+                qDebug() << "Received GMCP message" << msg.getName().toQString()
+                         << (msg.getJson() ? msg.getJson()->toQString() : "");
             }
+            receiveGmcpMessage(msg);
         } else {
             qWarning() << "His GMCP is not enabled yet!";
         }

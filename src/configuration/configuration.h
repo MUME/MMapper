@@ -287,24 +287,8 @@ public:
 
     struct NODISCARD GroupManagerSettings final
     {
-        GroupManagerStateEnum state = GroupManagerStateEnum::Off;
-        uint16_t localPort = 0u;
-        uint16_t remotePort = 0u;
-        QString host;
-        QString charName;
-        bool shareSelf = false;
         QColor color;
-        bool rulesWarning = false;
-        QByteArray certificate;
-        QByteArray privateKey;
-        QStringList authorizedSecrets;
-        bool requireAuth = false;
         QByteArray geometry;
-        QMap<QString, QVariant> secretMetadata;
-        QString groupTellColor; // ANSI color
-        bool useGroupTellAnsi256Color = false;
-        bool lockGroup = false;
-        bool autoStart = false;
 
     private:
         SUBGROUP();

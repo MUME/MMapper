@@ -6,8 +6,8 @@
 
 #include "../global/Badge.h"
 #include "../global/RuleOf5.h"
+#include "../map/mmapper2room.h"
 #include "../map/roomid.h"
-#include "../parser/CommandQueue.h"
 #include "mmapper2character.h"
 
 #include <memory>
@@ -16,40 +16,73 @@
 
 #include <QByteArray>
 #include <QColor>
-#include <QVariantMap>
 
 class CGroupChar;
 using SharedGroupChar = std::shared_ptr<CGroupChar>;
+class JsonObj;
+
+namespace tags {
+struct NODISCARD GroupIdTag final
+{};
+} // namespace tags
+
+struct NODISCARD GroupId final : public TaggedInt<GroupId, tags::GroupIdTag, uint32_t>
+{
+    using TaggedInt::TaggedInt;
+    constexpr GroupId()
+        : GroupId{UINT_MAX}
+    {}
+    NODISCARD constexpr uint32_t asUint32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, GroupId id);
+    friend AnsiOstream &operator<<(AnsiOstream &os, GroupId id);
+};
+
+static_assert(sizeof(GroupId) == sizeof(uint32_t));
+static constexpr const GroupId INVALID_GROUPID{UINT_MAX};
+static_assert(GroupId{} == INVALID_GROUPID);
 
 // TODO: make std::vector private
-class NODISCARD GroupVector : public std::vector<SharedGroupChar>
-{};
+using GroupVector = std::vector<SharedGroupChar>;
 
 class NODISCARD CGroupChar final : public std::enable_shared_from_this<CGroupChar>
 {
 private:
     struct NODISCARD Internal final
     {
-        QString name;
-        QString label;
-        QColor color;
-        ServerRoomId serverId = INVALID_SERVER_ROOMID;
-        ExternalRoomId externalId = INVALID_EXTERNAL_ROOMID;
+        QColor color = QColor::Invalid;
     };
 
 private:
     Internal m_internal;
 
-public:
-    int hp = 0;
-    int maxhp = 0;
-    int mana = 0;
-    int maxmana = 0;
-    int moves = 0;
-    int maxmoves = 0;
-    CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
-    CharacterAffectFlags affects;
-    CommandQueue prespam;
+private:
+    struct NODISCARD Server final
+    {
+        GroupId id = INVALID_GROUPID;
+        CharacterName name;
+        CharacterLabel label;
+        ServerRoomId serverId = INVALID_SERVER_ROOMID;
+
+        CharacterRoomName roomName;
+        QString textHP;
+        QString textMoves;
+        QString textMana;
+        int hp = 0;
+        int maxhp = 0;
+        int mana = 0;
+        int maxmana = 0;
+        int mp = 0;
+        int maxmp = 0;
+
+        CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
+        CharacterTypeEnum type = CharacterTypeEnum::UNDEFINED;
+        CharacterAffectFlags affects;
+
+        void reset() { *this = Server{}; }
+    };
+
+private:
+    Server m_server;
 
 public:
     CGroupChar() = delete;
@@ -68,34 +101,110 @@ public:
     }
 
 public:
-    void init(QByteArray name, QColor color) = delete;
-    void init(QString name, QColor color);
+    void init(GroupId id);
     void reset();
 
 public:
-    NODISCARD const QString &getName() const { return m_internal.name; }
-    void setName(QByteArray name) = delete;
-    void setName(QString name) { m_internal.name = std::move(name); }
-    NODISCARD const QString &getLabel() const { return m_internal.label; }
-    void setLabel(QByteArray name) = delete;
-    void setLabel(QString label) { m_internal.label = std::move(label); }
-    void setColor(QColor col) { m_internal.color = std::move(col); }
-    void setExternalId(ExternalRoomId id) { m_internal.externalId = id; }
-    void setServerId(ServerRoomId id) { m_internal.serverId = id; }
-    NODISCARD const QColor &getColor() const { return m_internal.color; }
-    NODISCARD QVariantMap toVariantMap() const;
-    NODISCARD bool updateFromVariantMap(const QVariantMap &);
-    NODISCARD ExternalRoomId getExternalId() const { return m_internal.externalId; }
-    NODISCARD ServerRoomId getServerId() const { return m_internal.serverId; }
-    NODISCARD static QString getNameFromUpdateChar(const QVariantMap &);
+#define X_DECL_GETTERS_AND_SETTERS(UPPER_CASE, lower_case, CamelCase, friendly) \
+    NODISCARD inline bool is##CamelCase() const \
+    { \
+        return m_server.type == CharacterTypeEnum::UPPER_CASE; \
+    }
+    XFOREACH_CHARACTER_TYPE(X_DECL_GETTERS_AND_SETTERS)
+#undef X_DECL_GETTERS_AND_SETTERS
+
+public:
+    NODISCARD const CharacterName &getName() const
+    {
+        return m_server.name;
+    }
+    NODISCARD GroupId getId() const
+    {
+        return m_server.id;
+    }
+    void setName(CharacterName name)
+    {
+        m_server.name = std::move(name);
+    }
+    NODISCARD const CharacterLabel &getLabel() const
+    {
+        return m_server.label;
+    }
+    void setLabel(CharacterLabel label)
+    {
+        m_server.label = std::move(label);
+    }
+    void setColor(QColor col)
+    {
+        m_internal.color = std::move(col);
+    }
+    void setServerId(ServerRoomId id)
+    {
+        m_server.serverId = id;
+    }
+    NODISCARD const QColor &getColor() const
+    {
+        return m_internal.color;
+    }
+    NODISCARD bool updateFromGmcp(const JsonObj &obj);
+    NODISCARD ServerRoomId getServerId() const
+    {
+        return m_server.serverId;
+    }
+    NODISCARD CharacterTypeEnum getType() const
+    {
+        return m_server.type;
+    }
+    NODISCARD CharacterPositionEnum getPosition() const
+    {
+        return m_server.position;
+    }
+    NODISCARD const CharacterAffectFlags &getAffects() const
+    {
+        return m_server.affects;
+    }
+    NODISCARD int getHits() const
+    {
+        return m_server.hp;
+    }
+    NODISCARD int getMaxHits() const
+    {
+        return m_server.maxhp;
+    }
+    NODISCARD int getMana() const
+    {
+        return m_server.mana;
+    }
+    NODISCARD int getMaxMana() const
+    {
+        return m_server.maxmana;
+    }
+    NODISCARD int getMoves() const
+    {
+        return m_server.mp;
+    }
+    NODISCARD int getMaxMoves() const
+    {
+        return m_server.maxmp;
+    }
+    bool setPosition(CharacterPositionEnum pos);
+    bool setScore(const QString &hp, const QString &mana, const QString &moves);
+    void setRoomName(CharacterRoomName name)
+    {
+        m_server.roomName = std::move(name);
+    }
+    NODISCARD const CharacterRoomName &getRoomName() const
+    {
+        return m_server.roomName;
+    }
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {
-        hp = _hp;
-        maxhp = _maxhp;
-        mana = _mana;
-        maxmana = _maxmana;
-        moves = _moves;
-        maxmoves = _maxmoves;
+        m_server.hp = _hp;
+        m_server.maxhp = _maxhp;
+        m_server.mana = _mana;
+        m_server.maxmana = _maxmana;
+        m_server.mp = _moves;
+        m_server.maxmp = _maxmoves;
     }
 };

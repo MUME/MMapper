@@ -3,10 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "groupselection.h"
+#include "CGroupChar.h"
 #include "mmapper2character.h"
-
-#include <vector>
 
 #include <QAbstractTableModel>
 #include <QString>
@@ -108,8 +106,9 @@ private:
     GroupModel m_model;
 
 private:
-    QAction *m_kick = nullptr;
-    QString selectedCharacter;
+    QAction *m_center = nullptr;
+    QAction *m_recolor = nullptr;
+    SharedGroupChar selectedCharacter;
 
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
@@ -125,7 +124,6 @@ signals:
 
 public slots:
     void slot_updateLabels();
-    void slot_messageBox(const QString &title, const QString &message);
     void slot_mapUnloaded() { m_model.setMapLoaded(false); }
     void slot_mapLoaded() { m_model.setMapLoaded(true); }
 };

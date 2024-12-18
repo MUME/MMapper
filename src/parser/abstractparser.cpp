@@ -833,7 +833,6 @@ void AbstractParser::showHelp()
                      "  %1mark        - (see \"%1mark ??\" for syntax help)\n"
                      "\n"
                      "Utility commands:\n"
-                     "  %1gtell       - send group tell\n"
                      "  %1group       - (see \"%1group ??\" for syntax help)\n"
                      "  %1timer       - (see \"%1timer ??\" for syntax help)\n"
                      "\n"
@@ -1245,23 +1244,6 @@ void ParserCommon::setExitFlags(const ExitFlags ef, const ExitDirEnum dir)
 void ParserCommon::setConnectedRoomFlag(const DirectSunlightEnum light, const ExitDirEnum dir)
 {
     m_commonData.connectedRoomFlags.setDirectSunlight(dir, light);
-}
-
-void ParserCommon::sendGTellToUser(const QString &color, const QString &from, const QString &text)
-{
-    const QString tell = QString("\x1B%1%2 tells you [GT] '%3'\x1B[0m").arg(color, from, text);
-
-    if (m_proxyUserGmcp.isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MMAPPER_COMM)) {
-        m_proxyUserGmcp.gmcpToUser(
-            GmcpMessage(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL,
-                        GmcpJson{QString(R"({ "name": "%1", "text": "%2" })")
-                                     .arg(GmcpUtils::escapeGmcpStringData(from),
-                                          GmcpUtils::escapeGmcpStringData(tell))}));
-        return;
-    }
-
-    sendToUser(SendToUserSource::GroupTellOutput, "\n" + tell + "\n");
-    sendPromptToUser();
 }
 
 void AbstractParser::eval(const std::string_view name,

@@ -10,7 +10,6 @@
 #include "clientpage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
-#include "groupmanagerpage.h"
 #include "mumeprotocolpage.h"
 #include "parserpage.h"
 #include "pathmachinepage.h"
@@ -20,10 +19,9 @@
 #include <QListWidget>
 #include <QtWidgets>
 
-ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
+ConfigDialog::ConfigDialog(QWidget *const parent)
     : QDialog(parent)
     , ui(new Ui::ConfigDialog)
-    , m_groupManager(gm)
 {
     ui->setupUi(this);
 
@@ -35,7 +33,6 @@ ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
     auto graphicsPage = new GraphicsPage(this);
     auto parserPage = new ParserPage(this);
     auto clientPage = new ClientPage(this);
-    auto groupManagerPage = new GroupManagerPage(m_groupManager, this);
     auto autoLogPage = new AutoLogPage(this);
     auto mumeProtocolPage = new MumeProtocolPage(this);
     auto pathmachinePage = new PathmachinePage(this);
@@ -47,7 +44,6 @@ ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
     pagesWidget->addWidget(graphicsPage);
     pagesWidget->addWidget(parserPage);
     pagesWidget->addWidget(clientPage);
-    pagesWidget->addWidget(groupManagerPage);
     pagesWidget->addWidget(autoLogPage);
     pagesWidget->addWidget(mumeProtocolPage);
     pagesWidget->addWidget(pathmachinePage);
@@ -70,10 +66,6 @@ ConfigDialog::ConfigDialog(Mmapper2Group *const gm, QWidget *const parent)
     connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::slot_loadConfig);
-    connect(this,
-            &ConfigDialog::sig_loadConfig,
-            groupManagerPage,
-            &GroupManagerPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::slot_loadConfig);
     connect(this,
             &ConfigDialog::sig_loadConfig,
@@ -130,12 +122,6 @@ void ConfigDialog::createIcons()
     clientButton->setText(tr("Integrated\nMud Client"));
     clientButton->setTextAlignment(Qt::AlignHCenter);
     clientButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-
-    auto *groupButton = new QListWidgetItem(ui->contentsWidget);
-    groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
-    groupButton->setText(tr("Group\nManager"));
-    groupButton->setTextAlignment(Qt::AlignHCenter);
-    groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
     auto *autoLogButton = new QListWidgetItem(ui->contentsWidget);
     autoLogButton->setIcon(QIcon(":/icons/autologgercfg.png"));

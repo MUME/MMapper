@@ -375,32 +375,17 @@ set(mmapper_SRCS
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
     opengl/legacy/impl_gl20.cpp
-    pandoragroup/CGroup.cpp
-    pandoragroup/CGroup.h
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupChar.h
-    pandoragroup/CGroupCommunicator.cpp
-    pandoragroup/CGroupCommunicator.h
-    pandoragroup/GroupClient.cpp
-    pandoragroup/GroupClient.h
+    pandoragroup/ColorGenerator.cpp
+    pandoragroup/ColorGenerator.h
     pandoragroup/GroupManagerApi.cpp
     pandoragroup/GroupManagerApi.h
-    pandoragroup/GroupPortMapper.cpp
-    pandoragroup/GroupPortMapper.h
-    pandoragroup/GroupServer.cpp
-    pandoragroup/GroupServer.h
-    pandoragroup/GroupSocket.cpp
-    pandoragroup/GroupSocket.h
     pandoragroup/enums.cpp
     pandoragroup/enums.h
-    pandoragroup/groupaction.cpp
-    pandoragroup/groupaction.h
-    pandoragroup/groupauthority.cpp
-    pandoragroup/groupauthority.h
-    pandoragroup/groupselection.cpp
-    pandoragroup/groupselection.h
     pandoragroup/groupwidget.cpp
     pandoragroup/groupwidget.h
+    pandoragroup/mmapper2character.cpp
     pandoragroup/mmapper2character.h
     pandoragroup/mmapper2group.cpp
     pandoragroup/mmapper2group.h
@@ -468,8 +453,6 @@ set(mmapper_SRCS
     preferences/generalpage.h
     preferences/graphicspage.cpp
     preferences/graphicspage.h
-    preferences/groupmanagerpage.cpp
-    preferences/groupmanagerpage.h
     preferences/mumeprotocolpage.cpp
     preferences/mumeprotocolpage.h
     preferences/parserpage.cpp
@@ -569,7 +552,6 @@ set(mmapper_UIS
     preferences/configdialog.ui
     preferences/clientpage.ui
     preferences/generalpage.ui
-    preferences/groupmanagerpage.ui
     preferences/graphicspage.ui
     preferences/mumeprotocolpage.ui
     preferences/parserpage.ui

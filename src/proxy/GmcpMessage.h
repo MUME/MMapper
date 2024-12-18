@@ -35,6 +35,10 @@ class ParseEvent;
       ExternalDiscordHello, \
       "external.discord.hello", \
       "External.Discord.Hello") \
+    X(GROUP_ADD, GroupAdd, "group.add", "Group.Add") \
+    X(GROUP_REMOVE, GroupRemove, "group.remove", "Group.Remove") \
+    X(GROUP_SET, GroupSet, "group.set", "Group.Set") \
+    X(GROUP_UPDATE, GroupUpdate, "group.update", "Group.Update") \
     X(MMAPPER_COMM_GROUPTELL, \
       MmapperCommGroupTell, \
       "mmapper.comm.grouptell", \
@@ -57,7 +61,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MESSAGES = XFOREACH_GMCP_MESSAGE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MESSAGES == 21);
+static_assert(NUM_GMCP_MESSAGES == 25);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {

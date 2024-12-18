@@ -10,7 +10,6 @@
 #include "../map/roomid.h"
 #include "../mapdata/roomselection.h"
 #include "../mpi/remoteeditsession.h"
-#include "../pandoragroup/groupauthority.h"
 #include "../pandoragroup/mmapper2character.h"
 #include "../parser/CommandQueue.h"
 #include "../parser/DoorAction.h"
@@ -44,7 +43,6 @@ void registerMetatypes()
     REGISTER_METATYPE(CommandQueue);
     REGISTER_METATYPE(DoorActionEnum);
     REGISTER_METATYPE(ExitDirEnum);
-    REGISTER_METATYPE(GroupManagerStateEnum);
     REGISTER_METATYPE(SigParseEvent);
     REGISTER_METATYPE(SigRoomSelection);
     REGISTER_METATYPE(CharacterAffectEnum);

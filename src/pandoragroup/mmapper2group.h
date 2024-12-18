@@ -4,10 +4,9 @@
 // Author: Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/ConfigEnums.h"
-#include "../global/WeakHandle.h"
-#include "../map/Map.h"
-#include "../map/roomid.h"
+#include "../global/JsonValue.h"
+#include "CGroupChar.h"
+#include "ColorGenerator.h"
 #include "GroupManagerApi.h"
 #include "mmapper2character.h"
 
@@ -16,59 +15,29 @@
 #include <QArgument>
 #include <QMap>
 #include <QObject>
-#include <QTimer>
-#include <QVariantMap>
 
-class CGroup;
-class CGroupCommunicator;
-class CommandQueue;
 class GmcpMessage;
-class GroupAuthority;
-class JsonObj;
-class Mmapper2Group;
 
 class NODISCARD_QOBJECT Mmapper2Group final : public QObject
 {
     Q_OBJECT
 
 private:
-    struct NODISCARD LastPrompt final
-    {
-        QString textHP;
-        QString textMoves;
-        QString textMana;
-
-        void reset() { *this = LastPrompt{}; }
-    };
-    LastPrompt m_lastPrompt;
-
-    std::atomic_int m_calledStopInternal{0};
-    QTimer m_affectTimer;
-    QMap<CharacterAffectEnum, int64_t> m_affectLastSeen;
-
-    std::unique_ptr<GroupAuthority> m_authority;
-    QPointer<CGroupCommunicator> m_network;
-    std::unique_ptr<CGroup> m_group;
-
-public:
-    NODISCARD static GroupManagerStateEnum getConfigState();
-    static void setConfigState(GroupManagerStateEnum state);
+    SharedGroupChar m_self;
+    GroupVector m_charIndex;
+    // deleted in destructor as member of charIndex
+    ColorGenerator m_colorGenerator;
 
 private:
-    void log(const QString &msg) { emit sig_log("GroupManager", msg); }
-    void messageBox(const QString &msg) { emit sig_messageBox("GroupManager", msg); }
+    void log(const QString &msg) { emit sig_log("Group", msg); }
 
 public:
     explicit Mmapper2Group(QObject *parent);
     ~Mmapper2Group() final;
 
-    void start();
-    void stop();
-
-    NODISCARD GroupManagerStateEnum getMode();
-
-    NODISCARD GroupAuthority *getAuthority() { return m_authority.get(); }
-    NODISCARD CGroup *getGroup() { return m_group.get(); }
+public:
+    void resetChars();
+    NODISCARD const GroupVector &selectAll() { return m_charIndex; }
 
 public:
     NODISCARD GroupManagerApi &getGroupManagerApi() { return deref(m_groupManagerApi); }
@@ -77,26 +46,33 @@ private:
     friend GroupManagerApi;
     std::unique_ptr<GroupManagerApi> m_groupManagerApi;
 
-protected:
-    void sendGroupTell(const QString &tell); // sends gtell from local user
-    void kickCharacter(const QString &character);
-    void parseScoreInformation(const QString &score);
-    void parsePromptInformation(const QString &prompt);
-    void updateCharacterPosition(CharacterPositionEnum);
-    void updateCharacterAffect(CharacterAffectEnum, bool);
-
-private:
-    void setCharRoomId(ServerRoomId srvId, ExternalRoomId extId);
-
 private:
     void init();
-    void issueLocalCharUpdate();
-    NODISCARD bool setCharacterPosition(CharacterPositionEnum pos);
-    NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
-    void renameCharacter(QByteArray newname) = delete;
-    void renameCharacter(QString newname);
+    void characterChanged(bool updateCanvas);
+
+private:
     void parseGmcpCharName(const JsonObj &obj);
+    void parseGmcpCharStatusVars(const JsonObj &obj);
     void parseGmcpCharVitals(const JsonObj &obj);
+    void parseGmcpGroupAdd(const JsonObj &obj);
+    void parseGmcpGroupUpdate(const JsonObj &obj);
+    void parseGmcpGroupRemove(const JsonInt i);
+    void parseGmcpGroupSet(const JsonArray &arr);
+    void parseGmcpRoomInfo(const JsonObj &obj);
+
+private:
+    NODISCARD SharedGroupChar addChar(const GroupId id);
+    void removeChar(const GroupId id);
+    NODISCARD bool updateChar(SharedGroupChar sharedCh,
+                              const JsonObj &json); // updates given char from GMCP
+
+private:
+    NODISCARD CharacterTypeEnum getCharacterType(const JsonObj &json);
+    NODISCARD GroupId getGroupId(const JsonObj &json);
+
+public:
+    NODISCARD SharedGroupChar getCharById(const GroupId id) const;
+    NODISCARD SharedGroupChar getCharByName(const CharacterName &name) const;
 
 public:
     void onReset();
@@ -104,52 +80,13 @@ public:
 signals:
     // MainWindow::log (via MainWindow)
     void sig_log(const QString &, const QString &);
-    // MainWindow::groupNetworkStatus (via MainWindow)
-    void sig_networkStatus(bool);
     // MapCanvas::requestUpdate (via MainWindow)
     void sig_updateMapCanvas(); // redraw the opengl screen
 
-    // sent to ParserXML::sendGTellToUser (via Proxy)
-    void sig_displayGroupTellEvent(const QString &color,
-                                   const QString &name,
-                                   const QString &message);
-
-    // GroupWidget::messageBox (via GroupWidget)
-    void sig_messageBox(QString title, QString message);
     // GroupWidget::updateLabels (via GroupWidget)
     void sig_updateWidget(); // update group widget
 
-    // CGroupCommunicator::sendGroupTell
-    void sig_sendGroupTell(const QString &tell);
-    // CGroupCommunicator::kickCharacter
-    void sig_kickCharacter(const QString &character);
-    // CGroupCommunicator::sendCharUpdate
-    void sig_sendCharUpdate(const QVariantMap &map);
-    // CGroupCommunicator::sendSelfRename
-    void sig_sendSelfRename(const QString &, const QString &);
-
 public slots:
-    void slot_setCharRoomIdFromServer(ServerRoomId srvId, ExternalRoomId extId)
-    {
-        setCharRoomId(srvId, extId);
-    }
-    void slot_setCharRoomIdEstimated(ServerRoomId srvId, ExternalRoomId extId)
-    {
-        setCharRoomId(srvId, extId);
-    }
-    void slot_setMode(GroupManagerStateEnum newState);
-    void slot_startNetwork();
-    void slot_stopNetwork();
-    void slot_updateSelf(); // changing settings
-
-    void slot_setPath(CommandQueue);
     void slot_parseGmcpInput(const GmcpMessage &msg);
-
-protected slots:
-    // Communicator
-    void slot_gTellArrived(const QVariantMap &node);
-    void slot_relayMessageBox(const QString &message);
-    void slot_sendLog(const QString &);
-    void slot_characterChanged(bool updateCanvas);
-    void slot_onAffectTimeout();
+    void slot_setCharRoomIdEstimated(ServerRoomId serverId, ExternalRoomId externalId);
 };

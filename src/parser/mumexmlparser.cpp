@@ -402,8 +402,6 @@ bool MumeXmlParser::element(const QString &line)
                     m_commonData.overrideSendPrompt = false;
 
                     auto &lastPrompt = m_commonData.lastPrompt;
-                    const QString copy = normalizeStringCopy(lastPrompt);
-                    sendPromptLineEvent(copy);
 
                     const auto &config = getConfig();
                     if (!config.parser.removeXmlTags) {

@@ -10,7 +10,6 @@
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
-#include "../pandoragroup/CGroup.h"
 #include "../pandoragroup/CGroupChar.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "MapCanvasData.h"
@@ -418,37 +417,23 @@ void MapCanvas::paintCharacters()
 
 void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 {
-    CGroup *const pGroup = m_groupManager.getGroup();
-    if ((pGroup == nullptr) || Mmapper2Group::getConfigState() == GroupManagerStateEnum::Off
-        || m_data.isEmpty()) {
+    if (m_data.isEmpty()) {
         return;
     }
 
-    CGroup &group = deref(pGroup);
-    const CGroupChar &self = deref(group.getSelf());
-    const auto &charName = getConfig().groupManager.charName;
-
     RoomIdSet drawnRoomIds;
     const Map &map = m_data.getCurrentMap();
-    const auto pSelection = group.selectAll();
-    for (const auto &pCharacter : deref(pSelection)) {
-        const CGroupChar &character = deref(pCharacter);
-
+    for (const auto &pCharacter : m_groupManager.selectAll()) {
         // Omit player so that they know group members are below them
-        if (&character == &self || character.getName() == charName) {
+        if (pCharacter->isYou())
             continue;
-        }
+
+        const CGroupChar &character = deref(pCharacter);
 
         const auto &r = [&character, &map]() -> RoomHandle {
             const ServerRoomId srvId = character.getServerId();
             if (srvId != INVALID_SERVER_ROOMID) {
                 if (const auto &room = map.findRoomHandle(srvId)) {
-                    return room;
-                }
-            }
-            const ExternalRoomId extId = character.getExternalId();
-            if (extId != INVALID_EXTERNAL_ROOMID) {
-                if (const auto &room = map.findRoomHandle(extId)) {
                     return room;
                 }
             }
@@ -464,10 +449,8 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         const auto &pos = r.getPosition();
         const auto color = Color{character.getColor()};
         const bool fill = !drawnRoomIds.contains(id);
-        const auto prespam = m_data.getPath(id, character.prespam);
 
         batch.drawCharacter(pos, color, fill);
-        batch.drawPreSpammedPath(pos, prespam, color);
         drawnRoomIds.insert(id);
     }
 }

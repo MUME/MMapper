@@ -11,10 +11,8 @@
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
-#include "CGroup.h"
 #include "CGroupChar.h"
 #include "enums.h"
-#include "groupselection.h"
 #include "mmapper2group.h"
 
 #include <map>
@@ -91,7 +89,7 @@ GroupStateData::GroupStateData(const QColor &color,
         }
     }
     // Users spam search/reveal/flush so pad an extra position to reduce eye strain
-    if (!affects.contains(CharacterAffectEnum::SEARCH)) {
+    if (!affects.contains(CharacterAffectEnum::WAITING)) {
         ++m_count;
     }
 }
@@ -170,9 +168,9 @@ void GroupModel::resetModel()
 
 int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
-    if (auto group = m_group->getGroup()) {
+    if (auto group = m_group) {
         auto selection = group->selectAll();
-        return static_cast<int>(selection->size());
+        return static_cast<int>(selection.size());
     }
     return 0;
 }
@@ -193,9 +191,11 @@ NODISCARD static QString calculatePercentage(const int numerator, const int deno
     return QString("%1").arg(percentage).append("%");
 }
 
-NODISCARD static QString calculateRatio(const int numerator, const int denomenator)
+NODISCARD static QString calculateRatio(const int numerator,
+                                        const int denomenator,
+                                        CharacterTypeEnum type)
 {
-    if (numerator == 0 && denomenator == 0) {
+    if (type == CharacterTypeEnum::NPC || (numerator == 0 && denomenator == 0)) {
         return "";
     }
     return QString("%1/%2").arg(numerator).arg(denomenator);
@@ -239,42 +239,36 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
     case Qt::DisplayRole:
         switch (column) {
         case ColumnTypeEnum::NAME:
-            if (character.getLabel().isEmpty() || character.getName() == character.getLabel()) {
-                return character.getName();
+            if (character.getLabel().isEmpty()
+                || character.getName().getStdStringViewUtf8()
+                       == character.getLabel().getStdStringViewUtf8()) {
+                return character.getName().toQString();
             } else {
-                return QString("%1 (%2)").arg(character.getName(), character.getLabel());
+                return QString("%1 (%2)").arg(character.getName().toQString(),
+                                              character.getLabel().toQString());
             }
         case ColumnTypeEnum::HP_PERCENT:
-            return calculatePercentage(character.hp, character.maxhp);
+            return calculatePercentage(character.getHits(), character.getMaxHits());
         case ColumnTypeEnum::MANA_PERCENT:
-            return calculatePercentage(character.mana, character.maxmana);
+            return calculatePercentage(character.getMana(), character.getMaxMana());
         case ColumnTypeEnum::MOVES_PERCENT:
-            return calculatePercentage(character.moves, character.maxmoves);
+            return calculatePercentage(character.getMoves(), character.getMaxMoves());
         case ColumnTypeEnum::HP:
-            return calculateRatio(character.hp, character.maxhp);
+            return calculateRatio(character.getHits(), character.getMaxHits(), character.getType());
         case ColumnTypeEnum::MANA:
-            return calculateRatio(character.mana, character.maxmana);
+            return calculateRatio(character.getMana(), character.getMaxMana(), character.getType());
         case ColumnTypeEnum::MOVES:
-            return calculateRatio(character.moves, character.maxmoves);
+            return calculateRatio(character.getMoves(),
+                                  character.getMaxMoves(),
+                                  character.getType());
         case ColumnTypeEnum::STATE:
-            return QVariant::fromValue(
-                GroupStateData(character.getColor(), character.position, character.affects));
-        case ColumnTypeEnum::ROOM_NAME: {
-            const ServerRoomId srvId = character.getServerId();
-            if (srvId != INVALID_SERVER_ROOMID && m_mapLoaded) {
-                if (const auto r = deref(m_map).findRoomHandle(srvId)) {
-                    return r.getName().toQString();
-                }
-            }
-            const ExternalRoomId extId = character.getExternalId();
-            if (extId != INVALID_EXTERNAL_ROOMID && m_mapLoaded) {
-                if (const auto r = deref(m_map).findRoomHandle(extId)) {
-                    return r.getName().toQString();
-                }
-            }
-            return "Unknown";
-        }
-
+            return QVariant::fromValue(GroupStateData(character.getColor(),
+                                                      character.getPosition(),
+                                                      character.getAffects()));
+        case ColumnTypeEnum::ROOM_NAME:
+            if (character.getRoomName().isEmpty())
+                return "Unknown";
+            return character.getRoomName().toQString();
         default:
             qWarning() << "Unsupported column" << static_cast<int>(column);
             break;
@@ -297,15 +291,23 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
     case Qt::ToolTipRole:
         switch (column) {
         case ColumnTypeEnum::HP_PERCENT:
-            return calculateRatio(character.hp, character.maxhp);
+            if (character.getType() == CharacterTypeEnum::NPC)
+                break;
+            return calculateRatio(character.getHits(), character.getMaxHits(), character.getType());
         case ColumnTypeEnum::MANA_PERCENT:
-            return calculateRatio(character.mana, character.maxmana);
+            if (character.getType() == CharacterTypeEnum::NPC)
+                break;
+            return calculateRatio(character.getMana(), character.getMaxMana(), character.getType());
         case ColumnTypeEnum::MOVES_PERCENT:
-            return calculateRatio(character.moves, character.maxmoves);
+            if (character.getType() == CharacterTypeEnum::NPC)
+                break;
+            return calculateRatio(character.getMoves(),
+                                  character.getMaxMoves(),
+                                  character.getType());
         case ColumnTypeEnum::STATE: {
-            QString prettyName = getPrettyName(character.position);
+            QString prettyName = getPrettyName(character.getPosition());
             for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-                if (character.affects.contains(affect)) {
+                if (character.getAffects().contains(affect)) {
                     prettyName.append(", ").append(getPrettyName(affect));
                 }
             }
@@ -316,6 +318,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         case ColumnTypeEnum::MANA:
         case ColumnTypeEnum::MOVES:
         case ColumnTypeEnum::ROOM_NAME:
+            if (character.getServerId() == INVALID_SERVER_ROOMID)
+                return QString("%1").arg(character.getServerId().asUint32());
             break;
         }
         break;
@@ -334,12 +338,12 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
         return data;
     }
 
-    if (auto group = m_group->getGroup()) {
+    if (auto group = m_group) {
         auto selection = group->selectAll();
 
         // Map row to character
-        if (index.row() < static_cast<int>(selection->size())) {
-            const SharedGroupChar &character = selection->at(index.row());
+        if (index.row() < static_cast<int>(selection.size())) {
+            const SharedGroupChar &character = selection.at(static_cast<size_t>(index.row()));
             const auto column = static_cast<ColumnTypeEnum>(index.column());
             data = dataForCharacter(character, column, role);
         }
@@ -408,12 +412,35 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->verticalHeader()->setDefaultSectionSize(
         m_table->verticalHeader()->minimumSectionSize());
 
-    m_kick = new QAction(QIcon(":/icons/offline.png"), tr("&Kick"), this);
-    connect(m_kick, &QAction::triggered, this, [this]() {
-        try {
-            m_group->getGroupManagerApi().kickCharacter(selectedCharacter);
-        } catch (const std::exception &ex) {
-            slot_messageBox("Group Manager", QString::fromUtf8(ex.what()));
+    m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
+    connect(m_center, &QAction::triggered, this, [this]() {
+        // Center map on the clicked character
+        auto &character = deref(selectedCharacter);
+        if (character.isYou()) {
+            if (const auto &r = m_map->getCurrentRoom()) {
+                const auto vec2 = r.getPosition().to_vec2() + glm::vec2{0.5f, 0.5f};
+                emit sig_center(vec2); // connects to MapWindow
+                return;
+            }
+        }
+        const ServerRoomId srvId = character.getServerId();
+        if (srvId != INVALID_SERVER_ROOMID) {
+            if (const auto &r = m_map->findRoomHandle(srvId)) {
+                const auto vec2 = r.getPosition().to_vec2() + glm::vec2{0.5f, 0.5f};
+                emit sig_center(vec2); // connects to MapWindow
+            }
+        }
+    });
+
+    m_recolor = new QAction(QIcon(":/icons/group-recolor.png"), tr("&Recolor"), this);
+    connect(m_recolor, &QAction::triggered, this, [this]() {
+        auto &character = deref(selectedCharacter);
+        const QColor newColor = QColorDialog::getColor(character.getColor(), this);
+        if (newColor.isValid() && newColor != character.getColor()) {
+            character.setColor(newColor);
+            if (selectedCharacter->isYou()) {
+                setConfig().groupManager.color = newColor;
+            }
         }
     });
 
@@ -423,52 +450,30 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
 
         // Identify target
-        if (auto *const g = m_group->getGroup()) {
+        if (auto *const g = m_group) {
             auto selection = g->selectAll();
             // Map row to character
-            if (index.row() < static_cast<int>(selection->size())) {
-                const SharedGroupChar &pCharacter = selection->at(index.row());
-                auto &character = deref(pCharacter);
-                selectedCharacter = character.getName();
+            if (index.row() < static_cast<int>(selection.size())) {
+                selectedCharacter = selection.at(static_cast<size_t>(index.row()));
 
-                // Center map on the clicked character
-                const auto worldPos = [&character, this]() -> std::optional<glm::vec2> {
-                    const ServerRoomId srvId = character.getServerId();
-                    if (srvId != INVALID_SERVER_ROOMID) {
-                        if (const auto r = m_map->findRoomHandle(srvId)) {
-                            const Coordinate &c = r.getPosition();
-                            return c.to_vec2() + glm::vec2{0.5f, 0.5f};
-                        }
-                    }
-                    const ExternalRoomId extId = character.getExternalId();
-                    if (extId != INVALID_EXTERNAL_ROOMID) {
-                        if (const auto r = m_map->findRoomHandle(extId)) {
-                            const Coordinate &c = r.getPosition();
-                            return c.to_vec2() + glm::vec2{0.5f, 0.5f};
-                        }
-                    }
-                    return std::nullopt;
-                }();
-                if (worldPos.has_value()) {
-                    emit sig_center(worldPos.value()); // connects to MapWindow
-                }
-            }
+                // Build Context menu
+                m_center->setText(
+                    QString("&Center on %1").arg(selectedCharacter->getName().toQString()));
+                m_recolor->setText(
+                    QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
 
-            // Build Context menu
-            const bool isServer = Mmapper2Group::getConfigState() == GroupManagerStateEnum::Server;
-            const bool selectedSelf = (index.row() == 0);
-            if (isServer && !selectedSelf) {
-                // All context menu actions are only actionable by the server right now
-                m_kick->setText(QString("&Kick %1").arg(selectedCharacter));
+                m_center->setDisabled(!selectedCharacter->isYou()
+                                      && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
+
                 QMenu contextMenu(tr("Context menu"), this);
-                contextMenu.addAction(m_kick);
+                contextMenu.addAction(m_center);
+                contextMenu.addAction(m_recolor);
                 contextMenu.exec(QCursor::pos());
             }
         }
     });
 
     connect(m_group, &Mmapper2Group::sig_updateWidget, this, &GroupWidget::slot_updateLabels);
-    connect(m_group, &Mmapper2Group::sig_messageBox, this, &GroupWidget::slot_messageBox);
 
     readSettings();
 }
@@ -476,7 +481,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 GroupWidget::~GroupWidget()
 {
     delete m_table;
-    delete m_kick;
+    delete m_recolor;
     writeSettings();
 }
 
@@ -486,9 +491,9 @@ void GroupWidget::slot_updateLabels()
 
     // Hide unnecessary columns like mana if everyone is a zorc/troll
     const auto one_character_had_mana = [this]() -> bool {
-        auto selection = m_group->getGroup()->selectAll();
-        for (const auto &character : *selection) {
-            if (character->mana > 0) {
+        auto selection = m_group->selectAll();
+        for (const auto &character : selection) {
+            if (character->getMana() > 0) {
                 return true;
             }
         }
@@ -497,11 +502,6 @@ void GroupWidget::slot_updateLabels()
     const bool hide_mana = !one_character_had_mana();
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA), hide_mana);
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA_PERCENT), hide_mana);
-}
-
-void GroupWidget::slot_messageBox(const QString &title, const QString &message)
-{
-    QMessageBox::critical(this, title, message);
 }
 
 void GroupWidget::readSettings()

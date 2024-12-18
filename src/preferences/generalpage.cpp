@@ -64,9 +64,6 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(ui->showClientPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().general.noClientPanel = !ui->showClientPanelCheckBox->isChecked();
     });
-    connect(ui->autoStartGroupManagerCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().groupManager.autoStart = ui->autoStartGroupManagerCheckBox->isChecked();
-    });
     connect(ui->checkForUpdateCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().general.checkForUpdate = ui->checkForUpdateCheckBox->isChecked();
     });
@@ -176,7 +173,6 @@ void GeneralPage::slot_loadConfig()
     ui->showNotesCheckBox->setChecked(mumeNative.showNotes);
 
     ui->showClientPanelCheckBox->setChecked(!config.general.noClientPanel);
-    ui->autoStartGroupManagerCheckBox->setChecked(config.groupManager.autoStart);
     ui->checkForUpdateCheckBox->setChecked(config.general.checkForUpdate);
     ui->checkForUpdateCheckBox->setDisabled(NO_UPDATER);
     ui->autoLoadFileName->setText(autoLoad.fileName);

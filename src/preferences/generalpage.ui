@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>459</width>
-    <height>754</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -205,38 +205,11 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
-     <property name="minimumSize">
-      <size>
-       <width>435</width>
-       <height>139</height>
-      </size>
-     </property>
      <property name="title">
       <string>Startup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="autoStartGroupManagerCheckBox">
-        <property name="text">
-         <string>Start group manager</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="showClientPanelCheckBox">
-        <property name="text">
-         <string>Show client panel</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QCheckBox" name="checkForUpdateCheckBox">
-        <property name="text">
-         <string>Check for update</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0" colspan="2">
+      <item row="4" column="0" colspan="2">
        <widget class="QFrame" name="autoLoadFileFrame">
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
@@ -297,6 +270,20 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="showClientPanelCheckBox">
+        <property name="text">
+         <string>Show client panel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="checkForUpdateCheckBox">
+        <property name="text">
+         <string>Check for update</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -452,7 +439,6 @@
   <tabstop>showPassword</tabstop>
   <tabstop>showClientPanelCheckBox</tabstop>
   <tabstop>checkForUpdateCheckBox</tabstop>
-  <tabstop>autoStartGroupManagerCheckBox</tabstop>
   <tabstop>autoLoadCheck</tabstop>
   <tabstop>autoLoadFileName</tabstop>
   <tabstop>selectWorldFileButton</tabstop>

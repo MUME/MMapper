@@ -233,10 +233,6 @@ public:
     void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
 
 protected:
-    void sendPromptLineEvent(const QString &arr);
-    void sendScoreLineEvent(const QString &arr);
-
-protected:
     void onHandleParseEvent(const SigParseEvent &parseEvent)
     {
         m_outputs.onHandleParseEvent(parseEvent);
@@ -262,9 +258,6 @@ protected:
 protected:
     // accesses m_queue
     void clearQueue();
-
-public:
-    void sendGTellToUser(const QString &, const QString &, const QString &);
 };
 
 class MumeXmlParserBase : public ParserCommon

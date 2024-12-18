@@ -3,46 +3,31 @@
 
 #include "GroupManagerApi.h"
 
+#include "mmapper2character.h"
 #include "mmapper2group.h"
 
-#include <exception>
+void GroupManagerApi::refresh()
+{
+    return m_group.characterChanged(true);
+}
 
-#include <QByteArray>
+SharedGroupChar GroupManagerApi::getMember(const GroupId id)
+{
+    if (id == INVALID_GROUPID) {
+        throw std::invalid_argument("invalid id");
+    }
+    return m_group.getCharById(id);
+}
 
-void GroupManagerApi::kickCharacter(const QString &name)
+SharedGroupChar GroupManagerApi::getMember(const CharacterName &name)
 {
     if (name.isEmpty()) {
-        throw std::invalid_argument("name");
+        throw std::invalid_argument("empty name");
     }
-
-    m_group.kickCharacter(name);
+    return m_group.getCharByName(name);
 }
 
-void GroupManagerApi::sendGroupTell(const QString &msg)
+const GroupVector &GroupManagerApi::getMembers()
 {
-    if (msg.isEmpty()) {
-        throw std::invalid_argument("msg");
-    }
-
-    m_group.sendGroupTell(msg);
-}
-
-void GroupManagerApi::sendScoreLineEvent(const QString &arr)
-{
-    m_group.parseScoreInformation(arr);
-}
-
-void GroupManagerApi::sendPromptLineEvent(const QString &arr)
-{
-    m_group.parsePromptInformation(arr);
-}
-
-void GroupManagerApi::sendEvent(const CharacterPositionEnum pos)
-{
-    m_group.updateCharacterPosition(pos);
-}
-
-void GroupManagerApi::sendEvent(const CharacterAffectEnum affect, const bool enable)
-{
-    m_group.updateCharacterAffect(affect, enable);
+    return m_group.selectAll();
 }

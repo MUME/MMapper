@@ -532,7 +532,6 @@ void Proxy::allocParser()
         NODISCARD Proxy &getProxy() { return m_proxy; }
         NODISCARD MudTelnet &getMudTelnet() { return getProxy().getMudTelnet(); }
         NODISCARD UserTelnet &getUserTelnet() { return getProxy().getUserTelnet(); }
-        NODISCARD Mmapper2Group &getGroupManager() { return getProxy().getGroupManager(); }
         NODISCARD GameObserver &getGameObserver() { return getProxy().getGameObserver(); }
         NODISCARD MainWindow &getMainWindow() { return getProxy().getMainWindow(); }
         NODISCARD MapCanvas &getMapCanvas() { return getProxy().getMapCanvas(); }
@@ -576,7 +575,6 @@ void Proxy::allocParser()
                 isPrompt = s.back() != char_consts::C_NEWLINE && !isTwiddler;
                 break;
             case SendToUserSource::SimulatedOutput:
-            case SendToUserSource::GroupTellOutput:
             case SendToUserSource::FromMMapper:
                 break;
             }
@@ -619,11 +617,6 @@ void Proxy::allocParser()
 
             switch (source) {
             case SendToUserSource::FromMud:
-            case SendToUserSource::GroupTellOutput:
-                if (!isPrompt) {
-                    getGameObserver().observeSentToUser(s);
-                }
-                break;
             case SendToUserSource::DuplicatePrompt:
             case SendToUserSource::SimulatedPrompt:
             case SendToUserSource::SimulatedOutput:
@@ -659,11 +652,7 @@ void Proxy::allocParser()
         }
 
         void virt_onReleaseAllPaths() final { getPathMachine().slot_releaseAllPaths(); }
-        void virt_onShowPath(const CommandQueue &path) final
-        {
-            getPrespam().slot_setPath(path);
-            getGroupManager().slot_setPath(path);
-        }
+        void virt_onShowPath(const CommandQueue &path) final { getPrespam().slot_setPath(path); }
         void virt_onMapChanged() final { getMapCanvas().slot_mapChanged(); }
         void virt_onGraphicsSettingsChanged() final { getMapCanvas().graphicsSettingsChanged(); }
         void virt_onLog(const QString &mod, const QString &msg) final
@@ -839,12 +828,6 @@ void Proxy::init()
         QObject::connect(&m_mapData, &MapData::sig_onForcedPositionChange, this, [this]() {
             getMudParser().onForcedPositionChange();
         });
-        QObject::connect(&m_groupManager,
-                         &Mmapper2Group::sig_displayGroupTellEvent,
-                         this,
-                         [this](const QString &color, const QString &name, const QString &message) {
-                             getMudParser().ParserCommon::sendGTellToUser(color, name, message);
-                         });
     };
 
     allocPipelineObjects();

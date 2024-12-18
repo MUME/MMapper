@@ -80,8 +80,8 @@ private:
 
     QDockWidget *m_dockDialogRoom = nullptr;
     QDockWidget *m_dockDialogLog = nullptr;
-    QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
+    QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogAdventure = nullptr;
 
     std::unique_ptr<GameObserver> m_gameObserver;
@@ -120,7 +120,6 @@ private:
     QToolBar *pathMachineToolBar = nullptr;
     QToolBar *roomToolBar = nullptr;
     QToolBar *connectionToolBar = nullptr;
-    QToolBar *groupToolBar = nullptr;
     QToolBar *settingsToolBar = nullptr;
 
     QMenu *fileMenu = nullptr;
@@ -133,8 +132,6 @@ private:
     QMenu *helpMenu = nullptr;
     QMenu *mumeMenu = nullptr;
     QMenu *onlineTutorialsMenu = nullptr;
-    QMenu *groupMenu = nullptr;
-    QMenu *groupModeMenu = nullptr;
 
     QAction *newAct = nullptr;
     QAction *openAct = nullptr;
@@ -200,21 +197,6 @@ private:
         QAction *deleteInfoMarkAct = nullptr;
         QAction *editInfoMarkAct = nullptr;
     } infoMarkActions{};
-
-    struct NODISCARD GroupModeActions final
-    {
-        QActionGroup *groupModeGroup = nullptr;
-        QAction *groupOffAct = nullptr;
-        QAction *groupClientAct = nullptr;
-        QAction *groupServerAct = nullptr;
-    } groupMode{};
-
-    struct NODISCARD GroupNetworkActions final
-    {
-        QActionGroup *groupNetworkGroup = nullptr;
-        QAction *networkStartAct = nullptr;
-        QAction *networkStopAct = nullptr;
-    } groupNetwork{};
 
     QAction *createRoomAct = nullptr;
     QAction *editRoomSelectionAct = nullptr;
@@ -395,11 +377,6 @@ private:
     void connectScheduleActionConnection();
     void disconnectScheduleActionConnection();
 
-signals:
-    void sig_setGroupMode(GroupManagerStateEnum);
-    void sig_startGroupNetwork();
-    void sig_stopGroupNetwork();
-
 public slots:
     void slot_newFile();
     void slot_open();
@@ -460,11 +437,6 @@ public slots:
     void slot_newConnectionSelection(ConnectionSelection *);
     void slot_newInfoMarkSelection(InfoMarkSelection *);
     void slot_showContextMenu(const QPoint &);
-
-    void slot_onModeGroupOff();
-    void slot_onModeGroupClient();
-    void slot_onModeGroupServer();
-    void slot_groupNetworkStatus(bool toggle);
 
     void slot_onCheckForUpdate();
     void slot_voteForMUME();

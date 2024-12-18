@@ -18,6 +18,7 @@
 #define XFOREACH_GMCP_MODULE_TYPE(X) \
     X(CHAR, Char, "char", "Char") \
     X(EVENT, Event, "event", "Event") \
+    X(GROUP, Group, "group", "Group") \
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
     X(MMAPPER_COMM, MmapperComm, "mmapper.comm", "MMapper.Comm") \
     X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
@@ -34,7 +35,7 @@ enum class NODISCARD GmcpModuleTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MODULES = XFOREACH_GMCP_MODULE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MODULES == 6);
+static_assert(NUM_GMCP_MODULES == 7);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 namespace tags {

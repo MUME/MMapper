@@ -16,12 +16,12 @@
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
         <file>icons/affect-bashed.png</file>
-        <file>icons/affect-bleeding.png</file>
         <file>icons/affect-blind.png</file>
         <file>icons/affect-hungry.png</file>
-        <file>icons/affect-poisoned.png</file>
-        <file>icons/affect-riding.png</file>
-        <file>icons/affect-search.png</file>
+        <file>icons/affect-poison.png</file>
+        <file>icons/affect-ride.png</file>
+        <file>icons/affect-waiting.png</file>
+        <file>icons/affect-wound.png</file>
         <file>icons/affect-slept.png</file>
         <file>icons/affect-snared.png</file>
         <file>icons/affect-thirsty.png</file>
@@ -38,11 +38,7 @@
         <file>icons/goto.png</file>
         <file>icons/generalcfg.png</file>
         <file>icons/graphicscfg.png</file>
-        <file>icons/groupcfg.png</file>
-        <file>icons/groupclient.png</file>
-        <file>icons/groupmanager.png</file>
-        <file>icons/groupoff.png</file>
-        <file>icons/groupserver.png</file>
+        <file>icons/group-recolor.png</file>
         <file>icons/infomarkcreate.png</file>
         <file>icons/infomarkdelete.png</file>
         <file>icons/infomarkedit.png</file>

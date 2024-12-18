@@ -11,7 +11,6 @@ enum class NODISCARD SendToUserSource : uint8_t {
     DuplicatePrompt,
     SimulatedPrompt,
     SimulatedOutput,
-    GroupTellOutput,
     FromMMapper,
     NoLongerPrompted,
 };

@@ -11,7 +11,6 @@
 #include <QString>
 #include <QtCore>
 
-class Mmapper2Group;
 class QListWidgetItem;
 class QObject;
 class QShowEvent;
@@ -28,11 +27,10 @@ class NODISCARD_QOBJECT ConfigDialog final : public QDialog
 
 private:
     Ui::ConfigDialog *const ui;
-    Mmapper2Group *const m_groupManager;
     QStackedWidget *m_pagesWidget = nullptr;
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent);
+    explicit ConfigDialog(QWidget *parent);
     ~ConfigDialog() final;
 
 protected:

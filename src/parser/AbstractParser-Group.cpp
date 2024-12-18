@@ -2,23 +2,26 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiOstream.h"
+#include "../global/PrintUtils.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
 #include "abstractparser.h"
 
+#include <iostream>
 #include <ostream>
-#include <sstream>
 
-#include <QByteArray>
-
-NODISCARD static QString simplify(const std::string &s)
+class NODISCARD ArgMember final : public syntax::IArgument
 {
-    return QByteArray::fromStdString(s).simplified();
-}
+private:
+    GroupManagerApi &m_group;
 
-class NODISCARD ArgPlayer final : public syntax::IArgument
-{
+public:
+    explicit ArgMember(GroupManagerApi &group)
+        : m_group(group)
+    {}
+
 private:
     NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
                                              syntax::IMatchErrorLogger *) const final;
@@ -26,21 +29,48 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const final;
 };
 
-syntax::MatchResult ArgPlayer::virt_match(const syntax::ParserInput &input,
-                                          syntax::IMatchErrorLogger *) const
+syntax::MatchResult ArgMember::virt_match(const syntax::ParserInput &input,
+                                          syntax::IMatchErrorLogger *logger) const
 {
-    if (input.size() != 1) {
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
     }
 
-    // REVISIT: Verify this player exists. Check for spaces?
-    const std::string &name = input.front();
-    return syntax::MatchResult::success(1, input, Value{name});
+    static_assert(std::is_same_v<const std::string &, decltype(input.front())>);
+
+    SharedGroupChar member;
+    const std::string &str = input.front();
+    if (!str.empty() && std::all_of(str.begin(), str.end(), ::isdigit)) {
+        const auto id = GroupId{static_cast<uint32_t>(std::stoul(str))};
+        member = m_group.getMember(id);
+    } else {
+        member = m_group.getMember(CharacterName{str});
+    }
+
+    if (member) {
+        return syntax::MatchResult::success(1,
+                                            input,
+                                            Value{static_cast<int64_t>(member->getId().asUint32())});
+    }
+
+    if (logger) {
+        std::ostringstream os;
+        bool comma = false;
+        for (const auto &ch : m_group.getMembers()) {
+            if (comma) {
+                os << ", ";
+            }
+            os << ch->getName().getStdStringViewUtf8() << " (" << ch->getId().asUint32() << ")";
+            comma = true;
+        }
+        logger->logError("input was not a valid group member: " + os.str());
+    }
+    return syntax::MatchResult::failure(input);
 }
 
-std::ostream &ArgPlayer::virt_to_stream(std::ostream &os) const
+std::ostream &ArgMember::virt_to_stream(std::ostream &os) const
 {
-    return os << "<player>";
+    return os << "<name|id>";
 }
 
 void AbstractParser::parseGroup(StringView input)
@@ -48,87 +78,74 @@ void AbstractParser::parseGroup(StringView input)
     using namespace ::syntax;
     static const auto abb = syntax::abbrevToken;
 
-    auto groupKickSyntax = [this]() -> SharedConstSublist {
-        const auto argPlayer = TokenMatcher::alloc<ArgPlayer>();
-        auto acceptKick = Accept(
-            [this](User &user, const Pair *const args) -> void {
-                auto &os = user.getOstream();
-                const auto v = getAnyVectorReversed(args);
-                if constexpr ((IS_DEBUG_BUILD)) {
-                    const auto &kick = v[0].getString();
-                    assert(kick == "kick");
-                }
-                const auto name = simplify(v[1].getString());
+    const auto optArgEquals = TokenMatcher::alloc<ArgOptionalChar>(char_consts::C_EQUALS);
 
-                if (name.isEmpty()) {
-                    os << "Who do you want to kick?\n";
-                    return;
-                }
+    auto listColors = syntax::Accept(
+        [this](User &user, const Pair *) {
+            auto &os = user.getOstream();
 
-                m_group.kickCharacter(name);
-                send_ok(os);
-            },
-            "kick group member");
-        return buildSyntax(abb("kick"), argPlayer, acceptKick);
-    }();
+            const auto &members = m_group.getMembers();
+            if (members.empty()) {
+                os << "no group members found";
+                return;
+            }
 
-    auto groupLockSyntax = []() -> SharedConstSublist {
-        const auto argBool = TokenMatcher::alloc<ArgBool>();
-        auto acceptLock = Accept(
-            [](User &user, const Pair *args) -> void {
-                const auto value = deref(args).car.getBool();
-                auto &os = user.getOstream();
+            os << "Customizable colors:\n";
+            char buf[3];
+            for (const auto &member : members) {
+                snprintf(buf, sizeof(buf), "%2d", static_cast<int32_t>(member->getId().asUint32()));
+                const auto name = member->getName().getStdStringViewUtf8();
+                const auto color = Color(member->getColor());
+                os << buf << " " << name << " = " << color << AnsiOstream::endl;
+            }
+        },
+        "list group member ids and colors");
 
-                const auto msg = (value ? "locked" : "unlocked");
-                bool &lockGroup = setConfig().groupManager.lockGroup;
-                if (value == lockGroup) {
-                    os << "Group was already " << msg << AnsiOstream::endl;
-                    return;
-                }
+    auto setMemberColor = syntax::Accept(
+        [this](User &user, const Pair *args) {
+            auto &os = user.getOstream();
+            if (args == nullptr || args->cdr == nullptr || !args->car.isLong()
+                || !args->cdr->car.isLong()) {
+                throw std::runtime_error("internal error");
+            }
 
-                lockGroup = value;
-                os << "Group has been " << msg << AnsiOstream::endl;
-            },
-            "modify group lock");
-        return buildSyntax(abb("lock"), argBool, acceptLock);
-    }();
+            const auto id = static_cast<uint32_t>(args->cdr->car.getLong());
+            const auto rgb = static_cast<uint32_t>(args->car.getLong());
 
-    auto groupTellSyntax = [this]() -> SharedConstSublist {
-        const auto argRest = TokenMatcher::alloc<ArgRest>();
-        auto acceptTell = Accept(
-            [this](User &user, const Pair *const args) -> void {
-                auto &os = user.getOstream();
-                const auto v = getAnyVectorReversed(args);
+            const auto member = m_group.getMember(GroupId{id});
+            if (!member) {
+                throw std::runtime_error("internal error");
+            }
+            const auto name = member->getName().getStdStringViewUtf8();
 
-                if constexpr ((IS_DEBUG_BUILD)) {
-                    const auto &tell = v[0].getString();
-                    assert(tell == "tell");
-                }
+            const auto oldColor = Color(member->getColor());
+            const auto newColor = Color::fromRGB(rgb);
 
-                const auto message = simplify(concatenate_unquoted(v[1].getVector()));
-                if (message.isEmpty()) {
-                    os << "What do you want to tell the group?\n";
-                    return;
-                }
+            if (oldColor.getRGB() == rgb) {
+                os << "Member " << name << " (" << id << ") is already " << newColor << ".\n";
+                return;
+            }
 
-                m_group.sendGroupTell(message);
-                send_ok(os);
-            },
-            "send group tell");
-        return buildSyntax(abb("tell"), argRest, acceptTell);
-    }();
+            member->setColor(newColor.getQColor());
+            if (member->isYou()) {
+                setConfig().groupManager.color = member->getColor();
+            }
+            os << "Member " << name << " (" << id << ") has been changed from " << oldColor
+               << " to " << newColor << ".\n";
 
-    const auto groupSyntax = buildSyntax(groupKickSyntax, groupLockSyntax, groupTellSyntax);
+            m_group.refresh();
+        },
+        "set group member color");
 
-    eval("group", groupSyntax, input);
-}
+    auto listSyntax = buildSyntax(abb("list"), listColors);
 
-void ParserCommon::sendScoreLineEvent(const QString &arr)
-{
-    m_group.sendScoreLineEvent(arr);
-}
+    auto setSyntax = buildSyntax(abb("set"),
+                                 TokenMatcher::alloc<ArgMember>(m_group),
+                                 optArgEquals,
+                                 TokenMatcher::alloc<ArgHexColor>(),
+                                 setMemberColor);
 
-void ParserCommon::sendPromptLineEvent(const QString &arr)
-{
-    m_group.sendPromptLineEvent(arr);
+    auto colorsSyntax = buildSyntax(listSyntax, setSyntax);
+
+    eval("group", colorsSyntax, input);
 }

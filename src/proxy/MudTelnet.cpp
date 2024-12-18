@@ -457,6 +457,7 @@ void MudTelnet::resetGmcpModules()
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::CHAR, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EVENT, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::EXTERNAL_DISCORD, GmcpModuleVersion{1}}, true);
+    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::GROUP, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM_CHARS, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM, GmcpModuleVersion{1}}, true);
 }

@@ -76,31 +76,6 @@ NODISCARD QString getUnicodeStringFromLatin1ByteArray(const QVariant &variant,
     return getUnicodeString(variant, defaultValue);
 }
 
-NODISCARD QString readConfigWithFallback(const QSettings &conf,
-                                         const QString &unicodeStringKey,
-                                         const QString &latinByteArrayKey,
-                                         const QString &defaultValue)
-{
-    if (conf.contains(unicodeStringKey)) {
-        const auto &variant = conf.value(unicodeStringKey);
-        return getUnicodeString(variant, defaultValue);
-    }
-
-    if (conf.contains(latinByteArrayKey)) {
-        const auto &variant = conf.value(latinByteArrayKey);
-        return getUnicodeStringFromLatin1ByteArray(variant, defaultValue);
-    }
-
-    return defaultValue;
-}
-
-void removeIfExists(QSettings &conf, const QString &key)
-{
-    if (conf.contains(key)) {
-        conf.remove(key);
-    }
-}
-
 } // namespace
 
 Configuration::Configuration()
@@ -264,16 +239,10 @@ ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
 ConstString KEY_SHOW_STATUS_BAR = "Show Status Bar";
 ConstString KEY_SHOW_SCROLL_BARS = "Show Scroll Bars";
 ConstString KEY_SHOW_MENU_BAR = "Show Menu Bar";
-ConstString KEY_AUTHORIZATION_REQUIRED = "Authorization required";
-ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
-ConstString KEY_AUTO_START_GROUP_MANAGER = "Auto start group manager";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
-ConstString KEY_RSA_X509_CERTIFICATE = "RSA X509 certificate";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
-ConstString KEY_CHARACTER_NAME_LATIN1_BYTEARRAY = "character name";
-ConstString KEY_CHARACTER_NAME_STRING = "unicode character name";
 ConstString KEY_CHECK_FOR_UPDATE = "Check for update";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
 ConstString KEY_COLOR = "color";
@@ -307,16 +276,10 @@ ConstString KEY_3D_FOV = "canvas.advanced.fov";
 ConstString KEY_3D_VERTICAL_ANGLE = "canvas.advanced.verticalAngle";
 ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
 ConstString KEY_3D_LAYER_HEIGHT = "canvas.advanced.layerHeight";
-ConstString KEY_GROUP_TELL_ANSI_COLOR = "Group tell ansi color";
-ConstString KEY_GROUP_TELL_USE_256_ANSI_COLOR = "Use group tell 256 ansi color";
-ConstString KEY_HOST_LATIN1_BYTEARRAY = "host";
-ConstString KEY_HOST_STRING = "unicode host name";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
-ConstString KEY_GROUP_LOCAL_PORT = "local port";
 ConstString KEY_PROXY_LOCAL_PORT = "Local port number";
-ConstString KEY_LOCK_GROUP = "Lock current group members";
 ConstString KEY_MAP_MODE = "Map Mode";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
@@ -331,7 +294,6 @@ ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
-ConstString KEY_GROUP_REMOTE_PORT = "remote port";
 ConstString KEY_REMEMBER_LOGIN = "remember login";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
@@ -341,16 +303,11 @@ ConstString KEY_ROOM_DESC_ANSI_COLOR = "Room desc ansi color";
 ConstString KEY_ROOM_MATCHING_TOLERANCE = "room matching tolerance";
 ConstString KEY_ROOM_NAME_ANSI_COLOR = "Room name ansi color";
 ConstString KEY_ROWS = "Rows";
-ConstString KEY_RSA_PRIVATE_KEY = "RSA private key";
-ConstString KEY_RULES_WARNING = "rules warning NEWS 2763";
 ConstString KEY_RUN_FIRST_TIME = "Run first time";
-ConstString KEY_SECRET_METADATA = "Secret metadata";
 ConstString KEY_SERVER_NAME = "Server name";
-ConstString KEY_SHARE_SELF = "share self";
 ConstString KEY_SHOW_HIDDEN_EXIT_FLAGS = "Show hidden exit flags";
 ConstString KEY_SHOW_NOTES = "Show notes";
 ConstString KEY_DRAW_NEEDS_UPDATE = "Show updated rooms";
-ConstString KEY_STATE = "state";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
@@ -403,17 +360,6 @@ NODISCARD static bool isValidAnsi(const QString &input)
     return true;
 }
 
-NODISCARD static bool isValidGroupManagerState(const GroupManagerStateEnum state)
-{
-    switch (state) {
-    case GroupManagerStateEnum::Off:
-    case GroupManagerStateEnum::Client:
-    case GroupManagerStateEnum::Server:
-        return true;
-    }
-    return false;
-}
-
 NODISCARD static bool isValidMapMode(const MapModeEnum mode)
 {
     switch (mode) {
@@ -459,17 +405,6 @@ NODISCARD static QString sanitizeAnsi(const QString &input, const QString &defau
     }
 
     return defaultValue;
-}
-
-NODISCARD static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
-{
-    const auto state = static_cast<GroupManagerStateEnum>(input);
-    if (isValidGroupManagerState(state)) {
-        return state;
-    }
-
-    qWarning() << "invalid GroupManagerStateEnum:" << input;
-    return GroupManagerStateEnum::Off;
 }
 
 NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
@@ -785,42 +720,8 @@ void Configuration::PathMachineSettings::read(const QSettings &conf)
 
 void Configuration::GroupManagerSettings::read(const QSettings &conf)
 {
-    static constexpr const int DEFAULT_PORT = 4243;
-    static constexpr const char *const ANSI_GREEN = "[32m";
-
-    state = sanitizeGroupManagerState(
-        conf.value(KEY_STATE, static_cast<int>(GroupManagerStateEnum::Off)).toInt());
-    localPort = sanitizeUint16(conf.value(KEY_GROUP_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
-    remotePort = sanitizeUint16(conf.value(KEY_GROUP_REMOTE_PORT, DEFAULT_PORT).toInt(),
-                                DEFAULT_PORT);
-
-    const QString defaultHostName = "localhost";
-    const QString defaultCharName = []() -> QString {
-        if ((false)) {
-            return QHostInfo::localHostName();
-        }
-        return "Unknown";
-    }();
-
-    host = readConfigWithFallback(conf, KEY_HOST_STRING, KEY_HOST_LATIN1_BYTEARRAY, defaultHostName);
-    charName = readConfigWithFallback(conf,
-                                      KEY_CHARACTER_NAME_STRING,
-                                      KEY_CHARACTER_NAME_LATIN1_BYTEARRAY,
-                                      defaultCharName);
-
-    shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
     color = QColor(conf.value(KEY_COLOR, "#FFFF00").toString());
-    rulesWarning = conf.value(KEY_RULES_WARNING, true).toBool();
-    certificate = conf.value(KEY_RSA_X509_CERTIFICATE, "").toByteArray();
-    privateKey = conf.value(KEY_RSA_PRIVATE_KEY, "").toByteArray();
-    authorizedSecrets = conf.value(KEY_AUTHORIZED_SECRETS, QStringList()).toStringList();
-    requireAuth = NO_OPEN_SSL ? false : conf.value(KEY_AUTHORIZATION_REQUIRED, false).toBool();
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
-    secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
-    groupTellColor = conf.value(KEY_GROUP_TELL_ANSI_COLOR, QString(ANSI_GREEN)).toString();
-    useGroupTellAnsi256Color = conf.value(KEY_GROUP_TELL_USE_256_ANSI_COLOR, false).toBool();
-    lockGroup = conf.value(KEY_LOCK_GROUP, false).toBool();
-    autoStart = conf.value(KEY_AUTO_START_GROUP_MANAGER, false).toBool();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -986,30 +887,8 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
 
 void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_STATE, static_cast<int>(state));
-    // Note: There's no QVariant(uint16_t) constructor.
-    conf.setValue(KEY_GROUP_LOCAL_PORT, static_cast<int>(localPort));
-    conf.setValue(KEY_GROUP_REMOTE_PORT, static_cast<int>(remotePort));
-    //
-    removeIfExists(conf, KEY_HOST_LATIN1_BYTEARRAY);
-    conf.setValue(KEY_HOST_STRING, host);
-    //
-    removeIfExists(conf, KEY_CHARACTER_NAME_LATIN1_BYTEARRAY);
-    conf.setValue(KEY_CHARACTER_NAME_STRING, charName);
-    //
-    conf.setValue(KEY_SHARE_SELF, shareSelf);
     conf.setValue(KEY_COLOR, color.name());
-    conf.setValue(KEY_RULES_WARNING, rulesWarning);
-    conf.setValue(KEY_RSA_X509_CERTIFICATE, certificate);
-    conf.setValue(KEY_RSA_PRIVATE_KEY, privateKey);
-    conf.setValue(KEY_AUTHORIZED_SECRETS, authorizedSecrets);
-    conf.setValue(KEY_AUTHORIZATION_REQUIRED, requireAuth);
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
-    conf.setValue(KEY_SECRET_METADATA, secretMetadata);
-    conf.setValue(KEY_GROUP_TELL_ANSI_COLOR, groupTellColor);
-    conf.setValue(KEY_GROUP_TELL_USE_256_ANSI_COLOR, useGroupTellAnsi256Color);
-    conf.setValue(KEY_LOCK_GROUP, lockGroup);
-    conf.setValue(KEY_AUTO_START_GROUP_MANAGER, autoStart);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

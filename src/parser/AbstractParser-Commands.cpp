@@ -47,8 +47,7 @@ const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
 const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
-const Abbrev cmdGroupTell{"gtell", 2};
-const Abbrev cmdGroup{"group", 5};
+const Abbrev cmdGroup{"group", 2};
 const Abbrev cmdHelp{"help", 2};
 const Abbrev cmdMap{"map"};
 const Abbrev cmdMark{"mark", 3};
@@ -987,14 +986,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Disconnect from the MUD."));
-    add(
-        cmdGroupTell,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            const auto alias = "tell " + rest.toStdString();
-            parseGroup(StringView{alias});
-            return true;
-        },
-        makeSimpleHelp("Send a grouptell with the [message]."));
     add(
         cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {

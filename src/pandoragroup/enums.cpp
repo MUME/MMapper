@@ -5,7 +5,6 @@
 #include "enums.h"
 
 #include "../global/enums.h"
-#include "groupauthority.h"
 #include "mmapper2character.h"
 
 #include <array>
@@ -34,7 +33,7 @@
 
 namespace enums {
 DEFINE_GETTER_DEFINED(CharacterPositionEnum, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
-DEFINE_GETTER(GroupMetadataEnum, NUM_GROUP_METADATA, getAllGroupMetadata)
+DEFINE_GETTER_DEFINED(CharacterTypeEnum, NUM_CHARACTER_TYPES, getAllCharacterTypes)
 DEFINE_GETTER(CharacterAffectEnum, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
 } // namespace enums
 
