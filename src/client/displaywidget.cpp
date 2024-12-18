@@ -137,7 +137,7 @@ void AnsiTextHelper::displayText(const QString &str)
     int textIndex = 0, ansiIndex = 0;
     // ANSI codes are formatted as the following:
     // escape + [ + n1 (+ n2) + m
-    static const QRegularExpression ansiRx(R"(\x1b\[((?:\d+;?)*)m)");
+    static const QRegularExpression ansiRx(R"(\x1B\[((?:\d+;?)*)m)");
     QRegularExpressionMatchIterator it = ansiRx.globalMatch(str);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
