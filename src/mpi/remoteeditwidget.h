@@ -138,10 +138,7 @@ private:
     QScopedPointer<Editor> m_textEdit;
 
 public:
-    explicit RemoteEditWidget(bool editSession,
-                              const QString &title,
-                              const QString &body,
-                              QWidget *parent);
+    explicit RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:

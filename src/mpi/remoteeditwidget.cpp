@@ -673,13 +673,13 @@ void RemoteTextEdit::toggleWhitespace()
 }
 
 RemoteEditWidget::RemoteEditWidget(const bool editSession,
-                                   const QString &title,
-                                   const QString &body,
+                                   QString title,
+                                   QString body,
                                    QWidget *const parent)
     : QMainWindow(parent)
     , m_editSession(editSession)
-    , m_title(title)
-    , m_body(body)
+    , m_title(std::move(title))
+    , m_body(std::move(body))
 {
     setWindowFlags(windowFlags() | Qt::WindowType::Widget);
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
