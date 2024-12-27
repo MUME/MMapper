@@ -58,6 +58,7 @@ class QShowEvent;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
+class RoomEditAttrDlg;
 class RoomManager;
 class RoomSelection;
 class RoomWidget;
@@ -104,6 +105,7 @@ private:
     std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
     std::unique_ptr<QProgressDialog> m_progressDlg;
+    std::unique_ptr<RoomEditAttrDlg> m_roomEditAttrDlg;
 
     QToolBar *fileToolBar = nullptr;
     QToolBar *mouseModeToolBar = nullptr;

@@ -2033,10 +2033,20 @@ void MainWindow::slot_onEditRoomSelection()
         return;
     }
 
-    RoomEditAttrDlg roomEditDialog(this);
-    roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCanvas());
-    roomEditDialog.exec();
-    roomEditDialog.show();
+    if (m_roomEditAttrDlg != nullptr) {
+        m_roomEditAttrDlg->setFocus();
+        return;
+    }
+
+    m_roomEditAttrDlg = std::make_unique<RoomEditAttrDlg>(this);
+    {
+        auto &roomEditDialog = deref(m_roomEditAttrDlg);
+        roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCanvas());
+        roomEditDialog.show();
+        connect(&roomEditDialog, &QDialog::finished, this, [this](MAYBE_UNUSED int result) {
+            m_roomEditAttrDlg.reset();
+        });
+    }
 }
 
 void MainWindow::slot_onDeleteInfoMarkSelection()
