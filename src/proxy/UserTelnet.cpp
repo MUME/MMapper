@@ -39,11 +39,14 @@ static void normalizeForUser(std::ostream &os,
         }
 
         if (!line.empty()) {
-            foreachChar(line, C_CARRIAGE_RETURN, [&os, encoding, &goAhead](std::string_view txt) {
-                if (!txt.empty() && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
-                    convertFromLatin1(os, encoding, txt);
-                }
-            });
+            foreachCharMulti2(line,
+                              C_CARRIAGE_RETURN,
+                              [&os, encoding, &goAhead](std::string_view txt) {
+                                  if (!txt.empty()
+                                      && (txt.front() != C_CARRIAGE_RETURN || goAhead)) {
+                                      convertFromLatin1(os, encoding, txt);
+                                  }
+                              });
         }
 
         if (hasNewline) {

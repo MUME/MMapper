@@ -1968,6 +1968,7 @@ bool containsAnsi(const std::string_view sv)
     return sv.find(C_ESC) != std::string_view::npos;
 }
 
+// NOTE: This function requires the input to be "complete".
 void strip_ansi(std::ostream &os, const std::string_view input)
 {
     if (!containsAnsi(input)) {
@@ -1976,44 +1977,40 @@ void strip_ansi(std::ostream &os, const std::string_view input)
     }
 
     bool hasEsc = false;
-    foreachChar(input, C_ESC, [&os, &hasEsc](std::string_view sv) {
-        if (sv.empty()) {
-            return;
-        }
-
-        if (sv.front() == C_ESC) {
-            hasEsc = true;
-            return;
-        }
-
-        if (!hasEsc) {
-            os << sv;
-            return;
-        }
-
-        if (sv.front() == C_OPEN_BRACKET) {
-            sv.remove_prefix(1);
-        }
-
-        while (!sv.empty()) {
-            const char c = sv.front();
-            if (c != C_SEMICOLON && c != C_COLON && !isClamped(c, '0', '9')) {
-                break;
+    foreachUtf8CharSingle(
+        input,
+        C_ESC,
+        [&hasEsc]() { hasEsc = true; },
+        [&os, &hasEsc](std::string_view sv) {
+            if (sv.empty()) {
+                return;
             }
-
-            sv.remove_prefix(1);
-        }
-
-        if (!sv.empty()) {
-            const char c = sv.front();
-            if (isClamped(char(std::tolower(c)), 'a', 'z')) {
+            if (!hasEsc) {
+                os << sv;
+                return;
+            }
+            if (sv.front() == C_OPEN_BRACKET) {
                 sv.remove_prefix(1);
             }
-        }
+            while (!sv.empty()) {
+                const char c = sv.front();
+                if (c != C_SEMICOLON && c != C_COLON && !isClamped(c, '0', '9')) {
+                    break;
+                }
 
-        hasEsc = false;
-        os << sv;
-    });
+                sv.remove_prefix(1);
+            }
+
+            if (!sv.empty()) {
+                const char c = sv.front();
+                if (isClamped(char(std::tolower(c)), 'a', 'z')) {
+                    sv.remove_prefix(1);
+                }
+            }
+
+            hasEsc = false;
+            os << sv;
+        });
 }
 
 std::string strip_ansi(std::string s)

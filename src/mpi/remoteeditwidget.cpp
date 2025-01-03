@@ -103,13 +103,13 @@ public:
         highlightEncodingErrors(line);
     }
 
-    static QTextCharFormat getBackgroundFormat(const Qt::GlobalColor color)
+    NODISCARD static QTextCharFormat getBackgroundFormat(const Qt::GlobalColor color)
     {
         QTextCharFormat fmt;
         fmt.setBackground(QBrush{color});
         return fmt;
     }
-    static QTextCharFormat getBackgroundFormat(const QColor color)
+    NODISCARD static QTextCharFormat getBackgroundFormat(const QColor &color)
     {
         QTextCharFormat fmt;
         fmt.setBackground(QBrush{color});
@@ -122,9 +122,9 @@ public:
             return;
         }
 
-        const auto fmt = getBackgroundFormat(Qt::yellow);
+        const QTextCharFormat fmt = getBackgroundFormat(Qt::yellow);
         // REVISIT: Should this be in TabUtils?
-        mmqt::foreachChar(line, C_TAB, [this, &fmt](const auto at) {
+        mmqt::foreachCharPos(line, C_TAB, [this, &fmt](const auto at) {
             setFormat(static_cast<int>(at), 1, fmt);
         });
     }

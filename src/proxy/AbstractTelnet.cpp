@@ -264,21 +264,18 @@ static void doubleIacs(std::ostream &os, const std::string_view input)
 {
     // IAC byte must be doubled
     static constexpr const auto IAC = static_cast<char>(TN_IAC);
-    foreachChar(input, IAC, [&os](std::string_view sv) {
-        if (sv.empty()) {
-            return;
-        }
 
-        if (sv.front() != IAC) {
-            os << sv;
-            return;
-        }
-
-        for (auto c : sv) {
-            assert(c == IAC);
-            os << IAC << c;
-        }
-    });
+    // Note: input isn't required to be latin-1, but we're treating it as-if it is
+    // because the only thing that matters is the 255 byte.
+    foreachLatin1CharSingle(
+        input,
+        IAC,
+        [&os]() { os << IAC << IAC; },
+        [&os](const std::string_view sv) {
+            if (!sv.empty()) {
+                os << sv;
+            }
+        });
 }
 
 void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool goAhead)
