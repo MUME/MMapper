@@ -242,7 +242,7 @@ public:
         QChar last;
         bool hasLast = false;
         for (const auto &qc : line) {
-            if (qc.unicode() > 0xff) {
+            if (qc.unicode() > 0xFF) {
                 // no valid representation
                 // TODO: add a means of transliterating things like special quotes
                 // Does Qt offer this feature somewhere?
@@ -262,7 +262,7 @@ public:
                 default: {
                     const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xbf) && (last == 0xc2 || last == 0xc3))) {
+                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == 0xC2 || last == 0xC3))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -350,7 +350,7 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
 
     const auto c = text.at(pos);
     char unicode_buf[8];
-    std::snprintf(unicode_buf, sizeof(unicode_buf), "U+%04x", static_cast<int>(c.unicode()));
+    std::snprintf(unicode_buf, sizeof(unicode_buf), "U+%04X", static_cast<int>(c.unicode()));
 
     // REVISIT: Why doesn't this get the tooltip we applied in the LineHighlighter?
     // Apparently it's a reported bug that Qt refuses to acknowledge.

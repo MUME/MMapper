@@ -93,21 +93,21 @@ static_assert(alignof(Color) == alignof(uint32_t));
 
 #define XFOREACH_COLOR(X) \
     X(black, 000000) \
-    X(blue, 0000ff) \
-    X(cyan, 00ffff) \
-    /* X(darkOrange, ff8c00) */ \
-    X(darkOrange1, ff7f00) \
-    X(gray70, b3b3b3) \
-    X(gray75, c0c0c0) \
-    X(green, 00ff00) \
-    X(magenta, ff00ff) \
-    /* X(orange, ffa500) */ \
-    /* X(orangeRed, ff4500) */ \
-    X(red, ff0000) \
+    X(blue, 0000FF) \
+    X(cyan, 00FFFF) \
+    /* X(darkOrange, FF8C00) */ \
+    X(darkOrange1, FF7F00) \
+    X(gray70, B3B3B3) \
+    X(gray75, C0C0C0) \
+    X(green, 00FF00) \
+    X(magenta, FF00FF) \
+    /* X(orange, FFA500) */ \
+    /* X(orangeRed, FF4500) */ \
+    X(red, FF0000) \
     X(red20, 330000) \
     X(webGray, 808080) \
-    X(white, ffffff) \
-    X(yellow, ffff00)
+    X(white, FFFFFF) \
+    X(yellow, FFFF00)
 
 namespace Colors {
 #define X_DECL(name, hex) extern const Color name;

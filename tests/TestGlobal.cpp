@@ -98,20 +98,20 @@ void TestGlobal::ansiToRgbTest()
     // If you're looking for cyan, try 159 (#afffff).
     const int cyanAnsi = 153;
     const QColor cyanRgb = mmqt::ansi256toRgb(cyanAnsi);
-    QCOMPARE(cyanRgb, QColor("#afd7ff"));
+    QCOMPARE(cyanRgb, QColor("#AFD7FF"));
 
     auto testOne = [](const int ansi256, const QColor color, const AnsiColor16Enum ansi) {
         QCOMPARE(mmqt::toQColor(ansi), color);
         QCOMPARE(mmqt::ansi256toRgb(ansi256), color);
     };
 
-    testOne(0, "#2e3436", AnsiColor16Enum::black);
-    testOne(6, "#06989a", AnsiColor16Enum::cyan);
-    testOne(7, "#d3d7cf", AnsiColor16Enum::white);
+    testOne(0, "#2E3436", AnsiColor16Enum::black);
+    testOne(6, "#06989A", AnsiColor16Enum::cyan);
+    testOne(7, "#D3D7CF", AnsiColor16Enum::white);
 
     testOne(8, "#555753", AnsiColor16Enum::BLACK);
-    testOne(14, "#34e2e2", AnsiColor16Enum::CYAN);
-    testOne(15, "#eeeeec", AnsiColor16Enum::WHITE);
+    testOne(14, "#34E2E2", AnsiColor16Enum::CYAN);
+    testOne(15, "#EEEEEC", AnsiColor16Enum::WHITE);
 }
 
 void TestGlobal::stringViewTest()

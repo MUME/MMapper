@@ -69,28 +69,28 @@ void MumeClockWidget::slot_updateLabel()
         m_lastPhase = phase;
         switch (phase) {
         case MumeMoonPhaseEnum::WAXING_CRESCENT:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x92"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x92"));
             break;
         case MumeMoonPhaseEnum::FIRST_QUARTER:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x93"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x93"));
             break;
         case MumeMoonPhaseEnum::WAXING_GIBBOUS:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x94"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x94"));
             break;
         case MumeMoonPhaseEnum::FULL_MOON:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x95"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x95"));
             break;
         case MumeMoonPhaseEnum::WANING_GIBBOUS:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x96"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x96"));
             break;
         case MumeMoonPhaseEnum::THIRD_QUARTER:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x97"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x97"));
             break;
         case MumeMoonPhaseEnum::WANING_CRESCENT:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x98"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x98"));
             break;
         case MumeMoonPhaseEnum::NEW_MOON:
-            moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x91"));
+            moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x91"));
             break;
         case MumeMoonPhaseEnum::UNKNOWN:
             moonPhaseLabel->setText("");
@@ -160,7 +160,7 @@ void MumeClockWidget::slot_updateLabel()
     }
     if (precision <= MumeClockPrecisionEnum::HOUR) {
         // Prepend warning emoji to countdown
-        timeLabel->setText(QString::fromUtf8("\xe2\x9a\xa0").append(m_clock->toCountdown(moment)));
+        timeLabel->setText(QString::fromUtf8("\xE2\x9A\xA0").append(m_clock->toCountdown(moment)));
     } else {
         timeLabel->setText(m_clock->toCountdown(moment));
     }

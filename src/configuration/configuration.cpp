@@ -589,11 +589,11 @@ void Configuration::ConnectionSettings::read(const QSettings &conf)
 }
 
 // closest well-known color is "Outer Space"
-static constexpr const std::string_view DEFAULT_BGCOLOR = "#2e3436";
+static constexpr const std::string_view DEFAULT_BGCOLOR = "#2E3436";
 // closest well-known color is "Dusty Gray"
-static constexpr const std::string_view DEFAULT_DARK_COLOR = "#a19494";
+static constexpr const std::string_view DEFAULT_DARK_COLOR = "#A19494";
 // closest well-known color is "Cold Turkey"
-static constexpr const std::string_view DEFAULT_NO_SUNDEATH_COLOR = "#d4c7c7";
+static constexpr const std::string_view DEFAULT_NO_SUNDEATH_COLOR = "#D4C7C7";
 
 void Configuration::CanvasSettings::read(const QSettings &conf)
 {
@@ -719,7 +719,7 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     host = conf.value(KEY_HOST, "localhost").toByteArray();
     charName = conf.value(KEY_CHARACTER_NAME, QHostInfo::localHostName()).toByteArray();
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
-    color = QColor(conf.value(KEY_COLOR, "#ffff00").toString());
+    color = QColor(conf.value(KEY_COLOR, "#FFFF00").toString());
     rulesWarning = conf.value(KEY_RULES_WARNING, true).toBool();
     certificate = conf.value(KEY_RSA_X509_CERTIFICATE, "").toByteArray();
     privateKey = conf.value(KEY_RSA_PRIVATE_KEY, "").toByteArray();

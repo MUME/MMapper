@@ -73,7 +73,7 @@ void print_char(ICharTokenStream &os, const char c, const bool doubleQuote)
         } else {
             // NOTE: This form can generate invalid C++.
             char buf[8];
-            std::sprintf(buf, "\\x%02x", (c & 0xff)); // max 5 bytes including C_NUL
+            std::sprintf(buf, "\\x%02X", (c & 0xFF)); // max 5 bytes including C_NUL
             os.getEsc() << buf;
         }
         break;

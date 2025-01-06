@@ -93,16 +93,16 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             }
 
             // NOTE: This is incorrect for parsing C++ escape codes:
-            // * "\xf" is allowed in C++ but fails here.
-            // * "\xfff" is a parse error in C++, but it's allowed here.
+            // * "\xF" is allowed in C++ but fails here.
+            // * "\xFFF" is a parse error in C++, but it's allowed here.
             uint32_t result = 0;
             for (int i = 0; i < digits; ++i) {
                 if (it != end) {
                     if (auto opt = try_decode_hex(*it)) {
                         const auto bits = opt.value();
-                        assert((bits & 0xf) == bits);
+                        assert((bits & 0xF) == bits);
                         result <<= 4;
-                        result |= bits & 0xf;
+                        result |= bits & 0xF;
                         ++it;
                         continue;
                     }
@@ -380,7 +380,7 @@ void test::test_unquote() noexcept /* will crash the program if it throws */
         expectString(R"("\o000")", NULL_CHAR_STRINGVIEW);
 
         expectString(R"("\o033")", S_ESC);  // C_ESC
-        expectString(R"("\o377")", "\377"); // '\xff'
+        expectString(R"("\o377")", "\377"); // '\xFF'
     }
     {
         static const auto expectUnquoteException = [](const std::string_view input,

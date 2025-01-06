@@ -11,6 +11,8 @@
 #include <ostream>
 #include <sstream>
 
+using namespace char_consts;
+
 namespace { // anonymous
 namespace detail {
 
@@ -59,10 +61,10 @@ NODISCARD static inline constexpr char latin1ToAscii(const char c) noexcept
 static_assert(latin1ToAscii('X') == 'X');
 static_assert(latin1ToAscii('x') == 'x');
 static_assert(latin1ToAscii(char_consts::C_DELETE) == char_consts::C_DELETE);
-static_assert(latin1ToAscii("\x80"[0]) == LATIN1_UNDEFINED);
-static_assert(latin1ToAscii("\x9f"[0]) == LATIN1_UNDEFINED);
+static_assert(latin1ToAscii('\x80') == LATIN1_UNDEFINED);
+static_assert(latin1ToAscii('\x9F') == LATIN1_UNDEFINED);
 static_assert(latin1ToAscii(char_consts::C_NBSP) == char_consts::C_SPACE);
-static_assert(latin1ToAscii("\xff"[0]) == 'y');
+static_assert(latin1ToAscii('\xFF') == 'y');
 
 } // namespace detail
 } // namespace
@@ -103,8 +105,8 @@ QString &toLatin1InPlace(QString &str)
 {
     constexpr uint16_t UNICODE_LSQUO = 0x2018;
     constexpr uint16_t UNICODE_RSQUO = 0x2019;
-    constexpr uint16_t UNICODE_LDQUO = 0x201c;
-    constexpr uint16_t UNICODE_RDQUO = 0x201d;
+    constexpr uint16_t UNICODE_LDQUO = 0x201C;
+    constexpr uint16_t UNICODE_RDQUO = 0x201D;
 
     for (QChar &qc : str) {
         switch (qc.unicode()) {
@@ -159,7 +161,7 @@ void latin1ToAscii(std::ostream &os, const std::string_view sv)
 bool isPrintLatin1(const char c)
 {
     const auto uc = static_cast<uint8_t>(c);
-    return uc >= ((uc < 0x7f) ? 0x20 : 0xa0);
+    return uc >= ((uc < 0x7F) ? 0x20 : 0xA0);
 }
 
 void latin1ToUtf8(std::ostream &os, const char c)
@@ -175,15 +177,15 @@ void latin1ToUtf8(std::ostream &os, const char c)
     //
     // but we only care about a smaller subset:
     // U+0080 .. U+00FF: 1100001x  10xxxxxx (7 bits)
-    //                    c2..c3    80..bf  (hex)
+    //                    C2..C3    80..BF  (hex)
     //
-    // 0x80 becomes         c2        80
-    // 0xff becomes         c3        bf
+    // 0x80 becomes         C2        80
+    // 0xFF becomes         C3        BF
     static constexpr const auto SIX_BIT_MASK = (1u << 6u) - 1u;
     static_assert(SIX_BIT_MASK == 63);
     char buf[3];
-    buf[0] = char(0xc0u | (uc >> 6u));          // c2..c3
-    buf[1] = char(0x80u | (uc & SIX_BIT_MASK)); // 80..bf
+    buf[0] = char(0xC0u | (uc >> 6u));          // C2..C3
+    buf[1] = char(0x80u | (uc & SIX_BIT_MASK)); // 80..BF
     buf[2] = char_consts::C_NUL;
     os.write(buf, 2);
 }
@@ -339,12 +341,12 @@ NODISCARD static constexpr bool isProbablyUtf8(const std::string_view sv)
     constexpr uint8_t top6Bits = 0b1111'1100;
     constexpr uint8_t top7Bits = 0b1111'1110;
     static_assert(topBit == 0x80);
-    static_assert(top2Bits == 0xc0);
-    static_assert(top3Bits == 0xe0);
-    static_assert(top4Bits == 0xf0);
-    static_assert(top5Bits == 0xf8);
-    static_assert(top6Bits == 0xfc);
-    static_assert(top7Bits == 0xfe);
+    static_assert(top2Bits == 0xC0);
+    static_assert(top3Bits == 0xE0);
+    static_assert(top4Bits == 0xF0);
+    static_assert(top5Bits == 0xF8);
+    static_assert(top6Bits == 0xFC);
+    static_assert(top7Bits == 0xFE);
 
     size_t multiByteExpected = 0;
     for (const char c : sv) {
@@ -420,44 +422,44 @@ NODISCARD static constexpr bool isProbablyUtf8(const std::string_view sv)
 }
 
 static_assert(isProbablyUtf8("\x00")); // U+0000 (ascii 0x00)
-static_assert(isProbablyUtf8("\x7f")); // U+007f (ascii 0x7f)
+static_assert(isProbablyUtf8("\x7F")); // U+007f (ascii 0x7F)
 //
 static_assert(!isProbablyUtf8("\x80"));
-static_assert(!isProbablyUtf8("\xbf"));
+static_assert(!isProbablyUtf8("\xBF"));
 //
-static_assert(!isProbablyUtf8("\xc0\x80")); // invalid over-long encoding
-static_assert(!isProbablyUtf8("\xc1\x80")); // invalid over-long encoding
+static_assert(!isProbablyUtf8("\xC0\x80")); // invalid over-long encoding
+static_assert(!isProbablyUtf8("\xC1\x80")); // invalid over-long encoding
 //
-static_assert(isProbablyUtf8("\xc2\x80")); // U+  80 (latin1 0x80)
-static_assert(isProbablyUtf8("\xc2\xbf")); // U+  BF (latin1 0xbf)
-static_assert(isProbablyUtf8("\xc3\x80")); // U+  C0 (latin1 0xc0)
-static_assert(isProbablyUtf8("\xc3\xbf")); // U+  FF (latin1 0xff)
-static_assert(isProbablyUtf8("\xc4\x80")); // U+0100
-static_assert(isProbablyUtf8("\xdf\x80")); // U+07C0
-static_assert(isProbablyUtf8("\xdf\xbf")); // U+07FF
+static_assert(isProbablyUtf8("\xC2\x80")); // U+  80 (latin1 0x80)
+static_assert(isProbablyUtf8("\xC2\xBF")); // U+  BF (latin1 0xBF)
+static_assert(isProbablyUtf8("\xC3\x80")); // U+  C0 (latin1 0xC0)
+static_assert(isProbablyUtf8("\xC3\xBF")); // U+  FF (latin1 0xFF)
+static_assert(isProbablyUtf8("\xC4\x80")); // U+0100
+static_assert(isProbablyUtf8("\xDF\x80")); // U+07C0
+static_assert(isProbablyUtf8("\xDF\xBF")); // U+07FF
 //
-static_assert(isProbablyUtf8("\xe0\x80\x80")); // U+0800 (* not all in this range are valid)
-static_assert(isProbablyUtf8("\xe1\x80\x80")); // U+1000
-static_assert(isProbablyUtf8("\xec\x80\x80")); // U+C000
-static_assert(isProbablyUtf8("\xed\x80\x80")); // U+D000 (* not all in this range are valid)
-static_assert(isProbablyUtf8("\xee\x80\x80")); // U+E000
-static_assert(isProbablyUtf8("\xef\x80\x80")); // U+F000
-static_assert(isProbablyUtf8("\xef\xbf\xbf")); // U+FFFF
+static_assert(isProbablyUtf8("\xE0\x80\x80")); // U+0800 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xE1\x80\x80")); // U+1000
+static_assert(isProbablyUtf8("\xEC\x80\x80")); // U+C000
+static_assert(isProbablyUtf8("\xED\x80\x80")); // U+D000 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xEE\x80\x80")); // U+E000
+static_assert(isProbablyUtf8("\xEF\x80\x80")); // U+F000
+static_assert(isProbablyUtf8("\xEF\xBF\xBF")); // U+FFFF
 //
-static_assert(isProbablyUtf8("\xf0\x80\x80\x80")); // U+ 10000 (* not all in this range are valid)
-static_assert(isProbablyUtf8("\xf1\x80\x80\x80")); // U+ 40000
-static_assert(isProbablyUtf8("\xf2\x80\x80\x80")); // U+ 80000
-static_assert(isProbablyUtf8("\xf3\x80\x80\x80")); // U+ C0000
-static_assert(isProbablyUtf8("\xf4\x80\x80\x80")); // U+100000 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xF0\x80\x80\x80")); // U+ 10000 (* not all in this range are valid)
+static_assert(isProbablyUtf8("\xF1\x80\x80\x80")); // U+ 40000
+static_assert(isProbablyUtf8("\xF2\x80\x80\x80")); // U+ 80000
+static_assert(isProbablyUtf8("\xF3\x80\x80\x80")); // U+ C0000
+static_assert(isProbablyUtf8("\xF4\x80\x80\x80")); // U+100000 (* not all in this range are valid)
 //
-static_assert(!isProbablyUtf8("\xf5\x80\x80\x80")); // U+140000
-static_assert(!isProbablyUtf8("\xf6\x80\x80\x80")); // U+180000
-static_assert(!isProbablyUtf8("\xf7\x80\x80\x80")); // U+1C0000
+static_assert(!isProbablyUtf8("\xF5\x80\x80\x80")); // U+140000
+static_assert(!isProbablyUtf8("\xF6\x80\x80\x80")); // U+180000
+static_assert(!isProbablyUtf8("\xF7\x80\x80\x80")); // U+1C0000
 //
-static_assert(!isProbablyUtf8("\xf8\x80\x80\x80\x80"));     // illegal 5-byte sequence
-static_assert(!isProbablyUtf8("\xfc\x80\x80\x80\x80\x80")); // illegal 6-byte sequence
-static_assert(!isProbablyUtf8("\xfe"));                     // not valid anywhere
-static_assert(!isProbablyUtf8("\xff"));                     // not valid anywhere
+static_assert(!isProbablyUtf8("\xF8\x80\x80\x80\x80"));     // illegal 5-byte sequence
+static_assert(!isProbablyUtf8("\xFC\x80\x80\x80\x80\x80")); // illegal 6-byte sequence
+static_assert(!isProbablyUtf8("\xFE"));                     // not valid anywhere
+static_assert(!isProbablyUtf8("\xFF"));                     // not valid anywhere
 
 } // namespace detail
 } // namespace

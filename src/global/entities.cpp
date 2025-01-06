@@ -65,14 +65,14 @@ NODISCARD static bool isNameStartChar(const QChar c)
         return true;
     }
     const auto uc = static_cast<uint32_t>(c.unicode());
-    return uc >= 0xc0 && uc != 0xd7 && uc != 0xf7;
+    return uc >= 0xC0 && uc != 0xD7 && uc != 0xF7;
 }
 
 // only bother with the latin1 subset
 NODISCARD static bool isNameChar(const QChar c)
 {
     return isNameStartChar(c) || c == C_MINUS_SIGN || c == C_PERIOD || isLatin1Digit(c)
-           || c.unicode() == 0xb7;
+           || c.unicode() == 0xB7;
 }
 } // namespace entities
 
@@ -264,8 +264,8 @@ NODISCARD static const char *translit(const QChar qc)
         return S_CARET;
 
     case XmlEntityEnum::XID_empty: {
-        static_assert(static_cast<uint16_t>(XmlEntityEnum::XID_oslash) == 0xf8);
-        return "\xf8";
+        static_assert(static_cast<uint16_t>(XmlEntityEnum::XID_oslash) == 0xF8);
+        return "\xF8";
     }
 
     case XmlEntityEnum::XID_lowast:

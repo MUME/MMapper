@@ -59,7 +59,7 @@ NODISCARD static int testing()
     s.append(C_BACKSLASH);
     s.append(C_BACKSPACE);
     s.append(C_FORM_FEED);
-    s.append(QChar(char16_t(0xff)));
+    s.append(QChar(char16_t(0xFF)));
     s.append(QChar(char16_t(0x100)));
     s.append(C_CARRIAGE_RETURN);
     s.append(C_NEWLINE);

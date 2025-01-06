@@ -62,10 +62,10 @@ static_assert(ANSI256_GREY_END - ANSI256_GREY_START + 1 == 24);        // 24 lev
 
 // values from https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 namespace wiki {
-constexpr std::array<uint8_t, 6> ansi_colors6{0x00, 0x57, 0x87, 0xaf, 0xd7, 0xff};
+constexpr std::array<uint8_t, 6> ansi_colors6{0x00, 0x57, 0x87, 0xAF, 0xD7, 0xFF};
 static constexpr const std::array<int, 24> ansi_greys24{
-    0x08, 0x12, 0x1c, 0x26, 0x30, 0x3a, 0x44, 0x4e, 0x58, 0x62, 0x6c, 0x76,
-    0x80, 0x8a, 0x94, 0x9e, 0xa8, 0xb2, 0xbc, 0xc6, 0xd0, 0xda, 0xe4, 0xee,
+    0x08, 0x12, 0x1C, 0x26, 0x30, 0x3A, 0x44, 0x4E, 0x58, 0x62, 0x6C, 0x76,
+    0x80, 0x8A, 0x94, 0x9E, 0xA8, 0xB2, 0xBC, 0xC6, 0xD0, 0xDA, 0xE4, 0xEE,
 };
 
 } // namespace wiki
@@ -90,7 +90,7 @@ NODISCARD static int parsePositiveInt(const QStringView number)
     int n = 0;
     for (const QChar qc : number) {
         // bounds check for sanity
-        if (qc.unicode() > 0xff) {
+        if (qc.unicode() > 0xFF) {
             return -1;
         }
 
@@ -884,7 +884,7 @@ static void clamp255Inplace(int &n)
 
 static uint8_t clamp255(const uint32_t n)
 {
-    assert((n & 0xffu) == n);
+    assert((n & 0xFFu) == n);
     return static_cast<uint8_t>(n);
 }
 
@@ -896,22 +896,22 @@ static uint8_t clamp255(const int32_t n)
 std::string_view to_hex_color_string_view(AnsiColor16Enum ansi)
 {
     // TODO: support switching between different color standards.
-    static const std::string_view black("#2e3436");
+    static const std::string_view black("#2E3436");
     static const std::string_view BLACK("#555753");
-    static const std::string_view red("#cc0000");
-    static const std::string_view RED("#ef2929");
-    static const std::string_view green("#4e9a06");
-    static const std::string_view GREEN("#8ae234");
-    static const std::string_view yellow("#c4a000");
-    static const std::string_view YELLOW("#fce94f");
-    static const std::string_view blue("#3465a4");
-    static const std::string_view BLUE("#729fcf");
-    static const std::string_view magenta("#75507b");
-    static const std::string_view MAGENTA("#ad7fa8");
-    static const std::string_view cyan("#06989a");
-    static const std::string_view CYAN("#34e2e2");
-    static const std::string_view white("#d3d7cf");
-    static const std::string_view WHITE("#eeeeec");
+    static const std::string_view red("#CC0000");
+    static const std::string_view RED("#EF2929");
+    static const std::string_view green("#4E9A06");
+    static const std::string_view GREEN("#8AE234");
+    static const std::string_view yellow("#C4A000");
+    static const std::string_view YELLOW("#FCE94F");
+    static const std::string_view blue("#3465A4");
+    static const std::string_view BLUE("#729FCF");
+    static const std::string_view magenta("#75507B");
+    static const std::string_view MAGENTA("#AD7FA8");
+    static const std::string_view cyan("#06989A");
+    static const std::string_view CYAN("#34E2E2");
+    static const std::string_view white("#D3D7CF");
+    static const std::string_view WHITE("#EEEEEC");
 
 #define X_CASE(n, lower, UPPER) \
     case AnsiColor16Enum::lower: \
@@ -1071,7 +1071,7 @@ QColor mmqt::ansi256toRgb(const int ansi)
         assert(false);
         return mmqt::toQColor(AnsiColor16Enum::RED);
     }
-    const AnsiColor256 c256{static_cast<uint8_t>(ansi & 0xff)};
+    const AnsiColor256 c256{static_cast<uint8_t>(ansi & 0xFF)};
     const AnsiColorRGB c = ::toAnsiColorRGB(c256);
     return QColor{c.r, c.g, c.b};
 }
@@ -1146,7 +1146,7 @@ int rgbToAnsi256(int r, int g, int b)
         static_assert(conv(232) == 254);
         //
         static_assert(conv(233) == 255);
-        static_assert(0xee == 238);
+        static_assert(0xEE == 238);
         static_assert(conv(238) == 255);
         static_assert(conv(243) == 255);
 
