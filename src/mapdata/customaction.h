@@ -130,7 +130,7 @@ public:
     explicit ModifyRoomFlags(Type type, FlagModifyModeEnum in_mode) \
         : ModifyRoomFlags{RoomFieldVariant{type}, in_mode} \
     {}
-    X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
+    XFOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
 #undef X_DECLARE_CONSTRUCTORS
 #undef NOP
 
@@ -168,7 +168,7 @@ public:
     explicit ModifyExitFlags(Type type, const ExitDirEnum dir, const FlagModifyModeEnum mode) \
         : ModifyExitFlags{ExitFieldVariant{std::move(type)}, dir, mode} \
     {}
-    X_FOREACH_EXIT_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
+    XFOREACH_EXIT_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
 #undef X_DECLARE_CONSTRUCTORS
 #undef NOP
 

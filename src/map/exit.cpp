@@ -9,13 +9,13 @@
 #include "ExitFieldVariant.h"
 #include "ExitFlags.h"
 
-#define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Exit::set##_Type(_Type value) \
     { \
         m_fields._Prop = std::move(value); \
     }
-XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
-#undef DEFINE_SETTERS
+XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
 
 // bool Exit::exitXXX() const
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
@@ -23,7 +23,7 @@ XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
     { \
         return getExitFlags().is##CamelCase(); \
     }
-X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
+XFOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 // bool Exit::doorIsXXX() const
@@ -32,7 +32,7 @@ X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
     { \
         return exitIsDoor() && getDoorFlags().is##CamelCase(); \
     }
-X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
+XFOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 bool Exit::operator==(const Exit &rhs) const

@@ -10,7 +10,7 @@
 #include <QtGlobal>
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
-#define X_FOREACH_CHARACTER_POSITION(X) \
+#define XFOREACH_CHARACTER_POSITION(X) \
     X(UNDEFINED, undefined, Undefined, "No state available") \
     X(FIGHTING, fighting, Fighting, "Fighting") \
     X(STANDING, standing, Standing, "Standing") \
@@ -23,18 +23,18 @@
 
 enum class NODISCARD CharacterPositionEnum : uint8_t {
 #define X_DECL_CHARACTER_POSITION(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
-    X_FOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
+    XFOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
 #undef X_DECL_CHARACTER_POSITION
 };
 
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
-static constexpr const int NUM_CHARACTER_POSITIONS = X_FOREACH_CHARACTER_POSITION(X_COUNT);
+static constexpr const int NUM_CHARACTER_POSITIONS = XFOREACH_CHARACTER_POSITION(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(CharacterPositionEnum, NUM_CHARACTER_POSITIONS)
 Q_DECLARE_METATYPE(CharacterPositionEnum)
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
-#define X_FOREACH_CHARACTER_AFFECT(X) \
+#define XFOREACH_CHARACTER_AFFECT(X) \
     X(BLIND, blind, Blind, "Blind") \
     X(BASHED, bashed, Bashed, "Bashed") \
     X(SLEPT, slept, Slept, "Slept") \
@@ -50,12 +50,12 @@ Q_DECLARE_METATYPE(CharacterPositionEnum)
 // TODO: States for CASTING DISEASED
 enum class NODISCARD CharacterAffectEnum {
 #define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
-    X_FOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
+    XFOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
 #undef X_DECL_CHARACTER_AFFECT
 };
 
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
-static constexpr const int NUM_CHARACTER_AFFECTS = X_FOREACH_CHARACTER_AFFECT(X_COUNT);
+static constexpr const int NUM_CHARACTER_AFFECTS = XFOREACH_CHARACTER_AFFECT(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(CharacterAffectEnum, NUM_CHARACTER_AFFECTS)
 Q_DECLARE_METATYPE(CharacterAffectEnum)
@@ -71,7 +71,7 @@ public:
     { \
         return contains(CharacterAffectEnum::UPPER_CASE); \
     }
-    X_FOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
+    XFOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 

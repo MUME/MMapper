@@ -19,7 +19,7 @@ NODISCARD static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum typ
         return GmcpMessageName{friendly};
 
     switch (type) {
-        X_FOREACH_GMCP_MESSAGE_TYPE(X_CASE)
+        XFOREACH_GMCP_MESSAGE_TYPE(X_CASE)
 
     case GmcpMessageTypeEnum::UNKNOWN:
         // REVISIT: Do we really want this valid value to crash MMapper?
@@ -37,7 +37,7 @@ NODISCARD static GmcpMessageTypeEnum toGmcpMessageType(const std::string_view st
         return GmcpMessageTypeEnum::UPPER_CASE; \
     }
 
-    X_FOREACH_GMCP_MESSAGE_TYPE(X_CASE)
+    XFOREACH_GMCP_MESSAGE_TYPE(X_CASE)
 
 #undef X_CASE
     return GmcpMessageTypeEnum::UNKNOWN;

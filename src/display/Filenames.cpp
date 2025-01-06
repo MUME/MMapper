@@ -148,7 +148,7 @@ NODISCARD static const char *getFilenameSuffix(const CharacterPositionEnum posit
         return #lower_case; \
     } while (false);
     switch (position) {
-        X_FOREACH_CHARACTER_POSITION(X_CASE)
+        XFOREACH_CHARACTER_POSITION(X_CASE)
     }
     return "";
 #undef X_CASE
@@ -161,7 +161,7 @@ NODISCARD static const char *getFilenameSuffix(const CharacterAffectEnum affect)
         return #lower_case; \
     } while (false);
     switch (affect) {
-        X_FOREACH_CHARACTER_AFFECT(X_CASE)
+        XFOREACH_CHARACTER_AFFECT(X_CASE)
     }
     return "";
 #undef X_CASE

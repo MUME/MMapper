@@ -89,13 +89,13 @@ void AnsiCombo::initColours(const AnsiColor16LocationEnum change)
 
     add(initAnsiItem(AnsiColor16{}, m_mode));
 
-#define INIT(N, lower, UPPER) \
+#define X_INIT(N, lower, UPPER) \
     add(initAnsiItem(AnsiColor16{AnsiColor16Enum::lower}, m_mode)); \
     add(initAnsiItem(AnsiColor16{AnsiColor16Enum::UPPER}, m_mode));
 
-    XFOREACH_ANSI_COLOR_0_7(INIT)
+    XFOREACH_ANSI_COLOR_0_7(X_INIT)
 
-#undef INIT
+#undef X_INIT
 
     this->setAnsiCode(AnsiColor16{});
 }

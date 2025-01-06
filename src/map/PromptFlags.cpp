@@ -5,23 +5,23 @@
 
 NODISCARD std::string_view to_string_view(const PromptFogEnum val)
 {
-#define CASE(X) \
+#define X_CASE(X) \
     case PromptFogEnum::X: \
         return #X;
     switch (val) {
-        X_FOREACH_PROMPT_FOG_ENUM(CASE)
+        XFOREACH_PROMPT_FOG_ENUM(X_CASE)
     }
     std::abort();
-#undef CASE
+#undef X_CASE
 }
 NODISCARD std::string_view to_string_view(const PromptWeatherEnum val)
 {
-#define CASE(X) \
+#define X_CASE(X) \
     case PromptWeatherEnum::X: \
         return #X;
     switch (val) {
-        X_FOREACH_PROMPT_WEATHER_ENUM(CASE)
+        XFOREACH_PROMPT_WEATHER_ENUM(X_CASE)
     }
     std::abort();
-#undef CASE
+#undef X_CASE
 }

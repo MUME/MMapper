@@ -142,7 +142,7 @@ NODISCARD static QString getName(const ExitFlagEnum flag)
         return friendly; \
     } while (false);
     switch (flag) {
-        X_FOREACH_EXIT_FLAG(X_CASE)
+        XFOREACH_EXIT_FLAG(X_CASE)
     }
     return QString::asprintf("(ExitFlagEnum)%d", static_cast<int>(flag));
 #undef X_CASE
@@ -157,7 +157,7 @@ NODISCARD static QString getName(const DoorFlagEnum flag)
         return friendly; \
     } while (false);
     switch (flag) {
-        X_FOREACH_DOOR_FLAG(X_CASE)
+        XFOREACH_DOOR_FLAG(X_CASE)
     }
     return QString::asprintf("(DoorFlagEnum)%d", static_cast<int>(flag));
 #undef X_CASE

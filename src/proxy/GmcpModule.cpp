@@ -18,7 +18,7 @@ NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string_view str)
         return GmcpModuleTypeEnum::UPPER_CASE; \
     }
 
-    X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+    XFOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
 
     return GmcpModuleTypeEnum::UNKNOWN;
@@ -59,7 +59,7 @@ GmcpModule::GmcpModule(const GmcpModuleTypeEnum type, const GmcpModuleVersion ve
         m_nameVersion.normalizedName = normalized; \
         break;
     switch (type) {
-        X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+        XFOREACH_GMCP_MODULE_TYPE(X_CASE)
     case GmcpModuleTypeEnum::UNKNOWN:
         abort();
     }

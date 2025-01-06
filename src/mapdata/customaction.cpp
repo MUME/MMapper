@@ -283,12 +283,12 @@ ModifyRoomFlags::ModifyRoomFlags(const RoomFieldVariant in_flags, const FlagModi
     , mode(in_mode)
 {}
 
-#define X_FOREACH_ROOM_CLASS_FIELD(X) \
+#define XFOREACH_ROOM_CLASS_FIELD(X) \
     X(NOTE, Note, RoomNote) \
     X(MOB_FLAGS, MobFlags, RoomMobFlags) \
     X(LOAD_FLAGS, LoadFlags, RoomLoadFlags)
 
-#define X_FOREACH_ROOM_ENUM_FIELD(X) \
+#define XFOREACH_ROOM_ENUM_FIELD(X) \
     X(PORTABLE_TYPE, PortableType, RoomPortableEnum, NUM_PORTABLE_TYPES) \
     X(LIGHT_TYPE, LightType, RoomLightEnum, NUM_LIGHT_TYPES) \
     X(ALIGN_TYPE, AlignType, RoomAlignEnum, NUM_ALIGN_TYPES) \
@@ -307,7 +307,7 @@ void ModifyRoomFlags::exec(const RoomId id)
         return room->set##CamelCase( \
             modifyField(room->get##CamelCase(), var.get##CamelCase(), mode)); \
     }
-            X_FOREACH_ROOM_CLASS_FIELD(X_CASE)
+            XFOREACH_ROOM_CLASS_FIELD(X_CASE)
 #undef X_CASE
             // Room field enums
             // NOTE: TOGGLE assumes that the user never wants to toggle UNDEFINED enums
@@ -330,7 +330,7 @@ void ModifyRoomFlags::exec(const RoomId id)
             std::abort(); \
         } \
     }
-            X_FOREACH_ROOM_ENUM_FIELD(X_CASE)
+            XFOREACH_ROOM_ENUM_FIELD(X_CASE)
 #undef X_CASE
 
             // REVISIT: RoomName requires that we enhance RoomFieldVariant
@@ -344,8 +344,8 @@ void ModifyRoomFlags::exec(const RoomId id)
         }
     }
 }
-#undef X_FOREACH_ROOM_CLASS_FIELD
-#undef X_FOREACH_ROOM_ENUM_FIELD
+#undef XFOREACH_ROOM_CLASS_FIELD
+#undef XFOREACH_ROOM_ENUM_FIELD
 
 ModifyRoomUpToDate::ModifyRoomUpToDate(const bool in_checked)
     : checked(in_checked)
@@ -383,7 +383,7 @@ void ModifyExitFlags::exec(const RoomId id)
     }
     if (Room *const room = roomIndex(id)) {
         switch (m_var.getType()) {
-            X_FOREACH_EXIT_FIELD(X_CASE, NOP)
+            XFOREACH_EXIT_FIELD(X_CASE, NOP)
 #undef X_CASE
 #undef NOP
         default:

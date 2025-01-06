@@ -285,7 +285,7 @@ void UserTelnet::resetGmcpModules()
     }
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     m_gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
-    X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+    XFOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
     m_gmcp.modules.clear();
 }

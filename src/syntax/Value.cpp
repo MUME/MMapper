@@ -83,7 +83,7 @@ static void print(std::ostream &os, InfoMarkClassEnum value)
 
 std::ostream &operator<<(std::ostream &os, const Value &value)
 {
-#define CASE(Type, RefType, CamelCase) \
+#define X_CASE(Type, RefType, CamelCase) \
     case Value::IndexEnum::CamelCase: { \
         value_helper::print(os, value.get##CamelCase()); \
         return os; \
@@ -93,11 +93,11 @@ std::ostream &operator<<(std::ostream &os, const Value &value)
     case Value::IndexEnum::Null:
         return os << "null";
         //
-        X_FOREACH_VALUE_TYPE(CASE)
+        XFOREACH_VALUE_TYPE(X_CASE)
     }
 
     std::abort();
-#undef CASE
+#undef X_CASE
 }
 
 std::ostream &operator<<(std::ostream &os, const Vector &v)

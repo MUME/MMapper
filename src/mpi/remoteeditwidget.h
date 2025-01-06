@@ -159,9 +159,9 @@ protected slots:
     NODISCARD bool slot_contentsChanged() const;
     void slot_updateStatusBar();
 
-#define X(a, b, c, d, e) void slot_##a();
-    XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
-#undef X
+#define X_DECLARE_SLOT(a, b, c, d, e) void slot_##a();
+    XFOREACH_REMOTE_EDIT_MENU_ITEM(X_DECLARE_SLOT)
+#undef X_DECLARE_SLOT
 
 signals:
     void sig_cancel();

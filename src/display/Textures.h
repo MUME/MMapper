@@ -133,9 +133,9 @@ using TextureArrayNESWUD = EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EX
 
 struct NODISCARD MapCanvasTextures final
 {
-#define DECL(_Type, _Name) _Type _Name;
-    XFOREACH_MAPCANVAS_TEXTURES(DECL)
-#undef DECL
+#define X_DECL(_Type, _Name) _Type _Name;
+    XFOREACH_MAPCANVAS_TEXTURES(X_DECL)
+#undef X_DECL
 
 private:
     template<typename Callback>
@@ -154,9 +154,9 @@ public:
     template<typename Callback>
     void for_each(Callback &&callback)
     {
-#define EACH(_Type, _Name) apply_callback(_Name, callback);
-        XFOREACH_MAPCANVAS_TEXTURES(EACH)
-#undef EACH
+#define X_EACH(_Type, _Name) apply_callback(_Name, callback);
+        XFOREACH_MAPCANVAS_TEXTURES(X_EACH)
+#undef X_EACH
     }
 
     void destroyAll();
@@ -187,9 +187,9 @@ using proxy_t = typename Proxy<T>::type;
 
 struct NODISCARD MapCanvasTexturesProxy final
 {
-#define DECL_PROXY(_Type, _Name) mctp::detail::proxy_t<_Type> _Name;
-    XFOREACH_MAPCANVAS_TEXTURES(DECL_PROXY)
-#undef DECL_PROXY
+#define X_DECL_PROXY(_Type, _Name) mctp::detail::proxy_t<_Type> _Name;
+    XFOREACH_MAPCANVAS_TEXTURES(X_DECL_PROXY)
+#undef X_DECL_PROXY
 };
 
 NODISCARD extern MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct);

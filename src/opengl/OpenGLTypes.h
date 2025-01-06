@@ -103,9 +103,9 @@ struct NODISCARD LineParams final
     X(GEQUAL) \
     X(ALWAYS)
 
-#define DECL(X) X = GL_##X,
-enum class NODISCARD DepthFunctionEnum { XFOREACH_DEPTHFUNC(DECL) DEFAULT = LESS };
-#undef DECL
+#define X_DECL(X) X = GL_##X,
+enum class NODISCARD DepthFunctionEnum { XFOREACH_DEPTHFUNC(X_DECL) DEFAULT = LESS };
+#undef X_DECL
 
 enum class NODISCARD BlendModeEnum {
     /* glDisable(GL_BLEND); */

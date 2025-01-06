@@ -8,7 +8,7 @@
 #include <cstdint>
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
-#define X_FOREACH_DOOR_FLAG(X) \
+#define XFOREACH_DOOR_FLAG(X) \
     X(HIDDEN, hidden, Hidden, "Hidden") \
     X(NEED_KEY, need_key, NeedKey, "Need key") \
     X(NO_BLOCK, no_block, NoBlock, "No block") \
@@ -24,12 +24,12 @@
 
 enum class NODISCARD DoorFlagEnum {
 #define X_DECL_DOOR_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
-    X_FOREACH_DOOR_FLAG(X_DECL_DOOR_FLAG)
+    XFOREACH_DOOR_FLAG(X_DECL_DOOR_FLAG)
 #undef X_DECL_DOOR_FLAG
 };
 
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
-static constexpr const int NUM_DOOR_FLAGS = X_FOREACH_DOOR_FLAG(X_COUNT);
+static constexpr const int NUM_DOOR_FLAGS = XFOREACH_DOOR_FLAG(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(DoorFlagEnum, NUM_DOOR_FLAGS)
 
@@ -44,7 +44,7 @@ public:
     { \
         return contains(DoorFlagEnum::UPPER_CASE); \
     }
-    X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
+    XFOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 public:

@@ -25,9 +25,9 @@ class Exit final
 private:
     struct ExitFields final
     {
-#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
-        XFOREACH_EXIT_PROPERTY(DECL_FIELD)
-#undef DECL_FIELD
+#define X_DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
+        XFOREACH_EXIT_PROPERTY(X_DECL_FIELD)
+#undef X_DECL_FIELD
     };
 
 private:
@@ -45,9 +45,9 @@ public:
 public:
     void clearFields()
     {
-#define CLEAR_FIELD(_Type, _Prop, _OptInit) m_fields._Prop = _Type{_OptInit};
-        XFOREACH_EXIT_PROPERTY(CLEAR_FIELD)
-#undef CLEAR_FIELD
+#define X_CLEAR_FIELD(_Type, _Prop, _OptInit) m_fields._Prop = _Type{_OptInit};
+        XFOREACH_EXIT_PROPERTY(X_CLEAR_FIELD)
+#undef X_CLEAR_FIELD
     }
 
 public:
@@ -157,14 +157,14 @@ public:
     }
 
 public:
-#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
     inline const _Type &get##_Type() const \
     { \
         return m_fields._Prop; \
     } \
     void set##_Type(_Type value); // REVISIT: Does not update mesh
-    XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
-#undef DECL_GETTERS_AND_SETTERS
+    XFOREACH_EXIT_PROPERTY(X_DECL_GETTERS_AND_SETTERS)
+#undef X_DECL_GETTERS_AND_SETTERS
 
 public:
     /* older aliases */
@@ -184,13 +184,13 @@ public:
 public:
 #define X_DECLARE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
     bool exitIs##CamelCase() const;
-    X_FOREACH_EXIT_FLAG(X_DECLARE_ACCESSORS)
+    XFOREACH_EXIT_FLAG(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 
 public:
 #define X_DECLARE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
     bool doorIs##CamelCase() const;
-    X_FOREACH_DOOR_FLAG(X_DECLARE_ACCESSORS)
+    XFOREACH_DOOR_FLAG(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 
     inline bool hasDoorName() const

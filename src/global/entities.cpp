@@ -77,13 +77,16 @@ NODISCARD static bool isNameChar(const QChar c)
 } // namespace entities
 
 // NOTE: must have prefix because `and`, `or`, and `int` are C++ keywords.
-#define X(name, value) XID_##name = value
-#define SEP_COMMA() ,
+#define X_DEFINE_ENUM(name, value) XID_##name = value
+#define X_SEP_COMMA() ,
 
-enum class NODISCARD XmlEntityEnum : uint16_t { INVALID = 0, X_FOREACH_ENTITY(X, SEP_COMMA) };
+enum class NODISCARD XmlEntityEnum : uint16_t {
+    INVALID = 0,
+    XFOREACH_ENTITY(X_DEFINE_ENUM, X_SEP_COMMA)
+};
 
-#undef X
-#undef SEP_COMMA
+#undef X_DEFINE_ENUM
+#undef X_SEP_COMMA
 
 struct NODISCARD XmlEntity final
 {
@@ -124,14 +127,14 @@ struct NODISCARD EntityTable final
 NODISCARD static EntityTable initEntityTable()
 {
     // prefixed enum class is an antipattern, but we may not be able to avoid it in this case.
-#define X(name, value) (XmlEntity{#name, "&" #name ";", XmlEntityEnum::XID_##name})
-#define SEP_COMMA() ,
+#define X_DEFINE_ENTITY(name, value) (XmlEntity{#name, "&" #name ";", XmlEntityEnum::XID_##name})
+#define X_SEP_COMMA() ,
 
-    const std::vector<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};
+    const std::vector<XmlEntity> all_entities{XFOREACH_ENTITY(X_DEFINE_ENTITY, X_SEP_COMMA)};
     assert(all_entities.size() == 258);
 
-#undef X
-#undef SEP_COMMA
+#undef X_DEFINE_ENTITY
+#undef X_SEP_COMMA
 
     EntityTable entityTable;
     for (const auto &ent : all_entities) {

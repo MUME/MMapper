@@ -311,9 +311,9 @@ auto copy_proxy(const T &input) -> ::mctp::detail::proxy_t<T>
 MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct)
 {
     MapCanvasTexturesProxy result;
-#define COPY_PROXY(_Type, _Name) result._Name = detail::copy_proxy(mct._Name);
-    XFOREACH_MAPCANVAS_TEXTURES(COPY_PROXY)
-#undef COPY_PROXY
+#define X_COPY_PROXY(_Type, _Name) result._Name = detail::copy_proxy(mct._Name);
+    XFOREACH_MAPCANVAS_TEXTURES(X_COPY_PROXY)
+#undef X_COPY_PROXY
     return result;
 }
 } // namespace mctp

@@ -208,7 +208,7 @@ NODISCARD static QString getPrettyName(const CharacterPositionEnum position)
         return friendly; \
     } while (false);
     switch (position) {
-        X_FOREACH_CHARACTER_POSITION(X_CASE)
+        XFOREACH_CHARACTER_POSITION(X_CASE)
     }
     return QString::asprintf("(CharacterPositionEnum)%d", static_cast<int>(position));
 #undef X_CASE
@@ -221,7 +221,7 @@ NODISCARD static QString getPrettyName(const CharacterAffectEnum affect)
         return friendly; \
     } while (false);
     switch (affect) {
-        X_FOREACH_CHARACTER_AFFECT(X_CASE)
+        XFOREACH_CHARACTER_AFFECT(X_CASE)
     }
     return QString::asprintf("(CharacterAffectEnum)%d", static_cast<int>(affect));
 #undef X_CASE

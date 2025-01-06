@@ -4,7 +4,7 @@
 // note: clang-format chokes on this, so the file is named ".txt" instead of something more sensible for C++
 
 // https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Character_entity_references_in_HTML
-#define X_FOREACH_ENTITY(X, XSEP) \
+#define XFOREACH_ENTITY(X, XSEP) \
     X(excl, 0x0021) XSEP() \
     X(quot, 0x0022) XSEP() \
     X(percent, 0x0025) XSEP() \

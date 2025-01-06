@@ -364,8 +364,8 @@ void MainWindow::readSettings()
 {
     struct NODISCARD MySettings final
     {
-#define XDECL(name) decltype(Configuration::GeneralSettings::name) name{};
-#define XCOPY(name) (my_settings.name) = (actual_settings.name);
+#define X_DECL(name) decltype(Configuration::GeneralSettings::name) name{};
+#define X_COPY(name) (my_settings.name) = (actual_settings.name);
 #define XFOREACH_MY_SETTINGS(X) \
     X(firstRun) \
     X(windowGeometry) \
@@ -373,7 +373,7 @@ void MainWindow::readSettings()
     X(noClientPanel)
 
         // member variable declarations
-        XFOREACH_MY_SETTINGS(XDECL)
+        XFOREACH_MY_SETTINGS(X_DECL)
 
         NODISCARD static MySettings get()
         {
@@ -381,12 +381,12 @@ void MainWindow::readSettings()
             auto &&config = getConfig();
             const auto &actual_settings = config.general;
             MySettings my_settings{};
-            XFOREACH_MY_SETTINGS(XCOPY)
+            XFOREACH_MY_SETTINGS(X_COPY)
             return my_settings;
         }
 
-#undef XCOPY
-#undef XDECL
+#undef X_COPY
+#undef X_DECL
 #undef XFOREACH_MY_SETTINGS
     };
 

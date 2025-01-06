@@ -65,7 +65,7 @@ void TestGlobal::ansi256ColorTest()
     QCOMPARE(grayRgb, QColor(Qt::darkGray));
 
     // these are called for the side-effect of testing their asserts.
-#define TEST(N, lower, UPPER) \
+#define X_TEST(N, lower, UPPER) \
     do { \
         const std::string_view testing = #lower; \
         MAYBE_UNUSED const auto fg = mmqt::rgbToAnsi256String(lower##Rgb, \
@@ -73,7 +73,7 @@ void TestGlobal::ansi256ColorTest()
         MAYBE_UNUSED const auto bg = mmqt::rgbToAnsi256String(lower##Rgb, \
                                                               AnsiColor16LocationEnum::Background); \
     } while (false);
-    XFOREACH_ANSI_COLOR_0_7(TEST)
+    XFOREACH_ANSI_COLOR_0_7(X_TEST)
 
     // TODO: use colons instead of semicolons
     QCOMPARE(mmqt::rgbToAnsi256String(blackRgb, AnsiColor16LocationEnum::Foreground),
@@ -85,7 +85,7 @@ void TestGlobal::ansi256ColorTest()
              QString("[38;5;231m"));
     QCOMPARE(mmqt::rgbToAnsi256String(whiteRgb, AnsiColor16LocationEnum::Background),
              QString("[30;48;5;231m"));
-#undef TEST
+#undef X_TEST
 }
 
 void TestGlobal::ansiToRgbTest()

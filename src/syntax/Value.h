@@ -51,7 +51,7 @@ struct NODISCARD Value final
 {
 public:
     // X(Type, RefType, CamelCase)
-#define X_FOREACH_VALUE_TYPE(X) \
+#define XFOREACH_VALUE_TYPE(X) \
     X(bool, bool, Bool) \
     X(char, char, Char) \
     X(int32_t, int32_t, Int) \
@@ -64,14 +64,14 @@ public:
     X(ExitFlagEnum, ExitFlagEnum, ExitFlag) \
     X(InfoMarkClassEnum, InfoMarkClassEnum, InfoMarkClass)
 
-#define DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
-    enum class NODISCARD IndexEnum : uint8_t { Null, X_FOREACH_VALUE_TYPE(DECL_ENUM) };
-#undef DECL_ENUM
+#define X_DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
+    enum class NODISCARD IndexEnum : uint8_t { Null, XFOREACH_VALUE_TYPE(X_DECL_ENUM) };
+#undef X_DECL_ENUM
 
 private:
-#define TYPES(ValueType, RefType, CamelCase) , ValueType
-    using Variant = std::variant<std::nullptr_t X_FOREACH_VALUE_TYPE(TYPES)>;
-#undef TYPES
+#define X_TYPES(ValueType, RefType, CamelCase) , ValueType
+    using Variant = std::variant<std::nullptr_t XFOREACH_VALUE_TYPE(X_TYPES)>;
+#undef X_TYPES
 
 private:
     Variant m_value = nullptr;
@@ -90,7 +90,7 @@ public:
         return std::holds_alternative<std::nullptr_t>(m_value);
     }
 
-#define DEFINE_CTOR_IS_GET(ValueType, RefType, CamelCase) \
+#define X_DEFINE_CTOR_IS_GET(ValueType, RefType, CamelCase) \
     explicit Value(ValueType x) \
         : m_value(std::move(x)) \
     {} \
@@ -103,9 +103,9 @@ public:
         return std::get<ValueType>(m_value); \
     }
 
-    X_FOREACH_VALUE_TYPE(DEFINE_CTOR_IS_GET)
+    XFOREACH_VALUE_TYPE(X_DEFINE_CTOR_IS_GET)
 
-#undef DEFINE_CTOR_IS_GET
+#undef X_DEFINE_CTOR_IS_GET
 
 public:
     NODISCARD IndexEnum getType() const

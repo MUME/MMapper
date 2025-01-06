@@ -110,9 +110,9 @@ static_assert(alignof(Color) == alignof(uint32_t));
     X(yellow, ffff00)
 
 namespace Colors {
-#define DECL(name, hex) extern const Color name;
-XFOREACH_COLOR(DECL)
-#undef DECL
+#define X_DECL(name, hex) extern const Color name;
+XFOREACH_COLOR(X_DECL)
+#undef X_DECL
 } // namespace Colors
 
 NODISCARD Color textColor(Color color);

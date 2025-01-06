@@ -8,7 +8,7 @@
 #include <cstdint>
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly name")
-#define X_FOREACH_LINE_FLAG(X) \
+#define XFOREACH_LINE_FLAG(X) \
     X(NONE, none, None, "None") \
     X(ROOM, room, Room, "Room") \
     X(NAME, name, Name, "Name") \
@@ -25,12 +25,12 @@
 
 enum class NODISCARD LineFlagEnum : uint32_t {
 #define X_DECL_LINE_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
-    X_FOREACH_LINE_FLAG(X_DECL_LINE_FLAG)
+    XFOREACH_LINE_FLAG(X_DECL_LINE_FLAG)
 #undef X_DECL_LINE_FLAG
 };
 
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
-static constexpr const int NUM_LINE_FLAGS = X_FOREACH_LINE_FLAG(X_COUNT);
+static constexpr const int NUM_LINE_FLAGS = XFOREACH_LINE_FLAG(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(LineFlagEnum, NUM_LINE_FLAGS)
 
@@ -45,7 +45,7 @@ public:
     { \
         return contains(LineFlagEnum::UPPER_CASE); \
     }
-    X_FOREACH_LINE_FLAG(X_DEFINE_ACCESSORS)
+    XFOREACH_LINE_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 

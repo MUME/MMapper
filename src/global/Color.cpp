@@ -178,9 +178,9 @@ Color Color::fromRGB(const uint32_t rgb)
 
 namespace Colors {
 
-#define DECL(name, hex) const Color name = Color::fromHex(#hex);
-XFOREACH_COLOR(DECL)
-#undef DECL
+#define X_DECL(name, hex) const Color name = Color::fromHex(#hex);
+XFOREACH_COLOR(X_DECL)
+#undef X_DECL
 
 } // namespace Colors
 

@@ -886,12 +886,12 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
             return editMenu;
         }
     };
-#define X(a, b, c, d, e) \
+#define X_ADD_MENU(a, b, c, d, e) \
     if (auto menu = getMenu(b)) { \
         addToMenu(menu, EditViewCommand{&RemoteEditWidget::slot_##a, (b), (c), (d), (e)}); \
     }
-    XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
-#undef X
+    XFOREACH_REMOTE_EDIT_MENU_ITEM(X_ADD_MENU)
+#undef X_ADD_MENU
 }
 
 void RemoteEditWidget::addSave(QMenu *const fileMenu)

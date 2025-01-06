@@ -16,7 +16,7 @@
 class ParseEvent;
 
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
-#define X_FOREACH_GMCP_MESSAGE_TYPE(X) \
+#define XFOREACH_GMCP_MESSAGE_TYPE(X) \
     X(CHAR_NAME, CharName, "char.name", "Char.Name") \
     X(CHAR_STATUSVARS, CharStatusVars, "char.statusvars", "Char.StatusVars") \
     X(CHAR_VITALS, CharVitals, "char.vitals", "Char.Vitals") \
@@ -45,7 +45,7 @@ class ParseEvent;
 enum class NODISCARD GmcpMessageTypeEnum {
     UNKNOWN = -1,
 #define X_DECL_GMCP_MESSAGE_TYPE(UPPER_CASE, CamelCase, normalized, friendly) UPPER_CASE,
-    X_FOREACH_GMCP_MESSAGE_TYPE(X_DECL_GMCP_MESSAGE_TYPE)
+    XFOREACH_GMCP_MESSAGE_TYPE(X_DECL_GMCP_MESSAGE_TYPE)
 #undef X_DECL_GMCP_MESSAGE_TYPE
 };
 
@@ -84,13 +84,13 @@ public:
     explicit GmcpMessage(GmcpMessageTypeEnum type, GmcpJson json);
 
 public:
-#define DECL_GETTERS_AND_SETTERS(UPPER_CASE, CamelCase, normalized, friendly) \
+#define X_DECL_GETTERS_AND_SETTERS(UPPER_CASE, CamelCase, normalized, friendly) \
     NODISCARD inline bool is##CamelCase() const \
     { \
         return m_type == GmcpMessageTypeEnum::UPPER_CASE; \
     }
-    X_FOREACH_GMCP_MESSAGE_TYPE(DECL_GETTERS_AND_SETTERS)
-#undef DECL_GETTERS_AND_SETTERS
+    XFOREACH_GMCP_MESSAGE_TYPE(X_DECL_GETTERS_AND_SETTERS)
+#undef X_DECL_GETTERS_AND_SETTERS
 
 public:
     NODISCARD const GmcpMessageName &getName() const

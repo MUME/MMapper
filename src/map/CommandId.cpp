@@ -59,17 +59,17 @@ bool isDirection7(const CommandEnum cmd)
 }
 ExitDirEnum getDirection(const CommandEnum cmd)
 {
-#define CASE(x) \
+#define X_CASE(x) \
     case CommandEnum::x: \
         return ExitDirEnum::x
     switch (cmd) {
-        CASE(NORTH);
-        CASE(SOUTH);
-        CASE(EAST);
-        CASE(WEST);
-        CASE(UP);
-        CASE(DOWN);
-        CASE(UNKNOWN);
+        X_CASE(NORTH);
+        X_CASE(SOUTH);
+        X_CASE(EAST);
+        X_CASE(WEST);
+        X_CASE(UP);
+        X_CASE(DOWN);
+        X_CASE(UNKNOWN);
 
     case CommandEnum::LOOK:
     case CommandEnum::FLEE:
@@ -78,71 +78,71 @@ ExitDirEnum getDirection(const CommandEnum cmd)
     default:
         return ExitDirEnum::NONE;
     }
-#undef CASE
+#undef X_CASE
 }
 CommandEnum getCommand(const ExitDirEnum dir)
 {
-#define CASE(x) \
+#define X_CASE(x) \
     case ExitDirEnum::x: \
         return CommandEnum::x
     switch (dir) {
-        CASE(NORTH);
-        CASE(SOUTH);
-        CASE(EAST);
-        CASE(WEST);
-        CASE(UP);
-        CASE(DOWN);
-        CASE(UNKNOWN);
-        CASE(NONE);
+        X_CASE(NORTH);
+        X_CASE(SOUTH);
+        X_CASE(EAST);
+        X_CASE(WEST);
+        X_CASE(UP);
+        X_CASE(DOWN);
+        X_CASE(UNKNOWN);
+        X_CASE(NONE);
 
     default:
         return CommandEnum::LOOK;
     }
-#undef CASE
+#undef X_CASE
 }
 
 const char *getUppercase(const CommandEnum cmd)
 {
-#define CASE(x) \
+#define X_CASE(x) \
     case CommandEnum::x: \
         return #x
     switch (cmd) {
-        CASE(NORTH);
-        CASE(SOUTH);
-        CASE(EAST);
-        CASE(WEST);
-        CASE(UP);
-        CASE(DOWN);
-        CASE(UNKNOWN);
-        CASE(LOOK);
-        CASE(FLEE);
-        CASE(SCOUT);
-        CASE(NONE);
+        X_CASE(NORTH);
+        X_CASE(SOUTH);
+        X_CASE(EAST);
+        X_CASE(WEST);
+        X_CASE(UP);
+        X_CASE(DOWN);
+        X_CASE(UNKNOWN);
+        X_CASE(LOOK);
+        X_CASE(FLEE);
+        X_CASE(SCOUT);
+        X_CASE(NONE);
     }
-#undef CASE
+#undef X_CASE
 
     throw std::runtime_error("missing name for command");
 }
 
 const char *getLowercase(const CommandEnum cmd)
 {
-#define CASE(UPPER, lower) \
+#define X_CASE(UPPER, lower) \
     case CommandEnum::UPPER: \
         return #lower
     switch (cmd) {
-        CASE(NORTH, north);
-        CASE(SOUTH, south);
-        CASE(EAST, east);
-        CASE(WEST, west);
-        CASE(UP, up);
-        CASE(DOWN, down);
-        CASE(UNKNOWN, unknown);
-        CASE(LOOK, look);
-        CASE(FLEE, flee);
-        CASE(SCOUT, scout);
-        CASE(NONE, none);
+        X_CASE(NORTH, north);
+        X_CASE(SOUTH, south);
+        X_CASE(EAST, east);
+        X_CASE(WEST, west);
+        X_CASE(UP, up);
+        X_CASE(DOWN, down);
+        X_CASE(UNKNOWN, unknown);
+        X_CASE(LOOK, look);
+        X_CASE(FLEE, flee);
+        X_CASE(SCOUT, scout);
+        X_CASE(NONE, none);
     }
-#undef CASE
+#undef X_CASE
 
     throw std::runtime_error("missing name for command");
 }

@@ -27,13 +27,13 @@
 class ExitFieldVariant;
 class ParseEvent;
 
-#define X_FOREACH_FlagModifyModeEnum(X) \
+#define XFOREACH_FlagModifyModeEnum(X) \
     X(SET) \
     X(UNSET) \
     X(TOGGLE)
-#define DECL(X) X,
-enum class NODISCARD FlagModifyModeEnum { X_FOREACH_FlagModifyModeEnum(DECL) };
-#undef DECL
+#define X_DECL(X) X,
+enum class NODISCARD FlagModifyModeEnum { XFOREACH_FlagModifyModeEnum(X_DECL) };
+#undef X_DECL
 enum class NODISCARD ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
 using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>;
@@ -135,9 +135,9 @@ private:
 
     struct NODISCARD RoomFields final
     {
-#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop{_OptInit};
-        XFOREACH_ROOM_PROPERTY(DECL_FIELD)
-#undef DECL_FIELD
+#define X_DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop{_OptInit};
+        XFOREACH_ROOM_PROPERTY(X_DECL_FIELD)
+#undef X_DECL_FIELD
     };
 
 private:
@@ -188,14 +188,14 @@ public:
     NODISCARD ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
 
 public:
-#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
     NODISCARD inline const _Type &get##_Type(ExitDirEnum dir) const \
     { \
         return exit(dir).get##_Type(); \
     } \
     void set##_Type(ExitDirEnum dir, _Type value);
-    XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
-#undef DECL_GETTERS_AND_SETTERS
+    XFOREACH_EXIT_PROPERTY(X_DECL_GETTERS_AND_SETTERS)
+#undef X_DECL_GETTERS_AND_SETTERS
 
 public:
     void setId(RoomId id);
@@ -231,14 +231,14 @@ public:
     void setModified(RoomUpdateFlags updateFlags);
 
 public:
-#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
     NODISCARD inline const _Type &get##_Prop() const \
     { \
         return m_fields._Prop; \
     } \
     void set##_Prop(_Type value);
-    XFOREACH_ROOM_PROPERTY(DECL_GETTERS_AND_SETTERS)
-#undef DECL_GETTERS_AND_SETTERS
+    XFOREACH_ROOM_PROPERTY(X_DECL_GETTERS_AND_SETTERS)
+#undef X_DECL_GETTERS_AND_SETTERS
 
 public:
     Room() = delete;

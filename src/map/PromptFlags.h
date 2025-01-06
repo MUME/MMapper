@@ -8,26 +8,26 @@
 
 #include <cstdint>
 
-#define X_FOREACH_PROMPT_WEATHER_ENUM(X) \
+#define XFOREACH_PROMPT_WEATHER_ENUM(X) \
     X(UNDEFINED) \
     X(CLOUDS) \
     X(RAIN) \
     X(HEAVY_RAIN) \
     X(SNOW)
-#define X_FOREACH_PROMPT_FOG_ENUM(X) \
+#define XFOREACH_PROMPT_FOG_ENUM(X) \
     X(UNDEFINED) \
     X(LIGHT_FOG) \
     X(HEAVY_FOG)
 
-#define DECL(X) X,
-enum class NODISCARD PromptWeatherEnum { X_FOREACH_PROMPT_WEATHER_ENUM(DECL) };
-enum class NODISCARD PromptFogEnum { X_FOREACH_PROMPT_FOG_ENUM(DECL) };
-#undef DECL
+#define X_DECL(X) X,
+enum class NODISCARD PromptWeatherEnum { XFOREACH_PROMPT_WEATHER_ENUM(X_DECL) };
+enum class NODISCARD PromptFogEnum { XFOREACH_PROMPT_FOG_ENUM(X_DECL) };
+#undef X_DECL
 
-#define ADD(X) +1
-static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = (X_FOREACH_PROMPT_WEATHER_ENUM(ADD));
-static constexpr const size_t NUM_PROMPT_FOG_TYPES = (X_FOREACH_PROMPT_FOG_ENUM(ADD));
-#undef ADD
+#define X_ADD(X) +1
+static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = (XFOREACH_PROMPT_WEATHER_ENUM(X_ADD));
+static constexpr const size_t NUM_PROMPT_FOG_TYPES = (XFOREACH_PROMPT_FOG_ENUM(X_ADD));
+#undef X_ADD
 
 static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
 static_assert(NUM_PROMPT_FOG_TYPES == 3);

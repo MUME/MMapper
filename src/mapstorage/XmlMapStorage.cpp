@@ -38,7 +38,7 @@
 
 // ---------------------------- XmlMapStorage::TypeEnum ------------------------
 // list know enum types
-#define X_FOREACH_TYPE_ENUM(X) \
+#define XFOREACH_TYPE_ENUM(X) \
     X(RoomAlignEnum) \
     X(DoorFlagEnum) \
     X(ExitFlagEnum) \
@@ -54,14 +54,14 @@
     X(TypeEnum)
 
 enum class XmlMapStorage::TypeEnum : uint32_t {
-#define DECL(X) X,
-    X_FOREACH_TYPE_ENUM(DECL)
-#undef DECL
+#define X_DECL(X) X,
+    XFOREACH_TYPE_ENUM(X_DECL)
+#undef X_DECL
 };
 
-#define ADD(X) +1
-static constexpr const uint32_t NUM_XMLMAPSTORAGE_TYPE = (X_FOREACH_TYPE_ENUM(ADD));
-#undef ADD
+#define X_ADD(X) +1
+static constexpr const uint32_t NUM_XMLMAPSTORAGE_TYPE = (XFOREACH_TYPE_ENUM(X_ADD));
+#undef X_ADD
 
 // ---------------------------- XmlMapStorage::Converter -----------------------
 class XmlMapStorage::Converter final
@@ -106,13 +106,13 @@ private:
     //   ...
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
-#define DECL(X) \
+#define X_DECL(X) \
     static constexpr TypeEnum enumToType(X) \
     { \
         return TypeEnum::X; \
     }
-    X_FOREACH_TYPE_ENUM(DECL)
-#undef DECL
+    XFOREACH_TYPE_ENUM(X_DECL)
+#undef X_DECL
 
     uint32_t stringToEnum(TypeEnum type, const QStringView str, bool &fail) const;
     const QString &enumToString(TypeEnum type, uint32_t val) const;
@@ -124,24 +124,24 @@ private:
 
 XmlMapStorage::Converter::Converter()
     : enumToStrings{
-#define DECL(X) /* */ {#X},
-#define DECL_(X, ...) {#X},
-        /* these must match the enum types listed in X_FOREACH_TYPE_ENUM above */
-        {X_FOREACH_RoomAlignEnum(DECL)},
-        {X_FOREACH_DOOR_FLAG(DECL_)},
-        {X_FOREACH_EXIT_FLAG(DECL_)},
-        {X_FOREACH_RoomLightEnum(DECL)},
-        {X_FOREACH_ROOM_LOAD_FLAG(DECL)},
-        {X_FOREACH_INFOMARK_CLASS(DECL)},
-        {X_FOREACH_INFOMARK_TYPE(DECL)},
-        {X_FOREACH_ROOM_MOB_FLAG(DECL)},
-        {X_FOREACH_RoomPortableEnum(DECL)},
-        {X_FOREACH_RoomRidableEnum(DECL)},
-        {X_FOREACH_RoomSundeathEnum(DECL)},
-        {X_FOREACH_RoomTerrainEnum(DECL)},
-        {X_FOREACH_TYPE_ENUM(DECL)},
-#undef DECL
-#undef DECL_
+#define X_DECL(X) /* */ {#X},
+#define X_DECL2(X, ...) {#X},
+        /* these must match the enum types listed in XFOREACH_TYPE_ENUM above */
+        {XFOREACH_RoomAlignEnum(X_DECL)},
+        {XFOREACH_DOOR_FLAG(X_DECL2)},
+        {XFOREACH_EXIT_FLAG(X_DECL2)},
+        {XFOREACH_RoomLightEnum(X_DECL)},
+        {XFOREACH_ROOM_LOAD_FLAG(X_DECL)},
+        {XFOREACH_INFOMARK_CLASS(X_DECL)},
+        {XFOREACH_INFOMARK_TYPE(X_DECL)},
+        {XFOREACH_ROOM_MOB_FLAG(X_DECL)},
+        {XFOREACH_RoomPortableEnum(X_DECL)},
+        {XFOREACH_RoomRidableEnum(X_DECL)},
+        {XFOREACH_RoomSundeathEnum(X_DECL)},
+        {XFOREACH_RoomTerrainEnum(X_DECL)},
+        {XFOREACH_TYPE_ENUM(X_DECL)},
+#undef X_DECL
+#undef X_DECL2
     }
     , stringToEnums{}
     , empty{}
@@ -923,4 +923,4 @@ void XmlMapStorage::saveRoomMobFlags(QXmlStreamWriter &stream, const RoomMobFlag
     }
 }
 
-#undef X_FOREACH_TYPE_ENUM
+#undef XFOREACH_TYPE_ENUM

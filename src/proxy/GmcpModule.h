@@ -15,7 +15,7 @@
 // TODO: Comm
 
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
-#define X_FOREACH_GMCP_MODULE_TYPE(X) \
+#define XFOREACH_GMCP_MODULE_TYPE(X) \
     X(CHAR, Char, "char", "Char") \
     X(EVENT, Event, "event", "Event") \
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
@@ -26,7 +26,7 @@
 enum class NODISCARD GmcpModuleTypeEnum {
     UNKNOWN = -1,
 #define X_DECL_GMCP_MODULE_TYPE(UPPER_CASE, CamelCase, normalized, friendly) UPPER_CASE,
-    X_FOREACH_GMCP_MODULE_TYPE(X_DECL_GMCP_MODULE_TYPE)
+    XFOREACH_GMCP_MODULE_TYPE(X_DECL_GMCP_MODULE_TYPE)
 #undef X_DECL_GMCP_MODULE_TYPE
 };
 

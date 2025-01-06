@@ -293,7 +293,7 @@ private:
 };
 
 // REVISIT: DEFINED_ROOM_* includes multiple flags but should be one: i.e. "noride" and "ride"
-#define X_FOREACH_ARG_ROOM_FLAG(X) \
+#define XFOREACH_ARG_ROOM_FLAG(X) \
     X(ALL_MOB_FLAGS) \
     X(ALL_LOAD_FLAGS) \
     X(DEFINED_ROOM_ALIGN_TYPES) \
@@ -314,7 +314,7 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
     std::vector<Value> values;
     values.emplace_back(isAddFlag(sv));
 
-#define DEFINE_MATCH_LOGIC(FLAGS) \
+#define X_DEFINE_MATCH_LOGIC(FLAGS) \
     for (const auto &flag : (FLAGS)) { \
         const auto &command = getParserCommandName(flag); \
         if (!command.matches(sv)) { \
@@ -323,22 +323,22 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
         values.emplace_back(std::string{command.getCommand()}); \
         return syntax::MatchResult::success(1, input, Value(Vector(std::move(values)))); \
     }
-    X_FOREACH_ARG_ROOM_FLAG(DEFINE_MATCH_LOGIC)
-#undef DEFINE_MATCH_LOGIC
+    XFOREACH_ARG_ROOM_FLAG(X_DEFINE_MATCH_LOGIC)
+#undef X_DEFINE_MATCH_LOGIC
 
     if (logger) {
         std::ostringstream os;
-#define DEFINE_VALID_FLAGS_LOGIC(FLAGS) \
+#define X_DEFINE_VALID_FLAGS_LOGIC(FLAGS) \
     for (const auto &flag : (FLAGS)) { \
         os << getParserCommandName(flag).getCommand() << " "; \
     }
-        X_FOREACH_ARG_ROOM_FLAG(DEFINE_VALID_FLAGS_LOGIC)
-#undef DEFINE_VALID_FLAGS_LOGIC
+        XFOREACH_ARG_ROOM_FLAG(X_DEFINE_VALID_FLAGS_LOGIC)
+#undef X_DEFINE_VALID_FLAGS_LOGIC
         logger->logError("input was not a valid room flag: " + os.str());
     }
     return syntax::MatchResult::failure(input);
 }
-#undef X_FOREACH_ARG_ROOM_FLAG
+#undef XFOREACH_ARG_ROOM_FLAG
 
 std::ostream &ArgRoomFlag::virt_to_stream(std::ostream &os) const
 {

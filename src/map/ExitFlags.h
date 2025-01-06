@@ -8,7 +8,7 @@
 #include <cstdint>
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly name")
-#define X_FOREACH_EXIT_FLAG(X) \
+#define XFOREACH_EXIT_FLAG(X) \
     X(EXIT, exit, Exit, "Exit") \
     X(DOOR, door, Door, "Door") \
     X(ROAD, road, Road, "Road") \
@@ -25,12 +25,12 @@
 
 enum class NODISCARD ExitFlagEnum {
 #define X_DECL_EXIT_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
-    X_FOREACH_EXIT_FLAG(X_DECL_EXIT_FLAG)
+    XFOREACH_EXIT_FLAG(X_DECL_EXIT_FLAG)
 #undef X_DECL_EXIT_FLAG
 };
 
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
-static constexpr const int NUM_EXIT_FLAGS = X_FOREACH_EXIT_FLAG(X_COUNT);
+static constexpr const int NUM_EXIT_FLAGS = XFOREACH_EXIT_FLAG(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(ExitFlagEnum, NUM_EXIT_FLAGS)
 
@@ -45,7 +45,7 @@ public:
     { \
         return contains(ExitFlagEnum::UPPER_CASE); \
     }
-    X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
+    XFOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 

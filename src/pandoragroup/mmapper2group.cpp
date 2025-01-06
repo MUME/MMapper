@@ -58,14 +58,14 @@ static const AffectTimeoutMap g_affectTimeoutMap = {{CharacterAffectEnum::BASHED
 
 NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
 {
-#define CASE2(UPPER_CASE, lower_case, CamelCase, friendly) \
+#define X_CASE2(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
         if (str == #lower_case) { \
             return CharacterPositionEnum::UPPER_CASE; \
         } \
     } while (false);
-    X_FOREACH_CHARACTER_POSITION(CASE2)
-#undef CASE2
+    XFOREACH_CHARACTER_POSITION(X_CASE2)
+#undef X_CASE2
     return CharacterPositionEnum::UNDEFINED;
 }
 

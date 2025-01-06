@@ -16,7 +16,7 @@
 //
 // NOTE: SEP() is required because of the use in std::variant<> declaration,
 // which cannot accept trailing commas.
-#define X_FOREACH_ROOM_FIELD(X, SEP) \
+#define XFOREACH_ROOM_FIELD(X, SEP) \
     X(NOTE, Note, RoomNote) \
     SEP() \
     X(MOB_FLAGS, MobFlags, RoomMobFlags) \
@@ -36,28 +36,28 @@
     X(TERRAIN_TYPE, TerrainType, RoomTerrainEnum) \
     /* define room fields above */
 
-#define DECL_ENUM(UPPER_CASE, CamelCase, Type) UPPER_CASE
-#define COMMA() ,
-enum class NODISCARD RoomFieldVariantOrderEnum { X_FOREACH_ROOM_FIELD(DECL_ENUM, COMMA) };
-#undef COMMA
-#undef DECL_ENUM
+#define X_DECL_ENUM(UPPER_CASE, CamelCase, Type) UPPER_CASE
+#define X_COMMA() ,
+enum class NODISCARD RoomFieldVariantOrderEnum { XFOREACH_ROOM_FIELD(X_DECL_ENUM, X_COMMA) };
+#undef X_COMMA
+#undef X_DECL_ENUM
 
 class NODISCARD RoomFieldVariant final
 {
 private:
-#define COMMA() ,
-#define DECL_VAR_TYPES(UPPER_CASE, CamelCase, Type) Type
-    std::variant<X_FOREACH_ROOM_FIELD(DECL_VAR_TYPES, COMMA)> m_data;
-#undef DECL_VAR_TYPES
-#undef COMMA
+#define X_COMMA() ,
+#define X_DECL_VAR_TYPES(UPPER_CASE, CamelCase, Type) Type
+    std::variant<XFOREACH_ROOM_FIELD(X_DECL_VAR_TYPES, X_COMMA)> m_data;
+#undef X_DECL_VAR_TYPES
+#undef X_COMMA
 
 public:
     RoomFieldVariant() = delete;
     DEFAULT_RULE_OF_5(RoomFieldVariant);
 
 public:
-#define NOP()
-#define DEFINE_CTOR_AND_GETTER(UPPER_CASE, CamelCase, Type) \
+#define X_NOP()
+#define X_DEFINE_CTOR_AND_GETTER(UPPER_CASE, CamelCase, Type) \
     explicit RoomFieldVariant(Type val) \
         : m_data{std::move(val)} \
     {} \
@@ -65,14 +65,14 @@ public:
     { \
         return std::get<Type>(m_data); \
     }
-    X_FOREACH_ROOM_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
-#undef DEFINE_CTOR_AND_GETTER
-#undef NOP
+    XFOREACH_ROOM_FIELD(X_DEFINE_CTOR_AND_GETTER, X_NOP)
+#undef X_DEFINE_CTOR_AND_GETTER
+#undef X_NOP
 
 public:
     NODISCARD RoomFieldEnum getType() const noexcept
     {
-#define NOP()
+#define X_NOP()
 #define CASE(UPPER_CASE, CamelCase, Type) \
     case static_cast<size_t>(RoomFieldVariantOrderEnum::UPPER_CASE): { \
         static_assert( \
@@ -83,10 +83,10 @@ public:
         return RoomFieldEnum::UPPER_CASE; \
     }
         switch (const auto index = m_data.index()) {
-            X_FOREACH_ROOM_FIELD(CASE, NOP)
+            XFOREACH_ROOM_FIELD(CASE, X_NOP)
         }
 #undef CASE
-#undef NOP
+#undef X_NOP
 
         std::abort(); /* crash */
     }

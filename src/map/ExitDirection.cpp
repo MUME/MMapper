@@ -104,21 +104,21 @@ ExitDirEnum opposite(const ExitDirEnum in)
 
 const char *lowercaseDirection(const ExitDirEnum dir)
 {
-#define CASE(UPPER, lower) \
+#define X_CASE(UPPER, lower) \
     case ExitDirEnum::UPPER: \
         return #lower
     switch (dir) {
-        CASE(NORTH, north);
-        CASE(SOUTH, south);
-        CASE(EAST, east);
-        CASE(WEST, west);
-        CASE(UP, up);
-        CASE(DOWN, down);
-        CASE(UNKNOWN, unknown);
+        X_CASE(NORTH, north);
+        X_CASE(SOUTH, south);
+        X_CASE(EAST, east);
+        X_CASE(WEST, west);
+        X_CASE(UP, up);
+        X_CASE(DOWN, down);
+        X_CASE(UNKNOWN, unknown);
     default:
-        CASE(NONE, none);
+        X_CASE(NONE, none);
     }
-#undef CASE
+#undef X_CASE
 }
 
 namespace Mmapper2Exit {

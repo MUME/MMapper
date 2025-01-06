@@ -126,7 +126,7 @@ inline bool maybeModify(T &ours, T &&value)
     return true;
 }
 
-#define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Room::set##_Prop(_Type value) \
     { \
         if (maybeModify<_Type>((m_fields._Prop), std::move(value))) { \
@@ -134,10 +134,10 @@ inline bool maybeModify(T &ours, T &&value)
         } \
     }
 
-XFOREACH_ROOM_PROPERTY(DEFINE_SETTERS)
-#undef DEFINE_SETTERS
+XFOREACH_ROOM_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
 
-#define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Room::set##_Type(ExitDirEnum dir, _Type value) \
     { \
         ExitsList exits = getExitsList(); \
@@ -145,8 +145,8 @@ XFOREACH_ROOM_PROPERTY(DEFINE_SETTERS)
         setExitsList(exits); \
     }
 
-XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
-#undef DEFINE_SETTERS
+XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
 
 void Room::setExitsList(const ExitsList &newExits)
 {
