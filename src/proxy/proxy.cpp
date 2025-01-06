@@ -451,7 +451,7 @@ void Proxy::slot_processUserStream()
 void Proxy::slot_onSendToMudSocket(const QByteArray &ba)
 {
     if (m_mudSocket != nullptr) {
-        if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
+        if (!m_mudSocket->isConnectedOrConnecting()) {
             sendToUser(QString("\033[0;37;46m"
                                "MMapper is not connected to MUME. Please type "
                                "\033[1m"

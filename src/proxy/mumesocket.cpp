@@ -229,7 +229,7 @@ void MumeSslSocket::slot_checkTimeout()
 
 void MumeSslSocket::virt_sendToMud(const QByteArray &ba)
 {
-    if (m_socket.state() != QAbstractSocket::ConnectedState) {
+    if (!isConnectedOrConnecting()) {
         qWarning() << "Socket is not connected";
         return;
     }

@@ -43,6 +43,21 @@ public:
     void connectToHost() { virt_connectToHost(); }
     void sendToMud(const QByteArray &ba) { virt_sendToMud(ba); }
     NODISCARD QAbstractSocket::SocketState state() { return virt_state(); }
+    NODISCARD bool isConnectedOrConnecting()
+    {
+        switch (state()) {
+        case QAbstractSocket::ConnectingState:
+        case QAbstractSocket::ConnectedState:
+            return true;
+        case QAbstractSocket::UnconnectedState:
+        case QAbstractSocket::HostLookupState:
+        case QAbstractSocket::BoundState:
+        case QAbstractSocket::ListeningState:
+        case QAbstractSocket::ClosingState:
+            return false;
+        }
+        std::abort();
+    }
 
 protected slots:
     void slot_onConnect() { virt_onConnect(); }
