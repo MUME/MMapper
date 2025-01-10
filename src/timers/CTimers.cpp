@@ -149,8 +149,9 @@ void CTimers::slot_finishCountdownTimer()
     }
 
     // Why do we return before stopping the timer?
-    if (m_countdowns.empty())
+    if (m_countdowns.empty()) {
         return;
+    }
 
     // Why do we stop unconditionally and then restart?
     if (m_timer.isActive()) {
@@ -168,16 +169,18 @@ std::string CTimers::getTimers()
 {
     QMutexLocker locker(&m_lock);
 
-    if (m_timers.empty())
+    if (m_timers.empty()) {
         return "";
+    }
 
     std::ostringstream ostr;
     ostr << "Timers:" << std::endl;
     for (const auto &timer : m_timers) {
         const auto elapsed = msToMinSec(timer.elapsedMs());
         ostr << "- " << timer.getName();
-        if (!timer.getDescription().empty())
+        if (!timer.getDescription().empty()) {
             ostr << " <" << timer.getDescription() << ">";
+        }
         ostr << " (up for - " << elapsed << ")" << std::endl;
     }
     return ostr.str();
@@ -187,8 +190,9 @@ std::string CTimers::getCountdowns()
 {
     QMutexLocker locker(&m_lock);
 
-    if (m_countdowns.empty())
+    if (m_countdowns.empty()) {
         return "";
+    }
 
     std::ostringstream ostr;
     ostr << "Countdowns:" << std::endl;
@@ -196,8 +200,9 @@ std::string CTimers::getCountdowns()
         const auto elapsed = msToMinSec(countdown.elapsedMs());
         const auto left = msToMinSec(countdown.durationMs() - countdown.elapsedMs());
         ostr << "- " << countdown.getName();
-        if (!countdown.getDescription().empty())
+        if (!countdown.getDescription().empty()) {
             ostr << " <" << countdown.getDescription() << ">";
+        }
         ostr << " (up for - " << elapsed << ", left - " << left << ")" << std::endl;
     }
     return ostr.str();

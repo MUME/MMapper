@@ -82,14 +82,18 @@ private:
             // so it can be picked up by std::less<Coordinate>.
             bool operator()(const Coordinate &lhs, const Coordinate &rhs) const
             {
-                if (lhs.x < rhs.x)
+                if (lhs.x < rhs.x) {
                     return true;
-                if (rhs.x < lhs.x)
+                }
+                if (rhs.x < lhs.x) {
                     return false;
-                if (lhs.y < rhs.y)
+                }
+                if (lhs.y < rhs.y) {
                     return true;
-                if (rhs.y < lhs.y)
+                }
+                if (rhs.y < lhs.y) {
                     return false;
+                }
                 return lhs.z < rhs.z;
             }
         };

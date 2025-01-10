@@ -38,8 +38,9 @@ public:
 public:
     NODISCARD WeakHandle<const T> asConst() const
     {
-        if constexpr (std::is_const_v<T>)
+        if constexpr (std::is_const_v<T>) {
             return *this;
+        }
         return WeakHandle<const T>(m_weakPtr);
     }
     explicit operator WeakHandle<const T>() const { return asConst(); }
@@ -104,8 +105,9 @@ public:
         const auto this_beg = reinterpret_cast<uintptr_t>(this);
         const auto this_end = reinterpret_cast<uintptr_t>(this + 1);
 
-        if (this_beg < parent_beg || this_end > parent_end)
+        if (this_beg < parent_beg || this_end > parent_end) {
             throw std::runtime_error("must be a direct child member parent");
+        }
     }
 
 public:

@@ -107,8 +107,9 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
                                         const QList<Coordinate> &path,
                                         const Color &color)
 {
-    if (path.isEmpty())
+    if (path.isEmpty()) {
         return;
+    }
 
     const std::vector<glm::vec3> verts = [&c1, &path]() {
         std::vector<glm::vec3> translated;
@@ -419,8 +420,10 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         const CGroupChar &character = deref(pCharacter);
         const RoomId id = character.getRoomId();
         // Do not draw the character if they're in an "Unknown" room
-        if (id == INVALID_ROOMID || id > m_data.getMaxId() || &character == &self)
+        if (id == INVALID_ROOMID || id > m_data.getMaxId() || &character == &self) {
             continue;
+        }
+
         auto roomSelection = RoomSelection(m_data);
         if (const Room *const r = roomSelection.getRoom(id)) {
             const auto pos = r->getPosition();

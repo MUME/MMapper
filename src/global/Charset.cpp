@@ -44,8 +44,9 @@ NODISCARD static inline constexpr bool isAscii(const char c) noexcept
 
 NODISCARD static inline constexpr char latin1ToAscii(const char c) noexcept
 {
-    if (isAscii(c))
+    if (isAscii(c)) {
         return c;
+    }
 
     const auto i = getIndex(c);
     if (i >= IDX_NBSP && i < NUM_LATIN1_CODEPOINTS) {
@@ -79,8 +80,9 @@ char latin1ToAscii(const char c) noexcept
 bool isAscii(const std::string_view sv)
 {
     for (const char c : sv) {
-        if (!isAscii(c))
+        if (!isAscii(c)) {
             return false;
+        }
     }
     return true;
 }
@@ -348,8 +350,9 @@ NODISCARD static constexpr bool isProbablyUtf8(const std::string_view sv)
     for (const char c : sv) {
         const auto uc = static_cast<uint8_t>(c);
         if (multiByteExpected) {
-            if ((uc & top2Bits) != topBit)
+            if ((uc & top2Bits) != topBit) {
                 return false;
+            }
             // 10xxxxxx
             --multiByteExpected;
             continue;

@@ -24,10 +24,11 @@ NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 {
     assert(RoadIndexMaskEnum::NONE <= x && x <= RoadIndexMaskEnum::ALL);
 
-    if (x == RoadIndexMaskEnum::NONE)
+    if (x == RoadIndexMaskEnum::NONE) {
         return "none";
-    else if (x == RoadIndexMaskEnum::ALL)
+    } else if (x == RoadIndexMaskEnum::ALL) {
         return "all";
+    }
 
     // note: static variable initialized by IIFE guarantees thread safety.
     static const auto names = []() {
@@ -81,13 +82,15 @@ QString getResourceFilenameRaw(const QString &dir, const QString &name)
 
     // Check if the user provided a custom resource
     const auto custom = getConfig().canvas.resourcesDirectory + filename;
-    if (QFile{custom}.exists())
+    if (QFile{custom}.exists()) {
         return custom;
+    }
 
     // Fallback to the qrc resource
     const auto qrc = ":" + filename;
-    if (!QFile{qrc}.exists())
+    if (!QFile{qrc}.exists()) {
         qWarning() << "WARNING:" << dir << filename << "does not exist.";
+    }
     return qrc;
 }
 
@@ -99,12 +102,14 @@ QString getPixmapFilenameRaw(const QString &name)
 template<typename E>
 NODISCARD static QString getPixmapFilename(const char *const prefix, const E x)
 {
-    if (prefix == nullptr)
+    if (prefix == nullptr) {
         throw NullPointerException();
+    }
 
     const char *const suffix = getFilenameSuffix(x);
-    if (suffix == nullptr)
+    if (suffix == nullptr) {
         throw NullPointerException();
+    }
 
     return getPixmapFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
 }
@@ -165,12 +170,14 @@ NODISCARD static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 template<typename E>
 NODISCARD static QString getIconFilename(const char *const prefix, const E x)
 {
-    if (prefix == nullptr)
+    if (prefix == nullptr) {
         throw NullPointerException();
+    }
 
     const char *const suffix = getFilenameSuffix(x);
-    if (suffix == nullptr)
+    if (suffix == nullptr) {
         throw NullPointerException();
+    }
 
     return getIconFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
 }

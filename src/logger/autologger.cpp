@@ -39,17 +39,19 @@ AutoLogger::~AutoLogger()
 
 bool AutoLogger::createFile()
 {
-    if (m_logFile.is_open())
+    if (m_logFile.is_open()) {
         m_logFile.close();
+    }
 
     const auto &settings = getConfig().autoLog;
 
     const auto &path = settings.autoLogDirectory;
     QDir dir;
-    if (dir.mkpath(path))
+    if (dir.mkpath(path)) {
         dir.setPath(path);
-    else
+    } else {
         return false;
+    }
 
     QString fileName = QString("MMapper_Log_%1_%2_%3.txt")
                            .arg(QDate::currentDate().toString("yyyy_MM_dd"))
@@ -57,8 +59,9 @@ bool AutoLogger::createFile()
                            .arg(mmqt::toQStringUtf8(m_runId));
     m_logFile.open(mmqt::toStdStringUtf8(dir.absoluteFilePath(fileName)),
                    std::fstream::out | std::fstream::binary | std::fstream::app);
-    if (!m_logFile.is_open()) // Could not create file.
+    if (!m_logFile.is_open()) { // Could not create file.
         return false;
+    }
 
     m_curBytes = 0;
     m_curFile++;
@@ -68,8 +71,9 @@ bool AutoLogger::createFile()
 
 bool AutoLogger::writeLine(const QString &str)
 {
-    if (!m_shouldLog || !getConfig().autoLog.autoLog)
+    if (!m_shouldLog || !getConfig().autoLog.autoLog) {
         return false;
+    }
 
     bool created = true;
     if (!m_logFile.is_open()) {
@@ -101,13 +105,15 @@ void AutoLogger::deleteOldLogs()
 {
     auto &conf = getConfig().autoLog;
 
-    if (conf.cleanupStrategy == AutoLoggerEnum::KeepForever)
+    if (conf.cleanupStrategy == AutoLoggerEnum::KeepForever) {
         return;
+    }
 
     auto fileInfoList = QDir(conf.autoLogDirectory)
                             .entryInfoList(QStringList("MMapper_Log_*.txt"), QDir::Files);
-    if (fileInfoList.empty())
+    if (fileInfoList.empty()) {
         return;
+    }
 
     // Sort files so we can delete the oldest
     std::sort(fileInfoList.begin(), fileInfoList.end(), [](const auto &a, const auto &b) {
@@ -122,12 +128,14 @@ void AutoLogger::deleteOldLogs()
         bool deleteFile = false;
         switch (conf.cleanupStrategy) {
         case AutoLoggerEnum::DeleteDays:
-            if (fileInfo.birthTime().date().daysTo(today) >= conf.deleteWhenLogsReachDays)
+            if (fileInfo.birthTime().date().daysTo(today) >= conf.deleteWhenLogsReachDays) {
                 deleteFile = true;
+            }
             break;
         case AutoLoggerEnum::DeleteSize:
-            if (totalFileSize >= conf.deleteWhenLogsReachBytes)
+            if (totalFileSize >= conf.deleteWhenLogsReachBytes) {
                 deleteFile = true;
+            }
             break;
         case AutoLoggerEnum::KeepForever:
             break;
@@ -140,8 +148,9 @@ void AutoLogger::deleteOldLogs()
         }
     }
 
-    if (filesToDelete.empty())
+    if (filesToDelete.empty()) {
         return;
+    }
 
     if (conf.askDelete) {
         QString unit = "KB";
@@ -154,8 +163,9 @@ void AutoLogger::deleteOldLogs()
         }
         if (!showDeleteDialog(QString("There are %1 %2 of old logs.\n\nDo you want to delete them?")
                                   .arg(QString::number(num, 'f', 1))
-                                  .arg(unit)))
+                                  .arg(unit))) {
             return;
+        }
     }
 
     QFileInfoList fileList(filesToDelete);
@@ -197,11 +207,13 @@ void AutoLogger::slot_shouldLog(bool echo)
 
 void AutoLogger::slot_onConnected()
 {
-    if (getConfig().autoLog.cleanupStrategy != AutoLoggerEnum::KeepForever)
+    if (getConfig().autoLog.cleanupStrategy != AutoLoggerEnum::KeepForever) {
         deleteOldLogs();
+    }
 
     if (getConfig().autoLog.autoLog) {
-        if (!createFile())
+        if (!createFile()) {
             qWarning() << "Unable to create log file for autologger.";
+        }
     }
 }

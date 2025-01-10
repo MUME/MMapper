@@ -108,10 +108,11 @@ static void addApplicationFont()
         if (getConfig().integratedClient.font.isEmpty()) {
             QFont defaultClientFont;
             defaultClientFont.setFamily(family.front());
-            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
                 defaultClientFont.setPointSize(12);
-            else
+            } else {
                 defaultClientFont.setPointSize(10);
+            }
             defaultClientFont.setStyleStrategy(QFont::PreferAntialias);
             setConfig().integratedClient.font = defaultClientFont.toString();
         }
@@ -217,8 +218,9 @@ MainWindow::MainWindow()
     m_dockDialogAdventure->hide();
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
-    if constexpr (!NO_UPDATER)
+    if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
+    }
 
     createActions();
     setupToolBars();
@@ -398,10 +400,12 @@ void MainWindow::readSettings()
                                         qApp->primaryScreen()->availableGeometry()));
 
     } else {
-        if (!restoreGeometry(settings.windowGeometry))
+        if (!restoreGeometry(settings.windowGeometry)) {
             qWarning() << "Unable to restore window geometry";
-        if (!restoreState(settings.windowState))
+        }
+        if (!restoreState(settings.windowState)) {
             qWarning() << "Unable to restore toolbars and dockwidgets state";
+        }
 
         // Check if the window was moved to a screen with a different DPI
         getCanvas()->screenChanged();
@@ -514,8 +518,9 @@ void MainWindow::wireConnections()
             m_clientWidget,
             &ClientWidget::slot_onVisibilityChanged);
     connect(m_listener, &ConnectionListener::sig_clientSuccessfullyConnected, this, [this]() {
-        if (!m_clientWidget->isUsingClient())
+        if (!m_clientWidget->isUsingClient()) {
             m_dockDialogClient->hide();
+        }
     });
     connect(m_clientWidget, &ClientWidget::sig_relayMessage, this, [this](const QString &message) {
         showStatusShort(message);
@@ -684,8 +689,9 @@ void MainWindow::createActions()
                              this);
     layerUpAct->setShortcut(tr([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             return "Meta+Tab";
+        }
         return "Ctrl+Tab";
     }()));
     layerUpAct->setStatusTip(tr("Layer Up"));
@@ -696,8 +702,9 @@ void MainWindow::createActions()
 
     layerDownAct->setShortcut(tr([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             return "Meta+Shift+Tab";
+        }
         return "Ctrl+Shift+Tab";
     }()));
     layerDownAct->setStatusTip(tr("Layer Down"));
@@ -1153,10 +1160,11 @@ void MainWindow::hideCanvas(const bool hide)
     // so we may want to save mapChanged() and other similar requests
     // and send them after we show the canvas.
     if (MapCanvas *const canvas = getCanvas()) {
-        if (hide)
+        if (hide) {
             canvas->hide();
-        else
+        } else {
             canvas->show();
+        }
     }
 }
 
@@ -1248,8 +1256,9 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(showStatusBarAct);
     viewMenu->addAction(showScrollBarsAct);
-    if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac)
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
         viewMenu->addAction(showMenuBarAct);
+    }
     viewMenu->addAction(alwaysOnTopAct);
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
@@ -1272,8 +1281,9 @@ void MainWindow::setupMenuBar()
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(settingUpMmapperAct);
-    if constexpr (!NO_UPDATER)
+    if constexpr (!NO_UPDATER) {
         helpMenu->addAction(mmapperCheckForUpdateAct);
+    }
     helpMenu->addSeparator();
     mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
     mumeMenu->addAction(voteAct);
@@ -1311,8 +1321,9 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
             }
         }
         if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->empty()) {
-            if (m_roomSelection != nullptr)
+            if (m_roomSelection != nullptr) {
                 contextMenu.addSeparator();
+            }
             contextMenu.addAction(infoMarkActions.editInfoMarkAct);
             contextMenu.addAction(infoMarkActions.deleteInfoMarkAct);
         }
@@ -1499,10 +1510,11 @@ void MainWindow::slot_onPreferences()
 void MainWindow::slot_newRoomSelection(const SigRoomSelection &rs)
 {
     forceRoomAct->setEnabled(false);
-    if (rs.isValid())
+    if (rs.isValid()) {
         m_roomSelection = rs.getShared();
-    else
+    } else {
         m_roomSelection.reset();
+    }
 
     if (m_roomSelection != nullptr) {
         showStatusLong(QString("Selection: %1 room%2")
@@ -1623,8 +1635,9 @@ void MainWindow::slot_merge()
                                                     "Choose map file ...",
                                                     savedLastMapDir,
                                                     "MMapper Maps (*.mm2)");
-    if (fileName.isEmpty())
+    if (fileName.isEmpty()) {
         return;
+    }
 
     QFile file(fileName);
 
@@ -1676,8 +1689,9 @@ void MainWindow::slot_merge()
 
 void MainWindow::slot_open()
 {
-    if (!maybeSave())
+    if (!maybeSave()) {
         return;
+    }
 
     // FIXME: code duplication
     auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
@@ -1803,8 +1817,9 @@ void MainWindow::loadFile(const QString &fileName)
 
 void MainWindow::slot_percentageChanged(const uint32_t p)
 {
-    if (m_progressDlg == nullptr)
+    if (m_progressDlg == nullptr) {
         return;
+    }
 
     m_progressDlg->setValue(static_cast<int>(p));
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -2024,8 +2039,9 @@ void MainWindow::slot_onModeCreateInfoMarkSelect()
 
 void MainWindow::slot_onEditInfoMarkSelection()
 {
-    if (m_infoMarkSelection == nullptr)
+    if (m_infoMarkSelection == nullptr) {
         return;
+    }
 
     InfoMarksEditDlg dlg(this);
     dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
@@ -2041,8 +2057,9 @@ void MainWindow::slot_onCreateRoom()
 
 void MainWindow::slot_onEditRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     RoomEditAttrDlg roomEditDialog(this);
     roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCanvas());
@@ -2068,8 +2085,9 @@ void MainWindow::slot_onDeleteInfoMarkSelection()
 
 void MainWindow::slot_onDeleteRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<Remove>());
     getCanvas()->slot_clearRoomSelection();
@@ -2078,15 +2096,17 @@ void MainWindow::slot_onDeleteRoomSelection()
 
 void MainWindow::slot_onDeleteConnectionSelection()
 {
-    if (m_connectionSelection == nullptr)
+    if (m_connectionSelection == nullptr) {
         return; // previously called mapChanged for no good reason
+    }
 
     const auto &first = m_connectionSelection->getFirst();
     const auto &second = m_connectionSelection->getSecond();
     const Room *const r1 = first.room;
     const Room *const r2 = second.room;
-    if (r1 == nullptr || r2 == nullptr)
+    if (r1 == nullptr || r2 == nullptr) {
         return; // previously called mapChanged for no good reason
+    }
 
     const ExitDirEnum dir1 = first.direction;
     const ExitDirEnum dir2 = second.direction;
@@ -2104,8 +2124,9 @@ void MainWindow::slot_onDeleteConnectionSelection()
 
 void MainWindow::slot_onMoveUpRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, 1)));
     slot_onLayerUp();
@@ -2114,8 +2135,9 @@ void MainWindow::slot_onMoveUpRoomSelection()
 
 void MainWindow::slot_onMoveDownRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, -1)));
     slot_onLayerDown();
@@ -2124,8 +2146,9 @@ void MainWindow::slot_onMoveDownRoomSelection()
 
 void MainWindow::slot_onMergeUpRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, 1)));
     mapChanged();
@@ -2135,8 +2158,9 @@ void MainWindow::slot_onMergeUpRoomSelection()
 
 void MainWindow::slot_onMergeDownRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, -1)));
     mapChanged();
@@ -2146,8 +2170,9 @@ void MainWindow::slot_onMergeDownRoomSelection()
 
 void MainWindow::slot_onConnectToNeighboursRoomSelection()
 {
-    if (m_roomSelection == nullptr)
+    if (m_roomSelection == nullptr) {
         return;
+    }
 
     execSelectionGroupMapAction(std::make_unique<ConnectToNeighbours>());
     mapChanged();
@@ -2216,14 +2241,16 @@ MapCanvas *MainWindow::getCanvas() const
 
 void MainWindow::mapChanged() const
 {
-    if (MapCanvas *const canvas = getCanvas())
+    if (MapCanvas *const canvas = getCanvas()) {
         canvas->mapChanged();
+    }
 }
 
 void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)
 {
-    if (MapCanvas *const canvas = getCanvas())
+    if (MapCanvas *const canvas = getCanvas()) {
         canvas->slot_setCanvasMouseMode(mode);
+    }
 }
 
 void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> input_action)

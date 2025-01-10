@@ -122,8 +122,9 @@ void MapFrontend::clear()
         const auto roomId = RoomId{static_cast<uint32_t>(i)};
 
         auto &ref = roomIndex[roomId];
-        if (ref == nullptr)
+        if (ref == nullptr) {
             continue;
+        }
 
         std::exchange(ref, nullptr)->setAboutToDie();
 

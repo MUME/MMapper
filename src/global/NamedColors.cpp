@@ -35,8 +35,9 @@ public:
         if (index == XNamedColor::UNINITIALIZED) {
             throw std::invalid_argument("index");
         }
-        if (auto opt = reverseLookup.at(index - 1))
+        if (auto opt = reverseLookup.at(index - 1)) {
             return opt.value()->first;
+        }
         return {};
     }
 

@@ -113,15 +113,17 @@ static void renderImmediate(const SharedFunctions &sharedFunctions,
                             const std::shared_ptr<ShaderType_> &sharedShader,
                             const GLRenderState &renderState)
 {
-    if (verts.empty())
+    if (verts.empty()) {
         return;
+    }
 
     static WeakVbo weak;
     auto shared = weak.lock();
     if (shared == nullptr) {
         weak = shared = sharedFunctions->getStaticVbos().alloc();
-        if (shared == nullptr)
+        if (shared == nullptr) {
             throw std::runtime_error("OpenGL error: failed to alloc VBO");
+        }
     }
 
     VBO &vbo = *shared;

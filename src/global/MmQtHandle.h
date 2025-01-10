@@ -61,8 +61,9 @@ public:
     /* result can be discarded; throws NullPointerException */
     ALLOW_DISCARD inline const MmQtHandle &requireValid() const CAN_THROW
     {
-        if (!isValid())
+        if (!isValid()) {
             throw NullPointerException();
+        }
 
         return *this;
     }
@@ -70,8 +71,9 @@ public:
 public:
     NODISCARD const shared_type &getShared() const CAN_THROW
     {
-        if (auto &p = m_shared)
+        if (auto &p = m_shared) {
             return p;
+        }
         throw NullPointerException();
     }
 

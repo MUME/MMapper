@@ -74,22 +74,24 @@ public:
     NODISCARD
     QByteArray toQByteArray() const
     {
-        if constexpr (Encoding == EncodingEnum::Latin1)
+        if constexpr (Encoding == EncodingEnum::Latin1) {
             return mmqt::toQByteArrayLatin1(m_str);
-        else if constexpr (Encoding == EncodingEnum::Utf8)
+        } else if constexpr (Encoding == EncodingEnum::Utf8) {
             return mmqt::toQByteArrayUtf8(m_str);
-        else
+        } else {
             std::abort();
+        }
     }
     NODISCARD
     QString toQString() const
     {
-        if constexpr (Encoding == EncodingEnum::Latin1)
+        if constexpr (Encoding == EncodingEnum::Latin1) {
             return mmqt::toQStringLatin1(m_str);
-        else if constexpr (Encoding == EncodingEnum::Utf8)
+        } else if constexpr (Encoding == EncodingEnum::Utf8) {
             return mmqt::toQStringUtf8(m_str);
-        else
+        } else {
             std::abort();
+        }
     }
 };
 
@@ -150,8 +152,9 @@ public:
     explicit TaggedBoxedString(const char *const s)
         : TaggedBoxedString{std::string_view{(s == nullptr) ? "" : s}}
     {
-        if (s == nullptr)
+        if (s == nullptr) {
             throw NullPointerException();
+        }
     }
     explicit TaggedBoxedString(const std::string &s)
         : TaggedBoxedString{std::string_view{s}}
@@ -173,11 +176,13 @@ public:
         : m_ptr{std::move(ptr)}
         , m_view{m_ptr.get(), len}
     {
-        if (m_ptr == nullptr)
+        if (m_ptr == nullptr) {
             throw NullPointerException();
+        }
 
-        if (m_view.data()[len] != char_consts::C_NUL)
+        if (m_view.data()[len] != char_consts::C_NUL) {
             throw std::runtime_error("not null terminated");
+        }
     }
 
     // NOTE: call mmqt::makeXXX() or use mmqt::toStdStringLatin1()
@@ -191,12 +196,14 @@ protected:
 public:
     NODISCARD bool operator==(const TaggedBoxedString &rhs) const
     {
-        if (m_view.size() != rhs.m_view.size())
+        if (m_view.size() != rhs.m_view.size()) {
             return false;
+        }
         // string_view doesn't have this short circuit!
         if (reinterpret_cast<uintptr_t>(m_view.data())
-            == reinterpret_cast<uintptr_t>(rhs.m_view.data()))
+            == reinterpret_cast<uintptr_t>(rhs.m_view.data())) {
             return true;
+        }
         return m_view == rhs.m_view;
     }
     NODISCARD bool operator!=(const TaggedBoxedString &rhs) const { return !(rhs == *this); }

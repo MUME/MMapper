@@ -39,8 +39,9 @@ void fixMissing(T &array, const char *const name)
 {
     // reference to pointer so we can add missing elements
     for (UniqueRoomListWidgetItem &x : array) {
-        if (x != nullptr)
+        if (x != nullptr) {
             continue;
+        }
         const auto ordinal = static_cast<int>(&x - array.data());
         x = std::make_unique<RoomListWidgetItem>(QString::asprintf("%d", ordinal));
         qWarning() << "Missing " << name << " " << ordinal;
@@ -168,9 +169,10 @@ NODISCARD static QIcon getIcon(T flag)
     const QString filename = getPixmapFilename(flag);
     try {
         QIcon result(filename);
-        if (result.isNull())
+        if (result.isNull()) {
             throw std::runtime_error(
                 mmqt::toStdStringUtf8(QString("failed to load icon '%1'").arg(filename)));
+        }
         return result;
     } catch (...) {
         qWarning() << "Oops: Unable to create icon:" << filename;
@@ -182,8 +184,9 @@ NODISCARD static int getPriority(const RoomMobFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
-        if (flag == RoomMobFlagEnum::UPPER) \
+        if (flag == RoomMobFlagEnum::UPPER) { \
             return (pos) - (NUM_ROOM_MOB_FLAGS); \
+        } \
     } while (false)
     X_POS(PASSIVE_MOB, 0);
     X_POS(AGGRESSIVE_MOB, 1);
@@ -199,8 +202,9 @@ NODISCARD static int getPriority(const RoomLoadFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
-        if (flag == RoomLoadFlagEnum::UPPER) \
+        if (flag == RoomLoadFlagEnum::UPPER) { \
             return (pos) - (NUM_ROOM_LOAD_FLAGS); \
+        } \
     } while (false)
     X_POS(TREASURE, 0);
     X_POS(ARMOUR, 1);
@@ -460,11 +464,12 @@ void RoomEditAttrDlg::connectAll()
                              this,
                              &RoomEditAttrDlg::doorNameLineEditTextChanged);
 
-    for (QToolButton *const toolButton : roomTerrainButtons)
+    for (QToolButton *const toolButton : roomTerrainButtons) {
         m_connections += connect(toolButton,
                                  &QAbstractButton::toggled,
                                  this,
                                  &RoomEditAttrDlg::terrainToolButtonToggled);
+    }
 
     m_connections += connect(roomNoteTextEdit,
                              &QTextEdit::textChanged,
@@ -506,8 +511,9 @@ const Room *RoomEditAttrDlg::getSelectedRoom()
     }
     auto it = m_roomSelection->find(
         RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
-    if (it == m_roomSelection->end())
+    if (it == m_roomSelection->end()) {
         return nullptr;
+    }
     return it->second;
 }
 
@@ -549,9 +555,9 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
 
     roomListComboBox->clear();
 
-    if (rs == nullptr)
+    if (rs == nullptr) {
         return;
-    else if (rs->size() == 1) {
+    } else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
         const auto room = m_roomSelection->getFirstRoom();
         roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
@@ -662,8 +668,9 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             QString str = r->getDescription().toQString();
             // note: older rooms may not have a trailing newline
             // REVISIT: what if they have \r\n?
-            if (str.endsWith("\n"))
+            if (str.endsWith("\n")) {
                 str = str.left(str.length() - 1);
+            }
             roomDescriptionTextEdit->append(str);
         }
         roomDescriptionTextEdit->setFontItalic(true);
@@ -673,11 +680,12 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->append(r->getNote().toQString());
 
         const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
-            if (type == RoomTerrainEnum::ROAD)
+            if (type == RoomTerrainEnum::ROAD) {
                 return getPixmapFilename(TaggedRoad{
                     RoadIndexMaskEnum::NORTH | RoadIndexMaskEnum::EAST | RoadIndexMaskEnum::SOUTH});
-            else
+            } else {
                 return getPixmapFilename(type);
+            }
         };
         terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 
@@ -1111,16 +1119,19 @@ void RoomEditAttrDlg::toggleHiddenDoor()
 // terrain tab
 void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 {
-    if (!val)
+    if (!val) {
         return;
+    }
 
     const RoomTerrainEnum rtt = [this]() -> RoomTerrainEnum {
         // returns the first one that's checked, or UNDEFINED.
         for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
             const auto tmp = static_cast<RoomTerrainEnum>(i);
-            if (const QToolButton *const ptr = roomTerrainButtons[tmp])
-                if (ptr->isChecked())
+            if (const QToolButton *const ptr = roomTerrainButtons[tmp]) {
+                if (ptr->isChecked()) {
                     return tmp;
+                }
+            }
         }
 
         // oops

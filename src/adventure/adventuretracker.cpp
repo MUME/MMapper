@@ -98,8 +98,9 @@ void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
 
 void AdventureTracker::parseIfGoodbye([[maybe_unused]] const GmcpMessage &msg)
 {
-    if (!m_session)
+    if (!m_session) {
         return;
+    }
 
     qDebug().noquote() << QString("Adventure: ending session for %1").arg(m_session->name());
     m_session->endSession();
@@ -110,10 +111,11 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] const GmcpMessage &msg)
 void AdventureTracker::parseIfUpdatedCharName(const GmcpMessage &msg)
 {
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc || !doc->isObject())
+    if (!doc || !doc->isObject()) {
         return;
-    QJsonObject obj = doc->object();
+    }
 
+    QJsonObject obj = doc->object();
     if (!obj.contains("name")) {
         return;
     }
@@ -147,10 +149,11 @@ void AdventureTracker::parseIfUpdatedVitals(const GmcpMessage &msg)
     }
 
     std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc || !doc->isObject())
+    if (!doc || !doc->isObject()) {
         return;
-    QJsonObject obj = doc->object();
+    }
 
+    QJsonObject obj = doc->object();
     bool updated = false;
 
     if (obj.contains("xp")) {
@@ -163,8 +166,9 @@ void AdventureTracker::parseIfUpdatedVitals(const GmcpMessage &msg)
         updated = true;
     }
 
-    if (updated)
+    if (updated) {
         emit sig_updatedSession(m_session);
+    }
 }
 
 double AdventureTracker::checkpointXP()

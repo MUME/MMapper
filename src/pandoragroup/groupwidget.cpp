@@ -50,11 +50,13 @@ public:
         const Key key{filename, invert};
         if (!contains(key)) {
             auto &&[it, added] = m_images.emplace(key, filename);
-            if (!added)
+            if (!added) {
                 std::abort();
+            }
             QImage &image = it->second;
-            if (invert)
+            if (invert) {
                 image.invertPixels();
+            }
 
             qInfo() << "created image" << filename << (invert ? "(inverted)" : "(regular)");
         }
@@ -78,16 +80,19 @@ GroupStateData::GroupStateData(const QColor &color,
     , m_position(position)
     , m_affects(affects)
 {
-    if (position != CharacterPositionEnum::UNDEFINED)
+    if (position != CharacterPositionEnum::UNDEFINED) {
         ++m_count;
+    }
     // Increment imageCount for each active affect
     for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-        if (affects.contains(affect))
+        if (affects.contains(affect)) {
             ++m_count;
+        }
     }
     // Users spam search/reveal/flush so pad an extra position to reduce eye strain
-    if (!affects.contains(CharacterAffectEnum::SEARCH))
+    if (!affects.contains(CharacterAffectEnum::SEARCH)) {
         ++m_count;
+    }
 }
 
 void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
@@ -107,8 +112,9 @@ void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
         painter.translate(1, 0);
     };
 
-    if (m_position != CharacterPositionEnum::UNDEFINED)
+    if (m_position != CharacterPositionEnum::UNDEFINED) {
         drawOne(getIconFilename(m_position));
+    }
     for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (m_affects.contains(affect)) {
             drawOne(getIconFilename(affect));
@@ -177,8 +183,9 @@ int GroupModel::columnCount(const QModelIndex & /* parent */) const
 
 NODISCARD static QString calculatePercentage(const int numerator, const int denomenator)
 {
-    if (denomenator == 0)
+    if (denomenator == 0) {
         return "";
+    }
     int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
                                       / static_cast<double>(denomenator));
     // QT documentation doesn't say it's legal to use "\\%" or "%%", so we'll just append.
@@ -187,8 +194,9 @@ NODISCARD static QString calculatePercentage(const int numerator, const int deno
 
 NODISCARD static QString calculateRatio(const int numerator, const int denomenator)
 {
-    if (numerator == 0 && denomenator == 0)
+    if (numerator == 0 && denomenator == 0) {
         return "";
+    }
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
@@ -229,11 +237,12 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
     case Qt::DisplayRole:
         switch (column) {
         case ColumnTypeEnum::NAME:
-            if (character.getLabel().isEmpty() || character.getName() == character.getLabel())
+            if (character.getLabel().isEmpty() || character.getName() == character.getLabel()) {
                 return character.getName();
-            else
+            } else {
                 return QString("%1 (%2)").arg(QString::fromLatin1(character.getName()),
                                               QString::fromLatin1(character.getLabel()));
+            }
         case ColumnTypeEnum::HP_PERCENT:
             return calculatePercentage(character.hp, character.maxhp);
         case ColumnTypeEnum::MANA_PERCENT:
@@ -314,8 +323,9 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 QVariant GroupModel::data(const QModelIndex &index, int role) const
 {
     QVariant data = QVariant();
-    if (!index.isValid())
+    if (!index.isValid()) {
         return data;
+    }
 
     if (auto group = m_group->getGroup()) {
         auto selection = group->selectAll();

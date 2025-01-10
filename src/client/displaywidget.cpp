@@ -238,11 +238,13 @@ NODISCARD static QColor decodeColor(const AnsiColorVariant var,
                                     const QColor defaultColor,
                                     const bool intense)
 {
-    if (var.hasRGB())
+    if (var.hasRGB()) {
         return decodeColor(var.getRGB());
+    }
 
-    if (var.has256())
+    if (var.has256()) {
         return decodeColor(var.get256(), intense);
+    }
 
     return defaultColor;
 }
@@ -264,8 +266,9 @@ RawAnsi updateFormat(QTextCharFormat &format,
         updated.ul = AnsiColorVariant{};
     }
 
-    if (before == updated)
+    if (before == updated) {
         return updated;
+    }
 
     if (updated == RawAnsi{}) {
         setDefaultFormat(format, defaults);

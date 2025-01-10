@@ -89,8 +89,9 @@ public:
 
         for (const SelTypeEnum type : ALL_SEL_TYPES) {
             const std::vector<TexVert> &arr = m_arrays[type];
-            if (arr.empty())
+            if (arr.empty()) {
                 continue;
+            }
 
             const SharedMMTexture &texture = [&textures, type]() -> const SharedMMTexture & {
                 switch (type) {
@@ -139,8 +140,9 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
             const auto delta = roomCenter - m_mapScreen.getCenter();
             const auto distance = std::sqrt((delta.y * delta.y) + (delta.x * delta.x));
             // If we're too far away just scale down to 50% at most
-            if (distance >= static_cast<float>(BASESIZE))
+            if (distance >= static_cast<float>(BASESIZE)) {
                 return 0.5f;
+            }
             return 1.f - (distance / static_cast<float>(BASESIZE));
         }();
         gl.glScalef(scaleFactor, scaleFactor, 1.f);
@@ -164,8 +166,9 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
 
 void MapCanvas::paintSelectedRooms()
 {
-    if (!m_roomSelection || m_roomSelection->empty())
+    if (!m_roomSelection || m_roomSelection->empty()) {
         return;
+    }
 
     RoomSelFakeGL gl;
 

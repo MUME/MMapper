@@ -274,8 +274,9 @@ void InputWidget::forwardHistory()
         return;
     }
 
-    if (m_inputHistory.atEnd())
+    if (m_inputHistory.atEnd()) {
         m_inputHistory.backward();
+    }
 
     if (!m_inputHistory.atFront()) {
         m_inputHistory.backward();
@@ -292,14 +293,16 @@ void InputWidget::backwardHistory()
 
     clear();
     insertPlainText(m_inputHistory.value());
-    if (!m_inputHistory.atEnd())
+    if (!m_inputHistory.atEnd()) {
         m_inputHistory.forward();
+    }
 }
 
 void InputWidget::tabComplete()
 {
-    if (m_tabHistory.empty())
+    if (m_tabHistory.empty()) {
         return;
+    }
 
     QTextCursor current = textCursor();
     current.select(QTextCursor::WordUnderCursor);

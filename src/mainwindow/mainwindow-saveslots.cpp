@@ -11,8 +11,9 @@
 NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
 {
     if (const auto pSaveDialog = ptr.get()) {
-        if (pSaveDialog->exec() == QDialog::Accepted)
+        if (pSaveDialog->exec() == QDialog::Accepted) {
             return pSaveDialog->selectedFiles();
+        }
         return QStringList{};
     }
     throw NullPointerException();
@@ -20,8 +21,9 @@ NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr
 
 bool MainWindow::maybeSave()
 {
-    if (!m_mapData->dataChanged())
+    if (!m_mapData->dataChanged()) {
         return true;
+    }
 
     const int ret = QMessageBox::warning(this,
                                          tr("mmapper"),
@@ -43,10 +45,11 @@ std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
 {
     const auto &path = getConfig().autoLoad.lastMapDirectory;
     QDir dir;
-    if (dir.mkpath(path))
+    if (dir.mkpath(path)) {
         dir.setPath(path);
-    else
+    } else {
         dir.setPath(QDir::homePath());
+    }
     auto save = std::make_unique<QFileDialog>(this, "Choose map file name ...");
     save->setFileMode(QFileDialog::AnyFile);
     save->setDirectory(dir);

@@ -59,7 +59,6 @@ void ParseEvent::countSkipped()
 QString ParseEvent::toQString() const
 {
     using namespace char_consts;
-
     QString exitsStr;
     // REVISIT: Duplicate code with AbstractParser
     if (m_exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
@@ -68,14 +67,18 @@ QString ParseEvent::toQString() const
             if (exitFlags.isExit()) {
                 exitsStr.append(C_OPEN_BRACKET);
                 exitsStr.append(lowercaseDirection(dir));
-                if (exitFlags.isClimb())
+                if (exitFlags.isClimb()) {
                     exitsStr.append(C_SLASH);
-                if (exitFlags.isRoad())
+                }
+                if (exitFlags.isRoad()) {
                     exitsStr.append(C_EQUALS);
-                if (exitFlags.isDoor())
+                }
+                if (exitFlags.isDoor()) {
                     exitsStr.append(C_OPEN_PARENS);
-                if (m_connectedRoomFlags.hasDirectSunlight(dir))
+                }
+                if (m_connectedRoomFlags.hasDirectSunlight(dir)) {
                     exitsStr.append(C_CARET);
+                }
                 exitsStr.append(C_CLOSE_BRACKET);
             }
         }
@@ -83,10 +86,11 @@ QString ParseEvent::toQString() const
     QString promptStr;
     promptStr.append(mmqt::toQStringLatin1(getTerrainBytes(m_terrain)));
     if (m_promptFlags.isValid()) {
-        if (m_promptFlags.isLit())
+        if (m_promptFlags.isLit()) {
             promptStr.append(C_ASTERISK);
-        else if (m_promptFlags.isDark())
+        } else if (m_promptFlags.isDark()) {
             promptStr.append("o");
+        }
     }
 
     return QString("[%1,%2,%3,%4,%5,%6,%7]")

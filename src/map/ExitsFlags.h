@@ -46,11 +46,13 @@ public:
             tmp.value = value;
 
             ExitsFlagsType result;
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD)
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 result.set(dir, tmp.get(dir));
+            }
 
-            if (tmp.isValid())
+            if (tmp.isValid()) {
                 result.setValid();
+            }
 
             assert(tmp.value == result.value);
             return result;

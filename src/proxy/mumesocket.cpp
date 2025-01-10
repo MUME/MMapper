@@ -32,8 +32,10 @@ void MumeSocket::virt_onDisconnect()
 void MumeSocket::virt_onError2(QAbstractSocket::SocketError e, const QString &errorString)
 {
     QString errorStr = errorString;
-    if (!errorStr.at(errorStr.length() - 1).isPunct())
+    if (!errorStr.at(errorStr.length() - 1).isPunct()) {
         errorStr += "!";
+    }
+
     switch (e) {
     case QAbstractSocket::SslInvalidUserDataError:
     case QAbstractSocket::SslInternalError:
@@ -193,8 +195,9 @@ void MumeSslSocket::slot_onReadyRead()
     // REVISIT: check return value?
     MAYBE_UNUSED const auto ignored = //
         io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-            if (!byteArray.isEmpty())
+            if (!byteArray.isEmpty()) {
                 emit sig_processMudStream(byteArray);
+            }
         });
 }
 

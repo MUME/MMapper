@@ -20,15 +20,17 @@ ParserInput::ParserInput(std::shared_ptr<const std::vector<std::string>> v)
 
 const std::string &ParserInput::front() const
 {
-    if (empty())
+    if (empty()) {
         throw std::runtime_error("empty");
+    }
     return m_vector->at(m_beg);
 }
 
 const std::string &ParserInput::back() const
 {
-    if (empty())
+    if (empty()) {
         throw std::runtime_error("empty");
+    }
     return m_vector->at(m_end - 1);
 }
 
@@ -72,10 +74,11 @@ void ParserInput::concatenate_into(std::ostream &os) const
 {
     bool first = true;
     for (auto &s : *this) {
-        if (first)
+        if (first) {
             first = false;
-        else
+        } else {
             os << " ";
+        }
 
         print_string_smartquote(os, s);
     }
@@ -83,8 +86,9 @@ void ParserInput::concatenate_into(std::ostream &os) const
 
 std::string ParserInput::concatenate() const
 {
-    if (empty())
+    if (empty()) {
         return {};
+    }
 
     std::ostringstream ss;
     concatenate_into(ss);

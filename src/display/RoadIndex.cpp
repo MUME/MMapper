@@ -21,9 +21,11 @@ RoadIndexMaskEnum getRoadIndex(const Room &room)
 {
     RoadIndexMaskEnum roadIndex = RoadIndexMaskEnum::NONE;
 
-    for (const ExitDirEnum dir : ALL_EXITS_NESW)
-        if (room.exit(dir).exitIsRoad())
+    for (const ExitDirEnum dir : ALL_EXITS_NESW) {
+        if (room.exit(dir).exitIsRoad()) {
             roadIndex |= getRoadIndex(dir);
+        }
+    }
 
     return roadIndex;
 }

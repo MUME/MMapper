@@ -430,14 +430,16 @@ void Proxy::slot_mudTerminatedConnection()
 
 void Proxy::slot_processUserStream()
 {
-    if (m_userSocket == nullptr)
+    if (m_userSocket == nullptr) {
         return;
+    }
 
     // REVISIT: check return value?
     MAYBE_UNUSED const auto ignored = //
         io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
-            if (!byteArray.isEmpty())
+            if (!byteArray.isEmpty()) {
                 emit sig_analyzeUserStream(byteArray);
+            }
         });
 }
 

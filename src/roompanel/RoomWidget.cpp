@@ -176,8 +176,9 @@ bool RoomModel::isEnemy(const int row, const int column) const
     if (column < static_cast<int>(ColumnTypeEnum::LABEL)
         || column > static_cast<int>(ColumnTypeEnum::WEAPON)) {
         const auto &variant = getMobField(row, column);
-        if (variant == empty || !variant.canConvert(QMetaType::QString))
+        if (variant == empty || !variant.canConvert(QMetaType::QString)) {
             return false;
+        }
 
         // *an Orc*
         // *a grim Man*

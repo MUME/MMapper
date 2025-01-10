@@ -103,8 +103,9 @@ NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnu
                                               | DoorFlagEnum::DELAYED;
 
     const DoorFlags flags = room->exit(dir).getDoorFlags();
-    if (!flags.containsAny(SHOWN_FLAGS))
+    if (!flags.containsAny(SHOWN_FLAGS)) {
         return QString{};
+    }
 
     return QString::asprintf(" [%s%s%s]",
                              flags.needsKey() ? "L" : "",
@@ -291,12 +292,14 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
             const Room *const targetRoom = sharedTargetRoom.get();
 
             // Only draw the connection if the target room is within the bounds
-            if (!m_bounds.contains(targetRoom->getPosition()))
+            if (!m_bounds.contains(targetRoom->getPosition())) {
                 continue;
+            }
 
             // Only draw incoming connections if they are on a different layer
-            if (room->getPosition().z == targetRoom->getPosition().z)
+            if (room->getPosition().z == targetRoom->getPosition().z) {
                 continue;
+            }
 
             // Detect if this is a oneway
             bool oneway = true;
@@ -382,10 +385,11 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
 
     gl.setOffset(static_cast<float>(leftX), static_cast<float>(leftY), 0.f);
 
-    if (inExitFlags)
+    if (inExitFlags) {
         gl.setNormal();
-    else
+    } else {
         gl.setRed();
+    }
 
     {
         const auto srcZ = static_cast<float>(leftZ);
@@ -440,16 +444,19 @@ void ConnectionDrawer::drawConnectionLine(const ExitDirEnum startDir,
     std::vector<glm::vec3> points{};
     ConnectionLineBuilder lb{points};
     lb.drawConnLineStart(startDir, neighbours, srcZ);
-    if (points.empty())
+    if (points.empty()) {
         return;
+    }
 
-    if (oneway)
+    if (oneway) {
         lb.drawConnLineEnd1Way(endDir, dX, dY, dstZ);
-    else
+    } else {
         lb.drawConnLineEnd2Way(endDir, neighbours, dX, dY, dstZ);
+    }
 
-    if (points.empty())
+    if (points.empty()) {
         return;
+    }
 
     drawLineStrip(points);
 }
@@ -640,8 +647,9 @@ void MapCanvas::paintNearbyConnectionPoints()
                                                  const Room *const room,
                                                  const ExitDirEnum dir,
                                                  const std::optional<CD> &optFirst) -> void {
-        if (!isNESWUD(dir) && dir != ExitDirEnum::UNKNOWN)
+        if (!isNESWUD(dir) && dir != ExitDirEnum::UNKNOWN) {
             return;
+        }
 
         if (optFirst) {
             const CD &first = optFirst.value();
@@ -657,19 +665,22 @@ void MapCanvas::paintNearbyConnectionPoints()
     const auto addPoints =
         [this, isSelection, &addPoint](const std::optional<MouseSel> &sel,
                                        const std::optional<CD> &optFirst) -> void {
-        if (!sel.has_value())
+        if (!sel.has_value()) {
             return;
+        }
         const auto mouse = sel->getCoordinate();
         for (int dy = -1; dy <= 1; ++dy) {
             for (int dx = -1; dx <= 1; ++dx) {
                 const auto roomCoord = mouse + Coordinate(dx, dy, 0);
                 const Room *const room = m_data.getRoom(roomCoord);
-                if (room == nullptr)
+                if (room == nullptr) {
                     continue;
+                }
 
                 ExitDirFlags dirs = isSelection ? m_data.getExitDirections(roomCoord) : allExits;
-                if (optFirst)
+                if (optFirst) {
                     dirs |= ExitDirEnum::UNKNOWN;
+                }
 
                 dirs.for_each([&addPoint, &optFirst, &roomCoord, room](ExitDirEnum dir) -> void {
                     addPoint(roomCoord, room, dir, optFirst);
@@ -715,16 +726,18 @@ void MapCanvas::paintSelectedConnection()
     // REVISIT: How about not dashed lines to the nearest possible connections
     // if the second isn't valid?
     const auto optPos2 = [this, &sel]() -> std::optional<glm::vec3> {
-        if (sel.isSecondValid())
+        if (sel.isSecondValid()) {
             return getPosition(sel.getSecond());
-        else if (hasSel2())
+        } else if (hasSel2()) {
             return getSel2().to_vec3();
-        else
+        } else {
             return std::nullopt;
+        }
     }();
 
-    if (!optPos2)
+    if (!optPos2) {
         return;
+    }
 
     const glm::vec3 &pos2 = optPos2.value();
 

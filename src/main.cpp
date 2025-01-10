@@ -102,8 +102,9 @@ static void tryInitDrMingw()
 NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
 {
     const auto getAbsoluteFileName = [&dir, &input_filename]() -> std::optional<QString> {
-        if (QFileInfo{input_filename}.isAbsolute())
+        if (QFileInfo{input_filename}.isAbsolute()) {
             return input_filename;
+        }
 
         if (!dir.exists()) {
             qInfo() << "[main] Directory" << dir.absolutePath() << "does not exist.";
@@ -114,8 +115,9 @@ NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &in
     };
 
     const auto maybeFilename = getAbsoluteFileName();
-    if (!maybeFilename)
+    if (!maybeFilename) {
         return false;
+    }
 
     const auto &absoluteFilePath = maybeFilename.value();
     if (!QFile{absoluteFilePath}.exists()) {
@@ -132,10 +134,12 @@ static void tryAutoLoad(MainWindow &mw)
     const auto &settings = getConfig().autoLoad;
     if (settings.autoLoadMap) {
         if (!settings.fileName.isEmpty()
-            && tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName))
+            && tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName)) {
             return;
-        if (!NO_MAP_RESOURCE && tryLoad(mw, QDir(":/"), "arda.mm2"))
+        }
+        if (!NO_MAP_RESOURCE && tryLoad(mw, QDir(":/"), "arda.mm2")) {
             return;
+        }
         qInfo() << "[main] Unable to autoload map";
     }
 }

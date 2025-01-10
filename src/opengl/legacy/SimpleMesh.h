@@ -66,8 +66,9 @@ protected:
         {}
         ~AttribUnbinder()
         {
-            if (self != nullptr)
+            if (self != nullptr) {
                 self->unbindAttribs();
+            }
         }
     };
 
@@ -153,8 +154,9 @@ private:
 private:
     void virt_render(const GLRenderState &renderState) final
     {
-        if (isEmpty())
+        if (isEmpty()) {
             return;
+        }
 
         m_functions.checkError();
 

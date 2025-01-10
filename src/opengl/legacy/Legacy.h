@@ -105,8 +105,9 @@ public:
     {
         constexpr float ratio = 64.f;
         constexpr float inv_ratio = 1.f / ratio;
-        if (!std::isfinite(devicePixelRatio) || !isClamped(devicePixelRatio, inv_ratio, ratio))
+        if (!std::isfinite(devicePixelRatio) || !isClamped(devicePixelRatio, inv_ratio, ratio)) {
             throw std::invalid_argument("devicePixelRatio");
+        }
         m_devicePixelRatio = devicePixelRatio;
     }
 

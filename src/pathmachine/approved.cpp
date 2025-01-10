@@ -33,8 +33,9 @@ void Approved::virt_receiveRoom(RoomAdmin *const sender, const Room *const perha
     const auto cmp = [this, &event, &id, &perhaps]() {
         // Cache comparisons because we regularly call releaseMatch() and try the same rooms again
         auto it = compareCache.find(id);
-        if (it != compareCache.end())
+        if (it != compareCache.end()) {
             return it->second;
+        }
         const auto result = Room::compare(perhaps, event, matchingTolerance);
         compareCache.emplace(id, result);
         return result;
@@ -47,8 +48,9 @@ void Approved::virt_receiveRoom(RoomAdmin *const sender, const Room *const perha
 
     if (matchedRoom != nullptr) {
         // moreThanOne should only take effect if multiple distinct rooms match
-        if (matchedRoom->getId() != id)
+        if (matchedRoom->getId() != id) {
             moreThanOne = true;
+        }
         sender->releaseRoom(*this, id);
         return;
     }

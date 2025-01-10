@@ -14,8 +14,9 @@
 NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string_view str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    if (str == normalized) \
-        return GmcpModuleTypeEnum::UPPER_CASE;
+    if (str == normalized) { \
+        return GmcpModuleTypeEnum::UPPER_CASE; \
+    }
 
     X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
@@ -69,7 +70,8 @@ std::string GmcpModule::toStdString() const
 {
     std::ostringstream oss;
     oss << m_nameVersion.normalizedName;
-    if (hasVersion())
+    if (hasVersion()) {
         oss << char_consts::C_SPACE << m_nameVersion.version.asUint32();
+    }
     return std::move(oss).str();
 }

@@ -38,10 +38,12 @@ private:
     {
         // set(value);
         static_assert(0 <= digits && digits < 6);
-        if (min_ > max_)
+        if (min_ > max_) {
             throw std::invalid_argument("min/max");
-        if (defaultValue_ < min_ || defaultValue_ > max_)
+        }
+        if (defaultValue_ < min_ || defaultValue_ > max_) {
             throw std::invalid_argument("defaultValue");
+        }
     }
 
 public:
@@ -56,12 +58,14 @@ public:
     void reset() { set(defaultValue); }
     void set(const int value)
     {
-        if (m_notifying)
+        if (m_notifying) {
             throw std::runtime_error("recursion");
+        }
 
         const int newValue = std::clamp(value, min, max);
-        if (m_value == newValue)
+        if (m_value == newValue) {
             return;
+        }
 
         struct NODISCARD NotificationGuard final
         {
@@ -71,8 +75,9 @@ public:
             explicit NotificationGuard(FixedPoint &self)
                 : m_self{self}
             {
-                if (m_self.m_notifying)
+                if (m_self.m_notifying) {
                     throw std::runtime_error("recursion");
+                }
                 m_self.m_notifying = true;
             }
 
@@ -89,8 +94,9 @@ public:
 
     void setFloat(const float f)
     {
-        if (!std::isfinite(f))
+        if (!std::isfinite(f)) {
             throw std::invalid_argument("f");
+        }
         return set(static_cast<int>(std::lround(f * std::pow(10.f, static_cast<float>(digits)))));
     }
 

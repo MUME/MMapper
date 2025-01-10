@@ -31,15 +31,17 @@ private:
 syntax::MatchResult ArgNamedColor::virt_match(const syntax::ParserInput &input,
                                               syntax::IMatchErrorLogger *) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     auto arg = std::string_view{input.front()};
 
     auto names = XNamedColor::getAllNames();
     for (const auto &name : names) {
-        if (name == arg)
+        if (name == arg) {
             return syntax::MatchResult::success(1, input, Value{name});
+        }
     }
 
     return syntax::MatchResult::failure(input);
@@ -62,17 +64,21 @@ private:
 syntax::MatchResult ArgHexColor::virt_match(const syntax::ParserInput &input,
                                             syntax::IMatchErrorLogger *) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     auto arg = StringView{input.front()};
-    if (!arg.startsWith("#"))
+    if (!arg.startsWith("#")) {
         return syntax::MatchResult::failure(input);
+    }
+
     ++arg;
 
     for (const char c : arg) {
-        if (!std::isxdigit(c))
+        if (!std::isxdigit(c)) {
             return syntax::MatchResult::failure(input);
+        }
     }
 
     if (arg.length() != 6) {
@@ -109,10 +115,11 @@ inline decltype(auto) remap(T &&x)
 {
     static_assert(!std::is_same_v<std::decay_t<T>, std::string_view>);
     if constexpr (std::is_same_v<std::decay_t<T>,
-                                 std::string> || std::is_same_v<std::decay_t<T>, const char *>)
+                                 std::string> || std::is_same_v<std::decay_t<T>, const char *>) {
         return syntax::abbrevToken(std::forward<T>(x));
-    else if constexpr (true)
+    } else if constexpr (true) {
         return std::forward<T>(x);
+    }
 
     std::abort();
 }
@@ -135,8 +142,9 @@ void AbstractParser::doConfig(const StringView cmd)
 
             os << "Customizable colors:" << std::endl;
             for (const auto &name : names) {
-                if (name.empty() || name[0] == char_consts::C_PERIOD)
+                if (name.empty() || name[0] == char_consts::C_PERIOD) {
                     continue;
+                }
                 XNamedColor color(name);
                 os << " " << SmartQuotedString{name} << " = " << color.getColor() << std::endl;
             }
@@ -169,10 +177,11 @@ void AbstractParser::doConfig(const StringView cmd)
                << " to " << color.getColor() << "." << std::endl;
 
             // FIXME: Some of the colors still require a map update.
-            if ((false))
+            if ((false)) {
                 graphicsSettingsChanged();
-            else
+            } else {
                 mapChanged();
+            }
         },
         "set named color");
 
@@ -182,8 +191,9 @@ void AbstractParser::doConfig(const StringView cmd)
             [this, &fp, help](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
 
-                if (args == nullptr || !args->car.isFloat())
+                if (args == nullptr || !args->car.isFloat()) {
                     throw std::runtime_error("internal type error");
+                }
 
                 const float value = args->car.getFloat();
                 const auto min = fp.clone(fp.min).getFloat();
@@ -229,8 +239,9 @@ void AbstractParser::doConfig(const StringView cmd)
     auto &advanced = setConfig().canvas.advanced;
 
     auto getZoom = []() -> float {
-        if (auto primary = MapCanvas::getPrimary())
+        if (auto primary = MapCanvas::getPrimary()) {
             return primary->getRawZoom();
+        }
         return 1.f;
     };
 
@@ -251,8 +262,9 @@ void AbstractParser::doConfig(const StringView cmd)
             [&getZoom, &setZoom](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
 
-                if (args == nullptr || !args->car.isFloat())
+                if (args == nullptr || !args->car.isFloat()) {
                     throw std::runtime_error("internal type error");
+                }
 
                 const float value = args->car.getFloat();
                 const auto min = ScaleFactor::MIN_VALUE;
@@ -267,10 +279,11 @@ void AbstractParser::doConfig(const StringView cmd)
                     return;
                 }
 
-                if (setZoom(value))
+                if (setZoom(value)) {
                     os << "Changed zoom from " << oldValue << " to " << value << std::endl;
-                else
+                } else {
                     os << "Unable to change zoom." << std::endl;
+                }
             },
             "set zoom");
         return syn("zoom", syn("set", argZoom, acceptZoom));

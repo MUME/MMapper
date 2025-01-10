@@ -28,8 +28,9 @@ public:
     NODISCARD bool isSuccess() const { return std::holds_alternative<Success>(*this); }
     NODISCARD bool isFailure() const
     {
-        if (isSuccess())
+        if (isSuccess()) {
             return false;
+        }
         assert(std::holds_alternative<MatchResult>(*this));
         const auto &result = std::get<MatchResult>(*this);
         return !result;

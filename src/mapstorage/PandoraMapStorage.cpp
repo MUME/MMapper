@@ -52,8 +52,9 @@ NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
 {
 #define CASE2(UPPER, s) \
     do { \
-        if (str == s) \
+        if (str == s) { \
             return RoomTerrainEnum::UPPER; \
+        } \
     } while (false)
     CASE2(UNDEFINED, "undefined");
     CASE2(INDOORS, "indoors");

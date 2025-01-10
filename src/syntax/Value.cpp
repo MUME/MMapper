@@ -18,10 +18,11 @@ namespace value_helper {
 
 static void print(std::ostream &os, bool value)
 {
-    if ((false))
+    if ((false)) {
         os << std::boolalpha << value << std::noboolalpha;
-    else
+    } else {
         os << (value ? "true" : "false");
+    }
 }
 
 static void print(std::ostream &os, char value)
@@ -104,8 +105,9 @@ std::ostream &operator<<(std::ostream &os, const Vector &v)
     os << "'["; // "Vector(";
     bool first = true;
     for (const Value &a : v) {
-        if (!first)
+        if (!first) {
             os << ", ";
+        }
         os << a;
         first = false;
     }
@@ -133,8 +135,9 @@ Vector::Base::const_iterator Vector::end() const
 Vector getAnyVectorReversed(const Pair *const matched)
 {
     size_t len = 0;
-    for (const Pair *it = matched; it != nullptr; it = it->cdr)
+    for (const Pair *it = matched; it != nullptr; it = it->cdr) {
         ++len;
+    }
 
     std::vector<Value> result;
     result.resize(len);

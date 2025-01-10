@@ -109,8 +109,9 @@ LineParamsBinder::~LineParamsBinder()
     const auto &width = lineParams.width;
     const float ONE = 1.f;
     static_assert(sizeof(ONE) == sizeof(width));
-    if (!utils::equals(&width, &ONE))
+    if (!utils::equals(&width, &ONE)) {
         functions.glLineWidth(ONE);
+    }
 }
 
 PointSizeBinder::PointSizeBinder(Functions &in_functions, const std::optional<GLfloat> &in_pointSize)
@@ -136,8 +137,9 @@ TexturesBinder::TexturesBinder(const TexLookup &in_lookup,
 {
     for (size_t i = 0, size = textures.size(); i < size; ++i) {
         const auto id = textures[i];
-        if (id == INVALID_MM_TEXTURE_ID)
+        if (id == INVALID_MM_TEXTURE_ID) {
             continue;
+        }
 
         // note: pointer to shared pointer
         if (const SharedMMTexture *const pShared = lookup.find(id)) {
@@ -152,8 +154,9 @@ TexturesBinder::~TexturesBinder()
 {
     for (size_t i = 0, size = textures.size(); i < size; ++i) {
         const auto id = textures[i];
-        if (id == INVALID_MM_TEXTURE_ID)
+        if (id == INVALID_MM_TEXTURE_ID) {
             continue;
+        }
 
         // note: pointer to shared pointer
         if (const SharedMMTexture *const pShared = lookup.find(id)) {

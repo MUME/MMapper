@@ -44,8 +44,9 @@ private:
         NODISCARD size_t getInternalIndex(const AnsiColor16 color) const
         {
             const auto &opt = color.color;
-            if (opt.has_value())
+            if (opt.has_value()) {
                 return static_cast<size_t>(opt.value());
+            }
             return 16; // default
         }
 
@@ -59,9 +60,11 @@ private:
 
         NODISCARD const AnsiItem &getItem(AnsiColor16 color) const
         {
-            for (auto &item : values)
-                if (item.color == color)
+            for (auto &item : values) {
+                if (item.color == color) {
                     return item;
+                }
+            }
 
             assert(false);
             std::abort();

@@ -35,10 +35,12 @@ bool CompareVersion::operator>(const CompareVersion &other) const
     for (size_t i = 0; i < m_parts.size(); i++) {
         auto myPart = m_parts.at(i);
         auto otherPart = other.m_parts.at(i);
-        if (myPart == otherPart)
+        if (myPart == otherPart) {
             continue;
-        if (myPart > otherPart)
+        }
+        if (myPart > otherPart) {
             return true;
+        }
         break;
     }
     return false;
@@ -66,8 +68,9 @@ UpdateDialog::UpdateDialog(QWidget *const parent)
     m_buttonBox->button(QDialogButtonBox::Ok)->setText(tr("&Upgrade"));
     connect(m_buttonBox, &QDialogButtonBox::accepted, this, &UpdateDialog::accepted);
     connect(m_buttonBox, &QDialogButtonBox::accepted, this, [this]() {
-        if (QDesktopServices::openUrl(m_downloadUrl))
+        if (QDesktopServices::openUrl(m_downloadUrl)) {
             close();
+        }
     });
     connect(m_buttonBox, &QDialogButtonBox::rejected, this, &UpdateDialog::reject);
 
@@ -112,21 +115,23 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         // Regular expressions to detect if this download matches the current install
         const auto platformRegex = QRegularExpression(
             []() -> const char * {
-                if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+                if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
                     return R"(^.+\.dmg$)";
-                if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
+                } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
                     return R"(^.+\.(deb|AppImage)$)";
-                if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
+                } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
                     return R"(^.+\.exe$)";
+                }
                 abort();
             }(),
             QRegularExpression::PatternOption::CaseInsensitiveOption);
         const auto environmentRegex = QRegularExpression(
             []() -> const char * {
-                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit)
+                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit) {
                     return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
-                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit)
+                } else if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit) {
                     return R"((aarch64|amd64|arm64|x86_64|x64))";
+                }
                 abort();
             }(),
             QRegularExpression::PatternOption::CaseInsensitiveOption);
@@ -138,28 +143,32 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
                     && itemObj.contains("browser_download_url")
                     && itemObj["browser_download_url"].isString()) {
                     const QString name = itemObj["name"].toString();
-                    if (!name.contains(platformRegex) || !name.contains(environmentRegex))
+                    if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
                         continue;
+                    }
                     if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
                         // If MMapper is an AppImage then only select AppImage assets
                         // Similarly, if MMapper is not an AppImage then skip AppImage assets
                         const bool assetAppImage
                             = name.contains("AppImage", Qt::CaseSensitivity::CaseInsensitive);
                         const bool envAppImage = qgetenv(APPIMAGE_KEY) != nullptr;
-                        if ((envAppImage && !assetAppImage) || (!envAppImage && assetAppImage))
+                        if ((envAppImage && !assetAppImage) || (!envAppImage && assetAppImage)) {
                             continue;
+                        }
                     }
                     return itemObj["browser_download_url"].toString();
                 }
             }
         }
-        if (obj.contains("html_url") && obj["html_url"].isString())
+        if (obj.contains("html_url") && obj["html_url"].isString()) {
             return obj["html_url"].toString();
+        }
         return "https://github.com/MUME/MMapper/releases";
     }();
 
-    if (!obj.contains("tag_name") || !obj["tag_name"].isString())
+    if (!obj.contains("tag_name") || !obj["tag_name"].isString()) {
         return;
+    }
     const QString latestTag = obj["tag_name"].toString();
     const QString currentVersion = QLatin1String(getMMapperVersion());
     const CompareVersion latest(latestTag);

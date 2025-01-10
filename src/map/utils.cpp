@@ -107,18 +107,21 @@ public:
 
         const auto &zmap = map;
         const auto &z = zmap.find(c.z);
-        if (z == zmap.end())
+        if (z == zmap.end()) {
             return nullptr;
+        }
 
         const auto &ymap = z->second;
         const auto &y = ymap.find(c.y);
-        if (y == ymap.end())
+        if (y == ymap.end()) {
             return nullptr;
+        }
 
         const auto &xmap = y->second;
         const auto &x = xmap.find(c.x);
-        if (x == xmap.end())
+        if (x == xmap.end()) {
             return nullptr;
+        }
 
         return x->second;
     }

@@ -106,13 +106,14 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
             for (const auto flag : flags) {
                 static_assert(std::is_enum_v<decltype(flag)>);
                 const auto abb = getParserCommandName(flag);
-                if (!abb)
+                if (!abb) {
                     throw std::invalid_argument("flag");
+                }
                 const std::string key = abb.getCommand();
                 const auto it = result.find(key);
-                if (it == result.end())
+                if (it == result.end()) {
                     result.emplace(key, convert(flag));
-                else {
+                } else {
                     qWarning() << ("unable to add " + mmqt::toQStringLatin1(key) + " for "
                                    + abb.describe());
                 }
@@ -134,8 +135,9 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
     }();
     const std::string key = toLowerLatin1(args);
     const auto it = map.find(key);
-    if (it == map.end())
+    if (it == map.end()) {
         return std::nullopt;
+    }
     return it->second;
 }
 
@@ -151,8 +153,9 @@ private:
 syntax::MatchResult ArgDirection::virt_match(const syntax::ParserInput &input,
                                              syntax::IMatchErrorLogger *const logger) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     const auto arg = toLowerLatin1(input.front());
 
@@ -200,8 +203,9 @@ private:
 syntax::MatchResult ArgDoorFlag::virt_match(const syntax::ParserInput &input,
                                             syntax::IMatchErrorLogger *logger) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     const auto arg = toLowerLatin1(input.front());
     StringView sv(arg);
@@ -211,16 +215,18 @@ syntax::MatchResult ArgDoorFlag::virt_match(const syntax::ParserInput &input,
 
     for (const auto &flag : ALL_DOOR_FLAGS) {
         const auto &command = getParserCommandName(flag);
-        if (!command.matches(sv))
+        if (!command.matches(sv)) {
             continue;
+        }
         values.emplace_back(flag);
         return syntax::MatchResult::success(1, input, Value(Vector(std::move(values))));
     }
 
     if (logger) {
         std::ostringstream os;
-        for (const auto &flag : ALL_DOOR_FLAGS)
+        for (const auto &flag : ALL_DOOR_FLAGS) {
             os << getParserCommandName(flag).getCommand() << " ";
+        }
         logger->logError("input was not a valid door flag: " + os.str());
     }
     return syntax::MatchResult::failure(input);
@@ -243,8 +249,9 @@ private:
 syntax::MatchResult ArgExitFlag::virt_match(const syntax::ParserInput &input,
                                             syntax::IMatchErrorLogger *logger) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     const auto arg = toLowerLatin1(input.front());
     StringView sv(arg);
@@ -254,16 +261,18 @@ syntax::MatchResult ArgExitFlag::virt_match(const syntax::ParserInput &input,
 
     for (const auto &flag : ALL_EXIT_FLAGS) {
         const auto &command = getParserCommandName(flag);
-        if (!command.matches(sv))
+        if (!command.matches(sv)) {
             continue;
+        }
         values.emplace_back(flag);
         return syntax::MatchResult::success(1, input, Value(Vector(std::move(values))));
     }
 
     if (logger) {
         std::ostringstream os;
-        for (const auto &flag : ALL_EXIT_FLAGS)
+        for (const auto &flag : ALL_EXIT_FLAGS) {
             os << getParserCommandName(flag).getCommand() << " ";
+        }
         logger->logError("input was not a valid exit flag: " + os.str());
     }
     return syntax::MatchResult::failure(input);
@@ -295,8 +304,9 @@ private:
 syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
                                             syntax::IMatchErrorLogger *logger) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     const auto arg = toLowerLatin1(input.front());
     StringView sv(arg);
@@ -307,8 +317,9 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
 #define DEFINE_MATCH_LOGIC(FLAGS) \
     for (const auto &flag : (FLAGS)) { \
         const auto &command = getParserCommandName(flag); \
-        if (!command.matches(sv)) \
+        if (!command.matches(sv)) { \
             continue; \
+        } \
         values.emplace_back(std::string{command.getCommand()}); \
         return syntax::MatchResult::success(1, input, Value(Vector(std::move(values)))); \
     }
@@ -318,8 +329,9 @@ syntax::MatchResult ArgRoomFlag::virt_match(const syntax::ParserInput &input,
     if (logger) {
         std::ostringstream os;
 #define DEFINE_VALID_FLAGS_LOGIC(FLAGS) \
-    for (const auto &flag : (FLAGS)) \
-        os << getParserCommandName(flag).getCommand() << " ";
+    for (const auto &flag : (FLAGS)) { \
+        os << getParserCommandName(flag).getCommand() << " "; \
+    }
         X_FOREACH_ARG_ROOM_FLAG(DEFINE_VALID_FLAGS_LOGIC)
 #undef DEFINE_VALID_FLAGS_LOGIC
         logger->logError("input was not a valid room flag: " + os.str());
@@ -366,8 +378,9 @@ void AbstractParser::parseRoom(StringView input)
             const auto v = getAnyVectorReversed(args);
 
             const ExitDirEnum &dir = Mmapper2Exit::dirForChar(v[1].getChar());
-            if (!hasDoor(dir))
+            if (!hasDoor(dir)) {
                 throw std::runtime_error("exit is missing exitflag 'door'");
+            }
 
             const Vector &parts = v[2].getVector();
             for (const auto &part : parts) {
@@ -381,8 +394,9 @@ void AbstractParser::parseRoom(StringView input)
 
                 const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->size() != 1)
+                    if (rs->size() != 1) {
                         throw std::runtime_error("unable to select current room");
+                    }
                     return rs->getFirstRoomId();
                 }();
 
@@ -404,15 +418,17 @@ void AbstractParser::parseRoom(StringView input)
             const auto v = getAnyVectorReversed(args);
 
             const ExitDirEnum &dir = Mmapper2Exit::dirForChar(v[1].getChar());
-            if (!hasDoor(dir))
+            if (!hasDoor(dir)) {
                 throw std::runtime_error("exit is missing exitflag 'door'");
+            }
 
             const DoorName name(v[4].getString());
 
             const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->size() != 1)
+                if (rs->size() != 1) {
                     throw std::runtime_error("unable to select current room");
+                }
                 return rs->getFirstRoomId();
             }();
 
@@ -433,13 +449,15 @@ void AbstractParser::parseRoom(StringView input)
             const auto v = getAnyVectorReversed(args);
 
             const ExitDirEnum dir = Mmapper2Exit::dirForChar(v[1].getChar());
-            if (!hasDoor(dir))
+            if (!hasDoor(dir)) {
                 throw std::runtime_error("exit is missing exitflag 'door'");
+            }
 
             const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->size() != 1)
+                if (rs->size() != 1) {
                     throw std::runtime_error("unable to select current room");
+                }
                 return rs->getFirstRoomId();
             }();
 
@@ -490,13 +508,15 @@ void AbstractParser::parseRoom(StringView input)
                 const ExitFlagEnum flag = vector[1].getExitFlag();
                 ExitFieldVariant variant = ExitFieldVariant{ExitFlags{flag}};
 
-                if (!hasExit(dir) && flag != ExitFlagEnum::EXIT)
+                if (!hasExit(dir) && flag != ExitFlagEnum::EXIT) {
                     throw std::runtime_error("exit is missing");
+                }
 
                 const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->size() != 1)
+                    if (rs->size() != 1) {
                         throw std::runtime_error("unable to select current room");
+                    }
                     return rs->getFirstRoomId();
                 }();
 
@@ -531,13 +551,15 @@ void AbstractParser::parseRoom(StringView input)
                                                                     : FlagModifyModeEnum::UNSET;
 
                 const std::optional<RoomFieldVariant> opt = evalRoomField(vector[1].getString());
-                if (!opt)
+                if (!opt) {
                     throw std::runtime_error("unable to select current room");
+                }
 
                 const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->size() != 1)
+                    if (rs->size() != 1) {
                         throw std::runtime_error("unable to select current room");
+                    }
                     return rs->getFirstRoomId();
                 }();
 
@@ -576,8 +598,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->size() != 1)
+                if (rs->size() != 1) {
                     throw std::runtime_error("unable to select current room");
+                }
                 return rs->getFirstRoomId();
             }();
 
@@ -600,8 +623,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->size() != 1)
+                if (rs->size() != 1) {
                     throw std::runtime_error("unable to select current room");
+                }
                 return rs->getFirstRoomId();
             }();
 
@@ -633,8 +657,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->size() != 1)
+                if (rs->size() != 1) {
                     throw std::runtime_error("unable to select current room");
+                }
                 return rs->getFirstRoomId();
             }();
 

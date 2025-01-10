@@ -37,8 +37,9 @@ NODISCARD static inline TaggedStringLatin1<T> modifyField(const TaggedStringLati
     case FlagModifyModeEnum::TOGGLE:
         // the idea of toggling a string like a door name doesn't make sense,
         // so this implementation is as good as any.
-        if (prev.empty())
+        if (prev.empty()) {
             return next;
+        }
         return TaggedStringLatin1<T>{};
     }
     std::abort();
@@ -353,10 +354,11 @@ ModifyRoomUpToDate::ModifyRoomUpToDate(const bool in_checked)
 void ModifyRoomUpToDate::exec(const RoomId id)
 {
     if (Room *room = roomIndex(id)) {
-        if (checked)
+        if (checked) {
             room->setUpToDate();
-        else
+        } else {
             room->setOutDated();
+        }
     }
 }
 

@@ -109,9 +109,10 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
         }
     }
 
-    if (result.size() >= 30)
+    if (result.size() >= 30) {
         qWarning() << "Infomarks span" << result.size()
                    << "layers. Consider using a different algorithm if this function is too slow.";
+    }
 
     // WARNING: This is O(layers) * O(markers), which is okay as long
     // as the number of layers with infomarks is small.
@@ -177,23 +178,28 @@ void InfomarksBatch::renderImmediate(const GLRenderState &state)
 {
     auto &gl = m_realGL;
 
-    if (!m_lines.empty())
+    if (!m_lines.empty()) {
         gl.renderColoredLines(m_lines, state);
+    }
 
-    if (!m_tris.empty())
+    if (!m_tris.empty()) {
         gl.renderColoredTris(m_tris, state);
+    }
 
-    if (!m_text.empty())
+    if (!m_text.empty()) {
         m_font.render3dTextImmediate(m_text);
+    }
 
-    if (!m_points.empty())
+    if (!m_points.empty()) {
         gl.renderPoints(m_points, state.withPointSize(INFOMARK_POINT_SIZE));
+    }
 }
 
 void InfomarksMeshes::render()
 {
-    if (!isValid)
+    if (!isValid) {
         return;
+    }
 
     const auto common_state
         = GLRenderState().withDepthFunction(std::nullopt).withBlend(BlendModeEnum::TRANSPARENCY);
@@ -268,8 +274,9 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
 
 void MapCanvas::paintNewInfomarkSelection()
 {
-    if (!hasSel1() || !hasSel2())
+    if (!hasSel1() || !hasSel2()) {
         return;
+    }
 
     const auto pos1 = getSel1().pos.to_vec2();
     const auto pos2 = getSel2().pos.to_vec2();
@@ -290,8 +297,10 @@ void MapCanvas::paintNewInfomarkSelection()
 
 void MapCanvas::paintSelectedInfoMarks()
 {
-    if (m_infoMarkSelection == nullptr && m_canvasMouseMode != CanvasMouseModeEnum::SELECT_INFOMARKS)
+    if (m_infoMarkSelection == nullptr
+        && m_canvasMouseMode != CanvasMouseModeEnum::SELECT_INFOMARKS) {
         return;
+    }
 
     InfomarksBatch batch{getOpenGL(), getGLFont()};
     {
@@ -321,8 +330,9 @@ void MapCanvas::paintSelectedInfoMarks()
 
             const auto drawSelectionPoints = [this, &drawPoint](InfoMark *const marker) {
                 const auto &pos1 = marker->getPosition1();
-                if (pos1.z != m_currentLayer)
+                if (pos1.z != m_currentLayer) {
                     return;
+                }
 
                 const auto color = (m_infoMarkSelection != nullptr
                                     && m_infoMarkSelection->contains(marker))
@@ -330,8 +340,9 @@ void MapCanvas::paintSelectedInfoMarks()
                                        : Colors::cyan;
 
                 drawPoint(pos1, color);
-                if (marker->getType() == InfoMarkTypeEnum::TEXT)
+                if (marker->getType() == InfoMarkTypeEnum::TEXT) {
                     return;
+                }
 
                 const Coordinate &pos2 = marker->getPosition2();
                 assert(pos2.z == m_currentLayer);
@@ -355,8 +366,9 @@ void MapCanvas::paintBatchedInfomarks()
 
     BatchedInfomarksMeshes &map = m_batches.infomarksMeshes.value();
     const auto it = map.find(static_cast<int>(m_currentLayer));
-    if (it == map.end())
+    if (it == map.end()) {
         return;
+    }
 
     InfomarksMeshes &infomarksMeshes = it->second;
     infomarksMeshes.render();
@@ -365,8 +377,9 @@ void MapCanvas::paintBatchedInfomarks()
 void MapCanvas::updateInfomarkBatches()
 {
     std::optional<BatchedInfomarksMeshes> &opt_infomarks = m_batches.infomarksMeshes;
-    if (opt_infomarks.has_value())
+    if (opt_infomarks.has_value()) {
         return;
+    }
 
     opt_infomarks.emplace(getInfoMarksMeshes());
 }

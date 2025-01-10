@@ -57,8 +57,9 @@ void XPStatusWidget::updateContent()
 
 void XPStatusWidget::slot_configChanged(const std::type_info &configGroup)
 {
-    if (configGroup != typeid(Configuration::AdventurePanelSettings))
+    if (configGroup != typeid(Configuration::AdventurePanelSettings)) {
         return;
+    }
 
     readConfig();
     updateContent();

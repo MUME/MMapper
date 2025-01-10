@@ -17,16 +17,18 @@
 
 ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>)
 {
-    for (const auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor) {
         assert(x.room == nullptr);
+    }
 }
 
 ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
                                          MapFrontend *mf,
                                          const MouseSel &sel)
 {
-    for (const auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor) {
         assert(x.room == nullptr);
+    }
 
     const Coordinate c = sel.getCoordinate();
     mf->lookingForRooms(*this, c, c);
@@ -47,9 +49,11 @@ ConnectionSelection::~ConnectionSelection()
 
 bool ConnectionSelection::isValid() const
 {
-    for (const auto &x : m_connectionDescriptor)
-        if (x.room == nullptr)
+    for (const auto &x : m_connectionDescriptor) {
+        if (x.room == nullptr) {
             return false;
+        }
+    }
     return true;
 }
 
@@ -72,12 +76,13 @@ ExitDirEnum ConnectionSelection::computeDirection(const Coordinate2f &c)
     const float upDownRadius = 0.15f;
     const float centerRadius = 0.15f;
 
-    if (glm::distance(pos, upCenter) <= upDownRadius)
+    if (glm::distance(pos, upCenter) <= upDownRadius) {
         return ExitDirEnum::UP;
-    else if (glm::distance(pos, downCenter) <= upDownRadius)
+    } else if (glm::distance(pos, downCenter) <= upDownRadius) {
         return ExitDirEnum::DOWN;
-    else if (glm::distance(pos, actualCenter) <= centerRadius)
+    } else if (glm::distance(pos, actualCenter) <= centerRadius) {
         return ExitDirEnum::UNKNOWN;
+    }
 
     const bool ne = pos.x >= 1.f - pos.y;
     const bool nw = pos.x <= pos.y;

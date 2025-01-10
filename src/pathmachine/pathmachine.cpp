@@ -77,8 +77,9 @@ void PathMachine::slot_releaseAllPaths()
 
 void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
 {
-    if (m_lastEvent != sigParseEvent.requireValid())
+    if (m_lastEvent != sigParseEvent.requireValid()) {
         m_lastEvent = sigParseEvent;
+    }
 
     m_lastEvent.requireValid();
 
@@ -349,10 +350,11 @@ void PathMachine::evaluatePaths()
     if (paths.empty()) {
         m_state = PathStateEnum::SYNCING;
     } else {
-        if (const Room *const room = (paths.front()->getRoom()))
+        if (const Room *const room = (paths.front()->getRoom())) {
             setMostLikelyRoom(*room);
-        else
+        } else {
             clearMostLikelyRoom();
+        }
 
         if (std::next(paths.begin()) == paths.end()) {
             m_state = PathStateEnum::APPROVED;
@@ -383,16 +385,18 @@ const Room *PathMachine::getMostLikelyRoom() const
 
 RoomId PathMachine::getMostLikelyRoomId() const
 {
-    if (const Room *const room = getMostLikelyRoom())
+    if (const Room *const room = getMostLikelyRoom()) {
         return room->getId();
+    }
 
     return INVALID_ROOMID;
 }
 
 const Coordinate &PathMachine::getMostLikelyRoomPosition() const
 {
-    if (const Room *const room = getMostLikelyRoom())
+    if (const Room *const room = getMostLikelyRoom()) {
         return room->getPosition();
+    }
 
     static const Coordinate fake;
     return fake;

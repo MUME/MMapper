@@ -105,12 +105,13 @@ Color Color::withAlpha(const float alpha) const
 
 NODISCARD static int hexval(const char c)
 {
-    if (isClamped(c, '0', '9'))
+    if (isClamped(c, '0', '9')) {
         return c - '0';
-    else if (isClamped(c, 'a', 'f'))
+    } else if (isClamped(c, 'a', 'f')) {
         return 10 + (c - 'a');
-    else if (isClamped(c, 'A', 'F'))
+    } else if (isClamped(c, 'A', 'F')) {
         return 10 + (c - 'A');
+    }
 
     assert(false);
     return 0;
@@ -133,10 +134,11 @@ Color Color::fromHex(const std::string_view sv)
 
 Color mmqt::toColor(const QString &s)
 {
-    if (false)
+    if (false) {
         return Color::fromHex(mmqt::toStdStringLatin1(s));
-    else
+    } else {
         return Color(QColor(s));
+    }
 }
 
 std::string Color::toHex() const

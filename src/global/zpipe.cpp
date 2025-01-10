@@ -70,8 +70,9 @@ int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
     strm.opaque = Z_NULL;
     ret = deflateInit(&strm, level);
     pc.step();
-    if (ret != Z_OK)
+    if (ret != Z_OK) {
         return ret;
+    }
 
     /* compress until end of file */
     do {
@@ -134,8 +135,9 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
     strm.next_in = Z_NULL;
     ret = inflateInit(&strm);
     pc.step();
-    if (ret != Z_OK)
+    if (ret != Z_OK) {
         return ret;
+    }
 
     /* decompress until deflate stream ends or end of file */
     do {
@@ -144,8 +146,9 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
             (void) inflateEnd(&strm);
             return Z_ERRNO;
         }
-        if (strm.avail_in == 0)
+        if (strm.avail_in == 0) {
             break;
+        }
         strm.next_in = in;
 
         /* run inflate() on input until output buffer not full */
@@ -187,10 +190,12 @@ void zerr(int ret)
     fputs("zpipe: ", stderr);
     switch (ret) {
     case Z_ERRNO:
-        if (ferror(stdin))
+        if (ferror(stdin)) {
             fputs("error reading stdin\n", stderr);
-        if (ferror(stdout))
+        }
+        if (ferror(stdout)) {
             fputs("error writing stdout\n", stderr);
+        }
         break;
     case Z_STREAM_ERROR:
         fputs("invalid compression level\n", stderr);

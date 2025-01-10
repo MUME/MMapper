@@ -22,9 +22,11 @@
     { \
         static const auto things = []() { \
             std::vector<E> result; \
-            for (auto x : ::enums::genEnumValues<E, N>()) \
-                if (x != E::UNDEFINED) \
+            for (auto x : ::enums::genEnumValues<E, N>()) { \
+                if (x != E::UNDEFINED) { \
                     result.emplace_back(x); \
+                } \
+            } \
             return result; \
         }(); \
         return things; \

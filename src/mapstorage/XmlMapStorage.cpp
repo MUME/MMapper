@@ -424,33 +424,40 @@ Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 
 static ExitDirEnum directionForLowercase(const std::u16string_view lowcase)
 {
-    if (lowcase.empty())
+    if (lowcase.empty()) {
         return ExitDirEnum::UNKNOWN;
+    }
 
     switch (lowcase[0]) {
     case 'n':
-        if (lowcase == "north")
+        if (lowcase == "north") {
             return ExitDirEnum::NORTH;
+        }
         break;
     case 's':
-        if (lowcase == "south")
+        if (lowcase == "south") {
             return ExitDirEnum::SOUTH;
+        }
         break;
     case 'e':
-        if (lowcase == "east")
+        if (lowcase == "east") {
             return ExitDirEnum::EAST;
+        }
         break;
     case 'w':
-        if (lowcase == "west")
+        if (lowcase == "west") {
             return ExitDirEnum::WEST;
+        }
         break;
     case 'u':
-        if (lowcase == "up")
+        if (lowcase == "up") {
             return ExitDirEnum::UP;
+        }
         break;
     case 'd':
-        if (lowcase == "down")
+        if (lowcase == "down") {
             return ExitDirEnum::DOWN;
+        }
         break;
     default:
         break;

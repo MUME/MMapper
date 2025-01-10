@@ -76,8 +76,9 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
     const QByteArray &line = data.line;
     m_lineToUser.clear();
     m_lineFlags.remove(LineFlagEnum::NONE);
-    if (!m_lineFlags.isSnoop())
+    if (!m_lineFlags.isSnoop()) {
         m_snoopChar.reset();
+    }
 
     for (const char c : line) {
         if (m_readingTag) {
@@ -153,56 +154,62 @@ bool MumeXmlParser::element(const QByteArray &line)
         for (const char c : line) {
             switch (state) {
             case XmlAttributeStateEnum::ELEMENT:
-                if (isSpace(c))
+                if (isSpace(c)) {
                     state = XmlAttributeStateEnum::ATTRIBUTE;
-                else
+                } else {
                     continue;
+                }
                 break;
             case XmlAttributeStateEnum::ATTRIBUTE:
-                if (isSpace(c))
+                if (isSpace(c)) {
                     continue;
-                else if (c == C_EQUALS) {
+                } else if (c == C_EQUALS) {
                     key = os.str();
                     os.str(std::string());
                     state = XmlAttributeStateEnum::EQUALS;
-                } else
+                } else {
                     os << c;
+                }
                 break;
             case XmlAttributeStateEnum::EQUALS:
-                if (isSpace(c))
+                if (isSpace(c)) {
                     continue;
-                else if (c == C_SQUOTE)
+                } else if (c == C_SQUOTE) {
                     state = XmlAttributeStateEnum::SINGLE_QUOTED_VALUE;
-                else if (c == C_DQUOTE)
+                } else if (c == C_DQUOTE) {
                     state = XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE;
-                else {
+                } else {
                     os << c;
                     state = XmlAttributeStateEnum::UNQUOTED_VALUE;
                 }
                 break;
             case XmlAttributeStateEnum::UNQUOTED_VALUE:
                 // Note: This format is not valid according to the W3C XML standard
-                if (isSpace(c) || c == C_SLASH)
+                if (isSpace(c) || c == C_SLASH) {
                     makeAttribute();
-                else
+                } else {
                     os << c;
+                }
                 break;
             case XmlAttributeStateEnum::SINGLE_QUOTED_VALUE:
-                if (c == C_SQUOTE)
+                if (c == C_SQUOTE) {
                     makeAttribute();
-                else
+                } else {
                     os << c;
+                }
                 break;
             case XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE:
-                if (c == C_DQUOTE)
+                if (c == C_DQUOTE) {
                     makeAttribute();
-                else
+                } else {
                     os << c;
+                }
                 break;
             }
         }
-        if (key.has_value())
+        if (key.has_value()) {
             makeAttribute();
+        }
         return attributes;
     }();
 
@@ -227,8 +234,9 @@ bool MumeXmlParser::element(const QByteArray &line)
                             MAYBE_UNUSED const auto ignored = //
                                 m_queue.dequeue();
                         }
-                        if (m_move != CommandEnum::LOOK)
+                        if (m_move != CommandEnum::LOOK) {
                             m_queue.enqueue(m_move);
+                        }
                         move();
                     }
 
@@ -275,29 +283,33 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineFlags.insert(LineFlagEnum::ROOM);
 
                     for (const auto &pair : attrs) {
-                        if (pair.first.empty() || pair.second.empty())
+                        if (pair.first.empty() || pair.second.empty()) {
                             continue;
+                        }
                         switch (pair.first.at(0)) {
                         case 't':
                             if (pair.first == "terrain") {
                                 switch (pair.second.at(0)) {
                                 case 'b':
-                                    if (pair.second == "brush")
+                                    if (pair.second == "brush") {
                                         m_terrain = RoomTerrainEnum::BRUSH;
-                                    else // building
+                                    } else { // building
                                         m_terrain = RoomTerrainEnum::INDOORS;
+                                    }
                                     break;
                                 case 'c':
-                                    if (pair.second == "cavern")
+                                    if (pair.second == "cavern") {
                                         m_terrain = RoomTerrainEnum::CAVERN;
-                                    else // city
+                                    } else { // city
                                         m_terrain = RoomTerrainEnum::CITY;
+                                    }
                                     break;
                                 case 'f':
-                                    if (pair.second == "field")
+                                    if (pair.second == "field") {
                                         m_terrain = RoomTerrainEnum::FIELD;
-                                    else // forest
+                                    } else { // forest
                                         m_terrain = RoomTerrainEnum::FOREST;
+                                    }
                                     break;
                                 case 'h':
                                     // hills
@@ -308,10 +320,11 @@ bool MumeXmlParser::element(const QByteArray &line)
                                     m_terrain = RoomTerrainEnum::MOUNTAINS;
                                     break;
                                 case 'r':
-                                    if (pair.second == "rapids")
+                                    if (pair.second == "rapids") {
                                         m_terrain = RoomTerrainEnum::RAPIDS;
-                                    else // road
+                                    } else { // road
                                         m_terrain = RoomTerrainEnum::ROAD;
+                                    }
                                     break;
                                 case 's':
                                     // shallows
@@ -354,8 +367,9 @@ bool MumeXmlParser::element(const QByteArray &line)
                         break;
                     }
                     for (const auto &pair : attrs) {
-                        if (pair.first.empty() || pair.second.empty())
+                        if (pair.first.empty() || pair.second.empty()) {
                             continue;
+                        }
                         switch (pair.first.at(0)) {
                         case 'd':
                             if (pair.first == "dir") {
@@ -577,10 +591,11 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case C_SLASH:
                 if (line.startsWith("/character")) {
-                    if (m_lineFlags.isPrompt())
+                    if (m_lineFlags.isPrompt()) {
                         m_xmlMode = XmlModeEnum::PROMPT;
-                    else
+                    } else {
                         m_xmlMode = XmlModeEnum::ROOM;
+                    }
                     m_lineFlags.remove(LineFlagEnum::CHARACTER);
                 }
                 break;
@@ -624,16 +639,17 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     QByteArray toUser;
 
     const XmlModeEnum mode = [this]() -> XmlModeEnum {
-        if (m_lineFlags.isPrompt())
+        if (m_lineFlags.isPrompt()) {
             return XmlModeEnum::PROMPT;
-        else if (m_lineFlags.isExits())
+        } else if (m_lineFlags.isExits()) {
             return XmlModeEnum::EXITS;
-        else if (m_lineFlags.isName())
+        } else if (m_lineFlags.isName()) {
             return XmlModeEnum::NAME;
-        else if (m_lineFlags.isDescription())
+        } else if (m_lineFlags.isDescription()) {
             return XmlModeEnum::DESCRIPTION;
-        else if (m_lineFlags.isRoom())
+        } else if (m_lineFlags.isRoom()) {
             return XmlModeEnum::ROOM;
+        }
         return m_xmlMode;
     }();
 
@@ -747,8 +763,9 @@ void MumeXmlParser::parseMudCommands(const QString &str)
 {
     // REVISIT: Add XML tag-based actions that match on a given LineFlag
     const auto stdString = mmqt::toStdStringLatin1(str);
-    if (evalActionMap(StringView{stdString}))
+    if (evalActionMap(StringView{stdString})) {
         return;
+    }
 }
 
 std::string MumeXmlParser::snoopToUser(const std::string_view str)
@@ -761,8 +778,9 @@ std::string MumeXmlParser::snoopToUser(const std::string_view str)
             snoopPrefix = false;
         }
         os << c;
-        if (c == C_NEWLINE && m_snoopChar.has_value())
+        if (c == C_NEWLINE && m_snoopChar.has_value()) {
             snoopPrefix = true;
+        }
     }
     return os.str();
 }

@@ -211,8 +211,9 @@ void AbstractTelnet::Options::reset()
 
 void AbstractTelnet::reset()
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Reset telnet";
+    }
 
     m_options.reset();
 
@@ -231,8 +232,9 @@ static void doubleIacs(std::ostream &os, const std::string_view input)
     // IAC byte must be doubled
     static constexpr const auto IAC = static_cast<char>(TN_IAC);
     foreachChar(input, IAC, [&os](std::string_view sv) {
-        if (sv.empty())
+        if (sv.empty()) {
             return;
+        }
 
         if (sv.front() != IAC) {
             os << sv;
@@ -279,8 +281,9 @@ void AbstractTelnet::submitOverTelnet(const std::string_view data, const bool go
 
 void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending NAWS" << x << y;
+    }
 
     // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
     TelnetFormatter s{*this};
@@ -299,9 +302,10 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
         return;
     }
 
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
+    }
 
     TelnetFormatter s{*this};
     s.addRaw(TN_IAC);
@@ -312,8 +316,9 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
 {
     // Set his option state correctly
-    if (type == TN_DO || type == TN_DONT)
+    if (type == TN_DO || type == TN_DONT) {
         m_options.hisOptionState[option] = (type == TN_DO);
+    }
 
     sendTelnetOption(type, option);
 
@@ -325,10 +330,13 @@ void AbstractTelnet::sendCharsetRequest()
     // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
 
     QStringList myCharacterSets;
-    for (const auto &encoding : m_textCodec.supportedEncodings())
+    for (const auto &encoding : m_textCodec.supportedEncodings()) {
         myCharacterSets << mmqt::toQByteArrayLatin1(encoding);
-    if (m_debug)
+    }
+
+    if (m_debug) {
         qDebug() << "Sending Charset request" << myCharacterSets;
+    }
 
     static constexpr const auto delimeter = ";";
 
@@ -345,8 +353,9 @@ void AbstractTelnet::sendCharsetRequest()
 void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
 {
     auto payload = msg.toRawBytes();
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending GMCP:" << payload;
+    }
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_GMCP);
@@ -356,8 +365,9 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
 
 void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending MSSP:" << data;
+    }
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_MSSP);
@@ -367,8 +377,9 @@ void AbstractTelnet::sendMudServerStatus(const QByteArray &data)
 
 void AbstractTelnet::sendLineModeEdit()
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending Linemode EDIT";
+    }
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_LINEMODE);
@@ -379,8 +390,9 @@ void AbstractTelnet::sendLineModeEdit()
 
 void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending Terminal Type:" << terminalType;
+    }
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
@@ -400,8 +412,9 @@ void AbstractTelnet::sendCharsetRejected()
 
 void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Accepted Charset" << characterSet;
+    }
 
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
@@ -433,8 +446,9 @@ void AbstractTelnet::sendOptionStatus()
 
 void AbstractTelnet::sendTerminalTypeRequest()
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Requesting Terminal Type";
+    }
     TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     s.addEscaped(TNSB_SEND);
@@ -455,8 +469,9 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
     switch (command.length()) {
     case 2:
-        if (m_debug && ch != TN_GA && ch != TN_EOR)
+        if (m_debug && ch != TN_GA && ch != TN_EOR) {
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
+        }
 
         switch (ch) {
         case TN_GA:
@@ -469,9 +484,10 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
     case 3:
         option = command.unsigned_at(2);
 
-        if (m_debug)
+        if (m_debug) {
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
                      << telnetOptionName(option);
+        }
 
         switch (ch) {
         case TN_WILL:
@@ -513,8 +529,9 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                 heAnnouncedState[option] = true;
             }
             hisOptionState[option] = false;
-            if (option == OPT_ECHO)
+            if (option == OPT_ECHO) {
                 receiveEchoMode(true);
+            }
             break;
         case TN_DO:
             // peer allows us to enable some option
@@ -525,8 +542,9 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             }
 
             // Ignore attempts to enable OPT_ECHO
-            if (option == OPT_ECHO)
+            if (option == OPT_ECHO) {
                 break;
+            }
 
             // only respond if value changed or if this option has not been announced yet
             if (!myOptionState[option] || !announcedState[option]) {
@@ -583,13 +601,14 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     auto &hisOptionState = m_options.hisOptionState;
 
     if (m_debug) {
-        if (payload.length() == 1)
+        if (payload.length() == 1) {
             qDebug() << "* Processing Telnet Subnegotiation:"
                      << telnetOptionName(payload.unsigned_at(0));
-        else if (payload.length() >= 2)
+        } else if (payload.length() >= 2) {
             qDebug() << "* Processing Telnet Subnegotiation:"
                      << telnetOptionName(payload.unsigned_at(0))
                      << telnetSubnegName(payload.unsigned_at(1));
+        }
     }
 
     // subnegotiation - we analyze and respond...
@@ -598,12 +617,11 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     case OPT_STATUS:
         // see OPT_TERMINAL_TYPE for explanation why I'm doing this
         if (true /*myOptionState[OPT_STATUS]*/) {
-            if (payload[1] == TNSB_SEND)
             // request to send all enabled commands; if server sends his
             // own list of commands, we just ignore it (well, he shouldn't
             // send anything, as we do not request anything, but there are
             // so many servers out there, that you can never be sure...)
-            {
+            if (payload[1] == TNSB_SEND) {
                 sendOptionStatus();
             }
         }
@@ -636,8 +654,9 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     // CHARSET REQUEST <sep> <charsets>
                     const auto sep = payload[2];
                     const auto characterSets = payload.mid(3).split(sep);
-                    if (m_debug)
+                    if (m_debug) {
                         qDebug() << "Received encoding options" << characterSets;
+                    }
                     for (const auto &characterSet : characterSets) {
                         const auto name = mmqt::toStdStringLatin1(characterSet.simplified());
                         if (m_textCodec.supports(name)) {
@@ -649,12 +668,14 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                             break;
                         }
                     }
-                    if (accepted)
+                    if (accepted) {
                         break;
+                    }
                 }
                 // Reject invalid requests or if we did not find any supported codecs
-                if (m_debug)
+                if (m_debug) {
                     qDebug() << "Rejected all encodings";
+                }
                 sendCharsetRejected();
                 break;
             case TNSB_ACCEPTED:
@@ -662,14 +683,16 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     // CHARSET ACCEPTED <charset>
                     const auto characterSet = payload.mid(2).simplified();
                     m_textCodec.setEncodingForName(mmqt::toStdStringLatin1(characterSet));
-                    if (m_debug)
+                    if (m_debug) {
                         qDebug() << "He accepted charset" << characterSet;
+                    }
                     // TODO: RFC 2066 states to stop queueing data
                 }
                 break;
             case TNSB_REJECTED:
-                if (m_debug)
+                if (m_debug) {
                     qDebug() << "He rejected charset";
+                }
                 // TODO: RFC 2066 states to stop queueing data
                 break;
             case TNSB_TTABLE_IS:
@@ -688,8 +711,9 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                 qWarning() << "Compression was already enabled";
                 break;
             }
-            if (m_debug)
+            if (m_debug) {
                 qDebug() << "Starting compression";
+            }
             m_recvdCompress = true;
         }
         break;
@@ -719,8 +743,9 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 
     case OPT_MSSP:
         if (hisOptionState[OPT_MSSP]) {
-            if (m_debug)
+            if (m_debug) {
                 qDebug() << "Received MSSP message" << payload;
+            }
 
             receiveMudServerStatus(payload);
         }
@@ -751,8 +776,9 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 
 void AbstractTelnet::onReadInternal(const QByteArray &data)
 {
-    if (data.isEmpty())
+    if (data.isEmpty()) {
         return;
+    }
 
     // now we have the data, but we cannot forward it to next stage of processing,
     // because the data contains telnet commands
@@ -780,8 +806,9 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
             m_recvdCompress = false;
 #ifndef MMAPPER_NO_ZLIB
             int ret = inflateReset(&m_stream);
-            if (ret != Z_OK)
+            if (ret != Z_OK) {
                 throw std::runtime_error("Could not reset zlib");
+            }
 #endif
 
             // Start inflating at the next position
@@ -958,8 +985,9 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
         stream.next_out = reinterpret_cast<Bytef *>(out);
         int ret = inflate(&stream, Z_SYNC_FLUSH);
         assert(ret != Z_STREAM_ERROR); /* state not clobbered */
-        if (ret == Z_DATA_ERROR)
+        if (ret == Z_DATA_ERROR) {
             ret = inflateSync(&stream);
+        }
         switch (ret) {
         case Z_NEED_DICT:
         case Z_DATA_ERROR:
@@ -968,8 +996,9 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
         case Z_STREAM_END:
             /* clean up and return */
             m_inflateTelnet = false;
-            if (m_debug)
+            if (m_debug) {
                 qDebug() << "Ending compression";
+            }
             break;
         default:
             break;

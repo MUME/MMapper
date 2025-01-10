@@ -33,8 +33,9 @@ void VBO::reset()
 
 GLuint VBO::get() const
 {
-    if (m_vbo == INVALID_VBOID)
+    if (m_vbo == INVALID_VBOID) {
         throw std::runtime_error("VBO not allocated");
+    }
     return m_vbo;
 }
 
@@ -84,8 +85,9 @@ void Program::reset()
 
 GLuint Program::get() const
 {
-    if (m_program == INVALID_PROGRAM)
+    if (m_program == INVALID_PROGRAM) {
         throw std::runtime_error("Shader Program not allocated");
+    }
     return m_program;
 }
 

@@ -131,8 +131,9 @@ QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, cons
     xml.writeEndElement();
     xml.writeEndDocument();
 
-    if (LOG_MESSAGE_INFO)
+    if (LOG_MESSAGE_INFO) {
         qInfo() << "Outgoing message:" << block;
+    }
     return block;
 }
 
@@ -155,8 +156,9 @@ void CGroupCommunicator::sendMessage(GroupSocket &socket,
 // the core of the protocol
 void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByteArray &buff)
 {
-    if (LOG_MESSAGE_INFO)
+    if (LOG_MESSAGE_INFO) {
         qInfo() << "Incoming message:" << buff;
+    }
 
     QXmlStreamReader xml(buff);
     if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
@@ -201,8 +203,9 @@ void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByt
         case MessagesEnum::UPDATE_CHAR:
             if (xml.name() == QLatin1String("loginData")) {
                 const auto &attributes = xml.attributes();
-                if (attributes.hasAttribute("protocolVersion"))
+                if (attributes.hasAttribute("protocolVersion")) {
                     data["protocolVersion"] = attributes.value("protocolVersion").toUInt();
+                }
                 xml.readNextStartElement();
             }
             goto common_update_char; // effectively a fall-thru

@@ -22,8 +22,9 @@ Crossover::Crossover(std::shared_ptr<PathList> _paths,
 
 void Crossover::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
-    if (shortPaths->empty())
+    if (shortPaths->empty()) {
         admin->releaseRoom(*this, room->getId());
+    }
 
     for (auto &shortPath : *shortPaths) {
         augmentPath(shortPath, admin, room);

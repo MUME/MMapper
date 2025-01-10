@@ -86,8 +86,9 @@ ClientWidget::~ClientWidget() = default;
 
 void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 {
-    if (!isUsingClient())
+    if (!isUsingClient()) {
         return;
+    }
 
     // Delay connecting to verify that visibility is not just the dock popping back in
     QTimer::singleShot(500, [this]() {
@@ -169,10 +170,11 @@ bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
             DisplayWidget &display = deref(ui.display);
             StackedInputWidget &input = deref(ui.input);
             if (keyEvent->matches(QKeySequence::Copy)) {
-                if (display.canCopy())
+                if (display.canCopy()) {
                     display.copy();
-                else
+                } else {
                     input.slot_copy();
+                }
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Cut)) {

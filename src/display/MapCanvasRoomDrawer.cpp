@@ -60,8 +60,9 @@ NODISCARD static bool isTransparent(const XNamedColor &namedColor)
 
 NODISCARD static std::optional<Color> getColor(const XNamedColor &namedColor)
 {
-    if (isTransparent(namedColor))
+    if (isTransparent(namedColor)) {
         return std::nullopt;
+    }
     return namedColor.getColor();
 }
 
@@ -225,8 +226,9 @@ static void visitRoom(const Room *const room,
                       const mctp::MapCanvasTexturesProxy &textures,
                       IRoomVisitorCallbacks &callbacks)
 {
-    if (!callbacks.acceptRoom(room))
+    if (!callbacks.acceptRoom(room)) {
         return;
+    }
 
     // const auto &pos = room->getPosition();
     const bool isDark = room->getLightType() == RoomLightEnum::DARK;
@@ -242,13 +244,15 @@ static void visitRoom(const Room *const room,
 
     callbacks.visitTerrainTexture(room, terrainAndTrail.terrain);
 
-    if (auto trail = terrainAndTrail.trail)
+    if (auto trail = terrainAndTrail.trail) {
         callbacks.visitOverlayTexture(room, trail);
+    }
 
-    if (isDark)
+    if (isDark) {
         callbacks.visitNamedColorTint(room, RoomTintEnum::DARK);
-    else if (hasNoSundeath)
+    } else if (hasNoSundeath) {
         callbacks.visitNamedColorTint(room, RoomTintEnum::NO_SUNDEATH);
+    }
 
     mf.for_each([&room, &textures, &callbacks](const RoomMobFlagEnum flag) -> void {
         callbacks.visitOverlayTexture(room, textures.mob[flag]);
@@ -272,8 +276,9 @@ static void visitRoom(const Room *const room,
         // For each incoming connections
         for (const auto &targetId : exit.inRange()) {
             const SharedConstRoom &targetRoom = roomIndex[targetId];
-            if (targetRoom == nullptr)
+            if (targetRoom == nullptr) {
                 continue;
+            }
             for (const ExitDirEnum targetDir : ALL_EXITS_NESWUD) {
                 const Exit &targetExit = targetRoom->exit(targetDir);
                 const ExitFlags flags = targetExit.getExitFlags();
@@ -343,16 +348,18 @@ static void visitRoom(const Room *const room,
                                 isClimb);
         }
 
-        if (!exit.inIsEmpty())
+        if (!exit.inIsEmpty()) {
             drawInFlow(exit, dir);
+        }
     }
 
     // drawVertical
     for (const ExitDirEnum dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
         const Exit &exit = room->exit(dir);
         const auto &flags = exit.getExitFlags();
-        if (!flags.isExit())
+        if (!flags.isExit()) {
             continue;
+        }
 
         const bool isClimb = flags.isClimb();
 
@@ -391,8 +398,9 @@ static void visitRoom(const Room *const room,
             callbacks.visitStream(room, dir, StreamTypeEnum::OutFlow);
         }
 
-        if (!exit.inIsEmpty())
+        if (!exit.inIsEmpty()) {
             drawInFlow(exit, dir);
+        }
     }
 }
 
@@ -415,8 +423,9 @@ struct NODISCARD RoomTex
         : room{room_}
         , tex{tex_}
     {
-        if (tex_ == INVALID_MM_TEXTURE_ID)
+        if (tex_ == INVALID_MM_TEXTURE_ID) {
             throw std::invalid_argument("tex_");
+        }
     }
 
     NODISCARD MMTextureId priority() const { return tex; }
@@ -439,8 +448,9 @@ struct NODISCARD ColoredRoomTex : public RoomTex
         : RoomTex{room_, tex_}
         , color{color_}
     {
-        if (tex_ == INVALID_MM_TEXTURE_ID)
+        if (tex_ == INVALID_MM_TEXTURE_ID) {
             throw std::invalid_argument("tex_");
+        }
     }
 };
 
@@ -462,8 +472,9 @@ struct NODISCARD RoomTexVector final : public std::vector<RoomTex>
     // vanilla std::sort, which is N log N instead of N^2 log N.
     void sortByTexture()
     {
-        if (size() < 2)
+        if (size() < 2) {
             return;
+        }
 
         RoomTex *const beg = data();
         RoomTex *const end = beg + size();
@@ -474,8 +485,9 @@ struct NODISCARD RoomTexVector final : public std::vector<RoomTex>
 
     NODISCARD bool isSorted() const
     {
-        if (size() < 2)
+        if (size() < 2) {
             return true;
+        }
 
         const RoomTex *const beg = data();
         const RoomTex *const end = beg + size();
@@ -491,8 +503,9 @@ struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
     // vanilla std::sort, which is N log N instead of N^2 log N.
     void sortByTexture()
     {
-        if (size() < 2)
+        if (size() < 2) {
             return;
+        }
 
         ColoredRoomTex *const beg = data();
         ColoredRoomTex *const end = beg + size();
@@ -503,8 +516,9 @@ struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
 
     NODISCARD bool isSorted() const
     {
-        if (size() < 2)
+        if (size() < 2) {
             return true;
+        }
 
         const ColoredRoomTex *const beg = data();
         const ColoredRoomTex *const end = beg + size();
@@ -523,9 +537,11 @@ static void foreach_texture(const T &textures, Callback &&callback)
         const auto textureId = rtex.textureId();
 
         size_t end = beg + 1;
-        for (; end < size; ++end)
-            if (textureId != textures[end].textureId())
+        for (; end < size; ++end) {
+            if (textureId != textures[end].textureId()) {
                 break;
+            }
+        }
 
         next = end;
         /* note: creating temporaries to prevent callback from modifying beg and end */
@@ -536,8 +552,9 @@ static void foreach_texture(const T &textures, Callback &&callback)
 NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
                                                              const RoomTexVector &textures)
 {
-    if (textures.empty())
+    if (textures.empty()) {
         return UniqueMeshVector{};
+    }
 
     const size_t numUniqueTextures = [&textures]() -> size_t {
         size_t texCount = 0;
@@ -581,8 +598,9 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
 NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
     OpenGL &gl, const ColoredRoomTexVector &textures)
 {
-    if (textures.empty())
+    if (textures.empty()) {
         return UniqueMeshVector{};
+    }
 
     const size_t numUniqueTextures = [&textures]() -> size_t {
         size_t texCount = 0;
@@ -712,8 +730,9 @@ public:
 
     void virt_visitTerrainTexture(const Room *const room, const MMTextureId terrain) final
     {
-        if (terrain == INVALID_MM_TEXTURE_ID)
+        if (terrain == INVALID_MM_TEXTURE_ID) {
             return;
+        }
 
         m_data.roomTerrains.emplace_back(room, terrain);
 
@@ -728,8 +747,9 @@ public:
 
     void virt_visitOverlayTexture(const Room *const room, const MMTextureId overlay) final
     {
-        if (overlay != INVALID_MM_TEXTURE_ID)
+        if (overlay != INVALID_MM_TEXTURE_ID) {
             m_data.roomOverlays.emplace_back(room, overlay);
+        }
     }
 
     void virt_visitNamedColorTint(const Room *const room, const RoomTintEnum tint) final
@@ -749,8 +769,9 @@ public:
                         const WallTypeEnum wallType,
                         const bool isClimb) final
     {
-        if (isTransparent(color))
+        if (isTransparent(color)) {
             return;
+        }
 
         const std::optional<Color> optColor = getColor(color);
         if (!optColor.has_value()) {

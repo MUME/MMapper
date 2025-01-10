@@ -40,18 +40,22 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
 
     const auto isMarkerInSelection = [z, &isCoordInSelection](const auto &marker) -> bool {
         const Coordinate &pos1 = marker->getPosition1();
-        if (z != pos1.z)
+        if (z != pos1.z) {
             return false;
+        }
 
-        if (isCoordInSelection(pos1))
+        if (isCoordInSelection(pos1)) {
             return true;
+        }
 
-        if (marker->getType() == InfoMarkTypeEnum::TEXT)
+        if (marker->getType() == InfoMarkTypeEnum::TEXT) {
             return false;
+        }
 
         const Coordinate &pos2 = marker->getPosition2();
-        if (z != pos2.z)
+        if (z != pos2.z) {
             return false;
+        }
 
         return isCoordInSelection(pos2);
     };

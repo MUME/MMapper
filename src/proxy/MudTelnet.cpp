@@ -23,13 +23,13 @@
 NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view prefix)
 {
     const auto get_os_string = []() {
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
             return "Linux";
-        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             return "Mac";
-        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
+        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
             return "Windows";
-        else {
+        } else {
             assert(CURRENT_PLATFORM == PlatformEnum::Unknown);
             return "Unknown";
         }
@@ -76,11 +76,13 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
         && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isArray()) {
         // Handle the various messages
         const auto &array = msg.getJsonDocument()->array();
-        if (msg.isCoreSupportsSet())
+        if (msg.isCoreSupportsSet()) {
             resetGmcpModules();
+        }
         for (const auto &e : array) {
-            if (!e.isString())
+            if (!e.isString()) {
                 continue;
+            }
             const auto &moduleStr = e.toString();
             try {
                 const GmcpModule mod(mmqt::toStdStringLatin1(moduleStr));
@@ -147,8 +149,9 @@ void MudTelnet::virt_receiveEchoMode(bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
+    }
 
     emit sig_relayGmcp(msg);
 }
@@ -161,8 +164,9 @@ void MudTelnet::virt_receiveMudServerStatus(const QByteArray &ba)
 
 void MudTelnet::virt_onGmcpEnabled()
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Requesting GMCP from MUME";
+    }
 
     sendGmcpMessage(
         GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
@@ -217,16 +221,18 @@ void MudTelnet::sendCoreSupports()
     oss << "[ ";
     bool comma = false;
     for (const GmcpModule &mod : m_gmcp) {
-        if (comma)
+        if (comma) {
             oss << ", ";
+        }
         oss << char_consts::C_DQUOTE << mod.toStdString() << char_consts::C_DQUOTE;
         comma = true;
     }
     oss << " ]";
     const std::string set = oss.str();
 
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Sending GMCP Core.Supports to MUME" << mmqt::toQByteArrayLatin1(set);
+    }
 
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, GmcpJson{set}));
 }
@@ -252,9 +258,10 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
     const auto addValue([&map, &vals, &varName, &buffer, this]() {
         // Put it into the map.
-        if (m_debug)
+        if (m_debug) {
             qDebug() << "MSSP received value" << mmqt::toQByteArrayLatin1(buffer.toStdString())
                      << "for variable" << mmqt::toQByteArrayLatin1(varName.value());
+        }
 
         vals.push_back(buffer.toStdString());
         map[varName.value()] = vals;
@@ -265,8 +272,9 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
     for (int i = 0; i < data.size(); i++) {
         switch (state) {
         case MSSPStateEnum::BEGIN:
-            if (data.at(i) != TNSB_MSSP_VAR)
+            if (data.at(i) != TNSB_MSSP_VAR) {
                 continue;
+            }
             state = MSSPStateEnum::IN_VAR;
             break;
 
@@ -279,14 +287,16 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
 
             case TNSB_MSSP_VAL: {
                 if (buffer.isEmpty()) {
-                    if (m_debug)
+                    if (m_debug) {
                         qDebug() << "MSSP received variable without any name; ignoring it";
+                    }
                     continue;
                 }
 
-                if (m_debug)
+                if (m_debug) {
                     qDebug() << "MSSP received variable"
                              << mmqt::toQByteArrayLatin1(buffer.toStdString());
+                }
 
                 varName = buffer.toStdString();
                 state = MSSPStateEnum::IN_VAL;
@@ -325,8 +335,9 @@ void MudTelnet::parseMudServerStatus(const QByteArray &data)
         }
     }
 
-    if (varName.has_value() && !buffer.isEmpty())
+    if (varName.has_value() && !buffer.isEmpty()) {
         addValue();
+    }
 
     // Parse game time from MSSP
     const auto firstElement(

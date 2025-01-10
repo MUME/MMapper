@@ -18,22 +18,23 @@ QString escapeGmcpStringData(const QString &str)
 {
     QString result;
     for (const QChar c : str) {
-        if (c == C_DQUOTE)
+        if (c == C_DQUOTE) {
             result.append(R"(\")");
-        else if (c == C_BACKSLASH)
+        } else if (c == C_BACKSLASH) {
             result.append(R"(\\)");
-        else if (c == C_NEWLINE)
+        } else if (c == C_NEWLINE) {
             result.append(R"(\n)");
-        else if (c == C_CARRIAGE_RETURN)
+        } else if (c == C_CARRIAGE_RETURN) {
             result.append(R"(\r)");
-        else if (c == C_BACKSPACE)
+        } else if (c == C_BACKSPACE) {
             result.append(R"(\b)");
-        else if (c == C_FORM_FEED)
+        } else if (c == C_FORM_FEED) {
             result.append(R"(\f)");
-        else if (c == C_TAB)
+        } else if (c == C_TAB) {
             result.append(R"(\t)");
-        else
+        } else {
             result.append(c);
+        }
     }
     return result;
 }

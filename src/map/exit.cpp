@@ -51,8 +51,9 @@ bool Exit::operator!=(const Exit &rhs) const
 template<typename T>
 inline void maybeUpdate(T &x, const T &value)
 {
-    if (x != value)
+    if (x != value) {
         x = value;
+    }
 }
 
 void Exit::assignFrom(const Exit &rhs)

@@ -75,8 +75,9 @@ void GroupServer::sendToAll(const QByteArray &message)
 void GroupServer::sendToAllExceptOne(GroupSocket *const exception, const QByteArray &message)
 {
     for (auto &connection : filterClientList()) {
-        if (connection == exception)
+        if (connection == exception) {
             continue;
+        }
         if (connection->getProtocolState() == ProtocolStateEnum::Logged) {
             connection->sendData(message);
         }
@@ -215,10 +216,11 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
             parseHandshake(socket, data);
         } else if (message == MessagesEnum::UPDATE_CHAR) {
             // aha! parse the data
-            if (socket.getProtocolVersion() >= PROTOCOL_VERSION_103)
+            if (socket.getProtocolVersion() >= PROTOCOL_VERSION_103) {
                 parseLoginInformation(socket, data);
-            else
+            } else {
                 parseHandshake(socket, data); // Protocol 102 skips the handshake
+            }
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
@@ -286,8 +288,9 @@ void GroupServer::virt_retrieveData(GroupSocket &socket,
                 return;
             }
             for (const auto &pTarget : filterClientList()) {
-                if (&socket == pTarget)
+                if (&socket == pTarget) {
                     continue;
+                }
                 auto &target = deref(pTarget);
                 if (isEqualsCaseInsensitive(newName, QString::fromLatin1(target.getName()))) {
                     kickConnection(socket,
@@ -379,8 +382,9 @@ void GroupServer::parseLoginInformation(GroupSocket &socket, const QVariantMap &
 
         // Verify only one secret can be connected at once
         for (const auto &pTarget : filterClientList()) {
-            if (&socket == pTarget)
+            if (&socket == pTarget) {
                 continue;
+            }
             auto &target = deref(pTarget);
             if (socket.getPeerCertificate() == target.getPeerCertificate()) {
                 kickConnection(target, "Someone reconnected to the server using your secret!");

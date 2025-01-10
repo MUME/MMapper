@@ -21,11 +21,11 @@ namespace mmqt {
 // REVISIT: should this be latin1 or utf8, and should it use transliterations?
 static QByteArray getSecretBytes(const QString &secretText)
 {
-    if (false)
+    if (false) {
         return secretText.toUtf8();
-
-    else if (false)
+    } else if (false) {
         return mmqt::toQByteArrayLatin1(secretText); // includes some transliterations
+    }
 
     return secretText.toLatin1(); // no transliterations
 }
@@ -209,20 +209,23 @@ void GroupManagerPage::loadRemoteHostConfig()
         const auto name = GroupAuthority::getMetadata(key, GroupMetadataEnum::NAME);
 
         // IP and Port must be valid
-        if (ip.isEmpty() || port <= 0)
+        if (ip.isEmpty() || port <= 0) {
             continue;
+        }
 
         // Ignore contacts with duplicate ip/port combinations
         const auto contact = QString("%1:%2").arg(ip).arg(port);
-        if (contacts.contains(contact))
+        if (contacts.contains(contact)) {
             continue;
+        }
 
         // Populate contact
         contacts.insert(contact);
         ui->remoteHost->addItem(contact);
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
-        if (remoteHostText.compare(contact, Qt::CaseInsensitive) == 0)
+        if (remoteHostText.compare(contact, Qt::CaseInsensitive) == 0) {
             remoteHostIsContact = true;
+        }
     }
     if (!remoteHostIsContact) {
         // Add the entry from config if it wasn't already prepopulated
@@ -240,8 +243,9 @@ void GroupManagerPage::loadRemoteHostConfig()
             }
         } else {
             const int i = ui->remoteHost->findText(oldText);
-            if (i >= 0)
+            if (i >= 0) {
                 return i;
+            }
         }
         return 0;
     };
@@ -257,8 +261,9 @@ void GroupManagerPage::slot_charNameTextChanged()
     QString newNameStr = QString::fromLatin1(newName);
 
     // Force first character to be uppercase
-    if (newNameStr.length() > 0)
+    if (newNameStr.length() > 0) {
         newNameStr.replace(0, 1, newNameStr[0].toUpper());
+    }
 
     // Apply corrections back to the input field
     if (ui->charName->text() != newNameStr) {
@@ -294,13 +299,15 @@ void GroupManagerPage::slot_allowedSecretsChanged()
     bool alreadyPresent = authority->validSecret(secretText.toLatin1());
 
     bool enableAllowSecret = correctLength && !alreadyPresent && !isSelf;
-    if (ui->allowSecret->hasFocus() && !enableAllowSecret)
+    if (ui->allowSecret->hasFocus() && !enableAllowSecret) {
         ui->allowedComboBox->setFocus();
+    }
     ui->allowSecret->setEnabled(enableAllowSecret);
 
     bool enableRevokeSecret = correctLength && alreadyPresent && !isSelf;
-    if (ui->revokeSecret->hasFocus() && !enableRevokeSecret)
+    if (ui->revokeSecret->hasFocus() && !enableRevokeSecret) {
         ui->allowedComboBox->setFocus();
+    }
     ui->revokeSecret->setEnabled(enableRevokeSecret);
 
     if (correctLength && alreadyPresent) {

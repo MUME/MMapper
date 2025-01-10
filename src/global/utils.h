@@ -24,12 +24,13 @@ namespace details {
 template<typename T>
 NODISCARD constexpr bool isBitMask()
 {
-    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>)
+    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
         return true;
-    else if constexpr (std::is_enum_v<T>)
+    } else if constexpr (std::is_enum_v<T>) {
         return isBitMask<std::underlying_type_t<T>>();
-    else
+    } else {
         return false;
+    }
 }
 } // namespace details
 
@@ -108,8 +109,9 @@ NODISCARD std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 template<typename T>
 NODISCARD inline T &deref(T *const ptr)
 {
-    if (ptr == nullptr)
+    if (ptr == nullptr) {
         throw NullPointerException();
+    }
     return *ptr;
 }
 template<typename T>
@@ -138,8 +140,9 @@ inline T deref(std::shared_ptr<T> &&ptr) = delete;
 template<typename T>
 NODISCARD inline T &deref(const std::shared_ptr<T> &ptr)
 {
-    if (ptr == nullptr)
+    if (ptr == nullptr) {
         throw NullPointerException();
+    }
     return *ptr;
 }
 // Technically we could make this return move or copy of the pointed-to value,
@@ -149,15 +152,17 @@ inline T deref(std::unique_ptr<T> &&ptr) = delete;
 template<typename T>
 NODISCARD inline T &deref(const std::unique_ptr<T> &ptr)
 {
-    if (ptr == nullptr)
+    if (ptr == nullptr) {
         throw NullPointerException();
+    }
     return *ptr;
 }
 template<typename T>
 NODISCARD inline T &deref(const QPointer<T> &ptr)
 {
-    if (ptr == nullptr)
+    if (ptr == nullptr) {
         throw NullPointerException();
+    }
     return *ptr;
 }
 

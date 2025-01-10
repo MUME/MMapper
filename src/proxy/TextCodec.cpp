@@ -56,15 +56,16 @@ private:
     void virt_setEncodingForName(const std::string_view sv) final
     {
         const auto upper = ::toUpperLatin1(sv);
-        if (ENCODING_LATIN_1 == upper)
+        if (ENCODING_LATIN_1 == upper) {
             opt = CharacterEncodingEnum::LATIN1;
-        else if (ENCODING_UTF_8 == upper)
+        } else if (ENCODING_UTF_8 == upper) {
             opt = CharacterEncodingEnum::UTF8;
-        else if (ENCODING_US_ASCII == upper)
+        } else if (ENCODING_US_ASCII == upper) {
             opt = CharacterEncodingEnum::ASCII;
-        else
+        } else {
             qWarning() << "Refusing to autoselect to an unsupported codec"
                        << mmqt::toQByteArrayLatin1(upper);
+        }
     }
 
 private:
@@ -120,9 +121,10 @@ private:
     void virt_setEncodingForName(const std::string_view sv) final
     {
         const auto upper = ::toUpperLatin1(sv);
-        if (getName() != upper)
+        if (getName() != upper) {
             qWarning() << "Refusing to switch to an unforced codec"
                        << mmqt::toQByteArrayLatin1(upper);
+        }
     }
 
 private:

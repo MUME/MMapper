@@ -24,20 +24,24 @@ bool isAbbrev(StringView input, const std::string_view command, const int minAbb
     assert(minAbbrev == -1 || minAbbrev >= 1);
     assert(minAbbrev <= cmdLen);
 
-    if (minAbbrev == -1 || minAbbrev == cmdLen)
+    if (minAbbrev == -1 || minAbbrev == cmdLen) {
         return input.trim() == command;
+    }
 
     int matched = 0;
     for (const char c : command) {
-        if (input.isEmpty())
+        if (input.isEmpty()) {
             break;
-        if (std::tolower(input.takeFirstLetter()) != std::tolower(c))
+        }
+        if (std::tolower(input.takeFirstLetter()) != std::tolower(c)) {
             return false;
+        }
         ++matched;
     }
 
-    if (!input.isEmpty())
+    if (!input.isEmpty()) {
         return false;
+    }
 
     return matched >= minAbbrev;
 }
@@ -46,15 +50,18 @@ Abbrev::Abbrev(const char *const arg_command, const int arg_minAbbrev)
     : m_command{arg_command}
     , m_minAbbrev{arg_minAbbrev}
 {
-    if (this->m_command == nullptr || this->m_command[0] == C_NUL)
+    if (this->m_command == nullptr || this->m_command[0] == C_NUL) {
         throw std::invalid_argument("command");
+    }
 
     this->m_len = static_cast<int>(std::strlen(this->m_command));
-    if (this->m_minAbbrev == -1)
+    if (this->m_minAbbrev == -1) {
         this->m_minAbbrev = this->m_len;
+    }
 
-    if (!isClamped(this->m_minAbbrev, 1, this->m_len))
+    if (!isClamped(this->m_minAbbrev, 1, this->m_len)) {
         throw std::invalid_argument("minAbbrev");
+    }
 }
 
 Abbrev::operator bool() const
@@ -64,8 +71,9 @@ Abbrev::operator bool() const
 
 QString Abbrev::describe() const
 {
-    if (m_command == nullptr)
+    if (m_command == nullptr) {
         return "";
+    }
 
     QByteArray result;
     result.reserve(m_len);

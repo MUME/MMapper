@@ -13,8 +13,9 @@ DrawStream::~DrawStream() = default;
 
 void DrawStream::visit(const Room *room)
 {
-    if (room == nullptr)
+    if (room == nullptr) {
         return;
+    }
 
     const auto z = room->getPosition().z;
     auto &layer = m_layerToRooms[z];

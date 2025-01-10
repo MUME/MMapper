@@ -55,23 +55,26 @@ private:
 syntax::MatchResult ArgMarkClass::virt_match(const syntax::ParserInput &input,
                                              syntax::IMatchErrorLogger *logger) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
+    }
 
     const auto arg = toLowerLatin1(input.front());
     StringView sv(arg);
 
     for (const auto &clazz : ::enums::getAllInfoMarkClasses()) {
         const auto &command = getParserCommandName(clazz);
-        if (!command.matches(sv))
+        if (!command.matches(sv)) {
             continue;
+        }
         return syntax::MatchResult::success(1, input, Value(clazz));
     }
 
     if (logger) {
         std::ostringstream os;
-        for (const auto &clazz : ::enums::getAllInfoMarkClasses())
+        for (const auto &clazz : ::enums::getAllInfoMarkClasses()) {
             os << getParserCommandName(clazz).getCommand() << " ";
+        }
         logger->logError("input was not a valid mark class: " + os.str());
     }
     return syntax::MatchResult::failure(input);
@@ -134,15 +137,16 @@ void AbstractParser::parseMark(StringView input)
             int n = 0;
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
             for (const auto &mark : *is) {
-                if (n != 0)
+                if (n != 0) {
                     os << std::endl;
+                }
                 os << "\x1b[32m" << ++n << "\x1b[0m: " << getTypeName(mark->getType()) << std::endl;
                 os << "  angle: " << mark->getRotationAngle() << std::endl;
                 os << "  class: " << getParserCommandName(mark->getClass()).getCommand()
                    << std::endl;
-                if (mark->getType() == InfoMarkTypeEnum::TEXT)
+                if (mark->getType() == InfoMarkTypeEnum::TEXT) {
                     os << "  text: " << mark->getText().getStdStringLatin1() << std::endl;
-                else {
+                } else {
                     os << "  pos1: ";
                     printCoordinate(mark->getPosition1());
                     os << std::endl;
@@ -171,8 +175,9 @@ void AbstractParser::parseMark(StringView input)
 
             const auto index = static_cast<size_t>(v[1].getInt() - 1);
             assert(index >= 0);
-            if (index >= is->size())
+            if (index >= is->size()) {
                 throw std::runtime_error("unable to select mark");
+            }
 
             // delete the infomark
             const auto &mark = is->at(index);
@@ -238,12 +243,14 @@ void AbstractParser::parseMark(StringView input)
 
             const auto index = static_cast<size_t>(v[1].getInt() - 1);
             assert(index >= 0);
-            if (index >= is->size())
+            if (index >= is->size()) {
                 throw std::runtime_error("unable to select mark");
+            }
 
             const auto &mark = is->at(index);
-            if (mark->getType() != InfoMarkTypeEnum::TEXT)
+            if (mark->getType() != InfoMarkTypeEnum::TEXT) {
                 throw std::runtime_error("unable to set text to this mark");
+            }
 
             // update text of the first existing text infomark in this room
             const std::string text = concatenate_unquoted(v[3].getVector());
@@ -275,8 +282,9 @@ void AbstractParser::parseMark(StringView input)
 
             const auto index = static_cast<size_t>(v[1].getInt() - 1);
             assert(index >= 0);
-            if (index >= is->size())
+            if (index >= is->size()) {
                 throw std::runtime_error("unable to select mark");
+            }
 
             const auto clazz = v[3].getInfoMarkClass();
             const auto &mark = is->at(index);
@@ -304,12 +312,14 @@ void AbstractParser::parseMark(StringView input)
 
             const auto index = static_cast<size_t>(v[1].getInt() - 1);
             assert(index >= 0);
-            if (index >= is->size())
+            if (index >= is->size()) {
                 throw std::runtime_error("unable to select mark");
+            }
 
             const auto &mark = is->at(index);
-            if (mark->getType() != InfoMarkTypeEnum::TEXT)
+            if (mark->getType() != InfoMarkTypeEnum::TEXT) {
                 throw std::runtime_error("unable to set angle to this mark");
+            }
 
             const auto angle = v[3].getInt();
             mark->setRotationAngle(angle);

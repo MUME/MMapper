@@ -61,32 +61,37 @@ int utils::round_ftoi(const float f)
 
 std::optional<bool> utils::getEnvBool(const char *const key)
 {
-    if (!qEnvironmentVariableIsSet(key))
+    if (!qEnvironmentVariableIsSet(key)) {
         return std::nullopt;
+    }
 
     bool valid = false;
     const int value = qEnvironmentVariableIntValue(key, &valid);
-    if (valid)
+    if (valid) {
         return value == 1;
+    }
 
     QByteArray arr = qgetenv(key).toLower();
-    if (arr == "true" || arr == "yes")
+    if (arr == "true" || arr == "yes") {
         return true;
-    else if (arr == "false" || arr == "no")
+    } else if (arr == "false" || arr == "no") {
         return false;
+    }
 
     return std::nullopt;
 }
 
 std::optional<int> utils::getEnvInt(const char *const key)
 {
-    if (!qEnvironmentVariableIsSet(key))
+    if (!qEnvironmentVariableIsSet(key)) {
         return std::nullopt;
+    }
 
     bool valid = false;
     const int value = qEnvironmentVariableIntValue(key, &valid);
-    if (!valid)
+    if (!valid) {
         return std::nullopt;
+    }
 
     return value;
 }

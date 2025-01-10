@@ -128,8 +128,9 @@ std::optional<glm::vec3> MapCanvasViewport::unproject(const QInputEvent *const e
 std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const QInputEvent *const event) const
 {
     const auto opt_v = unproject(event);
-    if (!opt_v.has_value())
+    if (!opt_v.has_value()) {
         return std::nullopt;
+    }
     const glm::vec3 &v = opt_v.value();
     return MouseSel{Coordinate2f{v.x, v.y}, m_currentLayer};
 }
@@ -203,12 +204,13 @@ MapScreen::VisiblityResultEnum MapScreen::testVisibility(const glm::vec3 &input_
     // e.g.
     //   distance 5 vs margin 20 is "outside",
     //   distance 25 vs margin 20 is "inside".
-    if (dist < floorMargin)
+    if (dist < floorMargin) {
         return VisiblityResultEnum::OUTSIDE_MARGIN;
-    else if (dist > ceilMargin)
+    } else if (dist > ceilMargin) {
         return VisiblityResultEnum::INSIDE_MARGIN;
-    else
+    } else {
         return VisiblityResultEnum::ON_MARGIN;
+    }
 }
 
 glm::vec3 MapScreen::getProxyLocation(const glm::vec3 &input_pos, const float marginPixels) const

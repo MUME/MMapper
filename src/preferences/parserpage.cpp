@@ -28,8 +28,9 @@ public:
 
     QValidator::State validate(QString &input, int & /* pos */) const override
     {
-        if (input.isEmpty())
+        if (input.isEmpty()) {
             return QValidator::State::Intermediate;
+        }
 
         const bool valid = input.length() == 1 && isValidPrefix(input[0].toLatin1());
         return valid ? QValidator::State::Acceptable : QValidator::State::Invalid;

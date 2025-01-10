@@ -33,8 +33,9 @@ NODISCARD static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum typ
 NODISCARD static GmcpMessageTypeEnum toGmcpMessageType(const std::string_view str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    if (areEqualAsLowerLatin1(str, (normalized))) \
-        return GmcpMessageTypeEnum::UPPER_CASE;
+    if (areEqualAsLowerLatin1(str, (normalized))) { \
+        return GmcpMessageTypeEnum::UPPER_CASE; \
+    }
 
     X_FOREACH_GMCP_MESSAGE_TYPE(X_CASE)
 
@@ -69,8 +70,9 @@ QByteArray GmcpMessage::toRawBytes() const
     // FIXME: Mixing Latin1 and UTF8 is asking for trouble.
     std::ostringstream oss;
     oss << m_name.getStdStringLatin1();
-    if (m_json)
+    if (m_json) {
         oss << char_consts::C_SPACE << m_json->getStdStringUtf8();
+    }
     return mmqt::toQByteArrayUtf8(std::move(oss).str());
 }
 
@@ -81,9 +83,9 @@ GmcpMessage GmcpMessage::fromRawBytes(const QByteArray &ba)
 
     const int pos = ba.indexOf(char_consts::C_SPACE);
     // <data> is optional
-    if (pos == -1)
+    if (pos == -1) {
         return GmcpMessage{GmcpMessageName{mmqt::toStdStringLatin1(ba)}};
-
+    }
     auto package = GmcpMessageName{mmqt::toStdStringLatin1(ba.mid(0, pos))}; // Latin-1
     auto json = GmcpJson{mmqt::toStdStringUtf8(ba.mid(pos + 1))};            // UTF-8
     return GmcpMessage(std::move(package), std::move(json));

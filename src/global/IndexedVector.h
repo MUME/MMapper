@@ -73,31 +73,35 @@ public:
     NODISCARD const T *find(const Index e) const
     {
         const auto i = index(e);
-        if (i >= size())
+        if (i >= size()) {
             return nullptr;
+        }
         return Base::data() + static_cast<ptrdiff_t>(i);
     }
 
 public:
     NODISCARD static bool areEquivalent(const IndexedVector &va, const IndexedVector &vb)
     {
-        if (va.size() > vb.size())
+        if (va.size() > vb.size()) {
             return areEquivalent(vb, va); // swap order
+        }
 
         const Base &a = va;
         const Base &b = vb;
 
         const size_t minSize = va.size();
         for (size_t i = 0; i < minSize; ++i) {
-            if (a[i] != b[i])
+            if (a[i] != b[i]) {
                 return false;
+            }
         }
 
         const size_t maxSize = vb.size();
         assert(minSize <= maxSize);
         for (size_t i = minSize; i < maxSize; ++i) {
-            if (b[i] != T{})
+            if (b[i] != T{}) {
                 return false;
+            }
         }
 
         return true;

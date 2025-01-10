@@ -360,12 +360,14 @@ Abbrev getParserCommandName(const InfoMarkClassEnum x)
 
 NODISCARD static bool isCommand(const std::string &str, Abbrev abbrev)
 {
-    if (!abbrev)
+    if (!abbrev) {
         return false;
+    }
 
     auto view = StringView{str}.trim();
-    if (view.isEmpty())
+    if (view.isEmpty()) {
         return false;
+    }
 
     const auto word = view.takeFirstWord();
     return abbrev.matches(word);
@@ -403,16 +405,18 @@ bool AbstractParser::parseUserCommands(const QString &input)
     if (input.startsWith(getPrefixChar())) {
         std::string s = mmqt::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
-        if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar())
+        if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar()) {
             sendToUser("Internal error. Sorry.\n");
-        else
+        } else {
             parseSpecialCommand(view);
+        }
         sendPromptToUser();
         return false;
     }
 
-    if (tryParseGenericDoorCommand(input))
+    if (tryParseGenericDoorCommand(input)) {
         return false;
+    }
 
     return parseSimpleCommand(input);
 }
@@ -423,11 +427,13 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     const auto isOnline = ::isOnline();
 
     for (const CommandEnum cmd : ALL_COMMANDS) {
-        if (cmd == CommandEnum::NONE || cmd == CommandEnum::UNKNOWN)
+        if (cmd == CommandEnum::NONE || cmd == CommandEnum::UNKNOWN) {
             continue;
+        }
 
-        if (!isCommand(str, cmd))
+        if (!isCommand(str, cmd)) {
             continue;
+        }
 
         switch (cmd) {
         case CommandEnum::NORTH:
@@ -493,8 +499,9 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
 bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 {
     const auto dir = tryGetDir(words);
-    if (!words.isEmpty())
+    if (!words.isEmpty()) {
         return false;
+    }
     performDoorCommand(dir, dat);
     return true;
 }
@@ -545,8 +552,9 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
         return;
     }
 
-    if (evalSpecialCommandMap(wholeCommand))
+    if (evalSpecialCommandMap(wholeCommand)) {
         return;
+    }
 
     const auto word = wholeCommand.takeFirstWord();
     sendToUser(QString("Unrecognized command: %1\n").arg(word.toQString()));
@@ -554,18 +562,20 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 
 void AbstractParser::parseSearch(StringView view)
 {
-    if (view.isEmpty())
+    if (view.isEmpty()) {
         showSyntax("search [-(name|desc|contents|note|exits|flags|all|clear)] pattern");
-    else
+    } else {
         doSearchCommand(view);
+    }
 }
 
 void AbstractParser::parseDirections(StringView view)
 {
-    if (view.isEmpty())
+    if (view.isEmpty()) {
         showSyntax("dirs [-(name|desc|contents|note|exits|flags|all)] pattern");
-    else
+    } else {
         doGetDirectionsCommand(view);
+    }
 }
 
 class NODISCARD ArgHelpCommand final : public syntax::IArgument
@@ -685,8 +695,9 @@ void AbstractParser::initSpecialCommandMap()
     add(
         cmdDoorHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
+            if (!rest.isEmpty()) {
                 return false;
+            }
             this->showDoorCommandHelp();
             return true;
         },
@@ -694,13 +705,14 @@ void AbstractParser::initSpecialCommandMap()
 
     // door actions
     for (const DoorActionEnum x : ALL_DOOR_ACTION_TYPES) {
-        if (auto cmd = getParserCommandName(x))
+        if (auto cmd = getParserCommandName(x)) {
             add(
                 cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     return parseDoorAction(x, rest);
                 },
                 makeSimpleHelp("Sets door action: " + std::string{cmd.getCommand()}));
+        }
     }
 
     // misc commands
@@ -708,8 +720,9 @@ void AbstractParser::initSpecialCommandMap()
     add(
         cmdBack,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
+            if (!rest.isEmpty()) {
                 return false;
+            }
             this->doBackCommand();
             return true;
         },
@@ -753,8 +766,9 @@ void AbstractParser::initSpecialCommandMap()
     add(
         cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
+            if (!rest.isEmpty()) {
                 return false;
+            }
             this->doRemoveDoorNamesCommand();
             return true;
         },
@@ -805,8 +819,9 @@ void AbstractParser::initSpecialCommandMap()
     add(
         cmdTime,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
+            if (!rest.isEmpty()) {
                 return false;
+            }
             this->showMumeTime();
             return true;
         },
@@ -814,8 +829,9 @@ void AbstractParser::initSpecialCommandMap()
     add(
         cmdVote,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
+            if (!rest.isEmpty()) {
                 return false;
+            }
             this->openVoteURL();
             return true;
         },
@@ -866,8 +882,9 @@ void AbstractParser::addSpecialCommand(const char *const s,
                                        const HelpCallback &help)
 {
     const auto abb = Abbrev{s, minLen};
-    if (!abb)
+    if (!abb) {
         throw std::invalid_argument("s");
+    }
 
     const auto len = abb.getLength();
     const auto min = std::max(1, abb.getMinAbbrev());
@@ -878,10 +895,9 @@ void AbstractParser::addSpecialCommand(const char *const s,
         assert(i >= 0);
         key.resize(static_cast<unsigned int>(i));
         auto it = map.find(key);
-        if (it == map.end())
-
+        if (it == map.end()) {
             map.emplace(key, ParserRecord{fullName, callback, help});
-        else {
+        } else {
             qWarning() << ("unable to add " + mmqt::toQStringLatin1(key) + " for " + abb.describe());
         }
     }
@@ -889,16 +905,18 @@ void AbstractParser::addSpecialCommand(const char *const s,
 
 bool AbstractParser::evalSpecialCommandMap(StringView args)
 {
-    if (args.empty())
+    if (args.empty()) {
         return false;
+    }
 
     auto first = args.takeFirstWord();
     auto &map = m_specialCommandMap;
 
     const std::string key = toLowerLatin1(first.getStdStringView());
     auto it = map.find(key);
-    if (it == map.end())
+    if (it == map.end()) {
         return false;
+    }
 
     // REVISIT: add # of calls to the record?
     ParserRecord &rec = it->second;

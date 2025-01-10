@@ -23,8 +23,9 @@ RAIIBool::RAIIBool(RAIIBool &&rhs)
 
 RAIIBool::~RAIIBool()
 {
-    if (!std::exchange(moved, true))
+    if (!std::exchange(moved, true)) {
         ref = false;
+    }
 }
 
 RAIICallback::RAIICallback(RAIICallback &&rhs)

@@ -61,8 +61,9 @@ void AddExit::tryExec()
     }
 
     auto &ef = rfrom->getExitFlags(dir);
-    if (!ef.isExit())
+    if (!ef.isExit()) {
         rfrom->setExitFlags(dir, ef | ExitFlagEnum::EXIT);
+    }
 
     rfrom->addOutExit(dir, to);
     rto->addInExit(opposite(dir), from);

@@ -15,14 +15,16 @@ void IAction::match(const StringView input) const
 
 void StartsWithAction::virt_match(const StringView input) const
 {
-    if (input.startsWith(m_match))
+    if (input.startsWith(m_match)) {
         m_callback(input);
+    }
 }
 
 void EndsWithAction::virt_match(const StringView input) const
 {
-    if (input.endsWith(m_match))
+    if (input.endsWith(m_match)) {
         m_callback(input);
+    }
 }
 
 NODISCARD static std::regex createRegex(const std::string &pattern)
@@ -37,6 +39,7 @@ RegexAction::RegexAction(const std::string &pattern, const ActionCallback &callb
 
 void RegexAction::virt_match(const StringView input) const
 {
-    if (std::regex_match(input.begin(), input.end(), m_regex))
+    if (std::regex_match(input.begin(), input.end(), m_regex)) {
         m_callback(input);
+    }
 }

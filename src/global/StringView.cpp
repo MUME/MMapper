@@ -53,24 +53,29 @@ void StringView::eatLast()
 
 StringView &StringView::trimLeft() noexcept
 {
-    for (; !isEmpty(); eatFirst())
-        if (!isSpace(firstChar()))
+    for (; !isEmpty(); eatFirst()) {
+        if (!isSpace(firstChar())) {
             break;
+        }
+    }
     return *this;
 }
 
 StringView &StringView::trimRight() noexcept
 {
-    for (; !isEmpty(); eatLast())
-        if (!isSpace(lastChar()))
+    for (; !isEmpty(); eatLast()) {
+        if (!isSpace(lastChar())) {
             break;
+        }
+    }
     return *this;
 }
 
 void StringView::mustNotBeEmpty() const
 {
-    if (isEmpty())
+    if (isEmpty()) {
         throw std::runtime_error("StringView is empty");
+    }
 }
 
 char StringView::firstChar() const
@@ -91,8 +96,9 @@ char StringView::takeFirstLetter()
     mustNotBeEmpty();
 
     const auto c = firstChar();
-    if (isSpace(c))
+    if (isSpace(c)) {
         throw std::runtime_error("space");
+    }
 
     m_sv.remove_prefix(1);
     return c;
@@ -107,9 +113,11 @@ StringView StringView::takeFirstWordNoPostTrim()
 
     size_t len = 0;
     const auto before = m_sv;
-    for (; !isEmpty(); eatFirst(), ++len)
-        if (isSpace(firstChar()))
+    for (; !isEmpty(); eatFirst(), ++len) {
+        if (isSpace(firstChar())) {
             break;
+        }
+    }
 
     return StringView{before.substr(0, len)};
 }
@@ -124,9 +132,11 @@ StringView StringView::takeFirstWord()
 int StringView::countNonSpaceChars() const noexcept
 {
     int result = 0;
-    for (char c : m_sv)
-        if (!isSpace(c))
+    for (char c : m_sv) {
+        if (!isSpace(c)) {
             ++result;
+        }
+    }
     return result;
 }
 
@@ -137,8 +147,9 @@ int StringView::countWords() const
     tmp.trim();
 
     int result = 0;
-    for (; !tmp.isEmpty(); std::ignore = tmp.takeFirstWord())
+    for (; !tmp.isEmpty(); std::ignore = tmp.takeFirstWord()) {
         ++result;
+    }
     return result;
 }
 
@@ -152,8 +163,9 @@ std::vector<StringView> StringView::getWords() const
     auto tmp = *this;
     tmp.trim();
 
-    while (!tmp.isEmpty())
+    while (!tmp.isEmpty()) {
         result.emplace_back(tmp.takeFirstWord());
+    }
 
     assert(static_cast<int>(result.size()) == numWords);
     return result;
@@ -169,8 +181,9 @@ std::vector<std::string> StringView::getWordsAsStdStrings() const
     auto tmp = *this;
     tmp.trim();
 
-    while (!tmp.isEmpty())
+    while (!tmp.isEmpty()) {
         result.emplace_back(tmp.takeFirstWord().m_sv);
+    }
 
     assert(static_cast<int>(result.size()) == numWords);
     return result;
@@ -186,8 +199,9 @@ std::vector<QString> StringView::getWordsAsQStrings() const
     auto tmp = *this;
     tmp.trim();
 
-    while (!tmp.isEmpty())
+    while (!tmp.isEmpty()) {
         result.emplace_back(tmp.takeFirstWord().toQString());
+    }
 
     assert(static_cast<int>(result.size()) == numWords);
     return result;
@@ -214,8 +228,9 @@ StringView StringView::mid(const size_t pos) const
 
 StringView StringView::rmid(const size_t pos) const
 {
-    if (pos == std::string_view::npos)
+    if (pos == std::string_view::npos) {
         return *this;
+    }
 
     assert(pos <= m_sv.size());
     return substr(0, m_sv.size() - pos);
@@ -223,8 +238,9 @@ StringView StringView::rmid(const size_t pos) const
 
 StringView StringView::right(const size_t len) const
 {
-    if (len == std::string_view::npos)
+    if (len == std::string_view::npos) {
         return *this;
+    }
 
     assert(len <= m_sv.size());
     return substr(m_sv.size() - len);
@@ -232,16 +248,18 @@ StringView StringView::right(const size_t len) const
 
 bool StringView::startsWith(const std::string_view other) const
 {
-    if (m_sv.size() < other.size())
+    if (m_sv.size() < other.size()) {
         return false;
+    }
 
     return left(other.size()) == other;
 }
 
 bool StringView::endsWith(const std::string_view other) const
 {
-    if (m_sv.size() < other.size())
+    if (m_sv.size() < other.size()) {
         return false;
+    }
 
     return right(other.size()) == other;
 }
@@ -450,9 +468,10 @@ namespace test_detail {
 #define STRINGIZE(x) STRINGIZE2(x)
 #define TEST_ASSERT(x) \
     do { \
-        if (!(x)) \
+        if (!(x)) { \
             throw std::runtime_error("test failure in at " __FILE__ \
                                      ":" STRINGIZE(__LINE__) ": " #x); \
+        } \
     } while (false)
 
 void testEmpty()

@@ -250,8 +250,9 @@ public:
             assert(lsb >= 0);
             const auto x = static_cast<Flag>(lsb);
             assert(contains(x));
-            if (n-- == 0)
+            if (n-- == 0) {
                 return x;
+            }
         }
 
         std::abort(); /* crash */

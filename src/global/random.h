@@ -28,8 +28,9 @@ NODISCARD extern size_t getRandom(size_t max);
 template<typename T>
 NODISCARD decltype(auto) chooseRandomElement(T &container)
 {
-    if (container.empty())
+    if (container.empty()) {
         throw std::invalid_argument("container");
+    }
     const auto dir = getRandom(container.size() - 1u);
     return container[dir];
 }

@@ -321,8 +321,9 @@ glm::mat4 MapCanvas::getViewProj_old(const glm::vec2 &scrollPos,
 NODISCARD static float getPitchDegrees(const float zoomScale)
 {
     const float degrees = getConfig().canvas.advanced.verticalAngle.getFloat();
-    if (!MapCanvasConfig::isAutoTilt())
+    if (!MapCanvasConfig::isAutoTilt()) {
         return degrees;
+    }
 
     static_assert(ScaleFactor::MAX_VALUE >= 2.f);
     return glm::smoothstep(0.5f, 2.f, zoomScale) * degrees;
@@ -558,14 +559,16 @@ void MapCanvas::paintGL()
     std::optional<Clock::time_point> optStart;
     std::optional<Clock::time_point> optAfterTextures;
     std::optional<Clock::time_point> optAfterBatches;
-    if (showPerfStats)
+    if (showPerfStats) {
         optStart = Clock::now();
+    }
 
     {
         updateMultisampling();
         updateTextures();
-        if (showPerfStats)
+        if (showPerfStats) {
             optAfterTextures = Clock::now();
+        }
 
         // Note: The real work happens here!
         updateBatches();
@@ -573,25 +576,28 @@ void MapCanvas::paintGL()
         // For accurate timing of the update, we'd need to call glFinish(),
         // or at least set up an OpenGL query object. The update will send
         // a lot of data to the GPU, so it could take a while...
-        if (showPerfStats)
+        if (showPerfStats) {
             optAfterBatches = Clock::now();
+        }
 
         actuallyPaintGL();
     }
 
-    if (!showPerfStats)
+    if (!showPerfStats) {
         return; /* don't wait to finish */
+    }
 
     const auto &start = optStart.value();
     const auto &afterTextures = optAfterTextures.value();
     const auto &afterBatches = optAfterBatches.value();
     const auto afterPaint = Clock::now();
     const bool calledFinish = [this]() -> bool {
-        if (auto *const ctxt = QOpenGLWidget::context())
+        if (auto *const ctxt = QOpenGLWidget::context()) {
             if (auto *const func = ctxt->functions()) {
                 func->glFinish();
                 return true;
             }
+        }
         return false;
     }();
 
@@ -636,8 +642,9 @@ void MapCanvas::paintGL()
         ms(end - afterPaint),
         calledFinish ? "" : "*",
         total));
-    if (!calledFinish)
+    if (!calledFinish) {
         print("* = unable to call glFinish()");
+    }
 
     longestBatchMs = std::max(batchTime, longestBatchMs);
     print(QString::asprintf("Worst updateBatches: %.1f ms", longestBatchMs));
@@ -675,8 +682,9 @@ void MapCanvas::paintGL()
 
 void MapCanvas::paintSelectionArea()
 {
-    if (!hasSel1() || !hasSel2())
+    if (!hasSel1() || !hasSel2()) {
         return;
+    }
 
     const auto pos1 = getSel1().pos.to_vec2();
     const auto pos2 = getSel2().pos.to_vec2();
@@ -718,8 +726,9 @@ void MapCanvas::updateMultisampling()
 {
     const int wantMultisampling = getConfig().canvas.antialiasingSamples;
     std::optional<int> &activeStatus = graphicsOptionsStatus.multisampling;
-    if (activeStatus == wantMultisampling)
+    if (activeStatus == wantMultisampling) {
         return;
+    }
 
     // REVISIT: check return value?
     MAYBE_UNUSED const bool enabled = getOpenGL().tryEnableMultisampling(wantMultisampling);

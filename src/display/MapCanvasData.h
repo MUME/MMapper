@@ -89,8 +89,9 @@ public:
     }
     void logStep(const int numSteps)
     {
-        if (numSteps == 0)
+        if (numSteps == 0) {
             return;
+        }
         auto &self = *this;
         self *= std::pow(ZOOM_STEP, static_cast<float>(numSteps));
     }
@@ -206,8 +207,9 @@ public:
 public:
     NODISCARD static MouseSel getMouseSel(const std::optional<MouseSel> &x)
     {
-        if (x.has_value())
+        if (x.has_value()) {
             return x.value();
+        }
 
         assert(false);
         return {};

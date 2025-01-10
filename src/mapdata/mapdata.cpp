@@ -59,8 +59,9 @@ ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
     QMutexLocker locker(&mapLock);
     if (const Room *const room = map.get(pos)) {
         for (const ExitDirEnum dir : ALL_EXITS7) {
-            if (room->exit(dir).isExit())
+            if (room->exit(dir).isExit()) {
                 result |= dir;
+            }
         }
     }
     return result;
@@ -109,8 +110,9 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
     // NOTE: room is used and then reassigned inside the loop.
     if (const Room *room = map.get(start)) {
         for (const CommandEnum cmd : dirs) {
-            if (cmd == CommandEnum::LOOK)
+            if (cmd == CommandEnum::LOOK) {
                 continue;
+            }
 
             if (!isDirectionNESWUD(cmd)) {
                 break;
@@ -237,11 +239,13 @@ void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
     for (const SharedRoom &room : roomIndex) {
-        if (room == nullptr)
+        if (room == nullptr) {
             continue;
+        }
         Room *const r = room.get();
-        if (!f.filter(r))
+        if (!f.filter(r)) {
             continue;
+        }
         locks[room->getId()].insert(recipient);
         recipient->receiveRoom(this, r);
     }

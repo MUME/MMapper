@@ -113,8 +113,9 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         if (str != color.name()) {
             updated = true;
             color = QColor(str);
-            if (str != color.name())
+            if (str != color.name()) {
                 qWarning() << "Round trip error on color" << QuotedQString(str) << "vs" << color;
+            }
         }
     }
 

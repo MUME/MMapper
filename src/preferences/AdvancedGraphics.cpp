@@ -149,8 +149,9 @@ public:
         const auto value = m_fp.get();
         m_spin.setIntValue(value);
         m_slider.setValue(value);
-        if ((false))
+        if ((false)) {
             m_group.graphicsSettingsChanged();
+        }
     }
 
     DELETE_CTORS_AND_ASSIGN_OPS(SliderSpinboxButton);

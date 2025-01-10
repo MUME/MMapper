@@ -16,8 +16,9 @@ AbstractDebugOStream::AbstractDebugOStream(QDebug &&os)
 AbstractDebugOStream::~AbstractDebugOStream()
 {
     const auto str_utf8 = std::move(m_os_utf8).str();
-    if (str_utf8.empty())
+    if (str_utf8.empty()) {
         return;
+    }
 
     // Try to detect accidentally passing latin1
     assert(charset::isProbablyUtf8(str_utf8));

@@ -30,24 +30,27 @@ struct NODISCARD counting_iterator
     void operator++(int) = delete;
     ALLOW_DISCARD counting_iterator &operator++()
     {
-        if (it_ >= end_)
+        if (it_ >= end_) {
             throw std::runtime_error("overflow");
+        }
         ++it_;
         return *this;
     }
 
     NODISCARD bool operator==(const counting_iterator &rhs) const
     {
-        if (begin_ != rhs.begin_ || end_ != rhs.end_)
+        if (begin_ != rhs.begin_ || end_ != rhs.end_) {
             throw std::runtime_error("invalid comparison");
+        }
         return it_ == rhs.it_;
     }
     NODISCARD bool operator!=(const counting_iterator &rhs) const { return !operator==(rhs); }
 
     NODISCARD E operator*()
     {
-        if (it_ >= end_)
+        if (it_ >= end_) {
             throw std::runtime_error("overflow");
+        }
 
         return static_cast<E>(it_ - begin_);
     }

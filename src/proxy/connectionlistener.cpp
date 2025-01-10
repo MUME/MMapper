@@ -70,15 +70,17 @@ void ConnectionListener::listen()
     // Construct the first server
     m_servers.emplace_back(createServer());
     auto &server = m_servers.back();
-    if (!server->listen(hostAdress, port))
+    if (!server->listen(hostAdress, port)) {
         throw std::runtime_error(mmqt::toStdStringLatin1(server->errorString()));
+    }
 
     // Construct a second server for localhost IPv6 if we're only listening on localhost IPv4
     if (!settings.proxyListensOnAnyInterface) {
         m_servers.emplace_back(createServer());
         auto &serverIPv6 = m_servers.back();
-        if (!serverIPv6->listen(QHostAddress::LocalHostIPv6, port))
+        if (!serverIPv6->listen(QHostAddress::LocalHostIPv6, port)) {
             throw std::runtime_error(mmqt::toStdStringLatin1(serverIPv6->errorString()));
+        }
     }
 }
 

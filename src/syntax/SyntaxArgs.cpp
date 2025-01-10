@@ -31,25 +31,29 @@ ArgAbbrev::ArgAbbrev(std::string moved_str)
     : m_str(std::move(moved_str))
 {
     for (const char c : m_str) {
-        if (isSpace(c) || !isPrintLatin1(c))
+        if (isSpace(c) || !isPrintLatin1(c)) {
             throw std::invalid_argument("string");
+        }
     }
 }
 
 MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * /*logger*/) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return MatchResult::failure(input);
+    }
 
     const auto input_sv = StringView{input.front()};
     const size_t inputLen = input_sv.size();
     const size_t strlen = m_str.length();
-    if (inputLen > strlen)
+    if (inputLen > strlen) {
         return MatchResult::failure(input);
+    }
 
     for (size_t i = 0; i < inputLen; ++i) {
-        if (toLowerLatin1(m_str[i]) != toLowerLatin1(input_sv[i]))
+        if (toLowerLatin1(m_str[i]) != toLowerLatin1(input_sv[i])) {
             return MatchResult::failure(input);
+        }
     }
 
     return MatchResult::success(1, input, Value{m_str});
@@ -63,15 +67,17 @@ std::ostream &ArgAbbrev::virt_to_stream(std::ostream &os) const
 MatchResult ArgBool::virt_match(const syntax::ParserInput &input,
                                 syntax::IMatchErrorLogger * /*logger*/) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return MatchResult::failure(input);
+    }
 
     const auto first = toLowerLatin1(input.front());
 
-    if (first == "true" || first == "yes" || first == "1")
+    if (first == "true" || first == "yes" || first == "1") {
         return MatchResult::success(1, input, Value{true});
-    else if (first == "false" || first == "no" || first == "0")
+    } else if (first == "false" || first == "no" || first == "0") {
         return MatchResult::success(1, input, Value{false});
+    }
 
     return MatchResult::failure(input);
 }
@@ -84,8 +90,9 @@ std::ostream &ArgBool::virt_to_stream(std::ostream &os) const
 ArgChoice::ArgChoice(std::vector<TokenMatcher> tokens)
     : m_tokens(std::move(tokens))
 {
-    if (tokens.size() < 2)
+    if (tokens.size() < 2) {
         throw std::runtime_error("choice must have at least two elements");
+    }
 }
 
 MatchResult ArgChoice::virt_match(const ParserInput &input_sv, IMatchErrorLogger *logger) const
@@ -102,15 +109,17 @@ MatchResult ArgChoice::virt_match(const ParserInput &input_sv, IMatchErrorLogger
 
             std::vector<Value> v;
             v.emplace_back(Value(n));
-            if (result.optValue)
+            if (result.optValue) {
                 v.emplace_back(result.optValue.value());
+            }
 
             /* replace the value */
             result.optValue = Value(Vector(std::move(v)));
             return result;
         } else {
-            if (result.matched.length() > best.length())
+            if (result.matched.length() > best.length()) {
                 best = result.matched;
+            }
         }
     }
 
@@ -122,10 +131,11 @@ std::ostream &ArgChoice::virt_to_stream(std::ostream &os) const
     os << "<";
     bool first = true;
     for (auto &token : m_tokens) {
-        if (first)
+        if (first) {
             first = false;
-        else
+        } else {
             os << "|";
+        }
         os << token;
     }
     os << ">";
@@ -148,8 +158,9 @@ ArgInt ArgInt::withMin(int n)
 
 ArgInt ArgInt::withMinMax(int min, int max)
 {
-    if (min > max)
+    if (min > max) {
         throw std::invalid_argument("max");
+    }
     ArgInt result;
     result.min = min;
     result.max = max;
@@ -159,8 +170,9 @@ ArgInt ArgInt::withMinMax(int min, int max)
 MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logger) const
 {
     auto &arg = *this;
-    if (input.empty())
+    if (input.empty()) {
         return MatchResult::failure(input);
+    }
 
     const auto input_sv = StringView{input.front()};
 
@@ -171,16 +183,20 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         // The function std::stoi is documented to skip leading whitespace.
         const char firstChar = stringView.firstChar();
         if (!std::isdigit(firstChar) && firstChar != char_consts::C_MINUS_SIGN
-            && firstChar != char_consts::C_PLUS_SIGN)
+            && firstChar != char_consts::C_PLUS_SIGN) {
             return MatchResult::failure(input);
+        }
 
         ++stringView;
-        for (char c : stringView)
-            if (!std::isdigit(c))
+        for (char c : stringView) {
+            if (!std::isdigit(c)) {
                 return MatchResult::failure(input);
+            }
+        }
 
-        if (!std::isdigit(input_sv.lastChar()))
+        if (!std::isdigit(input_sv.lastChar())) {
             return MatchResult::failure(input);
+        }
     }
 
     using Limits = std::numeric_limits<int>;
@@ -256,18 +272,22 @@ std::ostream &ArgInt::virt_to_stream(std::ostream &os) const
 
     os << "<integer";
 
-    if (hasMin || hasMax)
+    if (hasMin || hasMax) {
         os << ":";
+    }
 
-    if (hasMin)
+    if (hasMin) {
         os << " " << arg.min.value();
+    }
 
     if (!singleValue) {
-        if (hasMin || hasMax)
+        if (hasMin || hasMax) {
             os << " ..";
+        }
 
-        if (hasMax)
+        if (hasMax) {
             os << " " << arg.max.value();
+        }
     }
 
     return os << ">";
@@ -289,10 +309,12 @@ ArgFloat ArgFloat::withMin(float n)
 
 ArgFloat ArgFloat::withMinMax(float min, float max)
 {
-    if (!std::isfinite(min))
+    if (!std::isfinite(min)) {
         throw std::invalid_argument("min");
-    if (!std::isfinite(max) || min > max)
+    }
+    if (!std::isfinite(max) || min > max) {
         throw std::invalid_argument("max");
+    }
     ArgFloat result;
     result.min = min;
     result.max = max;
@@ -302,8 +324,9 @@ ArgFloat ArgFloat::withMinMax(float min, float max)
 MatchResult ArgFloat::virt_match(const ParserInput &input, IMatchErrorLogger *logger) const
 {
     auto &arg = *this;
-    if (input.empty())
+    if (input.empty()) {
         return MatchResult::failure(input);
+    }
 
     const std::string &firstWord = input.front();
     using Limits = std::numeric_limits<float>;
@@ -345,18 +368,22 @@ std::ostream &ArgFloat::virt_to_stream(std::ostream &os) const
 
     os << "<float";
 
-    if (hasMin || hasMax)
+    if (hasMin || hasMax) {
         os << ":";
+    }
 
-    if (hasMin)
+    if (hasMin) {
         os << " " << arg.min.value();
+    }
 
     if (!singleValue) {
-        if (hasMin || hasMax)
+        if (hasMin || hasMax) {
             os << " ..";
+        }
 
-        if (hasMax)
+        if (hasMax) {
             os << " " << arg.max.value();
+        }
     }
 
     return os << ">";
@@ -369,13 +396,15 @@ MatchResult ArgOneOrMoreToken::virt_match(const ParserInput &input, IMatchErrorL
     auto current = input;
     while (!current.empty()) {
         MatchResult result = arg.m_token.tryMatch(current.left(1), logger);
-        if (!result)
+        if (!result) {
             break;
+        }
         values.emplace_back(result.optValue.value_or(Value{}));
         current = current.mid(1);
     }
-    if (values.empty())
+    if (values.empty()) {
         return MatchResult::failure(input);
+    }
     const auto size = values.size();
     return MatchResult::success(size, input, Value(Vector(std::move(values))));
 }
@@ -389,8 +418,9 @@ MatchResult ArgOptionalChar::virt_match(const ParserInput &input,
                                         IMatchErrorLogger * /*logger*/) const
 {
     size_t matched = 0;
-    if (!input.empty() && input.front().size() == 1 && input.front().front() == m_c)
+    if (!input.empty() && input.front().size() == 1 && input.front().front() == m_c) {
         ++matched;
+    }
 
     return MatchResult::success(matched, input);
 }
@@ -415,8 +445,9 @@ MatchResult ArgOptionalToken::virt_match(const ParserInput &input_sv,
 
         std::vector<Value> v;
         v.emplace_back(Value(true));
-        if (result.optValue)
+        if (result.optValue) {
             v.emplace_back(result.optValue.value());
+        }
 
         // replace the value
         result.optValue = Value(Vector(std::move(v)));
@@ -435,8 +466,9 @@ MatchResult ArgOptionalToken::virt_match(const ParserInput &input_sv,
 
 std::ostream &ArgOptionalToken::virt_to_stream(std::ostream &os) const
 {
-    if (m_ignored)
+    if (m_ignored) {
         os << "ignored";
+    }
     return os << "[" << m_token << "]";
 }
 
@@ -452,8 +484,9 @@ std::ostream &ArgRest::virt_to_stream(std::ostream &os) const
 
 MatchResult ArgString::virt_match(const ParserInput &input, IMatchErrorLogger * /*logger*/) const
 {
-    if (input.length() != 1)
+    if (input.length() != 1) {
         return MatchResult::failure(input);
+    }
 
     return MatchResult::success(1, input, Value{input.front()});
 }
@@ -466,12 +499,15 @@ std::ostream &ArgString::virt_to_stream(std::ostream &os) const
 NODISCARD static bool compareIgnoreCase(const std::string &a, const std::string &b)
 {
     const auto size = a.size();
-    if (size != b.size())
+    if (size != b.size()) {
         return false;
+    }
 
-    for (size_t i = 0; i < size; ++i)
-        if (toLowerLatin1(a[i]) != toLowerLatin1(b[i]))
+    for (size_t i = 0; i < size; ++i) {
+        if (toLowerLatin1(a[i]) != toLowerLatin1(b[i])) {
             return false;
+        }
+    }
 
     return true;
 }

@@ -61,8 +61,9 @@ namespace entities {
 // only bother with the latin1 subset
 NODISCARD static bool isNameStartChar(const QChar c)
 {
-    if (c == C_COLON || c == C_UNDERSCORE || isLatin1Alpha(c))
+    if (c == C_COLON || c == C_UNDERSCORE || isLatin1Alpha(c)) {
         return true;
+    }
     const auto uc = static_cast<uint32_t>(c.unicode());
     return uc >= 0xc0 && uc != 0xd7 && uc != 0xf7;
 }
@@ -152,8 +153,9 @@ XmlEntityEnum EntityTable::lookup_entity_id_by_short_name(const QString &entity)
 {
     const auto &map = by_short_name;
     const auto it = map.find(entity);
-    if (it != map.end())
+    if (it != map.end()) {
         return it->second.id;
+    }
     return XmlEntityEnum::INVALID;
 }
 
@@ -161,8 +163,9 @@ XmlEntityEnum EntityTable::lookup_entity_id_by_full_name(const QString &entity) 
 {
     const auto &map = by_full_name;
     const auto it = map.find(entity);
-    if (it != map.end())
+    if (it != map.end()) {
         return it->second.id;
+    }
     return XmlEntityEnum::INVALID;
 }
 
@@ -170,8 +173,9 @@ OptQByteArray EntityTable::lookup_entity_short_name_by_id(const XmlEntityEnum id
 {
     const auto &map = by_id;
     const auto it = map.find(id);
-    if (it != map.end())
+    if (it != map.end()) {
         return OptQByteArray{it->second.short_name};
+    }
     return std::nullopt;
 }
 
@@ -179,8 +183,9 @@ OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityEnum id)
 {
     const auto &map = by_id;
     const auto it = map.find(id);
-    if (it != map.end())
+    if (it != map.end()) {
         return OptQByteArray{it->second.full_name};
+    }
     return std::nullopt;
 }
 
@@ -326,11 +331,12 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
         }
 
         // first try transliteration
-        if (encodingType == EncodingEnum::Translit)
+        if (encodingType == EncodingEnum::Translit) {
             if (const char *const subst = translit(qc)) {
                 out += subst;
                 continue;
             }
+        }
 
         // then try named XML entities
         if (auto full_name = tab.lookup_entity_full_name_by_id(
@@ -365,8 +371,9 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
 
 NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const end)
 {
-    if (beg >= end || !isLatin1Digit(*beg))
+    if (beg >= end || !isLatin1Digit(*beg)) {
         return OptQChar{};
+    }
 
     using val_type = uint32_t;
     static_assert(std::numeric_limits<val_type>::max()
@@ -375,17 +382,20 @@ NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
         const QChar qc = *it;
-        if (!isLatin1(qc))
+        if (!isLatin1(qc)) {
             return OptQChar{};
+        }
         const char c = qc.toLatin1();
-        if (!isdigit(c))
+        if (!isdigit(c)) {
             return OptQChar{};
+        }
 
         val *= 10;
         val += static_cast<uint32_t>(c - '0');
 
-        if (val > MAX_UNICODE_CODEPOINT)
+        if (val > MAX_UNICODE_CODEPOINT) {
             return OptQChar{};
+        }
     }
 
     return OptQChar{val};
@@ -393,8 +403,9 @@ NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const
 
 NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const end)
 {
-    if (beg >= end || !isLatin1HexDigit(*beg))
+    if (beg >= end || !isLatin1HexDigit(*beg)) {
         return OptQChar{};
+    }
 
     using val_type = uint32_t;
     static_assert(std::numeric_limits<val_type>::max()
@@ -403,18 +414,21 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
         const QChar qc = *it;
-        if (!isLatin1(qc))
+        if (!isLatin1(qc)) {
             return OptQChar{};
+        }
         const char c = qc.toLatin1();
-        if (!isxdigit(c))
+        if (!isxdigit(c)) {
             return OptQChar{};
+        }
 
         val *= 16;
         val += isdigit(c) ? (static_cast<uint32_t>(c - '0'))
                           : (static_cast<uint32_t>(c - (isupper(c) ? 'A' : 'a')) + 10);
 
-        if (val > MAX_UNICODE_CODEPOINT)
+        if (val > MAX_UNICODE_CODEPOINT) {
             return OptQChar{};
+        }
     }
     return OptQChar{val};
 }
@@ -442,9 +456,11 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
 
             if (*it == 'x') {
                 ++it;
-                for (; it < end; ++it)
-                    if (!isLatin1HexDigit(*it))
+                for (; it < end; ++it) {
+                    if (!isLatin1HexDigit(*it)) {
                         break;
+                    }
+                }
 
                 if (it < end && *it == C_SEMICOLON) {
                     ++it;
@@ -456,9 +472,11 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
                 }
 
             } else if (isLatin1Digit(*it)) {
-                for (; it < end; ++it)
-                    if (!isLatin1Digit(*it))
+                for (; it < end; ++it) {
+                    if (!isLatin1Digit(*it)) {
                         break;
+                    }
+                }
 
                 if (it < end && *it == C_SEMICOLON) {
                     ++it;
@@ -470,9 +488,11 @@ void entities::foreachEntity(const QStringView input, EntityCallback &callback)
             }
         } else if (isNameStartChar(*it)) {
             ++it;
-            for (; it < end; ++it)
-                if (!isNameChar(*it))
+            for (; it < end; ++it) {
+                if (!isNameChar(*it)) {
                     break;
+                }
+            }
 
             if (it < end && *it == C_SEMICOLON) {
                 ++it;
@@ -521,10 +541,11 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
         void virt_decodedEntity(int start, int len, OptQChar decoded) final
         {
             skipto(start);
-            if (decoded)
+            if (decoded) {
                 out += decoded.value();
-            else
+            } else {
                 out += unprintable;
+            }
             pos = start + len;
         }
 
@@ -532,8 +553,9 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
         void skipto(int start)
         {
             assert(start >= this->pos);
-            if (start == this->pos)
+            if (start == this->pos) {
                 return;
+            }
 
             const char *const pos_it = input.begin() + pos;
             const char *const start_it = input.begin() + start;
@@ -561,16 +583,18 @@ static void testEncode(const char *_in, const char *_expect)
     const auto in = DecodedUnicode{_in};
     const auto out = encode(in);
     const auto expected = EncodedLatin1{_expect};
-    if (out != expected)
+    if (out != expected) {
         throw std::runtime_error("test failed");
+    }
 }
 static void testDecode(const char *_in, const char *_expect)
 {
     const auto in = EncodedLatin1{_in};
     const auto out = decode(in);
     const auto expected = DecodedUnicode{_expect};
-    if (out != expected)
+    if (out != expected) {
         throw std::runtime_error("test failed");
+    }
 }
 
 static const bool self_test = []() -> bool {
@@ -601,16 +625,18 @@ static const bool self_test = []() -> bool {
         in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
         const auto out = encode(DecodedUnicode{in});
         const auto expected = EncodedLatin1{"TM"};
-        if (out != expected)
+        if (out != expected) {
             throw std::runtime_error("test failed");
+        }
     }
     {
         QString in;
         in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
         const auto out = encode(DecodedUnicode{in}, EncodingEnum::Lossless);
         const auto expected = EncodedLatin1{"&trade;"};
-        if (out != expected)
+        if (out != expected) {
             throw std::runtime_error("test failed");
+        }
     }
     {
         const auto in = EncodedLatin1{"&#xFFFF;"};
@@ -618,8 +644,9 @@ static const bool self_test = []() -> bool {
         assert(out.length() == 1);
         assert(out.at(0).unicode() == 0xFFFF);
         const auto roundtrip = encode(out);
-        if (roundtrip != in)
+        if (roundtrip != in) {
             throw std::runtime_error("test failed");
+        }
     }
 
     {
@@ -629,8 +656,9 @@ static const bool self_test = []() -> bool {
         assert(out.length() == 1);
         assert(out.at(0).unicode() == 0xFFFF); // wrong since QT only stores 16 bits
         const auto roundtrip = encode(out);
-        if (roundtrip != EncodedLatin1{"&#xFFFF;"}) // also wrong, but expected.
+        if (roundtrip != EncodedLatin1{"&#xFFFF;"}) { // also wrong, but expected.
             throw std::runtime_error("test failed");
+        }
     }
 
     return true;

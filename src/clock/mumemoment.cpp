@@ -13,11 +13,13 @@
 static void maybe_warn_if_not_clamped(
     const char *const name, bool &warned, const int val, const int lo, const int hi)
 {
-    if (warned)
+    if (warned) {
         return;
+    }
 
-    if (val >= lo && val < hi)
+    if (val >= lo && val < hi) {
         return;
+    }
 
     auto &&os = MMLOG_ERROR();
     if constexpr (IS_DEBUG_BUILD) {
@@ -141,11 +143,13 @@ int MumeMoment::moonZenithMinutes() const
 MumeMoonPositionEnum MumeMoment::moonPosition() const
 {
     int rise = moonZenithMinutes() + MUME_MINUTES_PER_DAY * 3 / 4;
-    if (rise >= MUME_MINUTES_PER_DAY)
+    if (rise >= MUME_MINUTES_PER_DAY) {
         rise -= MUME_MINUTES_PER_DAY;
+    }
     int now = minute + hour * MUME_MINUTES_PER_HOUR;
-    if (now < rise)
+    if (now < rise) {
         now += MUME_MINUTES_PER_DAY;
+    }
     /* dir 0-15: 0: east, 1/2: southeast, 3/4: south, 5/6: southwest; 7: west;
            8-15: under the horizon*/
     const int dir = std::clamp((now - rise) * 16 / MUME_MINUTES_PER_DAY, 0, 15);
@@ -187,21 +191,24 @@ MumeMoonPhaseEnum MumeMoment::moonPhase() const
 
 MumeMoonVisibilityEnum MumeMoment::moonVisibility() const
 {
-    if (isMoonBelowHorizon() || moonPhase() == MumeMoonPhaseEnum::NEW_MOON)
+    if (isMoonBelowHorizon() || moonPhase() == MumeMoonPhaseEnum::NEW_MOON) {
         return MumeMoonVisibilityEnum::INVISIBLE;
+    }
 
     const auto isBright = isMoonBright();
     const auto time = toTimeOfDay();
-    if (!isBright && (time > MumeTimeEnum::DAWN && time < MumeTimeEnum::DUSK))
+    if (!isBright && (time > MumeTimeEnum::DAWN && time < MumeTimeEnum::DUSK)) {
         return MumeMoonVisibilityEnum::INVISIBLE;
+    }
 
     return isBright ? MumeMoonVisibilityEnum::BRIGHT : MumeMoonVisibilityEnum::DIM;
 }
 
 int MumeMoment::untilMoonPosition(MumeMoonPositionEnum pos) const
 {
-    if (pos == MumeMoonPositionEnum::UNKNOWN)
+    if (pos == MumeMoonPositionEnum::UNKNOWN) {
         return -1;
+    }
 
     static const constexpr int MINUTES[] = {4 * MUME_MINUTES_PER_DAY / 16,  // Invisible
                                             -4 * MUME_MINUTES_PER_DAY / 16, // East
@@ -223,8 +230,9 @@ int MumeMoment::untilMoonPosition(MumeMoonPositionEnum pos) const
 
 int MumeMoment::untilMoonPhase(MumeMoonPhaseEnum phase) const
 {
-    if (phase == MumeMoonPhaseEnum::UNKNOWN)
+    if (phase == MumeMoonPhaseEnum::UNKNOWN) {
         return -1;
+    }
 
     static const constexpr int PHASE_OFFSET[] = {15,  // Waxing Crescent
                                                  18,  // First Quarter

@@ -65,8 +65,9 @@ NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordina
 
 static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
 {
-    if (version > MMAPPER_2_5_1_SCHEMA)
+    if (version > MMAPPER_2_5_1_SCHEMA) {
         return;
+    }
 
     static_assert(INFOMARK_SCALE == 100);
     constexpr auto TWENTIETH = INFOMARK_SCALE / 20;
@@ -544,11 +545,12 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 
     transformInfomarkOnLoad(version, mark);
 
-    if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty())
+    if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty()) {
         mark.setText(InfoMarkText{});
-    else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty())
+    } else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty()) {
         // REVISIT: Just discard empty text markers?
         mark.setText(InfoMarkText{"New Marker"});
+    }
 }
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)

@@ -37,22 +37,24 @@ enum class NODISCARD TokenEnum { BeginString, EndString };
 
 NODISCARD static std::optional<uint32_t> try_decode_oct(char c) noexcept
 {
-    if ('0' <= c && c <= '7')
+    if ('0' <= c && c <= '7') {
         return c - '0';
-    else
+    } else {
         return std::nullopt;
+    }
 }
 
 NODISCARD static std::optional<uint32_t> try_decode_hex(char c) noexcept
 {
-    if ('0' <= c && c <= '9')
+    if ('0' <= c && c <= '9') {
         return c - '0';
-    else if ('a' <= c && c <= 'f')
+    } else if ('a' <= c && c <= 'f') {
         return 10 + (c - 'a');
-    else if ('A' <= c && c <= 'F')
+    } else if ('A' <= c && c <= 'F') {
         return 10 + (c - 'A');
-    else
+    } else {
         return std::nullopt;
+    }
 }
 
 NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view input,
@@ -78,15 +80,17 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             }
 
             // 400..777 are invalid.
-            if (result > 255)
+            if (result > 255) {
                 throw UnquoteException(ReasonEnum::INVALID_OCTAL);
+            }
 
             visit(static_cast<char>(static_cast<unsigned char>(result)));
         };
 
         const auto visit_hex = [&visit](const int digits, auto &it, const auto end) -> void {
-            if (digits != 2 && digits != 4 && digits != 8)
+            if (digits != 2 && digits != 4 && digits != 8) {
                 throw std::runtime_error("internal error");
+            }
 
             // NOTE: This is incorrect for parsing C++ escape codes:
             // * "\xf" is allowed in C++ but fails here.
@@ -109,8 +113,9 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             static constexpr const auto DEFAULT_TRANSLIT = static_cast<uint32_t>(
                 static_cast<unsigned char>(C_QUESTION_MARK));
 
-            if (result > 255)
+            if (result > 255) {
                 result = DEFAULT_TRANSLIT;
+            }
 
             visit(static_cast<char>(static_cast<unsigned char>(result)));
         };
@@ -123,8 +128,9 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
             const char c = *it++;
 
             if (mode == ModeEnum::Space) {
-                if (isSpace(c))
+                if (isSpace(c)) {
                     continue;
+                }
 
                 visit(TokenEnum::BeginString);
                 if (c == C_DQUOTE) {

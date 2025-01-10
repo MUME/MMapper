@@ -117,8 +117,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         static const QRegularExpression rx(
             R"(^(\d+)(?::\d{2})?\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
-        if (!match.hasMatch())
+        if (!match.hasMatch()) {
             return;
+        }
         hour = match.captured(1).toInt();
         if (match.captured(2).at(0) == 'p') {
             // pm
@@ -151,8 +152,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         static const QRegularExpression rx(
             R"(^(\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
-        if (!match.hasMatch())
+        if (!match.hasMatch()) {
             return;
+        }
 
         const QString cap1 = match.captured(1);
         weekDay = s_westronWeekDayNames.keyToValue(cap1.toLatin1().data());
@@ -193,16 +195,19 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 void MumeClock::slot_onUserGmcp(const GmcpMessage &msg)
 {
     if (!(msg.isEventDarkness() || msg.isEventSun()) || !msg.getJsonDocument().has_value()
-        || !msg.getJsonDocument()->isObject())
+        || !msg.getJsonDocument()->isObject()) {
         return;
+    }
 
     const QJsonObject obj = msg.getJsonDocument()->object();
-    if (!obj.contains("what") || !obj.value("what").isString())
+    if (!obj.contains("what") || !obj.value("what").isString()) {
         return;
+    }
 
     const auto what = obj["what"].toString();
-    if (what.isEmpty())
+    if (what.isEmpty()) {
         return;
+    }
 
     MumeTimeEnum time = MumeTimeEnum::UNKNOWN;
     if (msg.isEventSun()) {
@@ -279,8 +284,9 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
     }
 
     log(QString("Synchronized tick using %1").arg(reason));
-    if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR)
+    if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR) {
         m_precision = MumeClockPrecisionEnum::MINUTE;
+    }
 }
 
 void MumeClock::parseClockTime(const QString &clockTime)
@@ -294,8 +300,9 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
     // The current time is 5:23pm.
     static const QRegularExpression rx(R"(^The current time is (\d+):(\d+)\W*(am|pm).$)");
     auto match = rx.match(clockTime);
-    if (!match.hasMatch())
+    if (!match.hasMatch()) {
         return;
+    }
 
     int hour = match.captured(1).toInt();
     int minute = match.captured(2).toInt();
@@ -323,8 +330,9 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
 void MumeClock::parseMSSP(const int year, const int month, const int day, const int hour)
 {
     // We should not parse the fuzzy MSSP time if we already have a greater precision.
-    if (getPrecision() > MumeClockPrecisionEnum::DAY)
+    if (getPrecision() > MumeClockPrecisionEnum::DAY) {
         return;
+    }
 
     const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
 

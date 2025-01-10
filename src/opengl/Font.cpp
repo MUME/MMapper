@@ -286,8 +286,9 @@ struct NODISCARD FontMetrics
 
     NODISCARD const Kerning *lookupKerning(const Glyph *const prev, const Glyph *const current) const
     {
-        if (prev == nullptr || current == nullptr)
+        if (prev == nullptr || current == nullptr) {
             return nullptr;
+        }
 
         const auto it = kernings.find(IntPair{prev->id, current->id});
         return (it == kernings.end()) ? nullptr : it->second;
@@ -317,9 +318,10 @@ struct NODISCARD FontMetrics
         int width = 0;
         foreach_glyph(msg, [&width](const Glyph *const g, const Kerning *const k) {
             width += g->xadvance;
-            if (k != nullptr)
+            if (k != nullptr) {
                 // kerning amount is added to the advance
                 width += k->amount;
+            }
         });
         return width;
     }
@@ -697,10 +699,12 @@ NODISCARD static QString getFontFilename(const float devicePixelRatio)
     const char *const FONT_KEY = "MMAPPER_FONT";
     const char *const font = "Cantarell";
     const char *const size = [&devicePixelRatio]() {
-        if (devicePixelRatio > 1.75f)
+        if (devicePixelRatio > 1.75f) {
             return "36";
-        if (devicePixelRatio > 1.25f)
+        }
+        if (devicePixelRatio > 1.25f) {
             return "27";
+        }
         return "18";
     }();
     const QString fontFilename = QString(":/fonts/%1%2.fnt").arg(font).arg(size);
@@ -789,8 +793,9 @@ glm::ivec2 GLFont::getScreenCenter() const
 std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, const size_t count)
 {
     std::vector<FontVert3d> result;
-    if (count == 0)
+    if (count == 0) {
         return result;
+    }
 
     auto &fm = getFontMetrics();
     const auto end = text + count;
@@ -816,8 +821,9 @@ std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, co
 
 void GLFont::render2dTextImmediate(const std::vector<GLText> &text)
 {
-    if (text.empty())
+    if (text.empty()) {
         return;
+    }
 
     // input position: physical pixels, with origin at upper left
     // output: [-1, 1]^2
@@ -836,12 +842,14 @@ void GLFont::render2dTextImmediate(const std::vector<GLText> &text)
 
 void GLFont::render3dTextImmediate(const std::vector<GLText> &text)
 {
-    if (text.empty())
+    if (text.empty()) {
         return;
+    }
 
     const auto rawVerts = getFontBatchRawData(text.data(), text.size());
-    if (rawVerts.empty())
+    if (rawVerts.empty()) {
         return;
+    }
 
     m_gl.renderFont3d(m_texture, rawVerts);
 }

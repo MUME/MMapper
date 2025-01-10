@@ -197,8 +197,9 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeAttribute("area", "1");
     stream.writeAttribute("title", room.getName().toQString());
     stream.writeAttribute("environment", QString("%1").arg(static_cast<int>(room.getTerrainType())));
-    if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION))
+    if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION)) {
         stream.writeAttribute("important", "1");
+    }
 
     stream.writeStartElement("coord");
     const Coordinate &pos = room.getPosition();
@@ -214,8 +215,9 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
             stream.writeAttribute("direction", lowercaseDirection(dir));
             // REVISIT: Can MMP handle multiple exits in the same direction?
             stream.writeAttribute("target", toMmpRoomId(e.outFirst()));
-            if (e.isHiddenExit())
+            if (e.isHiddenExit()) {
                 stream.writeAttribute("hidden", "1");
+            }
             if (e.isDoor()) {
                 stream.writeAttribute("door", "2");
             }

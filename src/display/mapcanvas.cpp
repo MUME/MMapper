@@ -66,8 +66,9 @@ MapCanvas::MapCanvas(MapData &mapData,
     , m_groupManager{groupManager}
 {
     NonOwningPointer &pmc = primaryMapCanvas();
-    if (pmc == nullptr)
+    if (pmc == nullptr) {
         pmc = this;
+    }
 
     setCursor(Qt::OpenHandCursor);
     grabGesture(Qt::PinchGesture);
@@ -77,8 +78,9 @@ MapCanvas::MapCanvas(MapData &mapData,
 MapCanvas::~MapCanvas()
 {
     NonOwningPointer &pmc = primaryMapCanvas();
-    if (pmc == this)
+    if (pmc == this) {
         pmc = nullptr;
+    }
 
     cleanupOpenGL();
 }
@@ -210,10 +212,11 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
         if (hasCtrl) {
-            if (event->angleDelta().y() > 100)
+            if (event->angleDelta().y() > 100) {
                 slot_layerDown();
-            else if (event->angleDelta().y() < -100)
+            } else if (event->angleDelta().y() < -100) {
                 slot_layerUp();
+            }
         } else {
             const auto zoomAndMaybeRecenter = [this, event](const int numSteps) -> bool {
                 assert(numSteps != 0);
@@ -298,18 +301,21 @@ void MapCanvas::slot_forceMapperToRoom()
 bool MapCanvas::event(QEvent *const event)
 {
     auto tryHandlePinchZoom = [this, event]() -> bool {
-        if (event->type() != QEvent::Gesture)
+        if (event->type() != QEvent::Gesture) {
             return false;
+        }
 
         const auto *const gestureEvent = dynamic_cast<QGestureEvent *>(event);
-        if (gestureEvent == nullptr)
+        if (gestureEvent == nullptr) {
             return false;
+        }
 
         // Zoom in / out
         QGesture *const gesture = gestureEvent->gesture(Qt::PinchGesture);
         const auto *const pinch = dynamic_cast<QPinchGesture *>(gesture);
-        if (pinch == nullptr)
+        if (pinch == nullptr) {
             return false;
+        }
 
         const QPinchGesture::ChangeFlags changeFlags = pinch->changeFlags();
         if (changeFlags & QPinchGesture::ScaleFactorChanged) {
@@ -327,16 +333,18 @@ bool MapCanvas::event(QEvent *const event)
         return true;
     };
 
-    if (tryHandlePinchZoom())
+    if (tryHandlePinchZoom()) {
         return true;
+    }
 
     return QOpenGLWidget::event(event);
 }
 
 void MapCanvas::slot_createRoom()
 {
-    if (!hasSel1())
+    if (!hasSel1()) {
         return;
+    }
     const Coordinate c = getSel1().getCoordinate();
     RoomSelection tmpSel = RoomSelection(m_data, c);
     if (tmpSel.empty()) {
@@ -381,10 +389,12 @@ std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSe
     // space positions can be highly ansitropic (e.g. steep vertical angle),
     // so we'll expand the search area by probing in all 45 and 90 degree angles
     // from the mouse. This isn't perfect, but it should be good enough.
-    for (int dy = -1; dy <= 1; ++dy)
-        for (int dx = -1; dx <= 1; ++dx)
+    for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
             probe(glm::vec2{static_cast<float>(dx) * CLICK_RADIUS,
                             static_cast<float>(dy) * CLICK_RADIUS});
+        }
+    }
 
     const auto getScaled = [this](const glm::vec3 &c) -> Coordinate {
         const auto pos = glm::ivec3(glm::vec2(c) * static_cast<float>(INFOMARK_SCALE),
@@ -468,8 +478,9 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
             // the hi and lo points.
             const auto hiz = static_cast<int>(std::floor(near.z));
             const auto loz = static_cast<int>(std::ceil(far.z));
-            if (hiz <= loz)
+            if (hiz <= loz) {
                 break;
+            }
 
             bool empty = true;
             const auto tmpSel = RoomSelection::createSelection(m_data);

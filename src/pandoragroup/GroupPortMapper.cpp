@@ -141,8 +141,9 @@ public:
 private:
     NODISCARD QByteArray virt_tryGetExternalIp() final
     {
-        if (!validIGD())
+        if (!validIGD()) {
             return "";
+        }
 
         // REVISIT: Expose the external IP in the preferences?
         static const constexpr int EXTERNAL_IP_ADDRESS_BYTES = 46; /* ipv6 requires 45 bytes */

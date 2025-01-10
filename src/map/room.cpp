@@ -51,8 +51,9 @@ RoomModificationTracker::~RoomModificationTracker() = default;
 void RoomModificationTracker::notifyModified(Room &room, RoomUpdateFlags updateFlags)
 {
     m_isModified = true;
-    if (updateFlags.contains(RoomUpdateEnum::Mesh))
+    if (updateFlags.contains(RoomUpdateEnum::Mesh)) {
         m_needsMapUpdate = true;
+    }
     virt_onNotifyModified(room, updateFlags);
 }
 
@@ -71,8 +72,9 @@ Room::Room(this_is_private, RoomModificationTracker &tracker, const RoomStatusEn
 Room::~Room()
 {
     // This fails for JsonWorld::writeZones
-    if ((false))
+    if ((false)) {
         assert(m_status == RoomStatusEnum::Zombie);
+    }
 }
 
 ExitDirFlags Room::getOutExits() const
@@ -80,8 +82,9 @@ ExitDirFlags Room::getOutExits() const
     ExitDirFlags result;
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = this->exit(dir);
-        if (e.isExit() && !e.outIsEmpty())
+        if (e.isExit() && !e.outIsEmpty()) {
             result |= dir;
+        }
     }
     return result;
 }
@@ -90,8 +93,9 @@ OptionalExitDirConstRef Room::getRandomExit() const
 {
     // Pick an alternative direction to randomly wander into
     const auto outExits = this->getOutExits();
-    if (outExits.empty())
+    if (outExits.empty()) {
         return OptionalExitDirConstRef{};
+    }
 
     const auto randomDir = chooseRandomElement(outExits);
     return OptionalExitDirConstRef{ExitDirConstRef{randomDir, this->exit(randomDir)}};
@@ -102,9 +106,11 @@ ExitDirConstRef Room::getExitMaybeRandom(const ExitDirEnum dir) const
     // REVISIT: The whole room (not just exits) can be flagged as random in MUME.
     const Exit &e = this->exit(dir);
 
-    if (e.exitIsRandom())
-        if (auto opt = getRandomExit())
+    if (e.exitIsRandom()) {
+        if (auto opt = getRandomExit()) {
             return opt.value();
+        }
+    }
 
     return ExitDirConstRef{dir, e};
 }
@@ -112,8 +118,9 @@ ExitDirConstRef Room::getExitMaybeRandom(const ExitDirEnum dir) const
 template<typename T>
 inline bool maybeModify(T &ours, T &&value)
 {
-    if (ours == value)
+    if (ours == value) {
         return false;
+    }
 
     ours = std::forward<T>(value);
     return true;
@@ -172,8 +179,9 @@ void Room::setExitsList(const ExitsList &newExits)
     for (const ExitDirEnum dir : ALL_EXITS7) {
         Exit &ex = m_exits[dir];
         const Exit &newValue = newExits[dir];
-        if (ex == newValue)
+        if (ex == newValue) {
             continue;
+        }
 
         const auto diff = getDifferences(ex, newValue);
         assert(!diff.empty());
@@ -182,15 +190,17 @@ void Room::setExitsList(const ExitsList &newExits)
         assert(ex == newValue);
     }
 
-    if (!flags.empty())
+    if (!flags.empty()) {
         setModified(flags);
+    }
 }
 
 void Room::addInExit(const ExitDirEnum dir, const RoomId id)
 {
     Exit &ex = exit(dir);
-    if (ex.containsIn(id))
+    if (ex.containsIn(id)) {
         return;
+    }
     ex.addIn(id);
     setModified(incomingUpdateFlags);
 }
@@ -198,8 +208,9 @@ void Room::addInExit(const ExitDirEnum dir, const RoomId id)
 void Room::addOutExit(const ExitDirEnum dir, const RoomId id)
 {
     Exit &ex = exit(dir);
-    if (ex.containsOut(id))
+    if (ex.containsOut(id)) {
         return;
+    }
     ex.addOut(id);
     setModified(outgoingUpdateFlags);
 }
@@ -207,8 +218,9 @@ void Room::addOutExit(const ExitDirEnum dir, const RoomId id)
 void Room::removeInExit(const ExitDirEnum dir, const RoomId id)
 {
     Exit &ex = exit(dir);
-    if (!ex.containsIn(id))
+    if (!ex.containsIn(id)) {
         return;
+    }
     ex.removeIn(id);
     setModified(incomingUpdateFlags);
 }
@@ -216,8 +228,9 @@ void Room::removeInExit(const ExitDirEnum dir, const RoomId id)
 void Room::removeOutExit(const ExitDirEnum dir, const RoomId id)
 {
     Exit &ex = exit(dir);
-    if (!ex.containsOut(id))
+    if (!ex.containsOut(id)) {
         return;
+    }
     // REVISIT: check if it was actually there?
     ex.removeOut(id);
     setModified(outgoingUpdateFlags);
@@ -225,8 +238,9 @@ void Room::removeOutExit(const ExitDirEnum dir, const RoomId id)
 
 void Room::setId(const RoomId id)
 {
-    if (m_id == id)
+    if (m_id == id) {
         return;
+    }
 
     m_id = id;
     setModified(RoomUpdateFlags{RoomUpdateEnum::Id});
@@ -234,8 +248,9 @@ void Room::setId(const RoomId id)
 
 void Room::setPosition(const Coordinate &c)
 {
-    if (c == m_position)
+    if (c == m_position) {
         return;
+    }
 
     m_position = c;
     setModified(mesh_updateFlags | RoomUpdateEnum::Coord);
@@ -243,13 +258,15 @@ void Room::setPosition(const Coordinate &c)
 
 void Room::setPermanent()
 {
-    if (m_status == RoomStatusEnum::Zombie)
+    if (m_status == RoomStatusEnum::Zombie) {
         throw std::runtime_error("Attempt to resurrect a zombie");
+    }
 
     const bool wasTemporary = std::exchange(m_status, RoomStatusEnum::Permanent)
                               == RoomStatusEnum::Temporary;
-    if (wasTemporary)
+    if (wasTemporary) {
         setModified(mesh_updateFlags);
+    }
 }
 
 void Room::setAboutToDie()
@@ -260,8 +277,9 @@ void Room::setAboutToDie()
 
 void Room::setUpToDate()
 {
-    if (isUpToDate())
+    if (isUpToDate()) {
         return;
+    }
 
     m_borked = false;
     setModified(borked_updateFlags);
@@ -269,8 +287,9 @@ void Room::setUpToDate()
 
 void Room::setOutDated()
 {
-    if (!isUpToDate())
+    if (!isUpToDate()) {
         return;
+    }
 
     m_borked = true;
     setModified(borked_updateFlags);
@@ -316,9 +335,11 @@ SharedParseEvent Room::getEvent(const Room *const room)
 NODISCARD static int wordDifference(StringView a, StringView b)
 {
     size_t diff = 0;
-    while (!a.isEmpty() && !b.isEmpty())
-        if (a.takeFirstLetter() != b.takeFirstLetter())
+    while (!a.isEmpty() && !b.isEmpty()) {
+        if (a.takeFirstLetter() != b.takeFirstLetter()) {
             ++diff;
+        }
+    }
     return static_cast<int>(diff + a.size() + b.size());
 }
 
@@ -633,10 +654,11 @@ void Room::update(Room &room, const ParseEvent &event)
         room.setName(name);
     }
 
-    if (isUpToDate)
+    if (isUpToDate) {
         room.setUpToDate();
-    else
+    } else {
         room.setOutDated();
+    }
 }
 
 void Room::update(Room *const target, const Room *const source)
@@ -730,16 +752,19 @@ std::string Room::toStdString() const
     ss << "Exits:";
     for (const ExitDirEnum j : ALL_EXITS7) {
         const ExitFlags &exitFlags = exit(j).getExitFlags();
-        if (!exitFlags.isExit())
+        if (!exitFlags.isExit()) {
             continue;
+        }
         ss << " ";
 
         bool climb = exit(j).getExitFlags().isClimb();
-        if (climb)
+        if (climb) {
             ss << "|";
+        }
         bool door = exit(j).isDoor();
-        if (door)
+        if (door) {
             ss << "(";
+        }
         ss << lowercaseDirection(j);
         if (door) {
             const auto doorName = exit(j).getDoorName();
@@ -748,8 +773,9 @@ std::string Room::toStdString() const
             }
             ss << ")";
         }
-        if (climb)
+        if (climb) {
             ss << "|";
+        }
     }
     ss << ".\n";
     if (!getNote().isEmpty()) {
@@ -780,8 +806,9 @@ const Coordinate &Room::exitDir(ExitDirEnum dir)
 
 std::shared_ptr<Room> Room::clone(RoomModificationTracker &tracker) const
 {
-    if (m_status == RoomStatusEnum::Zombie)
+    if (m_status == RoomStatusEnum::Zombie) {
         throw std::runtime_error("Attempt to clone a zombie");
+    }
 
     const auto copy = std::make_shared<Room>(this_is_private{0}, tracker, RoomStatusEnum::Temporary);
 #define COPY(x) \

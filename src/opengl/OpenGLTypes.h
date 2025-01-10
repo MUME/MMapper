@@ -146,8 +146,9 @@ struct NODISCARD MMTextureId final : TaggedInt<MMTextureId, tags::MMTextureIdTag
     NODISCARD explicit operator bool() { return value() > DEFAULT_VALUE; }
     NODISCARD explicit operator size_t() const
     {
-        if (value() < 0)
+        if (value() < 0) {
             throw std::runtime_error("negative index");
+        }
         return static_cast<size_t>(value());
     }
 };

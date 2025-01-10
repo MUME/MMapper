@@ -117,8 +117,9 @@ public:
 
     void highlightTabs(const QString &line)
     {
-        if (line.indexOf(C_TAB) < 0)
+        if (line.indexOf(C_TAB) < 0) {
             return;
+        }
 
         const auto fmt = getBackgroundFormat(Qt::yellow);
         // REVISIT: Should this be in TabUtils?
@@ -196,8 +197,9 @@ public:
             void virt_decodedEntity(int start, int len, OptQChar decoded) final
             {
                 const auto get_fmt = [this, &decoded]() -> const QTextCharFormat & {
-                    if (!decoded)
+                    if (!decoded) {
                         return m_red;
+                    }
                     const auto val = decoded->unicode();
                     return (val < 256) ? m_yellow : m_darkOrange;
                 };
@@ -222,8 +224,9 @@ public:
         auto &opt = opt_##name; \
         if (!opt) { \
             opt = color; \
-            if (USE_TOOLTIPS) \
+            if (USE_TOOLTIPS) { \
                 opt.value().setToolTip(tooltip); \
+            } \
         } \
         return opt.value(); \
     }
@@ -308,11 +311,12 @@ void RemoteTextEdit::keyPressEvent(QKeyEvent *const event)
 /* Qt virtual */
 bool RemoteTextEdit::event(QEvent *const event)
 {
-    if ((USE_TOOLTIPS))
+    if ((USE_TOOLTIPS)) {
         if (event->type() == QEvent::ToolTip) {
             handle_toolTip(event);
             return true;
         }
+    }
 
     /* calls parent */
     return base::event(event);
@@ -322,9 +326,9 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
 {
     auto *const helpEvent = checked_dynamic_downcast<QHelpEvent *>(event);
     QTextCursor cursor = cursorForPosition(helpEvent->pos());
-    if ((false))
+    if ((false)) {
         cursor.select(QTextCursor::WordUnderCursor);
-    else {
+    } else {
         // Where you actually think you're pointing.
         cursor.movePosition(QTextCursor::PreviousCharacter);
     }
@@ -355,11 +359,13 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
 
 NODISCARD static bool lineHasTabs(const QTextCursor &line)
 {
-    if (line.isNull())
+    if (line.isNull()) {
         return false;
+    }
     const auto &block = line.block();
-    if (!block.isValid())
+    if (!block.isValid()) {
         return false;
+    }
     return block.text().indexOf(C_TAB) >= 0;
 }
 
@@ -380,23 +386,27 @@ static void expandTabs(QTextCursor line)
 static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
 {
     const auto &block = line.block();
-    if (!block.isValid())
+    if (!block.isValid()) {
         return;
+    }
 
     const auto &text = block.text();
-    if (text.isEmpty())
+    if (text.isEmpty()) {
         return;
+    }
 
     const int to_remove = [&text, max_spaces]() -> int {
         const int len = std::min(max_spaces, text.length());
         int n = 0;
-        while (n < len && text.at(n) == C_SPACE)
+        while (n < len && text.at(n) == C_SPACE) {
             ++n;
+        }
         return n;
     }();
 
-    if (to_remove == 0)
+    if (to_remove == 0) {
         return;
+    }
 
     line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
     line.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, to_remove);
@@ -460,8 +470,9 @@ static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&call
     auto end = LineRange::end(cur);
     for (auto it = beg; !it.isNull() && it < end;) {
         if (it.block().isValid()) {
-            if (callback(static_cast<const QTextCursor &>(it)) == CallbackResultEnum::STOP)
+            if (callback(static_cast<const QTextCursor &>(it)) == CallbackResultEnum::STOP) {
                 return;
+            }
         }
         if (!it.movePosition(QTextCursor::NextBlock)) {
             break;
@@ -498,8 +509,9 @@ void RemoteTextEdit::prefixPartialSelection(const QString &prefix)
     auto cur = textCursor();
     RaiiGroupUndoActions raii(cur);
     foreach_partly_selected_block(cur, [&prefix](const QTextCursor &line) -> void {
-        if (lineHasTabs(line))
+        if (lineHasTabs(line)) {
             expandTabs(line);
+        }
         insertPrefix(line, prefix);
     });
 }
@@ -508,8 +520,9 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
 {
     event->accept();
     auto cur = textCursor();
-    if (cur.hasSelection())
+    if (cur.hasSelection()) {
         return prefixPartialSelection(string_consts::S_TWO_SPACES);
+    }
 
     /* otherwise, insert a real tab, expand it, and restore the cursor */
     RaiiGroupUndoActions raii(cur);
@@ -533,8 +546,9 @@ void RemoteTextEdit::handleEventBacktab(QKeyEvent *const event)
     auto cur = textCursor();
     RaiiGroupUndoActions raii(cur);
     foreach_partly_selected_block(cur, [](const QTextCursor &line) -> void {
-        if (lineHasTabs(line))
+        if (lineHasTabs(line)) {
             expandTabs(line);
+        }
         tryRemoveLeadingSpaces(line, 2);
     });
 }
@@ -559,10 +573,13 @@ void RemoteTextEdit::joinLines()
     foreach_partly_selected_block(cur, [&buffer](const QTextCursor line) -> void {
         const QTextBlock block = line.block();
         const QString text = block.text();
-        if (text.isEmpty())
+        if (text.isEmpty()) {
             return;
-        if (!buffer.isEmpty())
+        }
+
+        if (!buffer.isEmpty()) {
             buffer.append(C_SPACE);
+        }
         buffer.appendExpandedTabs(QStringView{text});
     });
 
@@ -588,8 +605,9 @@ void RemoteTextEdit::justifyLines(const int maxLen)
     const auto from = doc->findBlock(cur.selectionStart());
     const auto to = doc->findBlock(cur.selectionEnd());
     const auto toBlockNumber = to.blockNumber();
-    if (!from.isValid())
+    if (!from.isValid()) {
         return;
+    }
 
     const int a = from.position();
     const int b = to.position() + to.length() - 1;
@@ -597,10 +615,13 @@ void RemoteTextEdit::justifyLines(const int maxLen)
     mmqt::TextBuffer buffer;
     for (auto it = from; it.isValid() && it.blockNumber() <= toBlockNumber; it = it.next()) {
         const auto &text = it.text();
-        if (text.isEmpty())
+        if (text.isEmpty()) {
             continue;
-        if (!buffer.isEmpty())
+        }
+
+        if (!buffer.isEmpty()) {
             buffer.append(C_SPACE);
+        }
         buffer.appendJustified(QStringView{text}, maxLen);
     }
 
@@ -629,10 +650,11 @@ void RemoteTextEdit::showWhitespace(const bool enabled)
 {
     auto *const doc = document();
     QTextOption option = doc->defaultTextOption();
-    if (enabled)
+    if (enabled) {
         option.setFlags(option.flags() | QTextOption::ShowTabsAndSpaces);
-    else
+    } else {
         option.setFlags(option.flags() & ~QTextOption::ShowTabsAndSpaces);
+    }
     option.setFlags(option.flags() | QTextOption::AddSpaceForLineAndParagraphSeparators);
     doc->setDefaultTextOption(option);
 }
@@ -833,8 +855,9 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
             editMenu->addSeparator();
             break;
         case EditCmd2Enum::EDIT_ONLY:
-            if (m_editSession)
+            if (m_editSession) {
                 addToMenu(editMenu, cmd, pTextEdit);
+            }
             break;
         case EditCmd2Enum::EDIT_OR_VIEW:
             addToMenu(editMenu, cmd, pTextEdit);
@@ -911,8 +934,9 @@ void RemoteEditWidget::addToMenu(QMenu *const menu, const EditViewCommand &cmd)
     }
 
     QAction *const act = new QAction(tr(cmd.action), this);
-    if (cmd.shortcut != nullptr)
+    if (cmd.shortcut != nullptr) {
         act->setShortcut(tr(cmd.shortcut));
+    }
     act->setStatusTip(tr(cmd.status));
     menu->addAction(act);
     connect(act, &QAction::triggered, this, cmd.mem_fn_ptr);
@@ -930,8 +954,9 @@ void RemoteEditWidget::addToMenu(QMenu *const menu,
     QAction *const act = new QAction(QIcon::fromTheme(cmd.theme, QIcon(cmd.icon)),
                                      tr(cmd.action),
                                      this);
-    if (cmd.shortcut != nullptr)
+    if (cmd.shortcut != nullptr) {
         act->setShortcut(tr(cmd.shortcut));
+    }
     act->setStatusTip(tr(cmd.status));
     menu->addAction(act);
 
@@ -989,8 +1014,9 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
     CursorAnsiInfo result;
     const auto &line = cursor.block().text();
     mmqt::foreachAnsi(line, [pos, &result](int start, const QStringView sv) {
-        if (result || pos < start || pos >= start + sv.length())
+        if (result || pos < start || pos >= start + sv.length()) {
             return;
+        }
 
         if (!mmqt::isValidAnsiColor(sv)) {
             result.buffer.append("*invalid*");
@@ -999,6 +1025,7 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
         }
 
         auto &buffer = result.buffer;
+
         if (const auto optAnsi = mmqt::parseAnsiColor(RawAnsi{}, sv)) {
             const auto &ansi = *optAnsi;
             // result.ansi = ansi;
@@ -1087,17 +1114,21 @@ void RemoteEditWidget::slot_updateStatusBar()
             status.append(std::forward<decltype(x)>(x));
         };
 
-        if (linesHaveTabs(cur))
+        if (linesHaveTabs(cur)) {
             err("Tabs");
+        }
 
-        if (linesHaveTrailingSpace(cur))
+        if (linesHaveTrailingSpace(cur)) {
             err("Trailing-Spaces");
+        }
 
-        if (hasLongLines(cur))
+        if (hasLongLines(cur)) {
             err("Long-lines");
+        }
 
-        if (first)
+        if (first) {
             status.append(hasSelection ? ", Selected-Lines: Ok" : ", Document: Ok");
+        }
     };
     report_errors();
     statusBar()->showMessage(status);
@@ -1123,8 +1154,9 @@ void RemoteEditWidget::slot_expandTabs()
     RaiiGroupUndoActions raii{cur};
 
     foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        if (lineHasTabs(line))
+        if (lineHasTabs(line)) {
             ::expandTabs(line);
+        }
     });
 }
 
@@ -1137,8 +1169,9 @@ void RemoteEditWidget::slot_removeTrailingWhitespace()
         static const QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
         assert(trailingWhitespace.isValid());
         QString text = line.block().text();
-        if (!text.contains(trailingWhitespace))
+        if (!text.contains(trailingWhitespace)) {
             return;
+        }
 
         text.remove(trailingWhitespace);
         line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -1156,8 +1189,9 @@ void RemoteEditWidget::slot_removeDuplicateSpaces()
         static const QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
         assert(spaces.isValid());
         QString text = line.block().text();
-        if (!text.contains(spaces))
+        if (!text.contains(spaces)) {
             return;
+        }
 
         text.replace(spaces, string_consts::S_SPACE);
         line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
@@ -1169,12 +1203,14 @@ void RemoteEditWidget::slot_removeDuplicateSpaces()
 void RemoteEditWidget::slot_normalizeAnsi()
 {
     const QString &old = m_textEdit->toPlainText();
-    if (!mmqt::containsAnsi(old))
+    if (!mmqt::containsAnsi(old)) {
         return;
+    }
 
     mmqt::TextBuffer output = mmqt::normalizeAnsi(ANSI_COLOR_SUPPORT_HI, old);
-    if (!output.hasTrailingNewline())
+    if (!output.hasTrailingNewline()) {
         output.append(C_NEWLINE);
+    }
 
     m_textEdit->replaceAll(output.getQString());
 }
@@ -1276,6 +1312,7 @@ void RemoteEditWidget::slot_finishEdit()
 void RemoteEditWidget::setVisible(bool visible)
 {
     QWidget::setVisible(visible);
-    if (visible)
+    if (visible) {
         slot_updateStatusBar();
+    }
 }

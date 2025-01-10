@@ -96,16 +96,18 @@ public:
     ~Settings() = default;
     explicit operator QSettings &()
     {
-        if (!m_settings)
+        if (!m_settings) {
             throw std::runtime_error("object does not exist");
+        }
         return m_settings.value();
     }
 };
 
 void Settings::initSettings()
 {
-    if (m_settings)
+    if (m_settings) {
         throw std::runtime_error("object already exists");
+    }
 
     // NOTE: mutex guards read/write access to g_path from multiple threads,
     // since the static variable can be set to nullptr on spurious failure.
@@ -149,11 +151,12 @@ void Settings::initSettings()
     std::call_once(success_flag, [this] {
         auto &&info = qInfo();
         info << "Using settings from" << QString{static_cast<QSettings &>(*this).fileName()};
-        if (g_path == nullptr)
+        if (g_path == nullptr) {
             info << "(Hint: Environment variable" << QString{MMAPPER_PROFILE_PATH}
                  << "overrides the default).";
-        else
+        } else {
             info << ".";
+        }
     });
 }
 
@@ -319,13 +322,16 @@ NODISCARD static bool isValidAnsi(const QString &input)
     }
 
     for (const auto &part : input.mid(1, input.length() - 2).split(";")) {
-        for (const QChar c : part)
-            if (!c.isDigit())
+        for (const QChar c : part) {
+            if (!c.isDigit()) {
                 return false;
+            }
+        }
         bool ok = false;
         const auto n = part.toUInt(&ok, 10);
-        if (!ok || n > MAX)
+        if (!ok || n > MAX) {
             return false;
+        }
     }
 
     return true;
@@ -378,11 +384,13 @@ NODISCARD static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
 NODISCARD static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
 {
     assert(isValidAnsi(defaultValue));
-    if (isValidAnsi(input))
+    if (isValidAnsi(input)) {
         return input;
+    }
 
-    if (!input.isEmpty())
+    if (!input.isEmpty()) {
         qWarning() << "invalid ansi code: " << input;
+    }
 
     return defaultValue;
 }
@@ -390,8 +398,9 @@ NODISCARD static QString sanitizeAnsi(const QString &input, const QString &defau
 NODISCARD static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
 {
     const auto state = static_cast<GroupManagerStateEnum>(input);
-    if (isValidGroupManagerState(state))
+    if (isValidGroupManagerState(state)) {
         return state;
+    }
 
     qWarning() << "invalid GroupManagerStateEnum:" << input;
     return GroupManagerStateEnum::Off;
@@ -400,8 +409,9 @@ NODISCARD static GroupManagerStateEnum sanitizeGroupManagerState(const int input
 NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
 {
     const auto mode = static_cast<MapModeEnum>(input);
-    if (isValidMapMode(mode))
+    if (isValidMapMode(mode)) {
         return mode;
+    }
 
     qWarning() << "invalid MapMode:" << input;
     return MapModeEnum::PLAY;
@@ -410,8 +420,9 @@ NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
 NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
 {
     const auto encoding = static_cast<CharacterEncodingEnum>(input);
-    if (isValidCharacterEncoding(encoding))
+    if (isValidCharacterEncoding(encoding)) {
         return encoding;
+    }
 
     qWarning() << "invalid CharacterEncodingEnum:" << input;
     return CharacterEncodingEnum::LATIN1;
@@ -420,8 +431,9 @@ NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t 
 NODISCARD static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
 {
     const auto state = static_cast<AutoLoggerEnum>(input);
-    if (isValidAutoLoggerState(state))
+    if (isValidAutoLoggerState(state)) {
         return state;
+    }
 
     qWarning() << "invalid AutoLoggerEnum:" << input;
     return AutoLoggerEnum::DeleteDays;
@@ -432,8 +444,9 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
     static constexpr const auto MIN = static_cast<int>(std::numeric_limits<uint16_t>::min());
     static constexpr const auto MAX = static_cast<int>(std::numeric_limits<uint16_t>::max());
 
-    if (isClamped(input, MIN, MAX))
+    if (isClamped(input, MIN, MAX)) {
         return static_cast<uint16_t>(input);
+    }
 
     qWarning() << "invalid uint16: " << input;
     return defaultValue;

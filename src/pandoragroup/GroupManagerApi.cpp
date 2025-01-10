@@ -11,16 +11,18 @@
 
 void GroupManagerApi::kickCharacter(const QByteArray &name) const
 {
-    if (name.isEmpty())
+    if (name.isEmpty()) {
         throw std::invalid_argument("name");
+    }
 
     m_group.acceptVisitor([&name](Mmapper2Group &group) { group.kickCharacter(name); });
 }
 
 void GroupManagerApi::sendGroupTell(const QByteArray &msg) const
 {
-    if (msg.isEmpty())
+    if (msg.isEmpty()) {
         throw std::invalid_argument("msg");
+    }
 
     m_group.acceptVisitor([&msg](Mmapper2Group &group) { group.sendGroupTell(msg); });
 }

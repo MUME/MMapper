@@ -28,19 +28,23 @@ NODISCARD static std::regex createRegex(const std::string &input,
 {
     // TODO: Switch from std::regex::extended to std::regex::multiline once GCC supports it
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
-    if (cs == Qt::CaseInsensitive)
+    if (cs == Qt::CaseInsensitive) {
         options |= std::regex_constants::icase;
+    }
     const std::string pattern = [&input, &options, &regex]() -> std::string {
-        if (input.empty())
+        if (input.empty()) {
             return R"(^$)";
+        }
 
-        if (regex)
+        if (regex) {
             return input;
+        }
 
         const auto escape_pattern = [&options]() {
             // Prevent user input from being interpreted as a POSIX extended regex
-            if (options & std::regex::extended)
+            if (options & std::regex::extended) {
                 return R"([.[{}()*+?|^$])";
+            }
             // ECMAScript escape pattern (unused)
             return R"([-[\]{}()*+?.,\^$|#\s])";
         };
@@ -66,10 +70,11 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
 {
     // REVISIT: rewrite this using the new syntax tree model.
     auto view = StringView{line}.trim();
-    if (view.isEmpty())
+    if (view.isEmpty()) {
         return std::nullopt;
-    else if (view.takeFirstLetter() != char_consts::C_MINUS_SIGN)
+    } else if (view.takeFirstLetter() != char_consts::C_MINUS_SIGN) {
         return RoomFilter{line, Qt::CaseInsensitive, false, PatternKindsEnum::NAME};
+    }
 
     const auto first = view.takeFirstWord();
     const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
@@ -93,8 +98,9 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
             return std::nullopt;
         }
     }();
-    if (!opt.has_value())
+    if (!opt.has_value()) {
         return std::nullopt;
+    }
 
     const auto kind = opt.value();
     if (kind != PatternKindsEnum::NONE) {

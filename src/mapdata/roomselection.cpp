@@ -58,8 +58,9 @@ RoomSelection::~RoomSelection()
 
 const Room *RoomSelection::getFirstRoom() const noexcept(false)
 {
-    if (empty())
+    if (empty()) {
         throw std::runtime_error("empty");
+    }
     return cbegin()->second;
 }
 

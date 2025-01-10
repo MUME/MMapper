@@ -71,8 +71,9 @@ public:
 private:
     void invoke(Args... args) const
     {
-        if (isValid())
+        if (isValid()) {
             m_function(args...);
+        }
     }
 
 public:
@@ -125,8 +126,9 @@ public:
     void invoke(Args... args)
     {
         assert(m_disableCount >= 0);
-        if (m_disableCount > 0)
+        if (m_disableCount > 0) {
             return;
+        }
 
         m_connections.remove_if(
             [tuple = std::tuple<Args...>(args...)](const WeakConnection &weakConnection) {
@@ -163,14 +165,16 @@ public:
 
     void disconnect(const SharedConnection &connection)
     {
-        if (connection)
+        if (connection) {
             disconnect(*connection);
+        }
     }
 
     void disconnect(const Connection &toRemove)
     {
-        if (m_connections.empty())
+        if (m_connections.empty()) {
             return;
+        }
 
         m_connections.remove_if([&toRemove](WeakConnection &weakConnection) {
             if (auto shared = weakConnection.lock()) {

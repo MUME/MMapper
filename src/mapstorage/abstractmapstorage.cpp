@@ -39,7 +39,8 @@ ProgressCounter &AbstractMapStorage::getProgressCounter() const
 {
     // This will always exist, so it should be safe to just dereference it,
     // but let's not tempt UB.
-    if (auto *const pc = m_progressCounter.get())
+    if (auto *const pc = m_progressCounter.get()) {
         return *pc;
+    }
     throw NullPointerException();
 }

@@ -40,11 +40,13 @@ ClientTelnet::~ClientTelnet()
 void ClientTelnet::connectToHost()
 {
     auto &socket = m_socket;
-    if (socket.state() == QAbstractSocket::ConnectedState)
+    if (socket.state() == QAbstractSocket::ConnectedState) {
         return;
+    }
 
-    if (socket.state() != QAbstractSocket::UnconnectedState)
+    if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
+    }
 
     socket.connectToHost(QHostAddress::LocalHost, getConfig().connection.localPort);
     socket.waitForConnected(3000);
@@ -95,8 +97,9 @@ void ClientTelnet::virt_sendRawData(const std::string_view data)
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
 {
-    if (m_current.x == x && m_current.y == y)
+    if (m_current.x == x && m_current.y == y) {
         return;
+    }
 
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;

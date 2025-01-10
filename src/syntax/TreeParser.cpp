@@ -25,8 +25,9 @@ TreeParser::TreeParser(SharedConstSublist syntaxRoot, User &user)
 
 bool TreeParser::parse(const ParserInput &input)
 {
-    if (syntaxOnly(input))
+    if (syntaxOnly(input)) {
         return true;
+    }
 
     bool isFull = false;
     const auto isHelpRequest = [&isFull](const std::string_view s) -> bool {
@@ -101,11 +102,13 @@ ParseResult TreeParser::syntaxRecurseNext(const Sublist &node,
                                           const ParserInput &input,
                                           const Pair *const matchedArgs)
 {
-    if (!node.hasNextNode())
+    if (!node.hasNextNode()) {
         return recurseAccept(node, input, matchedArgs);
+    }
 
-    if (const SharedConstSublist &tmp = node.getNext())
+    if (const SharedConstSublist &tmp = node.getNext()) {
         return syntaxRecurseFirst(deref(tmp), input, matchedArgs);
+    }
 
     return ParseResult::failure(input);
 }
@@ -114,8 +117,9 @@ ParseResult TreeParser::recurseAccept(const Sublist &node,
                                       const ParserInput &input,
                                       const Pair *matchedArgs)
 {
-    if (!input.empty())
+    if (!input.empty()) {
         return ParseResult::failure(input);
+    }
 
     node.getAcceptFn().call(m_user, matchedArgs);
     return ParseResult::success(input);
@@ -151,8 +155,9 @@ public:
     {
         // REVISIT: this should probably be colored,
         // but we don't have the info for that here.
-        if (m_helps.empty())
+        if (m_helps.empty()) {
             m_helps.emplace_back("<(empty)>");
+        }
         m_accept = std::move(acc);
     }
     void addHelp(std::string help) { m_helps.emplace_back(help); }
@@ -173,8 +178,9 @@ void HelpFrame::flush()
 {
     using namespace char_consts;
 
-    if (empty())
+    if (empty()) {
         return;
+    }
 
     if (!m_helps.empty() || m_accept) {
         std::ostringstream ss;
@@ -184,10 +190,11 @@ void HelpFrame::flush()
         if (!m_helps.empty()) {
             bool first = true;
             for (const auto &h : m_helps) {
-                if (first)
+                if (first) {
                     first = false;
-                else
+                } else {
                     ss << C_SPACE;
+                }
                 ss << h;
             }
         }
@@ -200,14 +207,15 @@ void HelpFrame::flush()
             size_t len = 0;
             bool inEsc = false;
             for (char c : sv) {
-                if (c == C_ESC)
+                if (c == C_ESC) {
                     inEsc = true;
-                else if (inEsc) {
-                    if (c == 'm')
+                } else if (inEsc) {
+                    if (c == 'm') {
                         inEsc = false;
-                    else
+                    } else {
                         assert(std::isdigit(c) || c == C_OPEN_BRACKET || c == C_SEMICOLON
                                || c == C_COLON);
+                    }
                 } else {
                     ++len;
                 }
@@ -377,18 +385,22 @@ ParseResult TreeParser::HelpCommon::syntaxRecurseNext(const Sublist &node,
                                                       const ParserInput &input,
                                                       HelpFrame &frame)
 {
-    if (!m_isFull)
+    if (!m_isFull) {
         if (frame.getFailed()) {
-            if (!node.hasNextNode() || node.getNext())
+            if (!node.hasNextNode() || node.getNext()) {
                 frame.addHelp("...");
+            }
             return ParseResult::failure(input);
         }
+    }
 
-    if (!node.hasNextNode())
+    if (!node.hasNextNode()) {
         return recurseAccept(node, input, frame);
+    }
 
-    if (const SharedConstSublist &tmp = node.getNext())
+    if (const SharedConstSublist &tmp = node.getNext()) {
         return syntaxRecurseFirst(deref(tmp), input, frame);
+    }
 
     return ParseResult::failure(input);
 }

@@ -60,8 +60,9 @@ NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
 {
 #define CASE2(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-        if (str == #lower_case) \
+        if (str == #lower_case) { \
             return CharacterPositionEnum::UPPER_CASE; \
+        } \
     } while (false);
     X_FOREACH_CHARACTER_POSITION(CASE2)
 #undef CASE2
@@ -118,8 +119,9 @@ void Mmapper2Group::stop()
 void Mmapper2Group::slot_characterChanged(bool updateCanvas)
 {
     emit sig_updateWidget();
-    if (updateCanvas)
+    if (updateCanvas) {
         emit sig_updateMapCanvas();
+    }
 }
 
 void Mmapper2Group::slot_updateSelf()
@@ -159,8 +161,9 @@ void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
     }
 
     CGroupChar &self = deref(m_group->getSelf());
-    if (self.getRoomId() == roomId)
+    if (self.getRoomId() == roomId) {
         return; // No update needed
+    }
 
     // Check if we are still snared
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
@@ -221,12 +224,14 @@ void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
     auto selection = getGroup()->selectByName(from.toLatin1());
     if (!selection->empty()) {
         const auto &character = selection->at(0);
-        if (!character->getLabel().isEmpty() && character->getLabel() != character->getName())
+        if (!character->getLabel().isEmpty() && character->getLabel() != character->getName()) {
             name = QString("%1 (%2)").arg(QString::fromLatin1(character->getName()),
                                           QString::fromLatin1(character->getLabel()));
-        if (getConfig().groupManager.useGroupTellAnsi256Color)
+        }
+        if (getConfig().groupManager.useGroupTellAnsi256Color) {
             color = mmqt::rgbToAnsi256String(character->getColor(),
                                              AnsiColor16LocationEnum::Background);
+        }
     }
     log(QString("GTell from %1 arrived: %2").arg(from, text));
 
@@ -243,11 +248,12 @@ void Mmapper2Group::kickCharacter(const QByteArray &character)
     case GroupManagerStateEnum::Client:
         throw std::invalid_argument("Only hosts can kick players");
     case GroupManagerStateEnum::Server:
-        if (getGroup()->getSelf()->getName() == character)
+        if (getGroup()->getSelf()->getName() == character) {
             throw std::invalid_argument("You can't kick yourself");
-
-        if (getGroup()->getCharByName(character) == nullptr)
+        }
+        if (getGroup()->getCharByName(character) == nullptr) {
             throw std::invalid_argument("Player does not exist");
+        }
         emit sig_kickCharacter(character);
         break;
     }
@@ -275,8 +281,9 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
                                         R"( and (\d+)\/(\d+) move)"     // Group 5/6 moves
                                         R"((?:ment point)?s.)");
     QRegularExpressionMatch match = sRx.match(score);
-    if (!match.hasMatch())
+    if (!match.hasMatch()) {
         return;
+    }
     const int hp = match.captured(1).toInt();
     const int maxhp = match.captured(2).toInt();
     const int mana = match.captured(3).toInt();
@@ -284,8 +291,9 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
     const int moves = match.captured(5).toInt();
     const int maxmoves = match.captured(6).toInt();
 
-    if (setCharacterScore(hp, maxhp, mana, maxmana, moves, maxmoves))
+    if (setCharacterScore(hp, maxhp, mana, maxmana, moves, maxmoves)) {
         issueLocalCharUpdate();
+    }
 }
 
 bool Mmapper2Group::setCharacterScore(const int hp,
@@ -322,8 +330,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
                                         R"((?: Mana:([^ >]+))?)"   // Group 2: Mana
                                         R"((?: Move:([^ >]+))?)"); // Group 3: Move
     QRegularExpressionMatch match = pRx.match(prompt);
-    if (!match.hasMatch())
+    if (!match.hasMatch()) {
         return;
+    }
 
     CGroupChar &self = deref(getGroup()->getSelf());
     QByteArray textHP;
@@ -332,8 +341,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     CharacterAffectFlags &affects = self.affects;
 
     const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
-    if (wasSearching)
+    if (wasSearching) {
         affects.remove(CharacterAffectEnum::SEARCH);
+    }
 
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
     textHP = mmqt::toQByteArrayLatin1(match.captured(1));
@@ -354,12 +364,13 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 #define X_SCORE(target, lower, upper) \
     do { \
         if (text == (target)) { \
-            if (current >= (upper)) \
+            if (current >= (upper)) { \
                 return upper; \
-            else if (current <= (lower)) \
+            } else if (current <= (lower)) { \
                 return lower; \
-            else \
+            } else { \
                 return current; \
+            } \
         } \
     } while (false)
 
@@ -368,8 +379,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         // REVISIT: Replace this if/else tree with a data structure
         const auto calc_hp =
             [](const QByteArray &text, const double current, const double max) -> double {
-            if (text.isEmpty() || text == "Healthy")
+            if (text.isEmpty() || text == "Healthy") {
                 return max;
+            }
             X_SCORE("Fine", max * 0.71, max * 0.99);
             X_SCORE("Hurt", max * 0.46, max * 0.70);
             X_SCORE("Wounded", max * 0.26, max * 0.45);
@@ -382,8 +394,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (self.maxmana != 0) {
         const auto calc_mana =
             [](const QByteArray &text, const double current, const double max) -> double {
-            if (text.isEmpty())
+            if (text.isEmpty()) {
                 return max;
+            }
             X_SCORE("Burning", max * 0.76, max * 0.99);
             X_SCORE("Hot", max * 0.46, max * 0.75);
             X_SCORE("Warm", max * 0.26, max * 0.45);
@@ -419,15 +432,18 @@ bool Mmapper2Group::setCharacterPosition(const CharacterPositionEnum position)
     CGroupChar &self = deref(getGroup()->getSelf());
     const CharacterPositionEnum oldPosition = self.position;
 
-    if (oldPosition == position)
+    if (oldPosition == position) {
         return false; // No update needed
+    }
 
     // Reset affects on death
-    if (position == CharacterPositionEnum::DEAD)
+    if (position == CharacterPositionEnum::DEAD) {
         self.affects = CharacterAffectFlags{};
+    }
 
-    if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
+    if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING) {
         return false; // Prefer dead state until we finish recovering some hp (i.e. stand)
+    }
 
     self.position = position;
     return true;
@@ -439,8 +455,9 @@ void Mmapper2Group::updateCharacterPosition(const CharacterPositionEnum position
         return;
     }
 
-    if (setCharacterPosition(position))
+    if (setCharacterPosition(position)) {
         issueLocalCharUpdate();
+    }
 }
 
 void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, const bool enable)
@@ -455,8 +472,9 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
     }
 
     CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
-    if (enable == affects.contains(affect))
+    if (enable == affects.contains(affect)) {
         return; // No update needed
+    }
 
     if (enable) {
         affects.insert(affect);
@@ -471,8 +489,9 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
 void Mmapper2Group::slot_onAffectTimeout()
 {
     auto &affectLastSeen = m_affectLastSeen;
-    if (affectLastSeen.isEmpty())
+    if (affectLastSeen.isEmpty()) {
         return;
+    }
 
     bool removedAtLeastOneAffect = false;
     CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
@@ -490,8 +509,9 @@ void Mmapper2Group::slot_onAffectTimeout()
             affectLastSeen.remove(affect);
         }
     }
-    if (removedAtLeastOneAffect)
+    if (removedAtLeastOneAffect) {
         issueLocalCharUpdate();
+    }
 }
 
 void Mmapper2Group::slot_setPath(CommandQueue dirs)
@@ -545,8 +565,9 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
             const int maxmana = obj.value("maxmana").toInt(self.maxmana);
             const int mp = obj.value("mp").toInt(self.moves);
             const int maxmp = obj.value("maxmp").toInt(self.maxmoves);
-            if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp))
+            if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp)) {
                 update = true;
+            }
         }
 
         if (obj.contains("ride") && obj.value("ride").isBool()) {
@@ -560,18 +581,22 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
             } else {
                 affects.remove(CharacterAffectEnum::RIDING);
             }
-            if (isRiding != wasRiding)
+            if (isRiding != wasRiding) {
                 update = true;
+            }
         }
 
         if (obj.contains("position") && obj.value("position").isString()) {
             const auto position = toCharacterPosition(obj.value("position").toString());
-            if (setCharacterPosition(position))
+            if (setCharacterPosition(position)) {
                 update = true;
+            }
         }
 
-        if (update)
+        if (update) {
             issueLocalCharUpdate();
+        }
+
         return;
     }
 
@@ -580,8 +605,9 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
         const QJsonDocument &doc = msg.getJsonDocument().value();
         const auto &obj = doc.object();
         const auto &name = obj.value("name");
-        if (!name.isString())
+        if (!name.isString()) {
             return;
+        }
 
         renameCharacter(name.toString().toLatin1());
         issueLocalCharUpdate();
@@ -710,8 +736,9 @@ void Mmapper2Group::slot_setMode(const GroupManagerStateEnum newMode)
     Mmapper2Group::setConfigState(newMode); // Ensure config matches reality
 
     const auto currentState = getMode();
-    if (currentState == newMode)
+    if (currentState == newMode) {
         return; // Do not bother changing states if we're already in it
+    }
 
     // Stop previous network if it changed
     slot_stopNetwork();

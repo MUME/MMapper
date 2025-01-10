@@ -19,15 +19,17 @@ void foreachLine(const QStringView input, Callback &&callback)
     qsizetype pos = 0;
     while (pos < len) {
         const qsizetype next = input.indexOf(C_NEWLINE, pos);
-        if (next < 0)
+        if (next < 0) {
             break;
+        }
         assert(next >= pos);
         assert(input[next] == C_NEWLINE);
         callback(input.mid(pos, next - pos), true);
         pos = next + 1;
     }
-    if (pos < len)
+    if (pos < len) {
         callback(input.mid(pos, len - pos), false);
+    }
 }
 
 template<typename Callback>
@@ -50,15 +52,17 @@ void foreachLine(const std::string_view input, Callback &&callback)
     size_t pos = 0;
     while (pos < len) {
         const auto next = input.find(C_NEWLINE, pos);
-        if (next == std::string_view::npos)
+        if (next == std::string_view::npos) {
             break;
+        }
         assert(next >= pos);
         assert(input[next] == C_NEWLINE);
         callback(input.substr(pos, next - pos + 1));
         pos = next + 1;
     }
-    if (pos < len)
+    if (pos < len) {
         callback(input.substr(pos, len - pos));
+    }
 }
 
 NODISCARD size_t countLines(std::string_view input);

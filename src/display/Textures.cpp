@@ -49,8 +49,9 @@ NODISCARD static SharedMMTexture loadTexture(const QString &name)
         texture->setSize(1);
         texture->create();
 
-        if (!texture->isCreated())
+        if (!texture->isCreated()) {
             throw std::runtime_error(mmqt::toStdStringUtf8("failed to create: " + name));
+        }
     }
 
     texture->setWrapMode(QOpenGLTexture::WrapMode::MirroredRepeat);
@@ -90,8 +91,10 @@ static void loadPixmapArray(road_texture_array<Tag> &textures)
 //
 static void setTrilinear(const SharedMMTexture &mmtex, const bool trilinear)
 {
-    if (mmtex == nullptr)
+    if (mmtex == nullptr) {
         return;
+    }
+
     if (QOpenGLTexture *const qtex = mmtex->get()) {
         qtex->setMinMagFilters(
             /* "minifying" filter */
@@ -270,8 +273,9 @@ namespace detail {
 
 static MMTextureId copy_proxy(const SharedMMTexture &pTex)
 {
-    if (!pTex)
+    if (!pTex) {
         return INVALID_MM_TEXTURE_ID;
+    }
 
     MMTexture &tex = *pTex;
     auto id = tex.getId();
@@ -318,8 +322,9 @@ void MapCanvas::updateTextures()
 {
     const bool wantTrilinear = getConfig().canvas.trilinearFiltering;
     std::optional<bool> &activeStatus = graphicsOptionsStatus.trilinear;
-    if (activeStatus == wantTrilinear)
+    if (activeStatus == wantTrilinear) {
         return;
+    }
 
     m_textures.for_each([wantTrilinear](SharedMMTexture &tex) -> void {
         if (tex->canBeUpdated()) {

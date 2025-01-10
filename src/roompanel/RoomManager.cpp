@@ -34,14 +34,15 @@ void RoomManager::updateWidget()
 
 void RoomManager::slot_parseGmcpInput(const GmcpMessage &msg)
 {
-    if (msg.isRoomCharsAdd())
+    if (msg.isRoomCharsAdd()) {
         parseGmcpAdd(msg);
-    else if (msg.isRoomCharsRemove())
+    } else if (msg.isRoomCharsRemove()) {
         parseGmcpRemove(msg);
-    else if (msg.isRoomCharsSet())
+    } else if (msg.isRoomCharsSet()) {
         parseGmcpSet(msg);
-    else if (msg.isRoomCharsUpdate())
+    } else if (msg.isRoomCharsUpdate()) {
         parseGmcpUpdate(msg);
+    }
 }
 
 void RoomManager::parseGmcpAdd(const GmcpMessage &msg)

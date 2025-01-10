@@ -67,8 +67,9 @@ public:
         const auto it = std::find_if(beg, end, [element](auto &x) -> bool {
             return my_equals(x, element);
         });
-        if (it == end)
+        if (it == end) {
             return std::nullopt;
+        }
 
         return static_cast<E>(it - beg);
     }
@@ -76,8 +77,9 @@ public:
     template<typename Callback>
     void for_each(Callback &&callback)
     {
-        for (auto &x : *this)
+        for (auto &x : *this) {
             callback(x);
+        }
     }
 
 public:

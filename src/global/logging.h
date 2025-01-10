@@ -62,8 +62,9 @@ public:
     {
         assert(s != nullptr);
         auto &self = *this;
-        if (s != nullptr)
+        if (s != nullptr) {
             self.writeLatin1(s);
+        }
         return self;
     }
 

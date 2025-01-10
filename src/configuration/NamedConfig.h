@@ -32,11 +32,13 @@ public:
     NODISCARD inline T get() const { return m_value; }
     void set(const T newValue)
     {
-        if (m_notifying)
+        if (m_notifying) {
             throw std::runtime_error("recursion");
+        }
 
-        if (m_value == newValue)
+        if (m_value == newValue) {
             return;
+        }
 
         struct NODISCARD NotificationGuard final
         {
@@ -46,8 +48,9 @@ public:
             explicit NotificationGuard(NamedConfig &self)
                 : m_self{self}
             {
-                if (m_self.m_notifying)
+                if (m_self.m_notifying) {
                     throw std::runtime_error("recursion");
+                }
                 m_self.m_notifying = true;
             }
 

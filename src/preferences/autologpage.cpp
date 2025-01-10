@@ -105,12 +105,13 @@ void AutoLogPage::slot_selectLogLocationButtonClicked(int /*unused*/)
 void AutoLogPage::slot_logStrategyChanged(int /*unused*/)
 {
     auto &strategy = setConfig().autoLog.cleanupStrategy;
-    if (ui->radioButtonKeepForever->isChecked())
+    if (ui->radioButtonKeepForever->isChecked()) {
         strategy = AutoLoggerEnum::KeepForever;
-    else if (ui->radioButtonDeleteDays->isChecked())
+    } else if (ui->radioButtonDeleteDays->isChecked()) {
         strategy = AutoLoggerEnum::DeleteDays;
-    else if (ui->radioButtonDeleteSize->isChecked())
+    } else if (ui->radioButtonDeleteSize->isChecked()) {
         strategy = AutoLoggerEnum::DeleteSize;
-    else
+    } else {
         abort();
+    }
 }

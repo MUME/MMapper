@@ -83,8 +83,9 @@ void GroupClient::slot_connectionEstablished()
 
 void GroupClient::virt_connectionClosed(GroupSocket & /*socket*/)
 {
-    if (!m_clientConnected)
+    if (!m_clientConnected) {
         return;
+    }
 
     emit sig_sendLog("Server closed the connection");
     tryReconnecting();
@@ -95,10 +96,11 @@ void GroupClient::slot_errorInConnection(GroupSocket *const /* socket */, const 
     QString str;
 
     const auto log_message = [this](const QString &message) {
-        if (m_reconnectAttempts <= 0)
+        if (m_reconnectAttempts <= 0) {
             emit sig_messageBox(message);
-        else
+        } else {
             emit sig_sendLog(message);
+        }
     };
 
     switch (m_socket.getSocketError()) {
@@ -243,10 +245,11 @@ void GroupClient::sendHandshake(const QVariantMap &data)
         } else {
             // MMapper 2.0.3 through MMapper 2.6 Protocol 102 does not do a version handshake
             // and goes directly to login
-            if (QSslSocket::supportsSsl())
+            if (QSslSocket::supportsSsl()) {
                 emit sig_sendLog(
                     "<b>WARNING:</b> "
                     "Host does not support encryption and your connection is insecure.");
+            }
 
             sendLoginInformation();
         }
@@ -312,8 +315,9 @@ void GroupClient::slot_connectionEncrypted()
 
     if (validCert) {
         // Assume that anyone connecting to a host will trust them (if auth is not required)
-        if (!validSecret)
+        if (!validSecret) {
             getAuthority()->add(secret);
+        }
         // Update metadata
         GroupAuthority::setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, m_socket.getPeerName());
         GroupAuthority::setMetadata(secret,

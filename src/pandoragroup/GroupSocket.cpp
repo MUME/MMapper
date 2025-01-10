@@ -125,8 +125,9 @@ void GroupSocket::disconnectFromHost()
 QString GroupSocket::getPeerName() const
 {
     const auto s = m_socket.peerName();
-    if (!s.isEmpty())
+    if (!s.isEmpty()) {
         return s;
+    }
     return m_socket.peerAddress().toString();
 }
 
@@ -151,8 +152,9 @@ void GroupSocket::setProtocolState(const ProtocolStateEnum val)
 {
     auto &timer = m_timer;
     timer.stop();
-    if (DEBUG)
+    if (DEBUG) {
         qInfo() << "Protocol state:" << static_cast<int>(val);
+    }
     m_protocolState = val;
     switch (val) {
     case ProtocolStateEnum::AwaitingLogin:
@@ -187,8 +189,9 @@ void GroupSocket::slot_onError(QAbstractSocket::SocketError e)
 void GroupSocket::slot_onPeerVerifyError(const QSslError &error)
 {
     // Ignore expected warnings
-    if (error.error() == QSslError::SelfSignedCertificate)
+    if (error.error() == QSslError::SelfSignedCertificate) {
         return;
+    }
 
     sendLog("<b>WARNING:</b> " + error.errorString());
     qWarning() << "onPeerVerifyError" << static_cast<int>(m_socket.error())
@@ -267,8 +270,9 @@ void GroupSocket::onReadInternal(const char c)
         buffer.append(c);
         if (static_cast<unsigned int>(buffer.size()) == currentMessageLen) {
             // Cut message from buffer
-            if (DEBUG)
+            if (DEBUG) {
                 qDebug() << "Incoming message:" << buffer;
+            }
             emit sig_incomingData(this, buffer);
 
             // Reset state machine
@@ -293,8 +297,9 @@ void GroupSocket::sendData(const QByteArray &data)
     QString len = QString("%1 ").arg(data.size());
     QByteArray buff = mmqt::toQByteArrayLatin1(len);
     buff += data;
-    if (DEBUG)
+    if (DEBUG) {
         qDebug() << "Sending message:" << buff;
+    }
     m_socket.write(buff);
 }
 

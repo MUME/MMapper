@@ -49,15 +49,18 @@ NODISCARD static EVP_PKEY_ptr generatePrivateKey()
     if (!ctx)
         throw std::runtime_error("Unable to allocate public key algorithm contex.");
 
-    if (EVP_PKEY_keygen_init(ctx.get()) <= 0)
+    if (EVP_PKEY_keygen_init(ctx.get()) <= 0) {
         throw std::runtime_error("Unable to initialize a public key algorithm.");
+    }
 
-    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), 2048) <= 0)
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), 2048) <= 0) {
         throw std::runtime_error("Unable to generate 2048-bit RSA key.");
+    }
 
     auto key = pkey.get();
-    if (EVP_PKEY_keygen(ctx.get(), &key) <= 0)
+    if (EVP_PKEY_keygen(ctx.get(), &key) <= 0) {
         throw std::runtime_error("Unable to write generated key to private key.");
+    }
 
     /* The key has been generated, return it. */
     return pkey;
@@ -111,8 +114,9 @@ NODISCARD static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
     X509_set_issuer_name(x509.get(), name);
 
     /* Actually sign the certificate with our key. */
-    if (!X509_sign(x509.get(), pkey.get(), EVP_sha1()))
+    if (!X509_sign(x509.get(), pkey.get(), EVP_sha1())) {
         throw std::runtime_error("Error signing certificate.");
+    }
 
     return x509;
 }
@@ -150,8 +154,9 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
     unsigned long err = ERR_get_error();
 
 #if OPENSSL_VERSION_NUMBER > 0x30000000L /* 3.0.x */
-    if (EVP_PKEY_get_base_id(pkey.get()) != EVP_PKEY_RSA)
+    if (EVP_PKEY_get_base_id(pkey.get()) != EVP_PKEY_RSA) {
         throw std::runtime_error("Public key of x509 is not of type RSA.");
+    }
 
     using OSSL_ENCODER_CTX_ptr
         = std::unique_ptr<OSSL_ENCODER_CTX, decltype(&::OSSL_ENCODER_CTX_free)>;
@@ -165,8 +170,9 @@ NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
     if (!ectx)
         throw std::runtime_error("No suitable potential encoders found,");
 
-    if (!OSSL_ENCODER_to_bio(ectx.get(), bio.get()))
+    if (!OSSL_ENCODER_to_bio(ectx.get(), bio.get())) {
         throw std::runtime_error("Encoding PEM failed.");
+    }
 #else
     RSA *const rsa = EVP_PKEY_get1_RSA(pkey.get()); // Get the underlying RSA key
     int rc = PEM_write_bio_RSAPrivateKey(bio.get(), rsa, nullptr, nullptr, 0, nullptr, nullptr);
@@ -287,8 +293,9 @@ GroupSecret GroupAuthority::getSecret() const
 
 bool GroupAuthority::add(const GroupSecret &secret)
 {
-    if (validSecret(secret))
+    if (validSecret(secret)) {
         return false;
+    }
 
     // Update model
     if (model.insertRow(model.rowCount())) {
@@ -305,8 +312,9 @@ bool GroupAuthority::add(const GroupSecret &secret)
 
 bool GroupAuthority::remove(const GroupSecret &secret)
 {
-    if (!validSecret(secret))
+    if (!validSecret(secret)) {
         return false;
+    }
 
     emit sig_secretRevoked(secret);
 
@@ -339,8 +347,9 @@ bool GroupAuthority::validCertificate(const GroupSocket &connection)
 {
     const GroupSecret &targetSecret = connection.getSecret();
     const QString &storedCertificate = getMetadata(targetSecret, GroupMetadataEnum::CERTIFICATE);
-    if (storedCertificate.isEmpty())
+    if (storedCertificate.isEmpty()) {
         return true;
+    }
 
     const QString targetCertficiate = connection.getPeerCertificate().toPem();
     const bool certificatesMatch = targetCertficiate.compare(storedCertificate, Qt::CaseInsensitive)

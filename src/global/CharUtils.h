@@ -47,8 +47,9 @@ void foreachChar(const QStringView input, const char c, Callback &&callback)
     qsizetype pos = 0;
     while (pos < len) {
         const qsizetype next = input.indexOf(c, pos);
-        if (next < 0)
+        if (next < 0) {
             break;
+        }
         assert(next >= pos);
         assert(input[next] == c);
         callback(next);

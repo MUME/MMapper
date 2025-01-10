@@ -34,10 +34,11 @@ const char *Functions::getShaderVersion()
 
 void Functions::enableProgramPointSize(const bool enable)
 {
-    if (enable)
+    if (enable) {
         Base::glEnable(GL_PROGRAM_POINT_SIZE);
-    else
+    } else {
         Base::glDisable(GL_PROGRAM_POINT_SIZE);
+    }
 }
 
 bool Functions::tryEnableMultisampling(const int requestedSamples)

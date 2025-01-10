@@ -194,24 +194,28 @@ void AnsiCombo::makeWidgetColoured(QWidget *const pWidget,
         const bool hasBg = color.bg.hasColor();
         const bool hasFg = color.fg.hasColor();
 
-        if (!hasFg && !hasBg)
+        if (!hasFg && !hasBg) {
             return QString("none");
-        else if (hasFg && !hasBg)
+        } else if (hasFg && !hasBg) {
             return color.getFgName();
-        else if (!hasFg && hasBg)
+        } else if (!hasFg && hasBg) {
             return QString("on %2").arg(color.getBgName());
-        else
+        } else {
             return QString("%1 on %2").arg(color.getFgName()).arg(color.getBgName());
+        }
     };
 
     QString displayString = display_string(pLabel->text());
 
-    if (color.bold)
+    if (color.bold) {
         displayString = QString("<b>%1</b>").arg(displayString);
-    if (color.italic)
+    }
+    if (color.italic) {
         displayString = QString("<i>%1</i>").arg(displayString);
-    if (color.underline)
+    }
+    if (color.underline) {
         displayString = QString("<u>%1</u>").arg(displayString);
+    }
 
     pLabel->setText(displayString);
 }

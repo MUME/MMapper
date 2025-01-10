@@ -51,8 +51,9 @@ static void print(std::ostream &os, const Source &source)
         int line = 0;
         bool was_newline = true;
         foreach_line(source, [&line, &was_newline](auto /*sv*/, bool has_newline) {
-            if (was_newline)
+            if (was_newline) {
                 ++line;
+            }
             was_newline = has_newline;
         });
         return static_cast<int>(std::to_string(line).size());
@@ -143,8 +144,9 @@ static void checkProgramInfo(Functions &gl, const GLuint programID)
         }
     }
 
-    if (result != GL_TRUE)
+    if (result != GL_TRUE) {
         std::abort();
+    }
 }
 
 static void checkShaderInfo(Functions &gl, const GLuint shaderId)
@@ -177,14 +179,16 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
         }
     }
 
-    if (result != GL_TRUE)
+    if (result != GL_TRUE) {
         std::abort();
+    }
 }
 
 NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
 {
-    if (!source)
+    if (!source) {
         return 0;
+    }
 
     const GLuint shaderId = gl.glCreateShader(type);
     if constexpr ((IS_DEBUG_BUILD)) {
@@ -220,8 +224,9 @@ Program loadShaders(Functions &gl, const Source &vert, const Source &frag)
 
     const auto is_valid = [](GLuint s) -> bool { return s != 0; };
     const auto numShaders = std::count_if(shaders.begin(), shaders.end(), is_valid);
-    if (numShaders == 0)
+    if (numShaders == 0) {
         std::abort(); // there won't be anything to link
+    }
 
     if constexpr ((IS_DEBUG_BUILD)) {
         std::ostringstream os;

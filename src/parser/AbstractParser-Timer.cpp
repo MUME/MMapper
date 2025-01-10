@@ -25,9 +25,9 @@ private:
 syntax::MatchResult ArgTimerName::virt_match(const syntax::ParserInput &input,
                                              syntax::IMatchErrorLogger * /*logger */) const
 {
-    if (input.empty())
+    if (input.empty()) {
         return syntax::MatchResult::failure(input);
-
+    }
     return syntax::MatchResult::success(1, input, Value{input.front()});
 }
 
@@ -58,8 +58,9 @@ void AbstractParser::parseTimer(StringView input)
 
             m_timers.addCountdown(name, desc, delay * 1000);
             os << "Added countdown timer " << name;
-            if (!desc.empty())
+            if (!desc.empty()) {
                 os << " <" << desc << ">";
+            }
             os << " for the duration of " << delay << " seconds." << std::endl;
             send_ok(os);
         },
@@ -80,8 +81,9 @@ void AbstractParser::parseTimer(StringView input)
 
             m_timers.addTimer(name, desc);
             os << "Added simple timer " << name;
-            if (!desc.empty())
+            if (!desc.empty()) {
                 os << " <" << desc << ">";
+            }
             os << "." << std::endl;
             send_ok(os);
         },
@@ -119,10 +121,11 @@ void AbstractParser::parseTimer(StringView input)
         [this](User &user, const Pair *const /* args */) {
             auto &os = user.getOstream();
             const auto list = m_timers.getStatCommandEntry();
-            if (list.empty())
+            if (list.empty()) {
                 os << "No timers have been created yet." << std::endl;
-            else
+            } else {
                 os << list;
+            }
             send_ok(os);
         },
         "list all timers");

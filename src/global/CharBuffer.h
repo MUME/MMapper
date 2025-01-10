@@ -39,9 +39,11 @@ public:
 public:
     void replaceAll(char from, char to)
     {
-        for (auto &x : *this)
-            if (x == from)
+        for (auto &x : *this) {
+            if (x == from) {
                 x = to;
+            }
+        }
     }
 };
 

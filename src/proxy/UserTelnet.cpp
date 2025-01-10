@@ -25,9 +25,9 @@ static void normalizeForUser(std::ostream &os,
     foreachLine(sv, [&os, encoding, &goAhead](std::string_view line) {
         using char_consts::C_CARRIAGE_RETURN;
         using char_consts::C_NEWLINE;
-
-        if (line.empty())
+        if (line.empty()) {
             return;
+        }
 
         const bool hasNewline = line.back() == C_NEWLINE;
         if (hasNewline) {
@@ -76,8 +76,9 @@ NODISCARD static QByteArray decodeFromUser(const CharacterEncodingEnum encoding,
             const auto codepoint = qc.unicode();
             if (codepoint < 256) {
                 oss << static_cast<char>(codepoint & 0xFF);
-            } else
+            } else {
                 oss << "?";
+            }
         }
         return mmqt::toQByteArrayLatin1(oss.str());
     }
@@ -120,8 +121,9 @@ void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 
 void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 {
-    if (!m_options.myOptionState[OPT_GMCP])
+    if (!m_options.myOptionState[OPT_GMCP]) {
         return;
+    }
 
     const auto name = msg.getName().getStdStringLatin1();
     const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
@@ -138,8 +140,9 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 
 void UserTelnet::slot_onSendMSSPToUser(const QByteArray &data)
 {
-    if (!m_options.myOptionState[OPT_MSSP])
+    if (!m_options.myOptionState[OPT_MSSP]) {
         return;
+    }
 
     sendMudServerStatus(data);
 }
@@ -162,8 +165,9 @@ void UserTelnet::slot_onRelayEchoMode(const bool isDisabled)
 void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
     // Eat Core.Hello since MMapper sends its own to MUME
-    if (msg.isCoreHello())
+    if (msg.isCoreHello()) {
         return;
+    }
 
     // Eat Core.Supports.[Add|Set|Remove] and proxy a MMapper filtered subset
     if (msg.getJson()
@@ -171,11 +175,13 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isArray()) {
         // Handle the various messages
         const auto &array = msg.getJsonDocument()->array();
-        if (msg.isCoreSupportsSet())
+        if (msg.isCoreSupportsSet()) {
             resetGmcpModules();
+        }
         for (const auto &e : array) {
-            if (!e.isString())
+            if (!e.isString()) {
                 continue;
+            }
             const auto &moduleStr = e.toString();
             try {
                 const GmcpModule mod{mmqt::toStdStringLatin1(moduleStr)};
@@ -194,17 +200,20 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         bool comma = false;
         for (const GmcpModule &mod : m_gmcp.modules) {
             // REVISIT: Are some MMapper supported modules not supposed to be filtered?
-            if (mod.isSupported())
+            if (mod.isSupported()) {
                 continue;
-            if (comma)
+            }
+            if (comma) {
                 oss << ", ";
+            }
             oss << char_consts::C_DQUOTE << mod.toStdString() << char_consts::C_DQUOTE;
             comma = true;
         }
         oss << " ]";
         if (!comma) {
-            if (m_debug)
+            if (m_debug) {
                 qDebug() << "All modules were supported or nothing was requested";
+            }
             return;
         }
         GmcpMessage filteredMsg(GmcpMessageTypeEnum::CORE_SUPPORTS_SET,
@@ -218,8 +227,9 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
 void UserTelnet::virt_receiveTerminalType(const QByteArray &data)
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Received Terminal Type" << data;
+    }
     emit sig_relayTermType(data);
 }
 
@@ -239,8 +249,9 @@ void UserTelnet::virt_sendRawData(const std::string_view data)
 
 bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
 {
-    if (!m_options.myOptionState[OPT_GMCP])
+    if (!m_options.myOptionState[OPT_GMCP]) {
         return false;
+    }
 
     return m_gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
 }
@@ -266,8 +277,9 @@ void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 
 void UserTelnet::resetGmcpModules()
 {
-    if (m_debug)
+    if (m_debug) {
         qDebug() << "Clearing GMCP modules";
+    }
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     m_gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
     X_FOREACH_GMCP_MODULE_TYPE(X_CASE)

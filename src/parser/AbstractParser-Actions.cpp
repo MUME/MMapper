@@ -33,8 +33,9 @@ void AbstractParser::initActionMap()
         const char hint = [&match]() -> char {
             using namespace char_consts;
             if (match.length() > 2 && match[0] == C_CARET && match[1] != C_BACKSLASH
-                && match[1] != C_OPEN_PARENS)
+                && match[1] != C_OPEN_PARENS) {
                 return match[1];
+            }
             return 0;
         }();
         map.emplace(hint, std::make_unique<RegexAction>(match, callback));
@@ -266,8 +267,9 @@ void AbstractParser::initActionMap()
              R"((?: Condition: [^.]+\.)?)",                      // Hunger or Thirst
              [this](StringView /*view*/) {
                  const auto list = m_timers.getStatCommandEntry();
-                 if (!list.empty())
+                 if (!list.empty()) {
                      sendToUser(list);
+                 }
              });
 
     /// Score
@@ -347,8 +349,9 @@ void AbstractParser::initActionMap()
 
 bool AbstractParser::evalActionMap(StringView line)
 {
-    if (line.empty())
+    if (line.empty()) {
         return false;
+    }
 
     auto &map = m_actionMap;
 

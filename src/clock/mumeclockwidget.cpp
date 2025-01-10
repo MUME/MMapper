@@ -150,8 +150,10 @@ void MumeClockWidget::slot_updateLabel()
             styleSheet = "padding-left:1px;padding-right:1px;color:black;background:yellow";
             statusTip = "Ticks left until night";
         }
-        if (precision != MumeClockPrecisionEnum::MINUTE)
+        if (precision != MumeClockPrecisionEnum::MINUTE) {
             statusTip = "The clock has not synced with MUME! Click to override at your own risk.";
+        }
+
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);
         updateMoonStyleSheet = true;
@@ -159,8 +161,9 @@ void MumeClockWidget::slot_updateLabel()
     if (precision <= MumeClockPrecisionEnum::HOUR) {
         // Prepend warning emoji to countdown
         timeLabel->setText(QString::fromUtf8("\xe2\x9a\xa0").append(m_clock->toCountdown(moment)));
-    } else
+    } else {
         timeLabel->setText(m_clock->toCountdown(moment));
+    }
 
     const MumeMoonVisibilityEnum moonVisibility = moment.moonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
@@ -175,6 +178,7 @@ void MumeClockWidget::slot_updateLabel()
         updateMoonText = true;
     }
 
-    if (updateMoonText)
+    if (updateMoonText) {
         moonPhaseLabel->setStatusTip(moment.toMumeMoonTime());
+    }
 }

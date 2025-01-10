@@ -134,8 +134,9 @@ void InfoMarksEditDlg::updateMark(InfoMark &im)
 void InfoMarksEditDlg::slot_modifyClicked()
 {
     InfoMark *const im = getCurrentInfoMark();
-    if (im == nullptr)
+    if (im == nullptr) {
         return;
+    }
 
     updateMark(*im);
     emit sig_infomarksChanged();
@@ -184,8 +185,9 @@ void InfoMarksEditDlg::updateMarkers()
         }
     }
 
-    if (m_selection->size() == 1)
+    if (m_selection->size() == 1) {
         objectsList->setCurrentIndex(1);
+    }
 }
 
 void InfoMarksEditDlg::updateDialog()
@@ -284,11 +286,12 @@ void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 {
     auto sm = m->shared_from_this();
     int i = 0;
-    for (size_t j = 0, len = m_markers.size(); j < len; ++j)
+    for (size_t j = 0, len = m_markers.size(); j < len; ++j) {
         if (m_markers[j] == sm) {
             i = static_cast<int>(j) + 1;
             break;
         }
+    }
 
     objectsList->setCurrentIndex(i);
 }

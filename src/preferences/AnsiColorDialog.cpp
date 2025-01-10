@@ -31,11 +31,12 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
                 QOverload<const QString &>::of(&QComboBox::textActivated),
                 this,
                 &AnsiColorDialog::ansiComboChange);
-        if (false)
+        if (false) {
             connect(combo,
                     QOverload<int>::of(&QComboBox::currentIndexChanged),
                     this,
                     &AnsiColorDialog::ansiComboChange);
+        }
     };
 
     auto connectCheckBox = [this](QCheckBox *const checkBox) {
@@ -56,8 +57,9 @@ AnsiColorDialog::AnsiColorDialog(QWidget *parent)
 QString AnsiColorDialog::getColor(const QString &ansiColor, QWidget *parent)
 {
     AnsiColorDialog dlg(ansiColor, parent);
-    if (dlg.exec() == QDialog::Accepted)
+    if (dlg.exec() == QDialog::Accepted) {
         return dlg.getAnsiString();
+    }
     return ansiColor;
 }
 
@@ -106,19 +108,24 @@ void AnsiColorDialog::slot_generateNewAnsiColor()
         raw.fg = AnsiColorVariant{fg->getAnsiCode()};
         raw.bg = AnsiColorVariant{bg->getAnsiCode()};
 
-        if (bold->isChecked())
+        if (bold->isChecked()) {
             raw.setBold();
-        if (italic->isChecked())
+        }
+        if (italic->isChecked()) {
             raw.setItalic();
-        if (underline->isChecked())
+        }
+        if (underline->isChecked()) {
             raw.setUnderline();
+        }
 
-        if (raw == RawAnsi{})
+        if (raw == RawAnsi{}) {
             return "";
+        }
 
         const AnsiString s = ansi_string(ANSI_COLOR_SUPPORT_HI, raw);
-        if (s.isEmpty())
+        if (s.isEmpty()) {
             return "";
+        }
 
         auto sv = s.getStdStringView();
         assert(sv.front() == char_consts::C_ESC);
@@ -134,6 +141,7 @@ void AnsiColorDialog::slot_generateNewAnsiColor()
                             ui.italicCheckBox,
                             ui.underlineCheckBox);
 
-    if (false)
+    if (false) {
         MMLOG() << "new ansi string " << mmqt::toStdStringLatin1(m_ansiString);
+    }
 }

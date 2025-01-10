@@ -24,9 +24,11 @@
         static_assert(std::is_enum_v<E>); \
         static const auto things = []() { \
             std::vector<E> result; \
-            for (const E x : ::enums::genEnumValues<E, N>()) \
-                if (x != E::UNDEFINED) \
+            for (const E x : ::enums::genEnumValues<E, N>()) { \
+                if (x != E::UNDEFINED) { \
                     result.emplace_back(x); \
+                } \
+            } \
             return result; \
         }(); \
         return things; \

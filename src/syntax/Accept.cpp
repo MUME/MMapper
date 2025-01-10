@@ -12,8 +12,9 @@ Accept::Accept(Accept::Function fn, std::string help)
     : m_function(std::make_shared<Function>(std::move(fn)))
     , m_help(std::move(help))
 {
-    if (*m_function == nullptr)
+    if (*m_function == nullptr) {
         throw NullPointerException();
+    }
 }
 
 void Accept::call(User &user, const Pair *const matched) const

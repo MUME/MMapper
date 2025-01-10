@@ -121,12 +121,14 @@ NODISCARD static auto makeKey(const ParseEvent &event, const MaskFlagsEnum maskF
     key += buf;
 
     for (size_t i = 0; i < ParseEvent::NUM_PROPS; ++i) {
-        if (((mask >> i) & 1u) != 1u)
+        if (((mask >> i) & 1u) != 1u) {
             continue;
+        }
 
         const auto &prop = event[i];
-        if (prop.isSkipped())
+        if (prop.isSkipped()) {
             continue;
+        }
 
         std::snprintf(buf, sizeof(buf), ";P%zu:%zu:", i, prop.size());
         key += buf;
@@ -155,13 +157,15 @@ public:
     {
         const MaskFlagsEnum mask = getKeyMask(event);
 
-        if (!isMatchedByTree(mask))
+        if (!isMatchedByTree(mask)) {
             return nullptr;
+        }
 
         const auto pk = makeKey(event, MaskFlagsEnum::NAME_DESC_TERRAIN);
         auto &result = m_primary[pk];
-        if (result == nullptr)
+        if (result == nullptr) {
             result = std::make_shared<RoomCollection>();
+        }
 
         for (auto subMask = mask; subMask != MaskFlagsEnum::NONE; subMask = reduceMask(subMask)) {
             const auto key = makeKey(event, subMask);
@@ -177,8 +181,9 @@ public:
     {
         const MaskFlagsEnum mask = getKeyMask(event);
 
-        if (!isMatchedByTree(mask))
+        if (!isMatchedByTree(mask)) {
             return;
+        }
 
         const auto &key = makeKey(event, mask);
 

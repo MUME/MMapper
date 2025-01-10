@@ -24,8 +24,9 @@ NODISCARD static auto maybe_add_suffix(const QString &filename)
 
 static void remove_tmp_suffix(const QString &filename) CAN_THROW
 {
-    if (!USE_TMP_SUFFIX)
+    if (!USE_TMP_SUFFIX) {
         return;
+    }
 
     const auto from = QFile::encodeName(filename + TMP_FILE_SUFFIX);
     const auto to = QFile::encodeName(filename);
