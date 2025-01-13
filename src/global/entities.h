@@ -75,3 +75,7 @@ public:
 void foreachEntity(QStringView line, EntityCallback &callback);
 
 } // namespace entities
+
+namespace test {
+extern void test_entities();
+} // namespace test

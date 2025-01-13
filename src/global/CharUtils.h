@@ -64,3 +64,7 @@ inline void foreachChar(const QString &input, const char c, Callback &&callback)
 }
 
 } // namespace mmqt
+
+namespace test {
+extern void testCharUtils();
+} // namespace test

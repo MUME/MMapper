@@ -585,28 +585,33 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
     return std::move(callback.out);
 }
 
-// self test
-namespace entities {
-static void testEncode(const char *_in, const char *_expect)
+namespace { // anonymous
+void testEncode(const char *const raw_in, const char *const raw_expect)
 {
-    const auto in = DecodedUnicode{_in};
+    using namespace entities;
+    const auto in = DecodedUnicode{raw_in};
     const auto out = encode(in);
-    const auto expected = EncodedLatin1{_expect};
+    const auto expected = EncodedLatin1{raw_expect};
     if (out != expected) {
         throw std::runtime_error("test failed");
     }
 }
-static void testDecode(const char *_in, const char *_expect)
+void testDecode(const char *const raw_in, const char *const raw_expect)
 {
-    const auto in = EncodedLatin1{_in};
+    using namespace entities;
+    const auto in = EncodedLatin1{raw_in};
     const auto out = decode(in);
-    const auto expected = DecodedUnicode{_expect};
+    const auto expected = DecodedUnicode{raw_expect};
     if (out != expected) {
         throw std::runtime_error("test failed");
     }
 }
+} // namespace
 
-static const bool self_test = []() -> bool {
+namespace test {
+void test_entities()
+{
+    using namespace entities;
     using namespace string_consts;
 
     //
@@ -682,7 +687,5 @@ static const bool self_test = []() -> bool {
             throw std::runtime_error("test failed");
         }
     }
-
-    return true;
-}();
-} // namespace entities
+}
+} // namespace test

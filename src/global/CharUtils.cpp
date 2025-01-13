@@ -4,43 +4,37 @@
 #include "CharUtils.h"
 
 #include "Consts.h"
+#include "tests.h"
 
 #include <deque>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
-namespace { // anonymous
 namespace test {
-
-NODISCARD static int testing()
+void testCharUtils()
 {
-    auto test = [](std::string_view input, char c, std::vector<std::string_view> expect) {
+    auto testcase = [](std::string_view input, char c, std::vector<std::string_view> expect) {
         size_t arg = 0;
         foreachChar(input, c, [&expect, &arg](std::string_view s) {
-            assert(arg < expect.size());
-            assert(expect.at(arg) == s);
+            TEST_ASSERT(arg < expect.size());
+            TEST_ASSERT(expect.at(arg) == s);
             ++arg;
         });
-        assert(arg == expect.size());
+        TEST_ASSERT(arg == expect.size());
     };
 
     using char_consts::C_SEMICOLON;
-    test("", C_SEMICOLON, {});
-    test("a", C_SEMICOLON, {"a"});
-    test("ab", C_SEMICOLON, {"ab"});
-    test(";", C_SEMICOLON, {";"});
-    test(";;", C_SEMICOLON, {";;"});
-    test("a;", C_SEMICOLON, {"a", ";"});
-    test("a;;", C_SEMICOLON, {"a", ";;"});
-    test(";a", C_SEMICOLON, {";", "a"});
-    test(";;a", C_SEMICOLON, {";;", "a"});
-    test(";;a;", C_SEMICOLON, {";;", "a", ";"});
-    test("ab;;c;", C_SEMICOLON, {"ab", ";;", "c", ";"});
-
-    return 42;
+    testcase("", C_SEMICOLON, {});
+    testcase("a", C_SEMICOLON, {"a"});
+    testcase("ab", C_SEMICOLON, {"ab"});
+    testcase(";", C_SEMICOLON, {";"});
+    testcase(";;", C_SEMICOLON, {";;"});
+    testcase("a;", C_SEMICOLON, {"a", ";"});
+    testcase("a;;", C_SEMICOLON, {"a", ";;"});
+    testcase(";a", C_SEMICOLON, {";", "a"});
+    testcase(";;a", C_SEMICOLON, {";;", "a"});
+    testcase(";;a;", C_SEMICOLON, {";;", "a", ";"});
+    testcase("ab;;c;", C_SEMICOLON, {"ab", ";;", "c", ";"});
 }
-
-static int test = testing();
 } // namespace test
-} // namespace

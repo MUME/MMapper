@@ -48,5 +48,5 @@ NODISCARD extern UnquoteResult unquote(std::string_view input,
                                        bool allowEmbeddedNull);
 
 namespace test {
-void test_unquote() noexcept;
+void testUnquote();
 } // namespace test

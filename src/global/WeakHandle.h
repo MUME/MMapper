@@ -126,3 +126,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(WeakHandleLifetime);
     ~WeakHandleLifetime() = default;
 };
+
+namespace test {
+extern void testWeakHandle();
+} // namespace test

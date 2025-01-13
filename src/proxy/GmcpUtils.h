@@ -9,3 +9,7 @@ class QString;
 namespace GmcpUtils {
 NODISCARD QString escapeGmcpStringData(const QString &);
 } // namespace GmcpUtils
+
+namespace test {
+extern void testGmcpUtils();
+} // namespace test

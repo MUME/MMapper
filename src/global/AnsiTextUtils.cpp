@@ -2419,12 +2419,3 @@ void testAnsiTextUtils()
 }
 
 } // namespace test
-
-namespace { // anonymous
-
-MAYBE_UNUSED int test_result = []() {
-    test::testAnsiTextUtils();
-    return 42;
-}();
-
-} // namespace

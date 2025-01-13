@@ -121,3 +121,7 @@ namespace mmqt {
 NODISCARD QColor textColor(QColor color);
 NODISCARD Color toColor(const QString &);
 } // namespace mmqt
+
+namespace test {
+extern void testColor();
+} // namespace test

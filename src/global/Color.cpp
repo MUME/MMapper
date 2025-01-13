@@ -5,6 +5,7 @@
 
 #include "Consts.h"
 #include "TextUtils.h"
+#include "tests.h"
 #include "utils.h"
 
 #include <iomanip>
@@ -207,7 +208,9 @@ QColor mmqt::textColor(const QColor color)
     return static_cast<QColor>(::textColor(Color(color)));
 }
 
-static const int color_self_test = []() -> int {
+namespace test {
+void testColor()
+{
     const Color redf{1.f, 0.f, 0.f};
     const Color greenf{0.f, 1.f, 0.f};
     const Color bluef{0.f, 0.f, 1.f};
@@ -221,32 +224,32 @@ static const int color_self_test = []() -> int {
     const Color green(Qt::green);
     const Color blue(Qt::blue);
 
-    assert(white == Colors::white);
-    assert(red == Colors::red);
-    assert(green == Colors::green);
-    assert(blue == Colors::blue);
+    TEST_ASSERT(white == Colors::white);
+    TEST_ASSERT(red == Colors::red);
+    TEST_ASSERT(green == Colors::green);
+    TEST_ASSERT(blue == Colors::blue);
 
-    assert(white == Color{});
-    assert(red == redf);
-    assert(green == greenf);
-    assert(blue == bluef);
+    TEST_ASSERT(white == Color{});
+    TEST_ASSERT(red == redf);
+    TEST_ASSERT(green == greenf);
+    TEST_ASSERT(blue == bluef);
 
-    assert(red == redi);
-    assert(green == greeni);
-    assert(blue == bluei);
+    TEST_ASSERT(red == redi);
+    TEST_ASSERT(green == greeni);
+    TEST_ASSERT(blue == bluei);
 
     const glm::vec4 &redVec = red.getVec4();
     const glm::vec4 &greenVec = green.getVec4();
     const glm::vec4 &blueVec = blue.getVec4();
 
-    assert(utils::equals(redVec.r, 1.f));
-    assert(utils::equals(greenVec.g, 1.f));
-    assert(utils::equals(blueVec.b, 1.f));
+    TEST_ASSERT(utils::equals(redVec.r, 1.f));
+    TEST_ASSERT(utils::equals(greenVec.g, 1.f));
+    TEST_ASSERT(utils::equals(blueVec.b, 1.f));
 
-    assert(red.getRGB() == 255);
-    assert(green.getRGB() == (255 << 8));
-    assert(blue.getRGB() == (255 << 16));
+    TEST_ASSERT(red.getRGB() == 255);
+    TEST_ASSERT(green.getRGB() == (255 << 8));
+    TEST_ASSERT(blue.getRGB() == (255 << 16));
 
-    assert(red.getRGBA() == (255u | (255u << SHIFT_a)));
-    return 42;
-}();
+    TEST_ASSERT(red.getRGBA() == (255u | (255u << SHIFT_a)));
+}
+} // namespace test

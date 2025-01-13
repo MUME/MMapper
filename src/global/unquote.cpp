@@ -6,6 +6,7 @@
 #include "Consts.h"
 #include "TextUtils.h"
 #include "logging.h"
+#include "tests.h"
 
 #include <iostream>
 #include <optional>
@@ -330,14 +331,14 @@ NODISCARD UnquoteResult unquote(const std::string_view input,
     return UnquoteResult{UnquoteFailureReason{"unknown error"}};
 }
 
-void test::test_unquote() noexcept /* will crash the program if it throws */
+void test::testUnquote()
 {
     {
         static const auto expectString2 = [](const std::string_view input,
                                              const std::string_view expected,
                                              const bool allowUnbalancedQuotes) {
             auto result = unquote_unsafe(input, allowUnbalancedQuotes);
-            assert(result == std::vector<std::string>{std::string{expected}});
+            TEST_ASSERT(result == std::vector<std::string>{std::string{expected}});
         };
 
         static const auto expectString = [](const std::string_view input,
@@ -388,10 +389,10 @@ void test::test_unquote() noexcept /* will crash the program if it throws */
             try {
                 MAYBE_UNUSED const auto ignored = //
                     unquote_unsafe(input, false);
-                assert(false);
+                TEST_ASSERT(false);
             } catch (const UnquoteException &ex) {
                 const auto &reason = ex.reason;
-                assert(reason == expectedReason);
+                TEST_ASSERT(reason == expectedReason);
             }
         };
 
@@ -411,39 +412,39 @@ void test::test_unquote() noexcept /* will crash the program if it throws */
 
     {
         const VectorOfStrings expect = {"abc", "def", "ghi"};
-        assert(unquote_unsafe("abc def ghi", false) == expect);
+        TEST_ASSERT(unquote_unsafe("abc def ghi", false) == expect);
     }
     {
         const VectorOfStrings expect = {"abc def", "ghi"};
-        assert(unquote_unsafe("ab\"c d\"ef ghi", false) == expect);
+        TEST_ASSERT(unquote_unsafe("ab\"c d\"ef ghi", false) == expect);
     }
     {
         const VectorOfStrings expect = {"abc def ghi"};
-        assert(unquote_unsafe("ab\"c def ghi", true) == expect);
+        TEST_ASSERT(unquote_unsafe("ab\"c def ghi", true) == expect);
     }
     {
         const VectorOfStrings expect = {"ab", "c def ghi"};
-        assert(unquote_unsafe("ab \"c def ghi", true) == expect);
+        TEST_ASSERT(unquote_unsafe("ab \"c def ghi", true) == expect);
     }
 
     {
         const VectorOfStrings expect = {"a", "b", "c"};
-        assert(unquote_unsafe("\t\t\ta \t b\r\nc\n", true) == expect);
+        TEST_ASSERT(unquote_unsafe("\t\t\ta \t b\r\nc\n", true) == expect);
     }
 
     {
         using char_consts::C_NUL;
         const char buf[8] = {'a', 'b', 'c', C_NUL, 'd', 'e', 'f', C_NUL};
         const std::string s{buf, 7};
-        assert(s.length() == 7);
-        assert(std::strlen(s.c_str()) == 3);
+        TEST_ASSERT(s.length() == 7);
+        TEST_ASSERT(std::strlen(s.c_str()) == 3);
         const VectorOfStrings expect{s};
         const auto result = unquote(R"("abc\0def")", false, true);
-        assert(result && result.getVectorOfStrings() == expect);
+        TEST_ASSERT(result && result.getVectorOfStrings() == expect);
     }
     {
         const VectorOfStrings expect = {"abc"};
         const auto result = unquote(R"("abc\0def")", false, false);
-        assert(result && result.getVectorOfStrings() == expect);
+        TEST_ASSERT(result && result.getVectorOfStrings() == expect);
     }
 }

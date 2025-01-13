@@ -4,55 +4,55 @@
 #include "WeakHandle.h"
 
 #include "ConfigConsts.h"
+#include "tests.h"
 
-#include <cassert>
 #include <string>
 
 namespace { // anonymous
 
-class Foo final : public EnableGetWeakHandleFromThis<Foo>
+class NODISCARD Foo final : public EnableGetWeakHandleFromThis<Foo>
 {
 private:
-    std::string s = "Foo";
+    std::string m_s = "Foo";
 };
 
-class Bar final
+class NODISCARD Bar final
 {
 private:
-    WeakHandleLifetime<Bar> lifetime{*this};
-    std::string s = "Bar";
+    WeakHandleLifetime<Bar> m_lifetime{*this};
+    std::string m_s = "Bar";
 
 public:
-    WeakHandle<Bar> getWeakHandle() { return lifetime.getWeakHandle(); }
-    WeakHandle<const Bar> getWeakHandle() const { return lifetime.getWeakHandle(); }
+    NODISCARD WeakHandle<Bar> getWeakHandle() { return m_lifetime.getWeakHandle(); }
+    NODISCARD WeakHandle<const Bar> getWeakHandle() const { return m_lifetime.getWeakHandle(); }
 };
 
 template<typename T>
-NODISCARD static inline WeakHandle<T> getWeakHandle(T &x) = delete;
+NODISCARD WeakHandle<T> getWeakHandle(T &x) = delete;
 
 template<>
-inline WeakHandle<Foo> getWeakHandle(Foo &foo)
+WeakHandle<Foo> getWeakHandle(Foo &foo)
 {
     return foo.getWeakHandleFromThis();
 }
 template<>
-inline WeakHandle<const Foo> getWeakHandle(const Foo &foo)
+WeakHandle<const Foo> getWeakHandle(const Foo &foo)
 {
     return foo.getWeakHandleFromThis();
 }
 template<>
-inline WeakHandle<Bar> getWeakHandle(Bar &bar)
+WeakHandle<Bar> getWeakHandle(Bar &bar)
 {
     return bar.getWeakHandle();
 }
 template<>
-inline WeakHandle<const Bar> getWeakHandle(const Bar &bar)
+WeakHandle<const Bar> getWeakHandle(const Bar &bar)
 {
     return bar.getWeakHandle();
 }
 
 template<typename T>
-NODISCARD static inline bool tryVisit(const WeakHandle<T> &handle)
+NODISCARD bool tryVisit(const WeakHandle<T> &handle)
 {
     return handle.acceptVisitor([](const T &) -> void {
         // could print here
@@ -60,7 +60,7 @@ NODISCARD static inline bool tryVisit(const WeakHandle<T> &handle)
 };
 
 template<typename T>
-NODISCARD static inline constexpr bool has_expected_properties()
+NODISCARD constexpr bool has_expected_properties()
 {
     return std::is_default_constructible_v<T>  //
            && !std::is_copy_constructible_v<T> //
@@ -70,34 +70,31 @@ NODISCARD static inline constexpr bool has_expected_properties()
 }
 
 template<typename T>
-static void test()
+void test_weak_handle()
 {
     static_assert(has_expected_properties<T>());
 
-    assert(!tryVisit(WeakHandle<Foo>()));
-    assert(tryVisit(Foo().getWeakHandleFromThis()));
+    TEST_ASSERT(!tryVisit(WeakHandle<Foo>()));
+    TEST_ASSERT(tryVisit(Foo().getWeakHandleFromThis()));
     {
         WeakHandle<T> handle;
         {
             T foo;
             handle = getWeakHandle(foo);
-            assert(tryVisit(handle));
+            TEST_ASSERT(tryVisit(handle));
         }
-        assert(!tryVisit(handle));
+        TEST_ASSERT(!tryVisit(handle));
     }
 }
 
-static const int test_weak_handle = []() -> int {
-    if constexpr (!IS_DEBUG_BUILD) {
-        return 0;
-    }
-
-    test<Foo>();
-    test<const Foo>();
-    test<Bar>();
-    test<const Bar>();
-
-    return 42;
-}();
-
 } // namespace
+
+namespace test {
+void testWeakHandle()
+{
+    ::test_weak_handle<Foo>();
+    ::test_weak_handle<const Foo>();
+    ::test_weak_handle<Bar>();
+    ::test_weak_handle<const Bar>();
+}
+} // namespace test

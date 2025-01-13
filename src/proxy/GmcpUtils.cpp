@@ -3,8 +3,10 @@
 
 #include "GmcpUtils.h"
 
+#include "../global/ConfigConsts.h"
 #include "../global/Consts.h"
 #include "../global/TextUtils.h"
+#include "../global/tests.h"
 
 #include <sstream>
 
@@ -48,10 +50,10 @@ QString escapeGmcpStringData(const QString &str)
     }
     return result;
 }
+} // namespace GmcpUtils
 
-namespace { // anonymous
 namespace test {
-NODISCARD static int testing()
+void testGmcpUtils()
 {
     using namespace char_consts;
     QString s;
@@ -63,24 +65,20 @@ NODISCARD static int testing()
     s.append(QChar(char16_t(0x100)));
     s.append(C_CARRIAGE_RETURN);
     s.append(C_NEWLINE);
-    assert(s.size() == 8);
+    TEST_ASSERT(s.size() == 8);
 
-    const auto result = escapeGmcpStringData(s);
-    assert(result.size() == 14);
+    const auto result = GmcpUtils::escapeGmcpStringData(s);
+    TEST_ASSERT(result.size() == 14);
 
     const auto str = mmqt::toStdStringUtf8(result);
-    assert(str
-           == "\\\""
-              "\\\\"
-              "\\b"
-              "\\f"
-              "\xc3\xbf"
-              "\xc4\x80"
-              "\\r"
-              "\\n");
-    return 42;
+    const auto expected = "\\\""
+                          "\\\\"
+                          "\\b"
+                          "\\f"
+                          "\xC3\xBF"
+                          "\xC4\x80"
+                          "\\r"
+                          "\\n";
+    TEST_ASSERT(str == expected);
 }
-MAYBE_UNUSED static int test = testing();
 } // namespace test
-} // namespace
-} // namespace GmcpUtils

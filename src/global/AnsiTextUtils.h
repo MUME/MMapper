@@ -1108,3 +1108,7 @@ NODISCARD QString rgbToAnsi256String(const QColor &rgb, AnsiColor16LocationEnum 
 NODISCARD bool containsAnsi(std::string_view sv);
 void strip_ansi(std::ostream &os, std::string_view sv);
 NODISCARD std::string strip_ansi(std::string);
+
+namespace test {
+extern void testAnsiTextUtils();
+} // namespace test

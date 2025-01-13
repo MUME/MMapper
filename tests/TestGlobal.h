@@ -16,10 +16,15 @@ public:
 
 private Q_SLOTS:
     static void ansi256ColorTest();
+    static void ansiTextUtilsTest();
     static void ansiToRgbTest();
+    static void charUtilsTest();
+    static void colorTest();
+    static void entitiesTest();
     static void hideQDebugTest();
     static void stringViewTest();
     static void toLowerLatin1Test();
     static void to_numberTest();
     static void unquoteTest();
+    static void weakHandleTest();
 };

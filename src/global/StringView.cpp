@@ -515,34 +515,34 @@ void testIntersect()
 {
     const std::string s = "test";
     const StringView sv{s};
-    assert(sv.intersects(sv.left(0)));      // "test" vs "" (at position 0)
-    assert(sv.intersects(sv.substr(2, 0))); // "test" vs "" (at position 2)
-    assert(sv.intersects(sv.right(0)));     // "test" vs "" (at position 4)
+    TEST_ASSERT(sv.intersects(sv.left(0)));      // "test" vs "" (at position 0)
+    TEST_ASSERT(sv.intersects(sv.substr(2, 0))); // "test" vs "" (at position 2)
+    TEST_ASSERT(sv.intersects(sv.right(0)));     // "test" vs "" (at position 4)
     //
-    assert(sv.left(3).intersects(sv.right(2)));  // "tes" vs "st"
-    assert(sv.left(2).intersects(sv.right(3)));  // "te" vs "est"
-    assert(!sv.left(2).intersects(sv.right(2))); // "te" vs "st" does not intersect
+    TEST_ASSERT(sv.left(3).intersects(sv.right(2)));  // "tes" vs "st"
+    TEST_ASSERT(sv.left(2).intersects(sv.right(3)));  // "te" vs "est"
+    TEST_ASSERT(!sv.left(2).intersects(sv.right(2))); // "te" vs "st" does not intersect
     //
-    assert(sv.left(0).intersects(sv.mid(0)));  // same as sv.intersects(sv.left(0));
-    assert(!sv.left(1).intersects(sv.mid(1))); // "t" vs "est" does not intersect
-    assert(!sv.left(2).intersects(sv.mid(2))); // "te" vs "st" does not intersect
-    assert(!sv.left(3).intersects(sv.mid(3))); // "tes" vs "t" does not intersect
-    assert(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
+    TEST_ASSERT(sv.left(0).intersects(sv.mid(0)));  // same as sv.intersects(sv.left(0));
+    TEST_ASSERT(!sv.left(1).intersects(sv.mid(1))); // "t" vs "est" does not intersect
+    TEST_ASSERT(!sv.left(2).intersects(sv.mid(2))); // "te" vs "st" does not intersect
+    TEST_ASSERT(!sv.left(3).intersects(sv.mid(3))); // "tes" vs "t" does not intersect
+    TEST_ASSERT(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
 }
 
 void testSubstring()
 {
     const std::string s = "test";
     const StringView sv{s};
-    assert(sv.isSubstringOf(sv));
+    TEST_ASSERT(sv.isSubstringOf(sv));
 
-    assert(!sv.isSubstringOf(sv.left(0)));
-    assert(!sv.isSubstringOf(sv.substr(2, 0)));
-    assert(!sv.isSubstringOf(sv.right(0)));
+    TEST_ASSERT(!sv.isSubstringOf(sv.left(0)));
+    TEST_ASSERT(!sv.isSubstringOf(sv.substr(2, 0)));
+    TEST_ASSERT(!sv.isSubstringOf(sv.right(0)));
 
-    assert(sv.left(0).isSubstringOf(sv.left(0)));
-    assert(sv.substr(2, 0).isSubstringOf(sv));
-    assert(sv.right(0).isSubstringOf(sv));
+    TEST_ASSERT(sv.left(0).isSubstringOf(sv.left(0)));
+    TEST_ASSERT(sv.substr(2, 0).isSubstringOf(sv));
+    TEST_ASSERT(sv.right(0).isSubstringOf(sv));
 }
 
 } // namespace test_detail

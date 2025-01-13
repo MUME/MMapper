@@ -5,10 +5,13 @@
 
 #include "../src/global/AnsiTextUtils.h"
 #include "../src/global/CaseUtils.h"
+#include "../src/global/CharUtils.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/global/RAII.h"
 #include "../src/global/StringView.h"
 #include "../src/global/TextUtils.h"
+#include "../src/global/WeakHandle.h"
+#include "../src/global/entities.h"
 #include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
 
@@ -90,6 +93,12 @@ void TestGlobal::ansi256ColorTest()
 #undef X_TEST
 }
 
+void TestGlobal::ansiTextUtilsTest()
+{
+    mmqt::HideQDebug forThisTest;
+    test::testAnsiTextUtils();
+}
+
 void TestGlobal::ansiToRgbTest()
 {
     static_assert(153 == 16 + 36 * 3 + 6 * 4 + 5);
@@ -114,6 +123,21 @@ void TestGlobal::ansiToRgbTest()
     testOne(8, "#555753", AnsiColor16Enum::BLACK);
     testOne(14, "#34E2E2", AnsiColor16Enum::CYAN);
     testOne(15, "#EEEEEC", AnsiColor16Enum::WHITE);
+}
+
+void TestGlobal::charUtilsTest()
+{
+    test::testCharUtils();
+}
+
+void TestGlobal::colorTest()
+{
+    test::testColor();
+}
+
+void TestGlobal::entitiesTest()
+{
+    test::test_entities();
 }
 
 void TestGlobal::hideQDebugTest()
@@ -205,7 +229,6 @@ void TestGlobal::hideQDebugTest()
 
 void TestGlobal::stringViewTest()
 {
-    // REVISIT: Test is meaningless during release builds
     test::testStringView();
 }
 
@@ -253,8 +276,12 @@ void TestGlobal::to_numberTest()
 
 void TestGlobal::unquoteTest()
 {
-    // REVISIT: Test is meaningless during release builds
-    test::test_unquote();
+    test::testUnquote();
+}
+
+void TestGlobal::weakHandleTest()
+{
+    test::testWeakHandle();
 }
 
 QTEST_MAIN(TestGlobal)
