@@ -24,43 +24,6 @@ void ProxyParserApi::disconnectFromMud() const
     m_proxy.acceptVisitor([](Proxy &proxy) { proxy.disconnectFromMud(); });
 }
 
-void ProxyParserApi::sendToMud(const QByteArray &msg) const
-{
-    if (msg.isEmpty())
-        return;
-
-    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.sendToMud(msg); });
-}
-
-void ProxyParserApi::sendToUser(const QByteArray &msg) const
-{
-    if (msg.isEmpty())
-        return;
-
-    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.sendToUser(msg); });
-}
-
-void ProxyParserApi::sendToMud(const std::string_view msg) const
-{
-    if (msg.empty())
-        return;
-
-    sendToMud(QByteArray{msg.data(), static_cast<int>(msg.length())});
-}
-
-void ProxyParserApi::sendToUser(const std::string_view msg) const
-{
-    if (msg.empty())
-        return;
-
-    sendToUser(QByteArray{msg.data(), static_cast<int>(msg.length())});
-}
-
-void ProxyParserApi::gmcpToMud(const GmcpMessage &msg) const
-{
-    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToMud(msg); });
-}
-
 void ProxyParserApi::gmcpToUser(const GmcpMessage &msg) const
 {
     m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToUser(msg); });
