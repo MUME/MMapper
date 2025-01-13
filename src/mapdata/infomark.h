@@ -47,7 +47,7 @@ public:
 struct NODISCARD InfomarkTextTag
 {};
 
-using InfoMarkText = TaggedString<InfomarkTextTag>;
+using InfoMarkText = TaggedStringLatin1<InfomarkTextTag>;
 
 #define X_FOREACH_INFOMARK_TYPE(X) \
     X(TEXT) \

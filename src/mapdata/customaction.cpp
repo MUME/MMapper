@@ -24,22 +24,22 @@
 #include <utility>
 
 template<typename T>
-NODISCARD static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
-                                                    const TaggedString<T> &next,
-                                                    const FlagModifyModeEnum mode)
+NODISCARD static inline TaggedStringLatin1<T> modifyField(const TaggedStringLatin1<T> &prev,
+                                                          const TaggedStringLatin1<T> &next,
+                                                          const FlagModifyModeEnum mode)
 {
     switch (mode) {
     case FlagModifyModeEnum::SET:
         return next;
     case FlagModifyModeEnum::UNSET:
         // this doesn't really make sense either.
-        return TaggedString<T>{};
+        return TaggedStringLatin1<T>{};
     case FlagModifyModeEnum::TOGGLE:
         // the idea of toggling a string like a door name doesn't make sense,
         // so this implementation is as good as any.
         if (prev.empty())
             return next;
-        return TaggedString<T>{};
+        return TaggedStringLatin1<T>{};
     }
     std::abort();
 }

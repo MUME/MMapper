@@ -19,7 +19,7 @@ struct NODISCARD DoorNameTag final
 {};
 } // namespace tags
 
-using DoorName = TaggedString<tags::DoorNameTag>;
+using DoorName = TaggedStringLatin1<tags::DoorNameTag>;
 
 //
 // X(UPPER_CASE, CamelCase)

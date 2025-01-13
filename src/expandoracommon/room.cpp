@@ -384,7 +384,9 @@ ComparisonResultEnum Room::compare(const Room *const room,
         return ComparisonResultEnum::DIFFERENT;
     }
 
-    switch (compareStrings(name.getStdString(), event.getRoomName().getStdString(), tolerance)) {
+    switch (compareStrings(name.getStdStringLatin1(),
+                           event.getRoomName().getStdStringLatin1(),
+                           tolerance)) {
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
@@ -394,8 +396,10 @@ ComparisonResultEnum Room::compare(const Room *const room,
         break;
     }
 
-    switch (
-        compareStrings(desc.getStdString(), event.getRoomDesc().getStdString(), tolerance, updated)) {
+    switch (compareStrings(desc.getStdStringLatin1(),
+                           event.getRoomDesc().getStdStringLatin1(),
+                           tolerance,
+                           updated)) {
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
@@ -671,7 +675,8 @@ void Room::update(Room *const target, const Room *const source)
 
     // REVISIT: why are these append operations, while the others replace?
     // REVISIT: And even if we accept appending, why is the target prepended?
-    target->setNote(RoomNote{target->getNote().getStdString() + source->getNote().getStdString()});
+    target->setNote(
+        RoomNote{target->getNote().getStdStringLatin1() + source->getNote().getStdStringLatin1()});
     target->setMobFlags(target->getMobFlags() | source->getMobFlags());
     target->setLoadFlags(target->getLoadFlags() | source->getLoadFlags());
 
@@ -715,11 +720,12 @@ void Room::update(Room *const target, const Room *const source)
     }
 }
 
+// Latin1
 std::string Room::toStdString() const
 {
     std::stringstream ss;
-    ss << getName().getStdString() << "\n"
-       << getDescription().getStdString() << getContents().getStdString();
+    ss << getName().getStdStringLatin1() << "\n"
+       << getDescription().getStdStringLatin1() << getContents().getStdStringLatin1();
 
     ss << "Exits:";
     for (const ExitDirEnum j : ALL_EXITS7) {
@@ -738,7 +744,7 @@ std::string Room::toStdString() const
         if (door) {
             const auto doorName = exit(j).getDoorName();
             if (!doorName.isEmpty()) {
-                ss << "/" << doorName.getStdString();
+                ss << "/" << doorName.getStdStringLatin1();
             }
             ss << ")";
         }
@@ -747,7 +753,7 @@ std::string Room::toStdString() const
     }
     ss << ".\n";
     if (!getNote().isEmpty()) {
-        ss << "Note: " << getNote().getStdString();
+        ss << "Note: " << getNote().getStdStringLatin1();
     }
 
     return ss.str();

@@ -122,7 +122,7 @@ void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
     if (!myOptionState[OPT_GMCP])
         return;
 
-    const auto name = msg.getName().getStdString();
+    const auto name = msg.getName().getStdStringLatin1();
     const std::size_t found = name.find_last_of(char_consts::C_PERIOD);
     try {
         const GmcpModule mod{name.substr(0, found)};

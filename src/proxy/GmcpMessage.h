@@ -58,7 +58,7 @@ struct NODISCARD GmcpMessageNameTag final
 {};
 } // namespace tags
 
-using GmcpMessageName = TaggedString<tags::GmcpMessageNameTag>; // Latin1
+using GmcpMessageName = TaggedStringLatin1<tags::GmcpMessageNameTag>;
 
 namespace tags {
 struct NODISCARD GmcpJsonTag final

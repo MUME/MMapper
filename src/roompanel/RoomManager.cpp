@@ -64,12 +64,12 @@ void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
     showGmcp(msg);
     // payload is a single number (usually followed by a space), not an array or object
     // thus parsed msg.getDocument() is not valid: use msg.getJson() instead
-    if (!msg.getJson() || msg.getJson()->getStdString().empty()) {
+    if (!msg.getJson() || msg.getJson()->getStdStringUtf8().empty()) {
         qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                              << "containing invalid empty payload: expecting number";
         return;
     }
-    const std::string &str = msg.getJson()->getStdString();
+    const std::string &str = msg.getJson()->getStdStringUtf8();
     size_t pos = 0;
     unsigned long num = 0;
     bool bad = false;

@@ -46,9 +46,9 @@ private:
 
 private:
     template<typename T>
-    NODISCARD bool matches(const TaggedString<T> &s) const
+    NODISCARD bool matches(const TaggedStringLatin1<T> &s) const
     {
-        return this->matches(s.getStdString());
+        return this->matches(s.getStdStringLatin1());
     }
 
 private:

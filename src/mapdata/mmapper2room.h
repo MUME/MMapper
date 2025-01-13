@@ -22,10 +22,10 @@ struct NODISCARD RoomNoteTag final
 {};
 } // namespace tags
 
-using RoomName = TaggedString<tags::RoomNameTag>;
-using RoomDesc = TaggedString<tags::RoomDescTag>;
-using RoomContents = TaggedString<tags::RoomContentsTag>;
-using RoomNote = TaggedString<tags::RoomNoteTag>;
+using RoomName = TaggedStringLatin1<tags::RoomNameTag>;
+using RoomDesc = TaggedStringLatin1<tags::RoomDescTag>;
+using RoomContents = TaggedStringLatin1<tags::RoomContentsTag>;
+using RoomNote = TaggedStringLatin1<tags::RoomNoteTag>;
 
 #define X_FOREACH_RoomTerrainEnum(X) \
     X(UNDEFINED) \

@@ -50,14 +50,14 @@ GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type)
 
 GmcpMessage::GmcpMessage(GmcpMessageName moved_package)
     : m_name{std::move(moved_package)}
-    , m_type{toGmcpMessageType(m_name.getStdString())}
+    , m_type{toGmcpMessageType(m_name.getStdStringLatin1())}
 {}
 
 GmcpMessage::GmcpMessage(GmcpMessageName moved_package, GmcpJson moved_json)
     : m_name{std::move(moved_package)}
     , m_json{std::move(moved_json)}
     , m_document(GmcpJsonDocument::fromJson(m_json->toQByteArray()))
-    , m_type{toGmcpMessageType(m_name.getStdString())}
+    , m_type{toGmcpMessageType(m_name.getStdStringLatin1())}
 {}
 
 GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type, GmcpJson moved_json)
@@ -68,9 +68,9 @@ QByteArray GmcpMessage::toRawBytes() const
 {
     // FIXME: Mixing Latin1 and UTF8 is asking for trouble.
     std::ostringstream oss;
-    oss << m_name.getStdString();
+    oss << m_name.getStdStringLatin1();
     if (m_json)
-        oss << char_consts::C_SPACE << m_json->getStdString();
+        oss << char_consts::C_SPACE << m_json->getStdStringUtf8();
     return mmqt::toQByteArrayUtf8(std::move(oss).str());
 }
 

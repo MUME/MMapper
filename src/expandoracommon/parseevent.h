@@ -90,8 +90,14 @@ public:
     virtual ~ParseEvent();
 
 private:
-    void setProperty(const RoomName &name) { m_properties.setProperty(0, name.getStdString()); }
-    void setProperty(const RoomDesc &desc) { m_properties.setProperty(1, desc.getStdString()); }
+    void setProperty(const RoomName &name)
+    {
+        m_properties.setProperty(0, name.getStdStringLatin1());
+    }
+    void setProperty(const RoomDesc &desc)
+    {
+        m_properties.setProperty(1, desc.getStdStringLatin1());
+    }
     void setProperty(const RoomTerrainEnum &terrain);
     void countSkipped();
 

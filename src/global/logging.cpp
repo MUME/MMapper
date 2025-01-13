@@ -19,6 +19,9 @@ AbstractDebugOStream::~AbstractDebugOStream()
     if (str_utf8.empty())
         return;
 
+    // Try to detect accidentally passing latin1
+    assert(charset::isProbablyUtf8(str_utf8));
+
     auto &debug = m_debug;
 
     // Assume Qt has a lock.

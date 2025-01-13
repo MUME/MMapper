@@ -62,7 +62,8 @@ public:
         // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces makes the hash more resilient.
-        auto desc = mmqt::toQStringLatin1(ParserUtils::normalizeWhitespace(roomDesc.getStdString()));
+        auto desc = mmqt::toQStringLatin1(
+            ParserUtils::normalizeWhitespace(roomDesc.getStdStringLatin1()));
         mmqt::toAsciiInPlace(desc);
 
         // REVISIT: should this be latin1 or utf8?

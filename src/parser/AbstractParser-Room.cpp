@@ -578,14 +578,14 @@ void AbstractParser::parseRoom(StringView input)
             }();
 
             const auto &old = rs->getFirstRoom()->getNote();
-            const RoomNote roomNote = RoomNote{old.getStdString() + "\n" + note};
+            const RoomNote roomNote = RoomNote{old.getStdStringLatin1() + "\n" + note};
             if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
                                        std::make_unique<ModifyRoomFlags>(RoomFieldVariant{roomNote},
                                                                          FlagModifyModeEnum::SET),
                                        roomId),
                                    rs))
                 throw std::runtime_error("execute failed");
-            os << "Note: " << roomNote.getStdString() << std::endl;
+            os << "Note: " << roomNote.getStdStringLatin1() << std::endl;
             send_ok(os);
         },
         "append room note");

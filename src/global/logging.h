@@ -34,11 +34,17 @@ public:
     void writeUtf8(std::string_view sv);
 
 public:
-    template<typename T>
+    template<EncodingEnum E, typename T>
     friend AbstractDebugOStream &operator<<(AbstractDebugOStream &self,
-                                            const TaggedString<T> &string)
+                                            const TaggedString<E, T> &string)
     {
-        self.writeLatin1(string.getRawStdString());
+        if constexpr (E == EncodingEnum::Latin1) {
+            self.writeLatin1(string.getRawStdString());
+        } else if constexpr (E == EncodingEnum::Utf8) {
+            self.writeUtf8(string.getRawStdString());
+        } else {
+            assert(false);
+        }
         return self;
     }
 

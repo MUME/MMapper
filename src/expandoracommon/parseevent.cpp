@@ -114,7 +114,8 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 
     // the moved strings are used by const ref here before they're moved.
     event->setProperty(moved_roomName);
-    event->setProperty(RoomDesc{ParserUtils::normalizeWhitespace(moved_roomDesc.getStdString())});
+    event->setProperty(
+        RoomDesc{ParserUtils::normalizeWhitespace(moved_roomDesc.getStdStringLatin1())});
     event->setProperty(terrain);
 
     // After this block, the moved values are gone.

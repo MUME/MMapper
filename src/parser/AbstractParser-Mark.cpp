@@ -141,7 +141,7 @@ void AbstractParser::parseMark(StringView input)
                 os << "  class: " << getParserCommandName(mark->getClass()).getCommand()
                    << std::endl;
                 if (mark->getType() == InfoMarkTypeEnum::TEXT)
-                    os << "  text: " << mark->getText().getStdString() << std::endl;
+                    os << "  text: " << mark->getText().getStdStringLatin1() << std::endl;
                 else {
                     os << "  pos1: ";
                     printCoordinate(mark->getPosition1());

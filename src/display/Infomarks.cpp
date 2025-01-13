@@ -243,7 +243,7 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
     switch (infoMarkType) {
     case InfoMarkTypeEnum::TEXT: {
         batch.renderText(pos,
-                         marker->getText().getStdString(),
+                         marker->getText().getStdStringLatin1(),
                          Color{color.getQColor()},
                          color,
                          fontFormatFlag,
