@@ -17,7 +17,7 @@ class NODISCARD_QOBJECT MpiFilter final : public QObject
     Q_OBJECT
 
 private:
-    TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
+    TelnetDataEnum m_previousType = TelnetDataEnum::Unknown;
     bool m_receivingMpi = false;
 
     char m_command = char_consts::C_NUL;

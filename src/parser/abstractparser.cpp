@@ -671,9 +671,9 @@ void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
     };
 
     switch (data.type) {
-    case TelnetDataEnum::DELAY:
-    case TelnetDataEnum::PROMPT:
-    case TelnetDataEnum::UNKNOWN:
+    case TelnetDataEnum::Delay:
+    case TelnetDataEnum::Prompt:
+    case TelnetDataEnum::Unknown:
         sendToMud(data.line);
         break;
     case TelnetDataEnum::CRLF:

@@ -46,8 +46,8 @@ MumeXmlParser::~MumeXmlParser() = default;
 
 void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
-    const bool isPrompt = data.type == TelnetDataEnum::PROMPT;
-    const bool isTwiddlers = data.type == TelnetDataEnum::DELAY;
+    const bool isPrompt = data.type == TelnetDataEnum::Prompt;
+    const bool isTwiddlers = data.type == TelnetDataEnum::Delay;
     if (isTwiddlers) {
         m_lastPrompt = data.line;
         if (getConfig().parser.removeXmlTags) {

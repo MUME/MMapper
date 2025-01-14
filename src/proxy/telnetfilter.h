@@ -15,13 +15,13 @@
 #include <QString>
 #include <QtCore>
 
-enum class NODISCARD TelnetDataEnum : uint8_t { UNKNOWN, PROMPT, CRLF, LF, DELAY };
+enum class NODISCARD TelnetDataEnum : uint8_t { Unknown, Prompt, CRLF, LF, Delay };
 
 struct NODISCARD TelnetData final
 {
     TelnetData() = default;
     QByteArray line;
-    TelnetDataEnum type = TelnetDataEnum::UNKNOWN;
+    TelnetDataEnum type = TelnetDataEnum::Unknown;
 };
 
 class NODISCARD_QOBJECT TelnetFilter final : public QObject

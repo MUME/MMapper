@@ -52,10 +52,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         switch (c) {
         case ASCII_DEL:
             buffer.line.append(ASCII_DEL);
-            buffer.type = TelnetDataEnum::DELAY;
+            buffer.type = TelnetDataEnum::Delay;
             que.enqueue(buffer);
             buffer.line.clear();
-            buffer.type = TelnetDataEnum::UNKNOWN;
+            buffer.type = TelnetDataEnum::Unknown;
             break;
 
         case ASCII_CR:
@@ -70,7 +70,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                     buffer.type = TelnetDataEnum::CRLF;
                     que.enqueue(buffer);
                     buffer.line.clear();
-                    buffer.type = TelnetDataEnum::UNKNOWN;
+                    buffer.type = TelnetDataEnum::Unknown;
                     break;
 
                 default:
@@ -88,7 +88,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::UNKNOWN;
+                buffer.type = TelnetDataEnum::Unknown;
             }
 
             buffer.line.append(c);
@@ -96,18 +96,18 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         }
     }
 
-    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::UNKNOWN)) {
+    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::Unknown)) {
         {
             if (goAhead) {
-                buffer.type = TelnetDataEnum::PROMPT;
+                buffer.type = TelnetDataEnum::Prompt;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::UNKNOWN;
+                buffer.type = TelnetDataEnum::Unknown;
             } else if (buffer.line.endsWith(ASCII_LF)) {
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::UNKNOWN;
+                buffer.type = TelnetDataEnum::Unknown;
             }
         }
     }

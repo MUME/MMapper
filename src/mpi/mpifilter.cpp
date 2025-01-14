@@ -20,9 +20,9 @@ NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
     case TelnetDataEnum::LF:
     case TelnetDataEnum::CRLF:
         return true;
-    case TelnetDataEnum::PROMPT:
-    case TelnetDataEnum::DELAY:
-    case TelnetDataEnum::UNKNOWN:
+    case TelnetDataEnum::Prompt:
+    case TelnetDataEnum::Delay:
+    case TelnetDataEnum::Unknown:
     default:
         return false;
     }

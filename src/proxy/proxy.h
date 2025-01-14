@@ -41,8 +41,6 @@ class TelnetFilter;
 class UserTelnet;
 class CTimers;
 
-#undef ERROR // Bad dog, Microsoft; bad dog!!!
-
 class NODISCARD_QOBJECT Proxy final : public QObject
 {
     Q_OBJECT
@@ -76,16 +74,16 @@ private:
     QPointer<CTimers> m_timers;
 
     enum class NODISCARD ServerStateEnum {
-        INITIALIZED,
-        OFFLINE,
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTING,
-        DISCONNECTED,
-        ERROR,
+        Initialized,
+        Offline,
+        Connecting,
+        Connected,
+        Disconnecting,
+        Disconnected,
+        Error,
     };
 
-    ServerStateEnum m_serverState = ServerStateEnum::INITIALIZED;
+    ServerStateEnum m_serverState = ServerStateEnum::Initialized;
 
 public:
     explicit Proxy(MapData &,

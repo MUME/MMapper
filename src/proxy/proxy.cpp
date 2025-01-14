@@ -39,8 +39,6 @@
 #include <QSslSocket>
 #include <QTcpSocket>
 
-#undef ERROR // Bad dog, Microsoft; bad dog!!!
-
 using mmqt::makeQPointer;
 
 Proxy::Proxy(MapData &md,
@@ -318,7 +316,7 @@ void Proxy::slot_onMudConnected()
 {
     const auto &settings = getConfig().mumeClientProtocol;
 
-    m_serverState = ServerStateEnum::CONNECTED;
+    m_serverState = ServerStateEnum::Connected;
 
     log("Connection to server established ...");
 
@@ -338,7 +336,7 @@ void Proxy::slot_onMudConnected()
 
 void Proxy::slot_onMudError(const QString &errorStr)
 {
-    m_serverState = ServerStateEnum::ERROR;
+    m_serverState = ServerStateEnum::Error;
 
     qWarning() << "Mud socket error" << errorStr;
     log(errorStr);
@@ -362,7 +360,7 @@ void Proxy::slot_onMudError(const QString &errorStr)
                        .arg(getConfig().parser.prefixChar)
                        .toLatin1());
         m_parserXml->sendPromptToUser();
-        m_serverState = ServerStateEnum::OFFLINE;
+        m_serverState = ServerStateEnum::Offline;
     } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
         sendToUser("\n"
                    "\033[0;37;46m"
@@ -370,7 +368,7 @@ void Proxy::slot_onMudError(const QString &errorStr)
                    "\033[0m"
                    "\n");
         m_parserXml->sendPromptToUser();
-        m_serverState = ServerStateEnum::OFFLINE;
+        m_serverState = ServerStateEnum::Offline;
     } else {
         // Terminate connection
         deleteLater();
@@ -389,7 +387,7 @@ void Proxy::slot_mudTerminatedConnection()
         return;
     }
 
-    m_serverState = ServerStateEnum::DISCONNECTED;
+    m_serverState = ServerStateEnum::Disconnected;
 
     m_userTelnet->slot_onRelayEchoMode(true);
 
@@ -478,28 +476,28 @@ void Proxy::slot_onSendToUserSocket(const QByteArray &ba)
 
 bool Proxy::isConnected() const
 {
-    return m_serverState == ServerStateEnum::CONNECTED;
+    return m_serverState == ServerStateEnum::Connected;
 }
 
 void Proxy::connectToMud()
 {
     switch (m_serverState) {
-    case ServerStateEnum::CONNECTING:
+    case ServerStateEnum::Connecting:
         sendToUser("Error: You're still connecting.\n");
         break;
 
-    case ServerStateEnum::CONNECTED:
+    case ServerStateEnum::Connected:
         sendToUser("Error: You're already connected.\n");
         break;
 
-    case ServerStateEnum::DISCONNECTING:
+    case ServerStateEnum::Disconnecting:
         sendToUser("Error: You're still disconnecting.\n");
         break;
 
-    case ServerStateEnum::INITIALIZED:
-    case ServerStateEnum::OFFLINE:
-    case ServerStateEnum::DISCONNECTED:
-    case ServerStateEnum::ERROR: {
+    case ServerStateEnum::Initialized:
+    case ServerStateEnum::Offline:
+    case ServerStateEnum::Disconnected:
+    case ServerStateEnum::Error: {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser(
                 "\n"
@@ -511,13 +509,13 @@ void Proxy::connectToMud()
                 "Welcome to the land of Middle-earth. May your visit here be... interesting.\n"
                 "Never forget! Try to role-play...\n");
             m_parserXml->doMove(CommandEnum::LOOK);
-            m_serverState = ServerStateEnum::OFFLINE;
+            m_serverState = ServerStateEnum::Offline;
             break;
         }
 
         if (auto sock = m_mudSocket.data()) {
             sendToUser("Connecting...\n");
-            m_serverState = ServerStateEnum::CONNECTING;
+            m_serverState = ServerStateEnum::Connecting;
             sock->connectToHost();
         } else {
             sendToUser("Internal error while trying to connect.\n");
@@ -532,35 +530,35 @@ void Proxy::disconnectFromMud()
     m_userTelnet->slot_onRelayEchoMode(true);
 
     switch (m_serverState) {
-    case ServerStateEnum::CONNECTING:
+    case ServerStateEnum::Connecting:
         sendToUser("Error: You're still connecting.\n");
         break;
 
-    case ServerStateEnum::OFFLINE:
-        m_serverState = ServerStateEnum::INITIALIZED;
+    case ServerStateEnum::Offline:
+        m_serverState = ServerStateEnum::Initialized;
         sendToUser("You disconnect your simulated link.\n");
         break;
 
-    case ServerStateEnum::CONNECTED: {
+    case ServerStateEnum::Connected: {
         if (auto sock = m_mudSocket.data()) {
             sendToUser("Disconnecting...\n");
-            m_serverState = ServerStateEnum::DISCONNECTING;
+            m_serverState = ServerStateEnum::Disconnecting;
             sock->disconnectFromHost();
             sendToUser("Disconnected.\n");
-            m_serverState = ServerStateEnum::DISCONNECTED;
+            m_serverState = ServerStateEnum::Disconnected;
         } else {
             sendToUser("Internal error while trying to disconnect.\n");
         }
         break;
     }
 
-    case ServerStateEnum::DISCONNECTING:
+    case ServerStateEnum::Disconnecting:
         sendToUser("Error: You're still disconnecting.\n");
         break;
 
-    case ServerStateEnum::INITIALIZED:
-    case ServerStateEnum::DISCONNECTED:
-    case ServerStateEnum::ERROR:
+    case ServerStateEnum::Initialized:
+    case ServerStateEnum::Disconnected:
+    case ServerStateEnum::Error:
         sendToUser("Error: You're not connected.\n");
         break;
     }
