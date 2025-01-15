@@ -8,85 +8,62 @@
 
 #include <cstddef>
 
-namespace { // anonymous
-
-NODISCARD char16_t to_char16(const char c)
-{
-    // zero-extend possibly signed Latin1 char to unsigned char16_t
-    return static_cast<char16_t>(static_cast<uint8_t>(c));
-}
-
-} // namespace
-
-bool operator==(const std::u16string_view left, const std::string_view right) noexcept
-{
-    // we could use some Qt function, as for example QtStringView::compare(QLatin1String), but:
-    // 1. we are reducing the dependencies on Qt
-    // 2. it's difficult to find a non-allocating comparison between UTF-16 and Latin1 strings in Qt
-
-    const size_t n = left.size();
-    if (n != right.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < n; ++i) {
-        if (left[i] != to_char16(right[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
 template<>
-uint64_t to_integer<uint64_t>(std::u16string_view str, bool &ok)
+std::optional<uint64_t> to_integer<uint64_t>(std::u16string_view str)
 {
     if (str.empty()) {
-        ok = false;
-        return 0;
+        return std::nullopt;
     }
     uint64_t ret = 0;
     for (const char16_t ch : str) {
-        if (ch >= '0' && ch <= '9') {
-            const auto digit = static_cast<uint32_t>(ch - '0');
-            const uint64_t next = ret * 10 + digit;
-            // on overflow we lose at least the top bit => next is less than half the value it should be,
-            // so divided by 8 will be less than the original (non multiplied by 10) value
-            if (next / 8 >= ret) {
-                ret = next;
-            } else {
-                ok = false;
-                return 0;
-            }
-        } else {
-            ok = false;
-            return ret;
+        if (ch < '0' || ch > '9') {
+            return std::nullopt;
         }
+
+        const auto digit = static_cast<uint32_t>(ch - '0');
+        const uint64_t next = ret * 10 + digit;
+        // on overflow we lose at least the top bit => next is less than half the value it should be,
+        // so divided by 8 will be less than the original (non multiplied by 10) value
+        if (next / 8 < ret) {
+            return std::nullopt;
+        }
+
+        ret = next;
     }
-    ok = true;
     return ret;
 }
 
 template<>
-int64_t to_integer<int64_t>(std::u16string_view str, bool &ok)
+std::optional<int64_t> to_integer<int64_t>(std::u16string_view str)
 {
     if (str.empty()) {
-        ok = false;
-        return 0;
+        return std::nullopt;
     }
     bool negative = false;
-    if (str[0] == char_consts::C_MINUS_SIGN) {
+    if (str.front() == char_consts::C_MINUS_SIGN) {
         negative = true;
         str.remove_prefix(1);
     }
-    const uint64_t uret = to_integer<uint64_t>(str, ok);
+    const auto opt_uret = to_integer<uint64_t>(str);
+    if (!opt_uret.has_value()) {
+        return std::nullopt;
+    }
+
     // max int64_t
     constexpr const uint64_t max_int64 = ~uint64_t(0) >> 1;
-    int64_t ret;
+    constexpr const auto max_neg = max_int64 + 1u;
+    static_assert(max_neg == 1ull << 63);
+
+    const auto uret = opt_uret.value();
+
     if (negative) {
-        ok = ok && (uret <= max_int64 + 1);
-        ret = static_cast<int64_t>(-uret);
+        if (uret <= max_neg) {
+            return static_cast<int64_t>(-uret);
+        }
     } else {
-        ok = ok && (uret <= max_int64);
-        ret = static_cast<int64_t>(uret);
+        if (uret <= max_int64) {
+            return static_cast<int64_t>(uret);
+        }
     }
-    return ret;
+    return std::nullopt;
 }

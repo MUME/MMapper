@@ -261,25 +261,15 @@ void TestGlobal::toLowerLatin1Test()
 
 void TestGlobal::to_numberTest()
 {
-    bool ok = false;
-    QCOMPARE(to_integer<uint64_t>(u"0", ok), 0);
-    QCOMPARE(ok, true);
-    QCOMPARE(to_integer<uint64_t>(u"1", ok), 1);
-    QCOMPARE(ok, true);
-    QCOMPARE(to_integer<uint64_t>(u"1234567890", ok), 1234567890);
-    QCOMPARE(ok, true);
-    QCOMPARE(to_integer<uint64_t>(u"12345678901234567890", ok), 12345678901234567890ull);
-    QCOMPARE(ok, true);
-    QCOMPARE(to_integer<uint64_t>(u"18446744073709551615", ok), 18446744073709551615ull);
-    QCOMPARE(ok, true);
-    QCOMPARE(to_integer<uint64_t>(u"18446744073709551616", ok), 0);
-    QCOMPARE(ok, false);
-    QCOMPARE(to_integer<uint64_t>(u"36893488147419103231", ok), 0);
-    QCOMPARE(ok, false);
-    QCOMPARE(to_integer<uint64_t>(u"92233720368547758079", ok), 0);
-    QCOMPARE(ok, false);
-    QCOMPARE(to_integer<uint64_t>(u"110680464442257309695", ok), 0);
-    QCOMPARE(ok, false);
+    QCOMPARE(to_integer<uint64_t>(u"0"), 0);
+    QCOMPARE(to_integer<uint64_t>(u"1"), 1);
+    QCOMPARE(to_integer<uint64_t>(u"1234567890"), 1234567890);
+    QCOMPARE(to_integer<uint64_t>(u"12345678901234567890"), 12345678901234567890ull);
+    QCOMPARE(to_integer<uint64_t>(u"18446744073709551615"), 18446744073709551615ull);
+    QCOMPARE(to_integer<uint64_t>(u"18446744073709551616"), std::nullopt);
+    QCOMPARE(to_integer<uint64_t>(u"36893488147419103231"), std::nullopt);
+    QCOMPARE(to_integer<uint64_t>(u"92233720368547758079"), std::nullopt);
+    QCOMPARE(to_integer<uint64_t>(u"110680464442257309695"), std::nullopt);
 }
 
 void TestGlobal::unquoteTest()

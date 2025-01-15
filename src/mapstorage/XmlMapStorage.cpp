@@ -5,26 +5,13 @@
 
 #include "XmlMapStorage.h"
 
-#include "../global/TextUtils.h"
-#include "../global/progresscounter.h"
 #include "../global/string_view_utils.h"
-#include "../global/utils.h"
 #include "../mainwindow/UpdateDialog.h"
-#include "../map/DoorFlags.h"
-#include "../map/ExitDirection.h"
-#include "../map/ExitFlags.h"
-#include "../map/coordinate.h"
 #include "../map/enums.h"
-#include "../map/exit.h"
-#include "../map/mmapper2room.h"
-#include "../map/room.h"
-#include "../map/roomid.h"
-#include "../mapdata/mapdata.h"
 #include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
 #include "roomsaver.h"
 
-#include <cstddef>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -34,7 +21,6 @@
 #include <QString>
 #include <QStringView>
 #include <QXmlStreamReader>
-#include <QXmlStreamWriter>
 
 // ---------------------------- XmlMapStorage::TypeEnum ------------------------
 // list know enum types
@@ -53,49 +39,51 @@
     X(RoomTerrainEnum) \
     X(TypeEnum)
 
-enum class XmlMapStorage::TypeEnum : uint32_t {
+namespace { // anonymous
+
+enum class NODISCARD TypeEnum : uint32_t {
 #define X_DECL(X) X,
     XFOREACH_TYPE_ENUM(X_DECL)
 #undef X_DECL
 };
 
-#define X_ADD(X) +1
-static constexpr const uint32_t NUM_XMLMAPSTORAGE_TYPE = (XFOREACH_TYPE_ENUM(X_ADD));
+#define X_ADD(X) +1 // NOLINT
+constexpr const size_t NUM_XMLMAPSTORAGE_TYPE = (XFOREACH_TYPE_ENUM(X_ADD));
 #undef X_ADD
 
 // ---------------------------- XmlMapStorage::Converter -----------------------
-class XmlMapStorage::Converter final
+class NODISCARD Converter final
 {
+private:
+    std::vector<std::vector<QString>> m_enumToStrings;
+    std::vector<QHash<QStringView, uint32_t>> m_stringToEnums;
+
 public:
     Converter();
     ~Converter() = default;
 
     // parse string containing a signed or unsigned number.
-    // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename T>
-    static T toInteger(const QStringView str, bool &fail)
+    NODISCARD static std::optional<T> toInteger(const QStringView str)
     {
-        bool ok = false;
-        const T ret = to_integer<T>(as_u16string_view(str), ok);
-        if (!ok) {
-            fail = true;
-        }
-        return ret;
+        return ::to_integer<T>(as_u16string_view(str));
     }
 
     // parse string containing the name of an enum.
-    // sets fail = true only in case of errors, otherwise fail is not modified
     template<typename ENUM>
-    ENUM toEnum(const QStringView str, bool &fail) const
+    NODISCARD std::optional<ENUM> toEnum(const QStringView str) const
     {
-        static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
-        return ENUM(stringToEnum(enumToType(ENUM(0)), str, fail));
+        static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
+        if (const auto opt = stringToEnum(enumToType(static_cast<ENUM>(0)), str); opt.has_value()) {
+            return static_cast<ENUM>(opt.value());
+        }
+        return std::nullopt;
     }
 
     template<typename ENUM>
-    const QString &toString(ENUM val) const
+    NODISCARD const QString &toString(const ENUM val) const
     {
-        static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
+        static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
         return enumToString(enumToType(val), static_cast<uint32_t>(val));
     }
 
@@ -107,23 +95,19 @@ private:
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define X_DECL(X) \
-    static constexpr TypeEnum enumToType(X) \
+    NODISCARD static constexpr TypeEnum enumToType(X) \
     { \
         return TypeEnum::X; \
     }
     XFOREACH_TYPE_ENUM(X_DECL)
 #undef X_DECL
 
-    uint32_t stringToEnum(TypeEnum type, const QStringView str, bool &fail) const;
-    const QString &enumToString(TypeEnum type, uint32_t val) const;
-
-    std::vector<std::vector<QString>> enumToStrings;
-    std::vector<QHash<QStringView, uint32_t>> stringToEnums;
-    const QString empty;
+    NODISCARD std::optional<uint32_t> stringToEnum(TypeEnum type, QStringView str) const;
+    NODISCARD const QString &enumToString(TypeEnum type, uint32_t val) const;
 };
 
-XmlMapStorage::Converter::Converter()
-    : enumToStrings{
+Converter::Converter()
+    : m_enumToStrings{
 #define X_DECL(X) /* */ {#X},
 #define X_DECL2(X, ...) {#X},
         /* these must match the enum types listed in XFOREACH_TYPE_ENUM above */
@@ -143,19 +127,16 @@ XmlMapStorage::Converter::Converter()
 #undef X_DECL
 #undef X_DECL2
     }
-    , stringToEnums{}
-    , empty{}
 {
-    if (enumToStrings.size() != NUM_XMLMAPSTORAGE_TYPE) {
+    if (m_enumToStrings.size() != NUM_XMLMAPSTORAGE_TYPE) {
         throw std::runtime_error("XmlMapStorage internal error: enum names do not match enum types");
     }
 
     // create the maps string -> enum value for each enum type listed above
-    for (std::vector<QString> &vec : enumToStrings) {
-        stringToEnums.emplace_back();
-        QHash<QStringView, uint32_t> &map = stringToEnums.back();
+    for (auto &vec : m_enumToStrings) {
+        auto &map = m_stringToEnums.emplace_back();
         uint32_t val = 0;
-        for (QString &str : vec) {
+        for (auto &str : vec) {
             if (str == "UNDEFINED") {
                 str.clear(); // we never save or load the string "UNDEFINED"
             } else {
@@ -163,41 +144,92 @@ XmlMapStorage::Converter::Converter()
                     // we save the EXIT flag inverted => invert the name too
                     str = "NO_EXIT";
                 }
-                map[QStringView(str)] = val;
+                map[str] = val;
             }
-            val++;
+            ++val;
         }
     }
 }
 
-const QString &XmlMapStorage::Converter::enumToString(const TypeEnum type, const uint32_t val) const
+const QString &Converter::enumToString(const TypeEnum type, const uint32_t val) const
 {
     const auto index = static_cast<uint32_t>(type);
-    if (index < enumToStrings.size() && val < enumToStrings[index].size()) {
-        return enumToStrings[index][val];
+    if (index < m_enumToStrings.size()) {
+        const auto &tmp = m_enumToStrings[index];
+        if (val < tmp.size()) {
+            return tmp[val];
+        }
     }
+
     qWarning().noquote().nospace()
         << "Attempt to save an invalid enum type = " << toString(type) << ", value = " << val
         << ". Either the current map is damaged, or there is a bug";
-    return empty;
+
+    static const QString g_empty{};
+    assert(g_empty.isEmpty());
+    return g_empty;
 }
 
-uint32_t XmlMapStorage::Converter::stringToEnum(const TypeEnum type,
-                                                const QStringView str,
-                                                bool &fail) const
+std::optional<uint32_t> Converter::stringToEnum(const TypeEnum type, const QStringView str) const
 {
     const auto index = static_cast<uint32_t>(type);
-    if (index < stringToEnums.size()) {
-        auto iter = stringToEnums[index].find(str);
-        if (iter != stringToEnums[index].end()) {
+    if (index < m_stringToEnums.size()) {
+        const auto &tmp = m_stringToEnums[index];
+        const auto iter = tmp.find(str);
+        if (iter != tmp.end()) {
             return iter.value();
         }
     }
-    fail = true;
-    return 0;
+    return std::nullopt;
 }
 
-const XmlMapStorage::Converter XmlMapStorage::conv;
+const Converter conv;
+
+NODISCARD ExitDirEnum directionForLowercase(const QStringRef &lowcase)
+{
+    if (lowcase.isEmpty()) {
+        return ExitDirEnum::UNKNOWN;
+    }
+
+    switch (lowcase.front().unicode()) {
+    case 'n':
+        if (lowcase == "north") {
+            return ExitDirEnum::NORTH;
+        }
+        break;
+    case 's':
+        if (lowcase == "south") {
+            return ExitDirEnum::SOUTH;
+        }
+        break;
+    case 'e':
+        if (lowcase == "east") {
+            return ExitDirEnum::EAST;
+        }
+        break;
+    case 'w':
+        if (lowcase == "west") {
+            return ExitDirEnum::WEST;
+        }
+        break;
+    case 'u':
+        if (lowcase == "up") {
+            return ExitDirEnum::UP;
+        }
+        break;
+    case 'd':
+        if (lowcase == "down") {
+            return ExitDirEnum::DOWN;
+        }
+        break;
+    default:
+        break;
+    }
+
+    return ExitDirEnum::UNKNOWN;
+}
+
+} // namespace
 
 // ---------------------------- XmlMapStorage ----------------------------------
 XmlMapStorage::XmlMapStorage(MapData &mapdata,
@@ -205,9 +237,6 @@ XmlMapStorage::XmlMapStorage(MapData &mapdata,
                              QFile *const file,
                              QObject *const parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
-    , m_loadedRooms()
-    , m_loadProgressDivisor(1) // avoid division by zero
-    , m_loadProgress(0)
 {}
 
 XmlMapStorage::~XmlMapStorage() = default;
@@ -264,7 +293,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     m_mapData.setDataChanged();
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        if (as_u16string_view(stream.name()) == "map") {
+        if (stream.name() == "map") {
             loadMap(stream);
             break; // expecting only one <map>
         }
@@ -282,20 +311,24 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
         const QString type = attrs.value("type").toString();
         if (type != "mmapper2xml") {
             throwErrorFmt(stream,
-                          "unsupported map type=\"%1\",\nexpecting type=\"mmapper2xml\"",
+                          R"(unsupported map type="%1",)"
+                          "\n"
+                          R"(expecting type="mmapper2xml")",
                           type);
         }
         const QString version = attrs.value("version").toString();
         const CompareVersion cmp(version);
         if (cmp.major() != 1) {
             throwErrorFmt(stream,
-                          "unsupported map version=\"%1\",\nexpecting version=\"1.x.y\"",
+                          R"(unsupported map version="%1",)"
+                          "\n"
+                          R"(expecting version="1.x.y")",
                           version);
         }
     }
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const std::u16string_view name = as_u16string_view(stream.name());
+        const auto &name = stream.name();
         if (name == "room") {
             loadRoom(stream);
         } else if (name == "marker") {
@@ -340,7 +373,7 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     RoomElementEnum found = RoomElementEnum::NONE;
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const std::u16string_view name = as_u16string_view(stream.name());
+        const auto &name = stream.name();
         if (name == "align") {
             throwIfDuplicate(stream, found, RoomElementEnum::ALIGN);
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
@@ -388,96 +421,50 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream)
     room.setLoadFlags(loadFlags);
     room.setMobFlags(mobFlags);
 
-    m_loadedRooms.emplace(std::move(roomId), std::move(sharedroom));
+    m_loadedRooms.emplace(roomId, sharedroom);
 }
 
 // convert string to RoomId
 RoomId XmlMapStorage::loadRoomId(QXmlStreamReader &stream, const QStringView idstr)
 {
-    bool fail = false;
-    const RoomId id{conv.toInteger<uint32_t>(idstr, fail)};
+    const std::optional<RoomId> id{Converter::toInteger<uint32_t>(idstr)};
     // convert number back to string, and compare the two:
     // if they differ, room ID is invalid.
-    if (fail || idstr != roomIdToString(id)) {
+    if (!id.has_value() || idstr != roomIdToString(id.value())) {
         throwErrorFmt(stream, "invalid room id \"%1\"", idstr.toString());
     }
-    return id;
+    return id.value();
 }
 
 // load current <coord> element
 Coordinate XmlMapStorage::loadCoordinate(QXmlStreamReader &stream)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    bool fail = false;
-    const int x = conv.toInteger<int>(attrs.value("x"), fail);
-    const int y = conv.toInteger<int>(attrs.value("y"), fail);
-    const int z = conv.toInteger<int>(attrs.value("z"), fail);
-    if (fail) {
+    const auto x = Converter::toInteger<int>(attrs.value("x"));
+    const auto y = Converter::toInteger<int>(attrs.value("y"));
+    const auto z = Converter::toInteger<int>(attrs.value("z"));
+    if (!x.has_value() || !y.has_value() || !z.has_value()) {
         throwErrorFmt(stream,
-                      "invalid coordinate values x=\"%1\" y=\"%2\" z=\"%3\"",
+                      R"(invalid coordinate values x="%1" y="%2" z="%3")",
                       attrs.value("x").toString(),
                       attrs.value("y").toString(),
                       attrs.value("z").toString());
     }
-    return Coordinate(x, y, z);
-}
-
-static ExitDirEnum directionForLowercase(const std::u16string_view lowcase)
-{
-    if (lowcase.empty()) {
-        return ExitDirEnum::UNKNOWN;
-    }
-
-    switch (lowcase[0]) {
-    case 'n':
-        if (lowcase == "north") {
-            return ExitDirEnum::NORTH;
-        }
-        break;
-    case 's':
-        if (lowcase == "south") {
-            return ExitDirEnum::SOUTH;
-        }
-        break;
-    case 'e':
-        if (lowcase == "east") {
-            return ExitDirEnum::EAST;
-        }
-        break;
-    case 'w':
-        if (lowcase == "west") {
-            return ExitDirEnum::WEST;
-        }
-        break;
-    case 'u':
-        if (lowcase == "up") {
-            return ExitDirEnum::UP;
-        }
-        break;
-    case 'd':
-        if (lowcase == "down") {
-            return ExitDirEnum::DOWN;
-        }
-        break;
-    default:
-        break;
-    }
-
-    return ExitDirEnum::UNKNOWN;
+    return Coordinate(x.value(), y.value(), z.value());
 }
 
 // load current <exit> element
 void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExitsList &exitList)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    const ExitDirEnum dir = directionForLowercase(as_u16string_view(attrs.value("dir")));
+    const ExitDirEnum dir = directionForLowercase(attrs.value("dir"));
     DoorFlags doorFlags;
     ExitFlags exitFlags;
     Exit &exit = exitList[dir];
     exit.setDoorName(DoorName{attrs.value("doorname").toString()});
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const std::u16string_view name = as_u16string_view(stream.name());
+        const auto &name = stream.name();
         if (name == "to") {
             exit.addOut(loadRoomId(stream, loadStringView(stream)));
         } else if (name == "doorflag") {
@@ -543,22 +530,22 @@ void XmlMapStorage::moveRoomsToMapData()
 void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    bool fail = false;
-    const InfoMarkTypeEnum type = conv.toEnum<InfoMarkTypeEnum>(attrs.value("type"), fail);
-    const InfoMarkClassEnum clas = conv.toEnum<InfoMarkClassEnum>(attrs.value("class"), fail);
-    if (fail) {
+    const auto type = conv.toEnum<InfoMarkTypeEnum>(attrs.value("type"));
+    const auto clas = conv.toEnum<InfoMarkClassEnum>(attrs.value("class"));
+    if (!type.has_value() || !clas.has_value()) {
         throwErrorFmt(stream,
-                      "invalid marker attributes type=\"%1\" class=\"%2\"",
+                      R"(invalid marker attributes type="%1" class="%2")",
                       attrs.value("type").toString(),
                       attrs.value("class").toString());
     }
     QStringView anglestr = attrs.value("angle");
     int angle = 0;
     if (!anglestr.isNull()) {
-        angle = conv.toInteger<int>(anglestr, fail);
-        if (fail) {
-            throwErrorFmt(stream, "invalid marker attribute angle=\"%1\"", anglestr.toString());
+        const auto opt_angle = Converter::toInteger<int>(anglestr);
+        if (!opt_angle.has_value()) {
+            throwErrorFmt(stream, R"(invalid marker attribute angle="%1")", anglestr.toString());
         }
+        angle = opt_angle.value();
     }
 
     SharedInfoMark sharedmarker = InfoMark::alloc(m_mapData);
@@ -566,12 +553,12 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
     size_t foundPos1 = 0;
     size_t foundPos2 = 0;
 
-    marker.setType(type);
-    marker.setClass(clas);
+    marker.setType(type.value());
+    marker.setClass(clas.value());
     marker.setRotationAngle(angle);
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        const std::u16string_view name = as_u16string_view(stream.name());
+        const auto &name = stream.name();
         if (name == "pos1") {
             marker.setPosition1(loadCoordinate(stream));
             ++foundPos1;
@@ -593,18 +580,16 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
 
     if (foundPos1 == 0) {
         throwError(stream,
-                   "invalid marker: missing mandatory element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
+                   R"(invalid marker: missing mandatory element <pos1 x="..." y="..." z="..."/>)");
     } else if (foundPos1 > 1) {
-        throwError(stream,
-                   "invalid marker: duplicate element <pos1 x=\"...\" y=\"...\" z=\"...\"/>");
+        throwError(stream, R"(invalid marker: duplicate element <pos1 x="..." y="..." z="..."/>)");
     }
 
     if (foundPos2 == 0) {
         // saveMarker() omits pos2 when it's equal to pos1
         marker.setPosition2(marker.getPosition1());
     } else if (foundPos2 > 1) {
-        throwError(stream,
-                   "invalid marker: duplicate element <pos2 x=\"...\" y=\"...\" z=\"...\"/>");
+        throwError(stream, R"(invalid marker: duplicate element <pos2 x="..." y="..." z="..."/>)");
     }
 
     // REVISIT: Just discard empty text markers?
@@ -612,23 +597,23 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream)
         marker.setText(InfoMarkText{"New Marker"});
     }
 
-    m_mapData.addMarker(std::move(sharedmarker));
+    m_mapData.addMarker(sharedmarker);
 }
 
 // load current element, which is expected to contain ONLY the name of an enum value
 template<typename ENUM>
 ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
 {
-    static_assert(std::is_enum<ENUM>::value, "template type ENUM must be an enumeration");
+    static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
 
-    const QStringView name = stream.name();
+    // copy name in case it's somehow modified by loadStringView()
+    const auto name = stream.name();
     const QStringView text = loadStringView(stream);
-    bool fail = false;
-    const ENUM e = conv.toEnum<ENUM>(text, fail);
-    if (fail) {
-        throwErrorFmt(stream, "invalid <%1> content \"%2\"", name.toString(), text.toString());
+    const std::optional<ENUM> e = conv.toEnum<ENUM>(text);
+    if (!e.has_value()) {
+        throwErrorFmt(stream, R"(invalid <%1> content "%2")", name.toString(), text.toString());
     }
-    return e;
+    return e.value();
 }
 
 // load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
@@ -640,7 +625,8 @@ QString XmlMapStorage::loadString(QXmlStreamReader &stream)
 // load current element, which is expected to contain ONLY text i.e. no attributes and no nested elements
 QStringView XmlMapStorage::loadStringView(QXmlStreamReader &stream)
 {
-    const QStringView name = stream.name();
+    // copy name in case it's somehow modified by readNext()
+    const auto name = stream.name();
     if (stream.readNext() != QXmlStreamReader::Characters) {
         throwErrorFmt(stream, "invalid <%1>...</%1>", name.toString());
     }
@@ -661,8 +647,8 @@ void XmlMapStorage::skipXmlElement(QXmlStreamReader &stream)
 
 void XmlMapStorage::loadNotifyProgress(QXmlStreamReader &stream)
 {
-    uint32_t loadProgressNew = static_cast<uint32_t> //
-        (static_cast<uint64_t>(stream.characterOffset()) / m_loadProgressDivisor);
+    auto loadProgressNew = static_cast<uint32_t>(static_cast<uint64_t>(stream.characterOffset())
+                                                 / m_loadProgressDivisor);
     if (loadProgressNew <= m_loadProgress) {
         return;
     }

@@ -24,6 +24,12 @@ class NODISCARD_QOBJECT XmlMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 
+private:
+    std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
+    uint64_t m_loadProgressDivisor = 1;
+    uint32_t m_loadProgress = 0;
+    static constexpr const uint32_t LOAD_PROGRESS_MAX = 100;
+
 public:
     XmlMapStorage() = delete;
     explicit XmlMapStorage(MapData &, const QString &, QFile *, QObject *parent);
@@ -42,17 +48,17 @@ private:
     void loadWorld(QXmlStreamReader &stream);
     void loadMap(QXmlStreamReader &stream);
     void loadRoom(QXmlStreamReader &stream);
-    RoomId loadRoomId(QXmlStreamReader &stream, const QStringView idstr);
-    Coordinate loadCoordinate(QXmlStreamReader &stream);
+    NODISCARD static RoomId loadRoomId(QXmlStreamReader &stream, QStringView idstr);
+    NODISCARD static Coordinate loadCoordinate(QXmlStreamReader &stream);
     void loadExit(QXmlStreamReader &stream, ExitsList &exitList);
     void loadMarker(QXmlStreamReader &stream);
     void loadNotifyProgress(QXmlStreamReader &stream);
 
     void connectRoomsExitFrom(QXmlStreamReader &stream);
-    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, const ExitDirEnum dir);
+    void connectRoomExitFrom(QXmlStreamReader &stream, const Room &fromRoom, ExitDirEnum dir);
     void moveRoomsToMapData();
 
-    enum class RoomElementEnum : uint32_t {
+    enum class NODISCARD RoomElementEnum : uint32_t {
         NONE /*  */ = 0,
         ALIGN /*   */ = 1 << 0,
         CONTENTS /**/ = 1 << 1,
@@ -67,21 +73,21 @@ private:
     };
 
     template<typename ENUM>
-    ENUM loadEnum(QXmlStreamReader &stream);
-    QString loadString(QXmlStreamReader &stream);
-    QStringView loadStringView(QXmlStreamReader &stream);
+    NODISCARD ENUM loadEnum(QXmlStreamReader &stream);
+    NODISCARD static QString loadString(QXmlStreamReader &stream);
+    NODISCARD static QStringView loadStringView(QXmlStreamReader &stream);
 
-    static QString roomIdToString(const RoomId id);
+    NODISCARD static QString roomIdToString(RoomId id);
 
     static void skipXmlElement(QXmlStreamReader &stream);
 
     NORETURN
     static void throwError(QXmlStreamReader &stream, const QString &msg);
 
-    // clang-format off
     template<typename... Args>
-    static void throwErrorFmt(QXmlStreamReader &stream, const QString &format, Args &&... args)
-    // clang-format on
+    NORETURN static void throwErrorFmt(QXmlStreamReader &stream,
+                                       const QString &format,
+                                       Args &&...args)
     {
         throwError(stream, format.arg(std::forward<Args>(args)...));
     }
@@ -90,23 +96,18 @@ private:
                                  RoomElementEnum &set,
                                  RoomElementEnum curr);
 
-    std::unordered_map<RoomId, SharedRoom> m_loadedRooms;
-    uint64_t m_loadProgressDivisor;
-    uint32_t m_loadProgress;
-    static constexpr const uint32_t LOAD_PROGRESS_MAX = 100;
-
     // ---------------- save map -------------------
     void saveWorld(QXmlStreamWriter &stream, bool baseMapOnly);
     void saveRooms(QXmlStreamWriter &stream, bool baseMapOnly, const ConstRoomList &roomList);
     static void saveRoom(QXmlStreamWriter &stream, const Room &room);
-    static void saveRoomLoadFlags(QXmlStreamWriter &stream, const RoomLoadFlags fl);
-    static void saveRoomMobFlags(QXmlStreamWriter &stream, const RoomMobFlags fl);
+    static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
+    static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);
 
     static void saveCoordinate(QXmlStreamWriter &stream, const QString &name, const Coordinate &pos);
-    static void saveExit(QXmlStreamWriter &stream, const Exit &e, const ExitDirEnum dir);
+    static void saveExit(QXmlStreamWriter &stream, const Exit &e, ExitDirEnum dir);
     static void saveExitTo(QXmlStreamWriter &stream, const Exit &e);
-    static void saveExitFlags(QXmlStreamWriter &stream, const ExitFlags fl);
-    static void saveDoorFlags(QXmlStreamWriter &stream, const DoorFlags fl);
+    static void saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl);
+    static void saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl);
 
     void saveMarkers(QXmlStreamWriter &stream, const MarkerList &markerList);
     static void saveMarker(QXmlStreamWriter &stream, const InfoMark &marker);
@@ -118,8 +119,4 @@ private:
 
     // ---------------- misc -------------------
     void log(const QString &msg);
-
-    enum class NODISCARD TypeEnum : uint32_t;
-    class Converter;
-    static const Converter conv;
 };
