@@ -54,6 +54,7 @@ public:
 
 private:
     void adjustResultTable();
+    NODISCARD QString constructToolTip(const Room *);
 
 signals:
     void sig_center(const glm::vec2 &worldPos);
@@ -68,7 +69,6 @@ public slots:
         closeEvent(event);
     }
 private slots:
-    QString slot_constructToolTip(const Room *);
     void slot_on_lineEdit_textChanged();
     void slot_findClicked();
     void slot_enableFindButton(const QString &text);

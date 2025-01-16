@@ -141,7 +141,7 @@ void FindRoomsDlg::slot_findClicked()
             QString id;
             id.setNum(rid.asUint32());
             QString roomName = room->getName().toQString();
-            QString toolTip = slot_constructToolTip(room);
+            QString toolTip = constructToolTip(room);
 
             item = new QTreeWidgetItem(resultTable);
             item->setText(0, id);
@@ -161,9 +161,10 @@ void FindRoomsDlg::slot_findClicked()
 }
 
 // FIXME: This code is almost identical to the code in MapCanvas::mouseReleaseEvent. Refactor!
-QString FindRoomsDlg::slot_constructToolTip(const Room *const r)
+QString FindRoomsDlg::constructToolTip(const Room *const r)
 {
-    return QString("Selected Room ID: %1\n%2").arg(r->getId().asUint32()).arg(r->toQString());
+    const auto &room = deref(r);
+    return QString("Selected Room ID: %1\n%2").arg(room.getId().asUint32()).arg(room.toQString());
 }
 
 void FindRoomsDlg::slot_showSelectedRoom()
