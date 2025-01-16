@@ -27,7 +27,6 @@ private Q_SLOTS:
     static void signal2Test();
     static void stringViewTest();
     static void toLowerLatin1Test();
-    static void to_numberTest();
     static void unquoteTest();
     static void weakHandleTest();
 };

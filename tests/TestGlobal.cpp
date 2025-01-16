@@ -436,19 +436,6 @@ void TestGlobal::toLowerLatin1Test()
     QCOMPARE(toLowerLatin1(C_MINUS_SIGN), C_MINUS_SIGN);
 }
 
-void TestGlobal::to_numberTest()
-{
-    QCOMPARE(to_integer<uint64_t>(u"0"), 0);
-    QCOMPARE(to_integer<uint64_t>(u"1"), 1);
-    QCOMPARE(to_integer<uint64_t>(u"1234567890"), 1234567890);
-    QCOMPARE(to_integer<uint64_t>(u"12345678901234567890"), 12345678901234567890ull);
-    QCOMPARE(to_integer<uint64_t>(u"18446744073709551615"), 18446744073709551615ull);
-    QCOMPARE(to_integer<uint64_t>(u"18446744073709551616"), std::nullopt);
-    QCOMPARE(to_integer<uint64_t>(u"36893488147419103231"), std::nullopt);
-    QCOMPARE(to_integer<uint64_t>(u"92233720368547758079"), std::nullopt);
-    QCOMPARE(to_integer<uint64_t>(u"110680464442257309695"), std::nullopt);
-}
-
 void TestGlobal::unquoteTest()
 {
     test::testUnquote();

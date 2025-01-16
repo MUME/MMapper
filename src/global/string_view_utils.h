@@ -30,18 +30,16 @@ NODISCARD inline std::u16string_view as_u16string_view(const QStringView str) no
 // convert a UTF-16 string_view to integer number. String view must contain only decimal digits
 // or (for signed numbers) start with the minus character '-'
 template<typename T>
-NODISCARD std::optional<T> to_integer(std::u16string_view str)
+NODISCARD inline std::optional<T> to_integer(std::u16string_view str)
 {
     static_assert(std::is_integral_v<T>, "to_integer() template type T must be integral");
 
     using MAXT = std::conditional_t<std::is_unsigned_v<T>, uint64_t, int64_t>;
-    const std::optional<MAXT> opt_maxval = ::to_integer<MAXT>(str);
-    if (!opt_maxval.has_value()) {
+    const std::optional<MAXT> maxval = to_integer<MAXT>(str);
+    if (!maxval) {
         return std::nullopt;
     }
-
-    const MAXT maxval = opt_maxval.value();
-    const T val = static_cast<T>(maxval);
+    const T val = static_cast<T>(maxval.value());
     if (maxval != static_cast<MAXT>(val)) {
         return std::nullopt;
     }
@@ -53,3 +51,20 @@ NODISCARD std::optional<int64_t> to_integer<int64_t>(std::u16string_view str);
 
 template<>
 NODISCARD std::optional<uint64_t> to_integer<uint64_t>(std::u16string_view str);
+
+/// \return true if UTF-16 and Latin1 string_views have the same contents, without allocating
+NODISCARD bool are_equivalent_latin1(std::u16string_view left, std::string_view right) noexcept;
+
+/// \return true if Latin1 and UTF-16 string_views have the same contents, without allocating
+NODISCARD inline bool are_equivalent_latin1(const std::string_view left,
+                                            const std::u16string_view right) noexcept
+{
+    return are_equivalent_latin1(right, left);
+}
+
+/// \return true if UTF-16 string_view and Latin1 string literal have the same contents, without allocating
+template<size_t N>
+NODISCARD bool are_equivalent_latin1(const std::u16string_view left, const char (&right)[N]) noexcept
+{
+    return are_equivalent_latin1(left, std::string_view{right, N - 1});
+}
