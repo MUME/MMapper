@@ -489,23 +489,16 @@ void MainWindow::wireConnections()
     connect(m_pathMachine,
             &PathMachine::sig_setCharPosition,
             m_groupManager,
-            &Mmapper2Group::slot_setCharacterRoomId,
-            Qt::QueuedConnection);
+            &Mmapper2Group::slot_setCharacterRoomId);
     connect(m_groupManager,
             &Mmapper2Group::sig_updateMapCanvas,
             canvas,
-            &MapCanvas::slot_requestUpdate,
-            Qt::QueuedConnection);
-    connect(this,
-            &MainWindow::sig_setGroupMode,
-            m_groupManager,
-            &Mmapper2Group::slot_setMode,
-            Qt::QueuedConnection);
+            &MapCanvas::slot_requestUpdate);
+    connect(this, &MainWindow::sig_setGroupMode, m_groupManager, &Mmapper2Group::slot_setMode);
     connect(m_groupManager,
             &Mmapper2Group::sig_networkStatus,
             this,
-            &MainWindow::slot_groupNetworkStatus,
-            Qt::QueuedConnection);
+            &MainWindow::slot_groupNetworkStatus);
 
     connect(m_mapData, &MapFrontend::sig_clearingMap, m_groupWidget, &GroupWidget::slot_mapUnloaded);
 

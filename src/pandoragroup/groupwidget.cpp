@@ -449,16 +449,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
     });
 
-    connect(m_group,
-            &Mmapper2Group::sig_updateWidget,
-            this,
-            &GroupWidget::slot_updateLabels,
-            Qt::QueuedConnection);
-    connect(m_group,
-            &Mmapper2Group::sig_messageBox,
-            this,
-            &GroupWidget::slot_messageBox,
-            Qt::QueuedConnection);
+    connect(m_group, &Mmapper2Group::sig_updateWidget, this, &GroupWidget::slot_updateLabels);
+    connect(m_group, &Mmapper2Group::sig_messageBox, this, &GroupWidget::slot_messageBox);
 
     readSettings();
 }

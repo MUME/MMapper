@@ -102,8 +102,7 @@ void Mmapper2Group::init()
     connect(m_group.get(),
             &CGroup::sig_characterChanged,
             this,
-            &Mmapper2Group::slot_characterChanged,
-            Qt::QueuedConnection);
+            &Mmapper2Group::slot_characterChanged);
 
     emit sig_updateWidget();
 }

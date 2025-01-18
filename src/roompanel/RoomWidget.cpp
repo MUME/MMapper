@@ -228,11 +228,7 @@ RoomWidget::RoomWidget(RoomManager &rm, QWidget *const parent)
     // Minimize row height
     table->verticalHeader()->setDefaultSectionSize(table->verticalHeader()->minimumSectionSize());
 
-    connect(&m_roomManager,
-            &RoomManager::sig_updateWidget,
-            this,
-            &RoomWidget::slot_update,
-            Qt::QueuedConnection);
+    connect(&m_roomManager, &RoomManager::sig_updateWidget, this, &RoomWidget::slot_update);
 
     readSettings();
 }
