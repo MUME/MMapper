@@ -13,6 +13,10 @@
 #include <sstream>
 #include <vector>
 
+namespace { // anonymous
+static volatile bool spam_and_lag = true;
+}
+
 RoomModificationTracker::~RoomModificationTracker() = default;
 
 void RoomModificationTracker::notifyModified(const RoomUpdateFlags updateFlags)
@@ -216,64 +220,88 @@ ComparisonResultEnum compareWeakProps(const RawRoom &room, const ParseEvent &eve
                 } else {
                     if (tolerance) {
                         // Do not be tolerant for multiple differences
-                        qDebug() << "Found too many differences" << event
-                                 << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                        if (spam_and_lag) {
+                            qDebug() << "Found too many differences" << event
+                                     << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                        }
                         return ComparisonResultEnum::DIFFERENT;
 
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
                         // No exit exists on the map so we probably found a secret door
-                        qDebug() << "Secret door likely found to the" << lowercaseDirection(dir)
-                                 << event;
+                        if (spam_and_lag) {
+                            qDebug() << "Secret door likely found to the" << lowercaseDirection(dir)
+                                     << event;
+                        }
                         tolerance = true;
 
                     } else if (roomExit.doorIsHidden() && !eventExitFlags.isDoor()) {
-                        qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
+                        if (spam_and_lag) {
+                            qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
+                        }
                         // REVISIT: why doesn't this set tolerance?
                     } else if (roomExitFlags.isExit() && roomExitFlags.isDoor()
                                && !eventExitFlags.isExit()) {
-                        qDebug() << "Door to the" << lowercaseDirection(dir)
-                                 << "is likely a secret";
+                        if (spam_and_lag) {
+                            qDebug()
+                                << "Door to the" << lowercaseDirection(dir) << "is likely a secret";
+                        }
                         tolerance = true;
 
                     } else {
-                        qWarning() << "Unknown exit/door tolerance condition to the"
-                                   << lowercaseDirection(dir) << event
-                                   << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                        if (spam_and_lag) {
+                            qWarning() << "Unknown exit/door tolerance condition to the"
+                                       << lowercaseDirection(dir) << event
+                                       << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                        }
                         return ComparisonResultEnum::DIFFERENT;
                     }
                 }
             } else if (diff.isRoad()) {
                 if (roomExitFlags.isRoad() && hasLight) {
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
-                    qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
+                    if (spam_and_lag) {
+                        qDebug() << "Orc/troll could not see trail to the"
+                                 << lowercaseDirection(dir);
+                    }
 
                 } else if (roomExitFlags.isRoad() && !eventExitFlags.isRoad()
                            && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
                     // A closed door is hiding the road that we know is there
-                    qDebug() << "Closed door masking road/trail to the" << lowercaseDirection(dir);
+                    if (spam_and_lag) {
+                        qDebug() << "Closed door masking road/trail to the"
+                                 << lowercaseDirection(dir);
+                    }
 
                 } else if (!roomExitFlags.isRoad() && eventExitFlags.isRoad()
                            && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
                     // A known door was previously mapped closed and a new road exit flag was found
-                    qDebug() << "Previously closed door was hiding road to the"
-                             << lowercaseDirection(dir);
+                    if (spam_and_lag) {
+                        qDebug() << "Previously closed door was hiding road to the"
+                                 << lowercaseDirection(dir);
+                    }
                     tolerance = true;
 
                 } else {
-                    qWarning() << "Unknown road tolerance condition to the"
-                               << lowercaseDirection(dir) << event
-                               << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                    if (spam_and_lag) {
+                        qWarning()
+                            << "Unknown road tolerance condition to the" << lowercaseDirection(dir)
+                            << event << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                    }
                     tolerance = true;
                 }
             } else if (diff.isClimb()) {
                 if (roomExitFlags.isDoor() && roomExitFlags.isClimb()) {
                     // A closed door is hiding the climb that we know is there
-                    qDebug() << "Door masking climb to the" << lowercaseDirection(dir);
+                    if (spam_and_lag) {
+                        qDebug() << "Door masking climb to the" << lowercaseDirection(dir);
+                    }
 
                 } else {
-                    qWarning() << "Unknown climb tolerance condition to the"
-                               << lowercaseDirection(dir) << event
-                               << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                    if (spam_and_lag) {
+                        qWarning()
+                            << "Unknown climb tolerance condition to the" << lowercaseDirection(dir)
+                            << event << mmqt::toQStringUtf8(room.toStdStringUtf8());
+                    }
                     tolerance = true;
                 }
             }
