@@ -480,7 +480,7 @@ void RoomEditAttrDlg::connectAll()
             m_noteSelected = false;
         }
     });
-    m_connections += connect(this, &QDialog::finished, this, [this](int result) {
+    m_connections += connect(this, &QDialog::finished, this, [this](int /*result*/) {
         if (m_noteSelected) {
             roomNoteChanged();
         }

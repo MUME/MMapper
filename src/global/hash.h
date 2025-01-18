@@ -9,7 +9,7 @@
 #include <type_traits>
 
 template<typename T>
-NODISCARD static auto numeric_hash(const T val) noexcept
+MAYBE_UNUSED NODISCARD static auto numeric_hash(const T val) noexcept
     -> std::enable_if_t<std::is_arithmetic_v<T>, size_t>
 {
     static constexpr const size_t size = sizeof(val);

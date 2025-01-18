@@ -49,8 +49,15 @@ void abortIfNotOnMainThread(const mm::source_location loc)
     // so this should not return.
     QMessageLogger(loc.file_name(), static_cast<int>(loc.line()), loc.function_name()).fatal(message);
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
     // For good measure, abort just in case qFatal() somehow returns.
     // NOLINTNEXTLINE (yes, we know QFatal is NORETURN)
     std::abort();
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 }
 } // namespace thread_utils

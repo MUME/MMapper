@@ -1051,7 +1051,7 @@ void AbstractTelnet::resetCompress()
     m_recvdCompress = false;
 
     // Should this be called here?
-    if (false) {
+    if ((false)) {
         deref(m_zstream_pimpl).reset();
     }
 }

@@ -2080,7 +2080,7 @@ void MainWindow::slot_onDeleteConnectionSelection()
     }
 
     const ExitDirEnum dir1 = first.direction;
-    const ExitDirEnum dir2 = second.direction;
+    MAYBE_UNUSED const ExitDirEnum dir2 = second.direction;
     const RoomId &id1 = r1->getId();
     const RoomId &id2 = r2->getId();
 
@@ -2149,12 +2149,19 @@ void MainWindow::slot_onConnectToNeighboursRoomSelection()
     mapChanged();
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+#endif
 void MainWindow::slot_onCheckForUpdate()
 {
     assert(!NO_UPDATER);
     m_updateDialog->show();
     m_updateDialog->open();
 }
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 void MainWindow::slot_voteForMUME()
 {

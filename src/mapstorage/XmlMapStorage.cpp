@@ -95,7 +95,7 @@ private:
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define X_DECL(X) \
-    NODISCARD static constexpr TypeEnum enumToType(X) \
+    MAYBE_UNUSED NODISCARD static constexpr TypeEnum enumToType(X) \
     { \
         return TypeEnum::X; \
     }

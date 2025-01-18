@@ -32,8 +32,8 @@ static constexpr const int ANSI_RESET = 0;
 static constexpr const int ANSI_REVERT_OFFSET = 20;
 
 #define X_DECL(_n, _lower, _UPPER, _Snake) \
-    static constexpr const int ANSI_##_UPPER{_n}; \
-    static constexpr const int ANSI_##_UPPER##_OFF{ANSI_REVERT_OFFSET + (_n)};
+    MAYBE_UNUSED static constexpr const int ANSI_##_UPPER{_n}; \
+    MAYBE_UNUSED static constexpr const int ANSI_##_UPPER##_OFF{ANSI_REVERT_OFFSET + (_n)};
 XFOREACH_ANSI_STYLE(X_DECL)
 #undef X_DECL
 
@@ -1012,7 +1012,7 @@ AnsiColorRGB toAnsiColorRGB(const AnsiColor256 ansiColor)
 
     // 232-255: grayscale from black to white in 24 steps
     if (ansi >= ANSI256_GREY_START) {
-        if (false) {
+        if ((false)) {
             const auto c = static_cast<uint8_t>(
                 wiki::ansi_greys24[static_cast<size_t>(ansi - ANSI256_GREY_START)]);
             return AnsiColorRGB{c, c, c};
@@ -1266,17 +1266,6 @@ NODISCARD static AnsiColor16Enum getClosestMatchInColorSpace(const AnsiColorRGB 
             }
         }
 
-        NODISCARD AnsiColor16 lookupExact(AnsiColorRGB c) const
-        {
-            for (size_t i = 0; i < Arr::SIZE; ++i) {
-                const auto e = static_cast<AnsiColor16Enum>(i);
-                if (c == arr[e]) {
-                    return AnsiColor16{e};
-                }
-            }
-            return AnsiColor16{};
-        }
-
     private:
         struct NODISCARD HSL final
         {
@@ -1297,7 +1286,6 @@ NODISCARD static AnsiColor16Enum getClosestMatchInColorSpace(const AnsiColorRGB 
 
         NODISCARD static float distSquaredHSL(const HSL &a, const HSL &b)
         {
-            static auto sqr = [](float f) { return std::pow(f, 2.f); };
             static auto toFloat255 = [](int x) {
                 assert(isClamped(x, 0, 255));
                 return static_cast<float>(x) / 255;
@@ -1374,7 +1362,7 @@ NODISCARD static AnsiColor16Enum getClosestMatchInColorSpace(const AnsiColorRGB 
             // at some point as we walk the greyscale values, unless BLACK or white
             // is somehow closer than all of the other colors.
 
-            if (false) {
+            if ((false)) {
                 // This method seems "worse" because it chooses colors that are
                 // imperceptibly different than black (e.g. {1,0,0}) as the full color.
 
@@ -1871,7 +1859,7 @@ AnsiTokenizer::Iterator::Iterator(const QStringView str)
 AnsiStringToken AnsiTokenizer::Iterator::next()
 {
     assert(hasNext());
-    const auto len = m_str.size();
+    MAYBE_UNUSED const auto len = m_str.size();
     const AnsiStringToken token = getCurrent();
     m_str = m_str.mid(token.length());
     return token;

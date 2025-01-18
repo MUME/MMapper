@@ -283,8 +283,8 @@ static MMTextureId copy_proxy(const SharedMMTexture &pTex)
     MMTexture &tex = *pTex;
     auto id = tex.getId();
 
-    if (false) {
-        QOpenGLTexture *qtex = tex.get();
+    if ((false)) {
+        MAYBE_UNUSED QOpenGLTexture *qtex = tex.get();
         QOpenGLTexture::Target target = tex.target();
         bool canBeUpdated = tex.canBeUpdated();
 

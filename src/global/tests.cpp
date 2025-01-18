@@ -18,6 +18,14 @@ void test_assert_fail(const mm::source_location loc, const char *const reason)
                loc.file_name(),
                loc.line());
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
+#endif
     // in case fatal() somehow returns...
+    // NOLINTNEXTLINE
     std::abort();
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 }
