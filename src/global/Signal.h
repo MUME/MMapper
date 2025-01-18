@@ -130,30 +130,30 @@ public:
             return;
         }
 
-        m_connections.remove_if(
-            [tuple = std::tuple<Args...>(args...)](const WeakConnection &weakConnection) {
-                if (const SharedConnection sharedConnection = weakConnection.lock()) {
-                    try {
-                        const Connection &connection = *sharedConnection;
-                        std::apply(
-                            [&connection](Args... tupleArgs) {
-                                ///
-                                connection.invoke(tupleArgs...);
-                            },
-                            tuple);
-                        return false;
-                    } catch (...) {
-                        reportException();
-                        qInfo() << "Automatically removing connection that threw an exception";
-                        return true;
-                    }
-                } else {
+        m_connections.remove_if([tuple = std::tuple<Args...>(std::move(args)...)](
+                                    const WeakConnection &weakConnection) {
+            if (const SharedConnection sharedConnection = weakConnection.lock()) {
+                try {
+                    const Connection &connection = *sharedConnection;
+                    std::apply(
+                        [&connection](Args... tupleArgs) {
+                            ///
+                            connection.invoke(tupleArgs...);
+                        },
+                        tuple);
+                    return false;
+                } catch (...) {
+                    reportException();
+                    qInfo() << "Automatically removing connection that threw an exception";
                     return true;
                 }
-            });
+            } else {
+                return true;
+            }
+        });
     }
 
-    void operator()(Args &&...args) { invoke(std::forward<Args>(args)...); }
+    void operator()(Args... args) { invoke(std::move(args)...); }
 
 public:
     NODISCARD SharedConnection connect(Function function)
