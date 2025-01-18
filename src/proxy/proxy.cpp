@@ -11,6 +11,7 @@
 #include "../display/mapcanvas.h"
 #include "../display/prespammedpath.h"
 #include "../global/MakeQPointer.h"
+#include "../global/SendToUser.h"
 #include "../global/io.h"
 #include "../mainwindow/mainwindow.h"
 #include "../map/parseevent.h"
@@ -259,6 +260,13 @@ void Proxy::slot_start()
     });
     connect(mudTelnet, &MudTelnet::sig_relayEchoMode, this, [this](const bool echo) {
         m_gameObserver.slot_observeToggledEchoMode(echo);
+    });
+
+    global::registerSendToUser(m_lifetime, [this](const QString &str) {
+        // REVISIT: We don't know if we're at a prompt or not.
+        sendToUser("\n");
+        sendToUser(mmqt::toQByteArrayLatin1(str));
+        deref(m_parserXml).sendPromptToUser();
     });
 
     log("Connection to client established ...");

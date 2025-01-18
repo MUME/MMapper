@@ -107,6 +107,8 @@ set(mmapper_SRCS
     global/RAII.cpp
     global/RAII.h
     global/RuleOf5.h
+    global/SendToUser.cpp
+    global/SendToUser.h
     global/Signal.h
     global/Signal2.h
     global/SignalBlocker.cpp

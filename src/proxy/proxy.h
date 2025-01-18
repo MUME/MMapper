@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
 #include "../observer/gameobserver.h"
@@ -60,6 +61,10 @@ private:
     GameObserver &m_gameObserver;
     const qintptr m_socketDescriptor;
     ConnectionListener &m_listener;
+
+    // REVISIT: This might be in the wrong spot; it's not part of the pipeline
+    // because it's intended for sendXXX within the lifetime of this object.
+    Signal2Lifetime m_lifetime;
 
     // initialized in ctor
     QPointer<RemoteEdit> m_remoteEdit;
