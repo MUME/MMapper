@@ -8,8 +8,8 @@
 #include "../configuration/configuration.h"
 #include "../display/InfoMarkSelection.h"
 #include "../display/mapcanvas.h"
-#include "../expandoracommon/coordinate.h"
-#include "../mapdata/infomark.h"
+#include "../map/coordinate.h"
+#include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 
 #include <cassert>

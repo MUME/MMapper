@@ -4,7 +4,7 @@
 
 #include "CommandQueue.h"
 
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
 
 QByteArray CommandQueue::toByteArray() const
 {

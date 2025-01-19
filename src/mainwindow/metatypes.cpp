@@ -3,10 +3,10 @@
 
 #include "metatypes.h"
 
-#include "../expandoracommon/parseevent.h"
 #include "../global/ConfigEnums.h"
-#include "../global/roomid.h"
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
+#include "../map/parseevent.h"
+#include "../map/roomid.h"
 #include "../mapdata/roomselection.h"
 #include "../mpi/remoteeditsession.h"
 #include "../pandoragroup/groupauthority.h"

@@ -5,11 +5,11 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../global/range.h"
-#include "../global/roomid.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFieldVariant.h"
-#include "../mapdata/ExitFlags.h"
-#include "../mapdata/mmapper2exit.h"
+#include "DoorFlags.h"
+#include "ExitDirection.h"
+#include "ExitFieldVariant.h"
+#include "ExitFlags.h"
+#include "roomid.h"
 
 #include <cassert>
 #include <set>

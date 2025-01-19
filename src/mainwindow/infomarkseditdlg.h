@@ -4,7 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../mapdata/infomark.h"
+#include "../map/infomark.h"
 #include "ui_infomarkseditdlg.h"
 
 #include <memory>

@@ -4,7 +4,7 @@
 
 #include "ConnectionLineBuilder.h"
 
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
 
 #include <cassert>
 

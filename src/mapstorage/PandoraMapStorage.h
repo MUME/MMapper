@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/coordinate.h"
+#include "../map/coordinate.h"
 #include "abstractmapstorage.h"
 
 #include <memory>

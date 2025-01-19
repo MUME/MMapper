@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
-#include "../global/roomid.h"
+#include "../map/parseevent.h"
+#include "../map/roomid.h"
 #include "AbstractRoomVisitor.h"
 
 #include <cstddef>

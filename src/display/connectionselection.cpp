@@ -7,9 +7,9 @@
 
 #include "../configuration/NamedConfig.h"
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/room.h"
-#include "../global/roomid.h"
+#include "../map/coordinate.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 
 #include <cassert>

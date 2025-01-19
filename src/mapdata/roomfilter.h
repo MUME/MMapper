@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
-#include "../expandoracommon/room.h"
+#include "../map/room.h"
 
 #include <cassert>
 #include <optional>

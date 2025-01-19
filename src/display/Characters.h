@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
+#include "../map/coordinate.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
 

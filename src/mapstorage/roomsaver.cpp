@@ -6,7 +6,7 @@
 #include "roomsaver.h"
 
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/room.h"
+#include "../map/room.h"
 #include "../mapdata/mapdata.h"
 
 #include <cassert>

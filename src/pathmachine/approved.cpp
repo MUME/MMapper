@@ -6,7 +6,7 @@
 #include "approved.h"
 
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/room.h"
+#include "../map/room.h"
 #include "../mapfrontend/mapaction.h"
 
 Approved::Approved(const SigParseEvent &sigParseEvent, const int tolerance)

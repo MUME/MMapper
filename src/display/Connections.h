@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../expandoracommon/coordinate.h"
 #include "../global/Array.h"
 #include "../global/RuleOf5.h"
-#include "../global/roomid.h"
 #include "../global/utils.h"
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
+#include "../map/coordinate.h"
+#include "../map/roomid.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
 

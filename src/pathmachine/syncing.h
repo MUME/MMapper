@@ -4,8 +4,8 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../expandoracommon/RoomRecipient.h"
 #include "../global/RuleOf5.h"
+#include "../map/RoomRecipient.h"
 #include "path.h"
 
 #include <list>

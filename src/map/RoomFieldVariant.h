@@ -3,8 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
+#include "room.h"
 
 #include <cstddef>
 #include <cstdlib>

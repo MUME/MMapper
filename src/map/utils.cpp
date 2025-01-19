@@ -3,12 +3,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "map.h"
+#include "utils.h"
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/room.h"
 #include "../global/utils.h"
-#include "AbstractRoomVisitor.h"
+#include "../mapfrontend/AbstractRoomVisitor.h"
+#include "coordinate.h"
+#include "room.h"
 
 #include <map>
 #include <memory>

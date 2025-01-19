@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "CommandId.h"
+#include "../map/CommandId.h"
 
 #include <QQueue>
 

@@ -5,7 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "CommandId.h"
+#include "../map/CommandId.h"
 #include "LineFlags.h"
 #include "abstractparser.h"
 

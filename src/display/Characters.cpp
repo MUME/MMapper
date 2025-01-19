@@ -4,8 +4,8 @@
 #include "Characters.h"
 
 #include "../configuration/configuration.h"
-#include "../expandoracommon/room.h"
-#include "../global/roomid.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"

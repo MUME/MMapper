@@ -4,18 +4,18 @@
 
 #include "roomfilter.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
 #include "../global/Charset.h"
 #include "../global/StringView.h"
 #include "../global/TaggedString.h"
 #include "../global/parserutils.h"
 #include "../global/utils.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/enums.h"
+#include "../map/exit.h"
+#include "../map/mmapper2room.h"
+#include "../map/room.h"
 #include "../parser/Abbrev.h"
 #include "../parser/AbstractParser-Commands.h"
-#include "ExitFieldVariant.h"
-#include "enums.h"
-#include "mmapper2room.h"
 
 #include <array>
 #include <optional>

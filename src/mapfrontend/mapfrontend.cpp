@@ -6,13 +6,12 @@
 
 #include "mapfrontend.h"
 
-#include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/room.h"
-#include "../global/roomid.h"
+#include "../map/RoomRecipient.h"
+#include "../map/coordinate.h"
+#include "../map/parseevent.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "ParseTree.h"
-#include "map.h"
 #include "mapaction.h"
 #include "roomcollection.h"
 #include "roomlocker.h"

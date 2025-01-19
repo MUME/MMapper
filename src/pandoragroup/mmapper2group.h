@@ -6,7 +6,7 @@
 
 #include "../global/ConfigEnums.h"
 #include "../global/WeakHandle.h"
-#include "../global/roomid.h"
+#include "../map/roomid.h"
 #include "GroupManagerApi.h"
 #include "mmapper2character.h"
 

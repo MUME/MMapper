@@ -4,9 +4,9 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/EnumIndexedArray.h"
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
+#include "../map/mmapper2room.h"
 #include "../mapdata/mapdata.h"
-#include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "CanvasMouseModeEnum.h"

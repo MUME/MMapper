@@ -7,7 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
-#include "../global/roomid.h"
+#include "../global/PrintUtils.h"
 #include "../parser/CommandQueue.h"
 #include "../proxy/GmcpMessage.h"
 #include "CGroup.h"

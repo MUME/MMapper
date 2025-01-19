@@ -5,7 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/coordinate.h"
+#include "../map/coordinate.h"
 #include "mapcanvas.h"
 
 #include <memory>

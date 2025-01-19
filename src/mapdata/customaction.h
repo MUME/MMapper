@@ -4,14 +4,15 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../expandoracommon/coordinate.h"
-#include "../global/roomid.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitFlags.h"
+#include "../map/RoomFieldVariant.h"
+#include "../map/coordinate.h"
+#include "../map/mmapper2room.h"
+#include "../map/roomid.h"
 #include "../mapfrontend/mapaction.h"
-#include "ExitDirection.h"
-#include "ExitFieldVariant.h"
-#include "RoomFieldVariant.h"
-#include "mmapper2exit.h"
-#include "mmapper2room.h"
 #include "roomselection.h"
 
 #include <list>

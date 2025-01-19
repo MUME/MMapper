@@ -6,8 +6,8 @@
 #include "crossover.h"
 
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/room.h"
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
+#include "../map/room.h"
 #include "experimenting.h"
 
 #include <memory>

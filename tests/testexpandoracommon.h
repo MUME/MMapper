@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
-#include "../src/expandoracommon/room.h"
+#include "../src/map/parseevent.h"
+#include "../src/map/room.h"
 
 #include <QObject>
 

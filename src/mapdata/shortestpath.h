@@ -4,9 +4,11 @@
 // Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
 #include "../expandoracommon/RoomAdmin.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitFlags.h"
 #include "../parser/abstractparser.h"
-#include "ExitDirection.h"
-#include "mmapper2exit.h"
 
 #include <QSet>
 #include <QVector>

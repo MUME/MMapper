@@ -6,11 +6,11 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/EnumIndexedArray.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/ExitFlags.h"
-#include "../mapdata/mmapper2exit.h"
-#include "../mapdata/mmapper2room.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitFlags.h"
+#include "../map/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "ui_roomeditattrdlg.h"
 

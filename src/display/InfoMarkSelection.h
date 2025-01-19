@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../mapdata/infomark.h"
+#include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 
 #include <memory>

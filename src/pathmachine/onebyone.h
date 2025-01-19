@@ -4,7 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../expandoracommon/parseevent.h"
+#include "../map/parseevent.h"
 #include "experimenting.h"
 
 #include <memory>

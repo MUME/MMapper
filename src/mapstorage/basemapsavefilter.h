@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
-#include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
+#include "../map/RoomRecipient.h"
+#include "../map/room.h"
 
 #include <cstdint>
 #include <memory>

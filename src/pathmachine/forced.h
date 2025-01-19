@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
+#include "../map/RoomRecipient.h"
+#include "../map/parseevent.h"
 
 class ParseEvent;
 class Room;

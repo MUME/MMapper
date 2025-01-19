@@ -5,14 +5,14 @@
 
 #include "parseevent.h"
 
+#include "../expandoracommon/property.h"
 #include "../global/TextUtils.h"
 #include "../global/parserutils.h"
-#include "../mapdata/ExitDirection.h"
-#include "../parser/CommandId.h"
-#include "../parser/ConnectedRoomFlags.h"
-#include "../parser/ExitsFlags.h"
-#include "../parser/PromptFlags.h"
-#include "property.h"
+#include "CommandId.h"
+#include "ConnectedRoomFlags.h"
+#include "ExitDirection.h"
+#include "ExitsFlags.h"
+#include "PromptFlags.h"
 
 #include <cassert>
 #include <cstdint>

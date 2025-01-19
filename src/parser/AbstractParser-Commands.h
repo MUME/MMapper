@@ -4,10 +4,10 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Flags.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFlags.h"
-#include "../mapdata/infomark.h"
-#include "../mapdata/mmapper2room.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitFlags.h"
+#include "../map/infomark.h"
+#include "../map/mmapper2room.h"
 #include "Abbrev.h"
 #include "DoorAction.h"
 

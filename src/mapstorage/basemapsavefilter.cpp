@@ -4,10 +4,10 @@
 
 #include "basemapsavefilter.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
 #include "../global/progresscounter.h"
-#include "../global/roomid.h"
+#include "../map/exit.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
 

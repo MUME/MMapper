@@ -5,15 +5,15 @@
 
 #include "mapaction.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/room.h"
 #include "../global/enums.h"
-#include "../global/roomid.h"
-#include "../mapdata/ExitDirection.h"
-#include "../parser/CommandId.h"
+#include "../map/CommandId.h"
+#include "../map/ExitDirection.h"
+#include "../map/exit.h"
+#include "../map/parseevent.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
+#include "../map/utils.h"
 #include "ParseTree.h"
-#include "map.h"
 #include "mapfrontend.h"
 #include "roomcollection.h"
 

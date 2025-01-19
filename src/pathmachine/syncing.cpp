@@ -5,7 +5,7 @@
 
 #include "syncing.h"
 
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
 #include "path.h"
 #include "pathparameters.h"
 

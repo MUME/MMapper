@@ -5,11 +5,11 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/coordinate.h"
-#include "../global/roomid.h"
+#include "../map/ExitDirection.h"
+#include "../map/coordinate.h"
+#include "../map/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "../parser/CommandQueue.h"
-#include "ExitDirection.h"
 #include "roomfilter.h"
 #include "roomselection.h"
 #include "shortestpath.h"

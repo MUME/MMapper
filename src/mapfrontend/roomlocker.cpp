@@ -5,8 +5,8 @@
 
 #include "roomlocker.h"
 
-#include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/room.h"
+#include "../map/RoomRecipient.h"
+#include "../map/room.h"
 #include "mapfrontend.h"
 
 RoomLocker::RoomLocker(RoomRecipient &forward,

@@ -4,9 +4,9 @@
 
 #include "RoadIndex.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
+#include "../map/exit.h"
+#include "../map/room.h"
 
 #include <stdexcept>
 

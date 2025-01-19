@@ -6,7 +6,6 @@
 #include "CGroupChar.h"
 
 #include "../global/QuotedQString.h"
-#include "../global/roomid.h"
 #include "../parser/abstractparser.h"
 
 #include <QDebug>

@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/EnumIndexedArray.h"
-#include "../mapdata/mmapper2room.h"
+#include "../map/mmapper2room.h"
 #include "../opengl/OpenGLTypes.h"
 #include "RoadIndex.h"
 

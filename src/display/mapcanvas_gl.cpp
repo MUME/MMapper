@@ -3,12 +3,12 @@
 
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
-#include "../expandoracommon/coordinate.h"
 #include "../global/Array.h"
 #include "../global/ChangeMonitor.h"
 #include "../global/ConfigConsts.h"
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
+#include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"

@@ -4,11 +4,11 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
-#include "../global/roomid.h"
+#include "../map/RoomRecipient.h"
+#include "../map/parseevent.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 
 #include <unordered_map>
 

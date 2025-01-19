@@ -4,8 +4,8 @@
 
 #include "InfoMarkSelection.h"
 
-#include "../expandoracommon/coordinate.h"
-#include "../mapdata/infomark.h"
+#include "../map/coordinate.h"
+#include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 
 #include <algorithm>

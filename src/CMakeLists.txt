@@ -64,18 +64,8 @@ set(mmapper_SRCS
     display/prespammedpath.h
     expandoracommon/RoomAdmin.cpp
     expandoracommon/RoomAdmin.h
-    expandoracommon/RoomRecipient.cpp
-    expandoracommon/RoomRecipient.h
-    expandoracommon/coordinate.cpp
-    expandoracommon/coordinate.h
-    expandoracommon/exit.cpp
-    expandoracommon/exit.h
-    expandoracommon/parseevent.cpp
-    expandoracommon/parseevent.h
     expandoracommon/property.cpp
     expandoracommon/property.h
-    expandoracommon/room.cpp
-    expandoracommon/room.h
     global/AnsiTextUtils.cpp
     global/AnsiTextUtils.h
     global/Array.h
@@ -148,7 +138,6 @@ set(mmapper_SRCS
     global/random.cpp
     global/random.h
     global/range.h
-    global/roomid.h
     global/string_view_utils.cpp
     global/string_view_utils.h
     global/tests.cpp
@@ -178,24 +167,41 @@ set(mmapper_SRCS
     mainwindow/metatypes.h
     mainwindow/roomeditattrdlg.cpp
     mainwindow/roomeditattrdlg.h
-    mapdata/DoorFlags.h
-    mapdata/ExitDirection.cpp
-    mapdata/ExitDirection.h
-    mapdata/ExitFieldVariant.h
-    mapdata/ExitFlags.h
-    mapdata/RoomFieldVariant.h
+    map/CommandId.cpp
+    map/CommandId.h
+    map/ConnectedRoomFlags.h
+    map/DoorFlags.h
+    map/ExitDirection.cpp
+    map/ExitDirection.h
+    map/ExitFieldVariant.h
+    map/ExitFlags.h
+    map/ExitsFlags.h
+    map/PromptFlags.h
+    map/RoomFieldVariant.h
+    map/RoomRecipient.cpp
+    map/RoomRecipient.h
+    map/coordinate.cpp
+    map/coordinate.h
+    map/enums.cpp
+    map/enums.h
+    map/exit.cpp
+    map/exit.h
+    map/infomark.cpp
+    map/infomark.h
+    map/mmapper2room.h
+    map/parseevent.cpp
+    map/parseevent.h
+    map/room.cpp
+    map/room.h
+    map/roomid.h
+    map/utils.cpp
+    map/utils.h
     mapdata/customaction.cpp
     mapdata/customaction.h
     mapdata/drawstream.cpp
     mapdata/drawstream.h
-    mapdata/enums.cpp
-    mapdata/enums.h
-    mapdata/infomark.cpp
-    mapdata/infomark.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h
-    mapdata/mmapper2exit.h
-    mapdata/mmapper2room.h
     mapdata/roomfilter.cpp
     mapdata/roomfilter.h
     mapdata/roomselection.cpp
@@ -206,8 +212,6 @@ set(mmapper_SRCS
     mapfrontend/AbstractRoomVisitor.h
     mapfrontend/ParseTree.cpp
     mapfrontend/ParseTree.h
-    mapfrontend/map.cpp
-    mapfrontend/map.h
     mapfrontend/mapaction.cpp
     mapfrontend/mapaction.h
     mapfrontend/mapfrontend.cpp
@@ -315,16 +319,11 @@ set(mmapper_SRCS
     parser/AbstractParser-Utils.h
     parser/Action.cpp
     parser/Action.h
-    parser/CommandId.cpp
-    parser/CommandId.h
     parser/CommandQueue.cpp
     parser/CommandQueue.h
-    parser/ConnectedRoomFlags.h
     parser/DoorAction.cpp
     parser/DoorAction.h
-    parser/ExitsFlags.h
     parser/LineFlags.h
-    parser/PromptFlags.h
     parser/abstractparser.cpp
     parser/abstractparser.h
     parser/mumexmlparser.cpp

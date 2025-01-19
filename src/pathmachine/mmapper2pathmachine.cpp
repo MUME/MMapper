@@ -6,7 +6,7 @@
 #include "mmapper2pathmachine.h"
 
 #include "../configuration/configuration.h"
-#include "../expandoracommon/parseevent.h"
+#include "../map/parseevent.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
 

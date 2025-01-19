@@ -5,7 +5,7 @@
 
 #include "prespammedpath.h"
 
-#include "../parser/CommandId.h"
+#include "../map/CommandId.h"
 #include "../parser/abstractparser.h"
 
 #include <utility>

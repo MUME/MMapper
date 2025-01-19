@@ -6,13 +6,17 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../configuration/configuration.h"
-#include "../expandoracommon/parseevent.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFieldVariant.h"
-#include "../mapdata/RoomFieldVariant.h"
-#include "../mapdata/mmapper2room.h"
+#include "../map/CommandId.h"
+#include "../map/ConnectedRoomFlags.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitsFlags.h"
+#include "../map/PromptFlags.h"
+#include "../map/RoomFieldVariant.h"
+#include "../map/mmapper2room.h"
+#include "../map/parseevent.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/GroupManagerApi.h"
 #include "../pandoragroup/mmapper2character.h"
@@ -21,12 +25,8 @@
 #include "../timers/CTimers.h"
 #include "AbstractParser-Utils.h"
 #include "Action.h"
-#include "CommandId.h"
 #include "CommandQueue.h"
-#include "ConnectedRoomFlags.h"
 #include "DoorAction.h"
-#include "ExitsFlags.h"
-#include "PromptFlags.h"
 
 #include <functional>
 #include <map>

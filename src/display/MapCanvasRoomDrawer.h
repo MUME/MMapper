@@ -3,12 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/room.h"
 #include "../global/Array.h"
-#include "../global/roomid.h"
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/infomark.h"
+#include "../map/ExitDirection.h"
+#include "../map/coordinate.h"
+#include "../map/infomark.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "../opengl/Font.h"
 #include "Connections.h"
 #include "Infomarks.h"

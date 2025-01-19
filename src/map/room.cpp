@@ -7,7 +7,7 @@
 
 #include "../global/StringView.h"
 #include "../global/random.h"
-#include "../mapdata/ExitFieldVariant.h"
+#include "ExitFieldVariant.h"
 #include "parseevent.h"
 
 #include <memory>

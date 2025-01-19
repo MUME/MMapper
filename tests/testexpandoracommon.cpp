@@ -4,9 +4,9 @@
 #include "testexpandoracommon.h"
 
 #include "../src/expandoracommon/RoomAdmin.h"
-#include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
-#include "../src/expandoracommon/room.h"
+#include "../src/map/parseevent.h"
+#include "../src/map/room.h"
 
 #include <QtTest/QtTest>
 

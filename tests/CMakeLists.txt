@@ -47,6 +47,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
     ../src/global/logging.cpp
+    ../src/global/parserutils.cpp
+    ../src/global/parserutils.h
     ../src/global/progresscounter.cpp
     ../src/global/progresscounter.h
     ../src/global/random.cpp
@@ -55,14 +57,17 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/string_view_utils.h
     ../src/global/utils.cpp
     ../src/global/utils.h
-    ../src/mapdata/ExitDirection.cpp
-    ../src/mapdata/ExitDirection.h
-    ../src/mapdata/ExitFieldVariant.cpp
-    ../src/mapdata/ExitFieldVariant.h
+    ../src/map/CommandId.cpp
+    ../src/map/ExitDirection.cpp
+    ../src/map/ExitDirection.h
+    ../src/map/ExitFieldVariant.cpp
+    ../src/map/ExitFieldVariant.h
+    ../src/map/coordinate.cpp
+    ../src/map/exit.cpp
+    ../src/map/parseevent.cpp
+    ../src/map/room.cpp
     ../src/parser/CommandId.cpp
     ../src/parser/CommandId.h
-    ../src/global/parserutils.cpp
-    ../src/global/parserutils.h
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
@@ -79,8 +84,6 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
 set(parser_SRCS
-    ../src/expandoracommon/parseevent.cpp
-    ../src/expandoracommon/parseevent.h
     ../src/expandoracommon/property.cpp
     ../src/expandoracommon/property.h
     ../src/global/CaseUtils.cpp
@@ -91,16 +94,18 @@ set(parser_SRCS
     ../src/global/TabUtils.h
     ../src/global/TextUtils.cpp
     ../src/global/TextUtils.h
+    ../src/global/parserutils.cpp
+    ../src/global/parserutils.h
     ../src/global/random.cpp
     ../src/global/random.h
     ../src/global/string_view_utils.cpp
     ../src/global/string_view_utils.h
-    ../src/mapdata/ExitDirection.cpp
-    ../src/mapdata/ExitDirection.h
-    ../src/parser/CommandId.cpp
-    ../src/parser/CommandId.h
-    ../src/global/parserutils.cpp
-    ../src/global/parserutils.h
+    ../src/map/CommandId.cpp
+    ../src/map/CommandId.h
+    ../src/map/ExitDirection.cpp
+    ../src/map/ExitDirection.h
+    ../src/map/parseevent.cpp
+    ../src/map/parseevent.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})

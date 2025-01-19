@@ -5,8 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/room.h"
+#include "../map/parseevent.h"
+#include "../map/room.h"
 #include "path.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"

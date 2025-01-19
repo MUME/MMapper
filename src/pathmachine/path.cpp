@@ -5,9 +5,9 @@
 
 #include "path.h"
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
+#include "../map/coordinate.h"
+#include "../map/exit.h"
+#include "../map/room.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 

@@ -6,8 +6,8 @@
 #include "roomsignalhandler.h"
 
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/room.h"
-#include "../global/roomid.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "../mapfrontend/mapaction.h"
 
 #include <cassert>

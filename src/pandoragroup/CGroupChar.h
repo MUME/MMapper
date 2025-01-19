@@ -5,7 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/RuleOf5.h"
-#include "../global/roomid.h"
+#include "../map/roomid.h"
 #include "../parser/CommandQueue.h"
 #include "mmapper2character.h"
 

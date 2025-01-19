@@ -8,11 +8,14 @@
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
 #include "../global/TextUtils.h"
-#include "../global/roomid.h"
-#include "../mapdata/mmapper2exit.h"
-#include "../mapdata/mmapper2room.h"
+#include "DoorFlags.h"
+#include "ExitDirection.h"
+#include "ExitFieldVariant.h"
+#include "ExitFlags.h"
 #include "coordinate.h"
 #include "exit.h"
+#include "mmapper2room.h"
+#include "roomid.h"
 
 #include <cassert>
 #include <memory>

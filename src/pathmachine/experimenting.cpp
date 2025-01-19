@@ -5,8 +5,8 @@
 
 #include "experimenting.h"
 
-#include "../expandoracommon/room.h"
 #include "../global/utils.h"
+#include "../map/room.h"
 #include "path.h"
 #include "pathparameters.h"
 

@@ -4,13 +4,16 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../expandoracommon/property.h"
 #include "../global/MmQtHandle.h"
-#include "../mapdata/mmapper2exit.h"
-#include "../parser/CommandId.h"
-#include "../parser/ConnectedRoomFlags.h"
-#include "../parser/ExitsFlags.h"
-#include "../parser/PromptFlags.h"
-#include "property.h"
+#include "CommandId.h"
+#include "ConnectedRoomFlags.h"
+#include "DoorFlags.h"
+#include "ExitDirection.h"
+#include "ExitFieldVariant.h"
+#include "ExitFlags.h"
+#include "ExitsFlags.h"
+#include "PromptFlags.h"
 
 #include <array>
 #include <cstddef>

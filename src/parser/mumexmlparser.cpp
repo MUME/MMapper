@@ -7,8 +7,8 @@
 
 #include "../global/Consts.h"
 #include "../global/parserutils.h"
-#include "ExitsFlags.h"
-#include "PromptFlags.h"
+#include "../map/ExitsFlags.h"
+#include "../map/PromptFlags.h"
 #include "abstractparser.h"
 #include "patterns.h"
 

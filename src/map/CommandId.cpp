@@ -5,7 +5,7 @@
 #include "CommandId.h"
 
 #include "../global/enums.h"
-#include "../mapdata/ExitDirection.h"
+#include "ExitDirection.h"
 
 #include <array>
 #include <stdexcept>

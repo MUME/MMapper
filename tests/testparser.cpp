@@ -3,12 +3,12 @@
 
 #include "testparser.h"
 
-#include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
 #include "../src/global/Charset.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/parserutils.h"
-#include "../src/mapdata/mmapper2room.h"
+#include "../src/map/mmapper2room.h"
+#include "../src/map/parseevent.h"
 
 #include <memory>
 

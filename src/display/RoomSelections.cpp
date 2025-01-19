@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/room.h"
 #include "../global/EnumIndexedArray.h"
+#include "../map/coordinate.h"
+#include "../map/room.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"

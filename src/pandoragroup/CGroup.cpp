@@ -6,7 +6,7 @@
 #include "CGroup.h"
 
 #include "../configuration/configuration.h"
-#include "../global/roomid.h"
+#include "../map/roomid.h"
 #include "CGroupChar.h"
 #include "groupaction.h"
 #include "groupselection.h"

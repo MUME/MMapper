@@ -4,12 +4,12 @@
 
 #include "ParseTree.h"
 
-#include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/property.h"
 #include "../global/Array.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/logging.h"
 #include "../global/utils.h"
+#include "../map/parseevent.h"
 #include "roomcollection.h"
 
 #include <algorithm>

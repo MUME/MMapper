@@ -5,8 +5,10 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/mmapper2exit.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFieldVariant.h"
+#include "../map/ExitFlags.h"
 #include "pathparameters.h"
 
 #include <cassert>

@@ -4,9 +4,9 @@
 #include "Infomarks.h"
 
 #include "../configuration/configuration.h"
-#include "../expandoracommon/coordinate.h"
 #include "../global/AnsiTextUtils.h"
-#include "../mapdata/infomark.h"
+#include "../map/coordinate.h"
+#include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"

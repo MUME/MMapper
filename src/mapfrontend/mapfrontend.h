@@ -6,12 +6,12 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../expandoracommon/RoomAdmin.h"
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/parseevent.h"
-#include "../global/roomid.h"
-#include "../mapdata/infomark.h"
+#include "../map/coordinate.h"
+#include "../map/infomark.h"
+#include "../map/parseevent.h"
+#include "../map/roomid.h"
+#include "../map/utils.h"
 #include "ParseTree.h"
-#include "map.h"
 
 #include <map>
 #include <memory>

@@ -4,8 +4,8 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Flags.h"
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/ExitFlags.h"
+#include "ExitDirection.h"
+#include "ExitFlags.h"
 
 #include <cassert>
 #include <cstdint>

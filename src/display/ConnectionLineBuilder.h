@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../mapdata/ExitDirection.h"
+#include "../map/ExitDirection.h"
 #include "../opengl/OpenGL.h"
 
 #include <vector>

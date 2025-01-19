@@ -5,8 +5,8 @@
 
 #include "roomcollection.h"
 
-#include "../expandoracommon/room.h"
 #include "../global/RAII.h"
+#include "../map/room.h"
 #include "AbstractRoomVisitor.h"
 
 #include <cassert>

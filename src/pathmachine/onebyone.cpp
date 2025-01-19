@@ -5,10 +5,10 @@
 
 #include "onebyone.h"
 
-#include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/room.h"
 #include "../global/utils.h"
-#include "../parser/CommandId.h"
+#include "../map/CommandId.h"
+#include "../map/parseevent.h"
+#include "../map/room.h"
 #include "experimenting.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"

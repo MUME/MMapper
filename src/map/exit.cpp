@@ -5,9 +5,9 @@
 #include "exit.h"
 
 #include "../global/Flags.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFieldVariant.h"
-#include "../mapdata/ExitFlags.h"
+#include "DoorFlags.h"
+#include "ExitFieldVariant.h"
+#include "ExitFlags.h"
 
 #define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Exit::set##_Type(_Type value) \

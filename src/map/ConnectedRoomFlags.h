@@ -4,7 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/utils.h"
-#include "../mapdata/ExitDirection.h"
+#include "ExitDirection.h"
 
 #include <cstdint>
 

@@ -3,9 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/RuleOf5.h"
-#include "../mapdata/DoorFlags.h"
-#include "../mapdata/ExitFlags.h"
-#include "../mapdata/infomark.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitFlags.h"
+#include "../map/infomark.h"
 
 #include <cstdint>
 #include <iostream>

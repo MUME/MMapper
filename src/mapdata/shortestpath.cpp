@@ -4,15 +4,15 @@
 
 #include "shortestpath.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
 #include "../global/enums.h"
-#include "../global/roomid.h"
 #include "../global/utils.h"
-#include "ExitDirection.h"
-#include "ExitFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFlags.h"
+#include "../map/exit.h"
+#include "../map/mmapper2room.h"
+#include "../map/room.h"
+#include "../map/roomid.h"
 #include "mapdata.h"
-#include "mmapper2room.h"
 #include "roomfilter.h"
 
 #include <memory>

@@ -5,7 +5,7 @@
 
 #include "roomselection.h"
 
-#include "../expandoracommon/room.h"
+#include "../map/room.h"
 #include "mapdata.h"
 
 #include <cassert>

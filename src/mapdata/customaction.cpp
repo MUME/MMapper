@@ -5,17 +5,17 @@
 
 #include "customaction.h"
 
-#include "../expandoracommon/exit.h"
-#include "../expandoracommon/room.h"
 #include "../global/Flags.h"
 #include "../global/enums.h"
+#include "../map/DoorFlags.h"
+#include "../map/ExitDirection.h"
+#include "../map/ExitFlags.h"
+#include "../map/exit.h"
+#include "../map/room.h"
+#include "../map/utils.h"
 #include "../mapfrontend/ParseTree.h"
-#include "../mapfrontend/map.h"
 #include "../mapfrontend/mapaction.h"
 #include "../mapfrontend/roomcollection.h"
-#include "DoorFlags.h"
-#include "ExitDirection.h"
-#include "ExitFlags.h"
 #include "roomselection.h"
 
 #include <memory>

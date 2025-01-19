@@ -4,7 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/utils.h"
-#include "../mapdata/mmapper2room.h"
+#include "mmapper2room.h"
 
 #include <cstdint>
 

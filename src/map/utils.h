@@ -5,8 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
+#include "coordinate.h"
 
 #include <memory>
 
