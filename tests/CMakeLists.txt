@@ -10,12 +10,6 @@ set(clock_SRCS
     ../src/clock/mumeclock.h
     ../src/clock/mumemoment.cpp
     ../src/clock/mumemoment.h
-    ../src/global/CaseUtils.cpp
-    ../src/global/Charset.cpp
-    ../src/global/TextUtils.cpp
-    ../src/global/TextUtils.h
-    ../src/global/logging.cpp
-    ../src/global/parserutils.cpp
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
     ../src/proxy/GmcpMessage.cpp
@@ -23,8 +17,13 @@ set(clock_SRCS
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
-add_dependencies(TestClock glm)
-target_link_libraries(TestClock Qt5::Test coverage_config)
+add_dependencies(TestClock glm mm_global)
+target_link_libraries(TestClock
+        mm_global
+        Qt5::Gui
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
 set_target_properties(
   TestClock PROPERTIES
   CXX_STANDARD 17
@@ -36,43 +35,23 @@ add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
 file(GLOB_RECURSE expandoracommon_SRCS
+    ../src/configuration/configuration.cpp
+    ../src/configuration/configuration.h
     ../src/expandoracommon/*.cpp
-    ../src/global/Charset.cpp
-    ../src/global/NullPointerException.cpp
-    ../src/global/NullPointerException.h
-    ../src/global/StringView.cpp
-    ../src/global/StringView.h
-    ../src/global/TabUtils.cpp
-    ../src/global/TabUtils.h
-    ../src/global/TextUtils.cpp
-    ../src/global/TextUtils.h
-    ../src/global/logging.cpp
-    ../src/global/parserutils.cpp
-    ../src/global/parserutils.h
-    ../src/global/progresscounter.cpp
-    ../src/global/progresscounter.h
-    ../src/global/random.cpp
-    ../src/global/random.h
-    ../src/global/string_view_utils.cpp
-    ../src/global/string_view_utils.h
-    ../src/global/utils.cpp
-    ../src/global/utils.h
-    ../src/map/CommandId.cpp
-    ../src/map/ExitDirection.cpp
-    ../src/map/ExitDirection.h
-    ../src/map/ExitFieldVariant.cpp
-    ../src/map/ExitFieldVariant.h
-    ../src/map/coordinate.cpp
-    ../src/map/exit.cpp
-    ../src/map/parseevent.cpp
-    ../src/map/room.cpp
-    ../src/parser/CommandId.cpp
-    ../src/parser/CommandId.h
+    ../src/map/*.cpp
+    ../src/mapfrontend/AbstractRoomVisitor.cpp
+    ../src/parser/Abbrev.cpp
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
-add_dependencies(TestExpandoraCommon glm)
-target_link_libraries(TestExpandoraCommon Qt5::Test coverage_config)
+add_dependencies(TestExpandoraCommon glm mm_global)
+target_link_libraries(TestExpandoraCommon
+        mm_global
+        Qt5::Gui
+        Qt5::Network
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
 set_target_properties(
   TestExpandoraCommon PROPERTIES
   CXX_STANDARD 17
@@ -85,21 +64,6 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 # Parser
 set(parser_SRCS
     ../src/expandoracommon/property.cpp
-    ../src/expandoracommon/property.h
-    ../src/global/CaseUtils.cpp
-    ../src/global/Charset.cpp
-    ../src/global/NullPointerException.cpp
-    ../src/global/NullPointerException.h
-    ../src/global/TabUtils.cpp
-    ../src/global/TabUtils.h
-    ../src/global/TextUtils.cpp
-    ../src/global/TextUtils.h
-    ../src/global/parserutils.cpp
-    ../src/global/parserutils.h
-    ../src/global/random.cpp
-    ../src/global/random.h
-    ../src/global/string_view_utils.cpp
-    ../src/global/string_view_utils.h
     ../src/map/CommandId.cpp
     ../src/map/CommandId.h
     ../src/map/ExitDirection.cpp
@@ -109,8 +73,13 @@ set(parser_SRCS
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
-add_dependencies(TestParser glm)
-target_link_libraries(TestParser Qt5::Test coverage_config)
+add_dependencies(TestParser glm mm_global)
+target_link_libraries(TestParser
+        mm_global
+        Qt5::Gui
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
 set_target_properties(
   TestParser PROPERTIES
   CXX_STANDARD 17
@@ -128,24 +97,11 @@ set(proxy_SRCS
     ../src/proxy/GmcpModule.h
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
-    ../src/global/AnsiTextUtils.cpp
-    ../src/global/CaseUtils.cpp
-    ../src/global/Charset.cpp
-    ../src/global/Color.cpp
-    ../src/global/NullPointerException.cpp
-    ../src/global/NullPointerException.h
-    ../src/global/PrintUtils.cpp
-    ../src/global/PrintUtils.h
-    ../src/global/TextUtils.cpp
-    ../src/global/TextUtils.h
-    ../src/global/logging.cpp
-    ../src/global/tests.cpp
-    ../src/global/tests.h
-    )
+     )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
-add_dependencies(TestProxy glm)
-target_link_libraries(TestProxy Qt5::Gui Qt5::Test coverage_config)
+add_dependencies(TestProxy glm mm_global)
+target_link_libraries(TestProxy mm_global Qt5::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
   CXX_STANDARD 17
@@ -163,8 +119,13 @@ set(mainwindow_SRCS
     )
 set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
-add_dependencies(TestMainWindow glm)
-target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+add_dependencies(TestMainWindow glm mm_global)
+target_link_libraries(TestMainWindow
+        mm_global
+        Qt5::Network
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
 set_target_properties(
   TestMainWindow PROPERTIES
   CXX_STANDARD 17
@@ -175,33 +136,15 @@ set_target_properties(
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
 # Global
-set(global_SRCS
-    ../src/global/AnsiTextUtils.cpp
-    ../src/global/CaseUtils.cpp
-    ../src/global/Charset.cpp
-    ../src/global/Color.cpp
-    ../src/global/NullPointerException.cpp
-    ../src/global/NullPointerException.h
-    ../src/global/PrintUtils.cpp
-    ../src/global/PrintUtils.h
-    ../src/global/StringView.cpp
-    ../src/global/StringView.h
-    ../src/global/TabUtils.cpp
-    ../src/global/TabUtils.h
-    ../src/global/TextUtils.cpp
-    ../src/global/TextUtils.h
-    ../src/global/logging.cpp
-    ../src/global/string_view_utils.cpp
-    ../src/global/string_view_utils.h
-    ../src/global/tests.cpp
-    ../src/global/tests.h
-    ../src/global/unquote.cpp
-    ../src/global/unquote.h
-    )
 set(TestGlobal_SRCS TestGlobal.cpp)
-add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
-add_dependencies(TestGlobal glm)
-target_link_libraries(TestGlobal Qt5::Widgets Qt5::Test coverage_config)
+add_executable(TestGlobal ${TestGlobal_SRCS})
+add_dependencies(TestGlobal glm mm_global)
+target_link_libraries(TestGlobal
+        mm_global
+        Qt5::Gui
+        Qt5::Test
+        Qt5::Widgets
+        coverage_config)
 set_target_properties(
   TestGlobal PROPERTIES
   CXX_STANDARD 17
@@ -222,21 +165,13 @@ set(adventure_SRCS
         ../src/configuration/configobserver.h
         ../src/configuration/configuration.cpp
         ../src/configuration/configuration.h
-        ../src/global/Color.cpp
-        ../src/global/Color.h
-        ../src/global/NamedColors.cpp
-        ../src/global/NamedColors.h
-        ../src/global/utils.cpp
-        ../src/global/utils.h
         ../src/observer/gameobserver.cpp
         ../src/observer/gameobserver.h
-        ../src/global/parserutils.cpp
-        ../src/global/parserutils.h
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
-add_dependencies(TestAdventure glm)
-target_link_libraries(TestAdventure Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+add_dependencies(TestAdventure glm mm_global)
+target_link_libraries(TestAdventure mm_global Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
         CXX_STANDARD 17
@@ -253,8 +188,8 @@ set(timer_test
 )
 set(TestTimer TestCTimers.cpp)
 add_executable(TestTimer ${timer_test} ${TestTimer})
-add_dependencies(TestTimer glm)
-target_link_libraries(TestTimer Qt5::Test coverage_config)
+add_dependencies(TestTimer glm mm_global)
+target_link_libraries(TestTimer mm_global Qt5::Test coverage_config)
 set_target_properties(
         TestTimer PROPERTIES
         CXX_STANDARD 17
@@ -271,8 +206,8 @@ set(room_mob
 )
 set(RoomMob roompanel/TestRoomMob.cpp)
 add_executable(TestRoomMob ${room_mob} ${RoomMob})
-add_dependencies(TestRoomMob glm)
-target_link_libraries(TestRoomMob Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+add_dependencies(TestRoomMob glm mm_global)
+target_link_libraries(TestRoomMob mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomMob PROPERTIES
         CXX_STANDARD 17
@@ -292,8 +227,8 @@ set(room_mobs
 )
 set(RoomMobs roompanel/TestRoomMobs.cpp)
 add_executable(TestRoomMobs ${room_mobs} ${RoomMobs})
-add_dependencies(TestRoomMobs glm)
-target_link_libraries(TestRoomMobs Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+add_dependencies(TestRoomMobs glm mm_global)
+target_link_libraries(TestRoomMobs mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomMobs PROPERTIES
         CXX_STANDARD 17
@@ -311,18 +246,12 @@ set(room_manager
         ../src/roompanel/RoomMob.cpp
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
-        ../src/global/CaseUtils.cpp
-        ../src/global/Charset.cpp
-        ../src/global/Charset.h
-        ../src/global/TabUtils.cpp
-        ../src/global/TabUtils.h
-        ../src/global/TextUtils.cpp
         ../src/proxy/GmcpMessage.cpp
 )
 set(RoomManager roompanel/TestRoomManager.cpp)
 add_executable(TestRoomManager ${room_manager} ${RoomManager})
-add_dependencies(TestRoomManager glm)
-target_link_libraries(TestRoomManager Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
+add_dependencies(TestRoomManager glm mm_global)
+target_link_libraries(TestRoomManager mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomManager PROPERTIES
         CXX_STANDARD 17

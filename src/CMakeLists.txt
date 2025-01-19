@@ -516,6 +516,15 @@ set(mmapper_DATA
     MacOSXBundleInfo.plist.in
     global/Version.cpp.in)
 
+set(mmapper_global_SRCS ${mmapper_SRCS})
+list(FILTER mmapper_global_SRCS INCLUDE REGEX "global/")
+list(FILTER mmapper_SRCS EXCLUDE REGEX "global/")
+
+message("mmapper_SRCS=[${mmapper_SRCS}]")
+message("mmapper_global_SRCS=[${mmapper_global_SRCS}]")
+
+add_library(mm_global STATIC ${mmapper_global_SRCS})
+
 # Build the executable
 add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_SRCS}
@@ -529,6 +538,8 @@ target_link_libraries(mmapper PUBLIC
     Qt5::Widgets
     Qt5::Network
     Qt5::OpenGL
+    ${CMAKE_THREAD_LIBS_INIT}
+    mm_global
 )
 
 set_target_properties(
@@ -539,8 +550,28 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 
+set_target_properties(
+  mm_global PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
-add_dependencies(mmapper glm)
+target_include_directories(mm_global SYSTEM PUBLIC
+        ${GLM_INCLUDE_DIR}
+        ${Qt5Core_INCLUDE_DIRS}
+        ${Qt5Widgets_INCLUDE_DIRS}
+        #${Qt5_Network_INCLUDE_DIRS}
+        #${Qt5_OpenGL_INCLUDE_DIRS}
+)
+target_link_libraries(mm_global PUBLIC
+    Qt5::Core
+    Qt5::Widgets
+)
+add_dependencies(mmapper glm mm_global)
+add_dependencies(mm_global glm)
 
 if(WIN32)
     target_link_libraries(mmapper PUBLIC ws2_32)
@@ -548,9 +579,12 @@ endif()
 
 if(WITH_ZLIB)
     target_include_directories(mmapper SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
+    target_include_directories(mm_global SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
     target_link_libraries(mmapper PUBLIC ${ZLIB_LIBRARIES})
+    target_link_libraries(mm_global PUBLIC ${ZLIB_LIBRARIES})
     if(NOT ZLIB_FOUND)
         add_dependencies(mmapper zlib)
+        add_dependencies(mm_global zlib)
     endif()
 endif()
 
