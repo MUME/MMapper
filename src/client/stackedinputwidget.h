@@ -15,7 +15,7 @@ class QLineEdit;
 class QObject;
 class QWidget;
 
-class StackedInputWidget final : public QStackedWidget
+class NODISCARD_QOBJECT StackedInputWidget final : public QStackedWidget
 {
     Q_OBJECT
 

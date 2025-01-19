@@ -21,7 +21,7 @@
 class CGroup;
 class GroupAuthority;
 
-class CGroupCommunicator : public QObject
+class NODISCARD_QOBJECT CGroupCommunicator : public QObject
 {
     Q_OBJECT
 

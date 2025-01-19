@@ -42,7 +42,7 @@ namespace mctp {
 struct MapCanvasTexturesProxy;
 }
 
-class MapData final : public MapFrontend
+class NODISCARD_QOBJECT MapData final : public MapFrontend
 {
     Q_OBJECT
 

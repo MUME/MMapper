@@ -20,7 +20,7 @@ class QXmlStreamWriter;
 
 /*! \brief MM2 export in XML format
  */
-class XmlMapStorage final : public AbstractMapStorage
+class NODISCARD_QOBJECT XmlMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 

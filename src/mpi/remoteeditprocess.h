@@ -13,7 +13,7 @@
 #include <QStringList>
 #include <QtCore>
 
-class RemoteEditProcess final : public QObject
+class NODISCARD_QOBJECT RemoteEditProcess final : public QObject
 {
     Q_OBJECT
 

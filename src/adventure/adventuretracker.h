@@ -11,7 +11,7 @@
 
 #include <QObject>
 
-class AdventureTracker final : public QObject
+class NODISCARD_QOBJECT AdventureTracker final : public QObject
 {
     Q_OBJECT
 

@@ -39,7 +39,7 @@ enum class NODISCARD XmlModeEnum : uint8_t {
     CHARACTER
 };
 
-class MumeXmlParser final : public AbstractParser
+class NODISCARD_QOBJECT MumeXmlParser final : public AbstractParser
 {
     Q_OBJECT
 

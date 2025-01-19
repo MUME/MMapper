@@ -20,7 +20,7 @@ class QMetaEnum;
 
 enum class NODISCARD MumeClockPrecisionEnum : int8_t { UNSET = -1, DAY, HOUR, MINUTE };
 
-class MumeClock final : public QObject
+class NODISCARD_QOBJECT MumeClock final : public QObject
 {
     Q_OBJECT
 
@@ -60,7 +60,7 @@ public:
     NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
     NODISCARD int64_t getLastSyncEpoch() const { return m_lastSyncEpoch; }
 
-    enum class WestronMonthNamesEnum : int8_t {
+    enum class NODISCARD_QOBJECT WestronMonthNamesEnum : int8_t {
         UnknownWestronMonth = -1,
         Afteryule,
         Solmath,
@@ -78,7 +78,7 @@ public:
 
     Q_ENUM(WestronMonthNamesEnum)
 
-    enum class SindarinMonthNamesEnum : int8_t {
+    enum class NODISCARD_QOBJECT SindarinMonthNamesEnum : int8_t {
         UnknownSindarinMonth = -1,
         Narwain,
         Ninui,
@@ -96,7 +96,7 @@ public:
 
     Q_ENUM(SindarinMonthNamesEnum)
 
-    enum class WestronWeekDayNamesEnum : int8_t {
+    enum class NODISCARD_QOBJECT WestronWeekDayNamesEnum : int8_t {
         UnknownWestronWeekDay = -1,
         Sunday,
         Monday,
@@ -109,7 +109,7 @@ public:
 
     Q_ENUM(WestronWeekDayNamesEnum)
 
-    enum class SindarinWeekDayNamesEnum : int8_t {
+    enum class NODISCARD_QOBJECT SindarinWeekDayNamesEnum : int8_t {
         UnknownSindarinWeekDay = -1,
         Oranor,
         Orithil,

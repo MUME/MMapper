@@ -28,7 +28,7 @@ class Proxy;
 class QObject;
 class RoomManager;
 
-class ConnectionListenerTcpServer final : public QTcpServer
+class NODISCARD_QOBJECT ConnectionListenerTcpServer final : public QTcpServer
 {
     Q_OBJECT
 
@@ -43,7 +43,7 @@ signals:
     void signal_incomingConnection(qintptr socketDescriptor);
 };
 
-class ConnectionListener final : public QObject
+class NODISCARD_QOBJECT ConnectionListener final : public QObject
 {
     Q_OBJECT
 

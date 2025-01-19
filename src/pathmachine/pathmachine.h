@@ -37,7 +37,7 @@ enum class NODISCARD PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 
  *
  * PathMachine is the base class for Mmapper2PathMachine
  */
-class PathMachine : public QObject
+class NODISCARD_QOBJECT PathMachine : public QObject
 {
     Q_OBJECT
 

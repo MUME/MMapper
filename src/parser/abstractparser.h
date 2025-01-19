@@ -54,7 +54,7 @@ namespace syntax {
 class Sublist;
 }
 
-class AbstractParser : public QObject
+class NODISCARD_QOBJECT AbstractParser : public QObject
 {
     Q_OBJECT
 

@@ -11,7 +11,7 @@
 #include <QFileInfoList>
 #include <QObject>
 
-class AutoLogger final : public QObject
+class NODISCARD_QOBJECT AutoLogger final : public QObject
 {
     Q_OBJECT
 

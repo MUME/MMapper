@@ -37,7 +37,7 @@ public:
     }
 };
 
-class UpdateDialog : public QDialog
+class NODISCARD_QOBJECT UpdateDialog : public QDialog
 {
     Q_OBJECT
 

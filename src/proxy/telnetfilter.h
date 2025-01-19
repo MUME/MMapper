@@ -24,7 +24,7 @@ struct NODISCARD TelnetData final
     TelnetDataEnum type = TelnetDataEnum::UNKNOWN;
 };
 
-class TelnetFilter final : public QObject
+class NODISCARD_QOBJECT TelnetFilter final : public QObject
 {
     Q_OBJECT
 

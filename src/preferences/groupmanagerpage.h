@@ -17,7 +17,7 @@ namespace Ui {
 class GroupManagerPage;
 }
 
-class GroupManagerPage final : public QWidget
+class NODISCARD_QOBJECT GroupManagerPage final : public QWidget
 {
     Q_OBJECT
 

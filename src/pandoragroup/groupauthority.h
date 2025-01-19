@@ -20,7 +20,7 @@ static constexpr const auto GROUP_ORGANIZATIONAL_UNIT = "MMapper";
 static constexpr const auto GROUP_COMMON_NAME = "GroupManager";
 
 class GroupSocket;
-class GroupAuthority : public QObject
+class NODISCARD_QOBJECT GroupAuthority : public QObject
 {
     Q_OBJECT
 

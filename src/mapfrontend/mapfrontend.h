@@ -33,7 +33,9 @@ class RoomRecipient;
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
-class MapFrontend : public QObject, public RoomAdmin, public InfoMarkModificationTracker
+class NODISCARD_QOBJECT MapFrontend : public QObject,
+                                      public RoomAdmin,
+                                      public InfoMarkModificationTracker
 {
     Q_OBJECT
 

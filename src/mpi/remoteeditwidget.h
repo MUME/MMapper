@@ -83,7 +83,7 @@ enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
       "Toggle the display of whitespace.", \
       "Ctrl+Shift+W")
 
-class RemoteTextEdit final : public QPlainTextEdit
+class NODISCARD_QOBJECT RemoteTextEdit final : public QPlainTextEdit
 {
     Q_OBJECT
 
@@ -122,7 +122,7 @@ private:
     void handle_toolTip(QEvent *event) const;
 };
 
-class RemoteEditWidget : public QMainWindow
+class NODISCARD_QOBJECT RemoteEditWidget : public QMainWindow
 {
     Q_OBJECT
 

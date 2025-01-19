@@ -15,7 +15,7 @@ namespace Ui {
 class AnsiColorDialog;
 }
 
-class AnsiColorDialog final : public QDialog
+class NODISCARD_QOBJECT AnsiColorDialog final : public QDialog
 {
     Q_OBJECT
 

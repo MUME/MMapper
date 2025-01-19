@@ -10,7 +10,7 @@
 
 class MapWindow;
 
-class MapZoomSlider final : public QSlider
+class NODISCARD_QOBJECT MapZoomSlider final : public QSlider
 {
 private:
     static constexpr float SCALE = 100.f;

@@ -43,7 +43,7 @@ public:
 };
 Q_DECLARE_METATYPE(GroupStateData)
 
-class GroupDelegate final : public QStyledItemDelegate
+class NODISCARD_QOBJECT GroupDelegate final : public QStyledItemDelegate
 {
     Q_OBJECT
 
@@ -58,7 +58,7 @@ public:
                              const QModelIndex &index) const override;
 };
 
-class GroupModel final : public QAbstractTableModel
+class NODISCARD_QOBJECT GroupModel final : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -97,7 +97,7 @@ public:
     void setMapLoaded(const bool val) { m_mapLoaded = val; }
 };
 
-class GroupWidget final : public QWidget
+class NODISCARD_QOBJECT GroupWidget final : public QWidget
 {
     Q_OBJECT
 

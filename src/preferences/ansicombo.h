@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../global/AnsiTextUtils.h"
+#include "../global/macros.h"
 
 #include <vector>
 
@@ -18,7 +19,7 @@
 class QObject;
 class QWidget;
 
-class AnsiCombo : public QComboBox
+class NODISCARD_QOBJECT AnsiCombo : public QComboBox
 {
     Q_OBJECT
 

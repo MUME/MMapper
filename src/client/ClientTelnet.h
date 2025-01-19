@@ -11,7 +11,7 @@
 #include <QObject>
 #include <QTcpSocket>
 
-class ClientTelnet final : public AbstractTelnet
+class NODISCARD_QOBJECT ClientTelnet final : public AbstractTelnet
 {
     Q_OBJECT
 

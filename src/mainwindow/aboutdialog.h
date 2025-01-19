@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Kalev Lember <kalev@smartlink.ee> (Kalev)
 
+#include "../global/macros.h"
 #include "ui_aboutdialog.h"
 
 #include <QDialog>
@@ -13,7 +14,7 @@ class QObject;
 class QTextBrowser;
 class QWidget;
 
-class AboutDialog : public QDialog, private Ui::AboutDialog
+class NODISCARD_QOBJECT AboutDialog : public QDialog, private Ui::AboutDialog
 {
     Q_OBJECT
 

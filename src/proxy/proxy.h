@@ -43,7 +43,7 @@ class CTimers;
 
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
-class Proxy final : public QObject
+class NODISCARD_QOBJECT Proxy final : public QObject
 {
     Q_OBJECT
 

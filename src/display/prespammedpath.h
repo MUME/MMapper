@@ -13,7 +13,7 @@
 class MapCanvas;
 class MapData;
 
-class PrespammedPath final : public QObject
+class NODISCARD_QOBJECT PrespammedPath final : public QObject
 {
     Q_OBJECT
 

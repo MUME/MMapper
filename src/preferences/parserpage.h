@@ -15,7 +15,7 @@ class QObject;
 
 enum class NODISCARD UiCharsetEnum { AsciiOrLatin1, UTF8 };
 
-class ParserPage : public QWidget, private Ui::ParserPage
+class NODISCARD_QOBJECT ParserPage : public QWidget, private Ui::ParserPage
 {
     Q_OBJECT
 

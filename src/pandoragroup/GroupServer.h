@@ -22,7 +22,7 @@ class GroupSocket;
 class GroupAuthority;
 class QObject;
 
-class GroupTcpServer final : public QTcpServer
+class NODISCARD_QOBJECT GroupTcpServer final : public QTcpServer
 {
     Q_OBJECT
 
@@ -37,7 +37,7 @@ signals:
     void signal_incomingConnection(qintptr socketDescriptor);
 };
 
-class GroupServer final : public CGroupCommunicator
+class NODISCARD_QOBJECT GroupServer final : public CGroupCommunicator
 {
     Q_OBJECT
 

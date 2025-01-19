@@ -17,7 +17,7 @@
 
 class QSslError;
 
-class MumeSocket : public QObject
+class NODISCARD_QOBJECT MumeSocket : public QObject
 {
     Q_OBJECT
 
@@ -77,7 +77,7 @@ signals:
     void sig_log(const QString &, const QString &);
 };
 
-class MumeSslSocket : public MumeSocket
+class NODISCARD_QOBJECT MumeSslSocket : public MumeSocket
 {
     Q_OBJECT
 
@@ -105,7 +105,7 @@ protected slots:
     void slot_checkTimeout();
 };
 
-class MumeTcpSocket final : public MumeSslSocket
+class NODISCARD_QOBJECT MumeTcpSocket final : public MumeSslSocket
 {
     Q_OBJECT
 

@@ -3,6 +3,7 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/macros.h"
 #include "adventuretracker.h"
 
 #include <memory>
@@ -12,7 +13,7 @@
 #include <QtCore>
 #include <QtWidgets>
 
-class AdventureWidget : public QWidget
+class NODISCARD_QOBJECT AdventureWidget : public QWidget
 {
     Q_OBJECT
 

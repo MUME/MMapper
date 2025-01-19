@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2023 The MMapper Authors
 
-#include "roompanel/RoomManager.h"
+#include "../src/global/macros.h"
+#include "../src/roompanel/RoomManager.h"
 
 #include <QObject>
 
-class TestRoomManager final : public QObject
+class NODISCARD_QOBJECT TestRoomManager final : public QObject
 {
     Q_OBJECT
 

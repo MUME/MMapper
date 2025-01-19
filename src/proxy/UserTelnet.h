@@ -8,7 +8,7 @@
 #include <QByteArray>
 #include <QObject>
 
-class UserTelnet final : public AbstractTelnet
+class NODISCARD_QOBJECT UserTelnet final : public AbstractTelnet
 {
     Q_OBJECT
 

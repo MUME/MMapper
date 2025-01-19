@@ -40,7 +40,7 @@ public:
     bool operator<(const QListWidgetItem &other) const override;
 };
 
-class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
+class NODISCARD_QOBJECT RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
 {
     Q_OBJECT
 

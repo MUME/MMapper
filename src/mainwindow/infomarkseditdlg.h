@@ -22,7 +22,7 @@ class QObject;
 class QWidget;
 class InfoMarkSelection;
 
-class InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
+class NODISCARD_QOBJECT InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
 {
     Q_OBJECT
 

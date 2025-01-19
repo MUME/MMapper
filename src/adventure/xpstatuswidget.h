@@ -3,6 +3,7 @@
 // Copyright (C) 2023 The MMapper Authors
 // Author: Mike Repass <mike.repass@gmail.com> (Taryn)
 
+#include "../global/macros.h"
 #include "adventuretracker.h"
 
 #include <memory>
@@ -11,7 +12,7 @@
 #include <QPushButton>
 #include <QStatusBar>
 
-class XPStatusWidget : public QPushButton
+class NODISCARD_QOBJECT XPStatusWidget : public QPushButton
 {
     Q_OBJECT
 

@@ -19,7 +19,7 @@ class QElapsedTimer;
 /**
 @author alve,,,
 */
-class Mmapper2PathMachine final : public PathMachine
+class NODISCARD_QOBJECT Mmapper2PathMachine final : public PathMachine
 {
     Q_OBJECT
 

@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../src/global/macros.h"
+
 #include <QObject>
 
-class TestClock final : public QObject
+class NODISCARD_QOBJECT TestClock final : public QObject
 {
     Q_OBJECT
 

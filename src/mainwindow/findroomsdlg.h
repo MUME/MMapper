@@ -33,7 +33,7 @@ class QTreeWidgetItem;
 class QWidget;
 class Room;
 
-class FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
+class NODISCARD_QOBJECT FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
 {
     Q_OBJECT
 

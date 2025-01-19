@@ -20,7 +20,7 @@ class RoomMobs;
 class QObject;
 class RoomManager;
 
-class RoomModel final : public QAbstractTableModel
+class NODISCARD_QOBJECT RoomModel final : public QAbstractTableModel
 {
     Q_OBJECT
 
@@ -62,7 +62,7 @@ private:
 
 }; // class RoomModel
 
-class RoomWidget final : public QWidget
+class NODISCARD_QOBJECT RoomWidget final : public QWidget
 {
     Q_OBJECT
 

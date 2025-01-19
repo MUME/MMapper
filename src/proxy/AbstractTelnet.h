@@ -93,7 +93,7 @@ struct NODISCARD AppendBuffer : public QByteArray
 };
 
 struct TelnetFormatter;
-class AbstractTelnet : public QObject
+class NODISCARD_QOBJECT AbstractTelnet : public QObject
 {
     Q_OBJECT
 

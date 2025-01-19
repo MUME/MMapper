@@ -24,7 +24,7 @@ class GroupSocket;
 class CGroupCommunicator;
 class GroupAction;
 
-class CGroup final : public QObject, public GroupAdmin
+class NODISCARD_QOBJECT CGroup final : public QObject, public GroupAdmin
 {
     Q_OBJECT
 

@@ -37,7 +37,7 @@ public:
     NODISCARD int64_t elapsedMs() const;
 };
 
-class CTimers final : public QObject
+class NODISCARD_QOBJECT CTimers final : public QObject
 {
     Q_OBJECT
 

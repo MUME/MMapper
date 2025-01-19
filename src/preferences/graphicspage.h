@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
 #include "ui_graphicspage.h"
 
 #include <memory>
@@ -20,7 +21,7 @@ namespace Ui {
 class GraphicsPage;
 }
 
-class GraphicsPage final : public QWidget
+class NODISCARD_QOBJECT GraphicsPage final : public QWidget
 {
     Q_OBJECT
 

@@ -26,7 +26,7 @@ class GmcpMessage;
 class GroupAuthority;
 class Mmapper2Group;
 
-class Mmapper2Group final : public QObject
+class NODISCARD_QOBJECT Mmapper2Group final : public QObject
 {
     Q_OBJECT
 

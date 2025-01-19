@@ -21,7 +21,7 @@ class GroupAuthority;
 enum class NODISCARD ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 using ProtocolVersion = uint32_t;
 
-class GroupSocket final : public QObject
+class NODISCARD_QOBJECT GroupSocket final : public QObject
 {
     Q_OBJECT
 

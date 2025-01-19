@@ -11,7 +11,7 @@
 #include <QGroupBox>
 
 class SliderSpinboxButton;
-class AdvancedGraphicsGroupBox final : public QObject
+class NODISCARD_QOBJECT AdvancedGraphicsGroupBox final : public QObject
 {
     Q_OBJECT
 

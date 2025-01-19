@@ -8,7 +8,7 @@
 #include <QByteArray>
 #include <QObject>
 
-class MudTelnet final : public AbstractTelnet
+class NODISCARD_QOBJECT MudTelnet final : public AbstractTelnet
 {
     Q_OBJECT
 

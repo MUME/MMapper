@@ -68,7 +68,7 @@ public:
     NODISCARD bool atEnd() const { return m_iterator == end(); }
 };
 
-class InputWidget final : public QPlainTextEdit
+class NODISCARD_QOBJECT InputWidget final : public QPlainTextEdit
 {
     Q_OBJECT
 

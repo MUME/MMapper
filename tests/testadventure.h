@@ -18,7 +18,7 @@ struct NODISCARD TestLine final
     }
 };
 
-class TestAdventure final : public QObject
+class NODISCARD_QOBJECT TestAdventure final : public QObject
 {
     Q_OBJECT
 

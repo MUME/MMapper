@@ -49,7 +49,9 @@ class Room;
 struct RoomId;
 class RoomSelFakeGL;
 
-class MapCanvas final : public QOpenGLWidget, private MapCanvasViewport, private MapCanvasInputState
+class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
+                                          private MapCanvasViewport,
+                                          private MapCanvasInputState
 {
     Q_OBJECT
 

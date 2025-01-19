@@ -60,7 +60,7 @@ class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
 
-class MainWindow final : public QMainWindow
+class NODISCARD_QOBJECT MainWindow final : public QMainWindow
 {
     Q_OBJECT
 

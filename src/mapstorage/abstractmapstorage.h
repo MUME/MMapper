@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
 #include "../global/progresscounter.h"
 
 #include <memory>
@@ -19,7 +20,7 @@ class ProgressCounter;
 class QFile;
 class Room;
 
-class AbstractMapStorage : public QObject
+class NODISCARD_QOBJECT AbstractMapStorage : public QObject
 {
     Q_OBJECT
 

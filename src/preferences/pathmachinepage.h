@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include "../global/macros.h"
 #include "ui_pathmachinepage.h"
 
 #include <QString>
@@ -12,7 +13,7 @@
 
 class QObject;
 
-class PathmachinePage : public QWidget, private Ui::PathmachinePage
+class NODISCARD_QOBJECT PathmachinePage : public QWidget, private Ui::PathmachinePage
 {
     Q_OBJECT
 

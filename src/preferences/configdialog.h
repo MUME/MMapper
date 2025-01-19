@@ -5,6 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -20,7 +22,7 @@ namespace Ui {
 class ConfigDialog;
 }
 
-class ConfigDialog final : public QDialog
+class NODISCARD_QOBJECT ConfigDialog final : public QDialog
 {
     Q_OBJECT
 

@@ -28,7 +28,7 @@ using RemoteSession = TaggedStringLatin1<tags::RemoteSessionTag>;
 // Internally shared across all view sessions
 static const RemoteSession REMOTE_VIEW_SESSION_ID = RemoteSession("-1");
 
-class RemoteEditSession : public QObject
+class NODISCARD_QOBJECT RemoteEditSession : public QObject
 {
     Q_OBJECT
 
@@ -70,7 +70,7 @@ protected slots:
     }
 };
 
-class RemoteEditInternalSession final : public RemoteEditSession
+class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 
@@ -86,7 +86,7 @@ private:
     QScopedPointer<RemoteEditWidget> m_widget;
 };
 
-class RemoteEditExternalSession final : public RemoteEditSession
+class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 

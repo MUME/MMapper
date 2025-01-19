@@ -14,7 +14,7 @@
 class RoomMobUpdate;
 class GmcpMessage;
 
-class RoomManager final : public QObject
+class NODISCARD_QOBJECT RoomManager final : public QObject
 {
     Q_OBJECT
 

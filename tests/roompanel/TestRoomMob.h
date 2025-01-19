@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2023 The MMapper Authors
 
+#include "../src/global/macros.h"
+
 #include <QObject>
 
-class TestRoomMob final : public QObject
+class NODISCARD_QOBJECT TestRoomMob final : public QObject
 {
     Q_OBJECT
 

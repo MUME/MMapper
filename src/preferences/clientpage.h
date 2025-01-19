@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -13,7 +15,7 @@ namespace Ui {
 class ClientPage;
 }
 
-class ClientPage final : public QWidget
+class NODISCARD_QOBJECT ClientPage final : public QWidget
 {
     Q_OBJECT
 

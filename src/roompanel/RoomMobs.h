@@ -17,7 +17,7 @@
 #include <QObject>
 #include <QtCore>
 
-class RoomMobs final : public QObject
+class NODISCARD_QOBJECT RoomMobs final : public QObject
 {
     Q_OBJECT
 

@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Mattias 'Mew_' Viklund <devmew@exedump.com> (Mirnir)
 
+#include "../global/macros.h"
+
 #include <QWidget>
 #include <QtCore>
 
@@ -10,7 +12,7 @@ namespace Ui {
 class AutoLogPage;
 }
 
-class AutoLogPage final : public QWidget
+class NODISCARD_QOBJECT AutoLogPage final : public QWidget
 {
     Q_OBJECT
 

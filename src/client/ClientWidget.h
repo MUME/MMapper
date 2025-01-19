@@ -20,7 +20,7 @@ namespace Ui {
 class ClientWidget;
 }
 
-class ClientWidget final : public QWidget
+class NODISCARD_QOBJECT ClientWidget final : public QWidget
 {
     Q_OBJECT
 

@@ -28,7 +28,7 @@ class QResizeEvent;
 class QScrollBar;
 class QTimer;
 
-class MapWindow final : public QWidget
+class NODISCARD_QOBJECT MapWindow final : public QWidget
 {
     Q_OBJECT
 

@@ -7,7 +7,7 @@
 
 #include <QObject>
 
-class GameObserver : public QObject
+class NODISCARD_QOBJECT GameObserver : public QObject
 {
     Q_OBJECT
 

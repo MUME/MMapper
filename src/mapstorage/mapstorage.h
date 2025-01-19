@@ -24,7 +24,7 @@ class QFile;
 class QObject;
 class Room;
 
-class MapStorage final : public AbstractMapStorage
+class NODISCARD_QOBJECT MapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 

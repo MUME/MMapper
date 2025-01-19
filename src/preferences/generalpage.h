@@ -5,6 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -15,7 +17,7 @@ class GeneralPage;
 
 class QObject;
 
-class GeneralPage final : public QWidget
+class NODISCARD_QOBJECT GeneralPage final : public QWidget
 {
     Q_OBJECT
 

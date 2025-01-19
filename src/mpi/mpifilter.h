@@ -12,7 +12,7 @@
 #include <QString>
 #include <QtCore>
 
-class MpiFilter final : public QObject
+class NODISCARD_QOBJECT MpiFilter final : public QObject
 {
     Q_OBJECT
 

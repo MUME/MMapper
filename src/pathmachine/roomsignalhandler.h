@@ -24,7 +24,7 @@ class RoomAdmin;
 class RoomRecipient;
 struct RoomId;
 
-class RoomSignalHandler final : public QObject
+class NODISCARD_QOBJECT RoomSignalHandler final : public QObject
 {
     Q_OBJECT
 

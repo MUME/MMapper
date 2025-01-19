@@ -9,7 +9,7 @@
 
 #include <QVariantMap>
 
-class GroupClient final : public CGroupCommunicator
+class NODISCARD_QOBJECT GroupClient final : public CGroupCommunicator
 {
     Q_OBJECT
 

@@ -18,7 +18,7 @@
 
 class RemoteEditSession;
 
-class RemoteEdit final : public QObject
+class NODISCARD_QOBJECT RemoteEdit final : public QObject
 {
     Q_OBJECT
 

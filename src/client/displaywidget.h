@@ -66,7 +66,7 @@ struct NODISCARD AnsiTextHelper final
     void limitScrollback(int lineLimit);
 };
 
-class DisplayWidget final : public QTextEdit
+class NODISCARD_QOBJECT DisplayWidget final : public QTextEdit
 {
     Q_OBJECT
 

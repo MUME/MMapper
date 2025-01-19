@@ -19,7 +19,7 @@ class QObject;
  * This loads XML files given the schema provided in the default Pandora Mapper file:
  * https://raw.githubusercontent.com/MUME/PandoraMapper/master/deploy/mume.xml
  */
-class PandoraMapStorage final : public AbstractMapStorage
+class NODISCARD_QOBJECT PandoraMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 
