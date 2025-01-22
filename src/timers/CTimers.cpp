@@ -5,11 +5,9 @@
 
 #include "../global/utils.h"
 
-#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <list>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -18,20 +16,6 @@
 #include <QMutexLocker>
 
 namespace { // anonymous
-template<typename T, typename Predicate>
-NODISCARD bool listRemoveIf(std::list<T> &list, Predicate &&should_remove)
-{
-    // c++20 version of remove_if() returns # of elements removed, but c++17 doesn't.
-    bool removed = false;
-    list.remove_if([&removed, &should_remove](const T &element) -> bool {
-        if (should_remove(element)) {
-            removed = true;
-            return true;
-        }
-        return false;
-    });
-    return removed;
-};
 
 NODISCARD int64_t nowMs()
 {
@@ -90,15 +74,17 @@ void CTimers::addTimer(std::string name, std::string desc)
 bool CTimers::removeCountdown(const std::string &name)
 {
     QMutexLocker locker(&m_lock);
-    return listRemoveIf(m_countdowns,
-                        [&name](const TTimer &timer) -> bool { return timer.getName() == name; });
+    return utils::listRemoveIf(m_countdowns, [&name](const TTimer &timer) -> bool {
+        return timer.getName() == name;
+    });
 }
 
 bool CTimers::removeTimer(const std::string &name)
 {
     QMutexLocker locker(&m_lock);
-    return listRemoveIf(m_timers,
-                        [&name](const TTimer &timer) -> bool { return timer.getName() == name; });
+    return utils::listRemoveIf(m_timers, [&name](const TTimer &timer) -> bool {
+        return timer.getName() == name;
+    });
 }
 
 void CTimers::addCountdown(std::string name, std::string desc, int64_t timeMs)

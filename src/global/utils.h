@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <list>
 #include <memory>
 #include <optional>
 #include <string>
@@ -337,6 +338,21 @@ ALLOW_DISCARD static inline size_t erase_if(Container &container, Callback &&cal
     const auto after = container.size();
     assert(before > after);
     return before - after;
+}
+
+template<typename T, typename Predicate>
+NODISCARD bool listRemoveIf(std::list<T> &list, Predicate &&should_remove)
+{
+    // c++20 version of remove_if() returns # of elements removed, but c++17 doesn't.
+    bool removed = false;
+    list.remove_if([&removed, &should_remove](const T &element) -> bool {
+        if (should_remove(element)) {
+            removed = true;
+            return true;
+        }
+        return false;
+    });
+    return removed;
 }
 
 template<typename Container, typename Callback>
