@@ -41,6 +41,11 @@
 using namespace char_consts;
 
 namespace { // anonymous
+
+// These are garbage.
+const QString nullString{};
+const QByteArray emptyByteArray{""};
+
 void decodeXmlEntities(QString &s)
 {
     s = entities::decode(entities::EncodedString{s});
@@ -49,11 +54,6 @@ void decodeXmlEntities(QString &s)
 void encodeXmlEntities(QString &s)
 {
     s = entities::encode(entities::DecodedString{s});
-}
-
-NODISCARD QString getQString(const charset::conversion::Utf16StringBuilder &builder)
-{
-    return QString::fromStdU16String(builder.str());
 }
 
 void appendCodepoint(QString &qs, char32_t c)
@@ -72,11 +72,13 @@ void appendCodepoint(QString &qs, char32_t c)
 
 MumeXmlParser::MumeXmlParser(MapData &md,
                              MumeClock &mc,
-                             ProxyParserApi proxy,
-                             GroupManagerApi group,
-                             CTimers &timers,
-                             QObject *parent)
-    : AbstractParser(md, mc, std::move(proxy), std::move(group), timers, parent)
+                             ProxyMudConnectionApi & /*proxyMudConnection*/,
+                             ProxyUserGmcpApi &proxyGmcp,
+                             GroupManagerApi &group,
+                             QObject *parent,
+                             AbstractParserOutputs &outputs,
+                             ParserCommonData &parserCommonData)
+    : MumeXmlParserBase{parent, mc, md, group, proxyGmcp, outputs, parserCommonData}
 {}
 
 MumeXmlParser::~MumeXmlParser() = default;
@@ -84,11 +86,12 @@ MumeXmlParser::~MumeXmlParser() = default;
 void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     const bool isPrompt = data.type == TelnetDataEnum::Prompt;
-    const bool isTwiddlers = data.type == TelnetDataEnum::Delay;
+    const bool isTwiddlers = data.type == TelnetDataEnum::Backspace;
     if (isTwiddlers) {
-        m_lastPrompt = QString::fromUtf8(data.line.getQByteArray());
+        auto &lastPrompt = m_commonData.lastPrompt;
+        lastPrompt = QString::fromUtf8(data.line.getQByteArray());
         if (getConfig().parser.removeXmlTags) {
-            decodeXmlEntities(m_lastPrompt);
+            decodeXmlEntities(lastPrompt);
         }
     }
     parse(data, isPrompt || isTwiddlers);
@@ -132,7 +135,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         m_tempCharacters.clear();
     }
     if (!m_lineToUser.isEmpty()) {
-        sendToUser(m_lineToUser, isGoAhead);
+        sendToUser(SendToUserSource::FromMud, m_lineToUser, isGoAhead);
 
         // Simplify the output and run actions
         QString temp = m_lineToUser;
@@ -250,8 +253,9 @@ bool MumeXmlParser::element(const QString &line)
                     // Certain weather events happen on ticks
 
                 } else if (line.startsWith("/xml")) {
-                    sendToUser("[MMapper] Mapper cannot function without XML mode\n");
-                    m_queue.clear();
+                    sendToUser(SendToUserSource::FromMMapper,
+                               "[MMapper] Mapper cannot function without XML mode\n");
+                    getQueue().clear();
                     m_lineFlags.clear();
                 }
                 break;
@@ -259,12 +263,13 @@ bool MumeXmlParser::element(const QString &line)
                 if (line.startsWith("prompt")) {
                     m_xmlMode = XmlModeEnum::PROMPT;
                     m_lineFlags.insert(LineFlagEnum::PROMPT);
-                    m_lastPrompt = emptyByteArray;
+                    m_commonData.lastPrompt = emptyByteArray;
                 }
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
-                    m_exits = nullString; // Reset string since payload can be from the 'exit' command
+                    m_commonData.exits
+                        = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
                     m_lineFlags.insert(LineFlagEnum::EXITS);
                 }
@@ -274,7 +279,7 @@ bool MumeXmlParser::element(const QString &line)
                     m_xmlMode = XmlModeEnum::ROOM;
                     m_descriptionReady = false;
                     m_exitsReady = false;
-                    m_exits = nullString;
+                    m_commonData.exits = nullString;
                     m_stringBuffer = nullString;
                     m_roomContents.reset();
                     m_lineFlags.insert(LineFlagEnum::ROOM);
@@ -307,7 +312,8 @@ bool MumeXmlParser::element(const QString &line)
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
-                    m_exits = nullString; // Reset string since payload can be from the 'exit' command
+                    m_commonData.exits
+                        = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
                     m_lineFlags.insert(LineFlagEnum::EXITS);
                     m_descriptionReady = true;
@@ -393,15 +399,16 @@ bool MumeXmlParser::element(const QString &line)
                 if (line.startsWith("/prompt")) {
                     m_xmlMode = XmlModeEnum::NONE;
                     m_lineFlags.remove(LineFlagEnum::PROMPT);
-                    m_overrideSendPrompt = false;
+                    m_commonData.overrideSendPrompt = false;
 
-                    const QString copy = normalizeStringCopy(m_lastPrompt);
+                    auto &lastPrompt = m_commonData.lastPrompt;
+                    const QString copy = normalizeStringCopy(lastPrompt);
                     sendPromptLineEvent(copy);
 
                     const auto &config = getConfig();
                     if (!config.parser.removeXmlTags) {
-                        encodeXmlEntities(m_lastPrompt);
-                        m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
+                        encodeXmlEntities(lastPrompt);
+                        lastPrompt = "<prompt>" + lastPrompt + "</prompt>";
                     }
 
                     if (m_descriptionReady) {
@@ -412,7 +419,7 @@ bool MumeXmlParser::element(const QString &line)
                                 AnsiOstream aos{os};
                                 emulateExits(aos, m_move);
                             }
-                            sendToUser(os.str());
+                            sendToUser(SendToUserSource::SimulatedOutput, os.str());
                         }
                         move();
                     }
@@ -492,7 +499,7 @@ QString MumeXmlParser::characters(QString &ch)
                     AnsiOstream aos{os};
                     emulateExits(aos, m_move);
                 }
-                sendToUser(os.str());
+                sendToUser(SendToUserSource::SimulatedOutput, os.str());
             }
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);
@@ -518,12 +525,12 @@ QString MumeXmlParser::characters(QString &ch)
         break;
 
     case XmlModeEnum::EXITS:
-        m_exits += ch;
+        m_commonData.exits += ch;
         break;
 
     case XmlModeEnum::PROMPT:
         // Store prompts in case an internal command is executed
-        m_lastPrompt += ch;
+        m_commonData.lastPrompt += ch;
         toUser.append(ch);
         break;
 
@@ -743,29 +750,31 @@ void MumeXmlParser::move()
     }
 
     const auto emitEvent = [this, expectedMove]() {
+        // REVISIT: once this isn't a signal/slot anymore, we won't need to create a shared event?
         auto ev = ParseEvent::createSharedEvent(m_move,
                                                 m_serverId,
                                                 m_roomName.value_or(RoomName{}),
                                                 m_roomDesc.value_or(RoomDesc{}),
                                                 m_roomContents.value_or(RoomContents{}),
                                                 m_exitIds.value_or(ServerExitIds{}),
-                                                m_terrain,
-                                                m_exitsFlags,
-                                                m_promptFlags,
-                                                m_connectedRoomFlags);
+                                                m_commonData.terrain,
+                                                m_commonData.exitsFlags,
+                                                m_commonData.promptFlags,
+                                                m_commonData.connectedRoomFlags);
 
         // TODO: only do this in PLAY mode.
         if (expectedMove) {
             maybeUpdate(expectedMove.value(), *ev);
         }
 
-        emit sig_handleParseEvent(SigParseEvent{ev});
+        onHandleParseEvent(SigParseEvent{ev});
     };
 
-    if (m_queue.isEmpty()) {
+    auto &queue = getQueue();
+    if (queue.isEmpty()) {
         emitEvent();
     } else {
-        const CommandEnum c = m_queue.dequeue();
+        const CommandEnum c = queue.dequeue();
         // Ignore scouting unless it forced movement via a one-way
         if (c != CommandEnum::SCOUT || m_move != CommandEnum::LOOK) {
             pathChanged();
@@ -773,7 +782,7 @@ void MumeXmlParser::move()
             if (c != m_move) {
                 MMLOG() << "[XML parser] move " << getUppercase(m_move) << " doesn't match command "
                         << getUppercase(c);
-                m_queue.clear();
+                queue.clear();
             }
         }
     }

@@ -1171,7 +1171,7 @@ private:
                 assert(argv[0].getString() == "select");
                 const auto room = getRoom();
                 const auto tmpSel = RoomSelection::createSelection(RoomIdSet{room.getId()});
-                emit m_self.sig_newRoomSelection(SigRoomSelection{tmpSel});
+                m_self.onNewRoomSelection(SigRoomSelection{tmpSel});
                 os << "Room ";
                 os << room.getIdExternal().asUint32();
                 os << " has been temporarily selected on the map.\n";
@@ -1230,7 +1230,7 @@ public:
 
         // TODO: output directly to user's ostream instead of returning a string.
         auto result = processSyntax(completeSyntax, thisCommand, input);
-        m_self.sendToUser(result);
+        m_self.sendToUser(SendToUserSource::FromMMapper, result);
     }
 };
 

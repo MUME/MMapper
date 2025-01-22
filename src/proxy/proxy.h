@@ -11,6 +11,7 @@
 #include "../global/io.h"
 #include "../observer/gameobserver.h"
 #include "../pandoragroup/GroupManagerApi.h"
+#include "../parser/SendToUserSource.h"
 #include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
@@ -27,24 +28,37 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class AbstractParser;
 class CTimers;
 class ConnectionListener;
+class MainWindow;
 class MapCanvas;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
 class MpiFilter;
+class MpiFilterToMud;
 class MudTelnet;
-class MudTelnetFilter;
 class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
 class PrespammedPath;
+class ProxyMudConnectionApi;
+class ProxyUserGmcpApi;
 class QTcpSocket;
 class RemoteEdit;
 class RoomManager;
+class TelnetLineFilter;
 class UserTelnet;
-class UserTelnetFilter;
+
+struct AbstractParserOutputs;
+struct AnsiWarningMessage;
+struct GameTime;
+struct MpiFilterOutputs;
+struct MudTelnetOutputs;
+struct MumeSocketOutputs;
+struct ParserCommonData;
+struct UserTelnetOutputs;
 
 class NODISCARD_QOBJECT Proxy final : public QObject
 {
@@ -53,7 +67,6 @@ class NODISCARD_QOBJECT Proxy final : public QObject
 private:
     io::buffer<(1 << 13)> m_buffer;
     WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
-    ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
 
     MapData &m_mapData;
     Mmapper2PathMachine &m_pathMachine;
@@ -63,25 +76,80 @@ private:
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
     const qintptr m_socketDescriptor;
-    ConnectionListener &m_listener;
+    MainWindow &m_mainWindow;
 
+private:
+    class UserSocket;
+    struct UserSocketOutputs;
+    struct NODISCARD Pipeline final
+    {
+    public:
+        struct NODISCARD Outputs final
+        {
+            struct NODISCARD User final
+            {
+                std::unique_ptr<UserSocketOutputs> userSocketOutputs;
+                std::unique_ptr<UserTelnetOutputs> userTelnetOutputs;
+            };
+            struct NODISCARD Mud final
+            {
+                std::unique_ptr<MumeSocketOutputs> mudSocketOutputs;
+                std::unique_ptr<MudTelnetOutputs> mudTelnetOutputs;
+                std::unique_ptr<MpiFilterOutputs> mpiFilterOutputs;
+            };
+            std::unique_ptr<AbstractParserOutputs> parserXmlOutputs;
+            User user;
+            Mud mud;
+        };
+        Outputs outputs;
+        struct NODISCARD Apis final
+        {
+            std::unique_ptr<ProxyMudConnectionApi> proxyMudConnection;
+            std::unique_ptr<ProxyUserGmcpApi> proxyGmcp;
+            std::optional<Signal2Lifetime> sendToUserLifetime;
+        };
+        Apis apis;
+
+        struct NODISCARD Common final
+        {
+            std::unique_ptr<ParserCommonData> parserCommonData;
+        };
+        Common common;
+
+    public: // from user: Sock -> Telnet -> LineFilter -> Parser
+        struct NODISCARD User final
+        {
+            std::unique_ptr<UserSocket> userSocket;
+            std::unique_ptr<UserTelnet> userTelnet;
+            std::unique_ptr<TelnetLineFilter> userTelnetFilter;
+            std::unique_ptr<AbstractParser> userParser;
+        };
+        User user;
+
+    public: // from mud: Sock -> Telnet -> LineFilter -> Mpi -> Parser
+        struct NODISCARD Mud final
+        {
+            std::unique_ptr<MumeSocket> mudSocket;
+            std::unique_ptr<MudTelnet> mudTelnet;
+            std::unique_ptr<TelnetLineFilter> mudTelnetFilter;
+            std::unique_ptr<MpiFilter> mpiFilterFromMud;
+            std::unique_ptr<MpiFilterToMud> mpiFilterToMud;
+            std::unique_ptr<MumeXmlParser> mudParser;
+        };
+        Mud mud;
+
+    public:
+    };
+
+private:
+    std::unique_ptr<Pipeline> m_pipeline;
     // REVISIT: This might be in the wrong spot; it's not part of the pipeline
     // because it's intended for sendXXX within the lifetime of this object.
     Signal2Lifetime m_lifetime;
 
-    // initialized in ctor
+    // Technically we create this, but we don't "own" it;
+    // it outlives this object when the connection closes.
     QPointer<RemoteEdit> m_remoteEdit;
-
-    // initialized in start()
-    QPointer<QTcpSocket> m_userSocket;
-    QPointer<UserTelnet> m_userTelnet;
-    QPointer<MudTelnet> m_mudTelnet;
-    QPointer<UserTelnetFilter> m_userTelnetFilter;
-    QPointer<MudTelnetFilter> m_mudTelnetFilter;
-    QPointer<MpiFilter> m_mpiFilter;
-    QPointer<MumeXmlParser> m_parserXml;
-    QPointer<MumeSocket> m_mudSocket;
-    QPointer<CTimers> m_timers;
 
     enum class NODISCARD ServerStateEnum {
         Initialized,
@@ -96,7 +164,19 @@ private:
     ServerStateEnum m_serverState = ServerStateEnum::Initialized;
 
 public:
-    explicit Proxy(MapData &,
+    NODISCARD static QPointer<Proxy> allocInit(MapData &,
+                                               Mmapper2PathMachine &,
+                                               PrespammedPath &,
+                                               Mmapper2Group &,
+                                               MumeClock &,
+                                               MapCanvas &,
+                                               GameObserver &,
+                                               qintptr &,
+                                               ConnectionListener &);
+
+public:
+    explicit Proxy(Badge<Proxy>,
+                   MapData &,
                    Mmapper2PathMachine &,
                    PrespammedPath &,
                    Mmapper2Group &,
@@ -108,16 +188,47 @@ public:
     ~Proxy() final;
 
 private:
-    friend ProxyParserApi;
+    void init();
+
+private:
+    void allocPipelineObjects();
+    void destroyPipelineObjects();
+
+    void allocUserSocket();
+    void allocMudSocket();
+    void allocUserTelnet();
+    void allocMudTelnet();
+    void allocParser();
+    void allocMpiFilter();
+    void allocRemoteEdit();
+
+private:
+    void processUserStream();
+    void userTerminatedConnection();
+
+private:
+    void onMudConnected();
+    void onMudError(const QString &);
+    void mudTerminatedConnection();
+
+private:
+    friend ProxyMudConnectionApi;
     NODISCARD bool isConnected() const;
     void connectToMud();
     void disconnectFromMud();
-    void sendToUser(const QString &ba) { emit sig_sendToUser(ba, false); }
-    void sendToMud(const QString &ba) { emit sig_sendToMud(ba); }
-    void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
-    void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
-    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
-    void log(const QString &msg) { emit sig_log("Proxy", msg); }
+
+private:
+    friend ProxyMudGmcpApi;
+    friend ProxyUserGmcpApi;
+    NODISCARD bool isMudGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    NODISCARD bool isUserGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    void gmcpToMud(const GmcpMessage &msg);
+    void gmcpToUser(const GmcpMessage &msg);
+
+private:
+    void sendToMud(const QString &s);
+    void sendToUser(SendToUserSource source, const QString &ba);
+    void log(const QString &msg);
 
     class NODISCARD AnsiHelper final
     {
@@ -154,36 +265,60 @@ private:
     };
 
     NODISCARD AnsiHelper getSendToUserAnsiOstream();
-    void sendNewlineToUser() { sendToUser("\n"); }
+    void sendNewlineToUser();
+    void sendPromptToUser();
+
     void sendWelcomeToUser();
+    void sendWarningToUser(const AnsiWarningMessage &warning);
     void sendErrorToUser(std::string_view msg);
     void sendStatusToUser(std::string_view msg);
     void sendSyntaxHintToUser(std::string_view before, std::string_view cmd, std::string_view after);
 
-signals:
-    void sig_log(const QString &, const QString &);
+private:
+    void onSendToMudSocket(const TelnetIacBytes &);
 
-    void sig_analyzeUserStream(const TelnetIacBytes &);
-    void sig_analyzeMudStream(const TelnetIacBytes &);
+private:
+    NODISCARD Pipeline &getPipeline() { return deref(m_pipeline); }
 
-    void sig_sendToMud(const QString &);
-    void sig_sendToUser(const QString &, bool);
+    NODISCARD GameObserver &getGameObserver() { return m_gameObserver; }
+    NODISCARD MainWindow &getMainWindow() { return m_mainWindow; }
+    NODISCARD MapCanvas &getMapCanvas() { return m_mapCanvas; }
+    NODISCARD Mmapper2Group &getGroupManager() { return m_groupManager; }
+    NODISCARD MumeClock &getMumeClock() { return m_mumeClock; }
+    NODISCARD Mmapper2PathMachine &getPathMachine() { return m_pathMachine; }
+    NODISCARD PrespammedPath &getPrespam() { return m_prespammedPath; }
 
-    void sig_gmcpToMud(const GmcpMessage &);
-    void sig_gmcpToUser(const GmcpMessage &);
+    NODISCARD MumeSocket &getMudSocket() { return deref(getPipeline().mud.mudSocket); }
+    NODISCARD MudTelnet &getMudTelnet() { return deref(getPipeline().mud.mudTelnet); }
+    NODISCARD TelnetLineFilter &getMudTelnetFilter()
+    {
+        return deref(getPipeline().mud.mudTelnetFilter);
+    }
+    NODISCARD MpiFilter &getMpiFilterFromMud() { return deref(getPipeline().mud.mpiFilterFromMud); }
+    NODISCARD MpiFilterToMud &getMpiFilterToMud()
+    {
+        return deref(getPipeline().mud.mpiFilterToMud);
+    }
 
-public slots:
-    void slot_start();
+    NODISCARD UserSocket &getUserSocket() { return deref(getPipeline().user.userSocket); }
+    NODISCARD UserTelnet &getUserTelnet() { return deref(getPipeline().user.userTelnet); }
+    NODISCARD TelnetLineFilter &getUserTelnetFilter()
+    {
+        return deref(getPipeline().user.userTelnetFilter);
+    }
+    NODISCARD RemoteEdit &getRemoteEdit();
+    NODISCARD MumeXmlParser &getMudParser() { return deref(getPipeline().mud.mudParser); }
+    NODISCARD AbstractParser &getUserParser() { return deref(getPipeline().user.userParser); }
 
-    void slot_processUserStream();
-    void slot_userTerminatedConnection();
-    void slot_mudTerminatedConnection();
+private:
+    NODISCARD const Pipeline &getPipeline() const { return deref(m_pipeline); }
+    NODISCARD const MudTelnet &getMudTelnet() const { return deref(getPipeline().mud.mudTelnet); }
+    NODISCARD const UserTelnet &getUserTelnet() const
+    {
+        return deref(getPipeline().user.userTelnet);
+    }
 
-    void slot_onSendToMudSocket(const TelnetIacBytes &);
-    void slot_onSendToUserSocket(const TelnetIacBytes &);
-
-    void slot_onMudError(const QString &);
-    void slot_onMudConnected();
-
-    void slot_onSendGameTimeToClock(int year, const std::string &month, int day, int hour);
+private:
+    NODISCARD bool hasConnectedUserSocket() const;
+    void onSubmitMpiToMud(const RawBytes &);
 };

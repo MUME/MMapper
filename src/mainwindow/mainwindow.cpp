@@ -187,7 +187,7 @@ MainWindow::MainWindow()
     // View -> Side Panels -> Room Panel (Mobs)
     m_roomManager = new RoomManager(this);
     m_roomManager->setObjectName("RoomManager");
-    deref(m_gameObserver).sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+    deref(m_gameObserver).sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
         deref(m_roomManager).slot_parseGmcpInput(gmcp);
     });
     m_roomWidget = new RoomWidget(deref(m_roomManager), this);
@@ -235,17 +235,17 @@ MainWindow::MainWindow()
 
     // TODO move this connect() wiring into AutoLogger::ctor ?
     GameObserver &observer = deref(m_gameObserver);
-    observer.sig_connected.connect(m_lifetime, [this]() {
+    observer.sig2_connected.connect(m_lifetime, [this]() {
         //
         deref(m_logger).slot_onConnected();
     });
-    observer.sig_toggledEchoMode.connect(m_lifetime, [this](bool echo) {
+    observer.sig2_toggledEchoMode.connect(m_lifetime, [this](bool echo) {
         deref(m_logger).slot_shouldLog(echo);
     });
-    observer.sig_sentToMudString.connect(m_lifetime, [this](const QString &msg) {
+    observer.sig2_sentToMudString.connect(m_lifetime, [this](const QString &msg) {
         deref(m_logger).slot_writeToLog(msg);
     });
-    observer.sig_sentToUserString.connect(m_lifetime, [this](const QString &msg) {
+    observer.sig2_sentToUserString.connect(m_lifetime, [this](const QString &msg) {
         deref(m_logger).slot_writeToLog(msg);
     });
 
@@ -514,7 +514,7 @@ void MainWindow::wireConnections()
 
 void MainWindow::slot_log(const QString &mod, const QString &message)
 {
-    logWindow->append("[" + mod + "] " + message);
+    logWindow->append(QString("[%1] %2").arg(mod, message));
     logWindow->moveCursor(QTextCursor::MoveOperation::End);
     logWindow->ensureCursorVisible();
     logWindow->update();

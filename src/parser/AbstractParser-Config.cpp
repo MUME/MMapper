@@ -361,7 +361,7 @@ void AbstractParser::doConfig(const StringView cmd)
                 Accept(
                     [this](User &user, auto) {
                         auto &os = user.getOstream();
-                        if (m_proxy.isConnected()) {
+                        if (isConnected()) {
                             os << "You must disconnect before you can reload the saved configuration.\n";
                             return;
                         }
@@ -376,7 +376,7 @@ void AbstractParser::doConfig(const StringView cmd)
                 Accept(
                     [this](User &user, auto) {
                         auto &os = user.getOstream();
-                        if (m_proxy.isConnected()) {
+                        if (isConnected()) {
                             os << "You must disconnect before you can do a factory reset.\n";
                             return;
                         }
@@ -407,9 +407,4 @@ void AbstractParser::doConfig(const StringView cmd)
                     makeFixedPointArg(advanced.layerHeight, "layer-height")))));
 
     eval("config", configSyntax, cmd);
-}
-
-void AbstractParser::setMode(MapModeEnum mode)
-{
-    emit sig_setMode(mode);
 }

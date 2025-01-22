@@ -123,12 +123,12 @@ void AbstractParser::parseGroup(StringView input)
     eval("group", groupSyntax, input);
 }
 
-void AbstractParser::sendScoreLineEvent(const QString &arr)
+void ParserCommon::sendScoreLineEvent(const QString &arr)
 {
     m_group.sendScoreLineEvent(arr);
 }
 
-void AbstractParser::sendPromptLineEvent(const QString &arr)
+void ParserCommon::sendPromptLineEvent(const QString &arr)
 {
     m_group.sendPromptLineEvent(arr);
 }

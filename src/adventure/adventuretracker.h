@@ -32,6 +32,10 @@ private:
     void parseIfUpdatedVitals(const GmcpMessage &msg);
     NODISCARD double checkpointXP();
 
+private:
+    void onUserGmcp(const GmcpMessage &msg);
+    void onUserText(const QString &line);
+
 signals:
     void sig_accomplishedTask(double xpGained);
     void sig_achievedSomething(const QString &achievement, double xpGained);
@@ -41,8 +45,4 @@ signals:
     void sig_killedMob(const QString &mobName, double xpGained);
     void sig_receivedHint(const QString &hint);
     void sig_updatedSession(const std::shared_ptr<AdventureSession> &session);
-
-public slots:
-    void slot_onUserText(const QString &line);
-    void slot_onUserGmcp(const GmcpMessage &msg);
 };

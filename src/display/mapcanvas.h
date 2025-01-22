@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/ChangeMonitor.h"
+#include "../global/Signal2.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
@@ -100,7 +101,7 @@ private:
     OptionStatus m_graphicsOptionsStatus;
     Diff m_diff;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
-    ConnectionSet m_connections;
+    Signal2Lifetime m_lifetime;
 
 public:
     explicit MapCanvas(MapData &mapData,

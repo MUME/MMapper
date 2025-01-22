@@ -89,6 +89,8 @@ void AnsiTextHelper::init()
     cursor.setCharFormat(format);
 }
 
+DisplayWidgetOutputs::~DisplayWidgetOutputs() = default;
+
 DisplayWidget::DisplayWidget(QWidget *const parent)
     : QTextBrowser(parent)
     , m_ansiTextHelper{static_cast<QTextEdit &>(*this)}
@@ -161,7 +163,7 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
 
     const auto &settings = getConfig().integratedClient;
     if (settings.autoResizeTerminal) {
-        emit sig_windowSizeChanged(x, y);
+        getOutput().windowSizeChanged(x, y);
     }
 
     QTextEdit::resizeEvent(event);

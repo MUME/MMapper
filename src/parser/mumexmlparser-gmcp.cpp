@@ -134,9 +134,10 @@ void MumeXmlParser::parseGmcpStatusVars(const JsonObj &obj)
 {
     // "Char.StatusVars {\"race\":\"Troll\",\"subrace\":\"Cave Troll\"}"
     if (auto race = obj.getString("race")) {
-        m_trollExitMapping = (race->compare("Troll", Qt::CaseInsensitive) == 0);
+        auto &trollExitMapping = m_commonData.trollExitMapping;
+        trollExitMapping = (race->compare("Troll", Qt::CaseInsensitive) == 0);
         log("Parser",
-            QString("%1 troll exit mapping").arg(m_trollExitMapping ? "Enabling" : "Disabling"));
+            QString("%1 troll exit mapping").arg(trollExitMapping ? "Enabling" : "Disabling"));
     }
 }
 
@@ -332,19 +333,20 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
 
 void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
 {
+    auto &promptFlags = m_commonData.promptFlags;
     using namespace mume_xml_parser_gmcp_detail;
     if (auto fog = obj.getString("fog")) {
         if (verbose_debugging) {
             qInfo().noquote() << "fog" << *fog;
         }
         if (fog == "-") {
-            m_promptFlags.setFogType(PromptFogEnum::LIGHT_FOG);
+            promptFlags.setFogType(PromptFogEnum::LIGHT_FOG);
         } else if (fog == "=") {
-            m_promptFlags.setFogType(PromptFogEnum::HEAVY_FOG);
+            promptFlags.setFogType(PromptFogEnum::HEAVY_FOG);
         } else {
             qWarning().noquote() << "prompt has unknown fog flag:" << *fog;
         }
-        m_promptFlags.setValid();
+        promptFlags.setValid();
     }
 
     if (auto light = obj.getString("light")) {
@@ -353,13 +355,13 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         }
         if (light == mmqt::QS_ASTERISK // indoor/sun (direct and indirect)
             || light == ")") {         // moon (direct and indirect)
-            m_promptFlags.setLit();
+            promptFlags.setLit();
         } else if (light == "o") { // darkness
-            m_promptFlags.setDark();
+            promptFlags.setDark();
         } else if (light != "!") { // ignore artifical light
             qWarning().noquote() << "prompt has unknown light flag:" << *light;
         }
-        m_promptFlags.setValid();
+        promptFlags.setValid();
     }
 
     if (auto weather = obj.getString("weather")) {
@@ -367,17 +369,17 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
             qInfo().noquote() << "weather" << *weather;
         }
         if (weather == mmqt::QS_TILDE) {
-            m_promptFlags.setWeatherType(PromptWeatherEnum::CLOUDS);
+            promptFlags.setWeatherType(PromptWeatherEnum::CLOUDS);
         } else if (weather == mmqt::QS_SQUOTE) {
-            m_promptFlags.setWeatherType(PromptWeatherEnum::RAIN);
+            promptFlags.setWeatherType(PromptWeatherEnum::RAIN);
         } else if (weather == mmqt::QS_DQUOTE) {
-            m_promptFlags.setWeatherType(PromptWeatherEnum::HEAVY_RAIN);
+            promptFlags.setWeatherType(PromptWeatherEnum::HEAVY_RAIN);
         } else if (weather == mmqt::QS_ASTERISK) {
-            m_promptFlags.setWeatherType(PromptWeatherEnum::SNOW);
+            promptFlags.setWeatherType(PromptWeatherEnum::SNOW);
         } else if (weather != mmqt::QS_SPACE) {
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
-        m_promptFlags.setValid();
+        promptFlags.setValid();
     }
 }
 
@@ -393,12 +395,12 @@ void MumeXmlParser::parseGmcpRoomInfo(const JsonObj &obj)
     using namespace mume_xml_parser_gmcp_detail;
     m_serverId = getServerId(obj);
 
-    m_terrain = getTerrain(obj);
+    m_commonData.terrain = getTerrain(obj);
     m_roomName = getRoomName(obj);
     m_roomDesc = getRoomDesc(obj);
     const auto misc = getMisc(obj, m_serverId);
-    m_connectedRoomFlags = misc.connectedRoomFlags;
-    m_exitsFlags = misc.exitsFlags;
+    m_commonData.connectedRoomFlags = misc.connectedRoomFlags;
+    m_commonData.exitsFlags = misc.exitsFlags;
     m_exitIds = misc.exitIds;
     //m_promptFlags = misc.promptFlags;
 }

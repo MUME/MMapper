@@ -2,36 +2,53 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../global/WeakHandle.h"
-#include "GmcpMessage.h"
 #include "GmcpModule.h"
 
-#include <string_view>
-
-#include <QByteArray>
-
+class GmcpMessage;
 class Proxy;
 
-// This is effectively a weak pointer to a virtual interface without the virtual;
-// it basically only exists to avoid giving the parser private access to Parser.
-class NODISCARD ProxyParserApi final
+class NODISCARD ProxyMudConnectionApi final
 {
 private:
-    WeakHandle<Proxy> m_proxy;
+    Proxy &m_proxy;
 
 public:
-    explicit ProxyParserApi(WeakHandle<Proxy> proxy)
-        : m_proxy(std::move(proxy))
+    explicit ProxyMudConnectionApi(Proxy &proxy)
+        : m_proxy{proxy}
     {}
 
 public:
     NODISCARD bool isConnected() const;
+    void connectToMud();
+    void disconnectFromMud();
+};
+
+class NODISCARD ProxyUserGmcpApi final
+{
+private:
+    Proxy &m_proxy;
 
 public:
-    void connectToMud() const;
-    void disconnectFromMud() const;
+    explicit ProxyUserGmcpApi(Proxy &proxy)
+        : m_proxy{proxy}
+    {}
 
 public:
-    void gmcpToUser(const GmcpMessage &msg) const;
-    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    NODISCARD bool isUserGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    void gmcpToUser(const GmcpMessage &msg);
+};
+
+class NODISCARD ProxyMudGmcpApi final
+{
+private:
+    Proxy &m_proxy;
+
+public:
+    explicit ProxyMudGmcpApi(Proxy &proxy)
+        : m_proxy{proxy}
+    {}
+
+public:
+    NODISCARD bool isMudGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
+    void gmcpToMud(const GmcpMessage &msg);
 };

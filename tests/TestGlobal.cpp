@@ -11,6 +11,7 @@
 #include "../src/global/Flags.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/global/IndexedVectorWithDefault.h"
+#include "../src/global/LineUtils.h"
 #include "../src/global/RAII.h"
 #include "../src/global/Signal2.h"
 #include "../src/global/StringView.h"
@@ -276,6 +277,11 @@ void TestGlobal::hideQDebugTest()
 void TestGlobal::indexedVectorWithDefaultTest()
 {
     test::testIndexedVectorWithDefault();
+}
+
+void TestGlobal::lineUtilsTest()
+{
+    test::testLineUtils();
 }
 
 namespace { // anonymous

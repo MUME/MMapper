@@ -224,25 +224,25 @@ void TestClock::parseWeatherTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"rise"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"rise"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"light"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"light"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "9:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"set"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"set"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "10:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"dark"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"dark"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Darkness {"what":"start"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Darkness {"what":"start"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
-    clock.slot_onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Moon {"what":"rise"})"));
+    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Moon {"what":"rise"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 }
 

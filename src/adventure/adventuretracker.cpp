@@ -19,16 +19,14 @@ AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent
     , m_observer{observer}
     , m_session{nullptr}
 {
-    m_observer.sig_sentToUserString.connect(m_lifetime, [this](const QString &str) {
-        this->AdventureTracker::slot_onUserText(str);
-    });
+    m_observer.sig2_sentToUserString.connect(m_lifetime,
+                                             [this](const QString &str) { onUserText(str); });
 
-    m_observer.sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
-        this->AdventureTracker::slot_onUserGmcp(gmcp);
-    });
+    m_observer.sig2_sentToUserGmcp.connect(m_lifetime,
+                                           [this](const GmcpMessage &gmcp) { onUserGmcp(gmcp); });
 }
 
-void AdventureTracker::slot_onUserText(const QString &line)
+void AdventureTracker::onUserText(const QString &line)
 {
     // These are sorted by order of frequency, which could create a problem for stateful
     // parsers that miss out on state because another parser returned before the parser
@@ -76,7 +74,7 @@ void AdventureTracker::slot_onUserText(const QString &line)
     }
 }
 
-void AdventureTracker::slot_onUserGmcp(const GmcpMessage &msg)
+void AdventureTracker::onUserGmcp(const GmcpMessage &msg)
 {
     // https://mume.org/help/generic_mud_communication_protocol
 

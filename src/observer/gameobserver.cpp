@@ -6,43 +6,31 @@
 
 #include "../global/parserutils.h"
 
-void GameObserver::slot_observeConnected()
+void GameObserver::observeConnected()
 {
-    sig_connected();
+    sig2_connected.invoke();
 }
 
-void GameObserver::slot_observeDisconnected()
+void GameObserver::observeSentToMud(const QString &input)
 {
-    sig_disconnected();
-}
-
-void GameObserver::slot_observeSentToMud(const QString &input)
-{
-    // sig_sentToMudBytes(input.toUtf8()); // FIXME: This does not make any sense anymore.
     auto str = input;
     ParserUtils::removeAnsiMarksInPlace(str);
-    sig_sentToMudString(str);
+    sig2_sentToMudString.invoke(str);
 }
 
-void GameObserver::slot_observeSentToUser(const QString &input, const bool goAhead)
+void GameObserver::observeSentToUser(const QString &input)
 {
-    // sig_sentToUserBytes(input.toUtf8(), goAhead); // FIXME: This does not make any sense anymore.
     auto str = input;
     ParserUtils::removeAnsiMarksInPlace(str);
-    sig_sentToUserString(str);
+    sig2_sentToUserString.invoke(str);
 }
 
-void GameObserver::slot_observeSentToMudGmcp(const GmcpMessage &m)
+void GameObserver::observeSentToUserGmcp(const GmcpMessage &m)
 {
-    sig_sentToMudGmcp(m);
+    sig2_sentToUserGmcp.invoke(m);
 }
 
-void GameObserver::slot_observeSentToUserGmcp(const GmcpMessage &m)
+void GameObserver::observeToggledEchoMode(const bool echo)
 {
-    sig_sentToUserGmcp(m);
-}
-
-void GameObserver::slot_observeToggledEchoMode(const bool echo)
-{
-    sig_toggledEchoMode(echo);
+    sig2_toggledEchoMode.invoke(echo);
 }

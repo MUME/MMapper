@@ -59,8 +59,6 @@ private:
     ServerList m_servers;
     QPointer<Proxy> m_proxy;
 
-    bool m_accept = true;
-
 public:
     explicit ConnectionListener(MapData &,
                                 Mmapper2PathMachine &,

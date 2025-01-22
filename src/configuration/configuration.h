@@ -171,7 +171,8 @@ public:
             FixedPoint<1> layerHeight{10, 100, 15};
 
         public:
-            NODISCARD ConnectionSet registerChangeCallback(ChangeMonitor::Function callback);
+            void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                                        const ChangeMonitor::Function &callback);
 
             Advanced();
         } advanced;
@@ -325,10 +326,10 @@ public:
             m_changeMonitor.notifyAll();
         }
 
-        NODISCARD ChangeMonitor::CallbackLifetime registerChangeCallback(
-            ChangeMonitor::Function callback)
+        void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                                    const ChangeMonitor::Function &callback)
         {
-            return m_changeMonitor.registerChangeCallback(std::move(callback));
+            return m_changeMonitor.registerChangeCallback(lifetime, callback);
         }
 
     private:

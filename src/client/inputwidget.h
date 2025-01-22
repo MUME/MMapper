@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
 #include <iterator>
@@ -68,6 +69,24 @@ public:
     NODISCARD bool atEnd() const { return m_iterator == end(); }
 };
 
+struct NODISCARD InputWidgetOutputs
+{
+public:
+    explicit InputWidgetOutputs() = default;
+    virtual ~InputWidgetOutputs();
+    DELETE_CTORS_AND_ASSIGN_OPS(InputWidgetOutputs);
+
+public:
+    void sendUserInput(const QString &msg) { virt_sendUserInput(msg); }
+    void displayMessage(const QString &msg) { virt_displayMessage(msg); }
+    void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
+
+private:
+    virtual void virt_sendUserInput(const QString &msg) = 0;
+    virtual void virt_displayMessage(const QString &msg) = 0;
+    virtual void virt_showMessage(const QString &msg, int timeout) = 0;
+};
+
 class NODISCARD_QOBJECT InputWidget final : public QPlainTextEdit
 {
     Q_OBJECT
@@ -76,13 +95,14 @@ private:
     using base = QPlainTextEdit;
 
 private:
+    InputWidgetOutputs &m_outputs;
     QString m_tabFragment;
     TabHistory m_tabHistory;
     InputHistory m_inputHistory;
     bool m_tabbing = false;
 
 public:
-    explicit InputWidget(QWidget *parent);
+    explicit InputWidget(QWidget *parent, InputWidgetOutputs &);
     ~InputWidget() final;
 
     NODISCARD QSize sizeHint() const override;
@@ -104,10 +124,5 @@ private:
     void backwardHistory();
 
 private:
-    void sendUserInput(const QString &msg) { emit sig_sendUserInput(msg); }
-
-signals:
-    void sig_sendUserInput(const QString &);
-    void sig_displayMessage(const QString &);
-    void sig_showMessage(const QString &, int);
+    void sendUserInput(const QString &msg) { m_outputs.sendUserInput(msg); }
 };

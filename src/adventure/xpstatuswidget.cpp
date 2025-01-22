@@ -31,8 +31,7 @@ XPStatusWidget::XPStatusWidget(AdventureTracker &at, QStatusBar *const sb, QWidg
             this,
             &XPStatusWidget::slot_updatedSession);
 
-    m_connections += setConfig().adventurePanel.registerChangeCallback(
-        [this]() { updateContent(); });
+    setConfig().adventurePanel.registerChangeCallback(m_lifetime, [this]() { updateContent(); });
 }
 
 void XPStatusWidget::updateContent()

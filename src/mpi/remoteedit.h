@@ -34,6 +34,9 @@ public:
     explicit RemoteEdit(QObject *parent);
     ~RemoteEdit() final = default;
 
+public:
+    void onDisconnected();
+
 protected:
     void cancel(const RemoteEditSession *);
     void save(const RemoteEditSession *);
@@ -44,13 +47,18 @@ private:
         return m_greatestUsedId == UINT_MAX ? 0 : m_greatestUsedId + 1;
     }
     void addSession(const RemoteSession &, const QString &, const QString &);
-    void removeSession(const RemoteEditSession *session);
+    void removeSession(const RemoteEditSession &session);
+
+private:
+    void trySave(const RemoteEditSession &session);
+    void sendToMume(const RemoteEditSession &session);
+    void trySaveLocally(const RemoteEditSession &session);
 
 signals:
-    void sig_sendToSocket(const RawBytes &);
+    void sig_remoteEditCancel(const RemoteEditMessageBytes &sessionId);
+    void sig_remoteEditSave(const RemoteEditMessageBytes &sessionId, const Latin1Bytes &content);
 
 public slots:
     void slot_remoteView(const QString &, const QString &);
     void slot_remoteEdit(const RemoteSession &, const QString &, const QString &);
-    void slot_onDisconnected();
 };

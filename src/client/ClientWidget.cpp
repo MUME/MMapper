@@ -5,7 +5,6 @@
 #include "ClientWidget.h"
 
 #include "../configuration/configuration.h"
-#include "../global/MakeQPointer.h"
 #include "ClientTelnet.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
@@ -19,70 +18,174 @@
 
 ClientWidget::ClientWidget(QWidget *const parent)
     : QWidget(parent)
-    , m_ui(std::make_unique<Ui::ClientWidget>())
-    , m_telnet(mmqt::makeQPointer<ClientTelnet>(this))
 {
     setWindowTitle("MMapper Client");
 
-    auto &ui = deref(m_ui);
-    ui.setupUi(this);
-    std::ignore = deref(ui.display);
-    std::ignore = deref(ui.input);
+    initPipeline();
+
+    auto &ui = getUi();
 
     // Port
     ui.port->setText(QString("%1").arg(getConfig().connection.localPort));
 
     ui.playButton->setFocus();
-    connect(ui.playButton, &QAbstractButton::clicked, this, [this]() {
-        deref(m_ui).parent->setCurrentIndex(1);
-        m_telnet->connectToHost();
+    QObject::connect(ui.playButton, &QAbstractButton::clicked, this, [this]() {
+        getUi().parent->setCurrentIndex(1);
+        getTelnet().connectToHost();
     });
 
     // Keyboard input on the display widget should be redirected to the input widget
     ui.display->setFocusProxy(ui.input);
 
     ui.input->installEventFilter(this);
-
-    // Connect the signals/slots
-    connect(m_telnet, &ClientTelnet::sig_disconnected, this, [this]() {
-        deref(deref(m_ui).display).slot_displayText("\n\n\n");
-        emit sig_relayMessage("Disconnected using the integrated client");
-    });
-    connect(m_telnet, &ClientTelnet::sig_connected, this, [this]() {
-        emit sig_relayMessage("Connected using the integrated client");
-
-        // Focus should be on the input
-        deref(m_ui).input->setFocus();
-    });
-    connect(m_telnet, &ClientTelnet::sig_socketError, this, [this](const QString &errorStr) {
-        deref(deref(m_ui).display).slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
-    });
-
-    // Input
-    connect(ui.input,
-            &StackedInputWidget::sig_sendUserInput,
-            m_telnet,
-            &ClientTelnet::slot_sendToMud);
-    connect(m_telnet,
-            &ClientTelnet::sig_echoModeChanged,
-            ui.input,
-            &StackedInputWidget::slot_toggleEchoMode);
-    connect(ui.input, &StackedInputWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
-
-    // Display
-    connect(ui.input,
-            &StackedInputWidget::sig_displayMessage,
-            ui.display,
-            &DisplayWidget::slot_displayText);
-    connect(m_telnet, &ClientTelnet::sig_sendToUser, ui.display, &DisplayWidget::slot_displayText);
-    connect(ui.display, &DisplayWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
-    connect(ui.display,
-            &DisplayWidget::sig_windowSizeChanged,
-            m_telnet,
-            &ClientTelnet::slot_onWindowSizeChanged);
 }
 
 ClientWidget::~ClientWidget() = default;
+
+ClientWidget::Pipeline::~Pipeline()
+{
+    objs.clientTelnet.reset();
+    objs.ui.reset();
+}
+
+void ClientWidget::initPipeline()
+{
+    m_pipeline.objs.ui = std::make_unique<Ui::ClientWidget>();
+    getUi().setupUi(this); // creates stacked input and display
+
+    initStackedInputWidget();
+    initDisplayWidget();
+
+    initClientTelnet();
+}
+
+void ClientWidget::initStackedInputWidget()
+{
+    class NODISCARD LocalStackedInputWidgetOutputs final : public StackedInputWidgetOutputs
+    {
+    private:
+        ClientWidget &m_self;
+
+    public:
+        explicit LocalStackedInputWidgetOutputs(ClientWidget &self)
+            : m_self{self}
+        {}
+
+    private:
+        NODISCARD ClientWidget &getSelf() { return m_self; }
+        NODISCARD ClientTelnet &getTelnet() { return getSelf().getTelnet(); }
+        NODISCARD DisplayWidget &getDisplay() { return getSelf().getDisplay(); }
+
+    private:
+        void virt_sendUserInput(const QString &msg, EchoMode /*echoMode*/) final
+        {
+            getTelnet().sendToMud(msg);
+        }
+
+        void virt_displayMessage(const QString &msg) final { getDisplay().slot_displayText(msg); }
+
+        void virt_showMessage(const QString &msg, MAYBE_UNUSED int timeout) final
+        {
+            // REVISIT: Why is timeout ignored?
+            getSelf().slot_onShowMessage(msg);
+        }
+    };
+    auto &out = m_pipeline.outputs.stackedInputWidgetOutputs;
+    out = std::make_unique<LocalStackedInputWidgetOutputs>(*this);
+    getInput().init(deref(out));
+}
+void ClientWidget::initDisplayWidget()
+{
+    class NODISCARD LocalDisplayWidgetOutputs final : public DisplayWidgetOutputs
+    {
+    private:
+        ClientWidget &m_self;
+
+    public:
+        explicit LocalDisplayWidgetOutputs(ClientWidget &self)
+            : m_self{self}
+        {}
+
+    private:
+        NODISCARD ClientWidget &getSelf() { return m_self; }
+        NODISCARD ClientTelnet &getTelnet() { return getSelf().getTelnet(); }
+
+    private:
+        void virt_showMessage(const QString &msg, int /*timeout*/) final
+        {
+            getSelf().slot_onShowMessage(msg);
+        }
+        void virt_windowSizeChanged(const int width, const int height) final
+        {
+            getTelnet().onWindowSizeChanged(width, height);
+        }
+    };
+    auto &out = m_pipeline.outputs.displayWidgetOutputs;
+    out = std::make_unique<LocalDisplayWidgetOutputs>(*this);
+    getDisplay().init(deref(out));
+}
+void ClientWidget::initClientTelnet()
+{
+    class NODISCARD LocalClientTelnetOutputs final : public ClientTelnetOutputs
+    {
+    private:
+        ClientWidget &m_self;
+
+    public:
+        explicit LocalClientTelnetOutputs(ClientWidget &self)
+            : m_self{self}
+        {}
+
+    private:
+        ClientWidget &getClient() { return m_self; }
+        DisplayWidget &getDisplay() { return getClient().getDisplay(); }
+        StackedInputWidget &getInput() { return getClient().getInput(); }
+
+    private:
+        void virt_connected() final
+        {
+            getClient().relayMessage("Connected using the integrated client");
+            // Focus should be on the input
+            getInput().setFocus();
+        }
+        void virt_disconnected() final
+        {
+            getDisplay().slot_displayText("\n\n\n");
+            getClient().relayMessage("Disconnected using the integrated client");
+        }
+        void virt_socketError(const QString &errorStr) final
+        {
+            getDisplay().slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
+        }
+        void virt_echoModeChanged(bool echo) final
+        {
+            getInput().setEchoMode(echo ? EchoMode::Visible : EchoMode::Hidden);
+        }
+        void virt_sendToUser(const QString &str) final
+        {
+            //
+            getDisplay().slot_displayText(str);
+        }
+    };
+    auto &out = m_pipeline.outputs.clientTelnetOutputs;
+    out = std::make_unique<LocalClientTelnetOutputs>(*this);
+    m_pipeline.objs.clientTelnet = std::make_unique<ClientTelnet>(deref(out));
+}
+
+DisplayWidget &ClientWidget::getDisplay()
+{
+    return deref(getUi().display);
+}
+
+StackedInputWidget &ClientWidget::getInput()
+{
+    return deref(getUi().input);
+}
+
+ClientTelnet &ClientWidget::getTelnet() // NOLINT (no, this shouldn't be const)
+{
+    return deref(m_pipeline.objs.clientTelnet);
+}
 
 void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 {
@@ -94,23 +197,23 @@ void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
     QTimer::singleShot(500, [this]() {
         if (!isVisible()) {
             // Disconnect if the widget is closed or minimized
-            m_telnet->disconnectFromHost();
+            getTelnet().disconnectFromHost();
 
         } else {
             // Connect if the client was previously activated and the widget is re-opened
-            m_telnet->connectToHost();
+            getTelnet().connectToHost();
         }
     });
 }
 
 bool ClientWidget::isUsingClient() const
 {
-    return deref(m_ui).parent->currentIndex() != 0;
+    return getUi().parent->currentIndex() != 0;
 }
 
 void ClientWidget::slot_onShowMessage(const QString &message)
 {
-    emit sig_relayMessage(message);
+    relayMessage(message);
 }
 
 void ClientWidget::slot_saveLog()
@@ -142,13 +245,13 @@ void ClientWidget::slot_saveLog()
     const auto &fileNames = result.filenames;
 
     if (fileNames.isEmpty()) {
-        emit sig_relayMessage(tr("No filename provided"));
+        relayMessage(tr("No filename provided"));
         return;
     }
 
     QFile document(fileNames[0]);
     if (!document.open(QFile::WriteOnly | QFile::Text)) {
-        emit sig_relayMessage(QString("Error occurred while opening %1").arg(document.fileName()));
+        relayMessage(QString("Error occurred while opening %1").arg(document.fileName()));
         return;
     }
 
@@ -158,7 +261,7 @@ void ClientWidget::slot_saveLog()
         const QString string = isHtml ? doc.toHtml() : doc.toPlainText();
         return string.toUtf8();
     };
-    document.write(getDocStringUtf8(deref(deref(m_ui).display).document(), result.isHtml));
+    document.write(getDocStringUtf8(getDisplay().document(), result.isHtml));
     document.close();
 }
 
@@ -166,7 +269,7 @@ bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
 {
     if (event->type() == QEvent::KeyPress) {
         if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
-            Ui::ClientWidget &ui = deref(m_ui);
+            Ui::ClientWidget &ui = getUi();
             DisplayWidget &display = deref(ui.display);
             StackedInputWidget &input = deref(ui.input);
             if (keyEvent->matches(QKeySequence::Copy)) {

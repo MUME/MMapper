@@ -20,17 +20,23 @@
 #include <QObject>
 #include <QString>
 
-ClientTelnet::ClientTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, parent, TelnetTermTypeBytes{"MMapper"})
+ClientTelnetOutputs::~ClientTelnetOutputs() = default;
+
+ClientTelnet::ClientTelnet(ClientTelnetOutputs &output)
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, TelnetTermTypeBytes{"MMapper"})
+    , m_output{output}
 {
     auto &socket = m_socket;
-    connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
-    connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);
-    connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::slot_onReadyRead);
-    connect(&socket,
-            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
-            this,
-            &ClientTelnet::slot_onError);
+    QObject::connect(&socket, &QAbstractSocket::connected, &m_dummy, [this]() { onConnected(); });
+    QObject::connect(&socket, &QAbstractSocket::disconnected, &m_dummy, [this]() {
+        onDisconnected();
+    });
+
+    QObject::connect(&socket, &QIODevice::readyRead, &m_dummy, [this]() { onReadyRead(); });
+    QObject::connect(&socket,
+                     QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
+                     &m_dummy,
+                     [this](QAbstractSocket::SocketError err) { onError(err); });
 }
 
 ClientTelnet::~ClientTelnet()
@@ -53,12 +59,12 @@ void ClientTelnet::connectToHost()
     socket.waitForConnected(3000);
 }
 
-void ClientTelnet::slot_onConnected()
+void ClientTelnet::onConnected()
 {
     reset();
     m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    emit sig_connected();
+    m_output.connected();
 }
 
 void ClientTelnet::disconnectFromHost()
@@ -66,14 +72,14 @@ void ClientTelnet::disconnectFromHost()
     m_socket.disconnectFromHost();
 }
 
-void ClientTelnet::slot_onDisconnected()
+void ClientTelnet::onDisconnected()
 {
     reset();
-    emit sig_echoModeChanged(true);
-    emit sig_disconnected();
+    m_output.echoModeChanged(true);
+    m_output.disconnected();
 }
 
-void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
+void ClientTelnet::onError(QAbstractSocket::SocketError error)
 {
     if (error == QAbstractSocket::RemoteHostClosedError) {
         // The connection closing isn't an error
@@ -82,21 +88,20 @@ void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
 
     QString err = m_socket.errorString();
     m_socket.abort();
-    emit sig_socketError(err);
+    m_output.socketError(err);
 }
 
-void ClientTelnet::slot_sendToMud(const QString &data)
+void ClientTelnet::sendToMud(const QString &data)
 {
     submitOverTelnet(data, false);
 }
 
 void ClientTelnet::virt_sendRawData(const TelnetIacBytes &data)
 {
-    m_sentBytes += data.length();
     m_socket.write(data.getQByteArray());
 }
 
-void ClientTelnet::slot_onWindowSizeChanged(const int width, const int height)
+void ClientTelnet::onWindowSizeChanged(const int width, const int height)
 {
     auto &current = m_currentNaws;
     if (current.width == width && current.height == height) {
@@ -115,7 +120,7 @@ void ClientTelnet::slot_onWindowSizeChanged(const int width, const int height)
     }
 }
 
-void ClientTelnet::slot_onReadyRead()
+void ClientTelnet::onReadyRead()
 {
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
@@ -126,20 +131,22 @@ void ClientTelnet::slot_onReadyRead()
 
 void ClientTelnet::virt_sendToMapper(const RawBytes &data, bool /*goAhead*/)
 {
-    // FIXME FIXME FIXME: specifiy the charset conversion using getEncoding() ...
-    QString out = data.getQByteArray();
+    // The encoding for the built-in client is always Utf8.
+    assert(getEncoding() == CharacterEncodingEnum::UTF8);
+    QString out = QString::fromUtf8(data.getQByteArray());
 
     // Replace BEL character with an application beep
+    // REVISIT: This seems like the WRONG place to do this.
     static constexpr const QChar BEL = mmqt::QC_ALERT;
     if (out.contains(BEL)) {
         out.remove(BEL);
         QApplication::beep();
     }
 
-    emit sig_sendToUser(out);
+    m_output.sendToUser(out);
 }
 
 void ClientTelnet::virt_receiveEchoMode(const bool mode)
 {
-    emit sig_echoModeChanged(mode);
+    m_output.echoModeChanged(mode);
 }

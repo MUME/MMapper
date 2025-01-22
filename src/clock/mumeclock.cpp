@@ -7,6 +7,10 @@
 #include "../global/Array.h"
 #include "../proxy/GmcpMessage.h"
 #include "mumemoment.h"
+#if 1
+// FIXME: move MsspTime somewhere more appropriate, or just use MumeMoment.
+#include "../proxy/MudTelnet.h"
+#endif
 
 #include <cassert>
 
@@ -110,9 +114,8 @@ MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const p
     , m_precision(MumeClockPrecisionEnum::UNSET)
     , m_observer{observer}
 {
-    m_observer.sig_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
-        this->MumeClock::slot_onUserGmcp(gmcp);
-    });
+    m_observer.sig2_sentToUserGmcp.connect(m_lifetime,
+                                           [this](const GmcpMessage &gmcp) { onUserGmcp(gmcp); });
 }
 
 MumeClock::MumeClock(GameObserver &observer)
@@ -219,7 +222,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     m_mumeStartEpoch = newStartEpoch;
 }
 
-void MumeClock::slot_onUserGmcp(const GmcpMessage &msg)
+void MumeClock::onUserGmcp(const GmcpMessage &msg)
 {
     if (!(msg.isEventDarkness() || msg.isEventSun()) || !msg.getJsonDocument().has_value()
         || !msg.getJsonDocument()->isObject()) {
@@ -354,7 +357,7 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
     m_mumeStartEpoch = newStartEpoch;
 }
 
-void MumeClock::parseMSSP(const int year, const int month, const int day, const int hour)
+void MumeClock::parseMSSP(const MsspTime &msspTime)
 {
     // We should not parse the fuzzy MSSP time if we already have a greater precision.
     if (getPrecision() > MumeClockPrecisionEnum::DAY) {
@@ -364,10 +367,10 @@ void MumeClock::parseMSSP(const int year, const int month, const int day, const 
     const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
 
     auto moment = getMumeMoment();
-    moment.year = year;
-    moment.month = month;
-    moment.day = day;
-    moment.hour = hour;
+    moment.year = msspTime.year;
+    moment.month = msspTime.month;
+    moment.day = msspTime.day;
+    moment.hour = msspTime.hour;
     // Don't override minute, since we don't get the from the MSSP time.
 
     const int64_t newStartEpoch = secsSinceEpoch - moment.toSeconds();

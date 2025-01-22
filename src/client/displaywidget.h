@@ -68,6 +68,25 @@ struct NODISCARD AnsiTextHelper final
 
 extern void setAnsiText(QTextEdit *pEdit, std::string_view text);
 
+struct DisplayWidgetOutputs
+{
+public:
+    explicit DisplayWidgetOutputs() = default;
+    virtual ~DisplayWidgetOutputs();
+    DELETE_CTORS_AND_ASSIGN_OPS(DisplayWidgetOutputs);
+
+public:
+    void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
+    void windowSizeChanged(const int width, const int height)
+    {
+        virt_windowSizeChanged(width, height);
+    }
+
+private:
+    virtual void virt_showMessage(const QString &msg, int timeout) = 0;
+    virtual void virt_windowSizeChanged(int width, int height) = 0;
+};
+
 class NODISCARD_QOBJECT DisplayWidget final : public QTextBrowser
 {
     Q_OBJECT
@@ -76,12 +95,26 @@ private:
     using base = QTextBrowser;
 
 private:
+    DisplayWidgetOutputs *m_output = nullptr;
     AnsiTextHelper m_ansiTextHelper;
     bool m_canCopy = false;
 
 public:
     explicit DisplayWidget(QWidget *parent);
     ~DisplayWidget() final;
+
+public:
+    void init(DisplayWidgetOutputs &output)
+    {
+        if (m_output != nullptr) {
+            std::abort();
+        }
+        m_output = &output;
+    }
+
+private:
+    // if this fails, it means you forgot to call init
+    NODISCARD DisplayWidgetOutputs &getOutput() { return deref(m_output); }
 
 private:
     NODISCARD const QFont &getDefaultFont() const
@@ -95,10 +128,6 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
-
-signals:
-    void sig_showMessage(const QString &, int);
-    void sig_windowSizeChanged(int, int);
 
 public slots:
     void slot_displayText(const QString &str);

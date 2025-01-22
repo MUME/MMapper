@@ -4,25 +4,56 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
 #include "../global/io.h"
+#include "../global/utils.h"
 #include "../proxy/AbstractTelnet.h"
 
 #include <QAbstractSocket>
 #include <QObject>
 #include <QTcpSocket>
 
-class NODISCARD_QOBJECT ClientTelnet final : public AbstractTelnet
+struct ClientTelnetOutputs
 {
-    Q_OBJECT
-
-private:
-    io::buffer<(1 << 15)> m_buffer;
-    QTcpSocket m_socket;
+    explicit ClientTelnetOutputs() = default;
+    virtual ~ClientTelnetOutputs();
+    DELETE_CTORS_AND_ASSIGN_OPS(ClientTelnetOutputs);
 
 public:
-    explicit ClientTelnet(QObject *parent);
+    void connected() { virt_connected(); }
+    void disconnected() { virt_disconnected(); }
+    void socketError(const QString &msg) { virt_socketError(msg); }
+    /** toggles echo mode for passwords */
+    void echoModeChanged(const bool echo) { virt_echoModeChanged(echo); }
+    /** Submits Telnet/text data back to the client */
+    void sendToUser(const QString &data) { virt_sendToUser(data); }
+
+private:
+    virtual void virt_connected() = 0;
+    virtual void virt_disconnected() = 0;
+    virtual void virt_socketError(const QString &msg) = 0;
+    /** toggles echo mode for passwords */
+    virtual void virt_echoModeChanged(bool echo) = 0;
+    /** Submits Telnet/text data back to the client */
+    virtual void virt_sendToUser(const QString &data) = 0;
+};
+
+class NODISCARD ClientTelnet final : AbstractTelnet
+{
+private:
+    ClientTelnetOutputs &m_output;
+    io::buffer<(1 << 15)> m_buffer;
+    QTcpSocket m_socket;
+    QObject m_dummy;
+
+public:
+    explicit ClientTelnet(ClientTelnetOutputs &output);
     ~ClientTelnet() final;
 
+private:
+    NODISCARD ClientTelnetOutputs &getOutput() { return m_output; }
+
+public:
     void connectToHost();
     void disconnectFromHost();
 
@@ -31,28 +62,18 @@ private:
     void virt_receiveEchoMode(bool) final;
     void virt_sendRawData(const TelnetIacBytes &data) final;
 
-signals:
-    /** Submits Telnet/text data back to the client */
-    void sig_sendToUser(const QString &data);
-
-    /** toggles echo mode for passwords */
-    void sig_echoModeChanged(bool);
-    void sig_disconnected();
-    void sig_connected();
-    void sig_socketError(const QString &);
-
-public slots:
+public:
     /** Window size has changed - informs the server about it */
-    void slot_onWindowSizeChanged(int width, int height);
+    void onWindowSizeChanged(int width, int height);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void slot_sendToMud(const QString &data);
+    void sendToMud(const QString &data);
 
-protected slots:
-    void slot_onConnected();
-    void slot_onDisconnected();
-    void slot_onError(QAbstractSocket::SocketError);
+protected:
+    void onConnected();
+    void onDisconnected();
+    void onError(QAbstractSocket::SocketError);
 
     /** Reads, parses telnet, and so forth */
-    void slot_onReadyRead();
+    void onReadyRead();
 };

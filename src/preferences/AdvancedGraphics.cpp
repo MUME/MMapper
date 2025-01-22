@@ -225,18 +225,20 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
         graphicsSettingsChanged();
     });
 
-    m_connections = MapCanvasConfig::registerChangeCallback(
-        [this, checkboxDiag, checkbox3d, autoTilt]() -> void {
-            SignalBlocker sb1{*checkboxDiag};
-            SignalBlocker sb2{*checkbox3d};
-            SignalBlocker sb3{*autoTilt};
-            for (auto &ssb : m_ssbs) {
-                ssb->forcedUpdate();
-            }
-            checkboxDiag->setChecked(MapCanvasConfig::getShowPerfStats());
-            checkbox3d->setChecked(MapCanvasConfig::isIn3dMode());
-            autoTilt->setChecked(MapCanvasConfig::isAutoTilt());
-        });
+    MapCanvasConfig::registerChangeCallback(m_lifetime,
+                                            [this, checkboxDiag, checkbox3d, autoTilt]() -> void {
+                                                SignalBlocker sb1{*checkboxDiag};
+                                                SignalBlocker sb2{*checkbox3d};
+                                                SignalBlocker sb3{*autoTilt};
+                                                for (auto &ssb : m_ssbs) {
+                                                    ssb->forcedUpdate();
+                                                }
+                                                checkboxDiag->setChecked(
+                                                    MapCanvasConfig::getShowPerfStats());
+                                                checkbox3d->setChecked(
+                                                    MapCanvasConfig::isIn3dMode());
+                                                autoTilt->setChecked(MapCanvasConfig::isAutoTilt());
+                                            });
 }
 
 AdvancedGraphicsGroupBox::~AdvancedGraphicsGroupBox() = default;

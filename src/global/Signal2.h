@@ -3,7 +3,7 @@
 // Copyright (C) 2024 The MMapper Authors
 
 #include "Badge.h"
-#include "Signal.h"
+#include "logging.h"
 #include "macros.h"
 #include "utils.h"
 
@@ -35,6 +35,15 @@ public:
     using Function = std::function<void(Args...)>;
 
 private:
+    NODISCARD static constexpr bool inline hasValidArgTypes()
+    {
+        constexpr bool noReferences = !std::disjunction_v<std::is_reference<Args>...>;
+        constexpr bool allCopyConstructible = std::conjunction_v<std::is_copy_constructible<Args>...>;
+        return noReferences && allCopyConstructible;
+    }
+    static_assert(hasValidArgTypes());
+
+private:
     struct NODISCARD Data final
     {
         Function function;
@@ -52,34 +61,50 @@ public:
     ~Signal2() = default;
     DELETE_CTORS_AND_ASSIGN_OPS(Signal2);
 
+private:
+    NODISCARD static bool try_invoke(const Function &function, const std::tuple<Args...> &tuple)
+    {
+        try {
+            std::apply(function, tuple);
+            return true;
+        } catch (const std::exception &ex) {
+            MMLOG_WARNING() << "Exception in signal handler: [" << ex.what() << "]";
+        } catch (...) {
+            MMLOG_WARNING() << "Unknown exception in signal handler.";
+        }
+        return false;
+    }
+
+private:
+    void invoke_guarded(const std::tuple<Args...> &tuple)
+    {
+        utils::erase_if(m_callbacks, [&tuple](const auto &data) -> bool {
+            // here we avoid std::ignore to guarantee the object stays alive
+            // for the duration of the call, just in case it matters.
+            if (MAYBE_UNUSED const auto ignored = data.weak.lock()) {
+                // note: logic inverted because try_invoke returns success,
+                // but we return whether to erase.
+                return !try_invoke(data.function, tuple);
+            }
+            return true; // erase
+        });
+    }
+
 public:
     void invoke(Args... args)
     {
-        static_assert(sizeof...(args) == 0 || Connection<Args...>::hasValidArgTypes());
+        static_assert(sizeof...(args) == 0 || hasValidArgTypes());
         if (m_invoking) {
             throw std::runtime_error("recursion");
         }
 
         m_invoking = true;
-
-        utils::erase_if(m_callbacks,
-                        [tuple = std::tuple<Args...>(args...)](const auto &data) -> bool {
-                            // here we avoid std::ignore to guarantee the object stays alive
-                            // for the duration of the call, just in case it matters.
-                            if (MAYBE_UNUSED const auto ignored = data.weak.lock()) {
-                                try {
-                                    std::apply(data.function, tuple);
-                                    return false;
-                                } catch (const std::exception &ex) {
-                                    qWarning().nospace()
-                                        << "Exception in signal handler: [" << ex.what() << "]";
-                                } catch (...) {
-                                    qWarning() << "Unknown exception in signal handler.";
-                                }
-                            }
-                            return true;
-                        });
-
+        try {
+            invoke_guarded(std::tuple<Args...>(std::move(args)...));
+        } catch (...) {
+            m_invoking = false;
+            throw;
+        }
         m_invoking = false;
     }
     void operator()(Args... args) { invoke(std::move(args)...); }
@@ -87,6 +112,9 @@ public:
 public:
     void connect(const Signal2Lifetime &lifetime, Function f)
     {
+        if (m_invoking) {
+            throw std::runtime_error("cannot connect while invoking");
+        }
         if (auto shared = lifetime.getObj()) {
             m_callbacks.emplace_back(std::move(f), shared);
         } else {

@@ -12,6 +12,7 @@
 #include <QObject>
 #include <QString>
 
+static constexpr const char *const MPI_PREFIX = "~$#E";
 using char_consts::C_NEWLINE;
 
 NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
@@ -21,19 +22,16 @@ NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
     case TelnetDataEnum::CRLF:
         return true;
     case TelnetDataEnum::Prompt:
-    case TelnetDataEnum::Delay:
-    case TelnetDataEnum::Unknown:
+    case TelnetDataEnum::Backspace:
+    case TelnetDataEnum::Empty:
     default:
         return false;
     }
 }
 
-void MpiFilter::parseNewMudInput(const TelnetData &data)
-{
-    emit sig_parseNewMudInput(data);
-}
+MpiFilterOutputs::~MpiFilterOutputs() = default;
 
-void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
+void MpiFilter::analyzeNewMudInput(const TelnetData &data)
 {
     if (m_receivingMpi) {
         if (data.line.length() <= m_remaining) {
@@ -49,7 +47,7 @@ void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
             TelnetData remainingData;
             remainingData.type = data.type;
             remainingData.line = RawBytes{data.line.getQByteArray().right(m_remaining)};
-            parseNewMudInput(remainingData);
+            m_outputs.onParseNewMudInput(remainingData);
         }
         if (m_remaining == 0) {
             m_receivingMpi = false;
@@ -59,7 +57,8 @@ void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
     } else {
         // mume protocol spec requires LF before start of MPI message
         if (endsInLinefeed(m_previousType)) {
-            if (!m_receivingMpi && data.line.length() >= 6 && data.line.startsWith("~$#E")) {
+            // REVISIT: static analysis says !m_receivingMpi is always true (looks correct).
+            if (!m_receivingMpi && data.line.length() >= 6 && data.line.startsWith(MPI_PREFIX)) {
                 m_buffer.clear();
                 m_command = data.line.at(4);
                 m_remaining = data.line.getQByteArray().mid(5).simplified().toInt();
@@ -69,8 +68,19 @@ void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
                 }
             }
         }
+        // REVISIT: static analysis says !m_receivingMpi is always true,
+        // but it must not see the m_receivingMpi = true in the block above.
         if (!m_receivingMpi) {
-            parseNewMudInput(data);
+            const volatile bool filterBareNewlines = false;
+            if (filterBareNewlines && data.type == TelnetDataEnum::LF
+                && data.line.getQByteArray() == "\n") {
+                // this is a special case used by Mume to force MPI messages to follow a newline
+                // after a prompt; this only occurs when Mume sends an MPI as the first text
+                // of a command. All non-MPI messages use CRLF instead of just bare newlines.
+                qInfo() << "Filtered bare newline.";
+            } else {
+                m_outputs.onParseNewMudInput(data);
+            }
         }
     }
 
@@ -119,7 +129,7 @@ void MpiFilter::parseEditMessage(const RawBytes &buffer)
     QString body = QString::fromLatin1(payload);      // MPI is always Latin1
 
     qDebug() << "Edit" << sessionId << title << "body.length=" << body.length();
-    emit sig_editMessage(sessionId, title, body);
+    m_outputs.onEditMessage(sessionId, title, body);
 }
 
 void MpiFilter::parseViewMessage(const RawBytes &buffer)
@@ -138,5 +148,57 @@ void MpiFilter::parseViewMessage(const RawBytes &buffer)
     QString body = QString::fromLatin1(payload);      // MPI is always Latin1
 
     qDebug() << "Message" << title << "body.length=" << body.length();
-    emit sig_viewMessage(title, body);
+    m_outputs.onViewMessage(title, body);
+}
+
+MpiFilterToMud::~MpiFilterToMud() = default;
+
+void MpiFilterToMud::cancelRemoteEdit(const RemoteEditMessageBytes &sessionId)
+{
+    const QString &sessionIdstr = QString("C%1\n").arg(sessionId.getQByteArray().constData());
+    const QByteArray buffer = QString("%1E%2\n%3")
+                                  .arg(MPI_PREFIX)
+                                  .arg(sessionIdstr.length())
+                                  .arg(sessionIdstr)
+                                  .toLatin1(); // MPI requires latin1
+
+    submitMpi(RawBytes{buffer});
+}
+
+void MpiFilterToMud::saveRemoteEdit(const RemoteEditMessageBytes &sessionId,
+                                    const Latin1Bytes &content)
+{
+    auto payload = content.getQByteArray();
+
+    // The body contents have to be followed by a LF if they are not empty
+    if (!payload.isEmpty() && !payload.endsWith(char_consts::C_NEWLINE)) {
+        payload.append(char_consts::C_NEWLINE);
+    }
+
+    const QString &sessionIdstr = QString("E%1\n").arg(sessionId.getQByteArray().constData());
+    QByteArray buffer = QString("%1E%2\n%3")
+                            .arg(MPI_PREFIX)
+                            .arg(payload.length() + sessionIdstr.length())
+                            .arg(sessionIdstr)
+                            .toLatin1(); // MPI is always Latin1
+
+    buffer += payload;
+
+    submitMpi(RawBytes{buffer});
+}
+void MpiFilterToMud::submitMpi(const RawBytes &bytes)
+{
+    assert(isMpiMessage(bytes));
+    // consider validating the content of the message here.
+    virt_submitMpi(bytes);
+}
+
+bool isMpiMessage(const RawBytes &bytes)
+{
+    return !bytes.isEmpty() && bytes.startsWith(MPI_PREFIX) && bytes.back() == C_NEWLINE;
+}
+
+bool hasMpiPrefix(const QString &s)
+{
+    return s.startsWith(MPI_PREFIX);
 }

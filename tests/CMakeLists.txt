@@ -107,6 +107,8 @@ set(proxy_SRCS
     ../src/proxy/GmcpModule.h
     ../src/proxy/GmcpUtils.cpp
     ../src/proxy/GmcpUtils.h
+    ../src/proxy/telnetfilter.cpp
+    ../src/proxy/telnetfilter.h
      )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})

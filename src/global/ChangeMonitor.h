@@ -2,36 +2,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "Signal.h"
+#include "Signal2.h"
 
 #include <vector>
 
-class NODISCARD ChangeMonitor final : private ::Signal<>
+class NODISCARD ChangeMonitor final
 {
 public:
-    using Base = ::Signal<>;
-    using Function = Base::Function;
-    using CallbackLifetime = Signal::SharedConnection;
+    using Sig = ::Signal2<>;
+    using Function = Sig::Function;
+    using Lifetime = Signal2Lifetime;
+    Sig m_sig;
 
 public:
-    NODISCARD CallbackLifetime registerChangeCallback(Function callback)
+    void registerChangeCallback(const Lifetime &lifetime, Function callback)
     {
-        return Base::connect(std::move(callback));
+        return m_sig.connect(lifetime, std::move(callback));
     }
 
 public:
-    void notifyAll() { Base::invoke(); }
-};
-
-struct NODISCARD ConnectionSet final
-{
-private:
-    std::vector<ChangeMonitor::CallbackLifetime> m_lifetimes;
-
-public:
-    ConnectionSet &operator+=(ChangeMonitor::CallbackLifetime lifetime)
-    {
-        m_lifetimes.emplace_back(std::move(lifetime));
-        return *this;
-    }
+    void notifyAll() { m_sig.invoke(); }
 };

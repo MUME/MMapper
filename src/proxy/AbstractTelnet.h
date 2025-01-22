@@ -96,10 +96,8 @@ struct NODISCARD AppendBuffer : public RawBytes
 };
 
 struct TelnetFormatter;
-class NODISCARD_QOBJECT AbstractTelnet : public QObject
+class NODISCARD AbstractTelnet
 {
-    Q_OBJECT
-
 private:
     friend TelnetFormatter;
 
@@ -132,6 +130,8 @@ protected:
 protected:
     Options m_options{};
     NawsData m_currentNaws{};
+
+private:
     int64_t m_sentBytes = 0;
 
 private:
@@ -163,6 +163,8 @@ private:
     };
 
     TelnetStateEnum m_state = TelnetStateEnum::NORMAL;
+    // false if the other side instructed us not to echo
+    bool m_echoMode = true;
     /** have we received the GA signal? */
     bool m_recvdGA = false;
     bool m_inflateTelnet = false;
@@ -170,10 +172,8 @@ private:
     bool m_debug = false;
 
 public:
-    explicit AbstractTelnet(TextCodecStrategyEnum strategy,
-                            QObject *parent,
-                            TelnetTermTypeBytes defaultTermType);
-    ~AbstractTelnet() override;
+    explicit AbstractTelnet(TextCodecStrategyEnum strategy, TelnetTermTypeBytes defaultTermType);
+    virtual ~AbstractTelnet();
 
 protected:
     NODISCARD const Options &getOptions() const { return m_options; }
@@ -184,10 +184,13 @@ public:
     /* unused */
     NODISCARD int64_t getSentBytes() const { return m_sentBytes; }
 
-    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) const
     {
         return virt_isGmcpModuleEnabled(name);
     }
+
+    // false if the other side instructed us not to echo
+    NODISCARD bool getEchoMode() const { return m_echoMode; }
 
 protected:
     void sendCharsetRequest();
@@ -202,27 +205,36 @@ protected:
     void sendLineModeEdit();
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
-    /** Prepares data, doubles IACs, sends it using sendRawData. */
+    /** performs charset conversion and doubles IACs */
     void submitOverTelnet(const QString &s, bool goAhead);
+    /** doubles IACs; input must be in the correct charset  */
     void submitOverTelnet(const RawBytes &s, bool goAhead);
 
 private:
-    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
+    void trySendGoAhead();
+    void sendWithDoubledIacs(const RawBytes &raw);
+
+private:
+    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) const
+    {
+        return false;
+    }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
     virtual void virt_receiveTerminalType(const TelnetTermTypeBytes &) {}
     virtual void virt_receiveMudServerStatus(const TelnetMsspBytes &) {}
     virtual void virt_receiveWindowSize(int, int) {}
-    /// Send out the data. Does not double IACs, this must be done
-    /// by caller if needed. This function is suitable for sending
-    /// telnet sequences.
     virtual void virt_sendRawData(const TelnetIacBytes &data) = 0;
     virtual void virt_sendToMapper(const RawBytes &, bool goAhead) = 0;
 
 protected:
     void onGmcpEnabled() { virt_onGmcpEnabled(); }
-    void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
+    void receiveEchoMode(const bool b)
+    {
+        m_echoMode = b;
+        virt_receiveEchoMode(b);
+    }
     void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
     void receiveTerminalType(const TelnetTermTypeBytes &ba) { virt_receiveTerminalType(ba); }
     void receiveMudServerStatus(const TelnetMsspBytes &ba) { virt_receiveMudServerStatus(ba); }
@@ -231,7 +243,11 @@ protected:
     /// Send out the data. Does not double IACs, this must be done
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
-    void sendRawData(const TelnetIacBytes &ba) { virt_sendRawData(ba); }
+    void sendRawData(const TelnetIacBytes &ba)
+    {
+        m_sentBytes += ba.length();
+        virt_sendRawData(ba);
+    }
     void sendRawData(const char *s) = delete;
 
 private:

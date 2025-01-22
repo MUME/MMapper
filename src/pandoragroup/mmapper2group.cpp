@@ -72,6 +72,7 @@ NODISCARD static CharacterPositionEnum toCharacterPosition(const QString &str)
 Mmapper2Group::Mmapper2Group(QObject *const parent)
     : QObject{parent}
     , m_affectTimer{this}
+    , m_groupManagerApi{std::make_unique<GroupManagerApi>(*this)}
 {
     auto &affectTimer = m_affectTimer;
     affectTimer.setInterval(1000);
@@ -520,7 +521,7 @@ void Mmapper2Group::slot_setPath(CommandQueue dirs)
     }
 }
 
-void Mmapper2Group::slot_reset()
+void Mmapper2Group::onReset()
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 

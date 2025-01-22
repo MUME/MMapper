@@ -9,41 +9,40 @@
 
 #include <QByteArray>
 
-void GroupManagerApi::kickCharacter(const QString &name) const
+void GroupManagerApi::kickCharacter(const QString &name)
 {
     if (name.isEmpty()) {
         throw std::invalid_argument("name");
     }
 
-    m_group.acceptVisitor([&name](Mmapper2Group &group) { group.kickCharacter(name); });
+    m_group.kickCharacter(name);
 }
 
-void GroupManagerApi::sendGroupTell(const QString &msg) const
+void GroupManagerApi::sendGroupTell(const QString &msg)
 {
     if (msg.isEmpty()) {
         throw std::invalid_argument("msg");
     }
 
-    m_group.acceptVisitor([&msg](Mmapper2Group &group) { group.sendGroupTell(msg); });
+    m_group.sendGroupTell(msg);
 }
 
-void GroupManagerApi::sendScoreLineEvent(const QString &arr) const
+void GroupManagerApi::sendScoreLineEvent(const QString &arr)
 {
-    m_group.acceptVisitor([&arr](Mmapper2Group &group) { group.parseScoreInformation(arr); });
+    m_group.parseScoreInformation(arr);
 }
 
-void GroupManagerApi::sendPromptLineEvent(const QString &arr) const
+void GroupManagerApi::sendPromptLineEvent(const QString &arr)
 {
-    m_group.acceptVisitor([&arr](Mmapper2Group &group) { group.parsePromptInformation(arr); });
+    m_group.parsePromptInformation(arr);
 }
 
-void GroupManagerApi::sendEvent(const CharacterPositionEnum pos) const
+void GroupManagerApi::sendEvent(const CharacterPositionEnum pos)
 {
-    m_group.acceptVisitor([pos](Mmapper2Group &group) { group.updateCharacterPosition(pos); });
+    m_group.updateCharacterPosition(pos);
 }
 
-void GroupManagerApi::sendEvent(const CharacterAffectEnum affect, const bool enable) const
+void GroupManagerApi::sendEvent(const CharacterAffectEnum affect, const bool enable)
 {
-    m_group.acceptVisitor(
-        [affect, enable](Mmapper2Group &group) { group.updateCharacterAffect(affect, enable); });
+    m_group.updateCharacterAffect(affect, enable);
 }

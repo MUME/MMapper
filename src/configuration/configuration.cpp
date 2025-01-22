@@ -1106,18 +1106,17 @@ Configuration::CanvasSettings::Advanced::Advanced()
     }
 }
 
-ConnectionSet Configuration::CanvasSettings::Advanced::registerChangeCallback(
-    ChangeMonitor::Function callback)
+void Configuration::CanvasSettings::Advanced::registerChangeCallback(
+    const ChangeMonitor::Lifetime &lifetime, const ChangeMonitor::Function &callback)
 {
-    ConnectionSet result;
-    result += use3D.registerChangeCallback(callback);
-    result += autoTilt.registerChangeCallback(callback);
-    result += printPerfStats.registerChangeCallback(callback);
-    result += fov.registerChangeCallback(callback);
-    result += verticalAngle.registerChangeCallback(callback);
-    result += horizontalAngle.registerChangeCallback(callback);
-    result += layerHeight.registerChangeCallback(callback);
-    return result;
+    /* copied for each; consider changing this to be std::shared_ptr<Function> */
+    use3D.registerChangeCallback(lifetime, callback);
+    autoTilt.registerChangeCallback(lifetime, callback);
+    printPerfStats.registerChangeCallback(lifetime, callback);
+    fov.registerChangeCallback(lifetime, callback);
+    verticalAngle.registerChangeCallback(lifetime, callback);
+    horizontalAngle.registerChangeCallback(lifetime, callback);
+    layerHeight.registerChangeCallback(lifetime, callback);
 }
 
 void setEnteredMain()

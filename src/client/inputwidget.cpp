@@ -18,8 +18,11 @@ static constexpr const int MIN_WORD_LENGTH = 3;
 
 static const QRegularExpression g_whitespaceRx(R"(\s+)");
 
-InputWidget::InputWidget(QWidget *const parent)
+InputWidgetOutputs::~InputWidgetOutputs() = default;
+
+InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
     : QPlainTextEdit(parent)
+    , m_outputs{outputs}
 {
     // Size Policy
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
@@ -288,7 +291,7 @@ void InputWidget::forwardHistory()
 {
     clear();
     if (m_inputHistory.atFront()) {
-        emit sig_showMessage("Reached beginning of input history", 1000);
+        m_outputs.showMessage("Reached beginning of input history", 1000);
         return;
     }
 
@@ -305,7 +308,7 @@ void InputWidget::forwardHistory()
 void InputWidget::backwardHistory()
 {
     if (m_inputHistory.atEnd()) {
-        emit sig_showMessage("Reached end of input history", 1000);
+        m_outputs.showMessage("Reached end of input history", 1000);
         return;
     }
 

@@ -70,12 +70,11 @@ public:
     NODISCARD CGroup *getGroup() { return m_group.get(); }
 
 public:
-    NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
+    NODISCARD GroupManagerApi &getGroupManagerApi() { return deref(m_groupManagerApi); }
 
 private:
-    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
-    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
     friend GroupManagerApi;
+    std::unique_ptr<GroupManagerApi> m_groupManagerApi;
 
 protected:
     void sendGroupTell(const QString &tell); // sends gtell from local user
@@ -95,6 +94,9 @@ private:
     NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
     void renameCharacter(QByteArray newname) = delete;
     void renameCharacter(QString newname);
+
+public:
+    void onReset();
 
 signals:
     // MainWindow::log (via MainWindow)
@@ -138,7 +140,6 @@ public slots:
     void slot_updateSelf(); // changing settings
 
     void slot_setPath(CommandQueue);
-    void slot_reset();
     void slot_parseGmcpInput(const GmcpMessage &msg);
 
 protected slots:

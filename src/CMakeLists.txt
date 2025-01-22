@@ -122,7 +122,6 @@ set(mmapper_SRCS
     global/RuleOf5.h
     global/SendToUser.cpp
     global/SendToUser.h
-    global/Signal.h
     global/Signal2.h
     global/SignalBlocker.cpp
     global/SignalBlocker.h
@@ -412,6 +411,7 @@ set(mmapper_SRCS
     parser/DoorAction.cpp
     parser/DoorAction.h
     parser/LineFlags.h
+    parser/SendToUserSource.h
     parser/abstractparser.cpp
     parser/abstractparser.h
     parser/mumexmlparser-gmcp.cpp

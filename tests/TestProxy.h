@@ -15,8 +15,9 @@ public:
     ~TestProxy() override = default;
 
 private Q_SLOTS:
-    void escapeTest();
-    void gmcpMessageDeserializeTest();
-    void gmcpMessageSerializeTest();
-    void gmcpModuleTest();
+    static void escapeTest();
+    static void gmcpMessageDeserializeTest();
+    static void gmcpMessageSerializeTest();
+    static void gmcpModuleTest();
+    static void telnetFilterTest();
 };

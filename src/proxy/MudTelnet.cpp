@@ -4,13 +4,17 @@
 
 #include "MudTelnet.h"
 
+#include "../clock/mumeclock.h"
 #include "../configuration/configuration.h"
 #include "../display/MapCanvasConfig.h"
 #include "../global/Consts.h"
+#include "../global/LineUtils.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
+#include "../mpi/mpifilter.h"
 #include "GmcpUtils.h"
 
+#include <charconv>
 #include <list>
 #include <map>
 #include <optional>
@@ -18,63 +22,283 @@
 #include <string_view>
 
 #include <QByteArray>
+#include <QOperatingSystemVersion>
 #include <QSysInfo>
 
-NODISCARD static TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefix)
-{
-    const auto get_os_string = []() {
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-            return "Linux";
-        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-            return "Mac";
-        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-            return "Windows";
-        } else {
-            assert(CURRENT_PLATFORM == PlatformEnum::Unknown);
-            return "Unknown";
-        }
-    };
+namespace { // anonymous
 
+constexpr const auto GAME_YEAR = "GAME YEAR";
+constexpr const auto GAME_MONTH = "GAME MONTH";
+constexpr const auto GAME_DAY = "GAME DAY";
+constexpr const auto GAME_HOUR = "GAME HOUR";
+
+NODISCARD std::optional<std::string> getMajorMinor()
+{
+    const auto major = QOperatingSystemVersion::current().majorVersion();
+    if (major < 0) {
+        return std::nullopt;
+    }
+    const auto minor = QOperatingSystemVersion::current().minorVersion();
+    if (minor < 0) {
+        return std::to_string(major);
+    }
+    return std::to_string(major) + "." + std::to_string(minor);
+}
+
+NODISCARD std::string getOsName()
+{
+#define X_CASE(X) \
+    case (PlatformEnum::X): \
+        return #X
+
+    switch (CURRENT_PLATFORM) {
+        X_CASE(Linux);
+        X_CASE(Mac);
+        X_CASE(Windows);
+        X_CASE(Unknown);
+    }
+    std::abort();
+#undef X_CASE
+}
+
+NODISCARD std::string getOs()
+{
+    if (auto ver = getMajorMinor()) {
+        return getOsName() + ver.value();
+    }
+    return getOsName();
+}
+
+NODISCARD TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefix)
+{
     // It's probably required to be ASCII.
-    const auto arch = QSysInfo::currentCpuArchitecture().toUtf8();
+    const auto arch = mmqt::toStdStringUtf8(QSysInfo::currentCpuArchitecture().toUtf8());
 
     std::ostringstream ss;
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
-       << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << get_os_string() << "/"
-       << arch.constData();
-    return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(ss.str())};
+       << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << getOs() << "/" << arch;
+    auto str = std::move(ss).str();
+
+    return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(str)};
 }
 
-MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, parent, addTerminalTypeSuffix("unknown"))
+using OptStdString = std::optional<std::string>;
+struct MsspMap final
+{
+private:
+    // REVISIT: why is this a list? always prefer vector over list, unless there's a good reason.
+    // (And the good reason needs to be documented.)
+    std::map<std::string, std::list<std::string>> m_map;
+
+public:
+    // Parse game time from MSSP
+    NODISCARD OptStdString lookup(const std::string &key) const
+    {
+        const auto it = m_map.find(key);
+        if (it == m_map.end()) {
+            MMLOG_WARNING() << "MSSP missing key " << key;
+            return std::nullopt;
+        }
+        const auto &elements = it->second;
+        if (elements.empty()) {
+            MMLOG_WARNING() << "MSSP empty key " << key;
+            return std::nullopt;
+        }
+        // REVISIT: protocols that allow duplicates usually declare that the LAST one is correct,
+        // but we're taking the first one here.
+        return elements.front();
+    }
+
+public:
+    NODISCARD static auto parseMssp(const TelnetMsspBytes &data, const bool debug)
+    {
+        MsspMap result;
+        auto &map = result.m_map;
+
+        std::optional<std::string> varName = std::nullopt;
+        std::list<std::string> vals;
+
+        enum class NODISCARD MSSPStateEnum {
+            ///
+            BEGIN,
+            /// VAR
+            IN_VAR,
+            /// VAL
+            IN_VAL
+        } state
+            = MSSPStateEnum::BEGIN;
+
+        AppendBuffer buffer;
+
+        const auto addValue([&map, &vals, &varName, &buffer, debug]() {
+            // Put it into the map.
+            if (debug) {
+                qDebug() << "MSSP received value" << buffer << "for variable"
+                         << mmqt::toQByteArrayRaw(varName.value());
+            }
+
+            vals.push_back(buffer.getQByteArray().toStdString());
+            map[varName.value()] = vals;
+
+            buffer.clear();
+        });
+
+        for (const char c : data) {
+            switch (state) {
+            case MSSPStateEnum::BEGIN:
+                if (c != TNSB_MSSP_VAR) {
+                    continue;
+                }
+                state = MSSPStateEnum::IN_VAR;
+                break;
+
+            case MSSPStateEnum::IN_VAR:
+                switch (c) {
+                case TNSB_MSSP_VAR:
+                case TN_IAC:
+                case 0:
+                    continue;
+
+                case TNSB_MSSP_VAL: {
+                    if (buffer.isEmpty()) {
+                        if (debug) {
+                            qDebug() << "MSSP received variable without any name; ignoring it";
+                        }
+                        continue;
+                    }
+
+                    if (debug) {
+                        qDebug() << "MSSP received variable" << buffer;
+                    }
+
+                    varName = buffer.getQByteArray().toStdString();
+                    state = MSSPStateEnum::IN_VAL;
+
+                    vals.clear(); // Which means this is a new value, so clear the list.
+                    buffer.clear();
+                } break;
+
+                default:
+                    buffer.append(static_cast<uint8_t>(c));
+                }
+                break;
+
+            case MSSPStateEnum::IN_VAL: {
+                assert(varName.has_value());
+
+                switch (c) {
+                case TN_IAC:
+                case 0:
+                    continue;
+
+                case TNSB_MSSP_VAR:
+                    state = MSSPStateEnum::IN_VAR;
+                    FALLTHROUGH;
+                case TNSB_MSSP_VAL:
+                    addValue();
+                    break;
+
+                default:
+                    buffer.append(static_cast<uint8_t>(c));
+                    break;
+                }
+                break;
+            }
+            }
+        }
+
+        if (varName.has_value() && !buffer.isEmpty()) {
+            addValue();
+        }
+
+        return result;
+    }
+};
+
+} // namespace
+
+MudTelnetOutputs::~MudTelnetOutputs() = default;
+
+MudTelnet::MudTelnet(MudTelnetOutputs &outputs)
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, addTerminalTypeSuffix("unknown"))
+    , m_outputs{outputs}
 {
     // RFC 2066 states we can provide many character sets but we force UTF-8 when
     // communicating with MUME
     resetGmcpModules();
 }
 
-void MudTelnet::slot_onDisconnected()
+void MudTelnet::onDisconnected()
 {
     // Reset Telnet options but retain GMCP modules
     reset();
 }
 
-void MudTelnet::slot_onAnalyzeMudStream(const TelnetIacBytes &data)
+void MudTelnet::onAnalyzeMudStream(const TelnetIacBytes &data)
 {
     onReadInternal(data);
 }
 
-void MudTelnet::slot_onSendRawToMud(const RawBytes &s)
+void MudTelnet::onSubmitMpiToMud(const RawBytes &bytes)
 {
+    assert(isMpiMessage(bytes));
+    submitOverTelnet(bytes, false);
+}
+
+NODISCARD static bool isOneLineCrlf(const QString &s)
+{
+    if (s.isEmpty() || s.back() != char_consts::C_NEWLINE) {
+        return false;
+    }
+    QStringView sv = s;
+    sv.chop(1);
+    return !sv.empty() && sv.back() == char_consts::C_CARRIAGE_RETURN
+           && !sv.contains(char_consts::C_NEWLINE);
+}
+
+void MudTelnet::submitOneLine(const QString &s)
+{
+    assert(isOneLineCrlf(s));
+    if (hasMpiPrefix(s)) {
+        // It would be useful to send feedback to the user.
+        const auto mangled = char_consts::C_SPACE + s;
+        qWarning() << "mangling command that contains MPI prefix" << mangled;
+        submitOverTelnet(mangled, false);
+        return;
+    }
+
     submitOverTelnet(s, false);
 }
 
-void MudTelnet::slot_onSendToMud(const QString &s)
+void MudTelnet::onSendToMud(const QString &s)
 {
-    submitOverTelnet(s, false);
+    if (s.isEmpty()) {
+        assert(false);
+        return;
+    }
+
+    if (m_lineBuffer.isEmpty() && isOneLineCrlf(s)) {
+        submitOneLine(s);
+        return;
+    }
+
+    // fallback: buffering
+    mmqt::foreachLine(s, [this](QStringView line, const bool hasNewline) {
+        if (hasNewline && !line.empty() && line.back() == char_consts::C_CARRIAGE_RETURN) {
+            line.chop(1);
+        }
+
+        m_lineBuffer += line;
+        if (!hasNewline) {
+            return;
+        }
+
+        const auto oneline = std::exchange(m_lineBuffer, {}) + string_consts::S_CRLF;
+        submitOneLine(oneline);
+    });
 }
 
-void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
+void MudTelnet::onGmcpToMud(const GmcpMessage &msg)
 {
     const auto &hisOptionState = getOptions().hisOptionState;
 
@@ -122,7 +346,7 @@ void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
     sendGmcpMessage(msg);
 }
 
-void MudTelnet::slot_onRelayNaws(const int width, const int height)
+void MudTelnet::onRelayNaws(const int width, const int height)
 {
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
@@ -136,7 +360,7 @@ void MudTelnet::slot_onRelayNaws(const int width, const int height)
     }
 }
 
-void MudTelnet::slot_onRelayTermType(const TelnetTermTypeBytes &terminalType)
+void MudTelnet::onRelayTermType(const TelnetTermTypeBytes &terminalType)
 {
     // Append the MMapper version suffix to the terminal type
     setTerminalType(addTerminalTypeSuffix(terminalType.getQByteArray().constData()));
@@ -151,12 +375,12 @@ void MudTelnet::virt_sendToMapper(const RawBytes &data, const bool goAhead)
         qDebug() << "MudTelnet::virt_sendToMapper" << data;
     }
 
-    emit sig_analyzeMudStream(data, goAhead);
+    m_outputs.onAnalyzeMudStream(data, goAhead);
 }
 
 void MudTelnet::virt_receiveEchoMode(const bool toggle)
 {
-    emit sig_relayEchoMode(toggle);
+    m_outputs.onRelayEchoMode(toggle);
 }
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
@@ -165,13 +389,13 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
     }
 
-    emit sig_relayGmcp(msg);
+    m_outputs.onRelayGmcpFromMudToUser(msg);
 }
 
 void MudTelnet::virt_receiveMudServerStatus(const TelnetMsspBytes &ba)
 {
     parseMudServerStatus(ba);
-    emit sig_sendMSSPToUser(ba);
+    m_outputs.onSendMSSPToUser(ba);
 }
 
 void MudTelnet::virt_onGmcpEnabled()
@@ -193,13 +417,9 @@ void MudTelnet::virt_onGmcpEnabled()
     }
 }
 
-/** Send out the data. Does not double IACs, this must be done
-            by caller if needed. This function is suitable for sending
-            telnet sequences. */
 void MudTelnet::virt_sendRawData(const TelnetIacBytes &data)
 {
-    m_sentBytes += data.length();
-    emit sig_sendToSocket(data);
+    m_outputs.onSendToSocket(data);
 }
 
 void MudTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
@@ -251,124 +471,75 @@ void MudTelnet::sendCoreSupports()
 
 void MudTelnet::parseMudServerStatus(const TelnetMsspBytes &data)
 {
-    std::map<std::string, std::list<std::string>> map;
+    const auto map = MsspMap::parseMssp(data, getDebug());
 
-    std::optional<std::string> varName = std::nullopt;
-    std::list<std::string> vals;
+    // REVISIT: try to read minute, in case mume ever supports it?
+    const OptStdString yearStr = map.lookup(GAME_YEAR);
+    const OptStdString monthStr = map.lookup(GAME_MONTH);
+    const OptStdString dayStr = map.lookup(GAME_DAY);
+    const OptStdString hourStr = map.lookup(GAME_HOUR);
 
-    enum class NODISCARD MSSPStateEnum {
-        ///
-        BEGIN,
-        /// VAR
-        IN_VAR,
-        /// VAL
-        IN_VAL
-    } state
-        = MSSPStateEnum::BEGIN;
+    MMLOG() << "MSSP game time received with"
+            << " year:" << yearStr.value_or("unknown") << " month:" << monthStr.value_or("unknown")
+            << " day:" << dayStr.value_or("unknown") << " hour:" << hourStr.value_or("unknown");
 
-    AppendBuffer buffer;
-
-    const auto addValue([&map, &vals, &varName, &buffer, this]() {
-        // Put it into the map.
-        if (getDebug()) {
-            qDebug() << "MSSP received value" << buffer << "for variable"
-                     << mmqt::toQByteArrayRaw(varName.value());
-        }
-
-        vals.push_back(buffer.getQByteArray().toStdString());
-        map[varName.value()] = vals;
-
-        buffer.clear();
-    });
-
-    for (const char c : data) {
-        switch (state) {
-        case MSSPStateEnum::BEGIN:
-            if (c != TNSB_MSSP_VAR) {
-                continue;
-            }
-            state = MSSPStateEnum::IN_VAR;
-            break;
-
-        case MSSPStateEnum::IN_VAR:
-            switch (c) {
-            case TNSB_MSSP_VAR:
-            case TN_IAC:
-            case 0:
-                continue;
-
-            case TNSB_MSSP_VAL: {
-                if (buffer.isEmpty()) {
-                    if (getDebug()) {
-                        qDebug() << "MSSP received variable without any name; ignoring it";
-                    }
-                    continue;
-                }
-
-                if (getDebug()) {
-                    qDebug() << "MSSP received variable" << buffer;
-                }
-
-                varName = buffer.getQByteArray().toStdString();
-                state = MSSPStateEnum::IN_VAL;
-
-                vals.clear(); // Which means this is a new value, so clear the list.
-                buffer.clear();
-            } break;
-
-            default:
-                buffer.append(static_cast<uint8_t>(c));
-            }
-            break;
-
-        case MSSPStateEnum::IN_VAL: {
-            assert(varName.has_value());
-
-            switch (c) {
-            case TN_IAC:
-            case 0:
-                continue;
-
-            case TNSB_MSSP_VAR:
-                state = MSSPStateEnum::IN_VAR;
-                FALLTHROUGH;
-            case TNSB_MSSP_VAL:
-                addValue();
-                break;
-
-            default:
-                buffer.append(static_cast<uint8_t>(c));
-                break;
-            }
-            break;
-        }
-        }
+    if (!yearStr.has_value() || !monthStr.has_value() || !dayStr.has_value()
+        || !hourStr.has_value()) {
+        MMLOG_WARNING() << "missing one or more MSSP keys";
+        return;
     }
 
-    if (varName.has_value() && !buffer.isEmpty()) {
-        addValue();
+    using OptInt = std::optional<int>;
+    auto my_stoi = [](const OptStdString &optString) -> OptInt {
+        if (!optString.has_value()) {
+            return std::nullopt;
+        }
+        const auto &s = optString.value();
+        const auto beg = s.data();
+        // NOLINTNEXTLINE (pointer arithmetic)
+        const auto end = beg + static_cast<ptrdiff_t>(s.size());
+        int result = 0;
+        auto [ptr, ec] = std::from_chars(beg, end, result);
+        if (ec != std::errc{} || (ptr != nullptr && *ptr != char_consts::C_NUL)) {
+            return std::nullopt;
+        }
+        return result;
+    };
+
+    const OptInt year = my_stoi(yearStr);
+    const OptInt month = MumeClock::getMumeMonth(mmqt::toQStringUtf8(monthStr.value()));
+    const OptInt day = my_stoi(dayStr);
+    const OptInt hour = my_stoi(hourStr);
+
+    if (!year.has_value() || !month.has_value() || !day.has_value() || !hour.has_value()) {
+        MMLOG_WARNING() << "invalid date values";
+        return;
     }
 
-    // Parse game time from MSSP
-    const auto firstElement(
-        [](const std::list<std::string> &elements) -> std::optional<std::string> {
-            return elements.empty() ? std::nullopt : std::optional<std::string>{elements.front()};
-        });
-    const auto yearStr = firstElement(map["GAME YEAR"]);
-    const auto monthStr = firstElement(map["GAME MONTH"]);
-    const auto dayStr = firstElement(map["GAME DAY"]);
-    const auto hourStr = firstElement(map["GAME HOUR"]);
+    const auto msspTime = MsspTime{year.value(), month.value(), day.value(), hour.value()};
 
-    qInfo() << "MSSP game time received with"
-            << "year:" << mmqt::toQByteArrayUtf8(yearStr.value_or("unknown"))
-            << "month:" << mmqt::toQByteArrayUtf8(monthStr.value_or("unknown"))
-            << "day:" << mmqt::toQByteArrayUtf8(dayStr.value_or("unknown"))
-            << "hour:" << mmqt::toQByteArrayUtf8(hourStr.value_or("unknown"));
+    auto warn_if_invalid = [](const std::string_view what, const int n, const int lo, const int hi) {
+        if (n < lo || n > hi) {
+            MMLOG_WARNING() << "invalid " << what << ": " << n;
+        }
+    };
 
-    if (yearStr.has_value() && monthStr.has_value() && dayStr.has_value() && hourStr.has_value()) {
-        const int year = stoi(yearStr.value());
-        const int day = stoi(dayStr.value());
-        const int hour = stoi(hourStr.value());
-        emit sig_sendGameTimeToClock(year, monthStr.value(), day, hour);
-    }
+    // MUME's official start is 2850, and the end is 3018 at the start of the fellowship.
+    // However, the historical average reset time has been around 3023 (about a RL month late).
+    //
+    // (note: 3018 - 2850 = 168 game years = 1008 RL days = ~2.76 RL years, and
+    //        3023 - 2850 = 173 game years = 1038 RL days = ~2.84 RL years).
+    //
+    // Let's err on the side of caution in case someone forgets to reset the time.
+    const int max_rl_years = 6;
+    const int mud_years_per_rl_year = MUME_MINUTES_PER_HOUR;
+    const int max_year = MUME_START_YEAR + mud_years_per_rl_year * max_rl_years;
+
+    // TODO: stronger validation of the integers here;
+    warn_if_invalid("year", msspTime.year, MUME_START_YEAR, max_year);
+    warn_if_invalid("month", msspTime.month, 0, MUME_MONTHS_PER_YEAR - 1);
+    warn_if_invalid("day", msspTime.day, 0, MUME_DAYS_PER_MONTH - 1);
+    warn_if_invalid("hour", msspTime.hour, 0, MUME_MINUTES_PER_HOUR - 1);
+
+    m_outputs.onSendGameTimeToClock(msspTime);
 }

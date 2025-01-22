@@ -71,9 +71,10 @@ std::string getCurrentOpenGLVersion()
     return g_current_gl_version;
 }
 
-ConnectionSet registerChangeCallback(ChangeMonitor::Function callback)
+void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                            ChangeMonitor::Function callback)
 {
-    return setConfig().canvas.advanced.registerChangeCallback(std::move(callback));
+    return setConfig().canvas.advanced.registerChangeCallback(lifetime, std::move(callback));
 }
 
 bool isIn3dMode()
@@ -245,7 +246,7 @@ void MapCanvas::initializeGL()
     font.setTextureId(allocateTextureId());
     font.init();
 
-    m_connections += setConfig().canvas.drawNeedsUpdate.registerChangeCallback([this]() {
+    setConfig().canvas.drawNeedsUpdate.registerChangeCallback(m_lifetime, [this]() {
         if (setConfig().canvas.drawNeedsUpdate.get() && m_diff.highlight.has_value()
             && m_diff.highlight->needsUpdate.empty()) {
             this->forceUpdateMeshes();

@@ -9,25 +9,25 @@
 
 class Mmapper2Group;
 
-// This is effectively a weak pointer to a virtual interface without the virtual;
-// it basically only exists to avoid giving the parser private access to Parser.
 class NODISCARD GroupManagerApi final
 {
 private:
-    WeakHandle<Mmapper2Group> m_group;
+    Mmapper2Group &m_group;
 
 public:
-    explicit GroupManagerApi(WeakHandle<Mmapper2Group> group)
-        : m_group(std::move(group))
+    explicit GroupManagerApi(Mmapper2Group &group)
+        : m_group(group)
     {}
+    ~GroupManagerApi() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(GroupManagerApi);
 
 public:
-    void kickCharacter(const QString &name) const;
-    void sendGroupTell(const QString &msg) const;
+    void kickCharacter(const QString &name);
+    void sendGroupTell(const QString &msg);
 
 public:
-    void sendScoreLineEvent(const QString &arr) const;
-    void sendPromptLineEvent(const QString &arr) const;
-    void sendEvent(CharacterPositionEnum position) const;
-    void sendEvent(CharacterAffectEnum affect, bool enable) const;
+    void sendScoreLineEvent(const QString &arr);
+    void sendPromptLineEvent(const QString &arr);
+    void sendEvent(CharacterPositionEnum position);
+    void sendEvent(CharacterAffectEnum affect, bool enable);
 };

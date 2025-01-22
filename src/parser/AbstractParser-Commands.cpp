@@ -414,7 +414,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         std::string s = mmqt::toStdStringUtf8(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar()) {
-            sendToUser("Internal error. Sorry.\n");
+            sendToUser(SendToUserSource::FromMMapper, "Internal error. Sorry.\n");
         } else {
             parseSpecialCommand(view);
         }
@@ -471,12 +471,14 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
                     const auto dir = static_cast<CommandEnum>(tryGetDir(view));
                     if (!isDirectionNESWUD(dir)) {
-                        sendToUser("In which direction do you want to scout?\n");
+                        sendToUser(SendToUserSource::SimulatedOutput,
+                                   "In which direction do you want to scout?\n");
                         sendPromptToUser();
 
                     } else {
-                        m_queue.enqueue(CommandEnum::SCOUT);
-                        m_queue.enqueue(dir);
+                        auto &queue = getQueue();
+                        queue.enqueue(CommandEnum::SCOUT);
+                        queue.enqueue(dir);
                         offlineCharacterMove();
                     }
                     return false;
@@ -493,7 +495,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     }
 
     if (!isOnline) {
-        sendToUser("Arglebargle, glop-glyf!?!\n");
+        sendToUser(SendToUserSource::SimulatedOutput, "Arglebargle, glop-glyf!?!\n");
         sendPromptToUser();
     }
 
@@ -513,7 +515,8 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser(QString("Syntax: %1set prefix [punct-char]\n").arg(getPrefixChar()));
+        sendToUser(SendToUserSource::FromMMapper,
+                   QString("Syntax: %1set prefix [punct-char]\n").arg(getPrefixChar()));
         return;
     }
 
@@ -542,17 +545,17 @@ void AbstractParser::parseSetCommand(StringView view)
             }
         }
 
-        sendToUser("Invalid prefix.\n");
+        sendToUser(SendToUserSource::FromMMapper, "Invalid prefix.\n");
         return;
     }
 
-    sendToUser("That variable is not supported.");
+    sendToUser(SendToUserSource::FromMMapper, "That variable is not supported.");
 }
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
     if (wholeCommand.isEmpty()) {
-        sendToUser("Error: special command input is empty.\n");
+        sendToUser(SendToUserSource::FromMMapper, "Error: special command input is empty.\n");
         return;
     }
 
@@ -561,7 +564,8 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
     }
 
     const auto word = wholeCommand.takeFirstWord();
-    sendToUser(QString("Unrecognized command: %1\n").arg(word.toQString()));
+    sendToUser(SendToUserSource::FromMMapper,
+               QString("Unrecognized command: %1\n").arg(word.toQString()));
 }
 
 void AbstractParser::parseSearch(StringView view)
@@ -669,14 +673,16 @@ void AbstractParser::doMapDiff()
     auto &mapData = m_mapData;
 
     if (mapData.getSavedMarks() != mapData.getCurrentMarks()) {
-        sendToUser("Note: Map markers have changed, but marker diff is not yet supported.\n");
+        sendToUser(SendToUserSource::FromMMapper,
+                   "Note: Map markers have changed, but marker diff is not yet supported.\n");
     }
 
     const Map &origin = mapData.getSavedMap();
     const Map &map = mapData.getCurrentMap();
 
     if (map == origin) {
-        sendToUser("The map has not been modified since the last save.\n");
+        sendToUser(SendToUserSource::FromMMapper,
+                   "The map has not been modified since the last save.\n");
         return;
     }
 
@@ -702,12 +708,14 @@ void AbstractParser::doMapCommand(StringView input)
             map.setSavedMap(Map{});
             map.setSavedMarks({});
             sendOkToUser();
-            sendToUser("WARNING: You should save the map immediately.\n");
-            sendToUser("Note: Group manager will probably display very strange results"
+            sendToUser(SendToUserSource::FromMMapper,
+                       "WARNING: You should save the map immediately.\n");
+            sendToUser(SendToUserSource::FromMMapper,
+                       "Note: Group manager will probably display very strange results"
                        " until you save the map and share it with your groupmates.\n");
 
         } else {
-            sendToUser("Ooops.\n");
+            sendToUser(SendToUserSource::FromMMapper, "Ooops.\n");
         }
     };
     auto removeDoorNames = [this]() { this->doRemoveDoorNamesCommand(); };
@@ -747,7 +755,7 @@ void AbstractParser::doMapCommand(StringView input)
     };
 
     auto checkConsistency = [this]() {
-        sendToUser("Attempting to check map consistency...\n");
+        sendToUser(SendToUserSource::FromMMapper, "Attempting to check map consistency...\n");
         emit m_mapData.sig_checkMapConsistency();
     };
 
@@ -757,7 +765,7 @@ void AbstractParser::doMapCommand(StringView input)
         try {
             map.revert();
         } catch (const std::exception &ex) {
-            sendToUser(std::string{"Exception: "} + ex.what());
+            sendToUser(SendToUserSource::FromMMapper, std::string{"Exception: "} + ex.what());
             return;
         }
 
@@ -895,7 +903,8 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
-            sendToUser(QString("Help for %1%2:\n"
+            sendToUser(SendToUserSource::FromMMapper,
+                       QString("Help for %1%2:\n"
                                "  %3\n"
                                "\n")
                            .arg(getPrefixChar())
@@ -1049,7 +1058,8 @@ void AbstractParser::initSpecialCommandMap()
                   "Note: Quoted versions do not allow escape codes,\n"
                   "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
 
-            sendToUser(QString("Help for %1%2:\n"
+            sendToUser(SendToUserSource::FromMMapper,
+                       QString("Help for %1%2:\n"
                                "%3\n"
                                "\n")
                            .arg(getPrefixChar())

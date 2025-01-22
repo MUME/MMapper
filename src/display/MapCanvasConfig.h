@@ -6,7 +6,8 @@
 
 namespace MapCanvasConfig {
 
-NODISCARD extern ConnectionSet registerChangeCallback(ChangeMonitor::Function callback);
+void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                            ChangeMonitor::Function callback);
 
 NODISCARD extern std::string getCurrentOpenGLVersion();
 

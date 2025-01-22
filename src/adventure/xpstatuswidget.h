@@ -21,7 +21,7 @@ private:
     QStatusBar *m_statusBar = nullptr;
     AdventureTracker &m_tracker;
     std::shared_ptr<AdventureSession> m_session;
-    ConnectionSet m_connections;
+    Signal2Lifetime m_lifetime;
 
 public:
     explicit XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent);

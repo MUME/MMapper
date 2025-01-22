@@ -40,7 +40,7 @@ enum class NODISCARD XmlModeEnum : uint8_t {
     HEADER
 };
 
-class NODISCARD_QOBJECT MumeXmlParser final : public AbstractParser
+class NODISCARD_QOBJECT MumeXmlParser final : public MumeXmlParserBase
 {
     Q_OBJECT
 
@@ -82,8 +82,14 @@ private:
     };
 
 public:
-    explicit MumeXmlParser(
-        MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, QObject *parent);
+    explicit MumeXmlParser(MapData &,
+                           MumeClock &,
+                           ProxyMudConnectionApi &,
+                           ProxyUserGmcpApi &,
+                           GroupManagerApi &,
+                           QObject *parent,
+                           AbstractParserOutputs &outputs,
+                           ParserCommonData &parserCommonData);
     ~MumeXmlParser() final;
 
 private:

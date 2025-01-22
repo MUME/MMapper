@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Consts.h"
+#include "../global/Signal2.h"
 #include "../mpi/remoteeditsession.h"
 #include "../proxy/telnetfilter.h"
 
@@ -12,21 +13,42 @@
 #include <QString>
 #include <QtCore>
 
-class NODISCARD_QOBJECT MpiFilter final : public QObject
+struct NODISCARD MpiFilterOutputs
 {
-    Q_OBJECT
-
-private:
-    TelnetDataEnum m_previousType = TelnetDataEnum::Unknown;
-    bool m_receivingMpi = false;
-
-    char m_command = char_consts::C_NUL;
-    int m_remaining = 0;
-    RawBytes m_buffer;
+public:
+    virtual ~MpiFilterOutputs();
 
 public:
-    explicit MpiFilter(QObject *const parent)
-        : QObject(parent)
+    void onParseNewMudInput(const TelnetData &data) { virt_onParseNewMudInput(data); }
+    void onEditMessage(const RemoteSession &session, const QString &title, const QString &body)
+    {
+        virt_onEditMessage(session, title, body);
+    }
+    void onViewMessage(const QString &title, const QString &body)
+    {
+        virt_onViewMessage(title, body);
+    }
+
+private:
+    virtual void virt_onParseNewMudInput(const TelnetData &) = 0;
+    virtual void virt_onEditMessage(const RemoteSession &, const QString &, const QString &) = 0;
+    virtual void virt_onViewMessage(const QString &, const QString &) = 0;
+};
+
+// from Mud
+class NODISCARD MpiFilter final
+{
+private:
+    MpiFilterOutputs &m_outputs;
+    RawBytes m_buffer;
+    int m_remaining = 0;
+    TelnetDataEnum m_previousType = TelnetDataEnum::Empty;
+    char m_command = char_consts::C_NUL;
+    bool m_receivingMpi = false;
+
+public:
+    explicit MpiFilter(MpiFilterOutputs &outputs)
+        : m_outputs{outputs}
     {}
 
 protected:
@@ -34,14 +56,25 @@ protected:
     void parseEditMessage(const RawBytes &buffer);
     void parseViewMessage(const RawBytes &buffer);
 
-private:
-    void parseNewMudInput(const TelnetData &data);
-
-signals:
-    void sig_parseNewMudInput(const TelnetData &data);
-    void sig_editMessage(const RemoteSession &, const QString &, const QString &);
-    void sig_viewMessage(const QString &, const QString &);
-
-public slots:
-    void slot_analyzeNewMudInput(const TelnetData &data);
+public:
+    void analyzeNewMudInput(const TelnetData &data);
 };
+
+// toMud
+class NODISCARD MpiFilterToMud
+{
+public:
+    MpiFilterToMud() = default;
+    virtual ~MpiFilterToMud();
+
+public:
+    void cancelRemoteEdit(const RemoteEditMessageBytes &sessionId);
+    void saveRemoteEdit(const RemoteEditMessageBytes &sessionId, const Latin1Bytes &content);
+
+private:
+    void submitMpi(const RawBytes &bytes);
+    virtual void virt_submitMpi(const RawBytes &bytes) = 0;
+};
+
+NODISCARD extern bool isMpiMessage(const RawBytes &bytes);
+NODISCARD extern bool hasMpiPrefix(const QString &s);

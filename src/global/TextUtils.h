@@ -79,6 +79,7 @@ NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);
 NODISCARD extern std::string_view toStdStringViewRaw(const QByteArray &arr);
+NODISCARD extern std::string_view toStdStringViewUtf8(const QByteArray &arr);
 } // namespace mmqt
 
 namespace test {

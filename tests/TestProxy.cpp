@@ -7,6 +7,7 @@
 #include "../src/proxy/GmcpMessage.h"
 #include "../src/proxy/GmcpModule.h"
 #include "../src/proxy/GmcpUtils.h"
+#include "../src/proxy/telnetfilter.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
@@ -65,6 +66,11 @@ void TestProxy::gmcpModuleTest()
     QCOMPARE(mmqt::toQByteArrayUtf8(module4.getNormalizedName()), QByteArray("mmapper.comm"));
     QCOMPARE(module4.getVersion().asUint32(), 1u);
     QVERIFY(module4.isSupported());
+}
+
+void TestProxy::telnetFilterTest()
+{
+    test::test_telnetfilter();
 }
 
 QTEST_MAIN(TestProxy)

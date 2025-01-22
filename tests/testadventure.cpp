@@ -276,7 +276,7 @@ void TestAdventure::testE2E()
     auto pump = [&observer](const std::vector<TestLine> &lines) {
         mmqt::HideQDebug forThisFunction;
         for (const TestLine &tl : lines) {
-            observer.slot_observeSentToUser(tl.line, true);
+            observer.observeSentToUser(tl.line);
         }
     };
 

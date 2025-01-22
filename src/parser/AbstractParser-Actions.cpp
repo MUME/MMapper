@@ -12,7 +12,16 @@
 #include <cassert>
 #include <memory>
 
-void AbstractParser::initActionMap()
+// candidate for moving to utils?
+template<typename Queue>
+static void maybePop(Queue &queue)
+{
+    if (!queue.empty()) {
+        queue.pop_front();
+    }
+}
+
+void MumeXmlParserBase::initActionMap()
 {
     auto &map = m_actionMap;
     map.clear();
@@ -74,13 +83,15 @@ void AbstractParser::initActionMap()
     addStartsWith("You are in a pretty bad shape, unable to do anything!", incap);
     addStartsWith("All you can do right now, is think about the stars!", incap);
     auto dead = [this](StringView /*view*/) {
-        m_queue.clear();
+        // REVISIT: send an event that the player died,
+        // instead of trying to dig into details that are likely to get out of date?
+        m_commonData.queue.clear();
         pathChanged();
-        emit sig_releaseAllPaths();
+        onReleaseAllPaths();
 
         // Highlight the current room
         const auto tmpSel = RoomSelection::createSelection(RoomIdSet{getTailPosition()});
-        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+        onNewRoomSelection(SigRoomSelection{tmpSel});
 
         m_group.sendEvent(CharacterPositionEnum::DEAD);
     };
@@ -207,9 +218,7 @@ void AbstractParser::initActionMap()
 
     /// Path Machine: Prespam
     auto failedMovement = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty()) {
-            m_queue.pop_front();
-        }
+        maybePop(getQueue());
         pathChanged();
     };
     addStartsWith("You failed to climb", failedMovement);
@@ -236,21 +245,19 @@ void AbstractParser::initActionMap()
     // A pack horse
     addEndsWith("is too exhausted.", failedMovement);
     auto zblam = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty()) {
-            m_queue.pop_front();
-        }
+        maybePop(getQueue());
         pathChanged();
         m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
     addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", zblam);
 
-    auto look = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::LOOK); };
+    auto look = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::LOOK); };
     addStartsWith("You follow", look);
 
-    auto flee = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::FLEE); };
+    auto flee = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::FLEE); };
     addStartsWith("You flee head", flee);
 
-    auto scout = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::SCOUT); };
+    auto scout = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::SCOUT); };
     addStartsWith("You quietly scout", scout);
 
     /// Time
@@ -267,9 +274,9 @@ void AbstractParser::initActionMap()
              R"( Alert: \w+\.)"                                  // Alertness
              R"((?: Condition: [^.]+\.)?)",                      // Hunger or Thirst
              [this](StringView /*view*/) {
-                 const auto list = m_timers.getStatCommandEntry();
+                 const auto list = getTimers().getStatCommandEntry();
                  if (!list.empty()) {
-                     sendToUser(list);
+                     sendToUser(SendToUserSource::FromMMapper, list);
                  }
              });
 
@@ -348,7 +355,9 @@ void AbstractParser::initActionMap()
     addRegex(R"(^You manage to break free of a tentacle's.+hold.$)", snaredOff);
 }
 
-bool AbstractParser::evalActionMap(StringView line)
+// FIXME: always returns false, so just remove the return value,
+//  or fix this to return true sometimes.
+bool MumeXmlParserBase::evalActionMap(StringView line)
 {
     if (line.empty()) {
         return false;

@@ -28,6 +28,7 @@
 #include "Action.h"
 #include "CommandQueue.h"
 #include "DoorAction.h"
+#include "SendToUserSource.h"
 
 #include <functional>
 #include <map>
@@ -53,25 +54,262 @@ namespace syntax {
 class Sublist;
 }
 
-class NODISCARD_QOBJECT AbstractParser : public QObject
+struct NODISCARD AbstractParserOutputs
+{
+public:
+    virtual ~AbstractParserOutputs();
+
+public:
+    // sent to MudTelnet
+    void onSendToMud(const QString &msg) { virt_onSendToMud(msg); }
+    // sent to UserTelnet
+    void onSendToUser(const SendToUserSource source, const QString &msg, const bool goAhead)
+    {
+        virt_onSendToUser(source, msg, goAhead);
+    }
+    // sent to MapCanvas
+    void onMapChanged() { virt_onMapChanged(); }
+    // sent to MapCanvas
+    void onGraphicsSettingsChanged() { virt_onGraphicsSettingsChanged(); }
+    // sent to PathMachine
+    void onReleaseAllPaths() { virt_onReleaseAllPaths(); }
+    // sent to MainWindow's log
+    void onLog(const QString &mod, const QString &msg) { virt_onLog(mod, msg); }
+    // sent to PathMachine
+    // for main move/search algorithm
+    // REVISIT: can we remove the signal wrapper?
+    void onHandleParseEvent(const SigParseEvent &parseEvent)
+    {
+        virt_onHandleParseEvent(parseEvent);
+    }
+    // for map
+    void onShowPath(const CommandQueue &path) { virt_onShowPath(path); }
+    // sent to MapCanvas
+    // REVISIT: can we remove the signal wrapper?
+    void onNewRoomSelection(const SigRoomSelection &roomSelection)
+    {
+        virt_onNewRoomSelection(roomSelection);
+    }
+    // sent to MainWindow
+    // for commands that set the mode (emulation, play, map)
+    // these are connected to MainWindow
+    void onSetMode(const MapModeEnum mode) { virt_onSetMode(mode); }
+    // sent to MapCanvas
+    void onInfomarksChanged() { virt_onInfomarksChanged(); }
+
+private:
+    // sent to MudTelnet
+    virtual void virt_onSendToMud(const QString &) = 0;
+    // sent to UserTelnet
+    virtual void virt_onSendToUser(SendToUserSource source, const QString &, bool goAhead) = 0;
+    // sent to MapCanvas
+    virtual void virt_onMapChanged() = 0;
+    // sent to MapCanvas
+    virtual void virt_onGraphicsSettingsChanged() = 0;
+    // sent to PathMachine
+    virtual void virt_onReleaseAllPaths() = 0;
+    // sent to MainWindow's log
+    virtual void virt_onLog(const QString &mod, const QString &msg) = 0;
+    // sent to PathMachine
+    // for main move/search algorithm
+    // REVISIT: can we remove the signal wrapper?
+    virtual void virt_onHandleParseEvent(const SigParseEvent &parseEvent) = 0;
+    // for map
+    virtual void virt_onShowPath(const CommandQueue &) = 0;
+    // sent to MapCanvas
+    // REVISIT: can we remove the signal wrapper?
+    virtual void virt_onNewRoomSelection(const SigRoomSelection &roomSelection) = 0;
+    // sent to MainWindow
+    // for commands that set the mode (emulation, play, map)
+    // these are connected to MainWindow
+    virtual void virt_onSetMode(MapModeEnum) = 0;
+    // sent to MapCanvas
+    virtual void virt_onInfomarksChanged() = 0;
+};
+
+struct NODISCARD ParserCommonData final
+{
+public:
+    QString exits; // nullString
+    ExitsFlagsType exitsFlags;
+    PromptFlagsType promptFlags;
+    ConnectedRoomFlagsType connectedRoomFlags;
+    RoomTerrainEnum terrain;
+
+public:
+    QString lastPrompt;
+    CommandQueue queue;
+    bool overrideSendPrompt = false;
+    bool trollExitMapping = false;
+
+public:
+    // accessed by initActionMap
+    CTimers timers;
+
+public:
+    explicit ParserCommonData(QObject *parent)
+        : timers{parent}
+    {}
+};
+
+class NODISCARD_QOBJECT ParserCommon : public QObject
+{
+    Q_OBJECT
+
+protected:
+    MumeClock &m_mumeClock;
+    MapData &m_mapData;
+
+protected:
+    GroupManagerApi &m_group;
+    ProxyUserGmcpApi &m_proxyUserGmcp;
+    AbstractParserOutputs &m_outputs;
+
+protected:
+    ParserCommonData &m_commonData;
+
+protected:
+    explicit ParserCommon(QObject *const parent,
+                          MumeClock &mumeClock,
+                          MapData &mapData,
+                          GroupManagerApi &group,
+                          ProxyUserGmcpApi &proxyUserGmcp,
+                          AbstractParserOutputs &outputs,
+                          ParserCommonData &commonData)
+        : QObject{parent}
+        , m_mumeClock{mumeClock}
+        , m_mapData{mapData}
+        , m_group{group}
+        , m_proxyUserGmcp{proxyUserGmcp}
+        , m_outputs{outputs}
+        , m_commonData{commonData}
+    {}
+
+protected:
+    NODISCARD CommandQueue &getQueue() { return m_commonData.queue; }
+    NODISCARD CTimers &getTimers() { return m_commonData.timers; }
+
+protected:
+    void log(const QString &a, const QString &b) { m_outputs.onLog(a, b); }
+
+public:
+    void sendToUser(const SendToUserSource source, const QString &s, const bool goAhead)
+    {
+        m_outputs.onSendToUser(source, s, goAhead);
+    }
+
+    inline void sendToUser(const SendToUserSource source, const QByteArray &arr)
+    {
+        sendToUser(source, QString::fromUtf8(arr), false);
+    }
+    inline void sendToUser(const SendToUserSource source, const std::string_view s)
+    {
+        sendToUser(source, mmqt::toQStringUtf8(s));
+    }
+    inline void sendToUser(const SendToUserSource source, const char *const s)
+    {
+        assert(s != nullptr);
+        if (s != nullptr) {
+            sendToUser(source, std::string_view{s});
+        }
+    }
+    inline void sendToUser(const SendToUserSource source, const QString &s)
+    {
+        sendToUser(source, s, false);
+    }
+
+protected:
+    void onNewRoomSelection(const SigRoomSelection &roomSelection)
+    {
+        m_outputs.onNewRoomSelection(roomSelection);
+    }
+
+public:
+    void sendPromptToUser();
+
+public:
+    void sendPromptToUser(const RoomHandle &r);
+    void sendPromptToUser(char light, char terrain);
+    void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
+
+protected:
+    void sendPromptLineEvent(const QString &arr);
+    void sendScoreLineEvent(const QString &arr);
+
+protected:
+    void onHandleParseEvent(const SigParseEvent &parseEvent)
+    {
+        m_outputs.onHandleParseEvent(parseEvent);
+    }
+
+protected:
+    void emulateExits(AnsiOstream &, CommandEnum move);
+    void sendRoomExitsInfoToUser(AnsiOstream &, const RoomPtr &r);
+    void sendRoomExitsInfoToUser(const RoomPtr &r);
+
+protected:
+    void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
+    void setExitFlags(ExitFlags flag, ExitDirEnum dir);
+
+protected:
+    NODISCARD RoomId getNextPosition() const;
+    NODISCARD RoomId getTailPosition() const;
+
+protected:
+    void pathChanged() { m_outputs.onShowPath(m_commonData.queue); }
+    void onReleaseAllPaths() { m_outputs.onReleaseAllPaths(); }
+
+protected:
+    // accesses m_queue
+    void clearQueue();
+
+public:
+    void sendGTellToUser(const QString &, const QString &, const QString &);
+};
+
+class MumeXmlParserBase : public ParserCommon
+{
+private:
+    ActionRecordMap m_actionMap;
+
+protected:
+    explicit MumeXmlParserBase(QObject *const parent,
+                               MumeClock &mumeClock,
+                               MapData &mapData,
+                               GroupManagerApi &group,
+                               ProxyUserGmcpApi &proxyUserGmcp,
+                               AbstractParserOutputs &outputs,
+                               ParserCommonData &parserCommonData)
+        : ParserCommon{parent, mumeClock, mapData, group, proxyUserGmcp, outputs, parserCommonData}
+    {
+        initActionMap();
+    }
+    ~MumeXmlParserBase() override;
+
+private:
+    void initActionMap();
+
+protected:
+    void parseExits(std::ostream &);
+    NODISCARD bool evalActionMap(StringView line);
+
+public:
+    // accesses m_lastPrompt and m_queue,
+    // but it's also only called from the proxy.
+    void onReset();
+    void onForcedPositionChange();
+};
+
+// TODO: rename this to UserInputParser
+class NODISCARD_QOBJECT AbstractParser final : public ParserCommon
 {
     Q_OBJECT
 
 private:
     class ParseRoomHelper;
 
-protected:
-    static const QString nullString;
-    static const QByteArray emptyByteArray;
-
-protected:
-    MumeClock &m_mumeClock;
-    MapData &m_mapData;
-    CTimers &m_timers;
-
 private:
-    const ProxyParserApi m_proxy;
-    const GroupManagerApi m_group;
+    ProxyMudConnectionApi &m_proxyMudConnection;
 
 private:
     // NOTE: This is only shared because std::unique_ptr<> does not play nice with opaque types,
@@ -100,69 +338,37 @@ private:
     }
 
 private:
-    ActionRecordMap m_actionMap;
-
-protected:
-    QString m_exits = nullString;
-    ExitsFlagsType m_exitsFlags;
-    PromptFlagsType m_promptFlags;
-    ConnectedRoomFlagsType m_connectedRoomFlags;
-    RoomTerrainEnum m_terrain;
-
-protected:
-    QString m_lastPrompt;
-    CommandQueue m_queue;
-    bool m_compactMode = false;
-    bool m_overrideSendPrompt = false;
-    bool m_trollExitMapping = false;
-
-private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(
-        MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, CTimers &timers, QObject *parent);
+    explicit AbstractParser(MapData &,
+                            MumeClock &,
+                            ProxyMudConnectionApi &,
+                            ProxyUserGmcpApi &,
+                            GroupManagerApi &,
+                            QObject *parent,
+                            AbstractParserOutputs &outputs,
+                            ParserCommonData &commonData);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
-    void sendPromptToUser();
-    void sendScoreLineEvent(const QString &arr);
-    void sendPromptLineEvent(const QString &arr);
 
 protected:
     void offlineCharacterMove(CommandEnum direction);
     void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
     void sendRoomInfoToUser(const RoomPtr &);
-    void sendPromptToUser(const RoomHandle &r);
-    void sendPromptToUser(char light, char terrain);
-    void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
-
-    void sendRoomExitsInfoToUser(AnsiOstream &, const RoomPtr &r);
-    void sendRoomExitsInfoToUser(const RoomPtr &r);
-
-    NODISCARD RoomId getNextPosition() const;
-    NODISCARD RoomId getTailPosition() const;
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
-    void genericDoorCommand(QString command, ExitDirEnum direction);
 
 public:
-    void setExitFlags(ExitFlags flag, ExitDirEnum dir);
-    void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
-
-    void emulateExits(AnsiOstream &, CommandEnum move);
-    void parseExits(std::ostream &);
     NODISCARD bool parseUserCommands(const QString &command);
-    NODISCARD static QString normalizeStringCopy(QString str);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
 
-    NODISCARD bool evalActionMap(StringView line);
-
 private:
-    void setMode(MapModeEnum mode);
+    void setMode(const MapModeEnum mode) { m_outputs.onSetMode(mode); }
     void parseSpecialCommand(StringView);
     NODISCARD bool parseSimpleCommand(const QString &str);
 
@@ -176,8 +382,6 @@ private:
 
     void showHeader(const QString &s);
 
-    void receiveMudServerStatus(const TelnetMsspBytes &);
-
     NODISCARD ExitDirEnum tryGetDir(StringView &words);
 
     void parseSetCommand(StringView view);
@@ -189,6 +393,8 @@ private:
     void openVoteURL();
     void doBackCommand();
     void doConfig(StringView view);
+
+    NODISCARD bool isConnected();
     void doConnectToHost();
     void doDisconnectFromHost();
     void doMapCommand(StringView rest);
@@ -197,8 +403,6 @@ private:
     void doGenerateBaseMap();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
-
-    void initActionMap();
 
     void initSpecialCommandMap();
     void addSpecialCommand(const char *s,
@@ -216,39 +420,22 @@ private:
     NODISCARD bool parseDoorAction(DoorActionEnum dat, StringView words);
 
 public:
-    inline void sendToUser(const QByteArray &arr) { sendToUser(QString::fromUtf8(arr), false); }
-    inline void sendToUser(const std::string_view s) { sendToUser(mmqt::toQStringUtf8(s)); }
-    inline void sendToUser(const char *const s)
-    {
-        assert(s != nullptr);
-        if (s != nullptr) {
-            sendToUser(std::string_view{s});
-        }
-    }
-    inline void sendToUser(const QString &s) { sendToUser(s, false); }
     friend AbstractParser &operator<<(AbstractParser &self, const std::string_view s)
     {
-        self.sendToUser(s);
+        self.sendToUser(SendToUserSource::FromMMapper, s);
         return self;
     }
     inline void sendOkToUser() { send_ok(*this); }
 
 protected:
-    inline void sendToUser(const QString &s, const bool goAhead)
-    {
-        emit sig_sendToUser(s, goAhead);
-    }
-    void pathChanged() { emit sig_showPath(m_queue); }
-    void mapChanged() { emit sig_mapChanged(); }
-
-protected:
-    void log(const QString &a, const QString &b) { emit sig_log(a, b); }
+    void mapChanged() { m_outputs.onMapChanged(); }
+    void infomarksChanged() { m_outputs.onInfomarksChanged(); }
 
 private:
-    void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
+    void graphicsSettingsChanged() { m_outputs.onGraphicsSettingsChanged(); }
 
     void sendToMud(const QByteArray &msg) = delete;
-    void sendToMud(const QString &msg) { emit sig_sendToMud(msg); }
+    void sendToMud(const QString &msg) { m_outputs.onSendToMud(msg); }
 
 private:
     void eval(std::string_view name,
@@ -262,45 +449,18 @@ private:
 
     void applySingleChange(const Change &change);
     void applyChanges(const ChangeList &changes);
-    void clearQueue();
+    void doOfflineCharacterMove();
 
-signals:
-    // telnet
-    void sig_sendToMud(const QString &);
-    void sig_sendToUser(const QString &, bool goAhead);
-    void sig_mapChanged();
-    void sig_graphicsSettingsChanged();
-    void sig_releaseAllPaths();
-
-    // used to log
-    void sig_log(const QString &, const QString &);
-
-    // for main move/search algorithm
-    void sig_handleParseEvent(const SigParseEvent &);
-    void sig_setCharRoomIdFromServer(ServerRoomId id);
-
-    // for map
-    void sig_showPath(CommandQueue);
-    void sig_newRoomSelection(const SigRoomSelection &rs);
-
-    // for user commands
-    void sig_command(const QString &, const Coordinate &);
-
-    // for commands that set the mode (emulation, play, map)
-    // these are connected to MainWindow
-    void sig_setMode(MapModeEnum);
-
-    // emitted when new infomark added by comand
-    void sig_infoMarksChanged();
+private:
+    void executeMudCommand(const QString &command);
+    void timersUpdate(const std::string &text);
 
 public slots:
     void slot_parseNewUserInput(const TelnetData &);
-    void slot_onForcedPositionChange();
-
-    void slot_reset();
-    void slot_sendGTellToUser(const QString &, const QString &, const QString &);
-    void slot_timersUpdate(const std::string &text);
-
-protected slots:
-    void slot_doOfflineCharacterMove();
 };
+
+NODISCARD extern QString normalizeStringCopy(QString str);
+
+namespace test {
+extern void testAbstractParser();
+} // namespace test

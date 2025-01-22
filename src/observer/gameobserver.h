@@ -12,27 +12,18 @@
 class NODISCARD_QOBJECT GameObserver final
 {
 public:
-    Signal2<> sig_connected;
-    Signal2<> sig_disconnected;
-    // Signal2<QByteArray> sig_sentToMudBytes;
-    // Signal2<QByteArray, bool /* go ahead */> sig_sentToUserBytes;
+    Signal2<> sig2_connected;
 
-    // Helper versions of the above, which remove ANSI in place and create QString
-    Signal2<QString> sig_sentToMudString;
-    Signal2<QString> sig_sentToUserString;
-    Signal2<GmcpMessage> sig_sentToMudGmcp;
-    Signal2<GmcpMessage> sig_sentToUserGmcp;
-    Signal2<bool> sig_toggledEchoMode;
+    Signal2<QString> sig2_sentToMudString;  // removes ANSI
+    Signal2<QString> sig2_sentToUserString; // removes ANSI
+
+    Signal2<GmcpMessage> sig2_sentToUserGmcp;
+    Signal2<bool> sig2_toggledEchoMode;
 
 public:
-    void slot_observeConnected();
-    void slot_observeDisconnected();
-
-    void slot_observeSentToMud(const QString &ba);
-    void slot_observeSentToUser(const QString &ba, bool goAhead);
-
-    void slot_observeSentToMudGmcp(const GmcpMessage &m);
-    void slot_observeSentToUserGmcp(const GmcpMessage &m);
-
-    void slot_observeToggledEchoMode(bool echo);
+    void observeConnected();
+    void observeSentToMud(const QString &ba);
+    void observeSentToUser(const QString &ba);
+    void observeSentToUserGmcp(const GmcpMessage &m);
+    void observeToggledEchoMode(bool echo);
 };

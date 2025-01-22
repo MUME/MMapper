@@ -8,61 +8,43 @@
 #include "../global/macros.h"
 #include "TaggedBytes.h"
 
-#include <cstdint>
+#include <functional>
 
-#include <QByteArray>
-#include <QObject>
-#include <QQueue>
-#include <QString>
-#include <QtCore>
-
-enum class NODISCARD TelnetDataEnum : uint8_t { Unknown, Prompt, CRLF, LF, Delay };
+enum class NODISCARD TelnetDataEnum : uint8_t { Empty, Prompt, CRLF, LF, Backspace };
 
 struct NODISCARD TelnetData final
 {
-    TelnetData() = default;
     RawBytes line;
-    TelnetDataEnum type = TelnetDataEnum::Unknown;
+    TelnetDataEnum type = TelnetDataEnum::Empty;
 };
 
-using TelnetIncomingDataQueue = QQueue<TelnetData>;
-
-class NODISCARD_QOBJECT MudTelnetFilter final : public QObject
+class NODISCARD TelnetLineFilter final
 {
-    Q_OBJECT
+public:
+    using Callback = std::function<void(const TelnetData &)>;
+    enum class NODISCARD OptionBackspacesEnum : uint8_t { No, Yes };
 
 private:
-    TelnetData m_mudIncomingBuffer;
+    RawBytes m_buffer;
+    Callback m_callback;
+    OptionBackspacesEnum m_reportBackspaces = OptionBackspacesEnum::No;
 
 public:
-    explicit MudTelnetFilter(QObject *const parent)
-        : QObject(parent)
-    {}
-    ~MudTelnetFilter() final = default;
-
-signals:
-    void sig_parseNewMudInput(const TelnetData &);
-
-public slots:
-    void slot_onAnalyzeMudStream(const RawBytes &ba, bool goAhead);
-};
-
-class NODISCARD_QOBJECT UserTelnetFilter final : public QObject
-{
-    Q_OBJECT
+    explicit TelnetLineFilter(const OptionBackspacesEnum reportBackspaces, Callback callback)
+        : m_callback{std::move(callback)}
+        , m_reportBackspaces{reportBackspaces}
+    {
+        assert(m_callback != nullptr);
+    }
 
 private:
-    TelnetData m_userIncomingData;
+    NODISCARD bool endsWith(char c) const;
+    void fwd(TelnetDataEnum);
 
 public:
-    explicit UserTelnetFilter(QObject *const parent)
-        : QObject(parent)
-    {}
-    ~UserTelnetFilter() final = default;
-
-signals:
-    void sig_parseNewUserInput(const TelnetData &);
-
-public slots:
-    void slot_onAnalyzeUserStream(const RawBytes &ba, bool goAhead);
+    void receive(const RawBytes &input, bool goAhead);
 };
+
+namespace test {
+extern void test_telnetfilter();
+} // namespace test

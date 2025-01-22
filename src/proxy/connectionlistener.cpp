@@ -87,24 +87,19 @@ void ConnectionListener::listen()
 
 void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
 {
-    if (m_accept) {
+    if (m_proxy == nullptr) {
         log("New connection: accepted.");
-        m_accept = false;
         emit sig_clientSuccessfullyConnected();
 
-        m_proxy = mmqt::makeQPointer<Proxy>(m_mapData,
-                                            m_pathMachine,
-                                            m_prespammedPath,
-                                            m_groupManager,
-                                            m_mumeClock,
-                                            m_mapCanvas,
-                                            m_gameOberver,
-                                            socketDescriptor,
-                                            *this);
-
-        connect(m_proxy, &QObject::destroyed, this, [this]() { m_accept = true; });
-        m_proxy->slot_start();
-
+        m_proxy = Proxy::allocInit(m_mapData,
+                                   m_pathMachine,
+                                   m_prespammedPath,
+                                   m_groupManager,
+                                   m_mumeClock,
+                                   m_mapCanvas,
+                                   m_gameOberver,
+                                   socketDescriptor,
+                                   *this);
     } else {
         log("New connection: rejected.");
         QTcpSocket tcpSocket;

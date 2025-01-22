@@ -5,34 +5,40 @@
 
 #include "proxy.h"
 
-bool ProxyParserApi::isConnected() const
+// This reports the state of the outbound/toMud socket.
+bool ProxyMudConnectionApi::isConnected() const
 {
-    bool result = false;
-    m_proxy.acceptVisitor([&result](Proxy &proxy) { result = proxy.isConnected(); });
-    return result;
+    return m_proxy.isConnected();
 }
 
-void ProxyParserApi::connectToMud() const
+// This only affects the outbound/toMud socket.
+void ProxyMudConnectionApi::connectToMud()
 {
-    // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
-    m_proxy.acceptVisitor([](Proxy &proxy) { proxy.connectToMud(); });
+    m_proxy.connectToMud();
 }
 
-void ProxyParserApi::disconnectFromMud() const
+// This only affects the outbound/toMud socket.
+void ProxyMudConnectionApi::disconnectFromMud()
 {
-    // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
-    m_proxy.acceptVisitor([](Proxy &proxy) { proxy.disconnectFromMud(); });
+    m_proxy.disconnectFromMud();
 }
 
-void ProxyParserApi::gmcpToUser(const GmcpMessage &msg) const
+bool ProxyUserGmcpApi::isUserGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
 {
-    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToUser(msg); });
+    return m_proxy.isUserGmcpModuleEnabled(mod);
 }
 
-bool ProxyParserApi::isGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
+void ProxyUserGmcpApi::gmcpToUser(const GmcpMessage &msg)
 {
-    bool result = false;
-    m_proxy.acceptVisitor(
-        [&mod, &result](Proxy &proxy) { result = proxy.isGmcpModuleEnabled(mod); });
-    return result;
+    m_proxy.gmcpToUser(msg);
+}
+
+bool ProxyMudGmcpApi::isMudGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
+{
+    return m_proxy.isMudGmcpModuleEnabled(mod);
+}
+
+void ProxyMudGmcpApi::gmcpToMud(const GmcpMessage &msg)
+{
+    m_proxy.gmcpToMud(msg);
 }

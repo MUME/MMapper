@@ -3,15 +3,43 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
 #include "AbstractTelnet.h"
 
 #include <QByteArray>
 #include <QObject>
 
-class NODISCARD_QOBJECT UserTelnet final : public AbstractTelnet
+struct NODISCARD UserTelnetOutputs
 {
-    Q_OBJECT
+public:
+    virtual ~UserTelnetOutputs();
 
+public:
+    void onAnalyzeUserStream(const RawBytes &bytes, const bool goAhead)
+    {
+        virt_onAnalyzeUserStream(bytes, goAhead);
+    }
+    void onSendToSocket(const TelnetIacBytes &bytes) { virt_onSendToSocket(bytes); }
+    void onRelayGmcpFromUserToMud(const GmcpMessage &msg) { virt_onRelayGmcpFromUserToMud(msg); }
+    void onRelayNawsFromUserToMud(const int width, const int height)
+    {
+        virt_onRelayNawsFromUserToMud(width, height);
+    }
+    void onRelayTermTypeFromUserToMud(const TelnetTermTypeBytes &bytes)
+    {
+        virt_onRelayTermTypeFromUserToMud(bytes);
+    }
+
+private:
+    virtual void virt_onAnalyzeUserStream(const RawBytes &, bool) = 0;
+    virtual void virt_onSendToSocket(const TelnetIacBytes &) = 0;
+    virtual void virt_onRelayGmcpFromUserToMud(const GmcpMessage &) = 0;
+    virtual void virt_onRelayNawsFromUserToMud(int, int) = 0;
+    virtual void virt_onRelayTermTypeFromUserToMud(const TelnetTermTypeBytes &) = 0;
+};
+
+class NODISCARD UserTelnet final : public AbstractTelnet
+{
 private:
     /** modules for GMCP */
     struct NODISCARD GmcpData final
@@ -22,12 +50,15 @@ private:
         GmcpModuleSet modules;
     } m_gmcp{};
 
+private:
+    UserTelnetOutputs &m_outputs;
+
 public:
-    explicit UserTelnet(QObject *parent);
+    explicit UserTelnet(UserTelnetOutputs &outputs);
     ~UserTelnet() final = default;
 
 private:
-    NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) final;
+    NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) const final;
     void virt_sendToMapper(const RawBytes &data, bool goAhead) final;
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
     void virt_receiveTerminalType(const TelnetTermTypeBytes &) final;
@@ -38,18 +69,13 @@ private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
 
-signals:
-    void sig_analyzeUserStream(const RawBytes &, bool goAhead);
-    void sig_sendToSocket(const TelnetIacBytes &);
-    void sig_relayGmcp(const GmcpMessage &);
-    void sig_relayNaws(int, int);
-    void sig_relayTermType(TelnetTermTypeBytes);
+public:
+    void onAnalyzeUserStream(const TelnetIacBytes &);
 
-public slots:
-    void slot_onSendToUser(const QString &data, bool goAhead);
-    void slot_onAnalyzeUserStream(const TelnetIacBytes &);
-    void slot_onConnected();
-    void slot_onRelayEchoMode(bool);
-    void slot_onGmcpToUser(const GmcpMessage &);
-    void slot_onSendMSSPToUser(const TelnetMsspBytes &);
+public:
+    void onSendToUser(const QString &data, bool goAhead);
+    void onConnected();
+    void onRelayEchoMode(bool);
+    void onGmcpToUser(const GmcpMessage &);
+    void onSendMSSPToUser(const TelnetMsspBytes &);
 };

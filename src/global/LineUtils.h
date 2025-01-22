@@ -66,3 +66,11 @@ void foreachLine(const std::string_view input, Callback &&callback)
 }
 
 NODISCARD size_t countLines(std::string_view input);
+
+namespace mmqt {
+NODISCARD QString getCommand(const QByteArray &utf8_line);
+} // namespace mmqt
+
+namespace test {
+extern void testLineUtils();
+} // namespace test

@@ -57,7 +57,7 @@ void AbstractParser::parseTimer(StringView input)
 
             const std::string desc = concatenate_unquoted(v[4].getVector());
 
-            m_timers.addCountdown(name, desc, delay * 1000);
+            getTimers().addCountdown(name, desc, delay * 1000);
             os << "Added countdown timer " << name;
             if (!desc.empty()) {
                 os << " <" << desc << ">";
@@ -80,7 +80,7 @@ void AbstractParser::parseTimer(StringView input)
             const auto name = v[2].getString();
             const std::string desc = concatenate_unquoted(v[3].getVector());
 
-            m_timers.addTimer(name, desc);
+            getTimers().addTimer(name, desc);
             os << "Added simple timer " << name;
             if (!desc.empty()) {
                 os << " <" << desc << ">";
@@ -97,10 +97,11 @@ void AbstractParser::parseTimer(StringView input)
 
             const auto name = v[1].getString();
 
+            auto &timers = getTimers();
             auto res = false;
-            if ((res = m_timers.removeTimer(name))) {
+            if ((res = timers.removeTimer(name))) {
                 os << "Removed simple timer " << name << ".\n";
-            } else if ((res = m_timers.removeCountdown(name))) {
+            } else if ((res = timers.removeCountdown(name))) {
                 os << "Removed countdown timer " << name << ".\n";
             } else {
                 os << "No timer with that name found.\n";
@@ -112,7 +113,7 @@ void AbstractParser::parseTimer(StringView input)
     auto clearTimers = Accept(
         [this](User &user, const Pair *const /* args */) {
             auto &os = user.getOstream();
-            m_timers.clear();
+            getTimers().clear();
             os << "Cleared all timers.\n";
             send_ok(os);
         },
@@ -121,7 +122,7 @@ void AbstractParser::parseTimer(StringView input)
     auto listTimers = Accept(
         [this](User &user, const Pair *const /* args */) {
             auto &os = user.getOstream();
-            const auto list = m_timers.getStatCommandEntry();
+            const auto list = getTimers().getStatCommandEntry();
             if (list.empty()) {
                 os << "No timers have been created yet.\n";
             } else {

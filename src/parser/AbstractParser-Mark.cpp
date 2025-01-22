@@ -206,7 +206,7 @@ void AbstractParser::parseMark(StringView input)
                 os << "Unable to remove marker.\n";
                 return;
             }
-            emit sig_infoMarksChanged(); // is this necessary?
+            infomarksChanged(); // is this necessary?
             send_ok(os);
         },
         "remove mark");
@@ -246,7 +246,7 @@ void AbstractParser::parseMark(StringView input)
                 return;
             }
 
-            emit sig_infoMarksChanged();
+            infomarksChanged();
             send_ok(os);
         },
         "add mark");
@@ -260,7 +260,7 @@ void AbstractParser::parseMark(StringView input)
         callback(mark);
         auto result = this->m_mapData.updateMarker(id, mark);
         if (result) {
-            emit sig_infoMarksChanged(); // is this necessary?
+            infomarksChanged(); // is this necessary?
         }
         return result;
     };

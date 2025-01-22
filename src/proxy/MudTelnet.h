@@ -3,22 +3,55 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
 #include "AbstractTelnet.h"
 
 #include <QByteArray>
 #include <QObject>
 
-class NODISCARD_QOBJECT MudTelnet final : public AbstractTelnet
+struct NODISCARD MsspTime final
 {
-    Q_OBJECT
+    int year = -1;
+    int month = -1;
+    int day = -1;
+    int hour = -1;
+};
+
+struct NODISCARD MudTelnetOutputs
+{
+    virtual ~MudTelnetOutputs();
+
+public:
+    void onAnalyzeMudStream(const RawBytes &bytes, const bool goAhead)
+    {
+        virt_onAnalyzeMudStream(bytes, goAhead);
+    }
+    void onSendToSocket(const TelnetIacBytes &bytes) { virt_onSendToSocket(bytes); }
+    void onRelayEchoMode(const bool echo) { virt_onRelayEchoMode(echo); }
+    void onRelayGmcpFromMudToUser(const GmcpMessage &msg) { virt_onRelayGmcpFromMudToUser(msg); }
+    void onSendMSSPToUser(const TelnetMsspBytes &bytes) { virt_onSendMSSPToUser(bytes); }
+    void onSendGameTimeToClock(const MsspTime &time) { virt_onSendGameTimeToClock(time); }
 
 private:
+    virtual void virt_onAnalyzeMudStream(const RawBytes &, bool goAhead) = 0;
+    virtual void virt_onSendToSocket(const TelnetIacBytes &) = 0;
+    virtual void virt_onRelayEchoMode(bool) = 0;
+    virtual void virt_onRelayGmcpFromMudToUser(const GmcpMessage &) = 0;
+    virtual void virt_onSendMSSPToUser(const TelnetMsspBytes &) = 0;
+    virtual void virt_onSendGameTimeToClock(const MsspTime &) = 0;
+};
+
+class NODISCARD MudTelnet final : public AbstractTelnet
+{
+private:
+    MudTelnetOutputs &m_outputs;
     /** modules for GMCP */
     GmcpModuleSet m_gmcp;
+    QString m_lineBuffer;
     bool m_receivedExternalDiscordHello = false;
 
 public:
-    explicit MudTelnet(QObject *parent);
+    explicit MudTelnet(MudTelnetOutputs &outputs);
     ~MudTelnet() final = default;
 
 private:
@@ -33,24 +66,19 @@ private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
     void parseMudServerStatus(const TelnetMsspBytes &);
+    void submitOneLine(const QString &s);
 
 private:
     void sendCoreSupports();
 
-signals:
-    void sig_analyzeMudStream(const RawBytes &, bool goAhead);
-    void sig_sendToSocket(const TelnetIacBytes &);
-    void sig_relayEchoMode(bool);
-    void sig_relayGmcp(const GmcpMessage &);
-    void sig_sendMSSPToUser(const TelnetMsspBytes &);
-    void sig_sendGameTimeToClock(int year, const std::string &month, int day, int hour);
+public:
+    void onDisconnected();
 
-public slots:
-    void slot_onAnalyzeMudStream(const TelnetIacBytes &);
-    void slot_onSendRawToMud(const RawBytes &);
-    void slot_onSendToMud(const QString &);
-    void slot_onDisconnected();
-    void slot_onRelayNaws(int, int);
-    void slot_onRelayTermType(const TelnetTermTypeBytes &);
-    void slot_onGmcpToMud(const GmcpMessage &);
+public:
+    void onAnalyzeMudStream(const TelnetIacBytes &);
+    void onSubmitMpiToMud(const RawBytes &);
+    void onSendToMud(const QString &);
+    void onRelayNaws(int, int);
+    void onRelayTermType(const TelnetTermTypeBytes &);
+    void onGmcpToMud(const GmcpMessage &);
 };

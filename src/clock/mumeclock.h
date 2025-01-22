@@ -18,6 +18,7 @@
 
 class GmcpMessage;
 class QMetaEnum;
+struct MsspTime;
 
 enum class NODISCARD MumeClockPrecisionEnum : int8_t { UNSET = -1, DAY, HOUR, MINUTE };
 
@@ -149,12 +150,15 @@ public:
 
     NODISCARD static int getMumeMonth(const QString &monthName);
     NODISCARD static int getMumeWeekday(const QString &weekdayName);
-    void parseMSSP(int year, int month, int day, int hour);
+    void parseMSSP(const MsspTime &gameTime);
 
 protected:
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
     void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);
     void parseWeather(MumeTimeEnum time, int64_t secsSinceEpoch);
+
+private:
+    void onUserGmcp(const GmcpMessage &msg);
 
 signals:
     void sig_log(const QString &, const QString &);
@@ -162,5 +166,4 @@ signals:
 public slots:
     void parseMumeTime(const QString &mumeTime);
     void parseClockTime(const QString &clockTime);
-    void slot_onUserGmcp(const GmcpMessage &msg);
 };

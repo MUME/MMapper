@@ -5,6 +5,8 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/AnsiTextUtils.h"
+#include "../global/Signal2.h"
 #include "../global/io.h"
 #include "TaggedBytes.h"
 
@@ -18,13 +20,47 @@
 
 class QSslError;
 
+struct NODISCARD AnsiWarningMessage final
+{
+    AnsiColor16Enum fg = AnsiColor16Enum::white;
+    AnsiColor16Enum bg = AnsiColor16Enum::red;
+    QString title;
+    QString msg;
+};
+
+struct NODISCARD MumeSocketOutputs
+{
+public:
+    virtual ~MumeSocketOutputs();
+
+public:
+    void onConnected() { virt_onConnected(); }
+    void onDisconnected() { virt_onDisconnected(); }
+    void onSocketWarning(const AnsiWarningMessage &msg) { virt_onSocketWarning(msg); }
+    void onSocketError(const QString &msg) { virt_onSocketError(msg); }
+    void onProcessMudStream(const TelnetIacBytes &bytes) { virt_onProcessMudStream(bytes); }
+    void onLog(const QString &msg) { virt_onLog(msg); }
+
+private:
+    virtual void virt_onConnected() = 0;
+    virtual void virt_onDisconnected() = 0;
+    virtual void virt_onSocketWarning(const AnsiWarningMessage &) = 0;
+    virtual void virt_onSocketError(const QString & /*errorString*/) = 0;
+    virtual void virt_onProcessMudStream(const TelnetIacBytes & /*buffer*/) = 0;
+    virtual void virt_onLog(const QString &) = 0;
+};
+
 class NODISCARD_QOBJECT MumeSocket : public QObject
 {
     Q_OBJECT
 
+protected:
+    MumeSocketOutputs &m_outputs;
+
 public:
-    explicit MumeSocket(QObject *parent)
+    explicit MumeSocket(QObject *parent, MumeSocketOutputs &outputs)
         : QObject(parent)
+        , m_outputs{outputs}
     {}
 
 private:
@@ -38,10 +74,14 @@ private:
     virtual void virt_onError2(QAbstractSocket::SocketError e, const QString &errorString);
 
 protected:
-    void fakeMessageFromMud(const QString &msg);
-
-protected:
-    void proxy_log(const QString &msg) { emit sig_log("Proxy", msg); }
+    void proxy_log(const QString &msg) { m_outputs.onLog(msg); }
+    void onConnect() { virt_onConnect(); }
+    void onDisconnect() { virt_onDisconnect(); }
+    void onError(QAbstractSocket::SocketError e) { virt_onError(e); }
+    void onError2(QAbstractSocket::SocketError e, const QString &errorString)
+    {
+        virt_onError2(e, errorString);
+    }
 
 public:
     void disconnectFromHost() { virt_disconnectFromHost(); }
@@ -64,22 +104,6 @@ public:
         }
         std::abort();
     }
-
-signals:
-    void sig_connected();
-    void sig_disconnected();
-    void sig_socketError(const QString &errorString);
-    void sig_processMudStream(const TelnetIacBytes &buffer);
-    void sig_log(const QString &, const QString &);
-
-protected slots:
-    void slot_onConnect() { virt_onConnect(); }
-    void slot_onDisconnect() { virt_onDisconnect(); }
-    void slot_onError(QAbstractSocket::SocketError e) { virt_onError(e); }
-    void slot_onError2(QAbstractSocket::SocketError e, const QString &errorString)
-    {
-        virt_onError2(e, errorString);
-    }
 };
 
 class NODISCARD_QOBJECT MumeSslSocket : public MumeSocket
@@ -92,7 +116,7 @@ protected:
     QTimer m_timer;
 
 public:
-    explicit MumeSslSocket(QObject *parent);
+    explicit MumeSslSocket(QObject *parent, MumeSocketOutputs &outputs);
     ~MumeSslSocket() override;
 
 private:
@@ -115,8 +139,8 @@ class NODISCARD_QOBJECT MumeTcpSocket final : public MumeSslSocket
     Q_OBJECT
 
 public:
-    explicit MumeTcpSocket(QObject *parent)
-        : MumeSslSocket(parent)
+    explicit MumeTcpSocket(QObject *parent, MumeSocketOutputs &outputs)
+        : MumeSslSocket(parent, outputs)
     {}
 
 private:

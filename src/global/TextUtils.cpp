@@ -130,6 +130,11 @@ std::string_view toStdStringViewLatin1(const QByteArray &arr)
     return toStdStringViewRaw(arr);
 }
 
+std::string_view toStdStringViewUtf8(const QByteArray &arr)
+{
+    return toStdStringViewRaw(arr);
+}
+
 } // namespace mmqt
 
 namespace { // anonymous

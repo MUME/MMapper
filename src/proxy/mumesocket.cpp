@@ -22,25 +22,18 @@
 #include <QtNetwork>
 
 static constexpr int TIMEOUT_MILLIS = 30000;
+static constexpr auto ENCRYPTION_WARNING = "ENCRYPTION WARNING";
+
+MumeSocketOutputs::~MumeSocketOutputs() = default;
 
 void MumeSocket::virt_onConnect()
 {
-    emit sig_connected();
+    m_outputs.onConnected();
 }
 
 void MumeSocket::virt_onDisconnect()
 {
-    emit sig_disconnected();
-}
-
-void MumeSocket::fakeMessageFromMud(const QString &msg)
-{
-    // This does not come from the mud, so we have to fake it.
-    // hopefully this won't interrupt telnet options, MPI, etc.
-
-    auto bytes = msg.toUtf8();
-    bytes.replace("\xFF", "\xFF\xFF");
-    emit sig_processMudStream(TelnetIacBytes{std::move(bytes)});
+    m_outputs.onDisconnected();
 }
 
 void MumeSocket::virt_onError2(QAbstractSocket::SocketError e, const QString &errorString)
@@ -83,11 +76,11 @@ void MumeSocket::virt_onError2(QAbstractSocket::SocketError e, const QString &er
     default:
         break;
     }
-    emit sig_socketError(errorStr);
+    m_outputs.onSocketError(errorStr);
 }
 
-MumeSslSocket::MumeSslSocket(QObject *parent)
-    : MumeSocket(parent)
+MumeSslSocket::MumeSslSocket(QObject *parent, MumeSocketOutputs &outputs)
+    : MumeSocket(parent, outputs)
     , m_socket{this}
     , m_timer{this}
 {
@@ -97,17 +90,17 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
         return config;
     };
     m_socket.setSslConfiguration(get_ssl_config());
-    connect(&m_socket,
-            QOverload<>::of(&QAbstractSocket::connected),
-            this,
-            &MumeSslSocket::slot_onConnect);
+
+    connect(&m_socket, QOverload<>::of(&QAbstractSocket::connected), this, [this]() {
+        onConnect();
+    });
     connect(&m_socket, &QIODevice::readyRead, this, &MumeSslSocket::slot_onReadyRead);
-    connect(&m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::slot_onDisconnect);
+    connect(&m_socket, &QAbstractSocket::disconnected, this, [this]() { onDisconnect(); });
     connect(&m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::slot_onEncrypted);
     connect(&m_socket,
             QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this,
-            &MumeSslSocket::slot_onError);
+            [this](QAbstractSocket::SocketError e) { this->MumeSslSocket::onError(e); });
     connect(&m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::slot_onPeerVerifyError);
 
     m_timer.setInterval(TIMEOUT_MILLIS);
@@ -123,6 +116,7 @@ MumeSslSocket::~MumeSslSocket()
 
 void MumeSslSocket::virt_connectToHost()
 {
+    // REVISIT: Most clients tell the user where they're connecting.
     const auto &settings = getConfig().connection;
     m_socket.connectToHostEncrypted(settings.remoteServerName,
                                     settings.remotePort,
@@ -155,13 +149,14 @@ void MumeSslSocket::virt_onError(QAbstractSocket::SocketError e)
     // MUME disconnecting is not an error. We also handle timeouts separately.
     if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
         m_timer.stop();
-        slot_onError2(e, m_socket.errorString());
+        onError2(e, m_socket.errorString());
     }
 }
 
 void MumeSslSocket::slot_onEncrypted()
 {
     m_timer.stop();
+    // This message is misleading; text is buffered until the encryption succeeds.
     proxy_log("Connection now encrypted ...");
     constexpr const bool LOG_CERT_INFO = true;
     if ((LOG_CERT_INFO)) {
@@ -178,35 +173,25 @@ void MumeSslSocket::slot_onEncrypted()
         proxy_log(QString("Peer certificate expires: %1.").arg(expStr));
     }
 
-    // NOTE: This originally called `MumeSocket::onConnect()`, which just called
-    // `emit sig_connected();` but that function is now private, and calling
-    // `MumeSocket::slot_onConnect()` here would end up calling `MumeSslSocket::virt_onConnect()`,
-    // which probably isn't intended.
-    emit sig_connected();
+    m_outputs.onConnected();
 }
 
 void MumeSslSocket::slot_onPeerVerifyError(const QSslError &error)
 {
-    proxy_log("<b>WARNING:</b> " + error.errorString());
-    qWarning() << "onPeerVerifyError" << m_socket.errorString() << error.errorString();
+    auto msg = error.errorString();
+    if (!msg.isEmpty() && !msg.back().isPunct()) {
+        msg += char_consts::C_PERIOD;
+    }
 
-    const auto msg = [&error]() {
-        constexpr auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::red);
-        constexpr auto boldWhiteOnRed = whiteOnRed.withBold();
+    // REVISIT: avoid sending HTML directly; send a title and message instead,
+    // and let the logger decide how to format the title.
+    //
+    // (e.g. Maybe the handler for sig3_socketWarning should be the one to format and send the message.)
+    proxy_log("<b>WARNING:</b> " + msg);
+    qWarning() << "onPeerVerifyError" << m_socket.errorString() << msg;
 
-        std::ostringstream oss;
-        AnsiOstream aos{oss};
-        aos.write("\n");
-        aos.writeWithColor(boldWhiteOnRed, "ENCRYPTION WARNING:");
-        aos.writeWithColor(whiteOnRed, " ");
-        aos.writeWithColor(whiteOnRed, mmqt::toStdStringUtf8(error.errorString()));
-        aos.writeWithColor(whiteOnRed, " ");
-        aos.writeWithColor(whiteOnRed, "!\n");
-        aos.write("\n");
-        return mmqt::toQStringUtf8(std::move(oss).str());
-    }();
-
-    fakeMessageFromMud(msg);
+    m_outputs.onSocketWarning(
+        AnsiWarningMessage{AnsiColor16Enum::white, AnsiColor16Enum::red, ENCRYPTION_WARNING, msg});
 }
 
 void MumeSslSocket::slot_onReadyRead()
@@ -214,7 +199,7 @@ void MumeSslSocket::slot_onReadyRead()
     // REVISIT: check return value?
     std::ignore = io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
         assert(!byteArray.isEmpty());
-        emit sig_processMudStream(TelnetIacBytes{byteArray});
+        m_outputs.onProcessMudStream(TelnetIacBytes{byteArray});
     });
 }
 
@@ -223,8 +208,8 @@ void MumeSslSocket::slot_checkTimeout()
     switch (m_socket.state()) {
     case QAbstractSocket::ConnectedState:
         if (!m_socket.isEncrypted()) {
-            slot_onError2(QAbstractSocket::SslHandshakeFailedError,
-                          "Timeout during encryption handshake.");
+            onError2(QAbstractSocket::SslHandshakeFailedError,
+                     "Timeout during encryption handshake.");
             return;
         } else {
             // Race condition? Connection was successfully encrypted
@@ -232,7 +217,7 @@ void MumeSslSocket::slot_checkTimeout()
         break;
     case QAbstractSocket::HostLookupState:
         m_socket.abort();
-        slot_onError2(QAbstractSocket::HostNotFoundError, "Could not find host!");
+        onError2(QAbstractSocket::HostNotFoundError, "Could not find host!");
         return;
 
     case QAbstractSocket::UnconnectedState:
@@ -242,7 +227,7 @@ void MumeSslSocket::slot_checkTimeout()
     case QAbstractSocket::ClosingState:
     default:
         m_socket.abort();
-        slot_onError2(QAbstractSocket::SocketTimeoutError, "Connection timed out!");
+        onError2(QAbstractSocket::SocketTimeoutError, "Connection timed out!");
         break;
     }
 }
@@ -274,24 +259,13 @@ void MumeTcpSocket::virt_onConnect()
 
     if (QSslSocket::supportsSsl()) {
         // Warn user of the insecure connection
-        QString msg = QByteArray(
-            "\n"
-            "\033[0;1;37;41m"
-            "WARNING:"
-            "\033[0;37;41m"
-            " "
+        m_outputs.onSocketWarning(AnsiWarningMessage{
+            AnsiColor16Enum::white,
+            AnsiColor16Enum::red,
+            ENCRYPTION_WARNING,
             "This connection is not secure! Disconnect and enable TLS encryption under the MMapper"
-            " preferences to get rid of this message."
-            "\033[0m"
-            "\n"
-            "\n");
-
-        fakeMessageFromMud(msg);
+            " preferences to get rid of this message."});
     }
 
-    // NOTE: This originally bypassed the parent class`MumeSslSocket::onConnect()`
-    // and called `MumeSocket::onConnect()` directly, which just called `emit sig_connected();`
-    // but that function is now private, and calling `MumeSocket::slot_onConnect()`
-    // would end up recursively calling this function!
-    emit sig_connected();
+    m_outputs.onConnected();
 }

@@ -103,6 +103,67 @@ NODISCARD static bool containsIAC(const std::string_view arr)
     return arr.find(char(TN_IAC)) != std::string_view::npos;
 }
 
+NODISCARD static bool containsIAC(const RawBytes &raw)
+{
+    return containsIAC(mmqt::toStdStringViewRaw(raw.getQByteArray()));
+}
+
+static void doubleIacs(std::ostream &os, const std::string_view input)
+{
+    // IAC byte must be doubled
+    static constexpr const auto IAC = static_cast<char>(TN_IAC);
+
+    // Note: input isn't required to be latin-1, but we're treating it as-if it is
+    // because the only thing that matters is the 255 byte.
+    foreachLatin1CharSingle(
+        input,
+        IAC,
+        [&os]() { os << IAC << IAC; },
+        [&os](const std::string_view sv) {
+            if (!sv.empty()) {
+                os << sv;
+            }
+        });
+}
+
+NODISCARD static TelnetIacBytes doubleIacs(const RawBytes &raw)
+{
+    if (!containsIAC(raw)) {
+        return TelnetIacBytes{raw.getQByteArray()};
+    }
+
+    const auto sv = mmqt::toStdStringViewRaw(raw.getQByteArray());
+    std::ostringstream os;
+    doubleIacs(os, sv);
+    return TelnetIacBytes{mmqt::toQByteArrayRaw(os.str())};
+}
+
+namespace mmqt {
+NODISCARD static std::string toEncoding(const QString &s, const CharacterEncodingEnum encoding)
+{
+    switch (encoding) {
+    case CharacterEncodingEnum::UTF8:
+        return mmqt::toStdStringUtf8(s);
+    case CharacterEncodingEnum::LATIN1:
+        return mmqt::toStdStringLatin1(s); // conversion to user charset
+    case CharacterEncodingEnum::ASCII: {
+        auto ascii = mmqt::toStdStringLatin1(s);          // conversion to user charset
+        charset::conversion::latin1ToAsciiInPlace(ascii); // conversion to user charset
+        return ascii;
+    }
+    default:
+        abort();
+    }
+}
+
+NODISCARD static RawBytes toRawBytes(const QString &qs, const CharacterEncodingEnum encoding)
+{
+    const auto s = toEncoding(qs, encoding);
+    return RawBytes{mmqt::toQByteArrayRaw(s)};
+}
+
+} // namespace mmqt
+
 // Emits output via AbstractTelnet::sendRawData() as RAII callback in dtor.
 struct NODISCARD TelnetFormatter final
 {
@@ -220,10 +281,8 @@ void AbstractTelnet::ZstreamPimpl::reset()
 }
 
 AbstractTelnet::AbstractTelnet(const TextCodecStrategyEnum strategy,
-                               QObject *const parent,
                                TelnetTermTypeBytes defaultTermType)
-    : QObject(parent)
-    , m_defaultTermType(std::move(defaultTermType))
+    : m_defaultTermType(std::move(defaultTermType))
     , m_textCodec{strategy}
     , m_zstream_pimpl{std::make_unique<ZstreamPimpl>()}
 {
@@ -262,74 +321,36 @@ void AbstractTelnet::reset()
     resetCompress();
 }
 
-static void doubleIacs(std::ostream &os, const std::string_view input)
-{
-    // IAC byte must be doubled
-    static constexpr const auto IAC = static_cast<char>(TN_IAC);
-
-    // Note: input isn't required to be latin-1, but we're treating it as-if it is
-    // because the only thing that matters is the 255 byte.
-    foreachLatin1CharSingle(
-        input,
-        IAC,
-        [&os]() { os << IAC << IAC; },
-        [&os](const std::string_view sv) {
-            if (!sv.empty()) {
-                os << sv;
-            }
-        });
-}
-
 void AbstractTelnet::submitOverTelnet(const QString &s, const bool goAhead)
 {
-    const auto data = [this, &s]() -> std::string {
-        switch (getEncoding()) {
-        case CharacterEncodingEnum::UTF8:
-            return mmqt::toStdStringUtf8(s);
-        case CharacterEncodingEnum::LATIN1:
-            return mmqt::toStdStringLatin1(s); // conversion to user charset
-        case CharacterEncodingEnum::ASCII: {
-            auto ascii = mmqt::toStdStringLatin1(s);          // conversion to user charset
-            charset::conversion::latin1ToAsciiInPlace(ascii); // conversion to user charset
-            return ascii;
-        }
-        default:
-            abort();
-        }
-    }();
-    submitOverTelnet(RawBytes{mmqt::toQByteArrayRaw(data)}, goAhead);
+    const auto rawBytes = mmqt::toRawBytes(s, getEncoding());
+    submitOverTelnet(rawBytes, goAhead);
+}
+
+void AbstractTelnet::trySendGoAhead()
+{
+    const auto &myOptionState = m_options.myOptionState;
+    const auto hasEor = myOptionState[OPT_EOR];
+    if (myOptionState[OPT_SUPPRESS_GA] && !hasEor) {
+        return;
+    }
+
+    const uint8_t buf[2]{TN_IAC, hasEor ? TN_EOR : TN_GA};
+    const auto ba = QByteArray{reinterpret_cast<const char *>(buf), 2};
+    sendRawData(TelnetIacBytes{ba});
+}
+
+void AbstractTelnet::sendWithDoubledIacs(const RawBytes &raw)
+{
+    sendRawData(doubleIacs(raw));
 }
 
 void AbstractTelnet::submitOverTelnet(const RawBytes &data, const bool goAhead)
 {
-    auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
-        const auto &myOptionState = m_options.myOptionState;
-        if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
-            return std::array<char, 2>{char(TN_IAC), char(myOptionState[OPT_EOR] ? TN_EOR : TN_GA)};
-        }
-
-        return std::nullopt;
-    };
-
-    const auto sv = mmqt::toStdStringViewRaw(data.getQByteArray());
-    if (!containsIAC(sv)) {
-        sendRawData(TelnetIacBytes{data.getQByteArray()});
-        if (auto ga = getGoAhead()) {
-            sendRawData(TelnetIacBytes{QByteArray{ga->data(), static_cast<int>(ga->size())}});
-        }
-        return;
+    sendWithDoubledIacs(data);
+    if (goAhead) {
+        trySendGoAhead();
     }
-
-    std::ostringstream os;
-    doubleIacs(os, sv);
-
-    // Add IAC GA unless they are suppressed
-    if (auto ga = getGoAhead()) {
-        os.write(ga->data(), static_cast<std::streamsize>(ga->size()));
-    }
-
-    // data ready, send it
-    sendRawData(TelnetIacBytes{mmqt::toQByteArrayRaw(os.str())});
 }
 
 void AbstractTelnet::sendWindowSizeChanged(const int width, const int height)
@@ -1058,7 +1079,7 @@ int AbstractTelnet::onReadInternalInflate(const char *const data,
         const int outLen = CHUNK - static_cast<int>(stream.avail_out);
         for (auto i = 0; i < outLen; i++) {
             // Process character by character
-            const uint8_t c = static_cast<unsigned char>(out[i]);
+            const auto c = static_cast<uint8_t>(out[i]);
             onReadInternal2(cleanData, c);
             if (m_recvdGA) {
                 processGA(cleanData);

@@ -78,8 +78,9 @@ public:
     }
 
 public:
-    NODISCARD ChangeMonitor::CallbackLifetime registerChangeCallback(ChangeMonitor::Function callback)
+    void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                                ChangeMonitor::Function callback)
     {
-        return m_changeMonitor.registerChangeCallback(std::move(callback));
+        return m_changeMonitor.registerChangeCallback(lifetime, std::move(callback));
     }
 };

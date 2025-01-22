@@ -23,7 +23,7 @@ private:
     using UniqueSsb = std::unique_ptr<SliderSpinboxButton>;
     std::vector<UniqueSsb> m_ssbs;
     // purposely unused; this variable exists as an RAII for the change monitors.
-    ConnectionSet m_connections;
+    Signal2Lifetime m_lifetime;
 
 public:
     explicit AdvancedGraphicsGroupBox(QGroupBox &groupBox);
