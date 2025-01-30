@@ -176,8 +176,13 @@ bool RoomManager::toMob(const QJsonObject &obj, RoomMobUpdate &data) const
     auto iter = obj.constFind("id");
     if (iter == obj.constEnd() || !toMobId(*iter, data)) {
         if (m_debug) {
-            qWarning().noquote() << "RoomManager received GMCP containing invalid Json object field {id: "
-                                 << *iter << "}";
+            auto &&warn = qWarning().noquote().nospace();
+            warn << "RoomManager received GMCP containing invalid Json object field ";
+            if (iter == obj.constEnd()) {
+                warn << "(missing id)";
+            } else {
+                warn << "{id: " << *iter << "}";
+            }
         }
         return false;
     }
