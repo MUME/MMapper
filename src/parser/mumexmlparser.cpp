@@ -274,6 +274,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/snoop")) {
+                    m_descriptionReady = false;
                     m_lineFlags.remove(LineFlagEnum::SNOOP);
                     if (m_descriptionReady) {
                         if (!m_exitsReady && getConfig().mumeNative.emulatedExits) {
