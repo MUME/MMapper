@@ -41,7 +41,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev libminiupnpc-dev
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev libminiupnpc-dev mold
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -49,7 +49,7 @@ jobs:
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-13" >> $GITHUB_ENV
         echo "CXX=g++-13" >> $GITHUB_ENV
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DUSE_MOLD=true" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
@@ -59,6 +59,7 @@ jobs:
         echo "CC=clang-18" >> $GITHUB_ENV
         echo "CXX=clang++-18" >> $GITHUB_ENV
         echo "STYLE=true" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_MOLD=true" >> $GITHUB_ENV
 
 
       #

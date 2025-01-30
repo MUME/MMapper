@@ -147,7 +147,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && git config --global --add safe.directory /root/mmapper && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_UNITY_BUILD=ON && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake mold ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && git config --global --add safe.directory /root/mmapper && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_UNITY_BUILD=ON -DUSE_MOLD=ON && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
       - sh: sudo mv build/*.deb* .
 
     test_script:
