@@ -638,7 +638,7 @@ public:
         {
             auto m = bulletPrefixRegex.match(line);
             if (m.hasMatch()) {
-                const QStringView sv = m.capturedView();
+                const QString sv = m.captured();
                 /* this could fail if someone breaks the regex pattern for the escaped asterisk */
                 bulletLength = sv.length();
                 prefixLen = measureExpandedTabsOneLine(sv, prefixLen);
@@ -706,7 +706,7 @@ void TextBuffer::appendJustified(QStringView input_line, const int maxLen)
             auto m = leadingNonSpaceRegex.match(line);
             if (m.hasMatch()) {
                 line = line.mid(m.capturedLength());
-                const auto word = m.capturedView();
+                const auto word = m.captured();
                 const int spaceCol = measureExpandedTabsOneLine(leadingSpace, col);
 
                 if (spaceCol + word.length() > maxLen) {
