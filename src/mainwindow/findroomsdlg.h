@@ -6,13 +6,21 @@
 
 #include "../mapdata/roomselection.h"
 #include "../parser/abstractparser.h"
-#include "ui_findroomsdlg.h" // auto-generated
 
 #include <QDialog>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
 #include <QtWidgets/QTreeWidgetItem>
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#endif
+#include "ui_findroomsdlg.h" // auto-generated
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 class MapCanvas;
 class MapData;
