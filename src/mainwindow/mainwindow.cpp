@@ -2170,7 +2170,8 @@ void MainWindow::setCurrentFile(const QString &fileName)
 {
     QFileInfo file(fileName);
     const auto shownName = fileName.isEmpty() ? "Untitled" : file.fileName();
-    const auto fileSuffix = ((m_mapData && m_mapData->isFileReadOnly()) || !file.isWritable())
+    const auto fileSuffix = ((m_mapData && m_mapData->isFileReadOnly())
+                             || (!fileName.isEmpty() && !file.isWritable()))
                                 ? " [read-only]"
                                 : "";
     const auto appSuffix = isMMapperBeta() ? " Beta" : "";
