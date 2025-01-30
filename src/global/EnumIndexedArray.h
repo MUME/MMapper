@@ -22,7 +22,7 @@ public:
 
 public:
     // inherits all constructors
-    using MMapper::Array<T, SIZE_>::Array;
+    using base::base;
 
 public:
     decltype(auto) at(E e) { return base::at(static_cast<uint32_t>(e)); }
