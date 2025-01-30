@@ -199,6 +199,16 @@ public:
     NODISCARD inline size_t count() const { return static_cast<size_t>(bits::bitCount(m_flags)); }
     NODISCARD inline size_t size() const { return count(); }
 
+private:
+    static void remove_lowest_bit(underlying_type &flags)
+    {
+        using U = underlying_type;
+        static_assert(std::is_unsigned_v<U>);
+        assert(flags != 0u);
+        flags = static_cast<U>(flags & static_cast<U>(flags - U{1}));
+    }
+
+public:
     // CAUTION: This function behaves differently than you probably expect.
     //
     // This function returns the nth bit set, defined in order from least to most significant bit that's currently
@@ -232,11 +242,9 @@ public:
     {
         auto n = n_;
         assert(n < count());
-        static constexpr underlying_type ONE = 1;
-        for (auto tmp = m_flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0u; remove_lowest_bit(tmp)) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
-            tmp ^= (ONE << lsb);
             const auto x = static_cast<Flag>(lsb);
             assert(contains(x));
             if (n-- == 0)
@@ -253,11 +261,9 @@ public:
     template<typename Predicate>
     NODISCARD std::optional<Flag> find_first_matching(Predicate &&predicate) const
     {
-        static constexpr underlying_type ONE = 1;
-        for (auto tmp = m_flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0u; remove_lowest_bit(tmp)) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
-            tmp ^= (ONE << lsb);
             const auto x = static_cast<Flag>(lsb);
             assert(contains(x));
             if (predicate(x)) {
@@ -274,11 +280,9 @@ public:
     template<typename Callback>
     void for_each(Callback &&callback) const
     {
-        static constexpr underlying_type ONE = 1;
-        for (auto tmp = m_flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0u; remove_lowest_bit(tmp)) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
-            tmp ^= (ONE << lsb);
             const auto x = static_cast<Flag>(lsb);
             assert(contains(x));
             callback(x);
