@@ -68,10 +68,10 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5 openssl\@1.1 lcov miniupnpc
+        brew install qt5 openssl@3 lcov miniupnpc
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV 
 
 
