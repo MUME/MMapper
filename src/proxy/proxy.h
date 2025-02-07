@@ -12,7 +12,6 @@
 #include "../observer/gameobserver.h"
 #include "../pandoragroup/GroupManagerApi.h"
 #include "../parser/SendToUserSource.h"
-#include "../timers/CTimers.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 #include "TaggedBytes.h"
@@ -42,6 +41,7 @@ class MudTelnet;
 class MumeClock;
 class MumeFallbackSocket;
 class MumeXmlParser;
+class PasswordConfig;
 class PrespammedPath;
 class ProxyMudConnectionApi;
 class ProxyUserGmcpApi;
@@ -135,6 +135,7 @@ private:
             std::unique_ptr<MpiFilter> mpiFilterFromMud;
             std::unique_ptr<MpiFilterToMud> mpiFilterToMud;
             std::unique_ptr<MumeXmlParser> mudParser;
+            std::unique_ptr<PasswordConfig> passwordConfig;
         };
         Mud mud;
 
@@ -309,6 +310,10 @@ private:
     NODISCARD RemoteEdit &getRemoteEdit();
     NODISCARD MumeXmlParser &getMudParser() { return deref(getPipeline().mud.mudParser); }
     NODISCARD AbstractParser &getUserParser() { return deref(getPipeline().user.userParser); }
+    NODISCARD PasswordConfig &getPasswordConfig()
+    {
+        return deref(getPipeline().mud.passwordConfig);
+    }
 
 private:
     NODISCARD const Pipeline &getPipeline() const { return deref(m_pipeline); }

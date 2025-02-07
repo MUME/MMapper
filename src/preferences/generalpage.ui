@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>459</width>
-    <height>651</height>
+    <height>754</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -148,6 +148,56 @@
           <string extracomment="No special characters">US-ASCII</string>
          </property>
         </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Account</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Account:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Password:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QLineEdit" name="accountName"/>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="QLineEdit" name="accountPassword">
+        <property name="echoMode">
+         <enum>QLineEdit::PasswordEchoOnEdit</enum>
+        </property>
+        <property name="placeholderText">
+         <string>***********</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="showPassword">
+        <property name="text">
+         <string>Show Password</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="3">
+       <widget class="QCheckBox" name="autoLogin">
+        <property name="text">
+         <string>Remember my login</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -396,6 +446,10 @@
   <tabstop>encryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
+  <tabstop>autoLogin</tabstop>
+  <tabstop>accountName</tabstop>
+  <tabstop>accountPassword</tabstop>
+  <tabstop>showPassword</tabstop>
   <tabstop>showClientPanelCheckBox</tabstop>
   <tabstop>checkForUpdateCheckBox</tabstop>
   <tabstop>autoStartGroupManagerCheckBox</tabstop>
@@ -403,9 +457,11 @@
   <tabstop>autoLoadFileName</tabstop>
   <tabstop>selectWorldFileButton</tabstop>
   <tabstop>displayMumeClockCheckBox</tabstop>
+  <tabstop>displayXPStatusCheckBox</tabstop>
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
+  <tabstop>proxyListensOnAnyInterfaceCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
   <tabstop>configurationResetButton</tabstop>
  </tabstops>

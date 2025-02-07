@@ -235,6 +235,16 @@ public:
         SUBGROUP();
     } colorSettings;
 
+    struct NODISCARD AccountSettings final
+    {
+        QString accountName;
+        bool accountPassword = false;
+        bool rememberLogin = false;
+
+    private:
+        SUBGROUP();
+    } account;
+
     struct NODISCARD AutoLoadSettings final
     {
         bool autoLoadMap = false;

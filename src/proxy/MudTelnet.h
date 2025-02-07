@@ -31,6 +31,7 @@ public:
     void onRelayGmcpFromMudToUser(const GmcpMessage &msg) { virt_onRelayGmcpFromMudToUser(msg); }
     void onSendMSSPToUser(const TelnetMsspBytes &bytes) { virt_onSendMSSPToUser(bytes); }
     void onSendGameTimeToClock(const MsspTime &time) { virt_onSendGameTimeToClock(time); }
+    void onTryCharLogin() { virt_onTryCharLogin(); }
 
 private:
     virtual void virt_onAnalyzeMudStream(const RawBytes &, bool goAhead) = 0;
@@ -39,6 +40,7 @@ private:
     virtual void virt_onRelayGmcpFromMudToUser(const GmcpMessage &) = 0;
     virtual void virt_onSendMSSPToUser(const TelnetMsspBytes &) = 0;
     virtual void virt_onSendGameTimeToClock(const MsspTime &) = 0;
+    virtual void virt_onTryCharLogin() = 0;
 };
 
 class NODISCARD MudTelnet final : public AbstractTelnet
@@ -81,4 +83,5 @@ public:
     void onRelayNaws(int, int);
     void onRelayTermType(const TelnetTermTypeBytes &);
     void onGmcpToMud(const GmcpMessage &);
+    void onLoginCredentials(const QString &, const QString &);
 };

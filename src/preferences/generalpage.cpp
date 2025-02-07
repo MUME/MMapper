@@ -21,6 +21,7 @@ static_assert(static_cast<int>(CharacterEncodingEnum::ASCII) == 2);
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GeneralPage)
+    , passCfg(this)
 {
     ui->setupUi(this);
 
@@ -107,6 +108,41 @@ GeneralPage::GeneralPage(QWidget *parent)
             emit sig_factoryReset();
         }
     });
+
+    connect(ui->autoLogin, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().account.rememberLogin = ui->autoLogin->isChecked();
+    });
+
+    connect(ui->accountName, &QLineEdit::textChanged, this, [](const QString &account) {
+        setConfig().account.accountName = account;
+    });
+
+    connect(&passCfg, &PasswordConfig::sig_error, this, [this](const QString &msg) {
+        qWarning() << msg;
+        QMessageBox::warning(this, "Password Error", msg);
+    });
+
+    connect(&passCfg, &PasswordConfig::sig_incomingPassword, this, [this](const QString &password) {
+        ui->showPassword->setText("Hide Password");
+        ui->accountPassword->setText(password);
+        ui->accountPassword->setEchoMode(QLineEdit::Normal);
+    });
+
+    connect(ui->accountPassword, &QLineEdit::textEdited, this, [this](const QString &password) {
+        setConfig().account.accountPassword = !password.isEmpty();
+        passCfg.setPassword(password);
+    });
+
+    connect(ui->showPassword, &QAbstractButton::clicked, this, [this]() {
+        if (ui->showPassword->text() == "Hide Password") {
+            ui->showPassword->setText("Show Password");
+            ui->accountPassword->clear();
+            ui->accountPassword->setEchoMode(QLineEdit::PasswordEchoOnEdit);
+        } else if (getConfig().account.accountPassword && ui->accountPassword->text().isEmpty()) {
+            ui->showPassword->setText("Request Password");
+            passCfg.getPassword();
+        }
+    });
 }
 
 GeneralPage::~GeneralPage()
@@ -121,6 +157,7 @@ void GeneralPage::slot_loadConfig()
     const auto &mumeNative = config.mumeNative;
     const auto &autoLoad = config.autoLoad;
     const auto &general = config.general;
+    const auto &account = config.account;
 
     ui->remoteName->setText(connection.remoteServerName);
     ui->remotePort->setValue(connection.remotePort);
@@ -152,6 +189,19 @@ void GeneralPage::slot_loadConfig()
     ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
 
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
+
+    if constexpr (NO_QTKEYCHAIN) {
+        ui->autoLogin->setEnabled(false);
+        ui->accountName->setEnabled(false);
+        ui->accountPassword->setEnabled(false);
+        ui->showPassword->setEnabled(false);
+    } else {
+        ui->autoLogin->setChecked(account.rememberLogin);
+        ui->accountName->setText(account.accountName);
+        if (!account.accountPassword) {
+            ui->accountPassword->setPlaceholderText("");
+        }
+    }
 }
 
 void GeneralPage::slot_selectWorldFileButtonClicked(bool /*unused*/)

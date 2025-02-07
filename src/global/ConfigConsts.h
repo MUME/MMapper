@@ -39,3 +39,9 @@ static inline constexpr const bool NO_WEBSOCKET = true;
 #else
 static inline constexpr const bool NO_WEBSOCKET = false;
 #endif
+
+#if defined(MMAPPER_NO_QTKEYCHAIN) && MMAPPER_NO_QTKEYCHAIN
+static inline constexpr const bool NO_QTKEYCHAIN = true;
+#else
+static inline constexpr const bool NO_QTKEYCHAIN = false;
+#endif

@@ -7,6 +7,7 @@
 #include "proxy.h"
 
 #include "../clock/mumeclock.h"
+#include "../configuration/PasswordConfig.h"
 #include "../configuration/configuration.h"
 #include "../display/mapcanvas.h"
 #include "../display/prespammedpath.h"
@@ -483,6 +484,15 @@ void Proxy::allocMudTelnet()
             // forwarded (to user)
             getUserTelnet().onSendMSSPToUser(bytes);
         }
+
+        void virt_onTryCharLogin() final
+        {
+            const auto &account = getConfig().account;
+            if (account.rememberLogin && !account.accountName.isEmpty() && account.accountPassword) {
+                // fetch asynchronously from keychain
+                getProxy().getPasswordConfig().getPassword();
+            }
+        }
     };
 
     auto &pipe = getPipeline();
@@ -702,6 +712,21 @@ void Proxy::allocParser()
                                                             this,
                                                             deref(out),
                                                             deref(parserCommon));
+
+    /* The login credentials are fetched asynchronously because the OS will prompt the user for permission */
+    pipe.mud.passwordConfig = std::make_unique<PasswordConfig>(this);
+    QObject::connect(pipe.mud.passwordConfig.get(),
+                     &PasswordConfig::sig_error,
+                     this,
+                     [](const QString &err) { qWarning() << err; });
+
+    QObject::connect(pipe.mud.passwordConfig.get(),
+                     &PasswordConfig::sig_incomingPassword,
+                     this,
+                     [this](const QString &password) {
+                         getMudTelnet().onLoginCredentials(getConfig().account.accountName,
+                                                           password);
+                     });
 }
 
 void Proxy::allocMpiFilter()

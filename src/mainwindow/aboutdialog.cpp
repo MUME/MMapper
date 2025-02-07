@@ -123,12 +123,19 @@ AboutDialog::AboutDialog(QWidget *parent)
           " project.</p>"
           "<pre>"
         + loadLicenseResource(":/LICENSE.GLM")
-        + +"</pre>"
-           "<hr/><h1>OpenSSL License</h1>"
-           "<p>Some versions of this product contains code from the "
-           "<a href=\"https://www.openssl.org/\">OpenSSL toolkit</a>"
-           ".</p>"
-           "<pre>"
+        + "</pre>"
+          "<hr/><h1>QtKeychain License</h1>"
+          "<p>This product contains code from the "
+          "<a href=\"https://github.com/frankosterfeld/qtkeychain\">QtKeychain</a>"
+          " project.</p>"
+          "<pre>"
+        + loadLicenseResource(":/LICENSE.QTKEYCHAIN")
+        + "</pre>"
+          "<hr/><h1>OpenSSL License</h1>"
+          "<p>Some versions of this product contains code from the "
+          "<a href=\"https://www.openssl.org/\">OpenSSL toolkit</a>"
+          ".</p>"
+          "<pre>"
         + loadLicenseResource(":/LICENSE.OPENSSL") + "</pre>");
     setFixedFont(licenseView);
 

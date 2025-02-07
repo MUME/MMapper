@@ -5,7 +5,6 @@
 #include "MudTelnet.h"
 
 #include "../clock/mumeclock.h"
-#include "../configuration/configuration.h"
 #include "../display/MapCanvasConfig.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
@@ -369,6 +368,13 @@ void MudTelnet::onRelayTermType(const TelnetTermTypeBytes &terminalType)
     }
 }
 
+void MudTelnet::onLoginCredentials(const QString &name, const QString &password)
+{
+    sendGmcpMessage(
+        GmcpMessage(GmcpMessageTypeEnum::CHAR_LOGIN,
+                    GmcpJson{QString(R"({ "name": "%1", "password": "%2" })").arg(name, password)}));
+}
+
 void MudTelnet::virt_sendToMapper(const RawBytes &data, const bool goAhead)
 {
     if (getDebug()) {
@@ -415,6 +421,9 @@ void MudTelnet::virt_onGmcpEnabled()
     if (m_receivedExternalDiscordHello) {
         sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::EXTERNAL_DISCORD_HELLO});
     }
+
+    // Check if user has requested we remember our login credentials
+    m_outputs.onTryCharLogin();
 }
 
 void MudTelnet::virt_sendRawData(const TelnetIacBytes &data)

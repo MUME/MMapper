@@ -239,6 +239,7 @@ void Settings::initSettings()
     QSettings &conf = static_cast<QSettings &>(settings)
 
 ConstString GRP_ADVENTURE_PANEL = "Adventure Panel";
+ConstString GRP_ACCOUNT = "Account";
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
 ConstString GRP_CANVAS = "Canvas";
@@ -257,6 +258,8 @@ ConstString GRP_ROOM_PANEL = "Room Panel";
 ConstString GRP_ROOMEDIT_DIALOG = "RoomEdit Dialog";
 
 ConstString KEY_ABSOLUTE_PATH_ACCEPTANCE = "absolute path acceptance";
+ConstString KEY_ACCOUNT_NAME = "account name";
+ConstString KEY_ACCOUNT_PASSWORD = "account password";
 ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
 ConstString KEY_SHOW_STATUS_BAR = "Show Status Bar";
 ConstString KEY_SHOW_SCROLL_BARS = "Show Scroll Bars";
@@ -327,6 +330,7 @@ ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_GROUP_REMOTE_PORT = "remote port";
+ConstString KEY_REMEMBER_LOGIN = "remember login";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
 ConstString KEY_ROOM_DARK_COLOR = "Room dark color";
@@ -524,6 +528,7 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_GENERAL, general); \
         GROUP_CALLBACK(callback, GRP_CONNECTION, connection); \
         GROUP_CALLBACK(callback, GRP_CANVAS, canvas); \
+        GROUP_CALLBACK(callback, GRP_ACCOUNT, account); \
         GROUP_CALLBACK(callback, GRP_AUTO_LOAD_WORLD, autoLoad); \
         GROUP_CALLBACK(callback, GRP_AUTO_LOG, autoLog); \
         GROUP_CALLBACK(callback, GRP_PARSER, parser); \
@@ -689,6 +694,13 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
+}
+
+void Configuration::AccountSettings::read(const QSettings &conf)
+{
+    accountName = conf.value(KEY_ACCOUNT_NAME, "").toString();
+    accountPassword = conf.value(KEY_ACCOUNT_PASSWORD, false).toBool();
+    rememberLogin = NO_QTKEYCHAIN ? false : conf.value(KEY_REMEMBER_LOGIN, false).toBool();
 }
 
 void Configuration::AutoLoadSettings::read(const QSettings &conf)
@@ -904,6 +916,13 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_3D_VERTICAL_ANGLE, advanced.verticalAngle.get());
     conf.setValue(KEY_3D_HORIZONTAL_ANGLE, advanced.horizontalAngle.get());
     conf.setValue(KEY_3D_LAYER_HEIGHT, advanced.layerHeight.get());
+}
+
+void Configuration::AccountSettings::write(QSettings &conf) const
+{
+    conf.setValue(KEY_ACCOUNT_NAME, accountName);
+    conf.setValue(KEY_ACCOUNT_PASSWORD, accountPassword);
+    conf.setValue(KEY_REMEMBER_LOGIN, rememberLogin);
 }
 
 void Configuration::AutoLoadSettings::write(QSettings &conf) const

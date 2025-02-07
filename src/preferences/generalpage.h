@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../configuration/PasswordConfig.h"
 #include "../global/macros.h"
 
 #include <QString>
@@ -15,14 +16,13 @@ namespace Ui {
 class GeneralPage;
 }
 
-class QObject;
-
 class NODISCARD_QOBJECT GeneralPage final : public QWidget
 {
     Q_OBJECT
 
 private:
     Ui::GeneralPage *const ui;
+    PasswordConfig passCfg;
 
 public:
     explicit GeneralPage(QWidget *parent);

@@ -29,6 +29,8 @@ set(mmapper_SRCS
     clock/mumemoment.cpp
     clock/mumemoment.h
     configuration/NamedConfig.h
+    configuration/PasswordConfig.cpp
+    configuration/PasswordConfig.h
     configuration/configuration.cpp
     configuration/configuration.h
     display/CanvasMouseModeEnum.h
@@ -651,6 +653,8 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
+  INSTALL_RPATH "${QTKEYCHAIN_LIBRARY_DIR}"
+  BUILD_WITH_INSTALL_RPATH ON
 )
 
 set_target_properties(
@@ -729,6 +733,14 @@ endif()
 
 if(WITH_WEBSOCKET)
     target_link_libraries(mmapper PUBLIC Qt5::WebSockets)
+endif()
+
+if(WITH_QTKEYCHAIN)
+    target_include_directories(mmapper SYSTEM PUBLIC ${QTKEYCHAIN_INCLUDE_DIR})
+    target_link_libraries(mmapper PUBLIC ${QTKEYCHAIN_LIBRARY})
+    if(NOT QTKEYCHAIN_FOUND)
+        add_dependencies(mmapper qtkeychain)
+    endif()
 endif()
 
 if(WITH_DRMINGW)
@@ -870,6 +882,9 @@ if(UNIX AND NOT APPLE)
     if(WITH_WEBSOCKET)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5websockets5 (>= 5.15.0)")
     endif()
+    if(WITH_QTKEYCHAIN)
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5keychain1")
+    endif()
 endif(UNIX AND NOT APPLE)
 
 # Windows Install Settings
@@ -962,7 +977,7 @@ if(APPLE)
     add_custom_command(
         TARGET mmapper
         POST_BUILD
-        COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -libpath ${QTKEYCHAIN_LIBRARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Deploying the Qt Framework onto the bundle"
         )
