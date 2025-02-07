@@ -102,9 +102,6 @@ private:
     NODISCARD InputWidget &getInputWidget();
     NODISCARD QLineEdit &getPasswordWidget();
 
-private:
-    NODISCARD bool eventFilter(QObject *obj, QEvent *event) final;
-
 public:
     void setEchoMode(EchoMode echoMode);
 

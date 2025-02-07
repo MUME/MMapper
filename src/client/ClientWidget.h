@@ -77,11 +77,11 @@ private:
 public:
     NODISCARD bool isUsingClient() const;
 
-protected:
-    NODISCARD bool eventFilter(QObject *obj, QEvent *event) override;
-
 private:
     void relayMessage(const QString &msg) { emit sig_relayMessage(msg); }
+
+protected:
+    NODISCARD bool focusNextPrevChild(bool next) override;
 
 signals:
     void sig_relayMessage(const QString &);

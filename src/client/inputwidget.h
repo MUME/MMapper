@@ -5,6 +5,7 @@
 
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
+#include "PaletteManager.h"
 
 #include <iterator>
 #include <list>
@@ -99,6 +100,7 @@ private:
     QString m_tabFragment;
     TabHistory m_tabHistory;
     InputHistory m_inputHistory;
+    PaletteManager m_paletteManager;
     bool m_tabbing = false;
 
 public:
@@ -109,6 +111,7 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    bool event(QEvent *event) override;
 
 private:
     void gotInput();

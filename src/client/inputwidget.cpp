@@ -5,6 +5,7 @@
 #include "inputwidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Color.h"
 
 #include <QLinkedList>
 #include <QMessageLogContext>
@@ -38,6 +39,9 @@ InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
 
     // Line Wrapping
     setLineWrapMode(QPlainTextEdit::NoWrap);
+
+    // Remember native palletes
+    m_paletteManager.init(*this, std::nullopt, Qt::lightGray);
 }
 
 QSize InputWidget::sizeHint() const
@@ -366,4 +370,10 @@ void InputWidget::tabComplete()
         textCursor().removeSelectedText();
         m_tabHistory.reset();
     }
+}
+
+bool InputWidget::event(QEvent *const event)
+{
+    m_paletteManager.tryUpdateFromFocusEvent(*this, deref(event).type());
+    return QPlainTextEdit::event(event);
 }

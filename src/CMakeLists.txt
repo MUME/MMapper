@@ -14,6 +14,8 @@ set(mmapper_SRCS
     client/ClientTelnet.h
     client/ClientWidget.cpp
     client/ClientWidget.h
+    client/PaletteManager.cpp
+    client/PaletteManager.h
     client/displaywidget.cpp
     client/displaywidget.h
     client/inputwidget.cpp

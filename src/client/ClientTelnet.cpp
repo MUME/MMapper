@@ -143,6 +143,7 @@ void ClientTelnet::virt_sendToMapper(const RawBytes &data, bool /*goAhead*/)
         QApplication::beep();
     }
 
+    // REVISIT: Why is virt_sendToMapper() calling sendToUser()? One needs to be renamed?
     m_output.sendToUser(out);
 }
 

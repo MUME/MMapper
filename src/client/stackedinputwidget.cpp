@@ -4,6 +4,7 @@
 
 #include "stackedinputwidget.h"
 
+#include "../global/Color.h"
 #include "../global/utils.h"
 #include "inputwidget.h"
 
@@ -86,26 +87,26 @@ void StackedInputWidget::initInput()
 
 void StackedInputWidget::initPassword()
 {
-    m_pipeline.objs.passwordWidget = std::make_unique<QLineEdit>(this);
+    struct NODISCARD PasswordInput final : public QLineEdit
+    {
+        PaletteManager m_paletteManager;
+
+        explicit PasswordInput(QWidget *parent)
+            : QLineEdit(parent)
+        {
+            m_paletteManager.init(*this, QColor(Qt::yellow).lighter(), Qt::lightGray);
+        }
+        NODISCARD bool event(QEvent *const event) override
+        {
+            m_paletteManager.tryUpdateFromFocusEvent(*this, deref(event).type());
+            return QLineEdit::event(event);
+        }
+    };
+    m_pipeline.objs.passwordWidget = std::make_unique<PasswordInput>(this);
+
     QObject::connect(&getPasswordWidget(), &QLineEdit::returnPressed, this, [this]() {
         gotPasswordInput();
     });
-}
-
-bool StackedInputWidget::eventFilter(QObject *const obj, QEvent *const event)
-{
-    if (event->type() == QEvent::KeyPress) {
-        if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
-            if (keyEvent->matches(QKeySequence::Copy) || keyEvent->matches(QKeySequence::Cut)
-                || keyEvent->matches(QKeySequence::Paste)) {
-                // Send event to the parent
-                event->ignore();
-                return true;
-            }
-        }
-    }
-    // Standard event processing
-    return QObject::eventFilter(obj, event);
 }
 
 void StackedInputWidget::setEchoMode(const EchoMode echoMode)
@@ -142,6 +143,7 @@ void StackedInputWidget::gotMultiLineInput(const QString &input)
     getOutput().sendUserInput(str, EchoMode::Visible);
 
     // REVISIT: Make color configurable
+    // TODO: use the ANSI ostream interface instead of manually embedding ansi codes.
     QString displayStr = QString("\033[0;33m").append(input).append("\033[0m\n");
     getOutput().displayMessage(displayStr);
 }

@@ -34,10 +34,8 @@ ClientWidget::ClientWidget(QWidget *const parent)
         getTelnet().connectToHost();
     });
 
-    // Keyboard input on the display widget should be redirected to the input widget
-    ui.display->setFocusProxy(ui.input);
-
     ui.input->installEventFilter(this);
+    ui.input->setFocus();
 }
 
 ClientWidget::~ClientWidget() = default;
@@ -157,7 +155,7 @@ void ClientWidget::initClientTelnet()
         {
             getDisplay().slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
         }
-        void virt_echoModeChanged(bool echo) final
+        void virt_echoModeChanged(const bool echo) final
         {
             getInput().setEchoMode(echo ? EchoMode::Visible : EchoMode::Hidden);
         }
@@ -265,32 +263,12 @@ void ClientWidget::slot_saveLog()
     document.close();
 }
 
-bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
+bool ClientWidget::focusNextPrevChild(MAYBE_UNUSED bool next)
 {
-    if (event->type() == QEvent::KeyPress) {
-        if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
-            Ui::ClientWidget &ui = getUi();
-            DisplayWidget &display = deref(ui.display);
-            StackedInputWidget &input = deref(ui.input);
-            if (keyEvent->matches(QKeySequence::Copy)) {
-                if (display.canCopy()) {
-                    display.copy();
-                } else {
-                    input.slot_copy();
-                }
-                keyEvent->accept();
-                return true;
-            } else if (keyEvent->matches(QKeySequence::Cut)) {
-                input.slot_cut();
-                keyEvent->accept();
-                return true;
-            } else if (keyEvent->matches(QKeySequence::Paste)) {
-                input.slot_paste();
-                keyEvent->accept();
-                return true;
-            }
-        }
+    if (getInput().hasFocus()) {
+        getDisplay().setFocus();
+    } else /* if (getDisplay().hasFocus()) */ {
+        getInput().setFocus();
     }
-    // Standard event processing
-    return QObject::eventFilter(obj, event);
+    return true;
 }
