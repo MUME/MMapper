@@ -16,7 +16,7 @@
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 
-static const QRegularExpression g_whitespaceRx(R"(\W+)");
+static const QRegularExpression g_whitespaceRx(R"(\s+)");
 
 InputWidget::InputWidget(QWidget *const parent)
     : QPlainTextEdit(parent)
@@ -49,8 +49,26 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
     const auto currentKey = event->key();
     const auto currentModifiers = event->modifiers();
 
-    if (currentKey != Qt::Key_Tab) {
-        m_tabbing = false;
+    if (m_tabbing) {
+        if (currentKey != Qt::Key_Tab) {
+            m_tabbing = false;
+        }
+
+        // If Backspace or Escape is pressed, reject the completion
+        QTextCursor current = textCursor();
+        if (currentKey == Qt::Key_Backspace || currentKey == Qt::Key_Escape) {
+            current.removeSelectedText();
+            event->accept();
+            return;
+        }
+
+        // For any other key press, accept the completion
+        if (currentKey != Qt::Key_Tab) {
+            current.movePosition(QTextCursor::Right,
+                                 QTextCursor::MoveAnchor,
+                                 current.selectedText().length());
+            setTextCursor(current);
+        }
     }
 
     // REVISIT: if (useConsoleEscapeKeys) ...
@@ -252,12 +270,12 @@ void TabHistory::addInputLine(const QString &string)
     for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary
-            push_back(word);
+            push_front(word);
 
             // Trim dictionary
             if (static_cast<int>(size())
                 > getConfig().integratedClient.tabCompletionDictionarySize) {
-                pop_front();
+                pop_back();
             }
         }
     }
@@ -300,28 +318,26 @@ void InputWidget::backwardHistory()
 
 void InputWidget::tabComplete()
 {
-    if (m_tabHistory.empty()) {
+    // Select all characters up until the previous whitespace
+    QTextCursor current = textCursor();
+    if (m_tabHistory.empty() || current.atStart()
+        || document()->characterAt(current.selectionStart() - 1).isSpace()) {
         return;
     }
-
-    QTextCursor current = textCursor();
-    current.select(QTextCursor::WordUnderCursor);
+    do {
+        current.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
+    } while (!current.atStart() && !document()->characterAt(current.selectionStart() - 1).isSpace());
+    if (current.selectedText().isEmpty()) {
+        return;
+    }
     if (!m_tabbing) {
         m_tabFragment = current.selectedText();
         m_tabHistory.reset();
         m_tabbing = true;
     }
 
-    // If we reach the end then loop back to the beginning and clear the selected text again
-    if (m_tabHistory.atEnd()) {
-        textCursor().removeSelectedText();
-        m_tabHistory.reset();
-        return;
-    }
-
     // Iterate through all previous words
     while (!m_tabHistory.atEnd()) {
-        // TODO(nschimme): Utilize a trie and search?
         const auto &word = m_tabHistory.value();
         if (!word.startsWith(m_tabFragment)) {
             // Try the next word
@@ -330,12 +346,22 @@ void InputWidget::tabComplete()
         }
 
         // Found a previous word to complete to
+        current.removeSelectedText();
+        current.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
         current.insertText(word);
-        if (current.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor)) {
-            current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, m_tabFragment.size());
-            setTextCursor(current);
-        }
+        auto length = word.length() - m_tabFragment.length();
+        current.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, length);
+        current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
+        setTextCursor(current);
+
         m_tabHistory.forward();
         break;
     }
+
+    // If we reach the end then loop back to the beginning and clear the selected text again
+    if (m_tabHistory.atEnd()) {
+        textCursor().removeSelectedText();
+        m_tabHistory.reset();
+    }
+
 }
