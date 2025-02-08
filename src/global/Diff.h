@@ -60,7 +60,7 @@ struct NODISCARD Range final
 {
 public:
     using Token = Token_;
-    static constexpr const size_t NPOS = ~size_t(0);
+    static constexpr const size_t NPOS = ~static_cast<size_t>(0);
 
 private:
     const Token *m_begin = nullptr;

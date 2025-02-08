@@ -532,8 +532,8 @@ static void foreach_texture(const T &textures, Callback &&callback)
         }
 
         next = end;
-        /* note: creating temporaries to prevent callback from modifying beg and end */
-        callback(size_t(beg), size_t(end));
+        /* note: casting to avoid passing references to beg and end */
+        callback(static_cast<size_t>(beg), static_cast<size_t>(end));
     }
 }
 
