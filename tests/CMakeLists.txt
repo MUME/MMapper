@@ -28,7 +28,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestClock COMMAND TestClock)
 
@@ -66,7 +65,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
@@ -101,7 +99,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestParser COMMAND TestParser)
 
@@ -126,7 +123,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestProxy COMMAND TestProxy)
 
@@ -146,7 +142,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
@@ -172,7 +167,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestGlobal COMMAND TestGlobal)
 
@@ -208,7 +202,6 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestAdventure COMMAND TestAdventure)
 
@@ -227,7 +220,6 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestTimer COMMAND TestTimer)
 
@@ -246,7 +238,6 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestRoomMob COMMAND TestRoomMob)
 
@@ -268,7 +259,6 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestRoomMobs COMMAND TestRoomMobs)
 
@@ -293,6 +283,5 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
-        UNITY_BUILD ${USE_UNITY_BUILD}
 )
 add_test(NAME TestRoomManager COMMAND TestRoomManager)

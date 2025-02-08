@@ -45,7 +45,6 @@ else()
                          -DUPNPC_BUILD_TESTS:BOOL=OFF
                          -DUPNPC_BUILD_SHARED:BOOL=ON
                          -DUPNPC_BUILD_STATIC:BOOL=ON
-                         -DCMAKE_UNITY_BUILD:BOOL=ON
 
         UPDATE_COMMAND ""
         ALWAYS 0
