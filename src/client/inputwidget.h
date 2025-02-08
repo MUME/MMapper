@@ -89,6 +89,7 @@ private:
     void gotInput();
     NODISCARD bool tryHistory(int);
     void keypadMovement(int);
+    void functionKeyPressed(const QString &keyName);
 
 private:
     void tabComplete();

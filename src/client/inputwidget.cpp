@@ -76,6 +76,27 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
             event->accept();
             return;
 
+#define X_CASE(_Name) \
+    case Qt::Key_##_Name: { \
+        event->accept(); \
+        functionKeyPressed(#_Name); \
+        break; \
+    }
+            X_CASE(F1);
+            X_CASE(F2);
+            X_CASE(F3);
+            X_CASE(F4);
+            X_CASE(F5);
+            X_CASE(F6);
+            X_CASE(F7);
+            X_CASE(F8);
+            X_CASE(F9);
+            X_CASE(F10);
+            X_CASE(F11);
+            X_CASE(F12);
+
+#undef X_CASE
+
             /** Key bindings for word history and tab completion */
         case Qt::Key_Up:
         case Qt::Key_Down:
@@ -121,6 +142,11 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
 
     // All other input
     base::keyPressEvent(event);
+}
+
+void InputWidget::functionKeyPressed(const QString &keyName)
+{
+    sendUserInput(keyName);
 }
 
 void InputWidget::keypadMovement(const int key)
