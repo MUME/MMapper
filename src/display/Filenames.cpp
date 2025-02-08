@@ -78,10 +78,10 @@ NODISCARD static const char *getFilenameSuffix(const E x)
 
 QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
-    const auto filename = QString("/%1/%2").arg(dir).arg(name);
+    const auto filename = QString("/%1/%2").arg(dir, name);
 
     // Check if the user provided a custom resource
-    const auto custom = getConfig().canvas.resourcesDirectory + filename;
+    auto custom = getConfig().canvas.resourcesDirectory + filename;
     if (QFile{custom}.exists()) {
         return custom;
     }
