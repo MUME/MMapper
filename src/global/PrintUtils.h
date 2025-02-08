@@ -95,26 +95,26 @@ public:
     private:
         friend ICharTokenStream;
         ICharTokenStream &m_stream;
-        CharTokenTypeEnum m_type;
+        CharTokenTypeEnum m_type = CharTokenTypeEnum::Normal;
 
     private:
-        explicit Helper(ICharTokenStream &stream, CharTokenTypeEnum type)
+        explicit Helper(ICharTokenStream &stream, const CharTokenTypeEnum type)
             : m_stream{stream}
             , m_type{type}
         {}
 
     public:
-        Helper &operator<<(char c)
+        Helper &operator<<(const char c)
         {
             m_stream.virt_append(m_type, c);
             return *this;
         }
-        Helper &operator<<(char32_t c)
+        Helper &operator<<(const char32_t c)
         {
             m_stream.virt_append(m_type, c);
             return *this;
         }
-        Helper &operator<<(std::string_view sv)
+        Helper &operator<<(const std::string_view sv)
         {
             m_stream.virt_append(m_type, sv);
             return *this;
@@ -149,7 +149,7 @@ private:
     {
         charset::conversion::utf32toUtf8(m_os, c);
     }
-    void virt_append(CharTokenTypeEnum, std::string_view sv) final { m_os << sv; }
+    void virt_append(const CharTokenTypeEnum, const std::string_view sv) final { m_os << sv; }
 };
 
 struct NODISCARD CallbackCharTokenStream final : public ICharTokenStream
@@ -171,15 +171,21 @@ public:
     ~CallbackCharTokenStream() final;
 
 private:
-    void virt_append(CharTokenTypeEnum type, char c) final { m_charFn(type, c); }
-    void virt_append(CharTokenTypeEnum type, char32_t c) final { m_codepointFn(type, c); }
-    void virt_append(CharTokenTypeEnum type, std::string_view sv) final { m_stringFn(type, sv); }
+    void virt_append(const CharTokenTypeEnum type, const char c) final { m_charFn(type, c); }
+    void virt_append(const CharTokenTypeEnum type, const char32_t c) final
+    {
+        m_codepointFn(type, c);
+    }
+    void virt_append(const CharTokenTypeEnum type, const std::string_view sv) final
+    {
+        m_stringFn(type, sv);
+    }
 };
 
 /* lvalue version */
 void print_char(ICharTokenStream &os, char32_t codepoint, bool doubleQuote);
 /* rvalue version */
-inline void print_char(ICharTokenStream &&os, char32_t codepoint, bool doubleQuote)
+inline void print_char(ICharTokenStream &&os, const char32_t codepoint, const bool doubleQuote)
 {
     /* lvalue version */
     print_char(os, codepoint, doubleQuote);
@@ -188,7 +194,7 @@ inline void print_char(ICharTokenStream &&os, char32_t codepoint, bool doubleQuo
 /* lvalue version */
 void print_char(ICharTokenStream &os, char c, bool doubleQuote);
 /* rvalue version */
-inline void print_char(ICharTokenStream &&os, char c, bool doubleQuote)
+inline void print_char(ICharTokenStream &&os, const char c, const bool doubleQuote)
 {
     /* lvalue version */
     print_char(os, c, doubleQuote);
@@ -197,7 +203,9 @@ inline void print_char(ICharTokenStream &&os, char c, bool doubleQuote)
 /* lvalue version */
 void print_string_quoted(ICharTokenStream &os, std::string_view sv, bool includeQuotes);
 /* rvalue version */
-inline void print_string_quoted(ICharTokenStream &&os, std::string_view sv, bool includeQuotes)
+inline void print_string_quoted(ICharTokenStream &&os,
+                                const std::string_view sv,
+                                const bool includeQuotes)
 {
     /* lvalue version */
     print_string_quoted(os, sv, includeQuotes);
