@@ -129,7 +129,7 @@ NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &in
     return true;
 }
 
-static void tryAutoLoad(MainWindow &mw)
+static void tryAutoLoadMap(MainWindow &mw)
 {
     const auto &settings = getConfig().autoLoad;
     if (settings.autoLoadMap) {
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
                                           ? static_upcast<ISplash>(std::make_unique<Splash>())
                                           : static_upcast<ISplash>(std::make_unique<FakeSplash>());
     auto mw = std::make_unique<MainWindow>();
-    tryAutoLoad(*mw);
+    tryAutoLoadMap(*mw);
     mw->show();
     splash->finish(mw.get());
     splash.reset();
