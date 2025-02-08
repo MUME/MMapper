@@ -286,6 +286,8 @@ ConstString KEY_DISPLAY_CLOCK = "Display clock";
 ConstString KEY_DRAW_DOOR_NAMES = "Draw door names";
 ConstString KEY_DRAW_NOT_MAPPED_EXITS = "Draw not mapped exits";
 ConstString KEY_DRAW_UPPER_LAYERS_TEXTURED = "Draw upper layers textured";
+ConstString KEY_EMOJI_ENCODE = "encode emoji";
+ConstString KEY_EMOJI_DECODE = "decode emoji";
 ConstString KEY_EMULATED_EXITS = "Emulated Exits";
 ConstString KEY_EXTERNAL_EDITOR_COMMAND = "External editor command";
 ConstString KEY_FILE_NAME = "File name";
@@ -750,6 +752,9 @@ void Configuration::ParserSettings::read(const QSettings &conf)
         nodesc.append("#=It is pitch black...");
         nodesc.append("#=You just see a dense fog around you...");
     }
+
+    encodeEmoji = conf.value(KEY_EMOJI_ENCODE, true).toBool();
+    decodeEmoji = conf.value(KEY_EMOJI_DECODE, true).toBool();
 }
 
 void Configuration::MumeClientProtocolSettings::read(const QSettings &conf)
@@ -950,6 +955,8 @@ void Configuration::ParserSettings::write(QSettings &conf) const
     conf.setValue(KEY_REMOVE_XML_TAGS, removeXmlTags);
     conf.setValue(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(prefixChar));
     conf.setValue(KEY_NO_ROOM_DESCRIPTION_PATTERNS, noDescriptionPatternsList);
+    conf.setValue(KEY_EMOJI_ENCODE, encodeEmoji);
+    conf.setValue(KEY_EMOJI_DECODE, decodeEmoji);
 }
 
 void Configuration::MumeNativeSettings::write(QSettings &conf) const

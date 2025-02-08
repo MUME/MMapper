@@ -86,6 +86,13 @@ ParserPage::ParserPage(QWidget *const parent)
             &QCheckBox::stateChanged,
             this,
             &ParserPage::slot_suppressXmlTagsCheckBoxStateChanged);
+
+    connect(encodeEmoji, &QCheckBox::clicked, this, [](bool checked) {
+        setConfig().parser.encodeEmoji = checked;
+    });
+    connect(decodeEmoji, &QCheckBox::clicked, this, [](bool checked) {
+        setConfig().parser.decodeEmoji = checked;
+    });
 }
 
 void ParserPage::slot_loadConfig()
@@ -103,6 +110,9 @@ void ParserPage::slot_loadConfig()
 
     endDescPatternsList->clear();
     endDescPatternsList->addItems(settings.noDescriptionPatternsList);
+
+    encodeEmoji->setChecked(settings.encodeEmoji);
+    decodeEmoji->setChecked(settings.decodeEmoji);
 }
 
 void ParserPage::slot_roomNameColorClicked()

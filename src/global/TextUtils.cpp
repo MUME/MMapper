@@ -135,6 +135,29 @@ std::string_view toStdStringViewUtf8(const QByteArray &arr)
     return toStdStringViewRaw(arr);
 }
 
+void foreach_regex(const QRegularExpression &regex,
+                   const QStringView text,
+                   const std::function<void(const QStringView match)> &callback_match,
+                   const std::function<void(const QStringView between)> &callback_between)
+{
+    auto it = regex.globalMatch(text);
+    int pos = 0;
+    int end = text.length();
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        const auto match_start = match.capturedStart(0);
+        const auto match_end = match.capturedEnd(0);
+        if (match_start != pos) {
+            callback_between(text.mid(pos, match_start - pos));
+        }
+        callback_match(text.mid(match_start, match_end - match_start));
+        pos = match_end;
+    }
+    if (pos != end) {
+        callback_between(text.mid(pos));
+    }
+}
+
 } // namespace mmqt
 
 namespace { // anonymous

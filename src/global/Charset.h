@@ -376,6 +376,10 @@ struct NODISCARD Utf8IteratorHelper final
             // perhaps we should only report one invalid codepoint for every
             // truncated codepoint, but it's an error anyway, so it probably
             // doesn't matter.
+            //
+            // FIXME: Actually it does matter; if someone passes in a truncated string that
+            // contains a partial utf8 codepoint, then we probably don't want to report multiple
+            // invalid codepoints.
             sv.remove_prefix(1);
         }
     }

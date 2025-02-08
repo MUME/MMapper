@@ -152,6 +152,8 @@ set(mmapper_SRCS
     global/bits.h
     global/cast_error.cpp
     global/cast_error.h
+    global/emojis.cpp
+    global/emojis.h
     global/entities-xforeach.txt
     global/entities.cpp
     global/entities.h

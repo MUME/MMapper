@@ -10,6 +10,7 @@
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
 #include "../global/TextUtils.h"
+#include "../global/emojis.h"
 
 #include <ostream>
 #include <sstream>
@@ -47,11 +48,19 @@ static void normalizeForUser(std::ostream &os, const bool goAhead, const std::st
     });
 }
 
-NODISCARD static QString normalizeForUser(const QString &s, const bool goAhead)
+NODISCARD static QString normalizeForUser(const CharacterEncodingEnum userEncoding,
+                                          const QString &s,
+                                          const bool goAhead)
 {
-    auto out = [goAhead, &s]() -> std::string {
+    auto out = [goAhead, &userEncoding, &s]() -> std::string {
         std::ostringstream oss;
-        normalizeForUser(oss, goAhead, mmqt::toStdStringUtf8(s));
+        normalizeForUser(oss,
+                         goAhead,
+                         mmqt::toStdStringUtf8((getConfig().parser.decodeEmoji
+                                                && userEncoding == CharacterEncodingEnum::UTF8
+                                                && s.contains(char_consts::C_COLON))
+                                                   ? mmqt::decodeEmojiShortCodes(s)
+                                                   : s));
         return std::move(oss).str();
     }();
 
@@ -101,7 +110,7 @@ void UserTelnet::onAnalyzeUserStream(const TelnetIacBytes &data)
 
 void UserTelnet::onSendToUser(const QString &s, const bool goAhead)
 {
-    auto outdata = normalizeForUser(s, goAhead);
+    auto outdata = normalizeForUser(getEncoding(), s, goAhead);
     submitOverTelnet(outdata, goAhead);
 }
 

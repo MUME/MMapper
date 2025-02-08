@@ -4,25 +4,25 @@
 #include "CaseUtils.h"
 
 #include "Charset.h"
+#include "tests.h"
 
-#include <cstdint>
-#include <sstream>
-
-// 0xD7u is multiplication sign.
-// 0xF7u is division sign.
-// 0xDF is lowercase sharp S; uppercase is unicode U+1E9E.
-// 0xFF is lowercase y with two dots; uppercase is unicode U+0178.
+namespace {
+constexpr uint8_t latin1_multiplication_sign = 0xD7u;
+constexpr uint8_t latin1_division_sign = 0xF7u;
+} // namespace
 
 NODISCARD static bool isToggleableUpperLatin1NonAscii(const char c)
 {
     const auto uc = static_cast<uint8_t>(c);
-    return uc >= 0xC0u && uc <= 0xDEu && uc != 0xD7u;
+    // 0xDF is lowercase sharp S; uppercase sharp S is unicode U+1E9E.
+    return uc >= 0xC0u && uc <= 0xDEu && uc != latin1_multiplication_sign;
 }
 
 NODISCARD static bool isToggleableLowerLatin1NonAscii(const char c)
 {
     const auto uc = static_cast<uint8_t>(c);
-    return uc >= 0xE0u && uc <= 0xFEu && uc != 0xF7u;
+    // 0xFF is lowercase y with diaeresis; uppercase Y with diaeresis is unicode U+0178.
+    return uc >= 0xE0u && uc <= 0xFEu && uc != latin1_division_sign;
 }
 
 char toLowerLatin1(const char c)
@@ -200,6 +200,8 @@ NODISCARD bool areEqualAsLowerUtf8(const std::string_view a, const std::string_v
         return areEqualAsLowerLatin1(a, b);
     }
 
+    // REVISIT: Current design iterates sliced codepoints as individual invalid codepoints.
+
     charset::conversion::Utf8Iterable iterable_a{a};
     charset::conversion::Utf8Iterable iterable_b{b};
 
@@ -258,4 +260,17 @@ NODISCARD std::string toLowerUtf8(const std::string_view sv)
 NODISCARD std::string toUpperUtf8(const std::string_view sv)
 {
     return toUpperUtf8(std::string{sv});
+}
+
+void test::testCaseUtils()
+{
+    static constexpr std::string_view thumbs_up = "\U0001F44D";
+    {
+        static_assert(thumbs_up.size() == 4);
+        const auto s1 = thumbs_up.substr(0, thumbs_up.size() - 1);
+        const std::string_view s2 = "???";
+        TEST_ASSERT(s1.size() == s2.size());
+        TEST_ASSERT(areEqualAsLowerUtf8(s1, s1));
+        TEST_ASSERT(areEqualAsLowerUtf8(s1, s2));
+    }
 }

@@ -880,6 +880,27 @@ void testStrings()
         }
         TEST_ASSERT(n == 0);
     }
+    {
+        {
+            size_t n = 0;
+            for (MAYBE_UNUSED auto ignored : charset::conversion::Utf8Iterable{thumbs_up8}) {
+                ++n;
+            }
+            TEST_ASSERT(n == 1);
+        }
+        {
+            // The current design causes Utf8Iterable to multi-report sliced codepoints.
+            constexpr auto invalid = charset::conversion::Utf8Iterable{}.invalid;
+            size_t n = 0;
+            std::vector<char32_t> codepoints;
+            for (MAYBE_UNUSED auto codepoint :
+                 charset::conversion::Utf8Iterable{thumbs_up8.substr(0, thumbs_up8.size() - 1)}) {
+                TEST_ASSERT(codepoint == invalid);
+                ++n;
+            }
+            TEST_ASSERT(n == 3);
+        }
+    }
 }
 
 void testStringsExtreme()

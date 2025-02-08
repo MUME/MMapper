@@ -35,3 +35,7 @@ NODISCARD extern std::string toLowerUtf8(std::string_view str);
 NODISCARD extern std::string toUpperUtf8(std::string_view str);
 NODISCARD extern std::string toLowerUtf8(std::string str);
 NODISCARD extern std::string toUpperUtf8(std::string str);
+
+namespace test {
+extern void testCaseUtils();
+}

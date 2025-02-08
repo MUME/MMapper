@@ -19,11 +19,13 @@ private Q_SLOTS:
     static void ansiOstreamTest();
     static void ansiTextUtilsTest();
     static void ansiToRgbTest();
+    static void caseUtilsTest();
     static void castTest();
     static void charsetTest();
     static void charUtilsTest();
     static void colorTest();
     static void diffTest();
+    static void emojiTest();
     static void entitiesTest();
     static void flagsTest();
     static void hideQDebugTest();

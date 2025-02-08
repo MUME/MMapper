@@ -81,6 +81,8 @@ public:
         bool removeXmlTags = false;
         char prefixChar = char_consts::C_UNDERSCORE;
         QStringList noDescriptionPatternsList;
+        bool encodeEmoji = true;
+        bool decodeEmoji = true;
 
     private:
         SUBGROUP();

@@ -10,6 +10,7 @@
 #include "../global/LineUtils.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
+#include "../global/emojis.h"
 #include "../mpi/mpifilter.h"
 #include "GmcpUtils.h"
 
@@ -214,6 +215,17 @@ public:
     }
 };
 
+NODISCARD bool isOneLineCrlf(const QString &s)
+{
+    if (s.isEmpty() || s.back() != char_consts::C_NEWLINE) {
+        return false;
+    }
+    QStringView sv = s;
+    sv.chop(1);
+    return !sv.empty() && sv.back() == char_consts::C_CARRIAGE_RETURN
+           && !sv.contains(char_consts::C_NEWLINE);
+}
+
 } // namespace
 
 MudTelnetOutputs::~MudTelnetOutputs() = default;
@@ -244,29 +256,26 @@ void MudTelnet::onSubmitMpiToMud(const RawBytes &bytes)
     submitOverTelnet(bytes, false);
 }
 
-NODISCARD static bool isOneLineCrlf(const QString &s)
+void MudTelnet::submitOneLine(const QString &inputLine)
 {
-    if (s.isEmpty() || s.back() != char_consts::C_NEWLINE) {
-        return false;
-    }
-    QStringView sv = s;
-    sv.chop(1);
-    return !sv.empty() && sv.back() == char_consts::C_CARRIAGE_RETURN
-           && !sv.contains(char_consts::C_NEWLINE);
-}
+    auto submit = [this](const QString &s) {
+        if (getConfig().parser.encodeEmoji && mmqt::containsNonLatin1Codepoints(s)) {
+            submitOverTelnet(mmqt::encodeEmojiShortCodes(s), false);
+        } else {
+            submitOverTelnet(s, false);
+        }
+    };
 
-void MudTelnet::submitOneLine(const QString &s)
-{
-    assert(isOneLineCrlf(s));
-    if (hasMpiPrefix(s)) {
+    assert(isOneLineCrlf(inputLine));
+    if (hasMpiPrefix(inputLine)) {
         // It would be useful to send feedback to the user.
-        const auto mangled = char_consts::C_SPACE + s;
+        const auto mangled = char_consts::C_SPACE + inputLine;
         qWarning() << "mangling command that contains MPI prefix" << mangled;
-        submitOverTelnet(mangled, false);
+        submit(mangled);
         return;
     }
 
-    submitOverTelnet(s, false);
+    submit(inputLine);
 }
 
 void MudTelnet::onSendToMud(const QString &s)

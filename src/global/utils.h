@@ -295,6 +295,14 @@ NODISCARD static inline T clampNonNegative(T x)
 }
 
 template<typename T>
+NODISCARD static inline auto pop_back(T &container)
+{
+    auto x = std::move(container.back());
+    container.pop_back();
+    return x;
+}
+
+template<typename T>
 NODISCARD static inline auto pop_front(T &container)
 {
     auto x = std::move(container.front());

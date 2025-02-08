@@ -21,29 +21,6 @@ const constexpr int SCROLLBAR_BUFFER = 1;
 const constexpr int TAB_WIDTH_SPACES = 8;
 const volatile bool ignore_non_default_underline_colors = false;
 
-void foreach_regex(const QRegularExpression &regex,
-                   const QStringView text,
-                   const std::function<void(const QStringView match)> &callback_match,
-                   const std::function<void(const QStringView between)> &callback_between)
-{
-    auto it = regex.globalMatch(text);
-    int pos = 0;
-    int end = text.length();
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        const auto match_start = match.capturedStart(0);
-        const auto match_end = match.capturedEnd(0);
-        if (match_start != pos) {
-            callback_between(text.mid(pos, match_start - pos));
-        }
-        callback_match(text.mid(match_start, match_end - match_start));
-        pos = match_end;
-    }
-    if (pos != end) {
-        callback_between(text.mid(pos));
-    }
-}
-
 void foreach_backspace(const QStringView text,
                        const std::function<void()> &callback_backspace,
                        const std::function<void(const QStringView nonBackspace)> &callback_between)
@@ -180,7 +157,7 @@ void setDefaultFormat(QTextCharFormat &format, const FontDefaults &defaults)
     format.setFontStrikeOut(false);
 }
 
-void AnsiTextHelper::displayText(const QString &str)
+void AnsiTextHelper::displayText(const QString &input_str)
 {
     // ANSI codes are formatted as the following:
     // escape + [ + n1 (+ n2) + m
@@ -285,7 +262,7 @@ void AnsiTextHelper::displayText(const QString &str)
     };
 
     auto add_formatted = [this, &add_raw, &try_remove_backspace](const QStringView text) {
-        foreach_regex(
+        mmqt::foreach_regex(
             url_regex,
             text,
             [this, &try_remove_backspace](const QStringView url) {
@@ -304,9 +281,9 @@ void AnsiTextHelper::displayText(const QString &str)
     };
 
     // Display text using a cursor
-    foreach_regex(
+    mmqt::foreach_regex(
         ansi_regex,
-        str,
+        input_str,
         [this, &add_raw](const QStringView ansiStr) {
             assert(!ansiStr.isEmpty() && ansiStr.front() == char_consts::C_ESC);
             if (mmqt::isAnsiColor(ansiStr)) {

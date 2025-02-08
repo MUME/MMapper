@@ -7,6 +7,7 @@
 #include "utils.h"
 
 #include <cctype>
+#include <functional>
 #include <string>
 #include <string_view>
 
@@ -80,6 +81,11 @@ NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);
 NODISCARD extern std::string_view toStdStringViewRaw(const QByteArray &arr);
 NODISCARD extern std::string_view toStdStringViewUtf8(const QByteArray &arr);
+
+void foreach_regex(const QRegularExpression &regex,
+                   const QStringView text,
+                   const std::function<void(const QStringView match)> &callback_match,
+                   const std::function<void(const QStringView between)> &callback_between);
 } // namespace mmqt
 
 namespace test {

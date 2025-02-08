@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace { // anonymous
-NODISCARD static bool compareIgnoreCase(const std::string_view &a, const std::string_view &b)
+NODISCARD bool compareIgnoreCase(const std::string_view &a, const std::string_view &b)
 {
     return areEqualAsLowerUtf8(a, b);
 }
@@ -41,6 +41,7 @@ ArgAbbrev::ArgAbbrev(std::string moved_str)
 {
     for (const char c : m_str) {
         // use nbsp_aware::isAnySpace?
+        // Note: This currently forbids non-latin1 codepoints.
         if (ascii::isSpace(c) || c == char_consts::C_NBSP || !isPrintLatin1(c)) {
             throw std::invalid_argument("string");
         }
@@ -53,14 +54,16 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
         return MatchResult::failure(input);
     }
 
-    const auto input_sv = StringView{input.front()};
+    const auto &input_sv = input.front();
     const size_t inputLen = input_sv.size();
-    const size_t strlen = m_str.length();
-    if (inputLen > strlen) {
+    if (inputLen > m_str.length()) {
         return MatchResult::failure(input);
     }
 
-    if (!compareIgnoreCase(m_str, input_sv.getStdStringView())) {
+    // Note: If this ever contains non-latin1 codepoints, then substr() could slice a codepoint,
+    // which could then allow "???" to match the sliced codepoint.
+    const auto maybe_sliced = std::string_view{m_str}.substr(0, inputLen);
+    if (!isValidUtf8(maybe_sliced) || !compareIgnoreCase(maybe_sliced, input_sv)) {
         return MatchResult::failure(input);
     }
 
@@ -117,7 +120,7 @@ MatchResult ArgChoice::virt_match(const ParserInput &input_sv, IMatchErrorLogger
             }
 
             std::vector<Value> v;
-            v.emplace_back(Value(n));
+            v.emplace_back(n);
             if (result.optValue) {
                 v.emplace_back(result.optValue.value());
             }

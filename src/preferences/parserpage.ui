@@ -452,6 +452,42 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Emoji Shortcodes</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="encodeEmoji">
+        <property name="text">
+         <string>Encode to shortcodes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="decodeEmoji">
+        <property name="text">
+         <string>Decode from shortcodes</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer>
      <property name="orientation">
       <enum>Qt::Vertical</enum>

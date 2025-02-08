@@ -18,6 +18,7 @@
 #include "../src/global/TaggedString.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/WeakHandle.h"
+#include "../src/global/emojis.h"
 #include "../src/global/entities.h"
 #include "../src/global/float_cast.h"
 #include "../src/global/int_cast.h"
@@ -125,7 +126,7 @@ void TestGlobal::ansiToRgbTest()
     const QColor cyanRgb = mmqt::ansi256toRgb(cyanAnsi);
     QCOMPARE(cyanRgb, QColor("#AFD7FF"));
 
-    auto testOne = [](const int ansi256, const QColor color, const AnsiColor16Enum ansi) {
+    auto testOne = [](const int ansi256, const QColor &color, const AnsiColor16Enum ansi) {
         QCOMPARE(mmqt::toQColor(ansi), color);
         QCOMPARE(mmqt::ansi256toRgb(ansi256), color);
     };
@@ -137,6 +138,11 @@ void TestGlobal::ansiToRgbTest()
     testOne(8, "#555753", AnsiColor16Enum::BLACK);
     testOne(14, "#34E2E2", AnsiColor16Enum::CYAN);
     testOne(15, "#EEEEEC", AnsiColor16Enum::WHITE);
+}
+
+void TestGlobal::caseUtilsTest()
+{
+    test::testCaseUtils();
 }
 
 void TestGlobal::castTest()
@@ -164,6 +170,11 @@ void TestGlobal::diffTest()
 {
     mmqt::HideQDebug forThisTest;
     test::testDiff();
+}
+
+void TestGlobal::emojiTest()
+{
+    test::test_emojis();
 }
 
 void TestGlobal::entitiesTest()

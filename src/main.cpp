@@ -9,6 +9,7 @@
 #include "./global/ConfigConsts.h"
 #include "./global/Version.h"
 #include "./global/WinSock.h"
+#include "./global/emojis.h"
 #include "./global/utils.h"
 #include "./mainwindow/mainwindow.h"
 
@@ -188,6 +189,7 @@ int main(int argc, char **argv)
     std::unique_ptr<ISplash> splash = !config.general.noSplash
                                           ? static_upcast<ISplash>(std::make_unique<Splash>())
                                           : static_upcast<ISplash>(std::make_unique<FakeSplash>());
+    tryLoadEmojis(getResourceFilenameRaw("emojis", "short-codes.json"));
     auto mw = std::make_unique<MainWindow>();
     tryAutoLoadMap(*mw);
     mw->show();
