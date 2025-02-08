@@ -506,7 +506,6 @@ set_target_properties(
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
-  UNITY_BUILD ${USE_UNITY_BUILD}
 )
 
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
