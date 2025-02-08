@@ -130,7 +130,7 @@ void ParserPage::savePatterns()
         const auto count = input->count();
         QStringList result;
         result.reserve(count);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < count; ++i) {
             result.append(input->itemText(i));
         }
         return result;

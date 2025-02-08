@@ -40,7 +40,7 @@ void Experimenting::augmentPath(const std::shared_ptr<Path> &path, const RoomHan
         }
         paths->push_back(working);
     }
-    numPaths++;
+    ++numPaths;
 }
 
 std::shared_ptr<PathList> Experimenting::evaluate()

@@ -1249,7 +1249,7 @@ void enhanceExits(AnsiOstream &os, const RoomHandle &sourceRoom)
                         if (!targetExit.exitIsExit()) {
                             continue;
                         }
-                        exitCount++;
+                        ++exitCount;
                         if (targetExit.containsOut(sourceId)) {
                             // Technically rooms can point back in a different direction
                             oneWay = false;

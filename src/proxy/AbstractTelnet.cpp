@@ -1077,7 +1077,7 @@ int AbstractTelnet::onReadInternalInflate(const char *const data,
         }
 
         const int outLen = CHUNK - static_cast<int>(stream.avail_out);
-        for (auto i = 0; i < outLen; i++) {
+        for (auto i = 0; i < outLen; ++i) {
             // Process character by character
             const auto c = static_cast<uint8_t>(out[i]);
             onReadInternal2(cleanData, c);

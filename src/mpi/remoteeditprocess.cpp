@@ -28,7 +28,7 @@ static constexpr const auto VALID_LEN = VALID.length();
 NODISCARD static std::string randomString(int length)
 {
     std::ostringstream os;
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < length; ++i) {
         os << VALID[getRandom(VALID_LEN)];
     }
     return os.str();

@@ -193,7 +193,7 @@ void GroupManagerPage::loadRemoteHostConfig()
     ui->remoteHost->clear();
     bool remoteHostIsContact = false;
     QSet<QString> contacts;
-    for (int i = 0; i < itemModel->rowCount(); i++) {
+    for (int i = 0; i < itemModel->rowCount(); ++i) {
         // Pre-populate entries from Authorized Contacts
         const auto key = GroupSecret{
             itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray().toLower()};
@@ -228,7 +228,7 @@ void GroupManagerPage::loadRemoteHostConfig()
     auto find_remote_host_index = [this, &remoteHostText, &oldText]() -> int {
         if (oldText.isEmpty()) {
             // On first start up select the remote host in the configuration
-            for (int i = 0; i < ui->remoteHost->count(); i++) {
+            for (int i = 0; i < ui->remoteHost->count(); ++i) {
                 const auto itemText = ui->remoteHost->itemText(i);
                 if (remoteHostText.compare(itemText, Qt::CaseInsensitive) == 0) {
                     return i;

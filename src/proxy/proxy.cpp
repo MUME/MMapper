@@ -635,7 +635,7 @@ void Proxy::allocParser()
                         sv.chop(1);
                     }
                     if (sv.isEmpty()) {
-                        m_newlines++;
+                        ++m_newlines;
                     } else {
                         m_newlines = 1;
                     }

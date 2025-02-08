@@ -255,7 +255,7 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
                         // for its position here instead of using this fragile interface.
                         if (const auto &pos = tryGetMostLikelyRoomPosition()) {
                             Coordinate c = pos.value() + eDir;
-                            c.z--;
+                            --c.z;
                             m_map.lookingForRooms(appr, c);
                             perhaps = appr.oneMatch();
 

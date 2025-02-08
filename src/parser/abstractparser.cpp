@@ -306,7 +306,7 @@ void MumeXmlParserBase::parseExits(std::ostream &os)
     } else {
         // Player exits
         const int length = str.length();
-        for (int i = 7; i < length; i++) {
+        for (int i = 7; i < length; ++i) {
             const char c = str.at(i).toLatin1();
             if (!parse_exit_flag(c)) {
                 switch (c) {
@@ -532,7 +532,7 @@ NODISCARD static QString compressDirections(const QString &original)
 
     for (const QChar c : original) {
         if (curnum != 0 && curval == c) {
-            curnum++;
+            ++curnum;
         } else {
             if (curnum != 0) {
                 addDirs();

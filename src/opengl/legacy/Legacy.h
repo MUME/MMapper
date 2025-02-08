@@ -54,7 +54,7 @@ NODISCARD static inline std::vector<VertexType_> convertQuadsToTris(
     std::vector<VertexType_> triangles;
     triangles.reserve(expected);
     const auto *it = quads.data();
-    for (size_t i = 0; i < numQuads; i++) {
+    for (size_t i = 0; i < numQuads; ++i) {
         const auto &a = *(it++);
         const auto &b = *(it++);
         const auto &c = *(it++);

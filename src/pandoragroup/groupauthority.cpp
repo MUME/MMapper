@@ -326,7 +326,7 @@ void GroupAuthority::remove(const GroupSecret &secret)
     emit sig_secretRevoked(secret);
 
     // Remove from model
-    for (int i = 0; i <= model.rowCount(); i++) {
+    for (int i = 0; i <= model.rowCount(); ++i) {
         QModelIndex index = model.index(i);
         const QString targetSecret = model.data(index, Qt::DisplayRole).toString().toUtf8().toLower();
         if (targetSecret == secret.getQByteArray()) {

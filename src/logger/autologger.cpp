@@ -65,7 +65,7 @@ bool AutoLogger::createFile()
     }
 
     m_curBytes = 0;
-    m_curFile++;
+    ++m_curFile;
 
     return true;
 }

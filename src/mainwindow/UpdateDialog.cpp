@@ -32,7 +32,7 @@ CompareVersion::CompareVersion(const QString &versionStr) noexcept
 
 bool CompareVersion::operator>(const CompareVersion &other) const
 {
-    for (size_t i = 0; i < m_parts.size(); i++) {
+    for (size_t i = 0; i < m_parts.size(); ++i) {
         auto myPart = m_parts.at(i);
         auto otherPart = other.m_parts.at(i);
         if (myPart == otherPart) {

@@ -93,13 +93,13 @@ MapCanvas *MapCanvas::getPrimary()
 
 void MapCanvas::slot_layerUp()
 {
-    m_currentLayer++;
+    ++m_currentLayer;
     layerChanged();
 }
 
 void MapCanvas::slot_layerDown()
 {
-    m_currentLayer--;
+    --m_currentLayer;
     layerChanged();
 }
 

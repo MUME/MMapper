@@ -214,7 +214,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     LoadRoomHelper helper{exitsToUnknown};
 
     progressCounter.setCurrentTask(ProgressMsg{"reading rooms"});
-    for (uint32_t i = 0; i < roomsCount; i++) {
+    for (uint32_t i = 0; i < roomsCount; ++i) {
         while (xml.readNextStartElement() && !xml.hasError()) {
             if (xml.name() == "room") {
                 loading.emplace_back(loadRoom(xml, helper));
@@ -238,7 +238,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
 
         Map index;
         ExternalRoomId max{0};
-        for (uint32_t i = 0; i < roomsCount; i++) {
+        for (uint32_t i = 0; i < roomsCount; ++i) {
             const auto xid = loading[i].getId();
             if (xid == INVALID_EXTERNAL_ROOMID) {
                 throw std::runtime_error("invalid room ID detected");

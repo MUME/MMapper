@@ -83,7 +83,7 @@ LineParserResult KillAndXPParser::parse(const QString &line)
         return std::nullopt;
     }
 
-    m_linesSinceShareExp++;
+    ++m_linesSinceShareExp;
 
     if (m_linesSinceShareExp > 5) {
         // too many lines have passed, our pending share exp has expired
