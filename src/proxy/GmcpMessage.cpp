@@ -57,7 +57,7 @@ GmcpMessage::GmcpMessage(GmcpMessageName moved_package)
 GmcpMessage::GmcpMessage(GmcpMessageName moved_package, GmcpJson moved_json)
     : m_name{std::move(moved_package)}
     , m_json{std::move(moved_json)}
-    , m_document(GmcpJsonDocument::fromJson(m_json->toQByteArray()))
+    , m_document{m_json.value()}
     , m_type{toGmcpMessageType(m_name.getStdStringUtf8())}
 {}
 

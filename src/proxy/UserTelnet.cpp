@@ -168,7 +168,7 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
                                  && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet()
                                      || msg.isCoreSupportsRemove())
                                  && msg.getJsonDocument().has_value()
-                                 && msg.getJsonDocument()->isArray();
+                                 && msg.getJsonDocument()->getArray().has_value();
 
     if (!requiresRewrite) {
         m_outputs.onRelayGmcpFromUserToMud(msg);
@@ -177,22 +177,23 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 
     // Eat Core.Supports.[Add|Set|Remove] and proxy a MMapper filtered subset
     // Handle the various messages
-    const auto &array = msg.getJsonDocument()->array();
     if (msg.isCoreSupportsSet()) {
         resetGmcpModules();
     }
-    for (const auto &e : array) {
-        if (!e.isString()) {
-            continue;
-        }
-        const auto &moduleStr = e.toString();
-        try {
-            const GmcpModule mod{mmqt::toStdStringUtf8(moduleStr)};
-            receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
+    if (const auto optArray = msg.getJsonDocument()->getArray()) {
+        for (const auto &e : optArray.value()) {
+            if (auto optString = e.getString()) {
+                const auto &module = optString.value();
+                try {
+                    const GmcpModule mod{mmqt::toStdStringUtf8(module)};
+                    receiveGmcpModule(mod, !msg.isCoreSupportsRemove());
 
-        } catch (const std::exception &e) {
-            qWarning() << "Module" << moduleStr << (msg.isCoreSupportsRemove() ? "remove" : "add")
-                       << "error because:" << e.what();
+                } catch (const std::exception &e) {
+                    qWarning() << "Module" << module
+                               << (msg.isCoreSupportsRemove() ? "remove" : "add")
+                               << "error because:" << e.what();
+                }
+            }
         }
     }
 

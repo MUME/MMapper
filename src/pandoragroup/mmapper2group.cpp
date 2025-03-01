@@ -7,6 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
+#include "../global/JsonObj.h"
 #include "../global/MakeQPointer.h"
 #include "../global/PrintUtils.h"
 #include "../global/thread_utils.h"
@@ -538,78 +539,74 @@ void Mmapper2Group::onReset()
     issueLocalCharUpdate();
 }
 
+void Mmapper2Group::parseGmcpCharName(const JsonObj &obj)
+{
+    // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
+    if (auto optName = obj.getString("name")) {
+        renameCharacter(optName.value());
+        issueLocalCharUpdate();
+    }
+}
+
+void Mmapper2Group::parseGmcpCharVitals(const JsonObj &obj)
+{
+    // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
+    CGroupChar &self = deref(getGroup()->getSelf());
+    CharacterAffectFlags &affects = self.affects;
+
+    bool update = false;
+
+    const int hp = obj.getInt("hp").value_or(self.hp);
+    const int maxhp = obj.getInt("maxhp").value_or(self.maxhp);
+    const int mana = obj.getInt("mana").value_or(self.mana);
+    const int maxmana = obj.getInt("maxmana").value_or(self.maxmana);
+    const int mp = obj.getInt("mp").value_or(self.moves);
+    const int maxmp = obj.getInt("maxmp").value_or(self.maxmoves);
+    if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp)) {
+        update = true;
+    }
+
+    if (auto optBool = obj.getBool("ride")) {
+        const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
+        const bool isRiding = optBool.value();
+        if (isRiding) {
+            affects.insert(CharacterAffectEnum::RIDING);
+            m_affectLastSeen.insert(CharacterAffectEnum::RIDING,
+                                    QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
+        } else {
+            affects.remove(CharacterAffectEnum::RIDING);
+        }
+        if (isRiding != wasRiding) {
+            update = true;
+        }
+    }
+
+    if (auto optString = obj.getString("position")) {
+        const auto position = toCharacterPosition(optString.value());
+        if (setCharacterPosition(position)) {
+            update = true;
+        }
+    }
+
+    if (update) {
+        issueLocalCharUpdate();
+    }
+}
+
 void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
 {
-    if (m_group == nullptr) {
+    if (m_group == nullptr || !msg.getJsonDocument().has_value()) {
+        return;
+    }
+    auto optObj = msg.getJsonDocument()->getObject();
+    if (!optObj) {
         return;
     }
 
-    if (msg.isCharVitals() && msg.getJsonDocument().has_value()
-        && msg.getJsonDocument()->isObject()) {
-        // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
-        const GmcpJsonDocument &doc = msg.getJsonDocument().value();
-        const auto &obj = doc.object();
-
-        CGroupChar &self = deref(getGroup()->getSelf());
-        CharacterAffectFlags &affects = self.affects;
-
-        bool update = false;
-
-        if (obj.contains("hp") || obj.contains("maxhp") || obj.contains("mana")
-            || obj.contains("maxmana") || obj.contains("mp") || obj.contains("maxmp")) {
-            const int hp = obj.value("hp").toInt(self.hp);
-            const int maxhp = obj.value("maxhp").toInt(self.maxhp);
-            const int mana = obj.value("mana").toInt(self.mana);
-            const int maxmana = obj.value("maxmana").toInt(self.maxmana);
-            const int mp = obj.value("mp").toInt(self.moves);
-            const int maxmp = obj.value("maxmp").toInt(self.maxmoves);
-            if (setCharacterScore(hp, maxhp, mana, maxmana, mp, maxmp)) {
-                update = true;
-            }
-        }
-
-        if (obj.contains("ride") && obj.value("ride").isBool()) {
-            const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
-            const bool isRiding = obj.value("ride").toBool();
-            if (isRiding) {
-                affects.insert(CharacterAffectEnum::RIDING);
-                m_affectLastSeen
-                    .insert(CharacterAffectEnum::RIDING,
-                            QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
-            } else {
-                affects.remove(CharacterAffectEnum::RIDING);
-            }
-            if (isRiding != wasRiding) {
-                update = true;
-            }
-        }
-
-        if (obj.contains("position") && obj.value("position").isString()) {
-            const auto position = toCharacterPosition(obj.value("position").toString());
-            if (setCharacterPosition(position)) {
-                update = true;
-            }
-        }
-
-        if (update) {
-            issueLocalCharUpdate();
-        }
-
-        return;
-    }
-
-    if (msg.isCharName() && msg.getJsonDocument().has_value() && msg.getJsonDocument()->isObject()) {
-        // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
-        const QJsonDocument &doc = msg.getJsonDocument().value();
-        const auto &obj = doc.object();
-        const auto &name = obj.value("name");
-        if (!name.isString()) {
-            return;
-        }
-
-        renameCharacter(name.toString());
-        issueLocalCharUpdate();
-        return;
+    if (msg.isCharVitals()) {
+        parseGmcpCharVitals(optObj.value());
+    } else if (msg.isCharName()) {
+        parseGmcpCharVitals(optObj.value());
     }
 }
 

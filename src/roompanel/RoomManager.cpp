@@ -49,7 +49,7 @@ void RoomManager::slot_parseGmcpInput(const GmcpMessage &msg)
 void RoomManager::parseGmcpAdd(const GmcpMessage &msg)
 {
     showGmcp(msg);
-    if (!msg.getJsonDocument().has_value() || !msg.getJsonDocument()->isObject()) {
+    if (!msg.getJsonDocument().has_value() || !msg.getJsonDocument()->getObject()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                                  << "containing invalid Json: expecting object, got"
@@ -57,7 +57,9 @@ void RoomManager::parseGmcpAdd(const GmcpMessage &msg)
         }
         return;
     }
-    addMob(msg.getJsonDocument()->object());
+
+    auto obj = msg.getJsonDocument()->getObject().value();
+    addMob(obj);
 }
 
 void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
@@ -70,23 +72,14 @@ void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
                              << "containing invalid empty payload: expecting number";
         return;
     }
-    const std::string &str = msg.getJson()->getStdStringUtf8();
-    size_t pos = 0;
-    unsigned long num = 0;
-    bool bad = false;
-    try {
-        num = std::stoul(str, &pos, 10);
-    } catch (...) {
-        bad = true; // str does not contain a valid unsigned long
-    }
-    const RoomMob::Id id = static_cast<RoomMob::Id>(num);
-    if (bad || id == RoomMobData::NOID || static_cast<unsigned long>(id) != num
-        || (pos < str.size() && str[pos] > char_consts::C_SPACE)) {
+    auto optNum = msg.getJsonDocument()->getInt();
+    if (!optNum || optNum.value() <= static_cast<JsonInt>(RoomMobData::NOID)) {
         qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                              << "containing invalid payload: expecting unsigned number, got"
                              << msg.getJson()->toQString();
         return;
     }
+    const RoomMob::Id id = static_cast<RoomMob::Id>(optNum.value());
     if (m_room.removeMobById(id)) {
         updateWidget();
     }
@@ -95,8 +88,9 @@ void RoomManager::parseGmcpRemove(const GmcpMessage &msg)
 void RoomManager::parseGmcpSet(const GmcpMessage &msg)
 {
     showGmcp(msg);
+
     const auto &doc = msg.getJsonDocument().value();
-    if (!doc.isArray()) {
+    if (!doc.getArray()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                                  << "containing invalid Json: expecting array, got"
@@ -105,15 +99,16 @@ void RoomManager::parseGmcpSet(const GmcpMessage &msg)
         return;
     }
     m_room.resetMobs();
-    for (QJsonValueRef value : doc.array()) {
-        if (value.isObject()) {
-            addMob(value.toObject());
+    auto array = doc.getArray().value();
+    for (const auto &entry : array) {
+        if (auto optObj = entry.getObject()) {
+            addMob(optObj.value());
         } else {
             if (m_debug) {
                 qWarning().noquote()
                     << "RoomManager received GMCP" << msg.getName().toQString()
                     << "containing invalid Json: expecting array of objects, got [/*...*/"
-                    << value.type() << "/*...*/]";
+                    << entry.type() << "/*...*/]";
             }
         }
     }
@@ -124,7 +119,7 @@ void RoomManager::parseGmcpUpdate(const GmcpMessage &msg)
 {
     showGmcp(msg);
     const auto &doc = msg.getJsonDocument().value();
-    if (!doc.isObject()) {
+    if (!doc.getObject()) {
         if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
                                  << "containing invalid Json: expecting object, got"
@@ -132,10 +127,10 @@ void RoomManager::parseGmcpUpdate(const GmcpMessage &msg)
         }
         return;
     }
-    updateMob(doc.object());
+    updateMob(doc.getObject().value());
 }
 
-void RoomManager::addMob(const QJsonObject &obj)
+void RoomManager::addMob(const JsonObj &obj)
 {
     RoomMobUpdate data;
     if (toMob(obj, data)) {
@@ -144,7 +139,7 @@ void RoomManager::addMob(const QJsonObject &obj)
     }
 }
 
-void RoomManager::updateMob(const QJsonObject &obj)
+void RoomManager::updateMob(const JsonObj &obj)
 {
     RoomMobUpdate data;
     if (toMob(obj, data)) {
@@ -173,76 +168,56 @@ const QHash<QString, MobFieldEnum> RoomManager::mobFields{
     {"weapon", MobFieldEnum::WEAPON},
 };
 
-bool RoomManager::toMob(const QJsonObject &obj, RoomMobUpdate &data) const
+bool RoomManager::toMob(const JsonObj &obj, RoomMobUpdate &data) const
 {
-    auto iter = obj.constFind("id");
-    if (iter == obj.constEnd() || !toMobId(*iter, data)) {
+    auto optId = obj.getInt("id");
+    if (!optId || optId.value() <= static_cast<JsonInt>(RoomMobData::NOID)) {
         if (m_debug) {
-            auto &&warn = qWarning().noquote().nospace();
-            warn << "RoomManager received GMCP containing invalid Json object field ";
-            if (iter == obj.constEnd()) {
-                warn << "(missing id)";
+            qWarning().noquote().nospace()
+                << "RoomManager received GMCP containing invalid Json object field ";
+            if (!optId) {
+                qWarning().noquote().nospace() << "(missing id)";
             } else {
-                warn << "{id: " << *iter << "}";
+                qWarning().noquote().nospace() << "{id: " << optId.value() << "}";
             }
         }
         return false;
     }
-    for (iter = obj.constBegin(); iter != obj.constEnd(); ++iter) {
-        auto match = mobFields.constFind(iter.key());
+    data.setId(static_cast<RoomMob::Id>(optId.value()));
+    for (auto iter = obj.begin(); iter != obj.end(); ++iter) {
+        auto match = mobFields.constFind(iter.first());
         if (match != mobFields.constEnd()) {
-            toMobField(*iter, data, *match);
+            toMobField(iter.second(), data, *match);
         } else if (m_debug) {
             qWarning().noquote() << "RoomManager received GMCP containing unknown Json object field {"
-                                 << iter.key() << ": " << *iter << "}";
+                                 << iter.first() << "}";
         }
     }
     return true;
 }
 
-bool RoomManager::toMobId(const QJsonValue &value, RoomMobUpdate &data)
+void RoomManager::toMobField(const JsonValue &value, RoomMobUpdate &data, const MobFieldEnum i)
 {
-    // RoomMob::Id cannot represent negative numbers
-    const double d = value.toDouble(-1.0);
-
-    // avoid UB when the result is -1, or if it's otherwise out of bounds.
-    if (auto tmp = float_cast::convert_float_to_int<RoomMob::Id>(d)) {
-        data.setId(tmp.get_value());
-    }
-
-    // check for exact conversion
-    return utils::isSameFloat(d, static_cast<double>(data.getId()));
-}
-
-void RoomManager::toMobField(const QJsonValue &value, RoomMobUpdate &data, const MobFieldEnum i)
-{
-    switch (value.type()) {
-    case QJsonValue::Double:
-        data.setField(i, QVariant::fromValue(static_cast<RoomMobData::Id>(value.toDouble())));
-        break;
-    case QJsonValue::String:
-        data.setField(i, QVariant::fromValue(value.toString()));
-        break;
-    case QJsonValue::Array: {
+    if (auto optInt = value.getInt()) {
+        data.setField(i, QVariant::fromValue(static_cast<RoomMobData::Id>(optInt.value())));
+    } else if (auto optString = value.getString()) {
+        data.setField(i, QVariant::fromValue(optString.value()));
+    } else if (auto optArray = value.getArray()) {
+        const auto arr = optArray.value();
         QString str;
-        // MUME sends flags and labels as array of strings
-        for (QJsonValueRef item : value.toArray()) {
-            if (item.isString()) {
-                if (!str.isEmpty()) {
-                    str += char_consts::C_COMMA;
-                }
-                str += item.toString();
+        // MUME sends flags and labels as an array of strings
+        for (const JsonValue &item : arr) {
+            optString = item.getString();
+            if (!optString)
+                continue;
+            if (!str.isEmpty()) {
+                str += char_consts::C_COMMA;
             }
+            str += optString.value();
         }
         data.setField(i, QVariant::fromValue(str));
-    } break;
-    case QJsonValue::Bool:
-    case QJsonValue::Null:
-    case QJsonValue::Object:
-    case QJsonValue::Undefined:
-    default:
+    } else {
         // MUME may send "weapon":false and "fighting":null
-        break;
     }
     data.setFlags(data.getFlags() | i);
 }

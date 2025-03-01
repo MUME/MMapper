@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/Flags.h"
+#include "../global/JsonDoc.h"
 #include "../global/TaggedString.h"
 
 #include <cstdint>
@@ -76,7 +77,7 @@ struct NODISCARD GmcpJsonTag final
 } // namespace tags
 
 using GmcpJson = TaggedStringUtf8<tags::GmcpJsonTag>;
-using GmcpJsonDocument = QJsonDocument;
+using GmcpJsonDocument = JsonDoc<tags::GmcpJsonTag>;
 
 class NODISCARD GmcpMessage final
 {

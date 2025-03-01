@@ -4,6 +4,7 @@
 
 #include "adventuretracker.h"
 
+#include "../global/JsonObj.h"
 #include "../global/RAII.h"
 #include "../proxy/GmcpMessage.h"
 
@@ -11,8 +12,6 @@
 #include <optional>
 
 #include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
 
 AdventureTracker::AdventureTracker(GameObserver &observer, QObject *const parent)
     : QObject{parent}
@@ -113,17 +112,21 @@ void AdventureTracker::parseIfGoodbye([[maybe_unused]] const GmcpMessage &msg)
 
 void AdventureTracker::parseIfUpdatedCharName(const GmcpMessage &msg)
 {
-    std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc || !doc->isObject()) {
+    if (!msg.getJsonDocument().has_value()) {
         return;
     }
 
-    QJsonObject obj = doc->object();
-    if (!obj.contains("name")) {
+    auto pObj = msg.getJsonDocument()->getObject();
+    if (!pObj) {
         return;
     }
+    const auto &obj = *pObj;
 
-    auto charName = obj["name"].toString();
+    auto optCharName = obj.getString("name");
+    if (!optCharName) {
+        return;
+    }
+    auto charName = optCharName.value();
 
     if (m_session == nullptr) {
         qDebug().noquote() << QString("Adventure: new adventure for %1").arg(charName);
@@ -151,21 +154,24 @@ void AdventureTracker::parseIfUpdatedVitals(const GmcpMessage &msg)
         return;
     }
 
-    std::optional<QJsonDocument> doc = msg.getJsonDocument();
-    if (!doc || !doc->isObject()) {
+    if (!msg.getJsonDocument().has_value()) {
         return;
     }
 
-    QJsonObject obj = doc->object();
-    bool updated = false;
+    auto pObj = msg.getJsonDocument()->getObject();
+    if (!pObj) {
+        return;
+    }
+    const auto &obj = *pObj;
 
-    if (obj.contains("xp")) {
-        m_session->updateXP(obj["xp"].toDouble());
+    bool updated = false;
+    if (auto optXp = obj.getDouble("xp")) {
+        m_session->updateXP(optXp.value());
         updated = true;
     }
 
-    if (obj.contains("tp")) {
-        m_session->updateTP(obj["tp"].toDouble());
+    if (auto optTp = obj.getDouble("tp")) {
+        m_session->updateTP(optTp.value());
         updated = true;
     }
 

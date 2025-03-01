@@ -5,6 +5,7 @@
 #include "mumeclock.h"
 
 #include "../global/Array.h"
+#include "../global/JsonObj.h"
 #include "../proxy/GmcpMessage.h"
 #include "mumemoment.h"
 #if 1
@@ -224,20 +225,21 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
 void MumeClock::onUserGmcp(const GmcpMessage &msg)
 {
-    if (!(msg.isEventDarkness() || msg.isEventSun()) || !msg.getJsonDocument().has_value()
-        || !msg.getJsonDocument()->isObject()) {
+    if (!msg.getJsonDocument().has_value() || !(msg.isEventDarkness() || msg.isEventSun())) {
         return;
     }
 
-    const QJsonObject obj = msg.getJsonDocument()->object();
-    if (!obj.contains("what") || !obj.value("what").isString()) {
+    auto pObj = msg.getJsonDocument()->getObject();
+    if (!pObj) {
         return;
     }
+    const auto &obj = *pObj;
 
-    const auto what = obj["what"].toString();
-    if (what.isEmpty()) {
+    const auto optWhat = obj.getString("what");
+    if (!optWhat) {
         return;
     }
+    const auto &what = optWhat.value();
 
     MumeTimeEnum time = MumeTimeEnum::UNKNOWN;
     if (msg.isEventSun()) {

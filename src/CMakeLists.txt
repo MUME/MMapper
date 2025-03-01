@@ -107,6 +107,12 @@ set(mmapper_SRCS
     global/IndexedVector.h
     global/IndexedVectorWithDefault.cpp
     global/IndexedVectorWithDefault.h
+    global/JsonArray.h
+    global/JsonDoc.h
+    global/JsonObj.cpp
+    global/JsonObj.h
+    global/JsonValue.h
+    global/JsonValue.cpp
     global/LineUtils.cpp
     global/LineUtils.h
     global/MakeQPointer.h

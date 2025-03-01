@@ -24,6 +24,7 @@ class CGroupCommunicator;
 class CommandQueue;
 class GmcpMessage;
 class GroupAuthority;
+class JsonObj;
 class Mmapper2Group;
 
 class NODISCARD_QOBJECT Mmapper2Group final : public QObject
@@ -94,6 +95,8 @@ private:
     NODISCARD bool setCharacterScore(int hp, int maxhp, int mana, int maxmana, int mp, int maxmp);
     void renameCharacter(QByteArray newname) = delete;
     void renameCharacter(QString newname);
+    void parseGmcpCharName(const JsonObj &obj);
+    void parseGmcpCharVitals(const JsonObj &obj);
 
 public:
     void onReset();

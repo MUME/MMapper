@@ -3,12 +3,10 @@
 // Copyright (C) 2021 The MMapper Authors
 // Author: Massimiliano Ghilardi <massimiliano.ghilardi@gmail.com> (Cosmos)
 
+#include "../global/JsonObj.h"
 #include "RoomMob.h"
 #include "RoomMobs.h"
 
-#include <memory>
-
-#include <QJsonObject>
 #include <QObject>
 
 class RoomMobUpdate;
@@ -40,13 +38,12 @@ private:
 
     void showGmcp(const GmcpMessage &msg) const;
 
-    void addMob(const QJsonObject &obj);
-    void updateMob(const QJsonObject &obj);
+    void addMob(const JsonObj &obj);
+    void updateMob(const JsonObj &obj);
     void updateWidget();
 
-    NODISCARD bool toMob(const QJsonObject &obj, RoomMobUpdate &mob) const;
-    NODISCARD static bool toMobId(const QJsonValue &value, RoomMobUpdate &data);
-    static void toMobField(const QJsonValue &value, RoomMobUpdate &data, MobFieldEnum i);
+    NODISCARD bool toMob(const JsonObj &obj, RoomMobUpdate &mob) const;
+    static void toMobField(const JsonValue &value, RoomMobUpdate &data, MobFieldEnum i);
 
 signals:
     void sig_updateWidget(); // update RoomWidget

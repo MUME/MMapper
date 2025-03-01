@@ -21,90 +21,9 @@
 #include <QByteArray>
 #include <QString>
 
-using JsonArray = QJsonArray;
-using OptJsonArray = std::optional<JsonArray>;
-
-using JSonInt = int32_t;
-using OptJsonInt = std::optional<JSonInt>;
-
-using JsonString = QString;
-using OptJsonString = std::optional<JsonString>;
-
 namespace { // anonymous
 static volatile bool verbose_debugging = IS_DEBUG_BUILD;
 } // namespace
-
-class NODISCARD JsonObj final
-{
-public:
-    using OptJsonObj = std::optional<JsonObj>;
-
-private:
-    QJsonObject m_obj;
-
-public:
-    explicit JsonObj(QJsonObject obj)
-        : m_obj{std::move(obj)}
-    {}
-
-    NODISCARD OptJsonArray getArray(const QString &name) const
-    {
-        if (m_obj.contains(name)) {
-            if (auto &&tmp = m_obj.value(name); tmp.isArray()) {
-                return OptJsonArray{tmp.toArray()};
-            }
-        }
-        return std::nullopt;
-    }
-    NODISCARD OptJsonInt getInt(const QString &name) const
-    {
-        if (m_obj.contains(name)) {
-            if (auto &&tmp = m_obj.value(name); tmp.isDouble()) {
-                return OptJsonInt{tmp.toInt()};
-            }
-        }
-        return std::nullopt;
-    }
-    NODISCARD OptJsonObj getObject(const QString &name) const
-    {
-        if (m_obj.contains(name)) {
-            if (auto &&tmp = m_obj.value(name); tmp.isObject()) {
-                return OptJsonObj{tmp.toObject()};
-            }
-        }
-        return std::nullopt;
-    }
-    NODISCARD OptJsonString getString(const QString &name) const
-    {
-        if (m_obj.contains(name)) {
-            if (auto &&tmp = m_obj.value(name); tmp.isString()) {
-                return OptJsonString{tmp.toString()};
-            }
-        }
-        return std::nullopt;
-    }
-};
-using OptJsonObj = JsonObj::OptJsonObj;
-
-class NODISCARD JsonDoc final
-{
-private:
-    QJsonDocument m_doc;
-
-public:
-    explicit JsonDoc(QJsonDocument doc)
-        : m_doc{std::move(doc)}
-    {}
-
-public:
-    NODISCARD OptJsonObj getObject() const
-    {
-        if (m_doc.isObject()) {
-            return OptJsonObj(m_doc.object());
-        }
-        return std::nullopt;
-    }
-};
 
 void MumeXmlParser::slot_parseGmcpInput(const GmcpMessage &msg)
 {
@@ -112,8 +31,7 @@ void MumeXmlParser::slot_parseGmcpInput(const GmcpMessage &msg)
         return;
     }
 
-    JsonDoc doc{msg.getJsonDocument().value()};
-    auto pObj = doc.getObject();
+    auto pObj = msg.getJsonDocument()->getObject();
     if (!pObj) {
         return;
     }
@@ -205,7 +123,7 @@ NODISCARD static RoomTerrainEnum getTerrain(const JsonObj &obj)
     return RoomTerrainEnum::UNDEFINED;
 }
 
-NODISCARD static ServerRoomId asServerId(const JSonInt room)
+NODISCARD static ServerRoomId asServerId(const JsonInt room)
 {
     // CAUTION: static analysis is wrong here, because room is a signed integer,
     // so (room < 1) can happen.
@@ -219,7 +137,7 @@ NODISCARD static ServerRoomId getServerId(const JsonObj &obj)
     if (!optRoom) {
         return INVALID_SERVER_ROOMID;
     }
-    const JSonInt &room = *optRoom;
+    const JsonInt &room = *optRoom;
     if (verbose_debugging) {
         qInfo().noquote() << "ID:" << room;
     }
@@ -295,7 +213,7 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
         const JsonObj &exit = *optExit;
         const auto optTo = exit.getInt("id");
         if (room != INVALID_SERVER_ROOMID && optTo) {
-            const JSonInt &to = *optTo;
+            const JsonInt &to = *optTo;
             if (verbose_debugging) {
                 qInfo().noquote() << "EXIT from" << room.asUint32() << dir << "to"
                                   << asServerId(to).asUint32();
@@ -316,13 +234,11 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
             continue;
         }
 
-        for (const QJsonValue &pflag : *optFlags) {
-            if (!pflag.isString()) {
-                continue;
+        for (const JsonValue &pflag : *optFlags) {
+            if (auto optString = pflag.getString()) {
+                const QString flag = optString.value();
+                processOneFlag(flag, d, result);
             }
-
-            const QString flag = pflag.toString();
-            processOneFlag(flag, d, result);
         }
     }
 
