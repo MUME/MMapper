@@ -68,7 +68,6 @@ parts:
     build-packages:
       - build-essential
       - libssl-dev
-      - libminiupnpc-dev
       - libqt5opengl5-dev
       - libqt5websockets5-dev
       - qt5keychain-dev
@@ -77,7 +76,6 @@ parts:
       - zlib1g-dev
       - dpkg-dev
     stage-packages:
-      - libminiupnpc17
       - libssl3
       - zlib1g
       - adwaita-icon-theme

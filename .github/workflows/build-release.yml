@@ -33,7 +33,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev libminiupnpc-dev qt5keychain-dev mold gcc-12 g++-12
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold gcc-12 g++-12
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-12" >> $GITHUB_ENV
         echo "CXX=g++-12" >> $GITHUB_ENV
@@ -42,10 +42,9 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5 openssl@3 miniupnpc
+        brew install qt5
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
 
     # Install Dependencies (Windows)
     - if: runner.os == 'Windows'

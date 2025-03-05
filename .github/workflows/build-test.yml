@@ -45,7 +45,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev libminiupnpc-dev qt5keychain-dev mold
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -72,10 +72,10 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5 openssl@3 lcov miniupnpc
+        brew install qt5 lcov
         brew link qt5 --force
         echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV 
 
 

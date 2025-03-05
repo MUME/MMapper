@@ -110,13 +110,6 @@ AboutDialog::AboutDialog(QWidget *parent)
           "<pre>"
         + loadLicenseResource(":/fonts/LICENSE")
         + "</pre>"
-          "<hr/><h1>MiniUPnPc License</h1>"
-          "<p>Some versions of this product contains code from the "
-          "<a href=\"https://github.com/miniupnp/miniupnp/\">MiniUPnPc</a>"
-          " project.</p>"
-          "<pre>"
-        + loadLicenseResource(":/LICENSE.MINIUPNPC")
-        + "</pre>"
           "<hr/><h1>GLM License</h1>"
           "<p>This product contains code from the "
           "<a href=\"https://glm.g-truc.net/\">OpenGL Mathematics (GLM)</a>"
