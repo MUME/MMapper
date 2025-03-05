@@ -40,7 +40,7 @@ class MpiFilter;
 class MpiFilterToMud;
 class MudTelnet;
 class MumeClock;
-class MumeSocket;
+class MumeFallbackSocket;
 class MumeXmlParser;
 class PrespammedPath;
 class ProxyMudConnectionApi;
@@ -129,7 +129,7 @@ private:
     public: // from mud: Sock -> Telnet -> LineFilter -> Mpi -> Parser
         struct NODISCARD Mud final
         {
-            std::unique_ptr<MumeSocket> mudSocket;
+            std::unique_ptr<MumeFallbackSocket> mudSocket;
             std::unique_ptr<MudTelnet> mudTelnet;
             std::unique_ptr<TelnetLineFilter> mudTelnetFilter;
             std::unique_ptr<MpiFilter> mpiFilterFromMud;
@@ -288,7 +288,7 @@ private:
     NODISCARD Mmapper2PathMachine &getPathMachine() { return m_pathMachine; }
     NODISCARD PrespammedPath &getPrespam() { return m_prespammedPath; }
 
-    NODISCARD MumeSocket &getMudSocket() { return deref(getPipeline().mud.mudSocket); }
+    NODISCARD MumeFallbackSocket &getMudSocket() { return deref(getPipeline().mud.mudSocket); }
     NODISCARD MudTelnet &getMudTelnet() { return deref(getPipeline().mud.mudTelnet); }
     NODISCARD TelnetLineFilter &getMudTelnetFilter()
     {

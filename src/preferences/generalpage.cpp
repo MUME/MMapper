@@ -33,10 +33,9 @@ GeneralPage::GeneralPage(QWidget *parent)
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GeneralPage::slot_localPortValueChanged);
-    connect(ui->tlsEncryptionCheckBox,
-            &QCheckBox::stateChanged,
-            this,
-            &GeneralPage::slot_tlsEncryptionCheckBoxStateChanged);
+    connect(ui->encryptionCheckBox, &QCheckBox::clicked, this, [](const bool checked) {
+        setConfig().connection.tlsEncryption = checked;
+    });
     connect(ui->proxyListensOnAnyInterfaceCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyListensOnAnyInterface = ui->proxyListensOnAnyInterfaceCheckBox
                                                                 ->isChecked();
@@ -126,11 +125,11 @@ void GeneralPage::slot_loadConfig()
     ui->remoteName->setText(connection.remoteServerName);
     ui->remotePort->setValue(connection.remotePort);
     ui->localPort->setValue(connection.localPort);
-    if (!QSslSocket::supportsSsl()) {
-        ui->tlsEncryptionCheckBox->setEnabled(false);
-        ui->tlsEncryptionCheckBox->setChecked(false);
+    if (!QSslSocket::supportsSsl() && NO_WEBSOCKET) {
+        ui->encryptionCheckBox->setEnabled(false);
+        ui->encryptionCheckBox->setChecked(false);
     } else {
-        ui->tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
+        ui->encryptionCheckBox->setChecked(connection.tlsEncryption);
     }
     ui->proxyListensOnAnyInterfaceCheckBox->setChecked(connection.proxyListensOnAnyInterface);
     ui->charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
@@ -185,11 +184,6 @@ void GeneralPage::slot_remotePortValueChanged(int /*unused*/)
 void GeneralPage::slot_localPortValueChanged(int /*unused*/)
 {
     setConfig().connection.localPort = static_cast<uint16_t>(ui->localPort->value());
-}
-
-void GeneralPage::slot_tlsEncryptionCheckBoxStateChanged(int /*unused*/)
-{
-    setConfig().connection.tlsEncryption = ui->tlsEncryptionCheckBox->isChecked();
 }
 
 void GeneralPage::slot_emulatedExitsStateChanged(int /*unused*/)

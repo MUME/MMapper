@@ -307,6 +307,11 @@ void Proxy::allocMudSocket()
             getProxy().onMudError(msg);
         }
 
+        void virt_onSocketStatus(const QString &msg) final
+        {
+            getProxy().sendStatusToUser(msg.toUtf8().toStdString());
+        }
+
         void virt_onDisconnected() final
         {
             qDebug() << "mud socket disconnected";
@@ -337,9 +342,7 @@ void Proxy::allocMudSocket()
     auto &pipe = getPipeline();
     auto &out = pipe.outputs.mud.mudSocketOutputs = std::make_unique<LocalMumeSocketOutputs>(*this);
     auto &outputs = deref(out);
-    pipe.mud.mudSocket = (!QSslSocket::supportsSsl() || !getConfig().connection.tlsEncryption)
-                             ? std::make_unique<MumeTcpSocket>(this, outputs)
-                             : std::make_unique<MumeSslSocket>(this, outputs);
+    pipe.mud.mudSocket = std::make_unique<MumeFallbackSocket>(this, outputs);
 }
 
 void Proxy::allocUserTelnet()

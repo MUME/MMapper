@@ -83,12 +83,12 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QCheckBox" name="tlsEncryptionCheckBox">
+       <widget class="QCheckBox" name="encryptionCheckBox">
         <property name="toolTip">
-         <string>Encrypt your connection to MUME using TLS</string>
+         <string>Require that your connection to MUME is always secure</string>
         </property>
         <property name="text">
-         <string>TLS encryption</string>
+         <string>Require encryption</string>
         </property>
        </widget>
       </item>
@@ -393,7 +393,7 @@
  <tabstops>
   <tabstop>remoteName</tabstop>
   <tabstop>remotePort</tabstop>
-  <tabstop>tlsEncryptionCheckBox</tabstop>
+  <tabstop>encryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
   <tabstop>showClientPanelCheckBox</tabstop>

@@ -33,3 +33,9 @@ static inline constexpr const bool NO_ZLIB = true;
 #else
 static inline constexpr const bool NO_ZLIB = false;
 #endif
+
+#if defined(MMAPPER_NO_WEBSOCKET) && MMAPPER_NO_WEBSOCKET
+static inline constexpr const bool NO_WEBSOCKET = true;
+#else
+static inline constexpr const bool NO_WEBSOCKET = false;
+#endif
