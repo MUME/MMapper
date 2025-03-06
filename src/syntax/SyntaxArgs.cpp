@@ -99,7 +99,7 @@ std::ostream &ArgBool::virt_to_stream(std::ostream &os) const
 ArgChoice::ArgChoice(std::vector<TokenMatcher> tokens)
     : m_tokens(std::move(tokens))
 {
-    if (tokens.size() < 2) {
+    if (m_tokens.size() < 2) {
         throw std::runtime_error("choice must have at least two elements");
     }
 }
