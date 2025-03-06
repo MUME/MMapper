@@ -53,48 +53,6 @@ std::ostream &ArgNamedColor::virt_to_stream(std::ostream &os) const
     return os << "<NamedColor>";
 }
 
-class NODISCARD ArgHexColor final : public syntax::IArgument
-{
-private:
-    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
-                                             syntax::IMatchErrorLogger *) const final;
-
-    std::ostream &virt_to_stream(std::ostream &os) const final;
-};
-
-syntax::MatchResult ArgHexColor::virt_match(const syntax::ParserInput &input,
-                                            syntax::IMatchErrorLogger *) const
-{
-    if (input.empty()) {
-        return syntax::MatchResult::failure(input);
-    }
-
-    auto arg = StringView{input.front()};
-    if (!arg.startsWith("#")) {
-        return syntax::MatchResult::failure(input);
-    }
-
-    ++arg;
-
-    for (const char c : arg) {
-        if (!std::isxdigit(c)) {
-            return syntax::MatchResult::failure(input);
-        }
-    }
-
-    if (arg.length() != 6) {
-        return syntax::MatchResult::failure(input);
-    }
-
-    const auto color = Color::fromHex(arg.getStdStringView());
-    return syntax::MatchResult::success(1, input, Value{static_cast<int64_t>(color.getRGB())});
-}
-
-std::ostream &ArgHexColor::virt_to_stream(std::ostream &os) const
-{
-    return os << "<HexColor>";
-}
-
 class NODISCARD BoolAlpha final
 {
 private:

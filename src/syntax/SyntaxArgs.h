@@ -226,4 +226,16 @@ NODISCARD TokenMatcher abbrevToken(std::string s);
 /// matches the entire string (case insensitive)
 NODISCARD TokenMatcher stringToken(std::string s);
 
+class NODISCARD ArgHexColor final : public syntax::IArgument
+{
+public:
+    ArgHexColor() = default;
+
+private:
+    NODISCARD syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                             syntax::IMatchErrorLogger *) const final;
+
+    std::ostream &virt_to_stream(std::ostream &os) const final;
+};
+
 } // namespace syntax
