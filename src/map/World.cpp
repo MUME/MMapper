@@ -1622,6 +1622,7 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
             room.fields.LightType = RoomLightEnum::LIT;
         } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH
                    && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
+            // REVISIT: Why not use the time and troll mode as well?
             room.fields.LightType = RoomLightEnum::DARK;
         }
     }

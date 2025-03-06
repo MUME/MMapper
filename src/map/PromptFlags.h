@@ -9,13 +9,13 @@
 #include <cstdint>
 
 #define XFOREACH_PROMPT_WEATHER_ENUM(X) \
-    X(UNDEFINED) \
+    X(NICE) \
     X(CLOUDS) \
     X(RAIN) \
     X(HEAVY_RAIN) \
     X(SNOW)
 #define XFOREACH_PROMPT_FOG_ENUM(X) \
-    X(UNDEFINED) \
+    X(NO_FOG) \
     X(LIGHT_FOG) \
     X(HEAVY_FOG)
 
@@ -96,8 +96,7 @@ public:
 public:
     NODISCARD bool isNiceWeather() const
     {
-        return getWeatherType() == PromptWeatherEnum::UNDEFINED
-               && getFogType() == PromptFogEnum::UNDEFINED;
+        return getWeatherType() == PromptWeatherEnum::NICE && getFogType() == PromptFogEnum::NO_FOG;
     }
 
 public:
@@ -114,6 +113,11 @@ public:
         using flags_type = decltype(m_flags);
         m_flags = static_cast<flags_type>(m_flags & ~LIGHT_MASK);
         m_flags = static_cast<flags_type>(m_flags | (DARK_ROOM & LIGHT_MASK));
+    }
+    void setArtificial()
+    {
+        using flags_type = decltype(m_flags);
+        m_flags = static_cast<flags_type>(m_flags & ~(DARK_ROOM & LIGHT_MASK));
     }
 
 public:

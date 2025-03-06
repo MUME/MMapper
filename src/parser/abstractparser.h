@@ -136,6 +136,11 @@ public:
     ConnectedRoomFlagsType connectedRoomFlags;
     RoomTerrainEnum terrain;
 
+    // REVISIT: Is there any point to having a distinction between null and empty?
+    std::optional<RoomName> roomName;
+    std::optional<RoomDesc> roomDesc;
+    std::optional<RoomContents> roomContents;
+
 public:
     QString lastPrompt;
     CommandQueue queue;
@@ -242,10 +247,6 @@ protected:
     void emulateExits(AnsiOstream &, CommandEnum move);
     void sendRoomExitsInfoToUser(AnsiOstream &, const RoomHandle &r);
     void sendRoomExitsInfoToUser(const RoomHandle &r);
-
-protected:
-    void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
-    void setExitFlags(ExitFlags flag, ExitDirEnum dir);
 
 protected:
     NODISCARD RoomId getNextPosition() const;

@@ -46,7 +46,7 @@ class NODISCARD_QOBJECT MumeXmlParser final : public MumeXmlParserBase
 
 private:
     XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
-    LineFlags m_lineFlags;
+    LineFlags m_lineFlags{};
     QString m_lineToUser;
     QString m_tempCharacters;
     QString m_tempTag;
@@ -56,14 +56,9 @@ private:
     std::optional<RoomId> m_expectedMove;
     std::optional<ServerExitIds> m_exitIds;
     bool m_readingTag = false;
-    bool m_gratuitous = false;
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
-
-    // REVISIT: Is there any point to having a distinction between null and empty?
-    std::optional<RoomName> m_roomName;
-    std::optional<RoomDesc> m_roomDesc;
-    std::optional<RoomContents> m_roomContents;
+    bool m_eventReady = false;
 
 private:
     enum class NODISCARD XmlAttributeStateEnum : uint8_t {

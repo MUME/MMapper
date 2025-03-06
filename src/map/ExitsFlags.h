@@ -93,6 +93,12 @@ public:
         value |= ((flags).asUint32() & MASK) << shift;
     }
 
+    void insert(const ExitDirEnum dir, const ExitFlagEnum flag)
+    {
+        const auto shift = getShift(dir);
+        value |= (ExitFlags{flag}.asUint32() & MASK) << shift;
+    }
+
 public:
     NODISCARD bool isValid() const
     {

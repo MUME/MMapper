@@ -52,30 +52,6 @@ NODISCARD const char *getPlatformEditor()
     }
 }
 
-NODISCARD QString getUnicodeString(const QVariant &variant, const QString &defaultValue)
-{
-    if (variant.type() == QVariant::String) {
-        const QString s = variant.toString();
-        if (!s.isNull() && !s.isEmpty()) {
-            return s;
-        }
-    }
-    return defaultValue;
-}
-
-NODISCARD QString getUnicodeStringFromLatin1ByteArray(const QVariant &variant,
-                                                      const QString &defaultValue)
-{
-    if (variant.type() == QVariant::ByteArray) {
-        // the default QString(const QByteArray&) assumes utf8,
-        // but this was saved as latin1.
-        const auto ba = variant.toByteArray();
-        return QString::fromLatin1(ba); // legacy case: latin1-encoded data
-    }
-
-    return getUnicodeString(variant, defaultValue);
-}
-
 } // namespace
 
 Configuration::Configuration()
@@ -285,7 +261,6 @@ ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
 ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
-ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
@@ -295,7 +270,6 @@ ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_REMEMBER_LOGIN = "remember login";
-ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
 ConstString KEY_ROOM_DARK_COLOR = "Room dark color";
 ConstString KEY_ROOM_DARK_LIT_COLOR = "Room dark lit color";
@@ -679,15 +653,6 @@ void Configuration::ParserSettings::read(const QSettings &conf)
     prefixChar = conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(char_consts::C_UNDERSCORE))
                      .toChar()
                      .toLatin1();
-    removeXmlTags = conf.value(KEY_REMOVE_XML_TAGS, true).toBool();
-    noDescriptionPatternsList = conf.value(KEY_NO_ROOM_DESCRIPTION_PATTERNS).toStringList();
-
-    auto &nodesc = noDescriptionPatternsList;
-    if (nodesc.isEmpty()) {
-        nodesc.append("#=It is pitch black...");
-        nodesc.append("#=You just see a dense fog around you...");
-    }
-
     encodeEmoji = conf.value(KEY_EMOJI_ENCODE, true).toBool();
     decodeEmoji = conf.value(KEY_EMOJI_DECODE, true).toBool();
 }
@@ -853,9 +818,7 @@ void Configuration::ParserSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_ROOM_NAME_ANSI_COLOR, roomNameColor);
     conf.setValue(KEY_ROOM_DESC_ANSI_COLOR, roomDescColor);
-    conf.setValue(KEY_REMOVE_XML_TAGS, removeXmlTags);
     conf.setValue(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(prefixChar));
-    conf.setValue(KEY_NO_ROOM_DESCRIPTION_PATTERNS, noDescriptionPatternsList);
     conf.setValue(KEY_EMOJI_ENCODE, encodeEmoji);
     conf.setValue(KEY_EMOJI_DECODE, decodeEmoji);
 }

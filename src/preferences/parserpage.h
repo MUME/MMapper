@@ -22,17 +22,8 @@ class NODISCARD_QOBJECT ParserPage : public QWidget, private Ui::ParserPage
 public:
     explicit ParserPage(QWidget *parent);
 
-private:
-    void savePatterns();
-
 public slots:
     void slot_loadConfig();
     void slot_roomNameColorClicked();
     void slot_roomDescColorClicked();
-    void slot_removeEndDescPatternClicked();
-    void slot_addEndDescPatternClicked();
-    void slot_testPatternClicked();
-    void slot_validPatternClicked();
-    void slot_endDescPatternsListActivated(const QString &);
-    void slot_suppressXmlTagsCheckBoxStateChanged(int);
 };

@@ -25,7 +25,6 @@
 #include "../proxy/GmcpMessage.h"
 #include "../proxy/telnetfilter.h"
 #include "abstractparser.h"
-#include "patterns.h"
 
 #include <cctype>
 #include <list>
@@ -49,11 +48,6 @@ const QByteArray emptyByteArray{""};
 void decodeXmlEntities(QString &s)
 {
     s = entities::decode(entities::EncodedString{s});
-}
-
-void encodeXmlEntities(QString &s)
-{
-    s = entities::encode(entities::DecodedString{s});
 }
 
 void appendCodepoint(QString &qs, char32_t c)
@@ -85,16 +79,12 @@ MumeXmlParser::~MumeXmlParser() = default;
 
 void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
-    const bool isPrompt = data.type == TelnetDataEnum::Prompt;
-    const bool isTwiddlers = data.type == TelnetDataEnum::Backspace;
-    if (isTwiddlers) {
-        auto &lastPrompt = m_commonData.lastPrompt;
-        lastPrompt = QString::fromUtf8(data.line.getQByteArray());
-        if (getConfig().parser.removeXmlTags) {
-            decodeXmlEntities(lastPrompt);
-        }
+    const bool isPromptOrTwiddlers = data.type == TelnetDataEnum::Prompt
+                                     || data.type == TelnetDataEnum::Backspace;
+    if (isPromptOrTwiddlers) {
+        m_commonData.lastPrompt = QString::fromUtf8(data.line.getQByteArray());
     }
-    parse(data, isPrompt || isTwiddlers);
+    parse(data, isPromptOrTwiddlers);
 }
 
 void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
@@ -138,11 +128,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         sendToUser(SendToUserSource::FromMud, m_lineToUser, isGoAhead);
 
         // Simplify the output and run actions
-        QString temp = m_lineToUser;
-        if (!getConfig().parser.removeXmlTags) {
-            decodeXmlEntities(temp);
-        }
-        QString tempStr = temp;
+        QString tempStr = m_lineToUser;
         tempStr = normalizeStringCopy(tempStr.trimmed());
         parseMudCommands(tempStr);
     }
@@ -242,7 +228,6 @@ bool MumeXmlParser::element(const QString &line)
             switch (line.front().unicode()) {
             case C_SLASH:
                 if (line.startsWith("/snoop")) {
-                    m_descriptionReady = false;
                     m_lineFlags.remove(LineFlagEnum::SNOOP);
 
                 } else if (line.startsWith("/status")) {
@@ -277,12 +262,14 @@ bool MumeXmlParser::element(const QString &line)
             case 'r':
                 if (line.startsWith("room")) {
                     m_xmlMode = XmlModeEnum::ROOM;
-                    m_descriptionReady = false;
-                    m_exitsReady = false;
-                    m_commonData.exits = nullString;
-                    m_stringBuffer = nullString;
-                    m_roomContents.reset();
                     m_lineFlags.insert(LineFlagEnum::ROOM);
+                    if (!m_lineFlags.isSnoop()) {
+                        m_descriptionReady = false;
+                        m_exitsReady = false;
+                        m_commonData.exits = nullString;
+                        m_stringBuffer = nullString;
+                        m_commonData.roomContents.reset();
+                    }
                 }
                 break;
             case 'w':
@@ -305,18 +292,15 @@ bool MumeXmlParser::element(const QString &line)
     case XmlModeEnum::ROOM:
         if (length > 0) {
             switch (line.front().unicode()) {
-            case 'g':
-                if (line.startsWith("gratuitous") && getConfig().parser.removeXmlTags) {
-                    m_gratuitous = true;
-                }
-                break;
             case 'e':
                 if (line.startsWith("exits")) {
-                    m_commonData.exits
-                        = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
                     m_lineFlags.insert(LineFlagEnum::EXITS);
-                    m_descriptionReady = true;
+                    if (!m_lineFlags.isSnoop()) {
+                        m_commonData.exits
+                            = nullString; // Reset string since payload can be from the 'exit' command
+                        m_descriptionReady = true;
+                    }
                 }
                 break;
             case 'n':
@@ -341,17 +325,28 @@ bool MumeXmlParser::element(const QString &line)
                 if (line.startsWith("header")) {
                     m_xmlMode = XmlModeEnum::HEADER;
                     m_lineFlags.insert(LineFlagEnum::HEADER);
-                    m_descriptionReady = true;
+                    if (!m_lineFlags.isSnoop()) {
+                        m_descriptionReady = true;
+                    }
                 }
                 break;
             case C_SLASH:
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
                     m_lineFlags.remove(LineFlagEnum::ROOM);
-                    m_roomContents = mmqt::makeRoomContents(m_stringBuffer);
-                    m_descriptionReady = true;
-                } else if (line.startsWith("/gratuitous")) {
-                    m_gratuitous = false;
+                    if (!m_lineFlags.isSnoop()) {
+                        m_commonData.roomContents = mmqt::makeRoomContents(m_stringBuffer);
+                        m_descriptionReady = true;
+                        if (!m_exitsReady && getConfig().mumeNative.emulatedExits) {
+                            m_exitsReady = true;
+                            std::ostringstream os;
+                            {
+                                AnsiOstream aos{os};
+                                emulateExits(aos, m_move);
+                            }
+                            sendToUser(SendToUserSource::SimulatedOutput, os.str());
+                        }
+                    }
                 }
                 break;
             }
@@ -380,10 +375,12 @@ bool MumeXmlParser::element(const QString &line)
             switch (line.front().unicode()) {
             case C_SLASH:
                 if (line.startsWith("/exits")) {
-                    std::ostringstream os;
-                    parseExits(os);
-                    m_lineToUser.append(mmqt::toQStringUtf8(os.str()));
-                    m_exitsReady = true;
+                    if (!m_lineFlags.isSnoop()) {
+                        std::ostringstream os;
+                        parseExits(os);
+                        sendToUser(SendToUserSource::SimulatedOutput, os.str());
+                        m_exitsReady = true;
+                    }
                     m_lineFlags.remove(LineFlagEnum::EXITS);
                     m_xmlMode = (m_lineFlags.contains(LineFlagEnum::ROOM) ? XmlModeEnum::ROOM
                                                                           : XmlModeEnum::NONE);
@@ -401,24 +398,7 @@ bool MumeXmlParser::element(const QString &line)
                     m_lineFlags.remove(LineFlagEnum::PROMPT);
                     m_commonData.overrideSendPrompt = false;
 
-                    auto &lastPrompt = m_commonData.lastPrompt;
-
-                    const auto &config = getConfig();
-                    if (!config.parser.removeXmlTags) {
-                        encodeXmlEntities(lastPrompt);
-                        lastPrompt = "<prompt>" + lastPrompt + "</prompt>";
-                    }
-
-                    if (m_descriptionReady) {
-                        if (!m_exitsReady && config.mumeNative.emulatedExits) {
-                            m_exitsReady = true;
-                            std::ostringstream os;
-                            {
-                                AnsiOstream aos{os};
-                                emulateExits(aos, m_move);
-                            }
-                            sendToUser(SendToUserSource::SimulatedOutput, os.str());
-                        }
+                    if (m_eventReady) {
                         move();
                     }
                 }
@@ -450,10 +430,6 @@ bool MumeXmlParser::element(const QString &line)
             }
         }
         break;
-    }
-
-    if (!getConfig().parser.removeXmlTags) {
-        m_lineToUser.append(C_LESS_THAN).append(line).append(C_GREATER_THAN);
     }
 
     return true;
@@ -490,7 +466,8 @@ QString MumeXmlParser::characters(QString &ch)
     switch (mode) {
     case XmlModeEnum::NONE: // non room info
         if (ch.isEmpty()) { // standard end of description parsed
-            if (m_descriptionReady && !m_exitsReady && config.mumeNative.emulatedExits) {
+            if (m_descriptionReady && !m_exitsReady && config.mumeNative.emulatedExits
+                && !m_lineFlags.isSnoop()) {
                 m_exitsReady = true;
                 std::ostringstream os;
                 {
@@ -501,12 +478,13 @@ QString MumeXmlParser::characters(QString &ch)
             }
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);
+            toUser.append(ch);
         }
-        toUser.append(ch);
         break;
 
     case XmlModeEnum::ROOM: // dynamic line
-        if (!m_descriptionReady) {
+        if (!m_descriptionReady && !m_lineFlags.isSnoop()) {
+            // REVISIT: Ask a Vala to build GMCP Room.Objects so we can use that and Room.Chars
             m_stringBuffer += ch;
         }
         toUser.append(ch);
@@ -517,13 +495,15 @@ QString MumeXmlParser::characters(QString &ch)
         break;
 
     case XmlModeEnum::DESCRIPTION: // static line
-        if (!m_gratuitous) {
-            toUser.append(ch);
-        }
+        toUser.append(ch);
         break;
 
     case XmlModeEnum::EXITS:
-        m_commonData.exits += ch;
+        if (m_lineFlags.isSnoop()) {
+            toUser.append(ch);
+        } else {
+            m_commonData.exits += ch;
+        }
         break;
 
     case XmlModeEnum::PROMPT:
@@ -539,9 +519,6 @@ QString MumeXmlParser::characters(QString &ch)
         break;
     }
 
-    if (!getConfig().parser.removeXmlTags) {
-        encodeXmlEntities(toUser);
-    }
     return toUser;
 }
 
@@ -735,24 +712,23 @@ void MumeXmlParser::maybeUpdate(RoomId expectedId, const ParseEvent &ev)
 void MumeXmlParser::move()
 {
     m_descriptionReady = false;
-
-    const auto expectedMove = std::exchange(m_expectedMove, {});
+    m_eventReady = false;
 
     // non-standard end of description parsed (blindness, fog, dark or so ...)
-    if (m_roomName.has_value()
-        && Patterns::matchNoDescriptionPatterns(m_roomName.value().toQString())) {
-        m_roomName.reset();
-        m_roomDesc.reset();
-        m_roomContents.reset();
+    if (!m_commonData.roomName.has_value()) {
+        m_commonData.roomContents.reset();
+        m_commonData.roomDesc.reset();
     }
+
+    const auto expectedMove = std::exchange(m_expectedMove, {});
 
     const auto emitEvent = [this, expectedMove]() {
         // REVISIT: once this isn't a signal/slot anymore, we won't need to create a shared event?
         auto ev = ParseEvent::createSharedEvent(m_move,
                                                 m_serverId,
-                                                m_roomName.value_or(RoomName{}),
-                                                m_roomDesc.value_or(RoomDesc{}),
-                                                m_roomContents.value_or(RoomContents{}),
+                                                m_commonData.roomName.value_or(RoomName{}),
+                                                m_commonData.roomDesc.value_or(RoomDesc{}),
+                                                m_commonData.roomContents.value_or(RoomContents{}),
                                                 m_exitIds.value_or(ServerExitIds{}),
                                                 m_commonData.terrain,
                                                 m_commonData.exitsFlags,

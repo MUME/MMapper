@@ -870,8 +870,8 @@ void Proxy::onMudConnected()
 
     log("Connection to server established ...");
 
-    // send gratuitous XML request
-    onSubmitMpiToMud(RawBytes{"~$#EX2\n3G\n"});
+    // send XML request
+    onSubmitMpiToMud(RawBytes{"~$#EX1\n3\n"});
     log("Sent MUME Protocol Initiator XML request");
 
     // send Remote Editing request

@@ -253,6 +253,7 @@ set(mmapper_SRCS
     map/Diff.h
     map/DoorFlags.cpp
     map/DoorFlags.h
+    map/DoorsFlags.h
     map/ExitDirection.cpp
     map/ExitDirection.h
     map/ExitFieldVariant.cpp
@@ -414,8 +415,6 @@ set(mmapper_SRCS
     parser/mumexmlparser-gmcp.cpp
     parser/mumexmlparser.cpp
     parser/mumexmlparser.h
-    parser/patterns.cpp
-    parser/patterns.h
     pathmachine/approved.cpp
     pathmachine/approved.h
     pathmachine/crossover.cpp

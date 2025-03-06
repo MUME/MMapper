@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace { // anonymous
-static volatile bool spam_and_lag = true;
+static volatile bool spam_and_lag = false;
 }
 
 RoomModificationTracker::~RoomModificationTracker() = default;

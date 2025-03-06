@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 The MMapper Authors
 
-#include "../configuration/configuration.h"
 #include "../global/CaseUtils.h"
-#include "../global/progresscounter.h"
 #include "../group/mmapper2group.h"
+#include "../map/DoorsFlags.h"
 #include "../map/ExitsFlags.h"
 #include "../map/ParseTree.h"
 #include "../map/PromptFlags.h"
@@ -13,7 +12,6 @@
 #include "../proxy/GmcpMessage.h"
 #include "abstractparser.h"
 #include "mumexmlparser.h"
-#include "patterns.h"
 
 #include <optional>
 #include <utility>
@@ -53,7 +51,7 @@ void MumeXmlParser::parseGmcpStatusVars(const JsonObj &obj)
     // "Char.StatusVars {\"race\":\"Troll\",\"subrace\":\"Cave Troll\"}"
     if (auto race = obj.getString("race")) {
         auto &trollExitMapping = m_commonData.trollExitMapping;
-        trollExitMapping = (race->compare("Troll", Qt::CaseInsensitive) == 0);
+        trollExitMapping = areEqualAsLowerUtf8(race->toUtf8().toStdString(), "Troll");
         log("Parser",
             QString("%1 troll exit mapping").arg(trollExitMapping ? "Enabling" : "Disabling"));
     }
@@ -169,19 +167,26 @@ NODISCARD static RoomDesc getRoomDesc(const JsonObj &obj)
 struct NODISCARD Misc final
 {
     ExitsFlagsType exitsFlags{};
-    // PromptFlagsType promptFlags{};
+    DoorsFlagsType doorsFlags{};
     ConnectedRoomFlagsType connectedRoomFlags{};
     ServerExitIds exitIds{};
 };
 
 static void processOneFlag(const QString &flag, const ExitDirEnum d, Misc &result)
 {
-    if (flag == "broken" || flag == "closed" || flag == "hidden") {
-        result.exitsFlags.set(d, ExitFlagEnum::DOOR);
+    if (flag == "hidden") {
+        result.doorsFlags.insert(d, DoorFlagEnum::HIDDEN);
+    } else if (flag == "broken") {
+        // REVISIT: Create new transient door flags for broken/closed
+        result.doorsFlags.insert(d, DoorFlagEnum::NO_BREAK);
+    } else if (flag == "closed") {
+        // REVISIT: Fix this hack where we use NO_BLOCK as a proxy for CLOSED_DOOR
+        // with indirect sunlight
+        result.doorsFlags.insert(d, DoorFlagEnum::NO_BLOCK);
     } else if (flag == "climb-down" || flag == "climb-up") {
-        result.exitsFlags.set(d, ExitFlagEnum::CLIMB);
+        result.exitsFlags.insert(d, ExitFlagEnum::CLIMB);
     } else if (flag == "road" || flag == "trail") {
-        result.exitsFlags.set(d, ExitFlagEnum::ROAD);
+        result.exitsFlags.insert(d, ExitFlagEnum::ROAD);
     } else if (flag == "sundeath" || flag == "sunny") {
         result.connectedRoomFlags.setValid();
         result.connectedRoomFlags.setDirectSunlight(d, DirectSunlightEnum::SAW_DIRECT_SUN);
@@ -192,7 +197,7 @@ static void processOneFlag(const QString &flag, const ExitDirEnum d, Misc &resul
     }
 }
 
-NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
+NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room, bool isTrollMode)
 {
     auto exits = obj.getObject("exits");
     if (!exits) {
@@ -208,7 +213,7 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
         }
 
         result.exitsFlags.setValid();
-        result.exitsFlags.set(d, ExitFlagEnum::EXIT);
+        result.exitsFlags.insert(d, ExitFlagEnum::EXIT);
 
         const JsonObj &exit = *optExit;
         const auto optTo = exit.getInt("id");
@@ -227,6 +232,8 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
             if (verbose_debugging) {
                 qInfo().noquote() << "exit" << dir << "name:" << doorName;
             }
+            result.exitsFlags.insert(d, ExitFlagEnum::DOOR);
+            result.doorsFlags.setValid();
         }
 
         const auto optFlags = exit.getArray("flags");
@@ -242,6 +249,25 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room)
         }
     }
 
+    // Orcs and trolls can detect exits with direct sunlight
+    auto &connectedFlags = result.connectedRoomFlags;
+    if (isTrollMode) {
+        connectedFlags.setTrollMode();
+    }
+    if (connectedFlags.hasAnyDirectSunlight() || isTrollMode) {
+        for (const ExitDirEnum alt_dir : ALL_EXITS_NESWUD) {
+            const auto eThisExit = result.exitsFlags.get(alt_dir);
+            const auto eThisClosed = result.doorsFlags.get(alt_dir).isNoBlock();
+
+            // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
+            if (!eThisExit.isExit() || eThisClosed || connectedFlags.hasDirectSunlight(alt_dir)) {
+                continue;
+            }
+
+            // Flag indirect sun
+            connectedFlags.setDirectSunlight(alt_dir, DirectSunlightEnum::SAW_NO_DIRECT_SUN);
+        }
+    }
     return result;
 }
 
@@ -251,36 +277,49 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
 {
     auto &promptFlags = m_commonData.promptFlags;
     using namespace mume_xml_parser_gmcp_detail;
-    if (auto fog = obj.getString("fog")) {
+
+    promptFlags.setValid();
+
+    if (!obj.getNull("fog")) {
+        if (verbose_debugging && promptFlags.getFogType() != PromptFogEnum::NO_FOG) {
+            qInfo().noquote() << "fog null";
+        }
+        promptFlags.setFogType(PromptFogEnum::NO_FOG);
+    } else if (auto fog = obj.getString("fog")) {
         if (verbose_debugging) {
             qInfo().noquote() << "fog" << *fog;
         }
-        if (fog == "-") {
+        if (fog == mmqt::QS_MINUS_SIGN) {
             promptFlags.setFogType(PromptFogEnum::LIGHT_FOG);
-        } else if (fog == "=") {
+        } else if (fog == mmqt::QS_EQUALS) {
             promptFlags.setFogType(PromptFogEnum::HEAVY_FOG);
         } else {
             qWarning().noquote() << "prompt has unknown fog flag:" << *fog;
         }
-        promptFlags.setValid();
     }
 
     if (auto light = obj.getString("light")) {
         if (verbose_debugging) {
             qInfo().noquote() << "light" << *light;
         }
-        if (light == mmqt::QS_ASTERISK // indoor/sun (direct and indirect)
-            || light == ")") {         // moon (direct and indirect)
+        if (light == mmqt::QS_ASTERISK           // indoor/sun (direct and indirect)
+            || light == mmqt::QS_CLOSE_PARENS) { // moon (direct and indirect)
             promptFlags.setLit();
-        } else if (light == "o") { // darkness
+        } else if (light == "o") { // darkness (magical, night, or permanent)
             promptFlags.setDark();
-        } else if (light != "!") { // ignore artifical light
+        } else if (light == mmqt::QS_EXCLAMATION) { // artifical light
+            promptFlags.setArtificial();
+        } else {
             qWarning().noquote() << "prompt has unknown light flag:" << *light;
         }
-        promptFlags.setValid();
     }
 
-    if (auto weather = obj.getString("weather")) {
+    if (!obj.getNull("weather")) {
+        if (verbose_debugging && promptFlags.getWeatherType() != PromptWeatherEnum::NICE) {
+            qInfo().noquote() << "weather null";
+        }
+        promptFlags.setWeatherType(PromptWeatherEnum::NICE);
+    } else if (auto weather = obj.getString("weather")) {
         if (verbose_debugging) {
             qInfo().noquote() << "weather" << *weather;
         }
@@ -295,7 +334,6 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         } else if (weather != mmqt::QS_SPACE) {
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
-        promptFlags.setValid();
     }
 }
 
@@ -312,11 +350,13 @@ void MumeXmlParser::parseGmcpRoomInfo(const JsonObj &obj)
     m_serverId = getServerId(obj);
 
     m_commonData.terrain = getTerrain(obj);
-    m_roomName = getRoomName(obj);
-    m_roomDesc = getRoomDesc(obj);
-    const auto misc = getMisc(obj, m_serverId);
+    m_commonData.roomName = getRoomName(obj);
+    m_commonData.roomDesc = getRoomDesc(obj);
+
+    const auto misc = getMisc(obj, m_serverId, m_commonData.trollExitMapping);
     m_commonData.connectedRoomFlags = misc.connectedRoomFlags;
     m_commonData.exitsFlags = misc.exitsFlags;
     m_exitIds = misc.exitIds;
-    //m_promptFlags = misc.promptFlags;
+
+    m_eventReady = true;
 }
