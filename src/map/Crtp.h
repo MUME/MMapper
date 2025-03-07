@@ -110,6 +110,32 @@ public:
     XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
 #undef X_DEFINE_SETTERS
 
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void add##_Type(_Type value) \
+    { \
+        crtp_get_fields()._Prop |= value; \
+    } \
+    void remove##_Type(_Type value) \
+    { \
+        crtp_get_fields()._Prop &= ~value; \
+    }
+    XFOREACH_EXIT_FLAG_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
+
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void add##_Type(_Type::Flag value) \
+    { \
+        using Type = _Type; \
+        add##_Type(Type{value}); \
+    } \
+    void remove##_Type(_Type::Flag value) \
+    { \
+        using Type = _Type; \
+        remove##_Type(Type{value}); \
+    }
+    XFOREACH_EXIT_FLAG_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
+
     void clearFields()
     {
         static_assert(std::is_reference_v<decltype(crtp_get_fields())>);
@@ -157,6 +183,32 @@ public:
     }
     XFOREACH_ROOM_PROPERTY(X_IMPL_SETTER)
 #undef X_IMPL_SETTER
+
+#define X_IMPL_SETTER(_Type, _Prop, _OptInit) \
+    void add##_Prop(const _Type value) \
+    { \
+        crtp_get_fields()._Prop |= value; \
+    } \
+    void remove##_Prop(const _Type value) \
+    { \
+        crtp_get_fields()._Prop &= ~value; \
+    }
+    XFOREACH_ROOM_FLAG_PROPERTY(X_IMPL_SETTER)
+#undef X_IMPL_SETTER
+
+#define X_IMPL_SETTER(_Type, _Prop, _OptInit) \
+    void add##_Prop(const _Type::Flag value) \
+    { \
+        using Type = _Type; \
+        add##_Prop(Type{value}); \
+    } \
+    void remove##_Prop(const _Type::Flag value) \
+    { \
+        using Type = _Type; \
+        remove##_Prop(Type{value}); \
+    }
+    XFOREACH_ROOM_FLAG_PROPERTY(X_IMPL_SETTER)
+#undef X_IMPL_SETTER
 };
 
 template<typename CRTP>
@@ -201,11 +253,33 @@ private:
 
 public:
 #define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void set##_Type(ExitDirEnum dir, _Type value) \
+    void set##_Type(const ExitDirEnum dir, _Type value) \
     { \
         crtp_get_exit(dir).set##_Type(std::move(value)); \
     }
     XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void add##_Type(const ExitDirEnum dir, const _Type value) \
+    { \
+        crtp_get_exit(dir).add##_Type(value); \
+    } \
+    void remove##_Type(const ExitDirEnum dir, const _Type value) \
+    { \
+        crtp_get_exit(dir).remove##_Type(value); \
+    }
+    XFOREACH_EXIT_FLAG_PROPERTY(X_DEFINE_SETTERS)
+#undef X_DEFINE_SETTERS
+#define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void add##_Type(const ExitDirEnum dir, const _Type::Flag value) \
+    { \
+        crtp_get_exit(dir).add##_Type(value); \
+    } \
+    void remove##_Type(const ExitDirEnum dir, const _Type::Flag value) \
+    { \
+        crtp_get_exit(dir).remove##_Type(value); \
+    }
+    XFOREACH_EXIT_FLAG_PROPERTY(X_DEFINE_SETTERS)
 #undef X_DEFINE_SETTERS
 };
 

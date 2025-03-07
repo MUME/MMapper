@@ -1460,6 +1460,70 @@ QString previewRoom(const RoomHandle &room,
 } // namespace mmqt
 
 namespace { // anonymous
+void testRawFlags()
+{
+    RawRoom rr;
+    {
+        auto &east = rr.getExit(ExitDirEnum::EAST);
+
+        TEST_ASSERT(!east.getExitFlags().isClimb());
+
+        east.addExitFlags(ExitFlagEnum::CLIMB);
+        TEST_ASSERT(east.getExitFlags().isClimb());
+
+        east.removeExitFlags(ExitFlagEnum::CLIMB);
+        TEST_ASSERT(!east.getExitFlags().isClimb());
+
+        east.addExitFlags(ExitFlags{ExitFlagEnum::CLIMB});
+        TEST_ASSERT(east.getExitFlags().isClimb());
+
+        east.removeExitFlags(ExitFlags{ExitFlagEnum::CLIMB});
+        TEST_ASSERT(!east.getExitFlags().isClimb());
+
+        rr.addExitFlags(ExitDirEnum::EAST, ExitFlagEnum::CLIMB);
+        TEST_ASSERT(east.getExitFlags().isClimb());
+
+        rr.removeExitFlags(ExitDirEnum::EAST, ExitFlagEnum::CLIMB);
+        TEST_ASSERT(!east.getExitFlags().isClimb());
+
+        rr.addExitFlags(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::CLIMB});
+        TEST_ASSERT(east.getExitFlags().isClimb());
+
+        rr.removeExitFlags(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::CLIMB});
+        TEST_ASSERT(!east.getExitFlags().isClimb());
+    }
+    {
+        TEST_ASSERT(!rr.getLoadFlags().contains(RoomLoadFlagEnum::ARMOUR));
+
+        rr.addLoadFlags(RoomLoadFlagEnum::ARMOUR);
+        TEST_ASSERT(rr.getLoadFlags().contains(RoomLoadFlagEnum::ARMOUR));
+
+        rr.removeLoadFlags(RoomLoadFlagEnum::ARMOUR);
+        TEST_ASSERT(!rr.getLoadFlags().contains(RoomLoadFlagEnum::ARMOUR));
+
+        rr.addLoadFlags(RoomLoadFlags{RoomLoadFlagEnum::ARMOUR});
+        TEST_ASSERT(rr.getLoadFlags().contains(RoomLoadFlagEnum::ARMOUR));
+
+        rr.removeLoadFlags(RoomLoadFlags{RoomLoadFlagEnum::ARMOUR});
+        TEST_ASSERT(!rr.getLoadFlags().contains(RoomLoadFlagEnum::ARMOUR));
+    }
+    {
+        TEST_ASSERT(!rr.getMobFlags().contains(RoomMobFlagEnum::RENT));
+
+        rr.addMobFlags(RoomMobFlagEnum::RENT);
+        TEST_ASSERT(rr.getMobFlags().contains(RoomMobFlagEnum::RENT));
+
+        rr.removeMobFlags(RoomMobFlagEnum::RENT);
+        TEST_ASSERT(!rr.getMobFlags().contains(RoomMobFlagEnum::RENT));
+
+        rr.addMobFlags(RoomMobFlags{RoomMobFlagEnum::RENT});
+        TEST_ASSERT(rr.getMobFlags().contains(RoomMobFlagEnum::RENT));
+
+        rr.removeMobFlags(RoomMobFlags{RoomMobFlagEnum::RENT});
+        TEST_ASSERT(!rr.getMobFlags().contains(RoomMobFlagEnum::RENT));
+    }
+}
+
 void testAddAndRemoveIsNoChange()
 {
     ProgressCounter pc;
@@ -1708,6 +1772,7 @@ namespace test {
 void testMap()
 {
     testRoomIdSet();
+    testRawFlags();
     testAddAndRemoveIsNoChange();
     testMapEnums();
     testAddingInvalidEnums();
