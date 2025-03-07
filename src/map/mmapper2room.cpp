@@ -186,6 +186,7 @@ QString getName(const RoomLoadFlagEnum flag)
         X_CASE2(EQUIPMENT, "Equipment");
         X_CASE2(COACH, "Coach");
         X_CASE2(FERRY, "Ferry");
+        X_CASE2(DEATHTRAP, "Deathtrap");
     }
     return QString::asprintf("(RoomLoadFlagEnum)%d", static_cast<int>(flag));
 #undef X_CASE2

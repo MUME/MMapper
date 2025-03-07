@@ -1042,29 +1042,6 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="3">
-           <widget class="QToolButton" name="toolButton15">
-            <property name="text">
-             <string>Random</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain-deathtrap.png</normaloff>:/pixmaps/terrain-deathtrap.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>64</width>
-              <height>64</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoExclusive">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="6" column="0">
            <widget class="QToolButton" name="toolButton12">
             <property name="text">
@@ -1223,13 +1200,6 @@
             </property>
             <property name="autoExclusive">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="3">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>DeathTrap</string>
             </property>
            </widget>
           </item>
@@ -1588,7 +1558,6 @@
   <tabstop>toolButton12</tabstop>
   <tabstop>toolButton13</tabstop>
   <tabstop>toolButton14</tabstop>
-  <tabstop>toolButton15</tabstop>
   <tabstop>roomNoteTextEdit</tabstop>
   <tabstop>roomStatTextEdit</tabstop>
   <tabstop>roomDiffTextEdit</tabstop>

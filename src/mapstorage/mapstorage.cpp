@@ -42,8 +42,9 @@ constexpr const int v19_10_0_newCoords = 36;      // switches to new coordinate 
 constexpr const int v25_02_0_noInboundLinks = 38; // stops loading and saving inbound links
 constexpr const int v25_02_1_removeUpToDate = 39; // removes upToDate
 constexpr const int v25_02_2_serverId = 40;       // adds server_id
+constexpr const int v25_02_3_deathFlag = 41;      // replaces death terrain with room flag
 
-constexpr const int CURRENT = v25_02_2_serverId;
+constexpr const int CURRENT = v25_02_3_deathFlag;
 
 } // namespace schema
 
@@ -224,7 +225,19 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
         room.setServerId(ServerRoomId{helper.read_u32()});
     }
     room.setNote(mmqt::makeRoomNote(helper.read_string()));
-    room.setTerrainType(toEnum<RoomTerrainEnum>(helper.read_u8()));
+    bool addDeathLoadFlag = false;
+    if (version >= schema::v25_02_3_deathFlag) {
+        room.setTerrainType(toEnum<RoomTerrainEnum>(helper.read_u8()));
+    } else {
+        const auto terrainType = helper.read_u8();
+        constexpr uint8_t DEATH_TERRAIN_TYPE = 15;
+        if (terrainType == DEATH_TERRAIN_TYPE) {
+            addDeathLoadFlag = true;
+            room.setTerrainType(RoomTerrainEnum::UNDEFINED);
+        } else {
+            room.setTerrainType(toEnum<RoomTerrainEnum>(terrainType));
+        }
+    }
     room.setLightType(toEnum<RoomLightEnum>(helper.read_u8()));
     room.setAlignType(toEnum<RoomAlignEnum>(helper.read_u8()));
     room.setPortableType(toEnum<RoomPortableEnum>(helper.read_u8()));
@@ -236,6 +249,9 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
         (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
     room.setLoadFlags(bitmaskToFlags<RoomLoadFlags>(
         (version >= schema::v2_4_0_largerFlags) ? helper.read_u32() : helper.read_u16()));
+    if (addDeathLoadFlag) {
+        room.addLoadFlags(RoomLoadFlagEnum::DEATHTRAP);
+    }
     if (version < schema::v25_02_1_removeUpToDate) {
         /*roomUpdated*/ std::ignore = helper.read_u8();
     }
@@ -342,6 +358,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
             case schema::v25_02_0_noInboundLinks:
             case schema::v25_02_1_removeUpToDate:
             case schema::v25_02_2_serverId:
+            case schema::v25_02_3_deathFlag:
                 return true;
             default:
                 break;

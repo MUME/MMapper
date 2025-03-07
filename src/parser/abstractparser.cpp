@@ -88,8 +88,6 @@ NODISCARD static char getTerrainSymbol(const RoomTerrainEnum type)
         return 'O'; // O  // cavern
     case RoomTerrainEnum::BRUSH:
         return C_COLON; // :  // brush
-    case RoomTerrainEnum::DEATHTRAP:
-        return 'X';
     }
 
     return C_SPACE;

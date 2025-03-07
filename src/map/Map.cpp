@@ -1185,8 +1185,112 @@ void displayRoom(AnsiOstream &os, const RoomHandle &r, const RoomFieldFlags fiel
     }
 }
 
+NODISCARD static std::vector<std::string> getExitKeywords(const Map &map,
+                                                          const RoomId sourceId,
+                                                          const ExitDirEnum i,
+                                                          const RawExit &e)
+{
+    if (!getConfig().mumeNative.showHiddenExitFlags) {
+        return {};
+    }
+
+    std::vector<std::string> etmp;
+    auto add_exit_keyword = [&etmp](std::string_view word) { etmp.emplace_back(word); };
+
+    const ExitFlags ef = e.getExitFlags();
+
+    // Extract hidden exit flags
+    /* TODO: const char* lowercaseName(ExitFlagEnum) */
+    if (ef.contains(ExitFlagEnum::NO_FLEE)) {
+        add_exit_keyword("noflee");
+    }
+    if (ef.contains(ExitFlagEnum::RANDOM)) {
+        add_exit_keyword("random");
+    }
+    if (ef.contains(ExitFlagEnum::SPECIAL)) {
+        add_exit_keyword("special");
+    }
+    if (ef.contains(ExitFlagEnum::DAMAGE)) {
+        add_exit_keyword("damage");
+    }
+    if (ef.contains(ExitFlagEnum::FALL)) {
+        add_exit_keyword("fall");
+    }
+    if (ef.contains(ExitFlagEnum::GUARDED)) {
+        add_exit_keyword("guarded");
+    }
+
+    // Exit modifiers
+    if (e.containsOut(sourceId)) {
+        add_exit_keyword("loop");
+
+    } else if (!e.outIsEmpty()) {
+        // Check target room for exit information
+        const auto targetId = e.outFirst();
+        uint32_t exitCount = 0;
+        bool oneWay = false;
+        bool hasNoFlee = false;
+
+        if (const auto &optTargetRoom = map.findRoomHandle(targetId)) {
+            const auto &targetRoom = deref(optTargetRoom);
+
+            if (!targetRoom.getExit(opposite(i)).containsOut(sourceId)) {
+                oneWay = true;
+            }
+            for (const ExitDirEnum j : ALL_EXITS_NESWUD) {
+                const auto &targetExit = targetRoom.getExit(j);
+                if (!targetExit.exitIsExit()) {
+                    continue;
+                }
+                ++exitCount;
+                if (targetExit.containsOut(sourceId)) {
+                    // Technically rooms can point back in a different direction
+                    oneWay = false;
+                }
+                if (targetExit.exitIsNoFlee()) {
+                    hasNoFlee = true;
+                }
+            }
+            if (oneWay) {
+                add_exit_keyword("oneway");
+            }
+            if (hasNoFlee && exitCount == 1) {
+                // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
+                add_exit_keyword("hasnoflee");
+            }
+
+            const auto loadFlags = targetRoom.getLoadFlags();
+            if (loadFlags.contains(RoomLoadFlagEnum::ATTENTION)) {
+                add_exit_keyword("attention");
+            } else if (loadFlags.contains(RoomLoadFlagEnum::DEATHTRAP)) {
+                // Override all other flags
+                return {"deathtrap"};
+            }
+
+            const auto mobFlags = targetRoom.getMobFlags();
+            if (mobFlags.contains(RoomMobFlagEnum::SUPER_MOB)) {
+                add_exit_keyword("smob");
+            }
+            if (mobFlags.contains(RoomMobFlagEnum::RATTLESNAKE)) {
+                add_exit_keyword("rattlesnake");
+            }
+
+            // Terrain type exit modifiers
+            const RoomTerrainEnum targetTerrain = targetRoom.getTerrainType();
+            if (targetTerrain == RoomTerrainEnum::UNDERWATER) {
+                add_exit_keyword("underwater");
+            }
+        }
+    }
+    return etmp;
+}
+
 void enhanceExits(AnsiOstream &os, const RoomHandle &sourceRoom)
 {
+    if (!sourceRoom.exists()) {
+        return;
+    }
+
     const Map &map = sourceRoom.getMap();
 
     bool enhancedExits = false;
@@ -1200,108 +1304,24 @@ void enhanceExits(AnsiOstream &os, const RoomHandle &sourceRoom)
             continue;
         }
 
-        std::string etmp;
-        auto add_exit_keyword = [&etmp](const char *word) {
-            if (!etmp.empty()) {
-                etmp += C_COMMA;
-            }
-            etmp += word;
-        };
-
-        // Extract hidden exit flags
-        if (getConfig().mumeNative.showHiddenExitFlags) {
-            /* TODO: const char* lowercaseName(ExitFlagEnum) */
-            if (ef.contains(ExitFlagEnum::NO_FLEE)) {
-                add_exit_keyword("noflee");
-            }
-            if (ef.contains(ExitFlagEnum::RANDOM)) {
-                add_exit_keyword("random");
-            }
-            if (ef.contains(ExitFlagEnum::SPECIAL)) {
-                add_exit_keyword("special");
-            }
-            if (ef.contains(ExitFlagEnum::DAMAGE)) {
-                add_exit_keyword("damage");
-            }
-            if (ef.contains(ExitFlagEnum::FALL)) {
-                add_exit_keyword("fall");
-            }
-            if (ef.contains(ExitFlagEnum::GUARDED)) {
-                add_exit_keyword("guarded");
-            }
-
-            // Exit modifiers
-            if (e.containsOut(sourceId)) {
-                add_exit_keyword("loop");
-
-            } else if (!e.outIsEmpty()) {
-                // Check target room for exit information
-                const auto targetId = e.outFirst();
-                uint32_t exitCount = 0;
-                bool oneWay = false;
-                bool hasNoFlee = false;
-                if (const auto &targetRoom = map.findRoomHandle(targetId)) {
-                    if (!targetRoom->getExit(opposite(i)).containsOut(sourceId)) {
-                        oneWay = true;
-                    }
-                    for (const ExitDirEnum j : ALL_EXITS_NESWUD) {
-                        const auto &targetExit = targetRoom->getExit(j);
-                        if (!targetExit.exitIsExit()) {
-                            continue;
-                        }
-                        ++exitCount;
-                        if (targetExit.containsOut(sourceId)) {
-                            // Technically rooms can point back in a different direction
-                            oneWay = false;
-                        }
-                        if (targetExit.exitIsNoFlee()) {
-                            hasNoFlee = true;
-                        }
-                    }
-                    if (oneWay) {
-                        add_exit_keyword("oneway");
-                    }
-                    if (hasNoFlee && exitCount == 1) {
-                        // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
-                        add_exit_keyword("hasnoflee");
-                    }
-
-                    const auto loadFlags = targetRoom->getLoadFlags();
-                    if (loadFlags.contains(RoomLoadFlagEnum::ATTENTION)) {
-                        add_exit_keyword("attention");
-                    }
-
-                    const auto mobFlags = targetRoom->getMobFlags();
-                    if (mobFlags.contains(RoomMobFlagEnum::SUPER_MOB)) {
-                        add_exit_keyword("smob");
-                    }
-                    if (mobFlags.contains(RoomMobFlagEnum::RATTLESNAKE)) {
-                        add_exit_keyword("rattlesnake");
-                    }
-
-                    // Terrain type exit modifiers
-                    const RoomTerrainEnum targetTerrain = targetRoom->getTerrainType();
-                    if (targetTerrain == RoomTerrainEnum::UNDERWATER) {
-                        add_exit_keyword("underwater");
-                    } else if (targetTerrain == RoomTerrainEnum::DEATHTRAP) {
-                        // Override all previous flags
-                        etmp = "deathtrap";
-                    }
-                }
-            }
-        }
-
-        // Extract door names
+        const auto keywords = getExitKeywords(map, sourceId, i, e);
         const auto &dn = e.getDoorName();
-        if (!dn.empty() || !etmp.empty()) {
+
+        if (!dn.empty() || !keywords.empty()) {
             enhancedExits = true;
             os << std::exchange(prefix, string_consts::SV_SPACE);
             os << Mmapper2Exit::charForDir(i) << C_COLON;
             if (!dn.empty()) {
                 os.writeWithColor(yellow, dn.getStdStringViewUtf8());
             }
-            if (!etmp.empty()) {
-                os << C_OPEN_PARENS << etmp << C_CLOSE_PARENS;
+            if (!keywords.empty()) {
+                auto optcomma = "";
+                os << C_OPEN_PARENS;
+                for (const auto &kw : keywords) {
+                    os << std::exchange(optcomma, string_consts::S_COMMA);
+                    os.writeWithColor(yellow, kw);
+                }
+                os << C_CLOSE_PARENS;
             }
         }
     }
@@ -1327,9 +1347,9 @@ void displayExits(AnsiOstream &os, const RoomHandle &r, const char sunCharacter)
 
     auto prefix = " ";
 
-    os << "Exits";
-    os.writeWithColor(yellow, "/emulated");
-    os << C_COLON;
+    os << "Exits" << C_OPEN_PARENS;
+    os.writeWithColor(yellow, "emulated");
+    os << C_CLOSE_PARENS << C_COLON;
 
     if (!hasExits) {
         os << " none.\n";
@@ -1348,14 +1368,15 @@ void displayExits(AnsiOstream &os, const RoomHandle &r, const char sunCharacter)
         if (e.exitIsExit()) {
             os << std::exchange(prefix, ", ");
 
-            RoomTerrainEnum sourceTerrain = r.getTerrainType();
+            const RoomTerrainEnum sourceTerrain = r.getTerrainType();
             if (!e.outIsEmpty()) {
                 const auto targetId = e.outFirst();
-                if (const auto &targetRoom = map.findRoomHandle(targetId)) {
-                    const RoomTerrainEnum targetTerrain = targetRoom->getTerrainType();
+                if (const auto &optTargetRoom = map.findRoomHandle(targetId)) {
+                    const auto &targetRoom = deref(optTargetRoom);
+                    const RoomTerrainEnum targetTerrain = targetRoom.getTerrainType();
 
                     // Sundeath exit flag modifiers
-                    if (targetRoom->getSundeathType() == RoomSundeathEnum::SUNDEATH) {
+                    if (targetRoom.getSundeathType() == RoomSundeathEnum::SUNDEATH) {
                         directSun = true;
                         os << sunCharacter;
                     }

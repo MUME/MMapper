@@ -183,7 +183,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     static_assert(NUM_ELEMENTS(m_exitListItems) <= 16u);
     static_assert(NUM_ELEMENTS(m_doorListItems) <= 16u);
     static_assert(NUM_ELEMENTS(m_roomTerrainButtons) == NUM_ROOM_TERRAIN_TYPES);
-    static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
+    static_assert(NUM_ROOM_TERRAIN_TYPES == 15);
 #undef NUM_ELEMENTS
 
     setupUi(this);
@@ -872,8 +872,6 @@ QToolButton *RoomEditAttrDlg::getTerrainToolButton(const RoomTerrainEnum value) 
         return toolButton13;
     case RoomTerrainEnum::CAVERN:
         return toolButton14;
-    case RoomTerrainEnum::DEATHTRAP:
-        return toolButton15;
     }
 
     return nullptr;

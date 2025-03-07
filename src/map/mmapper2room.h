@@ -48,8 +48,7 @@ using RoomNote = TaggedBoxedStringUtf8<tags::RoomNoteTag>;
     X(ROAD) \
     X(BRUSH) \
     X(TUNNEL) \
-    X(CAVERN) \
-    X(DEATHTRAP)
+    X(CAVERN)
 
 #define X_DECL(X) X,
 enum class NODISCARD RoomTerrainEnum : uint8_t { XFOREACH_RoomTerrainEnum(X_DECL) };
@@ -58,8 +57,8 @@ static_assert(RoomTerrainEnum::UNDEFINED == RoomTerrainEnum{0});
 #define X_ADD(X) +1
 static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = (XFOREACH_RoomTerrainEnum(X_ADD));
 #undef X_ADD
-static_assert(RoomTerrainEnum::DEATHTRAP == RoomTerrainEnum{NUM_ROOM_TERRAIN_TYPES - 1});
-static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
+static_assert(RoomTerrainEnum::CAVERN == RoomTerrainEnum{NUM_ROOM_TERRAIN_TYPES - 1});
+static_assert(NUM_ROOM_TERRAIN_TYPES == 15);
 DEFINE_ENUM_COUNT(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES)
 
 #define XFOREACH_RoomAlignEnum(X) \
@@ -184,15 +183,16 @@ class NODISCARD RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFl
     X(DARK_WORD) \
     X(EQUIPMENT) \
     X(COACH) \
-    X(FERRY)
+    X(FERRY) \
+    X(DEATHTRAP)
 
 enum class NODISCARD RoomLoadFlagEnum : uint8_t {
 #define X_DECL(X) X,
     XFOREACH_ROOM_LOAD_FLAG(X_DECL)
 #undef X_DECL
 };
-static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlagEnum::FERRY) + 1;
-static_assert(NUM_ROOM_LOAD_FLAGS == 24);
+static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlagEnum::DEATHTRAP) + 1;
+static_assert(NUM_ROOM_LOAD_FLAGS == 25);
 DEFINE_ENUM_COUNT(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS)
 
 class NODISCARD RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum, uint32_t>

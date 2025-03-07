@@ -54,7 +54,6 @@ NODISCARD static QString getTerrainTypeName(const RoomTerrainEnum x)
         CASE2(BRUSH, "Brush");
         CASE2(TUNNEL, "Tunnel");
         CASE2(CAVERN, "Cavern");
-        CASE2(DEATHTRAP, "Deathtrap");
     }
     return QString::asprintf("(TerrainType)%d", static_cast<int>(x));
 #undef CASE2
@@ -83,7 +82,6 @@ NODISCARD static QString getTerrainTypeColor(const RoomTerrainEnum x)
         CASE2(BRUSH, "6");
         CASE2(TUNNEL, "8");
         CASE2(CAVERN, "8");
-        CASE2(DEATHTRAP, "0");
     }
     return "0";
 #undef CASE2
@@ -172,7 +170,8 @@ void MmpMapStorage::saveRoom(const ExternalRawRoom &room, QXmlStreamWriter &stre
     stream.writeAttribute("area", "1");
     stream.writeAttribute("title", room.getName().toQString());
     stream.writeAttribute("environment", QString("%1").arg(static_cast<int>(room.getTerrainType())));
-    if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION)) {
+    if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION)
+        || room.getLoadFlags().contains(RoomLoadFlagEnum::DEATHTRAP)) {
         stream.writeAttribute("important", "1");
     }
 

@@ -75,7 +75,6 @@ NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
     CASE2(BRUSH, "brush");
     CASE2(TUNNEL, "tunnel");
     CASE2(CAVERN, "cavern");
-    CASE2(DEATHTRAP, "deathtrap"); // Not supported by Pandora
 #undef CASE2
     return RoomTerrainEnum::UNDEFINED;
 }
@@ -141,7 +140,7 @@ void PandoraMapStorage::loadExits(ExternalRawRoom &room,
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
-                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::DEATHTRAP);
+                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::UNDEFINED);
                     } else if (to == "UNDEFINED") {
                         helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::UNDEFINED);
                     } else {

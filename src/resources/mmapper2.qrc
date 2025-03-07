@@ -105,6 +105,7 @@
         <file>pixmaps/load-clock.png</file>
         <file>pixmaps/load-coach.png</file>
         <file>pixmaps/load-darkword.png</file>
+        <file>pixmaps/load-deathtrap.png</file>
         <file>pixmaps/load-equipment.png</file>
         <file>pixmaps/load-ferry.png</file>
         <file>pixmaps/load-food.png</file>
@@ -181,7 +182,6 @@
         <file>pixmaps/terrain-brush.png</file>
         <file>pixmaps/terrain-cavern.png</file>
         <file>pixmaps/terrain-city.png</file>
-        <file>pixmaps/terrain-deathtrap.png</file>
         <file>pixmaps/terrain-field.png</file>
         <file>pixmaps/terrain-forest.png</file>
         <file>pixmaps/terrain-hills.png</file>

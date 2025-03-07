@@ -64,8 +64,6 @@ NODISCARD static double terrain_cost(const RoomTerrainEnum type)
         return 0.75; // tunnel
     case RoomTerrainEnum::CAVERN:
         return 0.75; // cavern
-    case RoomTerrainEnum::DEATHTRAP:
-        return 1000.0; // deathtrap
     }
 
     return 1.0;
@@ -93,6 +91,9 @@ NODISCARD static double getLength(const RawExit &e, const RoomHandle &curr, cons
     }
     if (flags.isRoad()) { // Not sure if this is appropriate.
         cost -= 0.1;
+    }
+    if (nextr.getLoadFlags().contains(RoomLoadFlagEnum::DEATHTRAP)) {
+        cost += 1000.0;
     }
     return cost;
 }

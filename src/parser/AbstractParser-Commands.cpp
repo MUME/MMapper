@@ -229,6 +229,7 @@ Abbrev getParserCommandName(const RoomLoadFlagEnum x)
         CASE3(EQUIPMENT, "equipment", -1);
         CASE3(COACH, "coach", -1);
         CASE3(FERRY, "ferry", -1);
+        CASE3(DEATHTRAP, "deathtrap", -1);
     }
     return Abbrev{};
 #undef CASE3
@@ -258,7 +259,6 @@ Abbrev getParserCommandName(const RoomTerrainEnum x)
         CASE3(BRUSH, "brush", -1);
         CASE3(TUNNEL, "tunnel", -1);
         CASE3(CAVERN, "cavern", -1);
-        CASE3(DEATHTRAP, "deathtrap", -1);
     }
     return Abbrev{};
 #undef CASE3
