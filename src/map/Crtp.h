@@ -61,20 +61,11 @@ public:
 public:
     /* older aliases */
     DEPRECATED_MSG("use exitIsDoor()")
-    NODISCARD inline bool isDoor() const
-    {
-        return exitIsDoor();
-    }
+    NODISCARD inline bool isDoor() const = delete;
     DEPRECATED_MSG("use exitIsExit()")
-    NODISCARD inline bool isExit() const
-    {
-        return exitIsExit();
-    }
+    NODISCARD inline bool isExit() const = delete;
     DEPRECATED_MSG("use doorIsHidden()")
-    NODISCARD inline bool isHiddenExit() const
-    {
-        return doorIsHidden();
-    }
+    NODISCARD inline bool isHiddenExit() const = delete;
 
 public:
 #define X_DECL_INOUT_FNS(lower, SnakeCase) \
