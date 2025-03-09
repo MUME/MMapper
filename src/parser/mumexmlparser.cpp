@@ -558,12 +558,12 @@ void MumeXmlParser::setMove(const CommandEnum move)
     }
 
     auto &map = m_mapData;
-    auto pHere = map.getCurrentRoom();
-    if (!pHere) {
+    auto here = map.getCurrentRoom();
+    if (!here) {
         return;
     }
 
-    const auto &here = *pHere;
+    // FIXME
     if (false /*!here.isUpToDate()*/) {
         return;
     }
@@ -579,12 +579,12 @@ void MumeXmlParser::setMove(const CommandEnum move)
     }
 
     const RoomId id = set.first();
-    const auto &pThere = map.findRoomHandle(id);
-    if (!pThere) {
+    const auto there = map.findRoomHandle(id);
+    if (!there) {
         return;
     }
 
-    const auto &there = *pThere;
+    // FIXME
     if (false /*!there.isUpToDate() */ || there.getName().empty()
         || there.getDescription().empty()) {
         return;
@@ -669,12 +669,11 @@ void MumeXmlParser::maybeUpdate(RoomId expectedId, const ParseEvent &ev)
         return;
     }
 
-    const auto &pExpected = m_mapData.findRoomHandle(expectedId);
-    if (!pExpected) {
+    const auto expected = m_mapData.findRoomHandle(expectedId);
+    if (!expected) {
         return;
     }
 
-    const auto &expected = *pExpected;
     const auto &name = expected.getName();
     const auto &desc = expected.getDescription();
 
@@ -689,12 +688,12 @@ void MumeXmlParser::maybeUpdate(RoomId expectedId, const ParseEvent &ev)
     }
 
     auto update = [this, expectedId](const std::string_view what, const auto &field) {
-        const auto &pRoom = m_mapData.findRoomHandle(expectedId);
-        if (!pRoom) {
+        const auto room = m_mapData.findRoomHandle(expectedId);
+        if (!room) {
             return;
         }
 
-        const auto extId = pRoom->getIdExternal();
+        const auto extId = room.getIdExternal();
         const auto change = room_change_types::ModifyRoomFlags{expectedId,
                                                                field,
                                                                FlagModifyModeEnum::ASSIGN};

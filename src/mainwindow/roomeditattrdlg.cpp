@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <tuple>
 
 #include <QMessageLogContext>
 #include <QString>
@@ -459,8 +460,8 @@ void RoomEditAttrDlg::connectAll()
         auto &rnte = deref(roomNoteTextEdit);
         rnte.clear();
         setRoomNoteDirty(false);
-        if (auto r = this->getSelectedRoom()) {
-            if (!r->getNote().empty()) {
+        if (const auto r = this->getSelectedRoom()) {
+            if (!r.getNote().empty()) {
                 setRoomNoteDirty(true);
             }
         }
@@ -469,8 +470,8 @@ void RoomEditAttrDlg::connectAll()
     m_connections += connect(roomNoteRevertButton, &QPushButton::clicked, this, [this]() {
         auto &rnte = deref(roomNoteTextEdit);
         rnte.clear();
-        if (auto r = this->getSelectedRoom()) {
-            add_boxed_string(roomNoteTextEdit, r->getNote());
+        if (const auto r = this->getSelectedRoom()) {
+            add_boxed_string(roomNoteTextEdit, r.getNote());
         }
         setRoomNoteDirty(false);
     });
@@ -491,20 +492,26 @@ void RoomEditAttrDlg::disconnectAll()
     m_connections.disconnectAll();
 }
 
-std::optional<RoomHandle> RoomEditAttrDlg::getSelectedRoom()
+RoomHandle RoomEditAttrDlg::getSelectedRoom()
 {
-    if (m_roomSelection == nullptr || m_roomSelection->empty()) {
-        return std::nullopt;
+    if (m_roomSelection == nullptr) {
+        return RoomHandle{};
     }
-    if (m_roomSelection->size() == 1) {
-        return m_mapData->getCurrentMap().tryGetRoomHandle(m_roomSelection->getFirstRoomId());
+
+    const auto &rs = deref(m_roomSelection);
+    if (rs.empty()) {
+        return RoomHandle{};
     }
-    const auto target = RoomId{
-        roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()};
-    if (m_roomSelection->contains(target)) {
-        return m_mapData->getCurrentMap().tryGetRoomHandle(target);
+    if (rs.size() == 1) {
+        return deref(m_mapData).getCurrentMap().findRoomHandle(rs.getFirstRoomId());
     }
-    return std::nullopt;
+
+    const auto &combo = deref(roomListComboBox);
+    if (const auto target = RoomId{combo.itemData(combo.currentIndex()).toUInt()};
+        rs.contains(target)) {
+        return deref(m_mapData).getCurrentMap().findRoomHandle(target);
+    }
+    return RoomHandle{};
 }
 
 ExitDirEnum RoomEditAttrDlg::getSelectedExit()
@@ -553,23 +560,24 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
     m_mapData = md;
     m_mapCanvas = mc;
 
-    roomListComboBox->clear();
+    auto &combo = deref(roomListComboBox);
+    combo.clear();
 
     if (rs == nullptr) {
         return;
     }
 
-    tabWidget->setCurrentWidget(attributesTab);
+    deref(tabWidget).setCurrentWidget(attributesTab);
 
     auto &mapData = deref(m_mapData);
     const auto &map = mapData.getCurrentMap();
-    auto addToCombo = [this, &map](RoomId id) -> RoomHandle {
+    auto addToCombo = [&combo, &map](RoomId id) -> RoomHandle {
         RoomHandle room = map.getRoomHandle(id);
         const QString shown = QString("Room %1: %2")
                                   .arg(room.getIdExternal().asUint32())
                                   .arg(room.getName().toQString());
         // REVISIT: Should this be ExternalRoomId?
-        roomListComboBox->addItem(shown, room.getId().asUint32());
+        combo.addItem(shown, room.getId().asUint32());
         return room;
     };
 
@@ -581,18 +589,17 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
     } else {
         // REVISIT: Does the zero here mean that RoomId{0} won't work properly?
         // Should we change this to INVALID_ROOMID.value()?
-        roomListComboBox->addItem("All", 0);
+        combo.addItem("All", 0);
         for (const RoomId id : sel) {
-            MAYBE_UNUSED const auto room = //
-                addToCombo(id);
+            std::ignore = addToCombo(id);
         }
-        updateDialog(std::nullopt);
+        updateDialog(RoomHandle{});
     }
 
     connect(this, &RoomEditAttrDlg::sig_requestUpdate, m_mapCanvas, &MapCanvas::slot_requestUpdate);
 }
 
-void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
+void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
 {
     class NODISCARD DisconnectReconnectAntiPattern final
     {
@@ -611,7 +618,7 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
     } antiPattern{*this};
 
     constexpr auto CHECKABLE_AND_ENABLED = Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
-    if (r == std::nullopt || !r->exists()) {
+    if (!r.exists()) {
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(false);
 
@@ -649,7 +656,7 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
 
         exitsFrame->setEnabled(true);
 
-        const auto &e = r->getExit(getSelectedExit());
+        const auto &e = r.getExit(getSelectedExit());
         setCheckStates(m_exitListItems, e.getExitFlags());
 
         if (e.exitIsDoor()) {
@@ -676,29 +683,29 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
         setFlags(m_loadListItems, CHECKABLE_AND_ENABLED);
         setFlags(m_mobListItems, CHECKABLE_AND_ENABLED);
 
-        setCheckStates(m_mobListItems, r->getMobFlags());
-        setCheckStates(m_loadListItems, r->getLoadFlags());
+        setCheckStates(m_mobListItems, r.getMobFlags());
+        setCheckStates(m_loadListItems, r.getLoadFlags());
 
         roomDescriptionTextEdit->setEnabled(true);
         roomNoteTextEdit->setEnabled(true);
 
-        setAnsiText(roomDescriptionTextEdit, previewRoom(*r));
+        setAnsiText(roomDescriptionTextEdit, previewRoom(r));
 
         {
             assert(!m_noteSelected);
             clearRoomNote();
-            add_boxed_string(roomNoteTextEdit, r->getNote());
+            add_boxed_string(roomNoteTextEdit, r.getNote());
             setRoomNoteDirty(false);
         }
 
         // can this ever be nullptr?
         if (roomStatTextEdit != nullptr) {
-            const auto s = [r]() -> std::string {
+            const auto s = [&r]() -> std::string {
                 try {
                     std::ostringstream os;
                     {
                         AnsiOstream aos{os};
-                        r->getMap().statRoom(aos, r->getId());
+                        r.getMap().statRoom(aos, r.getId());
                     }
                     return std::move(os).str();
                 } catch (const std::exception &ex) {
@@ -710,13 +717,14 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
 
         // can this ever be nullptr?
         if (roomDiffTextEdit != nullptr) {
-            const auto s = [this, r]() -> std::string {
-                auto saved = m_mapData->getSavedMap();
-                auto current = m_mapData->getCurrentMap();
+            const auto s = [this, &r]() -> std::string {
+                auto &md = deref(m_mapData);
+                auto saved = md.getSavedMap();
+                auto current = md.getCurrentMap();
 
-                const ExternalRoomId ext = r->getIdExternal();
-                auto pOld = saved.findRoomHandle(ext);
-                auto pNew = current.findRoomHandle(ext);
+                const ExternalRoomId ext = r.getIdExternal();
+                const auto pOld = saved.findRoomHandle(ext);
+                const auto pNew = current.findRoomHandle(ext);
                 if (!pOld) {
                     return "The room was created since the last save.";
                 }
@@ -729,7 +737,7 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
                     {
                         AnsiOstream aos{os};
                         OstreamDiffReporter odr{aos};
-                        compare(odr, *pOld, *pNew);
+                        compare(odr, pOld, pNew);
                     }
                     auto str = std::move(os).str();
                     if (str.empty()) {
@@ -752,24 +760,24 @@ void RoomEditAttrDlg::updateDialog(const std::optional<RoomHandle> &r)
                 return getPixmapFilename(type);
             }
         };
-        terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
+        terrainLabel->setPixmap(get_terrain_pixmap(r.getTerrainType()));
 
-        if (auto *const button = getAlignRadioButton(r->getAlignType())) {
+        if (auto *const button = getAlignRadioButton(r.getAlignType())) {
             button->setChecked(true);
         }
-        if (auto *const button = getPortableRadioButton(r->getPortableType())) {
+        if (auto *const button = getPortableRadioButton(r.getPortableType())) {
             button->setChecked(true);
         }
-        if (auto *const button = getRideableRadioButton(r->getRidableType())) {
+        if (auto *const button = getRideableRadioButton(r.getRidableType())) {
             button->setChecked(true);
         }
-        if (auto *const button = getLightRadioButton(r->getLightType())) {
+        if (auto *const button = getLightRadioButton(r.getLightType())) {
             button->setChecked(true);
         }
-        if (auto *const button = getSundeathRadioButton(r->getSundeathType())) {
+        if (auto *const button = getSundeathRadioButton(r.getSundeathType())) {
             button->setChecked(true);
         }
-        if (auto *const button = getTerrainToolButton(r->getTerrainType())) {
+        if (auto *const button = getTerrainToolButton(r.getTerrainType())) {
             button->setChecked(true);
         }
     }
@@ -887,7 +895,7 @@ void RoomEditAttrDlg::updateCommon(const std::function<Change(const RawRoom &)> 
                                    const bool onlyExecuteAction)
 {
     if (const auto &r = getSelectedRoom()) {
-        m_mapData->applySingleChange(getChange(r->getRaw()));
+        m_mapData->applySingleChange(getChange(r.getRaw()));
 
     } else {
         m_mapData->applyChangesToList(*m_roomSelection, getChange);
@@ -915,7 +923,7 @@ void RoomEditAttrDlg::setSelectedRoomExitField(const ExitFieldVariant &var,
                                                const ExitDirEnum dir,
                                                const FlagModifyModeEnum mode)
 {
-    const auto id = getSelectedRoom()->getId();
+    const auto id = getSelectedRoom().getId();
     const bool changed = m_mapData->applySingleChange(
         Change{exit_change_types::ModifyExitFlags{id, dir, var, mode}});
 

@@ -244,8 +244,8 @@ protected:
 
 protected:
     void emulateExits(AnsiOstream &, CommandEnum move);
-    void sendRoomExitsInfoToUser(AnsiOstream &, const RoomPtr &r);
-    void sendRoomExitsInfoToUser(const RoomPtr &r);
+    void sendRoomExitsInfoToUser(AnsiOstream &, const RoomHandle &r);
+    void sendRoomExitsInfoToUser(const RoomHandle &r);
 
 protected:
     void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
@@ -356,7 +356,7 @@ public:
 protected:
     void offlineCharacterMove(CommandEnum direction);
     void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
-    void sendRoomInfoToUser(const RoomPtr &);
+    void sendRoomInfoToUser(const RoomHandle &);
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);

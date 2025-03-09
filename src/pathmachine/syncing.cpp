@@ -17,7 +17,7 @@ Syncing::Syncing(PathParameters &in_p,
     : signaler(in_signaler)
     , params(in_p)
     , paths(std::move(moved_paths))
-    , parent(Path::alloc(std::nullopt, this, signaler, std::nullopt))
+    , parent(Path::alloc(RoomHandle{}, this, signaler, std::nullopt))
 {}
 
 void Syncing::virt_receiveRoom(const RoomHandle &in_room)

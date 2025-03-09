@@ -69,7 +69,7 @@ RoomIdSet Map::findAllRooms(const ParseEvent &parseEvent) const
 {
     RoomIdSet result;
     for (const RoomId id : getRooms()) {
-        const RawRoom &room = deref(get_room_ptr(id));
+        const RawRoom &room = deref(find_room_ptr(id));
         if (matches(room, parseEvent)) {
             result.insert(id);
         }
@@ -81,89 +81,79 @@ void Map::getRooms(RoomRecipient &recipient, const ParseEvent &parseEvent) const
 {
     const Map &map = *this;
     if (parseEvent.getServerId() != INVALID_SERVER_ROOMID) {
-        const auto rh = map.findRoomHandle(parseEvent.getServerId());
-        if (rh != std::nullopt) {
-            return recipient.receiveRoom(rh.value());
+        if (const auto rh = map.findRoomHandle(parseEvent.getServerId())) {
+            return recipient.receiveRoom(rh);
         }
     }
     const auto &tree = map.getWorld().getParseTree();
     ::getRooms(map, tree, recipient, parseEvent);
 }
 
-NODISCARD const RawRoom *Map::get_room_ptr(const RoomId id) const
+NODISCARD const RawRoom *Map::find_room_ptr(const RoomId id) const
 {
     return getWorld().getRoom(id);
 }
 
-RoomHandle Map::get_room_handle_unchecked(const RoomId id) const
+RoomHandle Map::findRoomHandle(const RoomId id) const
 {
-    return RoomHandle{*this, get_room_ptr(id)};
-}
-
-RoomHandle Map::getRoomHandle(const RoomId id) const
-{
-    if (getWorld().hasRoom(id)) {
-        return get_room_handle_unchecked(id);
+    if (id != INVALID_ROOMID) {
+        if (const RawRoom *const ptr = find_room_ptr(id)) {
+            return RoomHandle{Badge<Map>{}, *this, ptr};
+        }
     }
-    throw InvalidMapOperation("RoomId not found");
+    return RoomHandle{};
 }
 
-RoomHandle Map::getRoomHandle(const ExternalRoomId id) const
-{
-    if (auto optHandle = findRoomHandle(id)) {
-        return *optHandle;
-    }
-    throw InvalidMapOperation("ExternalRoomId not found");
-}
-
-std::optional<RoomHandle> Map::tryGetRoomHandle(const RoomId id) const
-{
-    if (getWorld().hasRoom(id)) {
-        return get_room_handle_unchecked(id);
-    }
-    return std::nullopt;
-}
-
-const RawRoom &Map::getRawRoom(const RoomId id) const
-{
-    if (auto optRoom = findRoomHandle(id)) {
-        return optRoom->getRaw();
-    }
-    throw InvalidMapOperation("RoomId not found");
-}
-
-RoomPtr Map::findRoomHandle(const RoomId id) const
-{
-    if (id != INVALID_ROOMID && getWorld().hasRoom(id)) {
-        return getRoomHandle(id);
-    }
-    return std::nullopt;
-}
-
-RoomPtr Map::findRoomHandle(const ExternalRoomId ext) const
+RoomHandle Map::findRoomHandle(const ExternalRoomId ext) const
 {
     if (const RoomId id = getWorld().convertToInternal(ext); id != INVALID_ROOMID) {
         return findRoomHandle(id);
     }
-    return std::nullopt;
+    return RoomHandle{};
 }
 
-RoomPtr Map::findRoomHandle(const ServerRoomId serverId) const
+RoomHandle Map::findRoomHandle(const ServerRoomId serverId) const
 {
     if (serverId != INVALID_SERVER_ROOMID) {
         if (auto roomId = getWorld().lookup(serverId)) {
             return findRoomHandle(*roomId);
         }
     }
-    return std::nullopt;
+    return RoomHandle{};
 }
 
-RoomPtr Map::findRoomHandle(const Coordinate &coord) const
+RoomHandle Map::findRoomHandle(const Coordinate &coord) const
 {
     if (auto optRoom = getWorld().findRoom(coord)) {
         return getRoomHandle(*optRoom);
     }
-    return std::nullopt;
+    return RoomHandle{};
+}
+
+RoomHandle Map::getRoomHandle(const RoomId id) const
+{
+    if (auto h = findRoomHandle(id)) {
+        return h;
+    }
+    throw InvalidMapOperation("RoomId not found");
+}
+
+RoomHandle Map::getRoomHandle(const ExternalRoomId id) const
+{
+    if (auto h = findRoomHandle(id)) {
+        return h;
+    }
+    throw InvalidMapOperation("ExternalRoomId not found");
+}
+
+const RawRoom &Map::getRawRoom(const RoomId id) const
+{
+    if (id != INVALID_ROOMID) {
+        if (const RawRoom *const ptr = find_room_ptr(id)) {
+            return deref(ptr);
+        }
+    }
+    throw InvalidMapOperation("RoomId not found");
 }
 
 std::optional<DoorName> Map::findDoorName(const RoomId id, const ExitDirEnum dir) const
@@ -398,10 +388,10 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
                 for (const RoomId real_to : ex.getOutgoingSet()) {
                     const ExternalRoomId to = w.convertToExternal(real_to);
                     os << " ...";
-                    if (const auto &pOther = this->findRoomHandle(to)) {
+                    if (const auto other = this->findRoomHandle(to)) {
                         bool twoWay = false;
                         {
-                            const auto &otherExit = pOther->getExit(rev);
+                            const auto &otherExit = other.getExit(rev);
                             if (otherExit.containsOut(self)) {
                                 twoWay = true;
                             }
@@ -410,7 +400,7 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
                         const bool looping = hereExternal == to;
                         const bool adj = !looping
                                          && room.getPosition() + exitDir(dir)
-                                                == pOther->getPosition();
+                                                == other.getPosition();
 
                         os << (twoWay ? "two" : "one") << "-way ";
                         if (looping) {
@@ -428,11 +418,11 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
                             os << " (";
                             os.writeQuotedWithColor(green,
                                                     yellow,
-                                                    pOther->getName().getStdStringViewUtf8());
+                                                    other.getName().getStdStringViewUtf8());
                             os << ")";
 
                             if (!adj) {
-                                const auto &pos = pOther->getPosition();
+                                const auto &pos = other.getPosition();
                                 os << " at Coordinate(" << pos.x << ", " << pos.y << ", " << pos.z
                                    << ")";
                             }
@@ -1079,15 +1069,15 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
 {
     pc.increaseTotalStepsBy(current.getRoomsCount());
     for (const RoomId id : current.getRooms()) {
-        const auto &r = current.findRoomHandle(id);
+        const auto r = current.findRoomHandle(id);
         if (!r) {
             assert(false);
             continue;
         }
         const auto &prev = saved.findRoomHandle(id);
         // older code failed to check incoming/outgoing connection differences here
-        if (!prev || r->getRaw() != prev->getRaw()) {
-            callback(r->getRaw());
+        if (!prev || r.getRaw() != prev.getRaw()) {
+            callback(r.getRaw());
         }
         pc.step();
     }
@@ -1231,9 +1221,7 @@ NODISCARD static std::vector<std::string> getExitKeywords(const Map &map,
         bool oneWay = false;
         bool hasNoFlee = false;
 
-        if (const auto &optTargetRoom = map.findRoomHandle(targetId)) {
-            const auto &targetRoom = deref(optTargetRoom);
-
+        if (const auto &targetRoom = map.findRoomHandle(targetId)) {
             if (!targetRoom.getExit(opposite(i)).containsOut(sourceId)) {
                 oneWay = true;
             }
@@ -1371,8 +1359,7 @@ void displayExits(AnsiOstream &os, const RoomHandle &r, const char sunCharacter)
             const RoomTerrainEnum sourceTerrain = r.getTerrainType();
             if (!e.outIsEmpty()) {
                 const auto targetId = e.outFirst();
-                if (const auto &optTargetRoom = map.findRoomHandle(targetId)) {
-                    const auto &targetRoom = deref(optTargetRoom);
+                if (const auto &targetRoom = map.findRoomHandle(targetId)) {
                     const RoomTerrainEnum targetTerrain = targetRoom.getTerrainType();
 
                     // Sundeath exit flag modifiers
@@ -1576,8 +1563,9 @@ void testAddAndRemoveIsNoChange()
     TEST_ASSERT(m2.getRoomsCount() == 2);
 
     const auto secondId = [&m2, &secondCoord]() -> RoomId {
-        if (const auto &optR2 = m2.findRoomHandle(secondCoord)) {
-            return optR2->getId();
+        // REVISIT: add should we add Map::findRoomId(Coordinate)?
+        if (const auto r2 = m2.findRoomHandle(secondCoord)) {
+            return r2.getId();
         }
         return INVALID_ROOMID;
     }();

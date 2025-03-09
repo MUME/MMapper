@@ -47,7 +47,7 @@ class NODISCARD ConnectionSelection final : public std::enable_shared_from_this<
 public:
     struct NODISCARD ConnectionDescriptor final
     {
-        RoomPtr room = std::nullopt;
+        RoomHandle room;
         ExitDirEnum direction = ExitDirEnum::NONE;
 
         NODISCARD static bool isTwoWay(const ConnectionDescriptor &first,
@@ -92,8 +92,8 @@ public:
 
     // Valid just means the pointers aren't null.
     NODISCARD bool isValid() const;
-    NODISCARD bool isFirstValid() const { return m_connectionDescriptor[0].room != std::nullopt; }
-    NODISCARD bool isSecondValid() const { return m_connectionDescriptor[1].room != std::nullopt; }
+    NODISCARD bool isFirstValid() const { return m_connectionDescriptor[0].room.exists(); }
+    NODISCARD bool isSecondValid() const { return m_connectionDescriptor[1].room.exists(); }
 
     void receiveRoom(const RoomHandle &);
 

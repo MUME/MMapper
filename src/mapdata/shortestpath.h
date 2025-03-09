@@ -14,7 +14,7 @@
 
 struct NODISCARD SPNode final
 {
-    RoomPtr r = std::nullopt;
+    RoomHandle r;
     int parent = 0;
     double dist = 0.0;
     ExitDirEnum lastdir = ExitDirEnum::NONE;

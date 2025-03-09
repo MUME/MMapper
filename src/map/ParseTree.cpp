@@ -92,8 +92,8 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
     const auto t2 = Clock::now();
     size_t numReported = 0;
     for (const RoomId id : set) {
-        if (const auto &optRoom = map.findRoomHandle(id)) {
-            if (tryReport(*optRoom)) {
+        if (const auto optRoom = map.findRoomHandle(id)) {
+            if (tryReport(optRoom)) {
                 ++numReported;
             }
         }

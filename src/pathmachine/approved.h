@@ -21,7 +21,7 @@ class NODISCARD Approved final : public RoomRecipient
 private:
     SigParseEvent myEvent;
     std::unordered_map<RoomId, ComparisonResultEnum> compareCache;
-    RoomPtr matchedRoom = std::nullopt;
+    RoomHandle matchedRoom;
     MapFrontend &m_map;
     const int matchingTolerance;
     bool moreThanOne = false;
@@ -39,7 +39,7 @@ private:
     void virt_receiveRoom(const RoomHandle &) final;
 
 public:
-    NODISCARD RoomPtr oneMatch() const;
+    NODISCARD RoomHandle oneMatch() const;
     NODISCARD bool needsUpdate() const { return update; }
     void releaseMatch();
 };

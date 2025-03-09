@@ -18,7 +18,7 @@ ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>, MapFrontend
     : m_map{map}
 {
     for (const auto &x : m_connectionDescriptor) {
-        assert(x.room == std::nullopt);
+        assert(!x.room.exists());
     }
 }
 
@@ -28,12 +28,12 @@ ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
     : m_map{map}
 {
     for (const auto &x : m_connectionDescriptor) {
-        assert(x.room == std::nullopt);
+        assert(!x.room.exists());
     }
 
     const Coordinate c = sel.getCoordinate();
     if (const auto room = m_map.findRoomHandle(c)) {
-        this->receiveRoom(deref(room));
+        this->receiveRoom(room);
     }
     m_connectionDescriptor[0].direction = computeDirection(sel.pos);
 }
@@ -43,7 +43,7 @@ ConnectionSelection::~ConnectionSelection() = default;
 bool ConnectionSelection::isValid() const
 {
     for (const auto &x : m_connectionDescriptor) {
-        if (x.room == std::nullopt) {
+        if (!x.room.exists()) {
             return false;
         }
     }
@@ -88,7 +88,7 @@ void ConnectionSelection::setFirst(const RoomId id, const ExitDirEnum dir)
     m_first = true;
     m_connectionDescriptor[0].room.reset();
     if (const auto &room = m_map.findRoomHandle(id)) {
-        this->receiveRoom(deref(room));
+        this->receiveRoom(room);
     }
     m_connectionDescriptor[0].direction = dir;
 }
@@ -99,7 +99,7 @@ void ConnectionSelection::setSecond(const MouseSel &sel)
     const Coordinate c = sel.getCoordinate();
     m_connectionDescriptor[1].room.reset();
     if (const auto &room = m_map.findRoomHandle(c)) {
-        this->receiveRoom(deref(room));
+        this->receiveRoom(room);
     }
     m_connectionDescriptor[1].direction = computeDirection(sel.pos);
 }
@@ -109,7 +109,7 @@ void ConnectionSelection::setSecond(const RoomId id, const ExitDirEnum dir)
     m_first = false;
     m_connectionDescriptor[1].room.reset();
     if (const auto &room = m_map.findRoomHandle(id)) {
-        this->receiveRoom(deref(room));
+        this->receiveRoom(room);
     }
     m_connectionDescriptor[1].direction = dir;
 }
@@ -137,8 +137,8 @@ void ConnectionSelection::receiveRoom(const RoomHandle &room)
 bool ConnectionSelection::ConnectionDescriptor::isTwoWay(const ConnectionDescriptor &first,
                                                          const ConnectionDescriptor &second)
 {
-    const auto &r1 = deref(first.room);
-    const auto &r2 = deref(second.room);
+    const auto &r1 = first.room;
+    const auto &r2 = second.room;
     const auto &exit1 = r1.getExit(first.direction);
     const auto &exit2 = r2.getExit(second.direction);
     const RoomId &id1 = r1.getId();
@@ -149,8 +149,8 @@ bool ConnectionSelection::ConnectionDescriptor::isTwoWay(const ConnectionDescrip
 bool ConnectionSelection::ConnectionDescriptor::isOneWay(const ConnectionDescriptor &first,
                                                          const ConnectionDescriptor &second)
 {
-    const auto &r1 = deref(first.room);
-    const auto &r2 = deref(second.room);
+    const auto &r1 = first.room;
+    const auto &r2 = second.room;
     const ExitDirEnum dir2 = second.direction;
     const auto &exit1 = r1.getExit(first.direction);
     const auto &exit2 = r2.getExit(dir2);

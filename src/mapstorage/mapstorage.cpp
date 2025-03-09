@@ -610,8 +610,8 @@ bool MapStorage::virt_saveData(const RawMapData &mapData)
 
     // save rooms
     progressCounter.setNewTask(ProgressMsg{"saving rooms"}, roomsCount);
-    for (const RoomPtr &pRoom : roomList) {
-        saveRoom(deref(pRoom).getRawCopyExternal(), stream);
+    for (const auto &room : roomList) {
+        saveRoom(room.getRawCopyExternal(), stream);
         progressCounter.step();
     }
 

@@ -137,8 +137,8 @@ bool MmpMapStorage::virt_saveData(const RawMapData &mapData)
 
     // save rooms
     stream.writeStartElement("rooms");
-    for (const RoomPtr &pRoom : roomList) {
-        saveRoom(pRoom->getRawCopyExternal(), stream);
+    for (const auto &room : roomList) {
+        saveRoom(room.getRawCopyExternal(), stream);
         progressCounter.step();
     }
     stream.writeEndElement(); // end rooms

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "../global/Badge.h"
+#include "../global/ConfigConsts.h"
 #include "../global/macros.h"
 #include "Map.h"
 #include "ParseTree.h"
@@ -12,20 +14,29 @@
 class NODISCARD RoomHandle final : public RoomExitFieldsGetters<RoomHandle>
 {
 private:
-    // for access to getRoomFields()
-    friend RoomFieldsGetters<RoomHandle>;
-    // for access to ctor
-    friend Map;
-
-private:
     Map m_map;
     const RawRoom *m_room = nullptr;
 
-private:
-    RoomHandle(Map map, const RawRoom *const room)
+public:
+    // This must be implict for use in std::array.
+    RoomHandle() = default;
+    explicit RoomHandle(Badge<Map>, Map map, const RawRoom *const room)
         : m_map{std::move(map)}
         , m_room{room}
-    {}
+    {
+        if constexpr ((IS_DEBUG_BUILD)) {
+            sanityCheck();
+        }
+    }
+
+public:
+    void reset() { *this = RoomHandle{}; }
+
+public:
+    NODISCARD bool operator==(std::nullopt_t) const = delete;
+    NODISCARD bool operator!=(std::nullopt_t) const = delete;
+    NODISCARD bool operator==(std::nullptr_t) const = delete;
+    NODISCARD bool operator!=(std::nullptr_t) const = delete;
 
 public:
 #define X_DECL_GETTER(Type, Name, Init) NODISCARD Type get##Name() const;
@@ -46,6 +57,9 @@ public:
         return deref(m_room).getId();
     }
     NODISCARD ExternalRoomId getIdExternal() const;
+
+private:
+    void sanityCheck() const;
 
 public:
     NODISCARD bool exists() const;
@@ -85,8 +99,6 @@ public:
     // Can we just remove it and let them call previewRoom()?
     NODISCARD std::string toStdStringUtf8() const;
 };
-
-using RoomPtr = std::optional<RoomHandle>;
 
 template<>
 struct std::hash<RoomHandle>

@@ -142,26 +142,26 @@ void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
     }
 }
 
-void PathMachine::tryExits(const RoomPtr &room,
+void PathMachine::tryExits(const RoomHandle &room,
                            RoomRecipient &recipient,
                            const ParseEvent &event,
                            const bool out)
 {
-    if (room == std::nullopt) {
+    if (!room.exists()) {
         // most likely room doesn't exist
         return;
     }
 
     const CommandEnum move = event.getMoveType();
     if (isDirection7(move)) {
-        const auto &possible = room->getExit(getDirection(move));
+        const auto &possible = room.getExit(getDirection(move));
         tryExit(possible, recipient, out);
     } else {
         // Only check the current room for LOOK
-        m_map.lookingForRooms(recipient, room->getId());
+        m_map.lookingForRooms(recipient, room.getId());
         if (move >= CommandEnum::FLEE) {
             // Only try all possible exits for commands FLEE, SCOUT, and NONE
-            for (const auto &possible : room->getExits()) {
+            for (const auto &possible : room.getExits()) {
                 tryExit(possible, recipient, out);
             }
         }
@@ -175,11 +175,11 @@ void PathMachine::tryExit(const RawExit &possible, RoomRecipient &recipient, con
     }
 }
 
-void PathMachine::tryCoordinate(const RoomPtr &room,
+void PathMachine::tryCoordinate(const RoomHandle &room,
                                 RoomRecipient &recipient,
                                 const ParseEvent &event)
 {
-    if (room == std::nullopt) {
+    if (!room.exists()) {
         // most likely room doesn't exist
         return;
     }
@@ -188,11 +188,11 @@ void PathMachine::tryCoordinate(const RoomPtr &room,
     if (moveCode < CommandEnum::FLEE) {
         // LOOK, UNKNOWN will have an empty offset
         auto offset = ::exitDir(getDirection(moveCode));
-        const Coordinate c = room->getPosition() + offset;
+        const Coordinate c = room.getPosition() + offset;
         m_map.lookingForRooms(recipient, c);
 
     } else {
-        const Coordinate roomPos = room->getPosition();
+        const Coordinate roomPos = room.getPosition();
         // REVISIT: Should this enumerate 6 or 7 values?
         // NOTE: This previously enumerated 8 values instead of 7,
         // which meant it was asking for exitDir(ExitDirEnum::NONE),
@@ -208,35 +208,35 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
 {
     ParseEvent &event = sigParseEvent.deref();
 
-    RoomPtr perhaps;
+    RoomHandle perhaps;
     Approved appr{m_map, sigParseEvent, m_params.matchingTolerance};
 
     if (event.getServerId() != INVALID_SERVER_ROOMID) {
         perhaps = m_map.findRoomHandle(event.getServerId());
-        if (perhaps.has_value()) {
-            appr.receiveRoom(perhaps.value());
+        if (perhaps.exists()) {
+            appr.receiveRoom(perhaps);
         }
         perhaps = appr.oneMatch();
     }
 
     // This code path only happens for historic maps and mazes where no server id is present
-    if (perhaps == std::nullopt) {
+    if (!perhaps) {
         appr.releaseMatch();
 
         tryExits(getMostLikelyRoom(), appr, event, true);
         perhaps = appr.oneMatch();
 
-        if (perhaps == std::nullopt) {
+        if (!perhaps) {
             // try to match by reverse exit
             appr.releaseMatch();
             tryExits(getMostLikelyRoom(), appr, event, false);
             perhaps = appr.oneMatch();
-            if (perhaps == std::nullopt) {
+            if (!perhaps) {
                 // try to match by coordinate
                 appr.releaseMatch();
                 tryCoordinate(getMostLikelyRoom(), appr, event);
                 perhaps = appr.oneMatch();
-                if (perhaps == std::nullopt) {
+                if (!perhaps) {
                     // try to match by coordinate one step below expected
                     appr.releaseMatch();
                     // FIXME: need stronger type checking here.
@@ -259,7 +259,7 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
                             m_map.lookingForRooms(appr, c);
                             perhaps = appr.oneMatch();
 
-                            if (perhaps == std::nullopt) {
+                            if (!perhaps) {
                                 // try to match by coordinate one step above expected
                                 appr.releaseMatch();
                                 c.z += 2;
@@ -273,13 +273,13 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
         }
     }
 
-    if (perhaps == std::nullopt) {
+    if (!perhaps) {
         // couldn't match, give up
         m_state = PathStateEnum::EXPERIMENTING;
         m_pathRoot = m_mostLikelyRoom;
 
-        const RoomPtr &pathRoot = getPathRoot();
-        if (pathRoot == std::nullopt) {
+        const RoomHandle pathRoot = getPathRoot();
+        if (!pathRoot) {
             // What do we do now? "Who cares?"
             return ChangeList{};
         }
@@ -298,11 +298,10 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
     // Update the exit from the previous room to the current room
     const CommandEnum move = event.getMoveType();
     if (isDirectionNESWUD(move)) {
-        if (const RoomPtr &pRoom = getMostLikelyRoom()) {
-            const auto &room = deref(pRoom);
+        if (const auto room = getMostLikelyRoom()) {
             const auto dir = getDirection(move);
             const auto &ex = room.getExit(dir);
-            const auto to = perhaps->getId();
+            const auto to = perhaps.getId();
             if (!ex.containsOut(to)) {
                 const auto from = room.getId();
                 changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
@@ -315,7 +314,7 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
     }
 
     // Update most likely room with player's current location
-    setMostLikelyRoom(perhaps->getId());
+    setMostLikelyRoom(perhaps.getId());
 
     updateMostLikelyRoom(sigParseEvent, changes);
 
@@ -334,8 +333,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent, Chang
     ParseEvent &event = sigParseEvent.deref();
 
     // guaranteed to succeed, since it's set above.
-    const auto pHere = getMostLikelyRoom();
-    const auto &here = deref(pHere);
+    const auto here = getMostLikelyRoom();
 
     // track added ServerIds to prevent multiple allocations
     std::unordered_set<ServerRoomId> addedIds;
@@ -356,8 +354,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent, Chang
             continue;
         }
         const auto &e = here.getExit(dir);
-        if (const auto &pThere = m_map.findRoomHandle(toServerId)) {
-            const auto &there = deref(pThere);
+        if (const auto there = m_map.findRoomHandle(toServerId)) {
             // ServerId already exists
             const auto from = here.getId();
             const auto to = there.getId();
@@ -432,10 +429,10 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
         RoomIdSet pathEnds;
         for (const auto &path : deref(m_paths)) {
             const auto &working = path->getRoom();
-            const RoomId workingId = deref(working).getId();
+            const RoomId workingId = working.getId();
             if (!pathEnds.contains(workingId)) {
                 qInfo() << "creating RoomId" << workingId.asUint32();
-                emit sig_createRoom(sigParseEvent, working->getPosition() + move);
+                emit sig_createRoom(sigParseEvent, working.getPosition() + move);
                 pathEnds.insert(workingId);
             }
         }
@@ -468,8 +465,8 @@ void PathMachine::evaluatePaths()
         return;
     }
 
-    if (const RoomPtr &room = paths.front()->getRoom()) {
-        setMostLikelyRoom(room->getId());
+    if (const auto room = deref(paths.front()).getRoom()) {
+        setMostLikelyRoom(room.getId());
     } else {
         // REVISIT: Should this case set state to SYNCING and then return?
         clearMostLikelyRoom();
@@ -502,19 +499,19 @@ void PathMachine::scheduleAction(const ChangeList &action)
     }
 }
 
-RoomPtr PathMachine::getPathRoot() const
+RoomHandle PathMachine::getPathRoot() const
 {
     if (!m_pathRoot.has_value()) {
-        return std::nullopt;
+        return RoomHandle{};
     }
 
     return m_map.findRoomHandle(m_pathRoot.value());
 }
 
-RoomPtr PathMachine::getMostLikelyRoom() const
+RoomHandle PathMachine::getMostLikelyRoom() const
 {
     if (!m_mostLikelyRoom.has_value()) {
-        return std::nullopt;
+        return RoomHandle{};
     }
 
     return m_map.findRoomHandle(m_mostLikelyRoom.value());
@@ -522,8 +519,8 @@ RoomPtr PathMachine::getMostLikelyRoom() const
 
 RoomId PathMachine::getMostLikelyRoomId() const
 {
-    if (const RoomPtr &room = getMostLikelyRoom()) {
-        return room->getId();
+    if (const auto room = getMostLikelyRoom()) {
+        return room.getId();
     }
 
     return INVALID_ROOMID;
@@ -550,18 +547,18 @@ void PathMachine::publishExternalId()
         return;
     }
 
-    auto room = m_map.findRoomHandle(roomId);
+    const auto room = m_map.findRoomHandle(roomId);
     if (!room) {
         return;
     }
 
-    setCharRoomIdEstimated(room->getServerId(), room->getIdExternal());
+    setCharRoomIdEstimated(room.getServerId(), room.getIdExternal());
 }
 
 std::optional<Coordinate> PathMachine::tryGetMostLikelyRoomPosition() const
 {
-    if (auto room = getMostLikelyRoom()) {
-        return room->getPosition();
+    if (const auto room = getMostLikelyRoom()) {
+        return room.getPosition();
     }
     return std::nullopt;
 }

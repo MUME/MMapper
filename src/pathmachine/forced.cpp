@@ -12,7 +12,7 @@
 
 void Forced::virt_receiveRoom(const RoomHandle &perhaps)
 {
-    if (m_matchedRoom == std::nullopt) {
+    if (!m_matchedRoom) {
         m_matchedRoom = perhaps;
         if (m_update) {
             // Force update room with last event
@@ -26,7 +26,7 @@ void Forced::virt_receiveRoom(const RoomHandle &perhaps)
 
 Forced::~Forced()
 {
-    m_map.releaseRoom(*this, deref(m_matchedRoom).getId());
+    m_map.releaseRoom(*this, m_matchedRoom.getId());
 }
 
 Forced::Forced(MapFrontend &map, const SigParseEvent &sigParseEvent, const bool update)

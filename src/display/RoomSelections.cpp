@@ -173,9 +173,9 @@ void MapCanvas::paintSelectedRooms()
     RoomSelFakeGL gl;
 
     for (const RoomId id : deref(m_roomSelection)) {
-        if (const auto &room = m_data.findRoomHandle(id)) {
+        if (const auto room = m_data.findRoomHandle(id)) {
             gl.resetMatrix();
-            paintSelectedRoom(gl, room->getRaw());
+            paintSelectedRoom(gl, room.getRaw());
         }
     }
 

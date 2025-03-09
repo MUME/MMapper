@@ -94,15 +94,15 @@ NODISCARD static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
 
 NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
 {
-    return deref(cd.room).getPosition().to_vec3() + getConnectionOffset(cd.direction);
+    return cd.room.getPosition().to_vec3() + getConnectionOffset(cd.direction);
 }
 
-NODISCARD static QString getDoorPostFix(const RoomPtr &room, const ExitDirEnum dir)
+NODISCARD static QString getDoorPostFix(const RoomHandle &room, const ExitDirEnum dir)
 {
     static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
                                               | DoorFlagEnum::DELAYED;
 
-    const DoorFlags flags = room->getExit(dir).getDoorFlags();
+    const DoorFlags flags = room.getExit(dir).getDoorFlags();
     if (!flags.containsAny(SHOWN_FLAGS)) {
         return QString{};
     }
@@ -113,10 +113,10 @@ NODISCARD static QString getDoorPostFix(const RoomPtr &room, const ExitDirEnum d
                              flags.isDelayed() ? "d" : "");
 }
 
-NODISCARD static QString getPostfixedDoorName(const RoomPtr &room, const ExitDirEnum dir)
+NODISCARD static QString getPostfixedDoorName(const RoomHandle &room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
-    return room->getExit(dir).getDoorName().toQString() + postFix;
+    return room.getExit(dir).getDoorName().toQString() + postFix;
 }
 
 UniqueMesh RoomNameBatch::getMesh(GLFont &font) const
@@ -681,8 +681,8 @@ void MapCanvas::paintNearbyConnectionPoints()
         for (int dy = -1; dy <= 1; ++dy) {
             for (int dx = -1; dx <= 1; ++dx) {
                 const Coordinate roomCoord = mouse + Coordinate(dx, dy, 0);
-                const auto &room = m_data.findRoomHandle(roomCoord);
-                if (room == std::nullopt) {
+                const auto room = m_data.findRoomHandle(roomCoord);
+                if (!room) {
                     continue;
                 }
 
@@ -692,7 +692,7 @@ void MapCanvas::paintNearbyConnectionPoints()
                 }
 
                 dirs.for_each([&addPoint, &optFirst, &roomCoord, &room](ExitDirEnum dir) -> void {
-                    addPoint(roomCoord, *room, dir, optFirst);
+                    addPoint(roomCoord, room, dir, optFirst);
                 });
             }
         }
@@ -703,7 +703,7 @@ void MapCanvas::paintNearbyConnectionPoints()
         && (m_connectionSelection->isFirstValid() || m_connectionSelection->isSecondValid())) {
         const CD valid = m_connectionSelection->isFirstValid() ? m_connectionSelection->getFirst()
                                                                : m_connectionSelection->getSecond();
-        const Coordinate &c = valid.room->getPosition();
+        const Coordinate &c = valid.room.getPosition();
         const glm::vec3 &pos = c.to_vec3();
         points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.direction));
 

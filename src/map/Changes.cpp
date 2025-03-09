@@ -20,8 +20,8 @@ void connectToNeighbors(ChangeList &changes,
 
     const Map map = room.getMap();
     auto connect = [&add, &map](const RoomId from, const Coordinate &pos, const ExitDirEnum dir) {
-        if (const auto &optRoom = map.findRoomHandle(pos)) {
-            add(from, dir, optRoom->getId());
+        if (const auto optRoom = map.findRoomHandle(pos)) {
+            add(from, dir, optRoom.getId());
         }
     };
 

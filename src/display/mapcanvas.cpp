@@ -160,8 +160,7 @@ void MapCanvas::slot_setRoomSelection(const SigRoomSelection &selection)
 
         qDebug() << "Updated selection with" << sel.size() << "rooms";
         if (sel.size() == 1) {
-            if (const RoomPtr &ptr = map.findRoomHandle(sel.getFirstRoomId())) {
-                const auto &r = deref(ptr);
+            if (const auto r = map.findRoomHandle(sel.getFirstRoomId())) {
                 auto message = mmqt::previewRoom(r,
                                                  mmqt::StripAnsiEnum::Yes,
                                                  mmqt::PreviewStyleEnum::ForLog);
@@ -497,8 +496,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 const auto pos = glm::mix(near, far, t);
                 assert(static_cast<int>(std::lround(pos.z)) == z);
                 const Coordinate c2 = MouseSel{Coordinate2f{pos.x, pos.y}, z}.getCoordinate();
-                if (const RoomPtr &r = m_data.findRoomHandle(c2)) {
-                    tmpSel.insert(deref(r).getId());
+                if (const auto r = m_data.findRoomHandle(c2)) {
+                    tmpSel.insert(r.getId());
                 }
             }
 
@@ -520,9 +519,9 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Select rooms
         if (hasLeftButton && hasSel1()) {
             if (!hasCtrl) {
-                const RoomPtr pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
-                if (pRoom != std::nullopt && m_roomSelection != nullptr
-                    && m_roomSelection->contains(deref(pRoom).getId())) {
+                const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
+                if (pRoom.exists() && m_roomSelection != nullptr
+                    && m_roomSelection->contains(pRoom.getId())) {
                     m_roomSelectionMove.emplace(RoomSelMove{});
                 } else {
                     m_roomSelectionMove.reset();
@@ -562,7 +561,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 const auto &r1 = m_connectionSelection->getFirst().room;
                 const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
 
-                if (r1->getExit(dir1).outIsEmpty()) {
+                if (r1.getExit(dir1).outIsEmpty()) {
                     m_connectionSelection = nullptr;
                 }
             }
@@ -665,7 +664,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                         const Coordinate &here = map.getRoomHandle(id).getPosition();
                         const Coordinate target = here + offset;
                         if (const auto &other = map.findRoomHandle(target)) {
-                            if (!sel.contains(other->getId())) {
+                            if (!sel.contains(other.getId())) {
                                 return false;
                             }
                         }
@@ -793,9 +792,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         // Display a room info tooltip if there was no mouse movement
         if (hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
-            if (const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate())) {
-                const auto &room = deref(pRoom);
-
+            if (const auto room = m_data.findRoomHandle(getSel1().getCoordinate())) {
                 // Tooltip doesn't support ANSI, and there's no way to add formatted text.
                 auto message = mmqt::previewRoom(room,
                                                  mmqt::StripAnsiEnum::Yes,
@@ -882,12 +879,12 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const auto &r1 = first.room;
                 const auto &r2 = second.room;
 
-                if (r1.has_value() && r2.has_value()) {
+                if (r1.exists() && r2.exists()) {
                     const ExitDirEnum dir1 = first.direction;
                     const ExitDirEnum dir2 = second.direction;
 
-                    const RoomId id1 = r1->getId();
-                    const RoomId id2 = r2->getId();
+                    const RoomId id1 = r1.getId();
+                    const RoomId id2 = r2.getId();
 
                     const bool isCompleteNew = m_connectionSelection->isCompleteNew();
                     m_connectionSelection = nullptr;

@@ -363,8 +363,13 @@ static ChangeList buildChangelist(ProgressCounter &pc,
     std::map<RoomId, RoomNote> notes;
     pc.increaseTotalStepsBy(sanitizeOutput.removedDoors.size());
     for (const auto &x : sanitizeOutput.removedDoors) {
-        const auto &pRoom = base.findRoomHandle(x.room);
-        if (!pRoom || x.name.empty()) {
+        if (x.name.empty()) {
+            assert(false);
+            continue;
+        }
+
+        const auto room = base.findRoomHandle(x.room);
+        if (!room) {
             assert(false);
             continue;
         }
@@ -377,7 +382,6 @@ static ChangeList buildChangelist(ProgressCounter &pc,
             continue;
         }
 
-        const auto &room = deref(pRoom);
         RoomNote before = [&notes, &room]() -> RoomNote {
             if (const auto it = notes.find(room.getId()); it != notes.end()) {
                 return it->second;
@@ -403,12 +407,11 @@ static ChangeList buildChangelist(ProgressCounter &pc,
     std::map<RoomId, Coordinate> movedRooms;
     pc.increaseTotalStepsBy(sanitizeOutput.movedRooms.size());
     for (const MovedRoom &x : sanitizeOutput.movedRooms) {
-        const auto &pRoom = base.findRoomHandle(x.room);
-        if (!pRoom) {
+        const auto room = base.findRoomHandle(x.room);
+        if (!room) {
             assert(false);
             continue;
         }
-        const auto &room = deref(pRoom);
         movedRooms[room.getId()] = x.original;
         pc.step();
     }

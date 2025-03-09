@@ -262,14 +262,14 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         case ColumnTypeEnum::ROOM_NAME: {
             const ServerRoomId srvId = character.getServerId();
             if (srvId != INVALID_SERVER_ROOMID && m_mapLoaded) {
-                if (const auto &r = m_map->findRoomHandle(srvId)) {
-                    return r->getName().toQString();
+                if (const auto r = deref(m_map).findRoomHandle(srvId)) {
+                    return r.getName().toQString();
                 }
             }
             const ExternalRoomId extId = character.getExternalId();
             if (extId != INVALID_EXTERNAL_ROOMID && m_mapLoaded) {
-                if (const auto &r = m_map->findRoomHandle(extId)) {
-                    return r->getName().toQString();
+                if (const auto r = deref(m_map).findRoomHandle(extId)) {
+                    return r.getName().toQString();
                 }
             }
             return "Unknown";
@@ -435,15 +435,15 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
                 const auto worldPos = [&character, this]() -> std::optional<glm::vec2> {
                     const ServerRoomId srvId = character.getServerId();
                     if (srvId != INVALID_SERVER_ROOMID) {
-                        if (const auto &r = m_map->findRoomHandle(srvId)) {
-                            const Coordinate &c = r->getPosition();
+                        if (const auto r = m_map->findRoomHandle(srvId)) {
+                            const Coordinate &c = r.getPosition();
                             return c.to_vec2() + glm::vec2{0.5f, 0.5f};
                         }
                     }
                     const ExternalRoomId extId = character.getExternalId();
                     if (extId != INVALID_EXTERNAL_ROOMID) {
-                        if (const auto &r = m_map->findRoomHandle(extId)) {
-                            const Coordinate &c = r->getPosition();
+                        if (const auto r = m_map->findRoomHandle(extId)) {
+                            const Coordinate &c = r.getPosition();
                             return c.to_vec2() + glm::vec2{0.5f, 0.5f};
                         }
                     }

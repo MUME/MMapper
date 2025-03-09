@@ -167,46 +167,46 @@ struct NODISCARD IRoomVisitorCallbacks
     virtual ~IRoomVisitorCallbacks();
 
 private:
-    NODISCARD virtual bool virt_acceptRoom(const RoomPtr &) const = 0;
+    NODISCARD virtual bool virt_acceptRoom(const RoomHandle &) const = 0;
 
 private:
     // Rooms
-    virtual void virt_visitTerrainTexture(const RoomPtr &, MMTextureId) = 0;
-    virtual void virt_visitTrailTexture(const RoomPtr &, MMTextureId) = 0;
-    virtual void virt_visitOverlayTexture(const RoomPtr &, MMTextureId) = 0;
-    virtual void virt_visitNamedColorTint(const RoomPtr &, RoomTintEnum) = 0;
+    virtual void virt_visitTerrainTexture(const RoomHandle &, MMTextureId) = 0;
+    virtual void virt_visitTrailTexture(const RoomHandle &, MMTextureId) = 0;
+    virtual void virt_visitOverlayTexture(const RoomHandle &, MMTextureId) = 0;
+    virtual void virt_visitNamedColorTint(const RoomHandle &, RoomTintEnum) = 0;
 
     // Walls
     virtual void virt_visitWall(
-        const RoomPtr &, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
+        const RoomHandle &, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
         = 0;
 
     // Streams
-    virtual void virt_visitStream(const RoomPtr &, ExitDirEnum, StreamTypeEnum) = 0;
+    virtual void virt_visitStream(const RoomHandle &, ExitDirEnum, StreamTypeEnum) = 0;
 
 public:
-    NODISCARD bool acceptRoom(const RoomPtr &room) const { return virt_acceptRoom(room); }
+    NODISCARD bool acceptRoom(const RoomHandle &room) const { return virt_acceptRoom(room); }
 
     // Rooms
-    void visitTerrainTexture(const RoomPtr &room, const MMTextureId tex)
+    void visitTerrainTexture(const RoomHandle &room, const MMTextureId tex)
     {
         virt_visitTerrainTexture(room, tex);
     }
-    void visitTrailTexture(const RoomPtr &room, const MMTextureId tex)
+    void visitTrailTexture(const RoomHandle &room, const MMTextureId tex)
     {
         virt_visitTrailTexture(room, tex);
     }
-    void visitOverlayTexture(const RoomPtr &room, const MMTextureId tex)
+    void visitOverlayTexture(const RoomHandle &room, const MMTextureId tex)
     {
         virt_visitOverlayTexture(room, tex);
     }
-    void visitNamedColorTint(const RoomPtr &room, const RoomTintEnum tint)
+    void visitNamedColorTint(const RoomHandle &room, const RoomTintEnum tint)
     {
         virt_visitNamedColorTint(room, tint);
     }
 
     // Walls
-    void visitWall(const RoomPtr &room,
+    void visitWall(const RoomHandle &room,
                    const ExitDirEnum dir,
                    const XNamedColor &color,
                    const WallTypeEnum wallType,
@@ -216,7 +216,7 @@ public:
     }
 
     // Streams
-    void visitStream(const RoomPtr &room, const ExitDirEnum dir, StreamTypeEnum streamType)
+    void visitStream(const RoomHandle &room, const ExitDirEnum dir, StreamTypeEnum streamType)
     {
         virt_visitStream(room, dir, streamType);
     }
@@ -224,7 +224,7 @@ public:
 
 IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
 
-static void visitRoom(const RoomPtr &room,
+static void visitRoom(const RoomHandle &room,
                       const mctp::MapCanvasTexturesProxy &textures,
                       IRoomVisitorCallbacks &callbacks,
                       const VisitRoomOptions &visitRoomOptions)
@@ -233,13 +233,13 @@ static void visitRoom(const RoomPtr &room,
         return;
     }
 
-    // const auto &pos = room->getPosition();
-    const bool isDark = room->getLightType() == RoomLightEnum::DARK;
-    const bool hasNoSundeath = room->getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
-    const bool notRideable = room->getRidableType() == RoomRidableEnum::NOT_RIDABLE;
-    const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room->getRaw());
-    const RoomMobFlags mf = room->getMobFlags();
-    const RoomLoadFlags lf = room->getLoadFlags();
+    // const auto &pos = room.getPosition();
+    const bool isDark = room.getLightType() == RoomLightEnum::DARK;
+    const bool hasNoSundeath = room.getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
+    const bool notRideable = room.getRidableType() == RoomRidableEnum::NOT_RIDABLE;
+    const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room.getRaw());
+    const RoomMobFlags mf = room.getMobFlags();
+    const RoomLoadFlags lf = room.getLoadFlags();
 
     callbacks.visitTerrainTexture(room, terrainAndTrail.terrain);
 
@@ -265,7 +265,7 @@ static void visitRoom(const RoomPtr &room,
         callbacks.visitOverlayTexture(room, textures.no_ride);
     }
 
-    const Map &map = room->getMap();
+    const Map &map = room.getMap();
     const auto drawInFlow = [&map, &room, &callbacks](const RawExit &exit,
                                                       const ExitDirEnum &dir) -> void {
         // For each incoming connections
@@ -274,7 +274,7 @@ static void visitRoom(const RoomPtr &room,
             for (const ExitDirEnum targetDir : ALL_EXITS_NESWUD) {
                 const auto &targetExit = targetRoom.getExit(targetDir);
                 const ExitFlags flags = targetExit.getExitFlags();
-                if (flags.isFlow() && targetExit.containsOut(room->getId())) {
+                if (flags.isFlow() && targetExit.containsOut(room.getId())) {
                     callbacks.visitStream(room, dir, StreamTypeEnum::InFlow);
                     return;
                 }
@@ -287,7 +287,7 @@ static void visitRoom(const RoomPtr &room,
     // FIXME: This requires a map update.
     // REVISIT: The logic of drawNotMappedExits seems a bit wonky.
     for (const ExitDirEnum dir : ALL_EXITS_NESW) {
-        const auto &exit = room->getExit(dir);
+        const auto &exit = room.getExit(dir);
         const ExitFlags flags = exit.getExitFlags();
         const auto isExit = flags.isExit();
         const auto isDoor = flags.isDoor();
@@ -347,7 +347,7 @@ static void visitRoom(const RoomPtr &room,
 
     // drawVertical
     for (const ExitDirEnum dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
-        const auto &exit = room->getExit(dir);
+        const auto &exit = room.getExit(dir);
         const auto &flags = exit.getExitFlags();
         if (!flags.isExit()) {
             continue;
@@ -409,22 +409,22 @@ static void visitRooms(const RoomVector &rooms,
 
 struct NODISCARD RoomTex
 {
-    RoomPtr room = std::nullopt;
+    RoomHandle room;
     MMTextureId tex = INVALID_MM_TEXTURE_ID;
 
-    explicit RoomTex(const RoomPtr &room_, const MMTextureId tex_)
-        : room{room_}
-        , tex{tex_}
+    explicit RoomTex(RoomHandle moved_room, const MMTextureId input_texid)
+        : room{std::move(moved_room)}
+        , tex{input_texid}
     {
-        if (tex_ == INVALID_MM_TEXTURE_ID) {
-            throw std::invalid_argument("tex_");
+        if (input_texid == INVALID_MM_TEXTURE_ID) {
+            throw std::invalid_argument("input_texid");
         }
     }
 
     NODISCARD MMTextureId priority() const { return tex; }
     NODISCARD MMTextureId textureId() const { return tex; }
 
-    friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
+    NODISCARD friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
     {
         // true if lhs comes strictly before rhs
         return lhs.priority() < rhs.priority();
@@ -434,11 +434,13 @@ struct NODISCARD RoomTex
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
-    ColoredRoomTex(const RoomPtr &room, const MMTextureId tex) = delete;
+    ColoredRoomTex(const RoomHandle &room, const MMTextureId tex) = delete;
 
-    explicit ColoredRoomTex(const RoomPtr &room_, const MMTextureId tex_, const Color &color_)
-        : RoomTex{room_, tex_}
-        , color{color_}
+    explicit ColoredRoomTex(RoomHandle moved_room,
+                            const MMTextureId input_texid,
+                            const Color &input_color)
+        : RoomTex{std::move(moved_room), input_texid}
+        , color{input_color}
     {}
 };
 
@@ -566,7 +568,7 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(const std::string_v
         // | |  ccw winding
         // A-B
         for (size_t i = beg; i < end; ++i) {
-            const auto &pos = textures[i].room->getPosition();
+            const auto &pos = textures[i].room.getPosition();
             const auto v0 = pos.to_vec3();
 #define EMIT(x, y) verts.emplace_back(glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0))
             EMIT(0, 0);
@@ -614,7 +616,7 @@ NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
         // A-B
         for (size_t i = beg; i < end; ++i) {
             const ColoredRoomTex &thisVert = textures[i];
-            const auto &pos = thisVert.room->getPosition();
+            const auto &pos = thisVert.room.getPosition();
             const auto v0 = pos.to_vec3();
             const auto color = thisVert.color;
 
@@ -722,12 +724,12 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchBuilder);
 
 private:
-    NODISCARD bool virt_acceptRoom(const RoomPtr &room) const final
+    NODISCARD bool virt_acceptRoom(const RoomHandle &room) const final
     {
-        return m_bounds.contains(room->getPosition());
+        return m_bounds.contains(room.getPosition());
     }
 
-    void virt_visitTerrainTexture(const RoomPtr &room, const MMTextureId terrain) final
+    void virt_visitTerrainTexture(const RoomHandle &room, const MMTextureId terrain) final
     {
         if (terrain == INVALID_MM_TEXTURE_ID) {
             return;
@@ -735,7 +737,7 @@ private:
 
         m_data.roomTerrains.emplace_back(room, terrain);
 
-        const auto v0 = room->getPosition().to_vec3();
+        const auto v0 = room.getPosition().to_vec3();
 #define EMIT(x, y) m_data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
@@ -744,23 +746,23 @@ private:
 #undef EMIT
     }
 
-    void virt_visitTrailTexture(const RoomPtr &room, const MMTextureId trail) final
+    void virt_visitTrailTexture(const RoomHandle &room, const MMTextureId trail) final
     {
         if (trail != INVALID_MM_TEXTURE_ID) {
             m_data.roomTrails.emplace_back(room, trail);
         }
     }
 
-    void virt_visitOverlayTexture(const RoomPtr &room, const MMTextureId overlay) final
+    void virt_visitOverlayTexture(const RoomHandle &room, const MMTextureId overlay) final
     {
         if (overlay != INVALID_MM_TEXTURE_ID) {
             m_data.roomOverlays.emplace_back(room, overlay);
         }
     }
 
-    void virt_visitNamedColorTint(const RoomPtr &room, const RoomTintEnum tint) final
+    void virt_visitNamedColorTint(const RoomHandle &room, const RoomTintEnum tint) final
     {
-        const auto v0 = room->getPosition().to_vec3();
+        const auto v0 = room.getPosition().to_vec3();
 #define EMIT(x, y) m_data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
@@ -769,7 +771,7 @@ private:
 #undef EMIT
     }
 
-    void virt_visitWall(const RoomPtr &room,
+    void virt_visitWall(const RoomHandle &room,
                         const ExitDirEnum dir,
                         const XNamedColor &color,
                         const WallTypeEnum wallType,
@@ -815,7 +817,7 @@ private:
         }
     }
 
-    void virt_visitStream(const RoomPtr &room,
+    void virt_visitStream(const RoomHandle &room,
                           const ExitDirEnum dir,
                           const StreamTypeEnum type) final
     {

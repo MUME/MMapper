@@ -68,16 +68,16 @@ DoorName MapData::getDoorName(const RoomId id, const ExitDirEnum dir)
 ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
 {
     if (const auto room = findRoomHandle(pos)) {
-        return computeExitDirections(room->getRaw());
+        return computeExitDirections(room.getRaw());
     }
     return {};
 }
 
 template<typename Callback>
-static void walk_path(const RoomHandle input_room, const CommandQueue &dirs, Callback &&callback)
+static void walk_path(const RoomHandle &input_room, const CommandQueue &dirs, Callback &&callback)
 {
     const auto &map = input_room.getMap();
-    auto room = input_room;
+    auto room = input_room; // Caution: This is reassigned below.
     for (const CommandEnum cmd : dirs) {
         if (cmd == CommandEnum::LOOK) {
             continue;
@@ -117,10 +117,8 @@ std::vector<Coordinate> MapData::getPath(const RoomId start, const CommandQueue 
     ret.reserve(static_cast<size_t>(dirs.size()));
 
     const Map &map = getCurrentMap();
-    if (const auto &optRoom = map.findRoomHandle(start)) {
-        walk_path(*optRoom, dirs, [&ret](const RawRoom &room) {
-            ret.push_back(room.getPosition());
-        });
+    if (const auto from = map.findRoomHandle(start)) {
+        walk_path(from, dirs, [&ret](const RawRoom &room) { ret.push_back(room.getPosition()); });
     }
     return ret;
 }
@@ -133,8 +131,8 @@ std::optional<RoomId> MapData::getLast(const RoomId start, const CommandQueue &d
 
     std::optional<RoomId> ret;
     const Map &map = getCurrentMap();
-    if (const auto &pRoom = map.findRoomHandle(start)) {
-        walk_path(*pRoom, dirs, [&ret](const RawRoom &room) { ret = room.getId(); });
+    if (const auto from = map.findRoomHandle(start)) {
+        walk_path(from, dirs, [&ret](const RawRoom &room) { ret = room.getId(); });
     }
     return ret;
 }
@@ -149,8 +147,8 @@ void MapData::applyChangesToList(const RoomSelection &sel,
 {
     ChangeList changes;
     for (const RoomId id : sel) {
-        if (const auto &ptr = findRoomHandle(id)) {
-            changes.add(callback(ptr->getRaw()));
+        if (const auto ptr = findRoomHandle(id)) {
+            changes.add(callback(ptr.getRaw()));
         }
     }
     applyChanges(changes);

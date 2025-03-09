@@ -26,8 +26,9 @@ Experimenting::~Experimenting() = default;
 
 void Experimenting::augmentPath(const std::shared_ptr<Path> &path, const RoomHandle &room)
 {
-    const Coordinate c = path->getRoom()->getPosition() + direction;
-    const auto working = path->fork(room, c, params, this, dirCode);
+    auto &p = deref(path);
+    const Coordinate c = p.getRoom().getPosition() + direction;
+    const auto working = p.fork(room, c, params, this, dirCode);
     if (best == nullptr) {
         best = working;
     } else if (working->getProb() > best->getProb()) {

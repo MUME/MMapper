@@ -18,11 +18,11 @@ Approved::Approved(MapFrontend &map, const SigParseEvent &sigParseEvent, const i
 
 Approved::~Approved()
 {
-    if (matchedRoom != std::nullopt) {
+    if (matchedRoom) {
         if (moreThanOne) {
-            m_map.releaseRoom(*this, matchedRoom->getId());
+            m_map.releaseRoom(*this, matchedRoom.getId());
         } else {
-            m_map.keepRoom(*this, matchedRoom->getId());
+            m_map.keepRoom(*this, matchedRoom.getId());
         }
     }
 }
@@ -48,9 +48,9 @@ void Approved::virt_receiveRoom(const RoomHandle &perhaps)
         return;
     }
 
-    if (matchedRoom != std::nullopt) {
+    if (matchedRoom) {
         // moreThanOne should only take effect if multiple distinct rooms match
-        if (matchedRoom->getId() != id) {
+        if (matchedRoom.getId() != id) {
             moreThanOne = true;
         }
         m_map.releaseRoom(*this, id);
@@ -63,18 +63,19 @@ void Approved::virt_receiveRoom(const RoomHandle &perhaps)
     }
 }
 
-RoomPtr Approved::oneMatch() const
+RoomHandle Approved::oneMatch() const
 {
-    return moreThanOne ? std::nullopt : matchedRoom;
+    // Note the logic: If there's more than one, then we return nothing.
+    return moreThanOne ? RoomHandle{} : matchedRoom;
 }
 
 void Approved::releaseMatch()
 {
     // Release the current candidate in order to receive additional candidates
-    if (matchedRoom != std::nullopt) {
-        m_map.releaseRoom(*this, matchedRoom->getId());
+    if (matchedRoom) {
+        m_map.releaseRoom(*this, matchedRoom.getId());
     }
     update = false;
-    matchedRoom = std::nullopt;
+    matchedRoom.reset();
     moreThanOne = false;
 }

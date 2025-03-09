@@ -50,7 +50,7 @@ namespace mctp {
 struct MapCanvasTexturesProxy;
 }
 
-using ConstRoomList = std::vector<RoomPtr>;
+using ConstRoomList = std::vector<RoomHandle>;
 
 class NODISCARD_QOBJECT MapData final : public MapFrontend
 {
@@ -77,18 +77,18 @@ public:
 
     NODISCARD std::optional<RoomId> getCurrentRoomId() const { return m_selectedRoom; }
 
-    NODISCARD std::optional<RoomHandle> getCurrentRoom() const
+    NODISCARD RoomHandle getCurrentRoom() const
     {
         if (m_selectedRoom) {
             return findRoomHandle(*m_selectedRoom);
         }
-        return std::nullopt;
+        return RoomHandle{};
     }
 
     NODISCARD std::optional<Coordinate> tryGetPosition() const
     {
         if (const auto &opt_room = getCurrentRoom()) {
-            return opt_room->getPosition();
+            return opt_room.getPosition();
         }
         return std::nullopt;
     }
@@ -175,7 +175,7 @@ public:
     void setPosition(const Coordinate &pos)
     {
         if (const auto &room = findRoomHandle(pos)) {
-            setRoom(room->getId());
+            setRoom(room.getId());
         } else {
             auto before = m_selectedRoom;
             clearSelectedRoom();
@@ -198,7 +198,7 @@ public:
     void forcePosition(const Coordinate &pos)
     {
         if (const auto &room = findRoomHandle(pos)) {
-            forceToRoom(room->getId());
+            forceToRoom(room.getId());
         } else {
             auto before = m_selectedRoom;
             clearSelectedRoom();

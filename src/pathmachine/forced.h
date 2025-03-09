@@ -15,7 +15,7 @@ class NODISCARD Forced final : public RoomRecipient
 {
 private:
     MapFrontend &m_map;
-    RoomPtr m_matchedRoom = std::nullopt;
+    RoomHandle m_matchedRoom;
     SigParseEvent m_myEvent;
     bool m_update = false;
 
@@ -29,5 +29,5 @@ private:
     void virt_receiveRoom(const RoomHandle &) final;
 
 public:
-    NODISCARD RoomPtr oneMatch() const { return m_matchedRoom; }
+    NODISCARD RoomHandle oneMatch() const { return m_matchedRoom; }
 };

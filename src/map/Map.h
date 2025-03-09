@@ -58,20 +58,25 @@ public:
     NODISCARD RoomIdSet findAllRooms(const ParseEvent &) const;
 
 private:
-    NODISCARD const RawRoom *get_room_ptr(RoomId id) const;
-    NODISCARD RoomHandle get_room_handle_unchecked(RoomId id) const;
+    NODISCARD const RawRoom *find_room_ptr(RoomId id) const;
+
+public:
+    // Semantics: "findRoomHandle()" functions can return an invalid handle;
+    // maybe these should be called "lookup()"?
+    NODISCARD RoomHandle findRoomHandle(RoomId id) const;
+    NODISCARD RoomHandle findRoomHandle(ExternalRoomId id) const;
+    NODISCARD RoomHandle findRoomHandle(ServerRoomId id) const;
+    NODISCARD RoomHandle findRoomHandle(const Coordinate &coord) const;
+
+public:
+    // Semantics: "getRoomHandle()" functions throw if the handle is invalid;
+    // use these when you demand that the value must exist.
+    // It would probably help to have a better name distinction than find() vs get().
+    NODISCARD RoomHandle getRoomHandle(RoomId id) const;
+    NODISCARD RoomHandle getRoomHandle(ExternalRoomId id) const;
 
 public:
     NODISCARD const RawRoom &getRawRoom(RoomId id) const;
-    NODISCARD std::optional<RoomHandle> findRoomHandle(RoomId id) const;
-    NODISCARD std::optional<RoomHandle> findRoomHandle(ExternalRoomId id) const;
-    NODISCARD std::optional<RoomHandle> findRoomHandle(ServerRoomId id) const;
-    NODISCARD std::optional<RoomHandle> findRoomHandle(const Coordinate &coord) const;
-
-public:
-    NODISCARD RoomHandle getRoomHandle(RoomId id) const;
-    NODISCARD RoomHandle getRoomHandle(ExternalRoomId id) const;
-    NODISCARD std::optional<RoomHandle> tryGetRoomHandle(RoomId id) const;
 
 public:
     NODISCARD std::optional<DoorName> findDoorName(RoomId id, ExitDirEnum dir) const;

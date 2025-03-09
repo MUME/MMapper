@@ -29,15 +29,25 @@ struct PathParameters;
 
 class NODISCARD Path final : public std::enable_shared_from_this<Path>
 {
+private:
+    std::shared_ptr<Path> m_parent;
+    std::vector<std::weak_ptr<Path>> m_children;
+    double m_probability = 1.0;
+    // in fact a path only has one room, one parent and some children (forks).
+    const RoomHandle m_room;
+    RoomSignalHandler *const m_signaler;
+    const std::optional<ExitDirEnum> m_dir;
+    bool m_zombie = false;
+
 public:
-    static std::shared_ptr<Path> alloc(const RoomPtr &room,
+    static std::shared_ptr<Path> alloc(const RoomHandle &room,
                                        RoomRecipient *locker,
                                        RoomSignalHandler *signaler,
                                        std::optional<ExitDirEnum> direction);
 
 public:
     explicit Path(Badge<Path>,
-                  const RoomPtr &room,
+                  RoomHandle moved_room,
                   RoomRecipient *locker,
                   RoomSignalHandler *signaler,
                   std::optional<ExitDirEnum> direction);
@@ -51,14 +61,14 @@ public:
         assert(!m_zombie);
         return !m_children.empty();
     }
-    NODISCARD RoomPtr getRoom() const
+    NODISCARD RoomHandle getRoom() const
     {
         assert(!m_zombie);
         return m_room;
     }
 
     // new Path is created, distance between rooms is calculated and probability is set accordingly
-    NODISCARD std::shared_ptr<Path> fork(const RoomPtr &room,
+    NODISCARD std::shared_ptr<Path> fork(const RoomHandle &room,
                                          const Coordinate &expectedCoordinate,
                                          const PathParameters &params,
                                          RoomRecipient *locker,
@@ -83,16 +93,6 @@ public:
         assert(!m_zombie);
         return m_parent;
     }
-
-private:
-    std::shared_ptr<Path> m_parent;
-    std::vector<std::weak_ptr<Path>> m_children;
-    double m_probability = 1.0;
-    // in fact a path only has one room, one parent and some children (forks).
-    const RoomPtr m_room;
-    RoomSignalHandler *const m_signaler;
-    const std::optional<ExitDirEnum> m_dir;
-    bool m_zombie = false;
 };
 
 struct NODISCARD PathList : public std::list<std::shared_ptr<Path>>,

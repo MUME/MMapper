@@ -912,8 +912,8 @@ bool MainWindow::slot_generateBaseMap()
                     }
                     seen.insert(maybe);
                     const auto oldr = oldMap.findRoomHandle(maybe);
-                    for (auto ex : deref(oldr).getExits()) {
-                        for (auto to : ex.outgoing) {
+                    for (const auto &ex : oldr.getExits()) {
+                        for (const auto to : ex.outgoing) {
                             if (!seen.contains(to)) {
                                 todo.push_back(to);
                             }
@@ -972,14 +972,14 @@ bool MainWindow::slot_generateBaseMap()
                     aos << " from ";
                     aos.writeQuotedWithColor(green,
                                              yellow,
-                                             deref(oldMap.findRoomHandle(*pOldRoom))
+                                             oldMap.findRoomHandle(*pOldRoom)
                                                  .getName()
                                                  .getStdStringViewUtf8());
                 }
                 aos << " to ";
                 aos.writeQuotedWithColor(green,
                                          yellow,
-                                         deref(newMap.findRoomHandle(*pNewRoom))
+                                         newMap.findRoomHandle(*pNewRoom)
                                              .getName()
                                              .getStdStringViewUtf8());
                 aos << ".\n";

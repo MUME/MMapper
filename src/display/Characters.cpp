@@ -389,8 +389,8 @@ void MapCanvas::paintCharacters()
     [this, &characterBatch]() {
         if (const std::optional<RoomId> opt_pos = m_data.getCurrentRoomId()) {
             const auto &id = opt_pos.value();
-            if (const auto &room = m_data.findRoomHandle(id)) {
-                const auto &pos = room->getPosition();
+            if (const auto room = m_data.findRoomHandle(id)) {
+                const auto &pos = room.getPosition();
                 // draw the characters before the current position
                 characterBatch.incrementCount(pos);
                 drawGroupCharacters(characterBatch);
@@ -439,7 +439,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
             continue;
         }
 
-        const auto &r = [&character, &map]() -> RoomPtr {
+        const auto &r = [&character, &map]() -> RoomHandle {
             const ServerRoomId srvId = character.getServerId();
             if (srvId != INVALID_SERVER_ROOMID) {
                 if (const auto &room = map.findRoomHandle(srvId)) {
@@ -452,16 +452,16 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
                     return room;
                 }
             }
-            return std::nullopt;
+            return RoomHandle{};
         }();
 
         // Do not draw the character if they're in an "Unknown" room
-        if (!r.has_value()) {
+        if (!r) {
             continue;
         }
 
-        const RoomId id = r->getId();
-        const auto &pos = r->getPosition();
+        const RoomId id = r.getId();
+        const auto &pos = r.getPosition();
         const auto color = Color{character.getColor()};
         const bool fill = !drawnRoomIds.contains(id);
         const auto prespam = m_data.getPath(id, character.prespam);

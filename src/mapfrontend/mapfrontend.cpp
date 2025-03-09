@@ -97,22 +97,22 @@ void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
     }
 }
 
-RoomPtr MapFrontend::findRoomHandle(RoomId id) const
+RoomHandle MapFrontend::findRoomHandle(RoomId id) const
 {
     return getCurrentMap().findRoomHandle(id);
 }
 
-RoomPtr MapFrontend::findRoomHandle(const Coordinate &coord) const
+RoomHandle MapFrontend::findRoomHandle(const Coordinate &coord) const
 {
     return getCurrentMap().findRoomHandle(coord);
 }
 
-RoomPtr MapFrontend::findRoomHandle(const ExternalRoomId id) const
+RoomHandle MapFrontend::findRoomHandle(const ExternalRoomId id) const
 {
     return getCurrentMap().findRoomHandle(id);
 }
 
-RoomPtr MapFrontend::findRoomHandle(const ServerRoomId id) const
+RoomHandle MapFrontend::findRoomHandle(const ServerRoomId id) const
 {
     return getCurrentMap().findRoomHandle(id);
 }
@@ -129,8 +129,8 @@ const RawRoom &MapFrontend::getRawRoom(const RoomId id) const
 
 RoomIdSet MapFrontend::findAllRooms(const Coordinate &coord) const
 {
-    if (auto pRoom = findRoomHandle(coord)) {
-        return RoomIdSet{deref(pRoom).getId()};
+    if (const auto room = findRoomHandle(coord)) {
+        return RoomIdSet{room.getId()};
     }
     return RoomIdSet{};
 }
@@ -176,15 +176,15 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
 {
-    if (const auto &pRoom = findRoomHandle(id)) {
-        recipient.receiveRoom(*pRoom);
+    if (const auto room = findRoomHandle(id)) {
+        recipient.receiveRoom(room);
     }
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Coordinate &pos)
 {
-    if (const auto &pRoom = findRoomHandle(pos)) {
-        recipient.receiveRoom(*pRoom);
+    if (const auto room = findRoomHandle(pos)) {
+        recipient.receiveRoom(room);
     }
 }
 
@@ -266,14 +266,14 @@ bool MapFrontend::applyChanges(const ChangeList &changes)
 
 void MapFrontend::keepRoom(RoomRecipient &, const RoomId id)
 {
-    if (const auto &room = findRoomHandle(id); room.has_value() && room->isTemporary()) {
+    if (const auto &room = findRoomHandle(id); room.exists() && room.isTemporary()) {
         applySingleChange(Change{room_change_types::MakePermanent{id}});
     }
 }
 
 void MapFrontend::releaseRoom(RoomRecipient &, const RoomId id)
 {
-    if (const auto &room = findRoomHandle(id); room.has_value() && room->isTemporary()) {
+    if (const auto &room = findRoomHandle(id); room.exists() && room.isTemporary()) {
         applySingleChange(Change{room_change_types::RemoveRoom{id}});
     }
 }

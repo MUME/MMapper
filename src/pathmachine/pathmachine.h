@@ -80,9 +80,9 @@ private:
     void syncing(const SigParseEvent &sigParseEvent);
     NODISCARD ChangeList approved(const SigParseEvent &sigParseEvent);
     void evaluatePaths();
-    void tryExits(const RoomPtr &, RoomRecipient &, const ParseEvent &, bool out);
+    void tryExits(const RoomHandle &, RoomRecipient &, const ParseEvent &, bool out);
     void tryExit(const RawExit &possible, RoomRecipient &recipient, bool out);
-    void tryCoordinate(const RoomPtr &, RoomRecipient &, const ParseEvent &);
+    void tryCoordinate(const RoomHandle &, RoomRecipient &, const ParseEvent &);
 
 private:
     void updateMostLikelyRoom(const SigParseEvent &sigParseEvent, ChangeList &changes);
@@ -99,9 +99,9 @@ private:
     // NOTE: This can fail.
     NODISCARD std::optional<Coordinate> tryGetMostLikelyRoomPosition() const;
     // NOTE: This can fail.
-    NODISCARD RoomPtr getPathRoot() const;
+    NODISCARD RoomHandle getPathRoot() const;
     // NOTE: This can fail.
-    NODISCARD RoomPtr getMostLikelyRoom() const;
+    NODISCARD RoomHandle getMostLikelyRoom() const;
     // NOTE: This can fail.
     NODISCARD RoomId getMostLikelyRoomId() const;
     DEPRECATED_MSG("use tryGetMostLikelyRoomPosition() instead")

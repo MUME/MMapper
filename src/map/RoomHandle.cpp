@@ -23,9 +23,17 @@ ExternalRoomId RoomHandle::getIdExternal() const
     return m_map.getWorld().convertToExternal(getId());
 }
 
+void RoomHandle::sanityCheck() const
+{
+    // This test probably isn't necessary, since only Map can call the nontrivial ctor.
+    if (m_room != nullptr && !m_map.getWorld().hasRoom(getId())) {
+        throw std::runtime_error("invalid RoomHandle");
+    }
+}
+
 bool RoomHandle::exists() const
 {
-    return m_room != nullptr && m_map.getWorld().hasRoom(getId());
+    return m_room != nullptr;
 }
 
 ServerRoomId RoomHandle::getServerId() const

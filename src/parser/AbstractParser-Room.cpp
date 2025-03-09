@@ -401,12 +401,12 @@ RoomId AbstractParser::getOtherRoom(int otherRoomId) const
     const auto otherExt = ExternalRoomId{static_cast<uint32_t>(otherRoomId)};
 
     auto &mapData = m_mapData;
-    RoomPtr optOther = mapData.findRoomHandle(otherExt);
-    if (!optOther) {
+    const auto other = mapData.findRoomHandle(otherExt);
+    if (!other) {
         throw std::runtime_error("What RoomId?");
     }
 
-    return optOther->getId();
+    return other.getId();
 }
 
 RoomId AbstractParser::getOptionalOtherRoom(const Vector &v, const size_t index) const
@@ -862,15 +862,13 @@ private:
         const auto otherExt = ExternalRoomId{static_cast<uint32_t>(otherRoomId)};
 
         auto &mapData = getMap();
-        RoomPtr optOther = mapData.findRoomHandle(otherExt);
-        if (!optOther) {
+        auto other = mapData.findRoomHandle(otherExt);
+        if (!other) {
             os << "To what RoomId?\n";
             return;
         }
 
-        const RoomHandle other = deref(optOther);
         assert(otherExt == other.getIdExternal());
-
         m_self.applySingleChange(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
                                                                                 roomId,
                                                                                 dir,
@@ -909,8 +907,8 @@ private:
 
         const auto &thisRoom = currentMap.getRoomHandle(roomId);
         const ExternalRoomId extId = thisRoom.getIdExternal();
-        const auto &pBefore = baseMap.findRoomHandle(extId);
-        if (!pBefore) {
+        const auto before = baseMap.findRoomHandle(extId);
+        if (!before) {
             os << "Room " << extId.value() << " has been added since the last save:\n";
             os << "\n";
             OstreamDiffReporter odr{os};
@@ -920,7 +918,6 @@ private:
             return;
         }
 
-        const auto &before = deref(pBefore);
         std::ostringstream oss;
         {
             AnsiOstream aos{oss};

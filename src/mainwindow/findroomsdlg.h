@@ -53,7 +53,7 @@ public:
 
 private:
     void adjustResultTable();
-    NODISCARD QString constructToolTip(const RoomPtr &);
+    NODISCARD QString constructToolTip(const RoomHandle &);
 
 signals:
     void sig_center(const glm::vec2 &worldPos);

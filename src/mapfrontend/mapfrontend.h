@@ -99,10 +99,10 @@ public:
 
     NODISCARD bool createEmptyRoom(const Coordinate &);
 
-    NODISCARD RoomPtr findRoomHandle(RoomId) const;
-    NODISCARD RoomPtr findRoomHandle(const Coordinate &) const;
-    NODISCARD RoomPtr findRoomHandle(ExternalRoomId id) const;
-    NODISCARD RoomPtr findRoomHandle(ServerRoomId id) const;
+    NODISCARD RoomHandle findRoomHandle(RoomId) const;
+    NODISCARD RoomHandle findRoomHandle(const Coordinate &) const;
+    NODISCARD RoomHandle findRoomHandle(ExternalRoomId id) const;
+    NODISCARD RoomHandle findRoomHandle(ServerRoomId id) const;
 
     NODISCARD RoomHandle getRoomHandle(RoomId id) const;
     NODISCARD const RawRoom &getRawRoom(RoomId id) const;

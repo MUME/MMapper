@@ -61,8 +61,7 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
         glm::vec2 sum{0.f, 0.f};
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = ExternalRoomId{selectedItem->text(0).toUInt()};
-            if (const auto &pRoom = map.findRoomHandle(id)) {
-                const auto &room = deref(pRoom);
+            if (const auto room = map.findRoomHandle(id)) {
                 sum += room.getPosition().to_vec2();
                 tmpSet.insert(room.getId());
             }
@@ -83,9 +82,9 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
         const auto &currentMap = map.getCurrentMap();
         RoomIdSet set;
         for (const auto &selectedItem : resultTable->selectedItems()) {
-            const auto id = ExternalRoomId{selectedItem->text(0).toUInt()};
-            if (const RoomPtr &room = currentMap.findRoomHandle(id)) {
-                set.insert(room->getId());
+            const auto extid = ExternalRoomId{selectedItem->text(0).toUInt()};
+            if (const auto room = currentMap.findRoomHandle(extid)) {
+                set.insert(room.getId());
             }
         }
         auto tmpSel = RoomSelection::createSelection(std::move(set));
@@ -175,9 +174,8 @@ void FindRoomsDlg::slot_findClicked()
                                  .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
 }
 
-QString FindRoomsDlg::constructToolTip(const RoomPtr &r)
+QString FindRoomsDlg::constructToolTip(const RoomHandle &room)
 {
-    const auto &room = deref(r);
     // Tooltip doesn't support ANSI, and there's no way to add formatted text.
     return mmqt::previewRoom(room, mmqt::StripAnsiEnum::Yes, mmqt::PreviewStyleEnum::ForDisplay);
 }
@@ -195,11 +193,11 @@ void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
 
     const auto &map = m_mapData.getCurrentMap();
     const auto extId = ExternalRoomId{inputItem->text(0).toUInt()};
-    if (const auto &r = map.findRoomHandle(extId)) {
+    if (const auto r = map.findRoomHandle(extId)) {
         // REVISIT: should this block be a stand-alone function?
         {
-            assert(r->getIdExternal() == extId);
-            const Coordinate &c = r->getPosition();
+            assert(r.getIdExternal() == extId);
+            const Coordinate &c = r.getPosition();
             const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
             emit sig_center(worldPos); // connects to MapWindow
         }

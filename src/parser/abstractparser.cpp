@@ -386,7 +386,7 @@ void MumeXmlParserBase::parseExits(std::ostream &os)
     }
 
     auto &exits = m_commonData.exits;
-    if (const auto &room = m_mapData.findRoomHandle(getNextPosition())) {
+    if (const auto room = m_mapData.findRoomHandle(getNextPosition())) {
         // REVISIT: Why is this a QString in the first place?
         const auto exs = mmqt::toStdStringUtf8(exits);
         StringView sv{exs};
@@ -397,12 +397,12 @@ void MumeXmlParserBase::parseExits(std::ostream &os)
         // so it's misleading if we claim this text came from Mume.
         {
             AnsiOstream aos{os};
-            enhanceExits(aos, *room);
+            enhanceExits(aos, room);
         }
 
         if (getConfig().mumeNative.showNotes) {
             AnsiOstream aos{os};
-            displayRoom(aos, *room, RoomFieldFlags{RoomFieldEnum::NOTE});
+            displayRoom(aos, room, RoomFieldFlags{RoomFieldEnum::NOTE});
         }
     } else {
         os << mmqt::toStdStringUtf8(exits);
@@ -449,12 +449,12 @@ void ParserCommon::emulateExits(AnsiOstream &os, const CommandEnum move)
     const auto nextRoom = [this, &move]() -> RoomId {
         // Use movement direction to find the next coordinate
         if (isDirectionNESWUD(move)) {
-            if (const auto &sourceRoom = m_mapData.getCurrentRoom()) {
-                const auto &exit = sourceRoom->getExit(getDirection(move));
+            if (const auto sourceRoom = m_mapData.getCurrentRoom()) {
+                const auto &exit = sourceRoom.getExit(getDirection(move));
                 if (exit.exitIsExit() && !exit.outIsEmpty()) {
                     const auto &map = m_mapData.getCurrentMap();
                     if (const auto &targetRoom = map.findRoomHandle(exit.outFirst())) {
-                        return targetRoom->getId();
+                        return targetRoom.getId();
                     }
                 }
             }
@@ -582,21 +582,25 @@ public:
     ~ShortestPathEmitter() final;
 
 private:
-    void virt_receiveShortestPath(QVector<SPNode> spnodes, int endpoint) final
+    void virt_receiveShortestPath(QVector<SPNode> spnodes, const int endpoint) final
     {
+        assert(0 < endpoint && endpoint < spnodes.size());
+
+        // Caution: spnode is modified here.
         const SPNode *spnode = &spnodes[endpoint];
-        auto name = spnode->r->getName();
+
+        auto name = deref(spnode).r.getName();
         parser.sendToUser(SendToUserSource::FromMMapper,
                           "Distance " + std::to_string(spnode->dist) + ": " + name.toStdStringUtf8()
                               + "\n");
         QString dirs;
-        while (spnode->parent >= 0) {
+        while (deref(spnode).parent >= 0) {
             if (&spnodes[spnode->parent] == spnode) {
                 parser.sendToUser(SendToUserSource::FromMMapper, "ERROR: loop\n");
                 break;
             }
             dirs.append(Mmapper2Exit::charForDir(spnode->lastdir));
-            spnode = &spnodes[spnode->parent];
+            spnode = &spnodes[spnode->parent]; // spnode now points to a new node.
         }
         std::reverse(dirs.begin(), dirs.end());
         parser.sendToUser(SendToUserSource::FromMMapper, "dirs: " + compressDirections(dirs) + "\n");
@@ -624,8 +628,8 @@ void AbstractParser::searchCommand(const RoomFilter &f)
 void AbstractParser::dirsCommand(const RoomFilter &f)
 {
     ShortestPathEmitter sp_emitter(*this);
-    if (const auto &r = m_mapData.findRoomHandle(getTailPosition())) {
-        MapData::shortestPathSearch(deref(r), sp_emitter, f, 10, 0);
+    if (const auto r = m_mapData.findRoomHandle(getTailPosition())) {
+        MapData::shortestPathSearch(r, sp_emitter, f, 10, 0);
     }
 }
 
@@ -998,13 +1002,12 @@ void AbstractParser::doOfflineCharacterMove()
         direction = queue.dequeue();
     }
 
-    const auto pRoom = m_mapData.getCurrentRoom();
-    if (pRoom == std::nullopt) {
+    const auto here = m_mapData.getCurrentRoom();
+    if (!here.exists()) {
         sendToUser(SendToUserSource::FromMMapper, "Alas, you cannot go that way...\n");
         return;
     }
 
-    const auto &here = deref(pRoom);
     if (direction == CommandEnum::LOOK) {
         sendRoomInfoToUser(here);
         sendRoomExitsInfoToUser(here);
@@ -1043,7 +1046,8 @@ void AbstractParser::doOfflineCharacterMove()
         return deref(e);
     };
 
-    const auto showMovement = [this, flee, scout](const CommandEnum dir, const RoomPtr &otherRoom) {
+    const auto showMovement = [this, flee, scout](const CommandEnum dir,
+                                                  const RoomHandle &otherRoom) {
         const auto showOtherRoom = [this, otherRoom]() {
             sendRoomInfoToUser(otherRoom);
             sendRoomExitsInfoToUser(otherRoom);
@@ -1067,17 +1071,17 @@ void AbstractParser::doOfflineCharacterMove()
         }
 
         showOtherRoom();
-        sendPromptToUser(*otherRoom);
+        sendPromptToUser(otherRoom);
 
         // Create character move event for main move/search algorithm
 
         auto ev = ParseEvent::createSharedEvent(dir,
-                                                otherRoom->getServerId(),
-                                                otherRoom->getName(),
-                                                otherRoom->getDescription(),
-                                                otherRoom->getContents(),
+                                                otherRoom.getServerId(),
+                                                otherRoom.getName(),
+                                                otherRoom.getDescription(),
+                                                otherRoom.getContents(),
                                                 ServerExitIds{},
-                                                otherRoom->getTerrainType(),
+                                                otherRoom.getTerrainType(),
                                                 ExitsFlagsType{},
                                                 PromptFlagsType{},
                                                 ConnectedRoomFlagsType{});
@@ -1112,23 +1116,23 @@ void AbstractParser::offlineCharacterMove(const CommandEnum direction)
     }
 }
 
-void AbstractParser::sendRoomInfoToUser(const RoomPtr &r)
+void AbstractParser::sendRoomInfoToUser(const RoomHandle &r)
 {
-    if (r == std::nullopt || !r->exists()) {
+    if (!r.exists()) {
         return;
     }
 
     std::ostringstream os;
     {
         AnsiOstream aos{os};
-        displayRoom(aos, *r, RoomFieldEnum::NAME | RoomFieldEnum::DESC | RoomFieldEnum::CONTENTS);
+        displayRoom(aos, r, RoomFieldEnum::NAME | RoomFieldEnum::DESC | RoomFieldEnum::CONTENTS);
     }
     sendToUser(SendToUserSource::SimulatedOutput, std::move(os).str());
 }
 
-void ParserCommon::sendRoomExitsInfoToUser(const RoomPtr &r)
+void ParserCommon::sendRoomExitsInfoToUser(const RoomHandle &r)
 {
-    if (r == std::nullopt || !r->exists()) {
+    if (!r.exists()) {
         return;
     }
 
@@ -1140,9 +1144,9 @@ void ParserCommon::sendRoomExitsInfoToUser(const RoomPtr &r)
     sendToUser(SendToUserSource::SimulatedOutput, std::move(os).str());
 }
 
-void ParserCommon::sendRoomExitsInfoToUser(AnsiOstream &os, const RoomPtr &r)
+void ParserCommon::sendRoomExitsInfoToUser(AnsiOstream &os, const RoomHandle &r)
 {
-    if (r == std::nullopt || !r->exists()) {
+    if (!r.exists()) {
         return;
     }
 
@@ -1150,10 +1154,10 @@ void ParserCommon::sendRoomExitsInfoToUser(AnsiOstream &os, const RoomPtr &r)
                                   ? char_consts::C_ASTERISK
                                   : char_consts::C_CARET;
 
-    displayExits(os, *r, sunCharacter);
+    displayExits(os, r, sunCharacter);
 
     if (getConfig().mumeNative.showNotes) {
-        displayRoom(os, *r, RoomFieldFlags{RoomFieldEnum::NOTE});
+        displayRoom(os, r, RoomFieldFlags{RoomFieldEnum::NOTE});
     }
 }
 
@@ -1173,9 +1177,9 @@ void ParserCommon::sendPromptToUser()
     }
 
     // Emulate prompt mode
-    if (const auto &r = m_mapData.findRoomHandle(
-            getNextPosition())) { // REVISIT: Should this be the current position?
-        sendPromptToUser(*r);
+    // REVISIT: Should this be the current position?
+    if (const auto r = m_mapData.findRoomHandle(getNextPosition())) {
+        sendPromptToUser(r);
     } else {
         sendPromptToUser(C_QUESTION_MARK, C_QUESTION_MARK);
     }

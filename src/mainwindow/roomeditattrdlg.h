@@ -80,9 +80,9 @@ private:
     void connectAll();
     void disconnectAll();
 
-    NODISCARD std::optional<RoomHandle> getSelectedRoom();
+    NODISCARD RoomHandle getSelectedRoom();
     NODISCARD ExitDirEnum getSelectedExit();
-    void updateDialog(const std::optional<RoomHandle> &);
+    void updateDialog(const RoomHandle &);
 
 private:
     void updateCommon(const std::function<Change(const RawRoom &)> &getChange,

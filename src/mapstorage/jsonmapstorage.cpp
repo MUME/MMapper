@@ -267,8 +267,7 @@ JsonWorld::~JsonWorld() = default;
 
 void JsonWorld::addRooms(const ConstRoomList &roomList, ProgressCounter &progressCounter)
 {
-    for (const auto &pRoom : roomList) {
-        const auto &room = deref(pRoom);
+    for (const auto &room : roomList) {
         progressCounter.step();
         m_jRoomIds.addRoom(room.getIdExternal());
         m_roomHashIndex.addRoom(room);
@@ -409,8 +408,8 @@ void JsonWorld::writeZones(const QDir &dir, ProgressCounter &progressCounter) co
     for (const auto &kv : index) {
         const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
-        for (const RoomPtr &pRoom : rooms) {
-            addRoom(jRooms, deref(pRoom).getRawCopyExternal());
+        for (const auto &room : rooms) {
+            addRoom(jRooms, room.getRawCopyExternal());
             progressCounter.step();
         }
 

@@ -1921,14 +1921,14 @@ void MainWindow::slot_onDeleteConnectionSelection()
     const auto &second = m_connectionSelection->getSecond();
     const auto &r1 = first.room;
     const auto &r2 = second.room;
-    if (r1 == std::nullopt || r2 == std::nullopt) {
+    if (!r1 || !r2) {
         return; // previously called mapChanged for no good reason
     }
 
     const ExitDirEnum dir1 = first.direction;
     MAYBE_UNUSED const ExitDirEnum dir2 = second.direction;
-    const RoomId &id1 = r1->getId();
-    const RoomId &id2 = r2->getId();
+    const RoomId &id1 = r1.getId();
+    const RoomId &id2 = r2.getId();
 
     getCanvas()->slot_clearConnectionSelection();
 

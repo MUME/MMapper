@@ -17,7 +17,7 @@ static std::optional<RevertPlan> build_plan_internal(AnsiOstream &os,
 {
     const auto &thisRoom = currentMap.getRoomHandle(roomId);
     const ExternalRoomId currentExtId = thisRoom.getIdExternal();
-    const auto &pBefore = baseMap.findRoomHandle(currentExtId);
+    const auto pBefore = baseMap.findRoomHandle(currentExtId);
     if (!pBefore) {
         os << "Room " << currentExtId.value()
            << " has been added since the last save, so it cannot be reverted.\n";
@@ -27,7 +27,7 @@ static std::optional<RevertPlan> build_plan_internal(AnsiOstream &os,
     std::optional<RevertPlan> result;
     auto &plan = result.emplace();
 
-    const RawRoom &orig = plan.expect = pBefore->getRaw();
+    const RawRoom &orig = plan.expect = pBefore.getRaw();
     // The "before" room will be modified.
     RawRoom before = orig;
     const RawRoom &after = thisRoom.getRaw();

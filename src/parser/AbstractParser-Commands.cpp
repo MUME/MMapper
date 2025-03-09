@@ -813,8 +813,8 @@ void AbstractParser::doMapCommand(StringView input)
         const RoomId id = getOtherRoom(v[1].getInt());
 
         auto &mapData = m_mapData;
-        RoomPtr optOther = mapData.findRoomHandle(id);
-        if (!optOther) {
+        const auto other = mapData.findRoomHandle(id);
+        if (!other) {
             os << "To what RoomId?\n";
             return;
         }
@@ -855,13 +855,12 @@ void AbstractParser::doMapCommand(StringView input)
             return;
         }
 
-        const RoomPtr optOther = saved.findRoomHandle(otherExt);
-        if (!optOther) {
+        const RoomHandle other = saved.findRoomHandle(otherExt);
+        if (!other) {
             os << "That room does not exist in the saved copy of the map.\n";
             return;
         }
 
-        auto &other = deref(optOther);
         auto rawCopy = other.getRaw();
         for (auto &e : rawCopy.exits) {
             e.incoming = {};
