@@ -248,7 +248,6 @@ MainWindow::MainWindow()
                                    | QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
-    m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
     // View -> Side Panels -> Room Panel (Mobs)
