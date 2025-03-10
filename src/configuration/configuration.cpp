@@ -742,7 +742,7 @@ void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
     linesOfInputHistory = conf.value(KEY_LINES_OF_INPUT_HISTORY, 100).toInt();
     tabCompletionDictionarySize = conf.value(KEY_TAB_COMPLETION_DICTIONARY_SIZE, 100).toInt();
     clearInputOnEnter = conf.value(KEY_CLEAR_INPUT_ON_ENTER, true).toBool();
-    autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, false).toBool();
+    autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, true).toBool();
 }
 
 void Configuration::RoomPanelSettings::read(QSettings &conf)
