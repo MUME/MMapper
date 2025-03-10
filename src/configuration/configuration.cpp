@@ -483,9 +483,6 @@ void Configuration::read()
 
         // New users get autologger turned on by default
         autoLog.autoLog = true;
-
-        // New users get a minimalistic menu
-        general.showMenuBar = false;
     }
 
     assert(canvas.backgroundColor == colorSettings.BACKGROUND);
