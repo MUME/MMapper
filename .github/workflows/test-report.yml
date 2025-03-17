@@ -9,7 +9,7 @@ jobs:
     name: Test Report
     runs-on: ubuntu-latest
     steps:
-    - uses: dorny/test-reporter@v1
+    - uses: dorny/test-reporter@v2
       with:
         artifact: /test-results (.*)/
         name: Test Report $1
