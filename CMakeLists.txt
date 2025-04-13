@@ -308,6 +308,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
         add_compile_options(-Wno-redundant-parens) # MOCs spam this.
         add_compile_options(-Wno-unreachable-code-break) # break after [[noreturn]] function is not a mistake; omitting the break is a recipe for future disaster.
+        add_compile_options(-Wno-switch-default)
+        if(APPLE)
+            add_compile_options(-Wno-poison-system-directories)
+        endif()
 
         # always errors
         add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.
