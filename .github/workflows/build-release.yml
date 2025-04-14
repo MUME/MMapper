@@ -75,7 +75,8 @@ jobs:
         cmake --version
         echo "C:/Qt/Tools/mingw1310_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
-        cmake -G "MinGW Makefiles" -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -S .. || exit -1
+        $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
+        cmake -G "MinGW Makefiles" -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -S .. || exit -1
         cmake --build . -j $env:NUMBER_OF_PROCESSORS
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
