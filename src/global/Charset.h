@@ -19,7 +19,8 @@ namespace charset::ascii {
 // ASCII 00 to 1F, and 7F only; Latin1 control codes 80 to 9F don't count.
 NODISCARD static inline bool isCntrl(const char c)
 {
-    return std::iscntrl(static_cast<uint8_t>(c));
+    const unsigned char uc = static_cast<unsigned char>(c);
+    return (uc <= 0x1F) || (uc == 0x7F);
 }
 
 // ASCII only
@@ -31,25 +32,43 @@ NODISCARD static inline bool isDigit(const char c)
 // ASCII only; Latin1 letters don't count.
 NODISCARD static inline bool isLower(const char c)
 {
-    return std::islower(static_cast<uint8_t>(c));
+    return (c >= 'a') && (c <= 'z');
 }
 
 // ASCII only; Latin1 punctuations don't count.
 NODISCARD static inline bool isPunct(const char c)
 {
-    return std::ispunct(static_cast<uint8_t>(c));
+    const unsigned char uc = static_cast<unsigned char>(c);
+    // 33–47    !"#$%&'()*+,-./
+    // 58–64    :;<=>?@
+    // 91–96    [\]^_`
+    // 123–126  {|}~
+    return ((uc >= char_consts::C_EXCLAMATION) && (uc <= char_consts::C_SLASH))
+           || ((uc >= char_consts::C_COLON) && (uc <= char_consts::C_AT_SIGN))
+           || ((uc >= char_consts::C_OPEN_BRACKET) && (uc <= char_consts::C_BACK_TICK))
+           || ((uc >= char_consts::C_OPEN_CURLY) && (uc <= char_consts::C_TILDE));
 }
 
 // ASCII only; Latin1 NBSP doesn't count.
 NODISCARD static inline bool isSpace(const char c)
 {
-    return std::isspace(static_cast<uint8_t>(c));
+    switch (c) {
+    case char_consts::C_SPACE:
+    case char_consts::C_TAB:
+    case char_consts::C_NEWLINE:
+    case char_consts::C_VERTICAL_TAB:
+    case char_consts::C_FORM_FEED:
+    case char_consts::C_CARRIAGE_RETURN:
+        return true;
+    default:
+        return false;
+    }
 }
 
 // ASCII only; Latin1 letters don't count.
 NODISCARD static inline bool isUpper(const char c)
 {
-    return std::isupper(static_cast<uint8_t>(c));
+    return (c >= 'A') && (c <= 'Z');
 }
 
 } // namespace charset::ascii

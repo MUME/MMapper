@@ -482,18 +482,12 @@ void TestGlobal::toLowerLatin1Test()
     QCOMPARE(toLowerLatin1(C_MINUS_SIGN), C_MINUS_SIGN);
 
     {
-        int num_std_lower = 0;
-        int num_std_upper = 0;
         int num_lower_latin1 = 0;
         int num_upper_latin1 = 0;
         int num_lower_utf8 = 0;
         int num_upper_utf8 = 0;
 
         for (int i = 0; i < 256; ++i) {
-            num_std_lower += std::islower(i) != 0;
-            num_std_upper += std::isupper(i) != 0;
-            assert(!std::islower(i) || !std::isupper(i));
-
             const auto c = static_cast<char>(static_cast<uint8_t>(i));
             num_lower_latin1 += isLowerLatin1(c);
             num_upper_latin1 += isUpperLatin1(c);
@@ -513,8 +507,6 @@ void TestGlobal::toLowerLatin1Test()
             assert(isUpperLatin1(c) == containsUpperUtf8(utf8));
         }
 
-        QCOMPARE(num_std_lower, 26);
-        QCOMPARE(num_std_upper, 26);
         QCOMPARE(num_lower_latin1, 26 + 30);
         QCOMPARE(num_upper_latin1, 26 + 30);
         QCOMPARE(num_lower_utf8, 26 + 30);

@@ -27,40 +27,32 @@ NODISCARD static bool isToggleableLowerLatin1NonAscii(const char c)
 
 char toLowerLatin1(const char c)
 {
-    const auto uc = static_cast<uint8_t>(c);
-    if (isToggleableUpperLatin1NonAscii(c)) {
+    if (charset::ascii::isUpper(c) || isToggleableUpperLatin1NonAscii(c)) {
+        const auto uc = static_cast<uint8_t>(c);
         // handle accented Latin-1 chars
         return static_cast<char>(uc + 0x20u);
     }
-    return static_cast<char>(std::tolower(uc));
+    return c;
 }
 
 char toUpperLatin1(const char c)
 {
-    const auto uc = static_cast<uint8_t>(c);
-    if (isToggleableLowerLatin1NonAscii(c)) {
+    if (charset::ascii::isLower(c) || isToggleableLowerLatin1NonAscii(c)) {
+        const auto uc = static_cast<uint8_t>(c);
         // handle accented Latin-1 chars
         return static_cast<char>(uc - 0x20u);
     }
-    return static_cast<char>(std::toupper(uc));
+    return c;
 }
 
 NODISCARD bool isLowerLatin1(const char c)
 {
-    if (isToggleableLowerLatin1NonAscii(c)) {
-        return true;
-    }
-    const auto uc = static_cast<uint8_t>(c);
-    return std::islower(uc);
+    return charset::ascii::isLower(c) || isToggleableLowerLatin1NonAscii(c);
 }
 
 NODISCARD bool isUpperLatin1(const char c)
 {
-    if (isToggleableUpperLatin1NonAscii(c)) {
-        return true;
-    }
-    const auto uc = static_cast<uint8_t>(c);
-    return std::isupper(uc);
+    return charset::ascii::isUpper(c) || isToggleableUpperLatin1NonAscii(c);
 }
 
 bool containsLowerLatin1(const std::string_view sv)
