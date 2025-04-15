@@ -102,7 +102,7 @@ void AnsiCombo::initColours(const AnsiColor16LocationEnum change)
 
 AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 {
-    auto stdString = colString.toStdString();
+    auto stdString = colString.toUtf8().toStdString();
 
     // No need to proceed if the color is empty
     if (colString.isEmpty()) {
