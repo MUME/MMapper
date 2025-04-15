@@ -32,7 +32,7 @@ void TestRoomManager::testSlotReset()
     auto &manager = m_manager;
     QVERIFY(!manager.getRoom().isIdPresent(2));
 
-    auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact)};
+    auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact).toStdString()};
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     manager.slot_parseGmcpInput(addMessage);
@@ -44,7 +44,7 @@ void TestRoomManager::testSlotReset()
 
 void TestRoomManager::testParseGmcpAddValidMessage()
 {
-    auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact)};
+    auto jsonStr = GmcpJson{QJsonDocument(gmcpRoomCharsAddObj).toJson(QJsonDocument::Compact).toStdString()};
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     auto &manager = m_manager;
@@ -58,7 +58,7 @@ void TestRoomManager::testParseGmcpInvalidMessage()
 {
     // Create an invalid GMCP message (e.g., missing required fields)
     QJsonObject invalidObj = {{"invalidField", "value"}};
-    auto jsonStr = GmcpJson{QJsonDocument(invalidObj).toJson(QJsonDocument::Compact)};
+    auto jsonStr = GmcpJson{QJsonDocument(invalidObj).toJson(QJsonDocument::Compact).toStdString()};
     GmcpMessage invalidMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
 
     // Attempt to parse the invalid message
@@ -74,7 +74,7 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
 {
     // Step 1: Add a mob to ensure there's something to update
     QJsonObject addObj = {{"id", 2}, {"name", "male magpie"}, {"position", "standing"}};
-    auto addJsonStr = GmcpJson{QJsonDocument(addObj).toJson(QJsonDocument::Compact)};
+    auto addJsonStr = GmcpJson{QJsonDocument(addObj).toJson(QJsonDocument::Compact).toStdString()};
     GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, addJsonStr);
     auto &manager = m_manager;
     manager.slot_parseGmcpInput(addMessage);
@@ -82,7 +82,7 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
 
     // Step 2: Create an update message for the same mob with new information
     QJsonObject updateObj = {{"id", 2}, {"name", "angry male magpie"}, {"position", "sleeping"}};
-    auto updateJsonStr = GmcpJson{QJsonDocument(updateObj).toJson(QJsonDocument::Compact)};
+    auto updateJsonStr = GmcpJson{QJsonDocument(updateObj).toJson(QJsonDocument::Compact).toStdString()};
     GmcpMessage updateMessage(GmcpMessageTypeEnum::ROOM_CHARS_UPDATE, updateJsonStr);
 
     // Prepare to capture the sig_updateWidget signal
