@@ -64,12 +64,14 @@ parts:
       - -DCMAKE_INSTALL_PREFIX=/usr
       - -DWITH_UPDATER=false
       - -DWITH_WEBSOCKET=ON
+      - -DWITH_QTKEYCHAIN=ON
     build-packages:
       - build-essential
       - libssl-dev
       - libminiupnpc-dev
       - libqt5opengl5-dev
       - libqt5websockets5-dev
+      - qt5keychain-dev
       - qtbase5-dev
       - qttools5-dev-tools
       - zlib1g-dev
@@ -87,6 +89,7 @@ parts:
       - libqt5gui5
       - libqt5svg5
       - libqt5websockets5
+      - libqt5keychain1
       - libxkbcommon0
       - light-themes
       - locales-all

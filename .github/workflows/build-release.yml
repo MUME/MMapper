@@ -33,7 +33,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev libminiupnpc-dev mold gcc-12 g++-12
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev libminiupnpc-dev qt5keychain-dev mold gcc-12 g++-12
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-12" >> $GITHUB_ENV
         echo "CXX=g++-12" >> $GITHUB_ENV
@@ -84,7 +84,7 @@ jobs:
         mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
-        cmake -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -S .. || exit -1
+        cmake -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build .
 
     # Package
