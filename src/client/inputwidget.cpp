@@ -363,5 +363,4 @@ void InputWidget::tabComplete()
         textCursor().removeSelectedText();
         m_tabHistory.reset();
     }
-
 }
