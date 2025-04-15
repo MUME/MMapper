@@ -31,9 +31,11 @@ if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
 
-find_package(Qt5 COMPONENTS
-    REQUIRED Core Widgets Network OpenGL Test
-    OPTIONAL_COMPONENTS WebSockets)
+set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL Test)
+if(WITH_WEBSOCKET)
+    list(APPEND MMAPPER_QT_COMPONENTS WebSockets)
+endif()
+find_package(Qt5 COMPONENTS ${MMAPPER_QT_COMPONENTS} REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
