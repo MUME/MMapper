@@ -119,8 +119,8 @@ template<typename T>
 inline decltype(auto) remap(T &&x)
 {
     static_assert(!std::is_same_v<std::decay_t<T>, std::string_view>);
-    if constexpr (std::is_same_v<std::decay_t<T>, std::string>
-                  || std::is_same_v<std::decay_t<T>, const char *>) {
+    if constexpr (std::is_same_v<std::decay_t<T>,
+                                 std::string> || std::is_same_v<std::decay_t<T>, const char *>) {
         return syntax::abbrevToken(std::forward<T>(x));
     } else if constexpr (true) {
         return std::forward<T>(x);
