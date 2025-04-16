@@ -3,8 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../group/mmapper2character.h"
 #include "../map/mmapper2room.h"
-#include "../pandoragroup/mmapper2character.h"
 #include "RoadIndex.h"
 
 #include <QString>

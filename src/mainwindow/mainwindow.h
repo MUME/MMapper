@@ -10,9 +10,9 @@
 #include "../global/Connections.h"
 #include "../global/Signal2.h"
 #include "../global/macros.h"
+#include "../group/mmapper2group.h"
 #include "../map/Changes.h"
 #include "../mapdata/roomselection.h"
-#include "../pandoragroup/mmapper2group.h"
 
 #include <memory>
 #include <optional>

@@ -195,6 +195,20 @@ set(mmapper_SRCS
     global/window_utils.h
     global/zpipe.cpp
     global/zpipe.h
+    group/CGroupChar.cpp
+    group/CGroupChar.h
+    group/ColorGenerator.cpp
+    group/ColorGenerator.h
+    group/GroupManagerApi.cpp
+    group/GroupManagerApi.h
+    group/enums.cpp
+    group/enums.h
+    group/groupwidget.cpp
+    group/groupwidget.h
+    group/mmapper2character.cpp
+    group/mmapper2character.h
+    group/mmapper2group.cpp
+    group/mmapper2group.h
     logger/autologger.cpp
     logger/autologger.h
     mainwindow/MapZoomSlider.cpp
@@ -375,20 +389,6 @@ set(mmapper_SRCS
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
     opengl/legacy/impl_gl20.cpp
-    pandoragroup/CGroupChar.cpp
-    pandoragroup/CGroupChar.h
-    pandoragroup/ColorGenerator.cpp
-    pandoragroup/ColorGenerator.h
-    pandoragroup/GroupManagerApi.cpp
-    pandoragroup/GroupManagerApi.h
-    pandoragroup/enums.cpp
-    pandoragroup/enums.h
-    pandoragroup/groupwidget.cpp
-    pandoragroup/groupwidget.h
-    pandoragroup/mmapper2character.cpp
-    pandoragroup/mmapper2character.h
-    pandoragroup/mmapper2group.cpp
-    pandoragroup/mmapper2group.h
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Actions.cpp
