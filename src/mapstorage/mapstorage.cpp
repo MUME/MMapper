@@ -233,7 +233,7 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
         constexpr uint8_t DEATH_TERRAIN_TYPE = 15;
         if (terrainType == DEATH_TERRAIN_TYPE) {
             addDeathLoadFlag = true;
-            room.setTerrainType(RoomTerrainEnum::UNDEFINED);
+            room.setTerrainType(RoomTerrainEnum::INDOORS);
         } else {
             room.setTerrainType(toEnum<RoomTerrainEnum>(terrainType));
         }
