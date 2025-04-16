@@ -37,6 +37,7 @@ jobs:
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-12" >> $GITHUB_ENV
         echo "CXX=g++-12" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_MOLD=true" >> $GITHUB_ENV
 
     # Install Dependencies (Mac)
     - if: runner.os == 'macOS'
