@@ -1,0 +1,200 @@
+/* Minimal MMapper Website Styles */
+
+/* Basic Reset & Body */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Georgia, serif; /* Simple serif fallback */
+    line-height: 1.6;
+    background-color: #1a1a1a; /* Dark background */
+    color: #ccc; /* Light grey text */
+}
+
+/* Content Wrapper */
+.content-wrapper {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #2a2a2a; /* Slightly lighter dark background for content */
+    border-radius: 5px;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Trebuchet MS", sans-serif; /* Simple sans-serif fallback */
+    color: #eee; /* Lighter heading color */
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2em;
+    text-align: center;
+    border-bottom: 1px solid #555;
+    padding-bottom: 0.3em;
+    margin-bottom: 1em;
+}
+
+h2 {
+    font-size: 1.6em;
+    color: #74a9be; /* MUME-inspired color */
+}
+
+h3 {
+    font-size: 1.3em;
+    color: #cc9933; /* MUME-inspired color */
+}
+
+/* Links */
+a {
+    color: #cc9933; /* MUME-inspired link color */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+    color: #eebb44; /* Lighter hover */
+}
+
+/* Paragraphs and Lists */
+p {
+    margin-bottom: 1em;
+}
+
+ul, ol {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+
+/* Code Blocks */
+pre, code {
+    font-family: Consolas, "Courier New", monospace; /* Monospace fallback */
+    background-color: #333;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.95em;
+}
+
+pre {
+    padding: 1em;
+    overflow-x: auto;
+    white-space: pre-wrap; /* Wrap long lines */
+    word-wrap: break-word;
+}
+
+/* Horizontal Rule */
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #555;
+    margin: 2em 0;
+}
+
+/* Platform Icons Section (on index.md) */
+.platform-links {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    margin: 2em 0;
+    padding: 1em 0;
+    border-top: 1px solid #555;
+    border-bottom: 1px solid #555;
+}
+
+.platform-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #ccc; /* Match body text */
+    text-decoration: none;
+}
+
+.platform-link i { /* Font Awesome Icon */
+    font-size: 3em; /* Make icons large */
+    margin-bottom: 0.5em;
+    color: #cc9933; /* Icon color */
+}
+
+.platform-link:hover i {
+    color: #eebb44; /* Lighter hover for icon */
+}
+
+.platform-link span { /* Text below icon */
+    font-size: 1.1em;
+    font-family: "Trebuchet MS", sans-serif;
+}
+
+/* Download Buttons/Links (on platform pages) */
+.download-link {
+    display: inline-block;
+    background-color: #cc9933;
+    color: #1a1a1a; /* Dark text on button */
+    padding: 0.8em 1.5em;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 0.5em 0;
+    transition: background-color 0.2s ease;
+}
+
+.download-link:hover {
+    background-color: #eebb44;
+    color: #000;
+    text-decoration: none;
+}
+
+/* Recommended Download Highlight */
+.recommended-download {
+    border: 2px solid #5cb85c; /* Green border */
+    padding: 0.6em 1.3em !important; /* Adjust padding slightly */
+}
+
+.recommendation-text {
+    color: #5cb85c;
+    font-weight: bold;
+    margin-left: 0.5em;
+}
+
+
+/* Warning Boxes */
+.notice-box {
+    border: 1px solid #fdc571; /* Orange border */
+    background-color: #3a3020; /* Dark orange background */
+    padding: 1em;
+    margin-top: 1.5em;
+    border-radius: 4px;
+    color: #fdddb3; /* Light text for contrast */
+}
+
+.notice-box strong {
+    color: #fdddb3; /* Ensure strong text is also light */
+}
+
+.notice-box code {
+    background-color: #5a5040; /* Slightly darker code background within notice */
+    color: #fdddb3;
+}
+
+/* Basic Footer */
+footer {
+    text-align: center;
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid #555;
+    font-size: 0.9em;
+    color: #888;
+}
+
+/* Feature Box */
+.feature-box {
+    display: inline-block;
+    padding: 0.3em 0.6em;
+    background-color: #333;
+    border-radius: 5px;
+    margin-right: 0.5em;
+}

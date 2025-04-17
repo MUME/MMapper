@@ -1,55 +1,35 @@
-Download MMapper
-=========
-MMapper is a graphical client and mapper for a game named [Multi-Users in Middle-earth](https://mume.org).
-The game is traditionally played in a text-only mode, but MMapper tries
-to represent the virtual world in user-friendly graphical environment. It acts
-as a proxy between a telnet client and a MUD server, being able to analyze game
-data in real time and show player's position on a map.
+---
+layout: default
+title: Play MUME with MMapper
+---
 
-### Windows
-{% for asset in site.github.latest_release.assets %}
-{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% elsif asset.name contains 'exe' %}
-[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
-{% else %}
-{% endif %}
-{% endfor %}
-### Mac
-{% for asset in site.github.latest_release.assets %}
-{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% elsif asset.name contains 'dmg' %}
-[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
-{% else %}
-{% endif %}
-{% endfor %}
-### Linux
-{% for asset in site.github.latest_release.assets %}
-{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' or asset.name contains 'zsync' %}
-{% elsif asset.name contains 'AppImage' or asset.name contains 'deb' %}
-[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
-{% else %}
-{% endif %}
-{% endfor %}
+<img src="{{ site.screenshot }}" alt="MMapper Screenshot" style="display: block; margin: 0 auto; width: 100%; max-width: auto; height: auto; margin-bottom: 1em;">
 
-## News
-Latest release {{ site.github.latest_release.tag_name }} ({{ site.github.latest_release.published_at | date_to_string }})
+MMapper is a graphical mapping tool that enhances the MUME (Multi-Users in Middle Earth) experience. It acts as a bridge between the MUME server and your game client, analyzing real-time game data and visually displaying your character’s position on the map.
 
-{{ site.github.latest_release.body }}
+## Download MMapper
 
-## Features
-1.  Automatic room creation and connection of rooms during mapping
-2.  Exit detection and note taking
-3.  Fast 3D OpenGL rendering with pseudo 3D layers
-4.  User friendly design with drag and drop mouse operations
-5.  Multi-platform support for Windows, Mac, and Linux
-6.  Multiplayer capabilities where group members can connect to your map
+Choose your operating system to download the latest version:
 
-## Usage
-Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki/Installing)
+<div class="platform-links">
+    <a href="{{ '/windows.html' | relative_url }}" class="platform-link">
+        <i class="fab fa-windows"></i>
+        <span>Windows</span>
+    </a>
+    <a href="{{ '/macos.html' | relative_url }}" class="platform-link">
+        <i class="fab fa-apple"></i>
+        <span>macOS</span>
+    </a>
+    <a href="{{ '/linux.html' | relative_url }}" class="platform-link">
+        <i class="fab fa-linux"></i>
+        <span>Linux</span>
+    </a>
+</div>
 
-## Frequently Asked Questions
-1.  [Troubleshooting](https://github.com/MUME/MMapper/wiki/Troubleshooting)
-2.  What is [MUME](https://mume.org)?
-
-## Found a bug?
-Please report it [here](https://github.com/MUME/MMapper/issues)
+## Key Features
+-  <span class="feature-box">Automated Mapping</span> Automatically maps rooms, terrain, exits, and connections as you explore. The map updates in real-time!
+-  <span class="feature-box">Interactive Map</span> Smooth navigation with fast OpenGL rendering and drag-and-drop room layer management.
+-  <span class="feature-box">Multi-Platform Support</span> Available for Windows, Linux, and macOS.
+-  <span class="feature-box">Group Map Sharing</span> See other players on your map in real-time for easy team collaboration.
+-  <span class="feature-box">Built-In MUD Client</span> Interact with the game world directly within MMapper.
+-  <span class="feature-box">Remote Editing</span> Edit your map's text file with your favorite editor or MMapper's built-in editor.

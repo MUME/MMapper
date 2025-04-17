@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{ page.title | default: site.title }} | {{ site.title }}</title>
+    <meta name="description" content="{{ page.description | default: site.description }}">
+
+    <!-- Link CSS -->
+    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+
+    <!-- Link Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Add site logo specified in _config.yml to head for potential use -->
+    {% if site.logo %}
+        <link rel="icon" href="{{ site.logo }}">
+    {% endif %}
+
+    <script src="{{ '/assets/js/download-highlight.js' | relative_url }}"></script>
+</head>
+<body>
+    <div class="content-wrapper">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <header style="display: flex; flex-direction: column; align-items: center;">
+                <div style="display: flex; align-items: center;">
+                    <img src="{{ site.logo }}" alt="MMapper" style="height: 50px; margin-right: 10px;">
+                    <h1><a href="{{ '/' | relative_url }}">{{ page.title | default: site.title }}</a></h1>
+                </div>
+                <p style="text-align: center; margin-top: -1em; margin-bottom: 2em; color: #aaa;">{{ site.description }}</p>
+            </header>
+            <nav>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="display: inline; margin-left: 10px;"><a href="{{ '/' | relative_url }}">Download</a></li>
+                    <li style="display: inline; margin-left: 10px;"><a href="{{ '/about.html' | relative_url }}">About</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <main>
+            {{ content }}
+        </main>
+
+        <footer>
+            <p>&copy; {{ 'now' | date: "%Y" }} The <a href="{{site.authors}}">MMapper Authors</a>. See <a href="https://github.com/MUME/MMapper">GitHub</a> for source and license.</p>
+        </footer>
+    </div>
+</body>
+</html>
