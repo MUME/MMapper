@@ -21,7 +21,7 @@
 #include <QString>
 
 static constexpr int PING_MILLIS = 45000;
-static constexpr int TIMEOUT_MILLIS = 30000;
+static constexpr int TIMEOUT_MILLIS = 5000;
 static constexpr auto ENCRYPTION_WARNING = "ENCRYPTION WARNING";
 static constexpr auto CONNECTION_WARNING = "Warning";
 
