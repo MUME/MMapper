@@ -33,8 +33,9 @@ title: Download MMapper for macOS
 Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki/Installing).
 
 ## Frequently Asked Questions
-1.  [Troubleshooting](https://github.com/MUME/MMapper/wiki/Troubleshooting)
-2.  What is [MUME](https://mume.org)?
+1.  What <a href="about.html#changelog">new features, changes, or bug fixes are</a> in this version?
+2.  I have [trouble and need help](https://github.com/MUME/MMapper/wiki/Troubleshooting) getting MMapper to run!
+3.  What is [MUME](https://mume.org)?
 
 ## Found a bug?
 Please report it [here](https://github.com/MUME/MMapper/issues).
