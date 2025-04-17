@@ -198,3 +198,47 @@ footer {
     border-radius: 5px;
     margin-right: 0.5em;
 }
+
+/* Add this at the end of the file */
+@media (max-width: 768px) {
+  /* Adjustments for smaller screens */
+  .content-wrapper {
+    padding: 10px;
+  }
+
+  /* Make the main div in index.md stack vertically */
+  #index-screenshot-flex {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #index-screenshot-flex > img {
+    margin-right: 0;
+    margin-bottom: 1em;
+  }
+
+  /* Adjust the header in default.html to stack vertically */
+  header > div {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header > div > img {
+    margin-bottom: 0.5em;
+  }
+
+  /* Make the platform links wrap to multiple lines */
+  .platform-links {
+    flex-wrap: wrap;
+  }
+
+  .platform-link {
+    width: 50%; /* Two links per row */
+    margin-bottom: 1em;
+  }
+
+  #index-screenshot-flex > img {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
