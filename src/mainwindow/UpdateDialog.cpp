@@ -18,6 +18,7 @@
 #include <QRegularExpression>
 
 static constexpr const char *APPIMAGE_KEY = "APPIMAGE";
+static constexpr const char *FLATPAK_KEY = "container";
 
 CompareVersion::CompareVersion(const QString &versionStr) noexcept
 {
@@ -112,20 +113,22 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
 
     const QJsonObject obj = doc.object();
     m_downloadUrl = [&obj]() -> QString {
-        // Regular expressions to detect if this download matches the current install
-        const auto platformRegex = QRegularExpression(
+        // Compile platform-specific regex
+        static const auto platformRegex = QRegularExpression(
             []() -> const char * {
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
                     return R"(^.+\.dmg$)";
                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                    return R"(^.+\.(deb|AppImage)$)";
+                    return R"(^.+\.(deb|AppImage|flatpak)$)";
                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
                     return R"(^.+\.exe$)";
                 }
                 abort();
             }(),
-            QRegularExpression::PatternOption::CaseInsensitiveOption);
-        const auto environmentRegex = QRegularExpression(
+            QRegularExpression::CaseInsensitiveOption);
+
+        // Compile architecture/environment-specific regex
+        static const auto environmentRegex = QRegularExpression(
             []() -> const char * {
                 if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit) {
                     return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
@@ -134,35 +137,44 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
                 }
                 abort();
             }(),
-            QRegularExpression::PatternOption::CaseInsensitiveOption);
+            QRegularExpression::CaseInsensitiveOption);
 
-        if (obj.contains("assets") && obj["assets"].isArray()) {
-            for (auto item : obj["assets"].toArray()) {
-                const QJsonObject itemObj = item.toObject();
-                if (itemObj.contains("name") && itemObj["name"].isString()
-                    && itemObj.contains("browser_download_url")
-                    && itemObj["browser_download_url"].isString()) {
-                    const QString name = itemObj["name"].toString();
-                    if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
-                        continue;
-                    }
-                    if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                        // If MMapper is an AppImage then only select AppImage assets
-                        // Similarly, if MMapper is not an AppImage then skip AppImage assets
-                        const bool assetAppImage
-                            = name.contains("AppImage", Qt::CaseSensitivity::CaseInsensitive);
-                        const bool envAppImage = qgetenv(APPIMAGE_KEY) != nullptr;
-                        if ((envAppImage && !assetAppImage) || (!envAppImage && assetAppImage)) {
-                            continue;
-                        }
-                    }
-                    return itemObj["browser_download_url"].toString();
+        const auto assets = obj.value("assets").toArray();
+        for (const auto &item : assets) {
+            const auto asset = item.toObject();
+            const QString name = asset.value("name").toString();
+            const QString url = asset.value("browser_download_url").toString();
+
+            if (name.isEmpty() || url.isEmpty()) {
+                continue;
+            }
+
+            if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
+                continue;
+            }
+
+            if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+                const bool isAssetAppImage = name.contains("AppImage", Qt::CaseInsensitive);
+                const bool isEnvAppImage = qEnvironmentVariableIsSet(APPIMAGE_KEY);
+                if (isAssetAppImage != isEnvAppImage) {
+                    continue;
+                }
+
+                const bool isAssetFlatpak = name.contains("flatpak", Qt::CaseInsensitive);
+                const bool isEnvFlatpak = qEnvironmentVariableIsSet(FLATPAK_KEY);
+                if (isAssetFlatpak != isEnvFlatpak) {
+                    continue;
                 }
             }
+
+            return url;
         }
-        if (obj.contains("html_url") && obj["html_url"].isString()) {
-            return obj["html_url"].toString();
+
+        const QString fallbackUrl = obj.value("html_url").toString();
+        if (!fallbackUrl.isEmpty()) {
+            return fallbackUrl;
         }
+
         return "https://github.com/MUME/MMapper/releases";
     }();
 

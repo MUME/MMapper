@@ -21,6 +21,7 @@ FIND_PATH(QTKEYCHAIN_INCLUDE_DIR keychain.h
   $ENV{INCLUDE}
   /usr/local/include
   /usr/include
+  /app/include
   PATH_SUFFIXES qt5keychain qtkeychain
 )
 

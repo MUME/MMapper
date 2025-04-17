@@ -1,0 +1,54 @@
+name: build-flatpak
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-flatpak:
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-47
+      options: --privileged
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+
+    - name: Get Git tag description and architecture
+      id: git_info
+      run: |
+        git config --global --add safe.directory $(pwd)
+        VERSION=$(git describe --tags --always --long)
+        ARCHITECTURE=$(uname -m)
+        FILE="org.mume.MMapper-${VERSION}-Linux-${ARCHITECTURE}.flatpak"
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "ARCHITECTURE=${ARCHITECTURE}" >> $GITHUB_ENV
+        echo "FILE=${FILE}" >> $GITHUB_ENV
+
+    - name: Build Flatpak
+      uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: "${{ env.FILE }}"
+        manifest-path: "manifest.json"
+        upload-artifact: false
+
+    - name: Generate SHA256 checksum
+      run: |
+        sha256sum ${{ env.FILE }} > ${{ env.FILE }}.sha256
+        mkdir -p artifact
+        mv *.flatpak* artifact
+
+    - name: Upload Flatpak bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-build Flatpak ${{ env.VERSION }}-${{ env.ARCHITECTURE }}
+        path: artifact/*.flatpak*
+

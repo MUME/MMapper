@@ -685,9 +685,14 @@ target_link_libraries(mm_map PUBLIC
     Qt5::Core
     Qt5::Widgets
 )
-add_dependencies(mmapper glm mm_global mm_map)
-add_dependencies(mm_global glm)
-add_dependencies(mm_map glm mm_global)
+add_dependencies(mmapper mm_global mm_map)
+add_dependencies(mm_map mm_global)
+
+if(NOT GLM_FOUND)
+    add_dependencies(mmapper glm)
+    add_dependencies(mm_map glm)
+    add_dependencies(mm_global glm)
+endif()
 
 if(WIN32)
     target_link_libraries(mmapper PUBLIC ws2_32)

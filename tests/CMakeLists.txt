@@ -35,7 +35,7 @@ set(clock_SRCS
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
-add_dependencies(TestClock glm mm_global)
+add_dependencies(TestClock mm_global)
 target_link_libraries(TestClock
         mm_global
         Qt5::Gui
@@ -59,7 +59,7 @@ set(expandoracommon_SRCS
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
-add_dependencies(TestExpandoraCommon glm mm_global mm_map)
+add_dependencies(TestExpandoraCommon mm_global mm_map)
 target_link_libraries(TestExpandoraCommon
         mm_map
         mm_global
@@ -82,7 +82,7 @@ set(parser_SRCS
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
-add_dependencies(TestParser glm mm_global mm_map)
+add_dependencies(TestParser mm_global mm_map)
 target_link_libraries(TestParser
         mm_map
         mm_global
@@ -112,7 +112,7 @@ set(proxy_SRCS
      )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
-add_dependencies(TestProxy glm mm_global)
+add_dependencies(TestProxy mm_global)
 target_link_libraries(TestProxy mm_global Qt5::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
@@ -131,7 +131,7 @@ set(mainwindow_SRCS
     )
 set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
-add_dependencies(TestMainWindow glm mm_global)
+add_dependencies(TestMainWindow mm_global)
 target_link_libraries(TestMainWindow
         mm_global
         Qt5::Network
@@ -150,7 +150,7 @@ add_test(NAME TestMainWindow COMMAND TestMainWindow)
 # Global
 set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS})
-add_dependencies(TestGlobal glm mm_global)
+add_dependencies(TestGlobal mm_global)
 target_link_libraries(TestGlobal
         mm_global
         Qt5::Gui
@@ -173,7 +173,7 @@ set(TestMap_SRCS
         TestMap.cpp
 )
 add_executable(TestMap ${TestMap_SRCS})
-add_dependencies(TestMap glm mm_global mm_map)
+add_dependencies(TestMap mm_global mm_map)
 target_link_libraries(TestMap
         mm_map
         mm_global
@@ -206,7 +206,7 @@ set(adventure_SRCS
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
-add_dependencies(TestAdventure glm mm_global)
+add_dependencies(TestAdventure mm_global)
 target_link_libraries(TestAdventure mm_global Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
@@ -224,7 +224,7 @@ set(timer_test
 )
 set(TestTimer TestCTimers.cpp)
 add_executable(TestTimer ${timer_test} ${TestTimer})
-add_dependencies(TestTimer glm mm_global)
+add_dependencies(TestTimer mm_global)
 target_link_libraries(TestTimer mm_global Qt5::Test coverage_config)
 set_target_properties(
         TestTimer PROPERTIES
@@ -242,7 +242,7 @@ set(room_mob
 )
 set(RoomMob roompanel/TestRoomMob.cpp)
 add_executable(TestRoomMob ${room_mob} ${RoomMob})
-add_dependencies(TestRoomMob glm mm_global)
+add_dependencies(TestRoomMob mm_global)
 target_link_libraries(TestRoomMob mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomMob PROPERTIES
@@ -263,7 +263,7 @@ set(room_mobs
 )
 set(RoomMobs roompanel/TestRoomMobs.cpp)
 add_executable(TestRoomMobs ${room_mobs} ${RoomMobs})
-add_dependencies(TestRoomMobs glm mm_global)
+add_dependencies(TestRoomMobs mm_global)
 target_link_libraries(TestRoomMobs mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomMobs PROPERTIES
@@ -286,7 +286,7 @@ set(room_manager
 )
 set(RoomManager roompanel/TestRoomManager.cpp)
 add_executable(TestRoomManager ${room_manager} ${RoomManager})
-add_dependencies(TestRoomManager glm mm_global)
+add_dependencies(TestRoomManager mm_global)
 target_link_libraries(TestRoomManager mm_global Qt5::Test Qt5::Gui Qt5::Widgets coverage_config)
 set_target_properties(
         TestRoomManager PROPERTIES
