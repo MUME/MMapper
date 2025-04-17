@@ -98,4 +98,3 @@ void ParserPage::slot_roomDescColorClicked()
     AnsiCombo::makeWidgetColoured(roomDescColorLabel, ansiString);
     setConfig().parser.roomDescColor = ansiString;
 }
-
