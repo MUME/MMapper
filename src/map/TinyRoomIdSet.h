@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <memory>
+#include <new>
 #include <optional>
 #include <set>
 #include <utility>
@@ -40,14 +41,14 @@ private:
         if (!hasBig()) {
             throw std::runtime_error("bad type");
         }
-        return **reinterpret_cast<PtrToSet *>(&m_storage);
+        return **std::launder(reinterpret_cast<PtrToSet *>(&m_storage));
     }
     NODISCARD const Set &getBig() const
     {
         if (!hasBig()) {
             throw std::runtime_error("bad type");
         }
-        return **reinterpret_cast<const PtrToSet *>(&m_storage);
+        return **std::launder(reinterpret_cast<const PtrToSet *>(&m_storage));
     }
     NODISCARD Type getOnly() const
     {
@@ -67,7 +68,7 @@ private:
         }
 
         const bool wasNullptr = newValue == nullptr;
-        PtrToSet *const ptr = reinterpret_cast<PtrToSet *>(&m_storage);
+        PtrToSet *const ptr = std::launder(reinterpret_cast<PtrToSet *>(&m_storage));
         using std::swap;
         swap(*ptr, newValue);
 
