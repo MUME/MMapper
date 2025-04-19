@@ -8,7 +8,8 @@
     "--socket=x11",
     "--socket=wayland",
     "--device=dri",
-    "--filesystem=home"
+    "--filesystem=home",
+    "--env=QT_QPA_PLATFORM=xcb"
   ],
   "command": "/app/bin/mmapper",
   "modules": [
