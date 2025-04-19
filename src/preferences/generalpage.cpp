@@ -134,7 +134,7 @@ GeneralPage::GeneralPage(QWidget *parent)
         if (ui->showPassword->text() == "Hide Password") {
             ui->showPassword->setText("Show Password");
             ui->accountPassword->clear();
-            ui->accountPassword->setEchoMode(QLineEdit::PasswordEchoOnEdit);
+            ui->accountPassword->setEchoMode(QLineEdit::Password);
         } else if (getConfig().account.accountPassword && ui->accountPassword->text().isEmpty()) {
             ui->showPassword->setText("Request Password");
             passCfg.getPassword();
