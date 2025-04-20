@@ -46,7 +46,7 @@ MumeFallbackSocket::MumeFallbackSocket(QObject *parent, MumeSocketOutputs &outpu
         case QAbstractSocket::ListeningState:
         case QAbstractSocket::ClosingState:
         default:
-            m_socket->deleteLater();
+            m_socket.reset();
             onSocketError(QStringLiteral("Connection has timed out due to network issues."));
             break;
         }
@@ -95,7 +95,7 @@ MumeFallbackSocket::MumeFallbackSocket(QObject *parent, MumeSocketOutputs &outpu
 MumeFallbackSocket::~MumeFallbackSocket()
 {
     stopTimer();
-    m_socket->deleteLater();
+    m_socket.reset();
 }
 
 void MumeFallbackSocket::disconnectFromHost()
@@ -130,14 +130,14 @@ void MumeFallbackSocket::connectToHost()
     auto &wrapper = deref(m_wrapper);
     switch (m_state) {
     case SocketTypeEnum::SSL:
-        m_socket = mmqt::makeQPointer<MumeSslSocket>(this, wrapper);
+        m_socket.reset(new MumeSslSocket(this, wrapper));
         break;
     case SocketTypeEnum::WEBSOCKET:
         assert(!NO_WEBSOCKET);
-        m_socket = mmqt::makeQPointer<MumeWebSocket>(this, wrapper);
+        m_socket.reset(new MumeWebSocket(this, wrapper));
         break;
     case SocketTypeEnum::INSECURE:
-        m_socket = mmqt::makeQPointer<MumeTcpSocket>(this, wrapper);
+        m_socket.reset(new MumeTcpSocket(this, wrapper));
         break;
     default:
         assert(false);

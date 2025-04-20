@@ -12,7 +12,7 @@
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
-#include <QPointer>
+#include <QScopedPointer>
 #include <QSslSocket>
 #include <QString>
 #include <QTimer>
@@ -63,7 +63,7 @@ class NODISCARD_QOBJECT MumeFallbackSocket final : public QObject
 
 private:
     enum SocketTypeEnum { SSL, WEBSOCKET, INSECURE } m_state = SocketTypeEnum::SSL;
-    QPointer<MumeSocket> m_socket;
+    QScopedPointer<MumeSocket> m_socket;
     std::unique_ptr<MumeSocketOutputs> m_wrapper;
     QTimer m_timer;
     MumeSocketOutputs &m_outputs;
