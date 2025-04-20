@@ -778,9 +778,6 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &ro
     const ServerRoomId serverId = room.getServerId();
     saveXmlAttribute(stream, "server_id", serverRoomIdToString(serverId));
     saveXmlAttribute(stream, "name", room.getName().toQString());
-    if (false /*!room.isUpToDate()*/) {
-        saveXmlAttribute(stream, "uptodate", "false");
-    }
     saveXmlElement(stream, "align", conv.toString(room.getAlignType()));
     saveXmlElement(stream, "light", conv.toString(room.getLightType()));
     saveXmlElement(stream, "portable", conv.toString(room.getPortableType()));

@@ -7,7 +7,6 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiOstream.h"
-#include "../global/CaseUtils.h"
 #include "../global/Consts.h"
 #include "../global/Diff.h"
 #include "../global/PrintUtils.h"
@@ -15,8 +14,6 @@
 #include "../global/entities.h"
 #include "../global/logging.h"
 #include "../global/parserutils.h"
-#include "../global/progresscounter.h"
-#include "../group/mmapper2group.h"
 #include "../map/ExitsFlags.h"
 #include "../map/ParseTree.h"
 #include "../map/PromptFlags.h"
@@ -538,11 +535,6 @@ void MumeXmlParser::setMove(const CommandEnum move)
         return;
     }
 
-    // FIXME
-    if (false /*!here.isUpToDate()*/) {
-        return;
-    }
-
     const auto &ex = here.getExit(dir);
     if (!ex.exitIsExit()) {
         return;
@@ -559,9 +551,7 @@ void MumeXmlParser::setMove(const CommandEnum move)
         return;
     }
 
-    // FIXME
-    if (false /*!there.isUpToDate() */ || there.getName().empty()
-        || there.getDescription().empty()) {
+    if (there.getName().empty() || there.getDescription().empty()) {
         return;
     }
 

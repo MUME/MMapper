@@ -87,10 +87,10 @@ void print_char(ICharTokenStream &os, const char32_t codepoint, const bool doubl
             char buf[16];
             if (codepoint > 0xFFFFu) {
                 // max 11 bytes (including  C_NUL)
-                std::sprintf(buf, "\\U%08X", (codepoint & 0xFFFF'FFFFu));
+                std::snprintf(buf, sizeof(buf), "\\U%08X", (codepoint & 0xFFFF'FFFFu));
             } else {
                 // max 7 bytes (including C_NUL)
-                std::sprintf(buf, "\\u%04X", (codepoint & 0xFFFFu));
+                std::snprintf(buf, sizeof(buf), "\\u%04X", (codepoint & 0xFFFFu));
             }
             os.getEsc() << buf;
         }

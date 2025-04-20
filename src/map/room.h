@@ -108,5 +108,3 @@ NODISCARD extern ComparisonResultEnum compareStrings(std::string_view room,
                                                      std::string_view event,
                                                      int prevTolerance,
                                                      bool upToDate = true);
-
-NODISCARD extern const Coordinate &exitDir(ExitDirEnum dir);
