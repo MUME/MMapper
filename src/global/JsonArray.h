@@ -19,23 +19,22 @@ public:
         : m_iter(it)
     {}
 
-    JsonValue operator*() const { return JsonValue{*m_iter}; }
+    NODISCARD JsonValue operator*() const { return JsonValue{*m_iter}; }
 
-    JsonArrayIterator &operator++()
+    ALLOW_DISCARD JsonArrayIterator &operator++()
     {
         ++m_iter;
         return *this;
     }
 
-    JsonArrayIterator operator++(int)
+    NODISCARD bool operator==(const JsonArrayIterator &other) const
     {
-        JsonArrayIterator temp = *this;
-        ++m_iter;
-        return temp;
+        return m_iter == other.m_iter;
     }
-
-    bool operator==(const JsonArrayIterator &other) const { return m_iter == other.m_iter; }
-    bool operator!=(const JsonArrayIterator &other) const { return m_iter != other.m_iter; }
+    NODISCARD bool operator!=(const JsonArrayIterator &other) const
+    {
+        return m_iter != other.m_iter;
+    }
 };
 
 class NODISCARD JsonArray final
@@ -50,7 +49,7 @@ private:
 
 public:
     explicit JsonArray(QJsonArray arr)
-        : m_arr{std::move(arr)}
+        : m_arr(std::move(arr)) // CAUTION: using curly braces here calls initializer list ctor.
         , m_beg{0}
         , m_end{static_cast<size_t>(m_arr.size())}
     {}

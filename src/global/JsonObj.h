@@ -22,29 +22,22 @@ public:
         : m_iter(it)
     {}
 
-    std::pair<JsonString, JsonValue> operator*() const
+    NODISCARD std::pair<JsonString, JsonValue> operator*() const
     {
         return {JsonString{m_iter.key()}, JsonValue{*m_iter}};
     }
 
-    JsonString first() const { return JsonString{m_iter.key()}; }
-    JsonValue second() const { return JsonValue(m_iter.value()); }
+    NODISCARD JsonString first() const { return JsonString{m_iter.key()}; }
+    NODISCARD JsonValue second() const { return JsonValue(m_iter.value()); }
 
-    JsonObjIterator &operator++()
+    ALLOW_DISCARD JsonObjIterator &operator++()
     {
         ++m_iter;
         return *this;
     }
 
-    JsonObjIterator operator++(int)
-    {
-        JsonObjIterator temp = *this;
-        ++m_iter;
-        return temp;
-    }
-
-    bool operator==(const JsonObjIterator &other) const { return m_iter == other.m_iter; }
-    bool operator!=(const JsonObjIterator &other) const { return m_iter != other.m_iter; }
+    NODISCARD bool operator==(const JsonObjIterator &other) const { return m_iter == other.m_iter; }
+    NODISCARD bool operator!=(const JsonObjIterator &other) const { return m_iter != other.m_iter; }
 };
 
 class NODISCARD JsonObj final
