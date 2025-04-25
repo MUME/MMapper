@@ -27,7 +27,7 @@ private:
     friend class RemoteEditSession;
 
 private:
-    std::map<uint32_t, std::unique_ptr<RemoteEditSession>> m_sessions;
+    std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> m_sessions;
     uint32_t m_greatestUsedId = 0;
 
 public:
@@ -46,7 +46,7 @@ private:
     {
         return m_greatestUsedId == UINT_MAX ? 0 : m_greatestUsedId + 1;
     }
-    void addSession(const RemoteSession &, const QString &, const QString &);
+    void addSession(const RemoteSessionId, const QString &, const QString &);
     void removeSession(const RemoteEditSession &session);
 
 private:
@@ -55,10 +55,10 @@ private:
     void trySaveLocally(const RemoteEditSession &session);
 
 signals:
-    void sig_remoteEditCancel(const RemoteEditMessageBytes &sessionId);
-    void sig_remoteEditSave(const RemoteEditMessageBytes &sessionId, const Latin1Bytes &content);
+    void sig_remoteEditCancel(const RemoteSessionId sessionId);
+    void sig_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
 
 public slots:
     void slot_remoteView(const QString &, const QString &);
-    void slot_remoteEdit(const RemoteSession &, const QString &, const QString &);
+    void slot_remoteEdit(const RemoteSessionId, const QString &, const QString &);
 };

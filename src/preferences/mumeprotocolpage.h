@@ -28,7 +28,6 @@ public:
 
 public slots:
     void slot_loadConfig();
-    void slot_remoteEditCheckBoxStateChanged(int);
     void slot_internalEditorRadioButtonChanged(bool);
     void slot_externalEditorCommandTextChanged(QString);
     void slot_externalEditorBrowseButtonClicked(bool);

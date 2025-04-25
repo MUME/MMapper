@@ -10,7 +10,6 @@
 
 #include <cassert>
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 #include <QClipboard>
@@ -30,18 +29,18 @@ void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
     addSession(REMOTE_VIEW_SESSION_ID, title, body);
 }
 
-void RemoteEdit::slot_remoteEdit(const RemoteSession &sessionId,
+void RemoteEdit::slot_remoteEdit(const RemoteSessionId sessionId,
                                  const QString &title,
                                  const QString &body)
 {
     addSession(sessionId, title, body);
 }
 
-void RemoteEdit::addSession(const RemoteSession &sessionId,
+void RemoteEdit::addSession(const RemoteSessionId sessionId,
                             const QString &title,
                             const QString &body)
 {
-    const auto internalId = getInternalIdCount();
+    const auto internalId = RemoteInternalId{getInternalIdCount()};
     std::unique_ptr<RemoteEditSession> session;
 
     if (getConfig().mumeClientProtocol.internalRemoteEditor) {
@@ -59,19 +58,19 @@ void RemoteEdit::addSession(const RemoteSession &sessionId,
     }
     m_sessions.insert(std::make_pair(internalId, std::move(session)));
 
-    m_greatestUsedId = internalId; // Increment internalId counter
+    m_greatestUsedId = internalId.asUint32(); // Increment internalId counter
 }
 
 void RemoteEdit::removeSession(const RemoteEditSession &session)
 {
-    const uint32_t internalId = session.getInternalId();
+    const auto internalId = session.getInternalId();
     const auto search = m_sessions.find(internalId);
     if (search != m_sessions.end()) {
-        qDebug() << "Destroying RemoteEditSession" << internalId;
+        qDebug() << "Destroying RemoteEditSession" << internalId.asUint32();
         m_sessions.erase(search);
 
     } else {
-        qWarning() << "Unable to find" << internalId << "session to erase";
+        qWarning() << "Unable to find" << internalId.asUint32() << "session to erase";
     }
 }
 
@@ -80,7 +79,7 @@ void RemoteEdit::cancel(const RemoteEditSession *const pSession)
     auto &session = deref(pSession);
 
     if (session.isEditSession() && session.isConnected()) {
-        qDebug() << "Cancelling session" << session.getSessionId();
+        qDebug() << "Cancelling session" << session.getSessionId().asInt32();
         emit sig_remoteEditCancel(session.getSessionId());
     }
 
@@ -97,7 +96,7 @@ void RemoteEdit::save(const RemoteEditSession *const pSession)
 void RemoteEdit::trySave(const RemoteEditSession &session)
 {
     if (!session.isEditSession()) {
-        qWarning() << "Session" << session.getInternalId()
+        qWarning() << "Session" << session.getInternalId().asUint32()
                    << "was not an edit session and could not be saved";
         assert(false);
         return;
@@ -117,7 +116,7 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
         std::abort();
     }
 
-    qDebug() << "Saving session" << session.getSessionId();
+    qDebug() << "Saving session" << session.getSessionId().asInt32();
     // REVISIT: should we warn if this transformation modifies the content
     // (e.g. unicode transliteration, etc).
     auto latin1 = Latin1Bytes{
@@ -128,7 +127,7 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
 void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
 {
     if (!session.isEditSession()) {
-        std::abort();
+        assert(false);
     }
 
     // Prompt the user to save the file somewhere since we disconnected
@@ -136,17 +135,18 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
         checked_dynamic_downcast<QWidget *>(parent()), // MainWindow
         "MUME disconnected and you need to save the file locally",
         getConfig().autoLoad.lastMapDirectory + QDir::separator()
-            + QString("MMapper-Edit-%1.txt").arg(session.getSessionId().getQByteArray().constData()),
+            + QString("MMapper-Edit-%1.txt").arg(session.getInternalId().asUint32()),
         "Text files (*.txt)");
 
     QFile file(name);
     if (!name.isEmpty() && file.open(QFile::WriteOnly | QFile::Text)) {
-        qDebug() << "Session" << session.getInternalId() << "was was saved to" << name;
+        qDebug() << "Session" << session.getInternalId().asUint32() << "was was saved to" << name;
         file.write(session.getContent().toUtf8());
         file.close();
     } else {
         QGuiApplication::clipboard()->setText(session.getContent());
-        qWarning() << "Session" << session.getInternalId() << "was copied to the clipboard";
+        qWarning() << "Session" << session.getInternalId().asUint32()
+                   << "was copied to the clipboard";
     }
 }
 
@@ -156,7 +156,7 @@ void RemoteEdit::onDisconnected()
         const auto &id = pair.first;
         const auto &session = pair.second;
         if (session->isEditSession()) {
-            qWarning() << "Session" << id << "marked as disconnected";
+            qWarning() << "Session" << id.asUint32() << "marked as disconnected";
             session->setDisconnected();
         }
     }

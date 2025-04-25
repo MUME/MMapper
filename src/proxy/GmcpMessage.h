@@ -39,10 +39,15 @@ class ParseEvent;
     X(GROUP_REMOVE, GroupRemove, "group.remove", "Group.Remove") \
     X(GROUP_SET, GroupSet, "group.set", "Group.Set") \
     X(GROUP_UPDATE, GroupUpdate, "group.update", "Group.Update") \
-    X(MMAPPER_COMM_GROUPTELL, \
-      MmapperCommGroupTell, \
-      "mmapper.comm.grouptell", \
-      "MMapper.Comm.GroupTell") \
+    X(MUME_CLIENT_EDIT, MumeClientEdit, "mume.client.edit", "MUME.Client.Edit") \
+    X(MUME_CLIENT_ERROR, MumeClientError, "mume.client.error", "MUME.Client.Error") \
+    X(MUME_CLIENT_VIEW, MumeClientView, "mume.client.view", "MUME.Client.View") \
+    X(MUME_CLIENT_CANCEL_EDIT, \
+      MumeClientCancelEdit, \
+      "mume.client.canceledit", \
+      "MUME.Client.CancelEdit") \
+    X(MUME_CLIENT_WRITE, MumeClientWrite, "mume.client.write", "MUME.Client.Write") \
+    X(MUME_CLIENT_XML, MumeClientXml, "mume.client.xml", "MUME.Client.XML") \
     X(ROOM_CHARS_ADD, RoomCharsAdd, "room.chars.add", "Room.Chars.Add") \
     X(ROOM_CHARS_REMOVE, RoomCharsRemove, "room.chars.remove", "Room.Chars.Remove") \
     X(ROOM_CHARS_SET, RoomCharsSet, "room.chars.set", "Room.Chars.Set") \
@@ -61,7 +66,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MESSAGES = XFOREACH_GMCP_MESSAGE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MESSAGES == 25);
+static_assert(NUM_GMCP_MESSAGES == 30);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {

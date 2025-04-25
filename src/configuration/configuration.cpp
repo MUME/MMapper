@@ -266,7 +266,6 @@ ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing sampl
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
-ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_REMEMBER_LOGIN = "remember login";
@@ -659,7 +658,6 @@ void Configuration::ParserSettings::read(const QSettings &conf)
 
 void Configuration::MumeClientProtocolSettings::read(const QSettings &conf)
 {
-    remoteEditing = conf.value(KEY_REMOTE_EDITING_AND_VIEWING, true).toBool();
     internalRemoteEditor = conf.value(KEY_USE_INTERNAL_EDITOR, true).toBool();
     externalRemoteEditorCommand = conf.value(KEY_EXTERNAL_EDITOR_COMMAND, getPlatformEditor())
                                       .toString();
@@ -832,7 +830,6 @@ void Configuration::MumeNativeSettings::write(QSettings &conf) const
 
 void Configuration::MumeClientProtocolSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_REMOTE_EDITING_AND_VIEWING, remoteEditing);
     conf.setValue(KEY_USE_INTERNAL_EDITOR, internalRemoteEditor);
     conf.setValue(KEY_EXTERNAL_EDITOR_COMMAND, externalRemoteEditorCommand);
 }

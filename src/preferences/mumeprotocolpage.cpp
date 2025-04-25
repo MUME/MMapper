@@ -18,10 +18,6 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->remoteEditCheckBox,
-            &QCheckBox::stateChanged,
-            this,
-            &MumeProtocolPage::slot_remoteEditCheckBoxStateChanged);
     connect(ui->internalEditorRadioButton,
             &QAbstractButton::toggled,
             this,
@@ -44,24 +40,11 @@ MumeProtocolPage::~MumeProtocolPage()
 void MumeProtocolPage::slot_loadConfig()
 {
     const auto &settings = getConfig().mumeClientProtocol;
-    ui->remoteEditCheckBox->setChecked(settings.remoteEditing);
     ui->internalEditorRadioButton->setChecked(settings.internalRemoteEditor);
     ui->externalEditorRadioButton->setChecked(!settings.internalRemoteEditor);
     ui->externalEditorCommand->setText(settings.externalRemoteEditorCommand);
     ui->externalEditorCommand->setEnabled(!settings.internalRemoteEditor);
     ui->externalEditorBrowseButton->setEnabled(!settings.internalRemoteEditor);
-}
-
-void MumeProtocolPage::slot_remoteEditCheckBoxStateChanged(int /*unused*/)
-{
-    const auto useRemoteEdit = ui->remoteEditCheckBox->isChecked();
-
-    setConfig().mumeClientProtocol.remoteEditing = useRemoteEdit;
-
-    ui->externalEditorRadioButton->setEnabled(useRemoteEdit);
-    ui->internalEditorRadioButton->setEnabled(useRemoteEdit);
-    ui->externalEditorBrowseButton->setEnabled(useRemoteEdit);
-    ui->externalEditorCommand->setEnabled(useRemoteEdit);
 }
 
 void MumeProtocolPage::slot_internalEditorRadioButtonChanged(bool /*unused*/)

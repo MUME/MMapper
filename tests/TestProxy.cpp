@@ -61,11 +61,6 @@ void TestProxy::gmcpModuleTest()
     QCOMPARE(mmqt::toQByteArrayUtf8(module3.getNormalizedName()), QByteArray("room"));
     QCOMPARE(module3.getVersion().asUint32(), 0u);
     QVERIFY(module3.isSupported());
-
-    GmcpModule module4("MMapper.Comm 1");
-    QCOMPARE(mmqt::toQByteArrayUtf8(module4.getNormalizedName()), QByteArray("mmapper.comm"));
-    QCOMPARE(module4.getVersion().asUint32(), 1u);
-    QVERIFY(module4.isSupported());
 }
 
 void TestProxy::telnetFilterTest()

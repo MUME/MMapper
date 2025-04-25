@@ -8,10 +8,10 @@
 #include "../display/MapCanvasConfig.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
+#include "../global/SendToUser.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "../global/emojis.h"
-#include "../mpi/mpifilter.h"
 #include "GmcpUtils.h"
 
 #include <charconv>
@@ -250,10 +250,10 @@ void MudTelnet::onAnalyzeMudStream(const TelnetIacBytes &data)
     onReadInternal(data);
 }
 
-void MudTelnet::onSubmitMpiToMud(const RawBytes &bytes)
+void MudTelnet::onSubmitGmcpMumeClient(const GmcpMessage &m)
 {
-    assert(isMpiMessage(bytes));
-    submitOverTelnet(bytes, false);
+    assert(m.getName().toQString().startsWith("MUME.Client."));
+    sendGmcpMessage(m);
 }
 
 void MudTelnet::submitOneLine(const QString &inputLine)
@@ -267,13 +267,6 @@ void MudTelnet::submitOneLine(const QString &inputLine)
     };
 
     assert(isOneLineCrlf(inputLine));
-    if (hasMpiPrefix(inputLine)) {
-        // It would be useful to send feedback to the user.
-        const auto mangled = char_consts::C_SPACE + inputLine;
-        qWarning() << "mangling command that contains MPI prefix" << mangled;
-        submit(mangled);
-        return;
-    }
 
     submit(inputLine);
 }
@@ -400,11 +393,55 @@ void MudTelnet::virt_receiveEchoMode(const bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
+    if (!msg.getJsonDocument().has_value()) {
+        return;
+    }
+
     if (getDebug()) {
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
     }
 
-    m_outputs.onRelayGmcpFromMudToUser(msg);
+    if (msg.isMumeClientError()) {
+        m_outputs.onMumeClientError(msg.getJson().value().toQString());
+        return;
+    }
+
+    auto optObj = msg.getJsonDocument()->getObject();
+    if (!optObj) {
+        return;
+    }
+    auto &obj = optObj.value();
+
+    const auto optTitle = obj.getString("title");
+    const auto optText = obj.getString("text");
+    const auto optId = obj.getInt("id");
+
+    if (msg.isMumeClientView()) {
+        if (!optTitle || optTitle.has_value()) {
+            m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
+            return;
+        }
+    } else if (msg.isMumeClientEdit()) {
+        m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
+                                   optTitle.value_or("Edit text..."),
+                                   optText.value_or(""));
+        return;
+
+    } else if (msg.isMumeClientWrite()) {
+        const auto optResult = obj.getString("result");
+        if (optId.has_value() && optResult.has_value()) {
+            qDebug() << "Failure sending remote message" << optId.value() << optResult.value();
+            // Mume doesn't send anything, so we have to make our own message.
+            global::sendToUser("Failure sending remote message: "
+                               + optResult.value_or("missing text"));
+        } else {
+            qDebug() << "[success] Successfully sent remote edit " << optId.value();
+        }
+        return;
+
+    } else {
+        m_outputs.onRelayGmcpFromMudToUser(msg);
+    }
 }
 
 void MudTelnet::virt_receiveMudServerStatus(const TelnetMsspBytes &ba)
@@ -430,6 +467,10 @@ void MudTelnet::virt_onGmcpEnabled()
     if (m_receivedExternalDiscordHello) {
         sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::EXTERNAL_DISCORD_HELLO});
     }
+
+    // Request XML mode
+    sendGmcpMessage(GmcpMessage{GmcpMessageTypeEnum::MUME_CLIENT_XML,
+                                GmcpJson{R"({ "enable": true, "silent": true })"}});
 
     // Check if user has requested we remember our login credentials
     m_outputs.onTryCharLogin();
@@ -460,6 +501,7 @@ void MudTelnet::resetGmcpModules()
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::GROUP, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM_CHARS, GmcpModuleVersion{1}}, true);
     receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::ROOM, GmcpModuleVersion{1}}, true);
+    receiveGmcpModule(GmcpModule{GmcpModuleTypeEnum::MUME_CLIENT, GmcpModuleVersion{1}}, true);
 }
 
 void MudTelnet::sendCoreSupports()

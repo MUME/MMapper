@@ -49,7 +49,7 @@ void registerMetatypes()
     REGISTER_METATYPE(CharacterPositionEnum);
     REGISTER_METATYPE(GmcpMessage);
     REGISTER_METATYPE(GroupSecret);
-    REGISTER_METATYPE(RemoteSession);
+    REGISTER_METATYPE(RemoteSessionId);
 
 #define X_REGISTER_METATYPE(name) REGISTER_METATYPE(name##Bytes);
     XFOREACH_TAGGED_BYTE_TYPES(X_REGISTER_METATYPE)

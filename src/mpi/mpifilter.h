@@ -6,6 +6,7 @@
 #include "../global/Consts.h"
 #include "../global/Signal2.h"
 #include "../mpi/remoteeditsession.h"
+#include "../proxy/GmcpMessage.h"
 #include "../proxy/telnetfilter.h"
 
 #include <QByteArray>
@@ -20,9 +21,9 @@ public:
 
 public:
     void onParseNewMudInput(const TelnetData &data) { virt_onParseNewMudInput(data); }
-    void onEditMessage(const RemoteSession &session, const QString &title, const QString &body)
+    void onEditMessage(const RemoteSessionId id, const QString &title, const QString &body)
     {
-        virt_onEditMessage(session, title, body);
+        virt_onEditMessage(id, title, body);
     }
     void onViewMessage(const QString &title, const QString &body)
     {
@@ -31,7 +32,7 @@ public:
 
 private:
     virtual void virt_onParseNewMudInput(const TelnetData &) = 0;
-    virtual void virt_onEditMessage(const RemoteSession &, const QString &, const QString &) = 0;
+    virtual void virt_onEditMessage(const RemoteSessionId, const QString &, const QString &) = 0;
     virtual void virt_onViewMessage(const QString &, const QString &) = 0;
 };
 
@@ -40,24 +41,20 @@ class NODISCARD MpiFilter final
 {
 private:
     MpiFilterOutputs &m_outputs;
-    RawBytes m_buffer;
-    int m_remaining = 0;
-    TelnetDataEnum m_previousType = TelnetDataEnum::Empty;
-    char m_command = char_consts::C_NUL;
-    bool m_receivingMpi = false;
 
 public:
     explicit MpiFilter(MpiFilterOutputs &outputs)
         : m_outputs{outputs}
     {}
 
-protected:
+private:
     void parseMessage(char command, const RawBytes &buffer);
     void parseEditMessage(const RawBytes &buffer);
     void parseViewMessage(const RawBytes &buffer);
 
 public:
-    void analyzeNewMudInput(const TelnetData &data);
+    void receiveMpiView(const QString &title, const QString body);
+    void receiveMpiEdit(const RemoteSessionId id, const QString &title, const QString body);
 };
 
 // toMud
@@ -68,13 +65,13 @@ public:
     virtual ~MpiFilterToMud();
 
 public:
-    void cancelRemoteEdit(const RemoteEditMessageBytes &sessionId);
-    void saveRemoteEdit(const RemoteEditMessageBytes &sessionId, const Latin1Bytes &content);
+    void cancelRemoteEdit(const RemoteSessionId id);
+    void saveRemoteEdit(const RemoteSessionId id, const Latin1Bytes &content);
 
 private:
-    void submitMpi(const RawBytes &bytes);
-    virtual void virt_submitMpi(const RawBytes &bytes) = 0;
+    void sendRemoteEditMessage(GmcpMessageTypeEnum type,
+                               const RemoteSessionId id,
+                               const QString &text);
+    void submitGmcp(const GmcpMessage &gmcpMessage);
+    virtual void virt_submitGmcp(const GmcpMessage &gmcpMessage) = 0;
 };
-
-NODISCARD extern bool isMpiMessage(const RawBytes &bytes);
-NODISCARD extern bool hasMpiPrefix(const QString &s);

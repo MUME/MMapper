@@ -20,7 +20,7 @@
     X(EVENT, Event, "event", "Event") \
     X(GROUP, Group, "group", "Group") \
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
-    X(MMAPPER_COMM, MmapperComm, "mmapper.comm", "MMapper.Comm") \
+    X(MUME_CLIENT, MumeClient, "mume.client", "MUME.Client") \
     X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
     X(ROOM, Room, "room", "Room") \
     /* define gmcp module types above */

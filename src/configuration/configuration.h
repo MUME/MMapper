@@ -88,7 +88,6 @@ public:
 
     struct NODISCARD MumeClientProtocolSettings final
     {
-        bool remoteEditing = false;
         bool internalRemoteEditor = false;
         QString externalRemoteEditorCommand;
 

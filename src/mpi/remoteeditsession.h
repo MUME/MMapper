@@ -3,11 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/TaggedInt.h"
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
 #include "../proxy/TaggedBytes.h"
-
-#include <algorithm>
 
 #include <QObject>
 #include <QScopedPointer>
@@ -19,10 +18,40 @@ class RemoteEdit;
 class RemoteEditProcess;
 class RemoteEditWidget;
 
-using RemoteSession = RemoteEditMessageBytes;
+namespace tags {
+struct NODISCARD RemoteInternalIdTag final
+{};
+struct NODISCARD RemoteSessionIdTag final
+{};
+} // namespace tags
+
+struct NODISCARD RemoteInternalId final
+    : public TaggedInt<RemoteInternalId, tags::RemoteInternalIdTag, uint32_t>
+{
+    using TaggedInt::TaggedInt;
+    constexpr RemoteInternalId()
+        : RemoteInternalId{0}
+    {}
+    NODISCARD constexpr uint32_t asUint32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, RemoteInternalId id);
+};
+
+// REVISIT: The successor edit format will need to be base64 with "content-type" metadata,
+// so it can correctly transfer utf8 and latin1 files, as well as utf8 string data to mudlle,
+// and possibly also various image formats; this would allow sharing of pictures.
+struct NODISCARD RemoteSessionId final
+    : public TaggedInt<RemoteSessionId, tags::RemoteSessionIdTag, int32_t>
+{
+    using TaggedInt::TaggedInt;
+    constexpr RemoteSessionId()
+        : RemoteSessionId{-1}
+    {}
+    NODISCARD constexpr int32_t asInt32() const { return value(); }
+    friend std::ostream &operator<<(std::ostream &os, RemoteSessionId id);
+};
 
 // Internally shared across all view sessions
-static inline const RemoteSession REMOTE_VIEW_SESSION_ID = RemoteSession("-1");
+static inline const RemoteSessionId REMOTE_VIEW_SESSION_ID = RemoteSessionId(-1);
 
 class NODISCARD_QOBJECT RemoteEditSession : public QObject
 {
@@ -34,14 +63,14 @@ private:
 
 private:
     bool m_connected = true;
-    const uint32_t m_internalId = 0;
-    const RemoteSession m_sessionId = REMOTE_VIEW_SESSION_ID;
+    const RemoteInternalId m_internalId{};
+    const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
     RemoteEdit *m_manager = nullptr;
     QString m_content;
 
 public:
-    explicit RemoteEditSession(uint32_t internalId,
-                               const RemoteSession &sessionId,
+    explicit RemoteEditSession(const RemoteInternalId internalId,
+                               const RemoteSessionId sessionId,
                                RemoteEdit *remoteEdit);
 
 public:
@@ -71,8 +100,8 @@ class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSessi
     Q_OBJECT
 
 public:
-    explicit RemoteEditInternalSession(uint32_t internalId,
-                                       const RemoteSession &sessionId,
+    explicit RemoteEditInternalSession(const RemoteInternalId internalId,
+                                       const RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
@@ -87,8 +116,8 @@ class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSessi
     Q_OBJECT
 
 public:
-    explicit RemoteEditExternalSession(uint32_t internalId,
-                                       const RemoteSession &sessionId,
+    explicit RemoteEditExternalSession(const RemoteInternalId internalId,
+                                       const RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
                                        RemoteEdit *remoteEdit);

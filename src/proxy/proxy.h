@@ -325,5 +325,4 @@ private:
 
 private:
     NODISCARD bool hasConnectedUserSocket() const;
-    void onSubmitMpiToMud(const RawBytes &);
 };

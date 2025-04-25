@@ -13,7 +13,6 @@
     X(Ascii)                \
     X(Latin1)               \
     X(Raw)                  \
-    X(RemoteEditMessage)    \
     X(Secret)               \
     X(TelnetCharset)        \
     X(TelnetIac)            \

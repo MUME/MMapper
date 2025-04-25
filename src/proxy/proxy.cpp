@@ -421,7 +421,7 @@ void Proxy::allocUserTelnet()
 
 void Proxy::allocMudTelnet()
 {
-    struct NODISCARD LocalMudTelnetOutputs final : MudTelnetOutputs
+    struct NODISCARD LocalMudTelnetOutputs final : public MudTelnetOutputs
     {
     private:
         Proxy &m_proxy;
@@ -464,6 +464,13 @@ void Proxy::allocMudTelnet()
 
         void virt_onRelayGmcpFromMudToUser(const GmcpMessage &msg) final
         {
+            if (msg.isMumeClientView() || msg.isMumeClientEdit() || msg.isMumeClientCancelEdit()
+                || msg.isMumeClientError() || msg.isMumeClientWrite() || msg.isMumeClientXml()) {
+                // this is a private message between MUME and mmapper.
+                qWarning() << "MUME.Client message was almost sent to the user.";
+                return;
+            }
+
             // forwarded (to user)
             getUserTelnet().onGmcpToUser(msg);
 
@@ -493,23 +500,37 @@ void Proxy::allocMudTelnet()
                 getProxy().getPasswordConfig().getPassword();
             }
         }
+
+        void virt_onMumeClientView(const QString &title, const QString &body) final
+        {
+            getProxy().getMpiFilterFromMud().receiveMpiView(title, body);
+        }
+        void virt_onMumeClientEdit(const RemoteSessionId id,
+                                   const QString &title,
+                                   const QString &body) final
+        {
+            getProxy().getMpiFilterFromMud().receiveMpiEdit(id, title, body);
+        }
+        void virt_onMumeClientError(const QString &errmsg) final
+        {
+            qInfo() << errmsg;
+            getProxy().sendToUser(SendToUserSource::FromMMapper,
+                                  QString("MUME.Client protocol error: %1").arg(errmsg));
+        }
     };
 
     auto &pipe = getPipeline();
     auto &out = pipe.outputs.mud.mudTelnetOutputs = std::make_unique<LocalMudTelnetOutputs>(*this);
     pipe.mud.mudTelnet = std::make_unique<MudTelnet>(deref(out));
 
-    // Telnet -> LineFilter -> MpiFilter -> Parser
+    // Telnet -> LineFilter -> Parser
     //
     // note: backspaces are processed here for "twiddlers" displayed as 1-letter prompts
     // overwritten by backspace to simulate a rotating bar.
-    //
-    // The main purpose of the line filter here is because the MPI protocol requires
-    // precise/careful tracking of whether lines end in "\n" vs "\r\n".
     pipe.mud.mudTelnetFilter
         = std::make_unique<TelnetLineFilter>(TelnetLineFilter::OptionBackspacesEnum::Yes,
                                              [this](const TelnetData &data) {
-                                                 getMpiFilterFromMud().analyzeNewMudInput(data);
+                                                 getMudParser().slot_parseNewMudInput(data);
                                              });
 }
 
@@ -757,7 +778,7 @@ void Proxy::allocMpiFilter()
         }
 
     private:
-        void virt_onEditMessage(const RemoteSession &id,
+        void virt_onEditMessage(const RemoteSessionId id,
                                 const QString &title,
                                 const QString &body) final
         {
@@ -796,9 +817,9 @@ void Proxy::allocRemoteEdit()
         {}
 
     private:
-        void virt_submitMpi(const RawBytes &bytes) final
+        void virt_submitGmcp(const GmcpMessage &gmcpMessage) final
         {
-            m_proxy.getMudTelnet().onSubmitMpiToMud(bytes);
+            m_proxy.getMudTelnet().onSubmitGmcpMumeClient(gmcpMessage);
         }
     };
 
@@ -809,15 +830,13 @@ void Proxy::allocRemoteEdit()
     QObject::connect(&remoteEdit,
                      &RemoteEdit::sig_remoteEditCancel,
                      this,
-                     [this](const RemoteEditMessageBytes &sessionId) {
-                         getMpiFilterToMud().cancelRemoteEdit(sessionId);
-                     });
+                     [this](const RemoteSessionId id) { getMpiFilterToMud().cancelRemoteEdit(id); });
 
     QObject::connect(&remoteEdit,
                      &RemoteEdit::sig_remoteEditSave,
                      this,
-                     [this](const RemoteEditMessageBytes &sessionId, const Latin1Bytes &content) {
-                         getMpiFilterToMud().saveRemoteEdit(sessionId, content);
+                     [this](const RemoteSessionId id, const Latin1Bytes &content) {
+                         getMpiFilterToMud().saveRemoteEdit(id, content);
                      });
 }
 
@@ -864,21 +883,9 @@ void Proxy::sendToUser(const SendToUserSource source, const QString &s)
 
 void Proxy::onMudConnected()
 {
-    const auto &settings = getConfig().mumeClientProtocol;
-
     m_serverState = ServerStateEnum::Connected;
 
     log("Connection to server established ...");
-
-    // send XML request
-    onSubmitMpiToMud(RawBytes{"~$#EX1\n3\n"});
-    log("Sent MUME Protocol Initiator XML request");
-
-    // send Remote Editing request
-    if (settings.remoteEditing) {
-        onSubmitMpiToMud(RawBytes{"~$#EI\n"});
-        log("Sent MUME Protocol Initiator remote editing request");
-    }
 
     // Reset clock precision to its lowest level
     m_mumeClock.setPrecision(MumeClockPrecisionEnum::UNSET);
@@ -1176,9 +1183,4 @@ bool Proxy::hasConnectedUserSocket() const
     // REVISIT: Is this ever actually null, or is it just disconnected?
     const auto &us = getPipeline().user.userSocket;
     return us != nullptr /* && us->state() == QAbstractSocket::ConnectedState */;
-}
-
-void Proxy::onSubmitMpiToMud(const RawBytes &bytes)
-{
-    getMudTelnet().onSubmitMpiToMud(bytes);
 }

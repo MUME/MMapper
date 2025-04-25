@@ -63,19 +63,12 @@
        <number>6</number>
       </property>
       <item row="1" column="0">
-       <widget class="QCheckBox" name="remoteEditCheckBox">
-        <property name="text">
-         <string>Remote editing</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
        <widget class="QCheckBox" name="xmlSupportCheckBox">
         <property name="enabled">
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Gratuitous XML</string>
+         <string>XML</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -143,7 +136,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>remoteEditCheckBox</tabstop>
   <tabstop>xmlSupportCheckBox</tabstop>
   <tabstop>internalEditorRadioButton</tabstop>
   <tabstop>externalEditorRadioButton</tabstop>
