@@ -27,6 +27,8 @@ public:
         return *this;
     }
 
+    JsonArrayIterator operator++(int) = delete;
+
     NODISCARD bool operator==(const JsonArrayIterator &other) const
     {
         return m_iter == other.m_iter;
@@ -82,6 +84,14 @@ public:
     NODISCARD JsonArrayIterator end() const
     {
         return JsonArrayIterator(std::next(m_arr.begin(), static_cast<ptrdiff_t>(m_end)));
+    }
+
+    NODISCARD JsonValue operator[](size_t index) const
+    {
+        if (index >= size()) {
+            throw std::out_of_range("index out of range");
+        }
+        return JsonValue{m_arr.at(static_cast<int>(m_beg + index))};
     }
 };
 using OptJsonArray = JsonArray::OptJsonArray;

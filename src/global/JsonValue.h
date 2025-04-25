@@ -46,8 +46,6 @@ public:
         : m_val{std::move(val)}
     {}
 
-    DEPRECATED QVariant::Type type() const { return m_val.toVariant().type(); }
-
     NODISCARD OptJsonArray getArray() const;
     NODISCARD OptJsonBool getBool() const;
     NODISCARD OptJsonInt getInt() const;

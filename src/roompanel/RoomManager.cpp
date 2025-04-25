@@ -105,10 +105,9 @@ void RoomManager::parseGmcpSet(const GmcpMessage &msg)
             addMob(optObj.value());
         } else {
             if (m_debug) {
-                qWarning().noquote()
-                    << "RoomManager received GMCP" << msg.getName().toQString()
-                    << "containing invalid Json: expecting array of objects, got [/*...*/"
-                    << entry.type() << "/*...*/]";
+                qWarning().noquote() << "RoomManager received GMCP" << msg.getName().toQString()
+                                     << "containing invalid Json: expecting array of objects, got:"
+                                     << msg.getJson()->toQString();
             }
         }
     }

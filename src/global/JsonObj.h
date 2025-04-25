@@ -36,6 +36,8 @@ public:
         return *this;
     }
 
+    JsonObjIterator operator++(int) = delete;
+
     NODISCARD bool operator==(const JsonObjIterator &other) const { return m_iter == other.m_iter; }
     NODISCARD bool operator!=(const JsonObjIterator &other) const { return m_iter != other.m_iter; }
 };
