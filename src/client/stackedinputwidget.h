@@ -11,6 +11,7 @@
 #include <QString>
 #include <QtCore>
 
+class PasswordDialog;
 class InputWidget;
 class QEvent;
 class QLineEdit;
@@ -31,22 +32,23 @@ public:
 
 public:
     // sent to the mud
-    void sendUserInput(const QString &msg, const EchoMode echoMode)
-    {
-        virt_sendUserInput(msg, echoMode);
-    }
+    void sendUserInput(const QString &msg) { virt_sendUserInput(msg); }
     // to be displayed by the built-in client
     void displayMessage(const QString &msg) { virt_displayMessage(msg); }
     // pop-up messages
     void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
+    // request password
+    void requestPassword() { virt_requestPassword(); }
 
 private:
     // sent to the mud
-    virtual void virt_sendUserInput(const QString &msg, EchoMode echoMode) = 0;
+    virtual void virt_sendUserInput(const QString &msg) = 0;
     // to be displayed by the built-in client
     virtual void virt_displayMessage(const QString &msg) = 0;
     // pop-up messages
     virtual void virt_showMessage(const QString &msg, int timeout) = 0;
+    // request password
+    virtual void virt_requestPassword() = 0;
 };
 
 class NODISCARD_QOBJECT StackedInputWidget final : public QStackedWidget
@@ -64,7 +66,7 @@ private:
         struct NODISCARD Objects final
         {
             std::unique_ptr<InputWidget> inputWidget;
-            std::unique_ptr<QLineEdit> passwordWidget;
+            std::unique_ptr<PasswordDialog> passwordDialog;
         };
 
         Outputs outputs;
@@ -100,14 +102,17 @@ private:
 
 private:
     NODISCARD InputWidget &getInputWidget();
-    NODISCARD QLineEdit &getPasswordWidget();
+    NODISCARD PasswordDialog &getPasswordDialog();
 
 public:
+    void requestPassword();
     void setEchoMode(EchoMode echoMode);
+    EchoMode getEchoMode() const { return m_echoMode; }
 
 private:
     void gotMultiLineInput(const QString &);
-    void gotPasswordInput();
+    void gotPasswordInput(const QString &);
+    void displayInputMessage(const QString &input);
 
 public slots:
     void slot_cut();

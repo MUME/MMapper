@@ -81,11 +81,13 @@ public:
     void sendUserInput(const QString &msg) { virt_sendUserInput(msg); }
     void displayMessage(const QString &msg) { virt_displayMessage(msg); }
     void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
+    void gotPasswordInput(const QString &password) { virt_gotPasswordInput(password); }
 
 private:
     virtual void virt_sendUserInput(const QString &msg) = 0;
     virtual void virt_displayMessage(const QString &msg) = 0;
     virtual void virt_showMessage(const QString &msg, int timeout) = 0;
+    virtual void virt_gotPasswordInput(const QString &password) = 0;
 };
 
 class NODISCARD_QOBJECT InputWidget final : public QPlainTextEdit

@@ -75,10 +75,7 @@ void ClientWidget::initStackedInputWidget()
         NODISCARD DisplayWidget &getDisplay() { return getSelf().getDisplay(); }
 
     private:
-        void virt_sendUserInput(const QString &msg, EchoMode /*echoMode*/) final
-        {
-            getTelnet().sendToMud(msg);
-        }
+        void virt_sendUserInput(const QString &msg) final { getTelnet().sendToMud(msg); }
 
         void virt_displayMessage(const QString &msg) final { getDisplay().slot_displayText(msg); }
 
@@ -87,6 +84,7 @@ void ClientWidget::initStackedInputWidget()
             // REVISIT: Why is timeout ignored?
             getSelf().slot_onShowMessage(msg);
         }
+        void virt_requestPassword() final { getSelf().getInput().requestPassword(); }
     };
     auto &out = m_pipeline.outputs.stackedInputWidgetOutputs;
     out = std::make_unique<LocalStackedInputWidgetOutputs>(*this);
@@ -161,8 +159,12 @@ void ClientWidget::initClientTelnet()
         }
         void virt_sendToUser(const QString &str) final
         {
-            //
             getDisplay().slot_displayText(str);
+
+            // Re-open the password dialog if we get a message in hidden echo mode
+            if (getClient().getInput().getEchoMode() == EchoMode::Hidden) {
+                getClient().getInput().requestPassword();
+            }
         }
     };
     auto &out = m_pipeline.outputs.clientTelnetOutputs;

@@ -22,6 +22,8 @@ set(mmapper_SRCS
     client/inputwidget.h
     client/stackedinputwidget.cpp
     client/stackedinputwidget.h
+    client/PasswordDialog.cpp
+    client/PasswordDialog.h
     clock/mumeclock.cpp
     clock/mumeclock.h
     clock/mumeclockwidget.cpp
