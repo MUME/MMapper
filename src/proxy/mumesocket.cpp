@@ -126,7 +126,9 @@ void MumeFallbackSocket::connectToHost()
         return;
     }
 
-    m_socket->deleteLater();
+    if (m_socket != nullptr) {
+        m_socket->deleteLater();
+    }
     auto &wrapper = deref(m_wrapper);
     switch (m_state) {
     case SocketTypeEnum::SSL:
