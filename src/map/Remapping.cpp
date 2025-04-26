@@ -212,26 +212,28 @@ bool Remapping::contains(const RoomId id) const
     return m_intToExt.at(id) != INVALID_EXTERNAL_ROOMID;
 }
 
-void Remapping::resize(const size_t size)
+void Remapping::grow_to_include(const RoomId id)
 {
-    const auto from = m_intToExt.size();
-    assert(size > from);
+    if (id == INVALID_ROOMID) {
+        assert(id != INVALID_ROOMID);
+        return;
+    }
 
-    m_intToExt.grow_to_size(size);
-
-    assert(m_intToExt.size() == size);
+    if (const auto size = id.asUint32() + 1; m_intToExt.size() < size) {
+        m_intToExt.grow_to_size(size);
+    }
+    assert(id.asUint32() < m_intToExt.size());
 }
 
 void Remapping::addNew(const RoomId id)
 {
+    assert(id != INVALID_ROOMID);
     assert(!contains(id));
     const auto nextExternal = getNextExternal();
     const auto pos = id.asUint32();
     assert(pos >= m_intToExt.size() || m_intToExt.at(id) == INVALID_EXTERNAL_ROOMID);
     assert(m_extToInt.find(nextExternal) == nullptr);
-    if (pos >= m_intToExt.size()) {
-        resize(pos + 1);
-    }
+    grow_to_include(id);
     m_intToExt.set(id, nextExternal);
     m_extToInt.set(nextExternal, id);
     assert(contains(id));
@@ -239,14 +241,13 @@ void Remapping::addNew(const RoomId id)
 
 void Remapping::undelete(const RoomId id, const ExternalRoomId extid)
 {
+    assert(id != INVALID_ROOMID);
     assert(!contains(id));
     assert(m_extToInt.find(extid) == nullptr);
     const auto pos = id.asUint32();
     assert(pos >= m_intToExt.size() || m_intToExt.at(id) == INVALID_EXTERNAL_ROOMID);
     assert(m_extToInt.find(extid) == nullptr);
-    if (pos >= m_intToExt.size()) {
-        resize(pos + 1);
-    }
+    grow_to_include(id);
     m_intToExt.set(id, extid);
     m_extToInt.set(extid, id);
     assert(contains(id));

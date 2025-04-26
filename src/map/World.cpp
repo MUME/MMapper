@@ -1250,7 +1250,6 @@ RoomId World::addRoom(const Coordinate &position)
     {
         const uint32_t newSize = id.asUint32() + 1;
         m_rooms.resize(newSize);
-        m_remapping.resize(newSize);
     }
 
     m_remapping.addNew(id);
@@ -1298,14 +1297,9 @@ void World::undeleteRoom(const ExternalRoomId extid, const RawRoom &raw)
         if (newSize > m_rooms.size()) {
             m_rooms.resize(newSize);
         }
-        if (newSize > m_remapping.size()) {
-            m_remapping.resize(newSize);
-        }
     }
 
-    {
-        m_remapping.undelete(raw.getId(), extid);
-    }
+    m_remapping.undelete(raw.id, extid);
 
     for (const auto &e : raw.exits) {
         if (!e.getOutgoingSet().empty() || !e.getIncomingSet().empty()) {

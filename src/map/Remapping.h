@@ -46,8 +46,10 @@ public:
     NODISCARD bool empty() const { return size() == 0; }
     NODISCARD bool contains(RoomId id) const;
 
+private:
+    void grow_to_include(RoomId id);
+
 public:
-    void resize(size_t size);
     void addNew(RoomId id);
     void undelete(RoomId id, ExternalRoomId extid);
     void removeAt(RoomId id);
