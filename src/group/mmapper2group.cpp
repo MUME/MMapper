@@ -33,6 +33,16 @@ Mmapper2Group::Mmapper2Group(QObject *const parent)
 
 Mmapper2Group::~Mmapper2Group() {}
 
+SharedGroupChar Mmapper2Group::getSelf()
+{
+    if (!m_self) {
+        m_self = CGroupChar::alloc();
+        m_self->setColor(getConfig().groupManager.color);
+        m_charIndex.push_back(m_self);
+    }
+    return m_self;
+}
+
 void Mmapper2Group::characterChanged(bool updateCanvas)
 {
     emit sig_updateWidget();
@@ -50,12 +60,9 @@ void Mmapper2Group::onReset()
 
 void Mmapper2Group::parseGmcpCharName(const JsonObj &obj)
 {
-    if (!m_self) {
-        return;
-    }
     // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
     if (auto optName = obj.getString("name")) {
-        m_self->setName(CharacterName{optName.value()});
+        getSelf()->setName(CharacterName{optName.value()});
         characterChanged(false);
     }
 }
@@ -67,11 +74,8 @@ void Mmapper2Group::parseGmcpCharStatusVars(const JsonObj &obj)
 
 void Mmapper2Group::parseGmcpCharVitals(const JsonObj &obj)
 {
-    if (!m_self) {
-        return;
-    }
     // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
-    characterChanged(updateChar(m_self, obj));
+    characterChanged(updateChar(getSelf(), obj));
 }
 
 void Mmapper2Group::parseGmcpGroupAdd(const JsonObj &obj)
@@ -115,20 +119,20 @@ void Mmapper2Group::parseGmcpGroupSet(const JsonArray &arr)
 
 void Mmapper2Group::parseGmcpRoomInfo(const JsonObj &obj)
 {
-    if (!m_self)
-        return;
+    SharedGroupChar self = getSelf();
 
     if (auto optInt = obj.getInt("id")) {
         const auto srvId = ServerRoomId{static_cast<uint32_t>(optInt.value())};
-        if (srvId != m_self->getServerId()) {
-            m_self->setServerId(srvId);
+        if (srvId != self->getServerId()) {
+            self->setServerId(srvId);
+            // No characterChanged needed here? ServerId update handled by updateChar return value
         }
     }
     if (auto optString = obj.getString("name")) {
         const auto name = CharacterRoomName{optString.value()};
-        if (name != m_self->getRoomName()) {
-            m_self->setRoomName(name);
-            characterChanged(false);
+        if (name != self->getRoomName()) {
+            self->setRoomName(name);
+            characterChanged(false); // Room name change should update widget
         }
     }
 }
@@ -181,17 +185,6 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
     }
 }
 
-void Mmapper2Group::slot_setCharRoomIdEstimated(ServerRoomId /* serverId */,
-                                                ExternalRoomId /* externalId */)
-{
-    if (!m_self)
-        return;
-
-    // REVISIT: ParseEvent only stores ASCII so we re-parse GMCP for UTF-8
-
-    // REVISIT: Eliminate external ids?
-}
-
 void Mmapper2Group::resetChars()
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
@@ -212,7 +205,7 @@ SharedGroupChar Mmapper2Group::addChar(const GroupId id)
 {
     removeChar(id);
     auto sharedCh = CGroupChar::alloc();
-    sharedCh->init(id);
+    sharedCh->setId(id);
     m_charIndex.push_back(sharedCh);
     return sharedCh;
 }
@@ -274,19 +267,23 @@ bool Mmapper2Group::updateChar(SharedGroupChar sharedCh, const JsonObj &obj)
 
     const auto id = ch.getId();
     const auto oldServerId = ch.getServerId();
-    const bool change = ch.updateFromGmcp(obj);
+    bool change = ch.updateFromGmcp(obj);
 
-    if (ch.isYou() && m_self != sharedCh) {
-        m_self.reset();
-        // REVISIT: Copy fields over into m_self to not drop other Char GMCP data
-        m_self = sharedCh;
-        sharedCh->setColor(getConfig().groupManager.color);
-        qDebug() << "self is" << id.asUint32() << ch.getName().toQString();
-    } else if (!sharedCh->getColor().isValid()) {
-        sharedCh->setColor(m_colorGenerator.getNextColor());
+    if (ch.isYou()) {
+        if (!m_self) {
+            m_self = sharedCh;
+            m_self->setColor(getConfig().groupManager.color);
+        } else if (m_self->getId() != sharedCh->getId()) {
+            m_self->setId(ch.getId());
+            change = m_self->updateFromGmcp(obj);
+            utils::erase_if(m_charIndex, [&sharedCh](const SharedGroupChar &pChar) -> bool {
+                return pChar == sharedCh;
+            });
+        }
+    }
+    if (!ch.getColor().isValid()) {
+        ch.setColor(m_colorGenerator.getNextColor());
         qDebug() << "adding" << id.asUint32() << ch.getName().toQString();
-    } else {
-        qDebug() << "updating" << id.asUint32() << ch.getName().toQString() << "change?" << change;
     }
 
     // Update canvas only if the character moved

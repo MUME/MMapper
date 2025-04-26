@@ -32,9 +32,7 @@
 #include <cassert>
 #include <memory>
 #include <optional>
-#include <set>
 #include <unordered_set>
-#include <utility>
 
 class RoomRecipient;
 
@@ -82,7 +80,6 @@ void PathMachine::forcePositionChange(const RoomId id, const bool update)
 
     setMostLikelyRoom(id);
     emit sig_playerMoved(id);
-    publishExternalId();
     m_state = PathStateEnum::APPROVED;
 
     if (!update) {
@@ -324,7 +321,6 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
     }
 
     emit sig_playerMoved(getMostLikelyRoomId());
-    publishExternalId();
     return changes;
 }
 
@@ -483,7 +479,6 @@ void PathMachine::evaluatePaths()
     }
 
     emit sig_playerMoved(getMostLikelyRoomId());
-    publishExternalId();
 }
 
 void PathMachine::scheduleAction(const ChangeList &action)
@@ -538,21 +533,6 @@ void PathMachine::setMostLikelyRoom(const RoomId roomId)
     } else {
         m_mostLikelyRoom.reset();
     }
-}
-
-void PathMachine::publishExternalId()
-{
-    const auto roomId = getMostLikelyRoomId();
-    if (roomId == INVALID_ROOMID) {
-        return;
-    }
-
-    const auto room = m_map.findRoomHandle(roomId);
-    if (!room) {
-        return;
-    }
-
-    setCharRoomIdEstimated(room.getServerId(), room.getIdExternal());
 }
 
 std::optional<Coordinate> PathMachine::tryGetMostLikelyRoomPosition() const

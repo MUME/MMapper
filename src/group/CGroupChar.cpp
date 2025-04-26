@@ -14,9 +14,8 @@
 CGroupChar::CGroupChar(Badge<CGroupChar>) {}
 CGroupChar::~CGroupChar() = default;
 
-void CGroupChar::init(const GroupId id)
+void CGroupChar::setId(const GroupId id)
 {
-    reset();
     m_server.id = id;
 }
 

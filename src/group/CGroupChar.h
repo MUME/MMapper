@@ -101,7 +101,6 @@ public:
     }
 
 public:
-    void init(GroupId id);
     void reset();
 
 public:
@@ -114,13 +113,14 @@ public:
 #undef X_DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD const CharacterName &getName() const
-    {
-        return m_server.name;
-    }
     NODISCARD GroupId getId() const
     {
         return m_server.id;
+    }
+    void setId(GroupId id);
+    NODISCARD const CharacterName &getName() const
+    {
+        return m_server.name;
     }
     void setName(CharacterName name)
     {

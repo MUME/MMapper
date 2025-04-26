@@ -61,6 +61,7 @@ private:
     void parseGmcpRoomInfo(const JsonObj &obj);
 
 private:
+    NODISCARD SharedGroupChar getSelf();
     NODISCARD SharedGroupChar addChar(const GroupId id);
     void removeChar(const GroupId id);
     NODISCARD bool updateChar(SharedGroupChar sharedCh,
@@ -88,5 +89,4 @@ signals:
 
 public slots:
     void slot_parseGmcpInput(const GmcpMessage &msg);
-    void slot_setCharRoomIdEstimated(ServerRoomId serverId, ExternalRoomId externalId);
 };

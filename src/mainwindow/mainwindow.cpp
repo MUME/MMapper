@@ -442,10 +442,6 @@ void MainWindow::wireConnections()
             &Mmapper2Group::sig_updateMapCanvas,
             canvas,
             &MapCanvas::slot_requestUpdate);
-    connect(m_pathMachine,
-            &PathMachine::sig_setCharRoomIdEstimated,
-            m_groupManager,
-            &Mmapper2Group::slot_setCharRoomIdEstimated);
 
     connect(m_mapData, &MapFrontend::sig_clearingMap, m_groupWidget, &GroupWidget::slot_mapUnloaded);
 

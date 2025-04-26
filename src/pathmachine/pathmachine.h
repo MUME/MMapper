@@ -12,7 +12,6 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
-#include <list>
 #include <memory>
 #include <optional>
 
@@ -68,11 +67,6 @@ protected:
 
 private:
     void scheduleAction(const ChangeList &action);
-    void publishExternalId();
-    void setCharRoomIdEstimated(const ServerRoomId serverId, const ExternalRoomId externalId)
-    {
-        emit sig_setCharRoomIdEstimated(serverId, externalId);
-    }
     void forcePositionChange(RoomId id, bool update);
 
 private:
@@ -111,7 +105,6 @@ signals:
     void sig_playerMoved(RoomId id);
     void sig_createRoom(const SigParseEvent &, const Coordinate &);
     void sig_scheduleAction(const SigMapChangeList &);
-    void sig_setCharRoomIdEstimated(ServerRoomId serverId, ExternalRoomId externalId);
 
 public slots:
     void slot_releaseAllPaths();
