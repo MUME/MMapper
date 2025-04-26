@@ -11,13 +11,13 @@
 #include <QRegularExpression>
 #include <QScrollBar>
 #include <QString>
+#include <QStyle>
 #include <QTextCursor>
 #include <QToolTip>
 #include <QtGui>
 
 namespace { // anonymous
 
-const constexpr int SCROLLBAR_BUFFER = 1;
 const constexpr int TAB_WIDTH_SPACES = 8;
 const volatile bool ignore_non_default_underline_colors = false;
 
@@ -67,7 +67,6 @@ void AnsiTextHelper::init()
 }
 
 DisplayWidgetOutputs::~DisplayWidgetOutputs() = default;
-
 DisplayWidget::DisplayWidget(QWidget *const parent)
     : QTextBrowser(parent)
     , m_ansiTextHelper{static_cast<QTextEdit &>(*this)}
@@ -84,22 +83,19 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
     document()->setUndoRedoEnabled(false);
     m_ansiTextHelper.init();
 
-    {
-        const auto &settings = getConfig().integratedClient;
+    // Set word wrap mode and other settings
+    QFontMetrics fm{getDefaultFont()};
+    setLineWrapMode(QTextEdit::FixedColumnWidth);
+    setWordWrapMode(QTextOption::WordWrap);
+    setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
+    setTabStopDistance(fm.horizontalAdvance(" ") * TAB_WIDTH_SPACES);
 
-        // Add an extra character for the scrollbars
-        QFontMetrics fm{getDefaultFont()};
-        int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER);
-        setLineWrapMode(QTextEdit::FixedColumnWidth);
-        setLineWrapColumnOrWidth(settings.columns);
-        setWordWrapMode(QTextOption::WordWrap);
-        setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-        setTabStopDistance(fm.horizontalAdvance(" ") * TAB_WIDTH_SPACES);
-
-        QScrollBar *const scrollbar = verticalScrollBar();
-        scrollbar->setSingleStep(fm.lineSpacing());
-        scrollbar->setPageStep(y);
-    }
+    // Scrollbar settings
+    QScrollBar *const scrollbar = verticalScrollBar();
+    scrollbar->setSingleStep(fm.lineSpacing());
+    scrollbar->setPageStep(sizeHint().height());
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     connect(this, &DisplayWidget::copyAvailable, this, [this](const bool available) {
         m_canCopy = available;
@@ -112,11 +108,15 @@ QSize DisplayWidget::sizeHint() const
 {
     const auto &settings = getConfig().integratedClient;
     const auto &margins = contentsMargins();
+    const int frame = frameWidth() * 2;
     QFontMetrics fm{getDefaultFont()};
-    const int x = fm.averageCharWidth() * (settings.columns + SCROLLBAR_BUFFER) + margins.left()
-                  + margins.right();
-    const int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER) + margins.top()
-                  + margins.bottom();
+    const int scrollbarExtent = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+
+    int x = (settings.columns * fm.averageCharWidth()) + margins.left() + margins.right()
+            + scrollbarExtent + frame;
+    int y = (settings.rows * fm.lineSpacing()) + margins.top() + margins.bottom() + scrollbarExtent
+            + frame;
+
     return QSize(x, y);
 }
 
@@ -124,11 +124,25 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
 {
     const auto &margins = contentsMargins();
     QFontMetrics fm{getDefaultFont()};
-    int x = (size().width() - margins.left() - margins.right()) / fm.averageCharWidth();
-    int y = (size().height() - margins.top() - margins.bottom()) / fm.lineSpacing();
-    // We subtract an extra character for the scrollbars
-    x -= SCROLLBAR_BUFFER;
-    y -= SCROLLBAR_BUFFER;
+    const int scrollbarExtent = style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    const int frame = frameWidth() * 2;
+
+    int widthAvailable = size().width() - margins.left() - margins.right() - scrollbarExtent
+                         - frame;
+    int heightAvailable = size().height() - margins.top() - margins.bottom() - scrollbarExtent
+                          - frame;
+
+    int x = widthAvailable / fm.averageCharWidth();
+    int y = heightAvailable / fm.lineSpacing();
+
+    // REVISIT: Right now only Mac is correct and we need to replace these row hacks
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+        y -= 6;
+    } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+        y -= 2;
+    }
+
+    // Set the line wrap width/height
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
 
