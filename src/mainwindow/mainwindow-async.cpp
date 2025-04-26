@@ -143,7 +143,7 @@ NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, Abstract
     pc.setCurrentTask(ProgressMsg{/*"phase 2: "*/ "construct map from raw rooms"});
     auto mapPair = Map::fromRooms(pc, std::exchange(data.rooms, {}));
 
-    pc.setCurrentTask(ProgressMsg{/*"phase 3: "*/ "construct markers databse"});
+    pc.setCurrentTask(ProgressMsg{/*"phase 3: "*/ "construct markers database"});
     auto markerData = getInformarkDb(pc, std::exchange(data.markerData, {}));
 
     pc.setCurrentTask(ProgressMsg{"finished building map"});
