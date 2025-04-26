@@ -7,6 +7,7 @@
 #include "../configuration/configuration.h"
 #include "../global/Color.h"
 
+#include <QFont>
 #include <QLinkedList>
 #include <QMessageLogContext>
 #include <QRegularExpression>
@@ -29,7 +30,10 @@ InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     // Minimum Size
-    QFontMetrics fm(currentCharFormat().font());
+    QFont font(getConfig().integratedClient.font);
+    setFont(font);
+
+    QFontMetrics fm(font);
     setMinimumSize(
         QSize(fm.averageCharWidth(),
               fm.lineSpacing()
