@@ -161,6 +161,7 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     }
 
     QTextEdit::resizeEvent(event);
+    ensureCursorVisible();
 }
 
 void DisplayWidget::keyPressEvent(QKeyEvent *event)
