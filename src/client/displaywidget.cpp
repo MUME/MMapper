@@ -99,6 +99,9 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
 
     connect(this, &DisplayWidget::copyAvailable, this, [this](const bool available) {
         m_canCopy = available;
+        if (available) {
+            this->setFocus();
+        }
     });
 }
 
@@ -158,6 +161,37 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     }
 
     QTextEdit::resizeEvent(event);
+}
+
+void DisplayWidget::keyPressEvent(QKeyEvent *event)
+{
+    bool isModifier = event->modifiers() != Qt::NoModifier;
+    auto isNavigationKey = [&event]() {
+        switch (event->key()) {
+        case Qt::Key_PageUp:
+        case Qt::Key_PageDown:
+        case Qt::Key_Home:
+        case Qt::Key_End:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+            return true;
+        default:
+            return false;
+        }
+    };
+    auto isAllowedKeySequence = [&event]() {
+        return event->matches(QKeySequence::Copy) || event->matches(QKeySequence::Paste)
+               || event->matches(QKeySequence::Cut) || event->matches(QKeySequence::SelectAll);
+    };
+
+    if (isModifier || isNavigationKey() || isAllowedKeySequence()) {
+        QTextBrowser::keyPressEvent(event);
+    } else {
+        getOutput().returnFocusToInput();
+        event->accept();
+    }
 }
 
 void setDefaultFormat(QTextCharFormat &format, const FontDefaults &defaults)

@@ -12,9 +12,9 @@
 
 #include <memory>
 
+#include <QFileDialog>
 #include <QString>
 #include <QTimer>
-#include <QtWidgets>
 
 ClientWidget::ClientWidget(QWidget *const parent)
     : QWidget(parent)
@@ -36,6 +36,7 @@ ClientWidget::ClientWidget(QWidget *const parent)
 
     ui.input->installEventFilter(this);
     ui.input->setFocus();
+    ui.display->setFocusPolicy(Qt::TabFocus);
 }
 
 ClientWidget::~ClientWidget() = default;
@@ -115,6 +116,8 @@ void ClientWidget::initDisplayWidget()
         {
             getTelnet().onWindowSizeChanged(width, height);
         }
+
+        void virt_returnFocusToInput() final { getSelf().getInput().setFocus(); }
     };
     auto &out = m_pipeline.outputs.displayWidgetOutputs;
     out = std::make_unique<LocalDisplayWidgetOutputs>(*this);
@@ -269,7 +272,7 @@ bool ClientWidget::focusNextPrevChild(MAYBE_UNUSED bool next)
 {
     if (getInput().hasFocus()) {
         getDisplay().setFocus();
-    } else /* if (getDisplay().hasFocus()) */ {
+    } else {
         getInput().setFocus();
     }
     return true;

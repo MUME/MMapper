@@ -81,10 +81,12 @@ public:
     {
         virt_windowSizeChanged(width, height);
     }
+    void returnFocusToInput() { virt_returnFocusToInput(); }
 
 private:
     virtual void virt_showMessage(const QString &msg, int timeout) = 0;
     virtual void virt_windowSizeChanged(int width, int height) = 0;
+    virtual void virt_returnFocusToInput() = 0;
 };
 
 class NODISCARD_QOBJECT DisplayWidget final : public QTextBrowser
@@ -128,6 +130,7 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 public slots:
     void slot_displayText(const QString &str);
