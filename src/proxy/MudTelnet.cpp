@@ -417,28 +417,31 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
     const auto optId = obj.getInt("id");
 
     if (msg.isMumeClientView()) {
-        if (!optTitle || optTitle.has_value()) {
-            m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
-            return;
-        }
+        m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
+        return;
     } else if (msg.isMumeClientEdit()) {
-        m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
-                                   optTitle.value_or("Edit text..."),
-                                   optText.value_or(""));
-        return;
-
-    } else if (msg.isMumeClientWrite()) {
-        const auto optResult = obj.getString("result");
-        if (optId.has_value() && optResult.has_value()) {
-            qDebug() << "Failure sending remote message" << optId.value() << optResult.value();
-            // Mume doesn't send anything, so we have to make our own message.
-            global::sendToUser("Failure sending remote message: "
-                               + optResult.value_or("missing text"));
-        } else {
-            qDebug() << "[success] Successfully sent remote edit " << optId.value();
+        if (optId) {
+            m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
+                                       optTitle.value_or("Edit text..."),
+                                       optText.value_or(""));
         }
         return;
 
+    } else if (msg.isMumeClientWrite() || msg.isMumeClientCancelEdit()) {
+        const int id = optId.value_or(REMOTE_VIEW_SESSION_ID.asInt32());
+        const auto optBool = obj.getBool("result");
+        const auto optString = obj.getString("result");
+        if (optBool && optBool.value()) {
+            qDebug() << "[success] Successfully" << (msg.isMumeClientWrite() ? "sent" : "cancelled")
+                     << "remote edit" << id;
+        } else {
+            const auto action = (msg.isMumeClientWrite() ? "sending" : "canceling");
+            const auto result = optString.value_or("missing text");
+            qDebug() << "Failure" << action << "remote message" << id << result;
+            // Mume doesn't send anything, so we have to make our own message.
+            global::sendToUser(QString("Failure %1 remote message: %1").arg(action, result));
+        }
+        return;
     } else {
         m_outputs.onRelayGmcpFromMudToUser(msg);
     }
