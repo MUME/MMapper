@@ -33,9 +33,10 @@ constexpr const int v2_0_0_initial = 17;          // Initial schema (Apr 2006)
 constexpr const int v2_0_2_ridable = 24;          // Ridable flag (Oct 2006)
 constexpr const int v2_0_4_zlib = 25;             // zlib compression (Jun 2009)
 constexpr const int v2_3_7_doorFlagsNomatch = 32; // 16-bit DoorFlags, NoMatch (Dec 2016)
-constexpr const int v2_4_0_largerFlags = 33;      // 16-bit Exits, 32-bit Mob/Load Flags (Dec 2017)
-constexpr const int v2_4_3_qCompress = 34;        // qCompress, SunDeath flag (Jan 2018)
-constexpr const int v2_5_1_discardNoMatch = 35;   // discard previous NoMatch flags (Aug 2018)
+constexpr const int v2_4_0_largerFlags
+    = 33; // 16-bit Exits, 32-bit Mob/Load Flags, SunDeath (Dec 2017)
+constexpr const int v2_4_3_qCompress = 34;      // qCompress (Jan 2018)
+constexpr const int v2_5_1_discardNoMatch = 35; // discard previous NoMatch flags (Aug 2018)
 
 // starting in 2019, versions are date based: v${YY}_${MM}_${rev}.
 constexpr const int v19_10_0_newCoords = 36;      // switches to new coordinate system
