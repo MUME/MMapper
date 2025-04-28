@@ -635,6 +635,7 @@ void Proxy::allocParser()
             // receive messages originating from the Mud; however in this location it also
             // receives some (but possibly not all) messages originating from MMapper's
             // command parser.
+            getGameObserver().observeSentToUser(s);
 
             switch (source) {
             case SendToUserSource::FromMud:
