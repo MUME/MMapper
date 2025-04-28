@@ -29,10 +29,12 @@ InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
     // Size Policy
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
-    // Minimum Size
+    // Terminal Font
     QFont font(getConfig().integratedClient.font);
-    setFont(font);
+    setStyleSheet(
+        QString("font-family: \"%1\"; font-size: %1pt;").arg(font.family(), font.pointSize()));
 
+    // Minimum Size
     QFontMetrics fm(font);
     setMinimumSize(
         QSize(fm.averageCharWidth(),
