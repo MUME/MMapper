@@ -28,11 +28,105 @@ const volatile bool verbose_debugging = false;
 using charset::charset_detail::NUM_LATIN1_CODEPOINTS;
 constexpr auto INVALID_CODEPOINT = ~char32_t(0);
 
-// TODO: move this somewhere better?
-NODISCARD bool isAsciiOrLatin1ControlCode(const char32_t codepoint)
+// TODO: move this somewhere and add tests
+namespace unicode {
+NODISCARD bool isSurrogate(const char32_t c)
 {
-    return (codepoint < 0x20u) || (codepoint >= 0x7Fu && codepoint < 0xA0u);
+    return c >= 0xD800u && c <= 0xDFFFu;
 }
+
+NODISCARD bool isPrivateUse(const char32_t c)
+{
+    return (c >= 0xE000u && c <= 0xF8FFu)          // BMP
+           || (c >= 0xF'0000u && c <= 0xF'FFFDu)   // PUP (15)
+           || (c >= 0x10'0000 && c <= 0x10'FFFDu); // PUP (16)
+}
+
+NODISCARD bool isNonCharacter(const char32_t c)
+{
+    // special case for Plane 0 (BMP)
+    if (c >= 0xFDD0u && c <= 0xFDEFu) {
+        return true;
+    }
+
+    // The top 2 codepoints are invalid in all planes.
+    switch (c & 0xFFFFu) {
+    case 0xFFFEu:
+    case 0xFFFFu:
+        return true;
+    default:
+        return false;
+    }
+}
+
+NODISCARD bool isInvalidUnicode(const char32_t c)
+{
+    return c > MAX_UNICODE_CODEPOINT || isSurrogate(c) || isPrivateUse(c) || isNonCharacter(c);
+}
+
+} // namespace unicode
+
+NODISCARD constexpr bool blacklisted(const char32_t c)
+{
+    return (c >= 0x0180u && c <= 0x024Fu)    // Latin extended B
+           || (c >= 0x0300u && c <= 0x036Fu) // spacing modifiers and diacritical marks ("insanity")
+           || (c >= 0x2800u && c <= 0x28FFu) // braille
+           || (c >= 0x2C00u && c <= 0x2FDFu); // non-western scripts
+}
+
+// This is a tolerant whitelist that may include codepoints we don't want;
+// consider using a table of assigned emojis.
+NODISCARD constexpr bool whitelisted(const char32_t c)
+{
+    if (blacklisted(c)) {
+        return false;
+    }
+
+    // see:
+    // https://en.wikipedia.org/wiki/Latin_Extended-A
+    // https://en.wikipedia.org/wiki/General_Punctuation
+    // https://en.wikipedia.org/wiki/Emoji#In_Unicode
+    //
+    // As of April 2025, all emojis currently live in U+2000..U+2FFF and U+1F000..U+1FFFF.
+    //
+    // https://en.wikibooks.org/wiki/Unicode/Character_reference/0000-0FFF
+    // https://en.wikibooks.org/wiki/Unicode/Character_reference/2000-2FFF
+    // https://en.wikibooks.org/wiki/Unicode/Character_reference/1F000-1FFFF
+    //
+
+    switch (c >> 12u) {
+    case 0x0u:
+        return c >= 0x0100u && c <= 0x017Fu; // latin extended A
+    case 0x2u:                               // punct and emoji
+    case 0x1Fu:                              // emoji
+        return true;
+    default:
+        return false;
+    }
+}
+
+static_assert(whitelisted(0x0100u));
+static_assert(whitelisted(0x017Fu));
+static_assert(blacklisted(0x0180u));
+//
+static_assert(blacklisted(0x0300u));
+static_assert(blacklisted(0x036Fu));
+//
+static_assert(whitelisted(0x2000u));
+static_assert(whitelisted(0x27FFu));
+//
+static_assert(blacklisted(0x2800u));
+static_assert(blacklisted(0x28FFu));
+//
+static_assert(whitelisted(0x2900u));
+static_assert(whitelisted(0x2BFFu));
+//
+static_assert(blacklisted(0x2C00u));
+static_assert(blacklisted(0x2FDFu));
+//
+static_assert(whitelisted(0x2FF0u));
+//
+static_assert(whitelisted(0x1F000u));
 
 struct NODISCARD Emojis final
 {
@@ -376,77 +470,60 @@ NODISCARD bool mmqt::containsNonLatin1Codepoints(const QString &s)
 NODISCARD QString mmqt::decodeEmojiShortCodes(const QString &s)
 {
     using namespace char_consts;
-    if (!s.contains(C_COLON)) {
+    if (!s.contains(QStringLiteral("[:"))) {
         return s;
     }
 
     // REVISIT: check loaded emojis against the same pattern?
-    static const QRegularExpression shortCodeRegex{":[-_+A-Za-z0-9]+:"};
-    static const QRegularExpression unicodeRegex{"^[Uu]\\+([0-9A-Fa-f]+)$"};
+    static const QRegularExpression shortCodeRegex{R"(\[:[-_+A-Za-z0-9]+\:])"};
+    static const QRegularExpression unicodeRegex{R"(^[Uu]\+([0-9A-Fa-f]+)$)"};
 
     QString result;
-    auto check = [&result](const QStringView match) -> bool {
+    QStringView view(s);
+    int lastPos = 0;
+
+    QRegularExpressionMatchIterator it = shortCodeRegex.globalMatch(s);
+
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        const int matchStart = match.capturedStart();
+        const int matchEnd = match.capturedEnd();
+
+        result += view.mid(lastPos, matchStart - lastPos);
+
+        QString inside = view.mid(matchStart + 2, matchEnd - matchStart - 4)
+                             .toString(); // Skip [: and :]
         const auto &map = getEmojis().shortCodeToHex;
-        assert(match.startsWith(C_COLON));
-        assert(match.endsWith(C_COLON));
-        const auto code = match.mid(1).chopped(1); // remove the colons
-        if (const auto it = map.find(code.toString()); it != map.end()) {
-            result += it->second;
-            return true;
-        }
-        if (const auto m = unicodeRegex.match(code); m.hasMatch()) {
-            const auto hex = m.captured(1);
-            if (const auto opt = tryGetOneCodepointHexCode(hex)) {
-                const char32_t codepoint = *opt;
-                // also avoid latin-1 control codes
-                // what about things like nbsp (U+A0), zwsp (U+200B), etc?
-                if (codepoint > NUM_LATIN1_CODEPOINTS || !isAsciiOrLatin1ControlCode(codepoint)) {
-                    result += QString(codepoint);
-                    return true;
+        const auto emojiIt = map.find(inside);
+        if (emojiIt != map.end()) {
+            result += emojiIt->second;
+        } else {
+            const auto unicodeMatch = unicodeRegex.match(inside);
+            if (unicodeMatch.hasMatch()) {
+                const QString hex = unicodeMatch.captured(1);
+                if (const auto opt = tryGetOneCodepointHexCode(hex)) {
+                    const char32_t codepoint = *opt;
+
+                    // note: we forbid *all* Latin-1 codepoints, instead of just control codes,
+                    // so there won't ever be any ambiguity over XML, ansi, etc.
+                    if (codepoint <= NUM_LATIN1_CODEPOINTS || unicode::isInvalidUnicode(codepoint)
+                        || !whitelisted(codepoint)) {
+                        result += view.mid(matchStart, matchEnd - matchStart); // Invalid codepoint
+                    } else {
+                        result += QString::fromUcs4(&codepoint, 1);
+                    }
+                } else {
+                    result += view.mid(matchStart, matchEnd - matchStart); // Invalid hex
                 }
+            } else {
+                result += view.mid(matchStart, matchEnd - matchStart); // Unknown shortcode
             }
         }
-        return false;
-    };
 
-    QStringView sv = s;
-    auto advance_to_colon = [&result, &sv]() {
-        if (const auto colon = sv.indexOf(C_COLON); colon != -1) {
-            result += sv.left(colon);
-            sv = sv.mid(colon);
-            return;
-        }
-        result += sv;
-        sv = {};
-    };
-    advance_to_colon();
-    assert(sv.front() == C_COLON);
-
-    // minimum short code length is 3 (includes two colons)
-    constexpr qsizetype MIN_LEN = 3;
-    while (sv.size() >= MIN_LEN && sv.front() == C_COLON) {
-        const auto next_colon = sv.indexOf(C_COLON, 1);
-        if (next_colon == -1) {
-            break;
-        }
-
-        // maybe is ":text:"
-        const auto maybe = sv.left(next_colon + 1);
-        if (maybe.size() >= MIN_LEN && shortCodeRegex.match(maybe).hasMatch() && check(maybe)) {
-            // replacement consumes the first and second colons
-            sv = sv.mid(next_colon + 1);
-            // look for the next colon after the two that were just matched
-            advance_to_colon();
-            continue;
-        }
-
-        // otherwise the 2nd colon survives as the first colon of the next potential match
-        result += sv.left(next_colon);
-        sv = sv.mid(next_colon);
+        lastPos = matchEnd;
     }
-    if (!sv.empty()) {
-        result += sv;
-    }
+
+    result += view.mid(lastPos);
     return result;
 }
 
@@ -455,8 +532,9 @@ NODISCARD QString mmqt::encodeEmojiShortCodes(const QString &s)
     if (!containsNonLatin1Codepoints(s)) {
         return s;
     }
-
+    static constexpr auto close_bracket = static_cast<char32_t>(mmqt::QC_CLOSE_BRACKET.unicode());
     static constexpr auto colon = static_cast<char32_t>(mmqt::QC_COLON.unicode());
+    static constexpr auto open_bracket = static_cast<char32_t>(mmqt::QC_OPEN_BRACKET.unicode());
     static constexpr auto question_mark = static_cast<char32_t>(mmqt::QC_QUESTION_MARK.unicode());
     const auto sv = std::u16string_view{reinterpret_cast<const char16_t *>(s.constData()),
                                         static_cast<size_t>(s.size())};
@@ -492,16 +570,18 @@ NODISCARD QString mmqt::encodeEmojiShortCodes(const QString &s)
 
             // REVISIT: should this include "U+" or not?
             char hex[32];
-            snprintf(hex, sizeof(hex), ":U+%X:", c);
+            snprintf(hex, sizeof(hex), "[:U+%X:]", c);
             for (const char ascii : std::string_view{hex}) {
                 m_output += static_cast<char32_t>(static_cast<uint8_t>(ascii));
             }
         }
         void virt_report(std::u32string_view sv) const final
         {
+            m_output += open_bracket;
             m_output += colon;
             m_output += sv;
             m_output += colon;
+            m_output += close_bracket;
         }
     };
 
@@ -587,27 +667,55 @@ void tryLoadEmojis(const QString &filename)
 
 void test::test_emojis()
 {
-    importEmojis(R"({"+1": "1F44D", "100": "1F4AF"})", "test-input");
+    importEmojis(R"({"+1": "1F44D", "100": "1F4AF", "a": "1F170"})", "test-input");
     struct NODISCARD TestCase final
     {
         QString input;
         QString expected;
         bool roundtrip = true;
     };
-    const std::vector<TestCase> testCases{TestCase{":0:+1:", ":0\U0001F44D"},
-                                          {":100:+1:100:", "\U0001F4AF+1\U0001F4AF"},
-                                          {":::100::::+1:::", "::\U0001F4AF::\U0001F44D::"},
-                                          // :a: and :b: are in the default short-code database,
-                                          // they're skipped here so that copy/pasting these
-                                          // test cases into mmapper will give the same results.
-                                          {":c:e:f:g:h:i:", ":c:e:f:g:h:i:"},
-                                          {":", ":"},
-                                          {"::", "::"},
-                                          {":::", ":::"},
-                                          // these cases can't roundtrip, because :u+ff:
-                                          // is a synthetic short code that's only decoded.
-                                          {":u+0:u+ff:", ":u+0\u00FF", false},
-                                          {":u+ff:u+ff:", "\u00FFu+ff:", false}};
+
+    const std::vector<TestCase> testCases{
+        // Positive cases
+        {"[:+1:]", "\U0001F44D"},                         // thumbs up
+        {"[:+1:][:100:]", "\U0001F44D\U0001F4AF"},        // thumbs up and 100
+        {"[:U+1F44D:]", "\U0001F44D", false},             // thumbs up
+        {"[:u+1f44d:]", "\U0001F44D", false},             // thumbs up (lowercase)
+        {"[:u+0001F44D:]", "\U0001F44D", false},          // thumbs up (with 0s)
+        {"[:a:][:c:]", "\U0001F170[:c:]"},                // a and unknown shortcode
+        {"[:c:][:e:][:f:][:g:]", "[:c:][:e:][:f:][:g:]"}, // unknown shortcodes, passed through
+        {"[:foo:] text [:bar:]", "[:foo:] text [:bar:]"}, // unknown shortcodes, passed through
+        {"[:1F44D:]", "[:1F44D:]"},                       // unknown shortcode (no U+)
+        {"[:1f44d:]", "[:1f44d:]"},                       // unknown shortcode (no U+; lowercase)
+        {"[:U+0061:]", "[:U+0061:]"},                     // disallowed ASCII 'a'
+        {"[:U+61:]", "[:U+61:]"},                         // disallowed ASCII 'a' (no 0s)
+
+        // Edge cases - valid partial matches
+        {":+1[:+1:]", ":+1\U0001F44D"},
+        {":[+1[:+1:]", ":[+1\U0001F44D"},
+        {"[:+1:]+1:", "\U0001F44D+1:"},
+        {"[:+1:]+1:]", "\U0001F44D+1:]"},
+        {"[:100:]+1[:100:]", "\U0001F4AF+1\U0001F4AF"},
+        {"::[:100:]::[:+1:]::", "::\U0001F4AF::\U0001F44D::"},
+
+        // Raw text edge cases
+        {"[:", "[:"},
+        {":]", ":]"},
+        {"[::]", "[::]"},
+        {"[:[:]:]", "[:[:]:]"},
+        {"[:[::]:]", "[:[::]:]"},
+
+        // Negative cases - invalid parsing, pass-through
+        {"[:U+110000:]", "[:U+110000:]"}, // Unicode > 0x10FFFF invalid
+        {"[:U+ZZZZ:]", "[:U+ZZZZ:]"},     // invalid hex
+        {"[:100a:]", "[:100a:]"},         // extra words
+        {"[:+1", "[:+1"},                 // missing closing colon
+        {":+1:]", ":+1:]"},               // missing opening bracket
+        {"[:U+1F44D", "[:U+1F44D"},       // missing closing colon
+        {":U+1F44D:]", ":U+1F44D:]"},     // missing opening bracket
+        {"[:U+:]", "[:U+:]"},             // missing number after U+
+    };
+
     for (const TestCase &tc : testCases) {
         if (const auto decoded = mmqt::decodeEmojiShortCodes(tc.input); decoded != tc.expected) {
             qInfo() << "[decode] input:" << tc.input << "expected:" << tc.expected
