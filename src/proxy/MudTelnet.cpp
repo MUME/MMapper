@@ -406,31 +406,39 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         return;
     }
 
-    auto optObj = msg.getJsonDocument()->getObject();
-    if (!optObj) {
-        return;
-    }
-    auto &obj = optObj.value();
+    if (msg.isMumeClientView() || msg.isMumeClientEdit()) {
+        auto optObj = msg.getJsonDocument()->getObject();
+        if (!optObj) {
+            return;
+        }
+        auto &obj = optObj.value();
 
-    const auto optTitle = obj.getString("title");
-    const auto optText = obj.getString("text");
-    const auto optId = obj.getInt("id");
+        const auto optTitle = obj.getString("title");
+        const auto optText = obj.getString("text");
 
-    if (msg.isMumeClientView()) {
-        m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
-        return;
-    } else if (msg.isMumeClientEdit()) {
-        if (optId) {
-            m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
-                                       optTitle.value_or("Edit text..."),
-                                       optText.value_or(""));
+        if (msg.isMumeClientView()) {
+            m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
+        } else if (msg.isMumeClientEdit()) {
+            if (auto optId = obj.getInt("id")) {
+                m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
+                                           optTitle.value_or("Edit text..."),
+                                           optText.value_or(""));
+            }
         }
         return;
+    }
 
-    } else if (msg.isMumeClientWrite() || msg.isMumeClientCancelEdit()) {
-        const int id = optId.value_or(REMOTE_VIEW_SESSION_ID.asInt32());
+    if (msg.isMumeClientWrite() || msg.isMumeClientCancelEdit()) {
+        auto optObj = msg.getJsonDocument()->getObject();
+        if (!optObj) {
+            return;
+        }
+        auto &obj = optObj.value();
+
+        const auto id = obj.getInt("id").value_or(REMOTE_VIEW_SESSION_ID.asInt32());
         const auto optBool = obj.getBool("result");
         const auto optString = obj.getString("result");
+
         if (optBool && optBool.value()) {
             qDebug() << "[success] Successfully" << (msg.isMumeClientWrite() ? "sent" : "cancelled")
                      << "remote edit" << id;
@@ -442,9 +450,9 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
             global::sendToUser(QString("Failure %1 remote message: %1").arg(action, result));
         }
         return;
-    } else {
-        m_outputs.onRelayGmcpFromMudToUser(msg);
     }
+
+    m_outputs.onRelayGmcpFromMudToUser(msg);
 }
 
 void MudTelnet::virt_receiveMudServerStatus(const TelnetMsspBytes &ba)
