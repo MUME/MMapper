@@ -30,9 +30,9 @@ InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     // Terminal Font
-    QFont font(getConfig().integratedClient.font);
-    setStyleSheet(
-        QString("font-family: \"%1\"; font-size: %1pt;").arg(font.family(), font.pointSize()));
+    QFont font;
+    font.fromString(getConfig().integratedClient.font);
+    setFont(font);
 
     // Minimum Size
     QFontMetrics fm(font);
