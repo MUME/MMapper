@@ -113,6 +113,7 @@ MainWindow::~MainWindow()
     forceNewFile();
     mmqt::rdisconnect(this);
     async_tasks::cleanup();
+    delete m_listener;
     destroyTopLevelWindows();
 }
 
