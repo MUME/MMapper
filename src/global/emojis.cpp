@@ -66,9 +66,16 @@ NODISCARD bool isInvalidUnicode(const char32_t c)
 
 } // namespace unicode
 
+// TODO: move this somewhere better?
+NODISCARD bool isAsciiOrLatin1ControlCode(const char32_t codepoint)
+{
+    return (codepoint < 0x20u) || (codepoint >= 0x7Fu && codepoint < 0xA0u);
+}
+
 NODISCARD constexpr bool blacklisted(const char32_t c)
 {
-    return (c >= 0x0180u && c <= 0x024Fu)    // Latin extended B
+    return (c <= 0x00FFu)                    // (forbidden to avoid ambiguity)
+           || (c >= 0x0180u && c <= 0x024Fu) // Latin extended B (non-european)
            || (c >= 0x0300u && c <= 0x036Fu) // spacing modifiers and diacritical marks ("insanity")
            || (c >= 0x2800u && c <= 0x28FFu) // braille
            || (c >= 0x2C00u && c <= 0x2FDFu); // non-western scripts
@@ -87,7 +94,9 @@ NODISCARD constexpr bool whitelisted(const char32_t c)
     // https://en.wikipedia.org/wiki/General_Punctuation
     // https://en.wikipedia.org/wiki/Emoji#In_Unicode
     //
-    // As of April 2025, all emojis currently live in U+2000..U+2FFF and U+1F000..U+1FFFF.
+    // As of April 2025, there are two latin-1 emojis (U+00A9 and U+00AE),
+    // four japanese emojis (U+3030, U+303D, U+3297, and U+3299)
+    // and all the rest live in either U+2000..U+2FFF or U+1F000..U+1FFFF.
     //
     // https://en.wikibooks.org/wiki/Unicode/Character_reference/0000-0FFF
     // https://en.wikibooks.org/wiki/Unicode/Character_reference/2000-2FFF
@@ -96,10 +105,27 @@ NODISCARD constexpr bool whitelisted(const char32_t c)
 
     switch (c >> 12u) {
     case 0x0u:
+        // purposely ignores Latin-1 (code points 0-255),
+        // as well as latin-extended B (non-western),
+        // spacing modifiers, and diacritical marks ("insanity").
         return c >= 0x0100u && c <= 0x017Fu; // latin extended A
-    case 0x2u:                               // punct and emoji
-    case 0x1Fu:                              // emoji
-        return true;
+    case 0x2u:
+        return true; // punct and emoji
+    case 0x3u:
+        switch (c >> 4u) {
+        case 0x303u:
+        case 0x329u:
+            return true; // japanese emojis
+        default:
+            return false;
+        }
+    case 0xF:
+        return c == 0xFE0Fu; // found in various short codes
+    case 0x1Fu:
+        return true; // emoji
+    case 0xE0:
+        return (c >= 0xE0000u && c <= 0xE007Fu)     // found in short codes for flags
+               || (c >= 0xE0100u && c <= 0xE01EFu); // variation selectors
     default:
         return false;
     }
@@ -126,7 +152,18 @@ static_assert(blacklisted(0x2FDFu));
 //
 static_assert(whitelisted(0x2FF0u));
 //
+static_assert(whitelisted(0x3030u));
+static_assert(whitelisted(0x303Du));
+static_assert(whitelisted(0x3297u));
+static_assert(whitelisted(0x3299u));
+//
+static_assert(whitelisted(0xFE0Fu));
+//
 static_assert(whitelisted(0x1F000u));
+//
+static_assert(whitelisted(0xE0062u));
+static_assert(whitelisted(0xE007Fu));
+static_assert(whitelisted(0xE0100u));
 
 struct NODISCARD Emojis final
 {
@@ -611,6 +648,22 @@ static void importEmojis(const QByteArray &bytes, const QString &filename)
     size_t num_output_emojis = 0;
     auto report = [&](const QString &shortCode, const QString &hex) {
         if (auto opt_emoji = getUnicode(hex)) {
+            for (const char32_t c : *opt_emoji) {
+                if (isAsciiOrLatin1ControlCode(c)) {
+                    // REVISIT: strongly consider rejecting the short code?
+                    qWarning().nospace() << "Short code " << shortCode << " = " << hex
+                                         << " contains a control code.";
+                    break;
+                } else if (c > NUM_LATIN1_CODEPOINTS && !whitelisted(c)) {
+                    // REVISIT: consider rejecting the short code?
+                    qWarning().nospace() << "Short code " << shortCode << " = " << hex
+                                         << " contains non-whitelisted codepoint " << c
+                                         << " (aka U+"
+                                         /* << Qt::uppercase */
+                                         << Qt::hex << static_cast<uint32_t>(c) << ")";
+                    break;
+                }
+            }
             const auto qemoji = QString::fromStdU32String(*opt_emoji);
             if (verbose_debugging) {
                 qDebug() << "shortCode" << shortCode << "emoji" << qemoji;
