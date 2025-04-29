@@ -61,6 +61,10 @@ GraphicsPage::GraphicsPage(QWidget *parent)
         setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
     });
 
+    connect(ui->drawUnsavedChanges, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
+        setConfig().canvas.showUnsavedChanges.set(ui->drawUnsavedChanges->isChecked());
+        graphicsSettingsChanged();
+    });
     connect(ui->drawNeedsUpdate,
             &QCheckBox::stateChanged,
             this,
@@ -123,9 +127,9 @@ void GraphicsPage::slot_loadConfig()
         ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
     }
 
-    ui->drawNeedsUpdate->setChecked(settings.drawNeedsUpdate.get());
+    ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
+    ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());
     ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);
-    ui->drawUpperLayersTextured->setChecked(settings.drawUpperLayersTextured);
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
 
     ui->resourceLineEdit->setText(settings.resourcesDirectory);
@@ -155,7 +159,7 @@ void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)
 
 void GraphicsPage::slot_drawNeedsUpdateStateChanged(int /*unused*/)
 {
-    setConfig().canvas.drawNeedsUpdate.set(ui->drawNeedsUpdate->isChecked());
+    setConfig().canvas.showMissingMapId.set(ui->drawNeedsUpdate->isChecked());
     graphicsSettingsChanged();
 }
 

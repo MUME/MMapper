@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>445</width>
-    <height>504</height>
+    <height>507</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -134,7 +134,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_Room">
      <property name="title">
-      <string>Room</string>
+      <string>Room Details</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_1">
       <property name="leftMargin">
@@ -152,31 +152,47 @@
       <property name="spacing">
        <number>6</number>
       </property>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="drawUpperLayersTextured">
+        <property name="text">
+         <string>Texture upper layers</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
+       <widget class="QCheckBox" name="drawDoorNames">
+        <property name="text">
+         <string>Render hidden doors</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Mapping Hints</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="drawNeedsUpdate">
+        <property name="text">
+         <string>Show missing map ids</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
        <widget class="QCheckBox" name="drawNotMappedExits">
         <property name="text">
-         <string>Draw unmapped exits</string>
+         <string>Show unmapped exits</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QCheckBox" name="drawUpperLayersTextured">
+       <widget class="QCheckBox" name="drawUnsavedChanges">
         <property name="text">
-         <string>Draw upper layers textured</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="drawDoorNames">
-        <property name="text">
-         <string>Draw hidden door names</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="drawNeedsUpdate">
-        <property name="text">
-         <string>Draw needs update hint</string>
+         <string>Show unsaved changes</string>
         </property>
        </widget>
       </item>
@@ -204,6 +220,13 @@
       <property name="spacing">
        <number>6</number>
       </property>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="darkLitPushButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="bgLabel">
         <property name="text">
@@ -224,13 +247,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="darkLitPushButton">
-        <property name="text">
-         <string>Select</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="2">
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -243,23 +259,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="darkLitLabel">
-        <property name="text">
-         <string>Light w/o Sundeath:</string>
-        </property>
-        <property name="buddy">
-         <cstring>darkLitPushButton</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="darkPushButton">
-        <property name="text">
-         <string>Select</string>
-        </property>
-       </widget>
       </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="bgChangeColor">
@@ -275,6 +274,23 @@
         </property>
         <property name="buddy">
          <cstring>connectionNormalPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="darkPushButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="darkLitLabel">
+        <property name="text">
+         <string>Light w/o Sundeath:</string>
+        </property>
+        <property name="buddy">
+         <cstring>darkLitPushButton</cstring>
         </property>
        </widget>
       </item>
@@ -338,12 +354,16 @@
   <tabstop>trilinearFilteringCheckBox</tabstop>
   <tabstop>softwareOpenGLCheckBox</tabstop>
   <tabstop>drawUpperLayersTextured</tabstop>
-  <tabstop>drawNotMappedExits</tabstop>
   <tabstop>drawDoorNames</tabstop>
+  <tabstop>drawUnsavedChanges</tabstop>
   <tabstop>drawNeedsUpdate</tabstop>
+  <tabstop>drawNotMappedExits</tabstop>
   <tabstop>bgChangeColor</tabstop>
   <tabstop>darkPushButton</tabstop>
   <tabstop>darkLitPushButton</tabstop>
+  <tabstop>connectionNormalPushButton</tabstop>
+  <tabstop>resourceLineEdit</tabstop>
+  <tabstop>resourcePushButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

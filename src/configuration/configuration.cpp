@@ -280,7 +280,8 @@ ConstString KEY_RUN_FIRST_TIME = "Run first time";
 ConstString KEY_SERVER_NAME = "Server name";
 ConstString KEY_SHOW_HIDDEN_EXIT_FLAGS = "Show hidden exit flags";
 ConstString KEY_SHOW_NOTES = "Show notes";
-ConstString KEY_DRAW_NEEDS_UPDATE = "Show updated rooms";
+ConstString KEY_SHOW_UNSAVED_CHANGES = "Show unsaved changes";
+ConstString KEY_SHOW_MISSING_MAP_ID = "Show missing map id";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
@@ -586,7 +587,8 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
                                         .append(DEFAULT_MMAPPER_SUBDIR)
                                         .append(DEFAULT_RESOURCES_SUBDIR))
                              .toString();
-    drawNeedsUpdate.set(conf.value(KEY_DRAW_NEEDS_UPDATE, false).toBool());
+    showMissingMapId.set(conf.value(KEY_SHOW_MISSING_MAP_ID, true).toBool());
+    showUnsavedChanges.set(conf.value(KEY_SHOW_UNSAVED_CHANGES, true).toBool());
     drawNotMappedExits = conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
@@ -767,7 +769,8 @@ NODISCARD static auto getQColorName(const XNamedColor &color)
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_RESOURCES_DIRECTORY, resourcesDirectory);
-    conf.setValue(KEY_DRAW_NEEDS_UPDATE, drawNeedsUpdate.get());
+    conf.setValue(KEY_SHOW_MISSING_MAP_ID, showMissingMapId.get());
+    conf.setValue(KEY_SHOW_UNSAVED_CHANGES, showUnsavedChanges.get());
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, drawNotMappedExits);
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
     conf.setValue(KEY_DRAW_DOOR_NAMES, drawDoorNames);

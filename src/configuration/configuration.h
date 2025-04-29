@@ -136,7 +136,8 @@ public:
 
     struct NODISCARD CanvasSettings final : public CanvasNamedColorOptions
     {
-        NamedConfig<bool> drawNeedsUpdate{"DRAW_NEEDS_UPDATE", false};
+        NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
+        NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
         bool drawNotMappedExits = false;
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;

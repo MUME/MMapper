@@ -246,8 +246,15 @@ void MapCanvas::initializeGL()
     font.setTextureId(allocateTextureId());
     font.init();
 
-    setConfig().canvas.drawNeedsUpdate.registerChangeCallback(m_lifetime, [this]() {
-        if (setConfig().canvas.drawNeedsUpdate.get() && m_diff.highlight.has_value()
+    setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
+        if (setConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
+            && m_diff.highlight->needsUpdate.empty()) {
+            this->forceUpdateMeshes();
+        }
+    });
+
+    setConfig().canvas.showMissingMapId.registerChangeCallback(m_lifetime, [this]() {
+        if (setConfig().canvas.showMissingMapId.get() && m_diff.highlight.has_value()
             && m_diff.highlight->needsUpdate.empty()) {
             this->forceUpdateMeshes();
         }
@@ -598,10 +605,12 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
         return;
     }
 
-    const bool showNeedsServerId = getConfig().canvas.drawNeedsUpdate.get();
+    const bool showNeedsServerId = getConfig().canvas.showMissingMapId.get();
+    const bool showChanged = getConfig().canvas.showUnsavedChanges.get();
 
     diff.futureHighlight = std::async(
-        std::launch::async, [saved, current, showNeedsServerId]() -> Diff::HighlightDiff {
+        std::launch::async,
+        [saved, current, showNeedsServerId, showChanged]() -> Diff::HighlightDiff {
             DECL_TIMER(t2, "[async] actuallyPaintGL: highlight differences and needs update");
             // 3-2
             // |/|
@@ -614,7 +623,10 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
             };
 
             // REVISIT: Just send the position and convert from point to quad in a shader?
-            auto getChanged = [&saved, &current]() -> TexVertVector {
+            auto getChanged = [&saved, &current, showChanged]() -> TexVertVector {
+                if (!showChanged) {
+                    return TexVertVector{};
+                }
                 DECL_TIMER(t3, "[async] actuallyPaintGL: compute differences");
                 TexVertVector changed;
                 auto drawQuad = [&changed](const RawRoom &room) {
@@ -681,7 +693,7 @@ void MapCanvas::paintDifferences()
                                    .withTexture0(texid));
     };
 
-    if (getConfig().canvas.drawNeedsUpdate.get()) {
+    if (getConfig().canvas.showMissingMapId.get()) {
         tryRenderWithTexture(highlight.needsUpdate, m_textures.room_needs_update->getId());
     }
     tryRenderWithTexture(highlight.diff, m_textures.room_modified->getId());
