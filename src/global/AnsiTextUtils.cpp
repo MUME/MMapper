@@ -1706,6 +1706,27 @@ bool isAnsiColor(const QString &ansi)
     return isAnsiColor(QStringView{ansi});
 }
 
+NODISCARD bool isAnsiEraseLine(QStringView ansi)
+{
+    if (ansi.length() < 3 || ansi.front() != char_consts::C_ESC
+        || ansi.at(1) != char_consts::C_OPEN_BRACKET || ansi.back() != 'K') {
+        return false;
+    }
+
+    // Check for valid parameters for Erase in Line (EL): empty or 0 (VT100 behavior)
+    ansi = ansi.mid(2, ansi.length() - 3);
+    if (ansi.isEmpty() || ansi == u"0") {
+        return true;
+    }
+
+    return false;
+}
+
+NODISCARD bool isAnsiEraseLine(const QString &ansi)
+{
+    return isAnsiEraseLine(QStringView{ansi});
+}
+
 void AnsiColorParser::for_each(QStringView ansi) const
 {
     using namespace mmqt;

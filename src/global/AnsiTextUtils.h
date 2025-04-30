@@ -1120,6 +1120,9 @@ NODISCARD extern std::optional<RawAnsi> parseAnsiColor(RawAnsi, const QString &a
 NODISCARD extern bool isValidAnsiColor(QStringView ansi);
 NODISCARD extern bool isValidAnsiColor(const QString &ansi);
 
+NODISCARD extern bool isAnsiEraseLine(QStringView ansi);
+NODISCARD extern bool isAnsiEraseLine(const QString &ansi);
+
 /**
  * NOTE:
  * 1. Code will assert() if the text does not contain any ansi strings.

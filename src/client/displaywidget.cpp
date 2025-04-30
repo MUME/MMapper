@@ -346,6 +346,10 @@ void AnsiTextHelper::displayText(const QString &input_str)
                 if (auto optNewColor = mmqt::parseAnsiColor(currentAnsi, ansiStr)) {
                     currentAnsi = updateFormat(format, defaults, currentAnsi, *optNewColor);
                 }
+            } else if (mmqt::isAnsiEraseLine(ansiStr)) {
+                cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 1);
+                cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+                cursor.removeSelectedText();
             } else {
                 add_raw(u"<ESC>", {});
                 if (ansiStr.length() > 1) {
