@@ -29,7 +29,7 @@ jobs:
     - uses: lukka/get-cmake@latest
 
     # Install Dependencies (Ubuntu)
-    - if: contains( matrix.os, 'ubuntu' )
+    - if: runner.os == 'Linux'
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
@@ -90,21 +90,43 @@ jobs:
     # Package
     - name: Package MMapper
       run: cd build && cpack
+    - if: runner.os == 'Linux'
+      name: Get Linux package file base name
+      id: get_linux_package_name
+      run: |
+        PACKAGE_FILE=$(ls ${{ github.workspace }}/artifact/*.deb)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+    - if: runner.os == 'macOS'
+      name: Get Mac package file base name
+      id: get_mac_package_name
+      run: |
+        PACKAGE_FILE=$(ls ${{ github.workspace }}/artifact/*.dmg)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+    - if: runner.os == 'Windows'
+      name: Get Windows package file base name
+      id: get_windows_package_name
+      shell: pwsh
+      run: |
+        $packageFile = Get-ChildItem -Path "${{ github.workspace }}/artifact/*.exe" | Select-Object -First 1
+        $packageBasename = $packageFile.BaseName -replace '\.', '-'
+        "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
     - if: runner.os == 'macOS'
       name: Upload Package for Mac
       uses: actions/upload-artifact@v4
       with:
-        name: build-release Mac ${{ env.GIT_TAG }}
+        name: release-${{ steps.get_mac_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.dmg*
-    - if: contains( matrix.os, 'ubuntu' )
+    - if: runner.os == 'Linux'
       name: Upload Package for Ubuntu
       uses: actions/upload-artifact@v4
       with:
-        name: build-release Linux ${{ env.GIT_TAG }}
+        name: release-${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.deb*
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
       uses: actions/upload-artifact@v4
       with:
-        name: build-release Windows ${{ env.GIT_TAG }}
+        name: release-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.exe*

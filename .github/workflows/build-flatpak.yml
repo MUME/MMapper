@@ -46,9 +46,16 @@ jobs:
         mkdir -p artifact
         mv *.flatpak* artifact
 
+    - name: Get Linux package file base name
+      id: get_linux_package_name
+      run: |
+        PACKAGE_FILE=$(ls artifact/*.flatpak)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+
     - name: Upload Flatpak bundle
       uses: actions/upload-artifact@v4
       with:
-        name: release-build Flatpak ${{ env.VERSION }}-${{ env.ARCHITECTURE }}
+        name: ${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: artifact/*.flatpak*
 

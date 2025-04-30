@@ -41,12 +41,12 @@ jobs:
       #
       # Install Packages (Ubuntu)
       #
-    - if: contains( matrix.os, 'ubuntu' )
+    - if: runner.os == 'Linux'
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
         sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold
-    - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
+    - if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
         sudo apt install -y gcc-13 g++-13 lcov
@@ -55,7 +55,7 @@ jobs:
         echo "CXX=g++-13" >> $GITHUB_ENV
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true -DUSE_MOLD=true" >> $GITHUB_ENV
         echo "COVERAGE=true" >> $GITHUB_ENV 
-    - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'clang'
+    - if: runner.os == 'Linux' && matrix.compiler == 'clang'
       name: Install Clang for Ubuntu
       run: |
         sudo apt install -y clang-18 binutils
@@ -197,21 +197,43 @@ jobs:
       # 
     - name: Package MMapper
       run: cd build && cpack
+    - if: runner.os == 'Linux'
+      name: Get Linux package file base name
+      id: get_linux_package_name
+      run: |
+        PACKAGE_FILE=$(ls ${{ github.workspace }}/artifact/*.deb)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+    - if: runner.os == 'macOS'
+      name: Get Mac package file base name
+      id: get_mac_package_name
+      run: |
+        PACKAGE_FILE=$(ls ${{ github.workspace }}/artifact/*.dmg)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+    - if: runner.os == 'Windows'
+      name: Get Windows package file base name
+      id: get_windows_package_name
+      shell: pwsh
+      run: |
+        $packageFile = Get-ChildItem -Path "${{ github.workspace }}/artifact/*.exe" | Select-Object -First 1
+        $packageBasename = $packageFile.BaseName -replace '\.', '-'
+        "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
     - if: runner.os == 'macOS'
       name: Upload Package for Mac
       uses: actions/upload-artifact@v4
       with:
-        name: build-test Mac ${{ matrix.os }} ${{ matrix.compiler }} ${{ env.GIT_TAG }}
+        name: debug-${{ steps.get_mac_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.dmg*
-    - if: contains( matrix.os, 'ubuntu' )
+    - if: runner.os == 'Linux'
       name: Upload Package for Ubuntu
       uses: actions/upload-artifact@v4
       with:
-        name: build-test Linux ${{ matrix.os }} ${{ matrix.compiler }} ${{ env.GIT_TAG }}
+        name: debug-${{ matrix.compiler }}-${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.deb*
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
       uses: actions/upload-artifact@v4
       with:
-        name: build-test Windows ${{ matrix.os }} ${{ matrix.compiler }} ${{ env.GIT_TAG }}
+        name: debug-${{ matrix.compiler }}-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.exe*

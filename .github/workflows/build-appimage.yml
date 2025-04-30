@@ -17,14 +17,17 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+
     - name: Get Git tag description
       id: git_info
       run: |
         echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
+
     - name: Build AppImage using Docker
       run: |
         # Build MMapper within a Docker container using the current working path as a volume
         docker run --rm -v "$(pwd)":/root/mmapper --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse:mrw --security-opt apparmor:unconfined ubuntu:22.04 bash -c 'export DEBIAN_FRONTEND=noninteractive && apt update -qq && apt install -y qt5-qmake qttools5-dev-tools libqt5opengl5-dev libqt5websockets5-dev qt5keychain-dev libgl1-mesa-dev build-essential mold clang git zlib1g-dev libssl-dev wget zsync fuse file cmake && cd /root/mmapper && mkdir -p build && cd build && git config --global --add safe.directory /root/mmapper && CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DUSE_MOLD=true -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON && make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2) && wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x linuxdeployqt-continuous-x86_64.AppImage && ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/org.mume.MMapper.desktop -updateinformation="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync" -appimage'
+
     - name: Generate SHA256 checksum for AppImage
       run: |
         sudo chown -R $USER:$USER build/
@@ -33,8 +36,16 @@ jobs:
         sha256sum $FILE > $FILE.sha256
         mkdir ${{ github.workspace }}/artifact
         mv *.AppImage* ${{ github.workspace }}/artifact
+
+    - name: Get Linux package file base name
+      id: get_linux_package_name
+      run: |
+        PACKAGE_FILE=$(ls ${{ github.workspace }}/artifact/*.AppImage)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
       with:
-        name: release-build AppImage ${{ env.GIT_TAG }}
+        name: ${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.AppImage*
