@@ -72,6 +72,14 @@
           <bool>true</bool>
          </property>
          <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>343</width>
+            <height>504</height>
+           </rect>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <property name="spacing">
             <number>12</number>
@@ -123,7 +131,6 @@
                <widget class="QPushButton" name="playButton">
                 <property name="font">
                  <font>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -319,6 +326,23 @@
        <bool>false</bool>
       </property>
       <widget class="DisplayWidget" name="display" native="true"/>
+      <widget class="PreviewWidget" name="preview">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="visible">
+        <bool>false</bool>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
       <widget class="StackedInputWidget" name="input" native="true"/>
      </widget>
     </widget>
@@ -336,6 +360,12 @@
    <class>StackedInputWidget</class>
    <extends>QWidget</extends>
    <header>client/stackedinputwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PreviewWidget</class>
+   <extends>QTextEdit</extends>
+   <header>client/PreviewWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

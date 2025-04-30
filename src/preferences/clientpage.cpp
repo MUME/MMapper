@@ -43,6 +43,10 @@ ClientPage::ClientPage(QWidget *parent)
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &ClientPage::slot_onChangeLinesOfScrollback);
+    connect(ui->previewSpinBox,
+            QOverload<int>::of(&QSpinBox::valueChanged),
+            this,
+            [](const int value) { setConfig().integratedClient.linesOfPeekPreview = value; });
 
     connect(ui->inputHistorySpinBox,
             QOverload<int>::of(&QSpinBox::valueChanged),
@@ -77,6 +81,7 @@ void ClientPage::slot_loadConfig()
     ui->columnsSpinBox->setValue(settings.columns);
     ui->rowsSpinBox->setValue(settings.rows);
     ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
+    ui->previewSpinBox->setValue(settings.linesOfPeekPreview);
     ui->inputHistorySpinBox->setValue(settings.linesOfInputHistory);
     ui->tabDictionarySpinBox->setValue(settings.tabCompletionDictionarySize);
     ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);

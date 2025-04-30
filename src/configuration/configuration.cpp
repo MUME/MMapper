@@ -254,6 +254,7 @@ ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
 ConstString KEY_3D_LAYER_HEIGHT = "canvas.advanced.layerHeight";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
+ConstString KEY_LINES_OF_PEEK_PREVIEW = "Lines of peek preview";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
 ConstString KEY_PROXY_LOCAL_PORT = "Local port number";
 ConstString KEY_MAP_MODE = "Map Mode";
@@ -713,6 +714,7 @@ void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
     tabCompletionDictionarySize = conf.value(KEY_TAB_COMPLETION_DICTIONARY_SIZE, 100).toInt();
     clearInputOnEnter = conf.value(KEY_CLEAR_INPUT_ON_ENTER, true).toBool();
     autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, true).toBool();
+    linesOfPeekPreview = conf.value(KEY_LINES_OF_PEEK_PREVIEW, 7).toInt();
 }
 
 void Configuration::RoomPanelSettings::read(const QSettings &conf)
@@ -878,6 +880,7 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_TAB_COMPLETION_DICTIONARY_SIZE, tabCompletionDictionarySize);
     conf.setValue(KEY_CLEAR_INPUT_ON_ENTER, clearInputOnEnter);
     conf.setValue(KEY_AUTO_RESIZE_TERMINAL, autoResizeTerminal);
+    conf.setValue(KEY_LINES_OF_PEEK_PREVIEW, linesOfPeekPreview);
 }
 
 void Configuration::RoomPanelSettings::write(QSettings &conf) const

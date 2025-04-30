@@ -103,6 +103,11 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
             this->setFocus();
         }
     });
+
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int value) {
+        bool atBottom = (value == verticalScrollBar()->maximum());
+        getOutput().showPreview(!atBottom);
+    });
 }
 
 DisplayWidget::~DisplayWidget() = default;
@@ -161,7 +166,9 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     }
 
     QTextEdit::resizeEvent(event);
-    ensureCursorVisible();
+
+    bool atBottom = (verticalScrollBar()->sliderPosition() == verticalScrollBar()->maximum());
+    getOutput().showPreview(!atBottom);
 }
 
 void DisplayWidget::keyPressEvent(QKeyEvent *event)

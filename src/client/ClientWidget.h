@@ -18,6 +18,7 @@ class DisplayWidget;
 class QEvent;
 class QObject;
 class StackedInputWidget;
+class PreviewWidget;
 
 struct ClientTelnetOutputs;
 struct DisplayWidgetOutputs;
@@ -73,6 +74,7 @@ private:
     NODISCARD DisplayWidget &getDisplay();
     NODISCARD StackedInputWidget &getInput();
     NODISCARD ClientTelnet &getTelnet();
+    NODISCARD PreviewWidget &getPreview();
 
 public:
     NODISCARD bool isUsingClient() const;

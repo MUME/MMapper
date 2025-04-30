@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "ClientTelnet.h"
+#include "PreviewWidget.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
 #include "ui_ClientWidget.h"
@@ -74,11 +75,16 @@ void ClientWidget::initStackedInputWidget()
         NODISCARD ClientWidget &getSelf() { return m_self; }
         NODISCARD ClientTelnet &getTelnet() { return getSelf().getTelnet(); }
         NODISCARD DisplayWidget &getDisplay() { return getSelf().getDisplay(); }
+        NODISCARD PreviewWidget &getPreview() { return getSelf().getPreview(); }
 
     private:
         void virt_sendUserInput(const QString &msg) final { getTelnet().sendToMud(msg); }
 
-        void virt_displayMessage(const QString &msg) final { getDisplay().slot_displayText(msg); }
+        void virt_displayMessage(const QString &msg) final
+        {
+            getDisplay().slot_displayText(msg);
+            getPreview().displayText(msg);
+        }
 
         void virt_showMessage(const QString &msg, MAYBE_UNUSED int timeout) final
         {
@@ -116,8 +122,8 @@ void ClientWidget::initDisplayWidget()
         {
             getTelnet().onWindowSizeChanged(width, height);
         }
-
         void virt_returnFocusToInput() final { getSelf().getInput().setFocus(); }
+        void virt_showPreview(bool visible) final { getSelf().getPreview().setVisible(visible); }
     };
     auto &out = m_pipeline.outputs.displayWidgetOutputs;
     out = std::make_unique<LocalDisplayWidgetOutputs>(*this);
@@ -138,6 +144,7 @@ void ClientWidget::initClientTelnet()
     private:
         ClientWidget &getClient() { return m_self; }
         DisplayWidget &getDisplay() { return getClient().getDisplay(); }
+        PreviewWidget &getPreview() { return getClient().getPreview(); }
         StackedInputWidget &getInput() { return getClient().getInput(); }
 
     private:
@@ -160,9 +167,11 @@ void ClientWidget::initClientTelnet()
         {
             getInput().setEchoMode(echo ? EchoMode::Visible : EchoMode::Hidden);
         }
+
         void virt_sendToUser(const QString &str) final
         {
             getDisplay().slot_displayText(str);
+            getPreview().displayText(str);
 
             // Re-open the password dialog if we get a message in hidden echo mode
             if (getClient().getInput().getEchoMode() == EchoMode::Hidden) {
@@ -178,6 +187,11 @@ void ClientWidget::initClientTelnet()
 DisplayWidget &ClientWidget::getDisplay()
 {
     return deref(getUi().display);
+}
+
+PreviewWidget &ClientWidget::getPreview()
+{
+    return deref(getUi().preview);
 }
 
 StackedInputWidget &ClientWidget::getInput()

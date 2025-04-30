@@ -342,6 +342,7 @@ public:
         int tabCompletionDictionarySize = 0;
         bool clearInputOnEnter = false;
         bool autoResizeTerminal = false;
+        int linesOfPeekPreview = 0;
 
     private:
         SUBGROUP();
