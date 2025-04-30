@@ -37,19 +37,6 @@ PreviewWidget::PreviewWidget(QWidget *parent)
 void PreviewWidget::displayText(const QString &textToShow)
 {
     helper.displayText(textToShow);
-
-    // Trim scrollback
-    const auto &settings = getConfig().integratedClient;
-    int lineLimit = settings.linesOfPeekPreview;
-    QTextCursor &cursor = helper.cursor;
-    const int lineCount = document()->lineCount();
-    if (lineCount > lineLimit) {
-        const int trimLines = lineCount - lineLimit;
-        cursor.movePosition(QTextCursor::Start);
-        cursor.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, trimLines);
-        cursor.removeSelectedText();
-        cursor.movePosition(QTextCursor::End);
-    }
-
+    helper.limitScrollback(getConfig().integratedClient.linesOfPeekPreview);
     ensureCursorVisible();
 }
