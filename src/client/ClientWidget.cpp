@@ -14,6 +14,7 @@
 #include <memory>
 
 #include <QFileDialog>
+#include <QScrollBar>
 #include <QString>
 #include <QTimer>
 
