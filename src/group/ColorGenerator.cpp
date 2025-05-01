@@ -4,7 +4,6 @@
 #include "ColorGenerator.h"
 
 #include <cmath>
-#include <utility>
 
 #include <QColor>
 #include <queue>
@@ -27,7 +26,7 @@ struct ColorGeneratorImpl final
             prevHues.pop();
         } else {
             hue = fmod(hue + GOLDEN_ANGLE, 360.0);
-            next = QColor::fromHsl(static_cast<int>(hue), 255, 127);
+            next = QColor::fromHsl(static_cast<int>(hue + 0.5), 255, 127);
         }
         return next;
     }

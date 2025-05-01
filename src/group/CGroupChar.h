@@ -151,6 +151,10 @@ public:
     {
         return m_server.serverId;
     }
+    void setType(CharacterTypeEnum type)
+    {
+        m_server.type = type;
+    }
     NODISCARD CharacterTypeEnum getType() const
     {
         return m_server.type;

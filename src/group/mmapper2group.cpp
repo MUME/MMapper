@@ -37,6 +37,7 @@ SharedGroupChar Mmapper2Group::getSelf()
 {
     if (!m_self) {
         m_self = CGroupChar::alloc();
+        m_self->setType(CharacterTypeEnum::YOU);
         m_self->setColor(getConfig().groupManager.color);
         m_charIndex.push_back(m_self);
     }
