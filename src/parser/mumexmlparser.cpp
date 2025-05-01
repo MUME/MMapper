@@ -733,20 +733,15 @@ void MumeXmlParser::move()
         onHandleParseEvent(SigParseEvent{ev});
     };
 
+    emitEvent();
     auto &queue = getQueue();
-    if (queue.isEmpty()) {
-        emitEvent();
-    } else {
+    if (!queue.isEmpty()) {
         const CommandEnum c = queue.dequeue();
-        // Ignore scouting unless it forced movement via a one-way
-        if (c != CommandEnum::SCOUT || m_move != CommandEnum::LOOK) {
-            pathChanged();
-            emitEvent();
-            if (c != m_move) {
-                MMLOG() << "[XML parser] move " << getUppercase(m_move) << " doesn't match command "
-                        << getUppercase(c);
-                queue.clear();
-            }
+        pathChanged();
+        if (c != m_move) {
+            MMLOG() << "[XML parser] move " << getUppercase(m_move) << " doesn't match command "
+                    << getUppercase(c);
+            queue.clear();
         }
     }
 

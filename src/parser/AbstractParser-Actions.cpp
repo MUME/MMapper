@@ -93,15 +93,6 @@ void MumeXmlParserBase::initActionMap()
     addEndsWith("is too exhausted.", failedMovement);
     addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", failedMovement);
 
-    auto look = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::LOOK); };
-    addStartsWith("You follow", look);
-
-    auto flee = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::FLEE); };
-    addStartsWith("You flee head", flee);
-
-    auto scout = [this](StringView /*view*/) { getQueue().enqueue(CommandEnum::SCOUT); };
-    addStartsWith("You quietly scout", scout);
-
     /// Time
     addStartsWith("The current time is",
                   [this](StringView view) { m_mumeClock.parseClockTime(view.toQString()); });
