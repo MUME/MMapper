@@ -18,6 +18,7 @@
  - The Web Map format has changed its md5 hashing strategy to also normalize on whitespace.
  - The unit test coverage was improved by 3%. (Gamor)
 
+---
 ## MMapper 23.05.0 (May 1, 2023)
 
 ### New features:
@@ -63,6 +64,7 @@
 ### Bug fixes:
  - Fixed a prompt regression where it felt slower
 
+---
 ## MMapper 22.12.1 (December 31, 2022)
 
 ### New features:
@@ -99,6 +101,7 @@
 ### Changes:
  - Default map has been updated
 
+---
 ## MMapper 21.12.1 (December 6, 2021)
 
 ### Changes:
@@ -227,6 +230,7 @@
  - DPI is checked when MMapper is started up
  - Fix _dirs command by swapping n/s
 
+---
 ## MMapper 20.10.0 (October 13, 2020)
 
 ### New features:
@@ -295,6 +299,7 @@
  - PowTTY terminal type will now include more information than simply 'unknown'
  - Squished bugs around snooping for Valar
 
+---
 ## MMapper 19.12.1 (December 31, 2019)
 
 ### Bug fixes:
@@ -453,6 +458,7 @@
  - The account "time" command will not unsync the clock
  - Last remembered prompt is now cleared on disconnect
 
+---
 ## MMapper 2.7.3 (December 26, 2018)
 
 ### New features:
@@ -679,6 +685,7 @@
  - Mume Clock will now show you the time even if it isn't certain
  - Fixed a 4 year old bug where no-ride rooms were not red
 
+---
 ## MMapper 2.4.1 (December 30, 2017)
 
 ### Changes:
@@ -714,6 +721,7 @@
   - GNOME and KDE integration improved (kalev)
   - Menus standardized and first time use improved (nschimme)
 
+---
 ## MMapper 2.3.6 (December 9, 2015)
 
 ### Changes:
@@ -763,6 +771,7 @@
  - Prompt detection fixes (kalev)
  - New note search feature (Arfang)
 
+---
 ## MMapper 2.2.1 (July 14, 2013)
 
 ### Changes:
