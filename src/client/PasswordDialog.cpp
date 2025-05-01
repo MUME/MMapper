@@ -31,6 +31,12 @@ PasswordDialog::PasswordDialog(InputWidgetOutputs &outputs, QWidget *const paren
     connect(buttonBox, &QDialogButtonBox::rejected, this, &PasswordDialog::reject);
 }
 
+bool PasswordDialog::focusNextPrevChild(bool /*next*/)
+{
+    // Disable tabbing
+    return false;
+}
+
 void PasswordDialog::accept()
 {
     QString password = m_passwordLineEdit->text();
