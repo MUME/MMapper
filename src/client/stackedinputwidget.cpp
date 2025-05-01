@@ -111,6 +111,12 @@ void StackedInputWidget::requestPassword()
     if (dlg.isActiveWindow() && dlg.isVisible()) {
         return;
     }
+
+    QPoint globalPos = [this]() {
+        auto &input = getInputWidget();
+        return input.mapToGlobal(input.cursorRect(input.textCursor()).topLeft());
+    }();
+    dlg.move(globalPos.x() - dlg.width(), globalPos.y() - dlg.height());
     dlg.show();
     dlg.raise();
     dlg.activateWindow();

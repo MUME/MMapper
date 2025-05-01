@@ -352,13 +352,13 @@
  <customwidgets>
   <customwidget>
    <class>DisplayWidget</class>
-   <extends>QWidget</extends>
+   <extends>QTextBrowser</extends>
    <header>client/displaywidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>StackedInputWidget</class>
-   <extends>QWidget</extends>
+   <extends>QStackedWidget</extends>
    <header>client/stackedinputwidget.h</header>
    <container>1</container>
   </customwidget>
@@ -369,6 +369,11 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>display</tabstop>
+  <tabstop>preview</tabstop>
+  <tabstop>input</tabstop>
+ </tabstops>
  <resources>
   <include location="../resources/mmapper2.qrc"/>
  </resources>
