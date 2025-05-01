@@ -1,32 +1,26 @@
-================================
-MMapper 24.03.1 (March 11, 2024)
-================================
+## MMapper 24.03.1 (March 11, 2024)
 
-Bug fix:
+### Bug fix:
  - Do not send MSSP to clients that haven't requested it. This fix helps JMC users.
 
-================================
-MMapper 24.03.0 (March 10, 2024)
-================================
+## MMapper 24.03.0 (March 10, 2024)
 
-New features:
+### New features:
  - MMapper will now synchronize the time to the hour using MUME's Mud Server Status Protocol. (Mirnir)
  - The recent whitespace change is now compatible with MMapper where room descriptions are now normalized.
 
-Bug fixes:
+### Bug fixes:
  - Timers will now trigger for Elves and Half-elves. (Gamor)
  - Some memory leaks were fixed.
 
-Changes:
+### Changes:
  - The minimum supported version of macOS is now Monterey.
  - The Web Map format has changed its md5 hashing strategy to also normalize on whitespace.
  - The unit test coverage was improved by 3%. (Gamor)
 
-================================
-MMapper 23.05.0 (May 1, 2023)
-================================
+## MMapper 23.05.0 (May 1, 2023)
 
-New features:
+### New features:
  - Added support for a rattlesnake mob flag to differentiate between the
    attention flag
  - The menu bar can now be intelligently hidden until mouseover for a more
@@ -34,218 +28,192 @@ New features:
  - Rattlesnake, attention, and smob hints are now displayed in the
    emulated exits
 
-Bug fixes:
+### Bug fixes:
  - The adventurer panel has a corrected XP and TP hourly rate
  - Undead kills are now tracked in the adventure panel
- - The moon has been fixed follow the game's adjusted synodic month
+ - The moon has been fixed to follow the game's adjusted synodic month
 
-Changes:
+### Changes:
  - Time is now synchronized using GMCP Event.Darkness and Event.Sun
  - Moon phases are now considered as part of the visibility counter
 
-================================
-MMapper 23.03.0 (March 18, 2023)
-================================
+## MMapper 23.03.0 (March 18, 2023)
 
-New features:
+### New features:
  - Added the Adventure Panel that helps players track, organize, and
    understand their adventures such as hints, XP, and achievements (Taryn)
- - Added the _timers command for players to track things (Azazello)
+ - Added the `_timers` command for players to track things (Azazello)
 
-Bug fixes:
+### Bug fixes:
  - Fixed crash when editing multiple rooms
  - Fixed Warrens' dawn and dusk messages (Troth)
  - RoomPanel now supports dark mode on macOS and Linux
  - Use Char.Vitals GMCP to set riding or position state rather than from the
    prompt using regular expressions
 
-Changes:
+### Changes:
  - Internal commands don't have weird output like "--->" anymore
  - Github Actions is now used very extensively for continuous build by the
    MMapper developers
  - Windows build has stopped using MSYS2 because it upgraded to OpenSSL3 which
-   is not supportted by the Qt5 framework
+   is not supported by the Qt5 framework
 
-================================
-MMapper 23.01.0 (January 1, 2023)
-================================
+## MMapper 23.01.0 (January 1, 2023)
 
-Bug fixes:
+### Bug fixes:
  - Fixed a prompt regression where it felt slower
 
-================================
-MMapper 22.12.1 (December 31, 2022)
-================================
+## MMapper 22.12.1 (December 31, 2022)
 
-New features:
+### New features:
  - Scroll bars and the status bar can now be hidden under the View menu. (Taryn)
 
-Bug fixes:
- - Fixed crash in _dirs command (Elval)
+### Bug fixes:
+ - Fixed crash in `_dirs` command (Elval)
  - Prompt is now drawn correctly by supporting nested XML tags
 
-Changes:
+### Changes:
  - Mapped rooms don't have dangling newlines anymore
  - MMapper now requires MacOS 11 Big Sur
  - .deb Linux package is now built on Debian Bullseye
 
-================================
-MMapper 22.12.0 (December 4, 2022)
-================================
+## MMapper 22.12.0 (December 4, 2022)
 
-Changes:
+### Changes:
  - Default map has been updated to support the Bree-land and parts of ABR
 
-Bug fixes:
+### Bug fixes:
  - Improved stability of remote editor
  - Base map filter supports Mandos
- - Removed Top Mud Sites from the _vote command and menu
+ - Removed Top Mud Sites from the `_vote` command and menu
  - Fixed shader error on AMD video cards using driver 22.11.1
 
-================================
-MMapper 22.05.0 (May 7, 2022)
-================================
+## MMapper 22.05.0 (May 7, 2022)
 
-New features:
+### New features:
  - Characters in the room can now be viewed in the Room Panel. This panel
    populated by the GMCP Room.Chars module (Cosmos)
  - Maps can now be exported and imported using the new human-readable and
    editable mm2xml XML format (Cosmos)
 
-Changes:
+### Changes:
  - Default map has been updated
 
-================================
-MMapper 21.12.1 (December 6, 2021)
-================================
+## MMapper 21.12.1 (December 6, 2021)
 
-Changes:
+### Changes:
  - Mapping only trusts Orc-mode to set room SUNDEATH
  - Mapping only trusts Troll-mode to set room NO_SUNDEATH, LIT, DARK
  - Removed OpenGL ES support because the Raspberry Pi 4 supports OpenGL 2.1
 
-Bug fixes:
+### Bug fixes:
  - Room syncing works now for Orcs when exits are sunny
  - Short prompts without the light and terrain are now correctly parsed
  - Fixed UTF-8 to Latin-1 encoding bug where special characters showed up as ??
  - Mac build works again by switching to brew miniupnc and qt5
- - Added work-around for TinTin++ character encoding negotation
+ - Added work-around for TinTin++ character encoding negotiation
 
-================================
-MMapper 21.12.0 (December 2, 2021)
-================================
+## MMapper 21.12.0 (December 2, 2021)
 
-New features:
+### New features:
  - MMapper will try to reduce sundeaths by resetting the clock to lowest
    precision when re-connecting. Users can override this by clicking the clock
    manually at their own risk.
  - Live remote edits will now prompt to have their contents saved if the
    connection to MUME is disrupted rather than disappearing into the Void.
 
-Changes:
+### Changes:
  - Mac builds now require Mac OS X 10.15 Catalina at a minimum.
  - Deb packages are now Ubuntu 20.04 (amd64) or Debian Bullseye (arm64).
  - Minimum supported Qt and CMake are now 5.12.4 and 3.16 respectively.
- - Cotire has been replaced with Unity Builds decreasing builds times by 30%.
+ - Cotire has been replaced with Unity Builds decreasing build times by 30%.
 
-Bug fixes:
+### Bug fixes:
  - Powtty now provides the Terminal Type to MMapper as "XTERM".
  - Eliminated newlines that were added for each XML tag (i.e. <character> or
    <magic>) in the saved room contents.
 
-================================
-MMapper 21.09.2 (September 29, 2021)
-================================
+## MMapper 21.09.2 (September 29, 2021)
 
-Bug fixes:
+### Bug fixes:
  - Prevent reconnecting from kicking players in Group Manager
  - Fix Latin-1 character mojibake in Group Manager names
- - Prevent scouting from occassionally triggering movement
+ - Prevent scouting from occasionally triggering movement
 
-================================
-MMapper 21.09.1 (September 26, 2021)
-================================
+## MMapper 21.09.1 (September 26, 2021)
 
-New features:
+### New features:
  - Use Char.Name GMCP module to populate the Group Manager
  - Use Char.StatusVars GMCP module to detect sundeath exits
 
-Bug fixes:
+### Bug fixes:
  - Prevent renaming from kicking players in the Group Manager
  - Update prompt parsing to support XP and TP TNL
  - Retain GMCP modules between reconnects
  - Fix race condition when proxying External.Discord.Hello
 
-================================
-MMapper 21.09.0 (September 24, 2021)
-================================
+## MMapper 21.09.0 (September 24, 2021)
 
-New features:
+### New features:
  - Balrog's whip entangle "bash" is now detected in the Group Manager
  - "score report" output is now captured for the Group Manager
  - Add the ability to search using a regex in the Find Rooms dialog
  - [Beta] Use Char.Vitals GMCP messages to populate the Group Manager when
    MUME adds support for GMCP Char module
 
-Changes:
+### Changes:
  - Rename MMapper.GroupTell to MMapper.Comm.GroupTell
  - Stopped sending the IAC-GA prompt request MPI to MUME
 
-Bug fixes:
+### Bug fixes:
  - Prompt rewriting works
  - Light and terrain characters in the prompt are now optional since we now
    parse the terrain type from <room terrain=...> XML attribute
- - Fixed RFC 2066 Charset negotation
+ - Fixed RFC 2066 Charset negotiation
  - Refactor telnet option handling to be less spammy
 
-================================
-MMapper 21.08.0 (August 9, 2021)
-================================
+## MMapper 21.08.0 (August 9, 2021)
 
-New features:
+### New features:
  - Added a new milkable mob flag and updated the default map to support it
- - Room textures can now by modded by players: https://github.com/MUME/MMapper/wiki/Modding
- - Added the _mark command to add, update, or remove text marks without using a mouse
+ - Room textures can now be modded by players: [https://github.com/MUME/MMapper/wiki/Modding](https://github.com/MUME/MMapper/wiki/Modding)
+ - Added the `_mark` command to add, update, or remove text marks without using a mouse
  - Distant selected rooms are now scaled based upon distance
 
-Changes:
- - Renamed _markcurrent to _room select
+### Changes:
+ - Renamed `_markcurrent` to `_room select`
  - Anonymously exposed OpenGL version in the terminal type
 
-Bug fixes:
+### Bug fixes:
  - Fixed MCCP2 compression crash when reconnecting
  - Prevent colors from looking washed out on Mesa 21.0.3 by not disabling multisampling
 
-================================
-MMapper 21.06.0 (June 1, 2021)
-================================
+## MMapper 21.06.0 (June 1, 2021)
 
-Note:
+### Note:
  - Windows users should manually uninstall MMapper from "Add or remove
    programs" before installing the new MMapper.
  - MMapper has dropped support for 32-bit binaries.
 
-Changes:
+### Changes:
  - Default map now includes Dol Guldur environments
  - Fixed <header> XML support parsing
  - Improved Windows installer High DPI support
  - Supported macOS 10.11 networking better
  - Increased telnet socket timeout to 30 seconds
  - Fixed an ANSI color encoding typo on the welcome message
- - Renamed _removedoornames to _remove-secret-door-names
+ - Renamed `_removedoornames` to `_remove-secret-door-names`
  - Fixed RoomEditDialog multiselection rendering error
  - Squished various minor bugs
 
-================================
-MMapper 21.01.0 (January 17, 2021)
-================================
+## MMapper 21.01.0 (January 17, 2021)
 
-New features:
- - Play, emulation, and mapping modes can be changed with: _config ??
+### New features:
+ - Play, emulation, and mapping modes can be changed with: `_config ??`
  - An insecure connection warning will now be displayed if TLS encryption is disabled
  - Selecting rooms and marks now displays the total count
 
-Bug fixes:
+### Bug fixes:
  - Fix autoexits parsing to support the new MUME XML format
  - Room online update status can now be changed when multiple rooms are selected
  - UI now allow remote and local ports above 10000
@@ -253,80 +221,72 @@ Bug fixes:
  - Allow clock to sync with Ainur
  - Fixed rare crash when a connection was not bi-directional
  - The world mesh is now updated during a tolerant room updates
- - Only troll exits are trusted for detecting direct sunlit exits, thereby improving accurancy
+ - Only troll exits are trusted for detecting direct sunlit exits, thereby improving accuracy
  - Removed the confusing orange bounds that resulted in a mesh rebuild
  - The display is now updated when changing a room's up to date flag.
  - DPI is checked when MMapper is started up
  - Fix _dirs command by swapping n/s
- 
-================================
-MMapper 20.10.0 (October 13, 2020)
-================================
 
-New features:
+## MMapper 20.10.0 (October 13, 2020)
+
+### New features:
  - Exits are now automatically generated during "Create New Connection" modes
  - Connections are now automatically deleted when a room exit is removed
  - Introduced End of Record (EOR) telnet protocol for Mudlet
  - Added Linemode (RFC 1116) telnet protocol for Putty and BSD Telnet
  - Selecting rooms and marks now displays the total count
- 
-Bug fixes:
+
+### Bug fixes:
  - Fixed 'Connect room(s) to its neighbour rooms' to connect north/south and one-way exits
  - Selecting the "Undefined" radio buttons when editing multiple rooms now works
  - Connection dots when selecting outgoing exits are now correctly displayed
  - Fixed directory creation when exporting a web map for 'Play MUME'
- - Added Top Mud Sites link to '_vote' command
+ - Added Top Mud Sites link to `_vote` command
  - Suppress Go Ahead (SGA) telnet protocol now actually works
  - Updated links to use HTTPS
 
-================================
-MMapper 20.08.0 (August 9, 2020)
-================================
+## MMapper 20.08.0 (August 9, 2020)
 
-New features:
+### New features:
  - MMapper can now automatically log play sessions to disk
  - Reworked underwater terrain sectors to be more identifiable
  - Flow flags now predict the movement into the next river room
  - Group Manager pulls health, mana, and move information from 'info' as well
  - AppImage Linux binaries are now packaged
 
-Bug fixes:
+### Bug fixes:
  - Increased draw distance for maps with many layers
  - Fixed setting door names using the CLI
  - Reduced the default client font size on Linux/Windows
  - Fixed bug where twiddlers were not being prompt detected
 
-================================
-MMapper 20.05.0 (May 20, 2020)
-================================
+## MMapper 20.05.0 (May 20, 2020)
 
-New features:
+### New features:
  - Support for Generic Mud Communication Protocol (GMCP) and MMapper.GroupTell module
  - Support for Mud Client Compression Protocol (MCCP2)
  - Ability to change the color of normal connections
 
-Bug fixes:
+### Bug fixes:
  - Fixed MUME clock and time output parsing
  - Remote edit widget justifies at 80 characters rather than 81
  - Group poison affect now triggers on any poison message in status
  - Prompt and exits detection has been improved
  - External links use HTTPS over HTTP
- - Mud Connector voting works again
+ - [Mud Connector](https://www.mudconnector.com/) voting works again
  - Disabled unnecessary scrollbars on MMapper logo in About dialog
- - Linux snap now runs succesfully on the Raspberry Pi
+ - Linux snap now runs successfully on the Raspberry Pi
 
-================================
-MMapper 20.03.0 (March 28, 2020)
-================================
+## MMapper 20.03.0 (March 28, 2020)
 
-New features:
+### New features:
  - Default map now includes Southern Mirkwood zones
  - Overhauled textures to be 250% larger and have more detail
  - Introduced 150% fractional scaling support for users with 4K monitors
  - Added a browse button to select 3rd party programs as your remote editor
  - Reduced Mac security dialogs by only listening on the local interface by default
 
-Bug fixes:
+### Bug fixes:
  - Screen DPI changes are now detected when MMapper is moved across monitors
  - Preferences dialog will now reposition itself on each open
  - Fixed off-by-one error in the internal remote editor
@@ -335,31 +295,27 @@ Bug fixes:
  - PowTTY terminal type will now include more information than simply 'unknown'
  - Squished bugs around snooping for Valar
 
-================================
-MMapper 19.12.1 (December 31, 2019)
-================================
+## MMapper 19.12.1 (December 31, 2019)
 
-Bug fixes:
+### Bug fixes:
  - Fix missing messages for hunger/thirst on group manager
  - Group manager affects are now always visible for new group members
  - Update dialog will now correctly close and download the relevant upgrade link
 
-================================
-MMapper 19.12.0 (December 28, 2019)
-================================
+## MMapper 19.12.0 (December 28, 2019)
 
-New features:
+### New features:
  - Added search, riding, and snared affects to the group manager
  - Mouse clicks on a room during 'mouse mode' now display an information tooltip
  - 'Find Rooms' dialog will now remember its last window position and dimensions
  - Room mapping commands now use the syntax model. For more info type: _room ??
- - Group manager commands now use the syntax model. For more info type: _group ??
+ - Group manager commands now use the syntax model. For more info type: `_group ??`
  - Integrated mud client is now a panel and not a non-modal window
  - Integrated mud client now uses a centered tooltip for dimension hints
  - Trilinear filtering is now enabled by default
  - Promote the _connect command when MUME disconnects
 
-Bug fixes:
+### Bug fixes:
  - Fixed ancient bug where mudlle'd movement would break map syncing (GH gate, Lorien, etc)
  - Always display exits even if the player is in an unknown room
  - Changing the character encoding within the preferences does not require a restart anymore
@@ -374,27 +330,23 @@ Bug fixes:
  - Fixed regression with internal mud client up/down key press behavior on Mac
  - Fixed room syncing for Valar
 
-================================
-MMapper 19.10.1 (October 31, 2019)
-================================
+## MMapper 19.10.1 (October 31, 2019)
 
-Bug fixes:
+### Bug fixes:
  - Remapped 'Road to the Grey Havens' on default map to resolve syncing
  - Preferences dialog is larger again
  - Fixed high DPI scaling on Windows
 
-================================
-MMapper 19.10.0 (October 25, 2019)
-================================
+## MMapper 19.10.0 (October 25, 2019)
 
-New features:
+### New features:
  - Faster rendering for most zoom levels with new textures and fonts
  - "3D view" with optional tilting as you zoom in
  - Enhanced marker and room connection editing
  - Improved map indicators for the character and group members
  - Added visible map mode bounds to decrease draw latency
  - Rendering now supports OpenGL ES (e.g. Raspberry Pi 4)
- - Added new _connect and _disconnect commands
+ - Added new `_connect` and `_disconnect` commands
  - Removed old room commands in favor of new room commands
  - Saving maps is now disabled unless the map was changed
  - Clicking on a group character causes map to center on them
@@ -412,7 +364,7 @@ New features:
  - Introduced support to import Pandora maps and export MMP maps
  - Unselecting rooms can now be done via commands (i.e. _search -c)
 
-Bug fixes:
+### Bug fixes:
  - Fixed left-click movement/panning precision error
  - Graphics avoid wrapping grass onto roads at room edges
  - Settings dialog is no longer modal
@@ -422,7 +374,7 @@ Bug fixes:
  - Fixed regression during mapping that left rooms locked
  - It is now impossible to kick yourself in the Group Manager
  - Group Manager clients assume the first received character is the host
- - Special commands are now allowed to have mixed case (i.e. _HeLp)
+ - Special commands are now allowed to have mixed case (i.e. `_HeLp`)
  - Factory reset will now refresh the preference dialog settings
  - Fixed MUME vote link to The Mud Connector
  - Fixed regression that made the parser less tolerant of secret exits
@@ -443,22 +395,20 @@ Bug fixes:
  - The mouse wheel now behaves consistently across mouse modes
  - Cleaned up connect/disconnect text
 
-================================
-MMapper 19.04.0 (April 22, 2019)
-================================
+## MMapper 19.04.0 (April 22, 2019)
 
-New features:
+### New features:
  - Updated map to include the Tower Hills
  - Improvements to the builtin editor (justification, whitespace, ansi, tabbing, and more!)
  - Group manager now shows player prespam
- - Add _knock action to parser
+ - Add `_knock` action to parser
  - Colors for dark/sunsafe rooms are now configurable under the Graphics preferences
  - Introduce coach and ferry load flags
  - Group manager rows and columns are smaller and autohide if necessary
  - Group manager remembers previous hosts as Authorized Contacts
  - Improved room texture resolution by 2x through artificial intelligence
 
-Bug fixes:
+### Bug fixes:
  - Really fix syncing when player is blinded
  - Remove group manager UPnP mapping from the router on shutdown
  - Mapper now syncs movement when a one-way is scouted
@@ -471,69 +421,61 @@ Bug fixes:
  - Reset group manager character info on MUME disconnect
  - Changing the client font is now correctly saved
 
-================================
-MMapper 2.8.0 (March 7, 2019)
-================================
+## MMapper 2.8.0 (March 7, 2019)
 
-New features:
+### New features:
  - Remote edit justify now understands ANSI and various lengths
- - _search and _mark commands now select and show distant rooms
- - Map immediately reflects changes from internal commands (i.e. _noride)
+ - `_search` and `_mark` commands now select and show distant rooms
+ - Map immediately reflects changes from internal commands (i.e. `_noride`)
  - MMapper now checks for upgrades on Github
 
-Bug fixes:
+### Bug fixes:
  - Fix syncing when player is blinded
- - _dirs command is now aware of damage/fall exits and tries to avoid them
+ - `_dirs` command is now aware of damage/fall exits and tries to avoid them
  - Prespammed directions are more resilient to non-movement commands
- - Internal commands now trigger on the tail position of prespam (i.e. _open)
+ - Internal commands now trigger on the tail position of prespam (i.e. `_open`)
  - Blacklist certain OpenGL drivers and fallback to software rendering on Windows
  - Fix "Always on top" action
  - Package missing msvcr120.dll on Windows
 
-================================
-MMapper 2.7.4 (January 2, 2019)
-================================
+## MMapper 2.7.4 (January 2, 2019)
 
-New features:
+### New features:
  - Group manager hosts will now have their ports automatically forwarded using UPnP
  - A red highlight is displayed below remote edit text that needs to be justified
  - Remote edit widget can now justify text to 80 characters (like MUME's %j)
  - Added toggle to prevent the group manager from autostarting
 
-Bug fixes:
+### Bug fixes:
  - Improved Mac OS X 10.9 and dark mode support
  - Refactored configuration to support multiple profiles for power users
  - Log view now correctly scrolls down on updates
  - The account "time" command will not unsync the clock
  - Last remembered prompt is now cleared on disconnect
 
-================================
-MMapper 2.7.3 (December 26, 2018)
-================================
+## MMapper 2.7.3 (December 26, 2018)
 
-New features:
+### New features:
  - Allow TLS connections to be compressed
  - Crash reporting added for Windows
- - Added _glock command to toggle the group lock
+ - Added `_glock` command to toggle the group lock
 
-Bug fixes:
+### Bug fixes:
  - Improved group manager stability after the host disconnected
  - Group manager host disconnecting will now not cause a message box to appear 3x
  - Major refactor of offline character movement and rendering pipeline
 
-================================
-MMapper 2.7.2 (December 8, 2018)
-================================
+## MMapper 2.7.2 (December 8, 2018)
 
-New features:
+### New features:
  - Disabled NAGLE for tcp connections which should hopefully increase performance during lossy conditions
- - ANSI color selection has` been moved into a dialog that supports high colors
- - Internal command prefix character can be changed with "_set prefix <char>"
- - Group manager clients will atempt to reconnect 3 times to a host before failing
+ - ANSI color selection has been moved into a dialog that supports high colors
+ - Internal command prefix character can be changed with "`_set prefix <char>`"
+ - Group manager clients will attempt to reconnect 3 times to a host before failing
  - Group hosts can lock the group to the current clients
  - Group tells are now colored
 
-Bug fixes:
+### Bug fixes:
  - Fixed crash due to threading issues on Windows
  - Tightened TCP keepalive to hopefully prevent idle connections from dropping
  - Fixed "black screen bug" with Intel video cards on Windows
@@ -545,52 +487,46 @@ Bug fixes:
  - Discrete nVidia and AMD GPUs are preferred on Windows for laptops with hybrid graphics
  - Room and group selection has been refactored
 
-================================
-MMapper 2.7.1 (November 30, 2018)
-================================
+## MMapper 2.7.1 (November 30, 2018)
 
-New features:
+### New features:
  - Info Markers are now selectable and movable using a mouse
  - Disconnects from MUME are now optionally mirrored on the client
  - Pinch gestures now zoom the map
  - Store and validate additional Group Manager secrets metadata
 
-Bug fixes:
+### Bug fixes:
  - Group Manager now remembers its last window position and state on boot
  - Only hidden door names are displayed on the map now
  - View panel moved to Sidebars toolbar
  - Door commands now work without a direction if there is only one secret exit
  - Prompts now update HP, mana, and moves using a lower bound
 
-================================
-MMapper 2.7.0 (November 24, 2018)
-================================
+## MMapper 2.7.0 (November 24, 2018)
 
-New features:
+### New features:
  - Group manager keeps your communications secure with encryption
  - Group manager allows you to authorize who can connect to your group
  - Elite and super mob flags have been introduced
  - Quest and passive mob flags have been modernized
  - Word of recall and equipment load flags have been added
  - 'Find Rooms' dialog can now select and edit rooms
- - Hosts can kick group members with the _gkick command or by clicking on them
+ - Hosts can kick group members with the `_gkick` command or by clicking on them
  - Offline mode now supports scouting and random exits
  - Integrated editor shows the line/column of the cursor within the status bar
  - Rooms can be forced updated or outdated
  - 'Edit Rooms' dialog icon and flag ordering improvements
 
-Bug fixes:
+### Bug fixes:
  - Improved stability when editing rooms after force moving
  - Multiple room and load flags are displayed at the same time again
  - Fixed bug where group member's mana was always shown as zero
  - Squished bug with prompt handling when the connection was not encrypted
  - Removed deprecated 'random' terrain type that displayed warnings in the logs
 
-================================
-MMapper 2.6.3 (November 12, 2018)
-================================
+## MMapper 2.6.3 (November 12, 2018)
 
-Changes:
+### Changes:
  - *Orc* day/night strings now sync the Mume clock
  - Fix Parser configuration ANSI dropdown to correctly select "none"
  - Introduced button to perform a configuration factory reset
@@ -598,22 +534,18 @@ Changes:
  - Fixed a race condition in the group manager and refactored the code
  - Do not draw characters if they are in an unknown location
 
-================================
-MMapper 2.6.2 (October 27, 2018)
-================================
+## MMapper 2.6.2 (October 27, 2018)
 
-Changes:
+### Changes:
  - Fixed bug when the negotiated window size was larger than 127 characters
  - Prompts are more consistently stored and displayed with internal commands
- - _note command now clears notes when provided with an empty payload
+ - `_note` command now clears notes when provided with an empty payload
  - Added shortcut to reset the zoom level back to the default level
  - Darkened default background color
 
-================================
-MMapper 2.6.1 (October 12, 2018)
-================================
+## MMapper 2.6.1 (October 12, 2018)
 
-Changes:
+### Changes:
  - Fixed crash when user selected US-ASCII character encoding
  - Improved stability when player was in room that got deleted
  - Certain InfoMark classes now have a colored background rather than text
@@ -622,17 +554,16 @@ Changes:
  - Re-ordered window tab navigation to make sense
  - MacOS Mojave and Wayland support improved
 
-================================
-MMapper 2.6.0 (September 29, 2018)
-================================
+## MMapper 2.6.0 (September 29, 2018)
 
-Note:
+### Note:
  - MUME will now ignore 'change charset' commands because MMapper 2.6.0 always
    communicates to MUME in Latin-1 over a Telnet proxy
  - In order to change the character encoding sent to your mud client please
    navigate to the MMapper General preferences and select an alternative
    character encoding from the drop down: Latin-1, UTF-8, or US-ASCII
-Changes:
+
+### Changes:
  - Introduced "No bash" door flag and "Stables" room flag
  - Squished bug where rooms would update themselves outside of "Mapping Mode"
  - Integrated client now displays user input as yellow
@@ -642,16 +573,14 @@ Changes:
  - Windows users now utilize OpenGL software rendering by default
  - Added "Show launch panel" option to General preferences
  - Stripped support for maps predating MMapper2
- - Fixed Parser &amp; bug in 'Suppress XML' mode
+ - Fixed Parser & bug in 'Suppress XML' mode
  - TLS certificate information is now logged
  - Refactored room lookups to use STL data structures
  - Cleaned up MMapper configuration and map compression logic
 
-================================
-MMapper 2.5.3 (August 18, 2018)
-================================
+## MMapper 2.5.3 (August 18, 2018)
 
-Changes:
+### Changes:
  - Group Manager stability improved
  - Proxy threading re-enabled by default and exposed as an option
  - Improved error reporting when connecting to MUME
@@ -661,11 +590,9 @@ Changes:
  - Greatly improved path machine performance back to 2.5.0 levels
  - Path machine handles doors/roads/climbs better
 
-================================
-MMapper 2.5.2 (August 12, 2018)
-================================
+## MMapper 2.5.2 (August 12, 2018)
 
-Changes:
+### Changes:
  - Host disconnecting will no longer cause Group Manager to crash
  - Prespammed path now correctly displays on the map
  - Emulated exits are better sync'd due to threading changes in the Proxy
@@ -675,22 +602,18 @@ Changes:
  - Fixed shortcuts in Find Rooms and Edit Informarks dialogs
  - Refactored Edit Informarks dialog to make more sense
 
-================================
-MMapper 2.5.1 (August 7, 2018)
-================================
+## MMapper 2.5.1 (August 7, 2018)
 
-Changes:
+### Changes:
  - Added new Stable flag for rooms
  - Integrated client supports automatic character set negotiation (RFC 2066)
  - Fixed bug that caused unnecessary NO_MATCH exits to be applied to maps
  - Squished bug that prevented auto-mapping sundeath for rooms to the west of the player
  - Exits now preserve their color from MUME
 
-================================
-MMapper 2.5.0 (May 13, 2018)
-================================
+## MMapper 2.5.0 (May 13, 2018)
 
-Changes:
+### Changes:
  - MMapper now encrypts your connection to MUME using TLS
  - Holding control and using the mouse wheel navigates layers
  - Improved the right click context menu
@@ -702,22 +625,18 @@ Changes:
  - Remote edit is now be passed through when disabled
  - Improved syncing when boarding/leaving the Grey Havens ferry
 
-================================
-MMapper 2.4.5 (February 11, 2018)
-================================
+## MMapper 2.4.5 (February 11, 2018)
 
-Changes:
+### Changes:
  - MMapper has a simple integrated mud client now
  - Remote editing is now supported through MMapper
  - Config Dialog has been overhauled
  - Updated MUME clock because the Third Age has been reset for the 10th time
  - Group Manager members are now displayed in sorted order
 
-================================
-MMapper 2.4.4 (January 28, 2018)
-================================
+## MMapper 2.4.4 (January 28, 2018)
 
-Changes:
+### Changes:
  - Fixed a critical storage bug that was corrupting InfoMarks. Please load a
    pre-2.4.3 map to recover your data. Sorry :(
  - Fixed regression that broke Powwow #prompt detection
@@ -736,13 +655,12 @@ Changes:
  - Contextual menus and cursors have been introduced to the map canvas
  - The parser will use the same newline terminator that the mud client is using
 
-================================
-MMapper 2.4.3 (January 16, 2018)
-================================
+## MMapper 2.4.3 (January 16, 2018)
 
-Note:
+### Note:
  - Maps saved with 2.4.3 are not compatible with previous versions
-Changes:
+
+### Changes:
  - Fixed bug where NO_RIDE rooms did not have a dark red cross
  - Fixed 7 year old bug that prevented renaming characters
  - Fix Ainur segfault that occurs in rooms with no exits
@@ -752,35 +670,30 @@ Changes:
  - Fixed typos where \n\r should have been \r\n
  - The default "cha charset" setting is now Latin-1
 
-================================
-MMapper 2.4.2 (January 1, 2018)
-================================
+## MMapper 2.4.2 (January 1, 2018)
 
-Changes:
+### Changes:
  - Fixed critical bug that prevented secret door names from being displayed
  - The last folder you open a map in will be remembered
  - The first time you open MMapper it will try to load a map automatically
  - Mume Clock will now show you the time even if it isn't certain
  - Fixed a 4 year old bug where no-ride rooms were not red
 
-================================
-MMapper 2.4.1 (December 30, 2017)
-================================
+## MMapper 2.4.1 (December 30, 2017)
 
-Changes:
+### Changes:
  - Resolved issues with QtIOCompressor library bundling by building it directly into MMapper
  - Group Manager will only attempt to connect for up to 5 seconds before timing out
  - MMapper's built in MumeClock will now only sync with known weather strings
  - First attempt at getting Ainur exits and <snoop> tags working
 
-================================
-MMapper 2.4.0 (December 26, 2017)
-================================
+## MMapper 2.4.0 (December 26, 2017)
 
-Note:
+### Note:
   - The .mm2 file format changed. Old files can be read, but files saved
     with this version can't be used with MMapper 2.3.x or older.
-Changes:
+
+### Changes:
   - Added support for classes of info marks, with different colors and font decorations (teoli)
   - Added ability to rotate info marks (teoli)
   - Fixed wall color when a special exit was present (was white instead of black) (teoli)
@@ -796,67 +709,53 @@ Changes:
   - Emulated prompts now show the current terrain and lighting (nschimme)
   - Web maps can now be exported (waba)
   - MMapper only support XML mode now and uses gratuitous flags (nschimme)
-  - Added new _search and _dirs commands to find rooms and their paths (ethorondil)
+  - Added new `_search` and `_dirs` commands to find rooms and their paths (ethorondil)
   - Notes can now be printed from the command line (ethorondil)
   - GNOME and KDE integration improved (kalev)
   - Menus standardized and first time use improved (nschimme)
 
-================================
-MMapper 2.3.6 (December 9, 2015)
-================================
+## MMapper 2.3.6 (December 9, 2015)
 
-Changes:
+### Changes:
   - High DPI displays are now supported such as Retina displays (nschimme)
 
-=================================
-MMapper 2.3.5 (July 29, 2015)
-=================================
+## MMapper 2.3.5 (July 29, 2015)
 
-Changes:
+### Changes:
   - Fixed bug that prevented connections from having TCP KeepAlive (nschimme)
   - Updated base map to include new zones; thanks Ortansia! (nschimme)
 
-================================
-MMapper 2.3.4 (May 1, 2015)
-================================
+## MMapper 2.3.4 (May 1, 2015)
 
-Changes:
+### Changes:
   - All connections now utilize TCP KeepAlive to help with dropped connections (nschimme)
   - Prompts are now correctly identified and remembered for internal commands (nschimme)
   - Cleaned up vote and Windows build code (nschimme)
 
-================================
-MMapper 2.3.3 (January 18, 2015)
-================================
+## MMapper 2.3.3 (January 18, 2015)
 
-Changes:
+### Changes:
   - [GroupManager] Player's hp, mana, and moves are now correctly updated (nschimme)
   - [GroupManager] Player's room name has been moved into the far right column (nschimme)
   - [GroupManager] Linux and Mac hosts can now accept incoming connections (nschimme)
-  - Prompts should not be displayed after an internal command like _help is run (nschimme)
-  - Added new _vote command and menu action to vote for MUME on TMC (nschimme)
+  - Prompts should not be displayed after an internal command like `_help` is run (nschimme)
+  - Added new `_vote` command and menu action to vote for MUME on TMC (nschimme)
 
-================================
-MMapper 2.3.2 (January 17, 2015)
-================================
+## MMapper 2.3.2 (January 17, 2015)
 
-Changes:
+### Changes:
  - Fixed critical bug that disallowed Mac and Linux users to connect to MMapper (nschimme)
 
-================================
-MMapper 2.3.1 (January 17, 2015)
-================================
+## MMapper 2.3.1 (January 17, 2015)
 
-Changes:
+### Changes:
  - Telnet characters now parsed correctly (nschimme)
  - Info marks load correctly (nschimme)
  - Updated base map with the new zones (nschimme)
 
-================================
-MMapper 2.3.0 (January 17, 2015)
-================================
+## MMapper 2.3.0 (January 17, 2015)
 
-Changes:
+### Changes:
  - Build now requires Qt5.2 and CMake 2.8.11 (nschimme)
  - Moved source to GitHub (nschimme)
  - Bug fixes and build improvements (kovis)
@@ -864,20 +763,16 @@ Changes:
  - Prompt detection fixes (kalev)
  - New note search feature (Arfang)
 
-================================
-MMapper 2.2.1 (July 14, 2013)
-================================
+## MMapper 2.2.1 (July 14, 2013)
 
-Changes:
+### Changes:
  - Build fixes
  - Fix issues with XML mode in the account menu
- - Make _name and _noride commands work (thanks Waba!)
+ - Make `_name` and `_noride` commands work (thanks Waba!)
 
-================================
-MMapper 2.2.0 (July 13, 2013)
-================================
+## MMapper 2.2.0 (July 13, 2013)
 
-Changes:
+### Changes:
  - Compatibility fixes with latest MUME server
  - Build fixes
  - Minor crasher fixes
