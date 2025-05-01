@@ -282,20 +282,6 @@ void AnsiTextHelper::displayText(const QString &input_str)
             return;
         }
 
-        auto isTwiddler = [](const QChar c) -> bool {
-            using namespace char_consts;
-            switch (c.unicode()) {
-            case C_BACKSLASH:
-            case C_MINUS_SIGN:
-            case C_SLASH:
-            case C_SPACE:
-            case C_VERTICAL_BAR:
-                return true;
-            default:
-                return false;
-            }
-        };
-
         const auto block = cursor.block();
         if (!block.isValid() && block.length() < 1) {
             return;
@@ -304,14 +290,6 @@ void AnsiTextHelper::displayText(const QString &input_str)
         const auto text = block.text();
         if (text.isNull() || text.isEmpty()) {
             return;
-        }
-
-        if (!isTwiddler(text.back())) {
-            const auto max_shown = 20;
-            const auto shown = (text.length() < max_shown)
-                                   ? text
-                                   : "..." + text.mid(text.length() - max_shown);
-            qWarning() << "refusing to backspace over non-twiddler:" << shown;
         }
 
         add_raw(mmqt::QS_BACKSPACE, {});
