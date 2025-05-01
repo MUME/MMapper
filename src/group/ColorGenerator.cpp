@@ -4,26 +4,22 @@
 #include "ColorGenerator.h"
 
 #include <cmath>
+#include <deque>
 
 #include <QColor>
-#include <queue>
 
 struct ColorGeneratorImpl final
 {
     static const constexpr double GOLDEN_ANGLE = 137.508; // in degrees
-    double hue;
-    std::queue<int> prevHues;
-
-    explicit ColorGeneratorImpl(QColor initialColor)
-        : hue{static_cast<double>(initialColor.hue())}
-    {}
+    double hue = 255;
+    std::deque<int> prevHues;
 
     QColor getNextColor()
     {
         QColor next;
         if (!prevHues.empty()) {
             next = QColor::fromHsl(prevHues.front(), 255, 127);
-            prevHues.pop();
+            prevHues.pop_front();
         } else {
             hue = fmod(hue + GOLDEN_ANGLE, 360.0);
             next = QColor::fromHsl(static_cast<int>(hue + 0.5), 255, 127);
@@ -34,13 +30,19 @@ struct ColorGeneratorImpl final
     void releaseColor(QColor color)
     {
         if (color.isValid()) {
-            prevHues.emplace(color.hue());
+            prevHues.emplace_back(color.hue());
         }
+    }
+
+    void init(QColor color)
+    {
+        prevHues.clear();
+        hue = static_cast<double>(color.hue());
     }
 };
 
-ColorGenerator::ColorGenerator(QColor initialColor)
-    : m_impl{std::make_unique<ColorGeneratorImpl>(initialColor)}
+ColorGenerator::ColorGenerator()
+    : m_impl{std::make_unique<ColorGeneratorImpl>()}
 {}
 
 ColorGenerator::~ColorGenerator() = default;
@@ -53,4 +55,9 @@ QColor ColorGenerator::getNextColor()
 void ColorGenerator::releaseColor(QColor color)
 {
     m_impl->releaseColor(color);
+}
+
+void ColorGenerator::init(QColor color)
+{
+    m_impl->init(color);
 }

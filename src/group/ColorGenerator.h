@@ -9,19 +9,23 @@
 
 #include <QColor>
 
-class ColorGeneratorImpl;
+struct ColorGeneratorImpl;
 
 class ColorGenerator final
 {
+private:
+    std::unique_ptr<ColorGeneratorImpl> m_impl;
+
 public:
-    explicit ColorGenerator(QColor initialColor);
+    explicit ColorGenerator();
     ~ColorGenerator();
 
     DEFAULT_MOVES_DELETE_COPIES(ColorGenerator);
 
+public:
+    void init(QColor color);
+
+public:
     NODISCARD QColor getNextColor();
     void releaseColor(QColor color);
-
-private:
-    std::unique_ptr<ColorGeneratorImpl> m_impl;
 };

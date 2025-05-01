@@ -27,7 +27,6 @@
 
 Mmapper2Group::Mmapper2Group(QObject *const parent)
     : QObject{parent}
-    , m_colorGenerator{getConfig().groupManager.color}
     , m_groupManagerApi{std::make_unique<GroupManagerApi>(*this)}
 {}
 
@@ -38,8 +37,11 @@ SharedGroupChar Mmapper2Group::getSelf()
     if (!m_self) {
         m_self = CGroupChar::alloc();
         m_self->setType(CharacterTypeEnum::YOU);
-        m_self->setColor(getConfig().groupManager.color);
         m_charIndex.push_back(m_self);
+
+        const auto color = getConfig().groupManager.color;
+        m_self->setColor(color);
+        m_colorGenerator.init(color);
     }
     return m_self;
 }
@@ -192,11 +194,6 @@ void Mmapper2Group::resetChars()
 
     log("You have left the group.");
 
-    for (const auto &character : m_charIndex) {
-        if (!character->isYou() && character->getColor().isValid()) {
-            m_colorGenerator.releaseColor(character->getColor());
-        }
-    }
     m_self.reset();
     m_charIndex.clear();
     characterChanged(true);
@@ -219,7 +216,7 @@ void Mmapper2Group::removeChar(const GroupId id)
         if (character.getId() != id) {
             return false;
         }
-        if (!pChar->isYou() && character.getColor().isValid()) {
+        if (!character.isYou()) {
             m_colorGenerator.releaseColor(character.getColor());
         }
         qDebug() << "removing" << id.asUint32() << character.getName().toQString();
