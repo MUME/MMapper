@@ -604,17 +604,28 @@ private:
         ChangeList changeList;
         for (const auto &flag : flags) {
             const Vector &vector = flag.getVector();
-            const FlagModifyModeEnum mode = vector[0].getBool() ? FlagModifyModeEnum::INSERT
-                                                                : FlagModifyModeEnum::REMOVE;
+            const bool is_add = vector[0].getBool();
 
             const std::optional<RoomFieldVariant> opt = evalRoomField(vector[1].getString());
             if (!opt) {
                 throw std::runtime_error("unable to select current room");
             }
 
+            // Check if the variant holds an enum type and adjust mode
+            const FlagModifyModeEnum mode = [is_add](const RoomFieldEnum type) {
+                if (type == RoomFieldEnum::ALIGN_TYPE || type == RoomFieldEnum::LIGHT_TYPE
+                    || type == RoomFieldEnum::RIDABLE_TYPE || type == RoomFieldEnum::PORTABLE_TYPE
+                    || type == RoomFieldEnum::SUNDEATH_TYPE
+                    || type == RoomFieldEnum::TERRAIN_TYPE) {
+                    return is_add ? FlagModifyModeEnum::ASSIGN : FlagModifyModeEnum::CLEAR;
+                } else {
+                    return is_add ? FlagModifyModeEnum::INSERT : FlagModifyModeEnum::REMOVE;
+                }
+            }(opt.value().getType());
+
             changeList.add(Change{ModifyRoomFlags{roomId, opt.value(), mode}});
 
-            const auto toggle = enabledString(mode == FlagModifyModeEnum::INSERT);
+            const auto toggle = enabledString(is_add);
             os << "Room flag " << toggle << AnsiOstream::endl;
         }
 
