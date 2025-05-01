@@ -48,22 +48,22 @@ public:
     NODISCARD char *data() { return m_internal->data; }
 };
 
-enum class NODISCARD IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
+enum class NODISCARD IOResultEnum : uint8_t { SUCCESS, FAILURE, EXCEPTION };
 
-enum class NODISCARD WithEmptyCallback { No, Yes };
+enum class NODISCARD WithEmptyCallbackEnum : uint8_t { No, Yes };
 
 template<size_t N, typename Callback>
 NODISCARD IOResultEnum readAllAvailable_ext(QIODevice &dev,
                                             buffer<N> &buffer,
                                             Callback &&callback,
-                                            const WithEmptyCallback withEmptyCallback)
+                                            const WithEmptyCallbackEnum withEmptyCallback)
 {
     static constexpr const auto MAX_SIZE = static_cast<qint64>(N);
     char *const data = buffer.data();
     while (dev.bytesAvailable() > 0) {
         const auto got = dev.read(data, MAX_SIZE);
         if (got <= 0) {
-            if (withEmptyCallback == WithEmptyCallback::Yes) {
+            if (withEmptyCallback == WithEmptyCallbackEnum::Yes) {
                 callback(QByteArray::fromRawData(data, 0));
             }
             return IOResultEnum::FAILURE;
@@ -77,7 +77,7 @@ NODISCARD IOResultEnum readAllAvailable_ext(QIODevice &dev,
         // contents of data the next time we read into the buffer.
         callback(QByteArray::fromRawData(data, igot));
     }
-    if (withEmptyCallback == WithEmptyCallback::Yes) {
+    if (withEmptyCallback == WithEmptyCallbackEnum::Yes) {
         callback(QByteArray::fromRawData(data, 0));
     }
     return IOResultEnum::SUCCESS;
@@ -89,7 +89,7 @@ NODISCARD IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callb
     return readAllAvailable_ext(dev,
                                 buffer,
                                 std::forward<Callback>(callback),
-                                WithEmptyCallback::No);
+                                WithEmptyCallbackEnum::No);
 }
 
 class NODISCARD IOException : public std::runtime_error

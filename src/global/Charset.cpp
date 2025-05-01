@@ -463,7 +463,7 @@ NODISCARD std::optional<uint8_t> try_pop_latin1(std::string_view &sv) noexcept
 
 NODISCARD bool are_equivalent_utf8(std::u16string_view left,
                                    std::string_view right,
-                                   const EquivTranslitOptions opts) noexcept
+                                   const EquivTranslitOptionsEnum opts) noexcept
 {
     while (!left.empty() && !right.empty()) {
         const auto a = charset::conversion::try_pop_utf16(left);
@@ -630,7 +630,7 @@ void testAsciiCharTypes()
 
 namespace { // anonymous
 
-enum class Enc { Latin1, Utf8 };
+enum class NODISCARD EncEnum : uint8_t { Latin1, Utf8 };
 
 void compare_different_utf8(const std::u16string_view s16, const std::string_view s8)
 {
@@ -648,7 +648,7 @@ void compare_same_utf8(const std::u16string_view s16, const std::string_view s8)
 
 void compare_same_utf8_translit_right(const std::u16string_view s16, const std::string_view s8)
 {
-    if (!charset::are_equivalent_utf8(s16, s8, charset::EquivTranslitOptions::Right)) {
+    if (!charset::are_equivalent_utf8(s16, s8, charset::EquivTranslitOptionsEnum::Right)) {
         qFatal("test failed: strings are not equivalent");
     }
 }

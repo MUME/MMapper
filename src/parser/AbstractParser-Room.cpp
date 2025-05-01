@@ -1227,7 +1227,7 @@ public:
 
         // TODO: output directly to user's ostream instead of returning a string.
         auto result = processSyntax(completeSyntax, thisCommand, input);
-        m_self.sendToUser(SendToUserSource::FromMMapper, result);
+        m_self.sendToUser(SendToUserSourceEnum::FromMMapper, result);
     }
 };
 

@@ -19,7 +19,7 @@ class QWidget;
 class NODISCARD PaletteManager final
 {
 public:
-    enum class NODISCARD FocusState { Focused, Unfocused };
+    enum class NODISCARD FocusStateEnum : uint8_t { Focused, Unfocused };
 
 private:
     QPalette m_focused;
@@ -28,8 +28,8 @@ private:
 
 public:
     void init(QWidget &widget, const std::optional<QColor> &activeBg, const QColor &inactiveBg);
-    void setFocusState(QWidget &widget, FocusState focusState);
-    void setFocused(QWidget &widget) { setFocusState(widget, FocusState::Focused); }
-    void setUnfocused(QWidget &widget) { setFocusState(widget, FocusState::Unfocused); }
+    void setFocusState(QWidget &widget, FocusStateEnum focusState);
+    void setFocused(QWidget &widget) { setFocusState(widget, FocusStateEnum::Focused); }
+    void setUnfocused(QWidget &widget) { setFocusState(widget, FocusStateEnum::Unfocused); }
     void tryUpdateFromFocusEvent(QWidget &widget, QEvent::Type type);
 };

@@ -166,7 +166,7 @@ void ClientWidget::initClientTelnet()
         }
         void virt_echoModeChanged(const bool echo) final
         {
-            getInput().setEchoMode(echo ? EchoMode::Visible : EchoMode::Hidden);
+            getInput().setEchoMode(echo ? EchoModeEnum::Visible : EchoModeEnum::Hidden);
         }
 
         void virt_sendToUser(const QString &str) final
@@ -175,7 +175,7 @@ void ClientWidget::initClientTelnet()
             getPreview().displayText(str);
 
             // Re-open the password dialog if we get a message in hidden echo mode
-            if (getClient().getInput().getEchoMode() == EchoMode::Hidden) {
+            if (getClient().getInput().getEchoMode() == EchoModeEnum::Hidden) {
                 getClient().getInput().requestPassword();
             }
         }

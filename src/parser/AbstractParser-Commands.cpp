@@ -413,7 +413,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         std::string s = mmqt::toStdStringUtf8(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != getPrefixChar()) {
-            sendToUser(SendToUserSource::FromMMapper, "Internal error. Sorry.\n");
+            sendToUser(SendToUserSourceEnum::FromMMapper, "Internal error. Sorry.\n");
         } else {
             parseSpecialCommand(view);
         }
@@ -470,7 +470,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
                     const auto dir = static_cast<CommandEnum>(tryGetDir(view));
                     if (!isDirectionNESWUD(dir)) {
-                        sendToUser(SendToUserSource::SimulatedOutput,
+                        sendToUser(SendToUserSourceEnum::SimulatedOutput,
                                    "In which direction do you want to scout?\n");
                         sendPromptToUser();
 
@@ -494,7 +494,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     }
 
     if (!isOnline) {
-        sendToUser(SendToUserSource::SimulatedOutput, "Arglebargle, glop-glyf!?!\n");
+        sendToUser(SendToUserSourceEnum::SimulatedOutput, "Arglebargle, glop-glyf!?!\n");
         sendPromptToUser();
     }
 
@@ -514,7 +514,7 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser(SendToUserSource::FromMMapper,
+        sendToUser(SendToUserSourceEnum::FromMMapper,
                    QString("Syntax: %1set prefix [punct-char]\n").arg(getPrefixChar()));
         return;
     }
@@ -544,17 +544,17 @@ void AbstractParser::parseSetCommand(StringView view)
             }
         }
 
-        sendToUser(SendToUserSource::FromMMapper, "Invalid prefix.\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Invalid prefix.\n");
         return;
     }
 
-    sendToUser(SendToUserSource::FromMMapper, "That variable is not supported.");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "That variable is not supported.");
 }
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
     if (wholeCommand.isEmpty()) {
-        sendToUser(SendToUserSource::FromMMapper, "Error: special command input is empty.\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Error: special command input is empty.\n");
         return;
     }
 
@@ -563,7 +563,7 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
     }
 
     const auto word = wholeCommand.takeFirstWord();
-    sendToUser(SendToUserSource::FromMMapper,
+    sendToUser(SendToUserSourceEnum::FromMMapper,
                QString("Unrecognized command: %1\n").arg(word.toQString()));
 }
 
@@ -672,7 +672,7 @@ void AbstractParser::doMapDiff()
     auto &mapData = m_mapData;
 
     if (mapData.getSavedMarks() != mapData.getCurrentMarks()) {
-        sendToUser(SendToUserSource::FromMMapper,
+        sendToUser(SendToUserSourceEnum::FromMMapper,
                    "Note: Map markers have changed, but marker diff is not yet supported.\n");
     }
 
@@ -680,7 +680,7 @@ void AbstractParser::doMapDiff()
     const Map &map = mapData.getCurrentMap();
 
     if (map == origin) {
-        sendToUser(SendToUserSource::FromMMapper,
+        sendToUser(SendToUserSourceEnum::FromMMapper,
                    "The map has not been modified since the last save.\n");
         return;
     }
@@ -707,14 +707,14 @@ void AbstractParser::doMapCommand(StringView input)
             map.setSavedMap(Map{});
             map.setSavedMarks({});
             sendOkToUser();
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        "WARNING: You should save the map immediately.\n");
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        "Note: Group manager will probably display very strange results"
                        " until you save the map and share it with your groupmates.\n");
 
         } else {
-            sendToUser(SendToUserSource::FromMMapper, "Ooops.\n");
+            sendToUser(SendToUserSourceEnum::FromMMapper, "Ooops.\n");
         }
     };
     auto removeDoorNames = [this]() { this->doRemoveDoorNamesCommand(); };
@@ -754,7 +754,7 @@ void AbstractParser::doMapCommand(StringView input)
     };
 
     auto checkConsistency = [this]() {
-        sendToUser(SendToUserSource::FromMMapper, "Attempting to check map consistency...\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Attempting to check map consistency...\n");
         emit m_mapData.sig_checkMapConsistency();
     };
 
@@ -764,7 +764,7 @@ void AbstractParser::doMapCommand(StringView input)
         try {
             map.revert();
         } catch (const std::exception &ex) {
-            sendToUser(SendToUserSource::FromMMapper, std::string{"Exception: "} + ex.what());
+            sendToUser(SendToUserSourceEnum::FromMMapper, std::string{"Exception: "} + ex.what());
             return;
         }
 
@@ -901,7 +901,7 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        QString("Help for %1%2:\n"
                                "  %3\n"
                                "\n")
@@ -1048,7 +1048,7 @@ void AbstractParser::initSpecialCommandMap()
                   "Note: Quoted versions do not allow escape codes,\n"
                   "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
 
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        QString("Help for %1%2:\n"
                                "%3\n"
                                "\n")

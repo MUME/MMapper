@@ -80,7 +80,7 @@ void basicFlagsTest()
     static_assert(enums::sanitizeFlags<Flags>(flags) == flags);
 }
 
-enum class TestFooEnum : uint8_t {
+enum class NODISCARD TestFooEnum : uint8_t {
     ZERO = 0,
     TWO = 2,
 };

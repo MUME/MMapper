@@ -91,10 +91,10 @@ void StackedInputWidget::initPassword()
         = std::make_unique<PasswordDialog>(deref(m_pipeline.outputs.inputOutputs), this);
 }
 
-void StackedInputWidget::setEchoMode(const EchoMode echoMode)
+void StackedInputWidget::setEchoMode(const EchoModeEnum echoMode)
 {
     m_echoMode = echoMode;
-    if (m_echoMode == EchoMode::Visible) {
+    if (m_echoMode == EchoModeEnum::Visible) {
         getPasswordDialog().hide();
 
         auto widget = &getInputWidget();
@@ -152,21 +152,21 @@ PasswordDialog &StackedInputWidget::getPasswordDialog() // NOLINT (no, it should
 
 void StackedInputWidget::slot_cut()
 {
-    if (m_echoMode == EchoMode::Visible) {
+    if (m_echoMode == EchoModeEnum::Visible) {
         getInputWidget().cut();
     }
 }
 
 void StackedInputWidget::slot_copy()
 {
-    if (m_echoMode == EchoMode::Visible) {
+    if (m_echoMode == EchoModeEnum::Visible) {
         getInputWidget().copy();
     }
 }
 
 void StackedInputWidget::slot_paste()
 {
-    if (m_echoMode == EchoMode::Visible) {
+    if (m_echoMode == EchoModeEnum::Visible) {
         getInputWidget().paste();
     }
 }

@@ -413,7 +413,7 @@ set(mmapper_SRCS
     parser/DoorAction.cpp
     parser/DoorAction.h
     parser/LineFlags.h
-    parser/SendToUserSource.h
+    parser/SendToUserSourceEnum.h
     parser/abstractparser.cpp
     parser/abstractparser.h
     parser/mumexmlparser-gmcp.cpp

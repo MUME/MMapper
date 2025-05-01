@@ -227,7 +227,7 @@ void Proxy::allocPipelineObjects()
     auto &lifetime = getPipeline().apis.sendToUserLifetime.emplace();
     global::registerSendToUser(lifetime, [this](const QString &str) {
         //
-        sendToUser(SendToUserSource::FromMMapper, str);
+        sendToUser(SendToUserSourceEnum::FromMMapper, str);
         sendPromptToUser();
     });
 }
@@ -514,7 +514,7 @@ void Proxy::allocMudTelnet()
         void virt_onMumeClientError(const QString &errmsg) final
         {
             qInfo() << errmsg;
-            getProxy().sendToUser(SendToUserSource::FromMMapper,
+            getProxy().sendToUser(SendToUserSourceEnum::FromMMapper,
                                   QString("MUME.Client protocol error: %1").arg(errmsg));
         }
     };
@@ -572,7 +572,7 @@ void Proxy::allocParser()
 
         // FIXME: This function is way too complicated, and the special newline/prompt handling
         // may also need to be done at a different point in the pipeline.
-        void virt_onSendToUser(const SendToUserSource source,
+        void virt_onSendToUser(const SendToUserSourceEnum source,
                                const QString &s,
                                const bool goAhead) final
         {
@@ -580,23 +580,23 @@ void Proxy::allocParser()
             bool isPrompt = false;
 
             switch (source) {
-            case SendToUserSource::NoLongerPrompted:
+            case SendToUserSourceEnum::NoLongerPrompted:
                 assert(s.isEmpty());
                 m_wasPrompt = false;
                 return;
-            case SendToUserSource::DuplicatePrompt:
-            case SendToUserSource::SimulatedPrompt:
+            case SendToUserSourceEnum::DuplicatePrompt:
+            case SendToUserSourceEnum::SimulatedPrompt:
                 isPrompt = true;
                 break;
-            case SendToUserSource::FromMud:
+            case SendToUserSourceEnum::FromMud:
                 if (s.isEmpty()) {
                     break;
                 }
                 isTwiddler = s.back() == char_consts::C_BACKSPACE;
                 isPrompt = s.back() != char_consts::C_NEWLINE && !isTwiddler;
                 break;
-            case SendToUserSource::SimulatedOutput:
-            case SendToUserSource::FromMMapper:
+            case SendToUserSourceEnum::SimulatedOutput:
+            case SendToUserSourceEnum::FromMMapper:
                 break;
             }
 
@@ -638,12 +638,12 @@ void Proxy::allocParser()
             getGameObserver().observeSentToUser(s);
 
             switch (source) {
-            case SendToUserSource::FromMud:
-            case SendToUserSource::DuplicatePrompt:
-            case SendToUserSource::SimulatedPrompt:
-            case SendToUserSource::SimulatedOutput:
-            case SendToUserSource::FromMMapper:
-            case SendToUserSource::NoLongerPrompted:
+            case SendToUserSourceEnum::FromMud:
+            case SendToUserSourceEnum::DuplicatePrompt:
+            case SendToUserSourceEnum::SimulatedPrompt:
+            case SendToUserSourceEnum::SimulatedOutput:
+            case SendToUserSourceEnum::FromMMapper:
+            case SendToUserSourceEnum::NoLongerPrompted:
                 break;
             }
 
@@ -876,7 +876,7 @@ void Proxy::sendToMud(const QString &s)
     getMudTelnet().onSendToMud(s);
 }
 
-void Proxy::sendToUser(const SendToUserSource source, const QString &s)
+void Proxy::sendToUser(const SendToUserSourceEnum source, const QString &s)
 {
     // FIXME: this is layered incorrectly
     getUserParser().sendToUser(source, s);
@@ -1012,7 +1012,7 @@ void Proxy::connectToMud()
             sendNewlineToUser();
             sendStatusToUser("MMapper is running in offline mode.");
             sendSyntaxHintToUser("Switch modes and", "connect", "to play MUME.");
-            sendToUser(SendToUserSource::SimulatedOutput,
+            sendToUser(SendToUserSourceEnum::SimulatedOutput,
                        "\n\n"
                        "Welcome to the land of Middle-earth. May your visit here be... interesting.\n"
                        "Never forget! Try to role-play...\n");
@@ -1079,7 +1079,7 @@ bool Proxy::isUserGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const
 auto Proxy::getSendToUserAnsiOstream() -> AnsiHelper
 {
     return AnsiHelper{m_lifetime, [this](const std::string &s) -> void {
-                          sendToUser(SendToUserSource::FromMMapper, mmqt::toQStringUtf8(s));
+                          sendToUser(SendToUserSourceEnum::FromMMapper, mmqt::toQStringUtf8(s));
                       }};
 }
 
@@ -1160,7 +1160,7 @@ void Proxy::sendNewlineToUser()
 {
     // TODO: find a way to avoid sending extra newlines when we assume a prompt exists,
     // and also find a way to re-send the prompt if we overwrite it.
-    sendToUser(SendToUserSource::FromMMapper, "\n");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "\n");
 }
 
 void Proxy::sendPromptToUser()

@@ -1730,12 +1730,12 @@ void testDoorVsExitFlags()
         map = result.map;
     };
 
-    enum class ExpectDoor { None, Visible, Hidden };
+    enum class NODISCARD ExpectDoorEnum : uint8_t { None, Visible, Hidden };
 
-    auto check = [&getExit](const std::optional<ExpectDoor> expect) {
+    auto check = [&getExit](const std::optional<ExpectDoorEnum> expect) {
         const bool isExit = expect.has_value();
-        const bool isDoor = isExit && expect != ExpectDoor::None;
-        const bool isHidden = isExit && expect == ExpectDoor::Hidden;
+        const bool isDoor = isExit && expect != ExpectDoorEnum::None;
+        const bool isHidden = isExit && expect == ExpectDoorEnum::Hidden;
         const RawExit &east = getExit();
         TEST_ASSERT(east.fields.exitFlags.isExit() == isExit);
         TEST_ASSERT(east.fields.exitFlags.isDoor() == isDoor);
@@ -1751,28 +1751,28 @@ void testDoorVsExitFlags()
 
     // the exit exists once it's created
     createExit();
-    check(ExpectDoor::None);
+    check(ExpectDoorEnum::None);
 
     // setting hidden makes it *both* door and hidden
     setHidden(true);
-    check(ExpectDoor::Hidden);
+    check(ExpectDoorEnum::Hidden);
 
     // removing hidden only removes the hidden attribute
     setHidden(false);
-    check(ExpectDoor::Visible);
+    check(ExpectDoorEnum::Visible);
     setHidden(true);
-    check(ExpectDoor::Hidden);
+    check(ExpectDoorEnum::Hidden);
 
     // removing door while already hidden = no change!
     setDoor(false);
-    check(ExpectDoor::Hidden);
+    check(ExpectDoorEnum::Hidden);
     setDoor(true);
-    check(ExpectDoor::Hidden);
+    check(ExpectDoorEnum::Hidden);
 
     // removing hidden first and then removing door removes both attributes
     setHidden(false);
     setDoor(false);
-    check(ExpectDoor::None);
+    check(ExpectDoorEnum::None);
 }
 
 } // namespace

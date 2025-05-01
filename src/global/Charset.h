@@ -138,7 +138,7 @@ extern void convert(std::ostream &os,
 
 } // namespace conversion
 
-enum class NODISCARD Utf8Validation : uint8_t {
+enum class NODISCARD Utf8ValidationEnum : uint8_t {
     // Valid: Fully valid UTF-8.
     Valid,
     // ContainsInvalidEncodings: This can be recognized as "encoded as UTF-8,"
@@ -157,7 +157,7 @@ enum class NODISCARD Utf8Validation : uint8_t {
     ContainsErrors,
 };
 
-NODISCARD Utf8Validation validateUtf8(std::string_view sv) noexcept;
+NODISCARD Utf8ValidationEnum validateUtf8(std::string_view sv) noexcept;
 NODISCARD bool isValidUtf8(std::string_view sv) noexcept;
 
 namespace conversion {
@@ -204,15 +204,15 @@ inline void simple_unicode_translit_in_place(char32_t &codepoint) noexcept
 namespace conversion {
 
 namespace conversion_detail {
-enum class NODISCARD BasicCharset : uint8_t { Ascii, Latin1 };
-enum class NODISCARD BasicTranslitOption : uint8_t {
+enum class NODISCARD BasicCharsetEnum : uint8_t { Ascii, Latin1 };
+enum class NODISCARD BasicTranslitOptionEnum : uint8_t {
     // Unicode out of the Latin1 range is replaced with the specified "invalid" codepoint.
     Unfriendly,
     // Unicode out of the Latin1 range can be replaced with a single Latin1 codepoint
     Simple,
 };
 
-template<BasicCharset charset, BasicTranslitOption use_translit>
+template<BasicCharsetEnum charset, BasicTranslitOptionEnum use_translit>
 class NODISCARD BasicCharsetInserter final
 {
 private:
@@ -226,7 +226,7 @@ public:
 private:
     NODISCARD static char32_t maybe_transit_unicode(const char32_t codepoint) noexcept
     {
-        if constexpr (use_translit == BasicTranslitOption::Simple) {
+        if constexpr (use_translit == BasicTranslitOptionEnum::Simple) {
             return simple_unicode_translit(codepoint);
         }
         return codepoint;
@@ -242,7 +242,7 @@ private:
 
     NODISCARD static char maybe_ascii(const char c) noexcept
     {
-        if constexpr (charset == BasicCharset::Ascii) {
+        if constexpr (charset == BasicCharsetEnum::Ascii) {
             if (!isAscii(c)) {
                 return latin1ToAscii(c);
             }
@@ -261,12 +261,12 @@ public:
     void operator()(const char32_t codepoint) { append_codepoint(codepoint); }
 };
 
-using InsertAscii = BasicCharsetInserter<BasicCharset::Ascii, BasicTranslitOption::Simple>;
+using InsertAscii = BasicCharsetInserter<BasicCharsetEnum::Ascii, BasicTranslitOptionEnum::Simple>;
 using InsertAsciiUnfriendly
-    = BasicCharsetInserter<BasicCharset::Ascii, BasicTranslitOption::Unfriendly>;
-using InsertLatin1 = BasicCharsetInserter<BasicCharset::Latin1, BasicTranslitOption::Simple>;
+    = BasicCharsetInserter<BasicCharsetEnum::Ascii, BasicTranslitOptionEnum::Unfriendly>;
+using InsertLatin1 = BasicCharsetInserter<BasicCharsetEnum::Latin1, BasicTranslitOptionEnum::Simple>;
 using InsertLatin1Unfriendly
-    = BasicCharsetInserter<BasicCharset::Latin1, BasicTranslitOption::Unfriendly>;
+    = BasicCharsetInserter<BasicCharsetEnum::Latin1, BasicTranslitOptionEnum::Unfriendly>;
 
 } // namespace conversion_detail
 
@@ -279,23 +279,23 @@ using conversion_detail::InsertLatin1Unfriendly;
 
 // This refers to "simple" unicode to latin1 transliteration,
 // as performed by simple_unicode_translit().
-enum class NODISCARD EquivTranslitOptions : uint8_t { None, Left, Right, Both };
+enum class NODISCARD EquivTranslitOptionsEnum : uint8_t { None, Left, Right, Both };
 
 template<typename Char>
-NODISCARD bool are_equivalent(Char left, Char right, const EquivTranslitOptions opts) noexcept
+NODISCARD bool are_equivalent(Char left, Char right, const EquivTranslitOptionsEnum opts) noexcept
 {
     static_assert(std::is_same_v<Char, char16_t> || std::is_same_v<Char, char32_t>);
 
     switch (opts) {
-    case EquivTranslitOptions::None:
+    case EquivTranslitOptionsEnum::None:
         break;
-    case EquivTranslitOptions::Left:
+    case EquivTranslitOptionsEnum::Left:
         simple_unicode_translit_in_place(left);
         break;
-    case EquivTranslitOptions::Right:
+    case EquivTranslitOptionsEnum::Right:
         simple_unicode_translit_in_place(right);
         break;
-    case EquivTranslitOptions::Both:
+    case EquivTranslitOptionsEnum::Both:
         simple_unicode_translit_in_place(left);
         simple_unicode_translit_in_place(right);
         break;
@@ -304,9 +304,10 @@ NODISCARD bool are_equivalent(Char left, Char right, const EquivTranslitOptions 
     return left == right;
 }
 
-NODISCARD bool are_equivalent_utf8(std::u16string_view left,
-                                   std::string_view right,
-                                   EquivTranslitOptions opts = EquivTranslitOptions::None) noexcept;
+NODISCARD bool are_equivalent_utf8(
+    std::u16string_view left,
+    std::string_view right,
+    EquivTranslitOptionsEnum opts = EquivTranslitOptionsEnum::None) noexcept;
 
 namespace conversion {
 namespace conversion_detail {
@@ -622,14 +623,14 @@ NODISCARD OptionalEncodedUtf8Codepoint try_encode_utf8_unchecked(char32_t codepo
                                                                  size_t bytes) noexcept;
 
 namespace conversion_detail {
-template<BasicTranslitOption use_translit>
+template<BasicTranslitOptionEnum use_translit>
 struct NODISCARD Latin1StringBuilderHelper final
 {
     using String = std::string;
     NODISCARD static bool isValid(const char) noexcept { return true; }
     NODISCARD static std::optional<char> tryEncode(char32_t codepoint) noexcept
     {
-        if constexpr (use_translit == BasicTranslitOption::Simple) {
+        if constexpr (use_translit == BasicTranslitOptionEnum::Simple) {
             simple_unicode_translit_in_place(codepoint);
         }
         if (codepoint > charset_detail::NUM_LATIN1_CODEPOINTS) {
@@ -649,8 +650,8 @@ struct NODISCARD Utf8StringBuilderHelper final
 };
 
 using Latin1StringBuilderUnfriendly
-    = StringBuilder<Latin1StringBuilderHelper<BasicTranslitOption::Unfriendly>>;
-using Latin1StringBuilder = StringBuilder<Latin1StringBuilderHelper<BasicTranslitOption::Simple>>;
+    = StringBuilder<Latin1StringBuilderHelper<BasicTranslitOptionEnum::Unfriendly>>;
+using Latin1StringBuilder = StringBuilder<Latin1StringBuilderHelper<BasicTranslitOptionEnum::Simple>>;
 using Utf8StringBuilder = StringBuilder<Utf8StringBuilderHelper>;
 
 } // namespace conversion_detail

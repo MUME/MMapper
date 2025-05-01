@@ -21,7 +21,7 @@ AbstractDebugOStream::~AbstractDebugOStream()
     }
 
     // Try to detect accidentally passing latin1
-    assert(charset::validateUtf8(str_utf8) == charset::Utf8Validation::Valid);
+    assert(charset::validateUtf8(str_utf8) == charset::Utf8ValidationEnum::Valid);
 
     auto &debug = m_debug;
 

@@ -469,15 +469,15 @@ RawAnsi updateFormat(QTextCharFormat &format,
             using ULS = QTextCharFormat::UnderlineStyle;
             const auto style = [&updated]() -> QTextCharFormat::UnderlineStyle {
                 switch (updated.getUnderlineStyle()) {
-                case AnsiUnderlineStyle::Dotted:
+                case AnsiUnderlineStyleEnum::Dotted:
                     return ULS::DotLine;
-                case AnsiUnderlineStyle::Curly:
+                case AnsiUnderlineStyleEnum::Curly:
                     return ULS::WaveUnderline;
-                case AnsiUnderlineStyle::Dashed:
+                case AnsiUnderlineStyleEnum::Dashed:
                     return ULS::DashUnderline;
-                case AnsiUnderlineStyle::None:
-                case AnsiUnderlineStyle::Normal:
-                case AnsiUnderlineStyle::Double: // not supported by Qt
+                case AnsiUnderlineStyleEnum::None:
+                case AnsiUnderlineStyleEnum::Normal:
+                case AnsiUnderlineStyleEnum::Double: // not supported by Qt
                 default:
                     return ULS::SingleUnderline;
                 }

@@ -122,7 +122,7 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
         m_tempCharacters.clear();
     }
     if (!m_lineToUser.isEmpty()) {
-        sendToUser(SendToUserSource::FromMud, m_lineToUser, isGoAhead);
+        sendToUser(SendToUserSourceEnum::FromMud, m_lineToUser, isGoAhead);
 
         // Simplify the output and run actions
         QString tempStr = m_lineToUser;
@@ -235,7 +235,7 @@ bool MumeXmlParser::element(const QString &line)
                     // Certain weather events happen on ticks
 
                 } else if (line.startsWith("/xml")) {
-                    sendToUser(SendToUserSource::FromMMapper,
+                    sendToUser(SendToUserSourceEnum::FromMMapper,
                                "[MMapper] Mapper cannot function without XML mode\n");
                     getQueue().clear();
                     m_lineFlags.clear();
@@ -341,7 +341,7 @@ bool MumeXmlParser::element(const QString &line)
                                 AnsiOstream aos{os};
                                 emulateExits(aos, m_move);
                             }
-                            sendToUser(SendToUserSource::SimulatedOutput, os.str());
+                            sendToUser(SendToUserSourceEnum::SimulatedOutput, os.str());
                         }
                     }
                 }
@@ -375,7 +375,7 @@ bool MumeXmlParser::element(const QString &line)
                     if (!m_lineFlags.isSnoop()) {
                         std::ostringstream os;
                         parseExits(os);
-                        sendToUser(SendToUserSource::SimulatedOutput, os.str());
+                        sendToUser(SendToUserSourceEnum::SimulatedOutput, os.str());
                         m_exitsReady = true;
                     }
                     m_lineFlags.remove(LineFlagEnum::EXITS);
@@ -471,7 +471,7 @@ QString MumeXmlParser::characters(QString &ch)
                     AnsiOstream aos{os};
                     emulateExits(aos, m_move);
                 }
-                sendToUser(SendToUserSource::SimulatedOutput, os.str());
+                sendToUser(SendToUserSourceEnum::SimulatedOutput, os.str());
             }
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);

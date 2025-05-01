@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-enum class NODISCARD SendToUserSource : uint8_t {
+enum class NODISCARD SendToUserSourceEnum : uint8_t {
     FromMud,
     DuplicatePrompt,
     SimulatedPrompt,

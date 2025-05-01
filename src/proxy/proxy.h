@@ -11,7 +11,7 @@
 #include "../global/io.h"
 #include "../group/GroupManagerApi.h"
 #include "../observer/gameobserver.h"
-#include "../parser/SendToUserSource.h"
+#include "../parser/SendToUserSourceEnum.h"
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 #include "TaggedBytes.h"
@@ -228,7 +228,7 @@ private:
 
 private:
     void sendToMud(const QString &s);
-    void sendToUser(SendToUserSource source, const QString &ba);
+    void sendToUser(SendToUserSourceEnum source, const QString &ba);
     void log(const QString &msg);
 
     class NODISCARD AnsiHelper final

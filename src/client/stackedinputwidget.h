@@ -21,7 +21,7 @@ class QWidget;
 
 struct InputWidgetOutputs;
 
-enum class EchoMode : uint8_t { Hidden, Visible };
+enum class NODISCARD EchoModeEnum : uint8_t { Hidden, Visible };
 
 struct NODISCARD StackedInputWidgetOutputs
 {
@@ -75,7 +75,7 @@ private:
         ~Pipeline();
     };
     Pipeline m_pipeline;
-    EchoMode m_echoMode = EchoMode::Visible;
+    EchoModeEnum m_echoMode = EchoModeEnum::Visible;
     StackedInputWidgetOutputs *m_output = nullptr;
 
 public:
@@ -106,8 +106,8 @@ private:
 
 public:
     void requestPassword();
-    void setEchoMode(EchoMode echoMode);
-    EchoMode getEchoMode() const { return m_echoMode; }
+    void setEchoMode(EchoModeEnum echoMode);
+    EchoModeEnum getEchoMode() const { return m_echoMode; }
 
 private:
     void gotMultiLineInput(const QString &);

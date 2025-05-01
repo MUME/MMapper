@@ -118,7 +118,7 @@ void MumeXmlParserBase::initActionMap()
              [this](StringView /*view*/) {
                  const auto list = getTimers().getStatCommandEntry();
                  if (!list.empty()) {
-                     sendToUser(SendToUserSource::FromMMapper, list);
+                     sendToUser(SendToUserSourceEnum::FromMMapper, list);
                  }
              });
 }

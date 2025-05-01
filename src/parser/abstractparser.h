@@ -28,7 +28,7 @@
 #include "Action.h"
 #include "CommandQueue.h"
 #include "DoorAction.h"
-#include "SendToUserSource.h"
+#include "SendToUserSourceEnum.h"
 
 #include <functional>
 #include <map>
@@ -63,7 +63,7 @@ public:
     // sent to MudTelnet
     void onSendToMud(const QString &msg) { virt_onSendToMud(msg); }
     // sent to UserTelnet
-    void onSendToUser(const SendToUserSource source, const QString &msg, const bool goAhead)
+    void onSendToUser(const SendToUserSourceEnum source, const QString &msg, const bool goAhead)
     {
         virt_onSendToUser(source, msg, goAhead);
     }
@@ -101,7 +101,7 @@ private:
     // sent to MudTelnet
     virtual void virt_onSendToMud(const QString &) = 0;
     // sent to UserTelnet
-    virtual void virt_onSendToUser(SendToUserSource source, const QString &, bool goAhead) = 0;
+    virtual void virt_onSendToUser(SendToUserSourceEnum source, const QString &, bool goAhead) = 0;
     // sent to MapCanvas
     virtual void virt_onMapChanged() = 0;
     // sent to MapCanvas
@@ -198,27 +198,27 @@ protected:
     void log(const QString &a, const QString &b) { m_outputs.onLog(a, b); }
 
 public:
-    void sendToUser(const SendToUserSource source, const QString &s, const bool goAhead)
+    void sendToUser(const SendToUserSourceEnum source, const QString &s, const bool goAhead)
     {
         m_outputs.onSendToUser(source, s, goAhead);
     }
 
-    inline void sendToUser(const SendToUserSource source, const QByteArray &arr)
+    inline void sendToUser(const SendToUserSourceEnum source, const QByteArray &arr)
     {
         sendToUser(source, QString::fromUtf8(arr), false);
     }
-    inline void sendToUser(const SendToUserSource source, const std::string_view s)
+    inline void sendToUser(const SendToUserSourceEnum source, const std::string_view s)
     {
         sendToUser(source, mmqt::toQStringUtf8(s));
     }
-    inline void sendToUser(const SendToUserSource source, const char *const s)
+    inline void sendToUser(const SendToUserSourceEnum source, const char *const s)
     {
         assert(s != nullptr);
         if (s != nullptr) {
             sendToUser(source, std::string_view{s});
         }
     }
-    inline void sendToUser(const SendToUserSource source, const QString &s)
+    inline void sendToUser(const SendToUserSourceEnum source, const QString &s)
     {
         sendToUser(source, s, false);
     }
@@ -416,7 +416,7 @@ private:
 public:
     friend AbstractParser &operator<<(AbstractParser &self, const std::string_view s)
     {
-        self.sendToUser(SendToUserSource::FromMMapper, s);
+        self.sendToUser(SendToUserSourceEnum::FromMMapper, s);
         return self;
     }
     inline void sendOkToUser() { send_ok(*this); }

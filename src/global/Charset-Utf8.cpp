@@ -192,7 +192,7 @@ static_assert(utf8_ranges[3].hi == utf8_3byte_num_codepoints - 1);
 static_assert(utf8_ranges[4].lo == utf8_3byte_num_codepoints);
 static_assert(utf8_ranges[4].hi < max_theoretical_codepoint);
 
-enum class NODISCARD CodePointError : uint8_t {
+enum class NODISCARD CodePointErrorEnum : uint8_t {
     Success,
     // error: string-view was empty
     Empty,
@@ -218,26 +218,26 @@ struct NODISCARD OptCodepoint final
 {
     size_t num_bytes = 0;
     char32_t codepoint = 0;
-    CodePointError error = CodePointError::Success;
+    CodePointErrorEnum error = CodePointErrorEnum::Success;
 
     explicit constexpr OptCodepoint() noexcept = default;
-    explicit constexpr OptCodepoint(const CodePointError error_) noexcept
+    explicit constexpr OptCodepoint(const CodePointErrorEnum error_) noexcept
         : error{error_}
     {}
     explicit constexpr OptCodepoint(const size_t num_bytes_,
                                     const char32_t codepoint_,
-                                    const CodePointError error_) noexcept
+                                    const CodePointErrorEnum error_) noexcept
         : num_bytes{num_bytes_}
         , codepoint{codepoint_}
         , error{error_}
     {}
     explicit constexpr OptCodepoint(const size_t num_bytes_, const char32_t codepoint_) noexcept
-        : OptCodepoint{num_bytes_, codepoint_, CodePointError::Success}
+        : OptCodepoint{num_bytes_, codepoint_, CodePointErrorEnum::Success}
     {}
 
     NODISCARD constexpr bool valid() const noexcept
     {
-        return num_bytes != 0 && error == CodePointError::Success;
+        return num_bytes != 0 && error == CodePointErrorEnum::Success;
     }
     NODISCARD explicit constexpr operator bool() const noexcept { return valid(); }
     NODISCARD constexpr bool operator==(const std::nullopt_t) const { return !valid(); }
@@ -247,12 +247,12 @@ struct NODISCARD OptCodepoint final
     }
 };
 
-static constexpr OptCodepoint Utf8ErrEmpty{CodePointError::Empty};
-static constexpr OptCodepoint Utf8ErrInvalidPrefix{CodePointError::InvalidPrefix};
-static constexpr OptCodepoint UtfErrTruncated{CodePointError::Truncated};
-static constexpr OptCodepoint UtfErrInvalidContinuation2{CodePointError::InvalidContinuation2};
-static constexpr OptCodepoint UtfErrInvalidContinuation3{CodePointError::InvalidContinuation3};
-static constexpr OptCodepoint UtfErrInvalidContinuation4{CodePointError::InvalidContinuation4};
+static constexpr OptCodepoint Utf8ErrEmpty{CodePointErrorEnum::Empty};
+static constexpr OptCodepoint Utf8ErrInvalidPrefix{CodePointErrorEnum::InvalidPrefix};
+static constexpr OptCodepoint UtfErrTruncated{CodePointErrorEnum::Truncated};
+static constexpr OptCodepoint UtfErrInvalidContinuation2{CodePointErrorEnum::InvalidContinuation2};
+static constexpr OptCodepoint UtfErrInvalidContinuation3{CodePointErrorEnum::InvalidContinuation3};
+static constexpr OptCodepoint UtfErrInvalidContinuation4{CodePointErrorEnum::InvalidContinuation4};
 
 static constexpr std::array<OptCodepoint, 4> UtfErrInvalidContinuations{Utf8ErrInvalidPrefix,
                                                                         UtfErrInvalidContinuation2,
@@ -423,10 +423,10 @@ NODISCARD constexpr OptCodepoint try_match_utf8(const std::string_view sv) noexc
     }
 
     if (isSurrogate(opt.codepoint)) {
-        opt.error = CodePointError::Utf16Surrogate;
+        opt.error = CodePointErrorEnum::Utf16Surrogate;
     } else if (const Utf8Range range = utf8_ranges[opt.num_bytes]; !range.contains(opt.codepoint)) {
-        opt.error = (opt.codepoint < range.lo) ? CodePointError::OverLongEncoding
-                                               : CodePointError::TooLarge;
+        opt.error = (opt.codepoint < range.lo) ? CodePointErrorEnum::OverLongEncoding
+                                               : CodePointErrorEnum::TooLarge;
     }
 
     return opt;
@@ -450,11 +450,12 @@ static_assert(try_match_utf8("\xC2\x7F") == UtfErrInvalidContinuation2);
 static_assert(try_match_utf8("\xC2\xC0") == UtfErrInvalidContinuation2);
 
 // over-long
-static_assert(try_match_utf8("\xC0\x80") == OptCodepoint{2, 0, CodePointError::OverLongEncoding});
+static_assert(try_match_utf8("\xC0\x80")
+              == OptCodepoint{2, 0, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xE0\x80\x80")
-              == OptCodepoint{3, 0, CodePointError::OverLongEncoding});
+              == OptCodepoint{3, 0, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xF0\x80\x80\x80")
-              == OptCodepoint{4, 0, CodePointError::OverLongEncoding});
+              == OptCodepoint{4, 0, CodePointErrorEnum::OverLongEncoding});
 
 // 1 byte
 static constexpr std::array<char, 2> zero{0, 0};
@@ -463,8 +464,10 @@ static_assert(try_match_utf8("\x1") == OptCodepoint{1, 0x1});
 static_assert(try_match_utf8("\x7F") == OptCodepoint{1, 0x7F});
 
 // 2 bytes
-static_assert(try_match_utf8("\xC0\x80") == OptCodepoint{2, 0, CodePointError::OverLongEncoding});
-static_assert(try_match_utf8("\xC1\xBF") == OptCodepoint{2, 0x7F, CodePointError::OverLongEncoding});
+static_assert(try_match_utf8("\xC0\x80")
+              == OptCodepoint{2, 0, CodePointErrorEnum::OverLongEncoding});
+static_assert(try_match_utf8("\xC1\xBF")
+              == OptCodepoint{2, 0x7F, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xC2\x80") == OptCodepoint{2, 0x80});
 static_assert(try_match_utf8("\xDF\xBF") == OptCodepoint{2, 0x7Ff});
 
@@ -472,16 +475,16 @@ static_assert(try_match_utf8("\xDF\xBF") == OptCodepoint{2, 0x7Ff});
 static_assert(try_match_utf8("\xE0\x7F\x7F") == UtfErrInvalidContinuation2);
 static_assert(try_match_utf8("\xE0\x80\x7F") == UtfErrInvalidContinuation3);
 static_assert(try_match_utf8("\xE0\x80\x80")
-              == OptCodepoint{3, 0, CodePointError::OverLongEncoding});
+              == OptCodepoint{3, 0, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xE0\x9F\xBF")
-              == OptCodepoint{3, 0x7Ff, CodePointError::OverLongEncoding});
+              == OptCodepoint{3, 0x7Ff, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xE0\xA0\x80") == OptCodepoint{3, 0x800});
 // U+D800-U+DFFF
 static_assert(try_match_utf8("\xED\x9F\xBF") == OptCodepoint{3, utf16_detail::FIRST_SURROGATE - 1});
 static_assert(try_match_utf8("\xED\xA0\x80")
-              == OptCodepoint{3, utf16_detail::FIRST_SURROGATE, CodePointError::Utf16Surrogate});
+              == OptCodepoint{3, utf16_detail::FIRST_SURROGATE, CodePointErrorEnum::Utf16Surrogate});
 static_assert(try_match_utf8("\xED\xBF\xBF")
-              == OptCodepoint{3, utf16_detail::LAST_SURROGATE, CodePointError::Utf16Surrogate});
+              == OptCodepoint{3, utf16_detail::LAST_SURROGATE, CodePointErrorEnum::Utf16Surrogate});
 static_assert(try_match_utf8("\xEE\x80\x80") == OptCodepoint{3, utf16_detail::LAST_SURROGATE + 1});
 static_assert(try_match_utf8("\xEF\xBB\xBF") == OptCodepoint{3, byte_order_mark});
 static_assert(try_match_utf8("\xEF\xBF\xBF") == OptCodepoint{3, 0xFFFF});
@@ -491,14 +494,14 @@ static_assert(try_match_utf8("\xF0\x7F\x7F\x7F") == UtfErrInvalidContinuation2);
 static_assert(try_match_utf8("\xF0\x80\x7F\x7F") == UtfErrInvalidContinuation3);
 static_assert(try_match_utf8("\xF0\x80\x80\x7F") == UtfErrInvalidContinuation4);
 static_assert(try_match_utf8("\xF0\x80\x80\x80")
-              == OptCodepoint{4, 0, CodePointError::OverLongEncoding});
+              == OptCodepoint{4, 0, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xF0\x8F\xBF\xBF")
-              == OptCodepoint{4, 0xFFFFu, CodePointError::OverLongEncoding});
+              == OptCodepoint{4, 0xFFFFu, CodePointErrorEnum::OverLongEncoding});
 static_assert(try_match_utf8("\xF0\x90\x80\x80") == OptCodepoint{4, 0x10000});
 static_assert(try_match_utf8("\xF0\x9F\x91\x8D") == OptCodepoint{4, thumbs_up});
 static_assert(try_match_utf8("\xF4\x8F\xBF\xBF") == OptCodepoint{4, MAX_UNICODE_CODEPOINT});
 static_assert(try_match_utf8("\xF4\x90\x80\x80")
-              == OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointError::TooLarge});
+              == OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointErrorEnum::TooLarge});
 
 } // namespace conversion_detail
 
@@ -538,51 +541,51 @@ NODISCARD static constexpr bool is7bit(const std::string_view sv) noexcept
     return true;
 }
 
-NODISCARD static constexpr Utf8Validation validateUtf8(std::string_view sv) noexcept
+NODISCARD static constexpr Utf8ValidationEnum validateUtf8(std::string_view sv) noexcept
 {
     if (is7bit(sv)) {
-        return Utf8Validation::Valid;
+        return Utf8ValidationEnum::Valid;
     }
 
     bool containsInvalidEncodings = false;
     while (!sv.empty()) {
         auto opt = conversion::conversion_detail::try_match_utf8(sv);
         if (opt.num_bytes == 0) {
-            return Utf8Validation::ContainsErrors;
+            return Utf8ValidationEnum::ContainsErrors;
         }
         switch (opt.error) {
-        case conversion::conversion_detail::CodePointError::Success:
+        case conversion::conversion_detail::CodePointErrorEnum::Success:
             break;
-        case conversion::conversion_detail::CodePointError::Empty:
-        case conversion::conversion_detail::CodePointError::InvalidPrefix:
-        case conversion::conversion_detail::CodePointError::Truncated:
-        case conversion::conversion_detail::CodePointError::InvalidContinuation2:
-        case conversion::conversion_detail::CodePointError::InvalidContinuation3:
-        case conversion::conversion_detail::CodePointError::InvalidContinuation4:
-            return Utf8Validation::ContainsErrors;
-        case conversion::conversion_detail::CodePointError::OverLongEncoding:
-        case conversion::conversion_detail::CodePointError::TooLarge:
-        case conversion::conversion_detail::CodePointError::Utf16Surrogate:
+        case conversion::conversion_detail::CodePointErrorEnum::Empty:
+        case conversion::conversion_detail::CodePointErrorEnum::InvalidPrefix:
+        case conversion::conversion_detail::CodePointErrorEnum::Truncated:
+        case conversion::conversion_detail::CodePointErrorEnum::InvalidContinuation2:
+        case conversion::conversion_detail::CodePointErrorEnum::InvalidContinuation3:
+        case conversion::conversion_detail::CodePointErrorEnum::InvalidContinuation4:
+            return Utf8ValidationEnum::ContainsErrors;
+        case conversion::conversion_detail::CodePointErrorEnum::OverLongEncoding:
+        case conversion::conversion_detail::CodePointErrorEnum::TooLarge:
+        case conversion::conversion_detail::CodePointErrorEnum::Utf16Surrogate:
             containsInvalidEncodings = true;
             break;
         }
         sv.remove_prefix(opt.num_bytes);
     }
-    return containsInvalidEncodings ? Utf8Validation::ContainsInvalidEncodings
-                                    : Utf8Validation::Valid;
+    return containsInvalidEncodings ? Utf8ValidationEnum::ContainsInvalidEncodings
+                                    : Utf8ValidationEnum::Valid;
 }
 
 NODISCARD static constexpr bool isValidUtf8(std::string_view sv)
 {
-    return validateUtf8(sv) == Utf8Validation::Valid;
+    return validateUtf8(sv) == Utf8ValidationEnum::Valid;
 }
 NODISCARD static constexpr bool hasInvalidEncodings(std::string_view sv)
 {
-    return validateUtf8(sv) == Utf8Validation::ContainsInvalidEncodings;
+    return validateUtf8(sv) == Utf8ValidationEnum::ContainsInvalidEncodings;
 }
 NODISCARD static constexpr bool hasErrors(std::string_view sv)
 {
-    return validateUtf8(sv) == Utf8Validation::ContainsErrors;
+    return validateUtf8(sv) == Utf8ValidationEnum::ContainsErrors;
 }
 
 static_assert(isValidUtf8("\x00")); // U+0000 (ascii 0x00)
@@ -628,7 +631,7 @@ static_assert(hasErrors("\xFE"));                     // not valid anywhere
 static_assert(hasErrors("\xFF"));                     // not valid anywhere
 } // namespace charset_detail
 
-NODISCARD Utf8Validation validateUtf8(const std::string_view sv) noexcept
+NODISCARD Utf8ValidationEnum validateUtf8(const std::string_view sv) noexcept
 {
     return charset_detail::validateUtf8(sv);
 }
@@ -796,7 +799,7 @@ namespace { // anonymous
 constexpr auto overlong = try_encode_utf8_unchecked(0x7Fu, 2);
 static_assert(overlong == "\xC1\xBF");
 static_assert(try_match_utf8(overlong.value())
-              == OptCodepoint{2, 0x7fu, CodePointError::OverLongEncoding});
+              == OptCodepoint{2, 0x7fu, CodePointErrorEnum::OverLongEncoding});
 } // namespace
 
 namespace { // anonymous
@@ -811,7 +814,7 @@ static_assert(invalid_surrogate == "\xF0\x8D\xA0\x80");
 // it's both overlong and a surrogate, but the fact that it's a surrogate is the "more important"
 // reason why it's not valid.
 static_assert(try_match_utf8(invalid_surrogate.value())
-              == OptCodepoint{4, utf16_detail::FIRST_SURROGATE, CodePointError::Utf16Surrogate});
+              == OptCodepoint{4, utf16_detail::FIRST_SURROGATE, CodePointErrorEnum::Utf16Surrogate});
 } // namespace
 
 namespace { // anonymous
@@ -819,7 +822,7 @@ static_assert(!try_encode_utf8_unchecked(MAX_UNICODE_CODEPOINT + 1, 3));
 constexpr auto too_big = try_encode_utf8_unchecked(MAX_UNICODE_CODEPOINT + 1, 4);
 static_assert(too_big == "\xF4\x90\x80\x80");
 static_assert(try_match_utf8(too_big.value())
-              == OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointError::TooLarge});
+              == OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointErrorEnum::TooLarge});
 } // namespace
 
 NODISCARD static constexpr bool utf8_check_roundtrip(const OptCodepoint ocp) noexcept
@@ -859,16 +862,16 @@ static_assert(utf8_check_roundtrip(OptCodepoint{4, thumbs_up}));
 // note: 3-byte codepoints in the range of the utf16 surrogate pairs aren't valid:
 static_assert(utf8_check_roundtrip(OptCodepoint{3, utf16_detail::FIRST_SURROGATE - 1}));
 static_assert(utf8_check_roundtrip(
-    OptCodepoint{3, utf16_detail::FIRST_SURROGATE, CodePointError::Utf16Surrogate}));
+    OptCodepoint{3, utf16_detail::FIRST_SURROGATE, CodePointErrorEnum::Utf16Surrogate}));
 static_assert(utf8_check_roundtrip(
-    OptCodepoint{3, utf16_detail::LAST_SURROGATE, CodePointError::Utf16Surrogate}));
+    OptCodepoint{3, utf16_detail::LAST_SURROGATE, CodePointErrorEnum::Utf16Surrogate}));
 static_assert(utf8_check_roundtrip(OptCodepoint{3, utf16_detail::LAST_SURROGATE + 1}));
 
 // note: 4-byte codepoints greater than U+10FFFF aren't valid:
 static_assert(
-    utf8_check_roundtrip(OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointError::TooLarge}));
+    utf8_check_roundtrip(OptCodepoint{4, MAX_UNICODE_CODEPOINT + 1, CodePointErrorEnum::TooLarge}));
 static_assert(
-    utf8_check_roundtrip(OptCodepoint{4, max_theoretical_codepoint, CodePointError::TooLarge}));
+    utf8_check_roundtrip(OptCodepoint{4, max_theoretical_codepoint, CodePointErrorEnum::TooLarge}));
 
 } // namespace conversion_detail
 

@@ -314,10 +314,12 @@ NODISCARD AnsiColor16 toAnsiColor16(AnsiColorVariant var);
     X(5, dashed, DASHED, Dashed)
 
 #define X_DECL_UL_TYPE(_n, _lower, _UPPER, _Snake) _Snake = (_n),
-enum class AnsiUnderlineStyle : uint8_t { XFOREACH_ANSI_UNDERLINE_TYPE(X_DECL_UL_TYPE) };
+enum class NODISCARD AnsiUnderlineStyleEnum : uint8_t {
+    XFOREACH_ANSI_UNDERLINE_TYPE(X_DECL_UL_TYPE)
+};
 #undef X_DECL_UL_TYPE
 
-NODISCARD inline std::string_view toStringViewLowercase(AnsiUnderlineStyle style);
+NODISCARD inline std::string_view toStringViewLowercase(AnsiUnderlineStyleEnum style);
 
 struct NODISCARD RawAnsi final
 {
@@ -327,7 +329,7 @@ struct NODISCARD RawAnsi final
 
 private:
     AnsiStyleFlags m_flags; // only bits 0..9 are used; the other 6 are reserved
-    AnsiUnderlineStyle m_underlineStyle = AnsiUnderlineStyle::None;
+    AnsiUnderlineStyleEnum m_underlineStyle = AnsiUnderlineStyleEnum::None;
 
 public:
     constexpr RawAnsi() = default;
@@ -394,7 +396,7 @@ public:
         copy.ul = var;
         return copy;
     }
-    NODISCARD constexpr RawAnsi withUnderlineStyle(const AnsiUnderlineStyle style) const
+    NODISCARD constexpr RawAnsi withUnderlineStyle(const AnsiUnderlineStyleEnum style) const
     {
         auto copy = *this;
         copy.setUnderlineStyle(style);
@@ -451,18 +453,18 @@ public:
     }
     constexpr void setUnderline()
     {
-        setUnderlineStyle(AnsiUnderlineStyle::Normal);
+        setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
     }
     constexpr void clearUnderline()
     {
         m_flags.remove(AnsiStyleFlagEnum::Underline);
-        m_underlineStyle = AnsiUnderlineStyle::None;
+        m_underlineStyle = AnsiUnderlineStyleEnum::None;
     }
 
 public:
-    constexpr void setUnderlineStyle(const AnsiUnderlineStyle style)
+    constexpr void setUnderlineStyle(const AnsiUnderlineStyleEnum style)
     {
-        if (style == AnsiUnderlineStyle::None) {
+        if (style == AnsiUnderlineStyleEnum::None) {
             clearUnderline();
         } else {
             m_flags.insert(AnsiStyleFlagEnum::Underline);
@@ -475,7 +477,7 @@ public:
     {
         return m_flags;
     }
-    NODISCARD constexpr AnsiUnderlineStyle getUnderlineStyle() const
+    NODISCARD constexpr AnsiUnderlineStyleEnum getUnderlineStyle() const
     {
         return m_underlineStyle;
     }
@@ -949,7 +951,7 @@ struct NODISCARD AnsiTokenizer final
         NODISCARD AnsiStringToken getCurrent();
 
     private:
-        enum class NODISCARD ResultEnum { KEEPGOING, STOP };
+        enum class NODISCARD ResultEnum : uint8_t { KEEPGOING, STOP };
 
         template<typename Callback>
         NODISCARD size_type skip(Callback &&check) const

@@ -279,7 +279,7 @@ void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
 {
     const auto &line = data.line.getQByteArray();
     auto parse_and_send = [this, &line]() {
-        sendToUser(SendToUserSource::NoLongerPrompted, "", true);
+        sendToUser(SendToUserSourceEnum::NoLongerPrompted, "", true);
 
         auto parse = [this, &line]() -> bool {
             const QString input = mmqt::getCommand(line);
@@ -288,7 +288,7 @@ void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
                 return parseUserCommands(input);
             } catch (const std::exception &ex) {
                 qWarning() << "Exception: " << ex.what();
-                sendToUser(SendToUserSource::FromMMapper,
+                sendToUser(SendToUserSourceEnum::FromMMapper,
                            QString::asprintf("An exception occurred: %s\n", ex.what()));
                 sendPromptToUser();
                 return false;
@@ -397,20 +397,21 @@ private:
         const SPNode *spnode = &spnodes[endpoint];
 
         auto name = deref(spnode).r.getName();
-        parser.sendToUser(SendToUserSource::FromMMapper,
+        parser.sendToUser(SendToUserSourceEnum::FromMMapper,
                           "Distance " + std::to_string(spnode->dist) + ": " + name.toStdStringUtf8()
                               + "\n");
         QString dirs;
         while (deref(spnode).parent >= 0) {
             if (&spnodes[spnode->parent] == spnode) {
-                parser.sendToUser(SendToUserSource::FromMMapper, "ERROR: loop\n");
+                parser.sendToUser(SendToUserSourceEnum::FromMMapper, "ERROR: loop\n");
                 break;
             }
             dirs.append(Mmapper2Exit::charForDir(spnode->lastdir));
             spnode = &spnodes[spnode->parent]; // spnode now points to a new node.
         }
         std::reverse(dirs.begin(), dirs.end());
-        parser.sendToUser(SendToUserSource::FromMMapper, "dirs: " + compressDirections(dirs) + "\n");
+        parser.sendToUser(SendToUserSourceEnum::FromMMapper,
+                          "dirs: " + compressDirections(dirs) + "\n");
     }
 };
 
@@ -420,13 +421,13 @@ void AbstractParser::searchCommand(const RoomFilter &f)
 {
     if (f.patternKind() == PatternKindsEnum::NONE) {
         onNewRoomSelection(SigRoomSelection{});
-        sendToUser(SendToUserSource::FromMMapper, "Rooms unselected.\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Rooms unselected.\n");
         return;
     }
 
     auto &map = m_mapData;
     auto found = map.genericFind(f);
-    sendToUser(SendToUserSource::FromMMapper,
+    sendToUser(SendToUserSourceEnum::FromMMapper,
                QString("%1 room%2 found.\n").arg(found.size()).arg((found.size() == 1) ? "" : "s"));
     const auto tmpSel = RoomSelection::createSelection(std::move(found));
     onNewRoomSelection(SigRoomSelection{tmpSel});
@@ -454,7 +455,7 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
         }
     }
 
-    sendToUser(SendToUserSource::FromMMapper,
+    sendToUser(SendToUserSourceEnum::FromMMapper,
                QString("Unexpected direction: \"%1\"\n").arg(word.toQString()));
     throw std::runtime_error("bad direction");
 }
@@ -464,7 +465,7 @@ void AbstractParser::showCommandPrefix()
     using namespace char_consts;
     const auto prefixChar = getPrefixChar();
     const auto quote = static_cast<char>((prefixChar == C_SQUOTE) ? C_DQUOTE : C_SQUOTE);
-    sendToUser(SendToUserSource::FromMMapper,
+    sendToUser(SendToUserSourceEnum::FromMMapper,
                QString("The current command prefix is: %1%2%1 (e.g. %2help)\n")
                    .arg(quote)
                    .arg(prefixChar));
@@ -484,7 +485,7 @@ bool AbstractParser::setCommandPrefix(const char prefix)
 void AbstractParser::showSyntax(const char *rest)
 {
     assert(rest != nullptr);
-    sendToUser(SendToUserSource::FromMMapper,
+    sendToUser(SendToUserSourceEnum::FromMMapper,
                QString::asprintf("Usage: %c%s\n", getPrefixChar(), (rest != nullptr) ? rest : ""));
 }
 
@@ -493,7 +494,7 @@ void AbstractParser::doSearchCommand(const StringView view)
     if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(view.getStdStringView())) {
         searchCommand(optFilter.value());
     } else {
-        sendToUser(SendToUserSource::FromMMapper, RoomFilter::parse_help);
+        sendToUser(SendToUserSourceEnum::FromMMapper, RoomFilter::parse_help);
     }
 }
 
@@ -502,7 +503,7 @@ void AbstractParser::doGetDirectionsCommand(const StringView view)
     if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(view.getStdStringView())) {
         dirsCommand(optFilter.value());
     } else {
-        sendToUser(SendToUserSource::FromMMapper, RoomFilter::parse_help);
+        sendToUser(SendToUserSourceEnum::FromMMapper, RoomFilter::parse_help);
     }
 }
 
@@ -510,12 +511,12 @@ void AbstractParser::doRemoveDoorNamesCommand()
 {
     ProgressCounter dummyPc;
     m_mapData.removeDoorNames(dummyPc);
-    sendToUser(SendToUserSource::FromMMapper, "Secret exits purged.\n");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "Secret exits purged.\n");
 }
 
 void AbstractParser::doGenerateBaseMap()
 {
-    sendToUser(SendToUserSource::FromMMapper, "Attempting to build the base map...\n");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "Attempting to build the base map...\n");
     emit m_mapData.sig_generateBaseMap();
 }
 
@@ -545,7 +546,7 @@ void AbstractParser::openVoteURL()
 {
     QDesktopServices::openUrl(QUrl(
         "https://www.mudconnect.com/cgi-bin/search.cgi?mode=mud_listing&mud=MUME+-+Multi+Users+In+Middle+Earth"));
-    sendToUser(SendToUserSource::FromMMapper, "Thank you kindly for voting!\n");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "Thank you kindly for voting!\n");
 }
 
 void AbstractParser::showHelpCommands(const bool showAbbreviations)
@@ -585,14 +586,14 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
         const auto thisLetter = rec.from[0];
         if (thisLetter != currentLetter) {
             currentLetter = thisLetter;
-            sendToUser(SendToUserSource::FromMMapper, "\n");
+            sendToUser(SendToUserSourceEnum::FromMMapper, "\n");
         }
 
         if (rec.from == rec.to) {
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        QString::asprintf("  %c%s\n", prefixChar, rec.from.c_str()));
         } else {
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        QString::asprintf("  %c%-20s -> %c%s\n",
                                          prefixChar,
                                          rec.from.c_str(),
@@ -611,7 +612,7 @@ void AbstractParser::showHeader(const QString &s)
     result += "\n";
     result += QString(s.size(), C_MINUS_SIGN);
     result += "\n";
-    sendToUser(SendToUserSource::FromMMapper, result);
+    sendToUser(SendToUserSourceEnum::FromMMapper, result);
 }
 
 void AbstractParser::showMiscHelp()
@@ -626,7 +627,7 @@ void AbstractParser::showMiscHelp()
     }();
 
     showHeader("Miscellaneous commands");
-    sendToUser(SendToUserSource::FromMMapper, helps.format(getPrefixChar()));
+    sendToUser(SendToUserSourceEnum::FromMMapper, helps.format(getPrefixChar()));
 }
 
 void AbstractParser::showHelp()
@@ -658,7 +659,7 @@ void AbstractParser::showHelp()
                      "  %1connect                   - connect to the MUD\n"
                      "  %1disconnect                - disconnect from the MUD\n");
 
-    sendToUser(SendToUserSource::FromMMapper, s.arg(getPrefixChar()));
+    sendToUser(SendToUserSourceEnum::FromMMapper, s.arg(getPrefixChar()));
 }
 
 void AbstractParser::showMumeTime()
@@ -695,7 +696,7 @@ void AbstractParser::showMumeTime()
             data += " " + moment.toMoonVisibilityCountDown() + " more ticks.\n";
         }
     }
-    sendToUser(SendToUserSource::FromMMapper, data);
+    sendToUser(SendToUserSourceEnum::FromMMapper, data);
 }
 
 void AbstractParser::showDoorCommandHelp()
@@ -705,7 +706,7 @@ void AbstractParser::showDoorCommandHelp()
     showHeader("Door commands");
     for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
         const int cmdWidth = 6;
-        sendToUser(SendToUserSource::FromMMapper,
+        sendToUser(SendToUserSourceEnum::FromMMapper,
                    QString("  %1%2 [dir] - executes \"%3 ... [dir]\"\n")
                        .arg(getPrefixChar())
                        .arg(getParserCommandName(dat).describe(), -cmdWidth)
@@ -791,7 +792,7 @@ void AbstractParser::doOfflineCharacterMove()
 
     CommandEnum direction = queue.dequeue();
     if (m_mapData.isEmpty()) {
-        sendToUser(SendToUserSource::FromMMapper, "Alas, you cannot go that way...\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Alas, you cannot go that way...\n");
         sendPromptToUser();
         return;
     }
@@ -802,7 +803,7 @@ void AbstractParser::doOfflineCharacterMove()
 
     // Note: flee and scout are mutually exclusive.
     if (flee) {
-        sendToUser(SendToUserSource::FromMMapper, "You flee head over heels.\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "You flee head over heels.\n");
         direction = getRandomDirection(); // pointless if onlyUseActualExits is true
     } else if (scout) {
         direction = queue.dequeue();
@@ -810,7 +811,7 @@ void AbstractParser::doOfflineCharacterMove()
 
     const auto here = m_mapData.getCurrentRoom();
     if (!here.exists()) {
-        sendToUser(SendToUserSource::FromMMapper, "Alas, you cannot go that way...\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Alas, you cannot go that way...\n");
         return;
     }
 
@@ -838,7 +839,7 @@ void AbstractParser::doOfflineCharacterMove()
         const auto &e = moveDir.exit;
 
         if (actualdir != direction) {
-            sendToUser(SendToUserSource::FromMMapper,
+            sendToUser(SendToUserSourceEnum::FromMMapper,
                        "You feel confused and move along randomly...\n");
             // REVISIT: remove this spam?
             qDebug() << "Randomly moving" << getLowercase(actualdir) << "instead of"
@@ -860,19 +861,19 @@ void AbstractParser::doOfflineCharacterMove()
         };
 
         if (scout) {
-            sendToUser(SendToUserSource::SimulatedOutput,
+            sendToUser(SendToUserSourceEnum::SimulatedOutput,
                        QByteArray("You quietly scout ")
                            .append(getLowercase(dir))
                            .append("wards...\n"));
             showOtherRoom();
-            sendToUser(SendToUserSource::SimulatedOutput, "\nYou stop scouting.\n");
+            sendToUser(SendToUserSourceEnum::SimulatedOutput, "\nYou stop scouting.\n");
             sendPromptToUser();
             return;
         }
 
         if (flee) {
             // REVISIT: Does MUME actually show you the direction when you flee?
-            sendToUser(SendToUserSource::SimulatedOutput,
+            sendToUser(SendToUserSourceEnum::SimulatedOutput,
                        QByteArray("You flee ").append(getLowercase(dir)).append("."));
         }
 
@@ -904,9 +905,9 @@ void AbstractParser::doOfflineCharacterMove()
     }
 
     if (!flee || scout) {
-        sendToUser(SendToUserSource::FromMMapper, "Alas, you cannot go that way...\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "Alas, you cannot go that way...\n");
     } else {
-        sendToUser(SendToUserSource::FromMMapper, "PANIC! You couldn't escape!\n");
+        sendToUser(SendToUserSourceEnum::FromMMapper, "PANIC! You couldn't escape!\n");
     }
     sendPromptToUser(here);
 }
@@ -933,7 +934,7 @@ void AbstractParser::sendRoomInfoToUser(const RoomHandle &r)
         AnsiOstream aos{os};
         displayRoom(aos, r, RoomFieldEnum::NAME | RoomFieldEnum::DESC | RoomFieldEnum::CONTENTS);
     }
-    sendToUser(SendToUserSource::SimulatedOutput, std::move(os).str());
+    sendToUser(SendToUserSourceEnum::SimulatedOutput, std::move(os).str());
 }
 
 void ParserCommon::sendRoomExitsInfoToUser(const RoomHandle &r)
@@ -947,7 +948,7 @@ void ParserCommon::sendRoomExitsInfoToUser(const RoomHandle &r)
         AnsiOstream aos{os};
         sendRoomExitsInfoToUser(aos, r);
     }
-    sendToUser(SendToUserSource::SimulatedOutput, std::move(os).str());
+    sendToUser(SendToUserSourceEnum::SimulatedOutput, std::move(os).str());
 }
 
 void ParserCommon::sendRoomExitsInfoToUser(AnsiOstream &os, const RoomHandle &r)
@@ -978,7 +979,7 @@ void ParserCommon::sendPromptToUser()
     auto &lastPrompt = m_commonData.lastPrompt;
     if (!lastPrompt.isEmpty() && isOnline()) {
         // REVISIT: Technically this is from MUME, but it's being duplicated here.
-        sendToUser(SendToUserSource::DuplicatePrompt, lastPrompt, true);
+        sendToUser(SendToUserSourceEnum::DuplicatePrompt, lastPrompt, true);
         return;
     }
 
@@ -1014,12 +1015,12 @@ void ParserCommon::sendPromptToUser(const char light, const char terrain)
     prompt += light;
     prompt += terrain;
     prompt += ">";
-    sendToUser(SendToUserSource::SimulatedPrompt, prompt, true);
+    sendToUser(SendToUserSourceEnum::SimulatedPrompt, prompt, true);
 }
 
 void AbstractParser::executeMudCommand(const QString &command)
 {
-    sendToUser(SendToUserSource::FromMMapper, "[" + command + "]\n");
+    sendToUser(SendToUserSourceEnum::FromMMapper, "[" + command + "]\n");
 
     if (isOnline()) {
         sendToMud(command + "\n");
@@ -1053,12 +1054,12 @@ void AbstractParser::eval(const std::string_view name,
 
     // TODO: output directly to user's ostream instead of returning a string.
     auto result = processSyntax(completeSyntax, thisCommand, input);
-    sendToUser(SendToUserSource::FromMMapper, result);
+    sendToUser(SendToUserSourceEnum::FromMMapper, result);
 }
 
 void AbstractParser::timersUpdate(const std::string &text)
 {
-    sendToUser(SendToUserSource::FromMMapper, text);
+    sendToUser(SendToUserSourceEnum::FromMMapper, text);
     sendPromptToUser();
 }
 

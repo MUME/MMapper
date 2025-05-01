@@ -51,7 +51,7 @@ static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
 NODISCARD RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
 NODISCARD RoadIndexMaskEnum getRoadIndex(const RawRoom &room);
 
-enum class NODISCARD RoadTagEnum { ROAD, TRAIL };
+enum class NODISCARD RoadTagEnum : uint8_t { ROAD, TRAIL };
 template<RoadTagEnum Tag>
 struct NODISCARD TaggedRoadIndex final
 {

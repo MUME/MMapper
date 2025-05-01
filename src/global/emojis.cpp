@@ -353,7 +353,7 @@ NODISCARD Emojis &getEmojis()
     return g_emojis;
 }
 
-enum class NODISCARD CodePointType : uint8_t {
+enum class NODISCARD CodePointTypeEnum : uint8_t {
     Valid,
     Surrogate,
     Noncharacter,
@@ -361,16 +361,16 @@ enum class NODISCARD CodePointType : uint8_t {
     OutOfBounds,
 };
 
-NODISCARD constexpr CodePointType classifyCodepoint(const char32_t codepoint)
+NODISCARD constexpr CodePointTypeEnum classifyCodepoint(const char32_t codepoint)
 {
 #define X_EXCLUDE_RANGE(_lo, _hi, _reason) \
     static_assert((_lo) < (_hi)); \
     if (isClamped<char32_t>(codepoint, (_lo), (_hi))) { \
-        return (CodePointType::_reason); \
+        return (CodePointTypeEnum::_reason); \
     }
 
     if (codepoint > MAX_UNICODE_CODEPOINT) {
-        return CodePointType::OutOfBounds;
+        return CodePointTypeEnum::OutOfBounds;
     }
 
     // https://en.wikipedia.org/wiki/Universal_Character_Set_characters#Surrogates
@@ -385,7 +385,7 @@ NODISCARD constexpr CodePointType classifyCodepoint(const char32_t codepoint)
 
     if ((codepoint & 0xFFFFu) >= 0xFFFEu && isClamped(codepoint >> 16u, 0u, 16u)) {
         // U+xxXXFE and U+xxXXFF
-        return CodePointType::Noncharacter;
+        return CodePointTypeEnum::Noncharacter;
     }
     switch (codepoint >> 16u) {
     case 0x0u:
@@ -405,42 +405,42 @@ NODISCARD constexpr CodePointType classifyCodepoint(const char32_t codepoint)
 
     case 0xFu:
     case 0x10u:
-        return CodePointType::PrivateUse;
+        return CodePointTypeEnum::PrivateUse;
 
     default:
         break;
     }
 
-    return CodePointType::Valid;
+    return CodePointTypeEnum::Valid;
 #undef X_EXCLUDE_RANGE
 }
 
 NODISCARD constexpr bool isValidUnicode(const char32_t codepoint)
 {
-    return classifyCodepoint(codepoint) == CodePointType::Valid;
+    return classifyCodepoint(codepoint) == CodePointTypeEnum::Valid;
 }
 
 static_assert(isValidUnicode(0x0u));
 static_assert(isValidUnicode(char_consts::thumbs_up));
-static_assert(classifyCodepoint(INVALID_CODEPOINT) == CodePointType::OutOfBounds);
+static_assert(classifyCodepoint(INVALID_CODEPOINT) == CodePointTypeEnum::OutOfBounds);
 
-static_assert(classifyCodepoint(0xD800u) == CodePointType::Surrogate);
-static_assert(classifyCodepoint(0xDFFFu) == CodePointType::Surrogate);
+static_assert(classifyCodepoint(0xD800u) == CodePointTypeEnum::Surrogate);
+static_assert(classifyCodepoint(0xDFFFu) == CodePointTypeEnum::Surrogate);
 
-static_assert(classifyCodepoint(0xE000u) == CodePointType::PrivateUse);
-static_assert(classifyCodepoint(0xEFFFu) == CodePointType::PrivateUse);
+static_assert(classifyCodepoint(0xE000u) == CodePointTypeEnum::PrivateUse);
+static_assert(classifyCodepoint(0xEFFFu) == CodePointTypeEnum::PrivateUse);
 
-static_assert(classifyCodepoint(0xF000u) == CodePointType::PrivateUse);
-static_assert(classifyCodepoint(0xF8FFu) == CodePointType::PrivateUse);
+static_assert(classifyCodepoint(0xF000u) == CodePointTypeEnum::PrivateUse);
+static_assert(classifyCodepoint(0xF8FFu) == CodePointTypeEnum::PrivateUse);
 
 static_assert(isValidUnicode(0xFDCFu));
 static_assert(isValidUnicode(0xFE0Fu));
-static_assert(classifyCodepoint(0xFDD0u) == CodePointType::Noncharacter);
-static_assert(classifyCodepoint(0xFFFFu) == CodePointType::Noncharacter);
+static_assert(classifyCodepoint(0xFDD0u) == CodePointTypeEnum::Noncharacter);
+static_assert(classifyCodepoint(0xFFFFu) == CodePointTypeEnum::Noncharacter);
 static_assert(isValidUnicode(0x10000u));
 
-static_assert(classifyCodepoint(0x10FFFDu) == CodePointType::PrivateUse);
-static_assert(classifyCodepoint(0x10FFFFu) == CodePointType::Noncharacter);
+static_assert(classifyCodepoint(0x10FFFDu) == CodePointTypeEnum::PrivateUse);
+static_assert(classifyCodepoint(0x10FFFFu) == CodePointTypeEnum::Noncharacter);
 
 NODISCARD std::optional<char32_t> tryGetOneCodepointHexCode(const QString &hex)
 {

@@ -36,14 +36,14 @@ void PaletteManager::init(QWidget &widget,
     m_initialized = true;
 }
 
-void PaletteManager::setFocusState(QWidget &widget, const FocusState focusState)
+void PaletteManager::setFocusState(QWidget &widget, const FocusStateEnum focusState)
 {
     assert(m_initialized);
     switch (focusState) {
-    case FocusState::Focused:
+    case FocusStateEnum::Focused:
         widget.setPalette(m_focused);
         break;
-    case FocusState::Unfocused:
+    case FocusStateEnum::Unfocused:
         widget.setPalette(m_unfocused);
         break;
     }

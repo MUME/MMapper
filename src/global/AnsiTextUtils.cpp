@@ -299,7 +299,7 @@ void AnsiColorState::receive_itu(const AnsiItuColorCodes &codes)
         if (codes.size() == 2) {
 #define X_CASE(_n, _lower, _UPPER, _Snake) \
     case (_n): \
-        m_raw.setUnderlineStyle(AnsiUnderlineStyle::_Snake); \
+        m_raw.setUnderlineStyle(AnsiUnderlineStyleEnum::_Snake); \
         return;
             switch (codes[1]) {
                 XFOREACH_ANSI_UNDERLINE_TYPE(X_CASE)
@@ -648,13 +648,13 @@ private:
                     XFOREACH_ANSI_STYLE_EXCEPT_UNDERLINE(X_CASE)
                 case AnsiStyleFlagEnum::Underline:
                     switch (after.getUnderlineStyle()) {
-                    case AnsiUnderlineStyle::None:
+                    case AnsiUnderlineStyleEnum::None:
                         break;
-                    case AnsiUnderlineStyle::Normal:
-                    case AnsiUnderlineStyle::Double:
-                    case AnsiUnderlineStyle::Curly:
-                    case AnsiUnderlineStyle::Dotted:
-                    case AnsiUnderlineStyle::Dashed:
+                    case AnsiUnderlineStyleEnum::Normal:
+                    case AnsiUnderlineStyleEnum::Double:
+                    case AnsiUnderlineStyleEnum::Curly:
+                    case AnsiUnderlineStyleEnum::Dotted:
+                    case AnsiUnderlineStyleEnum::Dashed:
                         result.add_code(ANSI_UNDERLINE);
                         if (supportsItuUnderline()) {
                             result.add_code(static_cast<uint8_t>(after.getUnderlineStyle()), true);
@@ -1564,14 +1564,14 @@ std::ostream &to_stream(std::ostream &os, const RawAnsi &raw)
         maybe_space();
         os << "with ";
         os << raw.ul;
-        if (underlineStyle != AnsiUnderlineStyle::None
-            && underlineStyle != AnsiUnderlineStyle::Normal) {
+        if (underlineStyle != AnsiUnderlineStyleEnum::None
+            && underlineStyle != AnsiUnderlineStyleEnum::Normal) {
             os << C_SPACE;
             os << toStringViewLowercase(underlineStyle);
         }
         os << " underline";
-    } else if (underlineStyle != AnsiUnderlineStyle::None
-               && underlineStyle != AnsiUnderlineStyle::Normal) {
+    } else if (underlineStyle != AnsiUnderlineStyleEnum::None
+               && underlineStyle != AnsiUnderlineStyleEnum::Normal) {
         maybe_space();
         os << "with ";
         os << toStringViewLowercase(underlineStyle);
@@ -2123,10 +2123,10 @@ std::string strip_ansi(std::string s)
     return std::move(oss).str();
 }
 
-std::string_view toStringViewLowercase(const AnsiUnderlineStyle style)
+std::string_view toStringViewLowercase(const AnsiUnderlineStyleEnum style)
 {
 #define X_CASE(_n, _lower, _UPPER, _Snake) \
-    case AnsiUnderlineStyle::_Snake: \
+    case AnsiUnderlineStyleEnum::_Snake: \
         return #_lower;
 
     switch (style) {
@@ -2176,20 +2176,20 @@ void test_itu()
         // round-trip testing with underline types
 #define X_CASE(_n, _lower, _UPPER, _Snake) \
     do { \
-        const bool isNone = (AnsiUnderlineStyle::_Snake) == AnsiUnderlineStyle::None; \
+        const bool isNone = (AnsiUnderlineStyleEnum::_Snake) == AnsiUnderlineStyleEnum::None; \
         const auto copy = []() { \
             auto tmp = ul; \
-            tmp.setUnderlineStyle(AnsiUnderlineStyle::_Snake); \
+            tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::_Snake); \
             return tmp; \
         }(); \
-        TEST_ASSERT(copy.getUnderlineStyle() == AnsiUnderlineStyle::_Snake); \
+        TEST_ASSERT(copy.getUnderlineStyle() == AnsiUnderlineStyleEnum::_Snake); \
         const auto str = ansi_string(ANSI_COLOR_SUPPORT_ALL, copy); \
         const auto opt = mmqt::parseAnsiColor({}, QString::fromUtf8(str.c_str())); \
         TEST_ASSERT(opt.has_value()); \
         TEST_ASSERT(opt == copy); \
         TEST_ASSERT(!isNone == opt.value().hasUnderline()); \
         TEST_ASSERT(opt.value().hasUnderlineColor()); \
-        TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyle::_Snake); \
+        TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::_Snake); \
     } while (false);
         XFOREACH_ANSI_UNDERLINE_TYPE(X_CASE)
 #undef X_CASE
@@ -2202,7 +2202,7 @@ void test_itu()
         // and Itu underline style, all in the same code.
         const auto kitchenSink = []() {
             auto tmp = ul;
-            tmp.setUnderlineStyle(AnsiUnderlineStyle::Curly);
+            tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Curly);
             tmp.fg = AnsiColorVariant{AnsiColor16Enum::RED};
             tmp.bg = AnsiColorVariant{AnsiColor256{42}};
             return tmp;
@@ -2221,7 +2221,7 @@ void test_itu()
         {
             const auto expect = []() {
                 RawAnsi tmp;
-                tmp.setUnderlineStyle(AnsiUnderlineStyle::Normal);
+                tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
                 tmp.fg = AnsiColorVariant(AnsiColor16Enum::red);
                 tmp.bg = AnsiColorVariant(AnsiColor16Enum::cyan);
                 return tmp;
@@ -2237,13 +2237,13 @@ void test_itu()
             TEST_ASSERT(opt != kitchenSink);
             TEST_ASSERT(opt == expect);
             TEST_ASSERT(opt.value().hasUnderline());
-            TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyle::Normal);
+            TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::Normal);
             TEST_ASSERT(!opt.value().hasUnderlineColor()); // NOTE: underline color requires ansi256
         }
         {
             const auto expect = []() {
                 RawAnsi tmp;
-                tmp.setUnderlineStyle(AnsiUnderlineStyle::Normal);
+                tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
                 tmp.fg = AnsiColorVariant(AnsiColor16Enum::red);
                 tmp.bg = AnsiColorVariant{AnsiColor256{42}};
                 tmp.ul = AnsiColorVariant{AnsiColor256{89}};
@@ -2260,7 +2260,7 @@ void test_itu()
             TEST_ASSERT(opt != kitchenSink);
             TEST_ASSERT(opt == expect);
             TEST_ASSERT(opt.value().hasUnderline());
-            TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyle::Normal);
+            TEST_ASSERT(opt.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::Normal);
             TEST_ASSERT(opt.value().hasUnderlineColor());
         }
 
@@ -2268,7 +2268,7 @@ void test_itu()
             const auto a = mmqt::parseAnsiColor({}, "\033[4m");
             TEST_ASSERT(a.has_value());
             TEST_ASSERT(a.value().hasUnderline());
-            TEST_ASSERT(a.value().getUnderlineStyle() == AnsiUnderlineStyle::Normal);
+            TEST_ASSERT(a.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::Normal);
             {
                 const auto b = mmqt::parseAnsiColor({}, "\033[4:1m");
                 TEST_ASSERT(a == b);
@@ -2279,7 +2279,7 @@ void test_itu()
                 TEST_ASSERT(b.has_value());
                 TEST_ASSERT(b == RawAnsi{});
                 TEST_ASSERT(!b.value().hasUnderline());
-                TEST_ASSERT(b.value().getUnderlineStyle() == AnsiUnderlineStyle::None);
+                TEST_ASSERT(b.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::None);
                 TEST_ASSERT(a != b);
                 TEST_ASSERT(b == c);
             }
@@ -2287,13 +2287,13 @@ void test_itu()
                 const auto b = mmqt::parseAnsiColor(a.value(), "\033[4:2m");
                 TEST_ASSERT(b.has_value());
                 TEST_ASSERT(b.value().hasUnderline());
-                TEST_ASSERT(b.value().getUnderlineStyle() == AnsiUnderlineStyle::Double);
+                TEST_ASSERT(b.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::Double);
                 TEST_ASSERT(a != b);
 
                 const auto c = mmqt::parseAnsiColor(b.value(), "\033[4:3m");
                 TEST_ASSERT(c.has_value());
                 TEST_ASSERT(c.value().hasUnderline());
-                TEST_ASSERT(c.value().getUnderlineStyle() == AnsiUnderlineStyle::Curly);
+                TEST_ASSERT(c.value().getUnderlineStyle() == AnsiUnderlineStyleEnum::Curly);
                 TEST_ASSERT(a != c);
                 TEST_ASSERT(b != c);
             }
@@ -2316,7 +2316,7 @@ void test_ansi_parse()
     }
     {
         RawAnsi expect = getRawAnsi(AnsiColor16Enum::red).withBold();
-        expect.setUnderlineStyle(AnsiUnderlineStyle::Curly);
+        expect.setUnderlineStyle(AnsiUnderlineStyleEnum::Curly);
         auto tmp = ansi_parse({}, "\033[31;4:3;1m");
         TEST_ASSERT(tmp.has_value());
         TEST_ASSERT(tmp.value() == expect);
