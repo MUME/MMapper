@@ -874,7 +874,7 @@ void AbstractParser::doOfflineCharacterMove()
         if (flee) {
             // REVISIT: Does MUME actually show you the direction when you flee?
             sendToUser(SendToUserSourceEnum::SimulatedOutput,
-                       QByteArray("You flee ").append(getLowercase(dir)).append("."));
+                       QByteArray("You flee ").append(getLowercase(dir)).append(".\n"));
         }
 
         showOtherRoom();
