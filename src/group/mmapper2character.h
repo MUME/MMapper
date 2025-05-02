@@ -78,6 +78,7 @@ Q_DECLARE_METATYPE(CharacterTypeEnum)
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
 #define XFOREACH_CHARACTER_AFFECT(X) \
     X(RIDE, ride, ride, "Riding") \
+    X(SANCTUARY, sanctuary, Sanctuary, "Sanctuary") \
     X(BLIND, blind, Blind, "Blind") \
     X(BASHED, bashed, Bashed, "Bashed") \
     X(SLEPT, slept, Slept, "Slept") \
