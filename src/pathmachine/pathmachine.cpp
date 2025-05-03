@@ -292,24 +292,6 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
 
     ChangeList changes;
 
-    // Update the exit from the previous room to the current room
-    const CommandEnum move = event.getMoveType();
-    if (isDirectionNESWUD(move)) {
-        if (const auto room = getMostLikelyRoom()) {
-            const auto dir = getDirection(move);
-            const auto &ex = room.getExit(dir);
-            const auto to = perhaps.getId();
-            if (!ex.containsOut(to)) {
-                const auto from = room.getId();
-                changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
-                                                                           from,
-                                                                           dir,
-                                                                           to,
-                                                                           WaysEnum::OneWay}});
-            }
-        }
-    }
-
     // Update most likely room with player's current location
     setMostLikelyRoom(perhaps.getId());
 
