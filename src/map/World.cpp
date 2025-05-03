@@ -404,7 +404,14 @@ void World::setRoom(const RoomId id, const RawRoom &room)
         m_spatialDb.add(id, coord);
     }
 
-    assert(deref(getRoom(id)) == room);
+    if constexpr (IS_DEBUG_BUILD) {
+        const auto &here = deref(getRoom(id));
+        assert(satisfiesInvariants(here));
+
+        auto copy = room;
+        enforceInvariants(copy);
+        assert(here == copy);
+    }
 }
 
 bool World::hasOneWayExit_inconsistent(const RoomId from,
@@ -603,31 +610,20 @@ void World::checkConsistency(ProgressCounter &counter) const
     auto checkExitFlags = [this](const RoomId id, const ExitDirEnum dir) {
         const auto exitFlags = getExitFlags(id, dir);
         const auto doorFlags = getDoorFlags(id, dir);
-        MAYBE_UNUSED const auto &doorName = getDoorName(id, dir);
-        MAYBE_UNUSED const auto &outbound = getOutgoing(id, dir);
 
         sanityCheckFlags(doorFlags);
         sanityCheckFlags(exitFlags);
 
-        const bool hasExits = !m_rooms.getExitOutgoing(id, dir).empty();
-        const bool hasDoorFlags = !m_rooms.getExitDoorFlags(id, dir).empty();
         const bool hasDoorName = !m_rooms.getExitDoorName(id, dir).empty();
-        const bool hasActualDoorFlag = exitFlags.isDoor();
         if (hasDoorName) {
-            assert(sanitizer::isSanitizedOneLine(
-                m_rooms.getExitDoorName(id, dir).getStdStringViewUtf8()));
+            if (!sanitizer::isSanitizedOneLine(
+                    m_rooms.getExitDoorName(id, dir).getStdStringViewUtf8())) {
+                throw MapConsistencyError("door name fails sanity check");
+            }
         }
 
-        const bool shouldHaveExitFlag = hasExits;
-        const bool shouldHaveDoorFlag = shouldHaveExitFlag
-                                        && (hasActualDoorFlag || hasDoorFlags || hasDoorName);
-
-        if (shouldHaveExitFlag != exitFlags.contains(ExitFlagEnum::EXIT)) {
-            throw MapConsistencyError("room was missing exit flag");
-        }
-
-        if (shouldHaveDoorFlag != exitFlags.contains(ExitFlagEnum::DOOR)) {
-            throw MapConsistencyError("room was missing door flag");
+        if (!satisfiesInvariants(m_rooms.getRawRoomRef(id).getExit(dir))) {
+            throw MapConsistencyError("room exit flags do not satisfy invariants");
         }
     };
 
@@ -912,7 +908,7 @@ void World::setRoomExitFields(const RoomId id, const ExitDirEnum dir, const Exit
     m_rooms.setExitDoorFlags(id, dir, fields.doorFlags);
     m_rooms.setExitExitFlags(id, dir, fields.exitFlags);
     m_rooms.setExitDoorName(id, dir, fields.doorName);
-    m_rooms.updateExitFlags(id, dir);
+    m_rooms.enforceInvariants(id, dir);
 }
 
 RawExit World::getRawExit(const RoomId id, const ExitDirEnum dir) const
@@ -971,7 +967,7 @@ void World::merge_update(RawRoom &target, const RawRoom &source)
     // Combine data if target room is up to date
     // REVISIT: what about UNKNOWN?
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        if (!source.hasExit(dir)) {
+        if (source.hasTrivialExit(dir)) {
             continue;
         }
 
@@ -1014,7 +1010,7 @@ void World::copy_exits(const RoomId targetId, const RawRoom &source)
 
         // If we added an exit, we need to make sure the flag exists;
         // REVISIT: should addExit() itself update the EXIT flag?
-        m_rooms.updateExitFlags(source.id, dir);
+        m_rooms.enforceInvariants(source.id, dir);
     }
 }
 
@@ -1074,13 +1070,14 @@ void World::setExit(const RoomId id, const ExitDirEnum dir, const RawExit &input
     m_rooms.setExitDoorName(id, dir, input.fields.doorName);
     m_rooms.setExitOutgoing(id, dir, input.outgoing);
     m_rooms.setExitIncoming(id, dir, input.incoming);
-    m_rooms.updateExitFlags(id, dir);
+    m_rooms.enforceInvariants(id, dir);
 }
 
 void World::setRoom_lowlevel(const RoomId id, const RawRoom &input)
 {
     assert(id == input.id);
     m_rooms.getRawRoomRef(id) = input;
+    m_rooms.enforceInvariants(id);
 }
 
 // for addRoom()
@@ -1102,10 +1099,17 @@ void World::initRoom(const RawRoom &input)
         m_serverIds.set(input.server_id, id);
     }
 
-    assert(deref(getRoom(id)) == input);
+    if constexpr (IS_DEBUG_BUILD) {
+        const auto &here = deref(getRoom(id));
+        assert(satisfiesInvariants(here));
+
+        auto copy = input;
+        enforceInvariants(copy);
+        assert(here == copy);
+    }
 }
 
-World World::init(ProgressCounter &counter, std::vector<ExternalRawRoom> ext_rooms)
+World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &ext_rooms)
 {
     DECL_TIMER(t, __FUNCTION__);
 
@@ -1161,7 +1165,7 @@ World World::init(ProgressCounter &counter, std::vector<ExternalRawRoom> ext_roo
             counter.setNewTask(ProgressMsg{"updating exit flags"}, rooms.size());
             for (const auto &room : rooms) {
                 for (const ExitDirEnum dir : ALL_EXITS7) {
-                    w.m_rooms.updateExitFlags(room.id, dir);
+                    w.m_rooms.enforceInvariants(room.id, dir);
                 }
                 counter.step();
             }
@@ -1469,6 +1473,7 @@ void World::apply(ProgressCounter &, const exit_change_types::SetExitFlags &chan
             e.fields.exitFlags &= ~change.flags;
             break;
         }
+        enforceInvariants(e);
     });
 }
 
@@ -1487,6 +1492,7 @@ void World::apply(ProgressCounter &, const exit_change_types::SetDoorFlags &chan
             e.fields.doorFlags &= ~change.flags;
             break;
         }
+        enforceInvariants(e);
     });
 }
 
@@ -1507,7 +1513,7 @@ void World::apply(ProgressCounter &, const exit_change_types::ModifyExitFlags &c
         DoorName doorName = m_rooms.getExitDoorName(id, dir);
         applyDoorName(doorName, change.mode, change.field.getDoorName());
         m_rooms.setExitDoorName(id, dir, doorName);
-        m_rooms.updateExitFlags(id, dir);
+        m_rooms.enforceInvariants(id, dir);
         return;
     }
     case ExitFieldEnum::EXIT_FLAGS: {
@@ -1520,7 +1526,7 @@ void World::apply(ProgressCounter &, const exit_change_types::ModifyExitFlags &c
         auto flags = m_rooms.getExitDoorFlags(id, dir);
         applyDoorFlags(flags, change.mode, change.field.getDoorFlags());
         m_rooms.setExitDoorFlags(id, dir, flags);
-        m_rooms.updateExitFlags(id, dir);
+        m_rooms.enforceInvariants(id, dir);
         return;
     }
     default:
@@ -1569,12 +1575,14 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
     if (eventExitsFlags.isValid()) {
         eventExitsFlags.removeValid();
         auto &exits = room.exits;
+
         if (true /*room.upToDate*/) {
             // Append exit flags if target room is up to date
             for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 RawExit &roomExit = exits[dir];
                 const ExitFlags roomExitFlags = roomExit.fields.exitFlags;
-                const ExitFlags eventExitFlags = eventExitsFlags.get(dir);
+                const ExitFlags eventExitFlags = eventExitsFlags.getWithUnmappedFlag(dir);
+
                 if (eventExitFlags ^ roomExitFlags) {
                     roomExit.fields.exitFlags = (roomExitFlags | eventExitFlags);
                 }
@@ -1583,7 +1591,7 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
             // Replace exit flags if target room is not up to date
             for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 RawExit &roomExit = exits[dir];
-                ExitFlags eventExitFlags = eventExitsFlags.get(dir);
+                ExitFlags eventExitFlags = eventExitsFlags.getWithUnmappedFlag(dir);
                 // ... but take care of the following exceptions
 
                 // REVISIT: DOOR and EXIT flags are automatic now, so this may have no effect.
@@ -1894,6 +1902,9 @@ void World::post_change_updates(ProgressCounter &pc)
 {
     if (needsBoundsUpdate()) {
         updateBounds(pc);
+    }
+    if constexpr (IS_DEBUG_BUILD) {
+        checkConsistency(pc);
     }
 }
 

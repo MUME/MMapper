@@ -129,7 +129,7 @@ void GraphicsPage::slot_loadConfig()
 
     ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
     ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());
-    ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);
+    ui->drawNotMappedExits->setChecked(settings.showUnmappedExits.get());
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
 
     ui->resourceLineEdit->setText(settings.resourcesDirectory);
@@ -165,7 +165,7 @@ void GraphicsPage::slot_drawNeedsUpdateStateChanged(int /*unused*/)
 
 void GraphicsPage::slot_drawNotMappedExitsStateChanged(int /*unused*/)
 {
-    setConfig().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
+    setConfig().canvas.showUnmappedExits.set(ui->drawNotMappedExits->isChecked());
     graphicsSettingsChanged();
 }
 

@@ -231,7 +231,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
-    if (auto &ex = m_exitListItems[ExitFlagEnum::EXIT]) {
+    if (auto &ex = m_exitListItems[ExitFlagEnum::UNMAPPED]) {
         ex->setFlags(ex->flags() & ~(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled));
     }
 
@@ -668,6 +668,15 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
             doorNameLineEdit->clear();
             doorNameLineEdit->setEnabled(false);
             doorFlagsListWidget->setEnabled(false);
+        }
+
+        // Exit flag can only be removed if there are no connections
+        if (auto &ex = m_exitListItems[ExitFlagEnum::EXIT]) {
+            if (e.outIsEmpty()) {
+                ex->setFlags(ex->flags() | CHECKABLE_AND_ENABLED);
+            } else {
+                ex->setFlags(ex->flags() & ~CHECKABLE_AND_ENABLED);
+            }
         }
 
         const bool shouldEnableDoorCheck = !e.exitIsDoor()

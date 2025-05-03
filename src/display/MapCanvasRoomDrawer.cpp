@@ -71,7 +71,7 @@ NODISCARD static VisitRoomOptions getVisitRoomOptions()
     result.canvasColors = static_cast<const Configuration::CanvasNamedColorOptions &>(canvas).clone();
     result.colorSettings
         = static_cast<const Configuration::NamedColorOptions &>(config.colorSettings).clone();
-    result.drawNotMappedExits = canvas.drawNotMappedExits;
+    result.drawNotMappedExits = canvas.showUnmappedExits.get();
     return result;
 }
 
@@ -297,8 +297,7 @@ static void visitRoom(const RoomHandle &room,
         // FIXME: This requires a map update.
         // TODO: make "not mapped" exits a separate mesh;
         // except what should we do for the "else" case?
-        if (isExit && visitRoomOptions.drawNotMappedExits
-            && exit.outIsEmpty()) { // zero outgoing connections
+        if (visitRoomOptions.drawNotMappedExits && exit.exitIsUnmapped()) {
             callbacks.visitWall(room,
                                 dir,
                                 LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
@@ -349,19 +348,16 @@ static void visitRoom(const RoomHandle &room,
     for (const ExitDirEnum dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
         const auto &exit = room.getExit(dir);
         const auto &flags = exit.getExitFlags();
-        if (!flags.isExit()) {
-            continue;
-        }
-
         const bool isClimb = flags.isClimb();
 
-        // FIXME: This requires a map update.
-        if (visitRoomOptions.drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
+        if (visitRoomOptions.drawNotMappedExits && flags.isUnmapped()) {
             callbacks.visitWall(room,
                                 dir,
                                 LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
                                 WallTypeEnum::DOTTED,
                                 isClimb);
+            continue;
+        } else if (!flags.isExit()) {
             continue;
         }
 

@@ -67,6 +67,7 @@ public:
     void setExitOutgoing(const RoomId id, const ExitDirEnum dir, const TinyRoomIdSet &set)
     {
         getRawRoomRef(id).getExit(dir).outgoing = set;
+        enforceInvariants(id, dir);
     }
     NODISCARD const TinyRoomIdSet &getExitOutgoing(const RoomId id, const ExitDirEnum dir) const
     {
@@ -84,9 +85,15 @@ public:
     }
 
 public:
-    void updateDoorFlags(RoomId id, ExitDirEnum dir);
-    void updateExitFlags(RoomId id, ExitDirEnum dir);
     void setExitFlags_safe(RoomId id, ExitDirEnum dir, ExitFlags input_flags);
+
+public:
+    void enforceInvariants(RoomId id, ExitDirEnum dir);
+    void enforceInvariants(RoomId id);
+
+public:
+    NODISCARD bool satisfiesInvariants(RoomId id, ExitDirEnum dir) const;
+    NODISCARD bool satisfiesInvariants(RoomId id) const;
 
 public:
     NODISCARD ExitFlags getExitFlags(const RoomId id, const ExitDirEnum dir) const
@@ -102,7 +109,7 @@ public:
         auto &data = getRawRoomRef(id).getExit(dir);
         (isOut ? data.outgoing : data.incoming) = set;
         if (isOut) {
-            updateExitFlags(id, dir);
+            enforceInvariants(id, dir);
         }
     }
 

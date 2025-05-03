@@ -189,64 +189,65 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
     {
         size_t addedDoorFlag = 0;
         size_t addedExitFlag = 0;
+        size_t addedUnmappedFlag = 0; // probably won't ever happen
+
         size_t removedDoorFlag = 0;
         size_t removedExitFlag = 0;
+        size_t removedUnmappedFlag = 0; // probably won't ever happen
 
         size_t removedDoorName = 0;
         size_t removedDoorFlagsExt = 0;
     };
-
     ExitRepairStats exitRepairStats;
     auto checkAndRepairFlags = [&output, &exitRepairStats](ExternalRawRoom &r,
                                                            const ExitDirEnum dir) {
         auto &exit = r.exits[dir];
-        auto &set = exit.getOutgoingSet();
-
-        auto &fields = exit.fields;
-        auto &exitFlags = fields.exitFlags;
-
-        const bool hasExits = !set.empty();
-        const bool hasDoorFlags = !fields.doorFlags.empty();
-        const bool hasDoorName = !fields.doorName.empty();
-        const bool hasActualDoorFlag = exitFlags.contains(ExitFlagEnum::DOOR);
-
-        const bool shouldHaveExitFlag = hasExits;
-        const bool shouldHaveDoorFlag = shouldHaveExitFlag
-                                        && (hasActualDoorFlag || hasDoorFlags || hasDoorName);
-
-        const bool hasExitFlag = exitFlags.contains(ExitFlagEnum::EXIT);
-        if (shouldHaveExitFlag && !hasExitFlag) {
-            exitFlags.insert(ExitFlagEnum::EXIT);
-            exitRepairStats.addedExitFlag += 1;
-        } else if (!shouldHaveExitFlag && hasExitFlag) {
-            exitFlags.remove(ExitFlagEnum::EXIT);
-            exitRepairStats.removedExitFlag += 1;
+        if (satisfiesInvariants(exit)) {
+            return;
         }
 
-        if (shouldHaveDoorFlag && !hasActualDoorFlag) {
-            exitFlags.insert(ExitFlagEnum::DOOR);
-            exitRepairStats.addedDoorFlag += 1;
+        const auto oldExitFlags = exit.getExitFlags();
+        const auto oldDoorFlags = exit.getDoorFlags();
+        const auto oldDoorName = exit.getDoorName();
+        const auto oldHadDoorName = exit.hasDoorName();
+
+        enforceInvariants(exit);
+
+        if (const bool isExit = exit.exitIsExit(), wasExit = oldExitFlags.isExit();
+            isExit != wasExit) {
+            if (isExit) {
+                ++exitRepairStats.addedExitFlag;
+            } else {
+                ++exitRepairStats.removedExitFlag;
+            }
         }
-        if (!shouldHaveDoorFlag) {
-            if (hasActualDoorFlag) {
-                exitFlags.remove(ExitFlagEnum::DOOR);
-                exitRepairStats.removedDoorFlag += 1;
-            }
 
-            if (hasDoorName) {
-                const auto &doorName = fields.doorName.getStdStringViewUtf8();
-                if (!doorName.empty() && (doorName.size() > 1 || doorName.back() != C_NEWLINE)) {
-                    output.removedDoors.emplace_back(
-                        RemovedDoorName{r.getId(), dir, fields.doorName});
-                }
-                fields.doorName = {};
-                exitRepairStats.removedDoorName += 1;
+        if (const bool isDoor = exit.exitIsDoor(), wasDoor = oldExitFlags.isDoor();
+            isDoor != wasDoor) {
+            if (isDoor) {
+                ++exitRepairStats.addedDoorFlag;
+            } else {
+                ++exitRepairStats.removedDoorFlag;
             }
+        }
 
-            if (hasDoorFlags) {
-                fields.doorFlags = {};
-                exitRepairStats.removedDoorFlagsExt += 1;
+        if (const bool isUnmapped = exit.exitIsUnmapped(), wasUnmapped = oldExitFlags.isUnmapped();
+            isUnmapped != wasUnmapped) {
+            // These probably won't ever happen.
+            if (isUnmapped) {
+                ++exitRepairStats.addedUnmappedFlag;
+            } else {
+                ++exitRepairStats.removedUnmappedFlag;
             }
+        }
+
+        if (exit.getDoorFlags().empty() && !oldDoorFlags.empty()) {
+            ++exitRepairStats.removedDoorFlagsExt;
+        }
+
+        if (!exit.hasDoorName() != oldHadDoorName) {
+            ++exitRepairStats.removedDoorName;
+            output.removedDoors.emplace_back(RemovedDoorName{r.getId(), dir, oldDoorName});
         }
     };
 
@@ -315,8 +316,10 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
             };
             printIfNonzero(exitRepairStats.addedExitFlag, "Added", "missing EXIT flag");
             printIfNonzero(exitRepairStats.addedDoorFlag, "Added", "missing DOOR flag");
+            printIfNonzero(exitRepairStats.addedUnmappedFlag, "Added", "missing UNMAPPED flag");
             printIfNonzero(exitRepairStats.removedExitFlag, "Removed", "invalid EXIT flag");
             printIfNonzero(exitRepairStats.removedDoorFlag, "Removed", "invalid DOOR flag");
+            printIfNonzero(exitRepairStats.removedUnmappedFlag, "Removed", "invalid UNMAPPED flag");
             printIfNonzero(exitRepairStats.removedDoorFlagsExt,
                            "Removed",
                            "invalid extended door flag");

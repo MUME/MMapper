@@ -64,3 +64,8 @@ public:
 
 using RawExit = detail::TaggedRawExit<tags::RoomIdTag>;
 using ExternalRawExit = detail::TaggedRawExit<tags::ExternalRoomIdTag>;
+
+NODISCARD bool satisfiesInvariants(const RawExit &);
+NODISCARD bool satisfiesInvariants(const ExternalRawExit &);
+void enforceInvariants(RawExit &);
+void enforceInvariants(ExternalRawExit &);

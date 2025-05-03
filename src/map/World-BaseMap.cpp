@@ -88,7 +88,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
                 // immer-like backend implementations that use copy-on-write.
                 const RawRoom room = deref(getRoom(id));
                 for (const auto dir : ALL_EXITS7) {
-                    if (!room.hasExit(dir)) {
+                    if (room.hasTrivialExit(dir)) {
                         continue;
                     }
                     const auto &exit = room.getExit(dir);

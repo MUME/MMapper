@@ -259,6 +259,10 @@ void MapCanvas::initializeGL()
             this->forceUpdateMeshes();
         }
     });
+
+    setConfig().canvas.showUnmappedExits.registerChangeCallback(m_lifetime, [this]() {
+        this->forceUpdateMeshes();
+    });
 }
 
 /* Direct means it is always called from the emitter's thread */

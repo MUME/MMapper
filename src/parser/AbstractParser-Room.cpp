@@ -84,6 +84,7 @@ NODISCARD static const char *getFlagName(const ExitFlagEnum flag)
         CASE(DAMAGE, "Damage");
         CASE(FALL, "Fall");
         CASE(GUARDED, "Guarded");
+        CASE(UNMAPPED, "Unmapped");
     }
     return "Unknown";
 #undef CASE

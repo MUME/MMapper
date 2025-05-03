@@ -184,11 +184,16 @@ void MmpMapStorage::saveRoom(const ExternalRawRoom &room, QXmlStreamWriter &stre
 
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const auto &e = room.getExit(dir);
-        if (e.exitIsExit() && !e.outIsEmpty()) {
+        if (e.exitIsExit()) {
             stream.writeStartElement("exit");
             stream.writeAttribute("direction", lowercaseDirection(dir));
             // REVISIT: Can MMP handle multiple exits in the same direction?
-            stream.writeAttribute("target", toMmpRoomId(e.outFirst()));
+            if (e.outIsEmpty() || e.exitIsUnmapped()) {
+                // MMP does not support unmapped exits so loop back
+                stream.writeAttribute("target", toMmpRoomId(room.getId()));
+            } else {
+                stream.writeAttribute("target", toMmpRoomId(e.outFirst()));
+            }
             if (e.doorIsHidden()) {
                 stream.writeAttribute("hidden", "1");
             }

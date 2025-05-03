@@ -155,7 +155,8 @@ static void sanitize(ExternalRawRoom &rawRoom)
 
     for (const ExitDirEnum dir : ALL_EXITS7) {
         ExternalRawExit &exit = rawRoom.exits[dir];
-        sanitize(exit, room, dir);
+        sanitize(exit, room, dir); // this is just for illegal enum values
+        enforceInvariants(exit);   // this checks if EXIT and DOOR flags are correct.
     }
 }
 } // namespace sanitize_helper
@@ -165,16 +166,51 @@ void sanitize(ExternalRawRoom &raw)
     sanitize_helper::sanitize(raw);
 }
 
+namespace detail {
+template<typename Room_>
+NODISCARD static bool satisfiesInvariants(Room_ &room)
+{
+    for (auto &exit : room.getExits()) {
+        if (!::satisfiesInvariants(exit)) {
+            return false;
+        }
+    }
+    return true;
+}
+template<typename Room_>
+static void enforceInvariants(Room_ &room)
+{
+    for (auto &exit : room.getExits()) {
+        ::enforceInvariants(exit);
+    }
+}
+} // namespace detail
+
+bool satisfiesInvariants(const RawRoom &room)
+{
+    return detail::satisfiesInvariants(room);
+}
+
+bool satisfiesInvariants(const ExternalRawRoom &room)
+{
+    return detail::satisfiesInvariants(room);
+}
+
+void enforceInvariants(RawRoom &room)
+{
+    detail::enforceInvariants(room);
+}
+
+void enforceInvariants(ExternalRawRoom &room)
+{
+    detail::enforceInvariants(room);
+}
+
 ExitDirFlags computeExitDirections(const RawRoom &room)
 {
     ExitDirFlags result;
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const auto &exit = room.getExit(dir);
-        const auto &flags = exit.getExitFlags();
-        if constexpr (IS_DEBUG_BUILD) {
-            const auto &outgoing = exit.outgoing;
-            assert(flags.isExit() == !outgoing.empty());
-        }
+        const auto &flags = room.getExitFlags(dir);
         if (flags.isExit()) {
             result |= dir;
         }

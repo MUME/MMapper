@@ -379,6 +379,7 @@ void JsonWorld::addExits(const ExternalRawRoom &room, QJsonObject &jr) const
     QJsonArray jExits; // Direction-indexed
     for (const ExternalRawExit &e : room.exits) {
         QJsonObject je;
+        // ISSUE: We haven't been updating the schema for these.
         je["flags"] = static_cast<qint64>(e.getExitFlags().asUint32());
         je["dflags"] = static_cast<qint64>(e.getDoorFlags().asUint32());
         je["name"] = e.getDoorName().toQString();

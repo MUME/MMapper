@@ -39,37 +39,6 @@ private:
 public:
     ExitsFlagsType() = default;
     NODISCARD explicit operator uint32_t() const { return value; }
-    NODISCARD static ExitsFlagsType create_unsafe(const uint32_t value)
-    {
-        if (false) {
-            ExitsFlagsType tmp;
-            tmp.value = value;
-
-            ExitsFlagsType result;
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                result.set(dir, tmp.get(dir));
-            }
-
-            if (tmp.isValid()) {
-                result.setValid();
-            }
-
-            assert(tmp.value == result.value);
-            return result;
-        } else {
-            static constexpr const uint32_t FULL_MASK = 0x40FFFFFFu;
-            static_assert(
-                FULL_MASK
-                == (static_cast<uint32_t>(EXITS_FLAGS_VALID) | ((1u << (SHIFT * NUM_DIRS)) - 1u)));
-
-            ExitsFlagsType result;
-            result.value = value & FULL_MASK;
-            // NOTE: can't assert this, because old versions will have invalid data;
-            // the whole point of the mask it to clean up the bad data.
-            // assert(result.value == value);
-            return result;
-        }
-    }
 
 public:
     NODISCARD bool operator==(ExitsFlagsType rhs) const { return value == rhs.value; }
@@ -79,6 +48,14 @@ public:
     NODISCARD ExitFlags get(const ExitDirEnum dir) const
     {
         return static_cast<ExitFlags>((value >> getShift(dir)) & MASK);
+    }
+    NODISCARD ExitFlags getWithUnmappedFlag(const ExitDirEnum dir) const
+    {
+        auto flags = get(dir);
+        if (flags.isExit()) {
+            flags |= ExitFlagEnum::UNMAPPED;
+        }
+        return flags;
     }
 
     void set(const ExitDirEnum dir, const ExitFlagEnum flag) { set(dir, ExitFlags{flag}); }

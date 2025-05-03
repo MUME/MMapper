@@ -138,7 +138,7 @@ public:
     NODISCARD RawRoom getRawCopy(RoomId id) const;
 
 public:
-    NODISCARD static World init(ProgressCounter &counter, std::vector<ExternalRawRoom> map);
+    NODISCARD static World init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &map);
 
 public:
     NODISCARD ExternalRoomIdSet convertToExternal(ProgressCounter &pc,

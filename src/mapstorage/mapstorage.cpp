@@ -273,14 +273,7 @@ void MapStorage::loadExits(ExternalRawRoom &room, QDataStream &stream, const uin
         if (version >= schema::v2_4_0_largerFlags) {
             e.setExitFlags(bitmaskToFlags<ExitFlags>(helper.read_u16()));
         } else {
-            auto flags = bitmaskToFlags<ExitFlags>(static_cast<uint16_t>(helper.read_u8()));
-            // REVISIT: This is now controlled by the map itself.
-            if (true) {
-                if (flags.isDoor()) {
-                    flags |= ExitFlagEnum::EXIT;
-                }
-            }
-            e.setExitFlags(flags);
+            e.setExitFlags(bitmaskToFlags<ExitFlags>(static_cast<uint16_t>(helper.read_u8())));
         }
 
         // Exits saved starting with schema::v2_0_4_zlib were offset by 1 bit causing

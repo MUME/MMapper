@@ -60,7 +60,8 @@ public:
     }
     NODISCARD bool operator!=(const TaggedRawRoom &rhs) const { return !(rhs == *this); }
     NODISCARD bool isTrivial() const { return *this == TaggedRawRoom{}; }
-    NODISCARD bool hasExit(const ExitDirEnum dir) const { return !exits[dir].isTrivial(); }
+    NODISCARD bool hasTrivialExit(const ExitDirEnum dir) const { return exits[dir].isTrivial(); }
+    NODISCARD bool hasNontrivialExit(const ExitDirEnum dir) const { return !hasTrivialExit(dir); }
 
     NODISCARD bool isTemporary() const { return status == RoomStatusEnum::Temporary; }
     NODISCARD bool isPermanent() const { return status == RoomStatusEnum::Permanent; }
@@ -74,6 +75,12 @@ using RawRoom = detail::TaggedRawRoom<tags::RoomIdTag>;
 using ExternalRawRoom = detail::TaggedRawRoom<tags::ExternalRoomIdTag>;
 
 extern void sanitize(ExternalRawRoom &);
+
+NODISCARD extern bool satisfiesInvariants(const RawRoom &);
+NODISCARD extern bool satisfiesInvariants(const ExternalRawRoom &);
+
+extern void enforceInvariants(RawRoom &);
+extern void enforceInvariants(ExternalRawRoom &);
 
 template<>
 NODISCARD std::string RawRoom::toStdStringUtf8() const;

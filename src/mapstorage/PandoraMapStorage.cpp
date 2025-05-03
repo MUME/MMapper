@@ -20,29 +20,26 @@
 #include <QRegularExpression>
 #include <QXmlStreamReader>
 
-struct NODISCARD ExitToUnknown final
+struct NODISCARD ExitToDeathTrap final
 {
     ExternalRoomId from;
     ExitDirEnum dir = ExitDirEnum::NONE;
-    RoomTerrainEnum type = RoomTerrainEnum::UNDEFINED;
 };
 
 struct NODISCARD PandoraMapStorage::LoadRoomHelper final
 {
 private:
-    std::vector<ExitToUnknown> &m_exitsToUnknown;
+    std::vector<ExitToDeathTrap> &m_exitsToDeathTrap;
 
 public:
-    explicit LoadRoomHelper(std::vector<ExitToUnknown> &exitsToUnknown)
-        : m_exitsToUnknown{exitsToUnknown}
+    explicit LoadRoomHelper(std::vector<ExitToDeathTrap> &exitsToDeathTrap)
+        : m_exitsToDeathTrap{exitsToDeathTrap}
     {}
 
 public:
-    void addExitToUnknown(const ExternalRoomId from,
-                          const ExitDirEnum dirEnum,
-                          const RoomTerrainEnum type)
+    void addExitToDeathtrap(const ExternalRoomId from, const ExitDirEnum dirEnum)
     {
-        m_exitsToUnknown.emplace_back(ExitToUnknown{from, dirEnum, type});
+        m_exitsToDeathTrap.emplace_back(ExitToDeathTrap{from, dirEnum});
     }
 };
 
@@ -140,9 +137,9 @@ void PandoraMapStorage::loadExits(ExternalRawRoom &room,
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
-                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::UNDEFINED);
+                        helper.addExitToDeathtrap(room.id, dir);
                     } else if (to == "UNDEFINED") {
-                        helper.addExitToUnknown(room.id, dir, RoomTerrainEnum::UNDEFINED);
+                        exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::UNMAPPED);
                     } else {
                         bool ok = false;
                         const int id = to.toInt(&ok);
@@ -209,8 +206,8 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     std::vector<ExternalRawRoom> loading;
     loading.reserve(roomsCount);
 
-    std::vector<ExitToUnknown> exitsToUnknown;
-    LoadRoomHelper helper{exitsToUnknown};
+    std::vector<ExitToDeathTrap> exitsToDeathTrap;
+    LoadRoomHelper helper{exitsToDeathTrap};
 
     progressCounter.setCurrentTask(ProgressMsg{"reading rooms"});
     for (uint32_t i = 0; i < roomsCount; ++i) {
@@ -225,10 +222,10 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     log(QString("Finished reading %1 rooms.").arg(loading.size()));
     file->close();
 
-    if (!exitsToUnknown.empty()) {
-        log(QString("Adding %1 undefined rooms").arg(exitsToUnknown.size()));
+    if (!exitsToDeathTrap.empty()) {
+        log(QString("Adding %1 death trap rooms").arg(exitsToDeathTrap.size()));
 
-        loading.reserve(loading.size() + exitsToUnknown.size());
+        loading.reserve(loading.size() + exitsToDeathTrap.size());
 
         struct NODISCARD Map final : std::map<ExternalRoomId, uint32_t>
         {
@@ -262,23 +259,23 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
             return result_id;
         };
 
-        auto newRoom = [](const ExternalRoomId id,
-                          const Coordinate &pos,
-                          const RoomTerrainEnum type) -> ExternalRawRoom {
+        auto newDeathTrapRoom = [](const ExternalRoomId id,
+                                   const Coordinate &pos) -> ExternalRawRoom {
             ExternalRawRoom result_room;
             result_room.setId(id);
             result_room.setPosition(pos);
-            result_room.setTerrainType(type);
+            result_room.setTerrainType(RoomTerrainEnum::INDOORS);
+            result_room.setLoadFlags(RoomLoadFlags{RoomLoadFlagEnum::DEATHTRAP});
             return result_room;
         };
 
-        for (const auto &x : exitsToUnknown) {
+        for (const auto &x : exitsToDeathTrap) {
             ExternalRawRoom &from = loading.at(index.at(x.from));
             // REVISIT: Should this be 2 * exitDir for NESW?
             const Coordinate pos = from.getPosition() + exitDir(x.dir);
             const auto id = allocId();
             from.getExit(x.dir).outgoing.insert(id);
-            loading.emplace_back(newRoom(id, pos, x.type));
+            loading.emplace_back(newDeathTrapRoom(id, pos));
         }
     }
 

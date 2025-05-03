@@ -337,6 +337,7 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
         CASE3(DAMAGE, "damage", -1);
         CASE3(FALL, "fall", -1);
         CASE3(GUARDED, "guarded", 5);
+        CASE3(UNMAPPED, "unmapped", -1);
     }
     return Abbrev{};
 #undef CASE3

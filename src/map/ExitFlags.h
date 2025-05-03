@@ -21,6 +21,7 @@
     X(DAMAGE, damage, Damage, "Damage") \
     X(FALL, fall, Fall, "Fall") \
     X(GUARDED, guarded, Guarded, "Guarded") \
+    X(UNMAPPED, unmapped, Unmapped, "Unmapped") \
     /* define exit flags above */
 
 enum class NODISCARD ExitFlagEnum : uint8_t {
