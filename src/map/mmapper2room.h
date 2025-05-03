@@ -200,28 +200,30 @@ class NODISCARD RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoa
     using Flags::Flags;
 };
 
+enum class ModifyTypeEnum { AssignClear, InsertRemove };
+
 // REVISIT: Why are these in a different order than the other XMACRO(), and why don't we just use that one?
 #define XFOREACH_ROOM_FIELD_ENUM(X) \
-    X(NAME) \
+    X(NAME, InsertRemove) \
     /* Note: DESC could also be called STATIC_DESC */ \
-    X(DESC) \
-    X(TERRAIN_TYPE) \
-    X(CONTENTS) \
-    X(NOTE) \
-    X(MOB_FLAGS) \
-    X(LOAD_FLAGS) \
-    X(PORTABLE_TYPE) \
-    X(LIGHT_TYPE) \
-    X(ALIGN_TYPE) \
-    X(RIDABLE_TYPE) \
-    X(SUNDEATH_TYPE) \
-    X(RESERVED)
+    X(DESC, InsertRemove) \
+    X(TERRAIN_TYPE, AssignClear) \
+    X(CONTENTS, InsertRemove) \
+    X(NOTE, InsertRemove) \
+    X(MOB_FLAGS, InsertRemove) \
+    X(LOAD_FLAGS, InsertRemove) \
+    X(PORTABLE_TYPE, AssignClear) \
+    X(LIGHT_TYPE, AssignClear) \
+    X(ALIGN_TYPE, AssignClear) \
+    X(RIDABLE_TYPE, AssignClear) \
+    X(SUNDEATH_TYPE, AssignClear) \
+    X(RESERVED, InsertRemove)
 
-#define X_DECL(X) X,
+#define X_DECL(_name, _type) _name,
 enum class NODISCARD RoomFieldEnum { XFOREACH_ROOM_FIELD_ENUM(X_DECL) };
 #undef X_DECL
 
-#define X_ADD(X) +1
+#define X_ADD(_name, _type) +1
 static constexpr const int NUM_ROOM_FIELDS = (XFOREACH_ROOM_FIELD_ENUM(X_ADD));
 #undef X_ADD
 
@@ -256,6 +258,37 @@ struct std::hash<RoomDesc>
         return std::hash<std::string_view>()(desc.getStdStringViewUtf8());
     }
 };
+
+#define XFOREACH_FlagModifyModeEnum(X) \
+    X(ASSIGN) \
+    X(INSERT) \
+    X(REMOVE) \
+    X(CLEAR)
+
+#define X_DECL(X) X,
+enum class NODISCARD FlagModifyModeEnum { XFOREACH_FlagModifyModeEnum(X_DECL) };
+#undef X_DECL
+
+NODISCARD inline ModifyTypeEnum getModifyType(RoomFieldEnum field)
+{
+    switch (field) {
+#define X_CASE(_name, _type) \
+    case RoomFieldEnum::_name: \
+        return ModifyTypeEnum::_type;
+        XFOREACH_ROOM_FIELD_ENUM(X_CASE)
+#undef X_CASE
+    }
+}
+
+NODISCARD inline FlagModifyModeEnum getModifyMode(RoomFieldEnum field, bool is_add)
+{
+    switch (getModifyType(field)) {
+    case ModifyTypeEnum::AssignClear:
+        return is_add ? FlagModifyModeEnum::ASSIGN : FlagModifyModeEnum::CLEAR;
+    case ModifyTypeEnum::InsertRemove:
+        return is_add ? FlagModifyModeEnum::INSERT : FlagModifyModeEnum::REMOVE;
+    }
+}
 
 NODISCARD extern std::string_view to_string_view(RoomAlignEnum);
 NODISCARD extern std::string_view to_string_view(RoomLightEnum);

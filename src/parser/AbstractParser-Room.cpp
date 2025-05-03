@@ -7,6 +7,7 @@
 #include "../map/Diff.h"
 #include "../map/RoomRevert.h"
 #include "../map/enums.h"
+#include "../map/mmapper2room.h"
 #include "../mapdata/mapdata.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -611,17 +612,7 @@ private:
                 throw std::runtime_error("unable to select current room");
             }
 
-            // Check if the variant holds an enum type and adjust mode
-            const FlagModifyModeEnum mode = [is_add](const RoomFieldEnum type) {
-                if (type == RoomFieldEnum::ALIGN_TYPE || type == RoomFieldEnum::LIGHT_TYPE
-                    || type == RoomFieldEnum::RIDABLE_TYPE || type == RoomFieldEnum::PORTABLE_TYPE
-                    || type == RoomFieldEnum::SUNDEATH_TYPE
-                    || type == RoomFieldEnum::TERRAIN_TYPE) {
-                    return is_add ? FlagModifyModeEnum::ASSIGN : FlagModifyModeEnum::CLEAR;
-                } else {
-                    return is_add ? FlagModifyModeEnum::INSERT : FlagModifyModeEnum::REMOVE;
-                }
-            }(opt.value().getType());
+            const FlagModifyModeEnum mode = getModifyMode(opt.value().getType(), is_add);
 
             changeList.add(Change{ModifyRoomFlags{roomId, opt.value(), mode}});
 

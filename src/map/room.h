@@ -28,15 +28,6 @@
 class ExitFieldVariant;
 class ParseEvent;
 
-#define XFOREACH_FlagModifyModeEnum(X) \
-    X(ASSIGN) \
-    X(INSERT) \
-    X(REMOVE) \
-    X(CLEAR)
-
-#define X_DECL(X) X,
-enum class NODISCARD FlagModifyModeEnum { XFOREACH_FlagModifyModeEnum(X_DECL) };
-#undef X_DECL
 enum class NODISCARD ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
 enum class NODISCARD RoomUpdateEnum {
