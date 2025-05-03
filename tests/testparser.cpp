@@ -6,11 +6,10 @@
 #include "../src/global/Charset.h"
 #include "../src/global/TextUtils.h"
 #include "../src/global/parserutils.h"
+#include "../src/map/RawExit.h"
 #include "../src/map/mmapper2room.h"
 #include "../src/map/parseevent.h"
 #include "../src/map/sanitizer.h"
-
-#include <memory>
 
 #include <QDebug>
 #include <QString>
@@ -78,6 +77,70 @@ void TestParser::toAsciiTest()
     }
 }
 
+static QDebug operator<<(QDebug debug, const ExitDirEnum dir)
+{
+#define X_CASE(UPPER) \
+    case ExitDirEnum::UPPER: \
+        return debug << "ExitDirEnum::" #UPPER
+    switch (dir) {
+        X_CASE(NORTH);
+        X_CASE(SOUTH);
+        X_CASE(EAST);
+        X_CASE(WEST);
+        X_CASE(UP);
+        X_CASE(DOWN);
+        X_CASE(UNKNOWN);
+        X_CASE(NONE);
+    default:
+        return debug << "*error*";
+    }
+#undef X_CASE
+}
+
+static QDebug operator<<(QDebug debug, const ExitFlagEnum flag)
+{
+#define X_CASE(_UPPER, _lower, _Camel, _Friendly) \
+    case ExitFlagEnum::_UPPER: \
+        return debug << "ExitFlagEnum::" #_UPPER;
+    switch (flag) {
+        XFOREACH_EXIT_FLAG(X_CASE)
+    }
+    return debug << "*error*";
+#undef X_CASE
+}
+
+static QDebug operator<<(QDebug debug, const ExitFlags flags)
+{
+    auto &&ns = debug.nospace();
+    ns << "ExitFlags{";
+    auto prefix = "";
+    for (auto f : flags) {
+        ns << prefix;
+        prefix = " | ";
+        ns << f;
+    }
+    ns << "}";
+
+    return debug;
+}
+
+static QDebug operator<<(QDebug debug, const ExitsFlagsType f)
+{
+    auto &&ns = debug.nospace();
+    ns << "ExitsFlagsType{";
+    if (f != ExitsFlagsType{}) {
+        ns << ".valid=" << f.isValid();
+        for (auto dir : ALL_EXITS_NESWUD) {
+            auto x = f.get(dir);
+            if (!x.empty()) {
+                ns << ", [" << dir << "] = " << x;
+            }
+        }
+    }
+    ns << "}";
+    return debug;
+}
+
 void TestParser::createParseEventTest()
 {
     static constexpr auto terrain = RoomTerrainEnum::INDOORS;
@@ -86,8 +149,6 @@ void TestParser::createParseEventTest()
                     const PromptFlagsType pFlags,
                     const size_t expectSkipped) {
         RoomContents roomContents = mmqt::makeRoomContents("Contents");
-        ExitsFlagsType eFlags;
-        eFlags.setValid();
         ConnectedRoomFlagsType cFlags;
         cFlags.setValid();
         const ParseEvent e = ParseEvent::createEvent(CommandEnum::NORTH,
@@ -97,7 +158,7 @@ void TestParser::createParseEventTest()
                                                      roomContents,
                                                      ServerExitIds{},
                                                      terrain,
-                                                     eFlags,
+                                                     RawExit{},
                                                      pFlags,
                                                      cFlags);
 
@@ -107,7 +168,10 @@ void TestParser::createParseEventTest()
         QCOMPARE(e.getRoomName(), sanitize(roomName));
         QCOMPARE(e.getRoomDesc(), sanitize(parsedRoomDescription));
         QCOMPARE(e.getRoomContents(), sanitize(roomContents));
-        QCOMPARE(e.getExitsFlags(), eFlags);
+        if (e.getExitsFlags() != ExitsFlagsType{}) {
+            qInfo() << e.getExitsFlags() << " vs " << ExitsFlagsType{};
+        }
+        QCOMPARE(e.getExitsFlags(), ExitsFlagsType{});
         QCOMPARE(e.getPromptFlags(), pFlags);
         QCOMPARE(e.getConnectedRoomFlags(), cFlags);
 

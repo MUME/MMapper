@@ -257,7 +257,6 @@ set(mmapper_SRCS
     map/Diff.h
     map/DoorFlags.cpp
     map/DoorFlags.h
-    map/DoorsFlags.h
     map/ExitDirection.cpp
     map/ExitDirection.h
     map/ExitFieldVariant.cpp

@@ -354,12 +354,34 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent, Chang
         }
     }
 
+    auto &eventExits = event.getExits();
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+        const auto &eventExit = eventExits[dir];
+        if (!eventExit.exitIsDoor() || !eventExit.doorIsHidden() || !eventExit.hasDoorName()) {
+            continue;
+        }
+        const auto &e = here.getExit(dir);
+        if (e.getExitFlags().isNoMatch()) {
+            continue;
+        }
+        if (e.getDoorName() != eventExit.getDoorName()) {
+            changes.add(
+                Change{exit_change_types::SetDoorName{here.getId(), dir, eventExit.getDoorName()}});
+        }
+        if (e.getDoorFlags() ^ eventExit.getDoorFlags()) {
+            changes.add(Change{exit_change_types::SetDoorFlags{FlagChangeEnum::Add,
+                                                               here.getId(),
+                                                               dir,
+                                                               eventExit.getDoorFlags()}});
+        }
+    }
+
     // Update rooms behind exits now that we are certain about our current location
     if (const ConnectedRoomFlagsType crf = event.getConnectedRoomFlags();
         crf.isValid() && (crf.hasAnyDirectSunlight() || crf.isTrollMode())) {
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const auto &e = here.getExit(dir);
-            if (e.getExitFlags().isNoMatch() || !e.outIsUnique()) {
+            if (e.getExitFlags().isNoMatch() || e.outIsEmpty() || !e.outIsUnique()) {
                 continue;
             }
 

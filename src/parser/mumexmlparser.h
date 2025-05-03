@@ -54,7 +54,6 @@ private:
     CommandEnum m_move = CommandEnum::NONE;
     ServerRoomId m_serverId = INVALID_SERVER_ROOMID;
     std::optional<RoomId> m_expectedMove;
-    std::optional<ServerExitIds> m_exitIds;
     bool m_readingTag = false;
     bool m_exitsReady = false;
     bool m_descriptionReady = false;

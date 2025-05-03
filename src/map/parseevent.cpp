@@ -24,14 +24,44 @@ NODISCARD static std::string getTerrainBytes(const RoomTerrainEnum &terrain)
 
 ParseEvent::~ParseEvent() = default;
 
+NODISCARD ExitsFlagsType ParseEvent::getExitsFlags() const
+{
+    ExitsFlagsType flags;
+    bool valid = false;
+    for (const ExitDirEnum dir : enums::getAllExitsNESWUD()) {
+        const auto &exit = m_exits[dir];
+        if (exit.exitIsExit()) {
+            flags.insert(dir, ExitFlagEnum::EXIT);
+            valid = true;
+        }
+        if (exit.exitIsClimb()) {
+            flags.insert(dir, ExitFlagEnum::CLIMB);
+            valid = true;
+        }
+        if (exit.exitIsRoad()) {
+            flags.insert(dir, ExitFlagEnum::ROAD);
+            valid = true;
+        }
+        if (exit.exitIsDoor()) {
+            flags.insert(dir, ExitFlagEnum::DOOR);
+            valid = true;
+        }
+    }
+    if (valid) {
+        flags.setValid();
+    }
+    return flags;
+}
+
 QString ParseEvent::toQString() const
 {
     using namespace char_consts;
     QString exitsStr;
+    const auto exitsFlags = getExitsFlags();
     // REVISIT: Duplicate code with AbstractParser
-    if (m_exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
+    if (exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
         for (const ExitDirEnum dir : enums::getAllExitsNESWUD()) {
-            const ExitFlags exitFlags = m_exitsFlags.get(dir);
+            const ExitFlags exitFlags = exitsFlags.get(dir);
             if (exitFlags.isExit()) {
                 exitsStr.append(C_OPEN_BRACKET);
                 exitsStr.append(lowercaseDirection(dir));
@@ -79,7 +109,7 @@ ParseEvent ParseEvent::createEvent(const CommandEnum c,
                                    RoomContents moved_roomContents,
                                    ServerExitIds moved_exitIds,
                                    const RoomTerrainEnum terrain,
-                                   const ExitsFlagsType exitsFlags,
+                                   RawExits moved_exits,
                                    const PromptFlagsType promptFlags,
                                    const ConnectedRoomFlagsType connectedRoomFlags)
 {
@@ -92,7 +122,7 @@ ParseEvent ParseEvent::createEvent(const CommandEnum c,
     event.m_roomContents = std::exchange(moved_roomContents, {});
     event.m_exitIds = std::exchange(moved_exitIds, {});
     event.m_terrain = terrain;
-    event.m_exitsFlags = exitsFlags;
+    event.m_exits = std::exchange(moved_exits, {});
     event.m_promptFlags = promptFlags;
     event.m_connectedRoomFlags = connectedRoomFlags;
 
@@ -104,9 +134,9 @@ SharedParseEvent ParseEvent::createSharedEvent(const CommandEnum c,
                                                RoomName moved_roomName,
                                                RoomDesc moved_roomDesc,
                                                RoomContents moved_roomContents,
-                                               ServerExitIds moved_exitIds,
+                                               const ServerExitIds &exitIds,
                                                const RoomTerrainEnum terrain,
-                                               const ExitsFlagsType exitsFlags,
+                                               RawExits moved_exits,
                                                const PromptFlagsType promptFlags,
                                                const ConnectedRoomFlagsType connectedRoomFlags)
 {
@@ -115,9 +145,9 @@ SharedParseEvent ParseEvent::createSharedEvent(const CommandEnum c,
                                                     std::move(moved_roomName),
                                                     std::move(moved_roomDesc),
                                                     std::move(moved_roomContents),
-                                                    std::move(moved_exitIds),
+                                                    exitIds,
                                                     terrain,
-                                                    exitsFlags,
+                                                    std::move(moved_exits),
                                                     promptFlags,
                                                     connectedRoomFlags));
 }
@@ -131,7 +161,7 @@ SharedParseEvent ParseEvent::createDummyEvent()
                              RoomContents{},
                              ServerExitIds{},
                              RoomTerrainEnum::UNDEFINED,
-                             ExitsFlagsType{},
+                             RawExits{},
                              PromptFlagsType{},
                              ConnectedRoomFlagsType{});
 }

@@ -3,10 +3,10 @@
 
 #include "../global/CaseUtils.h"
 #include "../group/mmapper2group.h"
-#include "../map/DoorsFlags.h"
 #include "../map/ExitsFlags.h"
 #include "../map/ParseTree.h"
 #include "../map/PromptFlags.h"
+#include "../map/RawRoom.h"
 #include "../map/parseevent.h"
 #include "../mapdata/mapdata.h"
 #include "../proxy/GmcpMessage.h"
@@ -166,31 +166,34 @@ NODISCARD static RoomDesc getRoomDesc(const JsonObj &obj)
 
 struct NODISCARD Misc final
 {
-    ExitsFlagsType exitsFlags{};
-    DoorsFlagsType doorsFlags{};
+    enum class DoorStateEnum { CLOSED, OPEN, BROKEN };
+    using DoorStates = EnumIndexedArray<DoorStateEnum, ExitDirEnum, NUM_EXITS>;
+    DoorStates doors{};
+    RawExits exits{};
     ConnectedRoomFlagsType connectedRoomFlags{};
     ServerExitIds exitIds{};
 };
 
-static void processOneFlag(const QString &flag, const ExitDirEnum d, Misc &result)
+static void processOneFlag(const QString &flag,
+                           const ExitDirEnum d,
+                           RawExit &exit,
+                           ConnectedRoomFlagsType &connectedRoomFlags,
+                           Misc::DoorStateEnum &door)
 {
     if (flag == "hidden") {
-        result.doorsFlags.insert(d, DoorFlagEnum::HIDDEN);
+        exit.addDoorFlags(DoorFlagEnum::HIDDEN);
     } else if (flag == "broken") {
-        // REVISIT: Create new transient door flags for broken/closed
-        result.doorsFlags.insert(d, DoorFlagEnum::NO_BREAK);
+        door = Misc::DoorStateEnum::BROKEN;
     } else if (flag == "closed") {
-        // REVISIT: Fix this hack where we use NO_BLOCK as a proxy for CLOSED_DOOR
-        // with indirect sunlight
-        result.doorsFlags.insert(d, DoorFlagEnum::NO_BLOCK);
+        door = Misc::DoorStateEnum::CLOSED;
     } else if (flag == "climb-down" || flag == "climb-up") {
-        result.exitsFlags.insert(d, ExitFlagEnum::CLIMB);
+        exit.addExitFlags(ExitFlagEnum::CLIMB);
     } else if (flag == "road" || flag == "trail") {
-        result.exitsFlags.insert(d, ExitFlagEnum::ROAD);
+        exit.addExitFlags(ExitFlagEnum::ROAD);
     } else if (flag == "sundeath" || flag == "sunny") {
-        result.connectedRoomFlags.setValid();
-        result.connectedRoomFlags.setDirectSunlight(d, DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedRoomFlags.setDirectSunlight(d, DirectSunlightEnum::SAW_DIRECT_SUN);
     } else if (flag == "water") {
+        // TODO: Not useful as of now
     } else {
         const char dir[2] = {lowercaseDirection(d)[0], char_consts::C_NUL};
         qWarning().noquote() << "exit" << dir << "has unknown flag:" << flag;
@@ -212,8 +215,8 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room, bool 
             continue;
         }
 
-        result.exitsFlags.setValid();
-        result.exitsFlags.insert(d, ExitFlagEnum::EXIT);
+        RawExit &currentExit = result.exits[d];
+        currentExit.addExitFlags(ExitFlagEnum::EXIT);
 
         const JsonObj &exit = *optExit;
         const auto optTo = exit.getInt("id");
@@ -224,6 +227,8 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room, bool 
                                   << asServerId(to).asUint32();
             }
             result.exitIds[d] = asServerId(to);
+            // REVISIT: Add a ServerRawExit instead of using exitIds?
+            // currentExit.getOutgoingSet().insert(asServerId(to));
         }
 
         const auto optDoorName = exit.getString("name");
@@ -232,8 +237,10 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room, bool 
             if (verbose_debugging) {
                 qInfo().noquote() << "exit" << dir << "name:" << doorName;
             }
-            result.exitsFlags.insert(d, ExitFlagEnum::DOOR);
-            result.doorsFlags.setValid();
+            currentExit.addExitFlags(ExitFlagEnum::DOOR);
+            currentExit.setDoorName(mmqt::makeDoorName(doorName));
+            auto &currentDoor = result.doors.at(d);
+            currentDoor = Misc::DoorStateEnum::OPEN;
         }
 
         const auto optFlags = exit.getArray("flags");
@@ -244,30 +251,34 @@ NODISCARD static Misc getMisc(const JsonObj &obj, const ServerRoomId room, bool 
         for (const JsonValue &pflag : *optFlags) {
             if (auto optString = pflag.getString()) {
                 const QString flag = optString.value();
-                processOneFlag(flag, d, result);
+                processOneFlag(flag, d, currentExit, result.connectedRoomFlags, result.doors.at(d));
             }
         }
     }
 
     // Orcs and trolls can detect exits with direct sunlight
     auto &connectedFlags = result.connectedRoomFlags;
-    if (isTrollMode) {
-        connectedFlags.setTrollMode();
-    }
     if (connectedFlags.hasAnyDirectSunlight() || isTrollMode) {
         for (const ExitDirEnum alt_dir : ALL_EXITS_NESWUD) {
-            const auto eThisExit = result.exitsFlags.get(alt_dir);
-            const auto eThisClosed = result.doorsFlags.get(alt_dir).isNoBlock();
+            const auto &eThisExit = result.exits[alt_dir];
+            const auto eThisClosed = eThisExit.exitIsDoor()
+                                     && result.doors.at(alt_dir) == Misc::DoorStateEnum::CLOSED;
 
             // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
-            if (!eThisExit.isExit() || eThisClosed || connectedFlags.hasDirectSunlight(alt_dir)) {
+            if (!eThisExit.exitIsExit() || eThisClosed
+                || connectedFlags.hasDirectSunlight(alt_dir)) {
                 continue;
             }
 
             // Flag indirect sun
             connectedFlags.setDirectSunlight(alt_dir, DirectSunlightEnum::SAW_NO_DIRECT_SUN);
         }
+        connectedFlags.setValid();
     }
+    if (isTrollMode) {
+        connectedFlags.setTrollMode();
+    }
+
     return result;
 }
 
@@ -355,8 +366,8 @@ void MumeXmlParser::parseGmcpRoomInfo(const JsonObj &obj)
 
     const auto misc = getMisc(obj, m_serverId, m_commonData.trollExitMapping);
     m_commonData.connectedRoomFlags = misc.connectedRoomFlags;
-    m_commonData.exitsFlags = misc.exitsFlags;
-    m_exitIds = misc.exitIds;
+    m_commonData.roomExits = misc.exits;
+    m_commonData.exitIds = misc.exitIds;
 
     m_eventReady = true;
 }

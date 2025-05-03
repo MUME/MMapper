@@ -7,6 +7,7 @@
 #include "../src/global/progresscounter.h"
 #include "../src/map/Change.h"
 #include "../src/map/Compare.h"
+#include "../src/map/RawExit.h"
 #include "../src/map/mmapper2room.h"
 
 #include <tuple>
@@ -41,9 +42,9 @@ NODISCARD static RawRoom createTemporaryRoom(const ParseEvent &event)
     tmp.setName(event.getRoomName());
     tmp.setDescription(event.getRoomDesc());
     tmp.setContents(event.getRoomContents());
-    auto flags = event.getExitsFlags();
+    auto &exits = event.getExits();
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        tmp.setExitFlags(dir, flags.get(dir));
+        tmp.setExitFlags(dir, exits[dir].getExitFlags());
     }
 
     ProgressCounter pc;
@@ -130,14 +131,15 @@ void TestExpandoraCommon::roomCompareTest_data()
         return QtRoomWrapper{shared};
     };
 
-    const auto get_exit_flags = [](const QtRoomWrapper &room) -> ExitsFlagsType {
-        return room.shared->computeExitsFlags();
+    const auto get_exits = [](const QtRoomWrapper &room) -> RawExits {
+        return room.shared->getExits();
     };
 
     const auto perfect_room = create_room();
-    const auto perfect_exit_flags = get_exit_flags(perfect_room);
+    const auto perfect_exits = get_exits(perfect_room);
 
     // Blinded / Puke in Darkness
+    // Can only see terrain type
     {
         const auto &room = perfect_room;
         const auto event = createParseEvent(room.getTerrainType());
@@ -145,6 +147,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     }
 
     // Puke with Awareness in Darkness
+    // Can see room name, contents, and terrain type
     {
         const auto &room = perfect_room;
         const auto event = createParseEvent(name, contents, room.getTerrainType());
@@ -152,6 +155,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     }
 
     // Whitespace change to room desc
+    // Extremely minor room change, should still match
     {
         const auto &room = perfect_room;
 
@@ -165,6 +169,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     }
 
     // Single word change to room desc
+    // Minor room change, should still match
     {
         const auto &room = perfect_room;
         const auto event = createParseEvent(name,
@@ -176,6 +181,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     }
 
     // Different room name
+    // "Road to the Grey Havens" problem
     {
         const auto &room = perfect_room;
         const auto event = createParseEvent(RoomName("Riverbank"),
@@ -193,40 +199,43 @@ void TestExpandoraCommon::roomCompareTest_data()
     }
 
     // Doors closed hiding exit w
+    // Closed hidden doors shouldn't cause a DIFFERENT comparison if the player doesn't see them
     {
         const auto &room = perfect_room;
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::WEST, ExitFlags{}); // Remove door and exit flag to the west
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::WEST].setExitFlags(ExitFlags{}); // Remove door and exit flag to the west
         const auto event = createParseEvent(CommandEnum::NORTH,
                                             name,
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags);
+                                            exits);
         QTest::newRow("doors closed") << room << event << ComparisonResultEnum::EQUAL;
     }
 
     // Doors open hiding climb
+    // Closed doors hide climbable exits and shouldn't cause a DIFFERENT comparison
     {
         const auto &room = perfect_room;
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::DOWN,
-                      ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::DOWN].setExitFlags(
+            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
         const auto event = createParseEvent(CommandEnum::NORTH,
                                             name,
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags);
+                                            exits);
         QTest::newRow("doors opens") << room << event << ComparisonResultEnum::EQUAL;
     }
 
     // Sunlight hiding road
+    // Orcs cannot see roads/trails if the sun is blinding them; shouldn't cause DIFFERENT
     {
         const auto &room = perfect_room;
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::NORTH,
-                      ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::NORTH].setExitFlags(
+            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
         ConnectedRoomFlagsType connectedFlags;
         connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setDirectSunlight(ExitDirEnum::EAST, DirectSunlightEnum::SAW_DIRECT_SUN);
@@ -238,16 +247,17 @@ void TestExpandoraCommon::roomCompareTest_data()
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags,
+                                            exits,
                                             connectedFlags);
         QTest::newRow("sunlight hiding road") << room << event << ComparisonResultEnum::EQUAL;
     }
 
     // Missing exit south
+    // Missing exits should be a DIFFERENT match
     {
         const auto &room = perfect_room;
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::SOUTH, ExitFlags{}); // Exit is missing from event
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::SOUTH].setExitFlags(ExitFlags{}); // Exit is missing from event
         const auto &south = room.getExit(ExitDirEnum::SOUTH);
         QVERIFY(south.exitIsExit());
         QVERIFY(!south.exitIsDoor());
@@ -257,15 +267,16 @@ void TestExpandoraCommon::roomCompareTest_data()
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags);
+                                            exits);
         QTest::newRow("missing exit south") << room << event << ComparisonResultEnum::DIFFERENT;
     }
 
     // Missing door and exit down
+    // This door is likely a mudlle door, should be tolerant? (REVISIT?)
     {
         const auto &room = perfect_room;
-        auto exitFlags = get_exit_flags(room);
-        exitFlags.set(ExitDirEnum::DOWN, ExitFlags{}); // Exit and door are missing from event
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::DOWN].setExitFlags(ExitFlags{}); // Exit and door are missing from event
         const auto &down = room.getExit(ExitDirEnum::DOWN);
         QVERIFY(down.exitIsExit());
         QVERIFY(down.exitIsDoor());
@@ -275,16 +286,17 @@ void TestExpandoraCommon::roomCompareTest_data()
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags);
+                                            exits);
         QTest::newRow("missing door and exit down")
             << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Missing climb e
+    // Ancient maps sometimes don't have climable exits, allow TOLERANCE
     {
         const auto &room = perfect_room;
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::EXIT}); // Remove climb e
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::EAST].setExitFlags(ExitFlags{ExitFlagEnum::EXIT}); // Remove climb e
         const auto &east = room.getExit(ExitDirEnum::EAST);
         QVERIFY(east.exitIsExit());
         QVERIFY(east.exitIsClimb()); // Room has climb e
@@ -293,20 +305,20 @@ void TestExpandoraCommon::roomCompareTest_data()
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags);
+                                            exits);
         QTest::newRow("missing climb e") << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Missing road e
+    // Ancient maps sometimes don't have trail exits, allow TOLERANCE
     {
         const auto room = create_room([](ExternalRawRoom &r) {
             //
             r.setExitFlags(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::EXIT});
         });
-        auto exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::EAST,
-                      ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
-
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::EAST].setExitFlags(
+            ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
         const auto &east = room.getExit(ExitDirEnum::EAST);
         QVERIFY(east.exitIsExit());
         QVERIFY(!east.exitIsRoad()); // Room has no road e
@@ -315,19 +327,20 @@ void TestExpandoraCommon::roomCompareTest_data()
                                             desc,
                                             contents,
                                             room.getTerrainType(),
-                                            exitFlags,
+                                            exits,
                                             ConnectedRoomFlagsType{});
         QTest::newRow("missing road n") << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Door west not marked as hidden
+    // Ancient maps sometimes don't have HIDDEN exits marked, allow TOLERANCE
     {
         const auto room = create_room([](ExternalRawRoom &r) {
             auto &west = r.exits[ExitDirEnum::WEST];
             west.setDoorFlags(west.getDoorFlags() ^ DoorFlagEnum::HIDDEN);
         });
-        ExitsFlagsType exitFlags = perfect_exit_flags;
-        exitFlags.set(ExitDirEnum::WEST, ExitFlags{}); // Exit and door are missing from event
+        auto exits = perfect_exits;
+        exits[ExitDirEnum::WEST].setExitFlags(ExitFlags{}); // Exit and door are missing from event
         const auto &west = room.getExit(ExitDirEnum::WEST);
         QVERIFY(west.exitIsExit());
         QVERIFY(west.exitIsDoor());
@@ -337,14 +350,14 @@ void TestExpandoraCommon::roomCompareTest_data()
                                       desc,
                                       contents,
                                       room.getTerrainType(),
-                                      exitFlags);
+                                      exits);
         QTest::newRow("door west not hidden") << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Outdated and no exits (likely player generated room)
     {
         const auto room = create_room([](ExternalRawRoom &r) { r.exits = {}; });
-        ExitsFlagsType exitFlags = get_exit_flags(room);
+        auto exits = get_exits(room);
 
         QVERIFY(!room.getExit(ExitDirEnum::SOUTH).exitIsExit());
         auto event = createParseEvent(CommandEnum::NORTH,
@@ -352,11 +365,12 @@ void TestExpandoraCommon::roomCompareTest_data()
                                       desc,
                                       contents,
                                       room.getTerrainType(),
-                                      exitFlags);
+                                      exits);
         QTest::newRow("outdated and no exits") << room << event << ComparisonResultEnum::EQUAL;
     }
 
     // Lit
+    // Troll mode can update lit rooms, allow TOLERANCE
     {
         const auto room = create_room([](ExternalRawRoom &r) {
             r.setLightType(RoomLightEnum::UNDEFINED);
@@ -373,13 +387,14 @@ void TestExpandoraCommon::roomCompareTest_data()
                                       desc,
                                       contents,
                                       room.getTerrainType(),
-                                      get_exit_flags(room),
+                                      get_exits(room),
                                       promptFlags,
                                       connectedFlags);
         QTest::newRow("lit") << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Dark
+    // Troll mode can update dark rooms, allow TOLERANCE
     {
         const auto room = create_room([](ExternalRawRoom &r) {
             r.setLightType(RoomLightEnum::UNDEFINED);
@@ -397,7 +412,7 @@ void TestExpandoraCommon::roomCompareTest_data()
                                       desc,
                                       contents,
                                       room.getTerrainType(),
-                                      get_exit_flags(room),
+                                      get_exits(room),
                                       promptFlags,
                                       connectedFlags);
         QTest::newRow("dark") << room << event << ComparisonResultEnum::TOLERANCE;

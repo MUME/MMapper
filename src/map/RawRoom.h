@@ -7,7 +7,6 @@
 #include "ExitsFlags.h"
 #include "RawExit.h"
 #include "RoomFields.h"
-#include "parseevent.h"
 
 namespace detail {
 template<typename Tag_>

@@ -867,6 +867,7 @@ void World::updateRoom(const RawRoom &newRoom)
         RawExit &copy = check.exits[dir];
         copy.fields.exitFlags = changed.exitFlags;
         copy.fields.doorFlags = changed.doorFlags;
+        copy.fields.doorName = changed.doorName;
     }
     if (check != newRoom) {
         throw InvalidMapOperation("Room mismatch");
@@ -1586,7 +1587,20 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
                 if (eventExitFlags ^ roomExitFlags) {
                     roomExit.fields.exitFlags = (roomExitFlags | eventExitFlags);
                 }
+
+                const DoorFlags roomDoorFlags = roomExit.fields.doorFlags;
+                const DoorFlags eventDoorFlags = event.getExits()[dir].fields.doorFlags;
+
+                if (eventDoorFlags ^ roomDoorFlags) {
+                    roomExit.fields.doorFlags = (roomDoorFlags | eventDoorFlags);
+                }
+
+                const auto &doorName = event.getExits()[dir].fields.doorName;
+                if (!doorName.isEmpty()) {
+                    roomExit.fields.doorName = doorName;
+                }
             }
+
         } else {
             // Replace exit flags if target room is not up to date
             for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {

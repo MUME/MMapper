@@ -16,6 +16,7 @@
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitsFlags.h"
 #include "../map/PromptFlags.h"
+#include "../map/RawRoom.h"
 #include "../map/RoomFieldVariant.h"
 #include "../map/RoomHandle.h"
 #include "../map/mmapper2room.h"
@@ -131,7 +132,8 @@ struct NODISCARD ParserCommonData final
 {
 public:
     QString exits; // nullString
-    ExitsFlagsType exitsFlags;
+    RawExits roomExits;
+    ServerExitIds exitIds;
     PromptFlagsType promptFlags;
     ConnectedRoomFlagsType connectedRoomFlags;
     RoomTerrainEnum terrain;

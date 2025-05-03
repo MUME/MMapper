@@ -719,9 +719,9 @@ void MumeXmlParser::move()
                                                 m_commonData.roomName.value_or(RoomName{}),
                                                 m_commonData.roomDesc.value_or(RoomDesc{}),
                                                 m_commonData.roomContents.value_or(RoomContents{}),
-                                                m_exitIds.value_or(ServerExitIds{}),
+                                                m_commonData.exitIds,
                                                 m_commonData.terrain,
-                                                m_commonData.exitsFlags,
+                                                m_commonData.roomExits,
                                                 m_commonData.promptFlags,
                                                 m_commonData.connectedRoomFlags);
 

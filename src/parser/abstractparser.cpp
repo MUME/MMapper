@@ -889,7 +889,7 @@ void AbstractParser::doOfflineCharacterMove()
                                                 otherRoom.getContents(),
                                                 ServerExitIds{},
                                                 otherRoom.getTerrainType(),
-                                                ExitsFlagsType{},
+                                                RawExit{},
                                                 PromptFlagsType{},
                                                 ConnectedRoomFlagsType{});
         onHandleParseEvent(SigParseEvent{ev});

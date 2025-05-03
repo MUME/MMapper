@@ -6,6 +6,7 @@
 
 #include "../global/EnumIndexedArray.h"
 #include "../global/MmQtHandle.h"
+#include "../map/RawRoom.h"
 #include "../map/roomid.h"
 #include "CommandId.h"
 #include "ConnectedRoomFlags.h"
@@ -32,6 +33,7 @@ class ParseEvent;
 using SharedParseEvent = std::shared_ptr<ParseEvent>;
 using SigParseEvent = MmQtHandle<ParseEvent>;
 using ServerExitIds = EnumIndexedArray<ServerRoomId, ExitDirEnum, NUM_EXITS>;
+using RawExits = RawRoom::Exits;
 
 // X(_MemberType, _memberName, _defaultInitializer)
 #define XFOREACH_PARSEEVENT_MEMBER(X) \
@@ -39,7 +41,7 @@ using ServerExitIds = EnumIndexedArray<ServerRoomId, ExitDirEnum, NUM_EXITS>;
     X(RoomDesc, m_roomDesc, ) \
     X(RoomContents, m_roomContents, ) \
     X(ServerExitIds, m_exitIds, ) \
-    X(ExitsFlagsType, m_exitsFlags, ) \
+    X(RawExits, m_exits, ) \
     X(PromptFlagsType, m_promptFlags, ) \
     X(ConnectedRoomFlagsType, m_connectedRoomFlags, ) \
     X(ServerRoomId, m_serverId, {INVALID_SERVER_ROOMID}) \
@@ -99,10 +101,15 @@ public:
     {
         return m_exitIds;
     }
-    NODISCARD ExitsFlagsType getExitsFlags() const
+
+    NODISCARD const RawExits &getExits() const
     {
-        return m_exitsFlags;
+        return m_exits;
     }
+
+    // DEPRECATED_MSG("use getExits()")
+    NODISCARD ExitsFlagsType getExitsFlags() const;
+
     NODISCARD PromptFlagsType getPromptFlags() const
     {
         return m_promptFlags;
@@ -178,9 +185,9 @@ public:
                                                         RoomName roomName,
                                                         RoomDesc roomDesc,
                                                         RoomContents roomContents,
-                                                        ServerExitIds exitIds,
+                                                        const ServerExitIds &exitIds,
                                                         RoomTerrainEnum terrain,
-                                                        ExitsFlagsType exitsFlags,
+                                                        RawExits exits,
                                                         PromptFlagsType promptFlags,
                                                         ConnectedRoomFlagsType connectedRoomFlags);
     NODISCARD static ParseEvent createEvent(CommandEnum c,
@@ -190,7 +197,7 @@ public:
                                             RoomContents roomContents,
                                             ServerExitIds exitIds,
                                             RoomTerrainEnum terrain,
-                                            ExitsFlagsType exitsFlags,
+                                            RawExits exits,
                                             PromptFlagsType promptFlags,
                                             ConnectedRoomFlagsType connectedRoomFlags);
 
