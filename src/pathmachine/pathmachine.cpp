@@ -332,6 +332,9 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent, Chang
             continue;
         }
         const auto &e = here.getExit(dir);
+        if (e.getExitFlags().isNoMatch()) {
+            continue;
+        }
         if (const auto there = m_map.findRoomHandle(toServerId)) {
             // ServerId already exists
             const auto from = here.getId();
@@ -356,7 +359,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent, Chang
         crf.isValid() && (crf.hasAnyDirectSunlight() || crf.isTrollMode())) {
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const auto &e = here.getExit(dir);
-            if (!e.outIsUnique()) {
+            if (e.getExitFlags().isNoMatch() || !e.outIsUnique()) {
                 continue;
             }
 
