@@ -162,13 +162,9 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
 {
     const ParseEvent &event = sigParseEvent.deref();
     if (getCurrentMap().empty()) {
-        if ((false)) {
-            // what was going on in this case?
-            Coordinate c(0, 0, 0);
-            slot_createRoom(sigParseEvent, c);
-            std::abort();
-        }
-        return;
+        // Bootstrap an empty map with its first room
+        Coordinate c(0, 0, 0);
+        slot_createRoom(sigParseEvent, c);
     }
 
     getCurrentMap().getRooms(recipient, event);
