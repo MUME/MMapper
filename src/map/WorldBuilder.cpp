@@ -245,7 +245,7 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
             ++exitRepairStats.removedDoorFlagsExt;
         }
 
-        if (!exit.hasDoorName() != oldHadDoorName) {
+        if (!exit.hasDoorName() && oldHadDoorName) {
             ++exitRepairStats.removedDoorName;
             output.removedDoors.emplace_back(RemovedDoorName{r.getId(), dir, oldDoorName});
         }
