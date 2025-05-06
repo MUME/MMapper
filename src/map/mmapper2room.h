@@ -7,6 +7,8 @@
 #include "../global/Flags.h"
 #include "../global/TaggedString.h"
 
+#include <stdexcept>
+
 #include <QtGlobal>
 
 namespace tags {
@@ -277,6 +279,8 @@ NODISCARD inline ModifyTypeEnum getModifyType(RoomFieldEnum field)
         return ModifyTypeEnum::_type;
         XFOREACH_ROOM_FIELD_ENUM(X_CASE)
 #undef X_CASE
+    default:
+        throw std::runtime_error("Invalid RoomFieldEnum value");
     }
 }
 
@@ -287,6 +291,8 @@ NODISCARD inline FlagModifyModeEnum getModifyMode(RoomFieldEnum field, bool is_a
         return is_add ? FlagModifyModeEnum::ASSIGN : FlagModifyModeEnum::CLEAR;
     case ModifyTypeEnum::InsertRemove:
         return is_add ? FlagModifyModeEnum::INSERT : FlagModifyModeEnum::REMOVE;
+    default:
+        throw std::runtime_error("Invalid ModifyTypeEnum value");
     }
 }
 

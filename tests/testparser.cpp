@@ -158,7 +158,7 @@ void TestParser::createParseEventTest()
                                                      roomContents,
                                                      ServerExitIds{},
                                                      terrain,
-                                                     RawExit{},
+                                                     RawExits{},
                                                      pFlags,
                                                      cFlags);
 

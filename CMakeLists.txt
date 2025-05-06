@@ -370,6 +370,7 @@ if(MSVC)
     # modernize the __cplusplus value
     add_compile_options(/Zc:__cplusplus)
     add_compile_options(/utf-8)
+    add_compile_options(/permissive-)
 endif()
 
 # Download arda.mm2
