@@ -25,6 +25,35 @@ public:
     // inherits all constructors
     using base::base;
 
+    EnumIndexedArray(EnumIndexedArray &other)
+        : base(static_cast<const base &>(other))
+    {}
+
+    EnumIndexedArray(const EnumIndexedArray &other)
+        : base(static_cast<const base &>(other))
+    {}
+
+    EnumIndexedArray(EnumIndexedArray &&other) noexcept(std::is_nothrow_move_constructible_v<base>)
+        : base(static_cast<base &&>(std::move(other)))
+    {}
+
+    EnumIndexedArray &operator=(const EnumIndexedArray &other)
+    {
+        if (this != &other) {
+            static_cast<base &>(*this) = static_cast<const base &>(other);
+        }
+        return *this;
+    }
+
+    EnumIndexedArray &operator=(EnumIndexedArray &&other) noexcept(
+        std::is_nothrow_move_assignable_v<base>)
+    {
+        if (this != &other) {
+            static_cast<base &>(*this) = static_cast<base &&>(std::move(other));
+        }
+        return *this;
+    }
+
 public:
     NODISCARD decltype(auto) at(E e) { return base::at(static_cast<uint32_t>(e)); }
     NODISCARD decltype(auto) at(E e) const { return base::at(static_cast<uint32_t>(e)); }
