@@ -664,9 +664,11 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                         const Coordinate &here = map.getRoomHandle(id).getPosition();
                         const Coordinate target = here + offset;
                         if (const auto &other = map.findRoomHandle(target)) {
-                            if (!sel.contains(other.getId())) {
-                                return false;
+                            // REVISIT: World consistency check isn't aware of moving rooms in groups with partial overlaps with itself
+                            if ((false) && sel.contains(other.getId())) {
+                                continue;
                             }
+                            return false;
                         }
                     }
                     return true;
