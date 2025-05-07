@@ -17,6 +17,7 @@
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
 #include "../global/AsyncTasks.h"
+#include "../global/SendToUser.h"
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
 #include "../global/window_utils.h"
@@ -2020,6 +2021,8 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
 
     setCurrentFile(mapData.getFileName());
     showStatusShort(tr("File loaded"));
+
+    global::sendToUser("Map loaded.\n");
 }
 
 void MainWindow::onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks)
