@@ -94,14 +94,30 @@ namespace conversion {
 namespace conversion_detail {
 static constexpr size_t UTF8_BITS_PER_BYTE = 6;
 
+template<typename T>
+struct NODISCARD wrapped final
+{
+    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
+    T value{};
+    NODISCARD explicit constexpr wrapped(const T x)
+        : value{x}
+    {}
+
+    using W = wrapped<T>;
+    NODISCARD friend constexpr W operator&(const W a, const W b) noexcept
+    {
+        return W{static_cast<T>(a.value & b.value)};
+    }
+};
+
 NODISCARD static inline constexpr uint8_t u8_bottom_bits(const size_t N) noexcept
 {
-    assert(0 <= N && N < 8);
+    assert(/* 0 <= N && */ N < 8);
     return static_cast<uint8_t>((1u << N) - 1u);
 }
 NODISCARD static inline constexpr uint8_t u8_top_bits(const size_t N) noexcept
 {
-    assert(0 <= N && N < 8);
+    assert(/* 0 <= N && */ N < 8);
     return static_cast<uint8_t>(~u8_bottom_bits(8 - N));
 }
 
@@ -391,7 +407,11 @@ private:
 
             // continuation bytes: 10xxxxxx
             codepoint <<= UTF8_BITS_PER_BYTE;
-            codepoint |= next & B<UTF8_BITS_PER_BYTE>();
+
+            // to silence warnings for bitwise operations on types that promote to int
+            using W = wrapped<uint8_t>;
+            const auto tmp = W{next} & W{B<UTF8_BITS_PER_BYTE>()};
+            codepoint |= tmp.value;
         }
 
         return OptCodepoint{size, codepoint};
@@ -647,7 +667,8 @@ namespace conversion_detail {
 template<size_t N>
 NODISCARD static inline constexpr uint8_t extract_part(const char32_t codepoint)
 {
-    return ((codepoint >> (N * UTF8_BITS_PER_BYTE)) & B<UTF8_BITS_PER_BYTE>());
+    const auto result = (codepoint >> (N * UTF8_BITS_PER_BYTE)) & B<UTF8_BITS_PER_BYTE>();
+    return static_cast<uint8_t>(result);
 }
 
 template<size_t N>

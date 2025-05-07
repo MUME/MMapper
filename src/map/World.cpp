@@ -1279,10 +1279,14 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
         counter.step();
     }
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
     return w;
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 }
 
 RoomId World::getNextId() const

@@ -84,7 +84,7 @@ void TestGlobal::ansi256ColorTest()
     // these are called for the side-effect of testing their asserts.
 #define X_TEST(N, lower, UPPER) \
     do { \
-        const std::string_view testing = #lower; \
+        MAYBE_UNUSED const std::string_view testing = #lower; /* variable exists for debugging */ \
         std::ignore = mmqt::rgbToAnsi256String(lower##Rgb, AnsiColor16LocationEnum::Foreground); \
         std::ignore = mmqt::rgbToAnsi256String(lower##Rgb, AnsiColor16LocationEnum::Background); \
     } while (false);

@@ -451,12 +451,12 @@ NODISCARD std::optional<char32_t> tryGetOneCodepointHexCode(const QString &hex)
         }
         result *= 16u;
         if ('0' <= c && c <= '9') {
-            result += c.unicode() - '0';
+            result += c.unicode() - static_cast<uint32_t>(u'0');
         } else if ('a' <= c && c <= 'f') {
-            result += 10 + (c.unicode() - 'a');
+            result += 10 + (c.unicode() - static_cast<uint32_t>(u'a'));
 
         } else if ('A' <= c && c <= 'F') {
-            result += 10 + (c.unicode() - 'A');
+            result += 10 + (c.unicode() - static_cast<uint32_t>(u'A'));
         } else {
             return std::nullopt;
         }
@@ -479,7 +479,7 @@ NODISCARD std::optional<std::u32string> getUnicode(const QString &hex)
         }
     }
 
-    return std::move(result);
+    return std::optional<std::u32string>{std::move(result)};
 }
 
 NODISCARD bool containsSurrogates(const QString &s)

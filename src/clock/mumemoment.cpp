@@ -137,7 +137,7 @@ int MumeMoment::moonZenithMinutes() const
 {
     // At what minute of day the moon is at its highest point in the sky
     const auto count = static_cast<int64_t>(toSeconds()) * MUME_MINUTES_PER_DAY;
-    return (count / MUME_MINUTES_PER_MOON_CYCLE) % MUME_MINUTES_PER_DAY;
+    return static_cast<int>((count / MUME_MINUTES_PER_MOON_CYCLE) % MUME_MINUTES_PER_DAY);
 }
 
 MumeMoonPositionEnum MumeMoment::moonPosition() const
@@ -245,7 +245,7 @@ int MumeMoment::untilMoonPhase(MumeMoonPhaseEnum phase) const
     const auto cycle = static_cast<int64_t>(toSeconds()) % MUME_MINUTES_PER_MOON_CYCLE;
     const auto target = MUME_MINUTES_PER_MOON_CYCLE
                         * (2 * PHASE_OFFSET[static_cast<int>(phase)] + 47) / 48;
-    return (target - cycle) % MUME_MINUTES_PER_MOON_CYCLE;
+    return static_cast<int>((target - cycle) % MUME_MINUTES_PER_MOON_CYCLE);
 }
 
 QString MumeMoment::toMumeMoonTime() const
