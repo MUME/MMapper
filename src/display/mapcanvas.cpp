@@ -1080,6 +1080,7 @@ void MapCanvas::screenChanged()
 void MapCanvas::selectionChanged()
 {
     update();
+    emit sig_selectionChanged();
 }
 
 void MapCanvas::graphicsSettingsChanged()

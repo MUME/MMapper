@@ -227,6 +227,7 @@ signals:
 
     void sig_log(const QString &, const QString &);
 
+    void sig_selectionChanged();
     void sig_newRoomSelection(const SigRoomSelection &);
     void sig_newConnectionSelection(ConnectionSelection *);
     void sig_newInfoMarkSelection(InfoMarkSelection *);
