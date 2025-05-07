@@ -6,6 +6,7 @@
 
 #include "mapfrontend.h"
 
+#include "../global/SendToUser.h"
 #include "../global/Timer.h"
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
@@ -73,7 +74,8 @@ bool MapFrontend::createEmptyRoom(const Coordinate &c)
 {
     const auto &map = getCurrentMap();
     if (map.findRoomHandle(c)) {
-        qWarning() << "A room already exists at the chosen position.";
+        MMLOG_ERROR() << "A room already exists at the chosen position.";
+        global::sendToUser("A room already exists at the chosen position.\n");
         return false;
     }
 
@@ -227,6 +229,7 @@ bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
         result = m_current.map.applySingleChange(pc, change);
     } catch (const std::exception &e) {
         MMLOG_ERROR() << "Exception: " << e.what();
+        global::sendToUser(QString("%1\n").arg(e.what()));
         return false;
     }
 
@@ -247,6 +250,7 @@ bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
         result = m_current.map.apply(pc, changes);
     } catch (const std::exception &e) {
         MMLOG_ERROR() << "Exception: " << e.what();
+        global::sendToUser(QString("%1\n").arg(e.what()));
         return false;
     }
 
