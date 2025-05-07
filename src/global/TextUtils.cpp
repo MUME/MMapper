@@ -41,7 +41,7 @@ bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 namespace text_utils {
 SplitResult<std::string_view> split_at(const std::string_view sv, const size_t pos)
 {
-    assert(0 <= pos && pos <= sv.size());
+    assert(pos <= sv.size());
     return {sv.substr(0, pos), sv.substr(pos, sv.size() - pos)};
 }
 

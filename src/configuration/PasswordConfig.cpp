@@ -3,6 +3,8 @@
 
 #include "PasswordConfig.h"
 
+#include "../global/macros.h"
+
 static const QLatin1String PASSWORD_KEY("password");
 static const QLatin1String APP_NAME("org.mume.mmapper");
 
@@ -40,6 +42,7 @@ void PasswordConfig::setPassword(const QString &password)
     m_writeJob.setTextData(password);
     m_writeJob.start();
 #else
+    std::ignore = password;
     emit sig_error("Password setting is not available.");
 #endif
 }

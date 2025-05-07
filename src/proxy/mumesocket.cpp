@@ -444,6 +444,8 @@ void MumeWebSocket::virt_sendToMud(const TelnetIacBytes &ba)
     }
 #ifndef MMAPPER_NO_WEBSOCKET
     m_socket.sendBinaryMessage(ba.getQByteArray());
+#else
+    std::ignore = ba;
 #endif
     m_pingTimer.start();
 }
