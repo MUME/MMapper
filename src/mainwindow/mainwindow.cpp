@@ -427,6 +427,25 @@ void MainWindow::wireConnections()
     connect(zoomResetAct, &QAction::triggered, canvas, &MapCanvas::slot_zoomReset);
 
     connect(canvas, &MapCanvas::sig_newRoomSelection, this, &MainWindow::slot_newRoomSelection);
+    connect(canvas, &MapCanvas::sig_selectionChanged, this, [this]() {
+        if (m_roomSelection != nullptr && m_roomSelection->size()) {
+            auto anyRoomAtOffset = [this](const Coordinate &offset) -> bool {
+                const auto &sel = deref(m_roomSelection);
+                for (const RoomId id : sel) {
+                    const Coordinate &here = m_mapData->getRoomHandle(id).getPosition();
+                    const Coordinate target = here + offset;
+                    if (m_mapData->findRoomHandle(target)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            moveUpRoomSelectionAct->setEnabled(!anyRoomAtOffset(Coordinate(0, 0, 1)));
+            moveDownRoomSelectionAct->setEnabled(!anyRoomAtOffset(Coordinate(0, 0, -1)));
+            mergeUpRoomSelectionAct->setEnabled(anyRoomAtOffset(Coordinate(0, 0, 1)));
+            mergeDownRoomSelectionAct->setEnabled(anyRoomAtOffset(Coordinate(0, 0, -1)));
+        }
+    });
     connect(canvas,
             &MapCanvas::sig_newConnectionSelection,
             this,
