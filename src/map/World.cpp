@@ -1917,9 +1917,7 @@ void World::post_change_updates(ProgressCounter &pc)
     if (needsBoundsUpdate()) {
         updateBounds(pc);
     }
-    if constexpr (IS_DEBUG_BUILD) {
-        checkConsistency(pc);
-    }
+    checkConsistency(pc);
 }
 
 void World::applyOne(ProgressCounter &pc, const Change &change)
