@@ -2215,16 +2215,80 @@ bool World::containsRoomsNotIn(const World &other) const
     return m_cachedRoomSet.containsElementNotIn(other.m_cachedRoomSet);
 }
 
+namespace { // anonymous
+
+NODISCARD bool hasMeshDifference(const RawExit &a, const RawExit &b)
+{
+    // door name change is not a mesh difference
+    return a.fields.exitFlags != b.fields.exitFlags     //
+           || a.fields.doorFlags != b.fields.doorFlags; //
+}
+
+NODISCARD bool hasMeshDifference(const RawRoom::Exits &a, const RawRoom::Exits &b)
+{
+    for (auto dir : ALL_EXITS7) {
+        if (hasMeshDifference(a[dir], b[dir])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+NODISCARD bool hasMeshDifference(const RoomFields &a, const RoomFields &b)
+{
+#define X_CASE(_Type, _Name, _Init) \
+    if ((a._Name) != (b._Name)) { \
+        return true; \
+    }
+    // NOTE: Purposely *NOT* doing "XFOREACH_ROOM_STRING_PROPERTY(X_CASE)"
+    XFOREACH_ROOM_FLAG_PROPERTY(X_CASE)
+    XFOREACH_ROOM_ENUM_PROPERTY(X_CASE)
+    return false;
+#undef X_CASE
+}
+
+NODISCARD bool hasMeshDifference(const RawRoom &a, const RawRoom &b)
+{
+    return a.position != b.position                 //
+           || hasMeshDifference(a.fields, b.fields) //
+           || hasMeshDifference(a.exits, b.exits);  //
+}
+
+// Only valid if one is immediately derived from the other.
+NODISCARD bool hasMeshDifference(const World &a, const World &b)
+{
+    for (const RoomId id : a.getRoomSet()) {
+        if (!b.hasRoom(id)) {
+            // technically we could return true here, but the function assumes that it won't be
+            // called if the worlds added or removed any rooms, so we only care about common rooms.
+            continue;
+        }
+        if (hasMeshDifference(deref(a.getRoom(id)), deref(b.getRoom(id)))) {
+            return true;
+        }
+    }
+    return false;
+}
+} // namespace
+
 // Only valid if one is immediately derived from the other.
 WorldComparisonStats World::getComparisonStats(const World &base, const World &modified)
 {
+    const auto anyRoomsAdded = modified.containsRoomsNotIn(base);
+    const auto anyRoomsRemoved = base.containsRoomsNotIn(modified);
+    const auto anyRoomsMoved = base.m_spatialDb != modified.m_spatialDb;
+
     WorldComparisonStats result;
     result.boundsChanged = base.getBounds() != modified.getBounds();
-    result.anyRoomsRemoved = base.containsRoomsNotIn(modified);
-    result.anyRoomsAdded = modified.containsRoomsNotIn(base);
-    result.spatialDbChanged = base.m_spatialDb != modified.m_spatialDb;
+    result.anyRoomsRemoved = anyRoomsRemoved;
+    result.anyRoomsAdded = anyRoomsAdded;
+    result.spatialDbChanged = anyRoomsMoved;
     result.serverIdsChanged = base.m_serverIds != modified.m_serverIds;
     result.parseTreeChanged = base.m_parseTree != modified.m_parseTree;
-    result.anyRoomFieldsChanged = base.m_rooms != modified.m_rooms;
+    result.hasMeshDifferences = anyRoomsAdded                         //
+                                || anyRoomsRemoved                    //
+                                || anyRoomsMoved                      //
+                                || hasMeshDifference(base, modified); //
+
     return result;
 }

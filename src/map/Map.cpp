@@ -191,7 +191,7 @@ static void reportDetectedChanges(std::ostream &os, const WorldComparisonStats &
         SHOW(parseTreeChanged);
         SHOW(serverIdsChanged);
 
-        SHOW(anyRoomFieldsChanged);
+        SHOW(hasMeshDifferences);
 
 #undef SHOW
     } while (false);
@@ -207,12 +207,7 @@ NODISCARD static RoomUpdateFlags reportNeededUpdates(std::ostream &os,
     // REVISIT: actually it doesn't matter if Align or Portable changed,
     // but there's no way to quickly those individually any more.
 
-    const bool needRoomMeshUpdate = stats.anyRoomsRemoved         //
-                                    || stats.anyRoomsAdded        //
-                                    || stats.spatialDbChanged     //
-                                    || stats.anyRoomFieldsChanged //
-        ;
-
+    const bool needRoomMeshUpdate = stats.hasMeshDifferences;
     const bool boundsChanged = stats.boundsChanged;
 
     os << "[update] Bounds changed: " << (boundsChanged ? "YES" : "NO") << ".\n";
@@ -1588,7 +1583,7 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(stats12.anyRoomsAdded);
         TEST_ASSERT(stats12.spatialDbChanged);
         TEST_ASSERT(stats12.parseTreeChanged);
-        TEST_ASSERT(stats12.anyRoomFieldsChanged);
+        TEST_ASSERT(stats12.hasMeshDifferences);
         TEST_ASSERT(!stats12.serverIdsChanged);
     }
 
@@ -1599,7 +1594,7 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(!stats23.anyRoomsAdded);
         TEST_ASSERT(stats23.spatialDbChanged);
         TEST_ASSERT(stats23.parseTreeChanged);
-        TEST_ASSERT(stats23.anyRoomFieldsChanged);
+        TEST_ASSERT(stats23.hasMeshDifferences);
         TEST_ASSERT(!stats23.serverIdsChanged);
     }
 
@@ -1610,7 +1605,7 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(!stats13.anyRoomsAdded);
         TEST_ASSERT(!stats13.spatialDbChanged);
         TEST_ASSERT(!stats13.parseTreeChanged);
-        TEST_ASSERT(!stats13.anyRoomFieldsChanged);
+        TEST_ASSERT(!stats13.hasMeshDifferences);
         TEST_ASSERT(!stats13.serverIdsChanged);
     }
 }
