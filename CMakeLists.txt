@@ -241,6 +241,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
             add_link_options(-fsanitize=address)
         endif()
 
+        if(TRUE)
+            message(STATUS "Building with GCC undefined behavior sanitizer")
+            add_compile_options(-fsanitize=undefined)
+            add_link_options(-fsanitize=undefined)
+        endif()
+
         add_compile_options(-Waddress)
         add_compile_options(-Wcast-align)
         add_compile_options(-Wcast-qual)
