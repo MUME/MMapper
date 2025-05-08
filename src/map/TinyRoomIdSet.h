@@ -18,37 +18,161 @@ struct NODISCARD TinySet
 {
 private:
     using Type = Type_;
-    using Set = Set_;
-    using PtrToSet = std::unique_ptr<Set>;
-
-    // REVISIT: if the type can spare a bit, then they can be equal.
-    /*
-    static_assert(sizeof(Type) < sizeof(uintptr_t));
-    static_assert(sizeof(uintptr_t) >= sizeof(PtrToSet));
-    */
+    using BigSet = Set_; // big as opposed to tiny
+    using UniqueBigSet = std::unique_ptr<BigSet>;
 
 private:
-    uintptr_t m_storage = 0;
+    // This Variant class is basically just a "compiler approved" union of Type and UniqueBig,
+    // where the least significant bit decides which type it is.
+    //
+    // Note that Storage does not control the lifetime of the pointed-to-set,
+    // but TinySet does control the lifetime of that object.
+    struct NODISCARD Variant final
+    {
+    private:
+        static inline constexpr size_t BUF_SIZE = sizeof(uintptr_t);
+        static inline constexpr size_t BUF_ALIGN = alignof(uintptr_t);
+        static_assert(BUF_SIZE == sizeof(UniqueBigSet));
+        static_assert(BUF_SIZE >= sizeof(size_t));
+        static_assert(sizeof(size_t) >= sizeof(Type)); /* note: must be at least one bit larger */
+        alignas(BUF_ALIGN) char m_buf[BUF_SIZE]{0};
+
+    public:
+        NODISCARD bool operator==(const Variant &other) const noexcept
+        {
+            return std::memcmp(m_buf, other.m_buf, BUF_SIZE) == 0;
+        }
+
+    private:
+        // holds_xxx() functions are based on this.
+        //
+        // Note: The copy is made to avoid the following dreaded sequence of events:
+        // 1) auto *ptr = std::launder(reinterpret_cast<UniqueBigSet*>(buf));
+        // 2) auto tmp = *std::launder(reinterpret_cast<uintptr_t*>(buf)); // invalidates ptr
+        // 3) use(ptr); // UB
+        //
+        // The reason this is UB is because of strict pointer aliasing rule that essentially
+        // allows the compiler to assume there can only be only one laundered "object"
+        // (or primitive type) at a given address, with the notable exception that it's also
+        // legal to have a pointer to a type that provides storage (e.g. char).
+        //
+        // So this means if the compiler can detect the start of the lifetime of a new object
+        // at the same address, then the old object's lifetime has ended. This means we cannot
+        // simultaneously maintain a pointer in the storage -and- also examine it as a uintptr_t.
+        // (Hopefully this rule will be relaxed for primitive types in a future c++ standard.)
+        //
+        // Another option would be to detect if the platform is big or little endian,
+        // and then just read the buffer's high or low byte to know the type.
+        // (I'm too lazy to check the assembly to see if either option is actually better,
+        // but I assume that the compiler will figure out both, so I'd expect both
+        // to yield the same assembly code.)
+        NODISCARD uintptr_t get_uintptrt() const noexcept
+        {
+            const Variant copy = *this; // compiler performs a memcpy
+            return *std::launder(reinterpret_cast<const uintptr_t *>(copy.m_buf));
+        }
+
+    public:
+        // empty is effectively just holding "(UniqueBig*)nullptr"
+        NODISCARD bool holds_nothing() const noexcept { return get_uintptrt() == 0u; }
+        NODISCARD bool holds_single_value() const noexcept { return (get_uintptrt() & 1u) == 1u; }
+        NODISCARD bool holds_unique_bigset() const noexcept
+        {
+            return !holds_nothing() && !holds_single_value();
+        }
+
+    public:
+        void clear() noexcept
+        {
+            if (holds_unique_bigset()) {
+                assign_unique_bigset(nullptr);
+            } else {
+                // would it be okay to write "*this = {};" here?
+                *std::launder(reinterpret_cast<uintptr_t *>(m_buf)) = 0u;
+            }
+            assert(holds_nothing());
+        }
+
+    public:
+        NODISCARD Type get_single_value() const noexcept
+        {
+            assert(holds_single_value());
+            const auto ui = get_uintptrt() >> 1u;
+            const auto size = static_cast<size_t>(ui);
+            return IdHelper_::fromBits(size);
+        }
+        void set_single_value(const Type value) noexcept
+        {
+            if (holds_unique_bigset()) {
+                assert(!holds_unique_bigset());
+                std::abort(); // crash
+            }
+
+            constexpr size_t MASK = ~size_t{0} >> 1u;
+            const auto raw_val = static_cast<size_t>(IdHelper_::getBits(value));
+            const auto masked_val = static_cast<uintptr_t>(raw_val & MASK);
+            assert(raw_val == masked_val);
+            const auto ui = (masked_val << 1u) | 1u;
+            assert(holds_nothing() || holds_single_value());
+            *std::launder(reinterpret_cast<uintptr_t *>(m_buf)) = ui;
+            assert(holds_single_value());
+            assert(get_single_value() == value);
+        }
+
+    private:
+        NODISCARD UniqueBigSet &getUniqueBigSet() noexcept
+        {
+            assert(holds_nothing() || holds_unique_bigset()); // used in assignment
+            return *std::launder(reinterpret_cast<UniqueBigSet *>(m_buf));
+        }
+        NODISCARD const UniqueBigSet &getUniqueBigSet() const noexcept
+        {
+            assert(holds_unique_bigset());
+            return *std::launder(reinterpret_cast<const UniqueBigSet *>(m_buf));
+        }
+
+    public:
+        NODISCARD BigSet &get_big() noexcept
+        {
+            assert(holds_unique_bigset());
+            return *getUniqueBigSet();
+        }
+        NODISCARD const BigSet &get_big() const noexcept
+        {
+            assert(holds_unique_bigset());
+            return *getUniqueBigSet();
+        }
+        // newValue is allowed to be nullptr
+        void assign_unique_bigset(UniqueBigSet newValue) noexcept
+        {
+            assert(holds_nothing() || holds_unique_bigset());
+            UniqueBigSet &ref = getUniqueBigSet();
+            using std::swap;
+            swap(ref, newValue);
+            assert(holds_nothing() || holds_unique_bigset());
+        }
+    };
+    Variant m_var;
 
 private:
-    NODISCARD bool isEmpty() const noexcept { return m_storage == 0u; }
-    NODISCARD bool hasOne() const noexcept { return (m_storage & 0x1u) == 0x1u; }
-    NODISCARD bool hasBig() const noexcept { return !isEmpty() && (m_storage & 0x1u) == 0x0u; }
+    NODISCARD bool isEmpty() const noexcept { return m_var.holds_nothing(); }
+    NODISCARD bool hasOne() const noexcept { return m_var.holds_single_value(); }
+    NODISCARD bool hasBig() const noexcept { return m_var.holds_unique_bigset(); }
 
 private:
-    NODISCARD Set &getBig()
+    NODISCARD BigSet &getBig()
     {
         if (!hasBig()) {
             throw std::runtime_error("bad type");
         }
-        return **std::launder(reinterpret_cast<PtrToSet *>(&m_storage));
+        return m_var.get_big();
     }
-    NODISCARD const Set &getBig() const
+    NODISCARD const BigSet &getBig() const
     {
         if (!hasBig()) {
             throw std::runtime_error("bad type");
         }
-        return **std::launder(reinterpret_cast<const PtrToSet *>(&m_storage));
+        return m_var.get_big();
     }
     NODISCARD Type getOnly() const
     {
@@ -56,23 +180,20 @@ private:
             throw std::runtime_error("bad type");
         }
 
-        // NOTE: Only allows 31-bit roomids on 32-bit platforms.
-        return IdHelper_::fromBits(static_cast<size_t>(m_storage) >> 1u);
+        return m_var.get_single_value();
     }
 
 private:
-    void assign(PtrToSet newValue)
+    void assign(UniqueBigSet newValue)
     {
         if (!hasBig()) {
-            m_storage = 0;
+            m_var.clear();
         }
 
-        const bool wasNullptr = newValue == nullptr;
-        PtrToSet *const ptr = std::launder(reinterpret_cast<PtrToSet *>(&m_storage));
-        using std::swap;
-        swap(*ptr, newValue);
+        const bool should_expect_empty = newValue == nullptr;
+        m_var.assign_unique_bigset(std::exchange(newValue, {}));
 
-        if (wasNullptr) {
+        if (should_expect_empty) {
             assert(isEmpty());
         } else {
             assert(hasBig());
@@ -87,17 +208,13 @@ private:
         }
 
         // NOTE: Only allows 31-bit roomids on 32-bit platforms.
-        m_storage = (IdHelper_::getBits(value) << 1u) | 1u;
+        m_var.set_single_value(value);
         assert(hasOne());
     }
 
     void clear() noexcept
     {
-        if (hasBig()) {
-            assign(nullptr);
-        } else {
-            m_storage = 0;
-        }
+        m_var.clear();
         assert(isEmpty());
     }
 
@@ -111,22 +228,22 @@ public:
     }
 
     ~TinySet() { clear(); }
-    TinySet(TinySet &&other) noexcept { std::swap(m_storage, other.m_storage); }
+    TinySet(TinySet &&other) noexcept { std::swap(m_var, other.m_var); }
 
     TinySet(const TinySet &other)
     {
         if (other.hasBig()) {
-            assign(std::make_unique<Set>(other.getBig()));
+            assign(std::make_unique<BigSet>(other.getBig()));
         } else {
             clear();
-            m_storage = other.m_storage;
+            m_var = other.m_var;
         }
     }
 
     TinySet &operator=(TinySet &&other) noexcept
     {
         if (std::addressof(other) != this) {
-            std::swap(m_storage, other.m_storage);
+            std::swap(m_var, other.m_var);
         }
         return *this;
     }
@@ -139,22 +256,13 @@ public:
         return *this;
     }
 
-    explicit TinySet(Set &&other)
-    {
-        if (other.empty()) {
-            /* nop */
-        } else if (other.size() == 1) {
-            *this = TinySet(other.first());
-        } else {
-            set(std::make_unique<Set>(std::move(other)));
-        }
-    }
+    explicit TinySet(BigSet &&other) = delete;
 
 public:
     struct NODISCARD ConstIterator final
     {
     private:
-        using SetConstIt = typename Set::ConstIterator;
+        using SetConstIt = typename BigSet::ConstIterator;
         SetConstIt m_setIt{};
         Type m_val{};
         enum class NODISCARD StateEnum : uint8_t { Empty, One, Big };
@@ -238,9 +346,7 @@ public:
     }
     NODISCARD ConstIterator end() const
     {
-        if (isEmpty()) {
-            return ConstIterator{};
-        } else if (hasOne()) {
+        if (isEmpty() || hasOne()) {
             return ConstIterator{};
         } else {
             return ConstIterator{getBig().end()};
@@ -273,7 +379,7 @@ public:
 
     NODISCARD bool operator==(const TinySet &rhs) const
     {
-        if (m_storage == rhs.m_storage) {
+        if (m_var == rhs.m_var) {
             return true;
         }
 
@@ -342,14 +448,14 @@ public:
             return;
         }
 
-        // convert to Big
-        PtrToSet ptrToBig = std::make_unique<Set>();
-        auto &big = *ptrToBig;
+        // convert to BigSet
+        UniqueBigSet uniqueBigSet = std::make_unique<BigSet>();
+        auto &big = *uniqueBigSet;
         big.insert(getOnly());
         big.insert(id);
 
         assert(hasOne());
-        assign(std::exchange(ptrToBig, {})); // conversion happens here
+        assign(std::exchange(uniqueBigSet, {})); // conversion to BigSet happens here
         assert(hasBig());
     }
 
