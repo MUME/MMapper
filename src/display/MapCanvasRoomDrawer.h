@@ -67,6 +67,18 @@ public:
                && future.wait_for(std::chrono::nanoseconds(0)) != std::future_status::timeout;
     }
 
+private:
+    static void reportException()
+    {
+        try {
+            std::rethrow_exception(std::current_exception());
+        } catch (const std::exception &ex) {
+            qWarning() << "Exception: " << ex.what();
+        } catch (...) {
+            qWarning() << "Unknown exception";
+        }
+    }
+
 public:
     // Don't call this unless isPending() is true.
     // NOTE: This can throw an exception thrown by the async function!
@@ -74,10 +86,17 @@ public:
     {
         DECL_TIMER(t, __FUNCTION__);
         FutureSharedMapBatchFinisher &future = m_opt_future.value();
-        auto pFinisher = future.get();
+
+        SharedMapBatchFinisher pFinisher;
+        try {
+            pFinisher = future.get();
+        } catch (...) {
+            reportException();
+            pFinisher.reset();
+        }
 
         if (m_ignored) {
-            pFinisher = SharedMapBatchFinisher{nullptr};
+            pFinisher.reset();
         }
 
         reset();
