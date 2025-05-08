@@ -34,7 +34,7 @@ struct NODISCARD WorldComparisonStats final
     bool parseTreeChanged = false;
     bool serverIdsChanged = false;
 
-    bool anyRoomFieldsChanged = false;
+    bool hasMeshDifferences = false;
 };
 
 class NODISCARD World final
