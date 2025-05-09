@@ -89,6 +89,9 @@ private:
     void print(const RoomFieldVariant &var);
 
 private:
+    void print(const RoomIdSet &set);
+
+private:
     void print(const ParseEvent &ev);
 
 private:

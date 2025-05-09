@@ -841,9 +841,57 @@ void World::setPosition(const RoomId id, const Coordinate &coord)
     m_rooms.setPosition(id, coord);
 }
 
+bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate &offset) const
+{
+    if (rooms.empty()) {
+        return false;
+    }
+    for (const auto id : rooms) {
+        if (!hasRoom(id)) {
+            return false; // avoid throwing
+        }
+        const auto &here = getPosition(id); // throws if missing
+        const auto there = here + offset;
+        if (auto other = findRoom(there)) {
+            if (!rooms.contains(*other)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void World::moveRelative(const RoomId id, const Coordinate &offset)
 {
     setPosition(id, getPosition(id) + offset);
+}
+
+void World::moveRelative(const RoomIdSet &rooms, const Coordinate &offset)
+{
+    if (rooms.empty()) {
+        throw std::runtime_error("no rooms specified");
+    }
+
+    if (!wouldAllowRelativeMove(rooms, offset)) {
+        throw std::runtime_error("invalid batch movement");
+    }
+
+    struct NODISCARD MoveInfo final
+    {
+        RoomId id;
+        Coordinate newPos;
+    };
+    std::vector<MoveInfo> infos;
+    infos.reserve(rooms.size());
+    for (const auto id : rooms) {
+        const auto &oldPos = getPosition(id);
+        infos.emplace_back(MoveInfo{id, oldPos + offset});
+        m_spatialDb.remove(id, oldPos);
+    }
+    for (const auto &x : infos) {
+        m_spatialDb.add(x.id, x.newPos);
+        m_rooms.setPosition(x.id, x.newPos);
+    }
 }
 
 void World::updateRoom(const RawRoom &newRoom)
@@ -1667,6 +1715,12 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::MoveRelativ
 {
     //
     moveRelative(change.room, change.offset);
+}
+
+void World::apply(ProgressCounter & /*pc*/, const room_change_types::MoveRelative2 &change)
+{
+    //
+    moveRelative(change.rooms, change.offset);
 }
 
 void World::apply(ProgressCounter & /*pc*/, const room_change_types::MergeRelative &change)

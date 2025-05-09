@@ -101,6 +101,12 @@ struct NODISCARD MoveRelative final
     Coordinate offset;
 };
 
+struct NODISCARD MoveRelative2 final
+{
+    RoomIdSet rooms;
+    Coordinate offset;
+};
+
 struct NODISCARD MergeRelative final
 {
     RoomId room = INVALID_ROOMID;
@@ -260,6 +266,8 @@ struct NODISCARD ConnectToNeighborsArgs final
     X(room_change_types::ModifyRoomFlags) \
     SEP() \
     X(room_change_types::MoveRelative) \
+    SEP() \
+    X(room_change_types::MoveRelative2) \
     SEP() \
     X(room_change_types::RemoveRoom) \
     SEP() \

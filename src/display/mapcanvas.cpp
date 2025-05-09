@@ -660,16 +660,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                 auto &map = this->m_data;
                 auto isMovable = [&map](RoomSelection &sel, const Coordinate &offset) -> bool {
                     sel.removeMissing(map);
-                    for (const RoomId id : sel) {
-                        const Coordinate &here = map.getRoomHandle(id).getPosition();
-                        const Coordinate target = here + offset;
-                        if (const auto &other = map.findRoomHandle(target)) {
-                            if (!sel.contains(other.getId())) {
-                                return false;
-                            }
-                        }
-                    }
-                    return true;
+                    return map.getCurrentMap().wouldAllowRelativeMove(sel.getRoomIds(), offset);
                 };
 
                 const auto diff = getSel2().pos.truncate() - getSel1().pos.truncate();
@@ -823,10 +814,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 m_roomSelectionMove.reset();
                 if (!wrongPlace && (m_roomSelection != nullptr)) {
                     const Coordinate moverel{pos, 0};
-                    m_data.applyChangesToList(
-                        *m_roomSelection, [&moverel](const RawRoom &room) -> Change {
-                            return Change{room_change_types::MoveRelative{room.getId(), moverel}};
-                        });
+                    m_data.applySingleChange(Change{
+                        room_change_types::MoveRelative2{m_roomSelection->getRoomIds(), moverel}});
                 }
 
             } else {

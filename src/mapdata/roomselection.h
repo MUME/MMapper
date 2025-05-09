@@ -48,6 +48,9 @@ public:
     void clear() { m_set = {}; }
 
 public:
+    NODISCARD const RoomIdSet &getRoomIds() const { return m_set; }
+
+public:
     void removeMissing(MapData &mapData);
 
 public:

@@ -1078,6 +1078,11 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
     }
 }
 
+NODISCARD bool Map::wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const
+{
+    return getWorld().wouldAllowRelativeMove(set, offset);
+}
+
 BasicDiffStats getBasicDiffStats(const Map &baseMap, const Map &modMap)
 {
     const auto &base = baseMap.getWorld();

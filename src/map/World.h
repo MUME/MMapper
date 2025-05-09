@@ -216,6 +216,7 @@ private:
 
 private:
     void moveRelative(RoomId id, const Coordinate &offset);
+    void moveRelative(const RoomIdSet &rooms, const Coordinate &offset);
     void setPosition(RoomId id, const Coordinate &coord);
     void setServerId(RoomId id, ServerRoomId serverId);
 
@@ -280,4 +281,7 @@ private:
 
 private:
     NODISCARD bool containsRoomsNotIn(const World &other) const;
+
+public:
+    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
 };
