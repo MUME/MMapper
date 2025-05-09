@@ -561,6 +561,18 @@ void ChangePrinter::print(const RoomFieldVariant &var)
 #undef X_NOP
 }
 
+void ChangePrinter::print(const RoomIdSet &set)
+{
+    auto prefix = "";
+    m_os << "RoomIdSet{";
+    for (auto id : set) {
+        m_os << prefix;
+        prefix = ", ";
+        print(id);
+    }
+    m_os << "}";
+}
+
 void ChangePrinter::print(const ParseEvent &event)
 {
     BEGIN_STRUCT_HELPER("ParseEvent")
@@ -659,6 +671,15 @@ void ChangePrinter::virt_accept(const MoveRelative &change)
     BEGIN_STRUCT_HELPER("MoveRelative")
     {
         HELPER_ADD_MEMBER(room);
+        HELPER_ADD_MEMBER(offset);
+    }
+}
+
+void ChangePrinter::virt_accept(const MoveRelative2 &change)
+{
+    BEGIN_STRUCT_HELPER("MoveRelative2")
+    {
+        HELPER_ADD_MEMBER(rooms);
         HELPER_ADD_MEMBER(offset);
     }
 }
