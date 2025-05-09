@@ -137,6 +137,9 @@ public:
                                    const Map &saved,
                                    const Map &current,
                                    const std::function<void(const RawRoom &room)> &callback);
+
+public:
+    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
 };
 
 struct NODISCARD MapApplyResult final
