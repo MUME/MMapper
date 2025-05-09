@@ -589,14 +589,14 @@ public:
     NODISCARD int operator[](const size_t pos) const { return at(pos); }
 
 public:
-    class NODISCARD ConstIterator final
+    class ALLOW_DISCARD ConstIterator final
     {
     private:
         const AnsiItuColorCodes *m_self = nullptr;
         uint8_t m_pos = 0;
 
     public:
-        explicit ConstIterator(const AnsiItuColorCodes *const self, const uint8_t pos)
+        NODISCARD explicit ConstIterator(const AnsiItuColorCodes *const self, const uint8_t pos)
             : m_self{self}
             , m_pos{pos}
         {
@@ -607,7 +607,8 @@ public:
         NODISCARD const AnsiItuColorCodes &getSelf() const { return deref(m_self); }
 
     public:
-        NODISCARD ConstIterator operator++()
+        void operator++(int) = delete;
+        ALLOW_DISCARD ConstIterator operator++()
         {
             if (m_pos >= getSelf().size()) {
                 throw std::runtime_error("invalid increment");

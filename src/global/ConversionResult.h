@@ -7,18 +7,16 @@
 
 #include <type_traits>
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
 template<typename T>
 class NODISCARD ConversionResult final
 {
 private:
     T m_value{};
     CastErrorEnum m_result = CastErrorEnum::Success;
-
-    // This is just to avoid a padding warning
-    static inline constexpr auto PAD_BYTES = (alignof(T) > sizeof(CastErrorEnum))
-                                                 ? (alignof(T) - sizeof(CastErrorEnum))
-                                                 : alignof(T);
-    MAYBE_UNUSED char m_unused_pad[PAD_BYTES]{};
 
 public:
     constexpr explicit ConversionResult(const T n) noexcept
@@ -60,3 +58,6 @@ public:
         return is_valid() && m_value == intValue;
     }
 };
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

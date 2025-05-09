@@ -16,13 +16,13 @@ enum class NODISCARD CastErrorEnum : uint8_t {
     RoundTripFailure,
 };
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
 struct NODISCARD CastErrorException : public std::runtime_error
 {
     CastErrorEnum err = CastErrorEnum::Success;
-
-    // This is just to avoid a padding warning.
-    static_assert(alignof(std::runtime_error) > sizeof(CastErrorEnum));
-    MAYBE_UNUSED char unused_pad[alignof(std::runtime_error) - sizeof(CastErrorEnum)]{};
 
     explicit CastErrorException(const CastErrorEnum e)
         : std::runtime_error{"CastErrorException"}
@@ -32,3 +32,6 @@ struct NODISCARD CastErrorException : public std::runtime_error
     }
     ~CastErrorException() override;
 };
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

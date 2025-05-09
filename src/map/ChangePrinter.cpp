@@ -61,7 +61,7 @@ public:
         m_cp.print(std::forward<V>(value));
     }
 
-    explicit operator bool() const { return true; }
+    NODISCARD explicit operator bool() const { return true; }
 };
 
 #define BEGIN_FLAGS_HELPER(name) if (FlagsHelper helper{*this, name})
@@ -96,7 +96,7 @@ public:
         m_cp.print(std::forward<T>(thing));
     }
 
-    explicit operator bool() const { return true; }
+    NODISCARD explicit operator bool() const { return true; }
 };
 
 ChangePrinter::ChangePrinter(Remap remap, AnsiOstream &os)
