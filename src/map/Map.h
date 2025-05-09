@@ -19,6 +19,9 @@
 #include <ostream>
 #include <vector>
 
+namespace mm {
+struct AbstractDebugOStream;
+}
 class AnsiOstream;
 class Change;
 class ChangeList;
@@ -141,8 +144,9 @@ public:
 
 struct NODISCARD MapApplyResult final
 {
+    static inline constexpr auto ALL_ROOM_UPDATE_FLAGS = ~RoomUpdateFlags{};
     Map map;
-    RoomUpdateFlags roomUpdateFlags = ~RoomUpdateFlags{};
+    RoomUpdateFlags roomUpdateFlags = ALL_ROOM_UPDATE_FLAGS;
 };
 
 struct NODISCARD MapPair final

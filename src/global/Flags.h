@@ -273,14 +273,14 @@ public:
     }
 
 public:
-    struct NODISCARD Iterator final
+    struct ALLOW_DISCARD Iterator final
     {
     private:
         Flags::underlying_type m_bits = 0;
         size_t m_pos = 0;
 
     public:
-        Iterator(const Flags flags, const size_t pos)
+        NODISCARD Iterator(const Flags flags, const size_t pos)
             : m_bits{flags.m_flags}
             , m_pos{pos}
         {}

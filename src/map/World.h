@@ -147,7 +147,7 @@ public:
     NODISCARD ExternalRawRoom convertToExternal(const RawRoom &room) const;
 
     NODISCARD RoomId convertToInternal(ExternalRoomId ext) const;
-    NODISCARD ExternalRoomId convertToExternal(RoomId ext) const;
+    NODISCARD ExternalRoomId convertToExternal(RoomId id) const;
 
 public:
     void applyOne(ProgressCounter &pc, const Change &change);

@@ -1394,9 +1394,9 @@ RoomId World::convertToInternal(const ExternalRoomId ext) const
     return m_remapping.convertToInternal(ext);
 }
 
-ExternalRoomId World::convertToExternal(const RoomId ext) const
+ExternalRoomId World::convertToExternal(const RoomId id) const
 {
-    return m_remapping.convertToExternal(ext);
+    return m_remapping.convertToExternal(id);
 }
 
 void World::apply(ProgressCounter &pc, const world_change_types::CompactRoomIds &change)

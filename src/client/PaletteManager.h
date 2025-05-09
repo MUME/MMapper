@@ -24,7 +24,7 @@ public:
 private:
     QPalette m_focused;
     QPalette m_unfocused;
-    MAYBE_UNUSED bool m_initialized = false;
+    bool m_initialized = false;
 
 public:
     void init(QWidget &widget, const std::optional<QColor> &activeBg, const QColor &inactiveBg);

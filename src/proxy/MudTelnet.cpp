@@ -153,7 +153,7 @@ public:
                 break;
 
             case MSSPStateEnum::IN_VAR:
-                switch (c) {
+                switch (static_cast<uint8_t>(c)) {
                 case TNSB_MSSP_VAR:
                 case TN_IAC:
                 case 0:
@@ -186,7 +186,7 @@ public:
             case MSSPStateEnum::IN_VAL: {
                 assert(varName.has_value());
 
-                switch (c) {
+                switch (static_cast<uint8_t>(c)) {
                 case TN_IAC:
                 case 0:
                     continue;

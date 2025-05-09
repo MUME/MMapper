@@ -219,7 +219,7 @@ void MapFrontend::setCurrentMap(const MapApplyResult &result)
 void MapFrontend::setCurrentMap(Map map)
 {
     // Always update everything when the map is changed like this.
-    setCurrentMap(MapApplyResult{map, ~RoomUpdateFlags{}});
+    setCurrentMap(MapApplyResult{std::move(map)});
 }
 
 bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
