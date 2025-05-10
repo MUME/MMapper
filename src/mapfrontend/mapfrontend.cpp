@@ -239,12 +239,24 @@ bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
 
 bool MapFrontend::applySingleChange(const Change &change)
 {
+    {
+        auto &&log = MMLOG();
+        log << "[MapFrontend::applySingleChange] ";
+        getCurrentMap().printChange(log, change);
+    }
+
     ProgressCounter dummyPc;
     return applySingleChange(dummyPc, change);
 }
 
 bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
 {
+    {
+        auto &&log = MMLOG();
+        log << "[MapFrontend::applyChanges] ";
+        getCurrentMap().printChanges(log, changes.getChanges(), "\n");
+    }
+
     MapApplyResult result;
     try {
         result = m_current.map.apply(pc, changes);

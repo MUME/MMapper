@@ -143,6 +143,24 @@ public:
 
 public:
     NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
+
+public:
+    void printChange(AnsiOstream &aos, const Change &change) const;
+    void printChanges(AnsiOstream &aos,
+                      const std::vector<Change> &changes,
+                      std::string_view sep) const;
+
+public:
+    void printChange(std::ostream &os, const Change &change) const;
+    void printChanges(std::ostream &os,
+                      const std::vector<Change> &changes,
+                      std::string_view sep) const;
+
+public:
+    void printChange(mm::AbstractDebugOStream &os, const Change &change) const;
+    void printChanges(mm::AbstractDebugOStream &os,
+                      const std::vector<Change> &changes,
+                      std::string_view sep) const;
 };
 
 struct NODISCARD MapApplyResult final

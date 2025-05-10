@@ -13,6 +13,36 @@ using namespace world_change_types;
 using namespace exit_change_types;
 using namespace room_change_types;
 
+namespace { // anonymous
+
+constexpr size_t max_roomids_printed = 20;
+
+constexpr RawAnsi const_color = getRawAnsi(AnsiColor16Enum::yellow);
+constexpr RawAnsi error_color = getRawAnsi(AnsiColor16Enum::RED);
+constexpr RawAnsi member_name_color = getRawAnsi(AnsiColor16Enum::cyan);
+constexpr RawAnsi type_name_color = getRawAnsi(AnsiColor16Enum::BLUE);
+constexpr RawAnsi warning_color = getRawAnsi(AnsiColor16Enum::YELLOW);
+
+void print_string_color_quoted(AnsiOstream &aos, std::string_view sv)
+{
+    constexpr RawAnsi normalAnsi = getRawAnsi(AnsiColor16Enum::green);
+    constexpr RawAnsi escapeAnsi = getRawAnsi(AnsiColor16Enum::yellow);
+    aos.writeQuotedWithColor(normalAnsi, escapeAnsi, sv);
+}
+
+template<typename Type_, typename Tag_, typename Int_>
+void writeTaggedInt(AnsiOstream &os,
+                    const std::string_view typeName,
+                    const TaggedInt<Tag_, Type_, Int_> tagged)
+{
+    os.writeWithColor(type_name_color, typeName);
+    os << "{";
+    os.writeWithColor(const_color, tagged.value());
+    os << "}";
+}
+
+} // namespace
+
 #define BEGIN_STRUCT_HELPER(name) if (StructHelper helper{*this, name})
 #define HELPER_ADD_MEMBER(name) helper.add_member(#name, (change.name))
 struct NODISCARD ChangePrinter::StructHelper final
@@ -22,10 +52,12 @@ private:
     size_t m_elements = 0;
 
 public:
-    StructHelper(ChangePrinter &cp, const std::string_view name)
+    explicit StructHelper(ChangePrinter &cp, const std::string_view name)
         : m_cp(cp)
     {
-        m_cp.m_os << name << "{";
+        auto &os = m_cp.m_os;
+        os.writeWithColor(type_name_color, name);
+        os << "{";
     }
     ~StructHelper() { m_cp.m_os << "}"; }
 
@@ -39,12 +71,12 @@ private:
     void write_member_name(const std::string_view name)
     {
         write_comma();
-        m_cp.m_os << name;
+        auto &os = m_cp.m_os;
+        os.writeWithColor(member_name_color, name);
     }
     void write_equals() { m_cp.m_os << " = "; }
 
 public:
-    void add_member(const std::string_view name) { write_member_name(name); }
     template<typename T>
     void add_member(const std::string_view name, T &&value)
     {
@@ -76,7 +108,9 @@ public:
     FlagsHelper(ChangePrinter &cp, const std::string_view name)
         : m_cp(cp)
     {
-        m_cp.m_os << name << "{";
+        auto &os = m_cp.m_os;
+        os.writeWithColor(type_name_color, name);
+        os << "{";
     }
     ~FlagsHelper() { m_cp.m_os << "}"; }
 
@@ -106,87 +140,94 @@ ChangePrinter::ChangePrinter(Remap remap, AnsiOstream &os)
 
 ChangePrinter::~ChangePrinter() = default;
 
-#ifndef NDEBUG
-NORETURN
-#endif
 void ChangePrinter::error()
 {
-    assert(false);
-    m_os << "__ERROR__";
+    m_os.writeWithColor(error_color, "__ERROR__");
 }
 
 void ChangePrinter::print(const bool val)
 {
-    m_os << (val ? "TRUE" : "FALSE");
+    m_os.writeWithColor(const_color, val ? "true" : "false");
 }
 
 void ChangePrinter::print(const Coordinate &coord)
 {
-    m_os << "Coordinate{" << coord.x << ", " << coord.y << ", " << coord.z << "}";
+    auto &os = m_os;
+    os.writeWithColor(type_name_color, "Coordinate");
+    os << "{";
+    os.writeWithColor(const_color, coord.x);
+    os << ", ";
+    os.writeWithColor(const_color, coord.y);
+    os << ", ";
+    os.writeWithColor(const_color, coord.z);
+    os << "}";
 }
 
 void ChangePrinter::print(const ExitDirEnum dir)
 {
-    m_os << to_string_view(dir);
+    m_os.writeWithColor(const_color, to_string_view(dir));
 }
 
 void ChangePrinter::print(const ServerRoomId serverId)
 {
     if (serverId == INVALID_SERVER_ROOMID) {
-        m_os << "INVALID_SERVER_ID";
+        m_os.writeWithColor(error_color, "INVALID_SERVER_ID");
     } else {
-        m_os << "ServerRoomId{" << serverId.asUint32() << "}";
+        writeTaggedInt(m_os, "ServerRoomId", serverId);
     }
 }
 
 void ChangePrinter::print(const RoomId room)
 {
     if (const auto ext = m_remap(room); ext != INVALID_EXTERNAL_ROOMID) {
-        m_os << ext;
+        print(ext);
     } else {
-        m_os << "UnknownExternalId{" << room << "}";
+        m_os.writeWithColor(error_color, "UnknownExternalId");
+        m_os << "{";
+        m_os.writeWithColor(const_color, room.asUint32());
+        m_os << "}";
     }
 }
 
 void ChangePrinter::print(const ExternalRoomId ext)
 {
-    if (ext != INVALID_EXTERNAL_ROOMID) {
-        m_os << ext;
+    if (ext == INVALID_EXTERNAL_ROOMID) {
+        m_os.writeWithColor(error_color, "INVALID_EXTERNAL_ROOMID");
     } else {
-        m_os << "UnknownExternalId{}";
+        writeTaggedInt(m_os, "ExternalRoomId", ext);
     }
 }
 
 void ChangePrinter::print(const DoorName &name)
 {
-    print_string_quoted(m_os, name.getStdStringViewUtf8());
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
 void ChangePrinter::print(const RoomContents &name)
 {
-    print_string_quoted(m_os, name.getStdStringViewUtf8());
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
 void ChangePrinter::print(const RoomName &name)
 {
-    print_string_quoted(m_os, name.getStdStringViewUtf8());
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
 void ChangePrinter::print(const RoomNote &name)
 {
-    print_string_quoted(m_os, name.getStdStringViewUtf8());
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
 void ChangePrinter::print(const RoomDesc &name)
 {
-    print_string_quoted(m_os, name.getStdStringViewUtf8());
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
 void ChangePrinter::print(const ChangeTypeEnum type)
 {
 #define X_CASE(x) \
     case ChangeTypeEnum::x: \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -201,13 +242,13 @@ void ChangePrinter::print(const DirectSunlightEnum type)
     // use "saner" strings
     switch (type) {
     case DirectSunlightEnum::UNKNOWN:
-        m_os << "UNKNOWN";
+        m_os.writeWithColor(const_color, "UNKNOWN");
         return;
     case DirectSunlightEnum::SAW_DIRECT_SUN:
-        m_os << "SUN";
+        m_os.writeWithColor(const_color, "SUN");
         return;
     case DirectSunlightEnum::SAW_NO_DIRECT_SUN:
-        m_os << "DARK";
+        m_os.writeWithColor(const_color, "DARK");
         return;
     }
     error();
@@ -217,7 +258,7 @@ void ChangePrinter::print(const DoorFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     case DoorFlagEnum::UPPER_CASE: \
-        m_os << #UPPER_CASE; \
+        m_os.writeWithColor(const_color, #UPPER_CASE); \
         return;
 
     switch (flag) {
@@ -231,7 +272,7 @@ void ChangePrinter::print(const ExitFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     case ExitFlagEnum::UPPER_CASE: \
-        m_os << #UPPER_CASE; \
+        m_os.writeWithColor(const_color, #UPPER_CASE); \
         return;
 
     switch (flag) {
@@ -245,7 +286,7 @@ void ChangePrinter::print(const FlagChangeEnum type)
 {
 #define X_CASE(X) \
     case FlagChangeEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (type) {
@@ -259,7 +300,7 @@ void ChangePrinter::print(const FlagModifyModeEnum mode)
 {
 #define X_CASE(X) \
     case FlagModifyModeEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (mode) {
@@ -274,7 +315,7 @@ void ChangePrinter::print(const PositionChangeEnum type)
 {
 #define X_CASE(X) \
     case PositionChangeEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (type) {
@@ -288,7 +329,7 @@ void ChangePrinter::print(const PromptFogEnum type)
 {
 #define X_CASE(X) \
     case PromptFogEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (type) {
@@ -302,7 +343,7 @@ void ChangePrinter::print(const PromptWeatherEnum type)
 {
 #define X_CASE(X) \
     case PromptWeatherEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (type) {
@@ -316,7 +357,7 @@ void ChangePrinter::print(const RoomAlignEnum type)
 {
 #define X_CASE(x) \
     case (RoomAlignEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -330,7 +371,7 @@ void ChangePrinter::print(const RoomLoadFlagEnum flag)
 {
 #define X_CASE(X) \
     case RoomLoadFlagEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (flag) {
@@ -344,7 +385,7 @@ void ChangePrinter::print(const RoomMobFlagEnum flag)
 {
 #define X_CASE(X) \
     case RoomMobFlagEnum::X: \
-        m_os << #X; \
+        m_os.writeWithColor(const_color, #X); \
         return;
 
     switch (flag) {
@@ -358,7 +399,7 @@ void ChangePrinter::print(const RoomLightEnum type)
 {
 #define X_CASE(x) \
     case (RoomLightEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -372,7 +413,7 @@ void ChangePrinter::print(const RoomPortableEnum type)
 {
 #define X_CASE(x) \
     case (RoomPortableEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -386,7 +427,7 @@ void ChangePrinter::print(const RoomRidableEnum type)
 {
 #define X_CASE(x) \
     case (RoomRidableEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -400,7 +441,7 @@ void ChangePrinter::print(const RoomSundeathEnum type)
 {
 #define X_CASE(x) \
     case (RoomSundeathEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -414,7 +455,7 @@ void ChangePrinter::print(const RoomTerrainEnum type)
 {
 #define X_CASE(x) \
     case (RoomTerrainEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (type) {
@@ -428,7 +469,7 @@ void ChangePrinter::print(const WaysEnum ways)
 {
 #define X_CASE(x) \
     case (WaysEnum::x): \
-        m_os << #x; \
+        m_os.writeWithColor(const_color, #x); \
         return;
 
     switch (ways) {
@@ -443,7 +484,7 @@ void ChangePrinter::print(const ConnectedRoomFlagsType flags)
     BEGIN_STRUCT_HELPER("ConnectedRoomFlags")
     {
         if (!flags.isValid()) {
-            helper.add_member("INVALID");
+            helper.add_member("INVALID", true);
         } else {
             for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 helper.add_key_value(dir, flags.getDirectSunlight(dir));
@@ -457,7 +498,7 @@ void ChangePrinter::print(const ExitsFlagsType flags)
     BEGIN_STRUCT_HELPER("ExitsFlags")
     {
         if (!flags.isValid()) {
-            helper.add_member("INVALID");
+            helper.add_member("INVALID", true);
         } else {
             for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 helper.add_key_value(dir, flags.get(dir));
@@ -491,8 +532,7 @@ void ChangePrinter::print(const PromptFlagsType flags)
     BEGIN_STRUCT_HELPER("PromptFlagsType")
     {
         if (!flags.isValid()) {
-            helper.add_member("INVALID");
-            m_os << "INVALID";
+            helper.add_member("INVALID", true);
         } else {
             helper.add_member("fog_type", flags.getFogType());
             helper.add_member("weather_type", flags.getWeatherType());
@@ -525,11 +565,14 @@ void ChangePrinter::print(const RoomMobFlags mobFlags)
 void ChangePrinter::print(const ExitFieldVariant &var)
 {
     switch (var.getType()) {
-    case ExitFieldEnum::DOOR_NAME:
-        m_os << "DoorName{";
+    case ExitFieldEnum::DOOR_NAME: {
+        auto &os = m_os;
+        os.writeWithColor(type_name_color, "DoorName");
+        os << "{";
         print(var.getDoorName());
-        m_os << "}";
+        os << "}";
         return;
+    }
     case ExitFieldEnum::EXIT_FLAGS:
         print(var.getExitFlags());
         return;
@@ -544,16 +587,18 @@ void ChangePrinter::print(const RoomFieldVariant &var)
 {
 #define X_NOP()
 #define X_PRINT(UPPER_CASE, CamelCase, Type) \
-    case RoomFieldEnum::UPPER_CASE: \
-        m_os << #UPPER_CASE; \
-        m_os << "{"; \
+    case RoomFieldEnum::UPPER_CASE: { \
+        auto &os = m_os; \
+        os.writeWithColor(type_name_color, #UPPER_CASE); \
+        os << "{"; \
         print(var.get##CamelCase()); \
-        m_os << "}"; \
-        return;
+        os << "}"; \
+        return; \
+    }
     switch (var.getType()) {
         XFOREACH_ROOM_FIELD(X_PRINT, X_NOP)
     case RoomFieldEnum::RESERVED:
-        m_os << "RESERVED";
+        m_os.writeWithColor(error_color, "RESERVED");
         return;
     }
     error();
@@ -563,14 +608,21 @@ void ChangePrinter::print(const RoomFieldVariant &var)
 
 void ChangePrinter::print(const RoomIdSet &set)
 {
+    auto &os = m_os;
     auto prefix = "";
-    m_os << "RoomIdSet{";
+    os.writeWithColor(type_name_color, "RoomIdSet");
+    os << "{";
+    size_t rooms_printed = 0;
     for (auto id : set) {
-        m_os << prefix;
+        os << prefix;
         prefix = ", ";
+        if (rooms_printed++ >= max_roomids_printed) {
+            os.writeWithColor(warning_color, "...");
+            break;
+        }
         print(id);
     }
-    m_os << "}";
+    os << "}";
 }
 
 void ChangePrinter::print(const ParseEvent &event)

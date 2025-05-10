@@ -33,9 +33,6 @@ public:
     ~ChangePrinter() final;
 
 private:
-#ifndef NDEBUG
-    NORETURN
-#endif
     void error();
 
 private:
