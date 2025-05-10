@@ -19,6 +19,16 @@
 #include <vector>
 
 namespace { // anonymous
+
+// REVISIT: Should we replace this with a user-controlled option, or just make for debug builds?
+// For now, it's useful to see this info in release builds;
+//
+// Also, we may want to try to disable this for test cases, because there are tests of invalid
+// enum values, and those can trigger the error() function in the ChangePrinter.
+static volatile bool print_world_changes = true;
+// This limit exists because reverting may create a very large list of changes.
+static volatile size_t max_change_batch_print_size = 20;
+
 struct NODISCARD MapConsistencyError final : public std::runtime_error
 {
     explicit MapConsistencyError(const std::string &msg)
@@ -1991,8 +2001,70 @@ void World::post_change_updates(ProgressCounter &pc)
     checkConsistency(pc);
 }
 
+namespace {
+struct NODISCARD WorldChangePrinter final
+{
+private:
+    const World &m_world;
+    AnsiOstream &m_aos;
+    ChangePrinter m_cp;
+
+public:
+    explicit WorldChangePrinter(const World &w, AnsiOstream &aos)
+        : m_world{w}
+        , m_aos{aos}
+        , m_cp{[this](RoomId id) -> ExternalRoomId {
+                   if (!m_world.hasRoom(id)) {
+                       return INVALID_EXTERNAL_ROOMID;
+                   }
+                   return m_world.convertToExternal(id);
+               },
+               aos}
+    {}
+    void print(const Change &change) { m_cp.print(change); }
+    void print(const std::vector<Change> &changes, const std::string_view sep)
+    {
+        size_t num_printed = 0;
+        std::string_view prefix = "";
+        for (const Change &change : changes) {
+            m_aos << prefix;
+            prefix = sep;
+            if (num_printed++ >= max_change_batch_print_size) {
+                m_aos.writeWithColor(getRawAnsi(AnsiColor16Enum::RED),
+                                     "...(change list print limit reached)...");
+                break;
+            }
+            m_cp.print(change);
+        }
+    }
+};
+
+} // namespace
+
+void World::printChange(AnsiOstream &aos, const Change &change) const
+{
+    WorldChangePrinter{*this, aos}.print(change);
+}
+
+void World::printChanges(AnsiOstream &aos,
+                         const std::vector<Change> &changes,
+                         const std::string_view sep) const
+{
+    WorldChangePrinter{*this, aos}.print(changes, sep);
+}
+
 void World::applyOne(ProgressCounter &pc, const Change &change)
 {
+    if (print_world_changes) {
+        std::ostringstream oss;
+        {
+            AnsiOstream aos{oss};
+            aos << "[world] Applying 1 change...\n";
+            printChange(aos, change);
+            oss << "\n";
+        }
+        MMLOG_INFO() << oss.str();
+    }
     change.acceptVisitor([this, &pc](const auto &specialized_change) {
         //
         this->apply(pc, specialized_change);
@@ -2064,6 +2136,19 @@ void World::applyAll_internal(ProgressCounter &pc, const std::vector<Change> &ch
 
     if (changes.empty()) {
         throw InvalidMapOperation("Changes are empty");
+    }
+
+    if (print_world_changes) {
+        std::ostringstream oss;
+        {
+            AnsiOstream aos{oss};
+            const auto count = changes.size();
+            aos << "[world] Applying " << count << " change" << ((count == 1) ? "" : "s")
+                << "...\n";
+            printChanges(aos, changes, "\n");
+            aos << "\n";
+        }
+        MMLOG_INFO() << oss.str();
     }
 
     pc.increaseTotalStepsBy(changes.size());

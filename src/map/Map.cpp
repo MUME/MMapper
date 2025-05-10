@@ -1083,6 +1083,45 @@ NODISCARD bool Map::wouldAllowRelativeMove(const RoomIdSet &set, const Coordinat
     return getWorld().wouldAllowRelativeMove(set, offset);
 }
 
+void Map::printChange(AnsiOstream &aos, const Change &change) const
+{
+    getWorld().printChange(aos, change);
+}
+void Map::printChanges(AnsiOstream &aos,
+                       const std::vector<Change> &changes,
+                       const std::string_view sep) const
+{
+    getWorld().printChanges(aos, changes, sep);
+}
+
+void Map::printChange(std::ostream &os, const Change &change) const
+{
+    AnsiOstream aos{os};
+    printChange(aos, change);
+}
+void Map::printChanges(std::ostream &os,
+                       const std::vector<Change> &changes,
+                       const std::string_view sep) const
+{
+    AnsiOstream aos{os};
+    printChanges(aos, changes, sep);
+}
+
+void Map::printChange(mm::AbstractDebugOStream &os, const Change &change) const
+{
+    std::ostringstream oss;
+    printChange(oss, change);
+    os.writeUtf8(oss.str());
+}
+void Map::printChanges(mm::AbstractDebugOStream &os,
+                       const std::vector<Change> &changes,
+                       std::string_view sep) const
+{
+    std::ostringstream oss;
+    printChanges(oss, changes, sep);
+    os.writeUtf8(oss.str());
+}
+
 BasicDiffStats getBasicDiffStats(const Map &baseMap, const Map &modMap)
 {
     const auto &base = baseMap.getWorld();

@@ -284,4 +284,10 @@ private:
 
 public:
     NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
+
+public:
+    void printChange(AnsiOstream &aos, const Change &change) const;
+    void printChanges(AnsiOstream &aos,
+                      const std::vector<Change> &changes,
+                      std::string_view sep) const;
 };
