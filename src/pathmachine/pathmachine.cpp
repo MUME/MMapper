@@ -203,6 +203,8 @@ void PathMachine::tryCoordinate(const RoomHandle &room,
 
 ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
 {
+    ChangeList changes;
+
     ParseEvent &event = sigParseEvent.deref();
 
     RoomHandle perhaps;
@@ -214,6 +216,24 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
             appr.receiveRoom(perhaps);
         }
         perhaps = appr.oneMatch();
+    }
+
+    // When moving between server-ID'd rooms, check that the map
+    // thinks that the last move can do what it did and if not, add it.
+    const auto curroom = getMostLikelyRoom();
+    if (getConfig().general.mapMode == MapModeEnum::MAP && perhaps && curroom.getServerId() != INVALID_SERVER_ROOMID) {
+        const CommandEnum moveCode = event.getMoveType();
+        const auto dir = getDirection(moveCode);
+        if (isDirectionNESWUD(moveCode)) {
+            const auto &possible = curroom.getExit(dir);
+            if (!possible.containsOut(perhaps.getId())) {
+                changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
+                                                                           curroom.getId(),
+                                                                           dir,
+                                                                           perhaps.getId(),
+                                                                           WaysEnum::OneWay}});
+            }
+        }
     }
 
     // This code path only happens for historic maps and mazes where no server id is present
@@ -289,8 +309,6 @@ ChangeList PathMachine::approved(const SigParseEvent &sigParseEvent)
 
         return ChangeList{};
     }
-
-    ChangeList changes;
 
     // Update most likely room with player's current location
     setMostLikelyRoom(perhaps.getId());
