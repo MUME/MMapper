@@ -8,6 +8,7 @@
 #include "../global/utils.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
+#include "../opengl/OpenGL.h"
 #include "Filenames.h"
 #include "RoadIndex.h"
 #include "mapcanvas.h"
@@ -336,4 +337,19 @@ void MapCanvas::updateTextures()
 
     // called to trigger an early error
     std::ignore = mctp::getProxy(m_textures);
+}
+
+void MapCanvasTextures::loadCustomTexture(SharedMMTexture &dest,
+                                          const QString &name,
+                                          QOpenGLTexture::Target target,
+                                          const QImage &img)
+{
+    auto tex = MMTexture::alloc(
+        target,
+        [=](QOpenGLTexture &qtex) {
+            qtex.setData(img);
+        },
+        /*forbidUpdates=*/true);
+
+    dest = tex;
 }
