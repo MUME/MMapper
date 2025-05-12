@@ -16,7 +16,6 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
-#include <OpenGL/gl.h>
 #include <QOpenGLFunctions>
 #include "Connections.h"
 #include "MapCanvasConfig.h"
@@ -616,12 +615,7 @@ void MapCanvas::actuallyPaintGL()
     if (m_textures.backgroundImage && m_textures.backgroundImage->getId() != INVALID_MM_TEXTURE_ID) {
         const auto &tex = m_textures.backgroundImage;
 
-        // Manually disable depth test/write for the background image
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-
-        const float z = -1000.f; // Far enough behind everything else
-        // Use correct coordinates: top-left → top-right → bottom-right → bottom-left
+        // Z is arbitrary since we don't rely on depth testing here
         const glm::vec3 topLeft{-6.f, 21.f, 0.f};
         const glm::vec3 topRight{721.f, 21.f, 0.f};
         const glm::vec3 bottomRight{721.f, -271.f, 0.f};
@@ -639,12 +633,8 @@ void MapCanvas::actuallyPaintGL()
             GLRenderState()
                 .withBlend(BlendModeEnum::NONE)
                 .withTexture0(tex->getId())
-                .withColor(Color{1.0f, 1.0f, 1.0f, 1.0f})  // Fully opaque
+                .withColor(Color{1.0f, 1.0f, 1.0f, 1.0f})  // Fully opaque white
             );
-
-        // Restore OpenGL depth state
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
     }
 
     if (m_data.isEmpty()) {
@@ -1106,7 +1096,11 @@ void MapCanvas::renderMapBatches()
         const int thisLayer = layer.first;
         if (thisLayer == m_currentLayer) {
             gl.clearDepth();
-            fadeBackground();
+
+            // Prevent overlay dimming if we have a custom background
+            if (!m_textures.backgroundImage) {
+                fadeBackground();
+            }
         }
         drawLayer(thisLayer, m_currentLayer);
     }
