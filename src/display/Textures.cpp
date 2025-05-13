@@ -257,6 +257,13 @@ void MapCanvas::initTextures()
 
     textures.backgroundImage = loadTexture(getPixmapFilenameRaw("background-image.png"));
 
+    if (textures.backgroundImage) {
+        auto &tex = deref(textures.backgroundImage);
+        const auto id = allocateTextureId();
+        tex.setId(id);
+        m_opengl.setTextureLookup(id, textures.backgroundImage);
+    }
+
 
     {
         textures.for_each([this](SharedMMTexture &pTex) -> void {
