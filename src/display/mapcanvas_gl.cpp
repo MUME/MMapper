@@ -244,30 +244,6 @@ void MapCanvas::initializeGL()
     // REVISIT: should the font texture have the lowest ID?
     initTextures();
 
-    {
-        QImage image(":/pixmaps/arda-map.png");
-        image = image.mirrored();
-
-        if (!image.isNull()) {
-            // Load the image into the backgroundImage texture
-            m_textures.loadCustomTexture(
-                m_textures.backgroundImage,
-                "BackgroundImage", // Just a label
-                QOpenGLTexture::Target2D,
-                image);
-
-            // Register the texture properly with OpenGL
-            if (m_textures.backgroundImage) {
-                auto &tex = deref(m_textures.backgroundImage);
-                const auto id = allocateTextureId();
-                tex.setId(id);
-                m_opengl.setTextureLookup(id, m_textures.backgroundImage);
-            }
-        } else {
-            qWarning() << "Failed to load background image.";
-        }
-    }
-
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
@@ -612,7 +588,9 @@ void MapCanvas::actuallyPaintGL()
     auto &gl = getOpenGL();
     gl.clear(Color{getConfig().canvas.backgroundColor});
 
-    if (m_textures.backgroundImage && m_textures.backgroundImage->getId() != INVALID_MM_TEXTURE_ID) {
+    if (getConfig().canvas.showBackgroundImage.get()
+        && m_textures.backgroundImage
+        && m_textures.backgroundImage->getId() != INVALID_MM_TEXTURE_ID) {
         const auto &tex = m_textures.backgroundImage;
 
         // Z is arbitrary since we don't rely on depth testing here
