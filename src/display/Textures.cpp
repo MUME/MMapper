@@ -255,6 +255,9 @@ void MapCanvas::initTextures()
     textures.room_needs_update = loadTexture(getPixmapFilenameRaw("room-needs-update.png"));
     textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
+    textures.backgroundImage = loadTexture(getPixmapFilenameRaw("background-image.png"));
+
+
     {
         textures.for_each([this](SharedMMTexture &pTex) -> void {
             auto &tex = deref(pTex);

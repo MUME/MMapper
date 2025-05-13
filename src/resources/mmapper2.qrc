@@ -1,5 +1,5 @@
-<!DOCTYPE RCC><RCC version="1.0">
-    <qresource>
+<RCC>
+    <qresource prefix="/">
         <file>LICENSE.GLM</file>
         <file>LICENSE.GPL2</file>
         <file>LICENSE.LGPL</file>
@@ -84,6 +84,7 @@
         <file>icons/viewmag+.png</file>
         <file>icons/viewmag-.png</file>
         <file>icons/viewmagfit.png</file>
+        <file>pixmaps/background-image.png</file>
         <file>pixmaps/char-arrows.png</file>
         <file>pixmaps/char-room-sel.png</file>
         <file>pixmaps/door-down.png</file>
