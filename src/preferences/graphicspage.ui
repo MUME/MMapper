@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>445</width>
-    <height>507</height>
+    <height>568</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -321,6 +321,22 @@
        <widget class="QPushButton" name="resourcePushButton">
         <property name="text">
          <string>Select</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_Background">
+     <property name="title">
+      <string>Map Background</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_Background">
+      <item>
+       <widget class="QCheckBox" name="backgroundImageCheckBox">
+        <property name="text">
+         <string>Show Background Image</string>
         </property>
        </widget>
       </item>
