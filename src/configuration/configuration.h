@@ -139,6 +139,7 @@ public:
         NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
         NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
         NamedConfig<bool> showUnmappedExits{"SHOW_UNMAPPED_EXITS", false};
+        NamedConfig<bool> showBackgroundImage{"SHOW_BACKGROUND_IMAGE", true};
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
         int antialiasingSamples = 0;
