@@ -172,7 +172,7 @@ World World::copy() const
     World result;
     result.m_remapping = m_remapping;
     result.m_rooms = m_rooms;
-    result.m_cachedRoomSet = m_cachedRoomSet;
+    result.m_roomSet = m_roomSet;
     result.m_spatialDb = m_spatialDb;
     result.m_serverIds = m_serverIds;
     result.m_parseTree = m_parseTree;
@@ -182,11 +182,11 @@ World World::copy() const
 
 bool World::operator==(const World &rhs) const
 {
-    return m_remapping == rhs.m_remapping            //
-           && m_rooms == rhs.m_rooms                 //
-           && m_cachedRoomSet == rhs.m_cachedRoomSet //
-           && m_spatialDb == rhs.m_spatialDb         //
-           && m_serverIds == rhs.m_serverIds         //
+    return m_remapping == rhs.m_remapping    //
+           && m_rooms == rhs.m_rooms         //
+           && m_roomSet == rhs.m_roomSet     //
+           && m_spatialDb == rhs.m_spatialDb //
+           && m_serverIds == rhs.m_serverIds //
            && m_parseTree == rhs.m_parseTree;
 }
 
@@ -210,7 +210,7 @@ bool World::hasRoom(const RoomId id) const
 
     if ((false)) {
         // this is O(logN)
-        return m_cachedRoomSet.contains(id);
+        return m_roomSet.contains(id);
     } else {
         // this should be O(1) lookup in a vector.
         return m_remapping.contains(id);
@@ -382,7 +382,7 @@ void World::setRoom(const RoomId id, const RawRoom &room)
         }
     } else {
         // Not found
-        insertId(m_cachedRoomSet, id);
+        insertId(m_roomSet, id);
     }
 
     if (oldServerId != INVALID_SERVER_ROOMID && oldServerId != room.server_id) {
@@ -646,7 +646,7 @@ void World::checkConsistency(ProgressCounter &counter) const
     };
 
     auto checkRemapping = [this](const RoomId id) {
-        if (!m_cachedRoomSet.contains(id)) {
+        if (!m_roomSet.contains(id)) {
             throw MapConsistencyError("remapping cache already contained this id");
         }
 
@@ -969,7 +969,7 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
 
     m_remapping.removeAt(id);
     m_rooms.removeAt(id);
-    removeId(m_cachedRoomSet, id);
+    removeId(m_roomSet, id);
 }
 
 void World::setRoomStatus(const RoomId id, const RoomStatusEnum status)
@@ -1168,7 +1168,7 @@ void World::initRoom(const RawRoom &input)
     /* now perform bookkeeping */
     {
         // REVISIT: should "upToDate" be automatic?
-        insertId(m_cachedRoomSet, id);
+        insertId(m_roomSet, id);
         insertParse(id, ALL_PARSE_KEY_FLAGS);
         m_spatialDb.add(id, input.position);
         m_serverIds.set(input.server_id, id);
@@ -1250,7 +1250,7 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
             DECL_TIMER(t3, "insert-rooms-cachedRoomSet");
             counter.setNewTask(ProgressMsg{"inserting rooms"}, rooms.size());
             for (const auto &room : rooms) {
-                insertId(w.m_cachedRoomSet, room.id);
+                insertId(w.m_roomSet, room.id);
                 counter.step();
             }
         }
@@ -2308,7 +2308,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         }
 
         os << "\n";
-        os << "Total rooms: " << m_cachedRoomSet.size() << ".\n";
+        os << "Total rooms: " << m_roomSet.size() << ".\n";
         os << "\n";
         os << "  missing server id: " << numMissingServerId << ".\n";
         os << "\n";
@@ -2367,7 +2367,7 @@ XFOREACH_ROOM_PROPERTY(X_DEFINE_GETTER)
 
 bool World::containsRoomsNotIn(const World &other) const
 {
-    return m_cachedRoomSet.containsElementNotIn(other.m_cachedRoomSet);
+    return m_roomSet.containsElementNotIn(other.m_roomSet);
 }
 
 namespace { // anonymous
