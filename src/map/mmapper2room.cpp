@@ -297,19 +297,19 @@ RoomNote makeRoomNote(std::string note)
 }
 
 namespace mmqt {
-RoomName makeRoomName(QString name)
+RoomName makeRoomName(const QString &name)
 {
     return ::makeRoomName(toStdStringUtf8(name));
 }
-RoomDesc makeRoomDesc(QString desc)
+RoomDesc makeRoomDesc(const QString &desc)
 {
     return ::makeRoomDesc(toStdStringUtf8(desc));
 }
-RoomContents makeRoomContents(QString desc)
+RoomContents makeRoomContents(const QString &desc)
 {
     return ::makeRoomContents(toStdStringUtf8(desc));
 }
-RoomNote makeRoomNote(QString note)
+RoomNote makeRoomNote(const QString &note)
 {
     return ::makeRoomNote(toStdStringUtf8(note));
 }
@@ -336,7 +336,7 @@ bool RoomNoteTag::isValid(const std::string_view sv)
 
 namespace { // anonymous
 
-static void test_room_descs()
+void test_room_descs()
 {
     auto make_string = [](const size_t len) -> std::string {
         std::string s(len, static_cast<char>('x'));

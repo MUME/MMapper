@@ -277,11 +277,10 @@ NODISCARD inline ModifyTypeEnum getModifyType(RoomFieldEnum field)
 #define X_CASE(_name, _type) \
     case RoomFieldEnum::_name: \
         return ModifyTypeEnum::_type;
-        XFOREACH_ROOM_FIELD_ENUM(X_CASE)
+        XFOREACH_ROOM_FIELD_ENUM(X_CASE) // NOLINT (consecutive identical values are expected)
 #undef X_CASE
-    default:
-        throw std::runtime_error("Invalid RoomFieldEnum value");
     }
+    throw std::runtime_error("Invalid RoomFieldEnum value");
 }
 
 NODISCARD inline FlagModifyModeEnum getModifyMode(RoomFieldEnum field, bool is_add)
@@ -291,9 +290,8 @@ NODISCARD inline FlagModifyModeEnum getModifyMode(RoomFieldEnum field, bool is_a
         return is_add ? FlagModifyModeEnum::ASSIGN : FlagModifyModeEnum::CLEAR;
     case ModifyTypeEnum::InsertRemove:
         return is_add ? FlagModifyModeEnum::INSERT : FlagModifyModeEnum::REMOVE;
-    default:
-        throw std::runtime_error("Invalid ModifyTypeEnum value");
     }
+    throw std::runtime_error("Invalid ModifyTypeEnum value");
 }
 
 NODISCARD extern std::string_view to_string_view(RoomAlignEnum);
@@ -321,10 +319,10 @@ NODISCARD extern RoomContents makeRoomContents(std::string desc);
 NODISCARD extern RoomNote makeRoomNote(std::string note);
 
 namespace mmqt {
-NODISCARD extern RoomName makeRoomName(QString name);
-NODISCARD extern RoomDesc makeRoomDesc(QString desc);
-NODISCARD extern RoomContents makeRoomContents(QString desc);
-NODISCARD extern RoomNote makeRoomNote(QString note);
+NODISCARD extern RoomName makeRoomName(const QString &name);
+NODISCARD extern RoomDesc makeRoomDesc(const QString &desc);
+NODISCARD extern RoomContents makeRoomContents(const QString &desc);
+NODISCARD extern RoomNote makeRoomNote(const QString &note);
 } // namespace mmqt
 
 namespace test {

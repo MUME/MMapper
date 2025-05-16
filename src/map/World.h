@@ -43,7 +43,7 @@ private:
     Remapping m_remapping;
     RawRooms m_rooms;
     /// Cached set for quick access; must be exactly the same as those in rooms.
-    RoomIdSet m_cachedRoomSet;
+    RoomIdSet m_roomSet;
     /// This must be updated any time a room's position changes.
     SpatialDb m_spatialDb;
     ServerIdMap m_serverIds;
@@ -81,7 +81,7 @@ public:
     NODISCARD ExternalRoomId getNextExternalId() const;
 
 public:
-    NODISCARD const RoomIdSet &getRoomSet() const { return m_cachedRoomSet; }
+    NODISCARD const RoomIdSet &getRoomSet() const { return m_roomSet; }
 
 public:
     NODISCARD bool hasRoom(RoomId id) const;
