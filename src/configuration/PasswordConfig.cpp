@@ -5,8 +5,10 @@
 
 #include "../global/macros.h"
 
+#ifndef MMAPPER_NO_QTKEYCHAIN
 static const QLatin1String PASSWORD_KEY("password");
 static const QLatin1String APP_NAME("org.mume.mmapper");
+#endif
 
 PasswordConfig::PasswordConfig(QObject *const parent)
     : QObject(parent)
