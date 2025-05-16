@@ -971,19 +971,6 @@ private:
             return;
         }
 
-        if (false) {
-            os << "The following change-requests will be applied:\n";
-            ChangePrinter printer{[&currentMap](RoomId id) -> ExternalRoomId {
-                                      return currentMap.getExternalRoomId(id);
-                                  },
-                                  os};
-            for (const auto &change : changes.getChanges()) {
-                os << " * ";
-                printer.accept(change);
-                os << "\n";
-            }
-        }
-
         auto &map = getMap();
         if (!map.applyChanges(changes)) {
             os << "Ooops... Something went wrong?\n";
