@@ -182,7 +182,7 @@ void ChangePrinter::print(const RoomId room)
     if (const auto ext = m_remap(room); ext != INVALID_EXTERNAL_ROOMID) {
         print(ext);
     } else {
-        m_os.writeWithColor(error_color, "UnknownExternalId");
+        m_os.writeWithColor(error_color, "UnknownRoomId");
         m_os << "{";
         m_os.writeWithColor(const_color, room.asUint32());
         m_os << "}";
