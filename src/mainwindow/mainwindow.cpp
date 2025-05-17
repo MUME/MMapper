@@ -976,8 +976,6 @@ static void setConfigMapMode(const MapModeEnum mode)
 void MainWindow::slot_onPlayMode()
 {
     // map mode can only create rooms, but play mode can make changes
-    disconnectCreateRoomConnection();
-    connectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::PLAY);
     modeMenu->setIcon(mapperMode.playModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -988,8 +986,6 @@ void MainWindow::slot_onMapMode()
 {
     slot_log("MainWindow",
              "Map mode selected - new rooms are created when entering unmapped areas.");
-    connectCreateRoomConnection();
-    connectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::MAP);
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -999,8 +995,6 @@ void MainWindow::slot_onMapMode()
 void MainWindow::slot_onOfflineMode()
 {
     slot_log("MainWindow", "Offline emulation mode selected - learn new areas safely.");
-    disconnectCreateRoomConnection();
-    disconnectScheduleActionConnection();
     setConfigMapMode(MapModeEnum::OFFLINE);
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
     // needed so that the menu updates to reflect state set by commands
@@ -2080,30 +2074,4 @@ void MainWindow::onSuccessfulSave(const SaveModeEnum mode,
             config.fileName = absoluteFilePath;
         }
     }
-}
-
-void MainWindow::connectCreateRoomConnection()
-{
-    m_createRoomConnection = connect(m_pathMachine,
-                                     &Mmapper2PathMachine::sig_createRoom,
-                                     m_mapData,
-                                     &MapData::slot_createRoom);
-}
-
-void MainWindow::disconnectCreateRoomConnection()
-{
-    m_createRoomConnection.disconnect();
-}
-
-void MainWindow::connectScheduleActionConnection()
-{
-    m_scheduleActionConnection = connect(m_pathMachine,
-                                         &Mmapper2PathMachine::sig_scheduleAction,
-                                         m_mapData,
-                                         &MapData::slot_scheduleAction);
-}
-
-void MainWindow::disconnectScheduleActionConnection()
-{
-    m_scheduleActionConnection.disconnect();
 }
