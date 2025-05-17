@@ -1825,34 +1825,35 @@ struct NODISCARD BasicSetUnsetHelper
     }
 };
 
+// clang-format off
+//
+// reason for disabling formatting: clion 2024.x mangles this struct every time you edit the file,
+// even when clion is configured to use the project-wide .clang-format file.
 template<typename T>
 struct NODISCARD FlagSetUnsetHelper
 {
     static void assign(T &x, const T &change)
     {
-        //
         x = change;
         sanityCheckFlags(x);
     }
     static void insert(T &x, const T &change)
     {
-        //
         x |= change;
         sanityCheckFlags(x);
     }
     static void remove(T &x, const T &change)
     {
-        //
         x &= ~change;
         sanityCheckFlags(x);
     }
     static void clear(T &x)
     {
-        //
         x.clear();
         sanityCheckFlags(x);
     }
 };
+// clang-format on
 
 template<typename T>
 struct IsTaggedString : std::bool_constant<false>
