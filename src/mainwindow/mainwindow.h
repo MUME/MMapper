@@ -220,8 +220,6 @@ private:
     QAction *rebuildMeshesAct = nullptr;
 
     std::unique_ptr<ConfigDialog> m_configDialog;
-    mmqt::SingleConnection m_createRoomConnection;
-    mmqt::SingleConnection m_scheduleActionConnection;
 
     struct AsyncBase;
     struct AsyncHelper;
@@ -370,12 +368,6 @@ private:
     void onSuccessfulLoad(const MapLoadData &mapLoadData);
     void onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks);
     void onSuccessfulSave(SaveModeEnum mode, SaveFormatEnum format, const QString &fileName);
-
-private:
-    void connectCreateRoomConnection();
-    void disconnectCreateRoomConnection();
-    void connectScheduleActionConnection();
-    void disconnectScheduleActionConnection();
 
 public slots:
     void slot_newFile();

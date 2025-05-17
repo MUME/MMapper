@@ -433,7 +433,9 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
             const RoomId workingId = working.getId();
             if (!pathEnds.contains(workingId)) {
                 qInfo() << "creating RoomId" << workingId.asUint32();
-                emit sig_createRoom(sigParseEvent, working.getPosition() + move);
+                if (getMapMode() == MapModeEnum::MAP) {
+                    m_map.slot_createRoom(sigParseEvent, working.getPosition() + move);
+                }
                 pathEnds.insert(workingId);
             }
         }
@@ -488,14 +490,8 @@ void PathMachine::evaluatePaths()
 
 void PathMachine::scheduleAction(const ChangeList &action)
 {
-    if ((false)) {
-        // note: sig_scheduleAction conditionally calls in MAP mode so we'd need something
-        // like `if (m_mode == MapModeEnum::MAP)` somewhere if we're going to reproduce the
-        // same behavior without signals:
+    if (getMapMode() != MapModeEnum::OFFLINE) {
         m_map.applyChanges(action);
-    } else {
-        const auto wrapped = SigMapChangeList{std::make_shared<ChangeList>(action)};
-        emit sig_scheduleAction(wrapped);
     }
 }
 

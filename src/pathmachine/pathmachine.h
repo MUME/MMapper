@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../configuration/configuration.h"
 #include "../map/ChangeList.h"
 #include "../map/parseevent.h"
 #include "../map/room.h"
@@ -87,6 +88,7 @@ private:
 
 protected:
     NODISCARD PathStateEnum getState() const { return m_state; }
+    NODISCARD MapModeEnum getMapMode() const { return getConfig().general.mapMode; }
 
 private:
     NODISCARD bool hasMostLikelyRoom() const { return m_mostLikelyRoom.has_value(); }
@@ -103,8 +105,6 @@ private:
 
 signals:
     void sig_playerMoved(RoomId id);
-    void sig_createRoom(const SigParseEvent &, const Coordinate &);
-    void sig_scheduleAction(const SigMapChangeList &);
 
 public slots:
     void slot_releaseAllPaths();
