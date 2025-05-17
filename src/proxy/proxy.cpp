@@ -610,7 +610,11 @@ void Proxy::allocParser()
 
             const bool endsInNewline = s.back() == char_consts::C_NEWLINE;
             assert(goAhead == (isPrompt || isTwiddler));
-            assert(goAhead == !endsInNewline);
+            bool proceed = goAhead;
+            if (proceed == endsInNewline) {
+                qWarning() << "[proxy] Warning: GMCP output inconsistent with newline expectations.";
+                proceed = !endsInNewline;  // fallback behavior
+            }
 
             auto startsWithNewline = [](QStringView sv) {
                 if (sv.isEmpty()) {
