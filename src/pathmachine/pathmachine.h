@@ -71,16 +71,16 @@ private:
     void forcePositionChange(RoomId id, bool update);
 
 private:
-    void experimenting(const SigParseEvent &sigParseEvent);
-    void syncing(const SigParseEvent &sigParseEvent);
-    NODISCARD ChangeList approved(const SigParseEvent &sigParseEvent);
-    void evaluatePaths();
+    void experimenting(const SigParseEvent &sigParseEvent, ChangeList &changes);
+    void syncing(const SigParseEvent &sigParseEvent, ChangeList &changes);
+    void approved(const SigParseEvent &sigParseEvent, ChangeList &changes);
+    void evaluatePaths(ChangeList &changes);
     void tryExits(const RoomHandle &, RoomRecipient &, const ParseEvent &, bool out);
     void tryExit(const RawExit &possible, RoomRecipient &recipient, bool out);
     void tryCoordinate(const RoomHandle &, RoomRecipient &, const ParseEvent &);
 
 private:
-    void updateMostLikelyRoom(const SigParseEvent &sigParseEvent, ChangeList &changes);
+    void updateMostLikelyRoom(const SigParseEvent &sigParseEvent, ChangeList &changes, bool force);
 
 private:
     void clearMostLikelyRoom() { m_mostLikelyRoom.reset(); }
@@ -108,5 +108,4 @@ signals:
 
 public slots:
     void slot_releaseAllPaths();
-    void slot_scheduleAction(const SigMapChangeList &action) { scheduleAction(action.deref()); }
 };

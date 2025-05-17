@@ -43,21 +43,21 @@ void RoomSignalHandler::release(const RoomId room)
     }
 }
 
-void RoomSignalHandler::keep(const RoomId room, const ExitDirEnum dir, const RoomId fromId)
+void RoomSignalHandler::keep(const RoomId room,
+                             const ExitDirEnum dir,
+                             const RoomId fromId,
+                             ChangeList &changes)
 {
     assert(holdCount[room] != 0);
     assert(owners.contains(room));
 
     static_assert(static_cast<uint32_t>(ExitDirEnum::UNKNOWN) + 1 == NUM_EXITS);
     if (isNESWUD(dir) || dir == ExitDirEnum::UNKNOWN) {
-        ChangeList changes;
         changes.add(exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
                                                             fromId,
                                                             dir,
                                                             room,
                                                             WaysEnum::OneWay});
-        const auto wrapped = SigMapChangeList{std::make_shared<ChangeList>(changes)};
-        emit sig_scheduleAction(wrapped);
     }
 
     if (!lockers[room].empty()) {

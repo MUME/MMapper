@@ -928,21 +928,11 @@ void World::updateRoom(const RawRoom &newRoom)
     // The only things that are allowed to be "updated" are:
     // fields
     // status
-    // borked
-    // exit.fields.ExitFlags
-    // exit.fields.DoorFlags
 
     RawRoom check = getRawCopy(id);
     check.fields = newRoom.fields;
     check.status = newRoom.status;
     check.server_id = newRoom.server_id;
-    for (const ExitDirEnum dir : ALL_EXITS7) {
-        const auto &changed = newRoom.exits[dir].fields;
-        RawExit &copy = check.exits[dir];
-        copy.fields.exitFlags = changed.exitFlags;
-        copy.fields.doorFlags = changed.doorFlags;
-        copy.fields.doorName = changed.doorName;
-    }
     if (check != newRoom) {
         throw InvalidMapOperation("Room mismatch");
     }
@@ -1415,35 +1405,6 @@ void World::addRoom2(const Coordinate &desiredPosition, const ParseEvent &event)
     MMLOG() << "Applying changes after adding room " << convertToExternal(roomId).value() << "...";
     ProgressCounter dummyPc;
     apply(dummyPc, room_change_types::Update{roomId, event});
-
-    // REVISIT: Merge the duplicate code with that in pathmachine
-    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const auto toServerId = event.getExitIds()[dir];
-        if (toServerId == INVALID_SERVER_ROOMID) {
-            continue;
-        }
-        const auto copiedExit = getRawExit(roomId, dir);
-        if (copiedExit.outIsUnique()) {
-            // Add likely ServerId
-            const auto to = copiedExit.outFirst();
-            if (getServerId(to) == INVALID_SERVER_ROOMID) {
-                apply(dummyPc, room_change_types::SetServerId{to, toServerId});
-                continue;
-            }
-        }
-        // Add missing connections to that ServerId
-        if (const auto &there = lookup(toServerId)) {
-            const auto to = there.value();
-            if (!copiedExit.containsOut(to)) {
-                apply(dummyPc,
-                      exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
-                                                              roomId,
-                                                              dir,
-                                                              to,
-                                                              WaysEnum::OneWay});
-            }
-        }
-    }
 }
 
 ExternalRoomIdSet World::convertToExternal(ProgressCounter &pc, const TinyRoomIdSet &set) const
@@ -1641,8 +1602,6 @@ void World::apply(ProgressCounter &, const room_change_types::MakePermanent &cha
     m_rooms.setStatus(change.room, RoomStatusEnum::Permanent);
 }
 
-// FIXME: Yuck!
-// TODO: Rewrite this as a series of apply()?
 void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &change)
 {
     RawRoom room = getRawCopy(change.room);
@@ -1650,77 +1609,9 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
 
     room.fields.Contents = event.getRoomContents();
 
-    const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
-    ExitsFlagsType eventExitsFlags = event.getExitsFlags();
-    if (eventExitsFlags.isValid()) {
-        eventExitsFlags.removeValid();
-        auto &exits = room.exits;
-
-        if (true /*room.upToDate*/) {
-            // Append exit flags if target room is up to date
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                RawExit &roomExit = exits[dir];
-                const ExitFlags roomExitFlags = roomExit.fields.exitFlags;
-                const ExitFlags eventExitFlags = eventExitsFlags.getWithUnmappedFlag(dir);
-
-                if (eventExitFlags ^ roomExitFlags) {
-                    roomExit.fields.exitFlags = (roomExitFlags | eventExitFlags);
-                }
-
-                const DoorFlags roomDoorFlags = roomExit.fields.doorFlags;
-                const DoorFlags eventDoorFlags = event.getExits()[dir].fields.doorFlags;
-
-                if (eventDoorFlags ^ roomDoorFlags) {
-                    roomExit.fields.doorFlags = (roomDoorFlags | eventDoorFlags);
-                }
-
-                const auto &doorName = event.getExits()[dir].fields.doorName;
-                if (!doorName.isEmpty()) {
-                    roomExit.fields.doorName = doorName;
-                }
-            }
-
-        } else {
-            // Replace exit flags if target room is not up to date
-            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-                RawExit &roomExit = exits[dir];
-                ExitFlags eventExitFlags = eventExitsFlags.getWithUnmappedFlag(dir);
-                // ... but take care of the following exceptions
-
-                // REVISIT: DOOR and EXIT flags are automatic now, so this may have no effect.
-                if (true) {
-                    if (roomExit.fields.exitFlags.contains(ExitFlagEnum::DOOR)
-                        && !eventExitFlags.isDoor()) {
-                        // Prevent room hidden exits from being overridden
-                        eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
-                    }
-                }
-                if (roomExit.fields.exitFlags.contains(ExitFlagEnum::ROAD)
-                    && !eventExitFlags.isRoad() && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectSunlight(dir)) {
-                    // Prevent orcs/trolls from removing roads/trails if they're sunlit
-                    eventExitFlags |= ExitFlagEnum::ROAD;
-                }
-                roomExit.fields.exitFlags = eventExitFlags;
-            }
-        }
-    }
-
     room.server_id = event.getServerId();
 
     room.fields.TerrainType = event.getTerrainType();
-
-    const PromptFlagsType pFlags = event.getPromptFlags();
-    if (pFlags.isValid()) {
-        const RoomSundeathEnum sunType = room.fields.SundeathType;
-        if (pFlags.isLit() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
-            room.fields.LightType = RoomLightEnum::LIT;
-        } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH
-                   && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
-            // REVISIT: Why not use the time and troll mode as well?
-            room.fields.LightType = RoomLightEnum::DARK;
-        }
-    }
 
     const auto &desc = event.getRoomDesc();
     if (!desc.isEmpty()) {

@@ -1334,7 +1334,7 @@ void enhanceExits(AnsiOstream &os, const RoomHandle &sourceRoom)
         const auto keywords = getExitKeywords(map, sourceId, i, e);
         const auto &dn = e.getDoorName();
 
-        if (!dn.empty() || !keywords.empty()) {
+        if ((e.doorIsHidden() && !dn.empty()) || !keywords.empty()) {
             enhancedExits = true;
             os << std::exchange(prefix, string_consts::SV_SPACE);
             os << Mmapper2Exit::charForDir(i) << C_COLON;

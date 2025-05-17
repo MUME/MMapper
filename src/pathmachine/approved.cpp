@@ -58,8 +58,28 @@ void Approved::virt_receiveRoom(const RoomHandle &perhaps)
     }
 
     matchedRoom = perhaps;
-    if (cmp == ComparisonResultEnum::TOLERANCE && event.hasNameDescFlags()) {
+    if (cmp == ComparisonResultEnum::TOLERANCE
+        && (event.hasNameDescFlags() || event.hasServerId())) {
         update = true;
+    } else if (cmp == ComparisonResultEnum::EQUAL) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+            const auto toServerId = event.getExitIds()[dir];
+            if (toServerId == INVALID_SERVER_ROOMID) {
+                continue;
+            }
+            const auto &e = matchedRoom.getExit(dir);
+            if (e.exitIsNoMatch()) {
+                continue;
+            }
+            const auto there = m_map.findRoomHandle(toServerId);
+            if (!there && !e.exitIsUnmapped()) {
+                // New server id
+                update = true;
+            } else if (there && !e.containsOut(there.getId())) {
+                // Existing server id
+                update = true;
+            }
+        }
     }
 }
 
