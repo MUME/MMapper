@@ -47,7 +47,7 @@ public:
     // keep the room but un-cache it - overrides both hold and release
     // toId is negative if no exit should be added, else it's the id of
     // the room where the exit should lead
-    void keep(RoomId room, ExitDirEnum dir, RoomId fromId);
+    void keep(RoomId room, ExitDirEnum dir, RoomId fromId, ChangeList &changes);
 
     /* Sending to the rooms' owners:
        keepRoom: keep the room, but we don't need it anymore for now

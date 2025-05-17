@@ -115,7 +115,7 @@ void Path::setParent(const std::shared_ptr<Path> &p)
     m_parent = p;
 }
 
-void Path::approve()
+void Path::approve(ChangeList &changes)
 {
     assert(!m_zombie);
 
@@ -126,9 +126,9 @@ void Path::approve()
         assert(m_dir.has_value());
         const RoomHandle proom = parent->getRoom();
         const auto pId = !proom.exists() ? INVALID_ROOMID : proom.getId();
-        deref(m_signaler).keep(m_room.getId(), m_dir.value(), pId);
+        deref(m_signaler).keep(m_room.getId(), m_dir.value(), pId, changes);
         parent->removeChild(this->shared_from_this());
-        parent->approve();
+        parent->approve(changes);
     }
 
     for (const std::weak_ptr<Path> &weak_child : m_children) {

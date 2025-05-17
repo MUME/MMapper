@@ -147,6 +147,11 @@ ComparisonResultEnum compare(const RawRoom &room, const ParseEvent &event, const
         break;
     }
 
+    if (upToDate && event.hasServerId() && !mapIdMatch) {
+        // room is missing server id
+        upToDate = false;
+    }
+
     if (upToDate) {
         return ComparisonResultEnum::EQUAL;
     }
@@ -238,7 +243,6 @@ ComparisonResultEnum compareWeakProps(const RawRoom &room, const ParseEvent &eve
                         if (spam_and_lag) {
                             qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
                         }
-                        // REVISIT: why doesn't this set tolerance?
                     } else if (roomExitFlags.isExit() && roomExitFlags.isDoor()
                                && !eventExitFlags.isExit()) {
                         if (spam_and_lag) {
@@ -287,6 +291,7 @@ ComparisonResultEnum compareWeakProps(const RawRoom &room, const ParseEvent &eve
                             << "Unknown road tolerance condition to the" << lowercaseDirection(dir)
                             << event << mmqt::toQStringUtf8(room.toStdStringUtf8());
                     }
+                    // TODO: Likely an old road/trail that needs to be removed
                     tolerance = true;
                 }
             } else if (diff.isClimb()) {
@@ -302,6 +307,7 @@ ComparisonResultEnum compareWeakProps(const RawRoom &room, const ParseEvent &eve
                             << "Unknown climb tolerance condition to the" << lowercaseDirection(dir)
                             << event << mmqt::toQStringUtf8(room.toStdStringUtf8());
                     }
+                    // TODO: Likely an old climb that needs to be removed
                     tolerance = true;
                 }
             }

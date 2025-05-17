@@ -78,7 +78,7 @@ public:
         assert(!m_zombie);
         return m_probability;
     }
-    void approve();
+    void approve(ChangeList &changes);
 
     // deletes this path and all parents up to the next branch
     void deny();
