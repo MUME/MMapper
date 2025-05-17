@@ -12,6 +12,7 @@ Makefile
 .qmake.stash
 **.mm2
 **/.DS_Store
+.clang-tidy
 .idea
 .vs
 .vscode
