@@ -390,7 +390,6 @@ void MainWindow::writeSettings()
 
 void MainWindow::wireConnections()
 {
-    connect(m_pathMachine, &Mmapper2PathMachine::sig_log, this, &MainWindow::slot_log);
     connect(m_mapData,
             &MapFrontend::sig_clearingMap,
             m_pathMachine,
@@ -1372,6 +1371,10 @@ void MainWindow::setupStatusBar()
         m_dockDialogAdventure->setVisible(!m_dockDialogAdventure->isVisible());
     });
     statusBar()->insertPermanentWidget(0, xpStatus);
+
+    QLabel *pathmachineStatus = new QLabel(statusBar());
+    connect(m_pathMachine, &Mmapper2PathMachine::sig_state, pathmachineStatus, &QLabel::setText);
+    statusBar()->insertPermanentWidget(0, pathmachineStatus);
 }
 
 void MainWindow::slot_onPreferences()

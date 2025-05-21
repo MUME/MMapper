@@ -13,7 +13,6 @@
 class Configuration;
 class MapFrontend;
 class ParseEvent;
-class QElapsedTimer;
 class QObject;
 
 /**
@@ -23,14 +22,11 @@ class NODISCARD_QOBJECT Mmapper2PathMachine final : public PathMachine
 {
     Q_OBJECT
 
-private:
-    QElapsedTimer m_time;
-
 public:
     explicit Mmapper2PathMachine(MapFrontend &map, QObject *parent);
 
 signals:
-    void sig_log(const QString &, const QString &);
+    void sig_state(const QString &);
 
 public slots:
     void slot_handleParseEvent(const SigParseEvent &);
