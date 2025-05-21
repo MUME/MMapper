@@ -17,6 +17,8 @@
 // NOTE: SEP() is required because of the use in std::variant<> declaration,
 // which cannot accept trailing commas.
 #define XFOREACH_ROOM_FIELD(X, SEP) \
+    X(AREA, Area, RoomArea) \
+    SEP() \
     X(NAME, Name, RoomName) \
     SEP() \
     X(DESC, Description, RoomDesc) \

@@ -12,6 +12,10 @@
 #include <QtGlobal>
 
 namespace tags {
+struct NODISCARD RoomAreaTag final
+{
+    NODISCARD static bool isValid(std::string_view sv);
+};
 struct NODISCARD RoomNameTag final
 {
     NODISCARD static bool isValid(std::string_view sv);
@@ -30,6 +34,7 @@ struct NODISCARD RoomNoteTag final
 };
 } // namespace tags
 
+using RoomArea = TaggedBoxedStringUtf8<tags::RoomAreaTag>;
 using RoomName = TaggedBoxedStringUtf8<tags::RoomNameTag>;
 using RoomDesc = TaggedBoxedStringUtf8<tags::RoomDescTag>;
 using RoomContents = TaggedBoxedStringUtf8<tags::RoomContentsTag>;
@@ -206,6 +211,7 @@ enum class ModifyTypeEnum { AssignClear, InsertRemove };
 
 // REVISIT: Why are these in a different order than the other XMACRO(), and why don't we just use that one?
 #define XFOREACH_ROOM_FIELD_ENUM(X) \
+    X(AREA, InsertRemove) \
     X(NAME, InsertRemove) \
     /* Note: DESC could also be called STATIC_DESC */ \
     X(DESC, InsertRemove) \
@@ -230,7 +236,7 @@ static constexpr const int NUM_ROOM_FIELDS = (XFOREACH_ROOM_FIELD_ENUM(X_ADD));
 #undef X_ADD
 
 static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomFieldEnum::RESERVED) + 1);
-static_assert(NUM_ROOM_FIELDS == 13);
+static_assert(NUM_ROOM_FIELDS == 14);
 DEFINE_ENUM_COUNT(RoomFieldEnum, NUM_ROOM_FIELDS)
 
 class NODISCARD RoomFieldFlags final : public enums::Flags<RoomFieldFlags, RoomFieldEnum, uint16_t>
@@ -250,6 +256,14 @@ struct std::hash<RoomName>
     NODISCARD std::size_t operator()(const RoomName &name) const noexcept
     {
         return std::hash<std::string_view>()(name.getStdStringViewUtf8());
+    }
+};
+template<>
+struct std::hash<RoomArea>
+{
+    NODISCARD std::size_t operator()(const RoomArea &area) const noexcept
+    {
+        return std::hash<std::string_view>()(area.getStdStringViewUtf8());
     }
 };
 template<>
@@ -308,17 +322,20 @@ NODISCARD extern QString getName(RoomLoadFlagEnum flag);
 NODISCARD extern QString getName(RoomMobFlagEnum flag);
 NODISCARD extern QString getName(RoomTerrainEnum terrain);
 
+void sanitizeRoomArea(std::string &area);
 void sanitizeRoomName(std::string &name);
 void sanitizeRoomDesc(std::string &desc);
 void sanitizeRoomContents(std::string &contents);
 void sanitizeRoomNote(std::string &note);
 
+NODISCARD extern RoomArea makeRoomArea(std::string area);
 NODISCARD extern RoomName makeRoomName(std::string name);
 NODISCARD extern RoomDesc makeRoomDesc(std::string desc);
 NODISCARD extern RoomContents makeRoomContents(std::string desc);
 NODISCARD extern RoomNote makeRoomNote(std::string note);
 
 namespace mmqt {
+NODISCARD extern RoomArea makeRoomArea(const QString &area);
 NODISCARD extern RoomName makeRoomName(const QString &name);
 NODISCARD extern RoomDesc makeRoomDesc(const QString &desc);
 NODISCARD extern RoomContents makeRoomContents(const QString &desc);

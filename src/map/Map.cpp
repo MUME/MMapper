@@ -201,11 +201,8 @@ static void reportDetectedChanges(std::ostream &os, const WorldComparisonStats &
 NODISCARD static RoomUpdateFlags reportNeededUpdates(std::ostream &os,
                                                      const WorldComparisonStats &stats)
 {
-    // Things that don't cause mesh updates:
-    std::ignore = stats.parseTreeChanged || stats.serverIdsChanged;
-
     // REVISIT: actually it doesn't matter if Align or Portable changed,
-    // but there's no way to quickly those individually any more.
+    // but there's no way to quickly test those individually on this branch.
 
     const bool needRoomMeshUpdate = stats.hasMeshDifferences;
     const bool boundsChanged = stats.boundsChanged;
@@ -639,11 +636,48 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
     print_coordinate(os, ansi_green, pos);
     os << "\n";
 
+    os << "Area: ";
+    {
+        const RoomArea &areaName = room.getArea();
+        const auto numInArea = [this, &areaName]() {
+            if (auto opt = countRoomsWithArea(areaName)) {
+                return *opt;
+            }
+            // Other callers might be willing to tolerate failure,
+            // but it's a hard map consistency error here if the area doesn't exist.
+            throw std::runtime_error("invalid area");
+        }();
+        const auto relativeSize = [this, &numInArea]() {
+            // std::fmt should make this a lot easier when that's available.
+            char buf[32];
+            const auto pct = 100.0 * static_cast<double>(numInArea)
+                             / static_cast<double>(getRoomsCount());
+            std::snprintf(buf, sizeof(buf), "%.1f", pct);
+            return std::string{buf};
+        }();
+        if (!areaName.empty()) {
+            os.writeQuotedWithColor(ansi_green, ansi_yellow, areaName.getStdStringViewUtf8());
+        } else {
+            os.writeWithColor(ansi_yellow, "undefined");
+        }
+        os << " (";
+        os << "relative size: ";
+        os.writeWithColor(ansi_green, relativeSize);
+        os.writeWithColor(ansi_yellow, "%");
+        os << ", rooms: ";
+        os.writeWithColor(ansi_green, numInArea);
+        os << ")";
+    }
+    os << "\n";
+
     os << "Name: ";
     {
         const RoomName &name = room.getName();
         os.writeQuotedWithColor(ansi_green, ansi_yellow, name.getStdStringViewUtf8());
         if (!name.empty()) {
+            // TODO: report these stats within the current area
+            // and then _maybe_ also report the global values
+            // (right now it only shows the global values).
             os << " [";
 
             const auto &desc = room.getDescription();
@@ -851,6 +885,15 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
         }
     }
     // os << "\n";
+}
+
+std::optional<size_t> Map::countRoomsWithArea(const RoomArea &areaName) const
+{
+    const auto &world = getWorld();
+    if (const RoomIdSet *const area = world.findAreaRoomSet(areaName)) {
+        return area->size();
+    }
+    return std::nullopt;
 }
 
 size_t Map::countRoomsWithName(const RoomName &name) const
@@ -1495,6 +1538,9 @@ QString previewRoom(const RoomHandle &room,
     QString room_string = QString("%1").arg(room.getIdExternal().asUint32());
     if (auto server_id = room.getServerId(); server_id != INVALID_SERVER_ROOMID) {
         room_string += QString(" (server ID %1)").arg(server_id.asUint32());
+    }
+    if (const RoomArea &area = room.getArea(); !area.empty()) {
+        room_string += QString(" in %1").arg(area.toQString());
     }
 
     return QString("%1 Room %2 at Coordinates (%3, %4, %5)\n%6%7")

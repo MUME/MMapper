@@ -12,20 +12,24 @@
 #include "Map.h"
 #include "RoomRecipient.h"
 #include "World.h"
-#include "sanitizer.h"
 
 #include <deque>
 #include <optional>
-#include <ostream>
-#include <sstream>
 
 void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, const ParseEvent &event)
 {
+    // REVISIT: use Timer here instead of manually doing the same thing with Clock::now(),
+    // which would have the added benefit of reporting times for lookups that fail.
     using Clock = std::chrono::steady_clock;
     const auto t0 = Clock::now();
+    static volatile bool fallbackToCurrentArea = true;
+    static volatile bool fallbackToRemainder = true;
     static volatile bool fallbackToWholeMap = true;
 
     const RoomIdSet *const pSet = [&map, &event, &tree]() -> const RoomIdSet * {
+        const World &world = map.getWorld();
+        const RoomArea &areaName = event.getRoomArea();
+
         const RoomName &name = event.getRoomName();
         const RoomDesc &desc = event.getRoomDesc();
 
@@ -52,15 +56,43 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
             }
         }
 
-        if (fallbackToWholeMap) {
-            MMLOG() << "[getRooms] Failed to find a match with v1. Falling back to the whole map!";
+        if (fallbackToCurrentArea) {
+            MMLOG() << "[getRooms] Falling back to the current area!";
             MMLOG() << "[getRooms] event: " << mmqt::toStdStringUtf8(event.toQString());
-            return std::addressof(map.getWorld().getRoomSet());
-        } else {
-            MMLOG() << "[getRooms] Failed to find a match with v1; giving up.";
-            MMLOG() << "[getRooms] event: " << mmqt::toStdStringUtf8(event.toQString());
-            return nullptr;
+
+            if (const RoomIdSet *const set = world.findAreaRoomSet(areaName); set == nullptr) {
+                MMLOG() << "[getRooms] Area does not exist.";
+            } else if (set->empty()) {
+                MMLOG() << "[getRooms] Area was empty.";
+            } else {
+                return set;
+            }
         }
+
+        if (fallbackToRemainder && !areaName.empty()) {
+            MMLOG() << "[getRooms] Falling back to the remainder area...";
+            if (const RoomIdSet *const set = world.findAreaRoomSet(RoomArea{}); set == nullptr) {
+                // this should be a hard error, since the fallback area is required to exist.
+                assert(false);
+                MMLOG() << "[getRooms] Fallback area does not exist.";
+            } else if (set->empty()) {
+                // this should just return nullptr.
+                MMLOG() << "[getRooms] Fallback area was empty.";
+            } else {
+                return set;
+            }
+        }
+
+        if (fallbackToWholeMap) {
+            MMLOG() << "[getRooms] Falling back to the whole map...";
+            // this is probably unnecessary, and it's probably also the source of some bugs,
+            // since it could find a room known to be in a different area.
+            return &world.getRoomSet();
+        }
+
+        MMLOG() << "[getRooms] Failed to find a match; giving up.";
+        MMLOG() << "[getRooms] event: " << mmqt::toStdStringUtf8(event.toQString());
+        return nullptr;
     }();
 
     const auto t1 = Clock::now();
@@ -74,15 +106,9 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
 
     const int tolerance = getConfig().pathMachine.matchingTolerance;
     auto tryReport = [&event, &visitor, tolerance](const RoomHandle &room) {
-        if (fallbackToWholeMap) {
-            if (::compare(room.getRaw(), event, tolerance) == ComparisonResultEnum::DIFFERENT) {
-                return false;
-            }
+        if (::compare(room.getRaw(), event, tolerance) == ComparisonResultEnum::DIFFERENT) {
+            return false;
         }
-
-        // FIXME "Inside Grey Havens" (arda.mm2) vs "Inside the Grey Havens" (MUME)
-        // e.g. Don't let DEATHTRAP rooms be converted to "Inside the Grey Havens",
-        // and definitely don't choose name="", desc="" over "Inside Grey Havens"!
         visitor.receiveRoom(room);
         return true;
     };

@@ -26,6 +26,7 @@
 
     <xs:complexType name="room">
         <xs:sequence>
+            <xs:element name="area" type="xs:string" minOccurs="0" />
             <xs:element name="align" type="room_align" minOccurs="0" />
             <xs:element name="light" type="room_light" minOccurs="0" />
             <xs:element name="portable" type="room_portable" minOccurs="0" />

@@ -48,6 +48,7 @@ private:
 private:
     void print(const DoorName &name);
     void print(const RoomContents &name);
+    void print(const RoomArea &name);
     void print(const RoomName &name);
     void print(const RoomNote &name);
     void print(const RoomDesc &name);

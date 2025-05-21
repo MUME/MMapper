@@ -37,6 +37,7 @@ using RawExits = RawRoom::Exits;
 
 // X(_MemberType, _memberName, _defaultInitializer)
 #define XFOREACH_PARSEEVENT_MEMBER(X) \
+    X(RoomArea, m_roomArea, ) \
     X(RoomName, m_roomName, ) \
     X(RoomDesc, m_roomDesc, ) \
     X(RoomContents, m_roomContents, ) \
@@ -84,6 +85,10 @@ public:
     NODISCARD ServerRoomId getServerId() const
     {
         return m_serverId;
+    }
+    NODISCARD const RoomArea &getRoomArea() const
+    {
+        return m_roomArea;
     }
     NODISCARD const RoomName &getRoomName() const
     {
@@ -182,6 +187,7 @@ private:
 public:
     NODISCARD static SharedParseEvent createSharedEvent(CommandEnum c,
                                                         ServerRoomId id,
+                                                        RoomArea roomArea,
                                                         RoomName roomName,
                                                         RoomDesc roomDesc,
                                                         RoomContents roomContents,
@@ -192,6 +198,7 @@ public:
                                                         ConnectedRoomFlagsType connectedRoomFlags);
     NODISCARD static ParseEvent createEvent(CommandEnum c,
                                             ServerRoomId id,
+                                            RoomArea roomArea,
                                             RoomName roomName,
                                             RoomDesc roomDesc,
                                             RoomContents roomContents,

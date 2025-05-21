@@ -208,6 +208,11 @@ void ChangePrinter::print(const RoomContents &name)
     print_string_color_quoted(m_os, name.getStdStringViewUtf8());
 }
 
+void ChangePrinter::print(const RoomArea &name)
+{
+    print_string_color_quoted(m_os, name.getStdStringViewUtf8());
+}
+
 void ChangePrinter::print(const RoomName &name)
 {
     print_string_color_quoted(m_os, name.getStdStringViewUtf8());

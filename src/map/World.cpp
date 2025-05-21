@@ -8,6 +8,7 @@
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
 #include "Diff.h"
+#include "MapConsistencyError.h"
 #include "enums.h"
 #include "parseevent.h"
 #include "sanitizer.h"
@@ -29,16 +30,6 @@ static volatile bool print_world_changes = true;
 // This limit exists because reverting may create a very large list of changes.
 static volatile size_t max_change_batch_print_size = 20;
 
-struct NODISCARD MapConsistencyError final : public std::runtime_error
-{
-    explicit MapConsistencyError(const std::string &msg)
-        : std::runtime_error("MapConsistencyError: " + msg)
-    {}
-    ~MapConsistencyError() final;
-};
-
-MapConsistencyError::~MapConsistencyError() = default;
-
 template<typename Enum>
 void sanityCheckEnum(const Enum value)
 {
@@ -52,16 +43,6 @@ void sanityCheckFlags(const Flags flags)
     if (flags != enums::sanitizeFlags(flags)) {
         throw MapConsistencyError("invalid flags");
     }
-}
-
-void insertId(RoomIdSet &set, const RoomId id)
-{
-    /* set = */ set.insert(id);
-}
-
-void removeId(RoomIdSet &set, const RoomId id)
-{
-    /* set = */ set.erase(id);
 }
 
 template<typename Key>
@@ -172,22 +153,42 @@ World World::copy() const
     World result;
     result.m_remapping = m_remapping;
     result.m_rooms = m_rooms;
-    result.m_roomSet = m_roomSet;
     result.m_spatialDb = m_spatialDb;
     result.m_serverIds = m_serverIds;
     result.m_parseTree = m_parseTree;
+    result.m_areaInfos = m_areaInfos;
 
     return result;
 }
 
 bool World::operator==(const World &rhs) const
 {
-    return m_remapping == rhs.m_remapping    //
-           && m_rooms == rhs.m_rooms         //
-           && m_roomSet == rhs.m_roomSet     //
-           && m_spatialDb == rhs.m_spatialDb //
-           && m_serverIds == rhs.m_serverIds //
-           && m_parseTree == rhs.m_parseTree;
+    return m_remapping == rhs.m_remapping     //
+           && m_rooms == rhs.m_rooms          //
+           && m_spatialDb == rhs.m_spatialDb  //
+           && m_serverIds == rhs.m_serverIds  //
+           && m_parseTree == rhs.m_parseTree  //
+           && m_areaInfos == rhs.m_areaInfos; //
+}
+
+NODISCARD auto World::findArea(const std::optional<RoomArea> &area) -> AreaInfo *
+{
+    return m_areaInfos.find(area);
+}
+
+NODISCARD auto World::findArea(const std::optional<RoomArea> &area) const -> const AreaInfo *
+{
+    return m_areaInfos.find(area);
+}
+
+NODISCARD auto World::getArea(const std::optional<RoomArea> &area) -> AreaInfo &
+{
+    return m_areaInfos.get(area);
+}
+
+NODISCARD auto World::getArea(const std::optional<RoomArea> &area) const -> const AreaInfo &
+{
+    return m_areaInfos.get(area);
 }
 
 const RawRoom *World::getRoom(const RoomId id) const
@@ -208,13 +209,8 @@ bool World::hasRoom(const RoomId id) const
         throw InvalidMapOperation("Invalid RoomId");
     }
 
-    if ((false)) {
-        // this is O(logN)
-        return m_roomSet.contains(id);
-    } else {
-        // this should be O(1) lookup in a vector.
-        return m_remapping.contains(id);
-    }
+    // this should be O(1) lookup in a vector.
+    return m_remapping.contains(id);
 }
 
 void World::requireValidRoom(const RoomId id) const
@@ -380,10 +376,10 @@ void World::setRoom(const RoomId id, const RawRoom &room)
         if (parseChanged) {
             removeParse(id, parseChanged);
         }
-    } else {
-        // Not found
-        insertId(m_roomSet, id);
+        m_areaInfos.remove(oldRaw.getArea(), id);
     }
+
+    m_areaInfos.insert(room.getArea(), id);
 
     if (oldServerId != INVALID_SERVER_ROOMID && oldServerId != room.server_id) {
         m_serverIds.remove(oldServerId);
@@ -646,8 +642,14 @@ void World::checkConsistency(ProgressCounter &counter) const
     };
 
     auto checkRemapping = [this](const RoomId id) {
-        if (!m_roomSet.contains(id)) {
-            throw MapConsistencyError("remapping cache already contained this id");
+        if (!getGlobalArea().roomSet.contains(id)) {
+            throw MapConsistencyError("room set does not contain the room id");
+        }
+
+        const auto &areaName = getRoomArea(id);
+        auto &area = getArea(areaName);
+        if (!area.roomSet.contains(id)) {
+            throw MapConsistencyError("room set does not contain the room id");
         }
 
         if (!m_remapping.contains(id)) {
@@ -932,6 +934,7 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
 
     const auto coord = getPosition(id);
     const auto server_id = getServerId(id);
+    const auto areaName = getRoomArea(id);
 
     removeParse(id, ALL_PARSE_KEY_FLAGS);
     m_spatialDb.remove(id, coord);
@@ -943,7 +946,7 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
 
     m_remapping.removeAt(id);
     m_rooms.removeAt(id);
-    removeId(m_roomSet, id);
+    m_areaInfos.remove(areaName, id);
 }
 
 void World::setRoomStatus(const RoomId id, const RoomStatusEnum status)
@@ -1142,7 +1145,8 @@ void World::initRoom(const RawRoom &input)
     /* now perform bookkeeping */
     {
         // REVISIT: should "upToDate" be automatic?
-        insertId(m_roomSet, id);
+        const auto &areaName = input.getArea();
+        m_areaInfos.insert(areaName, id);
         insertParse(id, ALL_PARSE_KEY_FLAGS);
         m_spatialDb.add(id, input.position);
         m_serverIds.set(input.server_id, id);
@@ -1196,7 +1200,9 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
                         throw std::runtime_error("elements aren't in order");
                     }
                 }
-                assert(next.value() == numRooms);
+                if (next.value() != numRooms) {
+                    throw std::runtime_error("wrong number of elements");
+                }
             }
 
             {
@@ -1224,7 +1230,7 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
             DECL_TIMER(t3, "insert-rooms-cachedRoomSet");
             counter.setNewTask(ProgressMsg{"inserting rooms"}, rooms.size());
             for (const auto &room : rooms) {
-                insertId(w.m_roomSet, room.id);
+                w.m_areaInfos.insert(room.getArea(), room.id);
                 counter.step();
             }
         }
@@ -1291,6 +1297,19 @@ RoomId World::getNextId() const
 ExternalRoomId World::getNextExternalId() const
 {
     return m_remapping.getNextExternal();
+}
+
+const RoomIdSet &World::getRoomSet() const
+{
+    return getGlobalArea().roomSet;
+}
+
+const RoomIdSet *World::findAreaRoomSet(const RoomArea &areaName) const
+{
+    if (const AreaInfo *const area = this->findArea(areaName)) {
+        return &area->roomSet;
+    }
+    return nullptr;
 }
 
 RoomId World::addRoom(const Coordinate &position)
@@ -1590,6 +1609,8 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
 {
     RawRoom room = getRawCopy(change.room);
     const ParseEvent &event = change.event;
+
+    room.fields.Area = event.getRoomArea();
 
     room.fields.Contents = event.getRoomContents();
 
@@ -2050,6 +2071,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         size_t numMissingName = 0;
         size_t numMissingDesc = 0;
         size_t numMissingBoth = 0;
+        size_t numMissingArea = 0;
         size_t numMissingServerId = 0;
         size_t numWithNoConnections = 0;
         size_t numWithNoExits = 0;
@@ -2089,6 +2111,11 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
             const bool isMissingServerId = room.getServerId() == INVALID_SERVER_ROOMID;
             if (isMissingServerId) {
                 ++numMissingServerId;
+            }
+
+            const bool isMissingArea = room.getArea().empty();
+            if (isMissingArea) {
+                ++numMissingArea;
             }
 
             const bool isMissingName = getRoomName(id).empty();
@@ -2195,9 +2222,12 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         };
 
         os << "\n";
-        os << "Total rooms: " << C(m_roomSet.size()) << ".\n";
+        os << "Total areas: " << C(m_areaInfos.numAreas()) << ".\n";
+        os << "\n";
+        os << "Total rooms: " << C(getGlobalArea().roomSet.size()) << ".\n";
         os << "\n";
         os << "  missing server id: " << C(numMissingServerId) << ".\n";
+        os << "  missing area: " << C(numMissingArea) << ".\n";
         os << "\n";
         os << "  with no name and no desc: " << C(numMissingBoth) << ".\n";
         os << "  with name but no desc:    " << C(numMissingDesc - numMissingBoth) << ".\n";
@@ -2235,7 +2265,39 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
     }
 
     m_spatialDb.printStats(pc, os);
-    m_parseTree.printStats(pc, os);
+
+    static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+    static constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
+
+    auto line = std::string(81, '_'); // note: purposely using parens instead of curly.
+    assert(line.size() == 81);
+    line.back() = '\n';
+
+    {
+        os << "\n"
+           << line
+           << "\n"
+              "Within the global area (# rooms = "
+           << ColoredValue{green, getRoomSet().size()} << "):\n";
+        m_parseTree.printStats(pc, os);
+    }
+
+    for (const auto &kv : m_areaInfos) {
+        const auto &areaName = kv.first;
+        const auto numAreaRooms = kv.second.roomSet.size();
+
+        // REVISIT: include the relative size of the area?
+        os << "\n"
+           << line
+           << "\n"
+              "Within the ";
+        if (areaName.empty()) {
+            os << "default";
+        } else {
+            os << ColoredQuotedStringView{green, yellow, areaName.getStdStringViewUtf8()};
+        }
+        os << " area (# rooms = " << ColoredValue{green, numAreaRooms} << "):\n";
+    }
 }
 
 bool World::isTemporary(const RoomId id) const
@@ -2255,7 +2317,7 @@ XFOREACH_ROOM_PROPERTY(X_DEFINE_GETTER)
 
 bool World::containsRoomsNotIn(const World &other) const
 {
-    return m_roomSet.containsElementNotIn(other.m_roomSet);
+    return getGlobalArea().roomSet.containsElementNotIn(other.getGlobalArea().roomSet);
 }
 
 namespace { // anonymous

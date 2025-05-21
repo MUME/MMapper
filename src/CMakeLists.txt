@@ -272,6 +272,8 @@ set(mmapper_SRCS
     map/InvalidMapOperation.h
     map/Map.cpp
     map/Map.h
+    map/MapConsistencyError.cpp
+    map/MapConsistencyError.h
     map/ParseTree.cpp
     map/ParseTree.h
     map/PromptFlags.cpp
@@ -304,6 +306,8 @@ set(mmapper_SRCS
     map/World-BaseMap.cpp
     map/World.cpp
     map/World.h
+    map/WorldAreaMap.cpp
+    map/WorldAreaMap.h
     map/WorldBuilder.cpp
     map/WorldBuilder.h
     map/coordinate.cpp

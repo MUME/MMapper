@@ -66,6 +66,7 @@ public:
 
 // X(_Type, _Name, _Init)
 #define XFOREACH_ROOM_STRING_PROPERTY(X) \
+    X(RoomArea, Area, ) \
     X(RoomName, Name, ) \
     X(RoomDesc, Description, ) \
     X(RoomContents, Contents, ) \

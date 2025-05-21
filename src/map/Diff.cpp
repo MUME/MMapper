@@ -648,6 +648,9 @@ void OstreamDiffReporter::printStringVariantDiff(const RoomFieldVariant &aval,
     assert(aval.getType() == bval.getType());
 
     switch (aval.getType()) {
+    case RoomFieldEnum::AREA:
+        printDiff(m_os, aval.getArea(), bval.getArea());
+        break;
     case RoomFieldEnum::NAME:
         printDiff(m_os, aval.getName(), bval.getName());
         break;
@@ -707,6 +710,7 @@ void OstreamDiffReporter::virt_roomFieldDifference(const RoomHandle &a,
     assert(aval != bval);
 
     switch (aval.getType()) {
+    case RoomFieldEnum::AREA:
     case RoomFieldEnum::NAME:
     case RoomFieldEnum::DESC:
     case RoomFieldEnum::CONTENTS:

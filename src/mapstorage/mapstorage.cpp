@@ -44,8 +44,9 @@ constexpr const int v25_02_0_noInboundLinks = 38; // stops loading and saving in
 constexpr const int v25_02_1_removeUpToDate = 39; // removes upToDate
 constexpr const int v25_02_2_serverId = 40;       // adds server_id
 constexpr const int v25_02_3_deathFlag = 41;      // replaces death terrain with room flag
+constexpr const int v25_02_4_area = 42;           // adds area
 
-constexpr const int CURRENT = v25_02_3_deathFlag;
+constexpr const int CURRENT = v25_02_4_area;
 
 } // namespace schema
 
@@ -218,6 +219,9 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
     LoadRoomHelper helper{stream};
     ExternalRawRoom room;
     room.status = RoomStatusEnum::Permanent;
+    if (version >= schema::v25_02_4_area) {
+        room.setArea(mmqt::makeRoomArea(helper.read_string()));
+    }
     room.setName(mmqt::makeRoomName(helper.read_string()));
     room.setDescription(mmqt::makeRoomDesc(helper.read_string()));
     room.setContents(mmqt::makeRoomContents(helper.read_string()));
@@ -353,6 +357,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
             case schema::v25_02_1_removeUpToDate:
             case schema::v25_02_2_serverId:
             case schema::v25_02_3_deathFlag:
+            case schema::v25_02_4_area:
                 return true;
             default:
                 break;
@@ -521,6 +526,7 @@ InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
 
 void MapStorage::saveRoom(const ExternalRawRoom &room, QDataStream &stream)
 {
+    stream << room.getArea().toQString();
     stream << room.getName().toQString();
     stream << room.getDescription().toQString();
     stream << room.getContents().toQString();

@@ -324,10 +324,17 @@ void Remapping::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
         }
     }
 
+    static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+
     auto print = [&os](std::string_view prefix, size_t size, uint32_t loval, uint32_t hival) {
-        os << prefix << size;
+        os << prefix;
+        os.writeWithColor(green, size);
         if (loval != UINT_MAX && hival != UINT_MAX) {
-            os << " (" << loval << " to " << hival << ")";
+            os << " (";
+            os.writeWithColor(green, loval);
+            os << " to ";
+            os.writeWithColor(green, hival);
+            os << ")";
         }
         os << ".\n";
     };

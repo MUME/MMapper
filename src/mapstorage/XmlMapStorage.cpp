@@ -413,7 +413,10 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream) const
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
-        if (name == "align") {
+        if (name == "area") {
+            throwIfDuplicate(stream, found, RoomElementEnum::AREA);
+            room.setArea(mmqt::makeRoomArea(loadString(stream)));
+        } else if (name == "align") {
             throwIfDuplicate(stream, found, RoomElementEnum::ALIGN);
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
         } else if (name == "contents") {
@@ -781,6 +784,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &ro
     const ServerRoomId serverId = room.getServerId();
     saveXmlAttribute(stream, "server_id", serverRoomIdToString(serverId));
     saveXmlAttribute(stream, "name", room.getName().toQString());
+    saveXmlElement(stream, "area", room.getArea().toQString());
     saveXmlElement(stream, "align", conv.toString(room.getAlignType()));
     saveXmlElement(stream, "light", conv.toString(room.getLightType()));
     saveXmlElement(stream, "portable", conv.toString(room.getPortableType()));

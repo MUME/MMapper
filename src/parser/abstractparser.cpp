@@ -886,6 +886,7 @@ void AbstractParser::doOfflineCharacterMove()
 
         auto ev = ParseEvent::createSharedEvent(dir,
                                                 otherRoom.getServerId(),
+                                                otherRoom.getArea(),
                                                 otherRoom.getName(),
                                                 otherRoom.getDescription(),
                                                 otherRoom.getContents(),

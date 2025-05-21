@@ -36,7 +36,9 @@ template<typename T>
 NODISCARD static ChangeEnum sanitizeString(TaggedBoxedStringUtf8<T> &boxed)
 {
     const std::string_view view = boxed.getStdStringViewUtf8();
-    if constexpr (std::is_same_v<T, tags::RoomNameTag> || std::is_same_v<T, tags::DoorNameTag>) {
+    if constexpr (std::is_same_v<T, tags::RoomNameTag>    //
+                  || std::is_same_v<T, tags::RoomAreaTag> //
+                  || std::is_same_v<T, tags::DoorNameTag>) {
         if (sanitizer::isSanitizedOneLine(view)) {
             return ChangeEnum::None;
         }

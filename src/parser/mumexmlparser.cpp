@@ -716,6 +716,7 @@ void MumeXmlParser::move()
         // REVISIT: once this isn't a signal/slot anymore, we won't need to create a shared event?
         auto ev = ParseEvent::createSharedEvent(m_move,
                                                 m_serverId,
+                                                m_commonData.roomArea.value_or(RoomArea{}),
                                                 m_commonData.roomName.value_or(RoomName{}),
                                                 m_commonData.roomDesc.value_or(RoomDesc{}),
                                                 m_commonData.roomContents.value_or(RoomContents{}),

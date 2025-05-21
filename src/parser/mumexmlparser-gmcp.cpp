@@ -142,6 +142,17 @@ NODISCARD static ServerRoomId getServerId(const JsonObj &obj)
     return asServerId(room);
 }
 
+NODISCARD static RoomArea getRoomArea(const JsonObj &obj)
+{
+    if (auto area = obj.getString("area")) {
+        if (verbose_debugging) {
+            qInfo().noquote() << "Area:" << *area;
+        }
+        return mmqt::makeRoomArea(*area);
+    }
+    return RoomArea{};
+}
+
 NODISCARD static RoomName getRoomName(const JsonObj &obj)
 {
     if (auto name = obj.getString("name")) { // can be null
@@ -361,6 +372,7 @@ void MumeXmlParser::parseGmcpRoomInfo(const JsonObj &obj)
     m_serverId = getServerId(obj);
 
     m_commonData.terrain = getTerrain(obj);
+    m_commonData.roomArea = getRoomArea(obj);
     m_commonData.roomName = getRoomName(obj);
     m_commonData.roomDesc = getRoomDesc(obj);
 

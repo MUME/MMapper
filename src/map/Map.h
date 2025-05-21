@@ -115,6 +115,7 @@ public:
     static void diff(ProgressCounter &pc, AnsiOstream &os, const Map &a, const Map &b);
 
 public:
+    NODISCARD std::optional<size_t> countRoomsWithArea(const RoomArea &areaName) const;
     NODISCARD size_t countRoomsWithName(const RoomName &name) const;
     NODISCARD size_t countRoomsWithDesc(const RoomDesc &desc) const;
     NODISCARD size_t countRoomsWithNameDesc(const RoomName &name, const RoomDesc &desc) const;

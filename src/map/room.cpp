@@ -152,6 +152,11 @@ ComparisonResultEnum compare(const RawRoom &room, const ParseEvent &event, const
         upToDate = false;
     }
 
+    if (upToDate && room.getArea() != event.getRoomArea()) {
+        // room is missing area
+        upToDate = false;
+    }
+
     if (upToDate) {
         return ComparisonResultEnum::EQUAL;
     }

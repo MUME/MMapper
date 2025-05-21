@@ -153,6 +153,7 @@ void TestParser::createParseEventTest()
         cFlags.setValid();
         const ParseEvent e = ParseEvent::createEvent(CommandEnum::NORTH,
                                                      INVALID_SERVER_ROOMID,
+                                                     RoomArea{},
                                                      roomName,
                                                      parsedRoomDescription,
                                                      roomContents,

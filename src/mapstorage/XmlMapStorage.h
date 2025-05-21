@@ -70,16 +70,17 @@ private:
 
     enum class NODISCARD RoomElementEnum : uint32_t {
         NONE /*  */ = 0,
-        ALIGN /*   */ = 1 << 0,
-        CONTENTS /**/ = 1 << 1,
-        POSITION /**/ = 1 << 2,
-        DESCRIPTION = 1 << 3,
-        LIGHT /*   */ = 1 << 4,
-        NOTE /*    */ = 1 << 5,
-        PORTABLE /**/ = 1 << 6,
-        RIDABLE /* */ = 1 << 7,
-        SUNDEATH /**/ = 1 << 8,
-        TERRAIN /* */ = 1 << 9,
+        AREA /*   */ = 1 << 0,
+        ALIGN /*   */ = 1 << 1,
+        CONTENTS /**/ = 1 << 2,
+        POSITION /**/ = 1 << 3,
+        DESCRIPTION = 1 << 4,
+        LIGHT /*   */ = 1 << 5,
+        NOTE /*    */ = 1 << 6,
+        PORTABLE /**/ = 1 << 7,
+        RIDABLE /* */ = 1 << 8,
+        SUNDEATH /**/ = 1 << 9,
+        TERRAIN /* */ = 1 << 10,
     };
 
     template<typename ENUM>

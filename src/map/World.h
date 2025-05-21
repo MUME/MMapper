@@ -12,6 +12,7 @@
 #include "Remapping.h"
 #include "ServerIdMap.h"
 #include "SpatialDb.h"
+#include "WorldAreaMap.h"
 
 #include <memory>
 #include <optional>
@@ -27,9 +28,6 @@ struct NODISCARD WorldComparisonStats final
     bool anyRoomsRemoved = false;
     bool anyRoomsAdded = false;
 
-    // NOTE: Under the current design, the spatialDb could change even if no positions change
-    // because the spatialDb allows more than one room to exist at a given position, but only
-    // one room to "own" the position.
     bool spatialDbChanged = false;
     bool parseTreeChanged = false;
     bool serverIdsChanged = false;
@@ -42,12 +40,11 @@ class NODISCARD World final
 private:
     Remapping m_remapping;
     RawRooms m_rooms;
-    /// Cached set for quick access; must be exactly the same as those in rooms.
-    RoomIdSet m_roomSet;
     /// This must be updated any time a room's position changes.
     SpatialDb m_spatialDb;
     ServerIdMap m_serverIds;
     ParseTree m_parseTree;
+    AreaInfoMap m_areaInfos;
 
 public:
     explicit World() = default;
@@ -64,8 +61,17 @@ public:
     NODISCARD bool operator==(const World &rhs) const;
     NODISCARD bool operator!=(const World &rhs) const { return !(rhs == *this); }
 
+private:
+    NODISCARD AreaInfo *findArea(const std::optional<RoomArea> &area);
+    NODISCARD const AreaInfo *findArea(const std::optional<RoomArea> &area) const;
+    NODISCARD AreaInfo &getArea(const std::optional<RoomArea> &area);
+    NODISCARD const AreaInfo &getArea(const std::optional<RoomArea> &area) const;
+
+    NODISCARD AreaInfo &getGlobalArea() { return getArea(std::nullopt); }
+    NODISCARD const AreaInfo &getGlobalArea() const { return getArea(std::nullopt); }
+
 public:
-    NODISCARD const auto &getParseTree() const { return m_parseTree; }
+    NODISCARD const ParseTree &getParseTree() const { return m_parseTree; }
 
 public:
     NODISCARD const RawRoom *getRoom(RoomId id) const;
@@ -81,7 +87,8 @@ public:
     NODISCARD ExternalRoomId getNextExternalId() const;
 
 public:
-    NODISCARD const RoomIdSet &getRoomSet() const { return m_roomSet; }
+    NODISCARD const RoomIdSet &getRoomSet() const;
+    NODISCARD const RoomIdSet *findAreaRoomSet(const RoomArea &areaName) const;
 
 public:
     NODISCARD bool hasRoom(RoomId id) const;

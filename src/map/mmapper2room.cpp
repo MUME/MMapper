@@ -213,6 +213,25 @@ void sanitizeRoomName(std::string &name)
 
 ///
 
+NODISCARD static bool isSanitizeRoomArea(const std::string_view area)
+{
+    if (!isValidUtf8(area)) {
+        return false;
+    }
+    return sanitizer::isSanitizedOneLine(area);
+}
+
+void sanitizeRoomArea(std::string &area)
+{
+    if (isSanitizeRoomName(area)) {
+        return;
+    }
+    area = sanitizer::sanitizeOneLine(area).getStdStringUtf8();
+    assert(isSanitizeRoomArea(area));
+}
+
+///
+
 static constexpr size_t max_desc_width = 80;
 
 NODISCARD static bool isSanitizedRoomDesc(const std::string_view desc)
@@ -274,6 +293,12 @@ void sanitizeRoomNote(std::string &note)
 
 ///
 
+RoomArea makeRoomArea(std::string area)
+{
+    sanitizeRoomArea(area);
+    return RoomArea{std::move(area)};
+}
+
 RoomName makeRoomName(std::string name)
 {
     sanitizeRoomName(name);
@@ -297,6 +322,10 @@ RoomNote makeRoomNote(std::string note)
 }
 
 namespace mmqt {
+RoomArea makeRoomArea(const QString &area)
+{
+    return ::makeRoomArea(toStdStringUtf8(area));
+}
 RoomName makeRoomName(const QString &name)
 {
     return ::makeRoomName(toStdStringUtf8(name));
@@ -316,6 +345,10 @@ RoomNote makeRoomNote(const QString &note)
 } // namespace mmqt
 
 namespace tags {
+bool RoomAreaTag::isValid(const std::string_view sv)
+{
+    return isSanitizeRoomArea(sv);
+}
 bool RoomNameTag::isValid(const std::string_view sv)
 {
     return isSanitizeRoomName(sv);

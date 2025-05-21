@@ -91,7 +91,8 @@ QString ParseEvent::toQString() const
         }
     }
 
-    return QString("[%1,%2,%3,%4,%5,%6,%7]")
+    return QString("[%1,%2,%3,%4,%5,%6,%7,%8]")
+        .arg(m_roomArea.toQString())
         .arg(m_roomName.toQString())
         .arg(m_roomDesc.toQString())
         .arg(m_roomContents.toQString())
@@ -104,6 +105,7 @@ QString ParseEvent::toQString() const
 
 ParseEvent ParseEvent::createEvent(const CommandEnum c,
                                    const ServerRoomId id,
+                                   RoomArea moved_roomArea,
                                    RoomName moved_roomName,
                                    RoomDesc moved_roomDesc,
                                    RoomContents moved_roomContents,
@@ -117,6 +119,7 @@ ParseEvent ParseEvent::createEvent(const CommandEnum c,
 
     // After this block, the moved values are gone.
     event.m_serverId = id;
+    event.m_roomArea = std::exchange(moved_roomArea, {});
     event.m_roomName = std::exchange(moved_roomName, {});
     event.m_roomDesc = std::exchange(moved_roomDesc, {});
     event.m_roomContents = std::exchange(moved_roomContents, {});
@@ -131,6 +134,7 @@ ParseEvent ParseEvent::createEvent(const CommandEnum c,
 
 SharedParseEvent ParseEvent::createSharedEvent(const CommandEnum c,
                                                const ServerRoomId id,
+                                               RoomArea moved_roomArea,
                                                RoomName moved_roomName,
                                                RoomDesc moved_roomDesc,
                                                RoomContents moved_roomContents,
@@ -142,6 +146,7 @@ SharedParseEvent ParseEvent::createSharedEvent(const CommandEnum c,
 {
     return std::make_shared<ParseEvent>(createEvent(c,
                                                     id,
+                                                    std::move(moved_roomArea),
                                                     std::move(moved_roomName),
                                                     std::move(moved_roomDesc),
                                                     std::move(moved_roomContents),
@@ -156,6 +161,7 @@ SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createSharedEvent(CommandEnum::UNKNOWN,
                              INVALID_SERVER_ROOMID,
+                             RoomArea{},
                              RoomName{},
                              RoomDesc{},
                              RoomContents{},

@@ -206,6 +206,7 @@ private:
     }
 
 private:
+    void print(const RoomArea &area) { printQuoted(area); }
     void print(const RoomName &name) { printQuoted(name); }
     void print(const RoomDesc &desc) { printQuoted(desc); }
     void print(const RoomContents &desc) { printQuoted(desc); }

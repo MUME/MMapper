@@ -139,6 +139,7 @@ public:
     RoomTerrainEnum terrain;
 
     // REVISIT: Is there any point to having a distinction between null and empty?
+    std::optional<RoomArea> roomArea;
     std::optional<RoomName> roomName;
     std::optional<RoomDesc> roomDesc;
     std::optional<RoomContents> roomContents;
