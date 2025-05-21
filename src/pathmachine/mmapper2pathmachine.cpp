@@ -17,6 +17,9 @@
 
 NODISCARD static const char *stateName(const PathStateEnum state)
 {
+    if (state == PathStateEnum::APPROVED) {
+        return "";
+    }
 #define CASE(x) \
     do { \
     case PathStateEnum::x: \
@@ -34,8 +37,6 @@ NODISCARD static const char *stateName(const PathStateEnum state)
 
 void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEvent)
 {
-    static constexpr const char *const me = "PathMachine";
-
     /*
      * REVISIT: replace PathParameters with Configuration::PathMachineSettings
      * and then just do: params = config.pathMachine; ? 
@@ -52,13 +53,8 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
     params.matchingTolerance = utils::clampNonNegative(settings.matchingTolerance);
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
-    m_time.restart();
-    emit sig_log(me, QString("received event, state: %1").arg(stateName(getState())));
     PathMachine::handleParseEvent(sigParseEvent);
-    emit sig_log(me,
-                 QString("done processing event, state: %1, elapsed: %2 ms")
-                     .arg(stateName(getState()))
-                     .arg(m_time.elapsed()));
+    emit sig_state(stateName(getState()));
 }
 
 Mmapper2PathMachine::Mmapper2PathMachine(MapFrontend &map, QObject *const parent)
