@@ -288,6 +288,8 @@ std::optional<RawMapLoadData> XmlMapStorage::virt_loadData()
         QXmlStreamReader stream(&file);
 
         m_loading = std::make_unique<Loading>();
+        m_loading->result.filename = file.fileName();
+        m_loading->result.readonly = !QFileInfo(file).isWritable();
         m_loading->loadProgressDivisor = static_cast<uint64_t>(
             std::max<int64_t>(1, file.size() / LOAD_PROGRESS_MAX));
 
@@ -381,6 +383,7 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 void XmlMapStorage::loadRoom(QXmlStreamReader &stream) const
 {
     ExternalRawRoom room{};
+    room.status = RoomStatusEnum::Permanent;
 
     const QXmlStreamAttributes attrs = stream.attributes();
     const QStringView externalidstr = attrs.value("id");
