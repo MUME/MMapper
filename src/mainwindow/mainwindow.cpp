@@ -207,7 +207,7 @@ MainWindow::MainWindow()
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     // View -> Side Panels -> Adventure Panel (Trophy XP, Achievements, Hints, etc)
-    m_dockDialogAdventure = new QDockWidget(tr("Adventure Panel *BETA*"), this);
+    m_dockDialogAdventure = new QDockWidget(tr("Adventure Panel"), this);
     m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
     m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
     m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
