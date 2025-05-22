@@ -145,6 +145,9 @@ void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
     if (!changes.empty()) {
         scheduleAction(changes);
     }
+    if (m_state != PathStateEnum::SYNCING && hasMostLikelyRoom()) {
+        emit sig_playerMoved(getMostLikelyRoomId());
+    }
 }
 
 void PathMachine::tryExits(const RoomHandle &room,
@@ -323,8 +326,6 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
     if (appr.needsUpdate()) {
         changes.add(Change{room_change_types::Update{getMostLikelyRoomId(), sigParseEvent.deref()}});
     }
-
-    emit sig_playerMoved(getMostLikelyRoomId());
 }
 
 void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent,
@@ -597,8 +598,6 @@ void PathMachine::evaluatePaths(ChangeList &changes)
     } else {
         m_state = PathStateEnum::EXPERIMENTING;
     }
-
-    emit sig_playerMoved(getMostLikelyRoomId());
 }
 
 void PathMachine::scheduleAction(const ChangeList &action)
