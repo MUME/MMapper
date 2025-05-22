@@ -117,7 +117,7 @@ public:
     void setArtificial()
     {
         using flags_type = decltype(m_flags);
-        m_flags = static_cast<flags_type>(m_flags & ~(DARK_ROOM & LIGHT_MASK));
+        m_flags = static_cast<flags_type>(m_flags & ~LIGHT_MASK);
     }
 
 public:
