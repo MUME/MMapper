@@ -137,6 +137,9 @@ struct NODISCARD MapCanvasTextures final
     XFOREACH_MAPCANVAS_TEXTURES(X_DECL)
 #undef X_DECL
 
+    SharedMMTexture backgroundImage;
+    SharedMMTexture uploadImageToTexture(const QImage &img);
+
 private:
     template<typename Callback>
     static void apply_callback(SharedMMTexture &tex, Callback &&callback)
@@ -158,6 +161,11 @@ public:
         XFOREACH_MAPCANVAS_TEXTURES(X_EACH)
 #undef X_EACH
     }
+
+    void loadCustomTexture(SharedMMTexture &dest,
+                           const QString &name,
+                           QOpenGLTexture::Target target,
+                           const QImage &img);
 
     void destroyAll();
 };
