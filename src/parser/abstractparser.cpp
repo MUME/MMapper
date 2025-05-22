@@ -186,6 +186,8 @@ AbstractParser::~AbstractParser() = default;
 
 void MumeXmlParserBase::onReset()
 {
+    m_commonData.trollExitMapping = false;
+    m_commonData.promptFlags.reset();
     m_commonData.lastPrompt = "";
     getQueue().clear();
 }
