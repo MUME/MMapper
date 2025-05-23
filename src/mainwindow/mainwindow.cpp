@@ -171,6 +171,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
     logWindow = new QTextBrowser(m_dockDialogLog);
+    logWindow->setReadOnly(true);
     logWindow->setObjectName("LogWindow");
     m_dockDialogLog->setWidget(logWindow);
     m_dockDialogLog->hide();
