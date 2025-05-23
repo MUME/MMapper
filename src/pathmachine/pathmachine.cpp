@@ -52,6 +52,13 @@ bool PathMachine::hasLastEvent() const
     return event.canCreateNewRoom();
 }
 
+void PathMachine::onMapLoaded()
+{
+    if (hasLastEvent()) {
+        handleParseEvent(m_lastEvent);
+    }
+}
+
 void PathMachine::forcePositionChange(const RoomId id, const bool update)
 {
     slot_releaseAllPaths();

@@ -60,6 +60,9 @@ public:
     void forceUpdate(const RoomId id) { forcePositionChange(id, true); }
     NODISCARD bool hasLastEvent() const;
 
+public:
+    void onMapLoaded();
+
 protected:
     explicit PathMachine(MapFrontend &map, QObject *parent);
 

@@ -1989,6 +1989,7 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
     auto &mapData = deref(m_mapData);
     auto &mapCanvas = deref(getCanvas());
     auto &groupWidget = deref(m_groupWidget);
+    auto &pathMachine = deref(m_pathMachine);
 
     mapData.setMapData(mapLoadData);
     mapData.checkSize();
@@ -1996,6 +1997,7 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
     // TODO: convert from slot_xxx prefix if these are no longer used as slots anywhere.
     mapCanvas.slot_dataLoaded();
     groupWidget.slot_mapLoaded();
+    pathMachine.onMapLoaded();
 
     // Should this be part of mapChanged?
     updateMapModified();
