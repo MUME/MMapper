@@ -343,53 +343,58 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent,
     }
 
     ExitsFlagsType eventExitsFlags = event.getExitsFlags();
-    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        const auto from = here.getId();
-        const auto toServerId = event.getExitIds()[dir];
-        const auto &roomExit = here.getExit(dir);
-        if (roomExit.exitIsNoMatch()) {
-            continue;
-        }
-        if (toServerId == INVALID_SERVER_ROOMID) {
-            // Room has a hidden exit or does not agree with event
-            if (roomExit.exitIsExit() && !eventExitsFlags.get(dir).isExit()) {
-                if (force) {
-                    // Be destructive only on forcing an update
-                    changes.add(Change{
-                        exit_change_types::ModifyExitConnection{ChangeTypeEnum::Remove, from, dir}});
-                } else if (roomExit.exitIsDoor() && !roomExit.doorIsHidden()) {
-                    changes.add(
-                        Change{exit_change_types::SetDoorFlags{FlagChangeEnum::Add,
-                                                               from,
-                                                               dir,
-                                                               DoorFlags{DoorFlagEnum::HIDDEN}}});
-
-                } else {
-                    // Use NO_MATCH as a hint to the user which exit isn't matching
-                    changes.add(
-                        Change{exit_change_types::SetExitFlags{FlagChangeEnum::Add,
-                                                               from,
-                                                               dir,
-                                                               ExitFlags{ExitFlagEnum::NO_MATCH}}});
-                }
+    if (eventExitsFlags.isValid()) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+            const auto from = here.getId();
+            const auto toServerId = event.getExitIds()[dir];
+            const auto &roomExit = here.getExit(dir);
+            if (roomExit.exitIsNoMatch()) {
+                continue;
             }
-            continue;
-        }
-        if (const auto there = m_map.findRoomHandle(toServerId)) {
-            // ServerId already exists
-            const auto to = there.getId();
-            if ((getMapMode() == MapModeEnum::MAP || force) && !roomExit.containsOut(to)) {
-                changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
+            if (toServerId == INVALID_SERVER_ROOMID) {
+                // Room has a hidden exit or does not agree with event
+                if (roomExit.exitIsExit() && !eventExitsFlags.get(dir).isExit()
+                    && !roomExit.doorIsHidden()) {
+                    if (force) {
+                        // Be destructive only on forcing an update
+                        changes.add(
+                            Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Remove,
                                                                            from,
-                                                                           dir,
-                                                                           to,
-                                                                           WaysEnum::OneWay}});
+                                                                           dir}});
+                    } else if (roomExit.exitIsDoor()) {
+                        // Map is old and needs hidden flag
+                        changes.add(Change{
+                            exit_change_types::SetDoorFlags{FlagChangeEnum::Add,
+                                                            from,
+                                                            dir,
+                                                            DoorFlags{DoorFlagEnum::HIDDEN}}});
+                    } else {
+                        // Use NO_MATCH as a hint to the user which exit isn't matching
+                        changes.add(Change{
+                            exit_change_types::SetExitFlags{FlagChangeEnum::Add,
+                                                            from,
+                                                            dir,
+                                                            ExitFlags{ExitFlagEnum::NO_MATCH}}});
+                    }
+                }
+                continue;
             }
-        } else if (roomExit.outIsUnique() && addedIds.find(toServerId) == addedIds.end()) {
-            // Add likely ServerId
-            const auto to = roomExit.outFirst();
-            changes.add(Change{room_change_types::SetServerId{to, toServerId}});
-            addedIds.emplace(toServerId);
+            if (const auto there = m_map.findRoomHandle(toServerId)) {
+                // ServerId already exists
+                const auto to = there.getId();
+                if ((getMapMode() == MapModeEnum::MAP || force) && !roomExit.containsOut(to)) {
+                    changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
+                                                                               from,
+                                                                               dir,
+                                                                               to,
+                                                                               WaysEnum::OneWay}});
+                }
+            } else if (roomExit.outIsUnique() && addedIds.find(toServerId) == addedIds.end()) {
+                // Add likely ServerId
+                const auto to = roomExit.outFirst();
+                changes.add(Change{room_change_types::SetServerId{to, toServerId}});
+                addedIds.emplace(toServerId);
+            }
         }
     }
 
@@ -427,7 +432,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent,
             } else {
                 // Otherwise append exit/door flags
                 // REVISIT: What about old roads/climbs that need to be removed?
-                if (roomExit.exitIsNoMatch()) {
+                if (roomExit.exitIsNoMatch() || !eventExitsFlags.get(dir).isExit()) {
                     continue;
                 }
 
