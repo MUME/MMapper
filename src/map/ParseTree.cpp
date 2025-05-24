@@ -121,15 +121,20 @@ void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
     static constexpr RawAnsi green = getRawAnsi(AnsiColor16Enum::green);
     static constexpr RawAnsi yellow = getRawAnsi(AnsiColor16Enum::yellow);
 
+    auto C = [](auto x) {
+        static_assert(std::is_integral_v<decltype(x)>);
+        return ColoredValue{green, x};
+    };
+
     {
         const size_t total_name = name_only.size();
         const size_t total_desc = desc_only.size();
         const size_t total_name_desc = name_desc.size();
 
         os << "\n";
-        os << "Total name combinations:              " << total_name << ".\n";
-        os << "Total desc combinations:              " << total_desc << ".\n";
-        os << "Total name+desc combinations:         " << total_name_desc << ".\n";
+        os << "Total name combinations:              " << C(total_name) << ".\n";
+        os << "Total desc combinations:              " << C(total_desc) << ".\n";
+        os << "Total name+desc combinations:         " << C(total_name_desc) << ".\n";
 
         const auto countUnique = [](const auto &map) -> size_t {
             return static_cast<size_t>(std::count_if(std::begin(map), std::end(map), [](auto &kv) {
@@ -142,14 +147,14 @@ void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
         const size_t unique_name_Desc = countUnique(name_desc);
 
         os << "\n";
-        os << "  unique name:              " << unique_name << ".\n";
-        os << "  unique desc:              " << unique_desc << ".\n";
-        os << "  unique name+desc:         " << unique_name_Desc << ".\n";
+        os << "  unique name:              " << C(unique_name) << ".\n";
+        os << "  unique desc:              " << C(unique_desc) << ".\n";
+        os << "  unique name+desc:         " << C(unique_name_Desc) << ".\n";
 
         os << "\n";
-        os << "  non-unique names:             " << (total_name - unique_name) << ".\n";
-        os << "  non-unique descs:             " << (total_desc - unique_desc) << ".\n";
-        os << "  non-unique name+desc:         " << (total_name_desc - unique_name_Desc) << ".\n";
+        os << "  non-unique names:             " << C(total_name - unique_name) << ".\n";
+        os << "  non-unique descs:             " << C(total_desc - unique_desc) << ".\n";
+        os << "  non-unique name+desc:         " << C(total_name_desc - unique_name_Desc) << ".\n";
     }
 
     {
@@ -170,9 +175,9 @@ void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
         const size_t nonunique_name_desc = count_nonunique(name_desc);
 
         os << "\n";
-        os << "  rooms w/ non-unique names:             " << nonunique_name << ".\n";
-        os << "  rooms w/ non-unique descs:             " << nonunique_desc << ".\n";
-        os << "  rooms w/ non-unique name+desc:         " << nonunique_name_desc << ".\n";
+        os << "  rooms w/ non-unique names:             " << C(nonunique_name) << ".\n";
+        os << "  rooms w/ non-unique descs:             " << C(nonunique_desc) << ".\n";
+        os << "  rooms w/ non-unique name+desc:         " << C(nonunique_name_desc) << ".\n";
     }
 
     struct NODISCARD DisplayHelper final
@@ -221,10 +226,11 @@ void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
             }
         }
 
-        if (mostCommon) {
+        if (mostCommon && mostCommonCount > 1) {
             os << "\n";
-            os << "Most common non-default " << thing << " appears " << mostCommonCount << " time"
-               << ((mostCommonCount == 1) ? "" : "s") << ":\n";
+            // Note: This excludes default/empty strings.
+            os << "Most common " << thing << " appears " << ColoredValue{green, mostCommonCount}
+               << " time" << ((mostCommonCount == 1) ? "" : "s") << ":\n";
 
             DisplayHelper::print(os, *mostCommon);
         }

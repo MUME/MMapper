@@ -2187,43 +2187,51 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
             }
         }
 
+        static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+
+        auto C = [](auto x) {
+            static_assert(std::is_integral_v<decltype(x)>);
+            return ColoredValue{green, x};
+        };
+
         os << "\n";
-        os << "Total rooms: " << m_roomSet.size() << ".\n";
+        os << "Total rooms: " << C(m_roomSet.size()) << ".\n";
         os << "\n";
-        os << "  missing server id: " << numMissingServerId << ".\n";
+        os << "  missing server id: " << C(numMissingServerId) << ".\n";
         os << "\n";
-        os << "  with no name and no desc: " << numMissingBoth << ".\n";
-        os << "  with name but no desc:    " << (numMissingDesc - numMissingBoth) << ".\n";
-        os << "  with desc but no name:    " << (numMissingName - numMissingBoth) << ".\n";
+        os << "  with no name and no desc: " << C(numMissingBoth) << ".\n";
+        os << "  with name but no desc:    " << C(numMissingDesc - numMissingBoth) << ".\n";
+        os << "  with desc but no name:    " << C(numMissingName - numMissingBoth) << ".\n";
         os << "\n";
-        os << "  with no connections:         " << numWithNoConnections << ".\n";
-        os << "  with entrances but no exits: " << (numWithNoExits - numWithNoConnections) << ".\n";
-        os << "  with exits but no entrances: " << (numWithNoEntrances - numWithNoConnections)
+        os << "  with no connections:         " << C(numWithNoConnections) << ".\n";
+        os << "  with entrances but no exits: " << C(numWithNoExits - numWithNoConnections)
+           << ".\n";
+        os << "  with exits but no entrances: " << C(numWithNoEntrances - numWithNoConnections)
            << ".\n";
         os << "\n";
-        os << "Total exits: " << numExits << ".\n";
+        os << "Total exits: " << C(numExits) << ".\n";
         os << "\n";
-        os << "  doors:  " << numDoors << " (with names: " << numDoorNames << ").\n";
-        os << "  hidden: " << numHidden << " (with names: " << numHiddenDoorNames << ").\n";
-        os << "  loops:  " << numLoopExits << ".\n";
+        os << "  doors:  " << C(numDoors) << " (with names: " << C(numDoorNames) << ").\n";
+        os << "  hidden: " << C(numHidden) << " (with names: " << C(numHiddenDoorNames) << ").\n";
+        os << "  loops:  " << C(numLoopExits) << ".\n";
         os << "\n";
-        os << "  with multiple outputs: " << numMultipleOut << ".\n";
-        os << "  with multiple inputs:  " << numMultipleIn << ".\n";
+        os << "  with multiple outputs: " << C(numMultipleOut) << ".\n";
+        os << "  with multiple inputs:  " << C(numMultipleIn) << ".\n";
         os << "\n";
-        os << "Total connections: " << numConnections << ".\n";
+        os << "Total connections: " << C(numConnections) << ".\n";
         os << "\n";
-        os << "  adjacent 1-way:     " << adj1 << ".\n";
-        os << "  adjacent 2-way:     " << adj2 << ".\n";
-        os << "  looping 1-way:      " << loop1 << ".\n";
-        os << "  looping 2-way:      " << loop2 << ".\n";
-        os << "  non-adjacent 1-way: " << non1 << ".\n";
-        os << "  non-adjacent 2-way: " << non2 << ".\n";
+        os << "  adjacent 1-way:     " << C(adj1) << ".\n";
+        os << "  adjacent 2-way:     " << C(adj2) << ".\n";
+        os << "  looping 1-way:      " << C(loop1) << ".\n";
+        os << "  looping 2-way:      " << C(loop2) << ".\n";
+        os << "  non-adjacent 1-way: " << C(non1) << ".\n";
+        os << "  non-adjacent 2-way: " << C(non2) << ".\n";
         os << "\n";
-        os << "  total 1-way:        " << (non1 + adj1 + loop1) << ".\n";
-        os << "  total 2-way:        " << (non2 + adj2 + loop2) << ".\n";
-        os << "  total adjacent:     " << (adj1 + adj2) << ".\n";
-        os << "  total looping:      " << (loop1 + loop2) << ".\n";
-        os << "  total non-adjacent: " << (non1 + non2 + loop1 + loop2) << ".\n";
+        os << "  total 1-way:        " << C(non1 + adj1 + loop1) << ".\n";
+        os << "  total 2-way:        " << C(non2 + adj2 + loop2) << ".\n";
+        os << "  total adjacent:     " << C(adj1 + adj2) << ".\n";
+        os << "  total looping:      " << C(loop1 + loop2) << ".\n";
+        os << "  total non-adjacent: " << C(non1 + non2 + loop1 + loop2) << ".\n";
     }
 
     m_spatialDb.printStats(pc, os);

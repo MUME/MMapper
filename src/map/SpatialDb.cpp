@@ -72,8 +72,11 @@ void SpatialDb::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
         const Coordinate &max = bounds.max;
         const Coordinate &min = bounds.min;
 
+        static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+
         auto show = [&os](std::string_view prefix, int lo, int hi) {
-            os << prefix << (hi - lo + 1) << " (" << lo << " to " << hi << ").\n";
+            os << prefix << ColoredValue(green, hi - lo + 1) << " (" << ColoredValue(green, lo)
+               << " to " << ColoredValue(green, hi) << ").\n";
         };
 
         os << "\n";

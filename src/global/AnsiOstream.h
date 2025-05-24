@@ -18,6 +18,35 @@
 class QuotedString;
 class SmartQuotedString;
 
+template<typename T>
+struct NODISCARD ColoredValue final
+{
+    RawAnsi color;
+    T value{};
+    explicit ColoredValue(const RawAnsi c, const T v)
+        : color{c}
+        , value{v}
+    {}
+};
+
+template<typename T>
+ColoredValue(RawAnsi, T) -> ColoredValue<T>;
+
+struct NODISCARD ColoredQuotedStringView final
+{
+    RawAnsi normal;
+    RawAnsi escapes;
+    std::string_view value;
+
+    explicit ColoredQuotedStringView(const RawAnsi normal_,
+                                     const RawAnsi escapes_,
+                                     const std::string_view sv)
+        : normal{normal_}
+        , escapes{escapes_}
+        , value{sv}
+    {}
+};
+
 // AnsiOstream writes UTF8 bytes to the std::ostream.
 //
 // By default, all char-based string types (e.g. const char*, std::string, std::string_view, etc)
@@ -127,6 +156,16 @@ public:
 public:
     void write(const QuotedString &);
     void write(const SmartQuotedString &);
+    void write(const ColoredQuotedStringView s)
+    {
+        writeQuotedWithColor(s.normal, s.escapes, s.value);
+    }
+
+    template<typename T>
+    void write(const ColoredValue<T> x)
+    {
+        writeWithColor(x.color, x.value);
+    }
 
 public:
     template<typename T>
