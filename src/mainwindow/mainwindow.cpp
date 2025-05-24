@@ -1018,6 +1018,10 @@ void MainWindow::slot_setMode(MapModeEnum mode)
 
 void MainWindow::disableActions(bool value)
 {
+    // REVISIT: Which of these should be allowed during async actions?
+    // Note: Some of the ones that would launch async actions (e.g. loading/saving)
+    // would probably be blocked because we only allow one async action at a time,
+    // but they'll probably need to be individually tested to see what actually happens.
     newAct->setDisabled(value);
     openAct->setDisabled(value);
     mergeAct->setDisabled(value);
@@ -1028,26 +1032,6 @@ void MainWindow::disableActions(bool value)
     exportWebMapAct->setDisabled(value);
     exportMmpMapAct->setDisabled(value);
     exitAct->setDisabled(value);
-    aboutAct->setDisabled(value);
-    aboutQtAct->setDisabled(value);
-    zoomInAct->setDisabled(value);
-    zoomOutAct->setDisabled(value);
-    zoomResetAct->setDisabled(value);
-    mapperMode.playModeAct->setDisabled(value);
-    mapperMode.mapModeAct->setDisabled(value);
-    mouseMode.modeRoomSelectAct->setDisabled(value);
-    mouseMode.modeConnectionSelectAct->setDisabled(value);
-    mouseMode.modeMoveSelectAct->setDisabled(value);
-    mouseMode.modeInfoMarkSelectAct->setDisabled(value);
-    mouseMode.modeCreateInfoMarkAct->setDisabled(value);
-    layerUpAct->setDisabled(value);
-    layerDownAct->setDisabled(value);
-    layerResetAct->setDisabled(value);
-    mouseMode.modeCreateRoomAct->setDisabled(value);
-    mouseMode.modeCreateConnectionAct->setDisabled(value);
-    mouseMode.modeCreateOnewayConnectionAct->setDisabled(value);
-    releaseAllPathsAct->setDisabled(value);
-    alwaysOnTopAct->setDisabled(value);
 }
 
 void MainWindow::hideCanvas(const bool hide)
