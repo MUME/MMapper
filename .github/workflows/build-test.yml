@@ -148,16 +148,10 @@ jobs:
       name: Prepare lcov counters
       run: cd build && lcov --zerocounters --directory .
     - name: Run unit tests
-      run: cd build && ctest -V --no-compress-output -T test
+      run: cd build && ctest -V --no-compress-output -T test --output-junit ctest-to-junit-results.xml
       env:
         QT_QPA_PLATFORM: offscreen
         ASAN_OPTIONS: detect_leaks=0
-    - name: Transform test results from ctest to junit format
-      shell: pwsh
-      run: |
-        $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
-        $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
-        $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
