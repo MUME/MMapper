@@ -471,6 +471,42 @@ void MapCanvas::resizeGL(int width, int height)
     update();
 }
 
+void MapCanvas::setAnimating(bool value)
+{
+    if (m_frameRateController.animating == value)
+        return;
+
+    m_frameRateController.animating = value;
+
+    if (m_frameRateController.animating) {
+        QTimer::singleShot(0, this, &MapCanvas::renderLoop);
+    }
+}
+
+void MapCanvas::renderLoop()
+{
+    if (!m_frameRateController.animating) {
+        return;
+    }
+
+    // REVISIT: Make this configurable later when its not just used for the remesh flash
+    static constexpr int TARGET_FRAMES_PER_SECOND = 20;
+    auto targetFrameTime = std::chrono::milliseconds(1000 / TARGET_FRAMES_PER_SECOND);
+
+    auto now = std::chrono::steady_clock::now();
+    update();
+    auto afterPaint = std::chrono::steady_clock::now();
+
+    // Render the next frame at the appropriate time or now if we're behind
+    auto timeSinceLastFrame = std::chrono::duration_cast<std::chrono::milliseconds>(afterPaint
+                                                                                    - now);
+    auto delay = std::max(targetFrameTime - timeSinceLastFrame, std::chrono::milliseconds::zero());
+
+    QTimer::singleShot(delay.count(), this, &MapCanvas::renderLoop);
+
+    m_frameRateController.lastFrameTime = now;
+}
+
 void MapCanvas::updateBatches()
 {
     updateMapBatches();
@@ -521,6 +557,8 @@ void MapCanvas::finishPendingMapBatches()
     LOG() << "Waiting for the cookie. This shouldn't take long.";
     SharedMapBatchFinisher pFuture = remeshCookie.get();
     assert(!remeshCookie.isPending());
+
+    setAnimating(false);
 
     if (pFuture == nullptr) {
         // REVISIT: Do we need to schedule another update now?
@@ -707,9 +745,7 @@ void MapCanvas::paintMap()
 {
     const bool pending = m_batches.remeshCookie.isPending();
     if (pending) {
-        // REVISIT: will this end up using 100% cpu,
-        // or will it only run up to the frame rate times per second?
-        update();
+        setAnimating(true);
     }
 
     if (!m_batches.mapBatches.has_value()) {

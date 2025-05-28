@@ -59,6 +59,12 @@ public:
     static constexpr const int SCROLL_SCALE = 64;
 
 private:
+    struct NODISCARD FrameRateController final
+    {
+        std::chrono::steady_clock::time_point lastFrameTime;
+        bool animating = false;
+    };
+
     struct NODISCARD OptionStatus final
     {
         std::optional<int> multisampling;
@@ -100,6 +106,7 @@ private:
     Mmapper2Group &m_groupManager;
     OptionStatus m_graphicsOptionsStatus;
     Diff m_diff;
+    FrameRateController m_frameRateController;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
 
@@ -154,6 +161,10 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *e) override;
+
+private:
+    void setAnimating(bool value);
+    void renderLoop();
 
 private:
     void initLogger();
