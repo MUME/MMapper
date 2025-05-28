@@ -1,3 +1,64 @@
+## MMapper 25.06.0 (June 11, 2025)
+
+### New Features:
+
+* **Modernized Parser and Group Manager (GMCP):** MMapper now uses the modern GMCP protocol for core game data and group management. This is a result of major internal refactoring of the parser and group manager to a GMCP-based system. This replaces older peer-to-peer methods, improving overall reliability and accessibility. For groups, this means **no more hassle with sharing IP addresses or configuring firewalls!**
+* **Full Unicode and Emoji Support:**
+   * **Modern Character Encoding:** MMapper now fully supports Unicode internally, thanks to a significant backend overhaul and refactoring of internal utilities. This solves problems with incorrectly displayed characters in names, descriptions, or notes, and brings full Emoji Support.
+   * **Emoji Shortcodes:** Express yourself better! You can now use familiar icons and emoji shortcodes like `[:+1:]`, `[:smiley:]`, or `[:skull:]` in your notes or other text areas, and even in text sent to MUME to mark danger zones or jazz up tells. MUME will receive emojis as a shortcode and MMapper will translate it back to emoji on UTF-8 supported clients.
+* **Secure Login Credential Saving:** Tired of typing your password every time? You can now securely save your MUME login credentials using your operating system's keychain, making logging in quicker and avoiding the need to store passwords insecurely.
+* **Improved Connectivity & Distribution:**
+    * **WebSocket Connection Option:** Struggling to connect through a strict firewall? MMapper can now connect to MUME using WebSockets as a fallback method, improving connectivity for users behind certain network restrictions. This is supported by a rewritten proxy pipeline that handles client-server connections more robustly.
+    * **Flatpak Distribution:** MMapper is now available as a Flatpak, simplifying installation and updates across various Linux distributions.
+    * **Apple Silicon Support:** MMapper now offers a native package for Apple Silicon Macs, providing optimized performance and compatibility for the latest Apple hardware.
+* **Mapping Enhancements:**
+    * **Missing Map ID and Unsaved Changes Dots:** MMapper now supports MUME's per-room Map IDs that once discovered allow for deterministic room identification within Group Manager on different maps. MMapper will display yellow dots where a Map ID is missing and blue dots where there are unsaved changes to help you populate your map with Map IDs.
+    * **Automatic Door Mapping:** Mapping hidden doors has been made easier due to how MMapper now automatically does this for you. If you want to not have MMapper automap a door name mark the exit as No Match.
+    * **Additional Map Data Tracking:** MMapper now tracks areas, artificial light sources, and nice weather conditions reported by the game.
+    * **Manage Unknown Exits:** You can now remove exits that are marked as "unknown" from your map data.
+* **Client & UI Additions:**
+    * **Live Scrollback Preview:** While reviewing scrollback, you can now still see the latest game output — making it easier to keep track of what’s happening in real-time. The built-in client also supports clickable URLs and ITU underline styles sent by the game.
+    * **Improved Input in the Integrated Client:** The optional built-in MUME client has received usability improvements, including function keys, smarter `TAB` autocomplete, better `CTRL+TAB` behavior, and a clearer visual distinction for password input fields.
+    * **Description Panel:** New panel shows descriptive text and supports GenAI artwork via [Modding](https://github.com/MUME/MMapper/wiki/Modding). Many thanks to Freya who created the default images!
+      * Room art: ``rooms/<mapid>.jpg``
+      * Area art: ``areas/<normalized-area>.png``
+        * Normalization: lowercase, remove the first ``the ``, convert Latin-1 to ASCII, replace spaces with ``-``
+        * Example: ``the Lhûn Valley`` → ``areas/lhun-valley.bmp``
+        * Images can be either PNG, JPG, or BMP formats.
+
+### Changes & Improvements
+
+* Improved ``_map stats`` output with more color for easier reading and quick analysis.
+* Switched to zlib-ng on Windows: 2× faster compression.
+* Map loading and saving are now asynchronous, preventing UI freezes, a direct benefit of the backend overhaul for asynchronous operations.
+* Remote editing now uses MUME.Client GMCP instead of the legacy MPI protocol, leading to a more robust parser.
+* Connection attempts are faster due to a reduced timeout.
+* Editing room notes feels smoother with less frequent updates during typing.
+* Group state icons are cached for quicker display.
+* The "Edit Room Attributes" dialog no longer blocks interaction with the rest of the MMapper window, allowing you to multitask more effectively.
+* Replaced the path machine state from logs with a status bar widget, offering a more streamlined view.
+* Removed beta branding from the Adventure Panel.
+* Removed the old splash screen and integrated it directly into the map window.
+* Made the log panel read-only to prevent accidental font resizing.
+* For advanced users, the `MMAPPER_WINDOW_TITLE_PROGRAM_FIRST` environment variable allows you to change the order of elements in the window title, providing flexibility for specific window management setups.
+* Deathtrap terrain type rooms have switched from a terrain type to a load type. Older map files will now have these deathtraps loaded as the indoors terrain type to better match MUME's output.
+* Corrected problems with how certain special characters and text encodings (like UTF-8 quotes and XML entities) were handled and displayed, thanks to the Unicode support improvements. As a result, XML passthrough has been removed.
+* ``_open`` and ``_close`` door commands no longer use door names to encourage the use of in-game door memory and ensure fair play.
+* Updater enhanced to check beta or release channels.
+
+### Performance & Stability
+
+* General performance improvements across the application, partly due to threading model changes that eliminated dedicated threads for the Group Manager and optional proxy, leading to a more efficient concurrency model.
+* Addressed several potential crashes and stability issues related to data handling, timers, and parser exceptions, benefiting from widespread C++ modernization and stricter thread safety enforcement.
+
+### Under the Hood
+
+* **C++ Modernization:** There was a widespread effort to modernize the C++ codebase, adopting practices like RAII (Resource Acquisition Is Initialization) with custom handlers, using `noexcept`, preferring iterators over raw pointers, avoiding `new`/`delete`, using modern C++ features, and applying patterns like the "badge" idiom.
+* **Build System Enhancements:** The build environment was updated to Ubuntu Jammy for AppImages and enabled the Mold linker to improve build times.
+* **Dependency Streamlining:** The MiniUPnPc dependency was removed, simplifying the build and reducing external requirements.
+* **Windows Support:** Release packages are now built using Visual Studio and the Windows installer has been improved to prompt for closing MMapper during the uninstallation phase.
+
+---
 ## MMapper 24.03.1 (March 11, 2024)
 
 ### Bug fix:
