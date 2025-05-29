@@ -17,6 +17,7 @@ else()
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         ALWAYS 0
         )
     ExternalProject_Get_Property(glm SOURCE_DIR)

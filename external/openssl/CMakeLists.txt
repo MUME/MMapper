@@ -98,6 +98,7 @@ if(WIN32)
                 COMMAND make
                 INSTALL_COMMAND make install_sw
 
+                DOWNLOAD_EXTRACT_TIMESTAMP TRUE
                 UPDATE_COMMAND ""
                 BUILD_IN_SOURCE 1
                 ALWAYS 0

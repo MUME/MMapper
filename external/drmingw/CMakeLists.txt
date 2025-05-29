@@ -15,6 +15,7 @@ if(MINGW)
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/symsrv.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/symsrv.yes ${CMAKE_BINARY_DIR}/src/bin/
 
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             UPDATE_COMMAND ""
             ALWAYS 0
 
@@ -35,6 +36,7 @@ if(MINGW)
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/symsrv.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/symsrv.yes ${CMAKE_BINARY_DIR}/src/bin/
 
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
             UPDATE_COMMAND ""
             ALWAYS 0
 

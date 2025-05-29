@@ -52,6 +52,7 @@ else()
                    -DWITH_GTEST=OFF
                    -DZLIBNG_ENABLE_TESTS=OFF
 
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         UPDATE_COMMAND ""
         ALWAYS 0
 
