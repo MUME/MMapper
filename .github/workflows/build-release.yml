@@ -3,7 +3,7 @@ name: build-release
 on:
   push:
     tags:
-      - 'v*'
+    - 'v*'
     branches:
     - master
   pull_request:
@@ -45,9 +45,9 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt5
-        brew link qt5 --force
-        echo "$(brew --prefix qt5)/bin" >> $GITHUB_PATH
+        brew install qt@5
+        brew link qt@5 --force
+        echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
 
     # Install Dependencies (Windows)
     - if: runner.os == 'Windows'
