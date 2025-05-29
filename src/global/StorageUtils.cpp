@@ -3,8 +3,10 @@
 
 #include "StorageUtils.h"
 
-#ifndef MMAPPER_NO_ZLIB
+#include "../global/Timer.h"
 #include "ConfigConsts.h"
+
+#ifndef MMAPPER_NO_ZLIB
 #include "zpipe.h"
 #endif
 
@@ -32,6 +34,7 @@ QByteArray deflate(ProgressCounter &pc, const QByteArray &data)
 #else
 QByteArray zlib_inflate(ProgressCounter &pc, const QByteArray &data)
 {
+    DECL_TIMER(t, "StorageUtils::mmqt::zlib_inflate");
     ::mmqt::QByteArrayInputStream is{data};
     ::mmqt::QByteArrayOutputStream os;
     int err = mmz::zpipe_inflate(pc, is, os);
@@ -42,6 +45,7 @@ QByteArray zlib_inflate(ProgressCounter &pc, const QByteArray &data)
 }
 QByteArray zlib_deflate(ProgressCounter &pc, const QByteArray &data, const int level)
 {
+    DECL_TIMER(t, "StorageUtils::mmqt::zlib_deflate");
     ::mmqt::QByteArrayInputStream is{data};
     ::mmqt::QByteArrayOutputStream os;
     int err = mmz::zpipe_deflate(pc, is, os, level);

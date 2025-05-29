@@ -24,24 +24,33 @@ if(ZLIB_FOUND)
         endif()
     endif()
 else()
-    if(WIN32)
+    if(NOT WIN32)
+        message(FATAL_ERROR "zlib NOT found: use `-DWITH_ZLIB=OFF` to build without old map backwards compatability")
+    endif()
+    if (MSVC)
         set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
     else()
         set(ZLIB_STATIC_LIBRARY_NAME z)
-        message(FATAL_ERROR "zlib NOT found: use `-DWITH_ZLIB=OFF` to build without old map backwards compatability")
     endif()
-    message(STATUS "Could not find system zlib; building as a static library")
+    message(STATUS "Could not find system zlib; building zlib-ng as a static library")
     include(ExternalProject)
     ExternalProject_Add(zlib
-        URL "https://www.zlib.net/zlib-1.3.1.tar.gz"
-        URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
+        URL "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/2.2.4.tar.gz"
+        URL_HASH SHA256=a73343c3093e5cdc50d9377997c3815b878fd110bf6511c2c7759f2afb90f5a3
 
-        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-src"
-        BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-build"
+        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-ng-src"
+        BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-ng-build"
+
         INSTALL_COMMAND ""
-        CMAKE_ARGS "-DCMAKE_BUILD_TYPE=Release"
-        CMAKE_CACHE_ARGS -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
-                         -DBUILD_SHARED_LIBS:BOOL==OFF
+        CMAKE_ARGS -DZLIB_COMPAT=ON
+                   -DCMAKE_BUILD_TYPE:STRING=Release
+                   -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                   -DBUILD_SHARED_LIBS:BOOL=OFF
+                   -DWITH_GZFILEOP=OFF
+                   -DZLIB_ENABLE_TESTS=OFF
+                   -DWITH_SANITIZER=OFF
+                   -DWITH_GTEST=OFF
+                   -DZLIBNG_ENABLE_TESTS=OFF
 
         UPDATE_COMMAND ""
         ALWAYS 0
