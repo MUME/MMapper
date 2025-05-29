@@ -75,6 +75,7 @@ parts:
       - qttools5-dev-tools
       - zlib1g-dev
       - dpkg-dev
+      - xz-utils
     stage-packages:
       - libssl3
       - zlib1g
