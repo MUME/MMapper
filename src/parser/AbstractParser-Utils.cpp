@@ -28,7 +28,7 @@ std::string_view enabledString(const bool isEnabled)
 
 bool isValidPrefix(const char c)
 {
-    return std::ispunct(c);
+    return ascii::isPunct(c);
 }
 
 std::string concatenate_unquoted(const Vector &input)

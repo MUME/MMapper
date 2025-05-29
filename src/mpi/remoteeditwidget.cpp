@@ -269,7 +269,7 @@ public:
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
                         setFormat(pos - 1, 2, get_utf8_fmt());
-                    } else if (std::iscntrl(uc) || (!std::isprint(uc) && !std::isspace(uc))) {
+                    } else if (ascii::isCntrl(c) || !::isPrintLatin1(c)) {
                         setFormat(pos, 1, get_unprintable_fmt());
                     }
                 }

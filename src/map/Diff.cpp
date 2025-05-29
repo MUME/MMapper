@@ -113,7 +113,7 @@ NODISCARD std::vector<std::string_view> splitWordLines(const std::string_view s)
 
     auto insertWord = [&insertPunct, &wordsAndNewlines](std::string_view word) {
         assert(!word.empty());
-        if (std::ispunct(word.front())) {
+        if (ascii::isPunct(word.front())) {
             auto punct = remove_punct_prefix(word);
             insertPunct(punct);
             if (word.empty()) {
@@ -122,7 +122,7 @@ NODISCARD std::vector<std::string_view> splitWordLines(const std::string_view s)
         }
 
         assert(!word.empty());
-        if (!std::ispunct(word.back())) {
+        if (!ascii::isPunct(word.back())) {
             // ignore possible internal punctuation like: foo's
             wordsAndNewlines.emplace_back(word);
             return;
@@ -233,7 +233,7 @@ void printDiff(AnsiOstream &os, const std::string_view a, const std::string_view
                 return 0.1f;
             }
 
-            const float scale = std::ispunct(a.front()) ? 0.05f : 1.f;
+            const float scale = ascii::isPunct(a.front()) ? 0.05f : 1.f;
 
             // letters - words / 1000  = gently encourages longer matches
             return std::max(1e-4f, static_cast<float>(a.size()) * scale - 1e-3f);

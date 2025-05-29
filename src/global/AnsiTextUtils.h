@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "Charset.h"
 #include "Color.h"
 #include "Consts.h"
 #include "Flags.h"
@@ -973,7 +974,7 @@ struct NODISCARD AnsiTokenizer final
         NODISCARD size_type skip_ansi() const;
         NODISCARD static bool isControl(const QChar c)
         {
-            return std::iscntrl(c.toLatin1()) && c != QC_NBSP;
+            return ascii::isCntrl(c.toLatin1()) && c != QC_NBSP;
         }
         NODISCARD size_type skip_control() const;
         NODISCARD size_type skip_space() const;

@@ -721,7 +721,7 @@ private:
                 if ((ascii::isSpace(c) && c != char_consts::C_SPACE) || c == char_consts::C_NBSP) {
                     os << "Room name cannot contain non-standard whitespace.\n";
                     return;
-                } else if (std::iscntrl(c)) {
+                } else if (ascii::isCntrl(c)) {
                     os << "Room name cannot control codes.\n";
                     return;
                 }
