@@ -1,0 +1,84 @@
+name: upload-release
+
+on:
+  workflow_run:
+    workflows: ["build-release", "build-appimage", "build-flatpak"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  upload-release:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && startsWith(github.event.workflow_run.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Determine Release Version
+        id: determine_version
+        run: |
+          VERSION_NUMBER="${{ github.event.workflow_run.ref }}"
+          VERSION_NUMBER="${VERSION_NUMBER#refs/tags/v}"
+          echo "Extracted version: $VERSION_NUMBER"
+          echo "VERSION_NUMBER=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Download all build artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const workflowRuns = github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: ['build-release.yml', 'build-appimage.yml', 'build-flatpak.yml'],
+              event: 'push',
+              ref: context.payload.workflow_run.ref,
+              status: 'success'
+            });
+
+            let artifacts = [];
+            for await (const runs of github.paginate.iterator(workflowRuns)) {
+              for (const run of runs.data) {
+                console.log(`Workflow run id: ${run.id}, workflow name: ${run.name}`);
+                const artifactsForRun = await github.rest.actions.listWorkflowRunArtifacts({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id,
+                });
+                for (const artifact of artifactsForRun.data.artifacts) {
+                  console.log(`  Artifact: ${artifact.name}`);
+                  const download = await github.rest.actions.downloadArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                    archive_format: 'zip',
+                  });
+                  const fs = require('fs');
+                  const AdmZip = require('adm-zip');
+                  const zip = new AdmZip(Buffer.from(download.data));
+                  const outputDir = `${process.env.GITHUB_WORKSPACE}/release_artifacts/${artifact.name}`;
+                  fs.mkdirSync(outputDir, { recursive: true });
+                  zip.extractAllTo(outputDir, true);
+                  artifacts.push(outputDir);
+                }
+              }
+            }
+            core.exportVariable('release_artifacts', artifacts.join(','));
+
+      - name: List downloaded artifacts for verification
+        run: |
+          echo "Artifacts downloaded to ${{ github.workspace }}/release_artifacts:"
+          ls -R ${{ github.workspace }}/release_artifacts
+          echo "--- End of artifact listing ---"
+
+      - name: Create Tagged Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.determine_version.outputs.VERSION_NUMBER }}
+          name: MMapper ${{ steps.determine_version.outputs.VERSION_NUMBER }}
+          prerelease: false
+          draft: false
+          make_latest: true
+          generate_release_notes: true
+          files: ${{ env.release_artifacts }}
+          token: ${{ secrets.GITHUB_TOKEN }}

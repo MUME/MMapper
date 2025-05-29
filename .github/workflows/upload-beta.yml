@@ -1,0 +1,106 @@
+name: upload-beta
+
+on:
+  workflow_run:
+    workflows: ["build-release", "build-appimage", "build-flatpak"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  upload-beta:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Determine Release Version
+        id: determine_version
+        run: |
+          VERSION_NUMBER=$(git describe --tags --always --long)
+          echo "Extracted version: $VERSION_NUMBER"
+          echo "VERSION_NUMBER=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Download all build artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const workflowRuns = github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: ['build-release.yml', 'build-appimage.yml', 'build-flatpak.yml'],
+              event: 'push',
+              ref: 'refs/heads/master',
+              status: 'success'
+            });
+
+            let artifacts = [];
+            for await (const runs of github.paginate.iterator(workflowRuns)) {
+              for (const run of runs.data) {
+                console.log(`Workflow run id: ${run.id}, workflow name: ${run.name}`);
+                const artifactsForRun = await github.rest.actions.listWorkflowRunArtifacts({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id,
+                });
+                for (const artifact of artifactsForRun.data.artifacts) {
+                  console.log(`  Artifact: ${artifact.name}`);
+                  const download = await github.rest.actions.downloadArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                    archive_format: 'zip',
+                  });
+                  const fs = require('fs');
+                  const AdmZip = require('adm-zip');
+                  const zip = new AdmZip(Buffer.from(download.data));
+                  const outputDir = `${process.env.GITHUB_WORKSPACE}/release_artifacts/${artifact.name}`;
+                  fs.mkdirSync(outputDir, { recursive: true });
+                  zip.extractAllTo(outputDir, true);
+                  artifacts.push(outputDir);
+                }
+              }
+            }
+            core.exportVariable('release_artifacts', artifacts.join(','));
+
+      - name: List downloaded artifacts for verification
+        run: |
+          echo "Artifacts downloaded to ${{ github.workspace }}/release_artifacts:"
+          ls -R ${{ github.workspace }}/release_artifacts
+          echo "--- End of artifact listing ---"
+
+      - name: Prepare Beta Pre-release (Delete Old Assets)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -e
+          RELEASE_TAG="beta"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Beta release '$RELEASE_TAG' exists. Deleting existing assets..."
+            EXISTING_ASSETS=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' --repo "$GITHUB_REPOSITORY" | grep -v '""' | grep --color=never .)
+            if [ -n "$EXISTING_ASSETS" ]; then
+              echo "$EXISTING_ASSETS" | while IFS= read -r asset_name; do
+                if [[ -n "${asset_name// /}" ]]; then
+                  echo "   Deleting asset: '$asset_name'"
+                  gh release delete-asset "$RELEASE_TAG" "$asset_name" --repo "$GITHUB_REPOSITORY" --yes
+                fi
+              done
+              echo "Existing assets deleted."
+            else
+              echo "No existing assets found for beta release '$RELEASE_TAG'."
+            fi
+          fi
+
+      - name: Update Beta Pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: beta
+          name: MMapper Beta (${{ steps.determine_version.outputs.VERSION_NUMBER }})
+          prerelease: true
+          draft: false
+          generate_release_notes: true
+          body: "Latest build from the master branch. This pre-release is constantly updated with the newest changes. Last update: $(date -u +'%Y-%m-%dT%H:%M:%SZ')\n\n"
+          files: ${{ env.release_artifacts }}
+          token: ${{ secrets.GITHUB_TOKEN }}
