@@ -30,6 +30,7 @@
 #include "mainwindow.h"
 #include "utils.h"
 
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <optional>
@@ -47,6 +48,19 @@ enum class NODISCARD PollResultEnum : uint8_t { Timeout, Finished };
 
 namespace { // anonymous
 namespace mwa_detail {
+
+NODISCARD bool detectMm2Binary(const QString &fileName)
+{
+    QFile f{fileName};
+    if (!f.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    static constexpr int32_t MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
+    int32_t magic = 0;
+    QDataStream(&f) >> magic;
+    return magic == MMAPPER_MAGIC;
+}
 
 // MMapper2 XML map (as opposed to Pandora XML map)
 NODISCARD bool detectMm2Xml(const QString &fileName)
@@ -633,7 +647,7 @@ std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
         const auto fileNameLower = fileName.toLower();
 
         const AbstractMapStorage::Data data{pc, fileName, file};
-        if (fileNameLower.endsWith(".xml")) {
+        if (fileNameLower.endsWith(".xml") || !mwa_detail::detectMm2Binary(fileName)) {
             if (mwa_detail::detectMm2Xml(fileName)) {
                 // MMapper2 XML map
                 return std::make_unique<XmlMapStorage>(data, this);

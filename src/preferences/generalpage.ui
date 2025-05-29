@@ -252,7 +252,7 @@
             </sizepolicy>
            </property>
            <property name="placeholderText">
-            <string>:/arda.mm2</string>
+            <string>:/arda</string>
            </property>
           </widget>
          </item>

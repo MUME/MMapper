@@ -536,7 +536,7 @@ endif()
 list(APPEND mmapper_RCS "resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns")
 
 if(WITH_MAP)
-    configure_file(resources/arda.qrc ${CMAKE_BINARY_DIR}/map/arda.qrc COPYONLY)
+    configure_file(resources/arda.qrc.in ${CMAKE_BINARY_DIR}/map/arda.qrc)
     list(APPEND mmapper_RCS "${CMAKE_BINARY_DIR}/map/arda.qrc")
 endif()
 
@@ -697,6 +697,10 @@ endif()
 
 if(WIN32)
     target_link_libraries(mmapper PUBLIC ws2_32)
+endif()
+
+if(WITH_MAP)
+  add_dependencies(mmapper map)
 endif()
 
 if(WITH_ZLIB)

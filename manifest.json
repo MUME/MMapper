@@ -39,6 +39,9 @@
           "tag": "0.9.9.7"
         }
       ],
+      "build-options": {
+        "build-only": true
+      },
       "build-commands": [
         "cp -r glm /app/include/"
       ]
@@ -89,6 +92,23 @@
       ]
     },
     {
+      "name": "map",
+      "buildsystem": "simple",
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/MUME/arda.git",
+          "tag": "41"
+        }
+      ],
+      "build-options": {
+        "build-only": true
+      },
+      "build-commands": [
+        "cp arda.xml /app/"
+      ]
+    },
+    {
       "name": "mmapper",
       "buildsystem": "cmake-ninja",
       "builddir": true,
@@ -102,7 +122,7 @@
         "-DCMAKE_BUILD_TYPE=Release",
         "-DWITH_WEBSOCKET=ON",
         "-DWITH_QTKEYCHAIN=ON",
-        "-DWITH_MAP=OFF",
+        "-DWITH_MAP=/app/arda.xml",
         "-DWITH_TESTS=OFF",
         "-DOPENSSL_ROOT_DIR=/app",
         "-DCMAKE_PREFIX_PATH=/app/lib/qt5:/app"
