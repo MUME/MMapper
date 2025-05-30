@@ -29,6 +29,14 @@ title: Download MMapper for macOS
   <small>You only need to do this the first time you run this version.</small>
 </div>
 
+<details class="beta-downloads-details">
+  <summary>Looking for Beta or Development Builds?</summary>
+  <div class="beta-notice">
+    <p>These are pre-release builds and may be unstable. They are intended for testing and advanced users. Download at your own risk.</p>
+    <p><a href="{{ site.github.repository_url }}/releases/tag/beta" class="download-link">Go to Beta Releases on GitHub</a></p>
+  </div>
+</details>
+
 ## Usage
 Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki/Installing).
 

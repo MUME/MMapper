@@ -199,6 +199,30 @@ footer {
     margin-right: 0.5em;
 }
 
+/* Style for the Beta Downloads expandable section */
+details.beta-downloads-details {
+    margin-top: 2em;
+    padding: 1em;
+    background-color: #333; /* Slightly darker background */
+    border: 1px solid #555;
+    border-radius: 5px;
+}
+
+details.beta-downloads-details summary {
+    cursor: pointer;
+    color: #cc9933; /* Gold color for summary */
+}
+
+.beta-notice {
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: 1px solid #555;
+}
+
+.beta-notice p {
+    margin-bottom: 0.8em;
+}
+
 /* Add this at the end of the file */
 @media (max-width: 768px) {
   /* Adjustments for smaller screens */
