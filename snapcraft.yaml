@@ -99,6 +99,7 @@ parts:
       - xdg-user-dirs
     override-pull: |
       craftctl default
+      git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
       craftctl set version=$(git describe --tags --always --long)
     override-build: |
       craftctl default

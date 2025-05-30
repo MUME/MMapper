@@ -22,6 +22,12 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+    - name: Delete beta tag
+      shell: bash
+      run: |
+        if git tag | grep -q '^beta$'; then
+          git tag -d beta
+        fi
     - name: Get Git tag description
       id: git_info
       run: |

@@ -26,6 +26,7 @@ jobs:
       id: git_info
       run: |
         git config --global --add safe.directory $(pwd)
+        git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
         VERSION=$(git tag --points-at HEAD | grep '^v' | sed 's/^v//' || true)
         VERSION=${VERSION:-$(git rev-parse --short HEAD || true)}
         VERSION=${VERSION:-$(cat MMAPPER_VERSION)}
