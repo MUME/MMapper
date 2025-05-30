@@ -30,6 +30,7 @@
 #include "mainwindow.h"
 #include "utils.h"
 
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <optional>
@@ -40,6 +41,7 @@
 
 #include <QSize>
 #include <QString>
+#include <QXmlStreamReader>
 #include <QtWidgets>
 
 enum class NODISCARD CancelDispositionEnum : uint8_t { Forbid, Allow };
@@ -47,6 +49,19 @@ enum class NODISCARD PollResultEnum : uint8_t { Timeout, Finished };
 
 namespace { // anonymous
 namespace mwa_detail {
+
+NODISCARD bool detectMm2Binary(const QString &fileName)
+{
+    QFile f{fileName};
+    if (!f.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    static constexpr auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
+    int32_t magic = 0;
+    QDataStream(&f) >> magic;
+    return magic == MMAPPER_MAGIC;
+}
 
 // MMapper2 XML map (as opposed to Pandora XML map)
 NODISCARD bool detectMm2Xml(const QString &fileName)
@@ -64,6 +79,94 @@ NODISCARD bool detectMm2Xml(const QString &fileName)
     const QByteArray line2 = f.readLine(64);
     return line2.contains("mmapper2xml");
 }
+
+// Pandora XML map
+NODISCARD bool detectPandora(const QString &fileName)
+{
+    QFile f{fileName};
+    if (!f.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    QXmlStreamReader xml{&f};
+    if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
+        return false;
+    } else if (xml.name() != "map") {
+        return false;
+    } else if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
+        return false;
+    }
+    return true;
+}
+
+template<typename T>
+NODISCARD std::unique_ptr<AbstractMapStorage> make(const AbstractMapStorage::Data &data,
+                                                   MainWindow *const mw)
+{
+    return std::make_unique<T>(data, mw);
+}
+
+class NODISCARD FileFormatHelper final
+{
+public:
+    using DetectFn = bool (*)(const QString &);
+    using MakeFn = std::unique_ptr<AbstractMapStorage> (*)(const AbstractMapStorage::Data &data,
+                                                           MainWindow *mw);
+
+private:
+    DetectFn m_detect = nullptr;
+    MakeFn m_make = nullptr;
+
+public:
+    explicit FileFormatHelper(const DetectFn d, const MakeFn m)
+        : m_detect{d}
+        , m_make{m}
+    {
+        assert(m_detect != nullptr);
+        assert(m_make != nullptr);
+        if (m_detect == nullptr || m_make == nullptr) {
+            std::abort();
+        }
+    }
+
+private:
+    static void logException(const mm::source_location loc)
+    {
+        try {
+            std::rethrow_exception(std::current_exception());
+        } catch (const std::exception &ex) {
+            mm::WarningOstream{loc} << ex.what();
+        } catch (...) {
+            mm::WarningOstream{loc} << "Unknown exception.";
+        }
+    }
+
+public:
+    NODISCARD bool detect(const QString &fileName) const
+    {
+        try {
+            return m_detect(fileName);
+        } catch (...) {
+            logException(MM_SOURCE_LOCATION());
+            return false;
+        }
+    }
+    NODISCARD std::unique_ptr<AbstractMapStorage> make(const AbstractMapStorage::Data &data,
+                                                       MainWindow *mw) const
+    {
+        try {
+            return m_make(data, mw);
+        } catch (...) {
+            logException(MM_SOURCE_LOCATION());
+            throw;
+        }
+    }
+};
+
+const std::array<FileFormatHelper, 3> formats{
+    FileFormatHelper{&detectMm2Binary, &make<MapStorage>},
+    FileFormatHelper{&detectMm2Xml, &make<XmlMapStorage>},
+    FileFormatHelper{&detectPandora, &make<PandoraMapStorage>},
+};
 
 NODISCARD bool hasRooms(const RawMapLoadData &data)
 {
@@ -630,24 +733,13 @@ std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
 {
     auto tmp = [this, pc, &fileName, pFile]() -> std::unique_ptr<AbstractMapStorage> {
         auto &file = deref(pFile);
-        const auto fileNameLower = fileName.toLower();
-
         const AbstractMapStorage::Data data{pc, fileName, file};
-        if (fileNameLower.endsWith(".xml")) {
-            if (mwa_detail::detectMm2Xml(fileName)) {
-                // MMapper2 XML map
-                return std::make_unique<XmlMapStorage>(data, this);
-            } else {
-                // Pandora map
-                return std::make_unique<PandoraMapStorage>(data, this);
+        for (const auto &fmt : mwa_detail::formats) {
+            if (fmt.detect(fileName)) {
+                return fmt.make(data, this);
             }
-        } else if (fileNameLower.endsWith(".mm2xml")) {
-            // MMapper2 XML map
-            return std::make_unique<XmlMapStorage>(data, this);
-        } else {
-            // MMapper2 binary map
-            return std::make_unique<MapStorage>(data, this);
         }
+        throw std::runtime_error("unrecognized map file data format");
     }();
 
     AbstractMapStorage *const pStorage = tmp.get();
