@@ -215,6 +215,8 @@ set(mmapper_SRCS
     group/mmapper2group.h
     logger/autologger.cpp
     logger/autologger.h
+    mainwindow/DescriptionWidget.cpp
+    mainwindow/DescriptionWidget.h
     mainwindow/MapZoomSlider.cpp
     mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp

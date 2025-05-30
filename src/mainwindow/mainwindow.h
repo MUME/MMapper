@@ -64,6 +64,7 @@ class RoomManager;
 class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
+class DescriptionWidget;
 
 struct InfomarkDb;
 struct MapLoadData;
@@ -83,6 +84,7 @@ private:
     QDockWidget *m_dockDialogClient = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogAdventure = nullptr;
+    QDockWidget *m_dockDialogDescription = nullptr;
 
     std::unique_ptr<GameObserver> m_gameObserver;
     AutoLogger *m_logger = nullptr;
@@ -105,6 +107,8 @@ private:
 
     AdventureTracker *m_adventureTracker = nullptr;
     AdventureWidget *m_adventureWidget = nullptr;
+
+    DescriptionWidget *m_descriptionWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;

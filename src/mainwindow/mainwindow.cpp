@@ -29,6 +29,7 @@
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
 #include "../viewers/TopLevelWindows.h"
+#include "DescriptionWidget.h"
 #include "MapZoomSlider.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
@@ -219,6 +220,18 @@ MainWindow::MainWindow()
     m_dockDialogAdventure->setWidget(m_adventureWidget);
     m_dockDialogAdventure->hide();
 
+    // View -> Side Panels -> Description / Area Panel
+    m_descriptionWidget = new DescriptionWidget(this);
+    m_dockDialogDescription = new QDockWidget(tr("Description Panel"), this);
+    m_dockDialogDescription->setObjectName("DockWidgetDescription");
+    m_dockDialogDescription->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_dockDialogDescription->setFeatures(QDockWidget::DockWidgetMovable
+                                         | QDockWidget::DockWidgetFloatable
+                                         | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::RightDockWidgetArea, m_dockDialogDescription);
+    m_dockDialogDescription->setWidget(m_descriptionWidget);
+    m_dockDialogDescription->hide();
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
@@ -404,8 +417,16 @@ void MainWindow::wireConnections()
             canvas,
             &MapCanvas::slot_moveMarker);
 
+    connect(m_pathMachine,
+            &Mmapper2PathMachine::sig_playerMoved,
+            m_descriptionWidget,
+            [this](const RoomId &id) {
+                m_descriptionWidget->updateRoom(m_mapData->getRoomHandle(id));
+            });
+
     connect(m_mapData, &MapData::sig_onPositionChange, this, [this]() {
         m_pathMachine->onPositionChange(m_mapData->getCurrentRoomId());
+        m_descriptionWidget->updateRoom(m_mapData->getCurrentRoom());
     });
 
     connect(m_mapData,
@@ -1122,6 +1143,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
     sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
+    sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1485,6 +1507,7 @@ void MainWindow::forceNewFile()
     setCurrentFile("");
     getCanvas()->slot_dataLoaded();
     m_groupWidget->slot_mapLoaded();
+    m_descriptionWidget->updateRoom(RoomHandle{});
 
     updateMapModified();
     mapChanged();
@@ -1998,6 +2021,10 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
     mapCanvas.slot_dataLoaded();
     groupWidget.slot_mapLoaded();
     pathMachine.onMapLoaded();
+    if (const auto room = mapData.getCurrentRoom()) {
+        auto &widget = deref(m_descriptionWidget);
+        widget.updateRoom(room);
+    }
 
     // Should this be part of mapChanged?
     updateMapModified();
