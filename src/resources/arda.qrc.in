@@ -1,6 +1,6 @@
 <!-- This generated file exists to load the default map as a resource. -->
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource>
-        <file compress-algo="none">arda.mm2</file>
+        <file compress-algo="best" alias="arda">${MMAPPER_MAP_FILE}</file>
     </qresource>
 </RCC>

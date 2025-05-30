@@ -3,9 +3,9 @@ name: build-flatpak
 on:
   push:
     tags:
-      - 'v*'
+    - 'v*'
     branches:
-      - master
+    - master
   pull_request:
   workflow_dispatch:
 
@@ -13,7 +13,7 @@ jobs:
   build-flatpak:
     runs-on: ubuntu-latest
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-47
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-23.08
       options: --privileged
 
     steps:
@@ -26,7 +26,9 @@ jobs:
       id: git_info
       run: |
         git config --global --add safe.directory $(pwd)
-        VERSION=$(git describe --tags --always --long)
+        VERSION=$(git tag --points-at HEAD | grep '^v' | sed 's/^v//' || true)
+        VERSION=${VERSION:-$(git rev-parse --short HEAD || true)}
+        VERSION=${VERSION:-$(cat MMAPPER_VERSION)}
         ARCHITECTURE=$(uname -m)
         FILE="org.mume.MMapper-${VERSION}-Linux-${ARCHITECTURE}.flatpak"
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
