@@ -911,10 +911,12 @@ if(WIN32)
         DESTINATION .
         COMPONENT libraries
     )
-    if(MSVC)
+    if(MSVC AND MSVC_REDIST)
         get_filename_component(vcredist_name "${MSVC_REDIST}" NAME)
         install(FILES ${MSVC_REDIST} DESTINATION bin COMPONENT libraries)
-        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\bin\\\\${vcredist_name}\\\"'")
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
+            ExecWait '\\$INSTDIR\\\\bin\\\\${vcredist_name}'
+            ")
     endif()
 
     # ZIP requires 7-zip
@@ -934,19 +936,25 @@ if(WIN32)
     set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
     set(CPACK_NSIS_MUI_FINISHPAGE_RUN "mmapper.exe")
     set(CPACK_NSIS_MANIFEST_DPI_AWARE "ON")
-    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x64)")
-    else()
-        set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Caligor soft")
-        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x86)")
-    endif()
+    set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x64)")
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS}
+        Push \$0
+        mmapper_check:
+          ExecWait 'cmd /C tasklist /FI \\\"IMAGENAME eq mmapper.exe\\\" | findstr /I \\\"mmapper.exe\\\" >nul' \$0
+          StrCmp \$0 0 mmapper_found mmapper_done
+        mmapper_found:
+          MessageBox MB_OKCANCEL|MB_ICONQUESTION \\\"MMapper is running. Please close it to continue.\\\" IDOK mmapper_check
+          Abort
+        mmapper_done:
+          Pop \$0
+        ")
     if(WITH_DRMINGW)
         # Include shortcut to crash logs
-        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
             CreateShortCut \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\" \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
         # Delete shortcut and crash log
-        set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+        set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS}
             Delete \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\"
             Delete \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
