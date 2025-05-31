@@ -83,7 +83,7 @@ jobs:
         $qtPath = "C:\Qt\5.12.2\msvc2019_64"
         $env:PATH = "$qtPath;$env:PATH"
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$qtPath -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$qtPath -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build . --parallel
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
@@ -91,7 +91,7 @@ jobs:
         mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
-        cmake -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build . --parallel
 
     # Package
