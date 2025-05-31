@@ -4,12 +4,13 @@
 
 #include "../map/RoomHandle.h"
 
+#include <map>
+
 #include <QCache>
 #include <QFileSystemWatcher>
 #include <QLabel>
 #include <QPixmap>
 #include <QTextEdit>
-#include <QVBoxLayout>
 #include <QWidget>
 
 class NODISCARD_QOBJECT DescriptionWidget final : public QWidget
@@ -36,7 +37,7 @@ private:
 
 private:
     QCache<QString, QPixmap> m_pixmapCache;
-    std::set<QString> m_availableFiles;
+    std::map<QString, QString> m_availableFiles;
     QFileSystemWatcher m_watcher;
 
 private:

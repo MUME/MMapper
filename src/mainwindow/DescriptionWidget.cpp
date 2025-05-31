@@ -9,8 +9,14 @@
 #include "../preferences/ansicombo.h"
 #include "../src/global/Charset.h"
 
+#include <set>
+
+#include <QDirIterator>
 #include <QFile>
+#include <QFileInfo>
+#include <QImageReader>
 #include <QPixmap>
+#include <QRegularExpression>
 #include <QResizeEvent>
 
 DescriptionWidget::DescriptionWidget(QWidget *const parent)
@@ -62,12 +68,33 @@ void DescriptionWidget::scanDirectories()
     m_availableFiles.clear();
     const auto &resourcesDir = getConfig().canvas.resourcesDirectory;
 
+    // Get supported image formats
+    const QByteArrayList supportedFormatsList = QImageReader::supportedImageFormats();
+    qInfo() << "Supported Image Formats:" << supportedFormatsList;
+    std::set<QString> supportedFormats;
+    for (const QByteArray &format : supportedFormatsList) {
+        supportedFormats.insert(QString::fromUtf8(format).toLower());
+    }
+
     auto scanSubdir = [&](const QString &subdir) {
         QString dirPath = resourcesDir + "/" + subdir;
         QDirIterator it(dirPath, QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext()) {
-            QString relativePath = it.next().mid(dirPath.length() + 1);
-            m_availableFiles.insert(subdir + "/" + relativePath);
+            QFileInfo fileInfo(it.next());
+            QString suffix = fileInfo.suffix();
+
+            // Check if the file has a supported image extension
+            if (supportedFormats.find(suffix.toLower()) != supportedFormats.end()) {
+                QString fileName = fileInfo.fileName();
+                int dotIndex = fileName.lastIndexOf('.');
+                if (dotIndex == -1) {
+                    continue;
+                }
+                QString baseName = subdir + "/" + fileName.left(dotIndex);
+                qInfo() << "Found file:" << fileInfo.filePath() << "Base name:" << baseName
+                        << "Suffix:" << suffix;
+                m_availableFiles.insert({baseName, suffix});
+            }
         }
     };
 
@@ -119,9 +146,10 @@ void DescriptionWidget::updateRoom(const RoomHandle &r)
 
     const ServerRoomId id = r.getServerId();
     if (id != INVALID_SERVER_ROOMID) {
-        auto fileName = QString("rooms/%1.jpg").arg(id.asUint32());
-        if (m_availableFiles.find(fileName) != m_availableFiles.end()) {
-            newFileName = fileName;
+        QString baseName = QString("rooms/%1").arg(id.asUint32());
+        auto it = m_availableFiles.find(baseName);
+        if (it != m_availableFiles.end()) {
+            newFileName = baseName + "." + it->second;
             fileNameChanged = true;
         }
     }
@@ -129,11 +157,12 @@ void DescriptionWidget::updateRoom(const RoomHandle &r)
     const RoomArea &area = r.getArea();
     if (!fileNameChanged || newFileName.isEmpty()) {
         static const QRegularExpression regex("^the\\s+");
-        QString fileName = area.toQString().toLower().remove(regex).replace(' ', '-');
-        mmqt::toAsciiInPlace(fileName);
-        fileName = "areas/" + fileName + ".jpg";
-        if (m_availableFiles.find(fileName) != m_availableFiles.end()) {
-            newFileName = fileName;
+        QString baseName = area.toQString().toLower().remove(regex).replace(' ', '-');
+        mmqt::toAsciiInPlace(baseName);
+        baseName = "areas/" + baseName;
+        auto it = m_availableFiles.find(baseName);
+        if (it != m_availableFiles.end()) {
+            newFileName = baseName + "." + it->second;
             fileNameChanged = true;
         }
     }
