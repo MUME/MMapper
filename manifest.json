@@ -109,6 +109,24 @@
       ]
     },
     {
+      "name": "images",
+      "buildsystem": "simple",
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/MUME/images.git",
+          "tag": "main"
+        }
+      ],
+      "build-options": {
+        "build-only": true
+      },
+      "build-commands": [
+        "mkdir -p /app/images",
+        "cp -r . /app/images/"
+      ]
+    },
+    {
       "name": "mmapper",
       "buildsystem": "cmake-ninja",
       "builddir": true,
@@ -123,6 +141,7 @@
         "-DWITH_WEBSOCKET=ON",
         "-DWITH_QTKEYCHAIN=ON",
         "-DWITH_MAP=/app/arda.xml",
+        "-DWITH_IMAGES=/app/images/",
         "-DWITH_TESTS=OFF",
         "-DOPENSSL_ROOT_DIR=/app",
         "-DCMAKE_PREFIX_PATH=/app/lib/qt5:/app"

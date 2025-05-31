@@ -527,23 +527,25 @@ set(mmapper_SRCS
     viewers/TopLevelWindows.h
 )
 
-set(mmapper_RCS
-    resources/mmapper2.qrc)
+qt_add_resources(mmapper_QRC resources/mmapper2.qrc)
 
 if(MMAPPER_BETA)
-    list(APPEND mmapper_RCS "resources/beta.qrc")
+    qt_add_resources(mmapper_QRC "resources/beta.qrc")
     list(APPEND mmapper_RCS "resources/win32/beta.rc")
     set(MMAPPER_BRAND_SUFFIX "beta")
 else()
-    list(APPEND mmapper_RCS "resources/release.qrc")
+    qt_add_resources(mmapper_QRC "resources/release.qrc")
     list(APPEND mmapper_RCS "resources/win32/release.rc")
     set(MMAPPER_BRAND_SUFFIX "release")
 endif()
 list(APPEND mmapper_RCS "resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns")
 
 if(WITH_MAP)
-    configure_file(resources/arda.qrc.in ${CMAKE_BINARY_DIR}/map/arda.qrc)
-    list(APPEND mmapper_RCS "${CMAKE_BINARY_DIR}/map/arda.qrc")
+    qt_add_resources(mmapper_QRC "${CMAKE_BINARY_DIR}/map/map.qrc")
+endif()
+
+if(WITH_IMAGES)
+    qt_add_resources(mmapper_QRC "${CMAKE_BINARY_DIR}/images/images.qrc")
 endif()
 
 set(mmapper_UIS
@@ -628,6 +630,7 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_SRCS}
     ${mmapper_UIS}
     ${mmapper_RCS}
+    ${mmapper_QRC}
     ${mmapper_DATA}
 )
 
@@ -706,7 +709,11 @@ if(WIN32)
 endif()
 
 if(WITH_MAP)
-  add_dependencies(mmapper map)
+    add_dependencies(mmapper map_qrc)
+endif()
+
+if(WITH_IMAGES)
+    add_dependencies(mmapper images_qrc)
 endif()
 
 if(WITH_ZLIB)

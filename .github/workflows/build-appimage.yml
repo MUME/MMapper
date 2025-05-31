@@ -17,7 +17,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-
+    - uses: lukka/get-cmake@latest
     - name: Get Git tag description
       id: git_info
       run: |
@@ -29,21 +29,22 @@ jobs:
         sudo apt update -qq
         sudo apt install -y \
           qt5-qmake qttools5-dev-tools libqt5opengl5-dev libqt5websockets5-dev \
-          qt5keychain-dev libgl1-mesa-dev build-essential mold clang git \
+          qt5keychain-dev libgl1-mesa-dev build-essential mold git \
           zlib1g-dev libssl-dev wget zsync fuse file cmake
 
     - name: Build AppImage
       run: |
         mkdir -p build && cd build
 
-        CC=clang CXX=clang++ cmake .. \
+        cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/usr \
           -DUSE_MOLD=true \
           -DWITH_WEBSOCKET=ON \
           -DWITH_QTKEYCHAIN=ON \
           -DWITH_TESTS=OFF
-        make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install
+        make -j$(getconf _NPROCESSORS_ONLN)
+        make DESTDIR=appdir install
 
         # Extract version from CPackConfig.cmake
         export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2)
