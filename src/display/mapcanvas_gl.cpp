@@ -16,6 +16,7 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
+#include <QOpenGLFunctions>
 #include "Connections.h"
 #include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
@@ -242,6 +243,7 @@ void MapCanvas::initializeGL()
 
     // REVISIT: should the font texture have the lowest ID?
     initTextures();
+
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
@@ -581,11 +583,37 @@ void MapCanvas::finishPendingMapBatches()
 
 void MapCanvas::actuallyPaintGL()
 {
-    // DECL_TIMER(t, __FUNCTION__);
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
     gl.clear(Color{getConfig().canvas.backgroundColor});
+
+    if (getConfig().canvas.showBackgroundImage.get()
+        && m_textures.backgroundImage
+        && m_textures.backgroundImage->getId() != INVALID_MM_TEXTURE_ID) {
+        const auto &tex = m_textures.backgroundImage;
+
+        // Z is arbitrary since we don't rely on depth testing here
+        const glm::vec3 topLeft{-6.f, 21.f, 0.f};
+        const glm::vec3 topRight{721.f, 21.f, 0.f};
+        const glm::vec3 bottomRight{721.f, -271.f, 0.f};
+        const glm::vec3 bottomLeft{-6.f, -271.f, 0.f};
+
+        const std::vector<TexVert> quadVerts = {
+                                                TexVert{glm::vec3(0.f, 1.f, 0.f), topLeft},
+                                                TexVert{glm::vec3(1.f, 1.f, 0.f), topRight},
+                                                TexVert{glm::vec3(1.f, 0.f, 0.f), bottomRight},
+                                                TexVert{glm::vec3(0.f, 0.f, 0.f), bottomLeft},
+                                                };
+
+        gl.renderTexturedQuads(
+            quadVerts,
+            GLRenderState()
+                .withBlend(BlendModeEnum::NONE)
+                .withTexture0(tex->getId())
+                .withColor(Color{1.0f, 1.0f, 1.0f, 1.0f})  // Fully opaque white
+            );
+    }
 
     if (m_data.isEmpty()) {
         getGLFont().renderTextCentered("No map loaded");
@@ -1046,7 +1074,11 @@ void MapCanvas::renderMapBatches()
         const int thisLayer = layer.first;
         if (thisLayer == m_currentLayer) {
             gl.clearDepth();
-            fadeBackground();
+
+            // Prevent overlay dimming if we have a custom background
+            if (!m_textures.backgroundImage) {
+                fadeBackground();
+            }
         }
         drawLayer(thisLayer, m_currentLayer);
     }

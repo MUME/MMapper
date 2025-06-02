@@ -81,6 +81,10 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GraphicsPage::slot_drawUpperLayersTexturedStateChanged);
+    connect(ui->backgroundImageCheckBox, &QCheckBox::toggled,
+            [](bool checked) {
+                setConfig().canvas.showBackgroundImage.set(checked);
+            });
 
     connect(ui->resourceLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
         setConfig().canvas.resourcesDirectory = text;
@@ -133,6 +137,8 @@ void GraphicsPage::slot_loadConfig()
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
 
     ui->resourceLineEdit->setText(settings.resourcesDirectory);
+
+    ui->backgroundImageCheckBox->setChecked(getConfig().canvas.showBackgroundImage.get());
 }
 
 void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *const pushButton)
