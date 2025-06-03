@@ -155,6 +155,7 @@ jobs:
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "Beta release '$RELEASE_TAG' exists. Deleting the release..."
             gh release delete "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --yes || { echo "Failed to delete release: $RELEASE_TAG"; } # Add error handling
+            gh api -X DELETE repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG || true
           else
             echo "Beta release '$RELEASE_TAG' does not exist. No need to delete."
           fi
