@@ -54,4 +54,8 @@ public:
 
 private slots:
     void managerFinished(QNetworkReply *reply);
+
+private:
+    void setUpdateStatus(const QString &message, bool enableUpgradeButton, bool showAndUpdateDialog);
+    QString findDownloadUrlForRelease(const QJsonObject &releaseObject) const;
 };

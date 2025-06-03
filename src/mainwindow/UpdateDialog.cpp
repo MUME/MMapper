@@ -5,6 +5,7 @@
 #include "UpdateDialog.h"
 
 #include "../configuration/configuration.h"
+#include "../global/RAII.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 
@@ -87,13 +88,97 @@ void UpdateDialog::open()
     m_text->setText(tr("Checking for new version..."));
     m_buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
-    QNetworkRequest request(QUrl("https://api.github.com/repos/mume/mmapper/releases/latest"));
+    auto url = isMMapperBeta()
+                   ? QStringLiteral("https://api.github.com/repos/mume/mmapper/git/ref/tags/beta")
+                   : QStringLiteral("https://api.github.com/repos/mume/mmapper/releases/latest");
+    QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ServerHeader, "application/json");
     m_manager.get(request);
 }
 
+void UpdateDialog::setUpdateStatus(const QString &message,
+                                   bool enableUpgradeButton,
+                                   bool showAndUpdateDialog)
+{
+    m_text->setText(message);
+    m_buttonBox->button(QDialogButtonBox::Ok)->setEnabled(enableUpgradeButton);
+    if (showAndUpdateDialog) {
+        show();
+        raise();
+        activateWindow();
+    }
+}
+
+QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject) const
+{
+    // Compile platform-specific regex
+    static const auto platformRegex = QRegularExpression(
+        []() -> const char * {
+            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+                return R"(^.+\.dmg$)";
+            } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+                return R"(^.+\.(deb|AppImage|flatpak)$)";
+            } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+                return R"(^.+\.exe$)";
+            }
+            abort();
+        }(),
+        QRegularExpression::CaseInsensitiveOption);
+
+    // Compile architecture/environment-specific regex
+    static const auto environmentRegex = QRegularExpression(
+        []() -> const char * {
+            if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit) {
+                return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
+            } else if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit) {
+                return R"((aarch64|amd64|arm64|x86_64|x64))";
+            }
+            abort();
+        }(),
+        QRegularExpression::CaseInsensitiveOption);
+
+    const auto assets = releaseObject.value("assets").toArray();
+    for (const auto &item : assets) {
+        const auto asset = item.toObject();
+        const QString name = asset.value("name").toString();
+        const QString url = asset.value("browser_download_url").toString();
+
+        if (name.isEmpty() || url.isEmpty()) {
+            continue;
+        }
+
+        if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
+            continue;
+        }
+
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+            const bool isAssetAppImage = name.contains("AppImage", Qt::CaseInsensitive);
+            const bool isEnvAppImage = qEnvironmentVariableIsSet(APPIMAGE_KEY);
+            if (isAssetAppImage != isEnvAppImage) {
+                continue;
+            }
+
+            const bool isAssetFlatpak = name.contains("flatpak", Qt::CaseInsensitive);
+            const bool isEnvFlatpak = qEnvironmentVariableIsSet(FLATPAK_KEY);
+            if (isAssetFlatpak != isEnvFlatpak) {
+                continue;
+            }
+        }
+
+        return url;
+    }
+
+    const QString fallbackUrl = releaseObject.value("html_url").toString();
+    if (!fallbackUrl.isEmpty()) {
+        return fallbackUrl;
+    }
+
+    return "https://github.com/MUME/MMapper/releases";
+}
+
 void UpdateDialog::managerFinished(QNetworkReply *reply)
 {
+    const RAIICallback deleteLaterRAII{[&reply]() { reply->deleteLater(); }};
     // REVISIT: Timeouts, errors, etc
     if (reply->error()) {
         qWarning() << reply->errorString();
@@ -110,101 +195,59 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         qWarning() << answer;
         return;
     }
-
     const QJsonObject obj = doc.object();
-    m_downloadUrl = [&obj]() -> QString {
-        // Compile platform-specific regex
-        static const auto platformRegex = QRegularExpression(
-            []() -> const char * {
-                if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-                    return R"(^.+\.dmg$)";
-                } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                    return R"(^.+\.(deb|AppImage|flatpak)$)";
-                } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-                    return R"(^.+\.exe$)";
-                }
-                abort();
-            }(),
-            QRegularExpression::CaseInsensitiveOption);
 
-        // Compile architecture/environment-specific regex
-        static const auto environmentRegex = QRegularExpression(
-            []() -> const char * {
-                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit) {
-                    return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
-                } else if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit) {
-                    return R"((aarch64|amd64|arm64|x86_64|x64))";
-                }
-                abort();
-            }(),
-            QRegularExpression::CaseInsensitiveOption);
-
-        const auto assets = obj.value("assets").toArray();
-        for (const auto &item : assets) {
-            const auto asset = item.toObject();
-            const QString name = asset.value("name").toString();
-            const QString url = asset.value("browser_download_url").toString();
-
-            if (name.isEmpty() || url.isEmpty()) {
-                continue;
+    if (isMMapperBeta() && reply->request().url().toString().contains("/ref/tags/")) {
+        const QJsonObject objNode = obj.value("object").toObject();
+        const QString remoteCommitHash = objNode.value("sha").toString();
+        const QString localCommitHash = []() -> QString {
+            static const QRegularExpression hashRegex(R"(-g([0-9a-fA-F]+)$)");
+            QRegularExpressionMatch match = hashRegex.match(QString::fromUtf8(getMMapperVersion()));
+            if (match.hasMatch()) {
+                return match.captured(1);
             }
-
-            if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
-                continue;
-            }
-
-            if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                const bool isAssetAppImage = name.contains("AppImage", Qt::CaseInsensitive);
-                const bool isEnvAppImage = qEnvironmentVariableIsSet(APPIMAGE_KEY);
-                if (isAssetAppImage != isEnvAppImage) {
-                    continue;
-                }
-
-                const bool isAssetFlatpak = name.contains("flatpak", Qt::CaseInsensitive);
-                const bool isEnvFlatpak = qEnvironmentVariableIsSet(FLATPAK_KEY);
-                if (isAssetFlatpak != isEnvFlatpak) {
-                    continue;
-                }
-            }
-
-            return url;
+            return "";
+        }();
+        qInfo() << "Updater comparing: CURRENT=" << localCommitHash
+                << "LATEST=" << remoteCommitHash.left(10);
+        if (!localCommitHash.isEmpty() && remoteCommitHash.startsWith(localCommitHash)) {
+            setUpdateStatus(tr("You are on the latest beta!"), false, false);
+            return;
         }
 
-        const QString fallbackUrl = obj.value("html_url").toString();
-        if (!fallbackUrl.isEmpty()) {
-            return fallbackUrl;
-        }
-
-        return "https://github.com/MUME/MMapper/releases";
-    }();
-
-    if (!obj.contains("tag_name") || !obj["tag_name"].isString()) {
+        QNetworkRequest request(
+            QStringLiteral("https://api.github.com/repos/mume/mmapper/releases/tags/beta"));
+        request.setHeader(QNetworkRequest::ServerHeader, "application/json");
+        m_manager.get(request);
         return;
     }
-    const QString latestTag = obj["tag_name"].toString();
-    const QString currentVersion = QString::fromUtf8(getMMapperVersion());
-    const CompareVersion latest(latestTag);
-    static const CompareVersion current(currentVersion);
-    qInfo() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest
-            << "URL=" << m_downloadUrl;
-    if (current == latest) {
-        m_text->setText("You are up to date!");
 
-    } else if (current > latest) {
-        m_text->setText("No newer update available.");
-
-    } else {
-        m_text->setText(QString("A new version of MMapper is available!"
-                                "\n"
-                                "\n"
-                                "Press 'Upgrade' to download MMapper %1!")
-                            .arg(latestTag));
-        m_buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
-
-        // Show and raise the dialog in case this is the startup check
-        show();
-        raise();
-        activateWindow();
+    QString latestTag;
+    if (!isMMapperBeta()) {
+        if (!obj.contains("tag_name") || !obj["tag_name"].isString()) {
+            qWarning() << "Release 'tag_name' is missing or not a string.";
+            setUpdateStatus(tr("Could not determine release version details."), false, false);
+            return;
+        }
+        latestTag = obj["tag_name"].toString();
+        const QString currentVersion = QString::fromUtf8(getMMapperVersion());
+        const CompareVersion latest(latestTag);
+        static CompareVersion current(currentVersion);
+        qInfo() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest;
+        if (current == latest) {
+            setUpdateStatus(tr("You are up to date!"), false, false);
+            return;
+        } else if (current > latest) {
+            setUpdateStatus(tr("No newer update available."), false, false);
+            return;
+        }
     }
-    reply->deleteLater();
+    m_downloadUrl = findDownloadUrlForRelease(obj);
+    setUpdateStatus(QString("A new %1version of MMapper is available!"
+                            "\n"
+                            "\n"
+                            "Press 'Upgrade' to download %2!")
+                        .arg(isMMapperBeta() ? "beta " : "", isMMapperBeta() ? "it" : latestTag),
+                    true,
+                    true);
 }
