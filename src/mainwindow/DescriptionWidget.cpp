@@ -5,12 +5,15 @@
 
 #include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
+#include "../global/Charset.h"
+#include "../global/RAII.h"
 #include "../map/mmapper2room.h"
 #include "../preferences/ansicombo.h"
-#include "../src/global/Charset.h"
 
+#include <memory>
 #include <optional>
 #include <set>
+#include <vector>
 
 #include <QDirIterator>
 #include <QFile>
@@ -20,13 +23,18 @@
 #include <QRegularExpression>
 #include <QResizeEvent>
 
+static constexpr int MAX_DESCRIPTION_WIDTH = 80;
+static constexpr int TOP_PADDING_LINES = 5; // Padding for the room title and description
+static constexpr int BASE_BLUR_RADIUS = 16;
+static constexpr int DOWNSCALE_FACTOR = 10;
+
 DescriptionWidget::DescriptionWidget(QWidget *const parent)
     : QWidget(parent)
     , m_label(new QLabel(this))
     , m_textEdit(new QTextEdit(this))
 {
     m_label->setAlignment(Qt::AlignCenter);
-    m_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    m_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_label->setGeometry(rect());
 
     m_textEdit->setGeometry(rect());
@@ -43,7 +51,7 @@ DescriptionWidget::DescriptionWidget(QWidget *const parent)
 
     QFont font;
     font.fromString(getConfig().integratedClient.font);
-    setFont(font);
+    m_textEdit->setFont(font);
 
     scanDirectories();
 
@@ -55,7 +63,7 @@ DescriptionWidget::DescriptionWidget(QWidget *const parent)
             this,
             [this](const QString & /*path*/) {
                 scanDirectories();
-                m_pixmapCache.clear();
+                m_imageCache.clear();
                 updateBackground();
             });
 
@@ -128,35 +136,164 @@ void DescriptionWidget::resizeEvent(QResizeEvent *event)
 {
     const QSize &newSize = event->size();
     m_label->setGeometry(0, 0, newSize.width(), newSize.height());
-    m_textEdit->setGeometry(0, 0, newSize.width(), newSize.height());
+    m_textEdit->setGeometry(0,
+                            0,
+                            std::min(newSize.width(),
+                                     QFontMetrics(m_textEdit->font()).averageCharWidth()
+                                             * MAX_DESCRIPTION_WIDTH
+                                         + 2 * m_textEdit->frameWidth()),
+                            newSize.height());
     updateBackground();
+}
+
+QSize DescriptionWidget::minimumSizeHint() const
+{
+    return QSize{sizeHint().width() / 2, sizeHint().height() / 2};
+}
+
+QSize DescriptionWidget::sizeHint() const
+{
+    return QSize{384, 576};
 }
 
 void DescriptionWidget::updateBackground()
 {
-    auto loadImage = [&](const QString &fileName) -> QPixmap {
-        QPixmap pixmap;
-        if (fileName.startsWith(":/")) {
-            pixmap.load(fileName);
-        } else if (fileName.startsWith("/")) {
-            QString custom = getConfig().canvas.resourcesDirectory + fileName;
-            pixmap.load(custom);
+    auto loadAndCacheImage = [&](const QString &fileName) -> QImage * {
+        if (fileName.isEmpty()) {
+            return nullptr;
         }
-        return pixmap;
+
+        if (QImage *cachedImage = m_imageCache.object(fileName)) {
+            return cachedImage;
+        }
+
+        QString imagePath = fileName;
+        if (!fileName.startsWith(":/")) {
+            imagePath = getConfig().canvas.resourcesDirectory + fileName;
+        }
+
+        std::unique_ptr<QImage> temp = std::make_unique<QImage>();
+        if (!temp->load(imagePath) || temp->isNull()) {
+            qWarning() << "Failed to load image:" << imagePath;
+            return nullptr;
+        }
+
+        m_imageCache.insert(fileName, temp.release());
+        return m_imageCache.object(fileName);
     };
 
-    if (!m_fileName.isEmpty() && !m_pixmapCache.contains(m_fileName)) {
-        QPixmap newPixmap = loadImage(m_fileName);
-        if (!newPixmap.isNull()) {
-            m_pixmapCache.insert(m_fileName, new QPixmap(newPixmap));
-        }
+    QImage *baseImage = loadAndCacheImage(m_fileName);
+    if (!baseImage || baseImage->isNull()) {
+        m_label->clear();
+        return;
     }
 
-    QPixmap scaled;
-    if (QPixmap *pixmap = m_pixmapCache.object(m_fileName)) {
-        scaled = pixmap->scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    // Decide if widget is padded
+    const QSize widgetSize = size();
+    bool hasRoomRightOfTextEdit = [&]() {
+        const QRect textEditGeometry = m_textEdit->geometry();
+        const int spaceRightOfTextEdit = widgetSize.width()
+                                         - (textEditGeometry.x() + textEditGeometry.width());
+        return baseImage->width() <= spaceRightOfTextEdit;
+    }();
+    int topPadding = hasRoomRightOfTextEdit
+                         ? 0
+                         : TOP_PADDING_LINES * QFontMetrics(m_textEdit->font()).lineSpacing();
+
+    // Scale image and paint last
+    QImage resultImage(widgetSize, QImage::Format_ARGB32_Premultiplied);
+    resultImage.fill(Qt::transparent);
+    QPainter painter(&resultImage);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    const RAIICallback painterEndRAII{[&]() {
+        QSize imageFitSize(widgetSize.width(), widgetSize.height() - topPadding);
+        QImage scaledImageForCenter = baseImage->scaled(imageFitSize,
+                                                        Qt::KeepAspectRatio,
+                                                        Qt::SmoothTransformation);
+        QPoint center((widgetSize.width() - scaledImageForCenter.width()) / 2,
+                      (widgetSize.height() - scaledImageForCenter.height()) / 2
+                          + (hasRoomRightOfTextEdit ? 0 : topPadding / 2));
+        painter.drawImage(center, scaledImageForCenter);
+        painter.end();
+        m_label->setPixmap(QPixmap::fromImage(resultImage));
+    }};
+
+    // Blur background
+    QSize downscaledBlurSourceSize = QSize(std::max(1, widgetSize.width() / DOWNSCALE_FACTOR),
+                                           std::max(1, widgetSize.height() / DOWNSCALE_FACTOR));
+    QImage blurSource = baseImage
+                            ->scaled(downscaledBlurSourceSize,
+                                     Qt::IgnoreAspectRatio,
+                                     Qt::SmoothTransformation)
+                            .convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
+    if (blurSource.isNull() || blurSource.width() == 0 || blurSource.height() == 0) {
+        qWarning() << "Blur source image is invalid or empty. Skipping blur.";
+        return;
     }
-    m_label->setPixmap(scaled);
+
+    int blurRadius = std::max(0,
+                              std::min(std::min(BASE_BLUR_RADIUS / DOWNSCALE_FACTOR,
+                                                (blurSource.width() - 1) / 2),
+                                       (blurSource.height() - 1) / 2));
+    if (blurRadius == 0) {
+        qDebug() << "Actual blur radius is 0. Skipping blur.";
+        return;
+    }
+
+    auto stackBlur = [&](QImage &image, int radius) {
+        const int w = image.width();
+        const int h = image.height();
+        const int div = 2 * radius + 1;
+        std::vector<QRgb> linePixels;
+
+        // Horizontal blur
+        linePixels.resize(static_cast<size_t>(w));
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                linePixels[static_cast<size_t>(x)] = image.pixel(x, y);
+            }
+            for (int x = 0; x < w; ++x) {
+                int rSum = 0, gSum = 0, bSum = 0, aSum = 0;
+                for (int i = -radius; i <= radius; ++i) {
+                    size_t idx = static_cast<size_t>(std::clamp(x + i, 0, w - 1));
+                    QRgb pixel = linePixels[idx];
+                    rSum += qRed(pixel);
+                    gSum += qGreen(pixel);
+                    bSum += qBlue(pixel);
+                    aSum += qAlpha(pixel);
+                }
+                image.setPixel(x, y, qRgba(rSum / div, gSum / div, bSum / div, aSum / div));
+            }
+        }
+
+        // Vertical blur
+        linePixels.resize(static_cast<size_t>(h));
+        for (int x = 0; x < w; ++x) {
+            for (int y = 0; y < h; ++y) {
+                linePixels[static_cast<size_t>(y)] = image.pixel(x, y);
+            }
+            for (int y = 0; y < h; ++y) {
+                int rSum = 0, gSum = 0, bSum = 0, aSum = 0;
+                for (int i = -radius; i <= radius; ++i) {
+                    size_t idy = static_cast<size_t>(std::clamp(y + i, 0, h - 1));
+                    QRgb pixel = linePixels[idy];
+                    rSum += qRed(pixel);
+                    gSum += qGreen(pixel);
+                    bSum += qBlue(pixel);
+                    aSum += qAlpha(pixel);
+                }
+                image.setPixel(x, y, qRgba(rSum / div, gSum / div, bSum / div, aSum / div));
+            }
+        }
+    };
+
+    stackBlur(blurSource, blurRadius);
+
+    QImage fullBlurredBgImage = blurSource.scaled(widgetSize,
+                                                  Qt::IgnoreAspectRatio,
+                                                  Qt::SmoothTransformation);
+    painter.drawImage(0, 0, fullBlurredBgImage);
 }
 
 void DescriptionWidget::updateRoom(const RoomHandle &r)

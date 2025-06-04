@@ -228,7 +228,6 @@ MainWindow::MainWindow()
                                          | QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::RightDockWidgetArea, m_dockDialogDescription);
     m_dockDialogDescription->setWidget(m_descriptionWidget);
-    m_dockDialogDescription->hide();
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {

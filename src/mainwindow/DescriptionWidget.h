@@ -8,8 +8,8 @@
 
 #include <QCache>
 #include <QFileSystemWatcher>
+#include <QImage>
 #include <QLabel>
-#include <QPixmap>
 #include <QTextEdit>
 #include <QWidget>
 
@@ -27,6 +27,10 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
+protected:
+    NODISCARD QSize minimumSizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
+
 private:
     void scanDirectories();
     void updateBackground();
@@ -36,7 +40,7 @@ private:
     QTextEdit *m_textEdit;
 
 private:
-    QCache<QString, QPixmap> m_pixmapCache;
+    QCache<QString, QImage> m_imageCache;
     std::map<QString, QString> m_availableFiles;
     QFileSystemWatcher m_watcher;
 
