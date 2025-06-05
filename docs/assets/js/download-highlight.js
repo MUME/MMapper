@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     let detectedArch = null;
+    let isChromeOS = false;
     const downloadLinks = document.querySelectorAll('.download-link');
 
     // --- Architecture Detection (Best Effort) ---
@@ -14,11 +15,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    if (navigator.userAgentData && navigator.userAgentData.platform) {
+        const platform = navigator.userAgentData.platform.toLowerCase();
+        if (platform.includes('chromeos') || platform.includes('cros')) {
+            isChromeOS = true;
+        }
+    }
+
     // --- Highlight Download Link ---
     downloadLinks.forEach(link => {
         const href = link.href.toLowerCase();
-        let linkArch = null;
 
+        // Only recommend .deb for ChromeOS
+        if (isChromeOS && (href.includes('appimage') || href.includes('flatpak'))) {
+            return;
+        }
+
+        let linkArch = null;
         if (href.includes('x86_64') || href.includes('amd64') || href.includes('x64')) {
             linkArch = 'x86_64';
         } else if (href.includes('arm64') || href.includes('aarch64')) {

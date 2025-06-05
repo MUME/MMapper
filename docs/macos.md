@@ -9,7 +9,7 @@ title: Download MMapper for macOS
 {% elsif asset.name contains 'dmg' %}
 <a href="{{ asset.browser_download_url }}" class="download-link">
     Download {{ asset.name }}
-</a>
+</a>{% assign asset_name_lower = asset.name | downcase %}{% capture arch_label %}{% if asset_name_lower contains 'arm64' %}Apple Silicon{% elsif asset_name_lower contains 'x86_64' %}Intel{% endif %}{% endcapture %}{% if arch_label != "" %} <span class="arch-label">{{ arch_label }}</span>{% endif %}
 {% else %}
 {% endif %}
 {% endfor %}
