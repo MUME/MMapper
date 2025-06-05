@@ -14,9 +14,9 @@
 #include <QRegularExpression>
 #include <QString>
 
-enum class NODISCARD PatternKindsEnum { NONE, DESC, CONTENTS, NAME, NOTE, EXITS, FLAGS, ALL };
+enum class NODISCARD PatternKindsEnum { NONE, DESC, CONTENTS, NAME, NOTE, EXITS, FLAGS, AREA, ALL };
 static constexpr const auto PATTERN_KINDS_LENGTH = static_cast<size_t>(PatternKindsEnum::ALL) + 1u;
-static_assert(PATTERN_KINDS_LENGTH == 8);
+static_assert(PATTERN_KINDS_LENGTH == 9);
 
 class NODISCARD RoomFilter final
 {

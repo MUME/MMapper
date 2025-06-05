@@ -139,6 +139,9 @@ bool RoomFilter::filter_kind(const RawRoom &r, const PatternKindsEnum pat) const
                || this->matchesDefined(r.getAlignType());
     }
 
+    case PatternKindsEnum::AREA:
+        return matches(r.getArea());
+
     case PatternKindsEnum::NONE:
         return false;
     }
@@ -160,7 +163,8 @@ bool RoomFilter::filter(const RawRoom &r) const
                                                         PatternKindsEnum::NAME,
                                                         PatternKindsEnum::NOTE,
                                                         PatternKindsEnum::EXITS,
-                                                        PatternKindsEnum::FLAGS};
+                                                        PatternKindsEnum::FLAGS,
+                                                        PatternKindsEnum::AREA};
     static constexpr const size_t ALL_KINDS_SIZE = sizeof(ALL_KINDS) / sizeof(ALL_KINDS[0]);
     static_assert(ALL_KINDS_SIZE == PATTERN_KINDS_LENGTH - 2); // excludes NONE and ALL.
     for (const auto &pat : ALL_KINDS) {

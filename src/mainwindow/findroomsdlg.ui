@@ -49,10 +49,10 @@
             <string>Search</string>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="1" column="1">
-             <widget class="QRadioButton" name="notesRadioButton">
+            <item row="4" column="1">
+             <widget class="QRadioButton" name="flagsRadioButton">
               <property name="text">
-               <string>N&amp;otes</string>
+               <string>Fla&amp;gs</string>
               </property>
              </widget>
             </item>
@@ -63,10 +63,10 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
-             <widget class="QRadioButton" name="flagsRadioButton">
+            <item row="4" column="0">
+             <widget class="QRadioButton" name="contentsRadioButton">
               <property name="text">
-               <string>Fla&amp;gs</string>
+               <string>Con&amp;tents</string>
               </property>
              </widget>
             </item>
@@ -80,6 +80,13 @@
               </property>
              </widget>
             </item>
+            <item row="1" column="1">
+             <widget class="QRadioButton" name="notesRadioButton">
+              <property name="text">
+               <string>N&amp;otes</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QRadioButton" name="descRadioButton">
               <property name="text">
@@ -87,14 +94,14 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
-             <widget class="QRadioButton" name="contentsRadioButton">
+            <item row="5" column="0">
+             <widget class="QRadioButton" name="areaRadioButton">
               <property name="text">
-               <string>Con&amp;tents</string>
+               <string>A&amp;rea</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="0" colspan="2">
+            <item row="5" column="1">
              <widget class="QRadioButton" name="allRadioButton">
               <property name="text">
                <string>A&amp;ll</string>
@@ -265,6 +272,7 @@
   <tabstop>notesRadioButton</tabstop>
   <tabstop>contentsRadioButton</tabstop>
   <tabstop>flagsRadioButton</tabstop>
+  <tabstop>areaRadioButton</tabstop>
   <tabstop>allRadioButton</tabstop>
   <tabstop>caseCheckBox</tabstop>
   <tabstop>regexCheckBox</tabstop>

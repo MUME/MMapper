@@ -134,6 +134,8 @@ void FindRoomsDlg::slot_findClicked()
         kind = PatternKindsEnum::NOTE;
     } else if (flagsRadioButton->isChecked()) {
         kind = PatternKindsEnum::FLAGS;
+    } else if (areaRadioButton->isChecked()) {
+        kind = PatternKindsEnum::AREA;
     }
 
     try {
