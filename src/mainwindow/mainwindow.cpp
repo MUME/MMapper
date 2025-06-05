@@ -41,8 +41,6 @@
 
 #include <memory>
 #include <mutex>
-#include <optional>
-#include <thread>
 
 #include <QActionGroup>
 #include <QCloseEvent>
@@ -1480,8 +1478,9 @@ void MainWindow::showEvent(QShowEvent *const event)
         startServices();
 
         connect(window()->windowHandle(), &QWindow::screenChanged, this, [this]() {
+            MapWindow &window = deref(m_mapWindow);
+            CanvasDisabler canvasDisabler{window};
             MapCanvas &canvas = deref(getCanvas());
-            CanvasDisabler canvasDisabler{canvas};
             canvas.screenChanged();
         });
     });

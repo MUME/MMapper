@@ -6,16 +6,16 @@
 #include "../global/macros.h"
 
 class QObject;
-class MapCanvas;
 class MapFrontend;
+class MapWindow;
 
 class NODISCARD CanvasDisabler final
 {
 private:
-    MapCanvas &canvas;
+    MapWindow &window;
 
 public:
-    explicit CanvasDisabler(MapCanvas &in_canvas);
+    explicit CanvasDisabler(MapWindow &in_window);
     ~CanvasDisabler();
     DELETE_CTORS_AND_ASSIGN_OPS(CanvasDisabler);
 };

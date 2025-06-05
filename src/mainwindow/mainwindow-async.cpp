@@ -445,7 +445,7 @@ public:
         , mainWindow{mw}
         , fileName{name}
         , pFile(std::move(pf))
-        , canvasDisabler{deref(mw.getCanvas())}
+        , canvasDisabler{deref(mw.m_mapWindow)}
         , progressDlg{mw.createNewProgressDialog(dialogText,
                                                  allow_cancel == CancelDispositionEnum::Allow)}
         , pStorage{std::move(ps)}

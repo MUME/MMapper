@@ -4,16 +4,18 @@
 #include "utils.h"
 
 #include "../display/mapcanvas.h"
+#include "../display/mapwindow.h"
 
-CanvasDisabler::CanvasDisabler(MapCanvas &in_canvas)
-    : canvas{in_canvas}
+CanvasDisabler::CanvasDisabler(MapWindow &in_window)
+    : window{in_window}
 {
-    canvas.setEnabled(false);
+    window.getCanvas()->setEnabled(false);
 }
 
 CanvasDisabler::~CanvasDisabler()
 {
-    canvas.setEnabled(true);
+    window.getCanvas()->setEnabled(true);
+    window.hideSplashImage();
 }
 
 MapFrontendBlocker::MapFrontendBlocker(MapFrontend &in_data)

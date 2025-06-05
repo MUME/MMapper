@@ -6,12 +6,16 @@
 
 #include "mapwindow.h"
 
+#include "../display/Filenames.h"
 #include "../global/SignalBlocker.h"
+#include "../global/Version.h"
 #include "mapcanvas.h"
 
 #include <memory>
 
 #include <QGridLayout>
+#include <QLabel>
+#include <QPixmap>
 #include <QScrollBar>
 
 class QResizeEvent;
@@ -43,6 +47,53 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
     MapCanvas *const canvas = m_canvas.get();
 
     m_gridLayout->addWidget(canvas, 0, 0, 1, 1);
+    setMinimumSize(canvas->minimumSizeHint());
+
+    // Splash setup
+    auto createSplashPixmap = [](const QSize &targetLogicalSize, qreal dpr) -> QPixmap {
+        // Load base pixmap
+        QPixmap splash = getPixmapFilenameRaw("splash.png");
+        splash.setDevicePixelRatio(dpr);
+
+        // Scale splash to target physical size
+        QSize targetPhysicalSize(static_cast<int>(targetLogicalSize.width() * dpr),
+                                 static_cast<int>(targetLogicalSize.height() * dpr));
+        QPixmap scaled = splash.scaled(targetPhysicalSize,
+                                       Qt::KeepAspectRatio,
+                                       Qt::SmoothTransformation);
+        scaled.setDevicePixelRatio(dpr);
+
+        // Now paint on the scaled pixmap
+        QPainter painter(&scaled);
+        painter.setRenderHint(QPainter::TextAntialiasing, true);
+        painter.setPen(QPen(Qt::yellow));
+
+        QFont font = painter.font();
+        painter.setFont(font);
+
+        const QString versionText = QString::fromUtf8(getMMapperVersion());
+
+        // Calculate logical size for positioning text
+        QRect rect = scaled.rect();
+        int scaledWidth = static_cast<int>(rect.width() / dpr);
+        int scaledHeight = static_cast<int>(rect.height() / dpr);
+        int textWidth = QFontMetrics(font).horizontalAdvance(versionText);
+
+        // Draw text bottom-right with some padding
+        painter.drawText(scaledWidth - textWidth - 5, scaledHeight - 5, versionText);
+
+        painter.end();
+
+        return scaled;
+    };
+    auto splashPixmap = createSplashPixmap(size(), devicePixelRatioF());
+
+    // Now set pixmap with painted text
+    m_splashLabel = std::make_unique<QLabel>(this);
+    m_splashLabel->setPixmap(splashPixmap);
+    m_splashLabel->setFixedSize(size());
+    m_gridLayout->addWidget(m_splashLabel.get(), 0, 0, 1, 1, Qt::AlignVCenter | Qt::AlignTop);
+    m_splashLabel->show();
 
     // from map window to canvas
     {
@@ -72,6 +123,14 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
         connect(canvas, &MapCanvas::sig_continuousScroll, this, &MapWindow::slot_continuousScroll);
         connect(canvas, &MapCanvas::sig_mapMove, this, &MapWindow::slot_mapMove);
         connect(canvas, &MapCanvas::sig_zoomChanged, this, &MapWindow::slot_zoomChanged);
+    }
+}
+
+void MapWindow::hideSplashImage()
+{
+    if (m_splashLabel) {
+        m_splashLabel->hide();
+        m_splashLabel.release();
     }
 }
 
@@ -174,6 +233,14 @@ void MapWindow::centerOnScrollPos(const glm::ivec2 &scrollPos)
 
     const auto worldPos = m_knownMapSize.scrollToWorld(scrollPos);
     emit sig_setScroll(worldPos);
+}
+
+QSize MapWindow::sizeHint() const
+{
+    if (m_splashLabel && m_splashLabel->isVisible()) {
+        return m_splashLabel->size();
+    }
+    return QWidget::sizeHint();
 }
 
 void MapWindow::resizeEvent(QResizeEvent * /*event*/)

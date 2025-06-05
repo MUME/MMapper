@@ -10,7 +10,10 @@
 
 #include <memory>
 
+#include <QLabel>
+#include <QPixmap>
 #include <QPoint>
+#include <QSize>
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -41,6 +44,7 @@ protected:
     std::unique_ptr<QScrollBar> m_horizontalScrollBar;
     std::unique_ptr<QScrollBar> m_verticalScrollBar;
     std::unique_ptr<MapCanvas> m_canvas;
+    std::unique_ptr<QLabel> m_splashLabel;
 
 private:
     struct NODISCARD KnownMapSize final
@@ -66,10 +70,14 @@ public:
 
     NODISCARD MapCanvas *getCanvas() const;
 
+protected:
+    NODISCARD QSize sizeHint() const override;
+
 public:
     void updateScrollBars();
     void setZoom(float zoom);
     NODISCARD float getZoom() const;
+    void hideSplashImage();
 
 private:
     void centerOnScrollPos(const glm::ivec2 &scrollPos);

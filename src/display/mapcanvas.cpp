@@ -936,7 +936,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
 QSize MapCanvas::minimumSizeHint() const
 {
-    return {100, 100};
+    return {BASESIZE / 2, BASESIZE / 2};
 }
 
 QSize MapCanvas::sizeHint() const

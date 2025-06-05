@@ -55,7 +55,7 @@ class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
     Q_OBJECT
 
 public:
-    static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
+    static constexpr const int BASESIZE = 1024;
     static constexpr const int SCROLL_SCALE = 64;
 
 private:

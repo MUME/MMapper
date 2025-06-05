@@ -114,6 +114,10 @@ public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
     ~GroupWidget() final;
 
+protected:
+    NODISCARD QSize sizeHint() const override;
+    NODISCARD QSize minimumSizeHint() const override;
+
 private:
     void readSettings();
     void writeSettings();
