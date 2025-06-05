@@ -14,25 +14,17 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
-#include <zlib.h>
 
 #include <QDebug>
+
+#ifndef MMAPPER_NO_ZLIB
+#include <zlib.h>
+#endif
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
 #include <io.h>
 #endif
-
-#ifdef MMAPPER_NO_ZLIB
-NODISCARD int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
-{
-    throw std::runtime_error("unable to deflate (built without zlib)");
-}
-NODISCARD int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
-{
-    throw std::runtime_error("unable to inflate (built without zlib)");
-}
-#else
 
 static inline constexpr const size_t PAGE_SIZE = 1u << 12;
 static_assert(PAGE_SIZE != 0 && (PAGE_SIZE & (PAGE_SIZE - 1)) == 0,
@@ -45,6 +37,20 @@ static_assert(CHUNK != 0 && (CHUNK & (CHUNK - 1)) == 0, "CHUNK must be a power o
 static_assert(CHUNK >= PAGE_SIZE);
 
 namespace mmz {
+
+#ifdef MMAPPER_NO_ZLIB
+NODISCARD int zpipe_deflate(ProgressCounter & /*pc*/,
+                            IFile & /*source*/,
+                            IFile & /*dest*/,
+                            int /*level*/)
+{
+    throw std::runtime_error("unable to deflate (built without zlib)");
+}
+NODISCARD int zpipe_inflate(ProgressCounter & /*pc*/, IFile & /*source*/, IFile & /*dest*/)
+{
+    throw std::runtime_error("unable to inflate (built without zlib)");
+}
+#else
 
 /* Compress from file source to file dest until EOF on source.
    def() returns Z_OK on success, Z_MEM_ERROR if memory could not be
