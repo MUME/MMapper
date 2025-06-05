@@ -6,18 +6,14 @@
 #include "findroomsdlg.h"
 
 #include "../configuration/configuration.h"
-#include "../global/Charset.h"
 #include "../global/parserutils.h"
 #include "../map/ExitDirection.h"
 #include "../map/coordinate.h"
-#include "../map/exit.h"
-#include "../map/room.h"
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
 
-#include <cstdint>
 #include <memory>
 
 #include <QString>
@@ -120,11 +116,7 @@ void FindRoomsDlg::slot_findClicked()
                                                              : Qt::CaseInsensitive;
     const bool regex = regexCheckBox->isChecked();
 
-    // REVISIT: Why is this converted to ASCII?
-    // Is it because we expect RoomName, RoomDesc, etc to contain ASCII codepoints?
-    // Note: This conversion transliterates non-ascii codepoints.
-    const std::string text = charset::conversion::utf8ToAscii(
-        mmqt::toStdStringUtf8(lineEdit->text()));
+    const std::string text = mmqt::toStdStringUtf8(lineEdit->text());
 
     resultTable->clear();
     roomsFoundLabel->clear();

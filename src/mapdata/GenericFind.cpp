@@ -3,6 +3,7 @@
 
 #include "GenericFind.h"
 
+#include "../map/Map.h"
 #include "roomfilter.h"
 
 RoomIdSet genericFind(const Map &map, const RoomFilter &f)

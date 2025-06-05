@@ -4,62 +4,46 @@
 
 #include "roomfilter.h"
 
-#include "../global/Charset.h"
 #include "../global/StringView.h"
-#include "../global/TaggedString.h"
-#include "../global/parserutils.h"
-#include "../global/utils.h"
-#include "../map/ExitFieldVariant.h"
-#include "../map/enums.h"
-#include "../map/exit.h"
-#include "../map/mmapper2room.h"
-#include "../map/room.h"
+#include "../global/TextUtils.h"
 #include "../parser/Abbrev.h"
-#include "../parser/AbstractParser-Commands.h"
 
-#include <array>
 #include <optional>
-#include <regex>
-#include <vector>
 
-NODISCARD static std::regex createRegex(const std::string &input,
-                                        const Qt::CaseSensitivity cs,
-                                        const bool regex)
+#include <QRegularExpression>
+#include <QString>
+
+NODISCARD static QRegularExpression createRegex(const std::string_view input,
+                                                const Qt::CaseSensitivity cs,
+                                                const bool regex)
 {
-    // TODO: Switch from std::regex::extended to std::regex::multiline once GCC supports it
-    auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
+    QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption;
     if (cs == Qt::CaseInsensitive) {
-        options |= std::regex_constants::icase;
+        options |= QRegularExpression::CaseInsensitiveOption;
     }
-    const std::string pattern = [&input, &options, &regex]() -> std::string {
+    const QString pattern = [&input, &regex]() -> QString {
         if (input.empty()) {
-            return R"(^$)";
+            return QStringLiteral(R"(^$)");
         }
 
         if (regex) {
-            return input;
+            return mmqt::toQStringUtf8(input);
         }
 
-        const auto escape_pattern = [&options]() {
-            // Prevent user input from being interpreted as a POSIX extended regex
-            if (options & std::regex::extended) {
-                return R"([.[{}()*+?|^$])";
-            }
-            // ECMAScript escape pattern (unused)
-            return R"([-[\]{}()*+?.,\^$|#\s])";
-        };
-        static const std::regex escape(escape_pattern(), std::regex::optimize);
-        const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
-        return ".*" + sanitized + ".*";
+        static const QRegularExpression escape(QStringLiteral(R"([-[\]{}()*+?.,\^$|#\s])"),
+                                               QRegularExpression::NoPatternOption);
+        const QString sanitized = mmqt::toQStringUtf8(input).replace(escape,
+                                                                     QStringLiteral(R"(\$&)"));
+        return QStringLiteral(".*") + sanitized + QStringLiteral(".*");
     }();
-    return std::regex(pattern, options);
+    return QRegularExpression(pattern, options);
 }
 
 RoomFilter::RoomFilter(const std::string_view sv,
                        const Qt::CaseSensitivity cs,
                        const bool regex,
                        const PatternKindsEnum kind)
-    : m_regex(createRegex(charset::conversion::utf8ToAscii(sv), cs, regex))
+    : m_regex(createRegex(sv, cs, regex))
     , m_kind(kind)
 {}
 
