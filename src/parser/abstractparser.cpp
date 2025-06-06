@@ -639,6 +639,7 @@ void AbstractParser::showHelp()
                      "-------------\n"
                      "\n"
                      "Mapping commands:\n"
+                     "  %1map         - (see \"%1map ??\" for syntax help)\n"
                      "  %1room        - (see \"%1room ??\" for syntax help)\n"
                      "  %1mark        - (see \"%1mark ??\" for syntax help)\n"
                      "\n"
