@@ -405,7 +405,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     m_table->setModel(&m_model);
     m_table->setItemDelegate(new GroupDelegate(this));
-    m_table->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     layout->addWidget(m_table);
 
     // Minimize row height
@@ -492,11 +491,6 @@ QSize GroupWidget::sizeHint() const
     int desiredHeight = headerHeight + rowHeight + (m_table->frameWidth() * 2);
     int preferredWidth = m_table->horizontalHeader()->length();
     return QSize(preferredWidth, desiredHeight);
-}
-
-QSize GroupWidget::minimumSizeHint() const
-{
-    return m_table->minimumSizeHint();
 }
 
 void GroupWidget::slot_updateLabels()

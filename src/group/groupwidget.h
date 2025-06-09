@@ -116,7 +116,6 @@ public:
 
 protected:
     NODISCARD QSize sizeHint() const override;
-    NODISCARD QSize minimumSizeHint() const override;
 
 private:
     void readSettings();
