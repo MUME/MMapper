@@ -393,20 +393,21 @@ void MudTelnet::virt_receiveEchoMode(const bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
-    if (!msg.getJsonDocument().has_value()) {
-        return;
-    }
-
     if (getDebug()) {
         qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
     }
 
     if (msg.isMumeClientError()) {
-        m_outputs.onMumeClientError(msg.getJson().value().toQString());
+        if (auto optJson = msg.getJson()) {
+            m_outputs.onMumeClientError(optJson->toQString());
+        }
         return;
     }
 
     if (msg.isMumeClientView() || msg.isMumeClientEdit()) {
+        if (!msg.getJsonDocument()) {
+            return;
+        }
         auto optObj = msg.getJsonDocument()->getObject();
         if (!optObj) {
             return;
@@ -429,6 +430,9 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
     }
 
     if (msg.isMumeClientWrite() || msg.isMumeClientCancelEdit()) {
+        if (!msg.getJsonDocument()) {
+            return;
+        }
         auto optObj = msg.getJsonDocument()->getObject();
         if (!optObj) {
             return;
