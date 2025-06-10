@@ -273,10 +273,6 @@ MainWindow::MainWindow()
 
     // update connections
     wireConnections();
-    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
-                                    Qt::AlignCenter,
-                                    size(),
-                                    qApp->primaryScreen()->availableGeometry()));
 
     switch (getConfig().general.mapMode) {
     case MapModeEnum::PLAY:
@@ -314,6 +310,8 @@ MainWindow::MainWindow()
             this,
             &MainWindow::slot_checkMapConsistency);
     connect(m_mapData, &MapData::sig_generateBaseMap, this, &MainWindow::slot_generateBaseMap);
+
+    readSettings();
 }
 
 void MainWindow::startServices()
@@ -1472,8 +1470,7 @@ void MainWindow::showEvent(QShowEvent *const event)
 
     static std::once_flag flag;
     std::call_once(flag, [this]() {
-        // Read geometry and state settings and start services on startup
-        readSettings();
+        // Start services on startup
         startServices();
 
         connect(window()->windowHandle(), &QWindow::screenChanged, this, [this]() {
