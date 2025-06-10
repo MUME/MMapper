@@ -285,7 +285,6 @@ public:
     struct NODISCARD GroupManagerSettings final
     {
         QColor color;
-        QByteArray geometry;
 
     private:
         SUBGROUP();

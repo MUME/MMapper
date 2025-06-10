@@ -473,15 +473,12 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     });
 
     connect(m_group, &Mmapper2Group::sig_updateWidget, this, &GroupWidget::slot_updateLabels);
-
-    readSettings();
 }
 
 GroupWidget::~GroupWidget()
 {
     delete m_table;
     delete m_recolor;
-    writeSettings();
 }
 
 QSize GroupWidget::sizeHint() const
@@ -510,14 +507,4 @@ void GroupWidget::slot_updateLabels()
     const bool hide_mana = !one_character_had_mana();
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA), hide_mana);
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA_PERCENT), hide_mana);
-}
-
-void GroupWidget::readSettings()
-{
-    restoreGeometry(getConfig().groupManager.geometry);
-}
-
-void GroupWidget::writeSettings()
-{
-    setConfig().groupManager.geometry = saveGeometry();
 }

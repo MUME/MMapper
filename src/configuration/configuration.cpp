@@ -685,7 +685,6 @@ void Configuration::PathMachineSettings::read(const QSettings &conf)
 void Configuration::GroupManagerSettings::read(const QSettings &conf)
 {
     color = QColor(conf.value(KEY_COLOR, "#FFFF00").toString());
-    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -850,7 +849,6 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
 void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_COLOR, color.name());
-    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

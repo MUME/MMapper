@@ -117,10 +117,6 @@ public:
 protected:
     NODISCARD QSize sizeHint() const override;
 
-private:
-    void readSettings();
-    void writeSettings();
-
 signals:
     void sig_kickCharacter(const QString &);
     void sig_center(glm::vec2);
