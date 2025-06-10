@@ -83,6 +83,7 @@ private:
     void relayMessage(const QString &msg) { emit sig_relayMessage(msg); }
 
 protected:
+    NODISCARD QSize minimumSizeHint() const override;
     NODISCARD bool focusNextPrevChild(bool next) override;
 
 signals:

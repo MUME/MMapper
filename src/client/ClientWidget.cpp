@@ -49,6 +49,11 @@ ClientWidget::Pipeline::~Pipeline()
     objs.ui.reset();
 }
 
+QSize ClientWidget::minimumSizeHint() const
+{
+    return m_pipeline.objs.ui->display->sizeHint();
+}
+
 void ClientWidget::initPipeline()
 {
     m_pipeline.objs.ui = std::make_unique<Ui::ClientWidget>();
@@ -98,6 +103,7 @@ void ClientWidget::initStackedInputWidget()
     out = std::make_unique<LocalStackedInputWidgetOutputs>(*this);
     getInput().init(deref(out));
 }
+
 void ClientWidget::initDisplayWidget()
 {
     class NODISCARD LocalDisplayWidgetOutputs final : public DisplayWidgetOutputs
@@ -130,6 +136,7 @@ void ClientWidget::initDisplayWidget()
     out = std::make_unique<LocalDisplayWidgetOutputs>(*this);
     getDisplay().init(deref(out));
 }
+
 void ClientWidget::initClientTelnet()
 {
     class NODISCARD LocalClientTelnetOutputs final : public ClientTelnetOutputs
