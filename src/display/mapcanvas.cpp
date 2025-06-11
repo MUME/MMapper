@@ -936,12 +936,12 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
 QSize MapCanvas::minimumSizeHint() const
 {
-    return {BASESIZE / 2, BASESIZE / 2};
+    return QSize{sizeHint().width() / 2, sizeHint().height() / 2};
 }
 
 QSize MapCanvas::sizeHint() const
 {
-    return {BASESIZE, BASESIZE};
+    return {1280, 720};
 }
 
 void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)

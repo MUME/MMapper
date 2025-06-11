@@ -91,8 +91,9 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
     // Now set pixmap with painted text
     m_splashLabel = std::make_unique<QLabel>(this);
     m_splashLabel->setPixmap(splashPixmap);
-    m_splashLabel->setFixedSize(size());
-    m_gridLayout->addWidget(m_splashLabel.get(), 0, 0, 1, 1, Qt::AlignVCenter | Qt::AlignTop);
+    m_splashLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_splashLabel->setGeometry(rect());
+    m_gridLayout->addWidget(m_splashLabel.get(), 0, 0, 1, 1, Qt::AlignCenter);
     m_splashLabel->show();
 
     // from map window to canvas
