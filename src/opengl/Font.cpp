@@ -521,7 +521,7 @@ private:
 
 private:
     const FontMetrics &m_fm;
-    const glm::ivec2 m_iTexSize;
+    const glm::ivec2 m_iTexSize{};
     std::vector<FontVert3d> &m_verts3d;
     Opts m_opts;
     Bounds m_bounds;

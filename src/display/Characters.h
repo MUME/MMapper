@@ -28,9 +28,9 @@ struct MapCanvasTextures;
 class NODISCARD DistantObjectTransform final
 {
 public:
-    const glm::vec3 offset;
+    const glm::vec3 offset{};
     // rotation counterclockwise around the Z axis, starting at the +X axis.
-    const float rotationDegrees;
+    const float rotationDegrees = 0.f;
 
 public:
     explicit DistantObjectTransform(const glm::vec3 &offset_, const float rotationDegrees_)

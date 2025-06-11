@@ -24,8 +24,8 @@
 
 struct NODISCARD TexVert final
 {
-    glm::vec2 tex;
-    glm::vec3 vert;
+    glm::vec2 tex{};
+    glm::vec3 vert{};
 
     explicit TexVert(const glm::vec2 &tex_, const glm::vec3 &vert_)
         : tex{tex_}
@@ -38,8 +38,8 @@ using TexVertVector = std::vector<TexVert>;
 struct NODISCARD ColoredTexVert final
 {
     Color color;
-    glm::vec2 tex;
-    glm::vec3 vert;
+    glm::vec2 tex{};
+    glm::vec3 vert{};
 
     explicit ColoredTexVert(const Color &color_, const glm::vec2 &tex_, const glm::vec3 &vert_)
         : color{color_}
@@ -51,7 +51,7 @@ struct NODISCARD ColoredTexVert final
 struct NODISCARD ColorVert final
 {
     Color color;
-    glm::vec3 vert;
+    glm::vec3 vert{};
 
     explicit ColorVert(const Color &color_, const glm::vec3 &vert_)
         : color{color_}
@@ -67,10 +67,10 @@ struct NODISCARD ColorVert final
 // model-view-projection matrix and the output viewport.
 struct NODISCARD FontVert3d final
 {
-    glm::vec3 base; // world space
+    glm::vec3 base{}; // world space
     Color color;
-    glm::vec2 tex;
-    glm::vec2 vert; // screen space
+    glm::vec2 tex{};
+    glm::vec2 vert{}; // screen space
 
     explicit FontVert3d(const glm::vec3 &base_,
                         const Color &color_,
@@ -360,10 +360,10 @@ public:
     }
 };
 
-struct NODISCARD Viewport
+struct NODISCARD Viewport final
 {
-    glm::ivec2 offset;
-    glm::ivec2 size;
+    glm::ivec2 offset{};
+    glm::ivec2 size{};
 };
 
 static constexpr const size_t VERTS_PER_LINE = 2;
