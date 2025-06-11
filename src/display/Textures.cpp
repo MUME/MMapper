@@ -8,6 +8,7 @@
 #include "../global/utils.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
+#include "../opengl/OpenGL.h"
 #include "Filenames.h"
 #include "RoadIndex.h"
 #include "mapcanvas.h"
@@ -254,6 +255,16 @@ void MapCanvas::initTextures()
     textures.room_needs_update = loadTexture(getPixmapFilenameRaw("room-needs-update.png"));
     textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
+    textures.backgroundImage = loadTexture(getPixmapFilenameRaw("background-image.png"));
+
+    if (textures.backgroundImage) {
+        auto &tex = deref(textures.backgroundImage);
+        const auto id = allocateTextureId();
+        tex.setId(id);
+        m_opengl.setTextureLookup(id, textures.backgroundImage);
+    }
+
+
     {
         textures.for_each([this](SharedMMTexture &pTex) -> void {
             auto &tex = deref(pTex);
@@ -336,4 +347,19 @@ void MapCanvas::updateTextures()
 
     // called to trigger an early error
     std::ignore = mctp::getProxy(m_textures);
+}
+
+void MapCanvasTextures::loadCustomTexture(SharedMMTexture &dest,
+                                          const QString &name,
+                                          QOpenGLTexture::Target target,
+                                          const QImage &img)
+{
+    auto tex = MMTexture::alloc(
+        target,
+        [=](QOpenGLTexture &qtex) {
+            qtex.setData(img);
+        },
+        /*forbidUpdates=*/true);
+
+    dest = tex;
 }
