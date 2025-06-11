@@ -31,7 +31,7 @@ else()
 
     # Download images from Git repository
     else()
-        set(IMAGES_TAG "main") # Git tag for the image resources.
+        set(IMAGES_TAG "v25.06.0") # Git tag for the image resources.
 
         include(ExternalProject)
         ExternalProject_Add(images_repo

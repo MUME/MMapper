@@ -29,7 +29,7 @@ else()
 
     # Download map from Git repository
     else()
-        set(MAP_SCHEMA "41") # Git tag for the map schema version.
+        set(MAP_SCHEMA "42") # Git tag for the map schema version.
 
         include(ExternalProject)
         ExternalProject_Add(map_repo
