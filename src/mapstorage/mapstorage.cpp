@@ -40,13 +40,13 @@ constexpr const int v2_5_1_discardNoMatch = 35; // discard previous NoMatch flag
 
 // starting in 2019, versions are date based: v${YY}_${MM}_${rev}.
 constexpr const int v19_10_0_newCoords = 36;      // switches to new coordinate system
-constexpr const int v25_02_0_noInboundLinks = 38; // stops loading and saving inbound links
-constexpr const int v25_02_1_removeUpToDate = 39; // removes upToDate
-constexpr const int v25_02_2_serverId = 40;       // adds server_id
-constexpr const int v25_02_3_deathFlag = 41;      // replaces death terrain with room flag
-constexpr const int v25_02_4_area = 42;           // adds area
+constexpr const int v25_04_0_noInboundLinks = 38; // stops loading and saving inbound links
+constexpr const int v25_04_1_removeUpToDate = 39; // removes upToDate
+constexpr const int v25_04_2_serverId = 40;       // adds server_id
+constexpr const int v25_04_3_deathFlag = 41;      // replaces death terrain with room flag
+constexpr const int v25_05_0_area = 42;           // adds area
 
-constexpr const int CURRENT = v25_02_4_area;
+constexpr const int CURRENT = v25_05_0_area;
 
 } // namespace schema
 
@@ -219,19 +219,19 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
     LoadRoomHelper helper{stream};
     ExternalRawRoom room;
     room.status = RoomStatusEnum::Permanent;
-    if (version >= schema::v25_02_4_area) {
+    if (version >= schema::v25_05_0_area) {
         room.setArea(mmqt::makeRoomArea(helper.read_string()));
     }
     room.setName(mmqt::makeRoomName(helper.read_string()));
     room.setDescription(mmqt::makeRoomDesc(helper.read_string()));
     room.setContents(mmqt::makeRoomContents(helper.read_string()));
     room.setId(ExternalRoomId{helper.read_u32()});
-    if (version >= schema::v25_02_2_serverId) {
+    if (version >= schema::v25_04_2_serverId) {
         room.setServerId(ServerRoomId{helper.read_u32()});
     }
     room.setNote(mmqt::makeRoomNote(helper.read_string()));
     bool addDeathLoadFlag = false;
-    if (version >= schema::v25_02_3_deathFlag) {
+    if (version >= schema::v25_04_3_deathFlag) {
         room.setTerrainType(toEnum<RoomTerrainEnum>(helper.read_u8()));
     } else {
         const auto terrainType = helper.read_u8();
@@ -257,7 +257,7 @@ ExternalRawRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version
     if (addDeathLoadFlag) {
         room.addLoadFlags(RoomLoadFlagEnum::DEATHTRAP);
     }
-    if (version < schema::v25_02_1_removeUpToDate) {
+    if (version < schema::v25_04_1_removeUpToDate) {
         /*roomUpdated*/ std::ignore = helper.read_u8();
     }
 
@@ -293,7 +293,7 @@ void MapStorage::loadExits(ExternalRawRoom &room, QDataStream &stream, const uin
 
         e.setDoorName(mmqt::makeDoorName(helper.read_string()));
 
-        if (version < schema::v25_02_0_noInboundLinks) {
+        if (version < schema::v25_04_0_noInboundLinks) {
             // Inbound links will be converted to the new data format.
             for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
                  connection = helper.read_u32()) {
@@ -353,11 +353,11 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
             case schema::v2_4_3_qCompress:
             case schema::v2_5_1_discardNoMatch:
             case schema::v19_10_0_newCoords:
-            case schema::v25_02_0_noInboundLinks:
-            case schema::v25_02_1_removeUpToDate:
-            case schema::v25_02_2_serverId:
-            case schema::v25_02_3_deathFlag:
-            case schema::v25_02_4_area:
+            case schema::v25_04_0_noInboundLinks:
+            case schema::v25_04_1_removeUpToDate:
+            case schema::v25_04_2_serverId:
+            case schema::v25_04_3_deathFlag:
+            case schema::v25_05_0_area:
                 return true;
             default:
                 break;
