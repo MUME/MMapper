@@ -101,10 +101,6 @@ private:
     NODISCARD RoomHandle getPathRoot() const;
     // NOTE: This can fail.
     NODISCARD RoomHandle getMostLikelyRoom() const;
-    // NOTE: This can fail.
-    NODISCARD RoomId getMostLikelyRoomId() const;
-    DEPRECATED_MSG("use tryGetMostLikelyRoomPosition() instead")
-    NODISCARD Coordinate getMostLikelyRoomPosition() const;
 
 signals:
     void sig_playerMoved(RoomId id);

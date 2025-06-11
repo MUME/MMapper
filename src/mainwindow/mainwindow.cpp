@@ -416,7 +416,9 @@ void MainWindow::wireConnections()
             &Mmapper2PathMachine::sig_playerMoved,
             m_descriptionWidget,
             [this](const RoomId &id) {
-                m_descriptionWidget->updateRoom(m_mapData->getRoomHandle(id));
+                if (const auto room = m_mapData->getRoomHandle(id)) {
+                    m_descriptionWidget->updateRoom(room);
+                }
             });
 
     connect(m_mapData, &MapData::sig_onPositionChange, this, [this]() {

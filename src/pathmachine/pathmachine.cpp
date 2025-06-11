@@ -145,8 +145,10 @@ void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
     if (!changes.empty()) {
         scheduleAction(changes);
     }
-    if (m_state != PathStateEnum::SYNCING && hasMostLikelyRoom()) {
-        emit sig_playerMoved(getMostLikelyRoomId());
+    if (m_state != PathStateEnum::SYNCING) {
+        if (const auto room = getMostLikelyRoom()) {
+            emit sig_playerMoved(room.getId());
+        }
     }
 }
 
@@ -324,7 +326,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
     setMostLikelyRoom(perhaps.getId());
 
     if (appr.needsUpdate()) {
-        changes.add(Change{room_change_types::Update{getMostLikelyRoomId(), sigParseEvent.deref()}});
+        changes.add(Change{room_change_types::Update{perhaps.getId(), sigParseEvent.deref()}});
     }
 }
 
@@ -623,20 +625,6 @@ RoomHandle PathMachine::getMostLikelyRoom() const
     }
 
     return m_map.findRoomHandle(m_mostLikelyRoom.value());
-}
-
-RoomId PathMachine::getMostLikelyRoomId() const
-{
-    if (const auto room = getMostLikelyRoom()) {
-        return room.getId();
-    }
-
-    return INVALID_ROOMID;
-}
-
-Coordinate PathMachine::getMostLikelyRoomPosition() const
-{
-    return tryGetMostLikelyRoomPosition().value_or(Coordinate{});
 }
 
 void PathMachine::setMostLikelyRoom(const RoomId roomId)

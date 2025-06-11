@@ -1002,6 +1002,7 @@ void MapCanvas::slot_dataLoaded()
 
 void MapCanvas::slot_moveMarker(const RoomId id)
 {
+    assert(id != INVALID_ROOMID);
     m_data.setRoom(id);
     onMovement();
 }
