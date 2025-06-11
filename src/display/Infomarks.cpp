@@ -4,7 +4,6 @@
 #include "Infomarks.h"
 
 #include "../configuration/configuration.h"
-#include "../global/AnsiTextUtils.h"
 #include "../global/Charset.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
@@ -29,9 +28,8 @@
 #include <glm/glm.hpp>
 
 #include <QMessageLogContext>
-#include <QtCore>
 
-static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 2.f;
+static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 0.025f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;
 static constexpr float INFOMARK_POINT_SIZE = 6.f;
 
@@ -138,8 +136,42 @@ void InfomarksBatch::drawPoint(const glm::vec3 &a)
 
 void InfomarksBatch::drawLine(const glm::vec3 &a, const glm::vec3 &b)
 {
-    m_lines.emplace_back(m_color, a + m_offset);
-    m_lines.emplace_back(m_color, b + m_offset);
+    const glm::vec3 start_v = a + m_offset;
+    const glm::vec3 end_v = b + m_offset;
+
+    // Handle potential zero-length segments
+    if (start_v == end_v) {
+        float half_size = INFOMARK_ARROW_LINE_WIDTH / 2.0f;
+        glm::vec3 v1 = start_v + glm::vec3(-half_size, -half_size, 0.0f);
+        glm::vec3 v2 = start_v + glm::vec3(half_size, -half_size, 0.0f);
+        glm::vec3 v3 = start_v + glm::vec3(half_size, half_size, 0.0f);
+        glm::vec3 v4 = start_v + glm::vec3(-half_size, half_size, 0.0f);
+
+        m_tris.emplace_back(m_color, v1);
+        m_tris.emplace_back(m_color, v2);
+        m_tris.emplace_back(m_color, v3);
+
+        m_tris.emplace_back(m_color, v1);
+        m_tris.emplace_back(m_color, v3);
+        m_tris.emplace_back(m_color, v4);
+        return;
+    }
+
+    glm::vec3 dir = glm::normalize(end_v - start_v);
+    // Assuming lines are primarily on the XY plane, Z component of normal is 0
+    glm::vec3 perp_normal = glm::vec3(-dir.y, dir.x, 0.0f);
+    float half_width = INFOMARK_ARROW_LINE_WIDTH / 2.0f;
+
+    glm::vec3 v1 = start_v + perp_normal * half_width;
+    glm::vec3 v2 = start_v - perp_normal * half_width;
+    glm::vec3 v3 = end_v + perp_normal * half_width;
+    glm::vec3 v4 = end_v - perp_normal * half_width;
+
+    // Add quad to m_quads
+    m_quads.emplace_back(m_color, v1);
+    m_quads.emplace_back(m_color, v2);
+    m_quads.emplace_back(m_color, v4);
+    m_quads.emplace_back(m_color, v3);
 }
 
 void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
@@ -167,8 +199,8 @@ InfomarksMeshes InfomarksBatch::getMeshes()
 
     auto &gl = m_realGL;
     result.points = gl.createPointBatch(m_points);
-    result.lines = gl.createColoredLineBatch(m_lines);
     result.tris = gl.createColoredTriBatch(m_tris);
+    result.quads = gl.createColoredQuadBatch(m_quads);
 
     {
         assert(!m_text.locked);
@@ -186,17 +218,17 @@ void InfomarksBatch::renderImmediate(const GLRenderState &state)
 {
     auto &gl = m_realGL;
 
-    if (!m_lines.empty()) {
-        gl.renderColoredLines(m_lines, state);
-    }
     if (!m_tris.empty()) {
         gl.renderColoredTris(m_tris, state);
     }
-    if (!m_text.text.empty()) {
-        m_font.render3dTextImmediate(m_text.text);
+    if (!m_quads.empty()) {
+        gl.renderColoredQuads(m_quads, state);
     }
     if (!m_points.empty()) {
         gl.renderPoints(m_points, state.withPointSize(INFOMARK_POINT_SIZE));
+    }
+    if (!m_text.text.empty()) {
+        m_font.render3dTextImmediate(m_text.text);
     }
 }
 
@@ -210,8 +242,8 @@ void InfomarksMeshes::render()
         = GLRenderState().withDepthFunction(std::nullopt).withBlend(BlendModeEnum::TRANSPARENCY);
 
     points.render(common_state.withPointSize(INFOMARK_POINT_SIZE));
-    lines.render(common_state.withLineParams(LineParams{INFOMARK_ARROW_LINE_WIDTH}));
     tris.render(common_state);
+    quads.render(common_state);
     textMesh.render(common_state);
 }
 
@@ -273,7 +305,13 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
         break;
 
     case InfomarkTypeEnum::ARROW:
-        batch.drawLineStrip(glm::vec3{0.f}, glm::vec3{dx - 0.3f, dy, 0.f}, glm::vec3{dx, dy, 0.f});
+        // Draw the main shaft line quad
+        batch.drawLine(glm::vec3{0.f}, glm::vec3{dx - 0.3f, dy, 0.f});
+
+        // Draw an extension of the shaft to come out of the arrowhead's base
+        batch.drawLine(glm::vec3{dx - 0.2f, dy, 0.f}, glm::vec3{dx - 0.3f, dy, 0.f});
+
+        // Draw the arrowhead triangle
         batch.drawTriangle(glm::vec3{dx - 0.2f, dy + 0.07f, 0.f},
                            glm::vec3{dx - 0.2f, dy - 0.07f, 0.f},
                            glm::vec3{dx, dy, 0.f});

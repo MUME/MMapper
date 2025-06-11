@@ -30,7 +30,7 @@
 #include <QMessageLogContext>
 #include <QtCore>
 
-static constexpr const float CONNECTION_LINE_WIDTH = 2.f;
+static constexpr const float CONNECTION_LINE_WIDTH = 0.025f;
 static constexpr const float VALID_CONNECTION_POINT_SIZE = 6.f;
 static constexpr const float NEW_CONNECTION_POINT_SIZE = 8.f;
 
@@ -615,10 +615,10 @@ void ConnectionDrawer::drawConnEndTriUpDownUnknown(float dX, float dY, float dst
 ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl) const
 {
     ConnectionMeshes result;
-    result.normalLines = gl.createColoredLineBatch(normal.lineVerts);
     result.normalTris = gl.createColoredTriBatch(normal.triVerts);
-    result.redLines = gl.createColoredLineBatch(red.lineVerts);
     result.redTris = gl.createColoredTriBatch(red.triVerts);
+    result.normalQuads = gl.createColoredQuadBatch(normal.quadVerts);
+    result.redQuads = gl.createColoredQuadBatch(red.quadVerts);
     return result;
 }
 
@@ -630,19 +630,16 @@ void ConnectionMeshes::render(const int thisLayer, const int focusedLayer) const
         }
         return Colors::gray70.withAlpha(FAINT_CONNECTION_ALPHA);
     }();
-    const auto common_style = GLRenderState()
-                                  .withBlend(BlendModeEnum::TRANSPARENCY)
-                                  .withLineParams(LineParams{CONNECTION_LINE_WIDTH})
-                                  .withColor(color);
+    const auto common_style = GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY).withColor(color);
 
     // Even though we can draw colored lines and tris,
     // the reason for having separate lines is so red will always be on top.
     // If you don't think that's important, you can combine the batches.
 
-    normalLines.render(common_style);
     normalTris.render(common_style);
-    redLines.render(common_style);
     redTris.render(common_style);
+    normalQuads.render(common_style);
+    redQuads.render(common_style);
 }
 
 void MapCanvas::paintNearbyConnectionPoints()
@@ -760,8 +757,24 @@ void MapCanvas::paintSelectedConnection()
     auto &gl = getOpenGL();
     const auto rs = GLRenderState().withColor(Colors::red);
 
-    const std::vector<glm::vec3> verts{pos1, pos2};
-    gl.renderPlainLines(verts, rs.withLineParams(LineParams{CONNECTION_LINE_WIDTH}));
+    {
+        std::vector<ColorVert> verts;
+        const glm::vec3 dir = glm::normalize(pos2 - pos1);
+        const glm::vec3 perp_normal = glm::vec3(-dir.y, dir.x, 0.0f);
+        const float half_width = CONNECTION_LINE_WIDTH / 2.0f;
+
+        glm::vec3 v1 = pos1 + perp_normal * half_width;
+        glm::vec3 v2 = pos1 - perp_normal * half_width;
+        glm::vec3 v3 = pos2 - perp_normal * half_width;
+        glm::vec3 v4 = pos2 + perp_normal * half_width;
+
+        verts.emplace_back(Colors::red, v1);
+        verts.emplace_back(Colors::red, v2);
+        verts.emplace_back(Colors::red, v3);
+        verts.emplace_back(Colors::red, v4);
+
+        gl.renderColoredQuads(verts, rs);
+    }
 
     std::vector<ColorVert> points;
     points.emplace_back(Colors::red, pos1);
@@ -790,35 +803,108 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
-    const auto &connectionNormalColor
-        = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor.getColor() : Colors::red;
-
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
-    auto &verts = deref(m_currentBuffer).lineVerts;
-    auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
-        verts.emplace_back(color, a);
-        verts.emplace_back(color, b);
+    const float extension = CONNECTION_LINE_WIDTH * 0.5f;
+
+    // Helper lambda to generate a quad between two points with a specific color.
+    auto generateQuad = [&](const glm::vec3 &p1, const glm::vec3 &p2, const Color &quad_color) {
+        auto &verts = deref(m_currentBuffer).quadVerts;
+
+        // Zero-length segment, draw a small square.
+        if (p1 == p2) {
+            float half_size = CONNECTION_LINE_WIDTH / 2.0f;
+            glm::vec3 v_1 = p1 + glm::vec3(-half_size, -half_size, 0.0f);
+            glm::vec3 v_2 = p1 + glm::vec3(half_size, -half_size, 0.0f);
+            glm::vec3 v_3 = p1 + glm::vec3(half_size, half_size, 0.0f);
+            glm::vec3 v_4 = p1 + glm::vec3(-half_size, half_size, 0.0f);
+
+            verts.emplace_back(quad_color, v_1);
+            verts.emplace_back(quad_color, v_2);
+            verts.emplace_back(quad_color, v_3);
+            verts.emplace_back(quad_color, v_4);
+            return;
+        }
+
+        const glm::vec3 dir = glm::normalize(p2 - p1);
+        // Original perpendicular to the line segment in the XY plane.
+        const glm::vec3 perp_normal_1 = glm::vec3(-dir.y, dir.x, 0.0f);
+        // Second perpendicular, rotated 90 degrees relative to the first (within the XY plane).
+        const glm::vec3 perp_normal_2 = glm::vec3(dir.x, dir.y, 0.0f);
+        const float half_width = CONNECTION_LINE_WIDTH / 2.0f;
+
+        // Generate the first quad.
+        glm::vec3 v1_1 = p1 + perp_normal_1 * half_width;
+        glm::vec3 v1_2 = p1 - perp_normal_1 * half_width;
+        glm::vec3 v1_3 = p2 + perp_normal_1 * half_width;
+        glm::vec3 v1_4 = p2 - perp_normal_1 * half_width;
+
+        verts.emplace_back(quad_color, v1_1);
+        verts.emplace_back(quad_color, v1_2);
+        verts.emplace_back(quad_color, v1_4);
+        verts.emplace_back(quad_color, v1_3);
+
+        // Generate the second (orthogonal) quad.
+        glm::vec3 v2_1 = p1 + perp_normal_2 * half_width;
+        glm::vec3 v2_2 = p1 - perp_normal_2 * half_width;
+        glm::vec3 v2_3 = p2 + perp_normal_2 * half_width;
+        glm::vec3 v2_4 = p2 - perp_normal_2 * half_width;
+
+        verts.emplace_back(quad_color, v2_1);
+        verts.emplace_back(quad_color, v2_2);
+        verts.emplace_back(quad_color, v2_4);
+        verts.emplace_back(quad_color, v2_3);
     };
 
     const auto size = points.size();
     assert(size >= 2);
-    for (size_t i = 1; i < size; ++i) {
-        const auto start = transform(points[i - 1u]);
-        const auto end = transform(points[i]);
 
-        if (!isLongLine(start, end)) {
-            drawLine(connectionNormalColor, start, end);
+    for (size_t i = 1; i < size; ++i) {
+        const glm::vec3 start_orig = points[i - 1u];
+        const glm::vec3 end_orig = points[i];
+
+        const glm::vec3 start_v = transform(start_orig);
+        const glm::vec3 end_v = transform(end_orig);
+
+        const Color current_segment_color = isNormal() ? getCanvasNamedColorOptions()
+                                                             .connectionNormalColor.getColor()
+                                                       : Colors::red;
+
+        // Handle original zero-length segments first.
+        if (glm::length(end_v - start_v) < 1e-6f) {
+            generateQuad(start_v, end_v, current_segment_color);
             continue;
         }
 
-        const auto len = glm::length(start - end);
-        const auto faintCutoff = LONG_LINE_HALFLEN / len;
-        const auto mid1 = glm::mix(start, end, faintCutoff);
-        const auto mid2 = glm::mix(start, end, 1.f - faintCutoff);
-        const auto faint = connectionNormalColor.withAlpha(FAINT_CONNECTION_ALPHA);
+        glm::vec3 quad_start_v = start_v;
+        glm::vec3 quad_end_v = end_v;
+        const glm::vec3 segment_dir = glm::normalize(end_v - start_v);
 
-        drawLine(connectionNormalColor, start, mid1);
-        drawLine(faint, mid1, mid2);
-        drawLine(connectionNormalColor, mid2, end);
+        // Extend the first and last segments for better visual continuity.
+        if (i == 1) {
+            // First segment of the polyline.
+            quad_start_v = start_v - segment_dir * extension;
+        }
+        if (i == size - 1) {
+            // Last segment of the polyline.
+            quad_end_v = end_v + segment_dir * extension;
+        }
+
+        // If it's not a long line, just draw a single quad.
+        if (!isLongLine(quad_start_v, quad_end_v)) {
+            generateQuad(quad_start_v, quad_end_v, current_segment_color);
+            continue;
+        }
+
+        // It is a long line, apply fading.
+        const float len = glm::length(quad_end_v - quad_start_v);
+        const float faintCutoff = (len > 1e-6f) ? (LONG_LINE_HALFLEN / len) : 0.5f;
+
+        const glm::vec3 mid1 = glm::mix(quad_start_v, quad_end_v, faintCutoff);
+        const glm::vec3 mid2 = glm::mix(quad_start_v, quad_end_v, 1.f - faintCutoff);
+        const Color faint_color = current_segment_color.withAlpha(FAINT_CONNECTION_ALPHA);
+
+        generateQuad(quad_start_v, mid1, current_segment_color);
+        generateQuad(mid1, mid2, faint_color);
+        generateQuad(mid2, quad_end_v, current_segment_color);
     }
 }
