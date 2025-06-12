@@ -28,8 +28,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <QtCore>
-#include <QtGui>
+#include <QtCore> // For QFile, QFileInfo, QXmlStreamReader, QDebug, QString etc.
+#include <QImage> // For QImage
+#include <QColor> // For QColor
+#include <QOpenGLTexture> // For QOpenGLTexture
 
 static const bool VERBOSE_FONT_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_FONT_DEBUG")) {
@@ -363,7 +365,7 @@ QString FontMetrics::init(const QString &fontFilename)
     while (!xml.atEnd() && !xml.hasError()) {
         if (xml.readNextStartElement()) {
             const auto &attr = xml.attributes();
-            if (xml.name() == "common") {
+            if (xml.name() == QStringLiteral("common")) { // Changed
                 if (hasCommon) {
                     assert(false);
                     continue;
@@ -382,7 +384,7 @@ QString FontMetrics::init(const QString &fontFilename)
                 }
                 common = Common{lineHeight, base, scaleW, scaleH, marginX, marginY};
 
-            } else if (xml.name() == "char") {
+            } else if (xml.name() == QStringLiteral("char")) { // Changed
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -415,7 +417,7 @@ QString FontMetrics::init(const QString &fontFilename)
 
                 raw_glyphs.emplace_back(id, x, y2, width, height, xoffset, yoffset2, xadvance);
 
-            } else if (xml.name() == "kerning") {
+            } else if (xml.name() == QStringLiteral("kerning")) { // Changed
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -429,7 +431,7 @@ QString FontMetrics::init(const QString &fontFilename)
                     qDebug() << "Kerning" << PrintedChar{first} << PrintedChar{second} << amount;
                 }
                 raw_kernings.emplace_back(first, second, amount);
-            } else if (xml.name() == "page") {
+            } else if (xml.name() == QStringLiteral("page")) { // Changed
                 const int id = attr.value("id").toInt();
                 if (id != 0) {
                     continue;

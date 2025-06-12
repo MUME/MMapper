@@ -10,8 +10,9 @@
 
 #include <QString>
 #include <QWidget>
-#include <QtCore>
-#include <QtWidgets>
+#include <QtCore> // For QPoint, Qt:: enums etc.
+#include <QTextEdit> // For QTextEdit
+#include <QAction>   // For QAction (now in QtGui but often used with Widgets)
 
 class NODISCARD_QOBJECT AdventureWidget : public QWidget
 {
@@ -21,7 +22,7 @@ private:
     AdventureTracker &m_adventureTracker;
 
     QTextEdit *m_textEdit = nullptr;
-    std::unique_ptr<QTextCursor> m_textCursor;
+    std::unique_ptr<QTextCursor> m_textCursor; // QTextCursor is in QtGui
     QAction *m_clearContentAction = nullptr;
 
 public:

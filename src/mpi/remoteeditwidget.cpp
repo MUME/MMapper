@@ -264,7 +264,7 @@ public:
                 default: {
                     const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == 0xC2 || last == 0xC3))) {
+                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == QChar(0xC2) || last == QChar(0xC3)))) { // Changed
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -399,7 +399,7 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
     }
 
     const int to_remove = [&text, max_spaces]() -> int {
-        const int len = std::min(max_spaces, text.length());
+        const int len = std::min(max_spaces, static_cast<int>(text.length())); // Changed
         int n = 0;
         while (n < len && text.at(n) == C_SPACE) {
             ++n;
@@ -1290,14 +1290,15 @@ void RemoteEditWidget::closeEvent(QCloseEvent *event)
 bool RemoteEditWidget::slot_maybeCancel()
 {
     if (slot_contentsChanged()) {
-        const int ret = QMessageBox::warning(this,
-                                             m_title,
-                                             tr("You have edited the document.\n"
-                                                "Do you want to cancel your changes?"),
-                                             QMessageBox::Yes,
-                                             QMessageBox::No | QMessageBox::Escape
-                                                 | QMessageBox::Default);
-        if (ret == QMessageBox::No) {
+        QMessageBox msgBox(this);
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle(m_title);
+        msgBox.setText(tr("You have edited the document.\n"
+                          "Do you want to cancel your changes?"));
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::No); // Original had No as default via Escape for the second button
+
+        if (msgBox.exec() == QMessageBox::No) {
             return false;
         }
     }

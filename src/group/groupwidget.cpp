@@ -235,7 +235,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 
     // Map column to data
     switch (role) {
-    case Qt::DisplayRole:
+    case Qt::ItemDataRole::DisplayRole: // Changed
         switch (column) {
         case ColumnTypeEnum::NAME:
             if (character.getLabel().isEmpty()
@@ -353,7 +353,7 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
 QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     switch (role) {
-    case Qt::DisplayRole:
+    case Qt::ItemDataRole::DisplayRole: // Changed
         if (orientation == Qt::Orientation::Horizontal) {
             switch (static_cast<ColumnTypeEnum>(section)) {
             case ColumnTypeEnum::NAME:

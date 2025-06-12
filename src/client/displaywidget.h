@@ -15,9 +15,10 @@
 #include <QTextBrowser>
 #include <QTextCursor>
 #include <QTextEdit>
-#include <QTextFormat>
+#include <QTextFormat> // For QTextCharFormat (used in function signatures)
+#include <QTextCharFormat> // Explicit include for QTextCharFormat
+#include <QTextFrame> // Added for QTextFrame
 #include <QtCore>
-#include <QtGui>
 
 class QObject;
 class QResizeEvent;
@@ -52,7 +53,7 @@ struct NODISCARD AnsiTextHelper final
 
     explicit AnsiTextHelper(QTextEdit &input_textEdit, FontDefaults def)
         : textEdit{input_textEdit}
-        , cursor{textEdit.document()->rootFrame()->firstCursorPosition()}
+        , cursor(textEdit.document()->rootFrame()->firstCursorPosition()) // Explicit constructor
         , format{cursor.charFormat()}
         , defaults{std::move(def)}
     {}

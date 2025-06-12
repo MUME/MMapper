@@ -8,7 +8,8 @@
 #include "PaletteManager.h"
 
 #include <iterator>
-#include <list>
+#include <list> // For std::list
+// QLinkedList will be removed
 
 #include <QEvent>
 #include <QObject>
@@ -22,10 +23,10 @@ class QKeyEvent;
 class QObject;
 class QWidget;
 
-class NODISCARD InputHistory final : private std::list<QString>
+class NODISCARD InputHistory final : private std::list<QString> // Changed QLinkedList to std::list
 {
 private:
-    std::list<QString>::iterator m_iterator;
+    std::list<QString>::iterator m_iterator; // Changed QLinkedList to std::list
 
 public:
     InputHistory() { m_iterator = begin(); }
@@ -45,12 +46,12 @@ public:
     NODISCARD bool atEnd() const { return m_iterator == end(); }
 };
 
-class NODISCARD TabHistory final : private std::list<QString>
+class NODISCARD TabHistory final : private std::list<QString> // Changed QLinkedList to std::list
 {
-    using base = std::list<QString>;
+    using base = std::list<QString>; // Changed QLinkedList to std::list
 
 private:
-    std::list<QString>::iterator m_iterator;
+    std::list<QString>::iterator m_iterator; // Changed QLinkedList to std::list
 
 public:
     TabHistory() { m_iterator = begin(); }

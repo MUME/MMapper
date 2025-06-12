@@ -42,7 +42,7 @@ int RoomModel::columnCount(const QModelIndex & /* parent */) const
 
 QVariant RoomModel::headerData(int column, Qt::Orientation orientation, int role) const
 {
-    if (orientation == Qt::Orientation::Horizontal && role == Qt::DisplayRole) {
+    if (orientation == Qt::Orientation::Horizontal && role == Qt::ItemDataRole::DisplayRole) { // Changed
         switch (static_cast<ColumnTypeEnum>(column)) {
         case ColumnTypeEnum::NAME:
             return "Name";
@@ -81,7 +81,7 @@ QVariant RoomModel::data(const QModelIndex &index, int role) const
         const int column = index.column();
 
         switch (role) {
-        case Qt::DisplayRole:
+        case Qt::ItemDataRole::DisplayRole: // Changed
             if (isFightingYOU(row, column)) {
                 // replace you -> YOU for better visibility
                 return QStringLiteral("YOU");

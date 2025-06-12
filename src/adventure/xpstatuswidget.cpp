@@ -57,7 +57,7 @@ void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession>
     updateContent();
 }
 
-void XPStatusWidget::enterEvent(QEvent *event)
+void XPStatusWidget::enterEvent(QEnterEvent *event) // Changed QEvent* to QEnterEvent*
 {
     if (m_session != nullptr) {
         auto xpHourly = m_session->calculateHourlyRateXP();
@@ -68,7 +68,8 @@ void XPStatusWidget::enterEvent(QEvent *event)
         m_statusBar->showMessage(msg);
     }
 
-    QWidget::enterEvent(event);
+    // QPushButton::enterEvent takes QEnterEvent in Qt6, QWidget::enterEvent also takes QEnterEvent
+    QPushButton::enterEvent(event);
 }
 
 void XPStatusWidget::leaveEvent(QEvent *event)

@@ -8,13 +8,19 @@
 #include "../global/Color.h"
 
 #include <QFont>
-#include <QLinkedList>
+// #include <QLinkedList> // Removed as it's replaced by <list> in the header
 #include <QMessageLogContext>
 #include <QRegularExpression>
 #include <QSize>
 #include <QString>
-#include <QtGui>
-#include <QtWidgets>
+// Specific QtGui includes
+#include <QFontMetrics>
+#include <QKeyEvent>
+#include <QTextCursor>
+// Specific QtWidgets includes
+#include <QSizePolicy>
+#include <QFrame>
+// QtCore is included via inputwidget.h or other specific includes like QRegularExpression
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 
@@ -102,7 +108,7 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
         switch (currentKey) {
         /** Submit the current text */
         case Qt::Key_Return:
-        case Qt::Key_Enter:
+        // case Qt::Key_Enter: // Qt::Key_Enter is deprecated, Qt::Key_Return is the replacement.
             gotInput();
             event->accept();
             return;

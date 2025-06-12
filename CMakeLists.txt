@@ -37,7 +37,7 @@ if(WIN32 AND MINGW)
 endif()
 
 # Qt6 components should be listed without the Qt6:: namespace prefix for find_package
-set(MMAPPER_QT6_COMPONENTS_NO_NS Core Widgets Network OpenGL Test)
+set(MMAPPER_QT6_COMPONENTS_NO_NS Core Widgets Network OpenGL OpenGLWidgets Test) # Added OpenGLWidgets
 if(WITH_WEBSOCKET)
     list(APPEND MMAPPER_QT6_COMPONENTS_NO_NS WebSockets)
 endif()
@@ -50,6 +50,21 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
+
+# Pass include directories directly to moc
+message(STATUS "Qt6Core_INCLUDE_DIRS: ${Qt6Core_INCLUDE_DIRS}")
+message(STATUS "Qt6Widgets_INCLUDE_DIRS: ${Qt6Widgets_INCLUDE_DIRS}")
+message(STATUS "Qt6Gui_INCLUDE_DIRS: ${Qt6Gui_INCLUDE_DIRS}")
+message(STATUS "Qt6OpenGL_INCLUDE_DIRS: ${Qt6OpenGL_INCLUDE_DIRS}")
+message(STATUS "Qt6OpenGLWidgets_INCLUDE_DIRS: ${Qt6OpenGLWidgets_INCLUDE_DIRS}") # Added for OpenGLWidgets
+
+set(CMAKE_AUTOMOC_MOC_OPTIONS "") # Initialize as empty list
+foreach(DIR ${Qt6Core_INCLUDE_DIRS} ${Qt6Widgets_INCLUDE_DIRS} ${Qt6Gui_INCLUDE_DIRS} ${Qt6OpenGL_INCLUDE_DIRS} ${Qt6OpenGLWidgets_INCLUDE_DIRS}) # Added OpenGLWidgets
+    if(DIR) # Ensure DIR is not empty, which can happen if a variable is empty
+        list(APPEND CMAKE_AUTOMOC_MOC_OPTIONS "-I${DIR}")
+    endif()
+endforeach()
+# message(STATUS "CMAKE_AUTOMOC_MOC_OPTIONS: ${CMAKE_AUTOMOC_MOC_OPTIONS}") # For debugging the list
 
 if(Qt6Core_FOUND)
     if(Qt6Core_VERSION VERSION_LESS 6.2.0)

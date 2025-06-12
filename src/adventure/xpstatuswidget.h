@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>
+#include <QEnterEvent> // Added for QEnterEvent
 
 class NODISCARD_QOBJECT XPStatusWidget : public QPushButton
 {
@@ -27,8 +28,8 @@ public:
     explicit XPStatusWidget(AdventureTracker &at, QStatusBar *sb, QWidget *parent);
 
 protected:
-    void enterEvent(QEvent *event) override;
-    void leaveEvent(QEvent *event) override;
+    void enterEvent(QEnterEvent *event) override; // Changed QEvent* to QEnterEvent*
+    void leaveEvent(QEvent *event) override;     // QEvent* is correct for leaveEvent
 
 private:
     void updateContent();
