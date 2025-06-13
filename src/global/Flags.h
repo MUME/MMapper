@@ -276,14 +276,17 @@ public:
     struct ALLOW_DISCARD Iterator final
     {
     private:
-        Flags::underlying_type m_bits = 0;
-        size_t m_pos = 0;
+        underlying_type m_bits = 0;
+        uint8_t m_pos = 0;
 
     public:
         NODISCARD Iterator(const Flags flags, const size_t pos)
             : m_bits{flags.m_flags}
-            , m_pos{pos}
-        {}
+            , m_pos{static_cast<uint8_t>(pos)}
+        {
+            assert(pos == m_pos);
+            assert(pos <= flags.size());
+        }
 
     public:
         NODISCARD Flag operator*() const { return Flags{m_bits}.at(m_pos); }
