@@ -43,7 +43,7 @@ void AbstractShaderProgram::setUniforms(const glm::mat4 &mvp,
     assert(m_isBound);
     virt_setUniforms(mvp, uniforms);
 
-    if (uniforms.pointSize) {
+    if (uniforms.pointSize.has_value()) {
         setPointSize(uniforms.pointSize.value());
     }
 }
