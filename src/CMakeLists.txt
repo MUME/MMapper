@@ -891,7 +891,11 @@ endif(UNIX AND NOT APPLE)
 
 # Windows Install Settings
 if(WIN32)
+    if(MMAPPER_IS_DEBUG)
+        set(CMAKE_INSTALL_DEBUG_LIBRARIES TRUE)
+    endif()
     include(InstallRequiredSystemLibraries)
+    message(STATUS "System runtime libs: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
     set(CMAKE_WIN32_EXECUTABLE ON)
 
     # Install Executables
@@ -902,6 +906,7 @@ if(WIN32)
     )
 
     # Bundle Library Files
+    install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin)
     set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
     find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
@@ -918,11 +923,9 @@ if(WIN32)
         DESTINATION .
         COMPONENT libraries
     )
-    if(MSVC AND MSVC_REDIST)
-        get_filename_component(vcredist_name "${MSVC_REDIST}" NAME)
-        install(FILES ${MSVC_REDIST} DESTINATION bin COMPONENT libraries)
+    if(MSVC)
         set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
-            ExecWait '\\$INSTDIR\\\\bin\\\\${vcredist_name}'
+            ExecWait '\\$INSTDIR\\\\bin\\\\vcredist_x64.exe'
             ")
     endif()
 
