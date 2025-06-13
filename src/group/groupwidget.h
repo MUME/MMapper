@@ -7,6 +7,7 @@
 #include "mmapper2character.h"
 
 #include <QAbstractTableModel>
+#include <QSortFilterProxyModel>
 #include <QString>
 #include <QStyledItemDelegate>
 #include <QWidget>
@@ -14,10 +15,26 @@
 
 class QAction;
 class MapData;
-class CGroupChar;
 class Mmapper2Group;
 class QObject;
 class QTableView;
+
+class NODISCARD_QOBJECT GroupProxyModel final : public QSortFilterProxyModel
+{
+    Q_OBJECT
+
+public:
+    explicit GroupProxyModel(QObject *parent = nullptr);
+    ~GroupProxyModel() final;
+
+    void refresh();
+
+protected:
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+
+private:
+    SharedGroupChar getCharacterFromSource(const QModelIndex &source_index) const;
+};
 
 class NODISCARD GroupStateData final
 {
@@ -36,7 +53,6 @@ public:
 
 public:
     void paint(QPainter *pPainter, const QRect &rect);
-    // Shouldn't this be "getArea()"?
     NODISCARD int getWidth() const { return m_count * m_height; }
 };
 Q_DECLARE_METATYPE(GroupStateData)
@@ -61,8 +77,7 @@ class NODISCARD_QOBJECT GroupModel final : public QAbstractTableModel
     Q_OBJECT
 
 private:
-    MapData *m_map = nullptr;
-    Mmapper2Group *m_group = nullptr;
+    GroupVector m_characters;
     bool m_mapLoaded = false;
 
 public:
@@ -78,19 +93,32 @@ public:
         ROOM_NAME
     };
 
-    explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent);
+    explicit GroupModel(QObject *parent = nullptr);
 
+    NODISCARD const GroupVector &getCharacters() const { return m_characters; }
+    void setCharacters(const GroupVector &newChars);
     void resetModel();
     NODISCARD QVariant dataForCharacter(const SharedGroupChar &character,
                                         ColumnTypeEnum column,
                                         int role) const;
+    NODISCARD SharedGroupChar getCharacter(int row) const;
 
     NODISCARD int rowCount(const QModelIndex &parent) const override;
     NODISCARD int columnCount(const QModelIndex &parent) const override;
 
     NODISCARD QVariant data(const QModelIndex &index, int role) const override;
     NODISCARD QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    NODISCARD Qt::ItemFlags flags(const QModelIndex &parent) const override;
+
+    // Drag and drop overrides
+    NODISCARD Qt::ItemFlags flags(const QModelIndex &index) const override;
+    NODISCARD Qt::DropActions supportedDropActions() const override;
+    NODISCARD QStringList mimeTypes() const override;
+    NODISCARD QMimeData *mimeData(const QModelIndexList &indexes) const override;
+    NODISCARD bool dropMimeData(const QMimeData *data,
+                                Qt::DropAction action,
+                                int row,
+                                int column,
+                                const QModelIndex &parent) override;
 
     void setMapLoaded(const bool val) { m_mapLoaded = val; }
 };
@@ -103,6 +131,7 @@ private:
     QTableView *m_table = nullptr;
     Mmapper2Group *m_group = nullptr;
     MapData *m_map = nullptr;
+    GroupProxyModel *m_proxyModel = nullptr;
     GroupModel m_model;
 
 private:

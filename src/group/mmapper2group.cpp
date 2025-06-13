@@ -209,8 +209,9 @@ SharedGroupChar Mmapper2Group::addChar(const GroupId id)
 void Mmapper2Group::removeChar(const GroupId id)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
+    const auto &settings = getConfig().groupManager;
     bool wasRemoved = false;
-    utils::erase_if(m_charIndex, [this, &wasRemoved, &id](const SharedGroupChar &pChar) {
+    utils::erase_if(m_charIndex, [this, &settings, &wasRemoved, &id](const SharedGroupChar &pChar) {
         if (!pChar) {
             return false;
         }
@@ -218,7 +219,7 @@ void Mmapper2Group::removeChar(const GroupId id)
         if (character.getId() != id) {
             return false;
         }
-        if (!character.isYou()) {
+        if (!character.isYou() && character.getColor() != settings.npcColor) {
             m_colorGenerator.releaseColor(character.getColor());
         }
         qDebug() << "removing" << id.asUint32() << character.getName().toQString();
@@ -284,11 +285,36 @@ bool Mmapper2Group::updateChar(SharedGroupChar sharedCh, const JsonObj &obj)
             });
         }
     }
+
     if (!ch.getColor().isValid()) {
-        ch.setColor(m_colorGenerator.getNextColor());
+        auto getColor = [&]() -> QColor {
+            const auto &settings = getConfig().groupManager;
+            if (ch.isNpc() && settings.npcColorOverride) {
+                return settings.npcColor;
+            } else {
+                return m_colorGenerator.getNextColor();
+            }
+        };
+        ch.setColor(getColor());
         qDebug() << "adding" << id.asUint32() << ch.getName().toQString();
     }
 
     // Update canvas only if the character moved
     return change && ch.getServerId() != INVALID_SERVER_ROOMID && ch.getServerId() != oldServerId;
+}
+
+void Mmapper2Group::slot_groupSettingsChanged()
+{
+    const auto &settings = getConfig().groupManager;
+    for (const auto &character : m_charIndex) {
+        if (character->isYou()) {
+            character->setColor(settings.color);
+        } else if (character->isNpc() && settings.npcColorOverride) {
+            if (character->getColor() != settings.npcColor) {
+                m_colorGenerator.releaseColor(character->getColor());
+            }
+            character->setColor(settings.npcColor);
+        }
+    }
+    characterChanged(true);
 }

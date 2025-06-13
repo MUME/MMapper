@@ -221,7 +221,6 @@ ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
 ConstString KEY_CHECK_FOR_UPDATE = "Check for update";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
-ConstString KEY_COLOR = "color";
 ConstString KEY_COLUMNS = "Columns";
 ConstString KEY_COMMAND_PREFIX_CHAR = "Command prefix character";
 ConstString KEY_CONNECTION_NORMAL_COLOR = "Connection normal color";
@@ -236,6 +235,11 @@ ConstString KEY_EMOJI_DECODE = "decode emoji";
 ConstString KEY_EMULATED_EXITS = "Emulated Exits";
 ConstString KEY_EXTERNAL_EDITOR_COMMAND = "External editor command";
 ConstString KEY_FILE_NAME = "File name";
+ConstString KEY_GROUP_YOUR_COLOR = "color";
+ConstString KEY_GROUP_NPC_COLOR = "npc color";
+ConstString KEY_GROUP_NPC_COLOR_OVERRIDE = "npc color override";
+ConstString KEY_GROUP_NPC_SORT_BOTTOM = "npc sort bottom";
+ConstString KEY_GROUP_NPC_HIDE = "npc hide";
 ConstString KEY_AUTO_LOG = "Auto log";
 ConstString KEY_AUTO_LOG_ASK_DELETE = "Auto log ask before deleting";
 ConstString KEY_AUTO_LOG_CLEANUP_STRATEGY = "Auto log cleanup strategy";
@@ -684,7 +688,11 @@ void Configuration::PathMachineSettings::read(const QSettings &conf)
 
 void Configuration::GroupManagerSettings::read(const QSettings &conf)
 {
-    color = QColor(conf.value(KEY_COLOR, "#FFFF00").toString());
+    color = QColor(conf.value(KEY_GROUP_YOUR_COLOR, "#FFFF00").toString());
+    npcColor = QColor(conf.value(KEY_GROUP_NPC_COLOR, QColor(Qt::lightGray)).toString());
+    npcColorOverride = conf.value(KEY_GROUP_NPC_COLOR_OVERRIDE, false).toBool();
+    npcHide = conf.value(KEY_GROUP_NPC_HIDE, false).toBool();
+    npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -848,7 +856,11 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
 
 void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_COLOR, color.name());
+    conf.setValue(KEY_GROUP_YOUR_COLOR, color.name());
+    conf.setValue(KEY_GROUP_NPC_COLOR, npcColor);
+    conf.setValue(KEY_GROUP_NPC_COLOR_OVERRIDE, npcColorOverride);
+    conf.setValue(KEY_GROUP_NPC_HIDE, npcHide);
+    conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

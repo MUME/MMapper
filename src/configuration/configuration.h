@@ -285,6 +285,10 @@ public:
     struct NODISCARD GroupManagerSettings final
     {
         QColor color;
+        QColor npcColor;
+        bool npcColorOverride = false;
+        bool npcSortBottom = false;
+        bool npcHide = false;
 
     private:
         SUBGROUP();

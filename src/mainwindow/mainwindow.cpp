@@ -1391,6 +1391,10 @@ void MainWindow::slot_onPreferences()
             &ConfigDialog::sig_graphicsSettingsChanged,
             m_mapWindow,
             &MapWindow::slot_graphicsSettingsChanged);
+    connect(m_configDialog.get(),
+            &ConfigDialog::sig_groupSettingsChanged,
+            m_groupManager,
+            &Mmapper2Group::slot_groupSettingsChanged);
     m_configDialog->show();
 }
 

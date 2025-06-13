@@ -6,7 +6,7 @@
 
 #include "../global/Badge.h"
 #include "../global/RuleOf5.h"
-#include "../map/mmapper2room.h"
+#include "../global/hash.h"
 #include "../map/roomid.h"
 #include "mmapper2character.h"
 
@@ -40,6 +40,12 @@ struct NODISCARD GroupId final : public TaggedInt<GroupId, tags::GroupIdTag, uin
 static_assert(sizeof(GroupId) == sizeof(uint32_t));
 static constexpr const GroupId INVALID_GROUPID{UINT_MAX};
 static_assert(GroupId{} == INVALID_GROUPID);
+
+template<>
+struct std::hash<GroupId>
+{
+    std::size_t operator()(const GroupId id) const noexcept { return numeric_hash(id.asUint32()); }
+};
 
 // TODO: make std::vector private
 using GroupVector = std::vector<SharedGroupChar>;

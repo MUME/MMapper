@@ -83,10 +83,10 @@ signals:
     void sig_log(const QString &, const QString &);
     // MapCanvas::requestUpdate (via MainWindow)
     void sig_updateMapCanvas(); // redraw the opengl screen
-
     // GroupWidget::updateLabels (via GroupWidget)
     void sig_updateWidget(); // update group widget
 
 public slots:
     void slot_parseGmcpInput(const GmcpMessage &msg);
+    void slot_groupSettingsChanged();
 };

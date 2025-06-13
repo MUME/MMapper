@@ -459,6 +459,8 @@ set(mmapper_SRCS
     preferences/generalpage.h
     preferences/graphicspage.cpp
     preferences/graphicspage.h
+    preferences/grouppage.cpp
+    preferences/grouppage.h
     preferences/mumeprotocolpage.cpp
     preferences/mumeprotocolpage.h
     preferences/parserpage.cpp
@@ -561,6 +563,7 @@ set(mmapper_UIS
     preferences/clientpage.ui
     preferences/generalpage.ui
     preferences/graphicspage.ui
+    preferences/grouppage.ui
     preferences/mumeprotocolpage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui

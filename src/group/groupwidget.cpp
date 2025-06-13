@@ -6,8 +6,6 @@
 
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
-#include "../global/AnsiTextUtils.h"
-#include "../map/room.h"
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
@@ -16,17 +14,22 @@
 #include "mmapper2group.h"
 
 #include <map>
+#include <vector>
 
 #include <QAction>
+#include <QDebug>
 #include <QHeaderView>
 #include <QMessageLogContext>
 #include <QString>
+#include <QStringList>
 #include <QStyledItemDelegate>
 #include <QtWidgets>
 
 static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
               "# of columns");
+
+static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
 namespace { // anonymous
 
@@ -70,6 +73,43 @@ NODISCARD static auto &getImage(const QString &filename, const bool invert)
     return g_groupImageCache.getImage(filename, invert);
 }
 } // namespace
+
+GroupProxyModel::GroupProxyModel(QObject *const parent)
+    : QSortFilterProxyModel(parent)
+{}
+
+GroupProxyModel::~GroupProxyModel() = default;
+
+void GroupProxyModel::refresh()
+{
+    // Triggers re-filter and re-sort
+    invalidate();
+}
+
+SharedGroupChar GroupProxyModel::getCharacterFromSource(const QModelIndex &source_index) const
+{
+    const GroupModel *srcModel = qobject_cast<const GroupModel *>(sourceModel());
+    if (!srcModel || !source_index.isValid()) {
+        return nullptr;
+    }
+
+    return srcModel->getCharacter(source_index.row());
+}
+
+bool GroupProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
+{
+    if (!getConfig().groupManager.npcHide) {
+        return true;
+    }
+
+    QModelIndex sourceIndex = sourceModel()->index(source_row, 0, source_parent);
+    SharedGroupChar character = getCharacterFromSource(sourceIndex);
+    if (character && character->isNpc()) {
+        return false;
+    }
+
+    return true;
+}
 
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
@@ -121,7 +161,7 @@ void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
     painter.restore();
 }
 
-GroupDelegate::GroupDelegate(QObject *parent)
+GroupDelegate::GroupDelegate(QObject *const parent)
     : QStyledItemDelegate(parent)
 {}
 
@@ -136,7 +176,11 @@ void GroupDelegate::paint(QPainter *const painter,
         stateData.paint(painter, option.rect);
 
     } else {
-        QStyledItemDelegate::paint(painter, option, index);
+        QStyleOptionViewItem opt = option;
+        opt.state &= ~QStyle::State_HasFocus;
+        opt.state &= ~QStyle::State_Selected;
+
+        QStyledItemDelegate::paint(painter, opt, index);
     }
 }
 
@@ -153,11 +197,101 @@ QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIn
     return QStyledItemDelegate::sizeHint(option, index);
 }
 
-GroupModel::GroupModel(MapData *const md, Mmapper2Group *const group, QObject *const parent)
+GroupModel::GroupModel(QObject *const parent)
     : QAbstractTableModel(parent)
-    , m_map(md)
-    , m_group(group)
 {}
+
+void GroupModel::setCharacters(const GroupVector &newGameChars)
+{
+    std::unordered_set<GroupId> newGameCharIds;
+    newGameCharIds.reserve(newGameChars.size());
+    for (const auto &gameChar : newGameChars) {
+        if (gameChar) {
+            newGameCharIds.insert(gameChar->getId());
+        }
+    }
+
+    GroupVector resultingCharacterList;
+    resultingCharacterList.reserve(m_characters.size() + newGameChars.size());
+
+    // Temporary vectors to hold truly new players, NPCs, and all truly new characters
+    GroupVector trulyNewPlayers;
+    trulyNewPlayers.reserve(newGameChars.size());
+    GroupVector trulyNewNpcs;
+    trulyNewNpcs.reserve(newGameChars.size());
+    GroupVector allTrulyNewCharsInOriginalOrder;
+    allTrulyNewCharsInOriginalOrder.reserve(newGameChars.size());
+
+    // Preserve existing characters
+    std::unordered_set<GroupId> existingIds;
+    existingIds.reserve(m_characters.size());
+    for (const auto &existingChar : m_characters) {
+        if (existingChar) {
+            existingIds.insert(existingChar->getId());
+            if (newGameCharIds.count(existingChar->getId())) {
+                resultingCharacterList.push_back(existingChar);
+            }
+        }
+    }
+
+    // Identify truly new characters and categorize them as NPC or player
+    for (const auto &gameChar : newGameChars) {
+        if (gameChar) {
+            if (existingIds.find(gameChar->getId()) == existingIds.end()) {
+                allTrulyNewCharsInOriginalOrder.push_back(gameChar);
+                if (gameChar->isNpc()) {
+                    trulyNewNpcs.push_back(gameChar);
+                } else {
+                    trulyNewPlayers.push_back(gameChar);
+                }
+            }
+        }
+    }
+
+    // Insert the newly identified characters into the resulting list based on configuration.
+    if (getConfig().groupManager.npcSortBottom) {
+        // Find the insertion point for new players: before the first NPC in the preserved list.
+        auto itPlayerInsertPos = resultingCharacterList.begin();
+        while (itPlayerInsertPos != resultingCharacterList.end()) {
+            if (*itPlayerInsertPos && (*itPlayerInsertPos)->isNpc()) {
+                break;
+            }
+            ++itPlayerInsertPos;
+        }
+
+        // Insert truly new players at the determined position.
+        if (!trulyNewPlayers.empty()) {
+            resultingCharacterList.insert(itPlayerInsertPos,
+                                          trulyNewPlayers.begin(),
+                                          trulyNewPlayers.end());
+        }
+        // Insert truly new NPCs at the end of the list.
+        if (!trulyNewNpcs.empty()) {
+            resultingCharacterList.insert(resultingCharacterList.end(),
+                                          trulyNewNpcs.begin(),
+                                          trulyNewNpcs.end());
+        }
+    } else {
+        // If no special NPC sorting, just append all truly new characters in their original order.
+        if (!allTrulyNewCharsInOriginalOrder.empty()) {
+            resultingCharacterList.insert(resultingCharacterList.end(),
+                                          allTrulyNewCharsInOriginalOrder.begin(),
+                                          allTrulyNewCharsInOriginalOrder.end());
+        }
+    }
+
+    beginResetModel();
+    m_characters = std::move(resultingCharacterList);
+    endResetModel();
+}
+
+SharedGroupChar GroupModel::getCharacter(int row) const
+{
+    if (row >= 0 && row < static_cast<int>(m_characters.size())) {
+        return m_characters.at(static_cast<size_t>(row));
+    }
+    return nullptr;
+}
 
 void GroupModel::resetModel()
 {
@@ -167,11 +301,7 @@ void GroupModel::resetModel()
 
 int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
-    if (auto group = m_group) {
-        auto selection = group->selectAll();
-        return static_cast<int>(selection.size());
-    }
-    return 0;
+    return static_cast<int>(m_characters.size());
 }
 
 int GroupModel::columnCount(const QModelIndex & /* parent */) const
@@ -287,22 +417,20 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         }
         break;
 
-    case Qt::ToolTipRole:
+    case Qt::ToolTipRole: {
+        const auto getRatioTooltip = [&](int numerator, int denomenator) -> QVariant {
+            if (character.getType() == CharacterTypeEnum::NPC)
+                return QVariant();
+            return calculateRatio(numerator, denomenator, character.getType());
+        };
+
         switch (column) {
         case ColumnTypeEnum::HP_PERCENT:
-            if (character.getType() == CharacterTypeEnum::NPC)
-                break;
-            return calculateRatio(character.getHits(), character.getMaxHits(), character.getType());
+            return getRatioTooltip(character.getHits(), character.getMaxHits());
         case ColumnTypeEnum::MANA_PERCENT:
-            if (character.getType() == CharacterTypeEnum::NPC)
-                break;
-            return calculateRatio(character.getMana(), character.getMaxMana(), character.getType());
+            return getRatioTooltip(character.getMana(), character.getMaxMana());
         case ColumnTypeEnum::MOVES_PERCENT:
-            if (character.getType() == CharacterTypeEnum::NPC)
-                break;
-            return calculateRatio(character.getMoves(),
-                                  character.getMaxMoves(),
-                                  character.getType());
+            return getRatioTooltip(character.getMoves(), character.getMaxMoves());
         case ColumnTypeEnum::STATE: {
             QString prettyName = getPrettyName(character.getPosition());
             for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
@@ -322,6 +450,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
             break;
         }
         break;
+    }
 
     default:
         break;
@@ -332,22 +461,16 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 
 QVariant GroupModel::data(const QModelIndex &index, int role) const
 {
-    QVariant data = QVariant();
     if (!index.isValid()) {
-        return data;
+        return QVariant();
     }
 
-    if (auto group = m_group) {
-        auto selection = group->selectAll();
-
-        // Map row to character
-        if (index.row() < static_cast<int>(selection.size())) {
-            const SharedGroupChar &character = selection.at(static_cast<size_t>(index.row()));
-            const auto column = static_cast<ColumnTypeEnum>(index.column());
-            data = dataForCharacter(character, column, role);
-        }
+    if (index.row() >= 0 && index.row() < static_cast<int>(m_characters.size())) {
+        const SharedGroupChar &character = m_characters.at(static_cast<size_t>(index.row()));
+        return dataForCharacter(character, static_cast<ColumnTypeEnum>(index.column()), role);
     }
-    return data;
+
+    return QVariant();
 }
 
 QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -383,27 +506,129 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
     return QVariant();
 }
 
-Qt::ItemFlags GroupModel::flags(const QModelIndex & /* index */) const
+Qt::ItemFlags GroupModel::flags(const QModelIndex &index) const
 {
-    return Qt::ItemFlag::NoItemFlags;
+    if (!index.isValid()) {
+        return Qt::NoItemFlags;
+    }
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+}
+
+Qt::DropActions GroupModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
+}
+
+QStringList GroupModel::mimeTypes() const
+{
+    QStringList types;
+    types << GROUP_MIME_TYPE;
+    return types;
+}
+
+QMimeData *GroupModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData *mimeDataObj = new QMimeData();
+    QByteArray encodedData;
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+    if (!indexes.isEmpty() && indexes.first().isValid()) {
+        stream << indexes.first().row();
+    }
+    mimeDataObj->setData(GROUP_MIME_TYPE, encodedData);
+    return mimeDataObj;
+}
+
+bool GroupModel::dropMimeData(
+    const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    if (action == Qt::IgnoreAction)
+        return true;
+    if (!data->hasFormat(GROUP_MIME_TYPE) || column > 0)
+        return false;
+
+    QByteArray encodedData = data->data(GROUP_MIME_TYPE);
+    QDataStream stream(&encodedData, QIODevice::ReadOnly);
+    if (stream.atEnd())
+        return false;
+    int sourceRow;
+    stream >> sourceRow;
+
+    int targetInsertionIndex;
+    if (parent.isValid()) {
+        targetInsertionIndex = parent.row();
+    } else if (row != -1) {
+        targetInsertionIndex = row;
+    } else {
+        targetInsertionIndex = static_cast<int>(m_characters.size());
+    }
+
+    if (sourceRow == targetInsertionIndex
+        || (sourceRow == targetInsertionIndex - 1 && targetInsertionIndex > sourceRow)) {
+        return false;
+    }
+
+    if (targetInsertionIndex < 0)
+        targetInsertionIndex = 0;
+    if (targetInsertionIndex > static_cast<int>(m_characters.size()))
+        targetInsertionIndex = static_cast<int>(m_characters.size());
+
+    if (!beginMoveRows(QModelIndex(), sourceRow, sourceRow, QModelIndex(), targetInsertionIndex)) {
+        return false;
+    }
+
+    SharedGroupChar movedChar = m_characters[static_cast<size_t>(sourceRow)];
+    m_characters.erase(m_characters.begin() + sourceRow);
+
+    int actualInsertionIdx = targetInsertionIndex;
+    if (sourceRow < targetInsertionIndex) {
+        actualInsertionIdx--;
+    }
+
+    if (actualInsertionIdx < 0)
+        actualInsertionIdx = 0;
+    if (actualInsertionIdx > static_cast<int>(m_characters.size()))
+        actualInsertionIdx = static_cast<int>(m_characters.size());
+
+    m_characters.insert(m_characters.begin() + actualInsertionIdx, movedChar);
+
+    endMoveRows();
+    return true;
 }
 
 GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget *const parent)
     : QWidget(parent)
     , m_group(group)
     , m_map(md)
-    , m_model(md, group, this)
+    , m_model(this)
 {
+    if (m_group) {
+        m_model.setCharacters(m_group->selectAll());
+    } else {
+        m_model.setCharacters({});
+    }
+
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
     m_table = new QTableView(this);
-    m_table->setSelectionMode(QAbstractItemView::NoSelection);
+    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    m_table->setModel(&m_model);
+
+    m_proxyModel = new GroupProxyModel(this);
+    m_proxyModel->setSourceModel(&m_model);
+    m_table->setModel(m_proxyModel);
+
+    m_table->setDragEnabled(true);
+    m_table->setAcceptDrops(true);
+    m_table->setDragDropMode(QAbstractItemView::InternalMove);
+    m_table->setDefaultDropAction(Qt::MoveAction);
+    m_table->setDropIndicatorShown(true);
+
     m_table->setItemDelegate(new GroupDelegate(this));
     layout->addWidget(m_table);
 
@@ -443,32 +668,31 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
     });
 
-    connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &index) {
-        if (!index.isValid()) {
+    connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
+        if (!proxyIndex.isValid()) {
             return;
         }
 
-        // Identify target
-        if (auto *const g = m_group) {
-            auto selection = g->selectAll();
-            // Map row to character
-            if (index.row() < static_cast<int>(selection.size())) {
-                selectedCharacter = selection.at(static_cast<size_t>(index.row()));
+        QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
 
-                // Build Context menu
-                m_center->setText(
-                    QString("&Center on %1").arg(selectedCharacter->getName().toQString()));
-                m_recolor->setText(
-                    QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
+        if (!sourceIndex.isValid()) {
+            return;
+        }
 
-                m_center->setDisabled(!selectedCharacter->isYou()
-                                      && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
+        selectedCharacter = m_model.getCharacter(sourceIndex.row());
 
-                QMenu contextMenu(tr("Context menu"), this);
-                contextMenu.addAction(m_center);
-                contextMenu.addAction(m_recolor);
-                contextMenu.exec(QCursor::pos());
-            }
+        if (selectedCharacter) {
+            // Build Context menu
+            m_center->setText(
+                QString("&Center on %1").arg(selectedCharacter->getName().toQString()));
+            m_recolor->setText(QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
+            m_center->setDisabled(!selectedCharacter->isYou()
+                                  && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
+
+            QMenu contextMenu(tr("Context menu"), this);
+            contextMenu.addAction(m_center);
+            contextMenu.addAction(m_recolor);
+            contextMenu.exec(QCursor::pos());
         }
     });
 
@@ -492,13 +716,20 @@ QSize GroupWidget::sizeHint() const
 
 void GroupWidget::slot_updateLabels()
 {
-    m_model.resetModel();
+    if (m_group) {
+        m_model.setCharacters(m_group->selectAll());
+    } else {
+        m_model.setCharacters({});
+    }
+
+    if (m_proxyModel) {
+        m_proxyModel->refresh();
+    }
 
     // Hide unnecessary columns like mana if everyone is a zorc/troll
     const auto one_character_had_mana = [this]() -> bool {
-        auto selection = m_group->selectAll();
-        for (const auto &character : selection) {
-            if (character->getMana() > 0) {
+        for (const auto &character : m_model.getCharacters()) {
+            if (character && character->getMana() > 0) {
                 return true;
             }
         }
