@@ -32,6 +32,16 @@ jobs:
           qt5keychain-dev libgl1-mesa-dev build-essential mold git \
           zlib1g-dev libssl-dev wget zsync fuse file cmake
 
+    - name: Download linuxdeploy
+      run: |
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+
+    - name: Download linuxdeploy-plugin-qt
+      run: |
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy-plugin-qt-x86_64.AppImage
+
     - name: Build AppImage
       run: |
         mkdir -p build && cd build
@@ -49,14 +59,16 @@ jobs:
         # Extract version from CPackConfig.cmake
         export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2)
 
-        # Download and run linuxdeployqt
-        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-        chmod a+x linuxdeployqt-continuous-x86_64.AppImage
-        ./linuxdeployqt-continuous-x86_64.AppImage \
-          appdir/usr/share/applications/org.mume.MMapper.desktop \
-          -updateinformation="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync" \
-          -appimage
-        rm linuxdeployqt-continuous-x86_64.AppImage
+        # Make sure the plugin can be found, and set UPDATE_INFORMATION
+        export PATH=$PATH:$(pwd)/..
+        export UPDATE_INFORMATION="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync"
+
+        # Run linuxdeploy
+        ../linuxdeploy-x86_64.AppImage --appdir appdir --output appimage \
+          --executable appdir/usr/bin/mmapper \
+          --desktop-file appdir/usr/share/applications/org.mume.MMapper.desktop \
+          --icon-file appdir/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png \
+          --plugin qt
 
     - name: Generate SHA256 checksum for AppImage
       run: |
@@ -65,7 +77,7 @@ jobs:
         export FILE=$(find . -type f -name MMapper*.AppImage | sed 's#./##')
         sha256sum $FILE > $FILE.sha256
         mkdir ${{ github.workspace }}/artifact
-        mv *.AppImage* ${{ github.workspace }}/artifact
+        mv MMapper*.AppImage* ${{ github.workspace }}/artifact
 
     - name: Get Linux package file base name
       id: get_linux_package_name
