@@ -1,4 +1,4 @@
-## MMapper 25.06.0 (June 1, 2025)
+## MMapper 25.06.0 (June 11, 2025)
 
 ### New Features:
 
