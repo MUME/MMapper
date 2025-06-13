@@ -609,7 +609,7 @@ public:
 
     public:
         void operator++(int) = delete;
-        ALLOW_DISCARD ConstIterator operator++()
+        ALLOW_DISCARD ConstIterator &operator++()
         {
             if (m_pos >= getSelf().size()) {
                 throw std::runtime_error("invalid increment");
