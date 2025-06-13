@@ -22,18 +22,6 @@ class NODISCARD SimpleFont3dMesh : public SimpleMesh<VertexType_, FontShader>
 public:
     using Base = SimpleMesh<VertexType_, FontShader>;
 
-    explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
-                              const std::shared_ptr<FontShader> &sharedProgram)
-        : Base(sharedFunctions, sharedProgram)
-    {}
-
-    explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
-                              const std::shared_ptr<FontShader> &sharedProgram,
-                              const DrawModeEnum mode,
-                              const std::vector<VertexType_> &verts)
-        : Base(sharedFunctions, sharedProgram, mode, verts)
-    {}
-
 private:
     struct NODISCARD Attribs final
     {
@@ -53,8 +41,23 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+private:
+    std::optional<Attribs> m_boundAttribs;
 
+public:
+    explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
+                              const std::shared_ptr<FontShader> &sharedProgram)
+        : Base(sharedFunctions, sharedProgram)
+    {}
+
+    explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
+                              const std::shared_ptr<FontShader> &sharedProgram,
+                              const DrawModeEnum mode,
+                              const std::vector<VertexType_> &verts)
+        : Base(sharedFunctions, sharedProgram, mode, verts)
+    {}
+
+private:
     void virt_bind() override
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
@@ -71,23 +74,23 @@ private:
         gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
         gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(attribs.vertPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
         Functions &gl = Base::m_functions;
-        const auto attribs = boundAttribs.value();
+        const auto attribs = m_boundAttribs.value();
         gl.glDisableVertexAttribArray(attribs.basePos);
         gl.glDisableVertexAttribArray(attribs.colorPos);
         gl.glDisableVertexAttribArray(attribs.texPos);
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 };
 

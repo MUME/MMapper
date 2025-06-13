@@ -54,25 +54,25 @@ protected:
     class NODISCARD AttribUnbinder final
     {
     private:
-        SimpleMesh *self = nullptr;
+        SimpleMesh *m_self = nullptr;
 
     public:
         AttribUnbinder() = delete;
         DEFAULT_MOVES_DELETE_COPIES(AttribUnbinder);
 
     public:
-        explicit AttribUnbinder(SimpleMesh &_self)
-            : self{&_self}
+        explicit AttribUnbinder(SimpleMesh &self)
+            : m_self{&self}
         {}
         ~AttribUnbinder()
         {
-            if (self != nullptr) {
-                self->unbindAttribs();
+            if (m_self != nullptr) {
+                m_self->unbindAttribs();
             }
         }
     };
 
-    AttribUnbinder bindAttribs()
+    NODISCARD AttribUnbinder bindAttribs()
     {
         virt_bind();
         return AttribUnbinder{*this};

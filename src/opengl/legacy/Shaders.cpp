@@ -65,32 +65,32 @@ NODISCARD static const std::shared_ptr<T> &getInitialized(std::shared_ptr<T> &sh
 
 const std::shared_ptr<AColorPlainShader> &ShaderPrograms::getPlainAColorShader()
 {
-    return getInitialized<AColorPlainShader>(aColorShader, getFunctions(), "plain/acolor");
+    return getInitialized<AColorPlainShader>(m_aColorShader, getFunctions(), "plain/acolor");
 }
 
 const std::shared_ptr<UColorPlainShader> &ShaderPrograms::getPlainUColorShader()
 {
-    return getInitialized<UColorPlainShader>(uColorShader, getFunctions(), "plain/ucolor");
+    return getInitialized<UColorPlainShader>(m_uColorShader, getFunctions(), "plain/ucolor");
 }
 
 const std::shared_ptr<AColorTexturedShader> &ShaderPrograms::getTexturedAColorShader()
 {
-    return getInitialized<AColorTexturedShader>(aTexturedShader, getFunctions(), "tex/acolor");
+    return getInitialized<AColorTexturedShader>(m_aTexturedShader, getFunctions(), "tex/acolor");
 }
 
 const std::shared_ptr<UColorTexturedShader> &ShaderPrograms::getTexturedUColorShader()
 {
-    return getInitialized<UColorTexturedShader>(uTexturedShader, getFunctions(), "tex/ucolor");
+    return getInitialized<UColorTexturedShader>(m_uTexturedShader, getFunctions(), "tex/ucolor");
 }
 
 const std::shared_ptr<FontShader> &ShaderPrograms::getFontShader()
 {
-    return getInitialized<FontShader>(font, getFunctions(), "font");
+    return getInitialized<FontShader>(m_font, getFunctions(), "font");
 }
 
 const std::shared_ptr<PointShader> &ShaderPrograms::getPointShader()
 {
-    return getInitialized<PointShader>(point, getFunctions(), "point");
+    return getInitialized<PointShader>(m_point, getFunctions(), "point");
 }
 
 } // namespace Legacy

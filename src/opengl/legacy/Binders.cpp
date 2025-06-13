@@ -9,42 +9,42 @@
 
 namespace Legacy {
 
-BlendBinder::BlendBinder(Functions &in_functions, const BlendModeEnum in_blend)
-    : functions{in_functions}
-    , blend{in_blend}
+BlendBinder::BlendBinder(Functions &functions, const BlendModeEnum blend)
+    : m_functions{functions}
+    , m_blend{blend}
 {
-    switch (blend) {
+    switch (m_blend) {
     case BlendModeEnum::NONE:
-        functions.glDisable(GL_BLEND);
+        m_functions.glDisable(GL_BLEND);
         break;
     case BlendModeEnum::TRANSPARENCY:
-        functions.glEnable(GL_BLEND);
-        functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        m_functions.glEnable(GL_BLEND);
+        m_functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
     case BlendModeEnum::MODULATE:
-        functions.glEnable(GL_BLEND);
-        functions.glBlendFuncSeparate(GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
+        m_functions.glEnable(GL_BLEND);
+        m_functions.glBlendFuncSeparate(GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
         break;
     }
 }
 
 BlendBinder::~BlendBinder()
 {
-    switch (blend) {
+    switch (m_blend) {
     case BlendModeEnum::NONE:
     case BlendModeEnum::TRANSPARENCY:
         break;
     case BlendModeEnum::MODULATE:
-        functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        m_functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
     }
-    functions.glDisable(GL_BLEND);
+    m_functions.glDisable(GL_BLEND);
 }
 
-CullingBinder::CullingBinder(Functions &in_functions, const CullingEnum &in_culling)
-    : functions{in_functions}
+CullingBinder::CullingBinder(Functions &functions, const CullingEnum &culling)
+    : m_functions{functions}
 {
-    switch (in_culling) {
+    switch (culling) {
     case CullingEnum::DISABLED:
         disable();
         break;
@@ -67,82 +67,81 @@ CullingBinder::~CullingBinder()
 
 void CullingBinder::enable(const GLenum mode)
 {
-    functions.glCullFace(mode);
-    functions.glEnable(GL_CULL_FACE);
+    m_functions.glCullFace(mode);
+    m_functions.glEnable(GL_CULL_FACE);
 }
 
 void CullingBinder::disable()
 {
-    functions.glDisable(GL_CULL_FACE);
-    functions.glCullFace(GL_BACK);
+    m_functions.glDisable(GL_CULL_FACE);
+    m_functions.glCullFace(GL_BACK);
 }
 
-DepthBinder::DepthBinder(Functions &in_functions, const DepthBinder::OptDepth &in_depth)
-    : functions{in_functions}
-    , depth{in_depth}
+DepthBinder::DepthBinder(Functions &functions, const DepthBinder::OptDepth &depth)
+    : m_functions{functions}
+    , m_depth{depth}
 {
-    if (depth) {
-        functions.glEnable(GL_DEPTH_TEST);
-        functions.glDepthFunc(static_cast<GLenum>(depth.value()));
+    if (m_depth.has_value()) {
+        m_functions.glEnable(GL_DEPTH_TEST);
+        m_functions.glDepthFunc(static_cast<GLenum>(m_depth.value()));
     } else {
-        functions.glDisable(GL_DEPTH_TEST);
+        m_functions.glDisable(GL_DEPTH_TEST);
     }
 }
 
 DepthBinder::~DepthBinder()
 {
-    if (depth) {
-        functions.glDisable(GL_DEPTH_TEST);
-        functions.glDepthFunc(GL_LESS);
+    if (m_depth.has_value()) {
+        m_functions.glDisable(GL_DEPTH_TEST);
+        m_functions.glDepthFunc(GL_LESS);
     }
 }
 
-LineParamsBinder::LineParamsBinder(Functions &in_functions, const LineParams &in_lineParams)
-    : functions{in_functions}
-    , lineParams{in_lineParams}
+LineParamsBinder::LineParamsBinder(Functions &functions, const LineParams &lineParams)
+    : m_functions{functions}
+    , m_lineParams{lineParams}
 {
-    functions.glLineWidth(lineParams.width);
+    m_functions.glLineWidth(m_lineParams.width);
 }
 
 LineParamsBinder::~LineParamsBinder()
 {
-    const auto &width = lineParams.width;
+    const auto &width = m_lineParams.width;
     const float ONE = 1.f;
     static_assert(sizeof(ONE) == sizeof(width));
     if (!utils::equals(&width, &ONE)) {
-        functions.glLineWidth(ONE);
+        m_functions.glLineWidth(ONE);
     }
 }
 
-PointSizeBinder::PointSizeBinder(Functions &in_functions, const std::optional<GLfloat> &in_pointSize)
-    : functions{in_functions}
-    , optPointSize{in_pointSize}
+PointSizeBinder::PointSizeBinder(Functions &functions, const std::optional<GLfloat> &pointSize)
+    : m_functions{functions}
+    , m_optPointSize{pointSize}
 {
-    if (optPointSize.has_value()) {
-        functions.enableProgramPointSize(true);
+    if (m_optPointSize.has_value()) {
+        m_functions.enableProgramPointSize(true);
     }
 }
 
 PointSizeBinder::~PointSizeBinder()
 {
-    if (optPointSize.has_value()) {
-        functions.enableProgramPointSize(false);
+    if (m_optPointSize.has_value()) {
+        m_functions.enableProgramPointSize(false);
     }
 }
 
-TexturesBinder::TexturesBinder(const TexLookup &in_lookup,
-                               const TexturesBinder::Textures &in_textures)
-    : lookup{in_lookup}
-    , textures{in_textures}
+TexturesBinder::TexturesBinder(const TexLookup &lookup, const TexturesBinder::Textures &textures)
+    : m_lookup{lookup}
+    , m_textures{textures}
 {
-    for (size_t i = 0, size = textures.size(); i < size; ++i) {
-        const auto id = textures[i];
+    for (size_t i = 0, size = m_textures.size(); i < size; ++i) {
+        const auto id = m_textures[i];
         if (id == INVALID_MM_TEXTURE_ID) {
             continue;
         }
 
         // note: pointer to shared pointer
-        if (const SharedMMTexture *const pShared = lookup.find(id)) {
+        if (const SharedMMTexture *const pShared = m_lookup.find(id)) {
             if (const SharedMMTexture &tex = *pShared) {
                 tex->bind(static_cast<uint32_t>(i));
             }
@@ -152,14 +151,14 @@ TexturesBinder::TexturesBinder(const TexLookup &in_lookup,
 
 TexturesBinder::~TexturesBinder()
 {
-    for (size_t i = 0, size = textures.size(); i < size; ++i) {
-        const auto id = textures[i];
+    for (size_t i = 0, size = m_textures.size(); i < size; ++i) {
+        const auto id = m_textures[i];
         if (id == INVALID_MM_TEXTURE_ID) {
             continue;
         }
 
         // note: pointer to shared pointer
-        if (const SharedMMTexture *const pShared = lookup.find(id)) {
+        if (const SharedMMTexture *const pShared = m_lookup.find(id)) {
             if (const SharedMMTexture &tex = *pShared) {
                 tex->release(static_cast<uint32_t>(i));
             }
@@ -170,12 +169,12 @@ TexturesBinder::~TexturesBinder()
 RenderStateBinder::RenderStateBinder(Functions &functions,
                                      const TexLookup &texLookup,
                                      const GLRenderState &renderState)
-    : blendBinder{functions, renderState.blend}
-    , cullingBinder{functions, renderState.culling}
-    , depthBinder{functions, renderState.depth}
-    , lineParamsBinder{functions, renderState.lineParams}
-    , pointSizeBinder{functions, renderState.uniforms.pointSize}
-    , texturesBinder{texLookup, renderState.uniforms.textures}
+    : m_blendBinder{functions, renderState.blend}
+    , m_cullingBinder{functions, renderState.culling}
+    , m_depthBinder{functions, renderState.depth}
+    , m_lineParamsBinder{functions, renderState.lineParams}
+    , m_pointSizeBinder{functions, renderState.uniforms.pointSize}
+    , m_texturesBinder{texLookup, renderState.uniforms.textures}
 {}
 
 } // namespace Legacy

@@ -12,11 +12,11 @@ namespace Legacy {
 struct NODISCARD BlendBinder final
 {
 private:
-    Functions &functions;
-    const BlendModeEnum blend;
+    Functions &m_functions;
+    const BlendModeEnum m_blend;
 
 public:
-    explicit BlendBinder(Functions &in_functions, BlendModeEnum in_blend);
+    explicit BlendBinder(Functions &functions, BlendModeEnum blend);
     ~BlendBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(BlendBinder);
 };
@@ -24,10 +24,10 @@ public:
 struct NODISCARD CullingBinder final
 {
 private:
-    Functions &functions;
+    Functions &m_functions;
 
 public:
-    explicit CullingBinder(Functions &in_functions, const CullingEnum &in_culling);
+    explicit CullingBinder(Functions &functions, const CullingEnum &culling);
     ~CullingBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(CullingBinder);
 
@@ -42,11 +42,11 @@ public:
     using OptDepth = GLRenderState::OptDepth;
 
 private:
-    Functions &functions;
-    const OptDepth &depth;
+    Functions &m_functions;
+    const OptDepth &m_depth;
 
 public:
-    explicit DepthBinder(Functions &in_functions, const OptDepth &in_depth);
+    explicit DepthBinder(Functions &functions, const OptDepth &depth);
     ~DepthBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(DepthBinder);
 };
@@ -54,11 +54,11 @@ public:
 struct NODISCARD LineParamsBinder
 {
 private:
-    Functions &functions;
-    const LineParams &lineParams;
+    Functions &m_functions;
+    const LineParams &m_lineParams;
 
 public:
-    explicit LineParamsBinder(Functions &in_functions, const LineParams &in_lineParams);
+    explicit LineParamsBinder(Functions &functions, const LineParams &lineParams);
     ~LineParamsBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(LineParamsBinder);
 };
@@ -66,11 +66,11 @@ public:
 struct NODISCARD PointSizeBinder
 {
 private:
-    Functions &functions;
-    const std::optional<GLfloat> &optPointSize;
+    Functions &m_functions;
+    const std::optional<GLfloat> &m_optPointSize;
 
 public:
-    explicit PointSizeBinder(Functions &in_functions, const std::optional<GLfloat> &in_pointSize);
+    explicit PointSizeBinder(Functions &functions, const std::optional<GLfloat> &pointSize);
     ~PointSizeBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(PointSizeBinder);
 };
@@ -81,11 +81,11 @@ public:
     using Textures = GLRenderState::Textures;
 
 private:
-    const TexLookup &lookup;
-    const Textures &textures;
+    const TexLookup &m_lookup;
+    const Textures &m_textures;
 
 public:
-    explicit TexturesBinder(const TexLookup &in_lookup, const Textures &in_textures);
+    explicit TexturesBinder(const TexLookup &lookup, const Textures &textures);
     ~TexturesBinder();
     DELETE_CTORS_AND_ASSIGN_OPS(TexturesBinder);
 };
@@ -93,12 +93,12 @@ public:
 struct NODISCARD RenderStateBinder final
 {
 private:
-    BlendBinder blendBinder;
-    CullingBinder cullingBinder;
-    DepthBinder depthBinder;
-    LineParamsBinder lineParamsBinder;
-    PointSizeBinder pointSizeBinder;
-    TexturesBinder texturesBinder;
+    BlendBinder m_blendBinder;
+    CullingBinder m_cullingBinder;
+    DepthBinder m_depthBinder;
+    LineParamsBinder m_lineParamsBinder;
+    PointSizeBinder m_pointSizeBinder;
+    TexturesBinder m_texturesBinder;
 
 public:
     explicit RenderStateBinder(Functions &functions,

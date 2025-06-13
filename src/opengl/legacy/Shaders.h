@@ -116,12 +116,12 @@ struct NODISCARD ShaderPrograms final
 {
 private:
     Functions &m_functions;
-    std::shared_ptr<AColorPlainShader> aColorShader;
-    std::shared_ptr<UColorPlainShader> uColorShader;
-    std::shared_ptr<AColorTexturedShader> aTexturedShader;
-    std::shared_ptr<UColorTexturedShader> uTexturedShader;
-    std::shared_ptr<FontShader> font;
-    std::shared_ptr<PointShader> point;
+    std::shared_ptr<AColorPlainShader> m_aColorShader;
+    std::shared_ptr<UColorPlainShader> m_uColorShader;
+    std::shared_ptr<AColorTexturedShader> m_aTexturedShader;
+    std::shared_ptr<UColorTexturedShader> m_uTexturedShader;
+    std::shared_ptr<FontShader> m_font;
+    std::shared_ptr<PointShader> m_point;
 
 public:
     explicit ShaderPrograms(Functions &functions)
@@ -136,12 +136,12 @@ private:
 public:
     void resetAll()
     {
-        aColorShader.reset();
-        uColorShader.reset();
-        aTexturedShader.reset();
-        uTexturedShader.reset();
-        font.reset();
-        point.reset();
+        m_aColorShader.reset();
+        m_uColorShader.reset();
+        m_aTexturedShader.reset();
+        m_uTexturedShader.reset();
+        m_font.reset();
+        m_point.reset();
     }
 
 public:

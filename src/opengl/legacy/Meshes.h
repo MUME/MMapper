@@ -35,7 +35,7 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+    std::optional<Attribs> m_boundAttribs;
 
     void virt_bind() override
     {
@@ -45,21 +45,21 @@ private:
         const auto attribs = Attribs::getLocations(Base::m_program);
         gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
 
-        auto &attribs = boundAttribs.value();
+        auto &attribs = m_boundAttribs.value();
         Functions &gl = Base::m_functions;
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 };
 
@@ -87,7 +87,7 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+    std::optional<Attribs> m_boundAttribs;
 
     void virt_bind() override
     {
@@ -100,22 +100,22 @@ private:
         gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
         gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
 
-        auto &attribs = boundAttribs.value();
+        auto &attribs = m_boundAttribs.value();
         Functions &gl = Base::m_functions;
         gl.glDisableVertexAttribArray(attribs.colorPos);
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 }; // namespace Legacy
 
@@ -142,7 +142,7 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+    std::optional<Attribs> m_boundAttribs;
 
     void virt_bind() override
     {
@@ -156,22 +156,22 @@ private:
         /* NOTE: OpenGL 2.x can't use GL_TEXTURE_2D_ARRAY. */
         gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
 
-        auto &attribs = boundAttribs.value();
+        auto &attribs = m_boundAttribs.value();
         Functions &gl = Base::m_functions;
         gl.glDisableVertexAttribArray(attribs.texPos);
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 };
 
@@ -200,7 +200,7 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+    std::optional<Attribs> m_boundAttribs;
 
     void virt_bind() override
     {
@@ -216,23 +216,23 @@ private:
         /* NOTE: OpenGL 2.x can't use GL_TEXTURE_2D_ARRAY. */
         gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
 
-        auto &attribs = boundAttribs.value();
+        auto &attribs = m_boundAttribs.value();
         Functions &gl = Base::m_functions;
         gl.glDisableVertexAttribArray(attribs.colorPos);
         gl.glDisableVertexAttribArray(attribs.texPos);
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 };
 
@@ -260,7 +260,7 @@ private:
         }
     };
 
-    std::optional<Attribs> boundAttribs;
+    std::optional<Attribs> m_boundAttribs;
 
     void virt_bind() override
     {
@@ -273,22 +273,22 @@ private:
         gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
         gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        boundAttribs = attribs;
+        m_boundAttribs = attribs;
     }
 
     void virt_unbind() override
     {
-        if (!boundAttribs) {
+        if (!m_boundAttribs) {
             assert(false);
             return;
         }
 
-        auto &attribs = boundAttribs.value();
+        auto &attribs = m_boundAttribs.value();
         Functions &gl = Base::m_functions;
         gl.glDisableVertexAttribArray(attribs.colorPos);
         gl.glDisableVertexAttribArray(attribs.vertPos);
         gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        boundAttribs.reset();
+        m_boundAttribs.reset();
     }
 };
 
