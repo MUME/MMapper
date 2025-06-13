@@ -57,7 +57,7 @@ apps:
 parts:
   mmapper:
     plugin: cmake
-    after: [desktop-qt5]
+    # after: [desktop-qt5] # Removed desktop-qt5
     source: .
     cmake-generator: Ninja
     cmake-parameters:
@@ -68,11 +68,11 @@ parts:
     build-packages:
       - build-essential
       - libssl-dev
-      - libqt5opengl5-dev
-      - libqt5websockets5-dev
-      - qt5keychain-dev
-      - qtbase5-dev
-      - qttools5-dev-tools
+      - libqt6opengl6-dev
+      - libqt6websockets6-dev
+      - qtkeychain-qt6-dev
+      - qt6-base-dev
+      - qt6-tools-dev # or qt6-tools-dev-tools, using qt6-tools-dev for now
       - zlib1g-dev
       - dpkg-dev
       - xz-utils
@@ -85,17 +85,17 @@ parts:
       - libgdk-pixbuf2.0-0
       - libgl1-mesa-dri
       - libglu1-mesa
-      - libqt5gui5
-      - libqt5svg5
-      - libqt5websockets5
-      - libqt5keychain1
+      - libqt6gui6
+      - libqt6svg6
+      - libqt6websockets6
+      - libqt6keychain1 # Assuming this is the correct Qt6 version
       - libxkbcommon0
       - light-themes
       - locales-all
       - shared-mime-info
       - fonts-ubuntu
-      - qt5-gtk-platformtheme
-      - qtwayland5
+      - qt6-gtk-platformtheme # Assuming this is the correct package name
+      - qt6-qpa-plugins # For Wayland support with Qt6, might need qt6-wayland
       - xdg-user-dirs
     override-pull: |
       craftctl default
@@ -111,7 +111,7 @@ parts:
 
   desktop-settings-packages:
     plugin: nil
-    after: [desktop-qt5]
+    # after: [desktop-qt5] # Removed desktop-qt5
     build-packages:
       - libglib2.0-bin
     stage-packages:
@@ -127,10 +127,10 @@ parts:
       set -eux
       glib-compile-schemas usr/share/glib-2.0/schemas
 
-  desktop-qt5:
-    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
-    source-subdir: qt
-    plugin: make
+  # desktop-qt5: # Removed this part
+  #   source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+  #   source-subdir: qt
+  #   plugin: make
 
   # This part removes all the files in this snap which already exist in
   # connected content and base snaps. Since these files will be available
@@ -140,6 +140,8 @@ parts:
   cleanup:
     after: # Make this part run last; list all your other parts here
       - mmapper
+      - desktop-settings-packages # Added as desktop-qt5 was removed
+      - desktop-settings-build # Added as desktop-qt5 was removed
     plugin: nil
     build-snaps: # List all content-snaps and base snaps you're using here
       - core22

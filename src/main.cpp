@@ -15,18 +15,16 @@
 #include <optional>
 
 #include <QPixmap>
-#include <QtCore>
-#include <QtWidgets>
+#include <QtCore> // For QDir, QFile, QStandardPaths, Qt enums, qInfo, etc.
+#include <QApplication> // For QApplication
+#include <QSurfaceFormat> // For QSurfaceFormat
 
 #ifdef WITH_DRMINGW
 #include <exchndl.h>
 #endif
 
-static void useHighDpi()
-{
-    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-}
+// Qt::AA_EnableHighDpiScaling and Qt::AA_UseHighDpiPixmaps are default in Qt6
+// and have been removed.
 
 static void setHighDpiScaleFactorRoundingPolicy()
 {
@@ -116,7 +114,8 @@ static void setSurfaceFormat()
 
 int main(int argc, char **argv)
 {
-    useHighDpi();
+    // Qt::AA_EnableHighDpiScaling and Qt::AA_UseHighDpiPixmaps are default in Qt6.
+    // High DPI scaling is enabled by default, so the call to useHighDpi() was removed.
     setHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {

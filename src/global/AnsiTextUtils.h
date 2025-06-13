@@ -1017,7 +1017,7 @@ void foreachAnsi(const QStringView line, Callback &&callback)
         if (!m.hasMatch()) {
             break;
         }
-        callback(m.capturedStart(), m.capturedRef());
+        callback(m.capturedStart(), m.captured());
         pos = m.capturedEnd();
     }
 }

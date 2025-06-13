@@ -12,9 +12,15 @@
 #include <QScrollBar>
 #include <QString>
 #include <QStyle>
-#include <QTextCursor>
+#include <QTextCursor> // Already in .h via specific include there or <QTextEdit>
 #include <QToolTip>
-#include <QtGui>
+// QtGui classes that were covered by #include <QtGui>
+#include <QFontMetrics>
+#include <QKeyEvent>
+#include <QTextFrameFormat>
+#include <QTextOption>
+// QtWidgets classes (QScrollBar already included via QTextBrowser indirectly)
+#include <QScrollBar> // Explicitly include for clarity, though often available via widgets
 
 namespace { // anonymous
 

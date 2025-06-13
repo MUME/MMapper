@@ -22,6 +22,7 @@
 #include <QPixmap>
 #include <QRegularExpression>
 #include <QResizeEvent>
+#include <QPainter> // Added for QPainter
 
 static constexpr int MAX_DESCRIPTION_WIDTH = 80;
 static constexpr int TOP_PADDING_LINES = 5; // Padding for the room title and description

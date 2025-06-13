@@ -36,11 +36,12 @@ if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
 
-set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL Test)
+# Qt6 components should be listed without the Qt6:: namespace prefix for find_package
+set(MMAPPER_QT6_COMPONENTS_NO_NS Core Widgets Network OpenGL OpenGLWidgets Test) # Added OpenGLWidgets
 if(WITH_WEBSOCKET)
-    list(APPEND MMAPPER_QT_COMPONENTS WebSockets)
+    list(APPEND MMAPPER_QT6_COMPONENTS_NO_NS WebSockets)
 endif()
-find_package(Qt5 COMPONENTS ${MMAPPER_QT_COMPONENTS} REQUIRED)
+find_package(Qt6 COMPONENTS ${MMAPPER_QT6_COMPONENTS_NO_NS} REQUIRED)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -50,15 +51,30 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-if(Qt5Core_FOUND)
-    if(Qt5Core_VERSION VERSION_LESS 5.15.0)
-        message(FATAL_ERROR "Minimum supported Qt version is 5.15")
+# Pass include directories directly to moc
+message(STATUS "Qt6Core_INCLUDE_DIRS: ${Qt6Core_INCLUDE_DIRS}")
+message(STATUS "Qt6Widgets_INCLUDE_DIRS: ${Qt6Widgets_INCLUDE_DIRS}")
+message(STATUS "Qt6Gui_INCLUDE_DIRS: ${Qt6Gui_INCLUDE_DIRS}")
+message(STATUS "Qt6OpenGL_INCLUDE_DIRS: ${Qt6OpenGL_INCLUDE_DIRS}")
+message(STATUS "Qt6OpenGLWidgets_INCLUDE_DIRS: ${Qt6OpenGLWidgets_INCLUDE_DIRS}") # Added for OpenGLWidgets
+
+set(CMAKE_AUTOMOC_MOC_OPTIONS "") # Initialize as empty list
+foreach(DIR ${Qt6Core_INCLUDE_DIRS} ${Qt6Widgets_INCLUDE_DIRS} ${Qt6Gui_INCLUDE_DIRS} ${Qt6OpenGL_INCLUDE_DIRS} ${Qt6OpenGLWidgets_INCLUDE_DIRS}) # Added OpenGLWidgets
+    if(DIR) # Ensure DIR is not empty, which can happen if a variable is empty
+        list(APPEND CMAKE_AUTOMOC_MOC_OPTIONS "-I${DIR}")
+    endif()
+endforeach()
+# message(STATUS "CMAKE_AUTOMOC_MOC_OPTIONS: ${CMAKE_AUTOMOC_MOC_OPTIONS}") # For debugging the list
+
+if(Qt6Core_FOUND)
+    if(Qt6Core_VERSION VERSION_LESS 6.2.0)
+        message(FATAL_ERROR "Minimum supported Qt version is 6.2.0")
     endif()
 endif()
 
 if(WITH_WEBSOCKET)
-    if(NOT Qt5WebSockets_FOUND)
-        message(FATAL_ERROR "Qt5 WebSockets module not found: use `-DWITH_WEBSOCKET=OFF` to build without WebSocket support")
+    if(NOT Qt6WebSockets_FOUND)
+        message(FATAL_ERROR "Qt6 WebSockets module not found: use `-DWITH_WEBSOCKET=OFF` to build without WebSocket support")
     endif()
 else()
     message(STATUS "Building without WebSocket support")

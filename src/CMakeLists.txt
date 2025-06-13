@@ -634,13 +634,15 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_DATA}
 )
 
+# Get Qt include directories to explicitly pass to targets
 set(mm_libs mm_map mm_global)
 
 target_link_libraries(mmapper PUBLIC
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::OpenGL
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::OpenGL # Keep this for core OpenGL functionalities
+    Qt6::OpenGLWidgets # Add this for QOpenGLWidget
+    Qt6::Network
     # note: link order matters on some platforms. include ${mm_libs} twice if you have a link failure.
     ${mm_libs}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -654,6 +656,7 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
   INSTALL_RPATH "${QTKEYCHAIN_LIBRARY_DIR}"
   BUILD_WITH_INSTALL_RPATH ON
+  AUTOMOC_PATH_PREFIX ON
 )
 
 set_target_properties(
@@ -675,25 +678,21 @@ set_target_properties(
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
 target_include_directories(mm_global SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
-        ${Qt5Core_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        #${Qt5_Network_INCLUDE_DIRS}
-        #${Qt5_OpenGL_INCLUDE_DIRS}
+        # Qt6::Core include dirs should be automatically handled by target_link_libraries
+        # Qt6::Widgets include dirs should be automatically handled by target_link_libraries
 )
 target_include_directories(mm_map SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
-        ${Qt5Core_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        #${Qt5_Network_INCLUDE_DIRS}
-        #${Qt5_OpenGL_INCLUDE_DIRS}
+        # Qt6::Core include dirs should be automatically handled by target_link_libraries
+        # Qt6::Widgets include dirs should be automatically handled by target_link_libraries
 )
 target_link_libraries(mm_global PUBLIC
-    Qt5::Core
-    Qt5::Widgets
+    Qt6::Core
+    Qt6::Widgets
 )
 target_link_libraries(mm_map PUBLIC
-    Qt5::Core
-    Qt5::Widgets
+    Qt6::Core
+    Qt6::Widgets
 )
 add_dependencies(mmapper mm_global mm_map)
 add_dependencies(mm_map mm_global)
@@ -736,7 +735,7 @@ if(WITH_OPENSSL)
 endif()
 
 if(WITH_WEBSOCKET)
-    target_link_libraries(mmapper PUBLIC Qt5::WebSockets)
+    target_link_libraries(mmapper PUBLIC Qt6::WebSockets)
 endif()
 
 if(WITH_QTKEYCHAIN)
@@ -870,22 +869,18 @@ if(UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
     set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.15.0), libqt5gui5 (>= 5.15.0), libqt5opengl5 (>= 5.15.0), libqt5network5 (>= 5.15.0)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6 (>= 6.2.0), libqt6gui6 (>= 6.2.0), libqt6opengl6 (>= 6.2.0), libqt6network6 (>= 6.2.0)")
     if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
     if(WITH_OPENSSL)
-        if (OPENSSL_VERSION VERSION_LESS 3.0.0)
-            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
-        else()
-            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl3")
-        endif()
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl3")
     endif()
     if(WITH_WEBSOCKET)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5websockets5 (>= 5.15.0)")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6websockets6 (>= 6.2.0)")
     endif()
     if(WITH_QTKEYCHAIN)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5keychain1")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6keychain1 (>= 1.13.2)")
     endif()
 endif(UNIX AND NOT APPLE)
 

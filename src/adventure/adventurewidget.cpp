@@ -9,8 +9,15 @@
 
 #include <memory>
 
-#include <QtCore>
-#include <QtWidgets>
+#include <QtCore> // For Qt:: enums, QPoint, QString, etc.
+// QTextEdit, QAction are included in adventurewidget.h
+#include <QVBoxLayout>
+#include <QMenu>
+#include <QScrollBar>
+#include <QTextFrame> // Added for QTextFrame
+// QTextCursor, QTextFrameFormat, QTextCharFormat, QFont are QtGui classes.
+// Assuming they are covered by other includes or <QtGui> if it's still present globally for now.
+// Or they might be pulled in by <QTextEdit> itself.
 
 AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     : QWidget{parent}

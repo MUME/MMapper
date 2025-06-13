@@ -1,8 +1,8 @@
 {
   "app-id": "org.mume.MMapper",
   "runtime": "org.kde.Platform",
-  "runtime-version": "5.15-23.08",
-  "sdk": "org.kde.Sdk",
+  "runtime-version": "6.6", # Updated to Qt6 version
+  "sdk": "org.kde.Sdk", # SDK version will also be 6.6 due to runtime-version
   "finish-args": [
     "--share=network",
     "--socket=x11",
@@ -71,6 +71,8 @@
     {
       "name": "qtkeychain",
       "buildsystem": "cmake-ninja",
+      # qtkeychain might need a newer version or patches for Qt6
+      # For now, assuming the existing version might work or will be updated later if needed
       "sources": [
         {
           "type": "archive",
@@ -88,44 +90,44 @@
         "-DCMAKE_INSTALL_LIBDIR=/app/lib",
         "-DLIB_INSTALL_DIR=/app/lib",
         "-DBUILD_TRANSLATIONS=NO",
-        "-DCMAKE_PREFIX_PATH=/app"
+        "-DCMAKE_PREFIX_PATH=/app" # Should find Qt6 from the SDK
       ]
     },
-    {
-      "name": "map",
-      "buildsystem": "simple",
-      "sources": [
-        {
-          "type": "git",
-          "url": "https://github.com/MUME/arda.git",
-          "tag": "41"
-        }
-      ],
-      "build-options": {
-        "build-only": true
-      },
-      "build-commands": [
-        "cp arda.xml /app/"
-      ]
-    },
-    {
-      "name": "images",
-      "buildsystem": "simple",
-      "sources": [
-        {
-          "type": "git",
-          "url": "https://github.com/MUME/images.git",
-          "tag": "main"
-        }
-      ],
-      "build-options": {
-        "build-only": true
-      },
-      "build-commands": [
-        "mkdir -p /app/images",
-        "cp -r . /app/images/"
-      ]
-    },
+    # { # Removed map module as WITH_MAP=OFF
+    #   "name": "map",
+    #   "buildsystem": "simple",
+    #   "sources": [
+    #     {
+    #       "type": "git",
+    #       "url": "https://github.com/MUME/arda.git",
+    #       "tag": "41"
+    #     }
+    #   ],
+    #   "build-options": {
+    #     "build-only": true
+    #   },
+    #   "build-commands": [
+    #     "cp arda.xml /app/"
+    #   ]
+    # },
+    # { # Removed images module as WITH_IMAGES=OFF
+    #   "name": "images",
+    #   "buildsystem": "simple",
+    #   "sources": [
+    #     {
+    #       "type": "git",
+    #       "url": "https://github.com/MUME/images.git",
+    #       "tag": "main"
+    #     }
+    #   ],
+    #   "build-options": {
+    #     "build-only": true
+    #   },
+    #   "build-commands": [
+    #     "mkdir -p /app/images",
+    #     "cp -r . /app/images/"
+    #   ]
+    # },
     {
       "name": "mmapper",
       "buildsystem": "cmake-ninja",
@@ -140,11 +142,11 @@
         "-DCMAKE_BUILD_TYPE=Release",
         "-DWITH_WEBSOCKET=ON",
         "-DWITH_QTKEYCHAIN=ON",
-        "-DWITH_MAP=/app/arda.xml",
-        "-DWITH_IMAGES=/app/images/",
+        "-DWITH_MAP=OFF",         # Updated
+        "-DWITH_IMAGES=OFF",      # Updated
         "-DWITH_TESTS=OFF",
         "-DOPENSSL_ROOT_DIR=/app",
-        "-DCMAKE_PREFIX_PATH=/app/lib/qt5:/app"
+        "-DCMAKE_PREFIX_PATH=/app" # Removed /app/lib/qt5, should use SDK's Qt6
       ],
       "build-commands": [
         "sed -i 's|^Exec=.*|Exec=/app/bin/mmapper|' ../src/org.mume.MMapper.desktop"

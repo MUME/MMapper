@@ -28,7 +28,7 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
     m_gridLayout->setContentsMargins(0, 0, 0, 0);
 
     m_verticalScrollBar = std::make_unique<QScrollBar>(this);
-    m_verticalScrollBar->setOrientation(Qt::Vertical);
+    m_verticalScrollBar->setOrientation(Qt::Orientation::Vertical); // Changed
     m_verticalScrollBar->setRange(0, 0);
     m_verticalScrollBar->hide();
     m_verticalScrollBar->setSingleStep(MapCanvas::SCROLL_SCALE);
@@ -36,7 +36,7 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
     m_gridLayout->addWidget(m_verticalScrollBar.get(), 0, 1, 1, 1);
 
     m_horizontalScrollBar = std::make_unique<QScrollBar>(this);
-    m_horizontalScrollBar->setOrientation(Qt::Horizontal);
+    m_horizontalScrollBar->setOrientation(Qt::Orientation::Horizontal); // Changed
     m_horizontalScrollBar->setRange(0, 0);
     m_horizontalScrollBar->hide();
     m_horizontalScrollBar->setSingleStep(MapCanvas::SCROLL_SCALE);
