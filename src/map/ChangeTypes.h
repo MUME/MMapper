@@ -24,6 +24,10 @@
 #define XFOREACH_PositionChangeEnum(X) \
     X(Exact) \
     X(Relative)
+#define XFOREACH_UpdateTypeEnum(X) \
+    X(New) \
+    X(Force) \
+    X(Update)
 #define XFOREACH_WaysEnum(X) \
     X(OneWay) \
     X(TwoWay)
@@ -31,6 +35,7 @@
 enum class NODISCARD ChangeTypeEnum { XFOREACH_ChangeTypeEnum(X_DECL) };
 enum class NODISCARD FlagChangeEnum { XFOREACH_FlagChangeEnum(X_DECL) };
 enum class NODISCARD PositionChangeEnum { XFOREACH_PositionChangeEnum(X_DECL) };
+enum class NODISCARD UpdateTypeEnum { XFOREACH_UpdateTypeEnum(X_DECL) };
 enum class NODISCARD WaysEnum { XFOREACH_WaysEnum(X_DECL) };
 #undef X_DECL
 
@@ -58,7 +63,6 @@ struct NODISCARD AddPermanentRoom final
 
 struct NODISCARD AddRoom2 final
 {
-    // ServerRoomId server_id = INVALID_SERVER_ROOMID;
     Coordinate position;
     ParseEvent event;
     explicit AddRoom2(const Coordinate &pos, ParseEvent ev)
@@ -87,6 +91,12 @@ struct NODISCARD Update final
 {
     RoomId room = INVALID_ROOMID;
     ParseEvent event;
+    UpdateTypeEnum type = UpdateTypeEnum::Update;
+    explicit Update(const RoomId id, ParseEvent ev, const UpdateTypeEnum in_type)
+        : room{id}
+        , event{std::move(ev)}
+        , type{in_type}
+    {}
 };
 
 struct NODISCARD SetServerId final

@@ -93,7 +93,7 @@ void PathMachine::forcePositionChange(const RoomId id, const bool update)
 
     // Force update room with last event
     ChangeList changes;
-    changes.add(Change{room_change_types::Update{id, m_lastEvent.deref()}});
+    changes.add(Change{room_change_types::Update{id, m_lastEvent.deref(), UpdateTypeEnum::Force}});
     updateMostLikelyRoom(m_lastEvent, changes, true);
     if (!changes.empty()) {
         scheduleAction(changes);
@@ -326,7 +326,9 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
     setMostLikelyRoom(perhaps.getId());
 
     if (appr.needsUpdate()) {
-        changes.add(Change{room_change_types::Update{perhaps.getId(), sigParseEvent.deref()}});
+        changes.add(Change{room_change_types::Update{perhaps.getId(),
+                                                     sigParseEvent.deref(),
+                                                     UpdateTypeEnum::Update}});
     }
 }
 
@@ -463,9 +465,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent,
             const auto &doorName = eventExits.at(dir).getDoorName();
             if (eventDoorFlags.isHidden() && !doorName.isEmpty()
                 && roomExit.getDoorName() != doorName) {
-                changes.add(Change{
-
-                    exit_change_types::SetDoorName{here.getId(), dir, doorName}});
+                changes.add(Change{exit_change_types::SetDoorName{here.getId(), dir, doorName}});
             }
         }
     }

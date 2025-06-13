@@ -358,6 +358,20 @@ void ChangePrinter::print(const PromptWeatherEnum type)
 #undef X_CASE
 }
 
+void ChangePrinter::print(const UpdateTypeEnum type)
+{
+#define X_CASE(x) \
+    case UpdateTypeEnum::x: \
+        m_os.writeWithColor(const_color, #x); \
+        return;
+
+    switch (type) {
+        XFOREACH_UpdateTypeEnum(X_CASE)
+    }
+    error();
+#undef X_CASE
+}
+
 void ChangePrinter::print(const RoomAlignEnum type)
 {
 #define X_CASE(x) \
@@ -764,6 +778,7 @@ void ChangePrinter::virt_accept(const Update &change)
     {
         HELPER_ADD_MEMBER(room);
         helper.add_member("change", change.event);
+        HELPER_ADD_MEMBER(type);
     }
 }
 

@@ -1407,7 +1407,7 @@ void World::addRoom2(const Coordinate &desiredPosition, const ParseEvent &event)
 
     MMLOG() << "Applying changes after adding room " << convertToExternal(roomId).value() << "...";
     ProgressCounter dummyPc;
-    apply(dummyPc, room_change_types::Update{roomId, event});
+    apply(dummyPc, room_change_types::Update{roomId, event, UpdateTypeEnum::New});
 }
 
 ExternalRoomIdSet World::convertToExternal(ProgressCounter &pc, const TinyRoomIdSet &set) const
@@ -1612,7 +1612,9 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::Update &cha
 
     room.fields.Area = event.getRoomArea();
 
-    room.fields.Contents = event.getRoomContents();
+    if (change.type != UpdateTypeEnum::Update) {
+        room.fields.Contents = event.getRoomContents();
+    }
 
     room.server_id = event.getServerId();
 

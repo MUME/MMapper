@@ -52,7 +52,9 @@ NODISCARD static RawRoom createTemporaryRoom(const ParseEvent &event)
     auto &map = mapPair.modified;
     const RoomHandle room1 = map.getRoomHandle(DEFAULT_EXTERNAL_ROOMID);
     std::ignore = map.applySingleChange(pc,
-                                        Change{room_change_types::Update{DEFAULT_ROOMID, event}});
+                                        Change{room_change_types::Update{DEFAULT_ROOMID,
+                                                                         event,
+                                                                         UpdateTypeEnum::New}});
     const RoomHandle room2 = map.getRoomHandle(DEFAULT_EXTERNAL_ROOMID);
 
     assert(room2.getId() == DEFAULT_ROOMID);

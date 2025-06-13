@@ -63,6 +63,7 @@ private:
     void print(PositionChangeEnum type);
     void print(PromptFogEnum type);
     void print(PromptWeatherEnum type);
+    void print(UpdateTypeEnum type);
     void print(RoomAlignEnum type);
     void print(RoomLightEnum type);
     void print(RoomLoadFlagEnum flag);
