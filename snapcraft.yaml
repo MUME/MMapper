@@ -65,14 +65,12 @@ parts:
       - -DWITH_UPDATER=false
       - -DWITH_WEBSOCKET=ON
       - -DWITH_QTKEYCHAIN=ON
-      - -DWITH_IMAGES=OFF
-      - -DWITH_MAP=OFF
     build-packages:
       - build-essential
       - libssl-dev
       - libqt6opengl6-dev
       - libqt6websockets6-dev
-      - libqt6keychain1-dev
+      - qtkeychain-qt6-dev
       - qt6-base-dev
       - qt6-tools-dev # or qt6-tools-dev-tools, using qt6-tools-dev for now
       - zlib1g-dev
