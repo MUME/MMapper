@@ -11,7 +11,6 @@
 #include "../global/JsonArray.h"
 #include "../global/JsonObj.h"
 #include "../global/thread_utils.h"
-#include "../map/sanitizer.h"
 #include "../proxy/GmcpMessage.h"
 #include "CGroupChar.h"
 #include "mmapper2character.h"
@@ -23,7 +22,6 @@
 #include <QMessageLogContext>
 #include <QThread>
 #include <QVariantMap>
-#include <QtCore>
 
 Mmapper2Group::Mmapper2Group(QObject *const parent)
     : QObject{parent}
@@ -211,7 +209,11 @@ SharedGroupChar Mmapper2Group::addChar(const GroupId id)
 void Mmapper2Group::removeChar(const GroupId id)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
-    utils::erase_if(m_charIndex, [this, &id](const SharedGroupChar &pChar) -> bool {
+    bool wasRemoved = false;
+    utils::erase_if(m_charIndex, [this, &wasRemoved, &id](const SharedGroupChar &pChar) {
+        if (!pChar) {
+            return false;
+        }
         auto &character = deref(pChar);
         if (character.getId() != id) {
             return false;
@@ -220,9 +222,12 @@ void Mmapper2Group::removeChar(const GroupId id)
             m_colorGenerator.releaseColor(character.getColor());
         }
         qDebug() << "removing" << id.asUint32() << character.getName().toQString();
-        characterChanged(true);
+        wasRemoved = true;
         return true;
     });
+    if (wasRemoved) {
+        characterChanged(true);
+    }
 }
 
 SharedGroupChar Mmapper2Group::getCharById(const GroupId id) const
