@@ -1,3 +1,23 @@
+## MMapper 25.06.1 (June 13, 2025)
+
+### New Features:
+- Added group panel enhancements and preferences page to:
+  - Character re-ordering via drag and drop support
+  - Hide NPCs option
+  - Always sort NPCs to the bottom option
+  - Override the color of all NPCs option
+
+### Bug Fixes:
+- Mapping will no longer overwrite room contents unless it is a forced update or new room
+- Fixed ``_search`` to correctly handle multi-word searches
+- Allowed the window size to become smaller once again
+- Fixed Windows installation error by always installing the Visual C++ Redistributable
+- Fixed stale characters being shown on the group panel after they were removed
+
+### Changes:
+- Migrated AppImage build system from `linuxdeployqt` to `linuxdeploy`
+
+---
 ## MMapper 25.06.0 (June 11, 2025)
 
 ### New Features:
