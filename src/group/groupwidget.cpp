@@ -17,13 +17,17 @@
 #include <vector>
 
 #include <QAction>
+#include <QColorDialog>
 #include <QDebug>
 #include <QHeaderView>
+#include <QMenu>
 #include <QMessageLogContext>
+#include <QPainter>
 #include <QString>
 #include <QStringList>
 #include <QStyledItemDelegate>
-#include <QtWidgets>
+#include <QTableView>
+#include <QVBoxLayout>
 
 static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
@@ -205,10 +209,9 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
 {
     std::unordered_set<GroupId> newGameCharIds;
     newGameCharIds.reserve(newGameChars.size());
-    for (const auto &gameChar : newGameChars) {
-        if (gameChar) {
-            newGameCharIds.insert(gameChar->getId());
-        }
+    for (const auto &pGameChar : newGameChars) {
+        const auto &gameChar = deref(pGameChar);
+        newGameCharIds.insert(gameChar.getId());
     }
 
     GroupVector resultingCharacterList;
@@ -225,25 +228,23 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
     // Preserve existing characters
     std::unordered_set<GroupId> existingIds;
     existingIds.reserve(m_characters.size());
-    for (const auto &existingChar : m_characters) {
-        if (existingChar) {
-            existingIds.insert(existingChar->getId());
-            if (newGameCharIds.count(existingChar->getId())) {
-                resultingCharacterList.push_back(existingChar);
-            }
+    for (const auto &pExistingChar : m_characters) {
+        const auto &existingChar = deref(pExistingChar);
+        existingIds.insert(existingChar.getId());
+        if (newGameCharIds.count(existingChar.getId())) {
+            resultingCharacterList.push_back(pExistingChar);
         }
     }
 
     // Identify truly new characters and categorize them as NPC or player
-    for (const auto &gameChar : newGameChars) {
-        if (gameChar) {
-            if (existingIds.find(gameChar->getId()) == existingIds.end()) {
-                allTrulyNewCharsInOriginalOrder.push_back(gameChar);
-                if (gameChar->isNpc()) {
-                    trulyNewNpcs.push_back(gameChar);
-                } else {
-                    trulyNewPlayers.push_back(gameChar);
-                }
+    for (const auto &pGameChar : newGameChars) {
+        const auto &gameChar = deref(pGameChar);
+        if (existingIds.find(gameChar.getId()) == existingIds.end()) {
+            allTrulyNewCharsInOriginalOrder.push_back(pGameChar);
+            if (gameChar.isNpc()) {
+                trulyNewNpcs.push_back(pGameChar);
+            } else {
+                trulyNewPlayers.push_back(pGameChar);
             }
         }
     }

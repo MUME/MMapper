@@ -6,10 +6,10 @@
 namespace Legacy {
 
 AbstractShaderProgram::AbstractShaderProgram(std::string dirName,
-                                             SharedFunctions functions,
+                                             const SharedFunctions &functions,
                                              Program program)
     : m_dirName{std::move(dirName)}
-    , m_functions{std::move(functions)}
+    , m_functions{functions} // conversion to weak ptr
     , m_program{std::move(program)}
 {}
 

@@ -23,7 +23,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(AbstractShaderProgram);
 
 public:
-    AbstractShaderProgram(std::string dirName, SharedFunctions functions, Program program);
+    AbstractShaderProgram(std::string dirName, const SharedFunctions &functions, Program program);
 
     virtual ~AbstractShaderProgram();
 

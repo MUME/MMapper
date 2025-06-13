@@ -31,6 +31,8 @@ private:
 public:
     OpenGL();
     ~OpenGL();
+    OpenGL(const OpenGL &) = delete;
+    OpenGL &operator=(const OpenGL &) = delete;
 
 public:
     /* must be called before any other functions */

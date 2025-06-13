@@ -210,11 +210,7 @@ void Mmapper2Group::removeChar(const GroupId id)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     const auto &settings = getConfig().groupManager;
-    bool wasRemoved = false;
-    utils::erase_if(m_charIndex, [this, &settings, &wasRemoved, &id](const SharedGroupChar &pChar) {
-        if (!pChar) {
-            return false;
-        }
+    auto erased = utils::erase_if(m_charIndex, [this, &settings, &id](const SharedGroupChar &pChar) {
         auto &character = deref(pChar);
         if (character.getId() != id) {
             return false;
@@ -223,10 +219,9 @@ void Mmapper2Group::removeChar(const GroupId id)
             m_colorGenerator.releaseColor(character.getColor());
         }
         qDebug() << "removing" << id.asUint32() << character.getName().toQString();
-        wasRemoved = true;
         return true;
     });
-    if (wasRemoved) {
+    if (erased) {
         characterChanged(true);
     }
 }
@@ -272,7 +267,6 @@ bool Mmapper2Group::updateChar(SharedGroupChar sharedCh, const JsonObj &obj)
     const auto id = ch.getId();
     const auto oldServerId = ch.getServerId();
     bool change = ch.updateFromGmcp(obj);
-
     if (ch.isYou()) {
         if (!m_self) {
             m_self = sharedCh;
@@ -306,14 +300,15 @@ bool Mmapper2Group::updateChar(SharedGroupChar sharedCh, const JsonObj &obj)
 void Mmapper2Group::slot_groupSettingsChanged()
 {
     const auto &settings = getConfig().groupManager;
-    for (const auto &character : m_charIndex) {
-        if (character->isYou()) {
-            character->setColor(settings.color);
-        } else if (character->isNpc() && settings.npcColorOverride) {
-            if (character->getColor() != settings.npcColor) {
-                m_colorGenerator.releaseColor(character->getColor());
+    for (const auto &pChar : m_charIndex) {
+        auto &character = deref(pChar);
+        if (character.isYou()) {
+            character.setColor(settings.color);
+        } else if (character.isNpc() && settings.npcColorOverride) {
+            if (character.getColor() != settings.npcColor) {
+                m_colorGenerator.releaseColor(character.getColor());
             }
-            character->setColor(settings.npcColor);
+            character.setColor(settings.npcColor);
         }
     }
     characterChanged(true);
