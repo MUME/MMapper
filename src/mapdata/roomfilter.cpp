@@ -30,7 +30,7 @@ NODISCARD static QRegularExpression createRegex(const std::string_view input,
             return mmqt::toQStringUtf8(input);
         }
 
-        static const QRegularExpression escape(QStringLiteral(R"([-[\]{}()*+?.,\^$|#\s])"),
+        static const QRegularExpression escape(QStringLiteral(R"([-[\]{}()*+?.,\^$|#])"),
                                                QRegularExpression::NoPatternOption);
         const QString sanitized = mmqt::toQStringUtf8(input).replace(escape,
                                                                      QStringLiteral(R"(\$&)"));
