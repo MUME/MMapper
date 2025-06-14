@@ -187,6 +187,14 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     }
 
     const GLuint shaderId = gl.glCreateShader(type);
+    if (shaderId == 0) {
+        std::ostringstream os;
+        os << "Failed to allocate a shader for " << shaderTypeName(type) << " shader "
+           << QuotedString(source.filename) << "!";
+        qWarning() << os.str().c_str();
+        qFatal("opengl error");
+    }
+
     if constexpr ((IS_DEBUG_BUILD)) {
         std::ostringstream os;
         os << "Compiling " << shaderTypeName(type) << " shader " << QuotedString(source.filename)
