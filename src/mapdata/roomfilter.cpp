@@ -61,19 +61,42 @@ RoomFilter::RoomFilter(const std::string_view sv,
 {}
 
 const char *const RoomFilter::parse_help
-    = "Parse error; format is: [-(name|desc|contents|note|exits|all|clear)] pattern\n";
+    = "Parse error; format is: [-[r|regex]] -(name|desc|contents|note|exits|area|all|clear) pattern\n"
+      "  -r, -regex: Treat the pattern as a regular expression.\n"
+      "  -name: Search by room name (default if no flag is given).\n"
+      "  -desc: Search by room description.\n"
+      "  -contents: Search by room contents.\n"
+      "  -note: Search by room note.\n"
+      "  -exits: Search by exit names.\n"
+      "  -flags: Search by room or exit flags.\n"
+      "  -area: Search by area name.\n"
+      "  -all: Search across all fields.\n"
+      "  -clear: Clear the previous search results.\n";
 
 std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view line)
 {
     // REVISIT: rewrite this using the new syntax tree model.
     auto view = StringView{line}.trim();
+    bool regex = false;
+    PatternKindsEnum kind = PatternKindsEnum::NAME;
     if (view.isEmpty()) {
         return std::nullopt;
     } else if (view.takeFirstLetter() != char_consts::C_MINUS_SIGN) {
-        return RoomFilter{line, Qt::CaseInsensitive, false, PatternKindsEnum::NAME};
+        return RoomFilter{line, Qt::CaseInsensitive, regex, kind};
     }
 
-    const auto first = view.takeFirstWord();
+    auto first = view.takeFirstWord();
+    if (Abbrev("regex", 1).matches(first)) {
+        regex = true;
+        if (view.isEmpty()) {
+            // Require arguments beyond "-regex" or "-r"
+            return std::nullopt;
+        } else if (view.takeFirstLetter() != char_consts::C_MINUS_SIGN) {
+            return RoomFilter{view.toStdString(), Qt::CaseInsensitive, regex, kind};
+        }
+        first = view.takeFirstWord();
+    }
+
     const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
         if (Abbrev("desc", 1).matches(first)) {
             return PatternKindsEnum::DESC;
@@ -85,6 +108,8 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
             return PatternKindsEnum::EXITS;
         } else if (Abbrev("note", 1).matches(first)) {
             return PatternKindsEnum::NOTE;
+        } else if (Abbrev("area", 2).matches(first)) {
+            return PatternKindsEnum::AREA;
         } else if (Abbrev("all", 1).matches(first)) {
             return PatternKindsEnum::ALL;
         } else if (Abbrev("clear", 1).matches(first)) {
@@ -99,14 +124,14 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
         return std::nullopt;
     }
 
-    const auto kind = opt.value();
+    kind = opt.value();
     if (kind != PatternKindsEnum::NONE) {
         // Require pattern text in addition to arguments
         if (view.empty()) {
             return std::nullopt;
         }
     }
-    return RoomFilter{view.toStdString(), Qt::CaseInsensitive, false, kind};
+    return RoomFilter{view.toStdString(), Qt::CaseInsensitive, regex, kind};
 }
 
 bool RoomFilter::filter_kind(const RawRoom &r, const PatternKindsEnum pat) const

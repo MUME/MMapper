@@ -571,7 +571,8 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 void AbstractParser::parseSearch(StringView view)
 {
     if (view.isEmpty()) {
-        showSyntax("search [-(name|desc|contents|note|exits|flags|all|clear)] pattern");
+        showSyntax(
+            "search [-regex] [-(name|desc|contents|note|exits|flags|area|all|clear)] pattern");
     } else {
         doSearchCommand(view);
     }
