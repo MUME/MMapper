@@ -13,6 +13,20 @@
 #include <QRegularExpression>
 #include <QString>
 
+NODISCARD static QString escapeRegex(const QString &str)
+{
+    static const QRegularExpression metacharactersRx(R"([.*+?^${}()|\[\]\\])");
+    QString result = str;
+    int offset = 0;
+    auto it = metacharactersRx.globalMatch(str);
+    while (it.hasNext()) {
+        auto match = it.next();
+        result.insert(match.capturedStart() + offset, '\\');
+        ++offset;
+    }
+    return result;
+}
+
 NODISCARD static QRegularExpression createRegex(const std::string_view input,
                                                 const Qt::CaseSensitivity cs,
                                                 const bool regex)
@@ -21,7 +35,7 @@ NODISCARD static QRegularExpression createRegex(const std::string_view input,
     if (cs == Qt::CaseInsensitive) {
         options |= QRegularExpression::CaseInsensitiveOption;
     }
-    const QString pattern = [&input, &regex]() -> QString {
+    const auto makeRegex = [&input, &regex]() -> QString {
         if (input.empty()) {
             return QStringLiteral(R"(^$)");
         }
@@ -30,13 +44,12 @@ NODISCARD static QRegularExpression createRegex(const std::string_view input,
             return mmqt::toQStringUtf8(input);
         }
 
-        static const QRegularExpression escape(QStringLiteral(R"([-[\]{}()*+?.,\^$|#])"),
-                                               QRegularExpression::NoPatternOption);
-        const QString sanitized = mmqt::toQStringUtf8(input).replace(escape,
-                                                                     QStringLiteral(R"(\$&)"));
-        return QStringLiteral(".*") + sanitized + QStringLiteral(".*");
-    }();
-    return QRegularExpression(pattern, options);
+        QString pattern = escapeRegex(mmqt::toQStringUtf8(input));
+        static const QRegularExpression whitespaceRx(QStringLiteral(R"(\s+)"));
+        pattern.replace(whitespaceRx, QStringLiteral(R"(\s+)"));
+        return QStringLiteral(".*") + pattern + QStringLiteral(".*");
+    };
+    return QRegularExpression(makeRegex(), options);
 }
 
 RoomFilter::RoomFilter(const std::string_view sv,
