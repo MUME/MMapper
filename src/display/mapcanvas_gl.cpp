@@ -16,6 +16,7 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
+#include "../opengl/legacy/Meshes.h"
 #include "../src/global/SendToUser.h"
 #include "Connections.h"
 #include "MapCanvasConfig.h"
@@ -238,14 +239,14 @@ void MapCanvas::initializeGL()
     font.init();
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
-        if (setConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
-            && m_diff.highlight->needsUpdate.empty()) {
+        if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
+            && m_diff.highlight->modified.empty()) {
             this->forceUpdateMeshes();
         }
     });
 
     setConfig().canvas.showMissingMapId.registerChangeCallback(m_lifetime, [this]() {
-        if (setConfig().canvas.showMissingMapId.get() && m_diff.highlight.has_value()
+        if (getConfig().canvas.showMissingMapId.get() && m_diff.highlight.has_value()
             && m_diff.highlight->needsUpdate.empty()) {
             this->forceUpdateMeshes();
         }
@@ -674,9 +675,9 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
             };
 
             // REVISIT: Just send the position and convert from point to quad in a shader?
-            auto getChanged = [&saved, &current, showChanged]() -> TexVertVector {
+            auto getChanged = [&saved, &current, showChanged]() -> Diff::MaybeDataOrMesh {
                 if (!showChanged) {
-                    return TexVertVector{};
+                    return Diff::MaybeDataOrMesh{};
                 }
                 DECL_TIMER(t3, "[async] actuallyPaintGL: compute differences");
                 TexVertVector changed;
@@ -689,12 +690,16 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
 
                 ProgressCounter dummyPc;
                 Map::foreachChangedRoom(dummyPc, saved, current, drawQuad);
-                return changed;
+                if (changed.empty()) {
+                    return Diff::MaybeDataOrMesh{};
+                }
+
+                return Diff::MaybeDataOrMesh{std::move(changed)};
             };
 
-            auto getNeedsUpdate = [&current, showNeedsServerId]() -> TexVertVector {
+            auto getNeedsUpdate = [&current, showNeedsServerId]() -> Diff::MaybeDataOrMesh {
                 if (!showNeedsServerId) {
-                    return TexVertVector{};
+                    return MapCanvas::Diff::MaybeDataOrMesh{};
                 }
                 DECL_TIMER(t3, "[async] actuallyPaintGL: compute needs update");
 
@@ -712,7 +717,10 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                         }
                     }
                 });
-                return needsUpdate;
+                if (needsUpdate.empty()) {
+                    return Diff::MaybeDataOrMesh{};
+                }
+                return Diff::MaybeDataOrMesh{std::move(needsUpdate)};
             };
 
             return Diff::HighlightDiff{saved, current, getNeedsUpdate(), getChanged()};
@@ -730,24 +738,17 @@ void MapCanvas::paintDifferences()
         return;
     }
 
-    const auto &highlight = deref(diff.highlight);
+    auto &highlight = deref(diff.highlight);
     auto &gl = getOpenGL();
 
-    auto tryRenderWithTexture = [&gl](const TexVertVector &points, const MMTextureId texid) {
-        if (points.empty()) {
-            return;
-        }
-        gl.renderTexturedQuads(points,
-                               GLRenderState()
-                                   .withColor(Colors::white)
-                                   .withBlend(BlendModeEnum::TRANSPARENCY)
-                                   .withTexture0(texid));
-    };
-
     if (getConfig().canvas.showMissingMapId.get()) {
-        tryRenderWithTexture(highlight.needsUpdate, m_textures.room_needs_update->getId());
+        if (auto &needsUpdate = highlight.needsUpdate; !needsUpdate.empty()) {
+            needsUpdate.render(gl, m_textures.room_needs_update->getId());
+        }
     }
-    tryRenderWithTexture(highlight.diff, m_textures.room_modified->getId());
+    if (auto &modified = highlight.modified; !modified.empty()) {
+        modified.render(gl, m_textures.room_modified->getId());
+    }
 }
 
 void MapCanvas::paintMap()

@@ -73,12 +73,55 @@ private:
 
     struct NODISCARD Diff final
     {
+        struct NODISCARD MaybeDataOrMesh final
+            : public std::variant<std::monostate, TexVertVector, UniqueMesh>
+        {
+        public:
+            using base = std::variant<std::monostate, TexVertVector, UniqueMesh>;
+            using base::base;
+
+        public:
+            NODISCARD bool empty() const { return std::holds_alternative<std::monostate>(*this); }
+            NODISCARD bool hasData() const { return std::holds_alternative<TexVertVector>(*this); }
+            NODISCARD bool hasMesh() const { return std::holds_alternative<UniqueMesh>(*this); }
+
+        public:
+            NODISCARD const TexVertVector &getData() const
+            {
+                return std::get<TexVertVector>(*this);
+            }
+            NODISCARD const UniqueMesh &getMesh() const { return std::get<UniqueMesh>(*this); }
+
+            void render(OpenGL &gl, const MMTextureId texId)
+            {
+                if (empty()) {
+                    assert(false);
+                    return;
+                }
+
+                if (hasData()) {
+                    *this = gl.createTexturedQuadBatch(getData(), texId);
+                    assert(hasMesh());
+                    // REVISIT: rendering immediately after uploading the mesh may lag,
+                    // so consider delaying until the data is already on the GPU.
+                }
+
+                if (!hasMesh()) {
+                    assert(false);
+                    return;
+                }
+                auto &mesh = getMesh();
+                mesh.render(
+                    GLRenderState().withColor(Colors::white).withBlend(BlendModeEnum::TRANSPARENCY));
+            }
+        };
+
         struct NODISCARD HighlightDiff final
         {
             Map saved;
             Map current;
-            TexVertVector needsUpdate;
-            TexVertVector diff;
+            MaybeDataOrMesh needsUpdate;
+            MaybeDataOrMesh modified;
         };
 
         std::optional<std::future<HighlightDiff>> futureHighlight;
