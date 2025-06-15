@@ -948,4 +948,8 @@ void GroupWidget::updateColumnVisibility()
     }
 }
 
+void GroupWidget::slot_updateLabels()
+{
+    m_model.resetModel();  // This re-fetches characters and refreshes the table
+}
 
