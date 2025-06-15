@@ -370,9 +370,7 @@ void PathMachine::updateMostLikelyRoom(const SigParseEvent &sigParseEvent,
                     if (force) {
                         // Be destructive only on forcing an update
                         changes.add(
-                            Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Remove,
-                                                                           from,
-                                                                           dir}});
+                            Change{exit_change_types::NukeExit{from, dir, WaysEnum::OneWay}});
                     } else if (roomExit.exitIsDoor()) {
                         // Map is old and needs hidden flag
                         changes.add(Change{

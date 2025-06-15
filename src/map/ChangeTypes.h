@@ -157,6 +157,7 @@ struct NODISCARD TryMoveCloseTo final
 
 namespace exit_change_types {
 
+// NOTE: Use NukeExit if you want to remove a connection entirely
 struct NODISCARD ModifyExitConnection final
 {
     ChangeTypeEnum type = ChangeTypeEnum::Add;
@@ -168,10 +169,10 @@ struct NODISCARD ModifyExitConnection final
 
 struct NODISCARD ModifyExitFlags final
 {
-    RoomId room;
-    ExitDirEnum dir;
+    RoomId room = INVALID_ROOMID;
+    ExitDirEnum dir = ExitDirEnum::NONE;
     ExitFieldVariant field;
-    FlagModifyModeEnum mode;
+    FlagModifyModeEnum mode = FlagModifyModeEnum::ASSIGN;
 
     DEPRECATED_MSG("swap type and dir")
     ModifyExitFlags(RoomId room_,

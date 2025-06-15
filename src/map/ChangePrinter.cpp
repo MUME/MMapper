@@ -179,7 +179,9 @@ void ChangePrinter::print(const ServerRoomId serverId)
 
 void ChangePrinter::print(const RoomId room)
 {
-    if (const auto ext = m_remap(room); ext != INVALID_EXTERNAL_ROOMID) {
+    if (room == INVALID_ROOMID) {
+        m_os.writeWithColor(error_color, "INVALID_ROOMID");
+    } else if (const auto ext = m_remap(room); ext != INVALID_EXTERNAL_ROOMID) {
         print(ext);
     } else {
         m_os.writeWithColor(error_color, "UnknownRoomId");
