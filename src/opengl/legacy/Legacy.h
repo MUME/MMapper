@@ -88,6 +88,7 @@ private:
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
+    std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
 
 public:
     NODISCARD static std::shared_ptr<Functions> alloc();
@@ -109,6 +110,15 @@ public:
             throw std::invalid_argument("devicePixelRatio");
         }
         m_devicePixelRatio = devicePixelRatio;
+    }
+
+public:
+    // The purpose of this function is to safely manage the lifetime of reused meshes
+    // like the full screen quad mesh. Caller is expected to only keep a weak pointer
+    // to the mesh. See OpenGL::renderPlainFullScreenQuad().
+    void addSharedMesh(Badge<OpenGL>, std::shared_ptr<IRenderable> mesh)
+    {
+        m_staticMeshes.emplace_back(std::move(mesh));
     }
 
 public:
