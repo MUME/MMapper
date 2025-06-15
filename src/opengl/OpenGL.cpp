@@ -7,6 +7,7 @@
 #include "../display/Textures.h"
 #include "../global/logging.h"
 #include "./legacy/Legacy.h"
+#include "./legacy/Meshes.h"
 #include "./legacy/VBO.h"
 #include "OpenGLTypes.h"
 
@@ -432,15 +433,33 @@ void OpenGL::renderColoredTextured(const DrawModeEnum type,
 
 void OpenGL::renderPlainFullScreenQuad(const GLRenderState &renderState)
 {
-    // screen is [-1,+1]^3.
-    const auto fullScreenQuad = std::vector{glm::vec3{-1, -1, 0},
-                                            glm::vec3{+1, -1, 0},
-                                            glm::vec3{+1, +1, 0},
-                                            glm::vec3{-1, +1, 0}};
+    using MeshType = Legacy::PlainMesh<glm::vec3>;
+    static std::weak_ptr<MeshType> g_mesh;
+    auto sharedMesh = g_mesh.lock();
+    if (sharedMesh == nullptr) {
+        if (IS_DEBUG_BUILD) {
+            qDebug() << "allocating shared mesh for renderPlainFullScreenQuad";
+        }
+        auto &sharedFuncs = getSharedFunctions();
+        auto &funcs = deref(sharedFuncs);
+        g_mesh = sharedMesh
+            = std::make_shared<MeshType>(sharedFuncs,
+                                         funcs.getShaderPrograms().getPlainUColorShader());
+        funcs.addSharedMesh(Badge<OpenGL>{}, sharedMesh);
+        MeshType &mesh = deref(sharedMesh);
 
+        // screen is [-1,+1]^3.
+        const auto fullScreenQuad = std::vector{glm::vec3{-1, -1, 0},
+                                                glm::vec3{+1, -1, 0},
+                                                glm::vec3{+1, +1, 0},
+                                                glm::vec3{-1, +1, 0}};
+        mesh.setStatic(DrawModeEnum::QUADS, fullScreenQuad);
+    }
+
+    MeshType &mesh = deref(sharedMesh);
     const auto oldProj = getProjectionMatrix();
     setProjectionMatrix(glm::mat4(1));
-    renderPlainQuads(fullScreenQuad, renderState.withDepthFunction(std::nullopt));
+    mesh.render(renderState.withDepthFunction(std::nullopt));
     setProjectionMatrix(oldProj);
 }
 
