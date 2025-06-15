@@ -121,6 +121,7 @@ public:
 struct NODISCARD Batches final
 {
     RemeshCookie remeshCookie;
+    std::optional<MapBatches> next_mapBatches;
     std::optional<MapBatches> mapBatches;
     std::optional<BatchedInfomarksMeshes> infomarksMeshes;
     struct NODISCARD FlashState final
@@ -151,6 +152,8 @@ struct NODISCARD Batches final
     Batches() = default;
     ~Batches() = default;
     DEFAULT_MOVES_DELETE_COPIES(Batches);
+
+    NODISCARD bool isInProgress() const;
 
     void resetExistingMeshesButKeepPendingRemesh()
     {
