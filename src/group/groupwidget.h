@@ -189,4 +189,5 @@ private slots:
     void slot_onCharacterRemoved(GroupId characterId);
     void slot_onCharacterUpdated(SharedGroupChar character);
     void slot_onGroupReset(const GroupVector &newCharacterList);
+    void slot_updateLabels();
 };
