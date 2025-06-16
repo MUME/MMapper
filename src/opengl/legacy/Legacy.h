@@ -146,6 +146,10 @@ public:
     using Base::glGetString;
     using Base::glGetUniformLocation;
     using Base::glHint;
+    using Base::glIsBuffer;
+    using Base::glIsProgram;
+    using Base::glIsShader;
+    using Base::glIsTexture;
     using Base::glLinkProgram;
     using Base::glShaderSource;
     using Base::glUniform1fv;
