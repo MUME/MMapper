@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Badge.h"
 #include "../global/utils.h"
 #include "OpenGLTypes.h"
 
@@ -15,6 +16,7 @@
 #include <QSurfaceFormat>
 #include <qopengl.h>
 
+class MapCanvas;
 namespace Legacy {
 class Functions;
 } // namespace Legacy
@@ -40,6 +42,9 @@ public:
 public:
     NODISCARD static QSurfaceFormat createDefaultSurfaceFormat();
     NODISCARD static std::string getHighestReportableVersionString();
+
+public:
+    NODISCARD const auto &getSharedFunctions(Badge<MapCanvas>) { return getSharedFunctions(); }
 
 public:
     /* must be called before any other functions */
