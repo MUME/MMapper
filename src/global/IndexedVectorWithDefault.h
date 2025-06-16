@@ -121,7 +121,7 @@ public:
 
         return m_vec == rhs.m_vec;
     }
-    bool operator!=(const IndexedVectorWithDefault &rhs) const { return !(rhs == *this); }
+    NODISCARD bool operator!=(const IndexedVectorWithDefault &rhs) const { return !(rhs == *this); }
 };
 
 namespace test {

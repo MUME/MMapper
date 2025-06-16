@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include <QJsonValue>
 
@@ -14,7 +15,7 @@ class QString;
 class JsonObj;
 class JsonArray;
 
-struct JsonNull
+struct NODISCARD JsonNull final
 {};
 using OptJsonNull = std::optional<JsonNull>;
 
@@ -42,7 +43,7 @@ private:
     QJsonValue m_val;
 
 public:
-    explicit JsonValue(const QJsonValue &val)
+    explicit JsonValue(QJsonValue val)
         : m_val{std::move(val)}
     {}
 

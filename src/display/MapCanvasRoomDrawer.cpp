@@ -1058,7 +1058,6 @@ void finish(const IMapBatchesFinisher &finisher,
             OpenGL &gl,
             GLFont &font)
 {
-    opt_batches.reset();
     MapBatches &batches = opt_batches.emplace();
 
     // Note: This will call InternalData::finish;

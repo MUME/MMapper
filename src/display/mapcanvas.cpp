@@ -323,7 +323,7 @@ bool MapCanvas::event(QEvent *const event)
         }
         if (pinch->state() == Qt::GestureFinished) {
             m_scaleFactor.endPinch();
-            zoomChanged(); // might not have actualy changed
+            zoomChanged(); // might not have actually changed
         }
         resizeGL();
         return true;

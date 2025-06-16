@@ -57,5 +57,5 @@ public:
 
 public:
     // NOTE: This allocates memory.
-    static std::vector<std::string> getAllNames();
+    NODISCARD static std::vector<std::string> getAllNames();
 };

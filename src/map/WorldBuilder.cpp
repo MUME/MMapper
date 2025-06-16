@@ -261,7 +261,7 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
 
     ConnectionRepairStats connectionRepairStats;
     {
-        counter.setCurrentTask(ProgressMsg{"checking exits and flags"});
+        counter.setCurrentTask(ProgressMsg{"checking and repairing exits and flags"});
         counter.reset();
         counter.increaseTotalStepsBy(input.size());
         for (auto &r : input) {

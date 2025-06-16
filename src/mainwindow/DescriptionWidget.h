@@ -17,6 +17,18 @@ class NODISCARD_QOBJECT DescriptionWidget final : public QWidget
 {
     Q_OBJECT
 
+private:
+    QLabel *m_label;
+    QTextEdit *m_textEdit;
+
+private:
+    QCache<QString, QImage> m_imageCache;
+    std::map<QString, QString> m_availableFiles;
+    QFileSystemWatcher m_watcher;
+
+private:
+    QString m_fileName;
+
 public:
     explicit DescriptionWidget(QWidget *parent = nullptr);
     ~DescriptionWidget() final = default;
@@ -34,16 +46,4 @@ protected:
 private:
     void scanDirectories();
     void updateBackground();
-
-private:
-    QLabel *m_label;
-    QTextEdit *m_textEdit;
-
-private:
-    QCache<QString, QImage> m_imageCache;
-    std::map<QString, QString> m_availableFiles;
-    QFileSystemWatcher m_watcher;
-
-private:
-    QString m_fileName;
 };

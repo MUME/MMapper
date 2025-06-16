@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2025 The MMapper Authors
 
+#include "../global/OrderedMap.h"
 #include "../global/macros.h"
 #include "RoomIdSet.h"
 #include "mmapper2room.h"
@@ -24,7 +25,7 @@ struct NODISCARD AreaInfo final
 struct NODISCARD AreaInfoMap final
 {
 private:
-    using Map = std::map<RoomArea, AreaInfo>;
+    using Map = OrderedMap<RoomArea, AreaInfo>;
     Map m_map;
     AreaInfo m_global;
 
