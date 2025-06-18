@@ -12,6 +12,7 @@
 #include "../global/parserutils.h"
 #include "../global/progresscounter.h"
 #include "../global/tests.h"
+#include "../global/thread_utils.h"
 #include "Changes.h"
 #include "Diff.h"
 #include "ParseTree.h"
@@ -1167,27 +1168,39 @@ void Map::printChanges(mm::AbstractDebugOStream &os,
 
 BasicDiffStats getBasicDiffStats(const Map &baseMap, const Map &modMap)
 {
+    DECL_TIMER(t, "get map diff stats (parallel)");
+
     const auto &base = baseMap.getWorld();
     const auto &mod = modMap.getWorld();
 
-    BasicDiffStats result;
-    for (const RoomId id : base.getRoomSet()) {
+    ProgressCounter dummyPc;
+    std::atomic_size_t numRoomsRemoved{0};
+    std::atomic_size_t numRoomsAdded{0};
+    std::atomic_size_t numRoomsChanged{0};
+
+    thread_utils::parallel_for_each(base.getRoomSet(), dummyPc, [&](const RoomId id) {
         if (!mod.hasRoom(id)) {
-            ++result.numRoomsRemoved;
+            ++numRoomsRemoved;
         }
-    }
-    for (const RoomId id : mod.getRoomSet()) {
+    });
+
+    thread_utils::parallel_for_each(mod.getRoomSet(), dummyPc, [&](const RoomId id) {
         if (!base.hasRoom(id)) {
-            ++result.numRoomsAdded;
-            continue;
+            ++numRoomsAdded;
+            return;
         }
 
         const RawRoom &rawBase = base.getRawCopy(id);
         const RawRoom &rawModified = mod.getRawCopy(id);
         if (rawBase != rawModified) {
-            ++result.numRoomsChanged;
+            ++numRoomsChanged;
         }
-    }
+    });
+
+    BasicDiffStats result;
+    result.numRoomsRemoved = numRoomsRemoved;
+    result.numRoomsAdded = numRoomsAdded;
+    result.numRoomsChanged = numRoomsChanged;
     return result;
 }
 
