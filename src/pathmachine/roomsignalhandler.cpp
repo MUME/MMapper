@@ -5,41 +5,30 @@
 
 #include "roomsignalhandler.h"
 
-#include "../map/AbstractChangeVisitor.h"
-#include "../map/room.h"
-#include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 
 #include <cassert>
-#include <memory>
 
-void RoomSignalHandler::hold(const RoomId room, RoomRecipient *const locker)
+void RoomSignalHandler::hold(const RoomId room)
 {
-    // REVISIT: why do we allow locker to be null?
-    owners.insert(room);
-    if (lockers[room].empty()) {
-        holdCount[room] = 0;
-    }
-    lockers[room].insert(locker);
-    ++holdCount[room];
+    m_owners.insert(room);
+    m_holdCount[room]++;
 }
 
 void RoomSignalHandler::release(const RoomId room)
 {
-    assert(holdCount[room]);
-    if (--holdCount[room] == 0) {
-        if (owners.contains(room)) {
-            for (auto i = lockers[room].begin(); i != lockers[room].end(); ++i) {
-                if (RoomRecipient *const recipient = *i) {
-                    m_map.releaseRoom(*recipient, room);
-                }
-            }
+    auto it_hold_count = m_holdCount.find(room);
+    assert(it_hold_count != m_holdCount.end() && it_hold_count->second > 0);
+
+    if (--it_hold_count->second == 0) {
+        if (m_owners.contains(room)) {
+            std::ignore = m_map.tryRemoveTemporary(room);
         } else {
             assert(false);
         }
 
-        lockers.erase(room);
-        owners.erase(room);
+        m_owners.erase(room);
+        m_holdCount.erase(room);
     }
 }
 
@@ -48,8 +37,9 @@ void RoomSignalHandler::keep(const RoomId room,
                              const RoomId fromId,
                              ChangeList &changes)
 {
-    assert(holdCount[room] != 0);
-    assert(owners.contains(room));
+    auto it_hold_count = m_holdCount.find(room);
+    assert(it_hold_count != m_holdCount.end() && it_hold_count->second != 0);
+    assert(m_owners.contains(room));
 
     static_assert(static_cast<uint32_t>(ExitDirEnum::UNKNOWN) + 1 == NUM_EXITS);
     if (isNESWUD(dir) || dir == ExitDirEnum::UNKNOWN) {
@@ -60,13 +50,15 @@ void RoomSignalHandler::keep(const RoomId room,
                                                             WaysEnum::OneWay});
     }
 
-    if (!lockers[room].empty()) {
-        if (RoomRecipient *const locker = *(lockers[room].begin())) {
-            m_map.keepRoom(*locker, room);
-            lockers[room].erase(locker);
-        } else {
-            assert(false);
-        }
-    }
+    std::ignore = m_map.tryMakePermanent(room);
     release(room);
+}
+
+size_t RoomSignalHandler::getNumHolders(const RoomId room) const
+{
+    auto it = m_holdCount.find(room);
+    if (it != m_holdCount.end()) {
+        return it->second;
+    }
+    return 0;
 }

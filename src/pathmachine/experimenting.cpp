@@ -6,7 +6,6 @@
 #include "experimenting.h"
 
 #include "../global/utils.h"
-#include "../map/room.h"
 #include "path.h"
 #include "pathparameters.h"
 
@@ -15,11 +14,11 @@
 Experimenting::Experimenting(std::shared_ptr<PathList> pat,
                              const ExitDirEnum in_dirCode,
                              PathParameters &in_params)
-    : direction(::exitDir(in_dirCode))
-    , dirCode(in_dirCode)
-    , paths(PathList::alloc())
-    , params(in_params)
-    , shortPaths(std::move(pat))
+    : m_direction(::exitDir(in_dirCode))
+    , m_dirCode(in_dirCode)
+    , m_paths(PathList::alloc())
+    , m_params(in_params)
+    , m_shortPaths(std::move(pat))
 {}
 
 Experimenting::~Experimenting() = default;
@@ -27,26 +26,26 @@ Experimenting::~Experimenting() = default;
 void Experimenting::augmentPath(const std::shared_ptr<Path> &path, const RoomHandle &room)
 {
     auto &p = deref(path);
-    const Coordinate c = p.getRoom().getPosition() + direction;
-    const auto working = p.fork(room, c, params, this, dirCode);
-    if (best == nullptr) {
-        best = working;
-    } else if (working->getProb() > best->getProb()) {
-        paths->push_back(best);
-        second = best;
-        best = working;
+    const Coordinate c = p.getRoom().getPosition() + m_direction;
+    const auto working = p.fork(room, c, m_params, m_dirCode);
+    if (m_best == nullptr) {
+        m_best = working;
+    } else if (working->getProb() > m_best->getProb()) {
+        m_paths->push_back(m_best);
+        m_second = m_best;
+        m_best = working;
     } else {
-        if (second == nullptr || working->getProb() > second->getProb()) {
-            second = working;
+        if (m_second == nullptr || working->getProb() > m_second->getProb()) {
+            m_second = working;
         }
-        paths->push_back(working);
+        m_paths->push_back(working);
     }
-    ++numPaths;
+    ++m_numPaths;
 }
 
 std::shared_ptr<PathList> Experimenting::evaluate()
 {
-    for (PathList &sp = deref(shortPaths); !sp.empty();) {
+    for (PathList &sp = deref(m_shortPaths); !sp.empty();) {
         std::shared_ptr<Path> ppath = utils::pop_front(sp);
         Path &path = deref(ppath);
         if (!path.hasChildren()) {
@@ -54,36 +53,37 @@ std::shared_ptr<PathList> Experimenting::evaluate()
         }
     }
 
-    if (best != nullptr) {
-        if (second == nullptr || best->getProb() > second->getProb() * params.acceptBestRelative
-            || best->getProb() > second->getProb() + params.acceptBestAbsolute) {
-            for (auto &path : *paths) {
+    if (m_best != nullptr) {
+        if (m_second == nullptr
+            || m_best->getProb() > m_second->getProb() * m_params.acceptBestRelative
+            || m_best->getProb() > m_second->getProb() + m_params.acceptBestAbsolute) {
+            for (auto &path : *m_paths) {
                 path->deny();
             }
-            paths->clear();
-            paths->push_front(best);
+            m_paths->clear();
+            m_paths->push_front(m_best);
         } else {
-            paths->push_back(best);
+            m_paths->push_back(m_best);
 
-            for (std::shared_ptr<Path> working = paths->front(); working != best;) {
-                paths->pop_front();
+            for (std::shared_ptr<Path> working = m_paths->front(); working != m_best;) {
+                m_paths->pop_front();
                 // throw away if the probability is very low or not
                 // distinguishable from best. Don't keep paths with equal
                 // probability at the front, for we need to find a unique
                 // best path eventually.
-                if (best->getProb() > working->getProb() * params.maxPaths / numPaths
-                    || (best->getProb() <= working->getProb()
-                        && best->getRoom() == working->getRoom())) {
+                if (m_best->getProb() > working->getProb() * m_params.maxPaths / m_numPaths
+                    || (m_best->getProb() <= working->getProb()
+                        && m_best->getRoom() == working->getRoom())) {
                     working->deny();
                 } else {
-                    paths->push_back(working);
+                    m_paths->push_back(working);
                 }
-                working = paths->front();
+                working = m_paths->front();
             }
         }
     }
-    second = nullptr;
-    shortPaths = nullptr;
-    best = nullptr;
-    return paths;
+    m_second = nullptr;
+    m_shortPaths = nullptr;
+    m_best = nullptr;
+    return m_paths;
 }

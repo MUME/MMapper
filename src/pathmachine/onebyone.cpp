@@ -14,33 +14,30 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
-#include <list>
 #include <memory>
 
 class Path;
 
 OneByOne::OneByOne(const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
-                   RoomSignalHandler *const in_handler)
+                   RoomSignalHandler &in_handler)
     : Experimenting{PathList::alloc(), getDirection(sigParseEvent.deref().getMoveType()), in_params}
-    , event{sigParseEvent.getShared()}
-    , handler{in_handler}
+    , m_event{sigParseEvent.getShared()}
+    , m_handler{in_handler}
 {}
 
 void OneByOne::virt_receiveRoom(const RoomHandle &room)
 {
-    if (::compare(room.getRaw(), deref(event), params.matchingTolerance)
+    if (::compare(room.getRaw(), deref(m_event), m_params.matchingTolerance)
         == ComparisonResultEnum::EQUAL) {
-        augmentPath(shortPaths->back(), room);
+        augmentPath(m_shortPaths->back(), room);
     } else {
-        // needed because the memory address is not unique and
-        // calling admin->release might destroy a room still held by some path
-        handler->hold(room.getId(), this);
-        handler->release(room.getId());
+        m_handler.hold(room.getId());
+        m_handler.release(room.getId());
     }
 }
 
 void OneByOne::addPath(std::shared_ptr<Path> path)
 {
-    shortPaths->emplace_back(std::move(path));
+    m_shortPaths->emplace_back(std::move(path));
 }

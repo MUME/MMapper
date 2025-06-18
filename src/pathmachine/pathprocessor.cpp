@@ -3,7 +3,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "RoomRecipient.h"
+#include "pathprocessor.h"
 
-RoomRecipient::RoomRecipient() = default;
-RoomRecipient::~RoomRecipient() = default;
+PathProcessor::PathProcessor() = default;
+PathProcessor::~PathProcessor() = default;

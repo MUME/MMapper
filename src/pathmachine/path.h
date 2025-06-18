@@ -23,10 +23,35 @@
 #include <QtGlobal>
 
 class Coordinate;
-class RoomRecipient;
+class PathProcessor;
 class RoomSignalHandler;
 struct PathParameters;
 
+/*!
+ * @brief Represents a potential path segment during the pathfinding process.
+ *
+ * A Path object encapsulates a specific RoomHandle that is part of a potential
+ * route being explored by the PathMachine. Paths form a tree structure, with
+ * each Path (except roots) having a parent and potentially multiple children (forks).
+ *
+ * Key attributes:
+ * - `m_room`: The RoomHandle this path segment points to.
+ * - `m_probability`: Likelihood of this segment being correct.
+ * - `m_signaler`: Reference to RoomSignalHandler for lifecycle ops.
+ * - `m_dir`: Optional direction taken to reach this path's room.
+ *
+ * Core methods:
+ * - `approve(ChangeList&)`: Confirms this path segment, "keeps" its room via
+ *   RoomSignalHandler, and recursively approves its parent.
+ * - `deny(ChangeList&)`: Rejects this path segment, "releases" its room, and
+ *   may recursively deny its parent.
+ * - `fork(...)`: Creates a new child Path. Probability is based on various
+ *   factors including `RoomSignalHandler::getNumHolders()` for the target room.
+ *   When a Path is created via `alloc` (often from `fork`), if it represents a
+ *   specific direction from a parent, its room is `hold()`-called via the `RoomSignalHandler`.
+ *
+ * Managed by `std::shared_ptr<Path>`, typically in PathMachine's `m_paths` list.
+ */
 class NODISCARD Path final : public std::enable_shared_from_this<Path>
 {
 private:
@@ -35,21 +60,19 @@ private:
     double m_probability = 1.0;
     // in fact a path only has one room, one parent and some children (forks).
     const RoomHandle m_room;
-    RoomSignalHandler *const m_signaler;
+    RoomSignalHandler &m_signaler;
     const std::optional<ExitDirEnum> m_dir;
     bool m_zombie = false;
 
 public:
     static std::shared_ptr<Path> alloc(const RoomHandle &room,
-                                       RoomRecipient *locker,
-                                       RoomSignalHandler *signaler,
+                                       RoomSignalHandler &signaler,
                                        std::optional<ExitDirEnum> direction);
 
 public:
     explicit Path(Badge<Path>,
                   RoomHandle moved_room,
-                  RoomRecipient *locker,
-                  RoomSignalHandler *signaler,
+                  RoomSignalHandler &signaler,
                   std::optional<ExitDirEnum> direction);
     DELETE_CTORS_AND_ASSIGN_OPS(Path);
 
@@ -67,11 +90,10 @@ public:
         return m_room;
     }
 
-    // new Path is created, distance between rooms is calculated and probability is set accordingly
+    // new Path is created, distance between rooms is calculated and probability is set accordingly.
     NODISCARD std::shared_ptr<Path> fork(const RoomHandle &room,
                                          const Coordinate &expectedCoordinate,
                                          const PathParameters &params,
-                                         RoomRecipient *locker,
                                          ExitDirEnum dir);
     NODISCARD double getProb() const
     {

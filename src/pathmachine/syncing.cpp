@@ -13,11 +13,11 @@
 
 Syncing::Syncing(PathParameters &in_p,
                  std::shared_ptr<PathList> moved_paths,
-                 RoomSignalHandler *in_signaler)
+                 RoomSignalHandler &in_signaler)
     : signaler(in_signaler)
     , params(in_p)
     , paths(std::move(moved_paths))
-    , parent(Path::alloc(RoomHandle{}, this, signaler, std::nullopt))
+    , parent(Path::alloc(RoomHandle{}, signaler, std::nullopt))
 {}
 
 void Syncing::virt_receiveRoom(const RoomHandle &in_room)
@@ -31,7 +31,7 @@ void Syncing::virt_receiveRoom(const RoomHandle &in_room)
             parent = nullptr;
         }
     } else {
-        auto p = Path::alloc(in_room, this, signaler, ExitDirEnum::NONE);
+        auto p = Path::alloc(in_room, signaler, ExitDirEnum::NONE);
         p->setParent(parent);
         parent->insertChild(p);
         paths->push_back(p);

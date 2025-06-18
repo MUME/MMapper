@@ -17,7 +17,6 @@
 #include "../map/ExitDirection.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/RawRoom.h"
-#include "../map/RoomRecipient.h"
 #include "../map/World.h"
 #include "../map/coordinate.h"
 #include "../map/exit.h"

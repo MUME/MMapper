@@ -15,7 +15,7 @@ class AnsiOstream;
 class Map;
 class ParseEvent;
 class ProgressCounter;
-class RoomRecipient;
+class PathProcessor;
 
 struct NODISCARD NameDesc final
 {
@@ -90,7 +90,4 @@ struct NODISCARD ParseTree final
     void printStats(ProgressCounter &pc, AnsiOstream &os) const;
 };
 
-void getRooms(const Map &map,
-              const ParseTree &tree,
-              RoomRecipient &visitor,
-              const ParseEvent &event);
+NODISCARD RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &event);

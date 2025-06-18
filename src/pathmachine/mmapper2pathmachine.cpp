@@ -6,6 +6,7 @@
 #include "mmapper2pathmachine.h"
 
 #include "../configuration/configuration.h"
+#include "../global/SendToUser.h"
 #include "../map/parseevent.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
@@ -53,7 +54,14 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
     params.matchingTolerance = utils::clampNonNegative(settings.matchingTolerance);
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
-    PathMachine::handleParseEvent(sigParseEvent);
+    try {
+        PathMachine::handleParseEvent(sigParseEvent);
+    } catch (std::exception e) {
+        global::sendToUser(QString("ERROR: %1\n").arg(e.what()));
+    } catch (...) {
+        global::sendToUser("ERROR: unknown exception\n");
+    }
+
     emit sig_state(stateName(getState()));
 }
 

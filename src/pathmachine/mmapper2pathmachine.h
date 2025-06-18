@@ -15,9 +15,11 @@ class MapFrontend;
 class ParseEvent;
 class QObject;
 
-/**
-@author alve,,,
-*/
+/*!
+ * @brief Concrete implementation of PathMachine that handles parse events and interacts with the rest of the application.
+ *
+ * @author alve,,,
+ */
 class NODISCARD_QOBJECT Mmapper2PathMachine final : public PathMachine
 {
     Q_OBJECT

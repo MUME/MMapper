@@ -32,7 +32,7 @@
 #include <optional>
 #include <unordered_set>
 
-class RoomRecipient;
+class PathProcessor;
 
 PathMachine::PathMachine(MapFrontend &map, QObject *const parent)
     : QObject(parent)
@@ -88,6 +88,9 @@ void PathMachine::forcePositionChange(const RoomId id, const bool update)
     // Force update room with last event
     ChangeList changes;
     changes.add(Change{room_change_types::Update{id, m_lastEvent.deref(), UpdateTypeEnum::Force}});
+    if (room.isTemporary()) {
+        changes.add(Change{room_change_types::MakePermanent{id}});
+    }
     updateMostLikelyRoom(m_lastEvent, changes, true);
     if (!changes.empty()) {
         scheduleAction(changes);
@@ -119,6 +122,16 @@ void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
 
     m_lastEvent.requireValid();
 
+    if (m_map.getCurrentMap().empty()) {
+        // Bootstrap an empty map with its first room
+        Coordinate c(0, 0, 0);
+        m_map.slot_createRoom(sigParseEvent, c);
+        if (auto rh = m_map.findRoomHandle(c)) {
+            forcePositionChange(rh.getId(), false);
+            return;
+        }
+    }
+
     ChangeList changes;
 
     switch (m_state) {
@@ -147,7 +160,7 @@ void PathMachine::handleParseEvent(const SigParseEvent &sigParseEvent)
 }
 
 void PathMachine::tryExits(const RoomHandle &room,
-                           RoomRecipient &recipient,
+                           PathProcessor &recipient,
                            const ParseEvent &event,
                            const bool out)
 {
@@ -162,7 +175,9 @@ void PathMachine::tryExits(const RoomHandle &room,
         tryExit(possible, recipient, out);
     } else {
         // Only check the current room for LOOK
-        m_map.lookingForRooms(recipient, room.getId());
+        if (auto rh = m_map.findRoomHandle(room.getId())) {
+            recipient.receiveRoom(rh);
+        }
         if (move >= CommandEnum::FLEE) {
             // Only try all possible exits for commands FLEE, SCOUT, and NONE
             for (const auto &possible : room.getExits()) {
@@ -172,15 +187,17 @@ void PathMachine::tryExits(const RoomHandle &room,
     }
 }
 
-void PathMachine::tryExit(const RawExit &possible, RoomRecipient &recipient, const bool out)
+void PathMachine::tryExit(const RawExit &possible, PathProcessor &recipient, const bool out)
 {
     for (auto idx : (out ? possible.getOutgoingSet() : possible.getIncomingSet())) {
-        m_map.lookingForRooms(recipient, idx);
+        if (auto rh = m_map.findRoomHandle(idx)) {
+            recipient.receiveRoom(rh);
+        }
     }
 }
 
 void PathMachine::tryCoordinate(const RoomHandle &room,
-                                RoomRecipient &recipient,
+                                PathProcessor &recipient,
                                 const ParseEvent &event)
 {
     if (!room.exists()) {
@@ -193,7 +210,9 @@ void PathMachine::tryCoordinate(const RoomHandle &room,
         // LOOK, UNKNOWN will have an empty offset
         auto offset = ::exitDir(getDirection(moveCode));
         const Coordinate c = room.getPosition() + offset;
-        m_map.lookingForRooms(recipient, c);
+        if (auto rh = m_map.findRoomHandle(c)) {
+            recipient.receiveRoom(rh);
+        }
 
     } else {
         const Coordinate roomPos = room.getPosition();
@@ -203,7 +222,9 @@ void PathMachine::tryCoordinate(const RoomHandle &room,
         // even though both ExitDirEnum::UNKNOWN and ExitDirEnum::NONE
         // both have Coordinate(0, 0, 0).
         for (const ExitDirEnum dir : ALL_EXITS7) {
-            m_map.lookingForRooms(recipient, roomPos + ::exitDir(dir));
+            if (auto rh = m_map.findRoomHandle(roomPos + ::exitDir(dir))) {
+                recipient.receiveRoom(rh);
+            }
         }
     }
 }
@@ -260,14 +281,18 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
                         if (const auto &pos = tryGetMostLikelyRoomPosition()) {
                             Coordinate c = pos.value() + eDir;
                             --c.z;
-                            m_map.lookingForRooms(appr, c);
+                            if (auto rh = m_map.findRoomHandle(c)) {
+                                appr.receiveRoom(rh);
+                            }
                             perhaps = appr.oneMatch();
 
                             if (!perhaps) {
                                 // try to match by coordinate one step above expected
                                 appr.releaseMatch();
                                 c.z += 2;
-                                m_map.lookingForRooms(appr, c);
+                                if (auto rh = m_map.findRoomHandle(c)) {
+                                    appr.receiveRoom(rh);
+                                }
                                 perhaps = appr.oneMatch();
                             }
                         }
@@ -288,10 +313,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
             return;
         }
 
-        /* FIXME: null locker ends up being an error in RoomSignalHandler::keep(),
-         * so why is this allowed to be null, and how do we prevent this null
-         * from actually causing an error? */
-        deref(m_paths).push_front(Path::alloc(pathRoot, nullptr, &m_signaler, std::nullopt));
+        deref(m_paths).push_front(Path::alloc(pathRoot, m_signaler, std::nullopt));
         experimenting(sigParseEvent, changes);
 
         return;
@@ -520,9 +542,19 @@ void PathMachine::syncing(const SigParseEvent &sigParseEvent, ChangeList &change
     auto &params = m_params;
     ParseEvent &event = sigParseEvent.deref();
     {
-        Syncing sync{params, m_paths, &m_signaler};
-        if (event.hasServerId() || event.getNumSkipped() <= params.maxSkipped) {
-            m_map.lookingForRooms(sync, sigParseEvent);
+        Syncing sync{params, m_paths, m_signaler};
+        if (event.getNumSkipped() <= params.maxSkipped) {
+            RoomIdSet ids = m_map.lookingForRooms(sigParseEvent);
+            if (event.hasServerId()) {
+                if (auto rh = m_map.findRoomHandle(event.getServerId())) {
+                    ids.insert(rh.getId());
+                }
+            }
+            for (RoomId id : ids) {
+                if (auto rh = m_map.findRoomHandle(id)) {
+                    sync.receiveRoom(rh);
+                }
+            }
         }
         m_paths = sync.evaluate();
     }
@@ -553,10 +585,20 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent, ChangeList &
             }
         }
         // Look for appropriate rooms (including those we just created)
-        m_map.lookingForRooms(exp, sigParseEvent);
+        RoomIdSet ids = m_map.lookingForRooms(sigParseEvent);
+        if (event.hasServerId()) {
+            if (auto rh = m_map.findRoomHandle(event.getServerId())) {
+                ids.insert(rh.getId());
+            }
+        }
+        for (RoomId id : ids) {
+            if (auto rh = m_map.findRoomHandle(id)) {
+                exp.receiveRoom(rh);
+            }
+        }
         m_paths = exp.evaluate();
     } else {
-        OneByOne oneByOne{sigParseEvent, params, &m_signaler};
+        OneByOne oneByOne{sigParseEvent, params, m_signaler};
         {
             auto &tmp = oneByOne;
             for (const auto &path : deref(m_paths)) {

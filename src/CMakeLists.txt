@@ -299,8 +299,6 @@ set(mmapper_SRCS
     map/RoomHandle.h
     map/RoomIdSet.cpp
     map/RoomIdSet.h
-    map/RoomRecipient.cpp
-    map/RoomRecipient.h
     map/RoomRevert.cpp
     map/RoomRevert.h
     map/ServerIdMap.cpp
@@ -443,6 +441,8 @@ set(mmapper_SRCS
     pathmachine/pathmachine.cpp
     pathmachine/pathmachine.h
     pathmachine/pathparameters.h
+    pathmachine/pathprocessor.cpp
+    pathmachine/pathprocessor.h
     pathmachine/roomsignalhandler.cpp
     pathmachine/roomsignalhandler.h
     pathmachine/syncing.cpp

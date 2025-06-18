@@ -8,6 +8,9 @@
 
 #include <cstdint>
 
+/*!
+ * @brief Parameters used by the PathMachine for pathfinding calculations.
+ */
 struct NODISCARD PathParameters final
 {
     double acceptBestRelative = 10.0;

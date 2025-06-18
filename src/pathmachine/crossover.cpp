@@ -24,11 +24,12 @@ Crossover::Crossover(MapFrontend &map,
 
 void Crossover::virt_receiveRoom(const RoomHandle &room)
 {
-    if (deref(shortPaths).empty()) {
-        m_map.releaseRoom(*this, room.getId());
+    auto &shortPaths = deref(m_shortPaths);
+    if (shortPaths.empty()) {
+        std::ignore = m_map.tryRemoveTemporary(room.getId());
     }
 
-    for (auto &shortPath : *shortPaths) {
+    for (auto &shortPath : shortPaths) {
         augmentPath(shortPath, room);
     }
 }

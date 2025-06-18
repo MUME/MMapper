@@ -24,7 +24,7 @@
 
 class ParseEvent;
 class QObject;
-class RoomRecipient;
+class PathProcessor;
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.
@@ -103,6 +103,9 @@ public:
     void checkSize();
 
     NODISCARD bool createEmptyRoom(const Coordinate &);
+    NODISCARD bool hasTemporaryRoom(RoomId id) const;
+    NODISCARD bool tryRemoveTemporary(RoomId id);
+    NODISCARD bool tryMakePermanent(RoomId id);
 
     NODISCARD RoomHandle findRoomHandle(RoomId) const;
     NODISCARD RoomHandle findRoomHandle(const Coordinate &) const;
@@ -121,14 +124,8 @@ public:
 public:
     void scheduleAction(const Change &change);
 
-    // looking for rooms leads to a bunch of foundRoom() signals
-    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
-    void lookingForRooms(RoomRecipient &, RoomId); // by id
-    void lookingForRooms(RoomRecipient &, const Coordinate &);
-
-public:
-    void keepRoom(RoomRecipient &, RoomId);
-    void releaseRoom(RoomRecipient &, RoomId);
+    // looking for rooms returns a set of matching room IDs
+    NODISCARD RoomIdSet lookingForRooms(const SigParseEvent &);
 
 signals:
     // this signal is also sent out if a room is deleted. So any clients still

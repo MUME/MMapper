@@ -24,15 +24,20 @@ class Coordinate;
 class MapFrontend;
 class QEvent;
 class QObject;
-class RoomRecipient;
+class PathProcessor;
 struct RoomId;
 
 enum class NODISCARD PathStateEnum : uint8_t { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
 
-/**
+/*!
  * the parser determines the relations between incoming move- and room-events
  * and decides if rooms have to be added (and where) and where the player is
  * the results are published via signals
+ *
+ * PathMachine operates in different states: APPROVED (confident of location),
+ * EXPERIMENTING (exploring multiple possibilities), and SYNCING (searching for
+ * any matching room). It delegates specific processing logic to PathProcessor
+ * strategies based on the current state.
  *
  * PathMachine is the base class for Mmapper2PathMachine
  */
@@ -78,9 +83,9 @@ private:
     void syncing(const SigParseEvent &sigParseEvent, ChangeList &changes);
     void approved(const SigParseEvent &sigParseEvent, ChangeList &changes);
     void evaluatePaths(ChangeList &changes);
-    void tryExits(const RoomHandle &, RoomRecipient &, const ParseEvent &, bool out);
-    void tryExit(const RawExit &possible, RoomRecipient &recipient, bool out);
-    void tryCoordinate(const RoomHandle &, RoomRecipient &, const ParseEvent &);
+    void tryExits(const RoomHandle &, PathProcessor &, const ParseEvent &, bool out);
+    void tryExit(const RawExit &possible, PathProcessor &recipient, bool out);
+    void tryCoordinate(const RoomHandle &, PathProcessor &, const ParseEvent &);
 
 private:
     void updateMostLikelyRoom(const SigParseEvent &sigParseEvent, ChangeList &changes, bool force);

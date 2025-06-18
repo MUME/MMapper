@@ -8,8 +8,6 @@
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
 #include "../map/coordinate.h"
-#include "../map/exit.h"
-#include "../map/room.h"
 #include "../map/roomid.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
@@ -21,24 +19,22 @@
 #include <utility>
 
 std::shared_ptr<Path> Path::alloc(const RoomHandle &room,
-                                  RoomRecipient *const locker,
-                                  RoomSignalHandler *const signaler,
+                                  RoomSignalHandler &signaler,
                                   std::optional<ExitDirEnum> moved_direction)
 {
-    return std::make_shared<Path>(Badge<Path>{}, room, locker, signaler, std::move(moved_direction));
+    return std::make_shared<Path>(Badge<Path>{}, room, signaler, std::move(moved_direction));
 }
 
 Path::Path(Badge<Path>,
            RoomHandle moved_room,
-           RoomRecipient *const locker,
-           RoomSignalHandler *const in_signaler,
+           RoomSignalHandler &in_signaler,
            std::optional<ExitDirEnum> moved_direction)
     : m_room(std::move(moved_room))
     , m_signaler(in_signaler)
     , m_dir(std::move(moved_direction))
 {
     if (m_dir.has_value()) {
-        deref(m_signaler).hold(m_room.getId(), locker);
+        m_signaler.hold(m_room.getId());
     }
 }
 
@@ -50,14 +46,13 @@ Path::Path(Badge<Path>,
 std::shared_ptr<Path> Path::fork(const RoomHandle &in_room,
                                  const Coordinate &expectedCoordinate,
                                  const PathParameters &p,
-                                 RoomRecipient *const locker,
                                  const ExitDirEnum direction)
 {
     assert(!m_zombie);
     const auto udir = static_cast<uint32_t>(direction);
     assert(isClamped(udir, 0u, NUM_EXITS));
 
-    auto ret = Path::alloc(in_room, locker, m_signaler, direction);
+    auto ret = Path::alloc(in_room, m_signaler, direction);
     ret->setParent(shared_from_this());
     insertChild(ret);
 
@@ -99,7 +94,7 @@ std::shared_ptr<Path> Path::fork(const RoomHandle &in_room,
             }
         }
     }
-    dist /= static_cast<double>(m_signaler->getNumLockers(in_room.getId()));
+    dist /= static_cast<double>(m_signaler.getNumHolders(in_room.getId()));
     if (in_room.isTemporary()) {
         dist *= p.newRoomPenalty;
     }
@@ -126,7 +121,7 @@ void Path::approve(ChangeList &changes)
         assert(m_dir.has_value());
         const RoomHandle proom = parent->getRoom();
         const auto pId = !proom.exists() ? INVALID_ROOMID : proom.getId();
-        deref(m_signaler).keep(m_room.getId(), m_dir.value(), pId, changes);
+        m_signaler.keep(m_room.getId(), m_dir.value(), pId, changes);
         parent->removeChild(this->shared_from_this());
         parent->approve(changes);
     }
@@ -152,7 +147,7 @@ void Path::deny()
         return;
     }
     if (m_dir.has_value()) {
-        deref(m_signaler).release(m_room.getId());
+        m_signaler.release(m_room.getId());
     }
     if (const auto &parent = getParent()) {
         parent->removeChild(shared_from_this());

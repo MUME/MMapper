@@ -10,13 +10,12 @@
 #include "../global/logging.h"
 #include "Compare.h"
 #include "Map.h"
-#include "RoomRecipient.h"
 #include "World.h"
 
 #include <deque>
 #include <optional>
 
-void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, const ParseEvent &event)
+RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &event)
 {
     // REVISIT: use Timer here instead of manually doing the same thing with Clock::now(),
     // which would have the added benefit of reporting times for lookups that fail.
@@ -97,27 +96,28 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
 
     if (pSet == nullptr) {
         MMLOG() << "[getRooms] Unable to find any matches.";
-        return;
+        return RoomIdSet{};
     }
 
     auto &set = *pSet;
 
     const int tolerance = getConfig().pathMachine.matchingTolerance;
-    auto tryReport = [&event, &visitor, tolerance](const RoomHandle &room) {
+    auto tryReport = [&event, tolerance](const RoomHandle &room) {
         if (::compare(room.getRaw(), event, tolerance) == ComparisonResultEnum::DIFFERENT) {
             return false;
         }
-        visitor.receiveRoom(room);
         return true;
     };
 
     MMLOG() << "[getRooms] Found " << set.size() << " potential match(es).";
 
+    RoomIdSet results;
     const auto t2 = Clock::now();
     size_t numReported = 0;
     for (const RoomId id : set) {
         if (const auto optRoom = map.findRoomHandle(id)) {
             if (tryReport(optRoom)) {
+                results.insert(id);
                 ++numReported;
             }
         }
@@ -138,6 +138,8 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
     report("part1. (nothing)", t1, t2);
     report("part2. for(...) tryReport() ", t2, t3);
     report("overall", t0, t3);
+
+    return results;
 }
 
 void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const

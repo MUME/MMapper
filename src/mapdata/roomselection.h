@@ -9,7 +9,7 @@
 #include "../global/NullPointerException.h"
 #include "../global/RAII.h"
 #include "../global/RuleOf5.h"
-#include "../map/RoomRecipient.h"
+#include "../map/RoomHandle.h"
 #include "../map/roomid.h"
 #include "roomfilter.h"
 

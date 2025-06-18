@@ -4,10 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../map/DoorFlags.h"
 #include "../map/ExitDirection.h"
-#include "../map/ExitFieldVariant.h"
-#include "../map/ExitFlags.h"
 #include "experimenting.h"
 #include "path.h"
 
@@ -16,6 +13,13 @@
 class MapFrontend;
 struct PathParameters;
 
+/*!
+ * @brief PathProcessor strategy for creating paths when new rooms might be formed.
+ *
+ * Used in "Experimenting" state. Extends multiple existing paths from `m_shortPaths`
+ * (inherited from Experimenting) into newly observed or created rooms that match
+ * the current event, using `augmentPath()`.
+ */
 class NODISCARD Crossover final : public Experimenting
 {
 private:

@@ -6,26 +6,34 @@
 
 #include "../global/RuleOf5.h"
 #include "../map/RoomHandle.h"
-#include "../map/RoomRecipient.h"
 #include "../map/parseevent.h"
 #include "../map/room.h"
 #include "../map/roomid.h"
+#include "pathprocessor.h"
 
 #include <unordered_map>
 
 class MapFrontend;
 class ParseEvent;
 
-class NODISCARD Approved final : public RoomRecipient
+/*!
+ * @brief PathProcessor strategy for the "Approved" pathfinding state.
+ *
+ * Used when PathMachine is confident of the current room. It attempts to find
+ * a single, unambiguous match for incoming event data among directly accessible
+ * rooms or by server ID. Manages temporary room cleanup via ChangeList if
+ * rooms don't match or if multiple matches occur.
+ */
+class NODISCARD Approved final : public PathProcessor
 {
 private:
-    SigParseEvent myEvent;
-    std::unordered_map<RoomId, ComparisonResultEnum> compareCache;
-    RoomHandle matchedRoom;
+    SigParseEvent m_myEvent;
+    std::unordered_map<RoomId, ComparisonResultEnum> m_compareCache;
+    RoomHandle m_matchedRoom;
     MapFrontend &m_map;
-    const int matchingTolerance;
-    bool moreThanOne = false;
-    bool update = false;
+    const int m_matchingTolerance;
+    bool m_moreThanOne = false;
+    bool m_update = false;
 
 public:
     explicit Approved(MapFrontend &map, const SigParseEvent &sigParseEvent, int matchingTolerance);
@@ -40,6 +48,6 @@ private:
 
 public:
     NODISCARD RoomHandle oneMatch() const;
-    NODISCARD bool needsUpdate() const { return update; }
+    NODISCARD bool needsUpdate() const { return m_update; }
     void releaseMatch();
 };
