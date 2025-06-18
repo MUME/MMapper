@@ -26,7 +26,7 @@ namespace { // anonymous
 //
 // Also, we may want to try to disable this for test cases, because there are tests of invalid
 // enum values, and those can trigger the error() function in the ChangePrinter.
-static volatile bool print_world_changes = true;
+static volatile bool print_world_changes = IS_DEBUG_BUILD;
 // This limit exists because reverting may create a very large list of changes.
 static volatile size_t max_change_batch_print_size = 20;
 

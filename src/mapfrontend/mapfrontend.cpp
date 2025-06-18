@@ -253,7 +253,7 @@ bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
 
 bool MapFrontend::applySingleChange(const Change &change)
 {
-    {
+    if (IS_DEBUG_BUILD) {
         auto &&log = MMLOG();
         log << "[MapFrontend::applySingleChange] ";
         getCurrentMap().printChange(log, change);
@@ -265,7 +265,7 @@ bool MapFrontend::applySingleChange(const Change &change)
 
 bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
 {
-    {
+    if (IS_DEBUG_BUILD) {
         auto &&log = MMLOG();
         log << "[MapFrontend::applyChanges] ";
         getCurrentMap().printChanges(log, changes.getChanges(), "\n");
