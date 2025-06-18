@@ -30,6 +30,13 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
+<<<<<<< HEAD
+=======
+static constexpr const int GROUP_COLUMN_COUNT = 10;
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
+              "# of columns");
+
+>>>>>>> dabeb884 (Add Character Token system and column to Group Manager with image caching)
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
 namespace { // anonymous
@@ -467,8 +474,17 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 
     // Map column to data
     switch (role) {
+    case Qt::DecorationRole:
+        if (column == ColumnTypeEnum::CHARACTER_TOKEN && m_tokenManager) {
+            QString key = character.getDisplayName();  // Use display name
+            qDebug() << "GroupModel: Requesting token for display name:" << key;
+            return QIcon(m_tokenManager->getToken(key));
+        }
+        return QVariant();
     case Qt::DisplayRole:
         switch (column) {
+        case ColumnTypeEnum::CHARACTER_TOKEN:
+            return QVariant();
         case ColumnTypeEnum::NAME:
             if (character.getLabel().isEmpty()
                 || character.getName().getStdStringViewUtf8()
@@ -541,6 +557,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         };
 
         switch (column) {
+        case ColumnTypeEnum::CHARACTER_TOKEN:
+            return QVariant(); // or appropriate fallback
         case ColumnTypeEnum::HP_PERCENT:
             return getRatioTooltip(character.getHits(), character.getMaxHits());
         case ColumnTypeEnum::MANA_PERCENT:
@@ -584,12 +602,14 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    if (index.row() >= 0 && index.row() < static_cast<int>(m_characters.size())) {
-        const SharedGroupChar &character = m_characters.at(static_cast<size_t>(index.row()));
-        return dataForCharacter(character, static_cast<ColumnTypeEnum>(index.column()), role);
+    if (index.row() < 0 || index.row() >= static_cast<int>(m_characters.size())) {
+        return QVariant();
     }
 
-    return QVariant();
+    const SharedGroupChar &character = m_characters.at(static_cast<size_t>(index.row()));
+    const ColumnTypeEnum column = static_cast<ColumnTypeEnum>(index.column());
+
+    return dataForCharacter(character, column, role);
 }
 
 QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -711,6 +731,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     } else {
         m_model.setCharacters({});
     }
+    m_model.setTokenManager(&tokenManager);
 
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -738,8 +759,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     layout->addWidget(m_table);
 
     // Minimize row height
-    m_table->verticalHeader()->setDefaultSectionSize(
-        m_table->verticalHeader()->minimumSectionSize());
+    m_table->verticalHeader()->setDefaultSectionSize(32);
+    m_table->setIconSize(QSize(32, 32));
 
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {

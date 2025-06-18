@@ -5,6 +5,7 @@
 
 #include "CGroupChar.h"
 #include "mmapper2character.h"
+#include "tokenmanager.h"
 
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
@@ -73,6 +74,7 @@ public:
 };
 
 #define XFOREACH_COLUMNTYPE(X) \
+    X(CHARACTER_TOKEN, character_token, CharacterToken, "Icon") \
     X(NAME, name, Name, "Name") \
     X(HP_PERCENT, hp_percent, HpPercent, "HP") \
     X(MANA_PERCENT, mana_percent, ManaPercent, "Mana") \
@@ -103,6 +105,7 @@ class NODISCARD_QOBJECT GroupModel final : public QAbstractTableModel
 private:
     GroupVector m_characters;
     bool m_mapLoaded = false;
+    TokenManager *m_tokenManager = nullptr;
 
 public:
     explicit GroupModel(QObject *parent = nullptr);
@@ -117,6 +120,7 @@ public:
     void insertCharacter(const SharedGroupChar &newCharacter);
     void removeCharacterById(GroupId charId);
     void updateCharacter(const SharedGroupChar &updatedCharacter);
+    void setTokenManager(TokenManager *manager) { m_tokenManager = manager; }
     void resetModel();
 
 private:
@@ -154,6 +158,7 @@ private:
     MapData *m_map = nullptr;
     GroupProxyModel *m_proxyModel = nullptr;
     GroupModel m_model;
+    TokenManager tokenManager;
 
     void updateColumnVisibility();
 
