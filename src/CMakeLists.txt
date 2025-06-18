@@ -218,6 +218,8 @@ set(mmapper_SRCS
     group/mmapper2character.h
     group/mmapper2group.cpp
     group/mmapper2group.h
+    group/tokenmanager.cpp
+    group/tokenmanager.h
     logger/autologger.cpp
     logger/autologger.h
     mainwindow/DescriptionWidget.cpp
