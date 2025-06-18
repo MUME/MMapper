@@ -16,6 +16,7 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
+#include "../src/global/SendToUser.h"
 #include "Connections.h"
 #include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
@@ -555,27 +556,44 @@ void MapCanvas::finishPendingMapBatches()
     }
 
     LOG() << "Waiting for the cookie. This shouldn't take long.";
-    SharedMapBatchFinisher pFuture = remeshCookie.get();
-    assert(!remeshCookie.isPending());
+    try {
+        SharedMapBatchFinisher pFuture = remeshCookie.get();
+        assert(!remeshCookie.isPending());
 
-    setAnimating(false);
+        setAnimating(false);
 
-    if (pFuture == nullptr) {
-        // REVISIT: Do we need to schedule another update now?
-        LOG() << "Got NULL (means the update was flagged to be ignored)";
-        return;
+        if (pFuture == nullptr) {
+            // REVISIT: Do we need to schedule another update now?
+            LOG() << "Got NULL (means the update was flagged to be ignored)";
+            return;
+        }
+
+        // REVISIT: should we pass a "fake" one and only swap to the correct one on success?
+        LOG() << "Clearing the map batches and call the finisher to create new ones";
+
+        DECL_TIMER(t, __FUNCTION__);
+        const IMapBatchesFinisher &future = *pFuture;
+        std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
+        opt_mapBatches.reset();
+        finish(future, opt_mapBatches, getOpenGL(), getGLFont());
+        assert(opt_mapBatches.has_value());
+        m_data.saveSnapshot();
+
+    } catch (...) {
+        setAnimating(false);
+
+        QString msg;
+        try {
+            std::rethrow_exception(std::current_exception());
+        } catch (const std::exception &ex) {
+            msg = ex.what();
+        } catch (...) {
+            msg = QStringLiteral("unknown");
+        }
+        global::sendToUser(
+            QString("ERROR: %1\nReverting map to previous snapshot. Please file a bug!\n").arg(msg));
+        m_data.restoreSnapshot();
     }
-
-    // REVISIT: should we pass a "fake" one and only swap to the correct one on success?
-    LOG() << "Clearing the map batches and call the finisher to create new ones";
-
-    DECL_TIMER(t, __FUNCTION__);
-    const IMapBatchesFinisher &future = *pFuture;
-    std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
-    opt_mapBatches.reset();
-    finish(future, opt_mapBatches, getOpenGL(), getGLFont());
-    assert(opt_mapBatches.has_value());
-
 #undef LOG
 }
 

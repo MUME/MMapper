@@ -157,12 +157,14 @@ World World::copy() const
     result.m_serverIds = m_serverIds;
     result.m_parseTree = m_parseTree;
     result.m_areaInfos = m_areaInfos;
+    result.m_checkedConsistency = false;
 
     return result;
 }
 
 bool World::operator==(const World &rhs) const
 {
+    std::ignore = m_checkedConsistency;
     return m_remapping == rhs.m_remapping     //
            && m_rooms == rhs.m_rooms          //
            && m_spatialDb == rhs.m_spatialDb  //
@@ -589,7 +591,7 @@ void World::checkAllExitsConsistent(RoomId id) const
 
 void World::checkConsistency(ProgressCounter &counter) const
 {
-    if (getRoomSet().empty()) {
+    if (getRoomSet().empty() || m_checkedConsistency) {
         return;
     }
 
@@ -1272,6 +1274,7 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
         DECL_TIMER(t5, "check-consistency");
         counter.setNewTask(ProgressMsg{"checking map consistency" /*" [debug]"*/}, 1);
         w.checkConsistency(counter);
+        w.m_checkedConsistency = true;
         counter.step();
     }
 
@@ -1901,7 +1904,10 @@ void World::post_change_updates(ProgressCounter &pc)
     if (needsBoundsUpdate()) {
         updateBounds(pc);
     }
-    checkConsistency(pc);
+    if (IS_DEBUG_BUILD && false) {
+        checkConsistency(pc);
+        m_checkedConsistency = true;
+    }
 }
 
 namespace {

@@ -50,6 +50,7 @@ private:
 
     MapState m_saved;
     MapState m_current;
+    MapState m_snapshot;
 
 public:
     explicit MapFrontend(QObject *parent);
@@ -73,6 +74,10 @@ public:
     void setSavedMarks(InfomarkDb marks);
     void setSavedMap(Map map);
     void currentHasBeenSaved() { m_saved = m_current; }
+
+public:
+    void saveSnapshot();
+    void restoreSnapshot();
 
 public:
     void setCurrentMarks(InfomarkDb marks)

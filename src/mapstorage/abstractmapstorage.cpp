@@ -40,6 +40,7 @@ bool AbstractMapStorage::saveData(const MapData &mapData, const bool baseMapOnly
 
     RawMapData rawMapData{};
     rawMapData.mapPair.modified = mapData.getCurrentMap();
+    rawMapData.mapPair.modified.checkConsistency(getProgressCounter());
     rawMapData.position = mapData.tryGetPosition().value_or(Coordinate{});
     rawMapData.filename = getFilename();
     rawMapData.readonly = false; // otherwise we couldn't save

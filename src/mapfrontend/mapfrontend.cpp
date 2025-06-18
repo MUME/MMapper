@@ -189,11 +189,25 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Coordinate &po
 void MapFrontend::setSavedMap(Map map)
 {
     m_saved.map = map;
+    m_snapshot.map = map;
 }
 
 void MapFrontend::setSavedMarks(InfomarkDb marks)
 {
     m_saved.marks = marks;
+    m_snapshot.marks = marks;
+}
+
+void MapFrontend::saveSnapshot()
+{
+    m_snapshot.map = getCurrentMap();
+    m_snapshot.marks = getCurrentMarks();
+}
+
+void MapFrontend::restoreSnapshot()
+{
+    setCurrentMap(m_snapshot.map);
+    setCurrentMarks(m_snapshot.marks);
 }
 
 // REVISIT: we probably don't want to take the caller's word for it about what changed?

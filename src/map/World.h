@@ -45,6 +45,7 @@ private:
     ServerIdMap m_serverIds;
     ParseTree m_parseTree;
     AreaInfoMap m_areaInfos;
+    bool m_checkedConsistency = false;
 
 public:
     explicit World() = default;

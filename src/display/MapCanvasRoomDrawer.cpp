@@ -11,6 +11,7 @@
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
+#include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitFieldVariant.h"
@@ -1033,6 +1034,9 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                           ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
                                                            visitRoomOptions.colorSettings};
                           DECL_TIMER(t, "[ASYNC] generateAllLayerMeshes");
+
+                          ProgressCounter dummyPc;
+                          map.checkConsistency(dummyPc);
 
                           const LayerToRooms layerToRooms = [map]() -> LayerToRooms {
                               DECL_TIMER(t2, "[ASYNC] generateBatches.layerToRooms");
