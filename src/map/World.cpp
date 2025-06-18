@@ -7,6 +7,7 @@
 #include "../global/Timer.h"
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
+#include "../global/thread_utils.h"
 #include "Diff.h"
 #include "MapConsistencyError.h"
 #include "enums.h"
@@ -695,15 +696,17 @@ void World::checkConsistency(ProgressCounter &counter) const
     };
 
     counter.setNewTask(ProgressMsg{"checking room consistency"}, getRoomSet().size());
-    for (const RoomId id : getRoomSet()) {
-        checkAllExitsConsistent(id);
-        checkEnums(id);
-        checkFlags(id);
-        checkParseTree(id);
-        checkPosition(id);
-        checkRemapping(id);
-        checkServerId(id);
-        counter.step();
+    {
+        DECL_TIMER(t_rooms, "checkConsistency for each room (parallel)");
+        thread_utils::parallel_for_each(getRoomSet(), counter, [&, this](const RoomId id) {
+            checkAllExitsConsistent(id);
+            checkEnums(id);
+            checkFlags(id);
+            checkParseTree(id);
+            checkPosition(id);
+            checkRemapping(id);
+            checkServerId(id);
+        });
     }
 
     {
