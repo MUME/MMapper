@@ -18,17 +18,26 @@ NODISCARD extern bool isOnMainThread();
 #define ABORT_IF_NOT_ON_MAIN_THREAD() ::thread_utils::abortIfNotOnMainThread(MM_SOURCE_LOCATION())
 extern void abortIfNotOnMainThread(mm::source_location loc);
 
-template<typename Container, typename Callback>
-void parallel_for_each(Container &&container, ProgressCounter &counter, Callback &&callback)
+template<typename ThreadLocals, typename Container, typename Callback, typename MergeThreadLocals>
+void parallel_for_each_tl(Container &&container,
+                          ProgressCounter &counter,
+                          Callback &&callback,
+                          // The merge is done sequentially.
+                          MergeThreadLocals &&merge_threadlocals)
 {
     const auto numThreads = std::max<size_t>(1, std::thread::hardware_concurrency());
 
     if (numThreads == 1) {
+        std::array<ThreadLocals, 1> thread_locals;
+        auto &tl = thread_locals.front();
         for (auto &&id : container) {
-            callback(id);
+            callback(tl, id);
             counter.step();
         }
+        merge_threadlocals(thread_locals);
     } else {
+        std::vector<ThreadLocals> thread_locals;
+        thread_locals.reserve(numThreads);
         std::vector<std::future<void>> futures;
         futures.reserve(numThreads);
 
@@ -41,11 +50,12 @@ void parallel_for_each(Container &&container, ProgressCounter &counter, Callback
             std::advance(outer_it, actualChunkSize);
             const auto chunkEnd = outer_it;
 
+            auto &tl = thread_locals.emplace_back();
             futures.emplace_back(
-                std::async(std::launch::async, [&counter, &callback, chunkBegin, chunkEnd]() {
+                std::async(std::launch::async, [&counter, &callback, chunkBegin, chunkEnd, &tl]() {
                     try {
                         for (auto iter = chunkBegin; iter != chunkEnd; ++iter) {
-                            callback(*iter);
+                            callback(tl, *iter);
                             counter.step();
                         }
                     } catch (...) {
@@ -74,7 +84,22 @@ void parallel_for_each(Container &&container, ProgressCounter &counter, Callback
         } else if (canceled) {
             throw ProgressCanceledException();
         }
+
+        merge_threadlocals(thread_locals);
     }
+}
+
+template<typename Container, typename Callback>
+void parallel_for_each(Container &&container, ProgressCounter &counter, Callback &&callback)
+{
+    struct DummyThreadLocals final
+    {};
+    parallel_for_each_tl<DummyThreadLocals>(
+        std::forward<Container>(container),
+        counter,
+        [&callback](DummyThreadLocals &, auto &&x) { callback(x); },
+        // merge thread locals
+        [](auto &) {});
 }
 
 } // namespace thread_utils

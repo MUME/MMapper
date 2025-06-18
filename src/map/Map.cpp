@@ -480,102 +480,195 @@ bool Map::operator==(const Map &other) const
 
 void Map::diff(ProgressCounter &pc, AnsiOstream &os, const Map &a, const Map &b)
 {
-    std::set<ExternalRoomId> removedSet;
-    std::set<ExternalRoomId> addedSet;
-    std::set<ExternalRoomId> commonSet;
+    struct NoCopyDefaultMove
+    {
+        NoCopyDefaultMove() = default;
+        MAYBE_UNUSED ~NoCopyDefaultMove() = default;
+        NoCopyDefaultMove(const NoCopyDefaultMove &) = delete;
+        NoCopyDefaultMove &operator=(const NoCopyDefaultMove &) = delete;
+        MAYBE_UNUSED NoCopyDefaultMove(NoCopyDefaultMove &&) = default;
+        MAYBE_UNUSED NoCopyDefaultMove &operator=(NoCopyDefaultMove &&) = default;
+    };
+
+    struct NODISCARD Sets final : public NoCopyDefaultMove
+    {
+        std::set<ExternalRoomId> removedSet;
+        std::set<ExternalRoomId> addedSet;
+        std::set<ExternalRoomId> commonSet;
+
+        static void add_all(std::set<ExternalRoomId> &to, const std::set<ExternalRoomId> &from)
+        {
+            to.insert(from.begin(), from.end());
+        }
+
+        Sets &operator+=(const Sets &other)
+        {
+            add_all(removedSet, other.removedSet);
+            add_all(addedSet, other.addedSet);
+            add_all(commonSet, other.commonSet);
+            return *this;
+        }
+    };
+
+    DECL_TIMER(t, "Map::diff (parallel)");
 
     const World &aWorld = a.getWorld();
     const World &bWorld = b.getWorld();
 
-    pc.setNewTask(ProgressMsg{"scanning old rooms"}, a.getRoomsCount());
-    for (const RoomId oldRoom : a.getRooms()) {
-        const ExternalRoomId extId = aWorld.convertToExternal(oldRoom);
-        if (b.findRoomHandle(extId)) {
-            commonSet.insert(extId);
-        } else {
-            removedSet.insert(extId);
+    Sets sets;
+    auto merge_sets_tls = [&sets](auto &tls) {
+        for (auto &tl : tls) {
+            sets += tl;
         }
-        pc.step();
-    }
+    };
+
+    pc.setNewTask(ProgressMsg{"scanning old rooms"}, a.getRoomsCount());
+    thread_utils::parallel_for_each_tl<Sets>(
+        a.getRooms(),
+        pc,
+        [&aWorld, &b](auto &tl, const RoomId oldRoom) {
+            const ExternalRoomId extId = aWorld.convertToExternal(oldRoom);
+            if (b.findRoomHandle(extId)) {
+                tl.commonSet.insert(extId);
+            } else {
+                tl.removedSet.insert(extId);
+            }
+        },
+        merge_sets_tls);
 
     pc.setNewTask(ProgressMsg{"scanning new rooms"}, b.getRoomsCount());
-    for (const RoomId newRoom : b.getRooms()) {
-        const ExternalRoomId extId = bWorld.convertToExternal(newRoom);
-        if (!a.findRoomHandle(extId)) {
-            addedSet.insert(extId);
-        }
-        pc.step();
-    }
+    thread_utils::parallel_for_each_tl<Sets>(
+        b.getRooms(),
+        pc,
+        [&bWorld, &a](auto &tl, const RoomId newRoom) {
+            const ExternalRoomId extId = bWorld.convertToExternal(newRoom);
+            if (!a.findRoomHandle(extId)) {
+                tl.addedSet.insert(extId);
+            }
+        },
+        merge_sets_tls);
 
     bool hasChange = false;
 
+    struct NODISCARD TlReporter : NoCopyDefaultMove
     {
-        OstreamDiffReporter odr{os};
+    public:
+        struct [[nodiscard]] Detail final
+        {
+            std::ostringstream os;
+            AnsiOstream aos{os};
+            OstreamDiffReporter odr{aos};
+        };
 
-        if (!removedSet.empty()) {
+    private:
+        std::unique_ptr<Detail> m_detail = std::make_unique<Detail>();
+
+    public:
+        NODISCARD Detail &get() { return deref(m_detail); }
+        NODISCARD std::string finish()
+        {
+            auto result = std::move(deref(m_detail).os).str();
+            m_detail.reset();
+            return result;
+        }
+    };
+
+    auto merge_tl_reporters = [&os](auto &tls) {
+        for (auto &tl : tls) {
+            os.writeWithEmbeddedAnsi(tl.finish());
+        }
+    };
+
+    {
+        if (!sets.removedSet.empty()) {
             hasChange = true;
             os << "Removed rooms:\n";
             os << "\n";
-            pc.setNewTask(ProgressMsg{"reporting removed rooms"}, removedSet.size());
-            for (const ExternalRoomId extId : removedSet) {
-                const auto &oldRoom = a.getRoomHandle(extId);
-                os << "Removed room " << extId.value() << ":\n";
-                odr.removed(oldRoom);
-                pc.step();
-            }
+            pc.setNewTask(ProgressMsg{"reporting removed rooms"}, sets.removedSet.size());
+            thread_utils::parallel_for_each_tl<TlReporter>(
+                sets.removedSet,
+                pc,
+                [&a](auto &tl, const ExternalRoomId extId) {
+                    const auto &oldRoom = a.getRoomHandle(extId);
+                    auto &detail = tl.get();
+                    detail.os << "Removed room " << extId.value() << ":\n";
+                    detail.odr.removed(oldRoom);
+                },
+                merge_tl_reporters);
         }
 
-        if (!addedSet.empty()) {
+        if (!sets.addedSet.empty()) {
             if (hasChange) {
                 os << "\n";
             }
             hasChange = true;
             os << "Added rooms:\n";
             os << "\n";
-            pc.setNewTask(ProgressMsg{"reporting added rooms"}, addedSet.size());
-            for (const ExternalRoomId extId : addedSet) {
-                const auto &oldRoom = b.getRoomHandle(extId);
-                os << "Added room " << extId.value() << ":\n";
-                odr.added(oldRoom);
-                pc.step();
-            }
+            pc.setNewTask(ProgressMsg{"reporting added rooms"}, sets.addedSet.size());
+            thread_utils::parallel_for_each_tl<TlReporter>(
+                sets.addedSet,
+                pc,
+                [&b](auto &tl, const ExternalRoomId extId) {
+                    const auto &oldRoom = b.getRoomHandle(extId);
+                    auto &detail = tl.get();
+                    detail.os << "Added room " << extId.value() << ":\n";
+                    detail.odr.added(oldRoom);
+                },
+                merge_tl_reporters);
         }
     }
 
     {
-        bool printedAny = false;
-        pc.setNewTask(ProgressMsg{"scanning common rooms"}, commonSet.size());
-        for (const ExternalRoomId extId : commonSet) {
-            const auto &oldRoom = a.getRoomHandle(extId);
-            const auto &newRoom = b.getRoomHandle(extId);
-            std::ostringstream oss;
-            {
-                AnsiOstream aos{oss};
-                OstreamDiffReporter odr{aos};
-                compare(odr, oldRoom, newRoom);
-            }
-            auto str = std::move(oss).str();
-            if (str.empty()) {
-                continue;
-            }
+        struct TlReporter2 final : public TlReporter
+        {
+            bool printedAny = false;
+        };
 
-            if (!printedAny) {
-                printedAny = true;
-                if (hasChange) {
-                    os << "\n";
+        bool printed_first_change = false;
+        auto merge_tlreporter2 = [&os, &hasChange, &printed_first_change](auto &tls) {
+            for (TlReporter2 &tl : tls) {
+                if (!tl.printedAny) {
+                    continue;
                 }
-                os << "Changes to existing rooms:\n";
+
+                if (!printed_first_change) {
+                    if (hasChange) {
+                        os << "\n";
+                    }
+                    os << "Changes to existing rooms:\n";
+                    printed_first_change = true;
+                }
+
+                hasChange = true;
+                os.writeWithEmbeddedAnsi(tl.finish());
             }
+        };
 
-            os << "\n";
-            os << "Changes to room " << extId.value() << ":\n";
-            os.writeWithEmbeddedAnsi(str);
-            pc.step();
-        }
+        pc.setNewTask(ProgressMsg{"scanning common rooms"}, sets.commonSet.size());
+        thread_utils::parallel_for_each_tl<TlReporter2>(
+            sets.commonSet,
+            pc,
+            [&a, &b](TlReporter2 &tl, const ExternalRoomId extId) {
+                const auto &oldRoom = a.getRoomHandle(extId);
+                const auto &newRoom = b.getRoomHandle(extId);
+                std::ostringstream oss;
+                {
+                    AnsiOstream aos{oss};
+                    OstreamDiffReporter odr{aos};
+                    compare(odr, oldRoom, newRoom);
+                }
+                auto str = std::move(oss).str();
+                if (str.empty()) {
+                    return;
+                }
 
-        if (printedAny) {
-            hasChange = true;
-        }
+                tl.printedAny = true;
+                auto &detail = tl.get();
+                detail.os << "\n";
+                detail.os << "Changes to room " << extId.value() << ":\n";
+                detail.aos.writeWithEmbeddedAnsi(str);
+            },
+            merge_tlreporter2);
     }
 
     if (!hasChange) {
@@ -1174,33 +1267,40 @@ BasicDiffStats getBasicDiffStats(const Map &baseMap, const Map &modMap)
     const auto &mod = modMap.getWorld();
 
     ProgressCounter dummyPc;
-    std::atomic_size_t numRoomsRemoved{0};
-    std::atomic_size_t numRoomsAdded{0};
-    std::atomic_size_t numRoomsChanged{0};
-
-    thread_utils::parallel_for_each(base.getRoomSet(), dummyPc, [&](const RoomId id) {
-        if (!mod.hasRoom(id)) {
-            ++numRoomsRemoved;
-        }
-    });
-
-    thread_utils::parallel_for_each(mod.getRoomSet(), dummyPc, [&](const RoomId id) {
-        if (!base.hasRoom(id)) {
-            ++numRoomsAdded;
-            return;
-        }
-
-        const RawRoom &rawBase = base.getRawCopy(id);
-        const RawRoom &rawModified = mod.getRawCopy(id);
-        if (rawBase != rawModified) {
-            ++numRoomsChanged;
-        }
-    });
-
     BasicDiffStats result;
-    result.numRoomsRemoved = numRoomsRemoved;
-    result.numRoomsAdded = numRoomsAdded;
-    result.numRoomsChanged = numRoomsChanged;
+    auto merge_tls = [&result](auto &tls) {
+        for (auto &tl : tls) {
+            result += tl;
+        }
+    };
+
+    thread_utils::parallel_for_each_tl<BasicDiffStats>(
+        base.getRoomSet(),
+        dummyPc,
+        [&mod](auto &tl, const RoomId id) {
+            if (!mod.hasRoom(id)) {
+                ++tl.numRoomsRemoved;
+            }
+        },
+        merge_tls);
+
+    thread_utils::parallel_for_each_tl<BasicDiffStats>(
+        mod.getRoomSet(),
+        dummyPc,
+        [&base, &mod](auto &tl, const RoomId id) {
+            if (!base.hasRoom(id)) {
+                ++tl.numRoomsAdded;
+                return;
+            }
+
+            const RawRoom &rawBase = base.getRawCopy(id);
+            const RawRoom &rawModified = mod.getRawCopy(id);
+            if (rawBase != rawModified) {
+                ++tl.numRoomsChanged;
+            }
+        },
+        merge_tls);
+
     return result;
 }
 

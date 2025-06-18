@@ -182,6 +182,14 @@ struct NODISCARD BasicDiffStats final
     size_t numRoomsRemoved = 0;
     size_t numRoomsAdded = 0;
     size_t numRoomsChanged = 0;
+
+    BasicDiffStats &operator+=(const BasicDiffStats &other)
+    {
+        numRoomsRemoved += other.numRoomsRemoved;
+        numRoomsAdded += other.numRoomsAdded;
+        numRoomsChanged += other.numRoomsChanged;
+        return *this;
+    }
 };
 
 NODISCARD extern BasicDiffStats getBasicDiffStats(const Map &base, const Map &modified);
