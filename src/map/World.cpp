@@ -2390,17 +2390,31 @@ NODISCARD bool hasMeshDifference(const World &a, const World &b)
 // Only valid if one is immediately derived from the other.
 WorldComparisonStats World::getComparisonStats(const World &base, const World &modified)
 {
+    DECL_TIMER(t, "World::getComparisonStats");
+
     const auto anyRoomsAdded = modified.containsRoomsNotIn(base);
     const auto anyRoomsRemoved = base.containsRoomsNotIn(modified);
-    const auto anyRoomsMoved = base.m_spatialDb != modified.m_spatialDb;
+    const auto anyRoomsMoved = [&base, &modified]() -> bool {
+        DECL_TIMER(t2, "anyRoomsMoved");
+        return base.m_spatialDb != modified.m_spatialDb;
+    }();
+    const auto serverIdsChanged = [&base, &modified]() -> bool {
+        DECL_TIMER(t2, "serverIdsChanged");
+        return base.m_serverIds != modified.m_serverIds;
+    }();
+    const auto parseTreeChanged = [&base, &modified]() -> bool {
+        // This is currently the most expensive operation in the getComparisonStats().
+        DECL_TIMER(t2, "parseTreeChanged");
+        return base.m_parseTree != modified.m_parseTree;
+    }();
 
     WorldComparisonStats result;
     result.boundsChanged = base.getBounds() != modified.getBounds();
     result.anyRoomsRemoved = anyRoomsRemoved;
     result.anyRoomsAdded = anyRoomsAdded;
     result.spatialDbChanged = anyRoomsMoved;
-    result.serverIdsChanged = base.m_serverIds != modified.m_serverIds;
-    result.parseTreeChanged = base.m_parseTree != modified.m_parseTree;
+    result.serverIdsChanged = serverIdsChanged;
+    result.parseTreeChanged = parseTreeChanged;
     result.hasMeshDifferences = anyRoomsAdded                         //
                                 || anyRoomsRemoved                    //
                                 || anyRoomsMoved                      //
