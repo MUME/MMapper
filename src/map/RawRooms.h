@@ -17,6 +17,9 @@ public:
     NODISCARD RawRoom &getRawRoomRef(RoomId pos) { return m_rooms.at(pos); }
     NODISCARD const RawRoom &getRawRoomRef(RoomId pos) const { return m_rooms.at(pos); }
 
+    NODISCARD auto begin() const { return m_rooms.begin(); }
+    NODISCARD auto end() const { return m_rooms.end(); }
+
 public:
     NODISCARD size_t size() const { return m_rooms.size(); }
     void resize(const size_t numRooms) { m_rooms.resize(numRooms); }

@@ -2328,7 +2328,39 @@ XFOREACH_ROOM_PROPERTY(X_DEFINE_GETTER)
 
 bool World::containsRoomsNotIn(const World &other) const
 {
-    return getGlobalArea().roomSet.containsElementNotIn(other.getGlobalArea().roomSet);
+    DECL_TIMER(t, "World::containsRoomsNotIn (parallel)");
+
+    struct NODISCARD ThreadLocal final
+    {
+        bool result = false;
+    };
+
+    bool final_result = false;
+    auto merge_threadlocals = [&final_result](auto &tls) {
+        for (auto &tl : tls) {
+            if (tl.result) {
+                final_result = true;
+                return;
+            }
+        }
+    };
+
+    ProgressCounter dummyPc;
+    thread_utils::parallel_for_each_tl_range<ThreadLocal>(
+        m_rooms,
+        dummyPc,
+        [this, &other](auto &tl, const auto beg, const auto end) {
+            for (auto it = beg; it != end; ++it) {
+                const RawRoom &here = *it;
+                if (here.id != INVALID_ROOMID && this->hasRoom(here.id) && !other.hasRoom(here.id)) {
+                    tl.result = true;
+                    return;
+                }
+            }
+        },
+        merge_threadlocals);
+
+    return final_result;
 }
 
 namespace { // anonymous
@@ -2370,22 +2402,53 @@ NODISCARD bool hasMeshDifference(const RawRoom &a, const RawRoom &b)
            || hasMeshDifference(a.exits, b.exits);  //
 }
 
+} // namespace
+
 // Only valid if one is immediately derived from the other.
 NODISCARD bool hasMeshDifference(const World &a, const World &b)
 {
-    for (const RoomId id : a.getRoomSet()) {
-        if (!b.hasRoom(id)) {
-            // technically we could return true here, but the function assumes that it won't be
-            // called if the worlds added or removed any rooms, so we only care about common rooms.
-            continue;
+    DECL_TIMER(t, "hasMeshDifference (parallel)");
+
+    struct NODISCARD ThreadLocal final
+    {
+        bool result = false;
+    };
+    bool final_result = false;
+    auto merge_results = [&](const auto &tls) {
+        for (const auto &tl : tls) {
+            if (tl.result) {
+                final_result = true;
+                return;
+            }
         }
-        if (hasMeshDifference(deref(a.getRoom(id)), deref(b.getRoom(id)))) {
-            return true;
-        }
-    }
-    return false;
+    };
+
+    ProgressCounter dummyPc;
+    thread_utils::parallel_for_each_tl_range<ThreadLocal>(
+        a.m_rooms,
+        dummyPc,
+        [&a, &b](auto &tl, const auto beg, const auto end) {
+            for (auto it = beg; it != end; ++it) {
+                const RawRoom &here = *it;
+                const auto id = here.id;
+                if (id == INVALID_ROOMID || !a.hasRoom(id)) {
+                    continue;
+                }
+                if (!b.hasRoom(id)) {
+                    // technically we could return true here, but the function assumes that it won't be
+                    // called if the worlds added or removed any rooms, so we only care about common rooms.
+                    continue;
+                }
+                if (hasMeshDifference(deref(a.getRoom(id)), deref(b.getRoom(id)))) {
+                    tl.result = true;
+                    return;
+                }
+            }
+        },
+        merge_results);
+
+    return final_result;
 }
-} // namespace
 
 // Only valid if one is immediately derived from the other.
 WorldComparisonStats World::getComparisonStats(const World &base, const World &modified)

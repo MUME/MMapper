@@ -34,6 +34,9 @@ struct NODISCARD WorldComparisonStats final
     bool hasMeshDifferences = false;
 };
 
+class World;
+NODISCARD bool hasMeshDifference(const World &a, const World &b);
+
 class NODISCARD World final
 {
 private:
@@ -297,4 +300,7 @@ public:
     void printChanges(AnsiOstream &aos,
                       const std::vector<Change> &changes,
                       std::string_view sep) const;
+
+public:
+    friend bool hasMeshDifference(const World &a, const World &b);
 };
