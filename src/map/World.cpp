@@ -2402,11 +2402,6 @@ WorldComparisonStats World::getComparisonStats(const World &base, const World &m
         DECL_TIMER(t2, "serverIdsChanged");
         return base.m_serverIds != modified.m_serverIds;
     }();
-    const auto parseTreeChanged = [&base, &modified]() -> bool {
-        // This is currently the most expensive operation in the getComparisonStats().
-        DECL_TIMER(t2, "parseTreeChanged");
-        return base.m_parseTree != modified.m_parseTree;
-    }();
 
     WorldComparisonStats result;
     result.boundsChanged = base.getBounds() != modified.getBounds();
@@ -2414,7 +2409,6 @@ WorldComparisonStats World::getComparisonStats(const World &base, const World &m
     result.anyRoomsAdded = anyRoomsAdded;
     result.spatialDbChanged = anyRoomsMoved;
     result.serverIdsChanged = serverIdsChanged;
-    result.parseTreeChanged = parseTreeChanged;
     result.hasMeshDifferences = anyRoomsAdded                         //
                                 || anyRoomsRemoved                    //
                                 || anyRoomsMoved                      //

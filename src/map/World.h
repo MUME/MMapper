@@ -29,7 +29,6 @@ struct NODISCARD WorldComparisonStats final
     bool anyRoomsAdded = false;
 
     bool spatialDbChanged = false;
-    bool parseTreeChanged = false;
     bool serverIdsChanged = false;
 
     bool hasMeshDifferences = false;

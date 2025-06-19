@@ -189,7 +189,7 @@ static void reportDetectedChanges(std::ostream &os, const WorldComparisonStats &
         }
 
         SHOW(spatialDbChanged);
-        SHOW(parseTreeChanged);
+        // SHOW(parseTreeChanged);
         SHOW(serverIdsChanged);
 
         SHOW(hasMeshDifferences);
@@ -1785,7 +1785,6 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(!stats12.anyRoomsRemoved);
         TEST_ASSERT(stats12.anyRoomsAdded);
         TEST_ASSERT(stats12.spatialDbChanged);
-        TEST_ASSERT(stats12.parseTreeChanged);
         TEST_ASSERT(stats12.hasMeshDifferences);
         TEST_ASSERT(!stats12.serverIdsChanged);
     }
@@ -1796,7 +1795,6 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(stats23.anyRoomsRemoved);
         TEST_ASSERT(!stats23.anyRoomsAdded);
         TEST_ASSERT(stats23.spatialDbChanged);
-        TEST_ASSERT(stats23.parseTreeChanged);
         TEST_ASSERT(stats23.hasMeshDifferences);
         TEST_ASSERT(!stats23.serverIdsChanged);
     }
@@ -1807,7 +1805,6 @@ void testAddAndRemoveIsNoChange()
         TEST_ASSERT(!stats13.anyRoomsRemoved);
         TEST_ASSERT(!stats13.anyRoomsAdded);
         TEST_ASSERT(!stats13.spatialDbChanged);
-        TEST_ASSERT(!stats13.parseTreeChanged);
         TEST_ASSERT(!stats13.hasMeshDifferences);
         TEST_ASSERT(!stats13.serverIdsChanged);
     }
