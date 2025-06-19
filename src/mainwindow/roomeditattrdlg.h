@@ -168,4 +168,5 @@ public slots:
 
     // all tabs
     void closeClicked();
+    void onRevertDiffClicked();
 };

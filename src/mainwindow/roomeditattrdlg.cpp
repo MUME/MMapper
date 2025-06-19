@@ -15,9 +15,11 @@
 #include "../global/PrintUtils.h"
 #include "../global/SignalBlocker.h"
 #include "../global/utils.h"
+#include "../map/Changes.h"
 #include "../map/Diff.h"
 #include "../map/ExitFieldVariant.h"
 #include "../map/RoomFieldVariant.h"
+#include "../map/RoomRevert.h"
 #include "../map/enums.h"
 #include "../map/exit.h"
 #include "../map/mmapper2room.h"
@@ -252,6 +254,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     readSettings();
 
     connect(closeButton, &QAbstractButton::clicked, this, &RoomEditAttrDlg::closeClicked);
+    connect(revertDiffButton, &QPushButton::clicked, this, &RoomEditAttrDlg::onRevertDiffClicked);
 }
 
 RoomEditAttrDlg::~RoomEditAttrDlg()
@@ -630,6 +633,7 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
 
         roomDiffTextEdit->clear();
         roomDiffTextEdit->setEnabled(false);
+        revertDiffButton->setEnabled(false);
 
         terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainEnum::UNDEFINED)));
 
@@ -726,7 +730,8 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
 
         // can this ever be nullptr?
         if (roomDiffTextEdit != nullptr) {
-            const auto s = [this, &r]() -> std::string {
+            bool revertible = false;
+            const auto s = [this, &r, &revertible]() -> std::string {
                 auto &md = deref(m_mapData);
                 auto saved = md.getSavedMap();
                 auto current = md.getCurrentMap();
@@ -752,6 +757,7 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
                     if (str.empty()) {
                         return "No changes since the last save.";
                     }
+                    revertible = true;
                     return str;
                 } catch (const std::exception &ex) {
                     return std::string("Exception: ") + ex.what();
@@ -759,6 +765,7 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
             }();
 
             setAnsiText(roomDiffTextEdit, s);
+            revertDiffButton->setEnabled(revertible);
         }
 
         const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
@@ -1259,6 +1266,33 @@ void RoomEditAttrDlg::closeClicked()
     } else {
         accept();
     }
+}
+
+void RoomEditAttrDlg::onRevertDiffClicked()
+{
+    MapData &md = deref(m_mapData);
+    auto savedMap = md.getSavedMap();
+    auto currentMap = md.getCurrentMap();
+    const RoomId id = getSelectedRoom().getId();
+
+    std::ostringstream oss;
+    AnsiOstream aos{oss};
+    auto pResult = room_revert::build_plan(aos, currentMap, id, savedMap);
+    setAnsiText(roomDiffTextEdit, oss.str());
+
+    if (!pResult) {
+        QMessageBox::warning(this, "Revert Room Failed", "Failed to build revert plan");
+        return;
+    }
+
+    const room_revert::RevertPlan &plan = deref(pResult);
+    const ChangeList &changes = plan.changes;
+    if (changes.empty() || !md.applyChanges(changes)) {
+        QMessageBox::warning(this, "Revert Room Failed", "Failed to apply revert changes");
+        return;
+    }
+
+    updateDialog(getSelectedRoom());
 }
 
 void RoomEditAttrDlg::closeEvent(QCloseEvent *const ev)

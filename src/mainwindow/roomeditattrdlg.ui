@@ -1388,7 +1388,7 @@
        <item>
         <widget class="QPushButton" name="roomNoteRevertButton">
          <property name="text">
-          <string>Revert</string>
+          <string>Revert Changes</string>
          </property>
         </widget>
        </item>
@@ -1480,6 +1480,13 @@
          </property>
          <property name="acceptRichText">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="revertDiffButton">
+         <property name="text">
+          <string>Revert</string>
          </property>
         </widget>
        </item>
