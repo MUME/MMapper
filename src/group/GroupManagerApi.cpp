@@ -8,7 +8,7 @@
 
 void GroupManagerApi::refresh()
 {
-    return m_group.characterChanged(true);
+    return m_group.characterChanged();
 }
 
 SharedGroupChar GroupManagerApi::getMember(const GroupId id)

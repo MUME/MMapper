@@ -48,7 +48,7 @@ private:
 
 private:
     void init();
-    void characterChanged(bool updateCanvas);
+    void characterChanged();
 
 private:
     void parseGmcpCharName(const JsonObj &obj);
@@ -84,7 +84,10 @@ signals:
     // MapCanvas::requestUpdate (via MainWindow)
     void sig_updateMapCanvas(); // redraw the opengl screen
     // GroupWidget::updateLabels (via GroupWidget)
-    void sig_updateWidget(); // update group widget
+    void sig_characterAdded(SharedGroupChar character);
+    void sig_characterRemoved(GroupId characterId);
+    void sig_characterUpdated(SharedGroupChar character);
+    void sig_groupReset(const GroupVector &newCharacterList);
 
 public slots:
     void slot_parseGmcpInput(const GmcpMessage &msg);

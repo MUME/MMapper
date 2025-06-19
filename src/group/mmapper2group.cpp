@@ -44,12 +44,10 @@ SharedGroupChar Mmapper2Group::getSelf()
     return m_self;
 }
 
-void Mmapper2Group::characterChanged(bool updateCanvas)
+void Mmapper2Group::characterChanged()
 {
-    emit sig_updateWidget();
-    if (updateCanvas) {
-        emit sig_updateMapCanvas();
-    }
+    emit sig_updateMapCanvas();
+    emit sig_characterUpdated(getSelf());
 }
 
 void Mmapper2Group::onReset()
@@ -63,8 +61,9 @@ void Mmapper2Group::parseGmcpCharName(const JsonObj &obj)
 {
     // "Char.Name" "{\"fullname\":\"Gandalf the Grey\",\"name\":\"Gandalf\"}"
     if (auto optName = obj.getString("name")) {
-        getSelf()->setName(CharacterName{optName.value()});
-        characterChanged(false);
+        SharedGroupChar self = getSelf();
+        self->setName(CharacterName{optName.value()});
+        emit sig_characterUpdated(self);
     }
 }
 
@@ -76,13 +75,21 @@ void Mmapper2Group::parseGmcpCharStatusVars(const JsonObj &obj)
 void Mmapper2Group::parseGmcpCharVitals(const JsonObj &obj)
 {
     // "Char.Vitals {\"hp\":100,\"maxhp\":100,\"mana\":100,\"maxmana\":100,\"mp\":139,\"maxmp\":139}"
-    characterChanged(updateChar(getSelf(), obj));
+    SharedGroupChar self = getSelf();
+    if (updateChar(self, obj)) {
+        emit sig_updateMapCanvas();
+    }
+    emit sig_characterUpdated(self);
 }
 
 void Mmapper2Group::parseGmcpGroupAdd(const JsonObj &obj)
 {
     const auto id = getGroupId(obj);
-    characterChanged(updateChar(addChar(id), obj));
+    auto sharedCh = addChar(id);
+    if (updateChar(sharedCh, obj)) {
+        emit sig_updateMapCanvas();
+    }
+    emit sig_characterUpdated(sharedCh);
 }
 
 void Mmapper2Group::parseGmcpGroupUpdate(const JsonObj &obj)
@@ -92,7 +99,10 @@ void Mmapper2Group::parseGmcpGroupUpdate(const JsonObj &obj)
     if (!sharedCh) {
         sharedCh = addChar(id);
     }
-    characterChanged(updateChar(sharedCh, obj));
+    if (updateChar(sharedCh, obj)) {
+        emit sig_updateMapCanvas();
+    }
+    emit sig_characterUpdated(sharedCh);
 }
 
 void Mmapper2Group::parseGmcpGroupRemove(const JsonInt n)
@@ -110,31 +120,41 @@ void Mmapper2Group::parseGmcpGroupSet(const JsonArray &arr)
         if (auto optObj = entry.getObject()) {
             const auto &obj = optObj.value();
             const auto id = getGroupId(obj);
-            if (updateChar(addChar(id), obj)) {
+            auto sharedCh = addChar(id);
+            if (updateChar(sharedCh, obj)) {
                 change = true;
             }
+            emit sig_characterUpdated(sharedCh);
         }
     }
-    characterChanged(change);
+    if (change) {
+        emit sig_updateMapCanvas();
+    }
 }
 
 void Mmapper2Group::parseGmcpRoomInfo(const JsonObj &obj)
 {
     SharedGroupChar self = getSelf();
+    bool change = false;
 
     if (auto optInt = obj.getInt("id")) {
         const auto srvId = ServerRoomId{static_cast<uint32_t>(optInt.value())};
         if (srvId != self->getServerId()) {
             self->setServerId(srvId);
-            // No characterChanged needed here? ServerId update handled by updateChar return value
+            // TODO: No change needed here? ServerId update handled by updateChar return value
+            change = true;
         }
     }
     if (auto optString = obj.getString("name")) {
         const auto name = CharacterRoomName{optString.value()};
         if (name != self->getRoomName()) {
             self->setRoomName(name);
-            characterChanged(false); // Room name change should update widget
+            change = true;
         }
+    }
+
+    if (change) {
+        emit sig_characterUpdated(self);
     }
 }
 
@@ -194,21 +214,28 @@ void Mmapper2Group::resetChars()
 
     m_self.reset();
     m_charIndex.clear();
-    characterChanged(true);
+    emit sig_groupReset({});
+    emit sig_updateMapCanvas();
 }
 
 SharedGroupChar Mmapper2Group::addChar(const GroupId id)
 {
-    removeChar(id);
+    if (id != INVALID_GROUPID) {
+        removeChar(id);
+    }
     auto sharedCh = CGroupChar::alloc();
     sharedCh->setId(id);
     m_charIndex.push_back(sharedCh);
+    emit sig_characterAdded(sharedCh);
     return sharedCh;
 }
 
 void Mmapper2Group::removeChar(const GroupId id)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
+
+    emit sig_characterRemoved(id);
+
     const auto &settings = getConfig().groupManager;
     auto erased = utils::erase_if(m_charIndex, [this, &settings, &id](const SharedGroupChar &pChar) {
         auto &character = deref(pChar);
@@ -222,7 +249,7 @@ void Mmapper2Group::removeChar(const GroupId id)
         return true;
     });
     if (erased) {
-        characterChanged(true);
+        emit sig_updateMapCanvas();
     }
 }
 
@@ -311,5 +338,5 @@ void Mmapper2Group::slot_groupSettingsChanged()
             character.setColor(settings.npcColor);
         }
     }
-    characterChanged(true);
+    characterChanged();
 }
