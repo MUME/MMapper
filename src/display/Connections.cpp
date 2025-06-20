@@ -119,9 +119,16 @@ NODISCARD static QString getPostfixedDoorName(const RoomHandle &room, const Exit
     return room.getExit(dir).getDoorName().toQString() + postFix;
 }
 
-UniqueMesh RoomNameBatch::getMesh(GLFont &font) const
+NODISCARD UniqueMesh RoomNameBatchIntermediate::getMesh(GLFont &gl) const
 {
-    return font.getFontMesh(m_names);
+    return gl.getFontMesh(verts);
+}
+
+NODISCARD RoomNameBatchIntermediate RoomNameBatch::getIntermediate(const FontMetrics &font) const
+{
+    std::vector<FontVert3d> output;
+    ::getFontBatchRawData(font, m_names.data(), m_names.size(), output);
+    return RoomNameBatchIntermediate{std::move(output)};
 }
 
 void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,

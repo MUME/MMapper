@@ -41,6 +41,7 @@ class RoomFieldVariant;
 class RoomFilter;
 class ShortestPathRecipient;
 
+struct FontMetrics;
 struct MapCanvasTextures;
 struct RawMapData;
 struct MapLoadData;
@@ -69,7 +70,8 @@ public:
     ~MapData() final;
 
     NODISCARD FutureSharedMapBatchFinisher
-    generateBatches(const mctp::MapCanvasTexturesProxy &textures);
+    generateBatches(const mctp::MapCanvasTexturesProxy &textures,
+                    const std::shared_ptr<const FontMetrics> &font);
 
     // REVISIT: convert to template, or functionref after it compiles everywhere?
     void applyChangesToList(const RoomSelection &sel,

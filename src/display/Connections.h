@@ -22,7 +22,25 @@
 
 #include <QString>
 
+class GLFont;
 class OpenGL;
+struct FontMetrics;
+
+struct NODISCARD RoomNameBatchIntermediate final
+{
+    std::vector<FontVert3d> verts;
+
+    NODISCARD UniqueMesh getMesh(GLFont &gl) const;
+    NODISCARD bool empty() const { return verts.empty(); }
+    void clear() { verts.clear(); }
+
+    template<typename T>
+    static void append(std::vector<T> &v, const std::vector<T> &other)
+    {
+        v.insert(v.end(), other.begin(), other.end());
+    }
+    void append(const std::vector<FontVert3d> &other) { append(verts, other); }
+};
 
 struct NODISCARD RoomNameBatch final
 {
@@ -44,7 +62,7 @@ public:
     NODISCARD bool empty() const { return m_names.empty(); }
 
 public:
-    NODISCARD UniqueMesh getMesh(GLFont &font) const;
+    NODISCARD RoomNameBatchIntermediate getIntermediate(const FontMetrics &font) const;
 };
 
 using BatchedRoomNames = std::unordered_map<int, UniqueMesh>;

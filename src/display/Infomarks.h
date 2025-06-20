@@ -42,7 +42,16 @@ private:
     std::vector<ColorVert> m_points;
     std::vector<ColorVert> m_lines;
     std::vector<ColorVert> m_tris;
-    std::vector<GLText> m_text;
+
+    // REVISIT: This is ill-advised and may contain bugs.
+    struct NODISCARD Text final
+    {
+        std::vector<GLText> text;
+        std::vector<FontVert3d> verts;
+        bool locked = false;
+    };
+
+    Text m_text;
 
 public:
     explicit InfomarksBatch(OpenGL &gl, GLFont &font)

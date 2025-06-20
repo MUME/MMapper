@@ -69,7 +69,7 @@ struct std::hash<IntPair>
     }
 };
 
-struct NODISCARD FontMetrics
+struct NODISCARD FontMetrics final
 {
     static constexpr int UNDERLINE_ID = -257;
     static constexpr int BACKGROUND_ID = -258;
@@ -325,7 +325,25 @@ struct NODISCARD FontMetrics
         });
         return width;
     }
+
+    void getFontBatchRawData(const GLText *text,
+                             size_t count,
+                             std::vector<FontVert3d> &output) const;
 };
+
+// REVISIT: move this to header file?
+extern void getFontBatchRawData(const FontMetrics &fm,
+                                const GLText *text,
+                                size_t count,
+                                std::vector<FontVert3d> &output);
+
+void getFontBatchRawData(const FontMetrics &fm,
+                         const GLText *const text,
+                         const size_t count,
+                         std::vector<FontVert3d> &output)
+{
+    fm.getFontBatchRawData(text, count, output);
+}
 
 struct NODISCARD PrintedChar final
 {
@@ -731,11 +749,12 @@ NODISCARD static QString getFontFilename(const float devicePixelRatio)
 void GLFont::init()
 {
     assert(m_gl.isRendererInitialized());
-    m_fontMetrics = std::make_unique<FontMetrics>();
+    auto pfm = std::make_shared<FontMetrics>();
+    m_fontMetrics = pfm;
     const auto fontFilename = getFontFilename(m_gl.getDevicePixelRatio());
-    const QString imageFilename = m_fontMetrics->init(fontFilename);
 
-    auto &fm = *m_fontMetrics;
+    auto &fm = *pfm;
+    const QString imageFilename = fm.init(fontFilename);
 
     if (!QFile{imageFilename}.exists()) {
         qWarning() << "invalid font filename" << imageFilename;
@@ -790,14 +809,15 @@ glm::ivec2 GLFont::getScreenCenter() const
     return m_gl.getPhysicalViewport().offset + m_gl.getPhysicalViewport().size / 2;
 }
 
-std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, const size_t count)
+void FontMetrics::getFontBatchRawData(const GLText *const text,
+                                      const size_t count,
+                                      std::vector<FontVert3d> &output) const
 {
-    std::vector<FontVert3d> result;
     if (count == 0) {
-        return result;
+        return;
     }
 
-    auto &fm = getFontMetrics();
+    const auto before = output.size();
     const auto end = text + count;
 
     const size_t expectedVerts = [text, end]() -> size_t {
@@ -809,14 +829,14 @@ std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, co
         return 4 * static_cast<size_t>(numGlyphs);
     }();
 
-    result.reserve(expectedVerts);
+    output.reserve(before + expectedVerts);
 
-    FontBatchBuilder fontBatchBuilder{fm, result};
+    auto &fm = *this;
+    FontBatchBuilder fontBatchBuilder{fm, output};
     for (const GLText *it = text; it != end; ++it) {
         fontBatchBuilder.addString(*it);
     }
-    assert(result.size() == expectedVerts);
-    return result;
+    assert(output.size() == before + expectedVerts);
 }
 
 void GLFont::render2dTextImmediate(const std::vector<GLText> &text)
@@ -840,13 +860,8 @@ void GLFont::render2dTextImmediate(const std::vector<GLText> &text)
     m_gl.setProjectionMatrix(oldProj);
 }
 
-void GLFont::render3dTextImmediate(const std::vector<GLText> &text)
+void GLFont::render3dTextImmediate(const std::vector<FontVert3d> &rawVerts)
 {
-    if (text.empty()) {
-        return;
-    }
-
-    const auto rawVerts = getFontBatchRawData(text.data(), text.size());
     if (rawVerts.empty()) {
         return;
     }
@@ -854,9 +869,25 @@ void GLFont::render3dTextImmediate(const std::vector<GLText> &text)
     m_gl.renderFont3d(m_texture, rawVerts);
 }
 
-UniqueMesh GLFont::getFontMesh(const std::vector<GLText> &text)
+void GLFont::render3dTextImmediate(const std::vector<GLText> &text)
 {
-    const auto rawVerts = getFontBatchRawData(text.data(), text.size());
+    if (text.empty()) {
+        return;
+    }
+
+    const auto rawVerts = getFontMeshIntermediate(text);
+    render3dTextImmediate(rawVerts);
+}
+
+std::vector<FontVert3d> GLFont::getFontMeshIntermediate(const std::vector<GLText> &text)
+{
+    std::vector<FontVert3d> output;
+    getFontMetrics().getFontBatchRawData(text.data(), text.size(), output);
+    return output;
+}
+
+UniqueMesh GLFont::getFontMesh(const std::vector<FontVert3d> &rawVerts)
+{
     return m_gl.createFontMesh(m_texture, DrawModeEnum::QUADS, rawVerts);
 }
 

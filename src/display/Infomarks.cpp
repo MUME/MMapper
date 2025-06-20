@@ -161,7 +161,9 @@ void InfomarksBatch::renderText(const glm::vec3 &pos,
                                 const FontFormatFlags fontFormatFlag,
                                 const int rotationAngle)
 {
-    m_text.emplace_back(pos, text, color, std::move(moved_bgcolor), fontFormatFlag, rotationAngle);
+    assert(!m_text.locked);
+    m_text.text
+        .emplace_back(pos, text, color, std::move(moved_bgcolor), fontFormatFlag, rotationAngle);
 }
 
 InfomarksMeshes InfomarksBatch::getMeshes()
@@ -172,7 +174,14 @@ InfomarksMeshes InfomarksBatch::getMeshes()
     result.points = gl.createPointBatch(m_points);
     result.lines = gl.createColoredLineBatch(m_lines);
     result.tris = gl.createColoredTriBatch(m_tris);
-    result.textMesh = m_font.getFontMesh(m_text);
+
+    {
+        assert(!m_text.locked);
+        m_text.verts = m_font.getFontMeshIntermediate(m_text.text);
+        m_text.locked = true;
+    }
+    result.textMesh = m_font.getFontMesh(m_text.verts);
+
     result.isValid = true;
 
     return result;
@@ -188,8 +197,8 @@ void InfomarksBatch::renderImmediate(const GLRenderState &state)
     if (!m_tris.empty()) {
         gl.renderColoredTris(m_tris, state);
     }
-    if (!m_text.empty()) {
-        m_font.render3dTextImmediate(m_text);
+    if (!m_text.text.empty()) {
+        m_font.render3dTextImmediate(m_text.text);
     }
     if (!m_points.empty()) {
         gl.renderPoints(m_points, state.withPointSize(INFOMARK_POINT_SIZE));

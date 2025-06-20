@@ -536,12 +536,11 @@ static void foreach_texture(const T &textures, Callback &&callback)
     }
 }
 
-NODISCARD static UniqueMeshVector createSortedTexturedMeshes(const std::string_view /*what*/,
-                                                             OpenGL &gl,
-                                                             const RoomTexVector &textures)
+NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
+    const std::string_view /*what*/, const RoomTexVector &textures)
 {
     if (textures.empty()) {
-        return UniqueMeshVector{};
+        return {};
     }
 
     const size_t numUniqueTextures = [&textures]() -> size_t {
@@ -551,10 +550,9 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(const std::string_v
         return texCount;
     }();
 
-    std::vector<UniqueMesh> result_meshes;
-    result_meshes.reserve(numUniqueTextures);
-    const auto lambda = [&gl, &result_meshes, &textures](const size_t beg,
-                                                         const size_t end) -> void {
+    LayerMeshesIntermediate::FnVec tmp_meshes;
+    tmp_meshes.reserve(numUniqueTextures);
+    const auto lambda = [&tmp_meshes, &textures](const size_t beg, const size_t end) -> void {
         const RoomTex &rtex = textures[beg];
         const size_t count = end - beg;
 
@@ -575,19 +573,21 @@ NODISCARD static UniqueMeshVector createSortedTexturedMeshes(const std::string_v
 #undef EMIT
         }
 
-        result_meshes.emplace_back(gl.createTexturedQuadBatch(verts, rtex.tex));
+        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.tex](OpenGL &g) {
+            return g.createTexturedQuadBatch(v, t);
+        });
     };
 
     ::foreach_texture(textures, lambda);
-    assert(result_meshes.size() == numUniqueTextures);
-    return UniqueMeshVector{std::move(result_meshes)};
+    assert(tmp_meshes.size() == numUniqueTextures);
+    return tmp_meshes;
 }
 
-NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
-    const std::string_view /*what*/, OpenGL &gl, const ColoredRoomTexVector &textures)
+NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshes(
+    const std::string_view /*what*/, const ColoredRoomTexVector &textures)
 {
     if (textures.empty()) {
-        return UniqueMeshVector{};
+        return {};
     }
 
     const size_t numUniqueTextures = [&textures]() -> size_t {
@@ -597,11 +597,10 @@ NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
         return texCount;
     }();
 
-    std::vector<UniqueMesh> result_meshes;
-    result_meshes.reserve(numUniqueTextures);
+    LayerMeshesIntermediate::FnVec tmp_meshes;
+    tmp_meshes.reserve(numUniqueTextures);
 
-    const auto lambda = [&gl, &result_meshes, &textures](const size_t beg,
-                                                         const size_t end) -> void {
+    const auto lambda = [&tmp_meshes, &textures](const size_t beg, const size_t end) -> void {
         const RoomTex &rtex = textures[beg];
         const size_t count = end - beg;
 
@@ -625,15 +624,15 @@ NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
 #undef EMIT
         }
 
-        result_meshes.emplace_back(gl.createColoredTexturedQuadBatch(verts, rtex.tex));
+        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.tex](OpenGL &g) {
+            return g.createColoredTexturedQuadBatch(v, t);
+        });
     };
 
     ::foreach_texture(textures, lambda);
-    assert(result_meshes.size() == numUniqueTextures);
-    return UniqueMeshVector{std::move(result_meshes)};
+    assert(tmp_meshes.size() == numUniqueTextures);
+    return tmp_meshes;
 }
-
-using PlainQuadBatch = std::vector<glm::vec3>;
 
 struct NODISCARD LayerBatchData final
 {
@@ -676,27 +675,29 @@ struct NODISCARD LayerBatchData final
         streamOuts.sortByTexture();
     }
 
+    NODISCARD LayerMeshesIntermediate buildIntermediate() const
+    {
+        DECL_TIMER(t2, "LayerBatchData::buildIntermediate");
+        LayerMeshesIntermediate meshes;
+        meshes.terrain = ::createSortedTexturedMeshes("terrain", roomTerrains);
+        meshes.trails = ::createSortedTexturedMeshes("trails", roomTrails);
+        meshes.tints = roomTints; // REVISIT: this is a copy instead of a move
+        meshes.overlays = ::createSortedTexturedMeshes("overlays", roomOverlays);
+        meshes.doors = ::createSortedColoredTexturedMeshes("doors", doors);
+        meshes.walls = ::createSortedColoredTexturedMeshes("solidWalls", solidWallLines);
+        meshes.dottedWalls = ::createSortedColoredTexturedMeshes("dottedWalls", dottedWallLines);
+        meshes.upDownExits = ::createSortedColoredTexturedMeshes("upDownExits", roomUpDownExits);
+        meshes.streamIns = ::createSortedColoredTexturedMeshes("streamIns", streamIns);
+        meshes.streamOuts = ::createSortedColoredTexturedMeshes("streamOuts", streamOuts);
+        meshes.layerBoost = roomLayerBoostQuads; // REVISIT: this is a copy instead of a move
+        meshes.isValid = true;
+        return meshes;
+    }
+
     NODISCARD LayerMeshes getMeshes(OpenGL &gl) const
     {
         DECL_TIMER(t, "LayerBatchData::getMeshes");
-
-        LayerMeshes meshes;
-        meshes.terrain = ::createSortedTexturedMeshes("terrain", gl, roomTerrains);
-        meshes.trails = ::createSortedTexturedMeshes("trails", gl, roomTrails);
-        // REVISIT: Can tints be combined now?
-        for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
-            meshes.tints[tint] = gl.createPlainQuadBatch(roomTints[tint]);
-        }
-        meshes.overlays = ::createSortedTexturedMeshes("overlays", gl, roomOverlays);
-        meshes.doors = ::createSortedColoredTexturedMeshes("doors", gl, doors);
-        meshes.walls = ::createSortedColoredTexturedMeshes("solidWalls", gl, solidWallLines);
-        meshes.dottedWalls = ::createSortedColoredTexturedMeshes("dottedWalls", gl, dottedWallLines);
-        meshes.upDownExits = ::createSortedColoredTexturedMeshes("upDownExits", gl, roomUpDownExits);
-        meshes.streamIns = ::createSortedColoredTexturedMeshes("streamIns", gl, streamIns);
-        meshes.streamOuts = ::createSortedColoredTexturedMeshes("streamOuts", gl, streamOuts);
-        meshes.layerBoost = gl.createPlainQuadBatch(roomLayerBoostQuads);
-        meshes.isValid = true;
-        return meshes;
+        return buildIntermediate().getLayerMeshes(gl);
     }
 };
 
@@ -836,10 +837,11 @@ private:
 
 LayerBatchBuilder::~LayerBatchBuilder() = default;
 
-NODISCARD static LayerBatchData generateLayerMeshes(const RoomVector &rooms,
-                                                    const mctp::MapCanvasTexturesProxy &textures,
-                                                    const OptBounds &bounds,
-                                                    const VisitRoomOptions &visitRoomOptions)
+NODISCARD static LayerMeshesIntermediate generateLayerMeshes(
+    const RoomVector &rooms,
+    const mctp::MapCanvasTexturesProxy &textures,
+    const OptBounds &bounds,
+    const VisitRoomOptions &visitRoomOptions)
 {
     DECL_TIMER(t, "generateLayerMeshes");
 
@@ -848,21 +850,22 @@ NODISCARD static LayerBatchData generateLayerMeshes(const RoomVector &rooms,
     visitRooms(rooms, textures, builder, visitRoomOptions);
 
     data.sort();
-    return data;
+    return data.buildIntermediate();
 }
 
 struct NODISCARD InternalData final : public IMapBatchesFinisher
 {
 public:
-    std::unordered_map<int, LayerBatchData> batchedMeshes;
+    std::unordered_map<int, LayerMeshesIntermediate> batchedMeshes;
     BatchedConnections connectionDrawerBuffers;
-    std::unordered_map<int, RoomNameBatch> roomNameBatches;
+    std::unordered_map<int, RoomNameBatchIntermediate> roomNameBatches;
 
 private:
     void virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const final;
 };
 
 static void generateAllLayerMeshes(InternalData &internalData,
+                                   const FontMetrics &font,
                                    const LayerToRooms &layerToRooms,
                                    const mctp::MapCanvasTexturesProxy &textures,
                                    const VisitRoomOptions &visitRoomOptions)
@@ -883,7 +886,7 @@ static void generateAllLayerMeshes(InternalData &internalData,
         const int thisLayer = layer.first;
         auto &layerMeshes = batchedMeshes[thisLayer];
         ConnectionDrawerBuffers &cdb = connectionDrawerBuffers[thisLayer];
-        RoomNameBatch &rnb = roomNameBatches[thisLayer];
+        RoomNameBatch rnb;
         const auto &rooms = layer.second;
 
         {
@@ -907,7 +910,64 @@ static void generateAllLayerMeshes(InternalData &internalData,
                 }
             }
         }
+
+        {
+            DECL_TIMER(t8, "generateAllLayerMeshes.loop.part4");
+            roomNameBatches[thisLayer] = rnb.getIntermediate(font);
+        }
     }
+}
+
+LayerMeshes LayerMeshesIntermediate::getLayerMeshes(OpenGL &gl) const
+{
+    if (!isValid) {
+        return {};
+    }
+
+    struct NODISCARD Resolver final
+    {
+        OpenGL &m_gl;
+        NODISCARD UniqueMeshVector resolve(const FnVec &v)
+        {
+            std::vector<UniqueMesh> result;
+            result.reserve(v.size());
+            for (const auto &f : v) {
+                result.emplace_back(f(m_gl));
+            }
+            return UniqueMeshVector{std::move(result)};
+        }
+        NODISCARD UniqueMesh resolve(const PlainQuadBatch &batch)
+        {
+            return m_gl.createPlainQuadBatch(batch);
+        }
+        NODISCARD RoomTintArray<UniqueMesh> resolve(const RoomTintArray<PlainQuadBatch> &arr)
+        {
+            RoomTintArray<UniqueMesh> result;
+            for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
+                const PlainQuadBatch &b = arr[tint];
+                result[tint] = m_gl.createPlainQuadBatch(b);
+            }
+            return result;
+        }
+    };
+
+    DECL_TIMER(t, "LayerMeshesIntermediate::getLayerMeshes");
+    Resolver r{gl};
+    LayerMeshes lm;
+    lm.terrain = r.resolve(terrain);
+    lm.trails = r.resolve(trails);
+    lm.tints = r.resolve(tints);
+    lm.overlays = r.resolve(overlays);
+    lm.doors = r.resolve(doors);
+    lm.walls = r.resolve(walls);
+    lm.dottedWalls = r.resolve(dottedWalls);
+    lm.upDownExits = r.resolve(upDownExits);
+    lm.streamIns = r.resolve(streamIns);
+    lm.streamOuts = r.resolve(streamOuts);
+    lm.layerBoost = r.resolve(layerBoost);
+    lm.isValid = true;
+
+    return lm;
 }
 
 void LayerMeshes::render(const int thisLayer, const int focusedLayer)
@@ -1012,8 +1072,8 @@ void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) con
     {
         DECL_TIMER(t2, "InternalData::virt_finish batchedMeshes");
         for (const auto &kv : batchedMeshes) {
-            const LayerBatchData &data = kv.second;
-            output.batchedMeshes[kv.first] = data.getMeshes(gl);
+            const LayerMeshesIntermediate &data = kv.second;
+            output.batchedMeshes[kv.first] = data.getLayerMeshes(gl);
         }
     }
     {
@@ -1027,7 +1087,7 @@ void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) con
     {
         DECL_TIMER(t2, "InternalData::virt_finish roomNameBatches");
         for (const auto &kv : roomNameBatches) {
-            const RoomNameBatch &rnb = kv.second;
+            const RoomNameBatchIntermediate &rnb = kv.second;
             output.roomNameBatches[kv.first] = rnb.getMesh(font);
         }
     }
@@ -1035,12 +1095,13 @@ void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) con
 
 // NOTE: All of the lamda captures are copied, including the texture data!
 FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTexturesProxy &textures,
+                                                     const std::shared_ptr<const FontMetrics> &font,
                                                      const Map &map)
 {
     const auto visitRoomOptions = getVisitRoomOptions();
 
     return std::async(std::launch::async,
-                      [textures, map, visitRoomOptions]() -> SharedMapBatchFinisher {
+                      [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
                           ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
                                                            visitRoomOptions.colorSettings};
                           DECL_TIMER(t, "[ASYNC] generateAllLayerMeshes");
@@ -1062,7 +1123,11 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
 
                           auto result = std::make_shared<InternalData>();
                           auto &data = deref(result);
-                          generateAllLayerMeshes(data, layerToRooms, textures, visitRoomOptions);
+                          generateAllLayerMeshes(data,
+                                                 deref(font),
+                                                 layerToRooms,
+                                                 textures,
+                                                 visitRoomOptions);
                           return SharedMapBatchFinisher{result};
                       });
 }
