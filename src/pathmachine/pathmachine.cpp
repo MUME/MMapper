@@ -61,18 +61,12 @@ void PathMachine::onMapLoaded()
 
 void PathMachine::forcePositionChange(const RoomId id, const bool update)
 {
-    slot_releaseAllPaths();
-
     if (id == INVALID_ROOMID) {
         MMLOG() << "in " << __FUNCTION__ << " detected invalid room.";
-
-        clearMostLikelyRoom();
-        m_state = PathStateEnum::SYNCING;
-        return;
     }
-
     const auto &room = m_map.findRoomHandle(id);
     if (!room) {
+        slot_releaseAllPaths();
         clearMostLikelyRoom();
         m_state = PathStateEnum::SYNCING;
         return;
