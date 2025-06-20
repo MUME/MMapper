@@ -47,6 +47,23 @@
       ]
     },
     {
+      "name": "immer",
+      "buildsystem": "simple",
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/arximboldi/immer.git",
+          "tag": "v0.8.1"
+        }
+      ],
+      "build-options": {
+        "build-only": true
+      },
+      "build-commands": [
+        "cp -r immer /app/include/"
+      ]
+    },
+    {
       "name": "libsecret",
       "buildsystem": "meson",
       "config-opts": [

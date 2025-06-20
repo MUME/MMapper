@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2025 The MMapper Authors
 
-#include "../global/OrderedMap.h"
+#include "../global/ImmUnorderedMap.h"
 #include "../global/macros.h"
 #include "RoomIdSet.h"
 #include "mmapper2room.h"
 
-#include <map>
+#include <unordered_map>
 
 class ProgressCounter;
 
@@ -25,20 +25,18 @@ struct NODISCARD AreaInfo final
 struct NODISCARD AreaInfoMap final
 {
 private:
-    using Map = OrderedMap<RoomArea, AreaInfo>;
+    using Map = ImmUnorderedMap<RoomArea, AreaInfo>;
     Map m_map;
     AreaInfo m_global;
 
 public:
     NODISCARD explicit AreaInfoMap();
+    void init(const std::unordered_map<RoomArea, AreaInfo> &map, const AreaInfo &global);
 
 public:
     NODISCARD bool contains(const RoomArea &area) const { return find(area) != nullptr; }
 
-    NODISCARD AreaInfo *find(const std::optional<RoomArea> &area);
     NODISCARD const AreaInfo *find(const std::optional<RoomArea> &area) const;
-
-    NODISCARD AreaInfo &get(const std::optional<RoomArea> &area);
     NODISCARD const AreaInfo &get(const std::optional<RoomArea> &area) const;
 
     NODISCARD bool operator==(const AreaInfoMap &other) const;

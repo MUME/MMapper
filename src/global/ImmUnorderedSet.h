@@ -1,6 +1,6 @@
 #pragma once
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (C) 2021 The MMapper Authors
+// Copyright (C) 2025 The MMapper Authors
 
 #include "RuleOf5.h"
 #include "macros.h"
@@ -9,34 +9,36 @@
 #include <set>
 #include <stdexcept>
 
+#include <immer/set.hpp>
+
 template<typename T>
-struct NODISCARD OrderedSet final
+struct NODISCARD ImmUnorderedSet final
 {
 public:
-    using Set = std::set<T>;
+    using Set = immer::set<T>;
     using ValueType = T;
 
 private:
     Set m_set;
 
 public:
-    OrderedSet() = default;
-    DEFAULT_RULE_OF_5(OrderedSet);
+    ImmUnorderedSet() = default;
+    DEFAULT_RULE_OF_5(ImmUnorderedSet);
 
 public:
-    explicit OrderedSet(const ValueType id) { insert(id); }
-    explicit OrderedSet(const Set &other)
+    explicit ImmUnorderedSet(const ValueType id) { insert(id); }
+    explicit ImmUnorderedSet(const Set &other)
         : m_set{other}
     {}
-    explicit OrderedSet(Set &&other)
+    explicit ImmUnorderedSet(Set &&other)
         : m_set{std::move(other)}
     {}
-    OrderedSet &operator=(const Set &other)
+    ImmUnorderedSet &operator=(const Set &other)
     {
         m_set = other;
         return *this;
     }
-    OrderedSet &operator=(Set &&other)
+    ImmUnorderedSet &operator=(Set &&other)
     {
         m_set = std::move(other);
         return *this;
@@ -59,13 +61,13 @@ public:
         return *begin();
     }
 
-    NODISCARD bool contains(const ValueType id) const { return m_set.find(id) != m_set.end(); }
+    NODISCARD bool contains(const ValueType id) const { return m_set.find(id) != nullptr; }
 
 public:
-    void erase(const ValueType id) { m_set.erase(id); }
-    void insert(const ValueType id) { m_set.insert(id); }
+    void erase(const ValueType id) { m_set = std::move(m_set).erase(id); }
+    void insert(const ValueType id) { m_set = std::move(m_set).insert(id); }
 
 public:
-    NODISCARD bool operator==(const OrderedSet &rhs) const { return m_set == rhs.m_set; }
-    NODISCARD bool operator!=(const OrderedSet &rhs) const { return !(rhs == *this); }
+    NODISCARD bool operator==(const ImmUnorderedSet &rhs) const { return m_set == rhs.m_set; }
+    NODISCARD bool operator!=(const ImmUnorderedSet &rhs) const { return !(rhs == *this); }
 };

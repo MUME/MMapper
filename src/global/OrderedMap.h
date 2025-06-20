@@ -4,18 +4,14 @@
 
 #include "macros.h"
 
+#include <cstddef>
 #include <map>
-#include <memory>
-#include <set>
-#include <variant>
-#include <vector>
 
 template<typename K, typename V>
 struct NODISCARD OrderedMap final
 {
-public:
+private:
     using Map = std::map<K, V>;
-    using const_iterator = typename Map::const_iterator;
 
 private:
     Map m_map;
@@ -38,8 +34,8 @@ public:
     NODISCARD bool empty() const { return m_map.empty(); }
 
 public:
-    NODISCARD const_iterator begin() const { return m_map.begin(); }
-    NODISCARD const_iterator end() const { return m_map.end(); }
+    NODISCARD auto begin() const { return m_map.begin(); }
+    NODISCARD auto end() const { return m_map.end(); }
 
 public:
     NODISCARD bool operator==(const OrderedMap &other) const { return m_map == other.m_map; }

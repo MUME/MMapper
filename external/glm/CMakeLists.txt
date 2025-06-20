@@ -1,4 +1,4 @@
-find_path(GLM_INCLUDE_DIR glm/glm.hpp PATHS /app/include)
+find_path(GLM_INCLUDE_DIR glm/glm.hpp PATHS /app/include /usr/include)
 
 # Check if glm was found and set up include directories
 if(GLM_INCLUDE_DIR)

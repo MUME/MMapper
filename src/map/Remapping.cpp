@@ -276,7 +276,9 @@ void Remapping::compact(ProgressCounter &pc, const ExternalRoomId firstId)
     }
 
     ExternalRoomId next = firstId;
-    OrderedMap<ExternalRoomId, RoomId> newExtToInt;
+
+    // REVISIT: this may perform poorly with immer
+    ImmUnorderedMap<ExternalRoomId, RoomId> newExtToInt;
 
     pc.increaseTotalStepsBy(m_extToInt.size());
     for (const auto &kv : m_extToInt) {

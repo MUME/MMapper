@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 The MMapper Authors
 
-#include "../global/OrderedMap.h"
+#include "../global/ImmUnorderedMap.h"
 #include "../global/macros.h"
 #include "room.h"
 
@@ -12,7 +12,7 @@ class ProgressCounter;
 struct NODISCARD ServerIdMap final
 {
 private:
-    OrderedMap<ServerRoomId, RoomId> m_serverToInternal;
+    ImmUnorderedMap<ServerRoomId, RoomId> m_serverToInternal;
 
 public:
     NODISCARD auto empty() const { return m_serverToInternal.empty(); }

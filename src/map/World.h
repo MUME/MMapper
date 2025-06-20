@@ -65,12 +65,8 @@ public:
     NODISCARD bool operator!=(const World &rhs) const { return !(rhs == *this); }
 
 private:
-    NODISCARD AreaInfo *findArea(const std::optional<RoomArea> &area);
     NODISCARD const AreaInfo *findArea(const std::optional<RoomArea> &area) const;
-    NODISCARD AreaInfo &getArea(const std::optional<RoomArea> &area);
     NODISCARD const AreaInfo &getArea(const std::optional<RoomArea> &area) const;
-
-    NODISCARD AreaInfo &getGlobalArea() { return getArea(std::nullopt); }
     NODISCARD const AreaInfo &getGlobalArea() const { return getArea(std::nullopt); }
 
 public:

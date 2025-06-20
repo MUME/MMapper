@@ -47,7 +47,7 @@ void sanityCheckFlags(const Flags flags)
 }
 
 template<typename Key>
-void insertId(OrderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
+void insertId(ImmUnorderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
 {
     const RoomIdSet *const old = map.find(key);
     if (old == nullptr) {
@@ -60,7 +60,7 @@ void insertId(OrderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
 }
 
 template<typename Key>
-void removeId(OrderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
+void removeId(ImmUnorderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
 {
     const RoomIdSet *const old = map.find(key);
     if (old == nullptr || !old->contains(id)) {
@@ -174,19 +174,9 @@ bool World::operator==(const World &rhs) const
            && m_areaInfos == rhs.m_areaInfos; //
 }
 
-NODISCARD auto World::findArea(const std::optional<RoomArea> &area) -> AreaInfo *
-{
-    return m_areaInfos.find(area);
-}
-
 NODISCARD auto World::findArea(const std::optional<RoomArea> &area) const -> const AreaInfo *
 {
     return m_areaInfos.find(area);
-}
-
-NODISCARD auto World::getArea(const std::optional<RoomArea> &area) -> AreaInfo &
-{
-    return m_areaInfos.get(area);
 }
 
 NODISCARD auto World::getArea(const std::optional<RoomArea> &area) const -> const AreaInfo &
@@ -789,15 +779,20 @@ void World::nukeHelper(const RoomId id,
 
 void World::clearExit(const RoomId id, const ExitDirEnum dir, const WaysEnum ways)
 {
-    auto &exitRef = m_rooms.getRawRoomRef(id).getExit(dir);
     if (ways == WaysEnum::OneWay) {
-        // copy could allocate (about 0.1% of outgoing and 0.3% of incoming),
-        // so we'll only do it for the one-way case.
-        TinyRoomIdSet old_inbound = std::exchange(exitRef.incoming, {});
-        exitRef = {};
-        exitRef.incoming = std::move(old_inbound);
+        m_rooms.updateRawRoomRef(id, [dir](auto &r) {
+            auto &exitRef = r.getExit(dir);
+            // copy could allocate (about 0.1% of outgoing and 0.3% of incoming),
+            // so we'll only do it for the one-way case.
+            TinyRoomIdSet old_inbound = std::exchange(exitRef.incoming, {});
+            exitRef = {};
+            exitRef.incoming = std::move(old_inbound);
+        });
     } else {
-        exitRef = {};
+        m_rooms.updateRawRoomRef(id, [dir](auto &r) {
+            auto &exitRef = r.getExit(dir);
+            exitRef = {};
+        });
     }
 }
 
@@ -1133,7 +1128,7 @@ void World::setExit(const RoomId id, const ExitDirEnum dir, const RawExit &input
 void World::setRoom_lowlevel(const RoomId id, const RawRoom &input)
 {
     assert(id == input.id);
-    m_rooms.getRawRoomRef(id) = input;
+    m_rooms.updateRawRoomRef(id, [&input](auto &r) { r = input; });
     m_rooms.enforceInvariants(id);
 }
 
@@ -1192,32 +1187,8 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
     {
         DECL_TIMER(t1, "insert-rooms");
         {
-            DECL_TIMER(t2, "insert-rooms-part1");
-
-            const size_t numRooms = rooms.size();
-
-            // REVISIT: This trick is really only valid if there are no gaps in the roomids,
-            // and they're all presented in order!
-            {
-                RoomId next{0};
-                for (const auto &r : rooms) {
-                    if (r.id != next++) {
-                        throw std::runtime_error("elements aren't in order");
-                    }
-                }
-                if (next.value() != numRooms) {
-                    throw std::runtime_error("wrong number of elements");
-                }
-            }
-
-            {
-                DECL_TIMER(t3, "copy rooms");
-                for (const auto &r : rooms) {
-                    const RoomId id = r.getId();
-                    auto &roomRef = w.m_rooms.getRawRoomRef(id);
-                    roomRef = r; // copy
-                }
-            }
+            DECL_TIMER(t3, "copy rooms");
+            w.m_rooms.init(rooms);
         }
 
         {
@@ -1232,19 +1203,44 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
         }
 
         {
-            DECL_TIMER(t3, "insert-rooms-cachedRoomSet");
-            counter.setNewTask(ProgressMsg{"inserting rooms"}, rooms.size());
+            DECL_TIMER(t3, "insert-rooms-area-infos");
+            counter.setNewTask(ProgressMsg{"preparing to insert rooms to areas"}, rooms.size());
+            std::unordered_map<RoomArea, AreaInfo> map;
+            AreaInfo global;
             for (const auto &room : rooms) {
-                w.m_areaInfos.insert(room.getArea(), room.id);
+                map[room.getArea()].roomSet.insert(room.id);
+                global.roomSet.insert(room.id);
                 counter.step();
             }
+            counter.setNewTask(ProgressMsg{"inserting rooms to areas"}, 1);
+            w.m_areaInfos.init(map, global);
+            counter.step();
         }
         {
             // REVISIT: slow
             DECL_TIMER(t3, "insert-rooms-parsekey");
-            counter.setNewTask(ProgressMsg{"inserting room name/desc lookups"}, rooms.size());
-            for (const auto &room : rooms) {
-                w.insertParse(room.id, ALL_PARSE_KEY_FLAGS);
+            counter.setNewTask(ProgressMsg{"preparing to insert room name/desc lookups"},
+                               rooms.size());
+
+            auto initializer = [&rooms, &counter]() {
+                DECL_TIMER(t4, "insert-rooms-parsekey (prepare)");
+                ParseTreeInitializer tmp;
+                for (const auto &room : rooms) {
+                    const RoomName &name = room.getName();
+                    const RoomDesc &desc = room.getDescription();
+                    const NameDesc nameDesc{name, desc};
+                    tmp.name_only[name].insert(room.id);
+                    tmp.desc_only[desc].insert(room.id);
+                    tmp.name_desc[nameDesc].insert(room.id);
+                    counter.step();
+                }
+                return tmp;
+            }();
+
+            counter.setNewTask(ProgressMsg{"inserting room name/desc lookups"}, 1);
+            {
+                DECL_TIMER(t4, "insert-rooms-parsekey (init)");
+                w.m_parseTree.init(initializer);
                 counter.step();
             }
         }

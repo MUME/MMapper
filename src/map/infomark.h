@@ -5,7 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include "../global/Flags.h"
-#include "../global/OrderedSet.h"
+#include "../global/ImmUnorderedSet.h"
 #include "../global/TaggedInt.h"
 #include "../global/TaggedString.h"
 #include "coordinate.h"
@@ -167,7 +167,7 @@ struct std::hash<InfomarkId>
 struct NODISCARD ImmInfomarkIdSet final
 {
 private:
-    using Set = OrderedSet<InfomarkId>;
+    using Set = ImmUnorderedSet<InfomarkId>;
     Set m_set;
 
 public:

@@ -13,12 +13,16 @@ void RawRooms::setExitFlags_safe(const RoomId id, const ExitDirEnum dir, const E
 
 void RawRooms::enforceInvariants(const RoomId id, const ExitDirEnum dir)
 {
-    ::enforceInvariants(getRawRoomRef(id).getExit(dir));
+    if (!satisfiesInvariants(id, dir)) {
+        updateRawRoomRef(id, [dir](auto &r) { ::enforceInvariants(r.getExit(dir)); });
+    }
 }
 
 void RawRooms::enforceInvariants(const RoomId id)
 {
-    ::enforceInvariants(getRawRoomRef(id));
+    if (!satisfiesInvariants(id)) {
+        updateRawRoomRef(id, [](auto &r) { ::enforceInvariants(r); });
+    }
 }
 
 bool RawRooms::satisfiesInvariants(const RoomId id, const ExitDirEnum dir) const

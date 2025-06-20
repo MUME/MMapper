@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
-#include "../global/OrderedMap.h"
+#include "../global/ImmUnorderedMap.h"
 #include "../global/macros.h"
 #include "coordinate.h"
 #include "roomid.h"
@@ -17,7 +17,7 @@ struct NODISCARD SpatialDb final
 {
 private:
     /// Value is the last room assigned to the coordinate.
-    OrderedMap<Coordinate, RoomId> m_unique;
+    ImmUnorderedMap<Coordinate, RoomId> m_unique;
 
 private:
     std::optional<Bounds> m_bounds;

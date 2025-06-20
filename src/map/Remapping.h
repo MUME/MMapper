@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
-#include "../global/IndexedVectorWithDefault.h"
-#include "../global/OrderedMap.h"
+#include "../global/ImmIndexedVectorWithDefault.h"
+#include "../global/ImmUnorderedMap.h"
 #include "../global/macros.h"
 #include "RawRoom.h"
 #include "roomid.h"
@@ -17,8 +17,8 @@ class ProgressCounter;
 struct NODISCARD Remapping final
 {
 private:
-    OrderedMap<ExternalRoomId, RoomId> m_extToInt;
-    IndexedVectorWithDefault<ExternalRoomId, RoomId> m_intToExt{INVALID_EXTERNAL_ROOMID};
+    ImmUnorderedMap<ExternalRoomId, RoomId> m_extToInt;
+    ImmIndexedVectorWithDefault<ExternalRoomId, RoomId> m_intToExt{INVALID_EXTERNAL_ROOMID};
 
 public:
     NODISCARD RoomId convertToInternal(ExternalRoomId ext) const;

@@ -4,7 +4,7 @@
 #include "infomark.h"
 
 #include "../global/Charset.h"
-#include "../global/OrderedMap.h"
+#include "../global/ImmUnorderedMap.h"
 
 #include <memory>
 #include <stdexcept>
@@ -71,7 +71,7 @@ struct NODISCARD InfomarkDb::Pimpl final
     struct NODISCARD Data final
     {
     public:
-#define X_DEFINE_VECTOR(_Type, _Prop, _OptInit) OrderedMap<InfomarkId, _Type> _Prop##_map;
+#define X_DEFINE_VECTOR(_Type, _Prop, _OptInit) ImmUnorderedMap<InfomarkId, _Type> _Prop##_map;
         XFOREACH_INFOMARK_PROPERTY(X_DEFINE_VECTOR)
 #undef X_DEFINE_VECTOR
 

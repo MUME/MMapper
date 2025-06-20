@@ -108,6 +108,10 @@ set(mmapper_SRCS
     global/Flags.h
     global/HideQDebug.cpp
     global/HideQDebug.h
+    global/ImmIndexedVector.h
+    global/ImmIndexedVectorWithDefault.h
+    global/ImmUnorderedMap.h
+    global/ImmUnorderedSet.h
     global/IndexedVector.h
     global/IndexedVectorWithDefault.cpp
     global/IndexedVectorWithDefault.h
@@ -676,8 +680,10 @@ set_target_properties(
 )
 
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
+target_include_directories(mmapper SYSTEM PUBLIC ${IMMER_INCLUDE_DIR})
 target_include_directories(mm_global SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
+        ${IMMER_INCLUDE_DIR}
         ${Qt5Core_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
         #${Qt5_Network_INCLUDE_DIRS}
@@ -685,6 +691,7 @@ target_include_directories(mm_global SYSTEM PUBLIC
 )
 target_include_directories(mm_map SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
+        ${IMMER_INCLUDE_DIR}
         ${Qt5Core_INCLUDE_DIRS}
         ${Qt5Widgets_INCLUDE_DIRS}
         #${Qt5_Network_INCLUDE_DIRS}
@@ -705,6 +712,11 @@ if(NOT GLM_FOUND)
     add_dependencies(mmapper glm)
     add_dependencies(mm_map glm)
     add_dependencies(mm_global glm)
+endif()
+if(NOT IMMER_FOUND)
+    add_dependencies(mmapper immer)
+    add_dependencies(mm_map immer)
+    add_dependencies(mm_global immer)
 endif()
 
 if(WIN32)
