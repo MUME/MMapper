@@ -23,6 +23,8 @@
 #include <QThread>
 #include <QVariantMap>
 
+static const bool verbose_debugging = false;
+
 Mmapper2Group::Mmapper2Group(QObject *const parent)
     : QObject{parent}
     , m_groupManagerApi{std::make_unique<GroupManagerApi>(*this)}
@@ -165,7 +167,9 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
     }
 
     auto debug = [&msg]() {
-        qDebug() << msg.getName().toQByteArray() << msg.getJson()->toQByteArray();
+        if (verbose_debugging) {
+            qDebug() << msg.getName().toQByteArray() << msg.getJson()->toQByteArray();
+        }
     };
 
     if (msg.isGroupRemove()) {
