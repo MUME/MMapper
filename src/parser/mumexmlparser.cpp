@@ -8,7 +8,6 @@
 #include "../configuration/configuration.h"
 #include "../global/AnsiOstream.h"
 #include "../global/Consts.h"
-#include "../global/Diff.h"
 #include "../global/PrintUtils.h"
 #include "../global/TextUtils.h"
 #include "../global/entities.h"
@@ -522,181 +521,6 @@ QString MumeXmlParser::characters(QString &ch)
 void MumeXmlParser::setMove(const CommandEnum move)
 {
     m_move = move;
-    m_expectedMove.reset();
-
-    const auto dir = getDirection(move);
-    if (!isNESWUD(dir)) {
-        return;
-    }
-
-    auto &map = m_mapData;
-    auto here = map.getCurrentRoom();
-    if (!here) {
-        return;
-    }
-
-    const auto &ex = here.getExit(dir);
-    if (!ex.exitIsExit()) {
-        return;
-    }
-
-    const auto &set = ex.getOutgoingSet();
-    if (set.size() != 1) {
-        return;
-    }
-
-    const RoomId id = set.first();
-    const auto there = map.findRoomHandle(id);
-    if (!there) {
-        return;
-    }
-
-    if (there.getName().empty() || there.getDescription().empty()) {
-        return;
-    }
-
-    const Map &mm3Map = map.getCurrentMap();
-    if (!mm3Map.hasUniqueNameDesc(id)) {
-        return;
-    }
-
-    m_expectedMove = id;
-}
-
-// REVISIT: This is likely to be a performance problem.
-NODISCARD static bool isMostlyTheSame(const RoomDesc &a, const RoomDesc &b, const double cutoff)
-{
-    assert(std::isfinite(cutoff)
-           && isClamped(cutoff, std::nextafter(50.0, 51.0), std::nextafter(100.0, 99.0)));
-
-    if (a.empty() || b.empty()) {
-        return false;
-    }
-
-    struct NODISCARD MyDiff final : public diff::Diff<StringView>
-    {
-    public:
-        size_t removedBytes = 0;
-        size_t addedBytes = 0;
-        size_t commonBytes = 0;
-
-    private:
-        void virt_report(diff::SideEnum side, const Range &r) final
-        {
-            switch (side) {
-            case diff::SideEnum::A:
-                for (auto x : r) {
-                    removedBytes += x.size();
-                }
-                break;
-            case diff::SideEnum::B:
-                for (auto x : r) {
-                    addedBytes += x.size();
-                }
-                break;
-            case diff::SideEnum::Common:
-                for (auto x : r) {
-                    commonBytes += x.size();
-                }
-                break;
-            }
-        }
-    };
-
-    const std::vector<StringView> aWords = StringView{a.getStdStringViewUtf8()}.getWords();
-    const std::vector<StringView> bWords = StringView{b.getStdStringViewUtf8()}.getWords();
-
-    MyDiff diff;
-    diff.compare(MyDiff::Range::fromVector(aWords), MyDiff::Range::fromVector(bWords));
-
-    const auto max_change = std::max(diff.removedBytes, diff.addedBytes);
-    const auto min_change = std::min(diff.removedBytes, diff.addedBytes);
-    const auto total = min_change + diff.commonBytes;
-
-    if (total < 20 || max_change >= total) {
-        return false;
-    }
-
-    const auto ratio = static_cast<double>(total - max_change) / static_cast<double>(total);
-    const auto percent = ratio * 100.0;
-    const auto rounded = static_cast<double>(std::lround(percent * 10.0)) * 0.1;
-
-    MMLOG() << "[XML parser] Score: " << rounded << "% word match";
-    return rounded >= cutoff;
-}
-
-void MumeXmlParser::maybeUpdate(RoomId expectedId, const ParseEvent &ev)
-{
-    const auto &evname = ev.getRoomName();
-    const auto &evdesc = ev.getRoomDesc();
-
-    if (evname.empty() || evdesc.empty()) {
-        return;
-    }
-
-    const auto expected = m_mapData.findRoomHandle(expectedId);
-    if (!expected) {
-        return;
-    }
-
-    const auto &name = expected.getName();
-    const auto &desc = expected.getDescription();
-
-    if (name == evname && evdesc == desc) {
-        // This is what we want in 99+% of the cases
-        return;
-    }
-
-    if (false /*!expected.isUpToDate()*/ || name.empty() || desc.empty()) {
-        // Not our problem.
-        return;
-    }
-
-    auto update = [this, expectedId](const std::string_view what, const auto &field) {
-        const auto room = m_mapData.findRoomHandle(expectedId);
-        if (!room) {
-            return;
-        }
-
-        const auto extId = room.getIdExternal();
-        const auto change = room_change_types::ModifyRoomFlags{expectedId,
-                                                               field,
-                                                               FlagModifyModeEnum::ASSIGN};
-        if (!m_mapData.applySingleChange(Change{change})) {
-            MMLOG() << "[XML parser] Ooops. The update failed?";
-            return;
-        }
-
-        MMLOG() << "[XML parser] Auto-updated room " << what << " for room " << extId.value()
-                << ".";
-
-        // REVISIT: Can we eliminate the Qt logging?
-        const auto msg = QString("Auto-updated %1 for room %2.")
-                             .arg(mmqt::toQStringUtf8(what))
-                             .arg(extId.value());
-        log("MumeXmlParser", msg);
-    };
-
-    if (name == evname && isMostlyTheSame(desc, evdesc, 80.0)) {
-        // update the desc for a unique name? That's a no-brainer.
-        MMLOG() << "[XML parser] Exact name match.";
-        update("description", evdesc);
-        return;
-    }
-
-    if (desc == evdesc) {
-        // Update the name for what used to be a unique name+desc, and the desc still matches...
-        // should we still see if it's a similar name at least?
-        MMLOG() << "[XML parser] Exact description match.";
-        update("name", evname);
-        return;
-    }
-
-    if (isMostlyTheSame(desc, evdesc, 90.0)) {
-        MMLOG() << "[XML parser] Good enough description match.";
-        update("description", evdesc);
-        return;
-    }
 }
 
 void MumeXmlParser::move()
@@ -710,9 +534,7 @@ void MumeXmlParser::move()
         m_commonData.roomDesc.reset();
     }
 
-    const auto expectedMove = std::exchange(m_expectedMove, {});
-
-    const auto emitEvent = [this, expectedMove]() {
+    const auto emitEvent = [this]() {
         // REVISIT: once this isn't a signal/slot anymore, we won't need to create a shared event?
         auto ev = ParseEvent::createSharedEvent(m_move,
                                                 m_serverId,
@@ -725,11 +547,6 @@ void MumeXmlParser::move()
                                                 m_commonData.roomExits,
                                                 m_commonData.promptFlags,
                                                 m_commonData.connectedRoomFlags);
-
-        // TODO: only do this in PLAY mode.
-        if (expectedMove) {
-            maybeUpdate(expectedMove.value(), *ev);
-        }
 
         onHandleParseEvent(SigParseEvent{ev});
     };

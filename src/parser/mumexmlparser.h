@@ -53,7 +53,6 @@ private:
     QString m_stringBuffer;
     CommandEnum m_move = CommandEnum::NONE;
     ServerRoomId m_serverId = INVALID_SERVER_ROOMID;
-    std::optional<RoomId> m_expectedMove;
     bool m_readingTag = false;
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
@@ -97,7 +96,6 @@ private:
     void parseMudCommands(const QString &str);
     NODISCARD QString characters(QString &ch);
     NODISCARD bool element(const QString &);
-    void maybeUpdate(RoomId expectedId, const ParseEvent &ev);
     void setMove(CommandEnum dir);
     void move();
     void parseGmcpStatusVars(const JsonObj &obj);
