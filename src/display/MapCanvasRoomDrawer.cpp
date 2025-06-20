@@ -678,7 +678,7 @@ struct NODISCARD LayerBatchData final
 
     NODISCARD LayerMeshes getMeshes(OpenGL &gl) const
     {
-        DECL_TIMER(t, "getMeshes");
+        DECL_TIMER(t, "LayerBatchData::getMeshes");
 
         LayerMeshes meshes;
         meshes.terrain = ::createSortedTexturedMeshes("terrain", gl, roomTerrains);
@@ -1007,19 +1007,29 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
 
 void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const
 {
-    for (const auto &kv : batchedMeshes) {
-        const LayerBatchData &data = kv.second;
-        output.batchedMeshes[kv.first] = data.getMeshes(gl);
+    DECL_TIMER(t, "InternalData::virt_finish");
+
+    {
+        DECL_TIMER(t2, "InternalData::virt_finish batchedMeshes");
+        for (const auto &kv : batchedMeshes) {
+            const LayerBatchData &data = kv.second;
+            output.batchedMeshes[kv.first] = data.getMeshes(gl);
+        }
+    }
+    {
+        DECL_TIMER(t2, "InternalData::virt_finish connectionMeshes");
+        for (const auto &kv : connectionDrawerBuffers) {
+            const ConnectionDrawerBuffers &data = kv.second;
+            output.connectionMeshes[kv.first] = data.getMeshes(gl);
+        }
     }
 
-    for (const auto &kv : connectionDrawerBuffers) {
-        const ConnectionDrawerBuffers &data = kv.second;
-        output.connectionMeshes[kv.first] = data.getMeshes(gl);
-    }
-
-    for (const auto &kv : roomNameBatches) {
-        const RoomNameBatch &rnb = kv.second;
-        output.roomNameBatches[kv.first] = rnb.getMesh(font);
+    {
+        DECL_TIMER(t2, "InternalData::virt_finish roomNameBatches");
+        for (const auto &kv : roomNameBatches) {
+            const RoomNameBatch &rnb = kv.second;
+            output.roomNameBatches[kv.first] = rnb.getMesh(font);
+        }
     }
 }
 
