@@ -826,5 +826,5 @@ void OstreamDiffReporter::print(const ExitFieldVariant &var)
 
 void OstreamDiffReporter::printQuoted(const std::string_view sv)
 {
-    print_string_quoted(m_os, sv);
+    m_os.writeQuotedWithColor(m_os.getNextAnsi(), getRawAnsi(AnsiColor16Enum::yellow), sv);
 }
