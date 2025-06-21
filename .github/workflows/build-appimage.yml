@@ -17,7 +17,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: lukka/get-cmake@latest
     - name: Get Git tag description
       id: git_info
       run: |

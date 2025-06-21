@@ -40,7 +40,8 @@ jobs:
       id: git_info
       run: |
         echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
-    - uses: lukka/get-cmake@latest
+    - if: runner.os == 'Windows'
+      uses: lukka/get-cmake@latest
     - if: matrix.compiler == 'msvc'
       uses: ilammy/msvc-dev-cmd@v1
 
@@ -51,7 +52,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold cmake ninja-build
     - if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -78,7 +79,7 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt@5 lcov
+        brew install qt@5 lcov cmake ninja
         brew link qt@5 --force
         echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
