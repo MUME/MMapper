@@ -375,11 +375,11 @@ void MainWindow::readSettings()
                                         qApp->primaryScreen()->availableGeometry()));
 
     } else {
-        if (!restoreGeometry(settings.windowGeometry)) {
-            qWarning() << "Unable to restore window geometry";
-        }
         if (!restoreState(settings.windowState)) {
             qWarning() << "Unable to restore toolbars and dockwidgets state";
+        }
+        if (!restoreGeometry(settings.windowGeometry)) {
+            qWarning() << "Unable to restore window geometry";
         }
 
         // Check if the window was moved to a screen with a different DPI
@@ -389,7 +389,6 @@ void MainWindow::readSettings()
 
 void MainWindow::writeSettings()
 {
-    qDebug() << "Write settings";
     auto &savedConfig = setConfig().general;
     savedConfig.windowGeometry = saveGeometry();
     savedConfig.windowState = saveState();
