@@ -72,10 +72,15 @@ void AreaInfoMap::remove(const RoomArea &areaName, const RoomId id)
 {
     m_global.remove(id);
 
-    // REVISIT: use update()?
-    if (auto it = m_map.find(areaName)) {
-        auto copy = *it;
-        copy.remove(id);
-        m_map.set(areaName, std::move(copy));
+    if (const AreaInfo *const it = m_map.find(areaName)) {
+        const AreaInfo &info = *it;
+        if (info.roomSet.contains(id)) {
+            // special case: remove the area when the last room is removed
+            if (info.roomSet.size() == 1) {
+                m_map.erase(areaName);
+            } else {
+                m_map.update(areaName, [id](AreaInfo &area) { area.remove(id); });
+            }
+        }
     }
 }
