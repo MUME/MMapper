@@ -361,6 +361,10 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
 
 void MumeXmlParser::parseGmcpEventMoved(const JsonObj &obj)
 {
+    // In-game falls do not send a prompt, so we check if an event is ready to fire
+    if (m_eventReady) {
+        move();
+    }
     using namespace mume_xml_parser_gmcp_detail;
     const CommandEnum move = getMove(obj);
     setMove(move);
