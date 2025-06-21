@@ -27,9 +27,9 @@ namespace { // anonymous
 //
 // Also, we may want to try to disable this for test cases, because there are tests of invalid
 // enum values, and those can trigger the error() function in the ChangePrinter.
-static volatile bool print_world_changes = IS_DEBUG_BUILD;
+volatile bool g_print_world_changes = IS_DEBUG_BUILD;
 // This limit exists because reverting may create a very large list of changes.
-static volatile size_t max_change_batch_print_size = 20;
+volatile size_t g_max_change_batch_print_size = 20;
 
 template<typename Enum>
 void sanityCheckEnum(const Enum value)
@@ -1937,7 +1937,7 @@ public:
         for (const Change &change : changes) {
             m_aos << prefix;
             prefix = sep;
-            if (num_printed++ >= max_change_batch_print_size) {
+            if (num_printed++ >= g_max_change_batch_print_size) {
                 m_aos.writeWithColor(getRawAnsi(AnsiColor16Enum::RED),
                                      "...(change list print limit reached)...");
                 break;
@@ -1963,7 +1963,7 @@ void World::printChanges(AnsiOstream &aos,
 
 void World::applyOne(ProgressCounter &pc, const Change &change)
 {
-    if (print_world_changes) {
+    if (g_print_world_changes) {
         std::ostringstream oss;
         {
             AnsiOstream aos{oss};
@@ -2046,7 +2046,7 @@ void World::applyAll_internal(ProgressCounter &pc, const std::vector<Change> &ch
         throw InvalidMapOperation("Changes are empty");
     }
 
-    if (print_world_changes) {
+    if (g_print_world_changes) {
         std::ostringstream oss;
         {
             AnsiOstream aos{oss};
