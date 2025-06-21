@@ -345,8 +345,7 @@ void MainWindow::readSettings()
 #define XFOREACH_MY_SETTINGS(X) \
     X(firstRun) \
     X(windowGeometry) \
-    X(windowState) \
-    X(noClientPanel)
+    X(windowState)
 
         // member variable declarations
         XFOREACH_MY_SETTINGS(X_DECL)
@@ -386,12 +385,11 @@ void MainWindow::readSettings()
         // Check if the window was moved to a screen with a different DPI
         getCanvas()->screenChanged();
     }
-
-    m_dockDialogClient->setHidden(settings.noClientPanel);
 }
 
 void MainWindow::writeSettings()
 {
+    qDebug() << "Write settings";
     auto &savedConfig = setConfig().general;
     savedConfig.windowGeometry = saveGeometry();
     savedConfig.windowState = saveState();

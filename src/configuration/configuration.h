@@ -52,7 +52,6 @@ public:
         bool showScrollBars = true;
         bool showMenuBar = true;
         MapModeEnum mapMode = MapModeEnum::PLAY;
-        bool noClientPanel = false;
         bool checkForUpdate = true;
         CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::LATIN1;
 

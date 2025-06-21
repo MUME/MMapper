@@ -37,7 +37,6 @@ ClientWidget::ClientWidget(QWidget *const parent)
     });
 
     ui.input->installEventFilter(this);
-    ui.input->setFocus();
     ui.display->setFocusPolicy(Qt::TabFocus);
 }
 

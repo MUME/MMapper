@@ -61,9 +61,6 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::slot_showNotesStateChanged);
 
-    connect(ui->showClientPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().general.noClientPanel = !ui->showClientPanelCheckBox->isChecked();
-    });
     connect(ui->checkForUpdateCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().general.checkForUpdate = ui->checkForUpdateCheckBox->isChecked();
     });
@@ -172,7 +169,6 @@ void GeneralPage::slot_loadConfig()
     ui->showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);
     ui->showNotesCheckBox->setChecked(mumeNative.showNotes);
 
-    ui->showClientPanelCheckBox->setChecked(!config.general.noClientPanel);
     ui->checkForUpdateCheckBox->setChecked(config.general.checkForUpdate);
     ui->checkForUpdateCheckBox->setDisabled(NO_UPDATER);
     ui->autoLoadFileName->setText(autoLoad.fileName);
