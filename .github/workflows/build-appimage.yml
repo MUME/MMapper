@@ -29,7 +29,7 @@ jobs:
         sudo apt update -qq
         sudo apt install -y \
           qt5-qmake qttools5-dev-tools libqt5opengl5-dev libqt5websockets5-dev \
-          qt5keychain-dev libgl1-mesa-dev build-essential mold git \
+          qt5keychain-dev libgl1-mesa-dev qtwayland5 build-essential mold git \
           zlib1g-dev libssl-dev wget zsync fuse file cmake
 
     - name: Download linuxdeploy
@@ -59,9 +59,10 @@ jobs:
         # Extract version from CPackConfig.cmake
         export VERSION=$(grep -i "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d\" -f 2)
 
-        # Make sure the plugin can be found, and set UPDATE_INFORMATION
+        # Configure linuxdeploy and make sure the plugin can be found
         export PATH=$PATH:$(pwd)/..
         export UPDATE_INFORMATION="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync"
+        export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
 
         # Run linuxdeploy
         ../linuxdeploy-x86_64.AppImage --appdir appdir --output appimage \
