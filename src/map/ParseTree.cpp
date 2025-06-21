@@ -72,8 +72,6 @@ void getRooms(const Map &map, const ParseTree &tree, RoomRecipient &visitor, con
         if (fallbackToRemainder && !areaName.empty()) {
             MMLOG() << "[getRooms] Falling back to the remainder area...";
             if (const RoomIdSet *const set = world.findAreaRoomSet(RoomArea{}); set == nullptr) {
-                // this should be a hard error, since the fallback area is required to exist.
-                assert(false);
                 MMLOG() << "[getRooms] Fallback area does not exist.";
             } else if (set->empty()) {
                 // this should just return nullptr.
