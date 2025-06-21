@@ -1594,6 +1594,9 @@ void MainWindow::setMapModified(bool modified)
 {
     setWindowModified(modified);
     saveAct->setEnabled(modified);
+    if (modified) {
+        deref(m_mapWindow).hideSplashImage();
+    }
 }
 
 void MainWindow::updateMapModified()
