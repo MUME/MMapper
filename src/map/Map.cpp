@@ -1244,6 +1244,11 @@ void Map::printChanges(mm::AbstractDebugOStream &os,
     os.writeUtf8(oss.str());
 }
 
+void Map::enableExtraSanityChecks(const bool enable)
+{
+    World::enableExtraSanityChecks(enable);
+}
+
 BasicDiffStats getBasicDiffStats(const Map &baseMap, const Map &modMap)
 {
     DECL_TIMER(t, "get map diff stats (parallel)");
@@ -1960,6 +1965,7 @@ void testDoorVsExitFlags()
 namespace test {
 void testMap()
 {
+    Map::enableExtraSanityChecks(true);
     testRoomIdSet();
     testRawFlags();
     testAddAndRemoveIsNoChange();

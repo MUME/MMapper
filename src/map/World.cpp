@@ -27,6 +27,7 @@ namespace { // anonymous
 //
 // Also, we may want to try to disable this for test cases, because there are tests of invalid
 // enum values, and those can trigger the error() function in the ChangePrinter.
+volatile bool g_check_consistency_on_updates = false; // TODO: IS_TEST_BUILD;
 volatile bool g_print_world_changes = IS_DEBUG_BUILD;
 // This limit exists because reverting may create a very large list of changes.
 volatile size_t g_max_change_batch_print_size = 20;
@@ -146,6 +147,11 @@ void applyExitFlags(ExitFlags &exitFlags, const FlagModifyModeEnum mode, const E
 }
 
 } // namespace
+
+void World::enableExtraSanityChecks(const bool enable)
+{
+    g_check_consistency_on_updates = enable;
+}
 
 World World::copy() const
 {
@@ -1903,7 +1909,7 @@ void World::post_change_updates(ProgressCounter &pc)
     if (needsBoundsUpdate()) {
         updateBounds(pc);
     }
-    if (IS_DEBUG_BUILD && false) {
+    if (g_check_consistency_on_updates) {
         checkConsistency(pc);
         m_checkedConsistency = true;
     }

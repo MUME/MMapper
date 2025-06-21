@@ -299,4 +299,7 @@ public:
 
 public:
     friend bool hasMeshDifference(const World &a, const World &b);
+
+public:
+    static void enableExtraSanityChecks(bool enable);
 };

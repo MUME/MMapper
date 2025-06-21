@@ -160,6 +160,9 @@ public:
     void printChanges(mm::AbstractDebugOStream &os,
                       const std::vector<Change> &changes,
                       std::string_view sep) const;
+
+public:
+    static void enableExtraSanityChecks(bool enable);
 };
 
 struct NODISCARD MapApplyResult final

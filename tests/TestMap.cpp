@@ -18,24 +18,28 @@ TestMap::~TestMap() = default;
 
 void TestMap::diffTest()
 {
+    Map::enableExtraSanityChecks(true);
     mmqt::HideQDebug forThisTest;
     test::testMapDiff();
 }
 
 void TestMap::mapTest()
 {
+    Map::enableExtraSanityChecks(true);
     mmqt::HideQDebug forThisTest;
     test::testMap();
 }
 
 void TestMap::sanitizerTest()
 {
+    Map::enableExtraSanityChecks(true);
     mmqt::HideQDebug forThisTest;
     test::testSanitizer();
 }
 
 void TestMap::tinyRoomIdSetTest()
 {
+    Map::enableExtraSanityChecks(true);
     mmqt::HideQDebug forThisTest;
     test::testTinyRoomIdSet();
 }
