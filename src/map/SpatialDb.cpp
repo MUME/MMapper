@@ -80,8 +80,8 @@ void SpatialDb::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
         };
 
         os << "\n";
-        show("Width:  ", min.x, max.x);
-        show("Height: ", min.y, max.y);
-        show("Layers: ", min.z, max.z);
+        show("Width  (West  to East):   ", min.x, max.x);
+        show("Height (South to North):  ", min.y, max.y);
+        show("Layers (Down  to Up):     ", min.z, max.z);
     }
 }

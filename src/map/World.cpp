@@ -2238,8 +2238,10 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         os << "Total rooms: " << C(getGlobalArea().roomSet.size()) << ".\n";
         os << "\n";
         os << "  missing server id: " << C(numMissingServerId) << ".\n";
-        os << "  missing area: " << C(numMissingArea) << ".\n";
+        os << "  missing area:      " << C(numMissingArea) << ".\n";
         os << "\n";
+
+        // REVISIT: provide a way to identify and fix rooms with missing name and desc?
         os << "  with no name and no desc: " << C(numMissingBoth) << ".\n";
         os << "  with name but no desc:    " << C(numMissingDesc - numMissingBoth) << ".\n";
         os << "  with desc but no name:    " << C(numMissingName - numMissingBoth) << ".\n";
@@ -2293,22 +2295,134 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         m_parseTree.printStats(pc, os);
     }
 
-    for (const auto &kv : m_areaInfos) {
-        const auto &areaName = kv.first;
-        const auto numAreaRooms = kv.second.roomSet.size();
+    struct NODISCARD Nearest final
+    {
+        RoomId id = INVALID_ROOMID;
+        float len2 = 0.f;
+    };
 
-        // REVISIT: include the relative size of the area?
+    struct NODISCARD AreaStats final
+    {
+        glm::ivec3 center{};
+        glm::ivec3 lo{};
+        glm::ivec3 hi{};
+        std::optional<Nearest> nearest{};
+    };
+
+    // cache-aligned to prevent false sharing in the parallel_for_each
+    static constexpr size_t CACHE_LINE_SIZE = 64;
+    struct alignas(CACHE_LINE_SIZE) NODISCARD MyArea final
+    {
+        RoomArea area;
+        const AreaInfo *info = nullptr;
+        std::optional<AreaStats> stats{};
+    };
+    std::vector<MyArea> names;
+    names.reserve(m_areaInfos.numAreas());
+    for (const auto &kv : m_areaInfos) {
+        names.emplace_back(MyArea{kv.first, &kv.second});
+    }
+
+    static const auto ignore_the = [](std::string_view &sv) {
+        if (sv.find("the ") == 0) {
+            sv.remove_prefix(4);
+        }
+    };
+
+    std::sort(names.begin(), names.end(), [](const MyArea &a, const MyArea &b) -> bool {
+        std::string_view asv = a.area.getStdStringViewUtf8();
+        std::string_view bsv = b.area.getStdStringViewUtf8();
+
+        ignore_the(asv);
+        ignore_the(bsv);
+
+        return asv < bsv;
+    });
+
+    pc.setNewTask(ProgressMsg{"Computing area centers"}, names.size());
+    thread_utils::parallel_for_each(names, pc, [this](MyArea &tmp) {
+        const auto &rooms = deref(tmp.info).roomSet;
+        if (rooms.empty()) {
+            return;
+        }
+
+        auto &stats = tmp.stats.emplace();
+        glm::ivec3 sum{};
+        auto &lo = stats.lo;
+        auto &hi = stats.hi;
+        lo = hi = getPosition(rooms.first()).to_ivec3();
+        for (auto id : rooms) {
+            const auto pos = getPosition(id).to_ivec3();
+            sum += pos;
+            lo = glm::min(lo, pos);
+            hi = glm::max(hi, pos);
+        }
+        stats.center = sum / static_cast<int>(rooms.size());
+
+        auto &nearest = stats.nearest;
+        for (auto id : rooms) {
+            const auto pos = getPosition(id).to_ivec3();
+            const auto dist = glm::vec3{pos - stats.center};
+            const auto len2 = glm::dot(dist, dist);
+            if (!nearest.has_value() || len2 < nearest.value().len2) {
+                nearest.emplace(Nearest{id, len2});
+            }
+        }
+    });
+
+    auto print_ivec3 = [&os](std::string_view what, glm::ivec3 v) {
+        os << what << ": (" << ColoredValue{green, v.x} << ", " << ColoredValue{green, v.y} << ", "
+           << ColoredValue{green, v.z} << ")\n";
+    };
+
+    for (const auto &kv : names) {
+        const auto &areaName = kv.area;
+        const auto numAreaRooms = deref(kv.info).roomSet.size();
+
+        // REVISIT: include the relative size of the area (see the room stat output)?
         os << "\n"
            << line
            << "\n"
-              "Within the ";
+              "The ";
+
         if (areaName.empty()) {
             os << "default";
         } else {
             os << ColoredQuotedStringView{green, yellow, areaName.getStdStringViewUtf8()};
         }
-        os << " area (# rooms = " << ColoredValue{green, numAreaRooms} << "):\n";
+        os << " area contains " << ColoredValue{green, numAreaRooms} << " room"
+           << ((numAreaRooms == 1) ? "" : "s") << ".\n";
+
+        if (const auto &opt = kv.stats; opt.has_value()) {
+            const AreaStats &stats = opt.value();
+
+            os << "\n";
+
+            // should we try to describe the position relative to the center of the map?
+
+            const auto &c = stats.center;
+            print_ivec3("Center of mass", c);
+            if (stats.nearest.has_value()) {
+                const auto &nearest = stats.nearest.value();
+                const auto ext = convertToExternal(nearest.id);
+                os << "Closest room: " << ColoredValue{green, ext.value()} << ": "
+                   << ColoredQuotedStringView{green,
+                                              yellow,
+                                              getRoomName(nearest.id).getStdStringViewUtf8()};
+                print_ivec3(" at", getPosition(nearest.id).to_ivec3());
+            }
+            os << "\n";
+            print_ivec3("Bounds center", stats.lo + (stats.hi - stats.lo) / 2);
+            print_ivec3("Lower bounds", stats.lo);
+            print_ivec3("Upper bounds", stats.hi);
+            os << "\n";
+            const auto size = stats.hi - stats.lo + 1;
+            os << "Width  (West  to East):  " << ColoredValue{green, size.x} << ".\n";
+            os << "Height (South to North): " << ColoredValue{green, size.y} << ".\n";
+            os << "Layers (Down  to Up):    " << ColoredValue{green, size.z} << ".\n";
+        }
     }
+    os << "\n" << line << "\n";
 }
 
 bool World::isTemporary(const RoomId id) const
@@ -2364,7 +2478,6 @@ bool World::containsRoomsNotIn(const World &other) const
 }
 
 namespace { // anonymous
-
 NODISCARD bool hasMeshDifference(const RawExit &a, const RawExit &b)
 {
     // door name change is not a mesh difference
