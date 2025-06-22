@@ -305,7 +305,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
             const auto &ex = room.getExit(dir);
             const auto to = perhaps.getId();
             const auto toServerId = event.getExitIds()[opposite(dir)];
-            if (toServerId != room.getServerId() && !ex.containsOut(to)) {
+            if ((ex.exitIsUnmapped()
+                 && (toServerId == room.getServerId() // ServerId must agree
+                     || toServerId
+                            == INVALID_SERVER_ROOMID) // or when ServerId is missing (cannot see exit)
+                 && !ex.containsOut(to))
+                || !event.getExitsFlags().isValid()) { // or when in a maze that hides exits
                 const auto from = room.getId();
                 changes.add(Change{exit_change_types::ModifyExitConnection{ChangeTypeEnum::Add,
                                                                            from,
