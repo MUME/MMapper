@@ -32,14 +32,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
-#include <limits>
-#include <list>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -56,21 +52,6 @@
 #include <QtGui>
 
 namespace MapCanvasConfig {
-
-static std::mutex g_version_lock;
-static std::string g_current_gl_version = "UN0.0";
-
-static void setCurrentOpenGLVersion(std::string version)
-{
-    std::unique_lock<std::mutex> lock{g_version_lock};
-    g_current_gl_version = std::move(version);
-}
-
-std::string getCurrentOpenGLVersion()
-{
-    std::unique_lock<std::mutex> lock{g_version_lock};
-    return g_current_gl_version;
-}
 
 void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
                             ChangeMonitor::Function callback)
@@ -185,14 +166,16 @@ void MapCanvas::reportGLVersion()
         return std::move(oss).str();
     }();
 
-    MapCanvasConfig::setCurrentOpenGLVersion(version);
-
     logMsg("Current OpenGL Context:",
            QString("%1 (%2)")
                .arg(version.c_str())
                // FIXME: This is a bit late to report an invalid context.
                .arg(context()->isValid() ? "valid" : "invalid")
                .toUtf8());
+
+    logMsg("Highest Reportable OpenGL:",
+           mmqt::toQByteArrayUtf8(OpenGL::getHighestReportableVersionString()));
+
     logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
 }
 

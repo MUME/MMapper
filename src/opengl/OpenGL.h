@@ -7,10 +7,12 @@
 #include "OpenGLTypes.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <glm/glm.hpp>
 
+#include <QSurfaceFormat>
 #include <qopengl.h>
 
 namespace Legacy {
@@ -20,6 +22,7 @@ class Functions;
 class NODISCARD OpenGL final
 {
 private:
+    static std::string g_highest_reportable_version_string;
     std::shared_ptr<Legacy::Functions> m_opengl;
     bool m_rendererInitialized = false;
 
@@ -33,6 +36,10 @@ public:
     ~OpenGL();
     OpenGL(const OpenGL &) = delete;
     OpenGL &operator=(const OpenGL &) = delete;
+
+public:
+    NODISCARD static QSurfaceFormat createDefaultSurfaceFormat();
+    NODISCARD static std::string getHighestReportableVersionString();
 
 public:
     /* must be called before any other functions */

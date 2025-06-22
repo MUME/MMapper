@@ -10,6 +10,7 @@
 #include "./global/WinSock.h"
 #include "./global/emojis.h"
 #include "./mainwindow/mainwindow.h"
+#include "./opengl/OpenGL.h"
 
 #include <memory>
 #include <optional>
@@ -93,6 +94,9 @@ static void tryAutoLoadMap(MainWindow &mw)
 
 static void setSurfaceFormat()
 {
+    // Probe for supported OpenGL versions
+    QSurfaceFormat fmt = OpenGL::createDefaultSurfaceFormat();
+
     const auto &config = getConfig().canvas;
     if (config.softwareOpenGL) {
         QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
@@ -103,14 +107,7 @@ static void setSurfaceFormat()
         // Windows Intel drivers cause black screens if we don't specify OpenGL
         QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     }
-
-    QSurfaceFormat fmt;
-    fmt.setRenderableType(QSurfaceFormat::OpenGL);
-    QSurfaceFormat::FormatOptions options = QSurfaceFormat::DebugContext
-                                            | QSurfaceFormat::DeprecatedFunctions;
-    fmt.setOptions(options);
     fmt.setSamples(config.antialiasingSamples);
-    fmt.setDepthBufferSize(24);
     QSurfaceFormat::setDefaultFormat(fmt);
 }
 
@@ -131,12 +128,11 @@ int main(int argc, char **argv)
     auto tryLoadingWinSock = std::make_unique<WinSock>();
     setSurfaceFormat();
 
-    const auto &config = getConfig();
     tryLoadEmojis(getResourceFilenameRaw("emojis", "short-codes.json"));
     auto mw = std::make_unique<MainWindow>();
     tryAutoLoadMap(*mw);
     const int ret = QApplication::exec();
     mw.reset();
-    config.write();
+    getConfig().write();
     return ret;
 }

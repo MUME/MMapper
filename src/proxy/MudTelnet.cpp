@@ -5,13 +5,13 @@
 #include "MudTelnet.h"
 
 #include "../clock/mumeclock.h"
-#include "../display/MapCanvasConfig.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
 #include "../global/SendToUser.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "../global/emojis.h"
+#include "../opengl/OpenGL.h"
 #include "GmcpUtils.h"
 
 #include <charconv>
@@ -76,7 +76,7 @@ NODISCARD TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefi
 
     std::ostringstream ss;
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
-       << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << getOs() << "/" << arch;
+       << OpenGL::getHighestReportableVersionString() << "/" << getOs() << "/" << arch;
     auto str = std::move(ss).str();
 
     return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(str)};

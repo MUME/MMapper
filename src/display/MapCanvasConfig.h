@@ -9,8 +9,6 @@ namespace MapCanvasConfig {
 void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
                             ChangeMonitor::Function callback);
 
-NODISCARD extern std::string getCurrentOpenGLVersion();
-
 NODISCARD extern bool isIn3dMode();
 extern void set3dMode(bool);
 NODISCARD extern bool isAutoTilt();
