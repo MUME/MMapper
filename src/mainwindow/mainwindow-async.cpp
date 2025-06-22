@@ -739,7 +739,7 @@ std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
                 return fmt.make(data, this);
             }
         }
-        throw std::runtime_error("unrecognized map file data format");
+        throw std::runtime_error("Unrecognized file format");
     }();
 
     AbstractMapStorage *const pStorage = tmp.get();
@@ -756,35 +756,56 @@ bool MainWindow::tryStartNewAsync()
     return true;
 }
 
+void MainWindow::reportOpenFileFailure(const QString &fileName, const QString &reason)
+{
+    showWarning(tr("Cannot open file %1:\n%2.").arg(fileName, reason));
+}
+
+void MainWindow::reportOpenFileException(const QString &fileName, const std::exception_ptr &eptr)
+{
+    try {
+        std::rethrow_exception(eptr);
+    } catch (const std::exception &ex) {
+        reportOpenFileFailure(fileName, mmqt::toQStringUtf8(ex.what()));
+    } catch (...) {
+        reportOpenFileFailure(fileName, "Unknown exception");
+    }
+}
+
 void MainWindow::loadFile(const QString &fileName)
 {
-    if (!tryStartNewAsync()) {
+    try {
+        if (!tryStartNewAsync()) {
+            return;
+        }
+
+        if (fileName.isEmpty()) {
+            showStatusShort(tr("No filename provided"));
+            return;
+        }
+
+        auto pFile = std::make_shared<QFile>(fileName);
+        auto &file = deref(pFile);
+        if (!file.open(QFile::ReadOnly)) {
+            reportOpenFileFailure(fileName, file.errorString());
+            return;
+        }
+
+        // Immediately discard the old map.
+        forceNewFile();
+
+        auto pc = std::make_shared<ProgressCounter>();
+        auto pStorage = getLoadOrMergeMapStorage(pc, fileName, pFile);
+
+        m_asyncTask.begin(std::make_unique<AsyncLoader>(std::move(pc),
+                                                        *this,
+                                                        fileName,
+                                                        std::move(pFile),
+                                                        std::move(pStorage)));
+    } catch (...) {
+        reportOpenFileException(fileName, std::current_exception());
         return;
     }
-
-    if (fileName.isEmpty()) {
-        showStatusShort(tr("No filename provided"));
-        return;
-    }
-
-    auto pFile = std::make_shared<QFile>(fileName);
-    auto &file = deref(pFile);
-    if (!file.open(QFile::ReadOnly)) {
-        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName, file.errorString()));
-        return;
-    }
-
-    // Immediately discard the old map.
-    forceNewFile();
-
-    auto pc = std::make_shared<ProgressCounter>();
-    auto pStorage = getLoadOrMergeMapStorage(pc, fileName, pFile);
-
-    m_asyncTask.begin(std::make_unique<AsyncLoader>(std::move(pc),
-                                                    *this,
-                                                    fileName,
-                                                    std::move(pFile),
-                                                    std::move(pStorage)));
 }
 
 void MainWindow::slot_merge()
@@ -798,23 +819,31 @@ void MainWindow::slot_merge()
         return;
     }
 
-    auto pFile = std::make_shared<QFile>(fileName);
-    auto &file = deref(pFile);
-    if (!file.open(QFile::ReadOnly)) {
-        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName, file.errorString()));
+    // what happens if one of the above throws?
+
+    try {
+        auto pFile = std::make_shared<QFile>(fileName);
+        auto &file = deref(pFile);
+        if (!file.open(QFile::ReadOnly)) {
+            reportOpenFileFailure(fileName, file.errorString());
+            return;
+        }
+
+        auto pc = std::make_shared<ProgressCounter>();
+
+        auto pStorage = getLoadOrMergeMapStorage(pc, fileName, pFile);
+        connect(pStorage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
+
+        getCanvas()->slot_clearAllSelections();
+        m_asyncTask.begin(std::make_unique<AsyncMerge>(std::move(pc),
+                                                       *this,
+                                                       fileName,
+                                                       std::move(pFile),
+                                                       std::move(pStorage)));
+    } catch (...) {
+        reportOpenFileException(fileName, std::current_exception());
         return;
     }
-
-    auto pc = std::make_shared<ProgressCounter>();
-    auto pStorage = getLoadOrMergeMapStorage(pc, fileName, pFile);
-    connect(pStorage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
-
-    getCanvas()->slot_clearAllSelections();
-    m_asyncTask.begin(std::make_unique<AsyncMerge>(std::move(pc),
-                                                   *this,
-                                                   fileName,
-                                                   std::move(pFile),
-                                                   std::move(pStorage)));
 }
 
 bool MainWindow::saveFile(const QString &fileName,

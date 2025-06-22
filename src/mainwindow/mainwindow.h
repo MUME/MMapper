@@ -14,6 +14,7 @@
 #include "../map/Changes.h"
 #include "../mapdata/roomselection.h"
 
+#include <exception>
 #include <memory>
 #include <optional>
 
@@ -372,6 +373,8 @@ private:
     void onSuccessfulLoad(const MapLoadData &mapLoadData);
     void onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks);
     void onSuccessfulSave(SaveModeEnum mode, SaveFormatEnum format, const QString &fileName);
+    void reportOpenFileFailure(const QString &fileName, const QString &reason);
+    void reportOpenFileException(const QString &fileName, const std::exception_ptr &eptr);
 
 public slots:
     void slot_newFile();

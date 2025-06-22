@@ -1615,6 +1615,7 @@ void MainWindow::percentageChanged(const uint32_t p)
 void MainWindow::showWarning(const QString &s)
 {
     // REVISIT: shouldn't the warning have "this" as parent?
+    // REVISIT: shouldn't this also say MMapper?
     QMessageBox::warning(nullptr, tr("Application"), s);
 }
 
