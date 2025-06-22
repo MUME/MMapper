@@ -2477,8 +2477,10 @@ namespace { // anonymous
 NODISCARD bool hasMeshDifference(const RawExit &a, const RawExit &b)
 {
     // door name change is not a mesh difference
-    return a.fields.exitFlags != b.fields.exitFlags     //
-           || a.fields.doorFlags != b.fields.doorFlags; //
+    return a.fields.exitFlags != b.fields.exitFlags    //
+           || a.fields.doorFlags != b.fields.doorFlags //
+           || a.outgoing != b.outgoing                 //
+           || a.incoming != b.incoming;                //
 }
 
 NODISCARD bool hasMeshDifference(const RawRoom::Exits &a, const RawRoom::Exits &b)
