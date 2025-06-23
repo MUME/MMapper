@@ -111,7 +111,10 @@ struct NODISCARD EntityTable final
 {
     struct NODISCARD MyHash final
     {
-        NODISCARD uint32_t operator()(const QString &qs) const { return qHash(qs); }
+        NODISCARD uint32_t operator()(const QString &qs) const
+        {
+            return static_cast<uint32_t>(qHash(qs));
+        }
     };
 
     std::unordered_map<QString, XmlEntity, MyHash> by_short_name;
@@ -589,7 +592,7 @@ auto entities::decode(const EncodedString &input) -> DecodedString
     assert(tmp.size() == input.size());
 
     foreachEntity(QStringView{tmp}, callback);
-    callback.skipto(input.size());
+    callback.skipto(static_cast<int>(input.size()));
 
     return std::move(callback.out);
 }

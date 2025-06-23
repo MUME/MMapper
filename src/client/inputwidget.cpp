@@ -79,7 +79,7 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
         if (currentKey != Qt::Key_Tab) {
             current.movePosition(QTextCursor::Right,
                                  QTextCursor::MoveAnchor,
-                                 current.selectedText().length());
+                                 static_cast<int>(current.selectedText().length()));
             setTextCursor(current);
         }
     }
@@ -362,7 +362,7 @@ void InputWidget::tabComplete()
         current.removeSelectedText();
         current.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
         current.insertText(word);
-        auto length = word.length() - m_tabFragment.length();
+        auto length = static_cast<int>(word.length() - m_tabFragment.length());
         current.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, length);
         current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
         setTextCursor(current);

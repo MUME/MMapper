@@ -148,7 +148,7 @@ public:
             return fmt;
         };
 
-        const auto length = line.length() - breakPos;
+        const auto length = static_cast<int>(line.length() - breakPos);
         setFormat(breakPos, length, getFmt());
     }
 
@@ -159,7 +159,7 @@ public:
             return;
         }
 
-        const auto length = line.length() - breakPos;
+        const auto length = static_cast<int>(line.length() - breakPos);
         setFormat(breakPos, length, getBackgroundFormat(Qt::red));
     }
 
@@ -266,7 +266,8 @@ public:
                 default: {
                     const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
+                        && (isClamped<int>(uc, 0x80, 0xBF)
+                            && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -1281,8 +1282,8 @@ void RemoteEditWidget::slot_updateStatusBar()
         const auto plural = [](auto n) { return (n == 1) ? "" : "s"; };
 
         const QString selection = cur.selection().toPlainText();
-        const int selectionLength = selection.length();
-        const int selectionLines = selection.count(C_NEWLINE)
+        const int selectionLength = static_cast<int>(selection.length());
+        const int selectionLines = static_cast<int>(selection.count(C_NEWLINE))
                                    + (selection.endsWith(C_NEWLINE) ? 0 : 1);
 
         status.append(QString(", Selection: %1 char%2 on %3 line%4")
@@ -1335,7 +1336,8 @@ void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
     mmqt::TextBuffer text;
-    text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
+    text.reserve(
+        2 * static_cast<int>(old.length())); // Just a wild guess in case there's a lot of wrapping.
     mmqt::foreachLine(old,
                       [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
                           text.appendJustified(line, maxLen);

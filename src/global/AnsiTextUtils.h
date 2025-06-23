@@ -883,7 +883,7 @@ public:
     NODISCARD QChar at(const size_type pos) const
     {
         assert(!m_text.empty());
-        assert(isClamped(pos, 0, m_text.length() - 1));
+        assert(isClamped(pos, size_type(0), m_text.length() - 1));
         return m_text.at(pos);
     }
     NODISCARD QChar operator[](const size_type pos) const { return at(pos); }
@@ -1017,8 +1017,8 @@ void foreachAnsi(const QStringView line, Callback &&callback)
         if (!m.hasMatch()) {
             break;
         }
-        callback(m.capturedStart(), m.captured());
-        pos = m.capturedEnd();
+        callback(static_cast<int>(m.capturedStart()), m.captured());
+        pos = static_cast<int>(m.capturedEnd());
     }
 }
 
