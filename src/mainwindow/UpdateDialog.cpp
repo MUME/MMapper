@@ -180,7 +180,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
 {
     const RAIICallback deleteLaterRAII{[&reply]() { reply->deleteLater(); }};
     // REVISIT: Timeouts, errors, etc
-    if (reply->error()) {
+    if (reply->error() != QNetworkReply::NoError) {
         qWarning() << reply->errorString();
         return;
     }

@@ -6,14 +6,14 @@ else()
     else()
         message(FATAL_ERROR "QtKeychain NOT found: use `-DWITH_QTKEYCHAIN=OFF` to build without account autologin")
     endif()
-    set(QTKEYCHAIN_LIBRARY_NAME qt5keychain)
+    set(QTKEYCHAIN_LIBRARY_NAME qt6keychain) # Changed from qt5keychain
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(QTKEYCHAIN_LIBRARY_NAME "${QTKEYCHAIN_LIBRARY_NAME}d")
     endif()
     include(ExternalProject)
     ExternalProject_Add(qtkeychain_repo
         GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
-        GIT_TAG "35c4f40186a6ac3260982256e846bb0774ea91de"
+        GIT_TAG "0.15.0" # Updated to the latest tag that supports Qt6
 
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
         BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"
@@ -24,7 +24,7 @@ else()
                    -DBUILD_SHARED_LIBS:BOOL=ON
                    -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
                    -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
-        CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:PATH=${Qt5_DIR}
+        CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:PATH=${Qt6_DIR} # Changed from Qt5_DIR
 
         UPDATE_COMMAND ""
         ALWAYS 0
@@ -44,8 +44,8 @@ else()
     add_custom_target(qtkeychain)
     if(WIN32)
         if(MSVC)
-            get_target_property(QT5_CORE_LOCATION Qt5::Core LOCATION)
-            get_filename_component(QTKEYCHAIN_WIN_DEPLOY_DEST "${QT5_CORE_LOCATION}" DIRECTORY)
+            get_target_property(QT6_CORE_LOCATION Qt6::Core LOCATION) # Changed from Qt5::Core
+            get_filename_component(QTKEYCHAIN_WIN_DEPLOY_DEST "${QT6_CORE_LOCATION}" DIRECTORY)
         else()
             set(QTKEYCHAIN_WIN_DEPLOY_DEST "${CMAKE_BINARY_DIR}/src/bin/")
         endif()

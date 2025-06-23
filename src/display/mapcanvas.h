@@ -30,7 +30,7 @@
 #include <QColor>
 #include <QMatrix4x4>
 #include <QOpenGLDebugMessage>
-#include <QOpenGLFunctions_1_0>
+// #include <QOpenGLFunctions_1_0> // Removed, QOpenGLWidget provides functions
 #include <QOpenGLWidget>
 #include <QtCore>
 

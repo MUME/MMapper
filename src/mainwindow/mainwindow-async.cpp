@@ -82,7 +82,7 @@ NODISCARD bool detectPandora(const QString &fileName)
     QXmlStreamReader xml{&f};
     if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
         return false;
-    } else if (xml.name() != "map") {
+    } else if (xml.name() != QStringLiteral("map")) {
         return false;
     } else if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
         return false;

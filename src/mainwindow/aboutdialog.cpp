@@ -54,7 +54,7 @@ AboutDialog::AboutDialog(QWidget *parent)
                  "<p align=\"center\">"
                + getBuildInformation()
                + tr("Based on Qt %1 (%2 bit)")
-                     .arg(QT_VERSION_STR)
+                     .arg(qVersion())
                      .arg(static_cast<size_t>(QSysInfo::WordSize))
                + "</p>";
     };
