@@ -104,7 +104,8 @@
       "config-opts": [
         "-DCMAKE_INSTALL_LIBDIR=/app/lib",
         "-DLIB_INSTALL_DIR=/app/lib",
-        "-DBUILD_TRANSLATIONS=NO",
+        "-DBUILD_TRANSLATIONS=OFF",
+        "-DBUILD_WITH_QT6=ON",
         "-DCMAKE_PREFIX_PATH=/app"
       ]
     },
