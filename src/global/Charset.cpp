@@ -982,8 +982,8 @@ void testMmqtLatin1()
     {
         const QString thumbsUpQstr{"\U0001F44D"};
         TEST_ASSERT(thumbsUpQstr.size() == 2);
-        TEST_ASSERT(thumbsUpQstr.front() == 0xD83D);
-        TEST_ASSERT(thumbsUpQstr.back() == 0xDC4D);
+        TEST_ASSERT(thumbsUpQstr.front() == char16_t(0xD83D));
+        TEST_ASSERT(thumbsUpQstr.back() == char16_t(0xDC4D));
         TEST_ASSERT(thumbsUpQstr.front().isHighSurrogate());
         TEST_ASSERT(thumbsUpQstr.back().isLowSurrogate());
 
