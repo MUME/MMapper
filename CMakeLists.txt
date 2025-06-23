@@ -18,7 +18,7 @@ message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribu
 # Options
 option(WITH_ZLIB "zlib compressed old save backwards compatability" ON)
 option(WITH_UPDATER "Check GitHub for new releases" ON)
-if(NOT APPLE)
+if(NOT APPLE AND NOT WIN32)
     option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 endif()
 option(WITH_WEBSOCKET "Allow connecting to MUME over WebSockets" OFF)
