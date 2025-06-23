@@ -47,3 +47,13 @@ private:
     static void saveExits(const ExternalRawRoom &room, QDataStream &stream);
     void log(const QString &msg);
 };
+
+struct NODISCARD MM2FileVersion final
+{
+    enum class NODISCARD Relative : uint8_t { Older, Current, Newer };
+
+    uint32_t version = 0;
+    Relative relative = Relative::Older;
+};
+
+NODISCARD extern std::optional<MM2FileVersion> getMM2FileVersion(const QString &fileName);

@@ -236,14 +236,6 @@ void MapWindow::centerOnScrollPos(const glm::ivec2 &scrollPos)
     emit sig_setScroll(worldPos);
 }
 
-QSize MapWindow::sizeHint() const
-{
-    if (m_splashLabel && m_splashLabel->isVisible()) {
-        return m_splashLabel->size();
-    }
-    return QWidget::sizeHint();
-}
-
 void MapWindow::resizeEvent(QResizeEvent * /*event*/)
 {
     updateScrollBars();

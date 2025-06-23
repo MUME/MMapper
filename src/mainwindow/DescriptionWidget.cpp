@@ -97,8 +97,9 @@ void DescriptionWidget::scanDirectories()
                     continue;
                 }
 
+                const bool isQrc = filePath.startsWith(":/");
                 QString baseName;
-                if (filePath.startsWith(":/")) {
+                if (isQrc) {
                     baseName = filePath.left(dotIndex);
                 } else {
                     QString resourcesPath = getConfig().canvas.resourcesDirectory;
@@ -115,8 +116,10 @@ void DescriptionWidget::scanDirectories()
                     continue;
                 }
 
-                qInfo() << "Found file:" << fileInfo.filePath() << "Base name:" << baseName
-                        << "Suffix:" << suffix;
+                if (!isQrc) {
+                    qDebug() << "Found file:" << fileInfo.filePath() << "Base name:" << baseName
+                             << "Suffix:" << suffix;
+                }
                 m_availableFiles.insert({baseName, suffix});
             }
         }

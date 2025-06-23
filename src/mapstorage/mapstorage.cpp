@@ -27,26 +27,30 @@
 #include <QtWidgets>
 
 namespace { // anonymous
+
+constexpr auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
+static_assert(MMAPPER_MAGIC == -5067007);
+
 namespace schema {
 
-constexpr const int v2_0_0_initial = 17;          // Initial schema (Apr 2006)
-constexpr const int v2_0_2_ridable = 24;          // Ridable flag (Oct 2006)
-constexpr const int v2_0_4_zlib = 25;             // zlib compression (Jun 2009)
-constexpr const int v2_3_7_doorFlagsNomatch = 32; // 16-bit DoorFlags, NoMatch (Dec 2016)
-constexpr const int v2_4_0_largerFlags
+constexpr const uint32_t v2_0_0_initial = 17;          // Initial schema (Apr 2006)
+constexpr const uint32_t v2_0_2_ridable = 24;          // Ridable flag (Oct 2006)
+constexpr const uint32_t v2_0_4_zlib = 25;             // zlib compression (Jun 2009)
+constexpr const uint32_t v2_3_7_doorFlagsNomatch = 32; // 16-bit DoorFlags, NoMatch (Dec 2016)
+constexpr const uint32_t v2_4_0_largerFlags
     = 33; // 16-bit Exits, 32-bit Mob/Load Flags, SunDeath (Dec 2017)
-constexpr const int v2_4_3_qCompress = 34;      // qCompress (Jan 2018)
-constexpr const int v2_5_1_discardNoMatch = 35; // discard previous NoMatch flags (Aug 2018)
+constexpr const uint32_t v2_4_3_qCompress = 34;      // qCompress (Jan 2018)
+constexpr const uint32_t v2_5_1_discardNoMatch = 35; // discard previous NoMatch flags (Aug 2018)
 
 // starting in 2019, versions are date based: v${YY}_${MM}_${rev}.
-constexpr const int v19_10_0_newCoords = 36;      // switches to new coordinate system
-constexpr const int v25_04_0_noInboundLinks = 38; // stops loading and saving inbound links
-constexpr const int v25_04_1_removeUpToDate = 39; // removes upToDate
-constexpr const int v25_04_2_serverId = 40;       // adds server_id
-constexpr const int v25_04_3_deathFlag = 41;      // replaces death terrain with room flag
-constexpr const int v25_05_0_area = 42;           // adds area
+constexpr const uint32_t v19_10_0_newCoords = 36;      // switches to new coordinate system
+constexpr const uint32_t v25_04_0_noInboundLinks = 38; // stops loading and saving inbound links
+constexpr const uint32_t v25_04_1_removeUpToDate = 39; // removes upToDate
+constexpr const uint32_t v25_04_2_serverId = 40;       // adds server_id
+constexpr const uint32_t v25_04_3_deathFlag = 41;      // replaces death terrain with room flag
+constexpr const uint32_t v25_05_0_area = 42;           // adds area
 
-constexpr const int CURRENT = v25_05_0_area;
+constexpr const uint32_t CURRENT = v25_05_0_area;
 
 } // namespace schema
 
@@ -207,7 +211,36 @@ public:
     }
 };
 
+NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(LoadRoomHelper &helper)
+{
+    if (helper.read_i32() != MMAPPER_MAGIC) {
+        return std::nullopt;
+    }
+
+    const auto version = helper.read_u32();
+    using R = MM2FileVersion::Relative;
+    const R relative = (version == schema::CURRENT)
+                           ? R::Current
+                           : ((version < schema::CURRENT) ? R::Older : R::Newer);
+    return MM2FileVersion{version, relative};
+}
+
 } // namespace
+
+NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(const QString &fileName)
+{
+    try {
+        QFile f{fileName};
+        if (!f.open(QIODevice::ReadOnly)) {
+            return std::nullopt;
+        }
+        QDataStream stream{&f};
+        auto helper = LoadRoomHelper{stream};
+        return getMM2FileVersion(helper);
+    } catch (...) {
+        return std::nullopt;
+    }
+}
 
 MapStorage::MapStorage(const AbstractMapStorage::Data &data, QObject *parent)
     : AbstractMapStorage{data, parent}
@@ -336,12 +369,12 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
         auto helper = LoadRoomHelper{stream};
 
         // Read the version and magic
-        static constexpr const auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
-        if (helper.read_i32() != MMAPPER_MAGIC) {
+        const auto opt_ver = getMM2FileVersion(helper);
+        if (!opt_ver.has_value()) {
             return std::nullopt;
         }
 
-        const auto version = helper.read_u32();
+        const auto version = opt_ver.value().version;
 
         const bool supported = [version]() -> bool {
             switch (version) {

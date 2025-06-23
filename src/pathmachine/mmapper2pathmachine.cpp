@@ -56,7 +56,7 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
 
     try {
         PathMachine::handleParseEvent(sigParseEvent);
-    } catch (std::exception e) {
+    } catch (const std::exception &e) {
         global::sendToUser(QString("ERROR: %1\n").arg(e.what()));
     } catch (...) {
         global::sendToUser("ERROR: unknown exception\n");

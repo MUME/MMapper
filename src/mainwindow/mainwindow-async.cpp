@@ -52,15 +52,7 @@ namespace mwa_detail {
 
 NODISCARD bool detectMm2Binary(const QString &fileName)
 {
-    QFile f{fileName};
-    if (!f.open(QIODevice::ReadOnly)) {
-        return false;
-    }
-
-    static constexpr auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
-    int32_t magic = 0;
-    QDataStream(&f) >> magic;
-    return magic == MMAPPER_MAGIC;
+    return getMM2FileVersion(fileName).has_value();
 }
 
 // MMapper2 XML map (as opposed to Pandora XML map)

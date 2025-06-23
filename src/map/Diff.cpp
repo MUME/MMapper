@@ -460,7 +460,7 @@ void OstreamDiffReporter::exitPrefix(const RoomHandle &room, const ExitDirEnum d
     m_os << dirName;
 }
 void OstreamDiffReporter::exitPrefix(const RoomHandle &room,
-                                     ExitDirEnum dir,
+                                     const ExitDirEnum dir,
                                      const ExitFieldVariant &var)
 {
     exitPrefix(room, dir);
@@ -491,7 +491,7 @@ void OstreamDiffReporter::printRoomVariant(void (OstreamDiffReporter::*pfn)(),
 }
 
 void OstreamDiffReporter::printExitVariant(const RoomHandle &room,
-                                           ExitDirEnum dir,
+                                           const ExitDirEnum dir,
                                            const ExitFieldVariant &var)
 {
     exitPrefix(room, dir, var);

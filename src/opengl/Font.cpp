@@ -331,12 +331,6 @@ struct NODISCARD FontMetrics final
                              std::vector<FontVert3d> &output) const;
 };
 
-// REVISIT: move this to header file?
-extern void getFontBatchRawData(const FontMetrics &fm,
-                                const GLText *text,
-                                size_t count,
-                                std::vector<FontVert3d> &output);
-
 void getFontBatchRawData(const FontMetrics &fm,
                          const GLText *const text,
                          const size_t count,

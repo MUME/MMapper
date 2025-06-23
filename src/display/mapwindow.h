@@ -70,9 +70,6 @@ public:
 
     NODISCARD MapCanvas *getCanvas() const;
 
-protected:
-    NODISCARD QSize sizeHint() const override;
-
 public:
     void updateScrollBars();
     void setZoom(float zoom);
