@@ -9,10 +9,10 @@
 
 #include <memory>
 
+#include <QEnterEvent> // Added for QEnterEvent
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>
-#include <QEnterEvent> // Added for QEnterEvent
 
 class NODISCARD_QOBJECT XPStatusWidget : public QPushButton
 {

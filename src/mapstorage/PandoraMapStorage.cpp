@@ -85,7 +85,8 @@ ExternalRawRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml, LoadRoomHelpe
     }
 
     room.status = RoomStatusEnum::Permanent;
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QStringLiteral("room"))) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QStringLiteral("room"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QStringLiteral("room")) {
                 room.setId(
@@ -120,7 +121,8 @@ void PandoraMapStorage::loadExits(ExternalRawRoom &room,
                                   QXmlStreamReader &xml,
                                   LoadRoomHelper &helper)
 {
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QStringLiteral("exits"))) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QStringLiteral("exits"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QStringLiteral("exit")) {
                 const auto attr = xml.attributes();
