@@ -8,7 +8,7 @@
 #include "../global/Color.h"
 
 #include <QFont>
-#include <QLinkedList>
+// #include <QLinkedList> // QLinkedList is removed in Qt6, and std::list is used instead in the header.
 #include <QMessageLogContext>
 #include <QRegularExpression>
 #include <QSize>
@@ -279,7 +279,7 @@ void InputHistory::addInputLine(const QString &string)
 
 void TabHistory::addInputLine(const QString &string)
 {
-    QStringList list = string.split(g_whitespaceRx, Qt::SkipEmptyParts);
+    QStringList list = string.split(g_whitespaceRx, Qt::SplitBehaviorFlags::SkipEmptyParts);
     for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary

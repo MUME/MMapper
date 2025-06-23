@@ -653,10 +653,11 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
 set(mm_libs mm_map mm_global)
 
 target_link_libraries(mmapper PUBLIC
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::OpenGL
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Network
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets # Added OpenGLWidgets
     # note: link order matters on some platforms. include ${mm_libs} twice if you have a link failure.
     ${mm_libs}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -690,29 +691,37 @@ set_target_properties(
 
 target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
 target_include_directories(mmapper SYSTEM PUBLIC ${IMMER_INCLUDE_DIR})
+target_include_directories(mmapper PUBLIC
+    ${Qt6Core_INCLUDE_DIRS}
+    ${Qt6Gui_INCLUDE_DIRS}
+    ${Qt6Widgets_INCLUDE_DIRS}
+    ${Qt6OpenGL_INCLUDE_DIRS}
+)
 target_include_directories(mm_global SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
         ${IMMER_INCLUDE_DIR}
-        ${Qt5Core_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        #${Qt5_Network_INCLUDE_DIRS}
-        #${Qt5_OpenGL_INCLUDE_DIRS}
+        ${Qt6Core_INCLUDE_DIRS}
+        ${Qt6Widgets_INCLUDE_DIRS}
+        ${Qt6OpenGLWidgets_INCLUDE_DIRS} # Added
+        #${Qt6_Network_INCLUDE_DIRS}
+        #${Qt6_OpenGL_INCLUDE_DIRS}
 )
 target_include_directories(mm_map SYSTEM PUBLIC
         ${GLM_INCLUDE_DIR}
         ${IMMER_INCLUDE_DIR}
-        ${Qt5Core_INCLUDE_DIRS}
-        ${Qt5Widgets_INCLUDE_DIRS}
-        #${Qt5_Network_INCLUDE_DIRS}
-        #${Qt5_OpenGL_INCLUDE_DIRS}
+        ${Qt6Core_INCLUDE_DIRS}
+        ${Qt6Widgets_INCLUDE_DIRS}
+        #${Qt6_Network_INCLUDE_DIRS}
+        #${Qt6_OpenGL_INCLUDE_DIRS}
+    ${Qt6OpenGLWidgets_INCLUDE_DIRS}
 )
 target_link_libraries(mm_global PUBLIC
-    Qt5::Core
-    Qt5::Widgets
+    Qt6::Core
+    Qt6::Widgets
 )
 target_link_libraries(mm_map PUBLIC
-    Qt5::Core
-    Qt5::Widgets
+    Qt6::Core
+    Qt6::Widgets
 )
 add_dependencies(mmapper mm_global mm_map)
 add_dependencies(mm_map mm_global)
@@ -761,7 +770,7 @@ if(WITH_OPENSSL)
 endif()
 
 if(WITH_WEBSOCKET)
-    target_link_libraries(mmapper PUBLIC Qt5::WebSockets)
+    target_link_libraries(mmapper PUBLIC Qt6::WebSockets)
 endif()
 
 if(WITH_QTKEYCHAIN)
@@ -902,7 +911,8 @@ if(UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
     set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.15.0), libqt5gui5 (>= 5.15.0), libqt5opengl5 (>= 5.15.0), libqt5network5 (>= 5.15.0)")
+    # Qt6 package names might vary by distribution, e.g. libqt6core6 vs libqt6core6t64
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6 (>= 6.2.0), libqt6gui6 (>= 6.2.0), libqt6opengl6 (>= 6.2.0), libqt6network6 (>= 6.2.0)")
     if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
@@ -914,10 +924,11 @@ if(UNIX AND NOT APPLE)
         endif()
     endif()
     if(WITH_WEBSOCKET)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5websockets5 (>= 5.15.0)")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6websockets6 (>= 6.2.0)")
     endif()
     if(WITH_QTKEYCHAIN)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt5keychain1")
+        # Assuming qtkeychain will also be upgraded or a Qt6 compatible version exists
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6keychain1")
     endif()
 endif(UNIX AND NOT APPLE)
 

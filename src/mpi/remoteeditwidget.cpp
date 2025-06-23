@@ -266,7 +266,7 @@ public:
                 default: {
                     const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == 0xC2 || last == 0xC3))) {
+                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -401,7 +401,7 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
     }
 
     const int to_remove = [&text, max_spaces]() -> int {
-        const int len = std::min(max_spaces, text.length());
+        const int len = std::min(max_spaces, static_cast<int>(text.length()));
         int n = 0;
         while (n < len && text.at(n) == C_SPACE) {
             ++n;
