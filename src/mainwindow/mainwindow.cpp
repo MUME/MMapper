@@ -381,6 +381,7 @@ void MainWindow::readSettings()
         if (!restoreGeometry(settings.windowGeometry)) {
             qWarning() << "Unable to restore window geometry";
         }
+        raise();
 
         // Check if the window was moved to a screen with a different DPI
         getCanvas()->screenChanged();

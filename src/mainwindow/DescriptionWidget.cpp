@@ -148,7 +148,7 @@ void DescriptionWidget::resizeEvent(QResizeEvent *event)
 
 QSize DescriptionWidget::minimumSizeHint() const
 {
-    return QSize{sizeHint().width() / 2, sizeHint().height() / 2};
+    return QSize{sizeHint().width() / 3, sizeHint().height() / 3};
 }
 
 QSize DescriptionWidget::sizeHint() const
