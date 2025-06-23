@@ -212,7 +212,8 @@ std::optional<uint32_t> Converter::stringToEnum(const TypeEnum type, const QStri
 
 const Converter conv;
 
-NODISCARD ExitDirEnum directionForLowercase(const QStringView &lowcase) // Changed QStringRef to QStringView
+NODISCARD ExitDirEnum
+directionForLowercase(const QStringView &lowcase) // Changed QStringRef to QStringView
 {
     if (lowcase.isEmpty()) {
         return ExitDirEnum::UNKNOWN;

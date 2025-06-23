@@ -671,7 +671,7 @@ bool MapStorage::virt_saveData(const RawMapData &mapData)
                 .arg(QString::number(compressionRatio, 'f', 1)));
 
         // TODO: add progress counter
-        fileStream.writeRawData(compressedData.data(), compressedData.size());
+        fileStream.writeRawData(compressedData.data(), static_cast<int>(compressedData.size()));
     }
 
     log("Writing data finished.");
