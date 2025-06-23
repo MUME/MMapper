@@ -541,6 +541,7 @@ void Proxy::allocParser()
     private:
         Proxy &m_proxy;
         QString m_lastPrompt;
+        bool m_wasCompact = false;
         bool m_wasPrompt = false;
         size_t m_newlines = 0;
 
@@ -594,6 +595,9 @@ void Proxy::allocParser()
                 }
                 isTwiddler = s.back() == char_consts::C_BACKSPACE;
                 isPrompt = s.back() != char_consts::C_NEWLINE && !isTwiddler;
+                if (isPrompt) {
+                    m_wasCompact = (m_newlines == 1);
+                }
                 break;
             case SendToUserSourceEnum::SimulatedOutput:
             case SendToUserSourceEnum::FromMMapper:
@@ -624,7 +628,9 @@ void Proxy::allocParser()
 
             // The logic for isMissingNewline may be incomplete; expect more bugs here.
             const bool isMissingNewline = m_wasPrompt ? (!isTwiddler && !startsWithNewline(s))
-                                                      : (isPrompt && m_newlines < 2);
+                                                      : (isPrompt
+                                                         && (m_wasCompact ? m_newlines == 0
+                                                                          : m_newlines < 2));
             if (isMissingNewline) {
                 // add the missing newline.
                 getUserTelnet().onSendToUser(string_consts::S_NEWLINE, false);
