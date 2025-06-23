@@ -52,7 +52,7 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt@6 cmake ninja
+        brew install qt@6 cmake ninja qtkeychain
         brew link qt@6 --force
         echo "$(brew --prefix qt@6)/bin" >> $GITHUB_PATH
 
@@ -65,11 +65,7 @@ jobs:
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-    - if: runner.os == 'Windows'
-      name: Install Packages for Windows
-      uses: crazy-max/ghaction-chocolatey@v3
-      with:
-        args: install openssl --version=1.1.1.2100
+        modules: 'qtwebsockets'
 
     # Build
     - if: runner.os == 'Windows'

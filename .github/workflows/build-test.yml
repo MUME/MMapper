@@ -79,8 +79,8 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt@6 lcov cmake ninja
-        # brew link qt@6 --force # Linking may not be necessary or handled differently with qt@6
+        brew install qt@6 lcov cmake ninja qtkeychain
+        brew link qt@6 --force
         echo "$(brew --prefix qt@6)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV
@@ -91,27 +91,22 @@ jobs:
       #
     - if: runner.os == 'Windows' && matrix.compiler == 'msvc'
       name: Install Qt for Windows (MSVC)
-      uses: jurplel/install-qt-action@v4 # Assuming v4 supports Qt6, otherwise might need update
+      uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3' # Example Qt6 version, adjust as needed
+        version: '6.5.3'
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
+        modules: 'qtwebsockets'
     - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
       name: Install Qt for Windows (MinGW)
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.5.3' # Using Qt 6.5.3 as a recent LTS-ish version
+        version: '6.5.3'
         dir: 'C:\'
         arch: win64_mingw
         cache: true
-        # Not specifying 'tools' for MinGW, hoping aqtinstall picks a compatible one or it's bundled.
-    - if: runner.os == 'Windows'
-      name: Install Packages for Windows
-      uses: crazy-max/ghaction-chocolatey@v3
-      with:
-        args: install openssl --version=1.1.1.2100
-
+        modules: 'qtwebsockets'
 
       #
       # Build
@@ -145,7 +140,6 @@ jobs:
         cmake --version
         cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build . --parallel
-
 
       #
       # Run tests
@@ -190,7 +184,6 @@ jobs:
           echo "Convert any uses to corresponding functions in TextUtils e.g. ::toQStringUtf8()"
           exit -1
         fi
-
 
       #
       # Package
