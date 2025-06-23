@@ -1,3 +1,49 @@
+## MMapper 25.06.2 (June 23, 2025)
+
+### New Features:
+* **Performance Improvements:**
+    * **Blazing Fast Rendering**: Intermediate rendering now occurs on a background thread, slashing responsiveness time during map updates by over 10x.
+    * **Lag-Free Groups**:  The Group Panel's performance was significantly improved by only updating individual rows, leading to a much smoother experience with large groups.
+    * **Parallelized Updates**: The map consistency checker and `_map diff` command now run in parallel to complete 4x faster.
+    * **Faster Map Changes**: Updated the underlying data structures to copy-on-write, boosting overall application performance by around 100 milliseconds.
+* **Expanded Search:** The `_search` command now supports:
+    * `-area` parameters to select an entire area that has been mapped.
+    * `-regex` parameters for more powerful queries.
+* **Revert Button:** A button has been added to allow users to revert room changes back to the previous save.
+
+### Bug Fixes:
+* **Pathfinding and Mapping Logic:**
+    * In-game falls will now correctly trigger a "move" event.
+    * Fixed the pathfinding machine to correctly handle connections where exits are not visible.
+    * Corrected an issue causing the pathfinding machine to discard temporary rooms.
+    * Support was added for more types of failed movement actions around doors and climbs.
+* **User Interface and Visuals:**
+    * Fixed "compact mode".
+    * Corrected an issue where changes to exits would not trigger a visual remeshing of the map.
+    * Fixed the restoring of window positions and sizes and ensured the main window is visible on load.
+* **Functionality Fixes:**
+    * Fixed the `_search` command to correctly handle special characters.
+    * A failure to allocate a graphics shader is now handled correctly and will terminate the app to prevent undefined behavior.
+    * The application now probes for the highest available OpenGL version on startup.
+* **Crash Fixes:**
+    * Fixed a crash that occurred when loading an unsupported or empty file.
+    * Fixed a crash related to the "force to room" functionality.
+* **Data Integrity:**
+    * Implemented a fix to prevent data corruption by restoring the last map snapshot if a consistency check fails.
+    * Fixed an issue where an area was not removed when its last room was deleted.
+* **Build and Installation:**
+    * Corrected a typo that affected the installation of the Visual C++ Redistributable.
+    * Fixed the AppImage build to properly include Wayland, improving compatibility for Linux users.
+
+### Changes:
+* **User Experience Tweaks:**
+    * The application's minimum window size has been reduced.
+    * The splash screen is now hidden immediately upon any map modification.
+* **Internal/Developer:**
+    * Numerous internal code cleanups, refactoring, and style changes were made to improve maintainability.
+    * Improvements were made to developer-facing tools, including the output of `_map stats` and `diff`.
+
+---
 ## MMapper 25.06.1 (June 13, 2025)
 
 ### New Features:
