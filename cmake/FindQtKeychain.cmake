@@ -22,10 +22,10 @@ FIND_PATH(QTKEYCHAIN_INCLUDE_DIR keychain.h
   /usr/local/include
   /usr/include
   /app/include
-  PATH_SUFFIXES qt5keychain qtkeychain
+  PATH_SUFFIXES qt6keychain qtkeychain
 )
 
-FIND_LIBRARY(QTKEYCHAIN_LIBRARY NAMES qt5keychain qtkeychain
+FIND_LIBRARY(QTKEYCHAIN_LIBRARY NAMES qt6keychain qtkeychain
   PATHS
   ${LIB_DIR}
   "$ENV{LIB_DIR}"
