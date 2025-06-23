@@ -36,7 +36,7 @@ if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
 
-set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL OpenGLWidgets Test) # Added OpenGLWidgets
+set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL OpenGLWidgets Test)
 if(WITH_WEBSOCKET)
     list(APPEND MMAPPER_QT_COMPONENTS WebSockets)
 endif()
@@ -51,7 +51,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 if(Qt6Core_FOUND)
-    if(Qt6Core_VERSION VERSION_LESS 6.2.0) # Or a more appropriate Qt6 version
+    if(Qt6Core_VERSION VERSION_LESS 6.2.0)
         message(FATAL_ERROR "Minimum supported Qt version is 6.2")
     endif()
 endif()
