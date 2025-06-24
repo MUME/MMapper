@@ -16,6 +16,7 @@
 
 #include <map>
 #include <vector>
+#include <algorithm>
 
 #include <QAction>
 #include <QColorDialog>
@@ -752,8 +753,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     layout->addWidget(m_table);
 
     // Minimize row height
-    m_table->verticalHeader()->setDefaultSectionSize(32);
-    m_table->setIconSize(QSize(32, 32));
+    const int icon = getConfig().groupManager.tokenIconSize;
+    const int row  = std::max(icon, m_table->fontMetrics().height() + 4);
+
+    m_table->verticalHeader()->setDefaultSectionSize(row);
+    m_table->setIconSize(QSize(icon, icon));
 
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {
@@ -858,5 +862,16 @@ void GroupWidget::updateColumnVisibility()
 
     const bool hide_tokens = !getConfig().groupManager.showTokens;
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
+
+    // Apply current icon-size preference every time settings change
+    {
+        const int icon = getConfig().groupManager.tokenIconSize;
+        m_table->setIconSize(QSize(icon, icon));
+
+        QFontMetrics fm = m_table->fontMetrics();
+        int row = std::max(icon, fm.height() + 4);
+        m_table->verticalHeader()->setDefaultSectionSize(row);
+    }
 }
+
 
