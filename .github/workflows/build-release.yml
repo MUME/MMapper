@@ -42,6 +42,7 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
+        sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
           libgl1-mesa-dev build-essential cmake ninja-build mold git \
           zlib1g-dev libssl-dev libxcb-cursor-dev libsecret-1-dev
