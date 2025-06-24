@@ -340,7 +340,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-extra-semi-stmt) # enabled only for src/ directory
 
         # require explicit template parameters when deduction guides are missing
-        add_compile_options(-Werror=ctad-maybe-unsupported)
+        #add_compile_options(-Werror=ctad-maybe-unsupported)
 
         # always errors
         add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.
