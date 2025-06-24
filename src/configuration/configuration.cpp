@@ -240,6 +240,8 @@ ConstString KEY_GROUP_NPC_COLOR = "npc color";
 ConstString KEY_GROUP_NPC_COLOR_OVERRIDE = "npc color override";
 ConstString KEY_GROUP_NPC_SORT_BOTTOM = "npc sort bottom";
 ConstString KEY_GROUP_NPC_HIDE = "npc hide";
+ConstString KEY_GROUP_SHOW_TOKENS     = "show tokens";
+ConstString KEY_GROUP_TOKEN_ICON_SIZE = "token icon size";
 ConstString KEY_AUTO_LOG = "Auto log";
 ConstString KEY_AUTO_LOG_ASK_DELETE = "Auto log ask before deleting";
 ConstString KEY_AUTO_LOG_CLEANUP_STRATEGY = "Auto log cleanup strategy";
@@ -689,7 +691,8 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcColorOverride = conf.value(KEY_GROUP_NPC_COLOR_OVERRIDE, false).toBool();
     npcHide = conf.value(KEY_GROUP_NPC_HIDE, false).toBool();
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
-    showTokens = conf.value("showTokens", showTokens).toBool();
+    showTokens = conf.value(KEY_GROUP_SHOW_TOKENS, true).toBool();
+    tokenIconSize = conf.value(KEY_GROUP_TOKEN_ICON_SIZE, 32).toInt();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -856,7 +859,8 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_GROUP_NPC_COLOR_OVERRIDE, npcColorOverride);
     conf.setValue(KEY_GROUP_NPC_HIDE, npcHide);
     conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
-    conf.setValue("showTokens", showTokens);
+    conf.setValue(KEY_GROUP_SHOW_TOKENS, showTokens);
+    conf.setValue(KEY_GROUP_TOKEN_ICON_SIZE, tokenIconSize);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const
