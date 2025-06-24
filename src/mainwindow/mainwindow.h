@@ -156,6 +156,7 @@ private:
     QAction *mumeWikiAct = nullptr;
     QAction *settingUpMmapperAct = nullptr;
     QAction *newbieAct = nullptr;
+    QAction *actionReportIssue = nullptr;
     QAction *aboutAct = nullptr;
     QAction *aboutQtAct = nullptr;
     QAction *zoomInAct = nullptr;
@@ -444,4 +445,5 @@ public slots:
     void slot_openMumeWiki();
     void slot_openSettingUpMmapper();
     void slot_openNewbieHelp();
+    void onReportIssueTriggered();
 };

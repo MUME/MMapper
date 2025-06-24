@@ -44,7 +44,6 @@
 
 #include <QActionGroup>
 #include <QCloseEvent>
-#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFontDatabase>
 #include <QIcon>
@@ -52,6 +51,7 @@
 #include <QSize>
 #include <QString>
 #include <QTextBrowser>
+#include <QUrl>
 #include <QtWidgets>
 
 NODISCARD static const char *get_type_name(const AsyncTypeEnum mode)
@@ -612,6 +612,13 @@ void MainWindow::createActions()
     connect(mumeWikiAct, &QAction::triggered, this, &MainWindow::slot_openMumeWiki);
     settingUpMmapperAct = new QAction(QIcon::fromTheme("help-faq"), tr("Get &Help"), this);
     connect(settingUpMmapperAct, &QAction::triggered, this, &MainWindow::slot_openSettingUpMmapper);
+
+    actionReportIssue = new QAction(QIcon::fromTheme("help-browser"),
+                                    tr("Report an &Issue..."),
+                                    this);
+    actionReportIssue->setStatusTip(tr("Open the MMapper issue tracker in your browser"));
+    connect(actionReportIssue, &QAction::triggered, this, &MainWindow::onReportIssueTriggered);
+
     newbieAct = new QAction(tr("&Information for Newcomers"), this);
     newbieAct->setStatusTip("Newbie help on the MUME website");
     connect(newbieAct, &QAction::triggered, this, &MainWindow::slot_openNewbieHelp);
@@ -1171,6 +1178,7 @@ void MainWindow::setupMenuBar()
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(settingUpMmapperAct);
+    helpMenu->addAction(actionReportIssue);
     if constexpr (!NO_UPDATER) {
         helpMenu->addAction(mmapperCheckForUpdateAct);
     }
@@ -1956,6 +1964,11 @@ void MainWindow::slot_openMumeWiki()
 void MainWindow::slot_openSettingUpMmapper()
 {
     QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/wiki/Troubleshooting"));
+}
+
+void MainWindow::onReportIssueTriggered()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/issues"));
 }
 
 void MainWindow::slot_openNewbieHelp()

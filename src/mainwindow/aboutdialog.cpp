@@ -70,17 +70,6 @@ AboutDialog::AboutDialog(QWidget *const parent)
     };
     aboutText->setText(about_text());
 
-    /* Authors tab */
-    authorsView->setHtml(tr(
-        "<p>Maintainer: Jahara (please report bugs <a href=\"https://github.com/MUME/MMapper/issues\">here</a>)</p>"
-        "<p><u>Special thanks to:</u><br>"
-        "Alve for his great map engine<br>"
-        "Caligor for starting the mmapper project<br>"
-        "Azazello for creating the group manager</p>"
-        "<p><u>Contributors:</u><br>"
-        "Arfang, Cosmos, Cuantar, Elval, Kalev, Korir, Kovis, Krush, Mirnir, Taryn, Teoli, and Waba"
-        "</p>"));
-
     const auto loadResource = [](const QString &path) {
         QFile f(path);
         if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -90,6 +79,21 @@ AboutDialog::AboutDialog(QWidget *const parent)
             return ts.readAll();
         }
     };
+
+    /* Authors tab */
+    authorsView->clear();
+    const QStringList authors = loadResource(":/AUTHORS.txt").split("\n");
+    if (authors.isEmpty()) {
+        authorsView->setHtml("Could not load authors file.");
+    } else {
+        QString authorsHtml
+            = "<p>The MMapper project is maintained by the following contributors:</p><ul>";
+        for (const auto &line : authors) {
+            authorsHtml += "<li>" + line + "</li></br>";
+        }
+        authorsHtml += "</ul>";
+        authorsView->setHtml(authorsHtml);
+    }
 
     /* Licenses tab */
     QList<LicenseInfo> licenses;
