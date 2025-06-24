@@ -267,7 +267,8 @@ void MumeSslSocket::virt_onConnect()
 void MumeSslSocket::virt_onError(QAbstractSocket::SocketError e)
 {
     // MUME disconnecting is not an error. We also handle timeouts separately.
-    if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
+    if (e != QAbstractSocket::SocketError::RemoteHostClosedError
+        && e != QAbstractSocket::SocketError::SocketTimeoutError) {
         onError2(m_socket.errorString());
     }
 }
@@ -453,7 +454,8 @@ void MumeWebSocket::virt_sendToMud(const TelnetIacBytes &ba)
 void MumeWebSocket::virt_onError(QAbstractSocket::SocketError e)
 {
     // MUME disconnecting is not an error. We also handle timeouts separately.
-    if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
+    if (e != QAbstractSocket::SocketError::RemoteHostClosedError
+        && e != QAbstractSocket::SocketError::SocketTimeoutError) {
 #ifndef MMAPPER_NO_WEBSOCKET
         onError2(m_socket.errorString());
 #endif
@@ -465,8 +467,10 @@ void MumeWebSocket::onSslErrors(const QList<QSslError> &errors)
 {
     QString msg;
     for (const auto &error : errors) {
-        if (!msg.isEmpty())
-            msg += char_consts::C_SEMICOLON + char_consts::C_SPACE;
+        if (!msg.isEmpty()) {
+            msg += char_consts::C_SEMICOLON;
+            msg += char_consts::C_SPACE;
+        }
         msg += error.errorString();
     }
     if (!msg.isEmpty() && !msg.back().isPunct()) {

@@ -122,7 +122,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         QString tmpStr = colString;
         tmpStr.chop(1);
         tmpStr.remove(0, 1);
-        for (const auto &s : tmpStr.split(";", Qt::SkipEmptyParts)) {
+        for (const auto &s : tmpStr.split(";", Qt::SplitBehaviorFlags::SkipEmptyParts)) {
             const auto n = s.toInt();
             result_state.receive(n);
         }

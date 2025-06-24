@@ -61,7 +61,7 @@ public:
         {
             auto m = quotePrefixRegex.match(line);
             if (m.hasMatch()) {
-                const int len = m.capturedLength(0);
+                const int len = static_cast<int>(m.capturedLength(0));
                 quotePrefix = line.left(len);
                 prefixLen = measureExpandedTabsOneLine(quotePrefix, 0);
 
@@ -82,7 +82,7 @@ public:
             if (m.hasMatch()) {
                 const QString sv = m.captured();
                 /* this could fail if someone breaks the regex pattern for the escaped asterisk */
-                bulletLength = sv.length();
+                bulletLength = static_cast<int>(sv.length());
                 prefixLen = measureExpandedTabsOneLine(sv, prefixLen);
                 hasPrefix2 = true;
                 append(sv);
