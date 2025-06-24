@@ -52,7 +52,9 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev zlib1g-dev libssl-dev mold cmake ninja-build libgl1-mesa-dev libxcb-cursor-dev libsecret-1-dev
+          qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          libgl1-mesa-dev build-essential cmake ninja-build mold git \
+          zlib1g-dev libssl-dev libxcb-cursor-dev libsecret-1-dev
     - if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
