@@ -40,6 +40,15 @@ GroupPage::GroupPage(QWidget *const parent)
         setConfig().groupManager.showTokens = checked;
         emit sig_groupSettingsChanged();
     });
+    ui->tokenSizeComboBox->setCurrentText(QString::number(getConfig().groupManager.tokenIconSize) + " px");
+
+    connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this,
+            [this](const QString &txt) {
+                // strip " px" and convert to int
+                int value = txt.section(' ', 0, 0).toInt();
+                setConfig().groupManager.tokenIconSize = value;
+                emit sig_groupSettingsChanged();         // live update
+            });
 
     slot_loadConfig();
 }
@@ -65,6 +74,7 @@ void GroupPage::slot_loadConfig()
     ui->npcSortBottomCheckbox->setChecked(settings.npcSortBottom);
     ui->npcHideCheckbox->setChecked(settings.npcHide);
     ui->showTokensCheckbox->setChecked(settings.showTokens);
+    ui->tokenSizeComboBox->setCurrentText(QString::number(settings.tokenIconSize) + " px");
 }
 
 void GroupPage::slot_chooseColor()
