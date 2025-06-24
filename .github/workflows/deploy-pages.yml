@@ -25,6 +25,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Prepare Author and Changelog Include
+        run: |
+          mkdir -p docs/_includes
+          cp NEWS.md docs/_includes/news.md
+          awk '
+            NF {
+              name = gensub(/\s+[^ ]+@[^ ]+\s+/, " ", "g", $0)  # Strip email
+              print "- " name
+            }
+          ' AUTHORS.txt > docs/_includes/authors.md
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build

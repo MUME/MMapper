@@ -16,8 +16,6 @@ MMapper is a graphical mapping tool that enhances the MUME (Multi-Users in Middl
 
 ## Authors
 
-The MMapper project is maintained by the following [contributors]({{site.authors}}).
+The MMapper project is maintained by the following contributors:
 
-## <a id="changelog"></a>Latest Changelog
-
-{{ site.github.latest_release.body }}
+{% include authors.md %}
