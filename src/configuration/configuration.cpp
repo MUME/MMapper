@@ -689,6 +689,7 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcColorOverride = conf.value(KEY_GROUP_NPC_COLOR_OVERRIDE, false).toBool();
     npcHide = conf.value(KEY_GROUP_NPC_HIDE, false).toBool();
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
+    showTokens = conf.value("showTokens", showTokens).toBool();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -855,6 +856,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_GROUP_NPC_COLOR_OVERRIDE, npcColorOverride);
     conf.setValue(KEY_GROUP_NPC_HIDE, npcHide);
     conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
+    conf.setValue("showTokens", showTokens);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

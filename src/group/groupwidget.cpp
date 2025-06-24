@@ -30,13 +30,6 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
-<<<<<<< HEAD
-=======
-static constexpr const int GROUP_COLUMN_COUNT = 10;
-static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
-              "# of columns");
-
->>>>>>> dabeb884 (Add Character Token system and column to Group Manager with image caching)
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
 namespace { // anonymous
@@ -862,30 +855,8 @@ void GroupWidget::updateColumnVisibility()
     const bool hide_mana = !one_character_had_mana();
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA), hide_mana);
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA_PERCENT), hide_mana);
+
+    const bool hide_tokens = !getConfig().groupManager.showTokens;
+    m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
 }
 
-void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
-{
-    assert(character);
-    m_model.insertCharacter(character);
-    updateColumnVisibility();
-}
-
-void GroupWidget::slot_onCharacterRemoved(const GroupId characterId)
-{
-    assert(characterId != INVALID_GROUPID);
-    m_model.removeCharacterById(characterId);
-    updateColumnVisibility();
-}
-
-void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
-{
-    assert(character);
-    m_model.updateCharacter(character);
-}
-
-void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
-{
-    m_model.setCharacters(newCharacterList);
-    updateColumnVisibility();
-}
