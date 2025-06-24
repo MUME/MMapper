@@ -242,6 +242,7 @@ ConstString KEY_GROUP_NPC_SORT_BOTTOM = "npc sort bottom";
 ConstString KEY_GROUP_NPC_HIDE = "npc hide";
 ConstString KEY_GROUP_SHOW_TOKENS     = "show tokens";
 ConstString KEY_GROUP_TOKEN_ICON_SIZE = "token icon size";
+ConstString KEY_GROUP_TOKEN_OVERRIDES = "token overrides";
 ConstString KEY_AUTO_LOG = "Auto log";
 ConstString KEY_AUTO_LOG_ASK_DELETE = "Auto log ask before deleting";
 ConstString KEY_AUTO_LOG_CLEANUP_STRATEGY = "Auto log cleanup strategy";
@@ -693,6 +694,13 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
     showTokens = conf.value(KEY_GROUP_SHOW_TOKENS, true).toBool();
     tokenIconSize = conf.value(KEY_GROUP_TOKEN_ICON_SIZE, 32).toInt();
+    tokenOverrides.clear();
+    QSettings &rw = const_cast<QSettings &>(conf);
+    rw.beginGroup(KEY_GROUP_TOKEN_OVERRIDES);
+    const QStringList keys = rw.childKeys();
+    for (const QString &k : keys)
+        tokenOverrides.insert(k, rw.value(k).toString());
+    rw.endGroup();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -861,6 +869,11 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
     conf.setValue(KEY_GROUP_SHOW_TOKENS, showTokens);
     conf.setValue(KEY_GROUP_TOKEN_ICON_SIZE, tokenIconSize);
+    conf.beginGroup(KEY_GROUP_TOKEN_OVERRIDES);
+    conf.remove("");                                  // wipe old map entries
+    for (auto it = tokenOverrides.cbegin(); it != tokenOverrides.cend(); ++it)
+        conf.setValue(it.key(), it.value());
+    conf.endGroup();
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

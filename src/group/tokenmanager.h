@@ -13,6 +13,7 @@ public:
     TokenManager();
 
     QPixmap getToken(const QString &key);
+    static QString overrideFor(const QString &displayName);
     const QMap<QString, QString> &availableFiles() const;
 
 private:
@@ -20,7 +21,11 @@ private:
 
     QMap<QString, QString> m_availableFiles;
     QFileSystemWatcher m_watcher;
-    static QString normalizeKey(const QString &rawKey);
-mutable QMap<QString, QString> m_tokenPathCache;
+    mutable QMap<QString, QString> m_tokenPathCache;
+    QPixmap m_fallbackPixmap;
 };
+
+// Global sentinel that forces the built-in placeholder
+extern const QString kForceFallback;
+
 #endif
