@@ -18,6 +18,7 @@ if(MMAPPER_IS_DEBUG)
             -Wno-unused-parameter
             -Wno-unused-template
             -Wno-unused-variable
+            -Wno-ctad-maybe-unsupported
             -Werror=unused-result
         )
     endif()
