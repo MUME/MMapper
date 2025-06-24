@@ -165,6 +165,8 @@ private:
 private:
     QAction *m_center = nullptr;
     QAction *m_recolor = nullptr;
+    QAction *m_setIcon = nullptr;
+    QAction *m_useDefaultIcon = nullptr;
     SharedGroupChar selectedCharacter;
 
 public:

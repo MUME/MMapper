@@ -8,16 +8,29 @@
 #include <QStandardPaths>
 #include <QDebug>
 
-QString TokenManager::normalizeKey(const QString &rawKey)
+const QString kForceFallback(QStringLiteral("__force_fallback__"));
+
+static QString normalizeKey(QString key)
 {
-    QString key = rawKey.trimmed().toLower();
-    key.replace(QRegularExpression("[^a-z0-9_]+"), "_");  // Replace spaces and punctuation
+    static const QRegularExpression nonWordReg(
+        QStringLiteral("[^a-z0-9_]+"));
+
+    key = key.toLower();
+    key.replace(nonWordReg, QStringLiteral("_"));
     return key;
+}
+
+QString TokenManager::overrideFor(const QString &displayName)
+{
+    const auto &over = getConfig().groupManager.tokenOverrides;
+    auto it = over.constFind(displayName.trimmed());
+    return (it != over.constEnd()) ? it.value() : QString();
 }
 
 TokenManager::TokenManager()
 {
     scanDirectories();
+    m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
 }
 
 void TokenManager::scanDirectories()
@@ -48,7 +61,7 @@ void TokenManager::scanDirectories()
 
         if (formats.contains(suffix.toUtf8()))
         {
-            QString key = info.baseName();
+            QString key = normalizeKey(info.baseName());
             if (!m_availableFiles.contains(key))
             {
                 m_availableFiles.insert(key, path);
@@ -61,10 +74,17 @@ void TokenManager::scanDirectories()
 
 QPixmap TokenManager::getToken(const QString &key)
 {
-    //qDebug() << "TokenManager: Received raw key:" << key;
+    if (key == kForceFallback) {
+        return m_fallbackPixmap;
+    }
 
-    // Normalize the key
-    QString resolvedKey = normalizeKey(key);
+    QString lookup = key;
+    const QString ov = overrideFor(key);
+    if (!ov.isEmpty())
+        lookup = ov;                       // use the user-chosen icon basename
+
+    QString resolvedKey = normalizeKey(lookup);
+
     //qDebug() << "TokenManager: Normalized key:" << resolvedKey;
 
     if (resolvedKey.isEmpty()) {
@@ -74,7 +94,6 @@ QPixmap TokenManager::getToken(const QString &key)
 
     //qDebug() << "TokenManager: Requested key:" << resolvedKey;
 
-    // ✅ Step 1: Check path cache first
     if (m_tokenPathCache.contains(resolvedKey)) {
         QString path = m_tokenPathCache[resolvedKey];
         QPixmap cached;
@@ -88,10 +107,8 @@ QPixmap TokenManager::getToken(const QString &key)
             return pix;
         }
         qWarning() << "TokenManager: Cached path was invalid:" << path;
-        // Fall through to re-resolve path
     }
 
-    // Case-insensitive match against available keys
     QString matchedKey;
     for (const QString &k : m_availableFiles.keys()) {
         if (k.compare(resolvedKey, Qt::CaseInsensitive) == 0) {
@@ -110,7 +127,6 @@ QPixmap TokenManager::getToken(const QString &key)
         const QString &path = m_availableFiles.value(matchedKey);
         qDebug() << "TokenManager: Found path for key:" << matchedKey << "->" << path;
 
-        // ✅ Step 2: Cache resolved path
         m_tokenPathCache[resolvedKey] = path;
 
         QPixmap cached;
