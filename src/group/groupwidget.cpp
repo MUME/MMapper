@@ -13,6 +13,7 @@
 #include "CGroupChar.h"
 #include "enums.h"
 #include "mmapper2group.h"
+#include "tokenmanager.h"
 
 #include <map>
 #include <vector>
@@ -30,6 +31,12 @@
 #include <QStyledItemDelegate>
 #include <QTableView>
 #include <QVBoxLayout>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDir>
+#include <QMessageBox>
+
+extern const QString kForceFallback;
 
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
@@ -791,6 +798,64 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
     });
 
+    // ── Set-icon action ───────────────────────────────────────────
+    m_setIcon = new QAction(QIcon(":/icons/group-set-icon.png"), tr("Set &Icon…"), this);
+
+    connect(m_setIcon, &QAction::triggered, this, [this]() {
+
+        if (!selectedCharacter)                         // safety
+            return;
+
+        // 1. Character name (key)
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+
+        // 2. Tokens folder  (=  <resourcesDirectory>/tokens )
+        const QString tokensDir =
+            QDir(getConfig().canvas.resourcesDirectory).filePath("tokens");
+
+        if (!QDir(tokensDir).exists()) {
+            QMessageBox::information(
+                this,
+                tr("Tokens folder not found"),
+                tr("No 'tokens' folder was found at:\n%1\n\n"
+                   "Create a folder named 'tokens' inside that directory, "
+                   "put your images there, then restart MMapper.")
+                    .arg(tokensDir));
+            return;                         // abort setting an icon
+        }
+
+        const QString file = QFileDialog::getOpenFileName(
+            this,
+            tr("Choose icon for %1").arg(charName),
+            tokensDir,
+            tr("Images (*.png *.jpg *.bmp *.svg)"));
+
+        if (file.isEmpty())
+            return;                                     // user cancelled
+
+        // 3. store only the basename (without path / extension)
+        const QString base = QFileInfo(file).completeBaseName();
+        setConfig().groupManager.tokenOverrides[charName] = base;
+
+        // 4. immediately refresh this widget
+        slot_updateLabels();
+    });
+
+    m_useDefaultIcon = new QAction(QIcon(":/icons/group-clear-icon.png"),
+                                   tr("&Use default icon"), this);
+
+    connect(m_useDefaultIcon, &QAction::triggered, this, [this]() {
+        if (!selectedCharacter)
+            return;
+
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+
+        // store the sentinel so TokenManager shows char-room-sel.png
+        setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+
+        slot_updateLabels();            // live refresh
+    });
+
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
         if (!proxyIndex.isValid()) {
             return;
@@ -810,10 +875,16 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             m_recolor->setText(QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
             m_center->setDisabled(!selectedCharacter->isYou()
                                   && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
+            m_setIcon->setText(QString("&Set icon for %1…")
+                                   .arg(selectedCharacter->getName().toQString()));
+            m_useDefaultIcon->setText(QString("&Use default icon for %1")
+                                          .arg(selectedCharacter->getName().toQString()));
 
             QMenu contextMenu(tr("Context menu"), this);
             contextMenu.addAction(m_center);
             contextMenu.addAction(m_recolor);
+            contextMenu.addAction(m_setIcon);
+            contextMenu.addAction(m_useDefaultIcon);
             contextMenu.exec(QCursor::pos());
         }
     });
