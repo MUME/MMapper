@@ -28,7 +28,6 @@ jobs:
 
       - name: Prepare Author and Changelog Include
         run: |
-          mkdir -p docs/_includes
           cp NEWS.md docs/_includes/news.md
           awk '
             NF {
