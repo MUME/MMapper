@@ -288,6 +288,7 @@ public:
         bool npcColorOverride = false;
         bool npcSortBottom = false;
         bool npcHide = false;
+        bool showTokens = true;
 
     private:
         SUBGROUP();
