@@ -95,8 +95,6 @@ public:
     // for commands that set the mode (emulation, play, map)
     // these are connected to MainWindow
     void onSetMode(const MapModeEnum mode) { virt_onSetMode(mode); }
-    // sent to MapCanvas
-    void onInfomarksChanged() { virt_onInfomarksChanged(); }
 
 private:
     // sent to MudTelnet
@@ -124,8 +122,6 @@ private:
     // for commands that set the mode (emulation, play, map)
     // these are connected to MainWindow
     virtual void virt_onSetMode(MapModeEnum) = 0;
-    // sent to MapCanvas
-    virtual void virt_onInfomarksChanged() = 0;
 };
 
 struct NODISCARD ParserCommonData final
@@ -426,7 +422,6 @@ public:
 
 protected:
     void mapChanged() { m_outputs.onMapChanged(); }
-    void infomarksChanged() { m_outputs.onInfomarksChanged(); }
 
 private:
     void graphicsSettingsChanged() { m_outputs.onGraphicsSettingsChanged(); }

@@ -67,7 +67,7 @@ void InfoMarkSelection::init()
         return isCoordInSelection(pos2);
     };
 
-    const auto &db = m_mapData.getInfomarkDb();
+    const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
     for (const InfomarkId id : db.getIdSet()) {
         if (isMarkerInSelection(InfomarkHandle{db, id})) {
             m_markerList.emplace_back(id);
@@ -82,26 +82,26 @@ void InfoMarkSelection::applyOffset(const Coordinate &offset) const
         return;
     }
 
-    const auto updates = [this, &offset]() {
-        std::vector<InformarkChange> result_updates;
-        const auto oldDb = m_mapData.getInfomarkDb();
-        for (const InfomarkId marker : m_markerList) {
-            InfoMarkFields copy = oldDb.getRawCopy(marker);
-            copy.offsetBy(offset);
-            result_updates.emplace_back(marker, copy);
+    ChangeList changes;
+    const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
+    for (const InfomarkId id : m_markerList) {
+        try {
+            InfoMarkFields fields = db.getRawCopy(id);
+            fields.offsetBy(offset);
+            changes.add(Change{infomark_change_types::UpdateInfomark{id, fields}});
+        } catch (const std::out_of_range &e) {
+            qWarning() << "failed to find marker" << id.value() << ":" << e.what();
+            assert(false);
         }
-        return result_updates;
-    }();
-
-    if (updates.empty()) {
-        qWarning() << "Failed to move any markers.";
+    }
+    if (changes.empty()) {
         return;
     }
 
-    const auto count = updates.size();
-    if (m_mapData.updateMarkers(updates)) {
-        qInfo() << "Moved" << count << "marker(s).";
+    const auto count = changes.getChanges().size();
+    if (m_mapData.applyChanges(changes)) {
+        qInfo() << "Applied offset to" << count << "marker(s).";
     } else {
-        qWarning() << "Failed to move" << count << "marker(s).";
+        qWarning() << "Failed to apply offset to" << count << "marker(s).";
     }
 }

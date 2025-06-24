@@ -36,7 +36,7 @@ private:
 
 private:
     NODISCARD bool virt_canSave() const final { return true; }
-    NODISCARD bool virt_saveData(const RawMapData &map) final;
+    NODISCARD bool virt_saveData(const MapLoadData &map) final;
 
 private:
     NODISCARD static ExternalRawRoom loadRoom(QDataStream &stream, uint32_t version);

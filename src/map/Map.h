@@ -9,6 +9,7 @@
 #include "RoomFieldVariant.h"
 #include "RoomIdSet.h"
 #include "coordinate.h"
+#include "infomark.h"
 #include "mmapper2room.h"
 #include "parseevent.h"
 #include "room.h"
@@ -51,7 +52,8 @@ public:
 
 public:
     NODISCARD size_t getRoomsCount() const;
-    NODISCARD bool empty() const { return getRoomsCount() == 0; }
+    NODISCARD size_t getMarksCount() const;
+    NODISCARD bool empty() const;
     NODISCARD std::optional<Bounds> getBounds() const;
 
 public:
@@ -98,7 +100,12 @@ public:
     NODISCARD const World &getWorld() const { return *m_world; }
 
 public:
-    NODISCARD static MapPair fromRooms(ProgressCounter &counter, std::vector<ExternalRawRoom> rooms);
+    NODISCARD const InfomarkDb &getInfomarkDb() const;
+
+public:
+    NODISCARD static MapPair fromRooms(ProgressCounter &counter,
+                                       std::vector<ExternalRawRoom> rooms,
+                                       std::vector<InfoMarkFields> marks);
     void printMulti(ProgressCounter &pc, AnsiOstream &aos) const;
     void printStats(ProgressCounter &pc, AnsiOstream &aos) const;
     void printUnknown(ProgressCounter &pc, AnsiOstream &aos) const;
@@ -133,6 +140,7 @@ public:
     NODISCARD static Map merge(ProgressCounter &pc,
                                const Map &currentMap,
                                std::vector<ExternalRawRoom> newRooms,
+                               std::vector<InfoMarkFields> newMarks,
                                const Coordinate &mapOffset);
 
     static void foreachChangedRoom(ProgressCounter &pc,

@@ -48,7 +48,7 @@ NODISCARD static RawRoom createTemporaryRoom(const ParseEvent &event)
     }
 
     ProgressCounter pc;
-    MapPair mapPair = Map::fromRooms(pc, {tmp});
+    MapPair mapPair = Map::fromRooms(pc, {tmp}, {});
     auto &map = mapPair.modified;
     const RoomHandle room1 = map.getRoomHandle(DEFAULT_EXTERNAL_ROOMID);
     std::ignore = map.applySingleChange(pc,
@@ -128,7 +128,7 @@ void TestExpandoraCommon::roomCompareTest_data()
 
         callback(builder);
         ProgressCounter pc;
-        auto room = Map::fromRooms(pc, {builder}).modified.getRoomHandle(DEFAULT_ROOMID);
+        auto room = Map::fromRooms(pc, {builder}, {}).modified.getRoomHandle(DEFAULT_ROOMID);
         auto shared = std::make_shared<RoomHandle>(room);
         return QtRoomWrapper{shared};
     };

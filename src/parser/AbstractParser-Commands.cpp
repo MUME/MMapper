@@ -673,7 +673,7 @@ void AbstractParser::doMapDiff()
 {
     auto &mapData = m_mapData;
 
-    if (mapData.getSavedMarks() != mapData.getCurrentMarks()) {
+    if (mapData.getSavedMap().getInfomarkDb() != mapData.getCurrentMap().getInfomarkDb()) {
         sendToUser(SendToUserSourceEnum::FromMMapper,
                    "Note: Map markers have changed, but marker diff is not yet supported.\n");
     }
@@ -707,13 +707,9 @@ void AbstractParser::doMapCommand(StringView input)
         if (map.applySingleChange(Change{world_change_types::CompactRoomIds{}})) {
             // Mark *everything* as changed.
             map.setSavedMap(Map{});
-            map.setSavedMarks({});
             sendOkToUser();
             sendToUser(SendToUserSourceEnum::FromMMapper,
                        "WARNING: You should save the map immediately.\n");
-            sendToUser(SendToUserSourceEnum::FromMMapper,
-                       "Note: Group manager will probably display very strange results"
-                       " until you save the map and share it with your groupmates.\n");
 
         } else {
             sendToUser(SendToUserSourceEnum::FromMMapper, "Ooops.\n");

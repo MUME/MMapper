@@ -26,36 +26,7 @@ static constexpr const auto INFOMARK_SCALE = 100;
     X(Coordinate, Position2, ) \
     X(int, RotationAngle, 0)
 
-#define X_DECL(_Type, _Prop, _Init) _Prop,
-enum class NODISCARD InfoMarkUpdateEnum { XFOREACH_INFOMARK_PROPERTY(X_DECL) };
-#undef X_DECL
-
-#define X_COUNT(_Type, _Prop, _Init) +1
-static constexpr const size_t NUM_INFOMARK_UPDATE_TYPES = (XFOREACH_INFOMARK_PROPERTY(X_COUNT));
-#undef X_COUNT
-
-static_assert(NUM_INFOMARK_UPDATE_TYPES == 6);
-DEFINE_ENUM_COUNT(InfoMarkUpdateEnum, NUM_INFOMARK_UPDATE_TYPES)
-
-struct NODISCARD InfoMarkUpdateFlags final
-    : public enums::Flags<InfoMarkUpdateFlags, InfoMarkUpdateEnum, uint32_t>
-{
-    using Flags::Flags;
-};
-
 class InfoMark;
-
-class NODISCARD InfoMarkModificationTracker
-{
-public:
-    virtual ~InfoMarkModificationTracker();
-
-public:
-    void notifyModified(InfoMarkUpdateFlags updateFlags);
-
-private:
-    virtual void virt_onNotifyModified(InfoMarkUpdateFlags /*updateFlags*/) = 0;
-};
 
 namespace tags {
 struct NODISCARD InfomarkTextTag final
@@ -214,8 +185,8 @@ public:
 
 public:
     NODISCARD InfomarkId addMarker(const InfoMarkFields &im);
-    NODISCARD InfoMarkUpdateFlags updateMarker(InfomarkId, const InfoMarkFields &im);
-    NODISCARD InfoMarkUpdateFlags updateMarkers(const std::vector<InformarkChange> &updates);
+    void updateMarker(InfomarkId, const InfoMarkFields &im);
+    void updateMarkers(const std::vector<InformarkChange> &updates);
     NODISCARD InfoMarkFields getRawCopy(InfomarkId id) const;
 
     void removeMarker(InfomarkId);

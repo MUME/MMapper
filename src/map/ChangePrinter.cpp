@@ -12,6 +12,7 @@
 using namespace world_change_types;
 using namespace exit_change_types;
 using namespace room_change_types;
+using namespace infomark_change_types;
 
 namespace { // anonymous
 
@@ -627,6 +628,71 @@ void ChangePrinter::print(const RoomFieldVariant &var)
 #undef X_NOP
 }
 
+void ChangePrinter::print(const InfomarkId id)
+{
+    // REVISIT: Why InfomarkId and not InfoMarkId like the other types?
+    if (id == INVALID_INFOMARK_ID) {
+        m_os.writeWithColor(error_color, "INVALID_INFOMARK_ID");
+    } else {
+        writeTaggedInt(m_os, "InfomarkId", id);
+    }
+}
+
+void ChangePrinter::print(const InfoMarkClassEnum type)
+{
+#define CASE(UPPER, s) \
+    do { \
+    case InfoMarkClassEnum::UPPER: \
+        return m_os.writeWithColor(const_color, s); \
+    } while (false)
+    switch (type) {
+        // TODO: Move this into infomark.h XFOREACH
+        CASE(GENERIC, "generic");
+        CASE(HERB, "herb");
+        CASE(RIVER, "river");
+        CASE(PLACE, "place");
+        CASE(MOB, "mob");
+        CASE(COMMENT, "comment");
+        CASE(ROAD, "road");
+        CASE(OBJECT, "object");
+        CASE(ACTION, "action");
+        CASE(LOCALITY, "locality");
+    }
+#undef CASE
+}
+
+void ChangePrinter::print(const InfoMarkTypeEnum type)
+{
+#define CASE(UPPER, s) \
+    do { \
+    case InfoMarkTypeEnum::UPPER: \
+        return m_os.writeWithColor(const_color, s); \
+    } while (false)
+    switch (type) {
+        // TODO: Move this into infomark.h XFOREACH
+        CASE(TEXT, "text");
+        CASE(LINE, "line");
+        CASE(ARROW, "arrow");
+    }
+#undef CASE
+}
+
+void ChangePrinter::print(const InfoMarkText &text)
+{
+    print_string_color_quoted(m_os, text.getStdStringViewUtf8());
+}
+
+void ChangePrinter::print(const InfoMarkFields &fields)
+{
+    // REVISIT: Why fields and not "InfoMark" ?
+    BEGIN_STRUCT_HELPER("InfoMarkFields")
+    {
+#define X_CASE(Type, Prop, Init) helper.add_member(#Prop, fields.get##Prop());
+        XFOREACH_INFOMARK_PROPERTY(X_CASE)
+#undef X_CASE
+    }
+}
+
 void ChangePrinter::print(const RoomIdSet &set)
 {
     auto &os = m_os;
@@ -846,5 +912,30 @@ void ChangePrinter::virt_accept(const SetExitFlags &change)
         HELPER_ADD_MEMBER(room);
         HELPER_ADD_MEMBER(dir);
         HELPER_ADD_MEMBER(flags);
+    }
+}
+
+void ChangePrinter::virt_accept(const AddInfomark &change)
+{
+    BEGIN_STRUCT_HELPER("AddInfoMark")
+    {
+        HELPER_ADD_MEMBER(fields);
+    }
+}
+
+void ChangePrinter::virt_accept(const RemoveInfomark &change)
+{
+    BEGIN_STRUCT_HELPER("RemoveInfoMark")
+    {
+        HELPER_ADD_MEMBER(id);
+    }
+}
+
+void ChangePrinter::virt_accept(const UpdateInfomark &change)
+{
+    BEGIN_STRUCT_HELPER("UpdateInfoMark")
+    {
+        HELPER_ADD_MEMBER(id);
+        HELPER_ADD_MEMBER(fields);
     }
 }

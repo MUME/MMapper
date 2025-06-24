@@ -64,7 +64,7 @@ public:
         if (empty()) {
             throw std::runtime_error("InfoMarkSelection is empty");
         }
-        const auto &db = m_mapData.getInfomarkDb();
+        const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
         return InfomarkHandle{db, m_markerList.front()};
     }
 
@@ -81,7 +81,7 @@ public:
     void for_each(Callback &&callback) const
     {
         static_assert(std::is_invocable_r_v<void, Callback, const InfomarkHandle &>);
-        const auto &db = m_mapData.getInfomarkDb();
+        const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
         for (const InfomarkId id : m_markerList) {
             const InfomarkHandle marker{db, id};
             callback(marker);

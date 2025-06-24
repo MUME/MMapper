@@ -356,8 +356,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
     RawMapLoadData result;
     result.filename = fileName;
     result.readonly = !QFileInfo(fileName).isWritable();
-    auto &markerData = result.markerData.emplace();
-    auto &markers = markerData.markers;
+    auto &markers = result.markers;
 
     {
         log("Loading data ...");
@@ -594,15 +593,12 @@ void MapStorage::saveExits(const ExternalRawRoom &room, QDataStream &stream)
     }
 }
 
-bool MapStorage::virt_saveData(const RawMapData &mapData)
+bool MapStorage::virt_saveData(const MapLoadData &mapData)
 {
     auto &progressCounter = getProgressCounter();
     log("Writing data to file ...");
 
     const auto &map = mapData.mapPair.modified;
-    const RawMarkerData noMarkers;
-    const RawMarkerData &markerList = mapData.markerData.has_value() ? mapData.markerData.value()
-                                                                     : noMarkers;
 
     QDataStream fileStream(getFile());
     fileStream.setVersion(QDataStream::Qt_4_8);
@@ -622,7 +618,7 @@ bool MapStorage::virt_saveData(const RawMapData &mapData)
     }
 
     auto roomsCount = static_cast<uint32_t>(roomList.size());
-    const auto marksCount = static_cast<uint32_t>(markerList.size());
+    const auto marksCount = static_cast<uint32_t>(map.getMarksCount());
 
     // Write a header with a "magic number" and a version
     fileStream << static_cast<uint32_t>(0xFFB2AF01);
@@ -650,8 +646,9 @@ bool MapStorage::virt_saveData(const RawMapData &mapData)
 
     // save items
     progressCounter.setNewTask(ProgressMsg{"saving markers"}, marksCount);
-    for (const auto &mark : markerList.markers) {
-        saveMark(mark, stream);
+    auto &db = map.getInfomarkDb();
+    for (const InfomarkId id : db.getIdSet()) {
+        saveMark(db.getRawCopy(id), stream);
         progressCounter.step();
     }
 

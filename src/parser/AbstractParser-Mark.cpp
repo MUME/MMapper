@@ -180,7 +180,7 @@ void AbstractParser::parseMark(StringView input)
             throw std::runtime_error("invalid mark");
         }
         auto id = static_cast<InfomarkId>(static_cast<uint32_t>(n));
-        auto mark = m_mapData.getInfomarkDb().find(id);
+        auto mark = m_mapData.getCurrentMap().getInfomarkDb().find(id);
         if (!mark.exists()) {
             throw std::runtime_error("invalid mark");
         }
@@ -202,11 +202,10 @@ void AbstractParser::parseMark(StringView input)
             std::shared_ptr<InfoMarkSelection> is = getInfoMarkSelection(c);
 
             const auto id = lookup_mark(v[1].getInt());
-            if (!m_mapData.removeMarker(id)) {
+            if (!m_mapData.applySingleChange(Change{infomark_change_types::RemoveInfomark{id}})) {
                 os << "Unable to remove marker.\n";
                 return;
             }
-            infomarksChanged(); // is this necessary?
             send_ok(os);
         },
         "remove mark");
@@ -240,13 +239,11 @@ void AbstractParser::parseMark(StringView input)
             mark.setClass(InfoMarkClassEnum::COMMENT);
             mark.setPosition1(c);
 
-            auto added = m_mapData.addMarker(mark);
-            if (added == INVALID_INFOMARK_ID) {
+            if (!m_mapData.applySingleChange(Change{infomark_change_types::AddInfomark{mark}})) {
                 os << "Unable to add mark.\n";
                 return;
             }
 
-            infomarksChanged();
             send_ok(os);
         },
         "add mark");
@@ -255,14 +252,11 @@ void AbstractParser::parseMark(StringView input)
 
     using Callback = std::function<void(InfoMarkFields & mark)>;
     auto modify_mark = [this](InfomarkId id, const Callback &callback) {
-        auto marks = m_mapData.getMarkersList();
-        auto mark = marks.getRawCopy(id);
+        auto &db = m_mapData.getCurrentMap().getInfomarkDb();
+        auto mark = db.getRawCopy(id);
         callback(mark);
-        auto result = this->m_mapData.updateMarker(id, mark);
-        if (result) {
-            infomarksChanged(); // is this necessary?
-        }
-        return result;
+        return this->m_mapData.applySingleChange(
+            Change{infomark_change_types::UpdateInfomark{id, mark}});
     };
 
     auto modifyText = Accept(
@@ -287,8 +281,8 @@ void AbstractParser::parseMark(StringView input)
             const auto id = lookup_mark(v[1].getInt());
 
             {
-                const auto marks = m_mapData.getMarkersList();
-                const auto mark = marks.getRawCopy(id);
+                auto &db = m_mapData.getCurrentMap().getInfomarkDb();
+                const auto mark = db.getRawCopy(id);
                 if (mark.getType() != InfoMarkTypeEnum::TEXT) {
                     throw std::runtime_error("unable to set text to this mark");
                 }

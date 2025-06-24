@@ -10,13 +10,6 @@
 #include <stdexcept>
 #include <vector>
 
-InfoMarkModificationTracker::~InfoMarkModificationTracker() = default;
-
-void InfoMarkModificationTracker::notifyModified(InfoMarkUpdateFlags updateFlags)
-{
-    virt_onNotifyModified(updateFlags);
-}
-
 template<typename T>
 void maybeModify(T &ours, T value)
 {
@@ -123,22 +116,15 @@ public:
     }
 
 public:
-    NODISCARD InfoMarkUpdateFlags updateMarker(const InfomarkId id, const InfoMarkFields &im)
+    void updateMarker(const InfomarkId id, const InfoMarkFields &im)
     {
         if (!m_set.contains(id)) {
             throw std::runtime_error("invalid infomark id");
         }
 
-        InfoMarkUpdateFlags updates;
-
-#define X_SET_VALUE(_Type, _Prop, _OptInit) \
-    if (set##_Prop(id, im.get##_Prop())) { \
-        updates.insert(InfoMarkUpdateEnum::_Prop); \
-    }
+#define X_SET_VALUE(_Type, _Prop, _OptInit) std::ignore = set##_Prop(id, im.get##_Prop());
         XFOREACH_INFOMARK_PROPERTY(X_SET_VALUE)
 #undef X_SET_VALUE
-
-        return updates;
     }
 
     NODISCARD InfomarkId addMarker(const InfoMarkFields &im)
@@ -222,28 +208,25 @@ InfomarkId InfomarkDb::addMarker(const InfoMarkFields &im)
     return result;
 }
 
-InfoMarkUpdateFlags InfomarkDb::updateMarker(const InfomarkId id, const InfoMarkFields &im)
+void InfomarkDb::updateMarker(const InfomarkId id, const InfoMarkFields &im)
 {
     auto tmp = m_pimpl->clone();
-    InfoMarkUpdateFlags modified = tmp->updateMarker(id, im);
+    tmp->updateMarker(id, im);
 
     /* replace our guts */
     m_pimpl = tmp;
-    return modified;
 }
 
-InfoMarkUpdateFlags InfomarkDb::updateMarkers(const std::vector<InformarkChange> &updates)
+void InfomarkDb::updateMarkers(const std::vector<InformarkChange> &updates)
 {
     auto tmp = m_pimpl->clone();
-    InfoMarkUpdateFlags modified{};
 
     for (const InformarkChange &update : updates) {
-        modified |= tmp->updateMarker(update.id, update.fields);
+        tmp->updateMarker(update.id, update.fields);
     }
 
     /* replace our guts */
     m_pimpl = tmp;
-    return modified;
 }
 
 void InfomarkDb::removeMarker(const InfomarkId id)

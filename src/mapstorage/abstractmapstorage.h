@@ -90,7 +90,7 @@ private:
     NODISCARD virtual bool virt_canLoad() const = 0;
     NODISCARD virtual bool virt_canSave() const = 0;
     NODISCARD virtual std::optional<RawMapLoadData> virt_loadData() = 0;
-    NODISCARD virtual bool virt_saveData(const RawMapData &map) = 0;
+    NODISCARD virtual bool virt_saveData(const MapLoadData &map) = 0;
 
 signals:
     void sig_log(const QString &, const QString &);

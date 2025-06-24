@@ -39,7 +39,7 @@ private:
 
 private:
     NODISCARD bool virt_canSave() const final { return true; }
-    NODISCARD bool virt_saveData(const RawMapData &map) final;
+    NODISCARD bool virt_saveData(const MapLoadData &map) final;
 
 private:
     void log(const QString &msg) { emit sig_log("JsonMapStorage", msg); }

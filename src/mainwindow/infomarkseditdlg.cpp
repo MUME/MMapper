@@ -68,10 +68,6 @@ void InfoMarksEditDlg::connectAll()
 
     disconnectAll();
 
-    m_connections += connect(this,
-                             &InfoMarksEditDlg::sig_infomarksChanged,
-                             m_mapCanvas,
-                             &MapCanvas::slot_infomarksChanged);
     m_connections += connect(objectsList,
                              QOverload<int>::of(&QComboBox::currentIndexChanged),
                              this,
@@ -106,14 +102,13 @@ void InfoMarksEditDlg::slot_createClicked()
     InfoMarkFields im;
     updateMark(im);
 
-    const InfomarkId id = mapData.addMarker(im);
-    m_selection->emplace_back(id);
-    updateMarkers();
-
-    setCurrentInfoMark(id);
-    updateDialog();
-
-    emit sig_infomarksChanged();
+    bool success = mapData.applySingleChange(Change{infomark_change_types::AddInfomark{im}});
+    if (success) {
+        updateMarkers();
+        updateDialog();
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to create infomark.");
+    }
 }
 
 void InfoMarksEditDlg::updateMark(InfoMarkFields &im)
@@ -159,9 +154,9 @@ void InfoMarksEditDlg::slot_modifyClicked()
     InfoMarkFields mark = current.getRawCopy();
     updateMark(mark);
 
-    if (m_mapData->updateMarker(current.getId(), mark)) {
-        // REVISIT: The canvas will find out from the MapData, so this is not our responsibility.
-        emit sig_infomarksChanged();
+    if (!m_mapData->applySingleChange(
+            Change{infomark_change_types::UpdateInfomark{current.getId(), mark}})) {
+        QMessageBox::warning(this, "Error", "Failed to modify infomark.");
     }
 }
 
@@ -284,13 +279,14 @@ InfoMarkClassEnum InfoMarksEditDlg::getClass()
 
 InfomarkHandle InfoMarksEditDlg::getCurrentInfoMark()
 {
+    const auto &db = m_mapData->getCurrentMap().getInfomarkDb();
     bool ok = false;
     int n = objectsList->itemData(objectsList->currentIndex()).toInt(&ok);
     if (!ok || n == -1 || n >= static_cast<int>(m_markers.size())) {
-        return InfomarkHandle{m_mapData->getMarkersList(), INVALID_INFOMARK_ID};
+        return InfomarkHandle{db, INVALID_INFOMARK_ID};
     }
     auto id = m_markers.at(static_cast<size_t>(n));
-    return m_mapData->getMarkersList().find(id);
+    return db.find(id);
 }
 
 void InfoMarksEditDlg::setCurrentInfoMark(InfomarkId id)

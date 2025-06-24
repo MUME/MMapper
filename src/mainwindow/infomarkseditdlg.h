@@ -59,9 +59,6 @@ private:
     void updateDialog();
     void updateMark(InfoMarkFields &im);
 
-signals:
-    void sig_infomarksChanged();
-
 public slots:
     void slot_objectListCurrentIndexChanged(int);
     void slot_objectTypeCurrentIndexChanged(int);

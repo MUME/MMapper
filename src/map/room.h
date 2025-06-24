@@ -30,13 +30,11 @@ class ParseEvent;
 
 enum class NODISCARD ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
-enum class NODISCARD RoomUpdateEnum {
-    BoundsChanged,
-    RoomMeshNeedsUpdate,
-};
+// REVISIT: Rename this to MapUpdateEnum?
+enum class NODISCARD RoomUpdateEnum { BoundsChanged, RoomMeshNeedsUpdate, MarksChanged };
 
-static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 2;
-static_assert(NUM_ROOM_UPDATE_TYPES == static_cast<int>(RoomUpdateEnum::RoomMeshNeedsUpdate) + 1);
+static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 3;
+static_assert(NUM_ROOM_UPDATE_TYPES == static_cast<int>(RoomUpdateEnum::MarksChanged) + 1);
 DEFINE_ENUM_COUNT(RoomUpdateEnum, NUM_ROOM_UPDATE_TYPES)
 
 struct NODISCARD RoomUpdateFlags final
@@ -49,6 +47,7 @@ class NODISCARD RoomModificationTracker
 {
 private:
     bool m_needsMapUpdate = false;
+    bool m_needsMarkUpdate = false;
 
 public:
     virtual ~RoomModificationTracker();
@@ -62,6 +61,8 @@ private:
 public:
     NODISCARD bool getNeedsMapUpdate() const { return m_needsMapUpdate; }
     void clearNeedsMapUpdate() { m_needsMapUpdate = false; }
+    NODISCARD bool getNeedsMarkUpdate() const { return m_needsMarkUpdate; }
+    void clearNeedsMarkUpdate() { m_needsMarkUpdate = false; }
 };
 
 // X(_Type, _Name, _Init)

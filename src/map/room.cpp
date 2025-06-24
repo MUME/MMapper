@@ -21,8 +21,12 @@ RoomModificationTracker::~RoomModificationTracker() = default;
 
 void RoomModificationTracker::notifyModified(const RoomUpdateFlags updateFlags)
 {
-    if (!updateFlags.empty()) {
+    if (updateFlags.contains(RoomUpdateEnum::BoundsChanged)
+        || updateFlags.contains(RoomUpdateEnum::RoomMeshNeedsUpdate)) {
         m_needsMapUpdate = true;
+    }
+    if (updateFlags.contains(RoomUpdateEnum::MarksChanged)) {
+        m_needsMarkUpdate = true;
     }
     virt_onNotifyModified(updateFlags);
 }

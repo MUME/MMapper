@@ -38,7 +38,7 @@ bool AbstractMapStorage::saveData(const MapData &mapData, const bool baseMapOnly
         throw std::runtime_error("format does not support saving");
     }
 
-    RawMapData rawMapData{};
+    MapLoadData rawMapData{};
     rawMapData.mapPair.modified = mapData.getCurrentMap();
     rawMapData.mapPair.modified.checkConsistency(getProgressCounter());
     rawMapData.position = mapData.tryGetPosition().value_or(Coordinate{});
@@ -48,20 +48,6 @@ bool AbstractMapStorage::saveData(const MapData &mapData, const bool baseMapOnly
     if (baseMapOnly) {
         auto &map = rawMapData.mapPair.modified;
         map = map.filterBaseMap(getProgressCounter());
-    }
-
-    // REVIST: Convert infomarks to immutable data structure to make this copy O(1).
-    if (const InfomarkDb &markers = mapData.getMarkersList(); !markers.empty()) {
-        auto &data = rawMapData.markerData.emplace();
-        auto &copy = data.markers;
-        auto &pc = getProgressCounter();
-        pc.setNewTask(ProgressMsg{"copying markers"}, markers.getIdSet().size());
-        for (const InfomarkId id : markers.getIdSet()) {
-            if (id != INVALID_INFOMARK_ID) {
-                copy.emplace_back(markers.getRawCopy(id));
-            }
-            pc.step();
-        }
     }
 
     return virt_saveData(rawMapData);

@@ -50,9 +50,24 @@ Map::Map(std::shared_ptr<const World> world)
     std::ignore = deref(m_world);
 }
 
+const InfomarkDb &Map::getInfomarkDb() const
+{
+    return getWorld().getInfomarkDb();
+}
+
 size_t Map::getRoomsCount() const
 {
     return getWorld().getRoomSet().size();
+}
+
+size_t Map::getMarksCount() const
+{
+    return getWorld().getInfomarkDb().getIdSet().size();
+}
+
+bool Map::empty() const
+{
+    return getRoomsCount() == 0 && getMarksCount() == 0;
 }
 
 std::optional<Bounds> Map::getBounds() const
@@ -192,13 +207,18 @@ NODISCARD static RoomUpdateFlags reportNeededUpdates(std::ostream &os,
 
     const bool needRoomMeshUpdate = stats.hasMeshDifferences;
     const bool boundsChanged = stats.boundsChanged;
+    const bool marksChanged = stats.anyInfomarksChanged;
 
     os << "[update] Bounds changed: " << (boundsChanged ? "YES" : "NO") << ".\n";
+    os << "[update] Marks changed: " << (marksChanged ? "YES" : "NO") << ".\n";
     os << "[update] Needs any mesh updates: " << (needRoomMeshUpdate ? "YES" : "NO") << ".\n";
 
     RoomUpdateFlags result;
     if (boundsChanged) {
         result.insert(RoomUpdateEnum::BoundsChanged);
+    }
+    if (marksChanged) {
+        result.insert(RoomUpdateEnum::MarksChanged);
     }
     if (needRoomMeshUpdate) {
         result.insert(RoomUpdateEnum::RoomMeshNeedsUpdate);
@@ -228,7 +248,7 @@ NODISCARD static MapApplyResult update(const std::shared_ptr<const World> &input
     bool equal = base == modified;
     const auto t3 = Clock::now();
 
-    RoomUpdateFlags neededUpdates;
+    RoomUpdateFlags neededRoomUpdates;
     std::ostringstream info_os;
 
     if (equal) {
@@ -239,7 +259,7 @@ NODISCARD static MapApplyResult update(const std::shared_ptr<const World> &input
         try {
             const auto stats = World::getComparisonStats(base, modified);
             reportDetectedChanges(info_os, stats);
-            neededUpdates = reportNeededUpdates(info_os, stats);
+            neededRoomUpdates = reportNeededUpdates(info_os, stats);
         } catch (const std::exception &ex) {
             info_os << "[update] Changes detected, but an exception occurred while comparing: "
                     << ex.what() << ".\n";
@@ -269,7 +289,7 @@ NODISCARD static MapApplyResult update(const std::shared_ptr<const World> &input
     }
 
     // only modify input if the callback succeeds
-    return MapApplyResult{Map{std::move(modified)}, neededUpdates};
+    return MapApplyResult{Map{std::move(modified)}, neededRoomUpdates};
 }
 
 MapApplyResult Map::applySingleChange(ProgressCounter &pc, const Change &change) const
@@ -308,9 +328,11 @@ MapApplyResult Map::apply(ProgressCounter &pc, const ChangeList &changeList) con
     return apply(pc, changeList.getChanges());
 }
 
-MapPair Map::fromRooms(ProgressCounter &counter, std::vector<ExternalRawRoom> rooms)
+MapPair Map::fromRooms(ProgressCounter &counter,
+                       std::vector<ExternalRawRoom> rooms,
+                       std::vector<InfoMarkFields> marks)
 {
-    return WorldBuilder::buildFrom(counter, std::exchange(rooms, {}));
+    return WorldBuilder::buildFrom(counter, std::exchange(rooms, {}), std::exchange(marks, {}));
 }
 
 void Map::printStats(ProgressCounter &pc, AnsiOstream &aos) const
@@ -1073,6 +1095,7 @@ ExternalRoomId Map::getExternalRoomId(RoomId id) const
 Map Map::merge(ProgressCounter &pc,
                const Map &currentMap,
                std::vector<ExternalRawRoom> newRooms,
+               std::vector<InfoMarkFields> newMarks,
                const Coordinate &mapOffset)
 {
     if (newRooms.empty()) {
@@ -1149,10 +1172,13 @@ Map Map::merge(ProgressCounter &pc,
 
     {
         pc.setNewTask(ProgressMsg{"creating combined map"},
-                      currentMap.getRoomsCount() + newRooms.size());
+                      currentMap.getRoomsCount() + newRooms.size() + currentMap.getMarksCount()
+                          + newMarks.size());
 
         std::vector<ExternalRawRoom> rooms;
         rooms.reserve(currentMap.getRoomsCount() + newRooms.size());
+        std::vector<InfoMarkFields> marks;
+        marks.reserve(currentMap.getMarksCount() + newMarks.size());
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old rooms"});
         for (const RoomId id : currentMap.getRooms()) {
@@ -1167,9 +1193,28 @@ Map Map::merge(ProgressCounter &pc,
             pc.step();
         }
 
+        pc.setCurrentTask(ProgressMsg{"creating combined map: old marks"});
+        const auto &db = currentMap.getInfomarkDb();
+        for (const auto id : db.getIdSet()) {
+            marks.emplace_back(db.getRawCopy(id));
+            pc.step();
+        }
+
+        const auto infomarkOffset = [&mapOffset]() -> Coordinate {
+            const auto tmp = mapOffset.to_ivec3() * glm::ivec3{INFOMARK_SCALE, INFOMARK_SCALE, 1};
+            return Coordinate{tmp.x, tmp.y, tmp.z};
+        }();
+
+        pc.setCurrentTask(ProgressMsg{"creating combined map: new marks"});
+        for (auto &im : newMarks) {
+            im.offsetBy(infomarkOffset);
+            marks.emplace_back(im);
+            pc.step();
+        }
+
         pc.setNewTask(ProgressMsg{"loading"}, 1);
 
-        const auto tmp = Map::fromRooms(pc, std::move(rooms));
+        const auto tmp = Map::fromRooms(pc, std::move(rooms), std::move(marks));
         // NOTE: We're ignoring the base, so that means things like
         // "door names converted to notes" won't show up as a separate diff.
         if ((false) && tmp.base != tmp.modified) {
@@ -1735,10 +1780,16 @@ void testAddAndRemoveIsNoChange()
     room.setName(RoomName{"Name"});
     room.setPosition(firstCoord);
 
-    const MapPair mapPair = Map::fromRooms(pc, rooms);
+    std::vector<InfoMarkFields> marks;
+    auto &im = marks.emplace_back();
+    im.setType(InfoMarkTypeEnum::TEXT);
+    im.setText(InfoMarkText{"Text"});
+
+    const MapPair mapPair = Map::fromRooms(pc, rooms, marks);
     TEST_ASSERT(mapPair.base == mapPair.modified);
     const Map &m1 = mapPair.modified;
     TEST_ASSERT(m1.getRoomsCount() == 1);
+    TEST_ASSERT(m1.getMarksCount() == 1);
 
     const auto firstChangeResult = m1.applySingleChange(pc,
                                                         Change{room_change_types::AddPermanentRoom{
@@ -1848,8 +1899,9 @@ void testConstructingInvalidEnums()
         raw.id = ExternalRoomId{1};
         raw.setAlignType(set);
 
-        auto map = Map::fromRooms(pc, {raw});
+        auto map = Map::fromRooms(pc, {raw}, {});
         TEST_ASSERT(map.base.getRoomsCount() == 1);
+        TEST_ASSERT(map.base.getMarksCount() == 0);
 
         const auto roomId = map.base.getRooms().first();
         const auto raw2 = map.base.getRawRoom(roomId);

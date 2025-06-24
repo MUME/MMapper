@@ -13,6 +13,7 @@
 #include "ServerIdMap.h"
 #include "SpatialDb.h"
 #include "WorldAreaMap.h"
+#include "infomark.h"
 
 #include <memory>
 #include <optional>
@@ -32,6 +33,8 @@ struct NODISCARD WorldComparisonStats final
     bool serverIdsChanged = false;
 
     bool hasMeshDifferences = false;
+
+    bool anyInfomarksChanged = false;
 };
 
 class World;
@@ -47,6 +50,7 @@ private:
     ServerIdMap m_serverIds;
     ParseTree m_parseTree;
     AreaInfoMap m_areaInfos;
+    InfomarkDb m_infomarks;
     bool m_checkedConsistency = false;
 
 public:
@@ -71,6 +75,9 @@ private:
 
 public:
     NODISCARD const ParseTree &getParseTree() const { return m_parseTree; }
+
+public:
+    NODISCARD const InfomarkDb &getInfomarkDb() const { return m_infomarks; }
 
 public:
     NODISCARD const RawRoom *getRoom(RoomId id) const;
@@ -144,7 +151,9 @@ public:
     NODISCARD RawRoom getRawCopy(RoomId id) const;
 
 public:
-    NODISCARD static World init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &map);
+    NODISCARD static World init(ProgressCounter &counter,
+                                const std::vector<ExternalRawRoom> &map,
+                                const std::vector<InfoMarkFields> &marks);
 
 public:
     NODISCARD ExternalRoomIdSet convertToExternal(ProgressCounter &pc,

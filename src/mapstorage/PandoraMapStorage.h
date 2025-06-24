@@ -4,10 +4,8 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../map/RawRoom.h"
-#include "../map/coordinate.h"
 #include "abstractmapstorage.h"
 
-#include <memory>
 #include <optional>
 
 #include <QString>
@@ -38,7 +36,7 @@ private:
 
 private:
     NODISCARD bool virt_canSave() const final { return false; }
-    NODISCARD bool virt_saveData(const RawMapData & /*mapData*/) final { return false; }
+    NODISCARD bool virt_saveData(const MapLoadData & /*mapData*/) final { return false; }
 
 private:
     struct LoadRoomHelper;

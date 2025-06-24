@@ -167,7 +167,7 @@ NODISCARD bool hasRooms(const RawMapLoadData &data)
 
 NODISCARD bool hasMarkers(const RawMapLoadData &data)
 {
-    return data.markerData && !data.markerData->empty();
+    return !data.markers.empty();
 }
 
 // true if the map contains either rooms or markers;
@@ -205,21 +205,6 @@ NODISCARD std::optional<T> extract(std::future<std::optional<T>> &future, MainWi
 
 namespace background {
 
-NODISCARD static InfomarkDb getInformarkDb(ProgressCounter &pc,
-                                           std::optional<RawMarkerData> optMarkers)
-{
-    InfomarkDb newMarks;
-    if (optMarkers) {
-        auto &markers = optMarkers.value().markers;
-        pc.increaseTotalStepsBy(markers.size());
-        for (const auto &mark : markers) {
-            std::ignore = newMarks.addMarker(mark);
-            pc.step();
-        }
-    }
-    return newMarks;
-}
-
 NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, AbstractMapStorage &storage)
 {
     if (!storage.canLoad()) {
@@ -235,17 +220,15 @@ NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, Abstract
     auto &data = opt_data.value();
     pc.reset();
 
-    pc.setCurrentTask(ProgressMsg{/*"phase 2: "*/ "construct map from raw rooms"});
-    auto mapPair = Map::fromRooms(pc, std::exchange(data.rooms, {}));
-
-    pc.setCurrentTask(ProgressMsg{/*"phase 3: "*/ "construct markers database"});
-    auto markerData = getInformarkDb(pc, std::exchange(data.markerData, {}));
+    pc.setCurrentTask(ProgressMsg{/*"phase 2: "*/ "construct map from raw rooms and infomarks"});
+    auto mapPair = Map::fromRooms(pc,
+                                  std::exchange(data.rooms, {}),
+                                  std::exchange(data.markers, {}));
 
     pc.setCurrentTask(ProgressMsg{"finished building map"});
 
     MapLoadData result;
     result.mapPair = std::exchange(mapPair, {});
-    result.markerData = std::exchange(markerData, {});
     result.position = data.position;
     result.filename = data.filename;
     result.readonly = data.readonly;
@@ -253,9 +236,9 @@ NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, Abstract
     return result;
 }
 
-NODISCARD std::optional<std::pair<Map, InfomarkDb>> merge_map_data(ProgressCounter &pc,
-                                                                   AbstractMapStorage &storage,
-                                                                   const MapData &mapData)
+NODISCARD std::optional<Map> merge_map_data(ProgressCounter &pc,
+                                            AbstractMapStorage &storage,
+                                            const MapData &mapData)
 {
     if (!storage.canLoad()) {
         return std::nullopt;
@@ -270,10 +253,7 @@ NODISCARD std::optional<std::pair<Map, InfomarkDb>> merge_map_data(ProgressCount
 
     pc.setCurrentTask(ProgressMsg{"phase 2: merge the new map data"});
     // TODO: move ownership of the counter out of the storage object
-    return MapData::mergeMapData(pc,
-                                 mapData.getCurrentMap(),
-                                 mapData.getCurrentMarks(),
-                                 opt_data.value());
+    return MapData::mergeMapData(pc, mapData.getCurrentMap(), opt_data.value());
 }
 
 NODISCARD bool save(AbstractMapStorage &storage,
@@ -580,7 +560,7 @@ MainWindow::AsyncLoader::~AsyncLoader() = default;
 struct NODISCARD MainWindow::AsyncMerge final : public AsyncHelper
 {
 private:
-    using Result = std::optional<std::pair<Map, InfomarkDb>>;
+    using Result = std::optional<Map>;
     using Future = std::future<Result>;
 
 private:
@@ -631,7 +611,7 @@ private:
         }
 
         extraBlockers.reset();
-        mainWindow.onSuccessfulMerge(result->first, result->second);
+        mainWindow.onSuccessfulMerge(*result);
     }
 };
 

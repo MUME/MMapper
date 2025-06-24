@@ -8,7 +8,6 @@
 #include "../map/Changes.h"
 #include "../map/Map.h"
 #include "../map/coordinate.h"
-#include "../map/infomark.h"
 #include "../map/parseevent.h"
 #include "../map/roomid.h"
 
@@ -29,22 +28,16 @@ class PathProcessor;
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
-class NODISCARD_QOBJECT MapFrontend : public QObject,
-                                      public RoomModificationTracker,
-                                      public InfoMarkModificationTracker
+class NODISCARD_QOBJECT MapFrontend : public QObject, public RoomModificationTracker
 {
     Q_OBJECT
 
 private:
     struct NODISCARD MapState final
     {
-        InfomarkDb marks;
         Map map;
 
-        NODISCARD bool operator==(const MapState &rhs) const
-        {
-            return marks == rhs.marks && map == rhs.map;
-        }
+        NODISCARD bool operator==(const MapState &rhs) const { return map == rhs.map; }
         NODISCARD bool operator!=(const MapState &rhs) const { return !(rhs == *this); }
     };
 
@@ -57,8 +50,6 @@ public:
     ~MapFrontend() override;
 
 public:
-    NODISCARD InfomarkDb getCurrentMarks() const { return m_current.marks; }
-    NODISCARD InfomarkDb getSavedMarks() const { return m_saved.marks; }
     NODISCARD Map getCurrentMap() const { return m_current.map; }
     NODISCARD Map getSavedMap() const { return m_saved.map; }
 
@@ -70,21 +61,12 @@ private:
 
 public:
     void setCurrentMap(Map map);
-    void setCurrentMarks(InfomarkDb marks, InfoMarkUpdateFlags modified);
-    void setSavedMarks(InfomarkDb marks);
     void setSavedMap(Map map);
     void currentHasBeenSaved() { m_saved = m_current; }
 
 public:
     void saveSnapshot();
     void restoreSnapshot();
-
-public:
-    void setCurrentMarks(InfomarkDb marks)
-    {
-        setCurrentMarks(std::move(marks), ~InfoMarkUpdateFlags{});
-    }
-    NODISCARD InfomarkDb getInfomarkDb() const { return getCurrentMarks(); }
 
 public:
     ALLOW_DISCARD bool applyChanges(const ChangeList &changes);

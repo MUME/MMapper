@@ -101,7 +101,7 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
 
     BatchedInfomarksMeshes result;
     {
-        const auto &db = m_data.getMarkersList();
+        const auto &db = m_data.getCurrentMap().getInfomarkDb();
         for (const InfomarkId id : db.getIdSet()) {
             InfomarkHandle mark{db, id};
             const int layer = mark.getPosition1().z;
@@ -123,7 +123,7 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
     // If the performance gets too bad, count # in each layer,
     // allocate vectors, fill the vectors, and then only visit
     // each one once per layer.
-    const auto &db = m_data.getInfomarkDb();
+    const auto &db = m_data.getCurrentMap().getInfomarkDb();
     for (auto &it : result) {
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
@@ -364,7 +364,7 @@ void MapCanvas::paintSelectedInfoMarks()
                 drawPoint(pos2, color);
             };
 
-            const InfomarkDb &db = m_data.getMarkersList();
+            const InfomarkDb &db = m_data.getCurrentMap().getInfomarkDb();
             for (const InfomarkId id : db.getIdSet()) {
                 InfomarkHandle marker{db, id};
                 drawSelectionPoints(marker);
@@ -394,8 +394,14 @@ void MapCanvas::paintBatchedInfomarks()
 void MapCanvas::updateInfomarkBatches()
 {
     std::optional<BatchedInfomarksMeshes> &opt_infomarks = m_batches.infomarksMeshes;
-    if (opt_infomarks.has_value()) {
+    if (opt_infomarks.has_value() && !m_data.getNeedsMarkUpdate()) {
         return;
+    }
+
+    if (m_data.getNeedsMarkUpdate()) {
+        m_data.clearNeedsMarkUpdate();
+        assert(!m_data.getNeedsMarkUpdate());
+        MMLOG() << "[updateInfomarkBatches] cleared 'needsUpdate' flag";
     }
 
     opt_infomarks.emplace(getInfoMarksMeshes());

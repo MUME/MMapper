@@ -10,6 +10,7 @@
 #include "ExitFlags.h"
 #include "Map.h"
 #include "RoomHandle.h"
+#include "infomark.h"
 #include "mmapper2room.h"
 #include "roomid.h"
 
@@ -86,6 +87,13 @@ private:
 private:
     void print(const ExitFieldVariant &var);
     void print(const RoomFieldVariant &var);
+
+private:
+    void print(const InfomarkId id);
+    void print(InfoMarkClassEnum type);
+    void print(InfoMarkTypeEnum type);
+    void print(const InfoMarkText &text);
+    void print(const InfoMarkFields &fields);
 
 private:
     void print(const RoomIdSet &set);

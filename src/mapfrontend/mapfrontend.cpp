@@ -55,7 +55,6 @@ void MapFrontend::scheduleAction(const Change &change)
 void MapFrontend::revert()
 {
     emit sig_clearingMap();
-    setCurrentMarks(m_saved.marks);
     setCurrentMap(m_saved.map);
 }
 
@@ -63,7 +62,6 @@ void MapFrontend::clear()
 {
     emit sig_clearingMap();
     setCurrentMap(Map{});
-    setCurrentMarks(InfomarkDb{});
     currentHasBeenSaved();
     checkSize(); // called for side effect of sending signal
     virt_clear();
@@ -194,29 +192,14 @@ void MapFrontend::setSavedMap(Map map)
     m_snapshot.map = map;
 }
 
-void MapFrontend::setSavedMarks(InfomarkDb marks)
-{
-    m_saved.marks = marks;
-    m_snapshot.marks = marks;
-}
-
 void MapFrontend::saveSnapshot()
 {
     m_snapshot.map = getCurrentMap();
-    m_snapshot.marks = getCurrentMarks();
 }
 
 void MapFrontend::restoreSnapshot()
 {
     setCurrentMap(m_snapshot.map);
-    setCurrentMarks(m_snapshot.marks);
-}
-
-// REVISIT: we probably don't want to take the caller's word for it about what changed?
-void MapFrontend::setCurrentMarks(InfomarkDb marks, const InfoMarkUpdateFlags modified)
-{
-    m_current.marks = marks;
-    this->InfoMarkModificationTracker::notifyModified(modified);
 }
 
 void MapFrontend::setCurrentMap(const MapApplyResult &result)

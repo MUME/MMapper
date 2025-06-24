@@ -164,6 +164,7 @@ World World::copy() const
     result.m_serverIds = m_serverIds;
     result.m_parseTree = m_parseTree;
     result.m_areaInfos = m_areaInfos;
+    result.m_infomarks = m_infomarks;
     result.m_checkedConsistency = false;
 
     return result;
@@ -172,12 +173,13 @@ World World::copy() const
 bool World::operator==(const World &rhs) const
 {
     std::ignore = m_checkedConsistency;
-    return m_remapping == rhs.m_remapping     //
-           && m_rooms == rhs.m_rooms          //
-           && m_spatialDb == rhs.m_spatialDb  //
-           && m_serverIds == rhs.m_serverIds  //
-           && m_parseTree == rhs.m_parseTree  //
-           && m_areaInfos == rhs.m_areaInfos; //
+    return m_remapping == rhs.m_remapping    //
+           && m_rooms == rhs.m_rooms         //
+           && m_spatialDb == rhs.m_spatialDb //
+           && m_serverIds == rhs.m_serverIds //
+           && m_parseTree == rhs.m_parseTree //
+           && m_areaInfos == rhs.m_areaInfos //
+           && m_infomarks == rhs.m_infomarks;
 }
 
 NODISCARD auto World::findArea(const std::optional<RoomArea> &area) const -> const AreaInfo *
@@ -1168,7 +1170,9 @@ void World::initRoom(const RawRoom &input)
     }
 }
 
-World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &ext_rooms)
+World World::init(ProgressCounter &counter,
+                  const std::vector<ExternalRawRoom> &ext_rooms,
+                  const std::vector<InfoMarkFields> &marks)
 {
     DECL_TIMER(t, __FUNCTION__);
 
@@ -1281,6 +1285,15 @@ World World::init(ProgressCounter &counter, const std::vector<ExternalRawRoom> &
         w.checkConsistency(counter);
         w.m_checkedConsistency = true;
         counter.step();
+    }
+
+    {
+        DECL_TIMER(t6, "copy-infomarks");
+        counter.setNewTask(ProgressMsg{"copy infomarks"}, marks.size());
+        for (auto &mark : marks) {
+            std::ignore = w.m_infomarks.addMarker(mark);
+            counter.step();
+        }
     }
 
 #ifdef __clang__
@@ -1902,6 +1915,27 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::TryMoveClos
 
     const Coordinate assigned = getNearestFree(desired, check);
     setPosition(id, assigned);
+}
+
+void World::apply(ProgressCounter & /*pc*/, const infomark_change_types::AddInfomark &change)
+{
+    InfomarkDb db = getInfomarkDb();
+    std::ignore = db.addMarker(change.fields);
+    m_infomarks = std::move(db);
+}
+
+void World::apply(ProgressCounter & /*pc*/, const infomark_change_types::UpdateInfomark &change)
+{
+    InfomarkDb db = getInfomarkDb();
+    db.updateMarker(change.id, change.fields);
+    m_infomarks = std::move(db);
+}
+
+void World::apply(ProgressCounter & /*pc*/, const infomark_change_types::RemoveInfomark &change)
+{
+    InfomarkDb db = getInfomarkDb();
+    db.removeMarker(change.id);
+    m_infomarks = std::move(db);
 }
 
 void World::post_change_updates(ProgressCounter &pc)
@@ -2593,6 +2627,10 @@ WorldComparisonStats World::getComparisonStats(const World &base, const World &m
                                 || anyRoomsRemoved                    //
                                 || anyRoomsMoved                      //
                                 || hasMeshDifference(base, modified); //
+
+    const auto &baseInfomarks = base.getInfomarkDb().getIdSet();
+    const auto &modifiedInfomarks = modified.getInfomarkDb().getIdSet();
+    result.anyInfomarksChanged = (baseInfomarks != modifiedInfomarks);
 
     return result;
 }

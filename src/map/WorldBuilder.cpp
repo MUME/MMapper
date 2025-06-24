@@ -480,7 +480,9 @@ static void sortIfNecessary(ProgressCounter &counter, std::vector<ExternalRawRoo
     counter.step(1);
 }
 
-MapPair WorldBuilder::build(ProgressCounter &pc, std::vector<ExternalRawRoom> input)
+MapPair WorldBuilder::build(ProgressCounter &pc,
+                            std::vector<ExternalRawRoom> input,
+                            std::vector<InfoMarkFields> marks)
 {
     if (input.empty()) {
         return MapPair{};
@@ -489,16 +491,19 @@ MapPair WorldBuilder::build(ProgressCounter &pc, std::vector<ExternalRawRoom> in
     DECL_TIMER(t, "build-map");
     sortIfNecessary(pc, input);
     const auto sanitizerChanges = sanitize(pc, input);
-    const Map base{World::init(pc, input)};
+    // TODO: santizie marks
+    const Map base{World::init(pc, input, marks)};
     return MapPair{base, applySanitizerChanges(pc, base, sanitizerChanges)};
 }
 
 MapPair WorldBuilder::build() &&
 {
-    return build(m_counter, std::exchange(m_rooms, {}));
+    return build(m_counter, std::exchange(m_rooms, {}), std::exchange(m_marks, {}));
 }
 
-MapPair WorldBuilder::buildFrom(ProgressCounter &counter, std::vector<ExternalRawRoom> rooms)
+MapPair WorldBuilder::buildFrom(ProgressCounter &counter,
+                                std::vector<ExternalRawRoom> rooms,
+                                std::vector<InfoMarkFields> marks)
 {
-    return WorldBuilder(counter, std::move(rooms)).build();
+    return WorldBuilder(counter, std::move(rooms), std::move(marks)).build();
 }

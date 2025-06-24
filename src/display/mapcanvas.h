@@ -284,5 +284,4 @@ public slots:
     void slot_moveMarker(RoomId id);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
-    void slot_infomarksChanged() { infomarksChanged(); }
 };

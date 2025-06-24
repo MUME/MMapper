@@ -694,9 +694,6 @@ void Proxy::allocParser()
 
         // (via user command)
         void virt_onSetMode(const MapModeEnum mode) final { getMainWindow().slot_setMode(mode); }
-
-        // emitted after modifying infomarks for _infomark command
-        void virt_onInfomarksChanged() final { getMapCanvas().slot_infomarksChanged(); }
     };
 
     auto &pipe = getPipeline();

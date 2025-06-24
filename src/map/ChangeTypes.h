@@ -9,6 +9,7 @@
 #include "ExitFlags.h"
 #include "Map.h"
 #include "RoomHandle.h"
+#include "infomark.h"
 #include "mmapper2room.h"
 #include "roomid.h"
 
@@ -247,10 +248,31 @@ struct NODISCARD SetDoorName final
 
 } // namespace exit_change_types
 
+namespace infomark_change_types {
+
+struct NODISCARD AddInfomark
+{
+    InfoMarkFields fields;
+};
+
+struct NODISCARD UpdateInfomark
+{
+    InfomarkId id = INVALID_INFOMARK_ID;
+    InfoMarkFields fields;
+};
+
+struct NODISCARD RemoveInfomark
+{
+    InfomarkId id = INVALID_INFOMARK_ID;
+};
+
+} // namespace infomark_change_types
+
 namespace types {
 namespace world = world_change_types;
 namespace rooms = room_change_types;
 namespace exits = exit_change_types;
+namespace infomarks = infomark_change_types;
 } // namespace types
 
 struct NODISCARD ConnectToNeighborsArgs final
@@ -303,9 +325,18 @@ struct NODISCARD ConnectToNeighborsArgs final
     SEP() \
     X(exit_change_types::SetExitFlags)
 
+#define XFOREACH_INFOMARK_CHANGE_TYPES(X, SEP) \
+    X(infomark_change_types::AddInfomark) \
+    SEP() \
+    X(infomark_change_types::UpdateInfomark) \
+    SEP() \
+    X(infomark_change_types::RemoveInfomark)
+
 #define XFOREACH_CHANGE_TYPE(X, SEP) \
     XFOREACH_WORLD_CHANGE_TYPES(X, SEP) \
     SEP() \
     XFOREACH_ROOM_CHANGE_TYPES(X, SEP) \
     SEP() \
-    XFOREACH_EXIT_CHANGE_TYPES(X, SEP)
+    XFOREACH_EXIT_CHANGE_TYPES(X, SEP) \
+    SEP() \
+    XFOREACH_INFOMARK_CHANGE_TYPES(X, SEP)

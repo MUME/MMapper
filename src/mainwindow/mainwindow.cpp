@@ -1777,12 +1777,17 @@ void MainWindow::slot_onDeleteInfoMarkSelection()
 
     {
         const auto tmp = std::exchange(m_infoMarkSelection, nullptr);
-        m_mapData->removeMarkers(tmp->getMarkerList());
+        ChangeList changes;
+        for (const InfomarkId id : tmp->getMarkerList()) {
+            changes.add(Change{infomark_change_types::RemoveInfomark{id}});
+        }
+        if (!changes.empty()) {
+            m_mapData->applyChanges(changes);
+        }
     }
 
     MapCanvas *const canvas = getCanvas();
     canvas->slot_clearInfoMarkSelection();
-    canvas->infomarksChanged();
 }
 
 void MainWindow::slot_onDeleteRoomSelection()
@@ -2052,14 +2057,13 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
     global::sendToUser("Map loaded.\n");
 }
 
-void MainWindow::onSuccessfulMerge(const Map &map, const InfomarkDb &infomarks)
+void MainWindow::onSuccessfulMerge(const Map &map)
 {
     auto &mapData = deref(m_mapData);
     auto &mapCanvas = deref(getCanvas());
     auto &groupWidget = deref(m_groupWidget);
 
     mapData.setCurrentMap(map);
-    mapData.setCurrentMarks(infomarks);
     mapData.checkSize();
 
     // FIXME: mapData.setMapData() or mapData.checkSize() kicks off an async remesh,

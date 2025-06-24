@@ -34,11 +34,15 @@ struct NODISCARD WorldBuilder final
 {
 private:
     std::vector<ExternalRawRoom> m_rooms;
+    std::vector<InfoMarkFields> m_marks;
     ProgressCounter &m_counter;
 
 public:
-    explicit WorldBuilder(ProgressCounter &counter, std::vector<ExternalRawRoom> rooms)
+    explicit WorldBuilder(ProgressCounter &counter,
+                          std::vector<ExternalRawRoom> rooms,
+                          std::vector<InfoMarkFields> marks)
         : m_rooms{std::move(rooms)}
+        , m_marks{std::move(marks)}
         , m_counter{counter}
     {}
 
@@ -48,9 +52,13 @@ public:
 private:
     NODISCARD static SanitizerChanges sanitize(ProgressCounter &counter,
                                                std::vector<ExternalRawRoom> &input);
-    NODISCARD static MapPair build(ProgressCounter &counter, std::vector<ExternalRawRoom> input);
+    NODISCARD static MapPair build(ProgressCounter &counter,
+                                   std::vector<ExternalRawRoom> input,
+                                   std::vector<InfoMarkFields> marks);
 
 public:
     NODISCARD MapPair build() &&;
-    NODISCARD static MapPair buildFrom(ProgressCounter &counter, std::vector<ExternalRawRoom> rooms);
+    NODISCARD static MapPair buildFrom(ProgressCounter &counter,
+                                       std::vector<ExternalRawRoom> rooms,
+                                       std::vector<InfoMarkFields> marks);
 };
