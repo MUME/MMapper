@@ -73,8 +73,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>496</width>
-            <height>320</height>
+            <width>494</width>
+            <height>329</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
@@ -161,27 +161,36 @@
       <attribute name="title">
        <string>&amp;License</string>
       </attribute>
-      <layout class="QHBoxLayout" name="licenseTabLayout">
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <property name="leftMargin">
-        <number>10</number>
-       </property>
-       <property name="topMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>10</number>
-       </property>
-       <property name="bottomMargin">
-        <number>10</number>
-       </property>
+      <layout class="QVBoxLayout" name="licenseTabLayout">
        <item>
-        <widget class="QTextBrowser" name="licenseView">
-         <property name="openExternalLinks">
+        <widget class="QScrollArea" name="licenseScrollArea">
+         <property name="widgetResizable">
           <bool>true</bool>
          </property>
+         <widget class="QWidget" name="licenseScrollAreaContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>482</width>
+            <height>347</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="licenseLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>

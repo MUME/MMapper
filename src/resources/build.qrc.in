@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file alias="LICENSE.GPL2">${CMAKE_SOURCE_DIR}/COPYING.txt</file>
+        <file alias="icons/m.png">${CMAKE_SOURCE_DIR}/src/resources/icons/m-${MMAPPER_BRAND_SUFFIX}.png</file>
+        <file alias="pixmaps/splash.png">${CMAKE_SOURCE_DIR}/src/resources/pixmaps/splash-${MMAPPER_BRAND_SUFFIX}.png</file>
+    </qresource>
+</RCC>

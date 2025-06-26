@@ -536,14 +536,14 @@ set(mmapper_SRCS
 qt_add_resources(mmapper_QRC resources/mmapper2.qrc)
 
 if(MMAPPER_BETA)
-    qt_add_resources(mmapper_QRC "resources/beta.qrc")
     list(APPEND mmapper_RCS "resources/win32/beta.rc")
     set(MMAPPER_BRAND_SUFFIX "beta")
 else()
-    qt_add_resources(mmapper_QRC "resources/release.qrc")
     list(APPEND mmapper_RCS "resources/win32/release.rc")
     set(MMAPPER_BRAND_SUFFIX "release")
 endif()
+configure_file(resources/build.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/build.qrc)
+qt_add_resources(mmapper_QRC ${CMAKE_CURRENT_BINARY_DIR}/build.qrc)
 list(APPEND mmapper_RCS "resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns")
 
 if(WITH_MAP)
@@ -986,7 +986,7 @@ if(WIN32)
             ")
     endif()
     # NSIS always displays a license page
-    set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/src/resources/LICENSE.GPL2")
+    set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.txt")
 endif(WIN32)
 
 # Apple Install Settings
