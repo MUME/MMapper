@@ -19,4 +19,5 @@ private Q_SLOTS:
     static void mapTest();
     static void sanitizerTest();
     static void tinyRoomIdSetTest();
+    static void roomIdSetTest();
 };

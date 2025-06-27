@@ -5,42 +5,140 @@
 
 #include "../global/tests.h"
 
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
 namespace test {
 void testRoomIdSet()
 {
-    RoomIdSet a;
-    RoomIdSet b;
+    RoomIdSet defaultConstructorSet;
+    TEST_ASSERT(defaultConstructorSet.empty());
+    TEST_ASSERT(defaultConstructorSet.size() == 0ULL);
+    TEST_ASSERT(!defaultConstructorSet.contains(RoomId(1)));
+    TEST_ASSERT(defaultConstructorSet.cbegin() == defaultConstructorSet.cend());
 
-    TEST_ASSERT(a == b);
-    TEST_ASSERT(!a.contains(RoomId(1)));
+    RoomId singleId(42);
+    RoomIdSet setWithSingleId(singleId);
+    TEST_ASSERT(!setWithSingleId.empty());
+    TEST_ASSERT(setWithSingleId.size() == 1ULL);
+    TEST_ASSERT(setWithSingleId.contains(singleId));
+    TEST_ASSERT(!setWithSingleId.contains(RoomId(1)));
+    TEST_ASSERT(*setWithSingleId.begin() == singleId);
+    TEST_ASSERT(*setWithSingleId.cbegin() == singleId);
 
-    a.insert(RoomId(1));
+    RoomIdSet setForInsert;
+    setForInsert.insert(RoomId(10));
+    TEST_ASSERT(!setForInsert.empty());
+    TEST_ASSERT(setForInsert.size() == 1ULL);
+    TEST_ASSERT(setForInsert.contains(RoomId(10)));
+    setForInsert.insert(RoomId(20));
+    TEST_ASSERT(setForInsert.size() == 2ULL);
+    TEST_ASSERT(setForInsert.contains(RoomId(20)));
+    setForInsert.insert(RoomId(10));
+    TEST_ASSERT(setForInsert.size() == 2ULL);
 
-    TEST_ASSERT(a.contains(RoomId(1)));
-    TEST_ASSERT(a != b);
+    RoomIdSet setForErase;
+    setForErase.insert(RoomId(10));
+    setForErase.insert(RoomId(20));
+    setForErase.erase(RoomId(10));
+    TEST_ASSERT(setForErase.size() == 1ULL);
+    TEST_ASSERT(!setForErase.contains(RoomId(10)));
+    setForErase.erase(RoomId(30));
+    TEST_ASSERT(setForErase.size() == 1ULL);
 
-    b.insert(RoomId(1));
-    TEST_ASSERT(!a.containsElementNotIn(b));
-    TEST_ASSERT(a == b);
+    RoomIdSet setForClear;
+    setForClear.insert(RoomId(20));
+    setForClear.clear();
+    TEST_ASSERT(setForClear.empty());
+    TEST_ASSERT(setForClear.size() == 0ULL);
+    TEST_ASSERT(!setForClear.contains(RoomId(20)));
 
-    a.insert(RoomId(7));
-    TEST_ASSERT(a.containsElementNotIn(b));
-    TEST_ASSERT(a != b);
+    RoomIdSet setForIteration;
+    setForIteration.insert(RoomId(5));
+    setForIteration.insert(RoomId(15));
+    setForIteration.insert(RoomId(10));
+    std::vector<RoomId> sortedElements;
+    for (const auto &id : setForIteration) {
+        sortedElements.push_back(id);
+    }
+    std::sort(sortedElements.begin(), sortedElements.end());
+    TEST_ASSERT(sortedElements.size() == 3ULL);
+    TEST_ASSERT(sortedElements[0] == RoomId(5));
+    TEST_ASSERT(sortedElements[1] == RoomId(10));
+    TEST_ASSERT(sortedElements[2] == RoomId(15));
 
-    b.insert(RoomId(7));
-    TEST_ASSERT(!a.containsElementNotIn(b));
-    TEST_ASSERT(a == b);
+    RoomIdSet setEqualToIteratorTestSet;
+    setEqualToIteratorTestSet.insert(RoomId(5));
+    setEqualToIteratorTestSet.insert(RoomId(10));
+    setEqualToIteratorTestSet.insert(RoomId(15));
+    TEST_ASSERT(setForIteration == setEqualToIteratorTestSet);
+    TEST_ASSERT(!(setForIteration != setEqualToIteratorTestSet));
 
-    b.erase(RoomId(7));
-    TEST_ASSERT(a.containsElementNotIn(b));
-    TEST_ASSERT(a != b);
+    RoomIdSet setUnequalToIteratorTestSet;
+    setUnequalToIteratorTestSet.insert(RoomId(5));
+    setUnequalToIteratorTestSet.insert(RoomId(10));
+    TEST_ASSERT(setForIteration != setUnequalToIteratorTestSet);
+    TEST_ASSERT(!(setForIteration == setUnequalToIteratorTestSet));
 
-    b.insert(RoomId(8));
-    TEST_ASSERT(a.containsElementNotIn(b));
-    TEST_ASSERT(a != b);
+    RoomIdSet emptyTestSet;
+    TEST_ASSERT(defaultConstructorSet == emptyTestSet);
+    TEST_ASSERT(!(defaultConstructorSet != emptyTestSet));
 
-    b.insert(RoomId(7));
-    TEST_ASSERT(!a.containsElementNotIn(b));
-    TEST_ASSERT(a != b);
+    TEST_ASSERT(!setForIteration.containsElementNotIn(setEqualToIteratorTestSet));
+    TEST_ASSERT(setForIteration.containsElementNotIn(setUnequalToIteratorTestSet));
+    TEST_ASSERT(!setUnequalToIteratorTestSet.containsElementNotIn(setForIteration));
+    TEST_ASSERT(setForIteration.containsElementNotIn(defaultConstructorSet));
+    TEST_ASSERT(!defaultConstructorSet.containsElementNotIn(setForIteration));
+    TEST_ASSERT(!defaultConstructorSet.containsElementNotIn(emptyTestSet));
+    TEST_ASSERT(!setForIteration.containsElementNotIn(setForIteration));
+
+    RoomIdSet set1ForInsertAll;
+    set1ForInsertAll.insert(RoomId(1));
+    set1ForInsertAll.insert(RoomId(2));
+    RoomIdSet set2ForInsertAll;
+    set2ForInsertAll.insert(RoomId(2));
+    set2ForInsertAll.insert(RoomId(3));
+    set1ForInsertAll.insertAll(set2ForInsertAll);
+    TEST_ASSERT(set1ForInsertAll.size() == 3ULL);
+    TEST_ASSERT(set1ForInsertAll.contains(RoomId(1)));
+    TEST_ASSERT(set1ForInsertAll.contains(RoomId(2)));
+    TEST_ASSERT(set1ForInsertAll.contains(RoomId(3)));
+
+    RoomIdSet nonEmptySetForInsertAll;
+    nonEmptySetForInsertAll.insert(RoomId(100));
+    RoomIdSet emptySetForInsertAll;
+    nonEmptySetForInsertAll.insertAll(emptySetForInsertAll);
+    TEST_ASSERT(nonEmptySetForInsertAll.size() == 1ULL);
+    TEST_ASSERT(nonEmptySetForInsertAll.contains(RoomId(100)));
+
+    RoomIdSet emptySetAForInsertAll;
+    RoomIdSet emptySetBForInsertAll;
+    emptySetAForInsertAll.insertAll(emptySetBForInsertAll);
+    TEST_ASSERT(emptySetAForInsertAll.empty());
+
+    RoomIdSet setForFirstLast;
+    setForFirstLast.insert(RoomId(50));
+    setForFirstLast.insert(RoomId(30));
+    setForFirstLast.insert(RoomId(70));
+    TEST_ASSERT(setForFirstLast.first() == RoomId(30));
+    TEST_ASSERT(setForFirstLast.last() == RoomId(70));
+
+    RoomIdSet emptySetForExceptionTest;
+    bool exceptionCaughtFirst = false;
+    try {
+        std::ignore = emptySetForExceptionTest.first();
+    } catch (const std::out_of_range &) {
+        exceptionCaughtFirst = true;
+    }
+    TEST_ASSERT(exceptionCaughtFirst);
+
+    bool exceptionCaughtLast = false;
+    try {
+        std::ignore = emptySetForExceptionTest.last();
+    } catch (const std::out_of_range &) {
+        exceptionCaughtLast = true;
+    }
+    TEST_ASSERT(exceptionCaughtLast);
 }
 } // namespace test

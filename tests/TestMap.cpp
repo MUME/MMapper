@@ -44,4 +44,11 @@ void TestMap::tinyRoomIdSetTest()
     test::testTinyRoomIdSet();
 }
 
+void TestMap::roomIdSetTest()
+{
+    Map::enableExtraSanityChecks(true);
+    mmqt::HideQDebug forThisTest;
+    test::testRoomIdSet();
+}
+
 QTEST_MAIN(TestMap)
