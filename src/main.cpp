@@ -9,6 +9,7 @@
 #include "./global/ConfigConsts.h"
 #include "./global/WinSock.h"
 #include "./global/emojis.h"
+#include "./mainwindow/WinDarkMode.h"
 #include "./mainwindow/mainwindow.h"
 #include "./opengl/OpenGL.h"
 
@@ -126,6 +127,7 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     tryInitDrMingw();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
+    auto tryLoadingWinDarkMode = std::make_unique<WinDarkMode>(&app);
     setSurfaceFormat();
 
     tryLoadEmojis(getResourceFilenameRaw("emojis", "short-codes.json"));

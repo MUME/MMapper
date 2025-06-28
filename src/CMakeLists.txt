@@ -225,6 +225,8 @@ set(mmapper_SRCS
     mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
+    mainwindow/WinDarkMode.cpp
+    mainwindow/WinDarkMode.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
@@ -720,7 +722,8 @@ if(NOT IMMER_FOUND)
 endif()
 
 if(WIN32)
-    target_link_libraries(mmapper PUBLIC ws2_32)
+    target_link_libraries(mmapper PRIVATE ws2_32)
+    target_link_libraries(mmapper PRIVATE dwmapi)
 endif()
 
 if(WITH_MAP)
