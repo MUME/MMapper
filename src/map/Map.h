@@ -57,7 +57,7 @@ public:
     NODISCARD std::optional<Bounds> getBounds() const;
 
 public:
-    NODISCARD const RoomIdSet &getRooms() const;
+    NODISCARD const ImmRoomIdSet &getRooms() const;
     NODISCARD RoomIdSet findAllRooms(const ParseEvent &) const;
 
 private:

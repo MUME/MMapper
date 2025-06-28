@@ -1112,12 +1112,12 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                           const LayerToRooms layerToRooms = [map]() -> LayerToRooms {
                               DECL_TIMER(t2, "[ASYNC] generateBatches.layerToRooms");
                               LayerToRooms ltr;
-                              for (const RoomId id : map.getRooms()) {
+                              map.getRooms().for_each([&map, &ltr](const RoomId id) {
                                   const auto &r = map.getRoomHandle(id);
                                   const auto z = r.getPosition().z;
                                   auto &layer = ltr[z];
                                   layer.emplace_back(r);
-                              }
+                              });
                               return ltr;
                           }();
 

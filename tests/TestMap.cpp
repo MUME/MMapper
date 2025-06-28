@@ -49,6 +49,7 @@ void TestMap::roomIdSetTest()
     Map::enableExtraSanityChecks(true);
     mmqt::HideQDebug forThisTest;
     test::testRoomIdSet();
+    test::testImmRoomIdSet();
 }
 
 QTEST_MAIN(TestMap)

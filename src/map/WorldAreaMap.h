@@ -13,7 +13,7 @@ class ProgressCounter;
 
 struct NODISCARD AreaInfo final
 {
-    RoomIdSet roomSet;
+    ImmRoomIdSet roomSet;
 
     NODISCARD bool operator==(const AreaInfo &other) const;
     void remove(RoomId id);

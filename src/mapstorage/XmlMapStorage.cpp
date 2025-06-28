@@ -759,17 +759,17 @@ void XmlMapStorage::saveWorld(QXmlStreamWriter &stream)
     stream.writeEndElement(); // end map
 }
 
-void XmlMapStorage::saveRooms(QXmlStreamWriter &stream, const RoomIdSet &roomList)
+void XmlMapStorage::saveRooms(QXmlStreamWriter &stream, const ImmRoomIdSet &roomList)
 {
     const Map &map = m_saving->map.mapPair.modified;
     ProgressCounter &progressCounter = getProgressCounter();
 
-    for (const RoomId id : roomList) {
+    roomList.for_each([&](const RoomId id) {
         if (auto handle = map.getRoomHandle(id)) {
             saveRoom(stream, handle.getRawCopyExternal());
         }
         progressCounter.step();
-    }
+    });
 }
 
 void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &room)

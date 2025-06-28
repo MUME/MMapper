@@ -41,7 +41,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
         ServerRoomId{7854852},  // Frozen North
         ServerRoomId{14623711}, // Hidden Island
     };
-    for (auto id : getRoomSet()) {
+    getRoomSet().for_each([&](auto id) {
         const RawRoom &room = deref(getRoom(id));
         if (room.isPermanent()) {
             const auto serverId = room.getServerId();
@@ -51,7 +51,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
             }
         }
         pc.step();
-    }
+    });
 
     if (baseRooms.empty()) {
         qWarning() << "Unable to filter the map.";
@@ -89,7 +89,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
     {
         pc.setNewTask(ProgressMsg{"removing hidden exits"}, copy.size());
         size_t removedExits = 0;
-        for (auto id : copy) {
+        copy.for_each([&](auto id) {
             if (baseRooms.contains(id)) {
                 // Use a copy instead of a reference, to avoid crashing when trying out different
                 // immer-like backend implementations that use copy-on-write.
@@ -106,19 +106,19 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
                 }
             }
             pc.step();
-        }
+        });
         qInfo() << "GenerateBaseMap removed" << removedExits << "hidden or no-match exits(s)";
     }
     {
         pc.setNewTask(ProgressMsg{"removing inaccessible rooms"}, copy.size());
         size_t removedRooms = 0;
-        for (auto id : copy) {
+        copy.for_each([&](auto id) {
             if (!baseRooms.contains(id)) {
                 removeFromWorld(id, true);
                 ++removedRooms;
             }
             pc.step();
-        }
+        });
 
         qInfo() << "GenerateBaseMap removed" << removedRooms << "inaccessible rooms(s)";
     }

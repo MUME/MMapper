@@ -141,10 +141,10 @@ void FindRoomsDlg::slot_findClicked()
     try {
         RoomFilter filter(text, cs, regex, kind);
         const Map &map = m_mapData.getCurrentMap();
-        for (const auto &roomId : map.getRooms()) {
+        map.getRooms().for_each([&](const auto roomId) {
             const auto &room = map.getRoomHandle(roomId);
             if (!filter.filter(room.getRaw())) {
-                continue;
+                return;
             }
 
             QString id = QString("%1").arg(room.getIdExternal().asUint32());
@@ -156,7 +156,7 @@ void FindRoomsDlg::slot_findClicked()
             item->setText(1, roomName);
             item->setToolTip(0, toolTip);
             item->setToolTip(1, toolTip);
-        }
+        });
     } catch (const std::exception &ex) {
         qWarning() << "Exception: " << ex.what();
         QMessageBox::critical(this,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "../global/ImmOrderedSet.h"
 #include "../global/macros.h"
 #include "roomid.h"
 
@@ -128,6 +129,9 @@ public:
 using RoomIdSet = detail::BasicRoomIdSet<RoomId>;
 using ExternalRoomIdSet = detail::BasicRoomIdSet<ExternalRoomId>;
 
+using ImmRoomIdSet = ImmOrderedSet<RoomId>;
+
 namespace test {
 extern void testRoomIdSet();
+extern void testImmRoomIdSet();
 } // namespace test

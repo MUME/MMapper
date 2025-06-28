@@ -75,7 +75,7 @@ std::optional<Bounds> Map::getBounds() const
     return getWorld().getBounds();
 }
 
-const RoomIdSet &Map::getRooms() const
+const ImmRoomIdSet &Map::getRooms() const
 {
     return getWorld().getRoomSet();
 }
@@ -84,7 +84,7 @@ RoomIdSet Map::findAllRooms(const ParseEvent &parseEvent) const
 {
     const Map &map = *this;
     if (map.empty()) {
-        return RoomIdSet{};
+        return {};
     }
     const auto &tree = getWorld().getParseTree();
     return ::getRooms(map, tree, parseEvent);
@@ -351,7 +351,7 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
 
     std::set<ExternalRoomId> rooms;
     pc.setNewTask(ProgressMsg{"phase 1: scanning rooms"}, getRoomsCount());
-    for (const RoomId here : getRooms()) {
+    getRooms().for_each([&](const RoomId here) {
         const auto &room = deref(w.getRoom(here));
         const auto hereExternal = w.convertToExternal(here);
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
@@ -363,7 +363,7 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
             break;
         }
         pc.step();
-    }
+    });
 
     pc.setNewTask(ProgressMsg{"phase 2: processing rooms"}, rooms.size());
     for (const ExternalRoomId hereExternal : rooms) {
@@ -443,14 +443,14 @@ void Map::printUnknown(ProgressCounter &pc, AnsiOstream &os) const
 {
     std::set<ExternalRoomId> set;
     pc.setNewTask(ProgressMsg{"scanning rooms"}, getRoomsCount());
-    for (const RoomId id : getRooms()) {
+    getRooms().for_each([&](const RoomId id) {
         const auto &room = getRoomHandle(id);
         if (!room.getExit(ExitDirEnum::UNKNOWN).outIsEmpty()
             || !room.getExit(ExitDirEnum::UNKNOWN).inIsEmpty()) {
             set.insert(getExternalRoomId(id));
         }
         pc.step();
-    }
+    });
 
     const auto unknownStr = "Unknown";
 
@@ -991,7 +991,7 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
 std::optional<size_t> Map::countRoomsWithArea(const RoomArea &areaName) const
 {
     const auto &world = getWorld();
-    if (const RoomIdSet *const area = world.findAreaRoomSet(areaName)) {
+    if (const ImmRoomIdSet *const area = world.findAreaRoomSet(areaName)) {
         return area->size();
     }
     return std::nullopt;
@@ -1032,7 +1032,7 @@ std::optional<RoomId> Map::findUniqueName(const RoomName &name) const
 {
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
-    if (const RoomIdSet *const pSet = parseTree.name_only.find(name)) {
+    if (const ImmRoomIdSet *const pSet = parseTree.name_only.find(name)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }
@@ -1044,7 +1044,7 @@ std::optional<RoomId> Map::findUniqueDesc(const RoomDesc &desc) const
 {
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
-    if (const RoomIdSet *const pSet = parseTree.desc_only.find(desc)) {
+    if (const ImmRoomIdSet *const pSet = parseTree.desc_only.find(desc)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }
@@ -1057,7 +1057,7 @@ std::optional<RoomId> Map::findUniqueNameDesc(const RoomName &name, const RoomDe
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
     const NameDesc nameDesc{name, desc};
-    if (const RoomIdSet *const pSet = parseTree.name_desc.find(nameDesc)) {
+    if (const ImmRoomIdSet *const pSet = parseTree.name_desc.find(nameDesc)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }
@@ -1181,11 +1181,11 @@ Map Map::merge(ProgressCounter &pc,
         marks.reserve(currentMap.getMarksCount() + newMarks.size());
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old rooms"});
-        for (const RoomId id : currentMap.getRooms()) {
+        currentMap.getRooms().for_each([&](const RoomId id) {
             const RoomHandle &room = currentMap.getRoomHandle(id);
             rooms.emplace_back(room.getRawCopyExternal());
             pc.step();
-        }
+        });
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: new rooms"});
         for (const auto &room : newRooms) {
@@ -1230,11 +1230,11 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
                              const std::function<void(const RawRoom &room)> &callback)
 {
     pc.increaseTotalStepsBy(current.getRoomsCount());
-    for (const RoomId id : current.getRooms()) {
+    current.getRooms().for_each([&](const RoomId id) {
         const auto r = current.findRoomHandle(id);
         if (!r) {
             assert(false);
-            continue;
+            return;
         }
         const auto &prev = saved.findRoomHandle(id);
         // older code failed to check incoming/outgoing connection differences here
@@ -1242,7 +1242,7 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
             callback(r.getRaw());
         }
         pc.step();
-    }
+    });
 }
 
 NODISCARD bool Map::wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const

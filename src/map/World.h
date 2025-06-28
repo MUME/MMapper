@@ -93,8 +93,8 @@ public:
     NODISCARD ExternalRoomId getNextExternalId() const;
 
 public:
-    NODISCARD const RoomIdSet &getRoomSet() const;
-    NODISCARD const RoomIdSet *findAreaRoomSet(const RoomArea &areaName) const;
+    NODISCARD const ImmRoomIdSet &getRoomSet() const;
+    NODISCARD const ImmRoomIdSet *findAreaRoomSet(const RoomArea &areaName) const;
 
 public:
     NODISCARD bool hasRoom(RoomId id) const;

@@ -9,11 +9,11 @@
 RoomIdSet genericFind(const Map &map, const RoomFilter &f)
 {
     RoomIdSet result;
-    for (const RoomId id : map.getRooms()) {
+    map.getRooms().for_each([&result, &map, &f](const RoomId id) {
         const auto &room = map.getRawRoom(id);
         if (f.filter(room)) {
             result.insert(id);
         }
-    }
+    });
     return result;
 }

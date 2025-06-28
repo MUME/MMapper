@@ -25,7 +25,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
     static volatile bool fallbackToRemainder = true;
     static volatile bool fallbackToWholeMap = true;
 
-    const RoomIdSet *const pSet = [&map, &event, &tree]() -> const RoomIdSet * {
+    const ImmRoomIdSet *const pSet = [&map, &event, &tree]() -> const ImmRoomIdSet * {
         const World &world = map.getWorld();
         const RoomArea &areaName = event.getRoomArea();
 
@@ -59,7 +59,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
             MMLOG() << "[getRooms] Falling back to the current area!";
             MMLOG() << "[getRooms] event: " << mmqt::toStdStringUtf8(event.toQString());
 
-            if (const RoomIdSet *const set = world.findAreaRoomSet(areaName); set == nullptr) {
+            if (const auto *const set = world.findAreaRoomSet(areaName); set == nullptr) {
                 MMLOG() << "[getRooms] Area does not exist.";
             } else if (set->empty()) {
                 MMLOG() << "[getRooms] Area was empty.";
@@ -70,7 +70,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
 
         if (fallbackToRemainder && !areaName.empty()) {
             MMLOG() << "[getRooms] Falling back to the remainder area...";
-            if (const RoomIdSet *const set = world.findAreaRoomSet(RoomArea{}); set == nullptr) {
+            if (const auto *const set = world.findAreaRoomSet(RoomArea{}); set == nullptr) {
                 MMLOG() << "[getRooms] Fallback area does not exist.";
             } else if (set->empty()) {
                 // this should just return nullptr.
@@ -96,7 +96,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
 
     if (pSet == nullptr) {
         MMLOG() << "[getRooms] Unable to find any matches.";
-        return RoomIdSet{};
+        return {};
     }
 
     auto &set = *pSet;
@@ -114,14 +114,14 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
     RoomIdSet results;
     const auto t2 = Clock::now();
     size_t numReported = 0;
-    for (const RoomId id : set) {
+    set.for_each([&](const RoomId id) {
         if (const auto optRoom = map.findRoomHandle(id)) {
             if (tryReport(optRoom)) {
                 results.insert(id);
                 ++numReported;
             }
         }
-    }
+    });
     const auto t3 = Clock::now();
 
     MMLOG() << "[getRooms] Reported " << numReported << " potential match(es).";

@@ -698,13 +698,13 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                         needsUpdate.emplace_back(corner, pos + corner);
                     }
                 };
-                for (auto id : current.getRooms()) {
+                current.getRooms().for_each([&current, &drawQuad](auto id) {
                     if (auto h = current.getRoomHandle(id)) {
                         if (h.getServerId() == INVALID_SERVER_ROOMID) {
                             drawQuad(h);
                         }
                     }
-                }
+                });
                 return needsUpdate;
             };
 

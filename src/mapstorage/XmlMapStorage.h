@@ -107,7 +107,7 @@ private:
 
     // ---------------- save map -------------------
     void saveWorld(QXmlStreamWriter &stream);
-    void saveRooms(QXmlStreamWriter &stream, const RoomIdSet &roomList);
+    void saveRooms(QXmlStreamWriter &stream, const ImmRoomIdSet &roomList);
     static void saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &room);
     static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
     static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);

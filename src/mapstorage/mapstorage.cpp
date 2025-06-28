@@ -610,12 +610,12 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
     roomList.reserve(map.getRoomsCount());
 
     progressCounter.setNewTask(ProgressMsg{"scanning rooms"}, map.getRooms().size());
-    for (const RoomId id : map.getRooms()) {
+    map.getRooms().for_each([&](const RoomId id) {
         const auto &room = map.getRoomHandle(id);
         if (!room.isTemporary()) {
             roomList.push_back(room);
         }
-    }
+    });
 
     auto roomsCount = static_cast<uint32_t>(roomList.size());
     const auto marksCount = static_cast<uint32_t>(map.getMarksCount());

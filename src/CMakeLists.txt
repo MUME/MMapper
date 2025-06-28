@@ -110,6 +110,7 @@ set(mmapper_SRCS
     global/HideQDebug.h
     global/ImmIndexedVector.h
     global/ImmIndexedVectorWithDefault.h
+    global/ImmOrderedSet.h
     global/ImmUnorderedMap.h
     global/ImmUnorderedSet.h
     global/IndexedVector.h

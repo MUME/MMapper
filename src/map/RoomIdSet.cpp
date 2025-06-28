@@ -10,24 +10,26 @@
 #include <vector>
 
 namespace test {
-void testRoomIdSet()
+
+template<typename Type>
+void runRoomIdSetTests()
 {
-    RoomIdSet defaultConstructorSet;
+    Type defaultConstructorSet;
     TEST_ASSERT(defaultConstructorSet.empty());
     TEST_ASSERT(defaultConstructorSet.size() == 0ULL);
     TEST_ASSERT(!defaultConstructorSet.contains(RoomId(1)));
-    TEST_ASSERT(defaultConstructorSet.cbegin() == defaultConstructorSet.cend());
+    TEST_ASSERT(defaultConstructorSet.begin() == defaultConstructorSet.end());
 
     RoomId singleId(42);
-    RoomIdSet setWithSingleId(singleId);
+    Type setWithSingleId(singleId);
     TEST_ASSERT(!setWithSingleId.empty());
     TEST_ASSERT(setWithSingleId.size() == 1ULL);
     TEST_ASSERT(setWithSingleId.contains(singleId));
     TEST_ASSERT(!setWithSingleId.contains(RoomId(1)));
     TEST_ASSERT(*setWithSingleId.begin() == singleId);
-    TEST_ASSERT(*setWithSingleId.cbegin() == singleId);
+    TEST_ASSERT(*setWithSingleId.begin() == singleId);
 
-    RoomIdSet setForInsert;
+    Type setForInsert;
     setForInsert.insert(RoomId(10));
     TEST_ASSERT(!setForInsert.empty());
     TEST_ASSERT(setForInsert.size() == 1ULL);
@@ -38,7 +40,7 @@ void testRoomIdSet()
     setForInsert.insert(RoomId(10));
     TEST_ASSERT(setForInsert.size() == 2ULL);
 
-    RoomIdSet setForErase;
+    Type setForErase;
     setForErase.insert(RoomId(10));
     setForErase.insert(RoomId(20));
     setForErase.erase(RoomId(10));
@@ -47,14 +49,14 @@ void testRoomIdSet()
     setForErase.erase(RoomId(30));
     TEST_ASSERT(setForErase.size() == 1ULL);
 
-    RoomIdSet setForClear;
+    Type setForClear;
     setForClear.insert(RoomId(20));
     setForClear.clear();
     TEST_ASSERT(setForClear.empty());
     TEST_ASSERT(setForClear.size() == 0ULL);
     TEST_ASSERT(!setForClear.contains(RoomId(20)));
 
-    RoomIdSet setForIteration;
+    Type setForIteration;
     setForIteration.insert(RoomId(5));
     setForIteration.insert(RoomId(15));
     setForIteration.insert(RoomId(10));
@@ -68,20 +70,20 @@ void testRoomIdSet()
     TEST_ASSERT(sortedElements[1] == RoomId(10));
     TEST_ASSERT(sortedElements[2] == RoomId(15));
 
-    RoomIdSet setEqualToIteratorTestSet;
+    Type setEqualToIteratorTestSet;
     setEqualToIteratorTestSet.insert(RoomId(5));
     setEqualToIteratorTestSet.insert(RoomId(10));
     setEqualToIteratorTestSet.insert(RoomId(15));
     TEST_ASSERT(setForIteration == setEqualToIteratorTestSet);
     TEST_ASSERT(!(setForIteration != setEqualToIteratorTestSet));
 
-    RoomIdSet setUnequalToIteratorTestSet;
+    Type setUnequalToIteratorTestSet;
     setUnequalToIteratorTestSet.insert(RoomId(5));
     setUnequalToIteratorTestSet.insert(RoomId(10));
     TEST_ASSERT(setForIteration != setUnequalToIteratorTestSet);
     TEST_ASSERT(!(setForIteration == setUnequalToIteratorTestSet));
 
-    RoomIdSet emptyTestSet;
+    Type emptyTestSet;
     TEST_ASSERT(defaultConstructorSet == emptyTestSet);
     TEST_ASSERT(!(defaultConstructorSet != emptyTestSet));
 
@@ -93,10 +95,10 @@ void testRoomIdSet()
     TEST_ASSERT(!defaultConstructorSet.containsElementNotIn(emptyTestSet));
     TEST_ASSERT(!setForIteration.containsElementNotIn(setForIteration));
 
-    RoomIdSet set1ForInsertAll;
+    Type set1ForInsertAll;
     set1ForInsertAll.insert(RoomId(1));
     set1ForInsertAll.insert(RoomId(2));
-    RoomIdSet set2ForInsertAll;
+    Type set2ForInsertAll;
     set2ForInsertAll.insert(RoomId(2));
     set2ForInsertAll.insert(RoomId(3));
     set1ForInsertAll.insertAll(set2ForInsertAll);
@@ -105,26 +107,26 @@ void testRoomIdSet()
     TEST_ASSERT(set1ForInsertAll.contains(RoomId(2)));
     TEST_ASSERT(set1ForInsertAll.contains(RoomId(3)));
 
-    RoomIdSet nonEmptySetForInsertAll;
+    Type nonEmptySetForInsertAll;
     nonEmptySetForInsertAll.insert(RoomId(100));
-    RoomIdSet emptySetForInsertAll;
+    Type emptySetForInsertAll;
     nonEmptySetForInsertAll.insertAll(emptySetForInsertAll);
     TEST_ASSERT(nonEmptySetForInsertAll.size() == 1ULL);
     TEST_ASSERT(nonEmptySetForInsertAll.contains(RoomId(100)));
 
-    RoomIdSet emptySetAForInsertAll;
-    RoomIdSet emptySetBForInsertAll;
+    Type emptySetAForInsertAll;
+    Type emptySetBForInsertAll;
     emptySetAForInsertAll.insertAll(emptySetBForInsertAll);
     TEST_ASSERT(emptySetAForInsertAll.empty());
 
-    RoomIdSet setForFirstLast;
+    Type setForFirstLast;
     setForFirstLast.insert(RoomId(50));
     setForFirstLast.insert(RoomId(30));
     setForFirstLast.insert(RoomId(70));
     TEST_ASSERT(setForFirstLast.first() == RoomId(30));
     TEST_ASSERT(setForFirstLast.last() == RoomId(70));
 
-    RoomIdSet emptySetForExceptionTest;
+    Type emptySetForExceptionTest;
     bool exceptionCaughtFirst = false;
     try {
         std::ignore = emptySetForExceptionTest.first();
@@ -141,4 +143,14 @@ void testRoomIdSet()
     }
     TEST_ASSERT(exceptionCaughtLast);
 }
+
+void testRoomIdSet()
+{
+    runRoomIdSetTests<RoomIdSet>();
+};
+
+void testImmRoomIdSet()
+{
+    runRoomIdSetTests<ImmRoomIdSet>();
+};
 } // namespace test

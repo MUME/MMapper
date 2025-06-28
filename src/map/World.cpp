@@ -48,11 +48,11 @@ void sanityCheckFlags(const Flags flags)
 }
 
 template<typename Key>
-void insertId(ImmUnorderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
+void insertId(ImmUnorderedMap<Key, ImmRoomIdSet> &map, const Key &key, const RoomId id)
 {
-    const RoomIdSet *const old = map.find(key);
+    const ImmRoomIdSet *const old = map.find(key);
     if (old == nullptr) {
-        map.set(key, RoomIdSet{id});
+        map.set(key, ImmRoomIdSet{id});
     } else if (!old->contains(id)) {
         auto copy = *old;
         copy.insert(id);
@@ -61,9 +61,9 @@ void insertId(ImmUnorderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId
 }
 
 template<typename Key>
-void removeId(ImmUnorderedMap<Key, RoomIdSet> &map, const Key &key, const RoomId id)
+void removeId(ImmUnorderedMap<Key, ImmRoomIdSet> &map, const Key &key, const RoomId id)
 {
-    const RoomIdSet *const old = map.find(key);
+    const ImmRoomIdSet *const old = map.find(key);
     if (old == nullptr || !old->contains(id)) {
         return;
     }
@@ -749,7 +749,7 @@ void World::checkConsistency(ProgressCounter &counter) const
         if (!getRoomSet().empty()) {
             std::optional<Bounds> computedBounds;
             counter.setNewTask(ProgressMsg{"checking map coordinates"}, getRoomSet().size());
-            for (const RoomId id : getRoomSet()) {
+            getRoomSet().for_each([&](const RoomId id) {
                 const Coordinate &coord = getPosition(id);
                 if (!computedBounds) {
                     computedBounds.emplace(coord, coord);
@@ -757,7 +757,7 @@ void World::checkConsistency(ProgressCounter &counter) const
                     computedBounds->insert(coord);
                 }
                 counter.step();
-            }
+            });
             if (computedBounds != knownBounds) {
                 // REVISIT: This is happening for the "fullarda.mm2" map
                 throw MapConsistencyError("computed bounds were not the known bounds");
@@ -1320,12 +1320,12 @@ ExternalRoomId World::getNextExternalId() const
     return m_remapping.getNextExternal();
 }
 
-const RoomIdSet &World::getRoomSet() const
+const ImmRoomIdSet &World::getRoomSet() const
 {
     return getGlobalArea().roomSet;
 }
 
-const RoomIdSet *World::findAreaRoomSet(const RoomArea &areaName) const
+const ImmRoomIdSet *World::findAreaRoomSet(const RoomArea &areaName) const
 {
     if (const AreaInfo *const area = this->findArea(areaName)) {
         return &area->roomSet;
@@ -1472,7 +1472,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::RemoveAllDoorNa
     pc.increaseTotalStepsBy(getRoomSet().size());
     size_t numRemoved = 0;
     const DoorName none;
-    for (const RoomId id : getRoomSet()) {
+    getRoomSet().for_each([&](const RoomId id) {
         for (const ExitDirEnum dir : ALL_EXITS7) {
             const ExitFlags exitFlags = m_rooms.getExitExitFlags(id, dir);
             if (!exitFlags.isExit() || !exitFlags.isDoor()
@@ -1489,7 +1489,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::RemoveAllDoorNa
             numRemoved += 1;
         }
         pc.step();
-    }
+    });
 
     MMLOG() << "#NOTE: removed " << numRemoved << " hidden door name"
             << ((numRemoved == 1) ? "" : "s") << ".";
@@ -2041,7 +2041,7 @@ void World::zapRooms_unsafe(ProgressCounter &pc, const RoomIdSet &rooms)
     {
         DECL_TIMER(t2, "finding inbound exits");
         pc.increaseTotalStepsBy(getRoomSet().size());
-        for (const RoomId id : getRoomSet()) {
+        getRoomSet().for_each([&](const RoomId id) {
             for (const ExitDirEnum dir : ALL_EXITS7) {
                 const ExitDirEnum rev = opposite(dir);
                 for (const RoomId to : m_rooms.getExitOutgoing(id, dir)) {
@@ -2056,7 +2056,7 @@ void World::zapRooms_unsafe(ProgressCounter &pc, const RoomIdSet &rooms)
                 }
             }
             pc.step();
-        }
+        });
     }
 
     {
@@ -2141,7 +2141,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         size_t loop2 = 0;
 
         std::optional<Bounds> optBounds;
-        for (const RoomId id : getRoomSet()) {
+        getRoomSet().for_each([&](const RoomId id) {
             const RawRoom *const pRoom = getRoom(id);
             if (pRoom == nullptr) {
                 std::abort();
@@ -2259,7 +2259,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
             if (!hasExits) {
                 ++numWithNoExits;
             }
-        }
+        });
 
         static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
 

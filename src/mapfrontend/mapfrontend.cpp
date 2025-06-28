@@ -184,12 +184,12 @@ RoomIdSet MapFrontend::findAllRooms(const Coordinate &input_min, const Coordinat
     Bounds bounds{input_min, input_max};
     RoomIdSet result;
     const auto &map = getCurrentMap();
-    for (const RoomId id : map.getRooms()) {
+    map.getRooms().for_each([&](const RoomId id) {
         const auto &r = map.getRoomHandle(id);
         if (bounds.contains(r.getPosition())) {
             result.insert(r.getId());
         }
-    }
+    });
     return result;
 }
 
