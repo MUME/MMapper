@@ -102,14 +102,14 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
     BatchedInfomarksMeshes result;
     {
         const auto &db = m_data.getCurrentMap().getInfomarkDb();
-        for (const InfomarkId id : db.getIdSet()) {
+        db.getIdSet().for_each([&](const InfomarkId id) {
             InfomarkHandle mark{db, id};
             const int layer = mark.getPosition1().z;
             const auto it = result.find(layer);
             if (it == result.end()) {
                 std::ignore = result[layer]; // side effect: this creates the entry
             }
-        }
+        });
     }
 
     if (result.size() >= 30) {
@@ -127,9 +127,9 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
     for (auto &it : result) {
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
-        for (const InfomarkId id : db.getIdSet()) {
+        db.getIdSet().for_each([&](const InfomarkId id) {
             drawInfomark(batch, InfomarkHandle{db, id}, layer);
-        }
+        });
         it.second = batch.getMeshes();
     }
 
@@ -365,10 +365,10 @@ void MapCanvas::paintSelectedInfomarks()
             };
 
             const InfomarkDb &db = m_data.getCurrentMap().getInfomarkDb();
-            for (const InfomarkId id : db.getIdSet()) {
+            db.getIdSet().for_each([&](const InfomarkId id) {
                 InfomarkHandle marker{db, id};
                 drawSelectionPoints(marker);
-            }
+            });
         }
     }
     batch.renderImmediate(GLRenderState());

@@ -133,30 +133,7 @@ struct std::hash<InfomarkId>
     std::size_t operator()(const InfomarkId &id) const noexcept { return numeric_hash(id.value()); }
 };
 
-struct NODISCARD ImmInfomarkIdSet final
-{
-private:
-    using Set = ImmUnorderedSet<InfomarkId>;
-    Set m_set;
-
-public:
-    ImmInfomarkIdSet() = default;
-
-public:
-    NODISCARD bool contains(InfomarkId id) const { return m_set.contains(id); }
-    NODISCARD auto begin() const { return m_set.begin(); }
-    NODISCARD auto end() const { return m_set.end(); }
-    NODISCARD bool empty() const { return m_set.empty(); }
-    NODISCARD auto size() const { return m_set.size(); }
-
-public:
-    void insert(InfomarkId id) { m_set.insert(id); }
-    void remove(InfomarkId id) { m_set.erase(id); }
-
-public:
-    NODISCARD bool operator==(const ImmInfomarkIdSet &rhs) const { return m_set == rhs.m_set; }
-    NODISCARD bool operator!=(const ImmInfomarkIdSet &rhs) const { return !(rhs == *this); }
-};
+using ImmInfomarkIdSet = ImmUnorderedSet<InfomarkId>;
 
 struct InfomarkHandle;
 struct NODISCARD InfomarkDb final

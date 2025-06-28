@@ -849,10 +849,10 @@ void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const InfomarkDb &db)
     }
 
     ProgressCounter &progressCounter = getProgressCounter();
-    for (const InfomarkId id : db.getIdSet()) {
+    db.getIdSet().for_each([&](const InfomarkId id) {
         saveMarker(stream, db.getRawCopy(id));
         progressCounter.step();
-    }
+    });
 }
 
 void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const RawInfomark &marker)

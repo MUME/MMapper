@@ -647,10 +647,10 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
     // save items
     progressCounter.setNewTask(ProgressMsg{"saving markers"}, marksCount);
     auto &db = map.getInfomarkDb();
-    for (const InfomarkId id : db.getIdSet()) {
+    db.getIdSet().for_each([&](const InfomarkId id) {
         saveMark(db.getRawCopy(id), stream);
         progressCounter.step();
-    }
+    });
 
     buffer.close();
 

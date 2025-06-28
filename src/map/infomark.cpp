@@ -147,7 +147,7 @@ public:
         if (!m_set.contains(id)) {
             throw std::runtime_error("invalid infomark id");
         }
-        m_set.remove(id);
+        m_set.erase(id);
 #define X_SET_VALUE(_Type, _Prop, _OptInit) \
     { \
         auto &ref = m_data._Prop##_map; \

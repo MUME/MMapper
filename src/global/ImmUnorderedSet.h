@@ -5,10 +5,9 @@
 #include "RuleOf5.h"
 #include "macros.h"
 
-#include <memory>
-#include <set>
 #include <stdexcept>
 
+#include <immer/algorithm.hpp>
 #include <immer/set.hpp>
 
 template<typename T>
@@ -51,6 +50,17 @@ public:
 public:
     NODISCARD auto begin() const { return m_set.begin(); }
     NODISCARD auto end() const { return m_set.end(); }
+
+public:
+    template<typename Callback>
+    void for_each(Callback &&callback) const
+    {
+        immer::for_each_chunk(m_set, [&callback](const auto *begin, const auto *end) {
+            for (const auto *it = begin; it != end; ++it) {
+                std::forward<Callback>(callback)(*it);
+            }
+        });
+    }
 
 public:
     NODISCARD ValueType first() const

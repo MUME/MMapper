@@ -1195,10 +1195,10 @@ Map Map::merge(ProgressCounter &pc,
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old marks"});
         const auto &db = currentMap.getInfomarkDb();
-        for (const auto id : db.getIdSet()) {
+        db.getIdSet().for_each([&](const auto id) {
             marks.emplace_back(db.getRawCopy(id));
             pc.step();
-        }
+        });
 
         const auto infomarkOffset = [&mapOffset]() -> Coordinate {
             const auto tmp = mapOffset.to_ivec3() * glm::ivec3{INFOMARK_SCALE, INFOMARK_SCALE, 1};
