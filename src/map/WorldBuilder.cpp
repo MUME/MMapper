@@ -482,7 +482,7 @@ static void sortIfNecessary(ProgressCounter &counter, std::vector<ExternalRawRoo
 
 MapPair WorldBuilder::build(ProgressCounter &pc,
                             std::vector<ExternalRawRoom> input,
-                            std::vector<InfoMarkFields> marks)
+                            std::vector<RawInfomark> marks)
 {
     if (input.empty()) {
         return MapPair{};
@@ -503,7 +503,7 @@ MapPair WorldBuilder::build() &&
 
 MapPair WorldBuilder::buildFrom(ProgressCounter &counter,
                                 std::vector<ExternalRawRoom> rooms,
-                                std::vector<InfoMarkFields> marks)
+                                std::vector<RawInfomark> marks)
 {
     return WorldBuilder(counter, std::move(rooms), std::move(marks)).build();
 }

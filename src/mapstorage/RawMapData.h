@@ -11,7 +11,7 @@
 struct NODISCARD RawMapLoadData final
 {
     std::vector<ExternalRawRoom> rooms;
-    std::vector<InfoMarkFields> markers;
+    std::vector<RawInfomark> markers;
     Coordinate position;
     QString filename;
     bool readonly = true;

@@ -18,7 +18,7 @@
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
-#include "InfoMarkSelection.h"
+#include "InfomarkSelection.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
@@ -181,7 +181,7 @@ void MapCanvas::slot_setConnectionSelection(const std::shared_ptr<ConnectionSele
     selectionChanged();
 }
 
-void MapCanvas::slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &selection)
+void MapCanvas::slot_setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &selection)
 {
     if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
         m_infoMarkSelection = selection;
@@ -194,7 +194,7 @@ void MapCanvas::slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelectio
         m_infoMarkSelection = selection;
     }
 
-    emit sig_newInfoMarkSelection(m_infoMarkSelection.get());
+    emit sig_newInfomarkSelection(m_infoMarkSelection.get());
     selectionChanged();
 }
 
@@ -354,8 +354,8 @@ void MapCanvas::slot_createRoom()
     }
 }
 
-// REVISIT: This function doesn't need to return a shared ptr. Consider refactoring InfoMarkSelection?
-std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSel &sel)
+// REVISIT: This function doesn't need to return a shared ptr. Consider refactoring InfomarkSelection?
+std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSel &sel)
 {
     static constexpr float CLICK_RADIUS = 10.f;
 
@@ -372,7 +372,7 @@ std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSe
         const auto pos = sel.getScaledCoordinate(INFOMARK_SCALE);
         const auto lo = pos + Coordinate{-INFOMARK_CLICK_RADIUS, -INFOMARK_CLICK_RADIUS, 0};
         const auto hi = pos + Coordinate{+INFOMARK_CLICK_RADIUS, +INFOMARK_CLICK_RADIUS, 0};
-        return InfoMarkSelection::alloc(m_data, lo, hi);
+        return InfomarkSelection::alloc(m_data, lo, hi);
     }
 
     const glm::vec2 clickPoint = glm::vec2{optClickPoint.value()};
@@ -405,7 +405,7 @@ std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSe
     const auto hi = getScaled(maxCoord);
     const auto lo = getScaled(minCoord);
 
-    return InfoMarkSelection::alloc(m_data, lo, hi);
+    return InfomarkSelection::alloc(m_data, lo, hi);
 }
 
 void MapCanvas::mousePressEvent(QMouseEvent *const event)
@@ -433,7 +433,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
             slot_setRoomSelection(SigRoomSelection{m_roomSelection});
 
             // Select infomarks under the cursor.
-            slot_setInfoMarkSelection(getInfoMarkSelection(getSel1()));
+            slot_setInfomarkSelection(getInfomarkSelection(getSel1()));
 
             selectionChanged();
         }
@@ -449,7 +449,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
         // Select infomarks
         if (hasLeftButton && hasSel1()) {
-            auto tmpSel = getInfoMarkSelection(getSel1());
+            auto tmpSel = getInfomarkSelection(getSel1());
             if (m_infoMarkSelection != nullptr && !tmpSel->empty()
                 && m_infoMarkSelection->contains(tmpSel->front().getId())) {
                 m_infoMarkSelectionMove.reset();   // dtor, if necessary
@@ -623,7 +623,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     switch (m_canvasMouseMode) {
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
         if (hasLeftButton && hasSel1() && hasSel2()) {
-            if (hasInfoMarkSelectionMove()) {
+            if (hasInfomarkSelectionMove()) {
                 m_infoMarkSelectionMove->pos = getSel2().pos - getSel1().pos;
                 setCursor(Qt::ClosedHandCursor);
 
@@ -728,14 +728,14 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         setCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
-            if (hasInfoMarkSelectionMove()) {
+            if (hasInfomarkSelectionMove()) {
                 const auto pos_copy = m_infoMarkSelectionMove->pos;
                 m_infoMarkSelectionMove.reset();
                 if (m_infoMarkSelection != nullptr) {
                     const auto offset = Coordinate{(pos_copy * INFOMARK_SCALE).truncate(), 0};
 
                     // Update infomark location
-                    const InfoMarkSelection &sel = deref(m_infoMarkSelection);
+                    const InfomarkSelection &sel = deref(m_infoMarkSelection);
                     sel.applyOffset(offset);
                     infomarksChanged();
                 }
@@ -743,7 +743,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 // Add infomarks to selection
                 const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
                 const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
-                auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
+                auto tmpSel = InfomarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
                     const InfomarkHandle &firstMark = tmpSel->front();
                     const Coordinate &pos = firstMark.getPosition1();
@@ -754,7 +754,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                         .arg(pos.z);
                     log(ctemp);
                 }
-                slot_setInfoMarkSelection(tmpSel);
+                slot_setInfomarkSelection(tmpSel);
             }
             m_selectedArea = false;
         }
@@ -769,8 +769,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             // REVISIT: this previously searched for all the marks in c1, c2,
             // and then immediately cleared the selection.
             // Why??? Now it just allocates an empty selection.
-            auto tmpSel = InfoMarkSelection::allocEmpty(m_data, c1, c2);
-            slot_setInfoMarkSelection(tmpSel);
+            auto tmpSel = InfomarkSelection::allocEmpty(m_data, c1, c2);
+            slot_setInfomarkSelection(tmpSel);
         }
         infomarksChanged();
         break;
@@ -1106,7 +1106,7 @@ void MapCanvas::userPressedEscape(bool /*pressed*/)
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
         m_infoMarkSelectionMove.reset();
-        slot_clearInfoMarkSelection(); // calls selectionChanged();
+        slot_clearInfomarkSelection(); // calls selectionChanged();
         break;
     }
 }

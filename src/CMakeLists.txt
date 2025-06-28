@@ -48,8 +48,8 @@ set(mmapper_SRCS
     display/Filenames.h
     display/IMapBatchesFinisher.cpp
     display/IMapBatchesFinisher.h
-    display/InfoMarkSelection.cpp
-    display/InfoMarkSelection.h
+    display/InfomarkSelection.cpp
+    display/InfomarkSelection.h
     display/Infomarks.cpp
     display/Infomarks.h
     display/MapBatches.cpp

@@ -5,7 +5,7 @@
 #include "../adventure/adventurewidget.h"
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
-#include "../display/InfoMarkSelection.h"
+#include "../display/InfomarkSelection.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"

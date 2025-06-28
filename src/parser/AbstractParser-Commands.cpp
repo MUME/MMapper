@@ -343,11 +343,11 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const InfoMarkClassEnum x)
+Abbrev getParserCommandName(const InfomarkClassEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case InfoMarkClassEnum::UPPER: \
+    case InfomarkClassEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {

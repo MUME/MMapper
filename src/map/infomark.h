@@ -19,14 +19,12 @@
 static constexpr const auto INFOMARK_SCALE = 100;
 
 #define XFOREACH_INFOMARK_PROPERTY(X) \
-    X(InfoMarkText, Text, ) \
-    X(InfoMarkTypeEnum, Type, InfoMarkTypeEnum::TEXT) \
-    X(InfoMarkClassEnum, Class, InfoMarkClassEnum::GENERIC) \
+    X(InfomarkText, Text, ) \
+    X(InfomarkTypeEnum, Type, InfomarkTypeEnum::TEXT) \
+    X(InfomarkClassEnum, Class, InfomarkClassEnum::GENERIC) \
     X(Coordinate, Position1, ) \
     X(Coordinate, Position2, ) \
     X(int, RotationAngle, 0)
-
-class InfoMark;
 
 namespace tags {
 struct NODISCARD InfomarkTextTag final
@@ -35,12 +33,12 @@ struct NODISCARD InfomarkTextTag final
 };
 } // namespace tags
 
-using InfoMarkText = TaggedBoxedStringUtf8<tags::InfomarkTextTag>;
+using InfomarkText = TaggedBoxedStringUtf8<tags::InfomarkTextTag>;
 
 #define XFOREACH_INFOMARK_TYPE(X) X(TEXT) X(LINE) X(ARROW)
 
 #define X_DECL(X) X,
-enum class NODISCARD InfoMarkTypeEnum : uint8_t { XFOREACH_INFOMARK_TYPE(X_DECL) };
+enum class NODISCARD InfomarkTypeEnum : uint8_t { XFOREACH_INFOMARK_TYPE(X_DECL) };
 #undef X_DECL
 
 #define X_COUNT(X) +1
@@ -60,14 +58,14 @@ static_assert(NUM_INFOMARK_TYPES == 3);
     X(ACTION) \
     X(LOCALITY)
 #define X_DECL(X) X,
-enum class NODISCARD InfoMarkClassEnum : uint8_t { XFOREACH_INFOMARK_CLASS(X_DECL) };
+enum class NODISCARD InfomarkClassEnum : uint8_t { XFOREACH_INFOMARK_CLASS(X_DECL) };
 #undef X_DECL
 #define X_COUNT(X) +1
 static constexpr const size_t NUM_INFOMARK_CLASSES = XFOREACH_INFOMARK_CLASS(X_COUNT);
 #undef X_COUNT
 static_assert(NUM_INFOMARK_CLASSES == 10);
 
-struct NODISCARD InfoMarkFields final
+struct NODISCARD RawInfomark final
 {
 #define X_DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop{_OptInit};
     XFOREACH_INFOMARK_PROPERTY(X_DECL_FIELD)
@@ -89,7 +87,7 @@ public:
         setPosition2(getPosition2() + offset);
     }
 
-    NODISCARD InfoMarkFields getOffsetCopy(const Coordinate &offset) const
+    NODISCARD RawInfomark getOffsetCopy(const Coordinate &offset) const
     {
         auto copy = *this;
         copy.offsetBy(offset);
@@ -119,13 +117,13 @@ struct NODISCARD InfomarkId final : public TaggedInt<InfomarkId, tags::InfomarkI
 
 static constexpr const InfomarkId INVALID_INFOMARK_ID{UINT_MAX};
 
-struct NODISCARD InformarkChange final
+struct NODISCARD InfomarkChange final
 {
     InfomarkId id = INVALID_INFOMARK_ID;
-    InfoMarkFields fields{};
-    explicit InformarkChange(InfomarkId i, InfoMarkFields f)
+    RawInfomark mark{};
+    explicit InfomarkChange(InfomarkId i, RawInfomark m)
         : id(i)
-        , fields(std::move(f))
+        , mark(std::move(m))
     {}
 };
 
@@ -184,10 +182,10 @@ public:
     }
 
 public:
-    NODISCARD InfomarkId addMarker(const InfoMarkFields &im);
-    void updateMarker(InfomarkId, const InfoMarkFields &im);
-    void updateMarkers(const std::vector<InformarkChange> &updates);
-    NODISCARD InfoMarkFields getRawCopy(InfomarkId id) const;
+    NODISCARD InfomarkId addMarker(const RawInfomark &im);
+    void updateMarker(InfomarkId, const RawInfomark &im);
+    void updateMarkers(const std::vector<InfomarkChange> &updates);
+    NODISCARD RawInfomark getRawCopy(InfomarkId id) const;
 
     void removeMarker(InfomarkId);
 
@@ -231,7 +229,7 @@ public:
     {
         return exists();
     }
-    NODISCARD InfoMarkFields getRawCopy() const
+    NODISCARD RawInfomark getRawCopy() const
     {
         return m_db.getRawCopy(m_id);
     }
@@ -239,7 +237,7 @@ public:
 
 using InfomarkPtr = std::optional<InfomarkHandle>;
 
-NODISCARD extern InfoMarkText makeInfoMarkText(std::string text);
+NODISCARD extern InfomarkText makeInfomarkText(std::string text);
 namespace mmqt {
-NODISCARD extern InfoMarkText makeInfoMarkText(QString text);
+NODISCARD extern InfomarkText makeInfomarkText(QString text);
 }

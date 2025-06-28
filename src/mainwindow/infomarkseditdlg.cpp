@@ -6,7 +6,7 @@
 #include "infomarkseditdlg.h"
 
 #include "../configuration/configuration.h"
-#include "../display/InfoMarkSelection.h"
+#include "../display/InfomarkSelection.h"
 #include "../display/mapcanvas.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
@@ -18,7 +18,7 @@
 #include <QString>
 #include <QtWidgets>
 
-InfoMarksEditDlg::InfoMarksEditDlg(QWidget *const parent)
+InfomarksEditDlg::InfomarksEditDlg(QWidget *const parent)
     : QDialog(parent)
 {
     setupUi(this);
@@ -27,7 +27,7 @@ InfoMarksEditDlg::InfoMarksEditDlg(QWidget *const parent)
     connect(closeButton, &QAbstractButton::clicked, this, [this]() { this->accept(); });
 }
 
-void InfoMarksEditDlg::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,
+void InfomarksEditDlg::setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &is,
                                             MapData *const md,
                                             MapCanvas *const mc)
 {
@@ -44,22 +44,22 @@ void InfoMarksEditDlg::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelect
     updateDialog();
 }
 
-InfoMarksEditDlg::~InfoMarksEditDlg()
+InfomarksEditDlg::~InfomarksEditDlg()
 {
     writeSettings();
 }
 
-void InfoMarksEditDlg::readSettings()
+void InfomarksEditDlg::readSettings()
 {
-    restoreGeometry(getConfig().infoMarksDialog.geometry);
+    restoreGeometry(getConfig().infomarksDialog.geometry);
 }
 
-void InfoMarksEditDlg::writeSettings()
+void InfomarksEditDlg::writeSettings()
 {
-    setConfig().infoMarksDialog.geometry = saveGeometry();
+    setConfig().infomarksDialog.geometry = saveGeometry();
 }
 
-void InfoMarksEditDlg::connectAll()
+void InfomarksEditDlg::connectAll()
 {
     std::ignore = deref(objectsList);
     std::ignore = deref(objectType);
@@ -71,35 +71,35 @@ void InfoMarksEditDlg::connectAll()
     m_connections += connect(objectsList,
                              QOverload<int>::of(&QComboBox::currentIndexChanged),
                              this,
-                             &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
+                             &InfomarksEditDlg::slot_objectListCurrentIndexChanged);
     m_connections += connect(objectType,
                              QOverload<int>::of(&QComboBox::currentIndexChanged),
                              this,
-                             &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
+                             &InfomarksEditDlg::slot_objectTypeCurrentIndexChanged);
     m_connections += connect(objectCreate,
                              &QAbstractButton::clicked,
                              this,
-                             &InfoMarksEditDlg::slot_createClicked);
+                             &InfomarksEditDlg::slot_createClicked);
     m_connections += connect(objectModify,
                              &QAbstractButton::clicked,
                              this,
-                             &InfoMarksEditDlg::slot_modifyClicked);
+                             &InfomarksEditDlg::slot_modifyClicked);
 }
 
-void InfoMarksEditDlg::slot_objectListCurrentIndexChanged(int /*unused*/)
+void InfomarksEditDlg::slot_objectListCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged(int /*unused*/)
+void InfomarksEditDlg::slot_objectTypeCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::slot_createClicked()
+void InfomarksEditDlg::slot_createClicked()
 {
     auto &mapData = deref(m_mapData);
-    InfoMarkFields im;
+    RawInfomark im;
     updateMark(im);
 
     bool success = mapData.applySingleChange(Change{infomark_change_types::AddInfomark{im}});
@@ -111,17 +111,17 @@ void InfoMarksEditDlg::slot_createClicked()
     }
 }
 
-void InfoMarksEditDlg::updateMark(InfoMarkFields &im)
+void InfomarksEditDlg::updateMark(RawInfomark &im)
 {
     const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
 
     const int angle = static_cast<int>(std::lround(m_rotationAngle->value()));
-    const InfoMarkTypeEnum type = getType();
+    const InfomarkTypeEnum type = getType();
 
-    auto get_text = [this, type]() -> InfoMarkText {
+    auto get_text = [this, type]() -> InfomarkText {
         QString text = objectText->text();
-        if (type == InfoMarkTypeEnum::TEXT) {
+        if (type == InfomarkTypeEnum::TEXT) {
             if (text.isEmpty()) {
                 text = "New Marker";
                 objectText->setText(text);
@@ -133,7 +133,7 @@ void InfoMarksEditDlg::updateMark(InfoMarkFields &im)
             }
         }
         // REVISIT: sanitize before calling objectText->setText(), or after?
-        return mmqt::makeInfoMarkText(text);
+        return mmqt::makeInfomarkText(text);
     };
 
     im.setType(type);
@@ -144,14 +144,14 @@ void InfoMarksEditDlg::updateMark(InfoMarkFields &im)
     im.setRotationAngle(angle);
 }
 
-void InfoMarksEditDlg::slot_modifyClicked()
+void InfomarksEditDlg::slot_modifyClicked()
 {
-    const InfomarkHandle &current = getCurrentInfoMark();
+    const InfomarkHandle &current = getCurrentInfomark();
     if (!current) {
         return;
     }
 
-    InfoMarkFields mark = current.getRawCopy();
+    RawInfomark mark = current.getRawCopy();
     updateMark(mark);
 
     if (!m_mapData->applySingleChange(
@@ -160,12 +160,12 @@ void InfoMarksEditDlg::slot_modifyClicked()
     }
 }
 
-void InfoMarksEditDlg::disconnectAll()
+void InfomarksEditDlg::disconnectAll()
 {
     m_connections.disconnectAll();
 }
 
-void InfoMarksEditDlg::updateMarkers()
+void InfomarksEditDlg::updateMarkers()
 {
     m_markers.clear();
     if (m_selection != nullptr) {
@@ -176,14 +176,14 @@ void InfoMarksEditDlg::updateMarkers()
     objectsList->addItem("Create New Marker", QVariant(-1));
 
     assert(m_selection);
-    const InfoMarkSelection &sel = deref(m_selection);
+    const InfomarkSelection &sel = deref(m_selection);
 
     // note: mutable lambda is reqquired for the "n" counter variable to be modified.
     sel.for_each([this, n = 0](const InfomarkHandle &marker) mutable {
         switch (marker.getType()) {
-        case InfoMarkTypeEnum::TEXT:
-        case InfoMarkTypeEnum::LINE:
-        case InfoMarkTypeEnum::ARROW:
+        case InfomarkTypeEnum::TEXT:
+        case InfomarkTypeEnum::LINE:
+        case InfomarkTypeEnum::ARROW:
             assert(m_markers.size() == static_cast<size_t>(n));
             m_markers.emplace_back(marker.getId());
             objectsList->addItem(marker.getText().toQString(), QVariant(n));
@@ -197,15 +197,15 @@ void InfoMarksEditDlg::updateMarkers()
     }
 }
 
-void InfoMarksEditDlg::updateDialog()
+void InfomarksEditDlg::updateDialog()
 {
     class NODISCARD DisconnectReconnectAntiPattern final
     {
     private:
-        InfoMarksEditDlg &m_self;
+        InfomarksEditDlg &m_self;
 
     public:
-        explicit DisconnectReconnectAntiPattern(InfoMarksEditDlg &self)
+        explicit DisconnectReconnectAntiPattern(InfomarksEditDlg &self)
             : m_self{self}
         {
             m_self.disconnectAll();
@@ -213,26 +213,26 @@ void InfoMarksEditDlg::updateDialog()
         ~DisconnectReconnectAntiPattern() { m_self.connectAll(); }
     } antiPattern{*this};
 
-    const InfomarkHandle &marker = getCurrentInfoMark();
+    const InfomarkHandle &marker = getCurrentInfomark();
     if (marker) {
         objectType->setCurrentIndex(static_cast<int>(marker.getType()));
         objectClassesList->setCurrentIndex(static_cast<int>(marker.getClass()));
     }
 
     switch (getType()) {
-    case InfoMarkTypeEnum::TEXT:
+    case InfomarkTypeEnum::TEXT:
         m_x2->setEnabled(false);
         m_y2->setEnabled(false);
         m_rotationAngle->setEnabled(true);
         objectText->setEnabled(true);
         break;
-    case InfoMarkTypeEnum::LINE:
+    case InfomarkTypeEnum::LINE:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
         objectText->setEnabled(false);
         break;
-    case InfoMarkTypeEnum::ARROW:
+    case InfomarkTypeEnum::ARROW:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
@@ -265,19 +265,19 @@ void InfoMarksEditDlg::updateDialog()
     }
 }
 
-InfoMarkTypeEnum InfoMarksEditDlg::getType()
+InfomarkTypeEnum InfomarksEditDlg::getType()
 {
     // FIXME: This needs bounds checking.
-    return static_cast<InfoMarkTypeEnum>(objectType->currentIndex());
+    return static_cast<InfomarkTypeEnum>(objectType->currentIndex());
 }
 
-InfoMarkClassEnum InfoMarksEditDlg::getClass()
+InfomarkClassEnum InfomarksEditDlg::getClass()
 {
     // FIXME: This needs bounds checking.
-    return static_cast<InfoMarkClassEnum>(objectClassesList->currentIndex());
+    return static_cast<InfomarkClassEnum>(objectClassesList->currentIndex());
 }
 
-InfomarkHandle InfoMarksEditDlg::getCurrentInfoMark()
+InfomarkHandle InfomarksEditDlg::getCurrentInfomark()
 {
     const auto &db = m_mapData->getCurrentMap().getInfomarkDb();
     bool ok = false;
@@ -289,7 +289,7 @@ InfomarkHandle InfoMarksEditDlg::getCurrentInfoMark()
     return db.find(id);
 }
 
-void InfoMarksEditDlg::setCurrentInfoMark(InfomarkId id)
+void InfomarksEditDlg::setCurrentInfomark(InfomarkId id)
 {
     int i = 0;
     for (size_t j = 0, len = m_markers.size(); j < len; ++j) {

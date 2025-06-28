@@ -79,9 +79,9 @@ static void print(std::ostream &os, ExitDirEnum value)
     os << "Direction(" << to_string_view(value) << ")";
 }
 
-static void print(std::ostream &os, InfoMarkClassEnum value)
+static void print(std::ostream &os, InfomarkClassEnum value)
 {
-    os << "InfoMarkClassEnum(" << static_cast<int>(value) << ")";
+    os << "InfomarkClassEnum(" << static_cast<int>(value) << ")";
 }
 
 } // namespace value_helper

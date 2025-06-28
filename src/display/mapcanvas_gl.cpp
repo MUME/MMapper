@@ -777,7 +777,7 @@ void MapCanvas::paintSelections()
     paintSelectedRooms();
     paintSelectedConnection();
     paintSelectionArea();
-    paintSelectedInfoMarks();
+    paintSelectedInfomarks();
 }
 
 void MapCanvas::paintGL()

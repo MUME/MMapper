@@ -1172,7 +1172,7 @@ void World::initRoom(const RawRoom &input)
 
 World World::init(ProgressCounter &counter,
                   const std::vector<ExternalRawRoom> &ext_rooms,
-                  const std::vector<InfoMarkFields> &marks)
+                  const std::vector<RawInfomark> &marks)
 {
     DECL_TIMER(t, __FUNCTION__);
 

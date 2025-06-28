@@ -9,7 +9,7 @@
 
 #include <memory>
 
-class NODISCARD InfoMarkSelection final : public std::enable_shared_from_this<InfoMarkSelection>
+class NODISCARD InfomarkSelection final : public std::enable_shared_from_this<InfomarkSelection>
 {
 private:
     MapData &m_mapData;
@@ -18,13 +18,13 @@ private:
     Coordinate m_sel2;
 
 public:
-    NODISCARD static std::shared_ptr<InfoMarkSelection> allocEmpty(MapData &mapData,
+    NODISCARD static std::shared_ptr<InfomarkSelection> allocEmpty(MapData &mapData,
                                                                    const Coordinate &c1,
                                                                    const Coordinate &c2)
     {
-        return std::make_shared<InfoMarkSelection>(Badge<InfoMarkSelection>{}, mapData, c1, c2);
+        return std::make_shared<InfomarkSelection>(Badge<InfomarkSelection>{}, mapData, c1, c2);
     }
-    NODISCARD static std::shared_ptr<InfoMarkSelection> alloc(MapData &mapData,
+    NODISCARD static std::shared_ptr<InfomarkSelection> alloc(MapData &mapData,
                                                               const Coordinate &c1,
                                                               const Coordinate &c2)
     {
@@ -34,11 +34,11 @@ public:
     }
 
 public:
-    InfoMarkSelection(Badge<InfoMarkSelection>,
+    InfomarkSelection(Badge<InfomarkSelection>,
                       MapData &,
                       const Coordinate &c1,
                       const Coordinate &c2);
-    DELETE_CTORS_AND_ASSIGN_OPS(InfoMarkSelection);
+    DELETE_CTORS_AND_ASSIGN_OPS(InfomarkSelection);
 
 private:
     void init();
@@ -62,7 +62,7 @@ public:
     NODISCARD InfomarkHandle front() const
     {
         if (empty()) {
-            throw std::runtime_error("InfoMarkSelection is empty");
+            throw std::runtime_error("InfomarkSelection is empty");
         }
         const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
         return InfomarkHandle{db, m_markerList.front()};

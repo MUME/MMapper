@@ -29,7 +29,7 @@
 class ConnectionSelection;
 class MapData;
 class PrespammedPath;
-class InfoMarkSelection;
+class InfomarkSelection;
 
 enum class NODISCARD RoomTintEnum { DARK, NO_SUNDEATH };
 static const size_t NUM_ROOM_TINTS = 2;
@@ -187,14 +187,14 @@ struct NODISCARD MapCanvasInputState
     std::optional<RoomSelMove> m_roomSelectionMove;
     NODISCARD bool hasRoomSelectionMove() { return m_roomSelectionMove.has_value(); }
 
-    std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
+    std::shared_ptr<InfomarkSelection> m_infoMarkSelection;
 
-    struct NODISCARD InfoMarkSelectionMove final
+    struct NODISCARD InfomarkSelectionMove final
     {
         Coordinate2f pos;
     };
-    std::optional<InfoMarkSelectionMove> m_infoMarkSelectionMove;
-    NODISCARD bool hasInfoMarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
+    std::optional<InfomarkSelectionMove> m_infoMarkSelectionMove;
+    NODISCARD bool hasInfomarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
 
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
 

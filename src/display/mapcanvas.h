@@ -37,7 +37,7 @@
 class CharacterBatch;
 class ConnectionSelection;
 class Coordinate;
-class InfoMarkSelection;
+class InfomarkSelection;
 class MapData;
 class Mmapper2Group;
 class PrespammedPath;
@@ -174,7 +174,7 @@ private:
     void updateTextures();
     void updateMultisampling();
 
-    NODISCARD std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
+    NODISCARD std::shared_ptr<InfomarkSelection> getInfomarkSelection(const MouseSel &sel);
     NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                                const glm::ivec2 &size,
                                                float zoomScale,
@@ -186,8 +186,8 @@ private:
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
-    NODISCARD BatchedInfomarksMeshes getInfoMarksMeshes();
-    void drawInfoMark(InfomarksBatch &batch,
+    NODISCARD BatchedInfomarksMeshes getInfomarksMeshes();
+    void drawInfomark(InfomarksBatch &batch,
                       const InfomarkHandle &marker,
                       int currentLayer,
                       const glm::vec2 &offset = {},
@@ -208,7 +208,7 @@ private:
     void paintSelectedRoom(RoomSelFakeGL &, const RawRoom &room);
     void paintSelectedConnection();
     void paintNearbyConnectionPoints();
-    void paintSelectedInfoMarks();
+    void paintSelectedInfomarks();
     void paintCharacters();
     void paintDifferences();
     void forceUpdateMeshes();
@@ -241,7 +241,7 @@ signals:
     void sig_selectionChanged();
     void sig_newRoomSelection(const SigRoomSelection &);
     void sig_newConnectionSelection(ConnectionSelection *);
-    void sig_newInfoMarkSelection(InfoMarkSelection *);
+    void sig_newInfomarkSelection(InfomarkSelection *);
 
     void sig_setCurrentRoom(RoomId id, bool update);
     void sig_zoomChanged(float);
@@ -267,17 +267,17 @@ public slots:
 
     void slot_setRoomSelection(const SigRoomSelection &);
     void slot_setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
-    void slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
+    void slot_setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &);
 
     void slot_clearRoomSelection() { slot_setRoomSelection(SigRoomSelection{}); }
     void slot_clearConnectionSelection() { slot_setConnectionSelection(nullptr); }
-    void slot_clearInfoMarkSelection() { slot_setInfoMarkSelection(nullptr); }
+    void slot_clearInfomarkSelection() { slot_setInfomarkSelection(nullptr); }
 
     void slot_clearAllSelections()
     {
         slot_clearRoomSelection();
         slot_clearConnectionSelection();
-        slot_clearInfoMarkSelection();
+        slot_clearInfomarkSelection();
     }
 
     void slot_dataLoaded();

@@ -64,7 +64,7 @@ public:
     X(DoorFlagEnum, DoorFlagEnum, DoorFlag) \
     X(ExitFlagEnum, ExitFlagEnum, ExitFlag) \
     X(ExitDirEnum, ExitDirEnum, Direction) \
-    X(InfoMarkClassEnum, InfoMarkClassEnum, InfoMarkClass)
+    X(InfomarkClassEnum, InfomarkClassEnum, InfomarkClass)
 
 #define X_DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
     enum class NODISCARD IndexEnum : uint8_t { Null, XFOREACH_VALUE_TYPE(X_DECL_ENUM) };

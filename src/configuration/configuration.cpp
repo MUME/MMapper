@@ -453,7 +453,7 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_MUME_CLOCK, mumeClock); \
         GROUP_CALLBACK(callback, GRP_ADVENTURE_PANEL, adventurePanel); \
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
-        GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infoMarksDialog); \
+        GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infomarksDialog); \
         GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
         GROUP_CALLBACK(callback, GRP_ROOM_PANEL, roomPanel); \
         GROUP_CALLBACK(callback, GRP_FINDROOMS_DIALOG, findRoomsDialog); \
@@ -725,7 +725,7 @@ void Configuration::RoomPanelSettings::read(const QSettings &conf)
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
-void Configuration::InfoMarksDialog::read(const QSettings &conf)
+void Configuration::InfomarksDialog::read(const QSettings &conf)
 {
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
@@ -892,7 +892,7 @@ void Configuration::RoomPanelSettings::write(QSettings &conf) const
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
-void Configuration::InfoMarksDialog::write(QSettings &conf) const
+void Configuration::InfomarksDialog::write(QSettings &conf) const
 {
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }

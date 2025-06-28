@@ -41,8 +41,8 @@ private:
 private:
     NODISCARD static ExternalRawRoom loadRoom(QDataStream &stream, uint32_t version);
     static void loadExits(ExternalRawRoom &room, QDataStream &stream, uint32_t version);
-    NODISCARD static InfoMarkFields loadMark(QDataStream &stream, uint32_t version);
-    static void saveMark(const InfoMarkFields &mark, QDataStream &stream);
+    NODISCARD static RawInfomark loadMark(QDataStream &stream, uint32_t version);
+    static void saveMark(const RawInfomark &mark, QDataStream &stream);
     static void saveRoom(const ExternalRawRoom &room, QDataStream &stream);
     static void saveExits(const ExternalRawRoom &room, QDataStream &stream);
     void log(const QString &msg);

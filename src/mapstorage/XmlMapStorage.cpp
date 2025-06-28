@@ -45,8 +45,8 @@
     X(ExitFlagEnum) \
     X(RoomLightEnum) \
     X(RoomLoadFlagEnum) \
-    X(InfoMarkClassEnum) \
-    X(InfoMarkTypeEnum) \
+    X(InfomarkClassEnum) \
+    X(InfomarkTypeEnum) \
     X(RoomMobFlagEnum) \
     X(RoomPortableEnum) \
     X(RoomRidableEnum) \
@@ -562,8 +562,8 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExternalRawRoom::Exits &e
 void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
 {
     const QXmlStreamAttributes attrs = stream.attributes();
-    const auto type = conv.toEnum<InfoMarkTypeEnum>(attrs.value("type"));
-    const auto clas = conv.toEnum<InfoMarkClassEnum>(attrs.value("class"));
+    const auto type = conv.toEnum<InfomarkTypeEnum>(attrs.value("type"));
+    const auto clas = conv.toEnum<InfomarkClassEnum>(attrs.value("class"));
     if (!type.has_value() || !clas.has_value()) {
         throwErrorFmt(stream,
                       R"(invalid marker attributes type="%1" class="%2")",
@@ -580,7 +580,7 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
         angle = opt_angle.value();
     }
 
-    InfoMarkFields marker{};
+    RawInfomark marker{};
     size_t foundPos1 = 0;
     size_t foundPos2 = 0;
 
@@ -598,8 +598,8 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
             ++foundPos2;
         } else if (name == "text") {
             // load text only if type == TEXT
-            if (type == InfoMarkTypeEnum::TEXT) {
-                marker.setText(mmqt::makeInfoMarkText(loadString(stream)));
+            if (type == InfomarkTypeEnum::TEXT) {
+                marker.setText(mmqt::makeInfomarkText(loadString(stream)));
             }
         } else {
             qWarning().noquote().nospace()
@@ -624,11 +624,11 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
     }
 
     // REVISIT: Just discard empty text markers?
-    if (type == InfoMarkTypeEnum::TEXT && marker.getText().isEmpty()) {
-        marker.setText(mmqt::makeInfoMarkText("New Marker"));
+    if (type == InfomarkTypeEnum::TEXT && marker.getText().isEmpty()) {
+        marker.setText(mmqt::makeInfomarkText("New Marker"));
     }
 
-    std::vector<InfoMarkFields> &data = m_loading->result.markers;
+    std::vector<RawInfomark> &data = m_loading->result.markers;
     data.emplace_back(std::move(marker));
 }
 
@@ -855,9 +855,9 @@ void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const InfomarkDb &db)
     }
 }
 
-void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMarkFields &marker)
+void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const RawInfomark &marker)
 {
-    const InfoMarkTypeEnum type = marker.getType();
+    const InfomarkTypeEnum type = marker.getType();
     stream.writeStartElement("marker");
     saveXmlAttribute(stream, "type", conv.toString(type));
     saveXmlAttribute(stream, "class", conv.toString(marker.getClass()));
@@ -872,7 +872,7 @@ void XmlMapStorage::saveMarker(QXmlStreamWriter &stream, const InfoMarkFields &m
         saveCoordinate(stream, "pos2", marker.getPosition2());
     }
 
-    if (type == InfoMarkTypeEnum::TEXT) {
+    if (type == InfomarkTypeEnum::TEXT) {
         saveXmlElement(stream, "text", marker.getText().toQString());
     }
 

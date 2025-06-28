@@ -105,7 +105,7 @@ public:
 public:
     NODISCARD static MapPair fromRooms(ProgressCounter &counter,
                                        std::vector<ExternalRawRoom> rooms,
-                                       std::vector<InfoMarkFields> marks);
+                                       std::vector<RawInfomark> marks);
     void printMulti(ProgressCounter &pc, AnsiOstream &aos) const;
     void printStats(ProgressCounter &pc, AnsiOstream &aos) const;
     void printUnknown(ProgressCounter &pc, AnsiOstream &aos) const;
@@ -140,7 +140,7 @@ public:
     NODISCARD static Map merge(ProgressCounter &pc,
                                const Map &currentMap,
                                std::vector<ExternalRawRoom> newRooms,
-                               std::vector<InfoMarkFields> newMarks,
+                               std::vector<RawInfomark> newMarks,
                                const Coordinate &mapOffset);
 
     static void foreachChangedRoom(ProgressCounter &pc,

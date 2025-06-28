@@ -330,7 +330,7 @@ MapApplyResult Map::apply(ProgressCounter &pc, const ChangeList &changeList) con
 
 MapPair Map::fromRooms(ProgressCounter &counter,
                        std::vector<ExternalRawRoom> rooms,
-                       std::vector<InfoMarkFields> marks)
+                       std::vector<RawInfomark> marks)
 {
     return WorldBuilder::buildFrom(counter, std::exchange(rooms, {}), std::exchange(marks, {}));
 }
@@ -1095,7 +1095,7 @@ ExternalRoomId Map::getExternalRoomId(RoomId id) const
 Map Map::merge(ProgressCounter &pc,
                const Map &currentMap,
                std::vector<ExternalRawRoom> newRooms,
-               std::vector<InfoMarkFields> newMarks,
+               std::vector<RawInfomark> newMarks,
                const Coordinate &mapOffset)
 {
     if (newRooms.empty()) {
@@ -1177,7 +1177,7 @@ Map Map::merge(ProgressCounter &pc,
 
         std::vector<ExternalRawRoom> rooms;
         rooms.reserve(currentMap.getRoomsCount() + newRooms.size());
-        std::vector<InfoMarkFields> marks;
+        std::vector<RawInfomark> marks;
         marks.reserve(currentMap.getMarksCount() + newMarks.size());
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old rooms"});
@@ -1780,10 +1780,10 @@ void testAddAndRemoveIsNoChange()
     room.setName(RoomName{"Name"});
     room.setPosition(firstCoord);
 
-    std::vector<InfoMarkFields> marks;
+    std::vector<RawInfomark> marks;
     auto &im = marks.emplace_back();
-    im.setType(InfoMarkTypeEnum::TEXT);
-    im.setText(InfoMarkText{"Text"});
+    im.setType(InfomarkTypeEnum::TEXT);
+    im.setText(InfomarkText{"Text"});
 
     const MapPair mapPair = Map::fromRooms(pc, rooms, marks);
     TEST_ASSERT(mapPair.base == mapPair.modified);

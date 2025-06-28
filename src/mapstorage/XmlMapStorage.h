@@ -119,7 +119,7 @@ private:
     static void saveDoorFlags(QXmlStreamWriter &stream, DoorFlags fl);
 
     void saveMarkers(QXmlStreamWriter &stream, const InfomarkDb &marks);
-    static void saveMarker(QXmlStreamWriter &stream, const InfoMarkFields &marker);
+    static void saveMarker(QXmlStreamWriter &stream, const RawInfomark &marker);
 
     static void saveXmlElement(QXmlStreamWriter &stream, const QString &name, const QString &value);
     static void saveXmlAttribute(QXmlStreamWriter &stream,

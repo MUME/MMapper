@@ -90,10 +90,10 @@ private:
 
 private:
     void print(const InfomarkId id);
-    void print(InfoMarkClassEnum type);
-    void print(InfoMarkTypeEnum type);
-    void print(const InfoMarkText &text);
-    void print(const InfoMarkFields &fields);
+    void print(InfomarkClassEnum type);
+    void print(InfomarkTypeEnum type);
+    void print(const InfomarkText &text);
+    void print(const RawInfomark &fields);
 
 private:
     void print(const RoomIdSet &set);

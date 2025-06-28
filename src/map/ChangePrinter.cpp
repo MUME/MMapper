@@ -630,7 +630,6 @@ void ChangePrinter::print(const RoomFieldVariant &var)
 
 void ChangePrinter::print(const InfomarkId id)
 {
-    // REVISIT: Why InfomarkId and not InfoMarkId like the other types?
     if (id == INVALID_INFOMARK_ID) {
         m_os.writeWithColor(error_color, "INVALID_INFOMARK_ID");
     } else {
@@ -638,11 +637,11 @@ void ChangePrinter::print(const InfomarkId id)
     }
 }
 
-void ChangePrinter::print(const InfoMarkClassEnum type)
+void ChangePrinter::print(const InfomarkClassEnum type)
 {
 #define CASE(UPPER, s) \
     do { \
-    case InfoMarkClassEnum::UPPER: \
+    case InfomarkClassEnum::UPPER: \
         return m_os.writeWithColor(const_color, s); \
     } while (false)
     switch (type) {
@@ -661,11 +660,11 @@ void ChangePrinter::print(const InfoMarkClassEnum type)
 #undef CASE
 }
 
-void ChangePrinter::print(const InfoMarkTypeEnum type)
+void ChangePrinter::print(const InfomarkTypeEnum type)
 {
 #define CASE(UPPER, s) \
     do { \
-    case InfoMarkTypeEnum::UPPER: \
+    case InfomarkTypeEnum::UPPER: \
         return m_os.writeWithColor(const_color, s); \
     } while (false)
     switch (type) {
@@ -677,17 +676,16 @@ void ChangePrinter::print(const InfoMarkTypeEnum type)
 #undef CASE
 }
 
-void ChangePrinter::print(const InfoMarkText &text)
+void ChangePrinter::print(const InfomarkText &text)
 {
     print_string_color_quoted(m_os, text.getStdStringViewUtf8());
 }
 
-void ChangePrinter::print(const InfoMarkFields &fields)
+void ChangePrinter::print(const RawInfomark &mark)
 {
-    // REVISIT: Why fields and not "InfoMark" ?
-    BEGIN_STRUCT_HELPER("InfoMarkFields")
+    BEGIN_STRUCT_HELPER("RawInfomark")
     {
-#define X_CASE(Type, Prop, Init) helper.add_member(#Prop, fields.get##Prop());
+#define X_CASE(Type, Prop, Init) helper.add_member(#Prop, mark.get##Prop());
         XFOREACH_INFOMARK_PROPERTY(X_CASE)
 #undef X_CASE
     }
@@ -917,7 +915,7 @@ void ChangePrinter::virt_accept(const SetExitFlags &change)
 
 void ChangePrinter::virt_accept(const AddInfomark &change)
 {
-    BEGIN_STRUCT_HELPER("AddInfoMark")
+    BEGIN_STRUCT_HELPER("AddInfomark")
     {
         HELPER_ADD_MEMBER(fields);
     }
@@ -925,7 +923,7 @@ void ChangePrinter::virt_accept(const AddInfomark &change)
 
 void ChangePrinter::virt_accept(const RemoveInfomark &change)
 {
-    BEGIN_STRUCT_HELPER("RemoveInfoMark")
+    BEGIN_STRUCT_HELPER("RemoveInfomark")
     {
         HELPER_ADD_MEMBER(id);
     }
@@ -933,7 +931,7 @@ void ChangePrinter::virt_accept(const RemoveInfomark &change)
 
 void ChangePrinter::virt_accept(const UpdateInfomark &change)
 {
-    BEGIN_STRUCT_HELPER("UpdateInfoMark")
+    BEGIN_STRUCT_HELPER("UpdateInfomark")
     {
         HELPER_ADD_MEMBER(id);
         HELPER_ADD_MEMBER(fields);

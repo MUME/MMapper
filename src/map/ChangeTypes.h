@@ -252,13 +252,13 @@ namespace infomark_change_types {
 
 struct NODISCARD AddInfomark
 {
-    InfoMarkFields fields;
+    RawInfomark fields;
 };
 
 struct NODISCARD UpdateInfomark
 {
     InfomarkId id = INVALID_INFOMARK_ID;
-    InfoMarkFields fields;
+    RawInfomark fields;
 };
 
 struct NODISCARD RemoveInfomark

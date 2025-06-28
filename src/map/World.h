@@ -153,7 +153,7 @@ public:
 public:
     NODISCARD static World init(ProgressCounter &counter,
                                 const std::vector<ExternalRawRoom> &map,
-                                const std::vector<InfoMarkFields> &marks);
+                                const std::vector<RawInfomark> &marks);
 
 public:
     NODISCARD ExternalRoomIdSet convertToExternal(ProgressCounter &pc,

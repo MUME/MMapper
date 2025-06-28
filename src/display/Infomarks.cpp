@@ -13,7 +13,7 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
-#include "InfoMarkSelection.h"
+#include "InfomarkSelection.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
@@ -38,29 +38,29 @@ static constexpr float INFOMARK_POINT_SIZE = 6.f;
 #define LOOKUP_COLOR_INFOMARK(X) (getNamedColorOptions().X.getColor())
 
 // NOTE: This currently requires rebuilding the infomark meshes if a color changes.
-NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
-                                        const InfoMarkClassEnum infoMarkClass)
+NODISCARD static Color getInfomarkColor(const InfomarkTypeEnum infoMarkType,
+                                        const InfomarkClassEnum infoMarkClass)
 {
-    const Color defaultColor = (infoMarkType == InfoMarkTypeEnum::TEXT) ? Colors::black
+    const Color defaultColor = (infoMarkType == InfomarkTypeEnum::TEXT) ? Colors::black
                                                                         : Colors::white;
     switch (infoMarkClass) {
-    case InfoMarkClassEnum::HERB:
+    case InfomarkClassEnum::HERB:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_HERB);
-    case InfoMarkClassEnum::RIVER:
+    case InfomarkClassEnum::RIVER:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_RIVER);
-    case InfoMarkClassEnum::MOB:
+    case InfomarkClassEnum::MOB:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_MOB);
-    case InfoMarkClassEnum::COMMENT:
+    case InfomarkClassEnum::COMMENT:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_COMMENT);
-    case InfoMarkClassEnum::ROAD:
+    case InfomarkClassEnum::ROAD:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_ROAD);
-    case InfoMarkClassEnum::OBJECT:
+    case InfomarkClassEnum::OBJECT:
         return LOOKUP_COLOR_INFOMARK(INFOMARK_OBJECT);
 
-    case InfoMarkClassEnum::GENERIC:
-    case InfoMarkClassEnum::PLACE:
-    case InfoMarkClassEnum::ACTION:
-    case InfoMarkClassEnum::LOCALITY:
+    case InfomarkClassEnum::GENERIC:
+    case InfomarkClassEnum::PLACE:
+    case InfomarkClassEnum::ACTION:
+    case InfomarkClassEnum::LOCALITY:
         return defaultColor;
     }
 
@@ -68,23 +68,23 @@ NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
     return defaultColor;
 }
 
-NODISCARD static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum infoMarkClass)
+NODISCARD static FontFormatFlags getFontFormatFlags(const InfomarkClassEnum infoMarkClass)
 {
     switch (infoMarkClass) {
-    case InfoMarkClassEnum::GENERIC:
-    case InfoMarkClassEnum::HERB:
-    case InfoMarkClassEnum::RIVER:
-    case InfoMarkClassEnum::PLACE:
-    case InfoMarkClassEnum::MOB:
-    case InfoMarkClassEnum::COMMENT:
-    case InfoMarkClassEnum::ROAD:
-    case InfoMarkClassEnum::OBJECT:
+    case InfomarkClassEnum::GENERIC:
+    case InfomarkClassEnum::HERB:
+    case InfomarkClassEnum::RIVER:
+    case InfomarkClassEnum::PLACE:
+    case InfomarkClassEnum::MOB:
+    case InfomarkClassEnum::COMMENT:
+    case InfomarkClassEnum::ROAD:
+    case InfomarkClassEnum::OBJECT:
         return {};
 
-    case InfoMarkClassEnum::ACTION:
+    case InfomarkClassEnum::ACTION:
         return FontFormatFlags{FontFormatFlagEnum::ITALICS};
 
-    case InfoMarkClassEnum::LOCALITY:
+    case InfomarkClassEnum::LOCALITY:
         return FontFormatFlags{FontFormatFlagEnum::UNDERLINE};
     }
 
@@ -92,7 +92,7 @@ NODISCARD static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum info
     return {};
 }
 
-BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
+BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
 {
     // REVISIT: Infomarks uses QLinkedList. Linked list iteration can be
     // an order of magnitude slower than vector iteration.
@@ -128,7 +128,7 @@ BatchedInfomarksMeshes MapCanvas::getInfoMarksMeshes()
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
         for (const InfomarkId id : db.getIdSet()) {
-            drawInfoMark(batch, InfomarkHandle{db, id}, layer);
+            drawInfomark(batch, InfomarkHandle{db, id}, layer);
         }
         it.second = batch.getMeshes();
     }
@@ -220,7 +220,7 @@ void InfomarksMeshes::render()
     textMesh.render(common_state);
 }
 
-void MapCanvas::drawInfoMark(InfomarksBatch &batch,
+void MapCanvas::drawInfomark(InfomarksBatch &batch,
                              const InfomarkHandle &marker,
                              const int currentLayer,
                              const glm::vec2 &offset,
@@ -250,8 +250,8 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
     const auto infoMarkType = marker.getType();
     const auto infoMarkClass = marker.getClass();
 
-    // Color depends of the class of the InfoMark
-    const Color infoMarkColor = getInfoMarkColor(infoMarkType, infoMarkClass).withAlpha(0.55f);
+    // Color depends of the class of the Infomark
+    const Color infoMarkColor = getInfomarkColor(infoMarkType, infoMarkClass).withAlpha(0.55f);
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
     const glm::vec3 pos{x1, y1, static_cast<float>(layer)};
@@ -261,7 +261,7 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
     batch.setColor(bgColor);
 
     switch (infoMarkType) {
-    case InfoMarkTypeEnum::TEXT: {
+    case InfomarkTypeEnum::TEXT: {
         const auto utf8 = marker.getText().getStdStringViewUtf8();
         const auto latin1_to_render = charset::conversion::utf8ToLatin1(utf8); // GL font is latin1
         batch.renderText(pos,
@@ -273,11 +273,11 @@ void MapCanvas::drawInfoMark(InfomarksBatch &batch,
         break;
     }
 
-    case InfoMarkTypeEnum::LINE:
+    case InfomarkTypeEnum::LINE:
         batch.drawLine(glm::vec3{0.f}, glm::vec3{dx, dy, 0.f});
         break;
 
-    case InfoMarkTypeEnum::ARROW:
+    case InfomarkTypeEnum::ARROW:
         batch.drawLineStrip(glm::vec3{0.f}, glm::vec3{dx - 0.3f, dy, 0.f}, glm::vec3{dx, dy, 0.f});
         batch.drawTriangle(glm::vec3{dx - 0.2f, dy + 0.07f, 0.f},
                            glm::vec3{dx - 0.2f, dy - 0.07f, 0.f},
@@ -309,7 +309,7 @@ void MapCanvas::paintNewInfomarkSelection()
     }
 }
 
-void MapCanvas::paintSelectedInfoMarks()
+void MapCanvas::paintSelectedInfomarks()
 {
     if (m_infoMarkSelection == nullptr
         && m_canvasMouseMode != CanvasMouseModeEnum::SELECT_INFOMARKS) {
@@ -320,14 +320,14 @@ void MapCanvas::paintSelectedInfoMarks()
     {
         // draw selections
         if (m_infoMarkSelection != nullptr) {
-            const InfoMarkSelection &sel = deref(m_infoMarkSelection);
+            const InfomarkSelection &sel = deref(m_infoMarkSelection);
             sel.for_each([this, &batch](const InfomarkHandle &marker) {
-                drawInfoMark(batch, marker, m_currentLayer, {}, Colors::red);
+                drawInfomark(batch, marker, m_currentLayer, {}, Colors::red);
             });
-            if (hasInfoMarkSelectionMove()) {
+            if (hasInfomarkSelectionMove()) {
                 const glm::vec2 offset = m_infoMarkSelectionMove->pos.to_vec2();
                 sel.for_each([this, &batch, &offset](const InfomarkHandle &marker) {
-                    drawInfoMark(batch, marker, m_currentLayer, offset, Colors::yellow);
+                    drawInfomark(batch, marker, m_currentLayer, offset, Colors::yellow);
                 });
             }
         }
@@ -355,7 +355,7 @@ void MapCanvas::paintSelectedInfoMarks()
                                        : Colors::cyan;
 
                 drawPoint(pos1, color);
-                if (marker.getType() == InfoMarkTypeEnum::TEXT) {
+                if (marker.getType() == InfomarkTypeEnum::TEXT) {
                     return;
                 }
 
@@ -376,8 +376,8 @@ void MapCanvas::paintSelectedInfoMarks()
 
 void MapCanvas::paintBatchedInfomarks()
 {
-    const auto wantInfoMarks = (getTotalScaleFactor() >= getConfig().canvas.infomarkScaleCutoff);
-    if (!wantInfoMarks || !m_batches.infomarksMeshes.has_value()) {
+    const auto wantInfomarks = (getTotalScaleFactor() >= getConfig().canvas.infomarkScaleCutoff);
+    if (!wantInfomarks || !m_batches.infomarksMeshes.has_value()) {
         return;
     }
 
@@ -404,5 +404,5 @@ void MapCanvas::updateInfomarkBatches()
         MMLOG() << "[updateInfomarkBatches] cleared 'needsUpdate' flag";
     }
 
-    opt_infomarks.emplace(getInfoMarksMeshes());
+    opt_infomarks.emplace(getInfomarksMeshes());
 }

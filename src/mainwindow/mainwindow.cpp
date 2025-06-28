@@ -12,7 +12,7 @@
 #include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
-#include "../display/InfoMarkSelection.h"
+#include "../display/InfomarkSelection.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
@@ -468,9 +468,9 @@ void MainWindow::wireConnections()
             this,
             &MainWindow::slot_newConnectionSelection);
     connect(canvas,
-            &MapCanvas::sig_newInfoMarkSelection,
+            &MapCanvas::sig_newInfomarkSelection,
             this,
-            &MainWindow::slot_newInfoMarkSelection);
+            &MainWindow::slot_newInfomarkSelection);
     connect(canvas, &QWidget::customContextMenuRequested, this, &MainWindow::slot_showContextMenu);
 
     // Group
@@ -732,24 +732,24 @@ void MainWindow::createActions()
             &QAction::triggered,
             this,
             &MainWindow::slot_onModeMoveSelect);
-    mouseMode.modeInfoMarkSelectAct = new QAction(QIcon(":/icons/infomarkselection.png"),
+    mouseMode.modeInfomarkSelectAct = new QAction(QIcon(":/icons/infomarkselection.png"),
                                                   tr("Select Markers"),
                                                   this);
-    mouseMode.modeInfoMarkSelectAct->setStatusTip(tr("Select Info Markers"));
-    mouseMode.modeInfoMarkSelectAct->setCheckable(true);
-    connect(mouseMode.modeInfoMarkSelectAct,
+    mouseMode.modeInfomarkSelectAct->setStatusTip(tr("Select Info Markers"));
+    mouseMode.modeInfomarkSelectAct->setCheckable(true);
+    connect(mouseMode.modeInfomarkSelectAct,
             &QAction::triggered,
             this,
-            &MainWindow::slot_onModeInfoMarkSelect);
-    mouseMode.modeCreateInfoMarkAct = new QAction(QIcon(":/icons/infomarkcreate.png"),
+            &MainWindow::slot_onModeInfomarkSelect);
+    mouseMode.modeCreateInfomarkAct = new QAction(QIcon(":/icons/infomarkcreate.png"),
                                                   tr("Create New Markers"),
                                                   this);
-    mouseMode.modeCreateInfoMarkAct->setStatusTip(tr("Create New Info Markers"));
-    mouseMode.modeCreateInfoMarkAct->setCheckable(true);
-    connect(mouseMode.modeCreateInfoMarkAct,
+    mouseMode.modeCreateInfomarkAct->setStatusTip(tr("Create New Info Markers"));
+    mouseMode.modeCreateInfomarkAct->setCheckable(true);
+    connect(mouseMode.modeCreateInfomarkAct,
             &QAction::triggered,
             this,
-            &MainWindow::slot_onModeCreateInfoMarkSelect);
+            &MainWindow::slot_onModeCreateInfomarkSelect);
     mouseMode.modeCreateRoomAct = new QAction(QIcon(":/icons/roomcreate.png"),
                                               tr("Create New Rooms"),
                                               this);
@@ -790,8 +790,8 @@ void MainWindow::createActions()
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateRoomAct);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateConnectionAct);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateOnewayConnectionAct);
-    mouseMode.mouseModeActGroup->addAction(mouseMode.modeInfoMarkSelectAct);
-    mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateInfoMarkAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeInfomarkSelectAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateInfomarkAct);
     mouseMode.modeMoveSelectAct->setChecked(true);
 
     createRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Room"), this);
@@ -930,30 +930,30 @@ void MainWindow::createActions()
     selectedConnectionActGroup->addAction(deleteConnectionSelectionAct);
     selectedConnectionActGroup->setEnabled(false);
 
-    infoMarkActions.editInfoMarkAct = new QAction(QIcon(":/icons/infomarkedit.png"),
+    infomarkActions.editInfomarkAct = new QAction(QIcon(":/icons/infomarkedit.png"),
                                                   tr("Edit Selected Markers"),
                                                   this);
-    infoMarkActions.editInfoMarkAct->setStatusTip(tr("Edit Selected Info Markers"));
-    infoMarkActions.editInfoMarkAct->setCheckable(true);
-    connect(infoMarkActions.editInfoMarkAct,
+    infomarkActions.editInfomarkAct->setStatusTip(tr("Edit Selected Info Markers"));
+    infomarkActions.editInfomarkAct->setCheckable(true);
+    connect(infomarkActions.editInfomarkAct,
             &QAction::triggered,
             this,
-            &MainWindow::slot_onEditInfoMarkSelection);
-    infoMarkActions.deleteInfoMarkAct = new QAction(QIcon(":/icons/infomarkdelete.png"),
+            &MainWindow::slot_onEditInfomarkSelection);
+    infomarkActions.deleteInfomarkAct = new QAction(QIcon(":/icons/infomarkdelete.png"),
                                                     tr("Delete Selected Markers"),
                                                     this);
-    infoMarkActions.deleteInfoMarkAct->setStatusTip(tr("Delete Selected Info Markers"));
-    infoMarkActions.deleteInfoMarkAct->setCheckable(true);
-    connect(infoMarkActions.deleteInfoMarkAct,
+    infomarkActions.deleteInfomarkAct->setStatusTip(tr("Delete Selected Info Markers"));
+    infomarkActions.deleteInfomarkAct->setCheckable(true);
+    connect(infomarkActions.deleteInfomarkAct,
             &QAction::triggered,
             this,
-            &MainWindow::slot_onDeleteInfoMarkSelection);
+            &MainWindow::slot_onDeleteInfomarkSelection);
 
-    infoMarkActions.infoMarkGroup = new QActionGroup(this);
-    infoMarkActions.infoMarkGroup->setExclusive(false);
-    infoMarkActions.infoMarkGroup->addAction(infoMarkActions.deleteInfoMarkAct);
-    infoMarkActions.infoMarkGroup->addAction(infoMarkActions.editInfoMarkAct);
-    infoMarkActions.infoMarkGroup->setEnabled(false);
+    infomarkActions.infomarkGroup = new QActionGroup(this);
+    infomarkActions.infomarkGroup->setExclusive(false);
+    infomarkActions.infomarkGroup->addAction(infomarkActions.deleteInfomarkAct);
+    infomarkActions.infomarkGroup->addAction(infomarkActions.editInfomarkAct);
+    infomarkActions.infomarkGroup->setEnabled(false);
 
     mapperMode.playModeAct = new QAction(QIcon(":/icons/online.png"),
                                          tr("Switch to play mode"),
@@ -1098,11 +1098,11 @@ void MainWindow::setupMenuBar()
 
     QMenu *infoMarkMenu = editMenu->addMenu(QIcon(":/icons/infomarkselection.png"), tr("M&arkers"));
     infoMarkMenu->setStatusTip("Info markers");
-    infoMarkMenu->addAction(mouseMode.modeInfoMarkSelectAct);
+    infoMarkMenu->addAction(mouseMode.modeInfomarkSelectAct);
     infoMarkMenu->addSeparator();
-    infoMarkMenu->addAction(mouseMode.modeCreateInfoMarkAct);
-    infoMarkMenu->addAction(infoMarkActions.editInfoMarkAct);
-    infoMarkMenu->addAction(infoMarkActions.deleteInfoMarkAct);
+    infoMarkMenu->addAction(mouseMode.modeCreateInfomarkAct);
+    infoMarkMenu->addAction(infomarkActions.editInfomarkAct);
+    infoMarkMenu->addAction(infomarkActions.deleteInfomarkAct);
 
     roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
     roomMenu->addAction(mouseMode.modeRoomSelectAct);
@@ -1224,8 +1224,8 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
             if (m_roomSelection != nullptr) {
                 contextMenu.addSeparator();
             }
-            contextMenu.addAction(infoMarkActions.editInfoMarkAct);
-            contextMenu.addAction(infoMarkActions.deleteInfoMarkAct);
+            contextMenu.addAction(infomarkActions.editInfomarkAct);
+            contextMenu.addAction(infomarkActions.deleteInfomarkAct);
         }
     }
     contextMenu.addSeparator();
@@ -1233,9 +1233,9 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
     mouseMenu->addAction(mouseMode.modeMoveSelectAct);
     mouseMenu->addAction(mouseMode.modeRoomRaypickAct);
     mouseMenu->addAction(mouseMode.modeRoomSelectAct);
-    mouseMenu->addAction(mouseMode.modeInfoMarkSelectAct);
+    mouseMenu->addAction(mouseMode.modeInfomarkSelectAct);
     mouseMenu->addAction(mouseMode.modeConnectionSelectAct);
-    mouseMenu->addAction(mouseMode.modeCreateInfoMarkAct);
+    mouseMenu->addAction(mouseMode.modeCreateInfomarkAct);
     mouseMenu->addAction(mouseMode.modeCreateRoomAct);
     mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
     mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
@@ -1324,8 +1324,8 @@ void MainWindow::setupToolBars()
     mouseModeToolBar->addAction(mouseMode.modeCreateRoomAct);
     mouseModeToolBar->addAction(mouseMode.modeCreateConnectionAct);
     mouseModeToolBar->addAction(mouseMode.modeCreateOnewayConnectionAct);
-    mouseModeToolBar->addAction(mouseMode.modeInfoMarkSelectAct);
-    mouseModeToolBar->addAction(mouseMode.modeCreateInfoMarkAct);
+    mouseModeToolBar->addAction(mouseMode.modeInfomarkSelectAct);
+    mouseModeToolBar->addAction(mouseMode.modeCreateInfomarkAct);
     mouseModeToolBar->hide();
 
     viewToolBar = addToolBar(tr("View"));
@@ -1426,10 +1426,10 @@ void MainWindow::slot_newConnectionSelection(ConnectionSelection *const cs)
     selectedConnectionActGroup->setEnabled(m_connectionSelection != nullptr);
 }
 
-void MainWindow::slot_newInfoMarkSelection(InfoMarkSelection *const is)
+void MainWindow::slot_newInfomarkSelection(InfomarkSelection *const is)
 {
     m_infoMarkSelection = (is != nullptr) ? is->shared_from_this() : nullptr;
-    infoMarkActions.infoMarkGroup->setEnabled(m_infoMarkSelection != nullptr);
+    infomarkActions.infomarkGroup->setEnabled(m_infoMarkSelection != nullptr);
 
     if (m_infoMarkSelection != nullptr) {
         showStatusLong(QString("Selection: %1 mark%2")
@@ -1437,7 +1437,7 @@ void MainWindow::slot_newInfoMarkSelection(InfoMarkSelection *const is)
                            .arg((m_infoMarkSelection->size() != 1) ? "s" : ""));
         if (m_infoMarkSelection->empty()) {
             // Create a new infomark if its an empty selection
-            slot_onEditInfoMarkSelection();
+            slot_onEditInfomarkSelection();
         }
     }
 }
@@ -1720,24 +1720,24 @@ void MainWindow::slot_onModeCreateOnewayConnectionSelect()
     setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS);
 }
 
-void MainWindow::slot_onModeInfoMarkSelect()
+void MainWindow::slot_onModeInfomarkSelect()
 {
     setCanvasMouseMode(CanvasMouseModeEnum::SELECT_INFOMARKS);
 }
 
-void MainWindow::slot_onModeCreateInfoMarkSelect()
+void MainWindow::slot_onModeCreateInfomarkSelect()
 {
     setCanvasMouseMode(CanvasMouseModeEnum::CREATE_INFOMARKS);
 }
 
-void MainWindow::slot_onEditInfoMarkSelection()
+void MainWindow::slot_onEditInfomarkSelection()
 {
     if (m_infoMarkSelection == nullptr) {
         return;
     }
 
-    InfoMarksEditDlg dlg(this);
-    dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
+    InfomarksEditDlg dlg(this);
+    dlg.setInfomarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
     dlg.exec();
     dlg.show();
 }
@@ -1769,7 +1769,7 @@ void MainWindow::slot_onEditRoomSelection()
     }
 }
 
-void MainWindow::slot_onDeleteInfoMarkSelection()
+void MainWindow::slot_onDeleteInfomarkSelection()
 {
     if (m_infoMarkSelection == nullptr) {
         return;
@@ -1787,7 +1787,7 @@ void MainWindow::slot_onDeleteInfoMarkSelection()
     }
 
     MapCanvas *const canvas = getCanvas();
-    canvas->slot_clearInfoMarkSelection();
+    canvas->slot_clearInfomarkSelection();
 }
 
 void MainWindow::slot_onDeleteRoomSelection()

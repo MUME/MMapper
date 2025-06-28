@@ -16,30 +16,30 @@
 #include <QtCore>
 
 class Coordinate;
-class InfoMarkSelection;
+class InfomarkSelection;
 class MapCanvas;
 class MapData;
 class QCloseEvent;
 class QObject;
 class QWidget;
-struct InfoMarkFields;
+struct RawInfomark;
 
-class NODISCARD_QOBJECT InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
+class NODISCARD_QOBJECT InfomarksEditDlg final : public QDialog, private Ui::InfomarksEditDlg
 {
     Q_OBJECT
 
 private:
     mmqt::Connections m_connections;
-    std::shared_ptr<InfoMarkSelection> m_selection;
+    std::shared_ptr<InfomarkSelection> m_selection;
     std::vector<InfomarkId> m_markers;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
 
 public:
-    explicit InfoMarksEditDlg(QWidget *parent);
-    ~InfoMarksEditDlg() final;
+    explicit InfomarksEditDlg(QWidget *parent);
+    ~InfomarksEditDlg() final;
 
-    void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,
+    void setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &is,
                               MapData *md,
                               MapCanvas *mc);
 
@@ -50,14 +50,14 @@ private:
     void readSettings();
     void writeSettings();
 
-    NODISCARD InfoMarkTypeEnum getType();
-    NODISCARD InfoMarkClassEnum getClass();
-    NODISCARD InfomarkHandle getCurrentInfoMark();
-    void setCurrentInfoMark(InfomarkId m);
+    NODISCARD InfomarkTypeEnum getType();
+    NODISCARD InfomarkClassEnum getClass();
+    NODISCARD InfomarkHandle getCurrentInfomark();
+    void setCurrentInfomark(InfomarkId m);
 
     void updateMarkers();
     void updateDialog();
-    void updateMark(InfoMarkFields &im);
+    void updateMark(RawInfomark &im);
 
 public slots:
     void slot_objectListCurrentIndexChanged(int);

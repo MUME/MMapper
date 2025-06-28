@@ -30,7 +30,7 @@ NODISCARD QByteArray getCommandName(DoorActionEnum action);
 NODISCARD Abbrev getParserCommandName(DoorActionEnum action);
 NODISCARD Abbrev getParserCommandName(DoorFlagEnum x);
 NODISCARD Abbrev getParserCommandName(ExitFlagEnum x);
-NODISCARD Abbrev getParserCommandName(InfoMarkClassEnum x);
+NODISCARD Abbrev getParserCommandName(InfomarkClassEnum x);
 NODISCARD Abbrev getParserCommandName(RoomAlignEnum x);
 NODISCARD Abbrev getParserCommandName(RoomLightEnum x);
 NODISCARD Abbrev getParserCommandName(RoomLoadFlagEnum x);

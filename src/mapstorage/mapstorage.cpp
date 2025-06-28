@@ -77,7 +77,7 @@ NODISCARD Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
     return c;
 }
 
-void transformInfomarkOnLoad(const uint32_t version, InfoMarkFields &mark)
+void transformInfomarkOnLoad(const uint32_t version, RawInfomark &mark)
 {
     if (version >= schema::v19_10_0_newCoords) {
         return;
@@ -94,15 +94,15 @@ void transformInfomarkOnLoad(const uint32_t version, InfoMarkFields &mark)
     mark.setPosition2(mark.getPosition2() + halfRoomOffset);
 
     switch (mark.getType()) {
-    case InfoMarkTypeEnum::TEXT: {
+    case InfomarkTypeEnum::TEXT: {
         const Coordinate textOffset{TENTH, 3 * TENTH, 0};
         mark.setPosition1(mark.getPosition1() + textOffset);
         mark.setPosition2(mark.getPosition2() + textOffset);
         break;
     }
-    case InfoMarkTypeEnum::LINE:
+    case InfomarkTypeEnum::LINE:
         break;
-    case InfoMarkTypeEnum::ARROW: {
+    case InfomarkTypeEnum::ARROW: {
         const Coordinate offset1{0, TWENTIETH, 0};
         const Coordinate offset2{TENTH, TENTH, 0};
         mark.setPosition1(mark.getPosition1() + offset1);
@@ -495,9 +495,9 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
     return result;
 }
 
-InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
+RawInfomark MapStorage::loadMark(QDataStream &stream, const uint32_t version)
 {
-    InfoMarkFields mark;
+    RawInfomark mark;
     auto helper = LoadRoomHelper{stream};
 
     if (version < schema::v19_10_0_newCoords) {
@@ -505,7 +505,7 @@ InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
         std::ignore = helper.read_string(); /* value ignored; called for side effect */
     }
 
-    mark.setText(mmqt::makeInfoMarkText(helper.read_string()));
+    mark.setText(mmqt::makeInfomarkText(helper.read_string()));
 
     if (version < schema::v19_10_0_newCoords) {
         // was timestamp
@@ -516,9 +516,9 @@ InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
         if (value >= NUM_INFOMARK_TYPES) {
             static std::once_flag flag;
             std::call_once(flag, []() { qWarning() << "Detected out of bounds info mark type!"; });
-            return InfoMarkTypeEnum::TEXT;
+            return InfomarkTypeEnum::TEXT;
         }
-        return static_cast<InfoMarkTypeEnum>(value);
+        return static_cast<InfomarkTypeEnum>(value);
     }(helper.read_u8());
     mark.setType(type);
 
@@ -528,9 +528,9 @@ InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
                 static std::once_flag flag;
                 std::call_once(flag,
                                []() { qWarning() << "Detected out of bounds info mark class!"; });
-                return InfoMarkClassEnum::GENERIC;
+                return InfomarkClassEnum::GENERIC;
             }
-            return static_cast<InfoMarkClassEnum>(value);
+            return static_cast<InfomarkClassEnum>(value);
         }(helper.read_u8());
         mark.setClass(clazz);
         if (version < schema::v19_10_0_newCoords) {
@@ -545,12 +545,12 @@ InfoMarkFields MapStorage::loadMark(QDataStream &stream, const uint32_t version)
 
     transformInfomarkOnLoad(version, mark);
 
-    if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty()) {
-        mark.setText(InfoMarkText{});
+    if (mark.getType() != InfomarkTypeEnum::TEXT && !mark.getText().isEmpty()) {
+        mark.setText(InfomarkText{});
     }
     // REVISIT: Just discard empty text markers?
-    else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty()) {
-        mark.setText(InfoMarkText{"New Marker"});
+    else if (mark.getType() == InfomarkTypeEnum::TEXT && mark.getText().isEmpty()) {
+        mark.setText(InfomarkText{"New Marker"});
     }
 
     return mark;
@@ -676,11 +676,11 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
     return true;
 }
 
-void MapStorage::saveMark(const InfoMarkFields &mark, QDataStream &stream)
+void MapStorage::saveMark(const RawInfomark &mark, QDataStream &stream)
 {
     // REVISIT: save type first, and then avoid saving fields that aren't necessary?
-    const InfoMarkTypeEnum type = mark.getType();
-    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark.getText().toQString() : "");
+    const InfomarkTypeEnum type = mark.getType();
+    stream << QString((type == InfomarkTypeEnum::TEXT) ? mark.getText().toQString() : "");
     stream << static_cast<uint8_t>(type);
     stream << static_cast<uint8_t>(mark.getClass());
     // REVISIT: round to 45 degrees?

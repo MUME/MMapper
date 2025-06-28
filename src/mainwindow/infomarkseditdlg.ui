@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>InfoMarksEditDlg</class>
- <widget class="QDialog" name="InfoMarksEditDlg">
+ <class>InfomarksEditDlg</class>
+ <widget class="QDialog" name="InfomarksEditDlg">
   <property name="geometry">
    <rect>
     <x>0</x>

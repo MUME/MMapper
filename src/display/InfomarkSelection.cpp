@@ -2,7 +2,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "InfoMarkSelection.h"
+#include "InfomarkSelection.h"
 
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
@@ -15,7 +15,7 @@
 // Assumes arguments are pre-scaled by INFOMARK_SCALE;
 // TODO: add a new type to avoid accidental conversion
 // from "world scale" Coordinate to "infomark scale" Coordinate.
-InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
+InfomarkSelection::InfomarkSelection(Badge<InfomarkSelection>,
                                      MapData &mapData,
                                      const Coordinate &c1,
                                      const Coordinate &c2)
@@ -24,7 +24,7 @@ InfoMarkSelection::InfoMarkSelection(Badge<InfoMarkSelection>,
     , m_sel2{c2}
 {}
 
-void InfoMarkSelection::init()
+void InfomarkSelection::init()
 {
     const auto &c1 = m_sel1;
     const auto &c2 = m_sel2;
@@ -55,7 +55,7 @@ void InfoMarkSelection::init()
             return true;
         }
 
-        if (marker.getType() == InfoMarkTypeEnum::TEXT) {
+        if (marker.getType() == InfomarkTypeEnum::TEXT) {
             return false;
         }
 
@@ -75,7 +75,7 @@ void InfoMarkSelection::init()
     }
 }
 
-void InfoMarkSelection::applyOffset(const Coordinate &offset) const
+void InfomarkSelection::applyOffset(const Coordinate &offset) const
 {
     if (m_markerList.empty()) {
         qWarning() << "No markers selected.";
@@ -86,7 +86,7 @@ void InfoMarkSelection::applyOffset(const Coordinate &offset) const
     const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
     for (const InfomarkId id : m_markerList) {
         try {
-            InfoMarkFields fields = db.getRawCopy(id);
+            RawInfomark fields = db.getRawCopy(id);
             fields.offsetBy(offset);
             changes.add(Change{infomark_change_types::UpdateInfomark{id, fields}});
         } catch (const std::out_of_range &e) {

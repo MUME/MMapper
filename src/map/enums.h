@@ -25,8 +25,8 @@ X_DECL_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
 X_DECL_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
 X_DECL_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
 X_DECL_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
-X_DECL_GETTER(InfoMarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfoMarkClasses)
-X_DECL_GETTER(InfoMarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfoMarkTypes)
+X_DECL_GETTER(InfomarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfomarkClasses)
+X_DECL_GETTER(InfomarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfomarkTypes)
 } // namespace enums
 
 #undef X_DECL_GETTER
@@ -35,8 +35,8 @@ X_DECL_GETTER(InfoMarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfoMarkTypes)
 #define ALL_TERRAIN_TYPES ::enums::getAllTerrainTypes()
 #define ALL_DOOR_FLAGS ::enums::getAllDoorFlags()
 #define ALL_EXIT_FLAGS ::enums::getAllExitFlags()
-#define ALL_INFOMARK_CLASSES ::enums::getAllInfoMarkClasses()
-#define ALL_INFOMARK_TYPES ::enums::getAllInfoMarkTypes()
+#define ALL_INFOMARK_CLASSES ::enums::getAllInfomarkClasses()
+#define ALL_INFOMARK_TYPES ::enums::getAllInfomarkTypes()
 #define ALL_MOB_FLAGS ::enums::getAllMobFlags()
 #define ALL_LOAD_FLAGS ::enums::getAllLoadFlags()
 

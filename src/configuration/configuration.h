@@ -357,13 +357,13 @@ public:
         SUBGROUP();
     } roomPanel;
 
-    struct NODISCARD InfoMarksDialog final
+    struct NODISCARD InfomarksDialog final
     {
         QByteArray geometry;
 
     private:
         SUBGROUP();
-    } infoMarksDialog;
+    } infomarksDialog;
 
     struct NODISCARD RoomEditDialog final
     {

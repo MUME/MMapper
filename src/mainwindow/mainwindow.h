@@ -40,7 +40,7 @@ class ConnectionSelection;
 class FindRoomsDlg;
 class GameObserver;
 class GroupWidget;
-class InfoMarkSelection;
+class InfomarkSelection;
 class MapCanvas;
 class MapData;
 class MapWindow;
@@ -112,7 +112,7 @@ private:
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
-    std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
+    std::shared_ptr<InfomarkSelection> m_infoMarkSelection;
 
     std::unique_ptr<QProgressDialog> m_progressDlg;
     std::unique_ptr<RoomEditAttrDlg> m_roomEditAttrDlg;
@@ -178,8 +178,8 @@ private:
         QAction *modeRoomRaypickAct = nullptr;
         QAction *modeRoomSelectAct = nullptr;
         QAction *modeMoveSelectAct = nullptr;
-        QAction *modeInfoMarkSelectAct = nullptr;
-        QAction *modeCreateInfoMarkAct = nullptr;
+        QAction *modeInfomarkSelectAct = nullptr;
+        QAction *modeCreateInfomarkAct = nullptr;
         QAction *modeCreateRoomAct = nullptr;
         QAction *modeCreateConnectionAct = nullptr;
         QAction *modeCreateOnewayConnectionAct = nullptr;
@@ -196,12 +196,12 @@ private:
     QActionGroup *selectedRoomActGroup = nullptr;
     QActionGroup *selectedConnectionActGroup = nullptr;
 
-    struct NODISCARD InfoMarkActions final
+    struct NODISCARD InfomarkActions final
     {
-        QActionGroup *infoMarkGroup = nullptr;
-        QAction *deleteInfoMarkAct = nullptr;
-        QAction *editInfoMarkAct = nullptr;
-    } infoMarkActions{};
+        QActionGroup *infomarkGroup = nullptr;
+        QAction *deleteInfomarkAct = nullptr;
+        QAction *editInfomarkAct = nullptr;
+    } infomarkActions{};
 
     QAction *createRoomAct = nullptr;
     QAction *editRoomSelectionAct = nullptr;
@@ -398,8 +398,8 @@ public slots:
     void slot_onModeRoomRaypick();
     void slot_onModeRoomSelect();
     void slot_onModeMoveSelect();
-    void slot_onModeInfoMarkSelect();
-    void slot_onModeCreateInfoMarkSelect();
+    void slot_onModeInfomarkSelect();
+    void slot_onModeCreateInfomarkSelect();
     void slot_onModeCreateRoomSelect();
     void slot_onModeCreateConnectionSelect();
     void slot_onModeCreateOnewayConnectionSelect();
@@ -408,8 +408,8 @@ public slots:
     void slot_onLayerReset();
     void slot_onCreateRoom();
     void slot_onEditRoomSelection();
-    void slot_onEditInfoMarkSelection();
-    void slot_onDeleteInfoMarkSelection();
+    void slot_onEditInfomarkSelection();
+    void slot_onDeleteInfomarkSelection();
     void slot_onDeleteRoomSelection();
     void slot_onDeleteConnectionSelection();
     NODISCARD bool slot_moveRoomSelection(const Coordinate &offset);
@@ -434,7 +434,7 @@ public slots:
 
     void slot_newRoomSelection(const SigRoomSelection &);
     void slot_newConnectionSelection(ConnectionSelection *);
-    void slot_newInfoMarkSelection(InfoMarkSelection *);
+    void slot_newInfomarkSelection(InfomarkSelection *);
     void slot_showContextMenu(const QPoint &);
 
     void slot_onCheckForUpdate();
