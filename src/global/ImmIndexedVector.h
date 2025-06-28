@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <vector>
 
+#include <immer/algorithm.hpp>
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 
@@ -52,6 +53,17 @@ public:
         m_vec = std::move(t).persistent();
     }
     NODISCARD size_t size() const { return m_vec.size(); }
+
+public:
+    template<typename Callback>
+    void for_each(Callback &&callback) const
+    {
+        immer::for_each_chunk(m_vec, [&callback](const auto *begin, const auto *end) {
+            for (const auto *it = begin; it != end; ++it) {
+                std::forward<Callback>(callback)(*it);
+            }
+        });
+    }
 
 private:
     NODISCARD static size_t index(const Index e) { return static_cast<size_t>(e.value()); }

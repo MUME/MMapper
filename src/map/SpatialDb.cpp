@@ -5,8 +5,6 @@
 #include "../global/AnsiOstream.h"
 #include "../global/progresscounter.h"
 
-#include <ostream>
-
 NODISCARD static bool mightBeOnBoundary(const Coordinate &coord, const Bounds &bounds)
 {
 #define CHECK(_axis) ((bounds.min._axis) == (coord._axis) || (bounds.max._axis) == (coord._axis))
@@ -59,10 +57,10 @@ void SpatialDb::updateBounds(ProgressCounter &pc)
     const auto &c = m_unique.begin()->first;
     m_bounds.emplace(c, c);
     pc.increaseTotalStepsBy(m_unique.size());
-    for (const auto &kv : m_unique) {
+    m_unique.for_each([&](const auto &kv) {
         m_bounds->insert(kv.first);
         pc.step();
-    }
+    });
 }
 
 void SpatialDb::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const

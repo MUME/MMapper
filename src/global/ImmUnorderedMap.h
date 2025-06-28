@@ -6,6 +6,7 @@
 
 #include <unordered_map>
 
+#include <immer/algorithm.hpp>
 #include <immer/map.hpp>
 
 template<typename K, typename V>
@@ -41,6 +42,17 @@ public:
 public:
     NODISCARD auto begin() const { return m_map.begin(); }
     NODISCARD auto end() const { return m_map.end(); }
+
+public:
+    template<typename Callback>
+    void for_each(Callback &&callback) const
+    {
+        immer::for_each_chunk(m_map, [&callback](const auto *begin, const auto *end) {
+            for (const auto *it = begin; it != end; ++it) {
+                std::forward<Callback>(callback)(*it);
+            }
+        });
+    }
 
 public:
     NODISCARD bool operator==(const ImmUnorderedMap &other) const { return m_map == other.m_map; }

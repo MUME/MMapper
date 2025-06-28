@@ -46,9 +46,8 @@ public:
     void for_each(Callback &&callback) const
     {
         static_assert(std::is_invocable_r_v<void, Callback, ServerRoomId, RoomId>);
-        for (const auto &kv : m_serverToInternal) {
-            callback(kv.first, kv.second);
-        }
+        m_serverToInternal.for_each(
+            [&callback](const auto &p) { std::forward<Callback>(callback)(p.first, p.second); });
     }
 
     void printStats(ProgressCounter &pc, AnsiOstream &os) const;

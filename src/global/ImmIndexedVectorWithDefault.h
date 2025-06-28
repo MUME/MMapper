@@ -7,8 +7,6 @@
 #include "logging.h"
 #include "macros.h"
 
-#include <vector>
-
 template<typename ValueType_, typename IndexType_>
 struct NODISCARD ImmIndexedVectorWithDefault
 {
@@ -122,6 +120,13 @@ public:
     NODISCARD bool operator!=(const ImmIndexedVectorWithDefault &rhs) const
     {
         return !(rhs == *this);
+    }
+
+public:
+    template<typename Callback>
+    void for_each(Callback &&callback) const
+    {
+        m_vec.for_each(std::forward<Callback>(callback));
     }
 };
 
