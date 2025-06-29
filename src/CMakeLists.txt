@@ -347,6 +347,8 @@ set(mmapper_SRCS
     mapdata/roomselection.h
     mapdata/shortestpath.cpp
     mapdata/shortestpath.h
+    mapfrontend/MapHistory.cpp
+    mapfrontend/MapHistory.h
     mapfrontend/mapfrontend.cpp
     mapfrontend/mapfrontend.h
     mapstorage/MmpMapStorage.cpp

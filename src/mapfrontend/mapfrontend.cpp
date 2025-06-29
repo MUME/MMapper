@@ -22,9 +22,14 @@
 #include <tuple>
 #include <utility>
 
+static const size_t MAX_UNDO_HISTORY_CONST = 100;
+
 MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)
-{}
+    , m_history(MAX_UNDO_HISTORY_CONST)
+{
+    emitUndoRedoAvailability();
+}
 
 MapFrontend::~MapFrontend()
 {
@@ -54,16 +59,24 @@ void MapFrontend::scheduleAction(const Change &change)
 
 void MapFrontend::revert()
 {
+    if (!m_current.map.empty() || m_history.isUndoAvailable()) {
+        m_history.recordChange(m_current.map);
+    }
     emit sig_clearingMap();
-    setCurrentMap(m_saved.map);
+    setCurrentMap(MapApplyResult{m_saved.map});
+    currentHasBeenSaved();
 }
 
 void MapFrontend::clear()
 {
+    if (!m_current.map.empty() || m_history.isUndoAvailable()) {
+        qInfo() << "recorded change";
+        m_history.recordChange(m_current.map);
+    }
+
     emit sig_clearingMap();
-    setCurrentMap(Map{});
+    setCurrentMap(MapApplyResult{Map{}});
     currentHasBeenSaved();
-    checkSize(); // called for side effect of sending signal
     virt_clear();
 }
 
@@ -219,13 +232,19 @@ void MapFrontend::setCurrentMap(Map map)
 {
     // Always update everything when the map is changed like this.
     setCurrentMap(MapApplyResult{std::move(map)});
+    m_history.clearAll();
+    emitUndoRedoAvailability();
 }
 
-bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
+bool MapFrontend::applyChangesInternal(
+    ProgressCounter &pc,
+    const std::function<MapApplyResult(Map &, ProgressCounter &)> &applyFunction)
 {
+    Map previous = m_current.map;
+
     MapApplyResult result;
     try {
-        result = m_current.map.applySingleChange(pc, change);
+        result = applyFunction(m_current.map, pc);
     } catch (const std::exception &e) {
         MMLOG_ERROR() << "Exception: " << e.what();
         global::sendToUser(QString("%1\n").arg(e.what()));
@@ -233,17 +252,29 @@ bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
     }
 
     setCurrentMap(result);
+    if (m_current.map != previous) {
+        m_history.recordChange(previous);
+    } else {
+        m_history.redo_stack.clear();
+    }
+    emitUndoRedoAvailability();
     return true;
 }
 
-bool MapFrontend::applySingleChange(const Change &change)
+bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
 {
     if (IS_DEBUG_BUILD) {
         auto &&log = MMLOG();
         log << "[MapFrontend::applySingleChange] ";
         getCurrentMap().printChange(log, change);
     }
+    return applyChangesInternal(pc, [&](Map &map, ProgressCounter &counter) {
+        return map.applySingleChange(counter, change);
+    });
+}
 
+bool MapFrontend::applySingleChange(const Change &change)
+{
     ProgressCounter dummyPc;
     return applySingleChange(dummyPc, change);
 }
@@ -255,22 +286,35 @@ bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
         log << "[MapFrontend::applyChanges] ";
         getCurrentMap().printChanges(log, changes.getChanges(), "\n");
     }
-
-    MapApplyResult result;
-    try {
-        result = m_current.map.apply(pc, changes);
-    } catch (const std::exception &e) {
-        MMLOG_ERROR() << "Exception: " << e.what();
-        global::sendToUser(QString("%1\n").arg(e.what()));
-        return false;
-    }
-
-    setCurrentMap(result);
-    return true;
+    return applyChangesInternal(pc, [&](Map &map, ProgressCounter &counter) {
+        return map.apply(counter, changes);
+    });
 }
 
 bool MapFrontend::applyChanges(const ChangeList &changes)
 {
     ProgressCounter dummyPc;
     return applyChanges(dummyPc, changes);
+}
+
+void MapFrontend::emitUndoRedoAvailability()
+{
+    emit sig_undoAvailable(m_history.isUndoAvailable());
+    emit sig_redoAvailable(m_history.isRedoAvailable());
+}
+
+void MapFrontend::slot_undo()
+{
+    if (std::optional<Map> optMap = m_history.undo(m_current.map)) {
+        setCurrentMap(MapApplyResult{std::move(*optMap)});
+    }
+    emitUndoRedoAvailability();
+}
+
+void MapFrontend::slot_redo()
+{
+    if (std::optional<Map> optMap = m_history.redo(m_current.map)) {
+        setCurrentMap(MapApplyResult{std::move(*optMap)});
+    }
+    emitUndoRedoAvailability();
 }

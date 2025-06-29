@@ -10,12 +10,9 @@
 #include "../map/coordinate.h"
 #include "../map/parseevent.h"
 #include "../map/roomid.h"
+#include "MapHistory.h"
 
-#include <map>
-#include <memory>
 #include <optional>
-#include <set>
-#include <stack>
 #include <utility>
 
 #include <QString>
@@ -45,6 +42,56 @@ private:
     MapState m_current;
     MapState m_snapshot;
 
+private:
+    void emitUndoRedoAvailability();
+
+    struct HistoryCoordinator
+    {
+        MapHistory undo_stack;
+        MapHistory redo_stack;
+
+        HistoryCoordinator(size_t max_depth)
+            : undo_stack(true, max_depth)
+            , redo_stack(false)
+        {}
+
+        void recordChange(Map prev)
+        {
+            undo_stack.push(std::move(prev));
+            if (!redo_stack.isEmpty()) {
+                redo_stack.clear();
+            }
+        }
+
+        std::optional<Map> undo(Map current_map_state_for_redo)
+        {
+            if (undo_stack.isEmpty()) {
+                return std::nullopt;
+            }
+            redo_stack.push(std::move(current_map_state_for_redo));
+            return undo_stack.pop();
+        }
+
+        std::optional<Map> redo(Map current_map_state_for_undo)
+        {
+            if (redo_stack.isEmpty()) {
+                return std::nullopt;
+            }
+            undo_stack.push(std::move(current_map_state_for_undo));
+            return redo_stack.pop();
+        }
+
+        bool isUndoAvailable() const { return !undo_stack.isEmpty(); }
+        bool isRedoAvailable() const { return !redo_stack.isEmpty(); }
+
+        void clearAll()
+        {
+            undo_stack.clear();
+            redo_stack.clear();
+        }
+    };
+    HistoryCoordinator m_history;
+
 public:
     explicit MapFrontend(QObject *parent);
     ~MapFrontend() override;
@@ -67,6 +114,11 @@ public:
 public:
     void saveSnapshot();
     void restoreSnapshot();
+
+private:
+    bool applyChangesInternal(
+        ProgressCounter &pc,
+        const std::function<MapApplyResult(Map &, ProgressCounter &)> &applyFunction);
 
 public:
     ALLOW_DISCARD bool applyChanges(const ChangeList &changes);
@@ -114,9 +166,13 @@ signals:
     // working on this room can start some emergency action.
     void sig_mapSizeChanged(const Coordinate &, const Coordinate &);
     void sig_clearingMap();
+    void sig_undoAvailable(bool available);
+    void sig_redoAvailable(bool available);
 
 public slots:
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
     void slot_createRoom(const SigParseEvent &, const Coordinate &);
+    void slot_undo();
+    void slot_redo();
 };

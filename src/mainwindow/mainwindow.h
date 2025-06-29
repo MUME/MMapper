@@ -148,6 +148,10 @@ private:
     QAction *exportWebMapAct = nullptr;
     QAction *exportMmpMapAct = nullptr;
     QAction *exitAct = nullptr;
+
+    QAction *m_undoAction = nullptr;
+    QAction *m_redoAction = nullptr;
+
     QAction *voteAct = nullptr;
     QAction *mmapperCheckForUpdateAct = nullptr;
     QAction *mumeWebsiteAct = nullptr;
