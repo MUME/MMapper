@@ -8,39 +8,37 @@ NODISCARD bool AreaInfo::operator==(const AreaInfo &other) const
     return roomSet == other.roomSet;
 }
 
+bool AreaInfo::contains(const RoomId id) const
+{
+    return roomSet.contains(id);
+}
+
 void AreaInfo::remove(const RoomId id)
 {
-    if (!roomSet.contains(id)) {
+    if (!contains(id)) {
         return;
     }
-
     roomSet.erase(id);
 }
 
 AreaInfoMap::AreaInfoMap()
 {
     m_map.set(RoomArea{}, AreaInfo{});
-    assert(contains(RoomArea{}));
+    assert(find(RoomArea{}) != nullptr);
 }
 
-void AreaInfoMap::init(const std::unordered_map<RoomArea, AreaInfo> &map, const AreaInfo &global)
+void AreaInfoMap::init(const std::unordered_map<RoomArea, AreaInfo> &map, const ImmRoomIdSet &global)
 {
     m_map.init(map);
     m_global = global;
 }
 
-const AreaInfo *AreaInfoMap::find(const std::optional<RoomArea> &area) const
+const AreaInfo *AreaInfoMap::find(const RoomArea &area) const
 {
-    if (!area.has_value()) {
-        return &m_global;
-    }
-    if (const auto it = m_map.find(area.value()); it != nullptr) {
-        return it;
-    }
-    return nullptr;
+    return m_map.find(area);
 }
 
-const AreaInfo &AreaInfoMap::get(const std::optional<RoomArea> &area) const
+const AreaInfo &AreaInfoMap::get(const RoomArea &area) const
 {
     if (const AreaInfo *const pArea = find(area)) {
         return *pArea;
@@ -55,7 +53,7 @@ bool AreaInfoMap::operator==(const AreaInfoMap &other) const
 
 void AreaInfoMap::insert(const RoomArea &areaName, const RoomId id)
 {
-    m_global.roomSet.insert(id);
+    m_global.insert(id);
 
     // REVISIT: use update()?
     m_map.set(areaName, [id, ptr = m_map.find(areaName)]() -> AreaInfo {
@@ -70,7 +68,9 @@ void AreaInfoMap::insert(const RoomArea &areaName, const RoomId id)
 
 void AreaInfoMap::remove(const RoomArea &areaName, const RoomId id)
 {
-    m_global.remove(id);
+    if (m_global.contains(id)) {
+        m_global.erase(id);
+    }
 
     if (const AreaInfo *const it = m_map.find(areaName)) {
         const AreaInfo &info = *it;

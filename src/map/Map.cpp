@@ -991,7 +991,7 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
 std::optional<size_t> Map::countRoomsWithArea(const RoomArea &areaName) const
 {
     const auto &world = getWorld();
-    if (const ImmRoomIdSet *const area = world.findAreaRoomSet(areaName)) {
+    if (const auto area = world.findAreaRoomSet(areaName)) {
         return area->size();
     }
     return std::nullopt;
@@ -1032,7 +1032,7 @@ std::optional<RoomId> Map::findUniqueName(const RoomName &name) const
 {
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
-    if (const ImmRoomIdSet *const pSet = parseTree.name_only.find(name)) {
+    if (const auto *const pSet = parseTree.name_only.find(name)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }
@@ -1044,7 +1044,7 @@ std::optional<RoomId> Map::findUniqueDesc(const RoomDesc &desc) const
 {
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
-    if (const ImmRoomIdSet *const pSet = parseTree.desc_only.find(desc)) {
+    if (const auto *const pSet = parseTree.desc_only.find(desc)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }
@@ -1057,7 +1057,7 @@ std::optional<RoomId> Map::findUniqueNameDesc(const RoomName &name, const RoomDe
     const auto &world = getWorld();
     const auto &parseTree = world.getParseTree();
     const NameDesc nameDesc{name, desc};
-    if (const ImmRoomIdSet *const pSet = parseTree.name_desc.find(nameDesc)) {
+    if (const auto *const pSet = parseTree.name_desc.find(nameDesc)) {
         if (pSet->size() == 1) {
             return pSet->first();
         }

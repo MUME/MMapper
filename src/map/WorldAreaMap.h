@@ -9,12 +9,11 @@
 
 #include <unordered_map>
 
-class ProgressCounter;
-
 struct NODISCARD AreaInfo final
 {
-    ImmRoomIdSet roomSet;
+    ImmUnorderedRoomIdSet roomSet;
 
+    NODISCARD bool contains(RoomId id) const;
     NODISCARD bool operator==(const AreaInfo &other) const;
     void remove(RoomId id);
 };
@@ -27,17 +26,21 @@ struct NODISCARD AreaInfoMap final
 private:
     using Map = ImmUnorderedMap<RoomArea, AreaInfo>;
     Map m_map;
-    AreaInfo m_global;
+    // Note: global area must be ordered
+    ImmRoomIdSet m_global;
 
 public:
     NODISCARD explicit AreaInfoMap();
-    void init(const std::unordered_map<RoomArea, AreaInfo> &map, const AreaInfo &global);
+    void init(const std::unordered_map<RoomArea, AreaInfo> &map, const ImmRoomIdSet &global);
 
 public:
-    NODISCARD bool contains(const RoomArea &area) const { return find(area) != nullptr; }
+    NODISCARD const ImmRoomIdSet &getGlobal() const { return m_global; }
 
-    NODISCARD const AreaInfo *find(const std::optional<RoomArea> &area) const;
-    NODISCARD const AreaInfo &get(const std::optional<RoomArea> &area) const;
+public:
+    NODISCARD const AreaInfo *find(const RoomArea &area) const;
+
+    // get will throw if not found or wrong type is requested implicitly
+    NODISCARD const AreaInfo &get(const RoomArea &area) const;
 
     NODISCARD bool operator==(const AreaInfoMap &other) const;
     NODISCARD size_t numAreas() const { return m_map.size(); }

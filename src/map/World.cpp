@@ -48,11 +48,11 @@ void sanityCheckFlags(const Flags flags)
 }
 
 template<typename Key>
-void insertId(ImmUnorderedMap<Key, ImmRoomIdSet> &map, const Key &key, const RoomId id)
+void insertId(ImmUnorderedMap<Key, ImmUnorderedRoomIdSet> &map, const Key &key, const RoomId id)
 {
-    const ImmRoomIdSet *const old = map.find(key);
+    const auto *const old = map.find(key);
     if (old == nullptr) {
-        map.set(key, ImmRoomIdSet{id});
+        map.set(key, ImmUnorderedRoomIdSet{id});
     } else if (!old->contains(id)) {
         auto copy = *old;
         copy.insert(id);
@@ -61,9 +61,9 @@ void insertId(ImmUnorderedMap<Key, ImmRoomIdSet> &map, const Key &key, const Roo
 }
 
 template<typename Key>
-void removeId(ImmUnorderedMap<Key, ImmRoomIdSet> &map, const Key &key, const RoomId id)
+void removeId(ImmUnorderedMap<Key, ImmUnorderedRoomIdSet> &map, const Key &key, const RoomId id)
 {
-    const ImmRoomIdSet *const old = map.find(key);
+    const auto *const old = map.find(key);
     if (old == nullptr || !old->contains(id)) {
         return;
     }
@@ -182,12 +182,7 @@ bool World::operator==(const World &rhs) const
            && m_infomarks == rhs.m_infomarks;
 }
 
-NODISCARD auto World::findArea(const std::optional<RoomArea> &area) const -> const AreaInfo *
-{
-    return m_areaInfos.find(area);
-}
-
-NODISCARD auto World::getArea(const std::optional<RoomArea> &area) const -> const AreaInfo &
+const AreaInfo &World::getArea(const RoomArea &area) const
 {
     return m_areaInfos.get(area);
 }
@@ -643,13 +638,12 @@ void World::checkConsistency(ProgressCounter &counter) const
     };
 
     auto checkRemapping = [this](const RoomId id) {
-        if (!getGlobalArea().roomSet.contains(id)) {
+        if (!getRoomSet().contains(id)) {
             throw MapConsistencyError("room set does not contain the room id");
         }
 
-        const auto &areaName = getRoomArea(id);
-        auto &area = getArea(areaName);
-        if (!area.roomSet.contains(id)) {
+        const auto &area = getRoomArea(id);
+        if (!getArea(area).contains(id)) {
             throw MapConsistencyError("room set does not contain the room id");
         }
 
@@ -942,7 +936,7 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
 
     const auto coord = getPosition(id);
     const auto server_id = getServerId(id);
-    const auto areaName = getRoomArea(id);
+    const auto area = getRoomArea(id);
 
     removeParse(id, ALL_PARSE_KEY_FLAGS);
     m_spatialDb.remove(id, coord);
@@ -954,7 +948,7 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
 
     m_remapping.removeAt(id);
     m_rooms.removeAt(id);
-    m_areaInfos.remove(areaName, id);
+    m_areaInfos.remove(area, id);
 }
 
 void World::setRoomStatus(const RoomId id, const RoomStatusEnum status)
@@ -1153,8 +1147,8 @@ void World::initRoom(const RawRoom &input)
     /* now perform bookkeeping */
     {
         // REVISIT: should "upToDate" be automatic?
-        const auto &areaName = input.getArea();
-        m_areaInfos.insert(areaName, id);
+        const auto &area = input.getArea();
+        m_areaInfos.insert(area, id);
         insertParse(id, ALL_PARSE_KEY_FLAGS);
         m_spatialDb.add(id, input.position);
         m_serverIds.set(input.server_id, id);
@@ -1216,10 +1210,10 @@ World World::init(ProgressCounter &counter,
             DECL_TIMER(t3, "insert-rooms-area-infos");
             counter.setNewTask(ProgressMsg{"preparing to insert rooms to areas"}, rooms.size());
             std::unordered_map<RoomArea, AreaInfo> map;
-            AreaInfo global;
+            ImmRoomIdSet global;
             for (const auto &room : rooms) {
                 map[room.getArea()].roomSet.insert(room.id);
-                global.roomSet.insert(room.id);
+                global.insert(room.id);
                 counter.step();
             }
             counter.setNewTask(ProgressMsg{"inserting rooms to areas"}, 1);
@@ -1322,13 +1316,13 @@ ExternalRoomId World::getNextExternalId() const
 
 const ImmRoomIdSet &World::getRoomSet() const
 {
-    return getGlobalArea().roomSet;
+    return m_areaInfos.getGlobal();
 }
 
-const ImmRoomIdSet *World::findAreaRoomSet(const RoomArea &areaName) const
+const ImmUnorderedRoomIdSet *World::findAreaRoomSet(const RoomArea &area) const
 {
-    if (const AreaInfo *const area = this->findArea(areaName)) {
-        return &area->roomSet;
+    if (const AreaInfo *const areaInfo = m_areaInfos.find(area)) {
+        return &areaInfo->roomSet;
     }
     return nullptr;
 }
@@ -2271,7 +2265,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         os << "\n";
         os << "Total areas: " << C(m_areaInfos.numAreas()) << ".\n";
         os << "\n";
-        os << "Total rooms: " << C(getGlobalArea().roomSet.size()) << ".\n";
+        os << "Total rooms: " << C(getRoomSet().size()) << ".\n";
         os << "\n";
         os << "  missing server id: " << C(numMissingServerId) << ".\n";
         os << "  missing area:      " << C(numMissingArea) << ".\n";
@@ -2412,7 +2406,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
     };
 
     for (const auto &kv : names) {
-        const auto &areaName = kv.area;
+        const auto &area = kv.area;
         const auto numAreaRooms = deref(kv.info).roomSet.size();
 
         // REVISIT: include the relative size of the area (see the room stat output)?
@@ -2421,10 +2415,10 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
            << "\n"
               "The ";
 
-        if (areaName.empty()) {
+        if (area.empty()) {
             os << "default";
         } else {
-            os << ColoredQuotedStringView{green, yellow, areaName.getStdStringViewUtf8()};
+            os << ColoredQuotedStringView{green, yellow, area.getStdStringViewUtf8()};
         }
         os << " area contains " << ColoredValue{green, numAreaRooms} << " room"
            << ((numAreaRooms == 1) ? "" : "s") << ".\n";

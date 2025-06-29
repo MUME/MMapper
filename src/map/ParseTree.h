@@ -62,16 +62,16 @@ static_assert(ALL_PARSE_KEY_FLAGS == (ParseKeyFlags{ParseKeyEnum::Name} | ParseK
 
 struct NODISCARD ParseTreeInitializer final
 {
-    std::unordered_map<RoomName, ImmRoomIdSet> name_only;
-    std::unordered_map<RoomDesc, ImmRoomIdSet> desc_only;
-    std::unordered_map<NameDesc, ImmRoomIdSet> name_desc;
+    std::unordered_map<RoomName, ImmUnorderedRoomIdSet> name_only;
+    std::unordered_map<RoomDesc, ImmUnorderedRoomIdSet> desc_only;
+    std::unordered_map<NameDesc, ImmUnorderedRoomIdSet> name_desc;
 };
 
 struct NODISCARD ParseTree final
 {
-    ImmUnorderedMap<RoomName, ImmRoomIdSet> name_only;
-    ImmUnorderedMap<RoomDesc, ImmRoomIdSet> desc_only;
-    ImmUnorderedMap<NameDesc, ImmRoomIdSet> name_desc;
+    ImmUnorderedMap<RoomName, ImmUnorderedRoomIdSet> name_only;
+    ImmUnorderedMap<RoomDesc, ImmUnorderedRoomIdSet> desc_only;
+    ImmUnorderedMap<NameDesc, ImmUnorderedRoomIdSet> name_desc;
 
     void init(const ParseTreeInitializer &input)
     {
