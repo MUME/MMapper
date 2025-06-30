@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 The MMapper Authors
 
-#include "../global/CaseUtils.h"
 #include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "World.h"
 
-#include <array>
 #include <deque>
+#include <unordered_set>
 
 void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap & /* unused */)
 {
@@ -31,16 +30,24 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
     pc.setNewTask(ProgressMsg{"seeding rooms"}, getRoomSet().size());
 
     // Seed rooms
-    static const std::array<std::string_view, 2> seeds = {"The Fountain Square", "Cosy Room"};
+    const std::unordered_set<ServerRoomId> seeds = {
+        ServerRoomId{12681340}, // Fountain Square (Harlond)
+        ServerRoomId{4831075},  // Cosy Room (Gandalf Intro)
+        ServerRoomId{15197529}, // The High Chamber of the Lamp (Valinor)
+        ServerRoomId{10578781}, // Halls of Mandos
+        ServerRoomId{4489332},  // Halls of Awaiting
+        ServerRoomId{1274127},  // Chamber of the Trolls
+        ServerRoomId{5495709},  // Halls of Orcs
+        ServerRoomId{7854852},  // Frozen North
+        ServerRoomId{14623711}, // Hidden Island
+    };
     for (auto id : getRoomSet()) {
         const RawRoom &room = deref(getRoom(id));
         if (room.isPermanent()) {
-            auto rname = room.getName().getStdStringViewUtf8();
-            for (auto &seed : seeds) {
-                if (areEqualAsLowerUtf8(seed, rname)) {
-                    baseRooms.insert(id);
-                    roomsTodo.push_back(id);
-                }
+            const auto serverId = room.getServerId();
+            if (seeds.find(serverId) != seeds.end()) {
+                baseRooms.insert(id);
+                roomsTodo.push_back(id);
             }
         }
         pc.step();
