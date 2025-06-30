@@ -277,7 +277,7 @@
       <item row="3" column="0">
        <widget class="QCheckBox" name="clearInputCheckBox">
         <property name="text">
-         <string>Clear input on enter</string>
+         <string>Clear input on send</string>
         </property>
        </widget>
       </item>
