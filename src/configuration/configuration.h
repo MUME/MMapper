@@ -139,7 +139,6 @@ public:
         NamedConfig<bool> showUnmappedExits{"SHOW_UNMAPPED_EXITS", false};
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
-        int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;
         QString resourcesDirectory;
@@ -155,6 +154,7 @@ public:
 
         struct NODISCARD Advanced final
         {
+            NamedConfig<int> antialiasingSamples{"ANTIALIASING_SAMPLES", 0};
             NamedConfig<bool> use3D{"MMAPPER_3D", true};
             NamedConfig<bool> autoTilt{"MMAPPER_AUTO_TILT", true};
             NamedConfig<bool> printPerfStats{"MMAPPER_GL_PERFSTATS", IS_DEBUG_BUILD};

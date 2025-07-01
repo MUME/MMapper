@@ -268,6 +268,11 @@ void MapCanvas::initializeGL()
     setConfig().canvas.showUnmappedExits.registerChangeCallback(m_lifetime, [this]() {
         this->forceUpdateMeshes();
     });
+
+    setConfig().canvas.advanced.antialiasingSamples.registerChangeCallback(m_lifetime, [this]() {
+        this->updateMultisampling();
+        this->update();
+    });
 }
 
 /* Direct means it is always called from the emitter's thread */
@@ -472,6 +477,10 @@ void MapCanvas::resizeGL(int width, int height)
 
     setViewportAndMvp(width, height);
 
+    // Update the multisampling FBO size when the canvas is resized
+    const int wantMultisampling = getConfig().canvas.advanced.antialiasingSamples.get();
+    getOpenGL().setMultisamplingFbo(wantMultisampling, size());
+
     // Render
     update();
 }
@@ -621,6 +630,20 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
+
+    // Bind the appropriate FBO: multisampling if valid, otherwise resolved if valid, fallback to default
+    QOpenGLFramebufferObject *fboToBind = nullptr;
+    if (gl.getMultisamplingFbo() && gl.getMultisamplingFbo()->isValid()) {
+        fboToBind = gl.getMultisamplingFbo();
+    } else if (gl.getResolvedFbo() && gl.getResolvedFbo()->isValid()) {
+        fboToBind = gl.getResolvedFbo();
+    }
+
+    if (fboToBind) {
+        fboToBind->bind();
+    }
+
+    // Clear the FBO
     gl.clear(Color{getConfig().canvas.backgroundColor});
 
     if (m_data.isEmpty()) {
@@ -633,6 +656,14 @@ void MapCanvas::actuallyPaintGL()
     paintSelections();
     paintCharacters();
     paintDifferences();
+
+    // Unbind the FBO we rendered to
+    if (fboToBind) {
+        fboToBind->release();
+    }
+
+    // Blit from the resolved FBO to the default framebuffer (handles multisample resolve if needed)
+    gl.blitResolvedToDefault(size());
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
@@ -1007,14 +1038,15 @@ void MapCanvas::paintSelectionArea()
 
 void MapCanvas::updateMultisampling()
 {
-    const int wantMultisampling = getConfig().canvas.antialiasingSamples;
+    const int wantMultisampling = getConfig().canvas.advanced.antialiasingSamples.get();
     std::optional<int> &activeStatus = m_graphicsOptionsStatus.multisampling;
     if (activeStatus == wantMultisampling) {
         return;
     }
 
-    // REVISIT: check return value?
-    MAYBE_UNUSED const bool enabled = getOpenGL().tryEnableMultisampling(wantMultisampling);
+    // Update the multisampling FBO in the OpenGL class
+    getOpenGL().setMultisamplingFbo(wantMultisampling, size());
+
     activeStatus = wantMultisampling;
 }
 
