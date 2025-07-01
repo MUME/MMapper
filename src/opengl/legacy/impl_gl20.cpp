@@ -60,10 +60,8 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
     if (hasMultisampling && requestedSamples > 0) {
         Base::glEnable(GL_MULTISAMPLE);
 
-        //Base::glEnable(GL_POINT_SMOOTH);
         Base::glEnable(GL_LINE_SMOOTH);
         Base::glDisable(GL_POLYGON_SMOOTH);
-        //Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
         Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
         return true;
@@ -72,14 +70,11 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
         // TODO: We can use OpenGL 3.x FBOs to do multisampling even if the default framebuffer doesn't support it.
         // e.g. use Base::glDisable(GL_MULTISAMPLE);
         if (requestedSamples > 0) {
-            //Base::glEnable(GL_POINT_SMOOTH);
             Base::glEnable(GL_LINE_SMOOTH);
             Base::glDisable(GL_POLYGON_SMOOTH);
-            //Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
             Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
             return true;
         } else {
-            //Base::glDisable(GL_POINT_SMOOTH);
             Base::glDisable(GL_LINE_SMOOTH);
             Base::glDisable(GL_POLYGON_SMOOTH);
             return false;
