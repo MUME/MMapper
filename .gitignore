@@ -1,6 +1,5 @@
 cmake-build-debug/
-winbuild/
-build/
+build**/
 out/
 **CMakeFiles/
 **.bak
@@ -12,10 +11,12 @@ Makefile
 .qmake.stash
 **.mm2
 **/.DS_Store
+.cache
 .clang-tidy
 .idea
 .vs
 .vscode
+CMakeUserPresets.json
 CMakeSettings.json
 cmake-build-debug/
 
