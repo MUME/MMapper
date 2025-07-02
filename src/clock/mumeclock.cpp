@@ -80,7 +80,7 @@ private:
 
 public:
     NODISCARD static int keyToValue(const QString &key) { return g_qme.keyToValue(key.toUtf8()); }
-    NODISCARD static QString valueToKey(const int value) { return g_qme.valueToKey(value); }
+    NODISCARD static QString valueToKey(const int value) { return g_qme.valueToKey(static_cast<quint64>(value)); }
     NODISCARD static int keyCount() { return g_qme.keyCount(); }
 };
 
