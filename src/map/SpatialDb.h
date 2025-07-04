@@ -45,8 +45,7 @@ public:
     void for_each(Callback &&callback) const
     {
         static_assert(std::is_invocable_r_v<void, Callback, const Coordinate &, RoomId>);
-        m_unique.for_each(
-            [&callback](const auto &p) { std::forward<Callback>(callback)(p.first, p.second); });
+        m_unique.for_each([&callback](const auto &p) { callback(p.first, p.second); });
     }
     NODISCARD auto size() const { return m_unique.size(); }
 

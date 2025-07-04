@@ -60,7 +60,7 @@ public:
     {
         immer::for_each_chunk(m_vec, [&callback](const auto *begin, const auto *end) {
             for (const auto *it = begin; it != end; ++it) {
-                std::forward<Callback>(callback)(*it);
+                callback(*it);
             }
         });
     }

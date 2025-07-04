@@ -148,7 +148,7 @@ public:
     {
         immer::for_each_chunk(m_vector, [&callback](const Type *begin, const Type *end) {
             for (const Type *it = begin; it != end; ++it) {
-                std::forward<Callback>(callback)(*it);
+                callback(*it);
             }
         });
     }
