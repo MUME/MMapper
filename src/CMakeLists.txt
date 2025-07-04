@@ -847,6 +847,13 @@ endif()
 message(STATUS "Packaging for target: ${CPACK_SYSTEM_NAME} ${TARGET_ARCHITECTURE}")
 set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}-${TARGET_ARCHITECTURE}")
 
+# Components:
+if(CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
+    set(CPACK_STRIP_FILES FALSE)
+else()
+    set(CPACK_STRIP_FILES TRUE)
+endif()
+
 # Linux Install Settings
 if(UNIX AND NOT APPLE)
     set(SHARE_INSTALL_PREFIX
@@ -922,32 +929,49 @@ if(WIN32)
     # Install Executables
     install(
         TARGETS mmapper RUNTIME
-        DESTINATION bin
+        DESTINATION .
         COMPONENT applications
     )
 
+    # Debug symbols
+    set(WINDEPLOYQT_STAGING ${CMAKE_CURRENT_BINARY_DIR}/bin)
+    if(MSVC AND NOT CPACK_STRIP_FILES)
+        add_custom_command(TARGET mmapper POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${WINDEPLOYQT_STAGING}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE_DIR:mmapper>/mmapper.pdb"
+                    "${WINDEPLOYQT_STAGING}/mmapper.pdb"
+            COMMENT "Copy debug symbols"
+            VERBATIM
+        )
+    endif()
+
     # Bundle Library Files
-    install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT libraries)
-    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
-    find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
+    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --compiler-runtime --no-angle --no-translations --no-system-d3d-compiler --verbose 1)
+    find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES .)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
     message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")
     add_custom_command(
             TARGET mmapper
             POST_BUILD
-            COMMAND ${WINDEPLOYQT_APP} ${WINDEPLOYQT_ARGS} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.exe
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${WINDEPLOYQT_STAGING}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:mmapper>" ${WINDEPLOYQT_STAGING}
+            COMMAND "${WINDEPLOYQT_APP}" ${WINDEPLOYQT_ARGS} "${WINDEPLOYQT_STAGING}/mmapper.exe"
+            WORKING_DIRECTORY "${WINDEPLOYQT_STAGING}"
             COMMENT "Finding the Qt framework dependencies"
+            VERBATIM
     )
     install(DIRECTORY
-        ${CMAKE_CURRENT_BINARY_DIR}/bin
+        "${WINDEPLOYQT_STAGING}/"
         DESTINATION .
         COMPONENT libraries
+        USE_SOURCE_PERMISSIONS
+        PATTERN "*.exe" EXCLUDE
     )
     if(MSVC)
         set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
-            ExecWait '\\$INSTDIR\\\\bin\\\\vc_redist.x64.exe /q /norestart'
-            Delete '\\$INSTDIR\\\\bin\\\\vc_redist.x64.exe'
+            ExecWait '\\$INSTDIR\\\\vc_redist.x64.exe /q /norestart'
+            Delete '\\$INSTDIR\\\\vc_redist.x64.exe'
             ")
     endif()
 
@@ -956,8 +980,8 @@ if(WIN32)
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
     # Windows (NSIS) Settings
-    set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
-    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper")
+    set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+    set(CPACK_NSIS_MENU_LINKS "mmapper.exe;MMapper")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_HELP_LINK "http://github.com/mume/mmapper")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
@@ -1015,6 +1039,7 @@ if(APPLE)
         COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -libpath ${QTKEYCHAIN_LIBRARY_DIR}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Deploying the Qt Framework onto the bundle"
+        VERBATIM
         )
 
     # Codesign the bundle without a personal certificate
@@ -1027,6 +1052,7 @@ if(APPLE)
         COMMAND ${CODESIGN_APP} --deep -f -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -o runtime --entitlements ${CMAKE_CURRENT_SOURCE_DIR}/entitlements.plist
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Code signing the bundle"
+        VERBATIM
         )
 
     # Install Executables
@@ -1061,12 +1087,6 @@ set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the mud MUME")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
-# Components:
-if(CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
-    set(CPACK_STRIP_FILES FALSE)
-else()
-    set(CPACK_STRIP_FILES TRUE)
-endif()
 # Applications Component
 set(CPACK_COMPONENTS_ALL applications libraries)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")
