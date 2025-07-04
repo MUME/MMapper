@@ -71,9 +71,9 @@ if(APPLE)
 endif()
 
 if(WIN32)
-    # Target Windows 7 and above
-    add_definitions(/DNTDDI_VERSION=0x06010000)
-    add_definitions(/D_WIN32_WINNT=0x0601)
+    # Target Windows 10 and above
+    add_definitions(/DNTDDI_VERSION=0x0A000000)
+    add_definitions(/D_WIN32_WINNT=0x0A00)
     # Reduce the size of the Windows header files
     add_definitions(/DWIN32_LEAN_AND_MEAN)
 endif()
