@@ -2,7 +2,7 @@ name: deploy-release
 
 on:
   workflow_run:
-    workflows: ["build-release", "build-appimage", "build-flatpak"]
+    workflows: ["build-release", "build-appimage", "build-flatpak", "build-appx"]
     types:
       - completed
 

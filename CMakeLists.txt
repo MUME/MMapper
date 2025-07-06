@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18...3.22)
+cmake_minimum_required(VERSION 3.19...3.22)
 project(mmapper CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -93,10 +93,6 @@ else()
 endif()
 
 if(WITH_OPENSSL)
-    # Prevent 32bit OpenSSL linking error due to system C:/Windows/System32/libcrypto.dll
-    if(MINGW AND "${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .dll.a)
-    endif()
     find_package(OpenSSL)
     add_subdirectory(external/openssl)
 else()

@@ -1,0 +1,82 @@
+name: build-appx
+
+on:
+  push:
+    tags:
+    - 'v*'
+    branches:
+    - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-appx:
+    runs-on: windows-2022
+    continue-on-error: false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - name: Delete beta tag
+      shell: bash
+      run: |
+        if git tag | grep -q '^beta$'; then
+          git tag -d beta
+        fi
+    - name: Get Git tag description
+      id: git_info
+      run: |
+        echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
+    - uses: lukka/get-cmake@latest
+    - uses: ilammy/msvc-dev-cmd@v1
+
+    # Install Dependencies (Windows)
+    - name: Install Qt for Windows
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: 5.15.2
+        dir: 'C:\'
+        arch: win64_msvc2019_64
+        cache: true
+    - name: Install Packages for Windows
+      uses: crazy-max/ghaction-chocolatey@v3
+      with:
+        args: install openssl --version=1.1.1.2100
+
+    # Build
+    - name: Build MMapper
+      shell: pwsh
+      run: |
+        xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
+        mkdir ${{ github.workspace }}/artifact
+        mkdir build
+        cd build
+        cmake --version
+        $qtPath = "C:\Qt\5.12.2\msvc2019_64"
+        $env:PATH = "$qtPath;$env:PATH"
+        $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$qtPath -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -S .. || exit -1
+        cmake --build . --parallel
+
+    # Package
+    - name: Package AppX
+      shell: bash
+      run: |
+        cd build
+        cpack -G External
+
+    - name: Get Windows package file base name
+      id: get_windows_package_name
+      shell: pwsh
+      run: |
+        $packageFile = Get-ChildItem -Path "${{ github.workspace }}/artifact/*.appxupload" | Select-Object -First 1
+        $packageBasename = $packageFile.BaseName -replace '\.', '-'
+        "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
+
+    - name: Upload AppX
+      uses: actions/upload-artifact@v4
+      with:
+        name: appx-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
+        path: ${{ github.workspace }}/artifact/*.appxupload*
+        if-no-files-found: error

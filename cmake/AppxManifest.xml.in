@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="15054NilsSchimmelmann.MUMEMapper"
+    Publisher="CN=E6C50470-F1C0-446D-892A-9B7EAB1033B2"
+    Version="@APPX_MANIFEST_VERSION@" />
+
+  <Properties>
+    <DisplayName>MUME Mapper</DisplayName>
+    <PublisherDisplayName>Nils Schimmelmann</PublisherDisplayName>
+    <Logo>Assets/StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="mmapper.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="MUME Mapper"
+        Description="MMapper is a graphical mapping tool that enhances the MUME (Multi-Users in Middle Earth) game experience."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets/Square150x150Logo.png"
+        Square44x44Logo="Assets/Square44x44Logo.png">
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
