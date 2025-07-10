@@ -768,7 +768,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
     m_table->verticalHeader()->setDefaultSectionSize(row);
     m_table->setIconSize(QSize(icon, icon));
-
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {
         // Center map on the clicked character
@@ -946,6 +945,33 @@ void GroupWidget::updateColumnVisibility()
         int row = std::max(icon, fm.height() + 4);
         m_table->verticalHeader()->setDefaultSectionSize(row);
     }
+}
+
+void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
+{
+    assert(character);
+    m_model.insertCharacter(character);
+    updateColumnVisibility();
+}
+
+void GroupWidget::slot_onCharacterRemoved(const GroupId characterId)
+{
+    assert(characterId != INVALID_GROUPID);
+    m_model.removeCharacterById(characterId);
+    updateColumnVisibility();
+}
+
+void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
+{
+    assert(character);
+    m_model.updateCharacter(character);
+    updateColumnVisibility();
+}
+
+void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
+{
+    m_model.setCharacters(newCharacterList);
+    updateColumnVisibility();
 }
 
 void GroupWidget::slot_updateLabels()
