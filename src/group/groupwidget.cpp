@@ -38,6 +38,9 @@
 
 extern const QString kForceFallback;
 
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(ColumnTypeEnum::ROOM_NAME) + 1,
+              "# of columns");
+
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
 namespace { // anonymous
@@ -732,7 +735,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     } else {
         m_model.setCharacters({});
     }
-    m_model.setTokenManager(&tokenManager);
+    m_model.setTokenManager(&tokenManager());
 
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
