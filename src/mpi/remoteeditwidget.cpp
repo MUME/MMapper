@@ -16,6 +16,8 @@
 #include "../global/utils.h"
 #include "../global/window_utils.h"
 #include "../viewers/AnsiViewWindow.h"
+#include "findreplacewidget.h"
+#include "gotowidget.h"
 
 #include <cassert>
 #include <cctype>
@@ -691,12 +693,26 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
                           QString("MMapper %1").arg(m_editSession ? "Editor" : "Viewer"),
                           m_title);
 
+    QWidget *centralContainer = new QWidget(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralContainer);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+
+    m_gotoWidget.reset(createGotoWidget());
+    mainLayout->addWidget(m_gotoWidget.get(), 0);
+
+    m_findReplaceWidget.reset(createFindReplaceWidget());
+    mainLayout->addWidget(m_findReplaceWidget.get(), 0);
+
     // REVISIT: can this be called as an initializer?
     // Probably not. In fact this may be too early, since it accesses contentsMargins(),
     // which assumes this object is fully constructed and initialized.
     //
     // REVISIT: does this have to be QScopedPointer, or can it be std::unique_ptr?
     m_textEdit.reset(createTextEdit());
+    mainLayout->addWidget(m_textEdit.get(), 1);
+
+    setCentralWidget(centralContainer);
 
     // REVISIT: Restore geometry from config?
     setGeometry(QStyle::alignedRect(Qt::LeftToRight,
@@ -731,10 +747,63 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
     auto *const doc = pTextEdit->document();
     new LineHighlighter(MAX_LENGTH, doc);
 
-    setCentralWidget(pTextEdit);
     addStatusBar(pTextEdit);
     addFileMenu(menuBar(), pTextEdit);
     return pTextEdit;
+}
+
+auto RemoteEditWidget::createGotoWidget() -> GotoWidget *
+{
+    const auto pGotoWidget = new GotoWidget(this);
+    pGotoWidget->hide();
+
+    connect(pGotoWidget, &GotoWidget::sig_gotoLineRequested, this, [this](int lineNum) {
+        QTextCursor cursor = m_textEdit->textCursor();
+        cursor.movePosition(QTextCursor::Start);
+        if (cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor, lineNum - 1)) {
+            m_textEdit->setTextCursor(cursor);
+            m_textEdit->ensureCursorVisible();
+            slot_updateStatus(QString("Moved to line %1").arg(lineNum));
+            m_gotoWidget->hide();
+            m_textEdit->setFocus(Qt::OtherFocusReason);
+        } else {
+            slot_updateStatus(QString("Error: Line %1 not found.").arg(lineNum));
+            m_gotoWidget->setFocusToInput();
+        }
+    });
+    connect(pGotoWidget, &GotoWidget::sig_closeRequested, this, [this]() {
+        m_gotoWidget->hide();
+        m_textEdit->setFocus(Qt::OtherFocusReason);
+    });
+    return pGotoWidget;
+}
+
+auto RemoteEditWidget::createFindReplaceWidget() -> FindReplaceWidget *
+{
+    const auto pFindReplaceWidget = new FindReplaceWidget(m_editSession, this);
+    pFindReplaceWidget->hide();
+
+    connect(pFindReplaceWidget,
+            &FindReplaceWidget::sig_findRequested,
+            this,
+            &RemoteEditWidget::slot_handleFindRequested);
+    connect(pFindReplaceWidget,
+            &FindReplaceWidget::sig_replaceCurrentRequested,
+            this,
+            &RemoteEditWidget::slot_handleReplaceCurrentRequested);
+    connect(pFindReplaceWidget,
+            &FindReplaceWidget::sig_replaceAllRequested,
+            this,
+            &RemoteEditWidget::slot_handleReplaceAllRequested);
+    connect(pFindReplaceWidget, &FindReplaceWidget::sig_closeRequested, this, [this]() {
+        m_findReplaceWidget->hide();
+        m_textEdit->setFocus(Qt::OtherFocusReason);
+    });
+    connect(pFindReplaceWidget,
+            &FindReplaceWidget::sig_statusMessage,
+            this,
+            &RemoteEditWidget::slot_updateStatus);
+    return pFindReplaceWidget;
 }
 
 void RemoteEditWidget::addFileMenu(QMenuBar *const menuBar, const Editor *const pTextEdit)
@@ -871,6 +940,31 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
         }
     }
 
+    QAction *findAction = new QAction(QIcon::fromTheme("edit-find"), tr("&Find/Replace..."), this);
+    findAction->setShortcut(QKeySequence::Find);
+    findAction->setStatusTip(tr("Show Find/Replace bar"));
+    connect(findAction, &QAction::triggered, this, [this]() {
+        m_gotoWidget->hide();
+        m_findReplaceWidget->show();
+        m_findReplaceWidget->setFocusToFindInput();
+    });
+    editMenu->addAction(findAction);
+
+    QAction *gotoAction = new QAction(QIcon::fromTheme("go-jump"), tr("&Go to Line..."), this);
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+        gotoAction->setShortcut(QKeySequence("Ctrl+L"));
+    } else {
+        gotoAction->setShortcut(QKeySequence("Ctrl+G"));
+    }
+    gotoAction->setStatusTip(tr("Show Go to Line bar"));
+    connect(gotoAction, &QAction::triggered, this, [this]() {
+        m_findReplaceWidget->hide();
+        m_gotoWidget->show();
+        m_gotoWidget->setFocusToInput();
+    });
+    editMenu->addAction(gotoAction);
+    editMenu->addSeparator();
+
     // Note: "&Colors" looks like it conflicts with "&Copy",
     // but you can alt-E-C-C to visit copy first then colors.
     QMenu *const alignmentMenu = m_editSession ? editMenu->addMenu("&Alignment") : nullptr;
@@ -984,6 +1078,102 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
             this,
             &RemoteEditWidget::slot_updateStatusBar);
     connect(pTextEdit, &QPlainTextEdit::textChanged, this, &RemoteEditWidget::slot_updateStatusBar);
+}
+
+void RemoteEditWidget::slot_updateStatus(const QString &message_param)
+{
+    if (message_param.isEmpty()) {
+        slot_updateStatusBar();
+    } else {
+        statusBar()->showMessage(message_param);
+    }
+}
+
+void RemoteEditWidget::slot_handleFindRequested(const QString &term, QTextDocument::FindFlags flags)
+{
+    if (term.isEmpty()) {
+        return;
+    }
+
+    QTextCursor originalCursor = m_textEdit->textCursor();
+
+    if (m_textEdit->find(term, flags)) {
+        slot_updateStatus(QString("Found: '%1'").arg(term));
+        return;
+    }
+
+    // Wrap around
+    m_textEdit->moveCursor(flags.testFlag(QTextDocument::FindBackward) ? QTextCursor::End
+                                                                       : QTextCursor::Start);
+    if (m_textEdit->find(term, flags)) {
+        slot_updateStatus(QString("Found (from %1): '%2'")
+                              .arg(flags.testFlag(QTextDocument::FindBackward) ? "end" : "top")
+                              .arg(term));
+        return;
+    }
+
+    // Restore original cursor if not found
+    m_textEdit->setTextCursor(originalCursor);
+    slot_updateStatus(QString("Not found: '%1'").arg(term));
+}
+
+void RemoteEditWidget::slot_handleReplaceCurrentRequested(const QString &findTerm,
+                                                          const QString &replaceTerm,
+                                                          QTextDocument::FindFlags flags)
+{
+    if (findTerm.isEmpty()) {
+        return;
+    }
+
+    QTextCursor cursor = m_textEdit->textCursor();
+    if (cursor.hasSelection()) {
+        QString selectedText = cursor.selectedText();
+        Qt::CaseSensitivity cs = flags.testFlag(QTextDocument::FindCaseSensitively)
+                                     ? Qt::CaseSensitive
+                                     : Qt::CaseInsensitive;
+        if (QString::compare(selectedText, findTerm, cs) == 0) {
+            cursor.insertText(replaceTerm);
+            slot_updateStatus(QString("Replaced: '%1'").arg(findTerm));
+        }
+    }
+
+    // Always find the next occurrence after attempting replacement
+    slot_handleFindRequested(findTerm, flags);
+}
+
+void RemoteEditWidget::slot_handleReplaceAllRequested(const QString &findTerm,
+                                                      const QString &replaceTerm,
+                                                      QTextDocument::FindFlags flags)
+{
+    if (findTerm.isEmpty()) {
+        return;
+    }
+
+    int replacements = 0;
+    QTextCursor originalCursor = m_textEdit->textCursor();
+    m_textEdit->moveCursor(QTextCursor::Start);
+    m_textEdit->textCursor().beginEditBlock();
+
+    while (m_textEdit->find(findTerm, flags)) {
+        QTextCursor matchCursor = m_textEdit->textCursor();
+        if (matchCursor.hasSelection()) {
+            matchCursor.insertText(replaceTerm);
+            replacements++;
+        } else {
+            // Should not happen with QTextEdit::find, but as a safeguard
+            break;
+        }
+    }
+
+    m_textEdit->textCursor().endEditBlock();
+    m_textEdit->setTextCursor(originalCursor);
+
+    if (replacements > 0) {
+        slot_updateStatus(
+            QString("Replaced %1 occurrence(s) of '%2'.").arg(replacements).arg(findTerm));
+    } else {
+        slot_updateStatus(QString("Not found for replace all: '%1'.").arg(findTerm));
+    }
 }
 
 struct NODISCARD CursorColumnInfo final

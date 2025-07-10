@@ -378,6 +378,10 @@ set(mmapper_SRCS
     mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
+    mpi/gotowidget.cpp
+    mpi/gotowidget.h
+    mpi/findreplacewidget.cpp
+    mpi/findreplacewidget.h
     observer/gameobserver.cpp
     observer/gameobserver.h
     opengl/Font.cpp

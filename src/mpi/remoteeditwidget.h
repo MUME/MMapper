@@ -29,6 +29,8 @@ class QObject;
 class QPlainTextEdit;
 class QWidget;
 class QStatusBar;
+class GotoWidget;
+class FindReplaceWidget;
 
 enum class NODISCARD EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
 enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
@@ -144,6 +146,8 @@ private:
 
     bool m_submitted = false;
     QScopedPointer<Editor> m_textEdit;
+    QScopedPointer<GotoWidget> m_gotoWidget;
+    QScopedPointer<FindReplaceWidget> m_findReplaceWidget;
     std::unique_ptr<AnsiViewWindow> m_preview;
 
 public:
@@ -160,6 +164,8 @@ public:
 
 private:
     NODISCARD Editor *createTextEdit();
+    NODISCARD GotoWidget *createGotoWidget();
+    NODISCARD FindReplaceWidget *createFindReplaceWidget();
 
     void addToMenu(QMenu *menu, const EditViewCommand &cmd);
     void addToMenu(QMenu *menu, const EditCommand2 &cmd, const Editor *pTextEdit);
@@ -180,6 +186,14 @@ protected slots:
     NODISCARD bool slot_maybeCancel();
     NODISCARD bool slot_contentsChanged() const;
     void slot_updateStatusBar();
+    void slot_updateStatus(const QString &message);
+    void slot_handleFindRequested(const QString &term, QTextDocument::FindFlags flags);
+    void slot_handleReplaceCurrentRequested(const QString &findTerm,
+                                            const QString &replaceTerm,
+                                            QTextDocument::FindFlags flags);
+    void slot_handleReplaceAllRequested(const QString &findTerm,
+                                        const QString &replaceTerm,
+                                        QTextDocument::FindFlags flags);
 
 #define X_DECLARE_SLOT(a, b, c, d, e) void slot_##a();
     XFOREACH_REMOTE_EDIT_MENU_ITEM(X_DECLARE_SLOT)
