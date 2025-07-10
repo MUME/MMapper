@@ -241,6 +241,7 @@ ConstString KEY_GROUP_NPC_COLOR_OVERRIDE = "npc color override";
 ConstString KEY_GROUP_NPC_SORT_BOTTOM = "npc sort bottom";
 ConstString KEY_GROUP_NPC_HIDE = "npc hide";
 ConstString KEY_GROUP_SHOW_TOKENS     = "show tokens";
+ConstString KEY_GROUP_SHOW_MAP_TOKENS = "show map tokens";
 ConstString KEY_GROUP_TOKEN_ICON_SIZE = "token icon size";
 ConstString KEY_GROUP_TOKEN_OVERRIDES = "token overrides";
 ConstString KEY_AUTO_LOG = "Auto log";
@@ -693,7 +694,9 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcHide = conf.value(KEY_GROUP_NPC_HIDE, false).toBool();
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
     showTokens = conf.value(KEY_GROUP_SHOW_TOKENS, true).toBool();
+    showMapTokens = conf.value(KEY_GROUP_SHOW_MAP_TOKENS, true).toBool();
     tokenIconSize = conf.value(KEY_GROUP_TOKEN_ICON_SIZE, 32).toInt();
+
     tokenOverrides.clear();
     QSettings &rw = const_cast<QSettings &>(conf);
     rw.beginGroup(KEY_GROUP_TOKEN_OVERRIDES);
@@ -867,10 +870,12 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_GROUP_NPC_COLOR_OVERRIDE, npcColorOverride);
     conf.setValue(KEY_GROUP_NPC_HIDE, npcHide);
     conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
-    conf.setValue(KEY_GROUP_SHOW_TOKENS, showTokens);
+    conf.setValue(KEY_GROUP_SHOW_TOKENS,    showTokens);
+    conf.setValue(KEY_GROUP_SHOW_MAP_TOKENS, showMapTokens);
     conf.setValue(KEY_GROUP_TOKEN_ICON_SIZE, tokenIconSize);
+
     conf.beginGroup(KEY_GROUP_TOKEN_OVERRIDES);
-    conf.remove("");                                  // wipe old map entries
+    conf.remove("");  // wipe old map entries
     for (auto it = tokenOverrides.cbegin(); it != tokenOverrides.cend(); ++it)
         conf.setValue(it.key(), it.value());
     conf.endGroup();

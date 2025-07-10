@@ -158,7 +158,7 @@ private:
     MapData *m_map = nullptr;
     GroupProxyModel *m_proxyModel = nullptr;
     GroupModel m_model;
-    TokenManager tokenManager;
+    // TokenManager tokenManager;
 
     void updateColumnVisibility();
 

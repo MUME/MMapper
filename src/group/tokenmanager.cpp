@@ -7,6 +7,13 @@
 #include <QImageReader>
 #include <QStandardPaths>
 #include <QDebug>
+#include <QPixmapCache>
+#include <QQueue>
+#include <QOpenGLContext>
+
+#include "../display/Textures.h"
+#include "../opengl/OpenGL.h"
+#include "../opengl/OpenGLTypes.h"
 
 const QString kForceFallback(QStringLiteral("__force_fallback__"));
 
@@ -27,10 +34,28 @@ QString TokenManager::overrideFor(const QString &displayName)
     return (it != over.constEnd()) ? it.value() : QString();
 }
 
+static SharedMMTexture makeTextureFromPixmap(const QPixmap &px)
+{
+    using QT = QOpenGLTexture;
+
+    auto mmtex = MMTexture::alloc(
+        QT::Target2D,
+        [&px](QT &tex) { tex.setData(px.toImage().mirrored()); },
+        /*forbidUpdates = */ true);
+
+    auto *tex = mmtex->get();
+    tex->setWrapMode(QT::ClampToEdge);
+    tex->setMinMagFilters(QT::Linear, QT::Linear);
+
+    const MMTextureId internalId = allocateTextureId();
+    mmtex->setId(internalId);
+
+    return mmtex;
+}
+
 TokenManager::TokenManager()
 {
     scanDirectories();
-    m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
 }
 
 void TokenManager::scanDirectories()
@@ -65,7 +90,6 @@ void TokenManager::scanDirectories()
             if (!m_availableFiles.contains(key))
             {
                 m_availableFiles.insert(key, path);
-                qDebug() << "TokenManager: Found token image" << key << "at" << path;
                 m_watcher.addPath(path);
             }
         }
@@ -74,6 +98,9 @@ void TokenManager::scanDirectories()
 
 QPixmap TokenManager::getToken(const QString &key)
 {
+    if (m_fallbackPixmap.isNull())
+        m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
+
     if (key == kForceFallback) {
         return m_fallbackPixmap;
     }
@@ -85,20 +112,15 @@ QPixmap TokenManager::getToken(const QString &key)
 
     QString resolvedKey = normalizeKey(lookup);
 
-    //qDebug() << "TokenManager: Normalized key:" << resolvedKey;
-
     if (resolvedKey.isEmpty()) {
         qWarning() << "TokenManager: Received empty key — defaulting to 'blank_character'";
         resolvedKey = "blank_character";
     }
 
-    //qDebug() << "TokenManager: Requested key:" << resolvedKey;
-
     if (m_tokenPathCache.contains(resolvedKey)) {
         QString path = m_tokenPathCache[resolvedKey];
         QPixmap cached;
         if (QPixmapCache::find(path, &cached)) {
-            qDebug() << "TokenManager: Using cached pixmap (via cache) for" << path;
             return cached;
         }
         QPixmap pix;
@@ -117,28 +139,23 @@ QPixmap TokenManager::getToken(const QString &key)
         }
     }
 
-    qDebug() << "TokenManager: Available token keys:";
     for (const auto &availableKey : m_availableFiles.keys()) {
-        qDebug() << " - " << availableKey;
     }
 
     if (!matchedKey.isEmpty())
     {
         const QString &path = m_availableFiles.value(matchedKey);
-        qDebug() << "TokenManager: Found path for key:" << matchedKey << "->" << path;
 
         m_tokenPathCache[resolvedKey] = path;
 
         QPixmap cached;
         if (QPixmapCache::find(path, &cached)) {
-            qDebug() << "TokenManager: Using cached pixmap for" << path;
             return cached;
         }
 
         QPixmap pix;
         if (pix.load(path))
         {
-            qDebug() << "TokenManager: Loaded and caching image for" << matchedKey;
             QPixmapCache::insert(path, pix);
             return pix;
         }
@@ -155,14 +172,12 @@ QPixmap TokenManager::getToken(const QString &key)
     // Fallback: user-defined blank_character.png in tokens folder
     QString userFallback = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/tokens/blank_character.png";
     if (QFile::exists(userFallback)) {
-        qDebug() << "TokenManager: Using fallback image from modding folder:" << userFallback;
         m_tokenPathCache[resolvedKey] = userFallback;  // ✅ Cache fallback
         return QPixmap(userFallback);
     }
 
     // Final fallback: built-in resource image
     QString finalFallback = ":/pixmaps/char-room-sel.png";
-    qDebug() << "TokenManager: Using final fallback image";
     m_tokenPathCache[resolvedKey] = finalFallback;  // ✅ Cache fallback
     return QPixmap(finalFallback);
 }
@@ -170,4 +185,61 @@ QPixmap TokenManager::getToken(const QString &key)
 const QMap<QString, QString> &TokenManager::availableFiles() const
 {
     return m_availableFiles;
+}
+
+TokenManager &tokenManager()
+{
+    static TokenManager instance;   // created on first call (post-QGuiApp)
+    return instance;
+}
+
+MMTextureId TokenManager::textureIdFor(const QString &key)
+{
+    if (m_textureCache.contains(key))
+        return m_textureCache.value(key);
+
+    /* NOT current – do NOT try to upload, just remember we need to.     */
+    if (!m_pendingUploads.contains(key))
+        m_pendingUploads.append(key);
+    return INVALID_MM_TEXTURE_ID;
+}
+
+QString canonicalTokenKey(const QString &name)
+{
+    return normalizeKey(name);    // reuse the existing static helper
+}
+
+MMTextureId TokenManager::uploadNow(const QString &key,
+                                    const QPixmap &px)
+{
+    SharedMMTexture tex = makeTextureFromPixmap(px);
+    MMTextureId id      = tex->getId();
+
+    if (id == INVALID_MM_TEXTURE_ID)
+        return id;
+
+    m_ownedTextures.push_back(std::move(tex));
+    m_textureCache.insert(key, id);
+    return id;
+}
+
+// keep tex alive + cache the id
+void TokenManager::rememberUpload(const QString &key,
+                                  MMTextureId id,
+                                  SharedMMTexture tex)
+{
+    if (id == INVALID_MM_TEXTURE_ID)
+        return;
+
+    m_ownedTextures.push_back(std::move(tex));
+    m_textureCache.insert(key, id);
+}
+
+// retrieve pointer later
+SharedMMTexture TokenManager::textureById(MMTextureId id) const
+{
+    for (const auto &ptr : m_ownedTextures)
+        if (ptr->getId() == id)
+            return ptr;
+    return {};
 }

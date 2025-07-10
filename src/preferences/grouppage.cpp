@@ -36,10 +36,17 @@ GroupPage::GroupPage(QWidget *const parent)
         setConfig().groupManager.npcHide = checked;
         emit sig_groupSettingsChanged();
     });
+    ui->showTokensCheckbox->setChecked(getConfig().groupManager.showTokens);
     connect(ui->showTokensCheckbox, &QCheckBox::stateChanged, this, [this](int checked) {
         setConfig().groupManager.showTokens = checked;
         emit sig_groupSettingsChanged();
     });
+    ui->showMapTokensCheckbox->setChecked(getConfig().groupManager.showMapTokens);
+    connect(ui->showMapTokensCheckbox, &QCheckBox::stateChanged, this,
+            [this](int checked) {
+                setConfig().groupManager.showMapTokens = checked;
+                emit sig_groupSettingsChanged();          // refresh map instantly
+            });
     ui->tokenSizeComboBox->setCurrentText(QString::number(getConfig().groupManager.tokenIconSize) + " px");
 
     connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this,
@@ -74,6 +81,7 @@ void GroupPage::slot_loadConfig()
     ui->npcSortBottomCheckbox->setChecked(settings.npcSortBottom);
     ui->npcHideCheckbox->setChecked(settings.npcHide);
     ui->showTokensCheckbox->setChecked(settings.showTokens);
+    ui->showMapTokensCheckbox->setChecked(settings.showMapTokens);
     ui->tokenSizeComboBox->setCurrentText(QString::number(settings.tokenIconSize) + " px");
 }
 
