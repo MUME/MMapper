@@ -273,37 +273,29 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
         }
     }
 
-    // Insert the newly identified characters into the resulting list based on configuration.
-    if (getConfig().groupManager.npcSortBottom) {
-        // Find the insertion point for new players: before the first NPC in the preserved list.
-        auto itPlayerInsertPos = resultingCharacterList.begin();
-        while (itPlayerInsertPos != resultingCharacterList.end()) {
-            if (*itPlayerInsertPos && (*itPlayerInsertPos)->isNpc()) {
-                break;
-            }
-            ++itPlayerInsertPos;
+    // Insert the newly identified characters with one small helper
+    auto insertNewChars = [&](GroupVector &dest,
+                              const GroupVector &newPlayers,
+                              const GroupVector &newNpcs,
+                              const GroupVector &newAll) {
+        if (getConfig().groupManager.npcSortBottom) {
+            // players go before first NPC
+            auto firstNpc = std::find_if(dest.begin(),
+                                         dest.end(),
+                                         [](const SharedGroupChar &c) {
+                                             return c && c->isNpc();
+                                         });
+            dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
+            dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
+        } else {
+            dest.insert(dest.end(), newAll.begin(), newAll.end());
         }
+    };
 
-        // Insert truly new players at the determined position.
-        if (!trulyNewPlayers.empty()) {
-            resultingCharacterList.insert(itPlayerInsertPos,
-                                          trulyNewPlayers.begin(),
-                                          trulyNewPlayers.end());
-        }
-        // Insert truly new NPCs at the end of the list.
-        if (!trulyNewNpcs.empty()) {
-            resultingCharacterList.insert(resultingCharacterList.end(),
-                                          trulyNewNpcs.begin(),
-                                          trulyNewNpcs.end());
-        }
-    } else {
-        // If no special NPC sorting, just append all truly new characters in their original order.
-        if (!allTrulyNewCharsInOriginalOrder.empty()) {
-            resultingCharacterList.insert(resultingCharacterList.end(),
-                                          allTrulyNewCharsInOriginalOrder.begin(),
-                                          allTrulyNewCharsInOriginalOrder.end());
-        }
-    }
+    insertNewChars(resultingCharacterList,
+                   trulyNewPlayers,
+                   trulyNewNpcs,
+                   allTrulyNewCharsInOriginalOrder);
 
     beginResetModel();
     m_characters = std::move(resultingCharacterList);
@@ -551,7 +543,6 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
     const CGroupChar &character = deref(pCharacter);
 
     switch (role) {
-
     /* display / icons ---------------------------------------------------- */
     case Qt::DecorationRole:
     case Qt::DisplayRole:
@@ -844,38 +835,10 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         emit sig_characterUpdated(selectedCharacter);
     });
 
-    connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
-        if (!proxyIndex.isValid()) {
-            return;
-        }
-
-        QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
-
-        if (!sourceIndex.isValid()) {
-            return;
-        }
-
-        selectedCharacter = m_model.getCharacter(sourceIndex.row());
-        if (selectedCharacter) {
-            // Build Context menu
-            m_center->setText(
-                QString("&Center on %1").arg(selectedCharacter->getName().toQString()));
-            m_recolor->setText(QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
-            m_center->setDisabled(!selectedCharacter->isYou()
-                                  && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
-            m_setIcon->setText(
-                QString("&Set icon for %1…").arg(selectedCharacter->getName().toQString()));
-            m_useDefaultIcon->setText(
-                QString("&Use default icon for %1").arg(selectedCharacter->getName().toQString()));
-
-            QMenu contextMenu(tr("Context menu"), this);
-            contextMenu.addAction(m_center);
-            contextMenu.addAction(m_recolor);
-            contextMenu.addAction(m_setIcon);
-            contextMenu.addAction(m_useDefaultIcon);
-            contextMenu.exec(QCursor::pos());
-        }
-    });
+    connect(m_table,
+            &QAbstractItemView::clicked,
+            this,
+            &GroupWidget::showContextMenu);
 
     connect(m_group, &Mmapper2Group::sig_characterAdded, this, &GroupWidget::slot_onCharacterAdded);
     connect(m_group,
@@ -964,3 +927,41 @@ void GroupWidget::slot_updateLabels()
 {
     m_model.resetModel(); // This re-fetches characters and refreshes the table
 }
+
+// ───────────────────────── context-menu helpers ─────────────────────────
+void GroupWidget::showContextMenu(const QModelIndex &proxyIndex)
+{
+    if (!proxyIndex.isValid())
+        return;
+
+    QModelIndex src = m_proxyModel->mapToSource(proxyIndex);
+    if (!src.isValid())
+        return;
+
+    selectedCharacter = m_model.getCharacter(src.row());
+    if (!selectedCharacter)
+        return;
+
+    buildAndExecMenu();
+}
+
+void GroupWidget::buildAndExecMenu()
+{
+    const CGroupChar &c = deref(selectedCharacter);
+
+    m_center->setText(QString("&Center on %1").arg(c.getName().toQString()));
+    m_center->setDisabled(!c.isYou() && c.getServerId() == INVALID_SERVER_ROOMID);
+
+    m_recolor->setText(QString("&Recolor %1").arg(c.getName().toQString()));
+    m_setIcon->setText(QString("&Set icon for %1…").arg(c.getName().toQString()));
+    m_useDefaultIcon->setText(QString("&Use default icon for %1")
+                                  .arg(c.getName().toQString()));
+
+    QMenu menu(tr("Context menu"), this);
+    menu.addAction(m_center);
+    menu.addAction(m_recolor);
+    menu.addAction(m_setIcon);
+    menu.addAction(m_useDefaultIcon);
+    menu.exec(QCursor::pos());
+}
+// ─────────────────────────────────────────────────────────────────────────

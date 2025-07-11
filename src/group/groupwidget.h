@@ -161,6 +161,8 @@ private:
     // TokenManager tokenManager;
 
     void updateColumnVisibility();
+    void showContextMenu(const QModelIndex &proxyIndex);
+    void buildAndExecMenu();
 
 private:
     QAction *m_center = nullptr;
