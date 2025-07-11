@@ -15,6 +15,33 @@
 #include <QQueue>
 #include <QStandardPaths>
 
+namespace {
+
+/// Return a cached pixmap (or load & cache it). Null QPixmap if load fails.
+static QPixmap fetchPixmap(const QString &path)
+{
+    QPixmap px;
+    if (QPixmapCache::find(path, &px))
+        return px;
+    if (px.load(path)) {
+        QPixmapCache::insert(path, px);
+        return px;
+    }
+    return {};          // null means load failed
+}
+
+/// Case-insensitive lookup: “mount_pony” matches “Mount_Pony”
+static QString matchAvailableKey(const QMap<QString, QString> &files,
+                                 const QString &resolvedKey)
+{
+    for (const QString &k : files.keys())
+        if (k.compare(resolvedKey, Qt::CaseInsensitive) == 0)
+            return k;
+    return {};
+}
+
+}
+
 const QString kForceFallback(QStringLiteral("__force_fallback__"));
 
 static QString normalizeKey(QString key)
@@ -94,83 +121,54 @@ void TokenManager::scanDirectories()
 
 QPixmap TokenManager::getToken(const QString &key)
 {
+    // 0. ensure built-in fallback is ready
     if (m_fallbackPixmap.isNull())
         m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
 
-    if (key == kForceFallback) {
+    if (key == kForceFallback)
         return m_fallbackPixmap;
-    }
 
-    QString lookup = key;
-    const QString ov = overrideFor(key);
-    if (!ov.isEmpty())
-        lookup = ov; // use the user-chosen icon basename
-
-    QString resolvedKey = normalizeKey(lookup);
-
+    // 1. resolve overrides and normalise key
+    const QString lookup      = overrideFor(key).isEmpty() ? key : overrideFor(key);
+    QString       resolvedKey = normalizeKey(lookup);
     if (resolvedKey.isEmpty()) {
-        qWarning() << "TokenManager: Received empty key — defaulting to 'blank_character'";
+        qWarning() << "TokenManager: empty key — defaulting to 'blank_character'";
         resolvedKey = "blank_character";
     }
 
+    // 2. fast path: cached path ➜ cached pixmap
     if (m_tokenPathCache.contains(resolvedKey)) {
-        QString path = m_tokenPathCache[resolvedKey];
-        QPixmap cached;
-        if (QPixmapCache::find(path, &cached)) {
-            return cached;
-        }
-        QPixmap pix;
-        if (pix.load(path)) {
-            QPixmapCache::insert(path, pix);
-            return pix;
-        }
-        qWarning() << "TokenManager: Cached path was invalid:" << path;
+        const QString &path = m_tokenPathCache[resolvedKey];
+        if (QPixmap px = fetchPixmap(path); !px.isNull())
+            return px;
+        qWarning() << "TokenManager: cached path invalid:" << path;
     }
 
-    QString matchedKey;
-    for (const QString &k : m_availableFiles.keys()) {
-        if (k.compare(resolvedKey, Qt::CaseInsensitive) == 0) {
-            matchedKey = k;
-            break;
-        }
-    }
-
-    for (const auto &availableKey : m_availableFiles.keys()) {
-    }
-
+    // 3. search tokens directory
+    const QString matchedKey = matchAvailableKey(m_availableFiles, resolvedKey);
     if (!matchedKey.isEmpty()) {
         const QString &path = m_availableFiles.value(matchedKey);
-
         m_tokenPathCache[resolvedKey] = path;
-
-        QPixmap cached;
-        if (QPixmapCache::find(path, &cached)) {
-            return cached;
-        }
-
-        QPixmap pix;
-        if (pix.load(path)) {
-            QPixmapCache::insert(path, pix);
-            return pix;
-        } else {
-            qWarning() << "TokenManager: Failed to load image from path:" << path;
-        }
+        if (QPixmap px = fetchPixmap(path); !px.isNull())
+            return px;
+        qWarning() << "TokenManager: failed to load image:" << path;
     } else {
-        qWarning() << "TokenManager: No match found for key:" << resolvedKey;
+        qWarning() << "TokenManager: no match for key:" << resolvedKey;
     }
 
-    // Fallback: user-defined blank_character.png in tokens folder
-    QString userFallback = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                           + "/tokens/blank_character.png";
+    // 4. user-defined fallback (AppData/tokens/blank_character.png)
+    const QString userFallback =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
+        "/tokens/blank_character.png";
     if (QFile::exists(userFallback)) {
-        m_tokenPathCache[resolvedKey] = userFallback; // ✅ Cache fallback
-        return QPixmap(userFallback);
+        m_tokenPathCache[resolvedKey] = userFallback;
+        return fetchPixmap(userFallback);
     }
 
-    // Final fallback: built-in resource image
-    QString finalFallback = ":/pixmaps/char-room-sel.png";
-    m_tokenPathCache[resolvedKey] = finalFallback; // ✅ Cache fallback
-    return QPixmap(finalFallback);
+    // 5. built-in fallback resource
+    const QString resFallback = ":/pixmaps/char-room-sel.png";
+    m_tokenPathCache[resolvedKey] = resFallback;
+    return m_fallbackPixmap;
 }
 
 const QMap<QString, QString> &TokenManager::availableFiles() const
