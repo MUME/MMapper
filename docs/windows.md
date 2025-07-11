@@ -19,13 +19,15 @@ title: Download MMapper for Windows
 {% endfor %}
 
 <div class="notice-box" id="windows-notice">
-  <strong style="color: #d9534f;">Important Notice for Windows Users:</strong><br>
-  This application is not digitally signed. Windows Defender SmartScreen might prevent it from running initially.<br>
+  <strong style="color: #d9534f;">Important Notice for .exe Downloaders:</strong><br>
+  This application is not digitally signed, so Windows might prevent it from running initially.<br>
   <strong>To run the application:</strong>
   <ol>
-    <li>Attempt to run the downloaded <code>.exe</code> file.</li>
-    <li>If SmartScreen appears, click "More info".</li>
-    <li>Then, click "Run anyway".</li>
+    <li>Right-click the downloaded <code>.exe</code> file and select "Properties".</li>
+    <li>In the Properties window, look for a section near the bottom that says "Security".</li>
+    <li>If you see a checkbox or button labeled "Unblock", check it or click it.</li>
+    <li>Click "Apply" and then "OK".</li>
+    <li>You should now be able to run the MMapper installer.</li>
   </ol>
   <small>You only need to do this the first time you run this version.</small>
 </div>

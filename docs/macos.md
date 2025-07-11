@@ -15,7 +15,7 @@ title: Download MMapper for macOS
 
 <div class="notice-box" id="mac-notice">
   <strong style="color: #d9534f;">Important Notice for macOS Users:</strong><br>
-  This application is not notarized by Apple. macOS Gatekeeper might prevent it from opening directly.<br>
+  This application is not notarized by Apple, so macOS might prevent it from opening directly.<br>
   <strong>To run the application the first time:</strong>
   <ol>
     <li>Locate the downloaded <code>.dmg</code> file and open it.</li>
