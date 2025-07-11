@@ -29,6 +29,7 @@ public:
 
 signals:
     void sig_groupSettingsChanged();
+    void sig_showTokensChanged(bool);
 
 public slots:
     void slot_loadConfig();
