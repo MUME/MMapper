@@ -179,6 +179,7 @@ protected:
 signals:
     void sig_kickCharacter(const QString &);
     void sig_center(glm::vec2);
+    void sig_characterUpdated(SharedGroupChar character);
 
 public slots:
     void slot_mapUnloaded() { m_model.setMapLoaded(false); }
