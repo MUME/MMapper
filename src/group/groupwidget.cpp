@@ -841,6 +841,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
         // 4. immediately refresh this widget
         slot_updateLabels();
+        emit sig_characterUpdated(selectedCharacter);
     });
 
     m_useDefaultIcon = new QAction(QIcon(":/icons/group-clear-icon.png"),
@@ -856,6 +857,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
 
         slot_updateLabels();            // live refresh
+        emit sig_characterUpdated(selectedCharacter);
     });
 
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
