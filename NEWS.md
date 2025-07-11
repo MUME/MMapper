@@ -1,3 +1,26 @@
+## MMapper 25.07.0 (July 11, 2025)
+
+### New Features:
+* **Performance Improvements:**
+    * A major performance issue on maps without Server IDs was **eliminated by using meshes for dots**, leading to much faster rendering.
+    * **Improved UI Responsiveness** was achieved by optimizing point look-ups, reducing overall Copy-on-Write overhead by roughly 10% (from ~15% down to ~5%).
+* **User Interface:**
+    * **Undo/Redo** is now available for map changes, enabled by a significant rewrite using Copy-on-Write principles and refactored Infomarks.
+    * **Dark Mode Support** has been added for Windows users, improving comfort. The minimum supported Windows version is now **Windows 10**.
+    * **Goto Line and Find/Replace** were added to the built-in editor, enhancing text editing.
+* **Improved Distribution and Support:**
+    * The client is now **listed on the [Microsoft Store](https://apps.microsoft.com/detail/9p6f2b68rf7g)**, simplifying discovery and installation on Windows. This also changes the default executable path to the root directory (from `bin/`) and replaces software rendering with the official [Microsoft Compatibility Pack](https://apps.microsoft.com/detail/9nqpsl29bfff).
+
+### Changes:
+* The client now defaults to retaining input on send, based on user poll feedback.
+* `Infomarks` were refactored into the `World` data structure, and `InfoMark` renamed to `Infomark` for consistency and undo/redo support.
+* Adoption of immer's Copy-on-Write data structures (`ImmRoomIdSet`, `ImmUnorderedRoomIdSet`) and refactoring `Infomarks` enabled efficient undo/redo with significant memory savings (~300 MBs).
+* Increased the number of base map seeds that use server IDs, improving base map generation.
+* The "About" dialog was updated to include the Boost license for immer.
+* Issue reporting was refactored under the Help menu.
+* Website now supports light mode and links to the Microsoft and Snap stores.
+
+---
 ## MMapper 25.06.2 (June 23, 2025)
 
 ### New Features:
