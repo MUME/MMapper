@@ -217,7 +217,6 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
                                          const bool isFar,
                                          const QString &dispName)
 {
-
     const bool dontFillRotatedQuads = true;
     const bool shrinkRotatedQuads = false; // REVISIT: make this a user option?
 
@@ -513,7 +512,6 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     RoomIdSet drawnRoomIds;
 
     for (const auto &pCharacter : m_groupManager.selectAll()) {
-
         const CGroupChar &character = *pCharacter;
         if (character.isYou())
             continue;
