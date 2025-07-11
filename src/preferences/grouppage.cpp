@@ -42,20 +42,19 @@ GroupPage::GroupPage(QWidget *const parent)
         emit sig_groupSettingsChanged();
     });
     ui->showMapTokensCheckbox->setChecked(getConfig().groupManager.showMapTokens);
-    connect(ui->showMapTokensCheckbox, &QCheckBox::stateChanged, this,
-            [this](int checked) {
-                setConfig().groupManager.showMapTokens = checked;
-                emit sig_groupSettingsChanged();          // refresh map instantly
-            });
-    ui->tokenSizeComboBox->setCurrentText(QString::number(getConfig().groupManager.tokenIconSize) + " px");
+    connect(ui->showMapTokensCheckbox, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showMapTokens = checked;
+        emit sig_groupSettingsChanged(); // refresh map instantly
+    });
+    ui->tokenSizeComboBox->setCurrentText(QString::number(getConfig().groupManager.tokenIconSize)
+                                          + " px");
 
-    connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this,
-            [this](const QString &txt) {
-                // strip " px" and convert to int
-                int value = txt.section(' ', 0, 0).toInt();
-                setConfig().groupManager.tokenIconSize = value;
-                emit sig_groupSettingsChanged();         // live update
-            });
+    connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this, [this](const QString &txt) {
+        // strip " px" and convert to int
+        int value = txt.section(' ', 0, 0).toInt();
+        setConfig().groupManager.tokenIconSize = value;
+        emit sig_groupSettingsChanged(); // live update
+    });
 
     slot_loadConfig();
 }
