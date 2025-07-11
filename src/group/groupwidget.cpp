@@ -227,6 +227,25 @@ GroupModel::GroupModel(QObject *const parent)
     : QAbstractTableModel(parent)
 {}
 
+namespace {    // anonymous – helpers local to this file
+static void insertNewCharactersInto(GroupVector           &dest,
+                                    bool                   npcSortBottom,
+                                    const GroupVector     &newPlayers,
+                                    const GroupVector     &newNpcs,
+                                    const GroupVector     &newAll)
+{
+    if (npcSortBottom) {
+        // players go before first NPC already present
+        auto firstNpc = std::find_if(dest.begin(), dest.end(),
+                                     [](const SharedGroupChar &c) { return c && c->isNpc(); });
+        dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
+        dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
+    } else {
+        dest.insert(dest.end(), newAll.begin(), newAll.end());
+    }
+}
+} // namespace
+
 void GroupModel::setCharacters(const GroupVector &newGameChars)
 {
     DECL_TIMER(t, __FUNCTION__);
@@ -273,29 +292,11 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
         }
     }
 
-    // Insert the newly identified characters with one small helper
-    auto insertNewChars = [&](GroupVector &dest,
-                              const GroupVector &newPlayers,
-                              const GroupVector &newNpcs,
-                              const GroupVector &newAll) {
-        if (getConfig().groupManager.npcSortBottom) {
-            // players go before first NPC
-            auto firstNpc = std::find_if(dest.begin(),
-                                         dest.end(),
-                                         [](const SharedGroupChar &c) {
-                                             return c && c->isNpc();
-                                         });
-            dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
-            dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
-        } else {
-            dest.insert(dest.end(), newAll.begin(), newAll.end());
-        }
-    };
-
-    insertNewChars(resultingCharacterList,
-                   trulyNewPlayers,
-                   trulyNewNpcs,
-                   allTrulyNewCharsInOriginalOrder);
+    insertNewCharactersInto(resultingCharacterList,
+                            getConfig().groupManager.npcSortBottom,
+                            trulyNewPlayers,
+                            trulyNewNpcs,
+                            allTrulyNewCharsInOriginalOrder);
 
     beginResetModel();
     m_characters = std::move(resultingCharacterList);
