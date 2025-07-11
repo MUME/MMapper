@@ -434,109 +434,138 @@ NODISCARD static QStringView getPrettyName(const CharacterAffectEnum affect)
 #undef X_CASE
 }
 
+/*─────────────────────  complexity helpers  ─────────────────────*/
+namespace {
+
+static QString formatStatHelper(int num,
+                                int den,
+                                ColumnTypeEnum col,
+                                bool isNpc)
+{
+    if (col == ColumnTypeEnum::HP_PERCENT
+        || col == ColumnTypeEnum::MANA_PERCENT
+        || col == ColumnTypeEnum::MOVES_PERCENT) {
+        if (den == 0)
+            return {};
+        int pct = static_cast<int>(100.0 * double(num) / double(den));
+        return QString("%1%").arg(pct);
+    }
+
+    if (col == ColumnTypeEnum::HP
+        || col == ColumnTypeEnum::MANA
+        || col == ColumnTypeEnum::MOVES) {
+        // hide “0/0” for NPCs -- same behaviour as before
+        if (isNpc && num == 0 && den == 0)
+            return {};
+        return QString("%1/%2").arg(num).arg(den);
+    }
+    return {};
+}
+
+/// Big switch for DisplayRole, extracted out of dataForCharacter
+static QVariant makeDisplayRole(const CGroupChar &ch, ColumnTypeEnum c,
+                                TokenManager *tm)
+{
+    switch (c) {
+    case ColumnTypeEnum::CHARACTER_TOKEN:
+        return tm ? QIcon(tm->getToken(ch.getDisplayName())) : QVariant();
+    case ColumnTypeEnum::NAME:
+        if (ch.getLabel().isEmpty()
+            || ch.getName().getStdStringViewUtf8()
+                   == ch.getLabel().getStdStringViewUtf8()) {
+            return ch.getName().toQString();
+        } else {
+            return QString("%1 (%2)")
+                .arg(ch.getName().toQString(),
+                     ch.getLabel().toQString());
+        }
+    case ColumnTypeEnum::HP_PERCENT:
+        return formatStatHelper(ch.getHits(), ch.getMaxHits(), c, false);
+    case ColumnTypeEnum::MANA_PERCENT:
+        return formatStatHelper(ch.getMana(), ch.getMaxMana(), c, false);
+    case ColumnTypeEnum::MOVES_PERCENT:
+        return formatStatHelper(ch.getMoves(), ch.getMaxMoves(), c, false);
+    case ColumnTypeEnum::HP:
+        return formatStatHelper(ch.getHits(), ch.getMaxHits(), c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::MANA:
+        return formatStatHelper(ch.getMana(), ch.getMaxMana(), c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::MOVES:
+        return formatStatHelper(ch.getMoves(), ch.getMaxMoves(), c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::STATE:
+        return QVariant::fromValue(
+            GroupStateData(ch.getColor(),
+                           ch.getPosition(),
+                           ch.getAffects()));
+    case ColumnTypeEnum::ROOM_NAME:
+        return ch.getRoomName().isEmpty()
+                   ? QStringLiteral("Somewhere")
+                   : ch.getRoomName().toQString();
+    default:
+        return QVariant();
+    }
+}
+
+/// Big switch for ToolTipRole, extracted out as well
+static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c,
+                                bool useStatFmt)
+{
+    auto statTip = [&](int n, int d) -> QVariant {
+        return useStatFmt ? formatStatHelper(n, d, c, false) : QVariant();
+    };
+
+    switch (c) {
+    case ColumnTypeEnum::CHARACTER_TOKEN:
+        return QVariant();
+    case ColumnTypeEnum::HP_PERCENT:
+        return statTip(ch.getHits(),  ch.getMaxHits());
+    case ColumnTypeEnum::MANA_PERCENT:
+        return statTip(ch.getMana(),  ch.getMaxMana());
+    case ColumnTypeEnum::MOVES_PERCENT:
+        return statTip(ch.getMoves(), ch.getMaxMoves());
+    case ColumnTypeEnum::STATE: {
+        QString pretty = getPrettyName(ch.getPosition()).toString();
+        for (const CharacterAffectEnum a : ALL_CHARACTER_AFFECTS)
+            if (ch.getAffects().contains(a))
+                pretty.append(", ").append(getPrettyName(a));
+        return pretty;
+    }
+    case ColumnTypeEnum::ROOM_NAME:
+        if (ch.getServerId() != INVALID_SERVER_ROOMID)
+            return QString::number(ch.getServerId().asUint32());
+        return QVariant();
+    default:
+        return QVariant();
+    }
+}
+
+} // anonymous namespace
+/*──────────────────────────────────────────────────────────────────*/
+
 QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
-                                      const ColumnTypeEnum column,
-                                      const int role) const
+                                      const ColumnTypeEnum   column,
+                                      const int              role) const
 {
     const CGroupChar &character = deref(pCharacter);
 
-    const auto formatStat =
-        [](int numerator, int denomenator, ColumnTypeEnum statColumn) -> QString {
-        if (denomenator == 0
-            && (statColumn == ColumnTypeEnum::HP_PERCENT
-                || statColumn == ColumnTypeEnum::MANA_PERCENT
-                || statColumn == ColumnTypeEnum::MOVES_PERCENT)) {
-            return QLatin1String("");
-        }
-        // The NPC check for ratio is handled below in the switch statement
-        if ((numerator == 0 && denomenator == 0)
-            && (statColumn == ColumnTypeEnum::HP || statColumn == ColumnTypeEnum::MANA
-                || statColumn == ColumnTypeEnum::MOVES)) {
-            return QLatin1String("");
-        }
-
-        switch (statColumn) {
-        case ColumnTypeEnum::HP_PERCENT:
-        case ColumnTypeEnum::MANA_PERCENT:
-        case ColumnTypeEnum::MOVES_PERCENT: {
-            int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
-                                              / static_cast<double>(denomenator));
-            return QString("%1%").arg(percentage);
-        }
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
-            return QString("%1/%2").arg(numerator).arg(denomenator);
-        default:
-        case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::STATE:
-        case ColumnTypeEnum::ROOM_NAME:
-            return QLatin1String("");
-        }
-    };
-
-    // Map column to data
     switch (role) {
-    case Qt::DecorationRole:
-        if (column == ColumnTypeEnum::CHARACTER_TOKEN && m_tokenManager) {
-            QString key = character.getDisplayName(); // Use display name
-            qDebug() << "GroupModel: Requesting token for display name:" << key;
-            return QIcon(m_tokenManager->getToken(key));
-        }
-        return QVariant();
-    case Qt::DisplayRole:
-        switch (column) {
-        case ColumnTypeEnum::CHARACTER_TOKEN:
-            return QVariant();
-        case ColumnTypeEnum::NAME:
-            if (character.getLabel().isEmpty()
-                || character.getName().getStdStringViewUtf8()
-                       == character.getLabel().getStdStringViewUtf8()) {
-                return character.getName().toQString();
-            } else {
-                return QString("%1 (%2)").arg(character.getName().toQString(),
-                                              character.getLabel().toQString());
-            }
-        case ColumnTypeEnum::HP_PERCENT:
-            return formatStat(character.getHits(), character.getMaxHits(), column);
-        case ColumnTypeEnum::MANA_PERCENT:
-            return formatStat(character.getMana(), character.getMaxMana(), column);
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return formatStat(character.getMoves(), character.getMaxMoves(), column);
-        case ColumnTypeEnum::HP:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getHits(), character.getMaxHits(), column);
-            }
-        case ColumnTypeEnum::MANA:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMana(), character.getMaxMana(), column);
-            }
-        case ColumnTypeEnum::MOVES:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMoves(), character.getMaxMoves(), column);
-            }
-        case ColumnTypeEnum::STATE:
-            return QVariant::fromValue(GroupStateData(character.getColor(),
-                                                      character.getPosition(),
-                                                      character.getAffects()));
-        case ColumnTypeEnum::ROOM_NAME:
-            if (character.getRoomName().isEmpty()) {
-                return QStringLiteral("Somewhere");
-            } else {
-                return character.getRoomName().toQString();
-            }
-        default:
-            qWarning() << "Unsupported column" << static_cast<int>(column);
-            break;
-        }
-        break;
 
+    /* display / icons ---------------------------------------------------- */
+    case Qt::DecorationRole:
+    case Qt::DisplayRole:
+        return makeDisplayRole(character, column, m_tokenManager);
+
+    /* tooltips ----------------------------------------------------------- */
+    case Qt::ToolTipRole:
+        return makeTooltipRole(character,
+                               column,
+                               (column == ColumnTypeEnum::HP_PERCENT
+                                || column == ColumnTypeEnum::MANA_PERCENT
+                                || column == ColumnTypeEnum::MOVES_PERCENT));
+
+    /* colours & alignment ------------------------------------------------ */
     case Qt::BackgroundRole:
         return character.getColor();
 
@@ -544,53 +573,12 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         return mmqt::textColor(character.getColor());
 
     case Qt::TextAlignmentRole:
-        if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
-            // NOTE: There's no QVariant(AlignmentFlag) constructor.
+        if (column != ColumnTypeEnum::NAME &&
+            column != ColumnTypeEnum::ROOM_NAME) {
+            // QVariant(AlignmentFlag) ctor doesn’t exist;
             return static_cast<int>(Qt::AlignCenter);
         }
         break;
-
-    case Qt::ToolTipRole: {
-        const auto getRatioTooltip = [&](int numerator, int denomenator) -> QVariant {
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QVariant();
-            } else {
-                return formatStat(numerator, denomenator, column);
-            }
-        };
-
-        switch (column) {
-        case ColumnTypeEnum::CHARACTER_TOKEN:
-            return QVariant(); // or appropriate fallback
-        case ColumnTypeEnum::HP_PERCENT:
-            return getRatioTooltip(character.getHits(), character.getMaxHits());
-        case ColumnTypeEnum::MANA_PERCENT:
-            return getRatioTooltip(character.getMana(), character.getMaxMana());
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return getRatioTooltip(character.getMoves(), character.getMaxMoves());
-        case ColumnTypeEnum::STATE: {
-            QString prettyName;
-            prettyName += getPrettyName(character.getPosition());
-            for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-                if (character.getAffects().contains(affect)) {
-                    prettyName.append(QStringLiteral(", ")).append(getPrettyName(affect));
-                }
-            }
-            return prettyName;
-        }
-        case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
-            break;
-        case ColumnTypeEnum::ROOM_NAME:
-            if (character.getServerId() != INVALID_SERVER_ROOMID) {
-                return QString("%1").arg(character.getServerId().asUint32());
-            }
-            break;
-        }
-        break;
-    }
 
     default:
         break;
