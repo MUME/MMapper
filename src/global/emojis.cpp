@@ -523,8 +523,8 @@ NODISCARD QString mmqt::decodeEmojiShortCodes(const QString &s)
 
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        const int matchStart = match.capturedStart();
-        const int matchEnd = match.capturedEnd();
+        const int matchStart = static_cast<int>(match.capturedStart());
+        const int matchEnd = static_cast<int>(match.capturedEnd());
 
         result += view.mid(lastPos, matchStart - lastPos);
 

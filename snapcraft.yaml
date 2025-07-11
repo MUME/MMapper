@@ -57,7 +57,7 @@ apps:
 parts:
   mmapper:
     plugin: cmake
-    after: [desktop-qt5]
+    after: [desktop-qt6]
     source: .
     cmake-generator: Ninja
     cmake-parameters:
@@ -68,11 +68,12 @@ parts:
     build-packages:
       - build-essential
       - libssl-dev
-      - libqt5opengl5-dev
-      - libqt5websockets5-dev
-      - qt5keychain-dev
-      - qtbase5-dev
-      - qttools5-dev-tools
+      - libqt6opengl6-dev
+      - libqt6websockets6-dev
+      - qt6keychain-dev
+      - qt6-base-dev
+      - qt6-tools-dev
+      - libqt6svg6-dev
       - zlib1g-dev
       - dpkg-dev
       - xz-utils
@@ -85,17 +86,17 @@ parts:
       - libgdk-pixbuf2.0-0
       - libgl1-mesa-dri
       - libglu1-mesa
-      - libqt5gui5
-      - libqt5svg5
-      - libqt5websockets5
-      - libqt5keychain1
+      - libqt6gui6
+      - libqt6svg6
+      - libqt6websockets6
+      - libqt6keychain1
       - libxkbcommon0
       - light-themes
       - locales-all
       - shared-mime-info
       - fonts-ubuntu
-      - qt5-gtk-platformtheme
-      - qtwayland5
+      - qt6-gtk-platformtheme
+      - qt6-wayland
       - xdg-user-dirs
     override-pull: |
       craftctl default
@@ -111,7 +112,7 @@ parts:
 
   desktop-settings-packages:
     plugin: nil
-    after: [desktop-qt5]
+    after: [desktop-qt6]
     build-packages:
       - libglib2.0-bin
     stage-packages:
@@ -127,7 +128,7 @@ parts:
       set -eux
       glib-compile-schemas usr/share/glib-2.0/schemas
 
-  desktop-qt5:
+  desktop-qt6:
     source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
     source-subdir: qt
     plugin: make

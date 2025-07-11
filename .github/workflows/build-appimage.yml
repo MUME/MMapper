@@ -27,9 +27,9 @@ jobs:
       run: |
         sudo apt update -qq
         sudo apt install -y \
-          qt5-qmake qttools5-dev-tools libqt5opengl5-dev libqt5websockets5-dev \
-          qt5keychain-dev libgl1-mesa-dev qtwayland5 build-essential mold git \
-          zlib1g-dev libssl-dev wget zsync fuse file cmake
+          qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          libgl1-mesa-dev build-essential mold git \
+          zlib1g-dev libssl-dev wget zsync fuse file cmake libxcb-cursor-dev
 
     - name: Download linuxdeploy
       run: |
