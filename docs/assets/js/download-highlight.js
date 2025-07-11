@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
     downloadLinks.forEach(link => {
         const href = link.href.toLowerCase();
 
+        // Do not recommend Windows .exe installers
+        if (href.includes('.exe')) {
+            return;
+        }
+
         // Only recommend .deb for ChromeOS
         if (isChromeOS && (href.includes('appimage') || href.includes('flatpak'))) {
             return;

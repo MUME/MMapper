@@ -4,13 +4,17 @@ title: Download MMapper for Windows
 ---
 
 ## Download MMapper for Windows
+
+<a href="https://apps.microsoft.com/detail/9p6f2b68rf7g?referrer=appbadge&mode=direct">
+     <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" style="vertical-align: middle;"/>
+</a><span class="recommendation-text"> Recommended</span>
+
 {% for asset in site.github.latest_release.assets %}
-{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
+{% if asset.name contains 'sha256' %}
 {% elsif asset.name contains 'exe' %}
 <a href="{{ asset.browser_download_url }}" class="download-link">
     Download {{ asset.name }}
 </a>
-{% else %}
 {% endif %}
 {% endfor %}
 
