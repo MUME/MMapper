@@ -223,6 +223,119 @@ details.beta-downloads-details summary {
     margin-bottom: 0.8em;
 }
 
+/* Light mode styles */
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: #f0f0f0; /* Light background */
+        color: #333; /* Dark text */
+    }
+
+    .content-wrapper {
+        background-color: #ffffff; /* White background for content */
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: #333; /* Dark headings */
+    }
+
+    h1 {
+        border-bottom: 1px solid #ccc; /* Light grey border */
+    }
+
+    h2 {
+        color: #5a8a9b; /* Darker variant of MUME-inspired blue */
+    }
+
+    h3 {
+        color: #a07a2a; /* Darker variant of MUME-inspired gold */
+    }
+
+    a {
+        color: #a07a2a; /* Darker variant of MUME-inspired link color */
+    }
+
+    a:hover {
+        color: #cc9933; /* Original MUME-inspired link color for hover */
+    }
+
+    pre, code {
+        background-color: #eee; /* Light background for code */
+        color: #333; /* Dark text for code */
+    }
+
+    hr {
+        background-color: #ccc; /* Light grey horizontal rule */
+    }
+
+    .platform-link {
+        color: #333; /* Match body text */
+    }
+
+    .platform-link i {
+        color: #a07a2a; /* Darker variant of MUME-inspired icon color */
+    }
+
+    .platform-link:hover i {
+        color: #cc9933; /* Original MUME-inspired icon color for hover */
+    }
+
+    .download-link {
+        background-color: #a07a2a; /* Darker variant of MUME-inspired button */
+        color: #ffffff; /* White text on button */
+    }
+
+    .download-link:hover {
+        background-color: #cc9933; /* Original MUME-inspired button hover */
+        color: #1a1a1a; /* Dark text on hover */
+    }
+
+    .recommended-download {
+        border: 2px solid #4a904a; /* Darker green border */
+    }
+
+    .recommendation-text {
+        color: #4a904a; /* Darker green text */
+    }
+
+    .notice-box {
+        border: 1px solid #fdc571; /* Original orange border */
+        background-color: #fff0cc; /* Light orange background */
+        color: #806030; /* Dark text for contrast */
+    }
+
+    .notice-box strong {
+        color: #806030; /* Ensure strong text is also dark */
+    }
+
+    .notice-box code {
+        background-color: #ffe099; /* Slightly darker code background within notice */
+        color: #806030;
+    }
+
+    footer {
+        border-top: 1px solid #ccc; /* Light grey border */
+        color: #666; /* Slightly darker grey for footer text */
+    }
+
+    .feature-box {
+        background-color: #eee; /* Light background */
+        color: #333; /* Dark text */
+    }
+
+    details.beta-downloads-details {
+        background-color: #eee; /* Light background */
+        border: 1px solid #ccc; /* Light grey border */
+    }
+
+    details.beta-downloads-details summary {
+        color: #a07a2a; /* Darker variant of gold color for summary */
+    }
+
+    .beta-notice {
+        border-top: 1px solid #ccc; /* Light grey border */
+    }
+}
+
 /* Add this at the end of the file */
 @media (max-width: 768px) {
   /* Adjustments for smaller screens */
