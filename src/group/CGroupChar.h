@@ -62,6 +62,9 @@ private:
     Internal m_internal;
 
 private:
+    QString m_characterToken;
+
+private:
     struct NODISCARD Server final
     {
         GroupId id = INVALID_GROUPID;
@@ -140,6 +143,9 @@ public:
     {
         m_server.label = std::move(label);
     }
+
+    QString getDisplayName() const;
+
     void setColor(QColor col)
     {
         m_internal.color = std::move(col);
@@ -151,6 +157,15 @@ public:
     NODISCARD const QColor &getColor() const
     {
         return m_internal.color;
+    }
+    void setCharacterToken(const QString &tokenPath)
+    {
+        m_characterToken = tokenPath;
+    }
+
+    NODISCARD const QString &getCharacterToken() const
+    {
+        return m_characterToken;
     }
     NODISCARD bool updateFromGmcp(const JsonObj &obj);
     NODISCARD ServerRoomId getServerId() const
