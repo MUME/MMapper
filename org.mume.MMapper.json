@@ -1,17 +1,24 @@
 {
   "app-id": "org.mume.MMapper",
   "runtime": "org.kde.Platform",
-  "runtime-version": "5.15-23.08",
+  "runtime-version": "5.15-24.08",
   "sdk": "org.kde.Sdk",
   "finish-args": [
     "--share=network",
-    "--socket=x11",
     "--socket=wayland",
+    "--socket=fallback-x11",
+    "--share=ipc",
     "--device=dri",
-    "--filesystem=home",
+    "--filesystem=xdg-documents:rw",
     "--env=QT_QPA_PLATFORM=xcb"
   ],
-  "command": "/app/bin/mmapper",
+  "command": "mmapper",
+  "cleanup": [
+    "/app/images",
+    "/app/include",
+    "/app/arda.xml",
+    "*.a"
+  ],
   "modules": [
     {
       "name": "openssl3",
@@ -20,7 +27,7 @@
         {
           "type": "git",
           "url": "https://github.com/openssl/openssl.git",
-          "tag": "openssl-3.0.16"
+          "tag": "openssl-3.5.1"
         }
       ],
       "build-commands": [
@@ -39,9 +46,6 @@
           "tag": "0.9.9.7"
         }
       ],
-      "build-options": {
-        "build-only": true
-      },
       "build-commands": [
         "cp -r glm /app/include/"
       ]
@@ -56,9 +60,6 @@
           "tag": "v0.8.1"
         }
       ],
-      "build-options": {
-        "build-only": true
-      },
       "build-commands": [
         "cp -r immer /app/include/"
       ]
@@ -118,9 +119,6 @@
           "tag": "42"
         }
       ],
-      "build-options": {
-        "build-only": true
-      },
       "build-commands": [
         "cp arda.xml /app/"
       ]
@@ -135,9 +133,6 @@
           "tag": "main"
         }
       ],
-      "build-options": {
-        "build-only": true
-      },
       "build-commands": [
         "mkdir -p /app/images",
         "cp -r . /app/images/"
