@@ -115,7 +115,7 @@
         {
           "type": "git",
           "url": "https://github.com/MUME/arda.git",
-          "tag": "41"
+          "tag": "42"
         }
       ],
       "build-options": {
