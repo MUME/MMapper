@@ -69,7 +69,7 @@ int findTrailingWhitespace(const QStringView line)
     if (!m.hasMatch()) {
         return -1;
     }
-    return m.capturedStart();
+    return static_cast<int>(m.capturedStart());
 }
 
 int findTrailingWhitespace(const QString &line)
@@ -141,8 +141,8 @@ void foreach_regex(const QRegularExpression &regex,
                    const std::function<void(const QStringView between)> &callback_between)
 {
     auto it = regex.globalMatch(text);
-    int pos = 0;
-    int end = text.length();
+    qsizetype pos = 0;
+    auto end = text.length();
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
         const auto match_start = match.capturedStart(0);

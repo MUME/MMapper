@@ -78,7 +78,7 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
         if (currentKey != Qt::Key_Tab) {
             current.movePosition(QTextCursor::Right,
                                  QTextCursor::MoveAnchor,
-                                 current.selectedText().length());
+                                 static_cast<int>(current.selectedText().length()));
             setTextCursor(current);
         }
     }
@@ -278,7 +278,7 @@ void InputHistory::addInputLine(const QString &string)
 
 void TabHistory::addInputLine(const QString &string)
 {
-    QStringList list = string.split(g_whitespaceRx, Qt::SkipEmptyParts);
+    QStringList list = string.split(g_whitespaceRx, Qt::SplitBehaviorFlags::SkipEmptyParts);
     for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary
@@ -361,7 +361,7 @@ void InputWidget::tabComplete()
         current.removeSelectedText();
         current.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
         current.insertText(word);
-        auto length = word.length() - m_tabFragment.length();
+        auto length = static_cast<int>(word.length() - m_tabFragment.length());
         current.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, length);
         current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
         setTextCursor(current);

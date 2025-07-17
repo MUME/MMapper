@@ -31,7 +31,7 @@ private:
     int prefixLen = 0;
     QString quotePrefix;
     bool hasPrefix2 = false;
-    int bulletLength = 0;
+    qsizetype bulletLength = 0;
     QString prefix2;
     bool valid_ = false;
 
@@ -61,7 +61,7 @@ public:
         {
             auto m = quotePrefixRegex.match(line);
             if (m.hasMatch()) {
-                const int len = m.capturedLength(0);
+                const auto len = m.capturedLength(0);
                 quotePrefix = line.left(len);
                 prefixLen = measureExpandedTabsOneLine(quotePrefix, 0);
 

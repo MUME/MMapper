@@ -91,7 +91,7 @@ void DescriptionWidget::scanDirectories()
             // Check if the file has a supported image extension
             if (supportedFormats.find(suffix.toLower()) != supportedFormats.end()) {
                 QString filePath = fileInfo.filePath();
-                int dotIndex = filePath.lastIndexOf('.');
+                auto dotIndex = filePath.lastIndexOf('.');
                 if (dotIndex == -1) {
                     assert(false);
                     continue;

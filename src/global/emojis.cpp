@@ -517,14 +517,14 @@ NODISCARD QString mmqt::decodeEmojiShortCodes(const QString &s)
 
     QString result;
     QStringView view(s);
-    int lastPos = 0;
+    qsizetype lastPos = 0;
 
     QRegularExpressionMatchIterator it = shortCodeRegex.globalMatch(s);
 
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
-        const int matchStart = match.capturedStart();
-        const int matchEnd = match.capturedEnd();
+        const auto matchStart = match.capturedStart();
+        const auto matchEnd = match.capturedEnd();
 
         result += view.mid(lastPos, matchStart - lastPos);
 

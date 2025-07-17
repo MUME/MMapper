@@ -883,7 +883,7 @@ public:
     NODISCARD QChar at(const size_type pos) const
     {
         assert(!m_text.empty());
-        assert(isClamped(pos, 0, m_text.length() - 1));
+        assert(isClamped(pos, size_type(0), m_text.length() - 1));
         return m_text.at(pos);
     }
     NODISCARD QChar operator[](const size_type pos) const { return at(pos); }
@@ -1010,14 +1010,14 @@ extern const QRegularExpression weakAnsiRegex;
 template<typename Callback>
 void foreachAnsi(const QStringView line, Callback &&callback)
 {
-    const auto len = static_cast<int>(line.size());
-    int pos = 0;
+    const auto len = line.size();
+    qsizetype pos = 0;
     while (pos < len) {
         QRegularExpressionMatch m = weakAnsiRegex.match(line, pos);
         if (!m.hasMatch()) {
             break;
         }
-        callback(m.capturedStart(), m.capturedRef());
+        callback(m.capturedStart(), m.captured());
         pos = m.capturedEnd();
     }
 }
