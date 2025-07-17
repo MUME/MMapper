@@ -1,0 +1,44 @@
+name: build-snap
+
+on:
+  push:
+    tags:
+    - 'v*'
+    branches:
+    - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-snap:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Build Snap
+      id: snapcraft
+      uses: snapcore/action-build@v1
+
+    - name: Generate SHA256 checksum for AppImage
+      run: |
+        BUILT_SNAP_PATH="${{ steps.snapcraft.outputs.snap }}"
+        CANONICAL_SNAP_BASENAME=$(basename "${BUILT_SNAP_PATH}" .snap)
+        mkdir -p artifact
+        mv "${BUILT_SNAP_PATH}" artifact/
+        sha256sum artifact/"${CANONICAL_SNAP_BASENAME}".snap > artifact/"${CANONICAL_SNAP_BASENAME}".snap.sha256
+
+    - name: Get Linux package file base name
+      id: get_linux_package_name
+      run: |
+        PACKAGE_FILE=$(ls artifact/*.snap)
+        PACKAGE_BASENAME=$(basename "$PACKAGE_FILE" | sed 's/\./-/g')
+        echo "PACKAGE_BASENAME=$PACKAGE_BASENAME" >> $GITHUB_OUTPUT
+
+    - name: Upload Snap bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
+        path: artifact/*.snap*

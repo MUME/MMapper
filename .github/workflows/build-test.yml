@@ -72,7 +72,6 @@ jobs:
         echo "STYLE=true" >> $GITHUB_ENV
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_MOLD=true" >> $GITHUB_ENV
 
-
       #
       # Install Packages (Mac)
       #
@@ -84,7 +83,6 @@ jobs:
         echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
         echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV
-
 
       #
       # Install Packages (Windows)
@@ -145,7 +143,6 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build . --parallel
 
-
       #
       # Run tests
       #
@@ -189,7 +186,6 @@ jobs:
           echo "Convert any uses to corresponding functions in TextUtils e.g. ::toQStringUtf8()"
           exit -1
         fi
-
 
       #
       # Package
