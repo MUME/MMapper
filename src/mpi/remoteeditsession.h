@@ -58,15 +58,15 @@ class NODISCARD_QOBJECT RemoteEditSession : public QObject
     Q_OBJECT
 
 private:
-    friend class RemoteEditExternalSession;
-    friend class RemoteEditInternalSession;
-
-private:
-    bool m_connected = true;
-    const RemoteInternalId m_internalId{};
-    const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
     RemoteEdit *m_manager = nullptr;
     QString m_content;
+    const RemoteInternalId m_internalId{};
+    const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
+    bool m_connected = true;
+
+private:
+    friend class RemoteEditExternalSession;
+    friend class RemoteEditInternalSession;
 
 public:
     explicit RemoteEditSession(const RemoteInternalId internalId,
@@ -99,6 +99,9 @@ class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSessi
 {
     Q_OBJECT
 
+private:
+    QScopedPointer<RemoteEditWidget> m_widget;
+
 public:
     explicit RemoteEditInternalSession(const RemoteInternalId internalId,
                                        const RemoteSessionId sessionId,
@@ -106,14 +109,14 @@ public:
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
-
-private:
-    QScopedPointer<RemoteEditWidget> m_widget;
 };
 
 class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
+
+private:
+    QScopedPointer<RemoteEditProcess> m_process;
 
 public:
     explicit RemoteEditExternalSession(const RemoteInternalId internalId,
@@ -122,7 +125,4 @@ public:
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
-
-private:
-    QScopedPointer<RemoteEditProcess> m_process;
 };

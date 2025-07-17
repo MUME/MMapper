@@ -79,15 +79,16 @@ bool MainWindow::maybeSave()
 
     const QString changes = mmqt::toQStringUtf8(mapData.describeChanges());
 
-    const int ret = QMessageBox::warning(this,
-                                         tr("mmapper"),
-                                         tr("The current map has been modified:\n\n") + changes
-                                             + tr("\nDo you want to save the changes?"),
-                                         QMessageBox::Yes | QMessageBox::Default,
-                                         QMessageBox::No,
-                                         QMessageBox::Cancel | QMessageBox::Escape);
-
-    if (ret == QMessageBox::Yes) {
+    QMessageBox dlg(this);
+    dlg.setIcon(QMessageBox::Warning);
+    dlg.setWindowTitle(tr("mmapper"));
+    dlg.setText(tr("The current map has been modified:\n\n") + changes
+                + tr("\nDo you want to save the changes?"));
+    dlg.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    dlg.setDefaultButton(QMessageBox::Discard);
+    dlg.setEscapeButton(QMessageBox::Cancel);
+    const int ret = dlg.exec();
+    if (ret == QMessageBox::Save) {
         return slot_save();
     }
 

@@ -212,7 +212,7 @@ std::optional<uint32_t> Converter::stringToEnum(const TypeEnum type, const QStri
 
 const Converter conv;
 
-NODISCARD ExitDirEnum directionForLowercase(const QStringRef &lowcase)
+NODISCARD ExitDirEnum directionForLowercase(const QStringView &lowcase)
 {
     if (lowcase.isEmpty()) {
         return ExitDirEnum::UNKNOWN;
@@ -220,32 +220,32 @@ NODISCARD ExitDirEnum directionForLowercase(const QStringRef &lowcase)
 
     switch (lowcase.front().unicode()) {
     case 'n':
-        if (lowcase == "north") {
+        if (lowcase == QStringLiteral("north")) {
             return ExitDirEnum::NORTH;
         }
         break;
     case 's':
-        if (lowcase == "south") {
+        if (lowcase == QStringLiteral("south")) {
             return ExitDirEnum::SOUTH;
         }
         break;
     case 'e':
-        if (lowcase == "east") {
+        if (lowcase == QStringLiteral("east")) {
             return ExitDirEnum::EAST;
         }
         break;
     case 'w':
-        if (lowcase == "west") {
+        if (lowcase == QStringLiteral("west")) {
             return ExitDirEnum::WEST;
         }
         break;
     case 'u':
-        if (lowcase == "up") {
+        if (lowcase == QStringLiteral("up")) {
             return ExitDirEnum::UP;
         }
         break;
     case 'd':
-        if (lowcase == "down") {
+        if (lowcase == QStringLiteral("down")) {
             return ExitDirEnum::DOWN;
         }
         break;
@@ -313,7 +313,7 @@ void XmlMapStorage::loadWorld(QXmlStreamReader &stream)
     progressCounter.increaseTotalStepsBy(LOAD_PROGRESS_MAX);
 
     while (stream.readNextStartElement() && !stream.hasError()) {
-        if (stream.name() == "map") {
+        if (stream.name() == QStringLiteral("map")) {
             loadMap(stream);
             break; // expecting only one <map>
         }
@@ -363,11 +363,11 @@ void XmlMapStorage::loadMap(QXmlStreamReader &stream)
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
-        if (name == "room") {
+        if (name == QStringLiteral("room")) {
             loadRoom(stream);
-        } else if (name == "marker") {
+        } else if (name == QStringLiteral("marker")) {
             loadMarker(stream);
-        } else if (name == "position") {
+        } else if (name == QStringLiteral("position")) {
             m_loading->result.position = loadCoordinate(stream);
         } else {
             qWarning().noquote().nospace()
@@ -413,43 +413,43 @@ void XmlMapStorage::loadRoom(QXmlStreamReader &stream) const
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
-        if (name == "area") {
+        if (name == QStringLiteral("area")) {
             throwIfDuplicate(stream, found, RoomElementEnum::AREA);
             room.setArea(mmqt::makeRoomArea(loadString(stream)));
-        } else if (name == "align") {
+        } else if (name == QStringLiteral("align")) {
             throwIfDuplicate(stream, found, RoomElementEnum::ALIGN);
             room.setAlignType(loadEnum<RoomAlignEnum>(stream));
-        } else if (name == "contents") {
+        } else if (name == QStringLiteral("contents")) {
             throwIfDuplicate(stream, found, RoomElementEnum::CONTENTS);
             room.setContents(mmqt::makeRoomContents(loadString(stream)));
-        } else if (name == "coord") {
+        } else if (name == QStringLiteral("coord")) {
             throwIfDuplicate(stream, found, RoomElementEnum::POSITION);
             room.setPosition(loadCoordinate(stream));
-        } else if (name == "description") {
+        } else if (name == QStringLiteral("description")) {
             throwIfDuplicate(stream, found, RoomElementEnum::DESCRIPTION);
             room.setDescription(mmqt::makeRoomDesc(loadString(stream)));
-        } else if (name == "exit") {
+        } else if (name == QStringLiteral("exit")) {
             loadExit(stream, exitList);
-        } else if (name == "light") {
+        } else if (name == QStringLiteral("light")) {
             throwIfDuplicate(stream, found, RoomElementEnum::LIGHT);
             room.setLightType(loadEnum<RoomLightEnum>(stream));
-        } else if (name == "loadflag") {
+        } else if (name == QStringLiteral("loadflag")) {
             loadFlags |= loadEnum<RoomLoadFlagEnum>(stream);
-        } else if (name == "mobflag") {
+        } else if (name == QStringLiteral("mobflag")) {
             mobFlags |= loadEnum<RoomMobFlagEnum>(stream);
-        } else if (name == "note") {
+        } else if (name == QStringLiteral("note")) {
             throwIfDuplicate(stream, found, RoomElementEnum::NOTE);
             room.setNote(mmqt::makeRoomNote(loadString(stream)));
-        } else if (name == "portable") {
+        } else if (name == QStringLiteral("portable")) {
             throwIfDuplicate(stream, found, RoomElementEnum::PORTABLE);
             room.setPortableType(loadEnum<RoomPortableEnum>(stream));
-        } else if (name == "ridable") {
+        } else if (name == QStringLiteral("ridable")) {
             throwIfDuplicate(stream, found, RoomElementEnum::RIDABLE);
             room.setRidableType(loadEnum<RoomRidableEnum>(stream));
-        } else if (name == "sundeath") {
+        } else if (name == QStringLiteral("sundeath")) {
             throwIfDuplicate(stream, found, RoomElementEnum::SUNDEATH);
             room.setSundeathType(loadEnum<RoomSundeathEnum>(stream));
-        } else if (name == "terrain") {
+        } else if (name == QStringLiteral("terrain")) {
             throwIfDuplicate(stream, found, RoomElementEnum::TERRAIN);
             room.setTerrainType(loadEnum<RoomTerrainEnum>(stream));
         } else {
@@ -541,11 +541,11 @@ void XmlMapStorage::loadExit(QXmlStreamReader &stream, ExternalRawRoom::Exits &e
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
-        if (name == "to") {
+        if (name == QStringLiteral("to")) {
             exit.outgoing.insert(loadExternalRoomId(stream, loadStringView(stream)));
-        } else if (name == "doorflag") {
+        } else if (name == QStringLiteral("doorflag")) {
             doorFlags |= loadEnum<DoorFlagEnum>(stream);
-        } else if (name == "exitflag") {
+        } else if (name == QStringLiteral("exitflag")) {
             exitFlags |= loadEnum<ExitFlagEnum>(stream);
         } else {
             qWarning().noquote().nospace()
@@ -590,13 +590,13 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
 
     while (stream.readNextStartElement() && !stream.hasError()) {
         const auto &name = stream.name();
-        if (name == "pos1") {
+        if (name == QStringLiteral("pos1")) {
             marker.setPosition1(loadCoordinate(stream));
             ++foundPos1;
-        } else if (name == "pos2") {
+        } else if (name == QStringLiteral("pos2")) {
             marker.setPosition2(loadCoordinate(stream));
             ++foundPos2;
-        } else if (name == "text") {
+        } else if (name == QStringLiteral("text")) {
             // load text only if type == TEXT
             if (type == InfomarkTypeEnum::TEXT) {
                 marker.setText(mmqt::makeInfomarkText(loadString(stream)));

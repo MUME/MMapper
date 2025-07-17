@@ -85,9 +85,10 @@ ExternalRawRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml, LoadRoomHelpe
     }
 
     room.status = RoomStatusEnum::Permanent;
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room")) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QStringLiteral("room"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "room") {
+            if (xml.name() == QStringLiteral("room")) {
                 room.setId(
                     ExternalRoomId{static_cast<uint32_t>(xml.attributes().value("id").toInt())});
 
@@ -101,13 +102,13 @@ ExternalRawRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml, LoadRoomHelpe
                 const auto z = xml.attributes().value("z").toInt();
                 room.setPosition(Coordinate{x, y, z});
 
-            } else if (xml.name() == "roomname") {
+            } else if (xml.name() == QStringLiteral("roomname")) {
                 room.setName(mmqt::makeRoomName(xml.readElementText()));
-            } else if (xml.name() == "desc") {
+            } else if (xml.name() == QStringLiteral("desc")) {
                 room.setDescription(mmqt::makeRoomDesc(xml.readElementText().replace("|", "\n")));
-            } else if (xml.name() == "note") {
+            } else if (xml.name() == QStringLiteral("note")) {
                 room.setNote(mmqt::makeRoomNote(xml.readElementText()));
-            } else if (xml.name() == "exits") {
+            } else if (xml.name() == QStringLiteral("exits")) {
                 loadExits(room, xml, helper);
             }
         }
@@ -120,9 +121,10 @@ void PandoraMapStorage::loadExits(ExternalRawRoom &room,
                                   QXmlStreamReader &xml,
                                   LoadRoomHelper &helper)
 {
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "exits")) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QStringLiteral("exits"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "exit") {
+            if (xml.name() == QStringLiteral("exit")) {
                 const auto attr = xml.attributes();
                 if (attr.hasAttribute("dir") && attr.hasAttribute("to")
                     && attr.hasAttribute("door")) {
@@ -191,7 +193,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
         qWarning() << "File cannot be read" << file_fileName;
         return std::nullopt;
-    } else if (xml.name() != "map") {
+    } else if (xml.name() != QStringLiteral("map")) {
         qWarning() << "File does not start with element 'map'" << file_fileName;
         return std::nullopt;
     } else if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
@@ -212,7 +214,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     progressCounter.setCurrentTask(ProgressMsg{"reading rooms"});
     for (uint32_t i = 0; i < roomsCount; ++i) {
         while (xml.readNextStartElement() && !xml.hasError()) {
-            if (xml.name() == "room") {
+            if (xml.name() == QStringLiteral("room")) {
                 loading.emplace_back(loadRoom(xml, helper));
                 progressCounter.step();
             }

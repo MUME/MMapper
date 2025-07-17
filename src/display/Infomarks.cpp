@@ -94,11 +94,6 @@ NODISCARD static FontFormatFlags getFontFormatFlags(const InfomarkClassEnum info
 
 BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
 {
-    // REVISIT: Infomarks uses QLinkedList. Linked list iteration can be
-    // an order of magnitude slower than vector iteration.
-    //
-    // Consider converting the infomarks data structure to std::vector.
-
     BatchedInfomarksMeshes result;
     {
         const auto &db = m_data.getCurrentMap().getInfomarkDb();

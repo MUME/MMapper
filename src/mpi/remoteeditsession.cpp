@@ -20,9 +20,9 @@ RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
+    , m_manager(remoteEdit)
     , m_internalId(internalId)
     , m_sessionId(sessionId)
-    , m_manager(remoteEdit)
 {
     assert(m_manager != nullptr);
 }

@@ -8,7 +8,6 @@
 #include "../global/Color.h"
 
 #include <QFont>
-#include <QLinkedList>
 #include <QMessageLogContext>
 #include <QRegularExpression>
 #include <QSize>

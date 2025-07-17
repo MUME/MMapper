@@ -1480,14 +1480,16 @@ void RemoteEditWidget::closeEvent(QCloseEvent *event)
 bool RemoteEditWidget::slot_maybeCancel()
 {
     if (slot_contentsChanged()) {
-        const int ret = QMessageBox::warning(this,
-                                             m_title,
-                                             tr("You have edited the document.\n"
-                                                "Do you want to cancel your changes?"),
-                                             QMessageBox::Yes,
-                                             QMessageBox::No | QMessageBox::Escape
-                                                 | QMessageBox::Default);
-        if (ret == QMessageBox::No) {
+        QMessageBox dlg(this);
+        dlg.setIcon(QMessageBox::Warning);
+        dlg.setWindowTitle(m_title);
+        dlg.setText(tr("You have edited the document.\n"
+                       "Are you sure you want to discard all changes?"));
+        dlg.setStandardButtons(QMessageBox::Discard | QMessageBox::Cancel);
+        dlg.setDefaultButton(QMessageBox::Cancel);
+        dlg.setEscapeButton(QMessageBox::Cancel);
+        const int ret = dlg.exec();
+        if (ret != QMessageBox::Discard) {
             return false;
         }
     }
