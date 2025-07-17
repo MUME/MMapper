@@ -27,9 +27,9 @@ jobs:
       run: |
         sudo apt update -qq
         sudo apt install -y \
-          qt5-qmake qttools5-dev-tools libqt5opengl5-dev libqt5websockets5-dev \
-          qt5keychain-dev libgl1-mesa-dev qtwayland5 build-essential mold git \
-          zlib1g-dev libssl-dev wget zsync fuse file cmake
+          qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          libgl1-mesa-dev qt6-wayland qtkeychain-qt6-dev build-essential mold git \
+          zlib1g-dev libssl-dev wget zsync fuse file cmake libxcb-cursor-dev
 
     - name: Download linuxdeploy
       run: |
@@ -61,7 +61,9 @@ jobs:
         # Configure linuxdeploy and make sure the plugin can be found
         export PATH=$PATH:$(pwd)/..
         export UPDATE_INFORMATION="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync"
+        export QMAKE=/usr/bin/qmake6
         export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
+        export EXTRA_QT_PLUGINS="wayland-decoration-client;wayland-graphics-integration-client;wayland-shell-integration;waylandcompositor"
         export LIBSECRET_PATH=$(find /usr/lib -name "libsecret-1.so.0" 2>/dev/null | head -n 1)
 
         if [ -z "$LIBSECRET_PATH" ]; then

@@ -856,15 +856,15 @@ void AbstractTelnet::onReadInternal(const TelnetIacBytes &data)
     // so we parse the text and process all telnet commands:
 
     AppendBuffer cleanData;
-    cleanData.reserve(data.size());
+    cleanData.reserve(static_cast<int>(data.size()));
 
     int pos = 0;
     while (pos < data.size()) {
         if (m_inflateTelnet) {
             const int remaining = onReadInternalInflate(data.getQByteArray().data() + pos,
-                                                        data.size() - pos,
+                                                        static_cast<int>(data.size()) - pos,
                                                         cleanData);
-            pos = data.length() - remaining;
+            pos = static_cast<int>(data.length()) - remaining;
             // Continue because there might be additional chunks left to inflate
             continue;
         }

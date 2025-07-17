@@ -5,9 +5,9 @@ summary: MUME Mapper
 description: |
   MMapper is a graphical mapper for a MUD named MUME (Multi-Users in Middle
   Earth). The game is traditionally played in a text-only mode, but MMapper tries
-  to represent the virtual world in user-friendly graphical environment. It acts
+  to represent the virtual world in a user-friendly graphical environment. It acts
   as a proxy between a telnet client and a MUD server, being able to analyze game
-  data in real time and show player's position in a map.
+  data in real time and show the player's position on a map.
 
 grade: stable
 confinement: strict
@@ -18,85 +18,57 @@ architectures:
   - build-on: arm64
   - build-on: amd64
 
-plugs:
-  icon-themes:
-    interface: content
-    target: $SNAP/data-dir/icons
-    default-provider: gtk-common-themes
-  gtk-3-themes:
-    interface: content
-    target: $SNAP/data-dir/themes
-    default-provider: gtk-common-themes
-  sound-themes:
-    interface: content
-    target: $SNAP/data-dir/sounds
-    default-provider: gtk-common-themes
-
 apps:
-  mmapper-desktop:
-    command-chain: &command-chain
-      - bin/desktop-launch
+  mmapper:
     command: usr/bin/mmapper
     common-id: org.mume.MMapper
     desktop: usr/share/applications/org.mume.MMapper.desktop
-    plugs: &plugs
+    extensions:
+      - kde-neon-6
+    plugs:
       - home
-      - gsettings
       - network
       - network-bind
       - opengl
-      - x11
-      - desktop
-      - desktop-legacy
-      - wayland
-    environment:
-      HOME: "$SNAP_USER_COMMON"
-      DISABLE_WAYLAND: 1
-      __EGL_VENDOR_LIBRARY_DIRS: $SNAP/usr/share/glvnd/egl_vendor.d
+
+package-repositories:
+  - type: apt
+    components:
+      - main
+    suites:
+      - jammy
+    key-id: 444DABCF3667D0283F894EDDE6D4736255751E5D
+    url: http://origin.archive.neon.kde.org/user
+    key-server: keyserver.ubuntu.com
 
 parts:
   mmapper:
+    parse-info:
+      - usr/share/metainfo/org.mume.MMapper.xml
     plugin: cmake
-    after: [desktop-qt5]
     source: .
+    source-type: local
     cmake-generator: Ninja
     cmake-parameters:
       - -DCMAKE_INSTALL_PREFIX=/usr
-      - -DWITH_UPDATER=false
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DWITH_UPDATER=OFF
       - -DWITH_WEBSOCKET=ON
       - -DWITH_QTKEYCHAIN=ON
+      - -DCMAKE_INSTALL_SYSCONFDIR=/etc
+      - -DCMAKE_INSTALL_LOCALSTATEDIR=/var
+      - -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF
+      - -DCMAKE_INSTALL_RUNSTATEDIR=/run
+      - -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=ON
+      - -DCMAKE_VERBOSE_MAKEFILE=ON
+      - -DCMAKE_INSTALL_LIBDIR=lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+      - --log-level=STATUS
+      - -DCMAKE_LIBRARY_PATH=lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
     build-packages:
-      - build-essential
+      - libglm-dev
       - libssl-dev
-      - libqt5opengl5-dev
-      - libqt5websockets5-dev
-      - qt5keychain-dev
-      - qtbase5-dev
-      - qttools5-dev-tools
-      - zlib1g-dev
-      - dpkg-dev
-      - xz-utils
     stage-packages:
       - libssl3
-      - zlib1g
-      - adwaita-icon-theme
-      - dmz-cursor-theme
-      - gnome-themes-standard
-      - libgdk-pixbuf2.0-0
-      - libgl1-mesa-dri
-      - libglu1-mesa
-      - libqt5gui5
-      - libqt5svg5
-      - libqt5websockets5
-      - libqt5keychain1
-      - libxkbcommon0
-      - light-themes
-      - locales-all
-      - shared-mime-info
-      - fonts-ubuntu
-      - qt5-gtk-platformtheme
-      - qtwayland5
-      - xdg-user-dirs
     override-pull: |
       craftctl default
       git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
@@ -104,52 +76,24 @@ parts:
     override-build: |
       craftctl default
       sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $CRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
-    override-prime: |
-      craftctl default
-      sed -i 's|XDG_DATA_HOME=$SNAP_USER_DATA|XDG_DATA_HOME=$SNAP_USER_COMMON|' $CRAFT_PRIME/bin/desktop-launch
-      sed -i 's|XDG_CONFIG_HOME=$SNAP_USER_DATA|XDG_CONFIG_HOME=$SNAP_USER_COMMON|' $CRAFT_PRIME/bin/desktop-launch
-
-  desktop-settings-packages:
-    plugin: nil
-    after: [desktop-qt5]
-    build-packages:
-      - libglib2.0-bin
-    stage-packages:
-      - gsettings-desktop-schemas
-      - ubuntu-settings
     prime:
-      - usr/share/glib-2.0/schemas/*
-
-  desktop-settings-build:
-    plugin: nil
-    after: [desktop-settings-packages]
-    override-prime: |
-      set -eux
-      glib-compile-schemas usr/share/glib-2.0/schemas
-
-  desktop-qt5:
-    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
-    source-subdir: qt
-    plugin: make
-
-  # This part removes all the files in this snap which already exist in
-  # connected content and base snaps. Since these files will be available
-  # at runtime from the content and base snaps, they do not need to be
-  # included in this snap itself.
-  # More info: https://snapcraft-utils-library.readthedocs.io/en/latest/lib/cleanup.html
+      - -usr/lib/*/cmake/*
+      - -usr/include/*
+      - -usr/share/ECM/*
+      - -usr/share/man/*
+      - -usr/bin/X11
+      - -usr/lib/gcc/$CRAFT_ARCH_TRIPLET_BUILD_FOR/6.0.0
+      - -usr/lib/aspell/*
+      - -usr/share/lintian
   cleanup:
-    after: # Make this part run last; list all your other parts here
+    after:
       - mmapper
     plugin: nil
-    build-snaps: # List all content-snaps and base snaps you're using here
+    build-snaps:
       - core22
+      - kf6-core22
     override-prime: |
       set -eux
-      for snap in "core22"; do  # List all content-snaps and base snaps you're using here
-        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$CRAFT_PRIME/{}" "$CRAFT_PRIME/usr/{}" \;
+      for snap in "core22" "kf6-core22"; do
+          cd "/snap/$snap/current" && find . -type f,l -exec rm -rf "${CRAFT_PRIME}/{}" \;
       done
-      for CRUFT in bug lintian man; do
-        rm -rf $CRAFT_PRIME/usr/share/$CRUFT
-      done
-      find $CRAFT_PRIME/usr/share/doc/ -type f -not -name 'copyright' -delete
-      find $CRAFT_PRIME/usr/share -type d -empty -delete
