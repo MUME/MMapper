@@ -52,7 +52,10 @@ jobs:
       name: Install Packages for Ubuntu
       run: |
         sudo apt update -qq
-        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev qt5keychain-dev mold cmake ninja-build
+        sudo apt install -y \
+          qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          libgl1-mesa-dev qtkeychain-qt6-dev build-essential cmake ninja-build mold git \
+          zlib1g-dev libssl-dev
     - if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       name: Install GCC for Ubuntu
       run: |
@@ -76,12 +79,18 @@ jobs:
       # Install Packages (Mac)
       #
     - if: runner.os == 'macOS'
+      name: Install Qt for Mac
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: 6.5.3
+        arch: clang_64
+        cache: true
+        modules: 'qtwebsockets'
+    - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install qt@5 lcov cmake ninja
-        brew link qt@5 --force
-        echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
+        brew install cmake ninja lcov
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV
 
       #
@@ -91,25 +100,21 @@ jobs:
       name: Install Qt for Windows (MSVC)
       uses: jurplel/install-qt-action@v4
       with:
-        version: 5.15.2
+        version: '6.5.3'
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
+        modules: 'qtwebsockets'
     - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
       name: Install Qt for Windows (MinGW)
       uses: jurplel/install-qt-action@v4
       with:
-        version: 5.15.2
+        version: '6.5.3'
         dir: 'C:\'
-        arch: win64_mingw81
+        arch: win64_mingw
         cache: true
+        modules: 'qtwebsockets'
         tools: 'tools_mingw1310'
-    - if: runner.os == 'Windows'
-      name: Install Packages for Windows
-      uses: crazy-max/ghaction-chocolatey@v3
-      with:
-        args: install openssl --version=1.1.1.2100
-
 
       #
       # Build
@@ -118,21 +123,16 @@ jobs:
       name: Build MMapper for Windows
       shell: pwsh
       run: |
-        xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
         mkdir ${{ github.workspace }}/artifact
         mkdir build
         cd build
         cmake --version
-        # Compiler-specific logic
-        if ('${{ matrix.compiler }}' -eq 'msvc') {
-          $qtPath = "C:\Qt\5.12.2\msvc2019_64"
-        } elseif ('${{ matrix.compiler }}' -eq 'gcc') {
-          $qtPath = "C:\Qt\5.12.2\mingw81_64"
+        if ('${{ matrix.compiler }}' -eq 'gcc') {
           echo "C:/Qt/Tools/mingw1310_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
         }
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$qtPath -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
         cmake --build . --parallel
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac

@@ -1746,7 +1746,7 @@ void AnsiColorParser::for_each(QStringView ansi) const
     // ESC[...m -> ...
     ansi = ansi.mid(2, ansi.length() - 3);
 
-    const int len = ansi.length();
+    const auto len = ansi.length();
     qsizetype pos = 0;
 
     const auto try_report_itu = [this, &ansi, &pos](const qsizetype end) {
@@ -1880,7 +1880,7 @@ TextBuffer normalizeAnsi(const AnsiSupportFlags supportFlags, const QStringView 
     }
 
     TextBuffer output;
-    output.reserve(2 * old.length()); /* no idea */
+    output.reserve(static_cast<int>(old.length()));
 
     const auto reset = AnsiString::get_reset_string();
 
@@ -1912,9 +1912,9 @@ TextBuffer normalizeAnsi(const AnsiSupportFlags supportFlags, const QStringView 
                         output.append(ref);
                     };
 
-                    int pos = 0;
+                    qsizetype pos = 0;
                     foreachAnsi(line,
-                                [&next, &line, &pos, &print](const int begin,
+                                [&next, &line, &pos, &print](const auto begin,
                                                              const QStringView ansiStr) {
                                     assert(line.at(begin) == C_ESC);
                                     if (begin > pos) {

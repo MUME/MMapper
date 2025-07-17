@@ -97,7 +97,7 @@ XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 XFOREACH_CHAR_CONST(X_DEFINE_CHAR_CONST);
 #undef X_DEFINE_CHAR_CONST
 
-static inline constexpr const QChar QC_NBSP = 0xA0u;
+static inline constexpr const QChar QC_NBSP = char16_t(0xA0u);
 static inline const QString QS_NBSP = "\u00A0";
 
 } // namespace mmqt

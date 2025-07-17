@@ -9,7 +9,7 @@
 #include "../proxy/TaggedBytes.h"
 
 #include <QObject>
-#include <QScopedPointer>
+#include <QPointer>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
@@ -100,7 +100,7 @@ class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSessi
     Q_OBJECT
 
 private:
-    QScopedPointer<RemoteEditWidget> m_widget;
+    QPointer<RemoteEditWidget> m_widget;
 
 public:
     explicit RemoteEditInternalSession(const RemoteInternalId internalId,
@@ -116,7 +116,7 @@ class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSessi
     Q_OBJECT
 
 private:
-    QScopedPointer<RemoteEditProcess> m_process;
+    QPointer<RemoteEditProcess> m_process;
 
 public:
     explicit RemoteEditExternalSession(const RemoteInternalId internalId,

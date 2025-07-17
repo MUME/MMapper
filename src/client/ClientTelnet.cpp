@@ -81,7 +81,7 @@ void ClientTelnet::onDisconnected()
 
 void ClientTelnet::onError(QAbstractSocket::SocketError error)
 {
-    if (error == QAbstractSocket::RemoteHostClosedError) {
+    if (error == QAbstractSocket::SocketError::RemoteHostClosedError) {
         // The connection closing isn't an error
         return;
     }

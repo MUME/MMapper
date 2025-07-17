@@ -13,7 +13,7 @@
 
 #include <QMessageLogContext>
 #include <QObject>
-#include <QScopedPointer>
+#include <QPointer>
 #include <QString>
 
 RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
@@ -59,8 +59,8 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
 {
     qDebug() << "Destructed RemoteEditInternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto notLeaked = m_widget.take()) {
-        notLeaked->deleteLater();
+    if (auto *const p = m_widget.get()) {
+        p->close();
     }
 }
 
@@ -81,7 +81,7 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
 {
     qDebug() << "Destructed RemoteEditExternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto notLeaked = m_process.take()) {
-        notLeaked->deleteLater();
+    if (auto *const p = m_process.get()) {
+        p->deleteLater();
     }
 }
