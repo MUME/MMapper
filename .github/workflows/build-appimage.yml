@@ -62,12 +62,19 @@ jobs:
         export PATH=$PATH:$(pwd)/..
         export UPDATE_INFORMATION="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync"
         export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
+        export LIBSECRET_PATH=$(find /usr/lib -name "libsecret-1.so.0" 2>/dev/null | head -n 1)
+
+        if [ -z "$LIBSECRET_PATH" ]; then
+            echo "Error: libsecret-1.so.0 not found in common library paths. Please install it."
+            exit 1
+        fi
 
         # Run linuxdeploy
         ../linuxdeploy-x86_64.AppImage --appdir appdir --output appimage \
           --executable appdir/usr/bin/mmapper \
           --desktop-file appdir/usr/share/applications/org.mume.MMapper.desktop \
           --icon-file appdir/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png \
+          --library "$LIBSECRET_PATH" \
           --plugin qt
 
     - name: Generate SHA256 checksum for AppImage
