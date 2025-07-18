@@ -20,7 +20,6 @@
 * Issue reporting was refactored under the Help menu.
 * Website now supports light mode and links to the Microsoft and Snap stores.
 
----
 ## MMapper 25.06.2 (June 23, 2025)
 
 ### New Features:
@@ -66,7 +65,6 @@
     * Numerous internal code cleanups, refactoring, and style changes were made to improve maintainability.
     * Improvements were made to developer-facing tools, including the output of `_map stats` and `diff`.
 
----
 ## MMapper 25.06.1 (June 13, 2025)
 
 ### New Features:
@@ -78,7 +76,7 @@
 
 ### Bug Fixes:
 - Mapping will no longer overwrite room contents unless it is a forced update or new room
-- Fixed ``_search`` to correctly handle multi-word searches
+- Fixed `_search` to correctly handle multi-word searches
 - Allowed the window size to become smaller once again
 - Fixed Windows installation error by always installing the Visual C++ Redistributable
 - Fixed stale characters being shown on the group panel after they were removed
@@ -86,7 +84,6 @@
 ### Changes:
 - Migrated AppImage build system from `linuxdeployqt` to `linuxdeploy`
 
----
 ## MMapper 25.06.0 (June 11, 2025)
 
 ### New Features:
@@ -109,15 +106,15 @@
     * **Live Scrollback Preview:** While reviewing scrollback, you can now still see the latest game output — making it easier to keep track of what’s happening in real-time. The built-in client also supports clickable URLs and ITU underline styles sent by the game.
     * **Improved Input in the Integrated Client:** The optional built-in MUME client has received usability improvements, including function keys, smarter `TAB` autocomplete, better `CTRL+TAB` behavior, and a clearer visual distinction for password input fields.
     * **Description Panel:** New panel shows descriptive text and supports GenAI artwork via [Modding](https://github.com/MUME/MMapper/wiki/Modding). Many thanks to Freya who created the default images!
-      * Room art: ``rooms/<mapid>.jpg``
-      * Area art: ``areas/<normalized-area>.png``
-        * Normalization: lowercase, remove the first ``the ``, convert Latin-1 to ASCII, replace spaces with ``-``
-        * Example: ``the Lhûn Valley`` → ``areas/lhun-valley.bmp``
+      * Room art: `rooms/<mapid>.jpg`
+      * Area art: `areas/<normalized-area>.png`
+        * Normalization: lowercase, remove the first `the `, convert Latin-1 to ASCII, replace spaces with `-`
+        * Example: `the Lhûn Valley` → `areas/lhun-valley.bmp`
         * Images can be either PNG, JPG, or BMP formats.
 
 ### Changes & Improvements
 
-* Improved ``_map stats`` output with more color for easier reading and quick analysis.
+* Improved `_map stats` output with more color for easier reading and quick analysis.
 * Switched to zlib-ng on Windows: 2× faster compression.
 * Map loading and saving are now asynchronous, preventing UI freezes, a direct benefit of the backend overhaul for asynchronous operations.
 * Remote editing now uses MUME.Client GMCP instead of the legacy MPI protocol, leading to a more robust parser.
@@ -132,7 +129,7 @@
 * For advanced users, the `MMAPPER_WINDOW_TITLE_PROGRAM_FIRST` environment variable allows you to change the order of elements in the window title, providing flexibility for specific window management setups.
 * Deathtrap terrain type rooms have switched from a terrain type to a load type. Older map files will now have these deathtraps loaded as the indoors terrain type to better match MUME's output.
 * Corrected problems with how certain special characters and text encodings (like UTF-8 quotes and XML entities) were handled and displayed, thanks to the Unicode support improvements. As a result, XML passthrough has been removed.
-* ``_open`` and ``_close`` door commands no longer use door names to encourage the use of in-game door memory and ensure fair play.
+* `_open` and `_close` door commands no longer use door names to encourage the use of in-game door memory and ensure fair play.
 * Updater enhanced to check beta or release channels.
 
 ### Performance & Stability
@@ -283,8 +280,8 @@
 
 ### Bug fixes:
  - Powtty now provides the Terminal Type to MMapper as "XTERM".
- - Eliminated newlines that were added for each XML tag (i.e. <character> or
-   <magic>) in the saved room contents.
+ - Eliminated newlines that were added for each XML tag (i.e. `<character>` or
+   `<magic>`) in the saved room contents.
 
 ## MMapper 21.09.2 (September 29, 2021)
 
@@ -321,7 +318,7 @@
 ### Bug fixes:
  - Prompt rewriting works
  - Light and terrain characters in the prompt are now optional since we now
-   parse the terrain type from <room terrain=...> XML attribute
+   parse the terrain type from `<room terrain=...>` XML attribute
  - Fixed RFC 2066 Charset negotiation
  - Refactor telnet option handling to be less spammy
 
@@ -350,7 +347,7 @@
 
 ### Changes:
  - Default map now includes Dol Guldur environments
- - Fixed <header> XML support parsing
+ - Fixed `<header>` XML support parsing
  - Improved Windows installer High DPI support
  - Supported macOS 10.11 networking better
  - Increased telnet socket timeout to 30 seconds
@@ -463,7 +460,7 @@
  - Added search, riding, and snared affects to the group manager
  - Mouse clicks on a room during 'mouse mode' now display an information tooltip
  - 'Find Rooms' dialog will now remember its last window position and dimensions
- - Room mapping commands now use the syntax model. For more info type: _room ??
+ - Room mapping commands now use the syntax model. For more info type: `_room ??`
  - Group manager commands now use the syntax model. For more info type: `_group ??`
  - Integrated mud client is now a panel and not a non-modal window
  - Integrated mud client now uses a centered tooltip for dimension hints
@@ -626,7 +623,7 @@
 ### New features:
  - Disabled NAGLE for tcp connections which should hopefully increase performance during lossy conditions
  - ANSI color selection has been moved into a dialog that supports high colors
- - Internal command prefix character can be changed with "`_set prefix <char>`"
+ - Internal command prefix character can be changed with `_set prefix <char>`
  - Group manager clients will attempt to reconnect 3 times to a host before failing
  - Group hosts can lock the group to the current clients
  - Group tells are now colored
@@ -842,7 +839,7 @@
  - Resolved issues with QtIOCompressor library bundling by building it directly into MMapper
  - Group Manager will only attempt to connect for up to 5 seconds before timing out
  - MMapper's built in MumeClock will now only sync with known weather strings
- - First attempt at getting Ainur exits and <snoop> tags working
+ - First attempt at getting Ainur exits and `<snoop>` tags working
 
 ## MMapper 2.4.0 (December 26, 2017)
 
