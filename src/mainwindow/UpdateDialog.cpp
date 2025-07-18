@@ -6,8 +6,11 @@
 
 #include "../configuration/configuration.h"
 #include "../global/RAII.h"
-#include "../global/TextUtils.h"
 #include "../global/Version.h"
+
+#include <algorithm>
+#include <array>
+#include <utility>
 
 #include <QDesktopServices>
 #include <QGridLayout>
@@ -17,9 +20,39 @@
 #include <QNetworkReply>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QSysInfo>
 
 static constexpr const char *APPIMAGE_KEY = "APPIMAGE";
 static constexpr const char *FLATPAK_KEY = "container";
+
+namespace { // anonymous
+
+NODISCARD const char *getArchitectureRegexPattern()
+{
+    // See Qt documentation for expected keys
+    const std::array<std::pair<const char *, const char *>, 4> archPatterns = {
+        {{"arm64", "(arm64|aarch64)"},
+         {"x86_64", "(x86_64|amd64|x64)"},
+         {"i386", "(i386|x86(?!_64))"},
+         {"arm", "(arm(?!64)|armhf)"}}};
+
+    auto findPattern = [&](const QString &arch) -> const char * {
+        auto it = std::find_if(archPatterns.begin(), archPatterns.end(), [&arch](const auto &pair) {
+            return mmqt::toStdStringUtf8(arch) == pair.first;
+        });
+        return (it != archPatterns.end()) ? it->second : nullptr;
+    };
+
+    if (auto pattern = findPattern(QSysInfo::currentCpuArchitecture())) {
+        return pattern;
+    }
+    if (auto fallback = findPattern(QSysInfo::buildCpuArchitecture())) {
+        return fallback;
+    }
+    abort();
+}
+
+} // namespace
 
 CompareVersion::CompareVersion(const QString &versionStr) noexcept
 {
@@ -125,17 +158,9 @@ QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject
         }(),
         QRegularExpression::CaseInsensitiveOption);
 
-    // Compile architecture/environment-specific regex
-    static const auto environmentRegex = QRegularExpression(
-        []() -> const char * {
-            if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit) {
-                return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
-            } else if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit) {
-                return R"((aarch64|amd64|arm64|x86_64|x64))";
-            }
-            abort();
-        }(),
-        QRegularExpression::CaseInsensitiveOption);
+    // Compile architecture-specific regex
+    static const auto archRegex = QRegularExpression(getArchitectureRegexPattern(),
+                                                     QRegularExpression::CaseInsensitiveOption);
 
     const auto assets = releaseObject.value("assets").toArray();
     for (const auto &item : assets) {
@@ -147,7 +172,7 @@ QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject
             continue;
         }
 
-        if (!name.contains(platformRegex) || !name.contains(environmentRegex)) {
+        if (!name.contains(platformRegex) || !name.contains(archRegex)) {
             continue;
         }
 
