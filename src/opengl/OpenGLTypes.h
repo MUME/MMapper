@@ -20,14 +20,15 @@
 #include <glm/glm.hpp>
 
 #include <QDebug>
+#include <QOpenGLTexture>
 #include <qopengl.h>
 
 struct NODISCARD TexVert final
 {
-    glm::vec2 tex{};
+    glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit TexVert(const glm::vec2 &tex_, const glm::vec3 &vert_)
+    explicit TexVert(const glm::vec3 &tex_, const glm::vec3 &vert_)
         : tex{tex_}
         , vert{vert_}
     {}
@@ -38,10 +39,10 @@ using TexVertVector = std::vector<TexVert>;
 struct NODISCARD ColoredTexVert final
 {
     Color color;
-    glm::vec2 tex{};
+    glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit ColoredTexVert(const Color &color_, const glm::vec2 &tex_, const glm::vec3 &vert_)
+    explicit ColoredTexVert(const Color &color_, const glm::vec3 &tex_, const glm::vec3 &vert_)
         : color{color_}
         , tex{tex_}
         , vert{vert_}
@@ -76,10 +77,10 @@ struct NODISCARD FontVert3d final
                         const Color &color_,
                         const glm::vec2 &tex_,
                         const glm::vec2 &vert_)
-        : base{base_}
-        , color{color_}
-        , tex{tex_}
-        , vert{vert_}
+        : base(base_)
+        , color(color_)
+        , tex(tex_)
+        , vert(vert_)
     {}
 };
 
@@ -167,6 +168,79 @@ using SharedMMTexture = std::shared_ptr<MMTexture>;
 using TexLookup = IndexedVector<SharedMMTexture, MMTextureId>;
 using SharedTexLookup = std::shared_ptr<TexLookup>;
 
+enum class NODISCARD TextureTypeEnum { Texture2d, Texture2dArray };
+
+NODISCARD static inline TextureTypeEnum getTextureType(QOpenGLTexture::Target target)
+{
+    switch (target) {
+    case QOpenGLTexture::Target::Target2D:
+        return TextureTypeEnum::Texture2d;
+    case QOpenGLTexture::Target::Target2DArray:
+        return TextureTypeEnum::Texture2dArray;
+
+    case QOpenGLTexture::Target1D:
+    case QOpenGLTexture::Target1DArray:
+    case QOpenGLTexture::Target3D:
+    case QOpenGLTexture::TargetCubeMap:
+    case QOpenGLTexture::TargetCubeMapArray:
+    case QOpenGLTexture::Target2DMultisample:
+    case QOpenGLTexture::Target2DMultisampleArray:
+    case QOpenGLTexture::TargetRectangle:
+    case QOpenGLTexture::TargetBuffer:
+        break;
+    }
+    throw std::invalid_argument("target");
+}
+
+struct NODISCARD BasicTextureInfo final
+{
+    TextureTypeEnum type = TextureTypeEnum::Texture2d;
+    GLuint id = 0;
+    int width = 0;
+    int height = 0;
+    int depth = 1;
+
+public:
+    BasicTextureInfo() = default;
+    explicit BasicTextureInfo(const QOpenGLTexture &tex)
+        : type{getTextureType(tex.target())}
+        , id{tex.textureId()}
+        , width{tex.width()}
+        , height{tex.height()}
+        , depth{tex.depth()}
+    {}
+
+private:
+    /// Use static BasicTexture::declXXX() instead
+    explicit BasicTextureInfo(const TextureTypeEnum type_,
+                              const GLuint id_,
+                              const int width_,
+                              const int height_,
+                              const int depth_)
+        : type{type_}
+        , id{id_}
+        , width{width_}
+        , height{height_}
+        , depth{depth_}
+    {}
+
+public:
+    // NOTE: The prefix "decl-" is chosen to avoid sound like it's allocating memory.
+    NODISCARD static BasicTextureInfo decl2d(const GLuint id, const int width, const int height)
+    {
+        return BasicTextureInfo{TextureTypeEnum::Texture2d, id, width, height, 1};
+    }
+    NODISCARD static BasicTextureInfo decl2dArray(const GLuint id,
+                                                  const int width,
+                                                  const int height,
+                                                  const int depth)
+    {
+        return BasicTextureInfo{TextureTypeEnum::Texture2dArray, id, width, height, depth};
+    }
+
+    NODISCARD explicit operator bool() const { return id != 0; }
+};
+
 struct NODISCARD GLRenderState final
 {
     // glEnable(GL_BLEND)
@@ -185,7 +259,6 @@ struct NODISCARD GLRenderState final
     struct NODISCARD Uniforms final
     {
         Color color;
-        // glEnable(TEXTURE_2D), or glEnable(TEXTURE_3D)
         Textures textures;
         std::optional<float> pointSize;
     };
@@ -279,7 +352,7 @@ public:
     void clear() { virt_clear(); }
     // Clears the mesh and destroys the GL resources.
     void reset() { virt_reset(); }
-    NODISCARD bool isEmpty() const { return virt_isEmpty(); }
+    NODISCARD bool isEmpty() { return virt_isEmpty(); }
 
 public:
     void render(const GLRenderState &renderState)
@@ -307,12 +380,12 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(TexturedRenderable);
 
 private:
-    void virt_clear() final;
-    void virt_reset() final;
-    NODISCARD bool virt_isEmpty() const final;
+    void virt_clear() override;
+    void virt_reset() override;
+    NODISCARD bool virt_isEmpty() const override;
 
-public:
-    void virt_render(const GLRenderState &renderState) final;
+private:
+    void virt_render(const GLRenderState &renderState) override;
 
 public:
     NODISCARD MMTextureId replaceTexture(const MMTextureId tex)
@@ -338,6 +411,7 @@ public:
     ~UniqueMesh() = default;
     DEFAULT_MOVES_DELETE_COPIES(UniqueMesh);
 
+public:
     void render(const GLRenderState &rs) const { deref(m_mesh).render(rs); }
 };
 
@@ -352,9 +426,10 @@ public:
         : m_meshes{std::move(meshes)}
     {}
 
-    void render(const GLRenderState &rs)
+public:
+    void render(const GLRenderState &rs) const
     {
-        for (auto &mesh : m_meshes) {
+        for (const auto &mesh : m_meshes) {
             mesh.render(rs);
         }
     }

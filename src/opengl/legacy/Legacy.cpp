@@ -31,9 +31,11 @@
 #include <QDebug>
 #include <QFile>
 #include <QMessageLogContext>
+#include <QOpenGLExtraFunctions>
 #include <QOpenGLTexture>
 
 namespace Legacy {
+
 template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static auto createMesh(const SharedFunctions &functions,
                                  const DrawModeEnum mode,
@@ -321,6 +323,21 @@ void Functions::checkError()
     }
 
 #undef CASE
+}
+
+void Functions::glGenVertexArrays(GLsizei n, GLuint *arrays)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glGenVertexArrays(n, arrays);
+}
+
+void Functions::glBindVertexArray(GLuint array)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glBindVertexArray(array);
+}
+
+void Functions::glDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glDeleteVertexArrays(n, arrays);
 }
 
 } // namespace Legacy

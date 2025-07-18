@@ -200,7 +200,7 @@ bool MapCanvas::isBlacklistedDriver()
 
 void MapCanvas::initializeGL()
 {
-    auto &gl = getOpenGL();
+    OpenGL &gl = getOpenGL();
     try {
         gl.initializeOpenGLFunctions();
 
@@ -237,6 +237,19 @@ void MapCanvas::initializeGL()
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
+
+    // compile all shaders
+    {
+        auto &sharedFuncs = gl.getSharedFunctions(Badge<MapCanvas>{});
+        Legacy::Functions &funcs = deref(sharedFuncs);
+        Legacy::ShaderPrograms &programs = funcs.getShaderPrograms();
+        std::ignore = programs.getPlainAColorShader();
+        std::ignore = programs.getPlainUColorShader();
+        std::ignore = programs.getTexturedAColorShader();
+        std::ignore = programs.getTexturedUColorShader();
+        std::ignore = programs.getFontShader();
+        std::ignore = programs.getPointShader();
+    }
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
@@ -465,8 +478,9 @@ void MapCanvas::resizeGL(int width, int height)
 
 void MapCanvas::setAnimating(bool value)
 {
-    if (m_frameRateController.animating == value)
+    if (m_frameRateController.animating == value) {
         return;
+    }
 
     m_frameRateController.animating = value;
 
@@ -534,16 +548,32 @@ void MapCanvas::updateMapBatches()
     m_diff.cancelUpdates(m_data.getSavedMap());
 }
 
+bool Batches::isInProgress() const
+{
+    return remeshCookie.isPending() || next_mapBatches.has_value();
+}
+
 void MapCanvas::finishPendingMapBatches()
 {
-    std::string_view prefix = "[finishPendingMapBatches] ";
+    if (!m_batches.isInProgress()) {
+        return;
+    }
 
 #define LOG() MMLOG() << prefix
+    static const std::string_view prefix = "[finishPendingMapBatches] ";
+
+    MAYBE_UNUSED RAIICallback eventually{[this] {
+        if (!m_batches.isInProgress()) {
+            setAnimating(false);
+        }
+    }};
+
+    if (m_batches.next_mapBatches.has_value()) {
+        m_batches.mapBatches = std::exchange(m_batches.next_mapBatches, std::nullopt);
+    }
 
     RemeshCookie &remeshCookie = m_batches.remeshCookie;
-    if (!remeshCookie.isPending()) {
-        return;
-    } else if (!remeshCookie.isReady()) {
+    if (!remeshCookie.isPending() || !remeshCookie.isReady()) {
         return;
     }
 
@@ -551,8 +581,6 @@ void MapCanvas::finishPendingMapBatches()
     try {
         SharedMapBatchFinisher pFuture = remeshCookie.get();
         assert(!remeshCookie.isPending());
-
-        setAnimating(false);
 
         if (pFuture == nullptr) {
             // REVISIT: Do we need to schedule another update now?
@@ -565,15 +593,13 @@ void MapCanvas::finishPendingMapBatches()
 
         DECL_TIMER(t, __FUNCTION__);
         const IMapBatchesFinisher &future = *pFuture;
-        std::optional<MapBatches> &opt_mapBatches = m_batches.mapBatches;
+        std::optional<MapBatches> &opt_mapBatches = m_batches.next_mapBatches;
         opt_mapBatches.reset();
         finish(future, opt_mapBatches, getOpenGL(), getGLFont());
         assert(opt_mapBatches.has_value());
         m_data.saveSnapshot();
 
     } catch (...) {
-        setAnimating(false);
-
         QString msg;
         try {
             std::rethrow_exception(std::current_exception());
@@ -743,11 +769,11 @@ void MapCanvas::paintDifferences()
 
     if (getConfig().canvas.showMissingMapId.get()) {
         if (auto &needsUpdate = highlight.needsUpdate; !needsUpdate.empty()) {
-            needsUpdate.render(gl, m_textures.room_needs_update->getId());
+            needsUpdate.render(gl, m_textures.room_needs_update->getArrayPosition().array);
         }
     }
     if (auto &modified = highlight.modified; !modified.empty()) {
-        modified.render(gl, m_textures.room_modified->getId());
+        modified.render(gl, m_textures.room_modified->getArrayPosition().array);
     }
 }
 

@@ -147,14 +147,14 @@ private:
     void virt_bind() override
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
-        static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().tex) == 3 * sizeof(GLfloat));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         const auto attribs = Attribs::getLocations(Base::m_program);
         gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
         /* NOTE: OpenGL 2.x can't use GL_TEXTURE_2D_ARRAY. */
-        gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
+        gl.enableAttrib(attribs.texPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
         m_boundAttribs = attribs;
     }
@@ -206,7 +206,7 @@ private:
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
-        static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().tex) == 3 * sizeof(GLfloat));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
@@ -214,7 +214,7 @@ private:
         gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
         gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
         /* NOTE: OpenGL 2.x can't use GL_TEXTURE_2D_ARRAY. */
-        gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
+        gl.enableAttrib(attribs.texPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
         m_boundAttribs = attribs;
     }

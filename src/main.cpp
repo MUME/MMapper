@@ -24,16 +24,13 @@
 #include <exchndl.h>
 #endif
 
-static void useHighDpi()
-{
-    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-}
-
 static void setHighDpiScaleFactorRoundingPolicy()
 {
+    // High Dpi is enabled by default in Qt6
     QApplication::setHighDpiScaleFactorRoundingPolicy(
         Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+    assert(QApplication::highDpiScaleFactorRoundingPolicy()
+           == Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 }
 
 static void tryInitDrMingw()
@@ -105,7 +102,6 @@ static void setSurfaceFormat()
 
 int main(int argc, char **argv)
 {
-    useHighDpi();
     setHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {

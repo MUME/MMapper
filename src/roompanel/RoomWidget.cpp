@@ -150,7 +150,7 @@ const QVariant &RoomModel::getMobField(const int row, const int column) const
     const QVariant &variant = mob->getField(i);
 
     // immediately return non-Id based fields
-    if (static_cast<QMetaType::Type>(variant.type()) != QMetaType::UInt) {
+    if (!variant.canConvert<uint>()) {
         return variant;
     }
 
@@ -176,7 +176,7 @@ bool RoomModel::isEnemy(const int row, const int column) const
     if (column < static_cast<int>(ColumnTypeEnum::LABEL)
         || column > static_cast<int>(ColumnTypeEnum::WEAPON)) {
         const auto &variant = getMobField(row, column);
-        if (variant == empty || !variant.canConvert(QMetaType::QString)) {
+        if (variant == empty || !variant.canConvert<QString>()) {
             return false;
         }
 

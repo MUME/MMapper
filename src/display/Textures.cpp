@@ -12,6 +12,7 @@
 #include "RoadIndex.h"
 #include "mapcanvas.h"
 
+#include <array>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
@@ -20,6 +21,7 @@
 #include <glm/glm.hpp>
 
 #include <QMessageLogContext>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QtCore>
 #include <QtGui>
 
@@ -41,6 +43,27 @@ MMTexture::MMTexture(Badge<MMTexture>, const QString &name)
 void MapCanvasTextures::destroyAll()
 {
     for_each([](SharedMMTexture &tex) -> void { tex.reset(); });
+
+    auto &&os = MMLOG();
+
+    if constexpr (IS_DEBUG_BUILD)
+        os << "destroying...\n";
+#define XTEX(_TYPE, _NAME) \
+    do { \
+        if (auto &tex = _NAME##_Array) { \
+            if constexpr (IS_DEBUG_BUILD) { \
+                const auto layers = deref(deref(tex).get()).layers(); \
+                os << "... " #_NAME << "_Array w/ " << layers << " layer" \
+                   << ((layers == 1) ? "" : "s") << "\n"; \
+            } \
+            tex.reset(); \
+        } \
+    } while (false);
+    XFOREACH_MAPCANVAS_TEXTURES(XTEX)
+#undef XTEX
+
+    if constexpr (IS_DEBUG_BUILD)
+        os << "Done\n";
 }
 
 NODISCARD static SharedMMTexture loadTexture(const QString &name)
@@ -207,13 +230,29 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
         }
     };
 
-    return MMTexture::alloc(
-        QOpenGLTexture::Target::Target2D, [&init](QOpenGLTexture &tex) { return init(tex); }, true);
+    return MMTexture::alloc(QOpenGLTexture::Target::Target2D, init, true);
+}
+
+template<typename Type>
+static void appendAll(std::vector<SharedMMTexture> &v, Type &&things)
+{
+    for (const SharedMMTexture &t : things)
+        v.emplace_back(t);
+}
+
+template<typename... Types>
+NODISCARD static std::vector<SharedMMTexture> combine(Types &&...things)
+{
+    std::vector<SharedMMTexture> tmp;
+    (appendAll(tmp, things), ...);
+    return tmp;
 }
 
 void MapCanvas::initTextures()
 {
     MapCanvasTextures &textures = this->m_textures;
+    auto &opengl = this->getOpenGL();
+
     loadPixmapArray(textures.terrain); // 128
     loadPixmapArray(textures.road);    // 128
     loadPixmapArray(textures.trail);   // 64
@@ -254,28 +293,207 @@ void MapCanvas::initTextures()
     textures.room_needs_update = loadTexture(getPixmapFilenameRaw("room-needs-update.png"));
     textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
 
-    {
-        textures.for_each([this](SharedMMTexture &pTex) -> void {
-            auto &tex = deref(pTex);
-            assert(tex.get()); // make sure we didn't forget to initialize one
+    auto assignId = [this](SharedMMTexture &pTex) -> MMTextureId {
+        auto &tex = deref(pTex);
+        assert(tex.get()); // make sure we didn't forget to initialize one
 
-            auto id = allocateTextureId();
-            tex.setId(id);
-            m_opengl.setTextureLookup(id, pTex);
+        auto id = allocateTextureId();
+        tex.setId(id);
+        m_opengl.setTextureLookup(id, pTex);
+        return id;
+    };
+
+    {
+        textures.for_each([&assignId](SharedMMTexture &pTex) {
+            //
+            MAYBE_UNUSED auto ignored = assignId(pTex);
         });
     }
 
-    updateTextures();
+    {
+        // We're going to create a texture with Target2DArray.
+        // Measure first.
+
+        struct NODISCARD Measurements final
+        {
+            int max_xy_size = 0;
+            int layer_count = 0;
+            int max_mip_levels = 0;
+        };
+
+        const Measurements m = [&textures]() -> Measurements {
+            Measurements m2;
+            textures.for_each([&m2](const SharedMMTexture &pTex) -> void {
+                const auto &tex = deref(pTex);
+                const QOpenGLTexture &qtex = deref(tex.get());
+                assert(qtex.target() == QOpenGLTexture::Target2D);
+
+                const int width = qtex.width();
+                const int height = qtex.height();
+                assert(width == height);
+
+                m2.max_xy_size = std::max(m2.max_xy_size, std::max(width, height));
+                m2.layer_count += 1;
+                m2.max_mip_levels = std::max(m2.max_mip_levels, qtex.mipLevels());
+            });
+            return m2;
+        }();
+
+        auto maybeCreateArray2 = [&assignId, &opengl](auto &thing, SharedMMTexture &pArrayTex) {
+            std::optional<std::pair<int, int>> bounds;
+            auto getBounds = [](const auto &x) {
+                return std::make_pair<int, int>(x->get()->width(), x->get()->height());
+            };
+            QOpenGLTexture *pFirst = nullptr;
+
+            for (const SharedMMTexture &x : thing) {
+                if (!bounds) {
+                    pFirst = x->get();
+                    bounds = getBounds(x);
+                    const auto size = bounds->first;
+                    if (size != bounds->second)
+                        throw std::runtime_error("image must be square");
+                    if (!utils::isPowerOfTwo(static_cast<uint32_t>(size)))
+                        throw std::runtime_error("image size must be a power of two");
+                }
+
+                if (bounds != getBounds(x)) {
+                    throw std::runtime_error("oops");
+                }
+            }
+
+            auto &first = deref(pFirst);
+            std::vector<SharedMMTexture> inputs{thing.begin(), thing.end()};
+
+            auto init_array = [&first, &inputs](QOpenGLTexture &tex) {
+                using Dir = QOpenGLTexture::CoordinateDirection;
+                tex.setWrapMode(Dir::DirectionS, first.wrapMode(Dir::DirectionS));
+                tex.setWrapMode(Dir::DirectionT, first.wrapMode(Dir::DirectionT));
+                tex.setMinMagFilters(first.minificationFilter(), first.magnificationFilter());
+                tex.setAutoMipMapGenerationEnabled(false);
+                tex.create();
+                tex.setSize(first.width(), first.height(), 1);
+                tex.setLayers(static_cast<int>(inputs.size()));
+                tex.setMipLevels(tex.maximumMipLevels());
+                tex.setFormat(first.format());
+                tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA,
+                                    QOpenGLTexture::PixelType::UInt8);
+            };
+
+            pArrayTex = MMTexture::alloc(QOpenGLTexture::Target2DArray, init_array, false);
+            opengl.initArray(pArrayTex, inputs);
+            const auto id = assignId(pArrayTex);
+
+            int pos = 0;
+            for (const SharedMMTexture &x : thing) {
+                x->setArrayPosition(MMTexArrayPosition{id, pos});
+                pos += 1;
+            }
+        };
+
+        {
+            using One = std::array<SharedMMTexture, 1>;
+            One no_ride{textures.no_ride};
+            SharedMMTexture pArrayTex;
+            auto thing = combine(textures.load, textures.mob, no_ride);
+            maybeCreateArray2(thing, pArrayTex);
+            textures.load_Array = textures.mob_Array = textures.no_ride_Array = pArrayTex;
+        }
+
+        {
+            SharedMMTexture pArrayTex;
+            auto thing = combine(textures.terrain, textures.road);
+            maybeCreateArray2(thing, pArrayTex);
+            textures.terrain_Array = textures.road_Array = pArrayTex;
+        }
+
+        {
+            using Four = std::array<SharedMMTexture, 4>;
+            Four exits{textures.exit_climb_down,
+                       textures.exit_climb_up,
+                       textures.exit_down,
+                       textures.exit_up};
+            SharedMMTexture pArrayTex;
+            maybeCreateArray2(exits, pArrayTex);
+            textures.exit_climb_down_Array = textures.exit_climb_up_Array = textures.exit_down_Array
+                = textures.exit_up_Array = pArrayTex;
+        }
+
+        auto maybeCreateArray = [&maybeCreateArray2](auto &thing, SharedMMTexture &pArrayTex) {
+            if (pArrayTex)
+                return;
+            if constexpr (std::is_same_v<std::decay_t<decltype(thing)>, SharedMMTexture>) {
+                using JustOne = std::array<SharedMMTexture, 1>;
+                JustOne justOne{thing};
+                maybeCreateArray2(justOne, pArrayTex);
+            } else {
+                maybeCreateArray2(thing, pArrayTex);
+            }
+        };
+
+#define XTEX(_TYPE, _NAME) maybeCreateArray(textures._NAME, textures._NAME##_Array);
+        XFOREACH_MAPCANVAS_TEXTURES(XTEX)
+#undef XTEX
+
+        {
+            auto &&os = MMLOG();
+            os << "[initTextures] measurements:\n";
+
+#define PRINT(x) \
+    do { \
+        os << " " #x " = " << (x) << "\n"; \
+    } while (false)
+
+            PRINT(m.max_xy_size);
+            PRINT(m.layer_count);
+            PRINT(m.max_mip_levels);
+
+#undef PRINT
+        }
+    }
+
+    if constexpr (IS_DEBUG_BUILD) {
+        auto &&os = MMLOG();
+
+        auto report = [&os](std::string_view what, const SharedMMTexture &tex) {
+            os << what << " is " << tex->getId().value();
+            if (tex->hasArrayPosition()) {
+                const MMTexArrayPosition &pos = tex->getArrayPosition();
+                os << " and is in " << pos.array.value();
+                os << " at " << pos.position;
+            }
+            os << "\n";
+        };
+
+        auto wat = [&report](std::string_view what, const auto &thing) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(thing)>, SharedMMTexture>) {
+                report(what, thing);
+            } else
+                for (const SharedMMTexture &tex : thing) {
+                    report(what, tex);
+                }
+        };
+
+#define XTEX(_TYPE, _NAME) wat(#_NAME, m_textures._NAME);
+        XFOREACH_MAPCANVAS_TEXTURES(XTEX)
+#undef XTEX
+    }
+
+    {
+        // calling updateTextures() here depends on current multisampling status being reset.
+        m_graphicsOptionsStatus.multisampling.reset();
+        updateTextures();
+    }
 }
 
 namespace mctp {
 
 namespace detail {
 
-static MMTextureId copy_proxy(const SharedMMTexture &pTex)
+static MMTexArrayPosition copy_proxy(const SharedMMTexture &pTex)
 {
     if (!pTex) {
-        return INVALID_MM_TEXTURE_ID;
+        return MMTexArrayPosition{};
     }
 
     MMTexture &tex = *pTex;
@@ -290,7 +508,7 @@ static MMTextureId copy_proxy(const SharedMMTexture &pTex)
                 << "/ canBeUpdated:" << canBeUpdated;
     }
 
-    return id;
+    return tex.getArrayPosition();
 }
 
 template<typename T>
@@ -332,6 +550,17 @@ void MapCanvas::updateTextures()
             ::setTrilinear(tex, wantTrilinear);
         }
     });
+
+#define XTEX(_TYPE, _NAME) \
+    do { \
+        const SharedMMTexture &arr = m_textures._NAME##_Array; \
+        if (arr) { \
+            ::setTrilinear(arr, wantTrilinear); \
+        } \
+    } while (false);
+    XFOREACH_MAPCANVAS_TEXTURES(XTEX)
+#undef XTEX
+
     activeStatus = wantTrilinear;
 
     // called to trigger an early error

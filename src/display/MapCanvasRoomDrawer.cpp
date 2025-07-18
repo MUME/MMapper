@@ -143,8 +143,8 @@ struct LayerBatchData;
 
 struct NODISCARD TerrainAndTrail final
 {
-    MMTextureId terrain = INVALID_MM_TEXTURE_ID;
-    MMTextureId trail = INVALID_MM_TEXTURE_ID;
+    MMTexArrayPosition terrain;
+    MMTexArrayPosition trail;
 };
 
 NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const mctp::MapCanvasTexturesProxy &textures,
@@ -165,6 +165,7 @@ NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const mctp::MapCanvasTex
 
 struct NODISCARD IRoomVisitorCallbacks
 {
+public:
     virtual ~IRoomVisitorCallbacks();
 
 private:
@@ -172,9 +173,9 @@ private:
 
 private:
     // Rooms
-    virtual void virt_visitTerrainTexture(const RoomHandle &, MMTextureId) = 0;
-    virtual void virt_visitTrailTexture(const RoomHandle &, MMTextureId) = 0;
-    virtual void virt_visitOverlayTexture(const RoomHandle &, MMTextureId) = 0;
+    virtual void virt_visitTerrainTexture(const RoomHandle &, const MMTexArrayPosition &) = 0;
+    virtual void virt_visitTrailTexture(const RoomHandle &, const MMTexArrayPosition &) = 0;
+    virtual void virt_visitOverlayTexture(const RoomHandle &, const MMTexArrayPosition &) = 0;
     virtual void virt_visitNamedColorTint(const RoomHandle &, RoomTintEnum) = 0;
 
     // Walls
@@ -189,15 +190,15 @@ public:
     NODISCARD bool acceptRoom(const RoomHandle &room) const { return virt_acceptRoom(room); }
 
     // Rooms
-    void visitTerrainTexture(const RoomHandle &room, const MMTextureId tex)
+    void visitTerrainTexture(const RoomHandle &room, const MMTexArrayPosition &tex)
     {
         virt_visitTerrainTexture(room, tex);
     }
-    void visitTrailTexture(const RoomHandle &room, const MMTextureId tex)
+    void visitTrailTexture(const RoomHandle &room, const MMTexArrayPosition &tex)
     {
         virt_visitTrailTexture(room, tex);
     }
-    void visitOverlayTexture(const RoomHandle &room, const MMTextureId tex)
+    void visitOverlayTexture(const RoomHandle &room, const MMTexArrayPosition &tex)
     {
         virt_visitOverlayTexture(room, tex);
     }
@@ -244,8 +245,8 @@ static void visitRoom(const RoomHandle &room,
 
     callbacks.visitTerrainTexture(room, terrainAndTrail.terrain);
 
-    if (auto trail = terrainAndTrail.trail) {
-        callbacks.visitOverlayTexture(room, trail);
+    if (auto trail = terrainAndTrail.trail; trail.array) {
+        callbacks.visitTrailTexture(room, trail);
     }
 
     if (isDark) {
@@ -407,36 +408,33 @@ static void visitRooms(const RoomVector &rooms,
 struct NODISCARD RoomTex
 {
     RoomHandle room;
-    MMTextureId tex = INVALID_MM_TEXTURE_ID;
+    MMTexArrayPosition pos;
 
-    explicit RoomTex(RoomHandle moved_room, const MMTextureId input_texid)
+    explicit RoomTex(RoomHandle moved_room, const MMTexArrayPosition &input_pos)
         : room{std::move(moved_room)}
-        , tex{input_texid}
+        , pos{input_pos}
     {
-        if (input_texid == INVALID_MM_TEXTURE_ID) {
-            throw std::invalid_argument("input_texid");
-        }
+        if (input_pos.array == INVALID_MM_TEXTURE_ID)
+            throw std::invalid_argument("input_pos");
     }
 
-    NODISCARD MMTextureId priority() const { return tex; }
-    NODISCARD MMTextureId textureId() const { return tex; }
-
-    NODISCARD friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
+    NODISCARD static bool isPartitioned(const RoomTex &a, const RoomTex &b)
     {
-        // true if lhs comes strictly before rhs
-        return lhs.priority() < rhs.priority();
+        // if (a.pos.array == b.pos.array)
+        //            return a.pos.position < b.pos.position;
+        return a.pos.array < b.pos.array;
     }
 };
 
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
-    ColoredRoomTex(const RoomHandle &room, const MMTextureId tex) = delete;
+    ColoredRoomTex(const RoomHandle &room, const MMTexArrayPosition &tex) = delete;
 
     explicit ColoredRoomTex(RoomHandle moved_room,
-                            const MMTextureId input_texid,
+                            const MMTexArrayPosition input_pos,
                             const Color &input_color)
-        : RoomTex{std::move(moved_room), input_texid}
+        : RoomTex{std::move(moved_room), input_pos}
         , color{input_color}
     {}
 };
@@ -463,11 +461,12 @@ struct NODISCARD RoomTexVector final : public std::vector<RoomTex>
             return;
         }
 
+        if (isSorted())
+            return;
+
         RoomTex *const beg = data();
         RoomTex *const end = beg + size();
-        // NOTE: comparison will be std::less<RoomTex>, which uses
-        // operator<() if it exists.
-        std::sort(beg, end);
+        std::sort(beg, end, RoomTex::isPartitioned);
     }
 
     NODISCARD bool isSorted() const
@@ -478,7 +477,7 @@ struct NODISCARD RoomTexVector final : public std::vector<RoomTex>
 
         const RoomTex *const beg = data();
         const RoomTex *const end = beg + size();
-        return std::is_sorted(beg, end);
+        return std::is_sorted(beg, end, RoomTex::isPartitioned);
     }
 };
 
@@ -494,11 +493,14 @@ struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
             return;
         }
 
+        if (isSorted())
+            return;
+
         ColoredRoomTex *const beg = data();
         ColoredRoomTex *const end = beg + size();
         // NOTE: comparison will be std::less<RoomTex>, which uses
         // operator<() if it exists.
-        std::sort(beg, end);
+        std::sort(beg, end, RoomTex::isPartitioned);
     }
 
     NODISCARD bool isSorted() const
@@ -509,7 +511,7 @@ struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
 
         const ColoredRoomTex *const beg = data();
         const ColoredRoomTex *const end = beg + size();
-        return std::is_sorted(beg, end);
+        return std::is_sorted(beg, end, RoomTex::isPartitioned);
     }
 };
 
@@ -521,11 +523,11 @@ static void foreach_texture(const T &textures, Callback &&callback)
     const auto size = textures.size();
     for (size_t beg = 0, next = size; beg < size; beg = next) {
         const RoomTex &rtex = textures[beg];
-        const auto textureId = rtex.textureId();
+        const auto textureId = rtex.pos.array;
 
         size_t end = beg + 1;
         for (; end < size; ++end) {
-            if (textureId != textures[end].textureId()) {
+            if (textureId != textures[end].pos.array) {
                 break;
             }
         }
@@ -537,7 +539,7 @@ static void foreach_texture(const T &textures, Callback &&callback)
 }
 
 NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
-    const std::string_view /*what*/, const RoomTexVector &textures)
+    const std::string_view what, const RoomTexVector &textures)
 {
     if (textures.empty()) {
         return {};
@@ -549,6 +551,19 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
                           [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
         return texCount;
     }();
+
+    if constexpr (IS_DEBUG_BUILD) {
+        if (numUniqueTextures > 1) {
+            MMLOG() << what << " has " << numUniqueTextures << " unique textures\n";
+
+            {
+                auto &&os = MMLOG();
+                for (auto &x : textures) {
+                    os << x.pos.array.value() << " at " << x.pos.position << "\n";
+                }
+            }
+        }
+    }
 
     LayerMeshesIntermediate::FnVec tmp_meshes;
     tmp_meshes.reserve(numUniqueTextures);
@@ -563,9 +578,12 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
         // | |  ccw winding
         // A-B
         for (size_t i = beg; i < end; ++i) {
-            const auto &pos = textures[i].room.getPosition();
+            const RoomTex &thisVert = textures[i];
+            const auto &pos = thisVert.room.getPosition();
             const auto v0 = pos.to_vec3();
-#define EMIT(x, y) verts.emplace_back(glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0))
+            const auto z = thisVert.pos.position;
+
+#define EMIT(x, y) verts.emplace_back(glm::vec3((x), (y), z), v0 + glm::vec3((x), (y), 0))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -573,7 +591,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
 #undef EMIT
         }
 
-        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.tex](OpenGL &g) {
+        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.pos.array](OpenGL &g) {
             return g.createTexturedQuadBatch(v, t);
         });
     };
@@ -584,7 +602,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
 }
 
 NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshes(
-    const std::string_view /*what*/, const ColoredRoomTexVector &textures)
+    const std::string_view what, const ColoredRoomTexVector &textures)
 {
     if (textures.empty()) {
         return {};
@@ -596,6 +614,19 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
                           [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
         return texCount;
     }();
+
+    if constexpr (IS_DEBUG_BUILD) {
+        if (numUniqueTextures > 1) {
+            MMLOG() << what << " has " << numUniqueTextures << " unique textures\n";
+
+            {
+                auto &&os = MMLOG();
+                for (auto &x : textures) {
+                    os << x.pos.array.value() << " at " << x.pos.position << "\n";
+                }
+            }
+        }
+    }
 
     LayerMeshesIntermediate::FnVec tmp_meshes;
     tmp_meshes.reserve(numUniqueTextures);
@@ -615,8 +646,9 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
             const auto &pos = thisVert.room.getPosition();
             const auto v0 = pos.to_vec3();
             const auto color = thisVert.color;
+            const auto z = thisVert.pos.position;
 
-#define EMIT(x, y) verts.emplace_back(color, glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0))
+#define EMIT(x, y) verts.emplace_back(color, glm::vec3((x), (y), z), v0 + glm::vec3((x), (y), 0))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -624,7 +656,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
 #undef EMIT
         }
 
-        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.tex](OpenGL &g) {
+        tmp_meshes.emplace_back([v = std::move(verts), t = rtex.pos.array](OpenGL &g) {
             return g.createColoredTexturedQuadBatch(v, t);
         });
     };
@@ -650,10 +682,11 @@ struct NODISCARD LayerBatchData final
     RoomTintArray<PlainQuadBatch> roomTints;
     PlainQuadBatch roomLayerBoostQuads;
 
+    // So it can be used in std containers
     explicit LayerBatchData() = default;
+
     ~LayerBatchData() = default;
-    DEFAULT_MOVES(LayerBatchData);
-    DELETE_COPIES(LayerBatchData);
+    DEFAULT_MOVES_DELETE_COPIES(LayerBatchData);
 
     void sort()
     {
@@ -727,9 +760,9 @@ private:
         return m_bounds.contains(room.getPosition());
     }
 
-    void virt_visitTerrainTexture(const RoomHandle &room, const MMTextureId terrain) final
+    void virt_visitTerrainTexture(const RoomHandle &room, const MMTexArrayPosition &terrain) final
     {
-        if (terrain == INVALID_MM_TEXTURE_ID) {
+        if (terrain.array == INVALID_MM_TEXTURE_ID) {
             return;
         }
 
@@ -744,16 +777,16 @@ private:
 #undef EMIT
     }
 
-    void virt_visitTrailTexture(const RoomHandle &room, const MMTextureId trail) final
+    void virt_visitTrailTexture(const RoomHandle &room, const MMTexArrayPosition &trail) final
     {
-        if (trail != INVALID_MM_TEXTURE_ID) {
+        if (trail.array != INVALID_MM_TEXTURE_ID) {
             m_data.roomTrails.emplace_back(room, trail);
         }
     }
 
-    void virt_visitOverlayTexture(const RoomHandle &room, const MMTextureId overlay) final
+    void virt_visitOverlayTexture(const RoomHandle &room, const MMTexArrayPosition &overlay) final
     {
-        if (overlay != INVALID_MM_TEXTURE_ID) {
+        if (overlay.array != INVALID_MM_TEXTURE_ID) {
             m_data.roomOverlays.emplace_back(room, overlay);
         }
     }
@@ -790,25 +823,26 @@ private:
         if (wallType == WallTypeEnum::DOOR) {
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
-            const MMTextureId tex = m_textures.door[dir];
+            const MMTexArrayPosition &tex = m_textures.door[dir];
             m_data.doors.emplace_back(room, tex, glcolor);
+
         } else {
             if (isNESW(dir)) {
                 if (wallType == WallTypeEnum::SOLID) {
-                    const MMTextureId tex = m_textures.wall[dir];
+                    const MMTexArrayPosition &tex = m_textures.wall[dir];
                     m_data.solidWallLines.emplace_back(room, tex, glcolor);
                 } else {
-                    const MMTextureId tex = m_textures.dotted_wall[dir];
+                    const MMTexArrayPosition &tex = m_textures.dotted_wall[dir];
                     m_data.dottedWallLines.emplace_back(room, tex, glcolor);
                 }
             } else {
                 const bool isUp = dir == ExitDirEnum::UP;
                 assert(isUp || dir == ExitDirEnum::DOWN);
 
-                const MMTextureId tex = isClimb
-                                            ? (isUp ? m_textures.exit_climb_up
-                                                    : m_textures.exit_climb_down)
-                                            : (isUp ? m_textures.exit_up : m_textures.exit_down);
+                const MMTexArrayPosition &tex = isClimb ? (isUp ? m_textures.exit_climb_up
+                                                                : m_textures.exit_climb_down)
+                                                        : (isUp ? m_textures.exit_up
+                                                                : m_textures.exit_down);
 
                 m_data.roomUpDownExits.emplace_back(room, tex, glcolor);
             }

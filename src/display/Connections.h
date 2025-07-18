@@ -69,8 +69,8 @@ using BatchedRoomNames = std::unordered_map<int, UniqueMesh>;
 
 struct NODISCARD ConnectionDrawerColorBuffer final
 {
-    std::vector<ColorVert> lineVerts;
     std::vector<ColorVert> triVerts;
+    std::vector<ColorVert> quadVerts;
 
     ConnectionDrawerColorBuffer() = default;
     DEFAULT_MOVES_DELETE_COPIES(ConnectionDrawerColorBuffer);
@@ -78,18 +78,18 @@ struct NODISCARD ConnectionDrawerColorBuffer final
 
     void clear()
     {
-        lineVerts.clear();
         triVerts.clear();
+        quadVerts.clear();
     }
-    NODISCARD bool empty() const { return lineVerts.empty() && triVerts.empty(); }
+    NODISCARD bool empty() const { return triVerts.empty() && quadVerts.empty(); }
 };
 
 struct NODISCARD ConnectionMeshes final
 {
-    UniqueMesh normalLines;
     UniqueMesh normalTris;
-    UniqueMesh redLines;
     UniqueMesh redTris;
+    UniqueMesh normalQuads;
+    UniqueMesh redQuads;
 
     ConnectionMeshes() = default;
     DEFAULT_MOVES_DELETE_COPIES(ConnectionMeshes);

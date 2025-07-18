@@ -17,7 +17,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
 
 class OpenGL;
 
@@ -74,20 +74,21 @@ class Functions;
 using SharedFunctions = std::shared_ptr<Functions>;
 using WeakFunctions = std::weak_ptr<Functions>;
 
-/// \c Legacy::Functions implements both GL 2.0 and ES 2.0 (based on a subset of
+/// \c Legacy::Functions implements both GL 3.1 and ES 2.0 (based on a subset of
 /// GL 2.0); this is accomplished by using separate implementation files for the
-/// differences between GL 2.0 and ES 2.0.
-class NODISCARD Functions final : private QOpenGLFunctions,
+/// differences between GL 3.1 and ES 2.0.
+class NODISCARD Functions final : private QOpenGLFunctions_3_3_Core,
                                   public std::enable_shared_from_this<Functions>
 {
 private:
-    using Base = QOpenGLFunctions;
+    using Base = QOpenGLFunctions_3_3_Core;
     glm::mat4 m_viewProj = glm::mat4(1);
     Viewport m_viewport;
     float m_devicePixelRatio = 1.f;
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
+    std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
 
 public:
     NODISCARD static std::shared_ptr<Functions> alloc();
@@ -95,7 +96,7 @@ public:
 public:
     explicit Functions(Badge<Functions>);
 
-    ~Functions();
+    ~Functions() override;
     DELETE_CTORS_AND_ASSIGN_OPS(Functions);
 
 public:
@@ -109,6 +110,15 @@ public:
             throw std::invalid_argument("devicePixelRatio");
         }
         m_devicePixelRatio = devicePixelRatio;
+    }
+
+public:
+    // The purpose of this function is to safely manage the lifetime of reused meshes
+    // like the full screen quad mesh. Caller is expected to only keep a weak pointer
+    // to the mesh. See OpenGL::renderPlainFullScreenQuad().
+    void addSharedMesh(Badge<OpenGL>, std::shared_ptr<IRenderable> mesh)
+    {
+        m_staticMeshes.emplace_back(std::move(mesh));
     }
 
 public:
@@ -146,6 +156,10 @@ public:
     using Base::glGetString;
     using Base::glGetUniformLocation;
     using Base::glHint;
+    using Base::glIsBuffer;
+    using Base::glIsProgram;
+    using Base::glIsShader;
+    using Base::glIsTexture;
     using Base::glLinkProgram;
     using Base::glShaderSource;
     using Base::glUniform1fv;
@@ -156,9 +170,17 @@ public:
     using Base::glUseProgram;
     using Base::glVertexAttribPointer;
 
+    // VAO functions
+    void glGenVertexArrays(GLsizei n, GLuint *arrays);
+    void glBindVertexArray(GLuint array);
+    void glDeleteVertexArrays(GLsizei n, const GLuint *arrays);
+
 public:
-    // OpenGL man page says "Only width 1 is guaranteed to be supported."
-    void glLineWidth(const GLfloat lineWidth) { Base::glLineWidth(scalef(lineWidth)); }
+    void glLineWidth(const GLfloat /*lineWidth*/)
+    {
+        // OpenGL man page says "Only width 1 is guaranteed to be supported."
+        Base::glLineWidth(1.f);
+    }
 
 public:
     void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height)

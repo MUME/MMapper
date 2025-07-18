@@ -32,7 +32,9 @@ WinDarkMode::~WinDarkMode()
     }
 }
 
-bool WinDarkMode::nativeEventFilter(const QByteArray &eventType, void *message, long * /*result */)
+bool WinDarkMode::nativeEventFilter(const QByteArray &eventType,
+                                    void *message,
+                                    qintptr * /*result */)
 {
     if (eventType != "windows_generic_MSG")
         return false;
