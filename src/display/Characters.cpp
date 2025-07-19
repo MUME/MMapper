@@ -29,7 +29,7 @@
 #include <QtCore>
 #include <QColor>
 
-std::unordered_map<GroupId, GhostInfo> g_ghosts;
+std::unordered_map<QString, GhostInfo> g_ghosts;
 
 static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
 static constexpr float PATH_LINE_WIDTH = 4.f;
@@ -537,22 +537,29 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         batch.drawCharacter(pos, col, fill, tokenKey);
         drawnRoomIds.insert(id);
     }
-    /* ---------- draw persistent ghost tokens ------------------------------ */
-    for (const auto &[gid, g] : g_ghosts) {
-        if (g.roomSid == playerRoomSid)
-            continue;
+    /* ---------- draw (and purge) ghost tokens ------------------------------ */
+    for (auto it = g_ghosts.begin(); it != g_ghosts.end(); /* ++ in body */) {
+        const auto  &ghostInfo = it->second;         // key is QString, ignore it here
 
-        if (const auto h = map.findRoomHandle(g.roomSid)) {
+        /* If the player is now in that same room, drop the stale ghost entry */
+        if (ghostInfo.roomSid == playerRoomSid) {    // compare room ids
+            it = g_ghosts.erase(it);                 // erase returns next iterator
+            continue;                                // nothing to draw
+        }
+
+        /* Otherwise draw the ghost icon */
+        if (const auto h = map.findRoomHandle(ghostInfo.roomSid)) {   // use room id
             const Coordinate &pos = h.getPosition();
 
             QColor tint(Qt::white);
-            tint.setAlphaF(0.50f);          // 50 % opacity
+            tint.setAlphaF(0.50f);                   // 50 % opacity
             Color  col(tint);
 
             const bool fill = !drawnRoomIds.contains(h.getId());
-            batch.drawCharacter(pos, col, fill, g.tokenKey /*, 0.9f scale if supported */);
+            batch.drawCharacter(pos, col, fill, ghostInfo.tokenKey /*, 0.9f */);
             drawnRoomIds.insert(h.getId());
         }
+        ++it;                                        // manual increment
     }
 }
 
