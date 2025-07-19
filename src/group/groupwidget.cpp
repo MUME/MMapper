@@ -283,6 +283,9 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
     // Identify truly new characters and categorize them as NPC or player
     for (const auto &pGameChar : newGameChars) {
         const auto &gameChar = deref(pGameChar);
+
+        g_ghosts.erase(gameChar.getId());
+
         if (existingIds.find(gameChar.getId()) == existingIds.end()) {
             allTrulyNewCharsInOriginalOrder.push_back(pGameChar);
             if (gameChar.isNpc()) {
