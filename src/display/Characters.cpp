@@ -29,7 +29,7 @@
 #include <QtCore>
 #include <QColor>
 
-std::unordered_map<QString, GhostInfo> g_ghosts;
+std::unordered_map<ServerRoomId, GhostInfo> g_ghosts;
 
 static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
 static constexpr float PATH_LINE_WIDTH = 4.f;
@@ -539,27 +539,26 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     }
     /* ---------- draw (and purge) ghost tokens ------------------------------ */
     for (auto it = g_ghosts.begin(); it != g_ghosts.end(); /* ++ in body */) {
-        const auto  &ghostInfo = it->second;         // key is QString, ignore it here
+        ServerRoomId ghostSid  = it->first;          // map key is the room id
+        const QString tokenKey = it->second.tokenKey;
 
-        /* If the player is now in that same room, drop the stale ghost entry */
-        if (ghostInfo.roomSid == playerRoomSid) {    // compare room ids
-            it = g_ghosts.erase(it);                 // erase returns next iterator
-            continue;                                // nothing to draw
+        if (ghostSid == playerRoomSid) {             // player in same room → purge
+            it = g_ghosts.erase(it);
+            continue;
         }
 
-        /* Otherwise draw the ghost icon */
-        if (const auto h = map.findRoomHandle(ghostInfo.roomSid)) {   // use room id
+        /* use ghostSid here ▾ instead of ghostInfo.roomSid */
+        if (const auto h = map.findRoomHandle(ghostSid)) {
             const Coordinate &pos = h.getPosition();
 
-            QColor tint(Qt::white);
-            tint.setAlphaF(0.50f);                   // 50 % opacity
+            QColor tint(Qt::white); tint.setAlphaF(0.50f);
             Color  col(tint);
 
             const bool fill = !drawnRoomIds.contains(h.getId());
-            batch.drawCharacter(pos, col, fill, ghostInfo.tokenKey /*, 0.9f */);
+            batch.drawCharacter(pos, col, fill, tokenKey /*, 0.9f */);
             drawnRoomIds.insert(h.getId());
         }
-        ++it;                                        // manual increment
+        ++it;
     }
 }
 
