@@ -59,9 +59,7 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
 {
     qDebug() << "Destructed RemoteEditInternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto notLeaked = m_widget.take()) {
-        notLeaked->deleteLater();
-    }
+    m_widget.reset();
 }
 
 RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId internalId,
@@ -81,7 +79,5 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
 {
     qDebug() << "Destructed RemoteEditExternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto notLeaked = m_process.take()) {
-        notLeaked->deleteLater();
-    }
+    m_process.reset();
 }

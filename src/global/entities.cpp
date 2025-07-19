@@ -111,7 +111,7 @@ struct NODISCARD EntityTable final
 {
     struct NODISCARD MyHash final
     {
-        NODISCARD uint32_t operator()(const QString &qs) const { return qHash(qs); }
+        NODISCARD size_t operator()(const QString &qs) const { return qHash(qs); }
     };
 
     std::unordered_map<QString, XmlEntity, MyHash> by_short_name;
@@ -415,8 +415,10 @@ NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const
             return OptQChar{};
         }
     }
-
-    return OptQChar{val};
+    if (val > std::numeric_limits<uint16_t>::max()) {
+        return OptQChar{};
+    }
+    return OptQChar{static_cast<uint16_t>(val)};
 }
 
 NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const end)
@@ -448,7 +450,10 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
             return OptQChar{};
         }
     }
-    return OptQChar{val};
+    if (val > std::numeric_limits<uint16_t>::max()) {
+        return OptQChar{};
+    }
+    return OptQChar{static_cast<uint16_t>(val)};
 }
 
 // TODO: test with strings like "", "&;", "&&", "&&;", "&lt", "&lt;" "&lt&lt;",
@@ -589,7 +594,7 @@ auto entities::decode(const EncodedString &input) -> DecodedString
     assert(tmp.size() == input.size());
 
     foreachEntity(QStringView{tmp}, callback);
-    callback.skipto(input.size());
+    callback.skipto(static_cast<int>(input.size()));
 
     return std::move(callback.out);
 }
@@ -688,15 +693,12 @@ void test_entities()
     }
 
     {
-        // Demonstration that values above U+FFFF are mangled.
+        // Demonstration that values above U+FFFF are not supported.
         const auto in = EncodedString{"&#x10FFFF;"};
         const auto out = decode(in);
         assert(out.length() == 1);
-        assert(out.at(0).unicode() == 0xFFFF); // wrong since QT only stores 16 bits
-        const auto roundtrip = encode(out);
-        if (roundtrip != EncodedString{"&#xFFFF;"}) { // also wrong, but expected.
-            throw std::runtime_error("test failed");
-        }
+        assert(out.at(0).unicode() == C_QUESTION_MARK);
+        // REVISIT: Consider using U+FFFD replacement character instead?
     }
 }
 } // namespace test

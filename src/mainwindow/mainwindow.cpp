@@ -1465,7 +1465,7 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
         if (const auto *const mouseEvent = dynamic_cast<QMouseEvent *>(event)) {
             QRect rect = geometry();
             rect.setHeight(menuBar()->sizeHint().height());
-            if (rect.contains(mouseEvent->globalPos())) {
+            if (rect.contains(mouseEvent->globalPosition().toPoint())) {
                 menuBar()->show();
             } else {
                 menuBar()->hide();

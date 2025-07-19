@@ -57,7 +57,7 @@ void XPStatusWidget::slot_updatedSession(const std::shared_ptr<AdventureSession>
     updateContent();
 }
 
-void XPStatusWidget::enterEvent(QEvent *event)
+void XPStatusWidget::enterEvent(QEnterEvent *event)
 {
     if (m_session != nullptr) {
         auto xpHourly = m_session->calculateHourlyRateXP();

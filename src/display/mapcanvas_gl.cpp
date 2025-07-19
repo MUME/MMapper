@@ -200,7 +200,7 @@ bool MapCanvas::isBlacklistedDriver()
 
 void MapCanvas::initializeGL()
 {
-    auto &gl = getOpenGL();
+    OpenGL &gl = getOpenGL();
     try {
         gl.initializeOpenGLFunctions();
 
@@ -237,6 +237,19 @@ void MapCanvas::initializeGL()
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
+
+    // compile all shaders
+    {
+        auto &sharedFuncs = gl.getSharedFunctions(Badge<MapCanvas>{});
+        Legacy::Functions &funcs = deref(sharedFuncs);
+        Legacy::ShaderPrograms &programs = funcs.getShaderPrograms();
+        std::ignore = programs.getPlainAColorShader();
+        std::ignore = programs.getPlainUColorShader();
+        std::ignore = programs.getTexturedAColorShader();
+        std::ignore = programs.getTexturedUColorShader();
+        std::ignore = programs.getFontShader();
+        std::ignore = programs.getPointShader();
+    }
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()

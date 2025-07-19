@@ -148,7 +148,7 @@ public:
             return fmt;
         };
 
-        const auto length = line.length() - breakPos;
+        const int length = static_cast<int>(line.length()) - breakPos;
         setFormat(breakPos, length, getFmt());
     }
 
@@ -159,7 +159,7 @@ public:
             return;
         }
 
-        const auto length = line.length() - breakPos;
+        const int length = static_cast<int>(line.length()) - breakPos;
         setFormat(breakPos, length, getBackgroundFormat(Qt::red));
     }
 
@@ -168,8 +168,10 @@ public:
         const auto red = getBackgroundFormat(Qt::red);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        mmqt::foreachAnsi(line, [this, &red, &cyan](const int start, const QStringView sv) {
-            setFormat(start, static_cast<int>(sv.length()), mmqt::isValidAnsiColor(sv) ? cyan : red);
+        mmqt::foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
+            setFormat(static_cast<int>(start),
+                      static_cast<int>(sv.length()),
+                      mmqt::isValidAnsiColor(sv) ? cyan : red);
         });
     }
 
@@ -266,7 +268,8 @@ public:
                 default: {
                     const auto uc = static_cast<uint8_t>(c);
                     if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xBF) && (last == 0xC2 || last == 0xC3))) {
+                        && (isClamped<int>(uc, 0x80, 0xBF)
+                            && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
                         // Sometimes these are UTF-8 encoded Latin1 values,
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
@@ -401,7 +404,7 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
     }
 
     const int to_remove = [&text, max_spaces]() -> int {
-        const int len = std::min(max_spaces, text.length());
+        const int len = std::min(max_spaces, static_cast<int>(text.length()));
         int n = 0;
         while (n < len && text.at(n) == C_SPACE) {
             ++n;
@@ -1210,7 +1213,7 @@ NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 
     CursorAnsiInfo result;
     const auto &line = cursor.block().text();
-    mmqt::foreachAnsi(line, [pos, &result](int start, const QStringView sv) {
+    mmqt::foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
         if (result || pos < start || pos >= start + sv.length()) {
             return;
         }
@@ -1281,9 +1284,9 @@ void RemoteEditWidget::slot_updateStatusBar()
         const auto plural = [](auto n) { return (n == 1) ? "" : "s"; };
 
         const QString selection = cur.selection().toPlainText();
-        const int selectionLength = selection.length();
-        const int selectionLines = selection.count(C_NEWLINE)
-                                   + (selection.endsWith(C_NEWLINE) ? 0 : 1);
+        const auto selectionLength = selection.length();
+        const auto selectionLines = selection.count(C_NEWLINE)
+                                    + (selection.endsWith(C_NEWLINE) ? 0 : 1);
 
         status.append(QString(", Selection: %1 char%2 on %3 line%4")
                           .arg(selectionLength)
@@ -1335,7 +1338,8 @@ void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
     mmqt::TextBuffer text;
-    text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
+    text.reserve(
+        2 * static_cast<int>(old.length())); // Just a wild guess in case there's a lot of wrapping.
     mmqt::foreachLine(old,
                       [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
                           text.appendJustified(line, maxLen);

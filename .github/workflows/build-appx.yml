@@ -35,28 +35,22 @@ jobs:
     - name: Install Qt for Windows
       uses: jurplel/install-qt-action@v4
       with:
-        version: 5.15.2
+        version: 6.5.3
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-    - name: Install Packages for Windows
-      uses: crazy-max/ghaction-chocolatey@v3
-      with:
-        args: install openssl --version=1.1.1.2100
+        modules: 'qtwebsockets'
 
     # Build
     - name: Build MMapper
       shell: pwsh
       run: |
-        xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
         mkdir ${{ github.workspace }}/artifact
         mkdir build
         cd build
         cmake --version
-        $qtPath = "C:\Qt\5.12.2\msvc2019_64"
-        $env:PATH = "$qtPath;$env:PATH"
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$qtPath -DOPENSSL_ROOT_DIR=C:/OpenSSL/ -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -S .. || exit -1
         cmake --build . --parallel
 
     # Package
