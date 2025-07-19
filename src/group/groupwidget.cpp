@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
+#include "display/GhostRegistry.h"
 #include "../global/Timer.h"
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
@@ -345,8 +346,14 @@ void GroupModel::insertCharacter(const SharedGroupChar &newCharacter)
 void GroupModel::removeCharacterById(const GroupId charId)
 {
     const int index = findIndexById(charId);
-    if (index == -1) {
+    if (index == -1)
         return;
+
+    SharedGroupChar &c = m_characters[static_cast<size_t>(index)];
+
+    /*** NEW: store a ghost entry if this row is a mount ***/
+    if (c->isMount()) {
+        g_ghosts[c->getId()] = { c->getServerId(), c->getDisplayName() };
     }
 
     beginRemoveRows(QModelIndex(), index, index);
