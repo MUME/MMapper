@@ -546,7 +546,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
             const Coordinate &pos = h.getPosition();
 
             QColor tint(Qt::white);
-            tint.setAlphaF(0.70f);          // 70 % opacity
+            tint.setAlphaF(0.50f);          // 50 % opacity
             Color  col(tint);
 
             const bool fill = !drawnRoomIds.contains(h.getId());
