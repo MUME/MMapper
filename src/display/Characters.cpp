@@ -502,10 +502,12 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 
     /* Find the player's room once */
     const CGroupChar *playerChar = nullptr;
+    ServerRoomId      playerRoomSid = INVALID_SERVER_ROOMID;
     RoomId playerRoomId = INVALID_ROOMID;
     for (const auto &p : m_groupManager.selectAll()) {
         if (p->isYou()) {
             playerChar    = p.get();
+            playerRoomSid = p->getServerId();
             if (const auto r = map.findRoomHandle(p->getServerId()))
                 playerRoomId = r.getId();
             break;
@@ -534,5 +536,21 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         batch.drawCharacter(pos, col, fill, tokenKey);
         drawnRoomIds.insert(id);
     }
+    /* ---------- draw persistent ghost tokens ------------------------------ */
+    for (const auto &[gid, g] : g_ghosts) {
+        if (g.roomSid == playerRoomSid)            // skip if ghost is in player room
+            continue;
+
+        if (const auto h = map.findRoomHandle(g.roomSid)) {
+            const Coordinate &pos = h.getPosition();
+            Color col = Color{Qt::white}.withAlpha(0.70f);   // 70 % opacity
+            const bool fill = !drawnRoomIds.contains(h.getId());
+
+            /* If your drawCharacter() has a scale param, pass 0.9f; otherwise omit it */
+            batch.drawCharacter(pos, col, fill, g.tokenKey);
+            drawnRoomIds.insert(h.getId());
+        }
+    }
+
 }
 
