@@ -121,6 +121,13 @@ public:
     XFOREACH_CHARACTER_TYPE(X_DECL_GETTERS_AND_SETTERS)
 #undef X_DECL_GETTERS_AND_SETTERS
 
+    /* ---------- temporary helper until GMCP flags real mounts ---------- */
+    inline bool isMount() const
+    {
+        return isNpc();          // treat every NPC as a “mount” for now
+    }
+
+
 public:
     NODISCARD GroupId getId() const
     {
