@@ -27,6 +27,7 @@
 #include <glm/glm.hpp>
 
 #include <QtCore>
+#include <QColor>
 
 std::unordered_map<GroupId, GhostInfo> g_ghosts;
 
@@ -282,7 +283,7 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
         if (!dispName.isEmpty()                     // only if we have a key
             && getConfig().groupManager.showMapTokens)
         {
-            const Color tokenColor{1.f, 1.f, 1.f, 1.f};      // opaque white
+            const Color &tokenColor = color;            // inherits alpha from caller
             const auto &mtx = m_stack.top().modelView;
 
             auto pushVert = [this, &tokenColor, &mtx](const glm::vec2 &roomPos,
@@ -538,19 +539,20 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     }
     /* ---------- draw persistent ghost tokens ------------------------------ */
     for (const auto &[gid, g] : g_ghosts) {
-        if (g.roomSid == playerRoomSid)            // skip if ghost is in player room
+        if (g.roomSid == playerRoomSid)
             continue;
 
         if (const auto h = map.findRoomHandle(g.roomSid)) {
             const Coordinate &pos = h.getPosition();
-            Color col = Color{Qt::white}.withAlpha(0.70f);   // 70 % opacity
-            const bool fill = !drawnRoomIds.contains(h.getId());
 
-            /* If your drawCharacter() has a scale param, pass 0.9f; otherwise omit it */
-            batch.drawCharacter(pos, col, fill, g.tokenKey);
+            QColor tint(Qt::white);
+            tint.setAlphaF(0.70f);          // 70 % opacity
+            Color  col(tint);
+
+            const bool fill = !drawnRoomIds.contains(h.getId());
+            batch.drawCharacter(pos, col, fill, g.tokenKey /*, 0.9f scale if supported */);
             drawnRoomIds.insert(h.getId());
         }
     }
-
 }
 
