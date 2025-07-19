@@ -17,6 +17,7 @@
 #include "Textures.h"
 #include "mapcanvas.h"
 #include "prespammedpath.h"
+#include "GhostRegistry.h"
 
 #include <array>
 #include <cmath>
@@ -26,6 +27,8 @@
 #include <glm/glm.hpp>
 
 #include <QtCore>
+
+std::unordered_map<GroupId, GhostInfo> g_ghosts;
 
 static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
 static constexpr float PATH_LINE_WIDTH = 4.f;
