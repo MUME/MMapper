@@ -67,8 +67,10 @@ parts:
     build-packages:
       - libglm-dev
       - libssl-dev
+      - zlib1g-dev
     stage-packages:
       - libssl3
+      - zlib1g
     override-pull: |
       craftctl default
       git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
