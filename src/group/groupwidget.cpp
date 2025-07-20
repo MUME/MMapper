@@ -235,14 +235,23 @@ static void insertNewCharactersInto(GroupVector           &dest,
                                     const GroupVector     &newNpcs,
                                     const GroupVector     &newAll)
 {
+    auto eraseGhosts = [](const GroupVector &vec) {
+        if (!getConfig().groupManager.showNpcGhosts)
+            return;
+        for (const auto &p : vec)
+            g_ghosts.erase(deref(p).getServerId());
+    };
     if (npcSortBottom) {
         // players go before first NPC already present
         auto firstNpc = std::find_if(dest.begin(), dest.end(),
                                      [](const SharedGroupChar &c) { return c && c->isNpc(); });
         dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
+        eraseGhosts(newPlayers);
         dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
+        eraseGhosts(newNpcs);
     } else {
         dest.insert(dest.end(), newAll.begin(), newAll.end());
+        eraseGhosts(newAll);
     }
 }
 } // namespace
@@ -284,7 +293,8 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
     for (const auto &pGameChar : newGameChars) {
         const auto &gameChar = deref(pGameChar);
 
-        g_ghosts.erase(gameChar.getId());
+        if (getConfig().groupManager.showNpcGhosts)
+            g_ghosts.erase(gameChar.getServerId());
 
         if (existingIds.find(gameChar.getId()) == existingIds.end()) {
             allTrulyNewCharsInOriginalOrder.push_back(pGameChar);
@@ -355,8 +365,8 @@ void GroupModel::removeCharacterById(const GroupId charId)
     SharedGroupChar &c = m_characters[static_cast<size_t>(index)];
 
     /*** NEW: store a ghost entry if this row is a mount ***/
-    if (c->isMount()) {
-        g_ghosts[c->getId()] = { c->getServerId(), c->getDisplayName() };
+    if (getConfig().groupManager.showNpcGhosts && c->isNpc()) {
+        g_ghosts[c->getServerId()] = { c->getDisplayName() };
     }
 
     beginRemoveRows(QModelIndex(), index, index);
