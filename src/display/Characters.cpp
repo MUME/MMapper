@@ -538,6 +538,9 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         drawnRoomIds.insert(id);
     }
     /* ---------- draw (and purge) ghost tokens ------------------------------ */
+    if (!getConfig().groupManager.showNpcGhosts) {
+        g_ghosts.clear();           // purge any stale registry entries
+    } else
     for (auto it = g_ghosts.begin(); it != g_ghosts.end(); /* ++ in body */) {
         ServerRoomId ghostSid  = it->first;          // map key is the room id
         const QString tokenKey = it->second.tokenKey;
