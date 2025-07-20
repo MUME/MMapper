@@ -49,7 +49,10 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     connect(ui->antialiasingSamplesComboBox,
             &QComboBox::currentTextChanged,
             this,
-            &GraphicsPage::slot_antialiasingSamplesTextChanged);
+            [this](const QString &text) {
+                setConfig().canvas.advanced.antialiasingSamples.set(text.toInt());
+                graphicsSettingsChanged();
+            });
     connect(ui->trilinearFilteringCheckBox,
             &QCheckBox::stateChanged,
             this,
@@ -109,7 +112,7 @@ void GraphicsPage::slot_loadConfig()
     setIconColor(ui->darkLitPushButton, settings.roomDarkLitColor);
     setIconColor(ui->connectionNormalPushButton, settings.connectionNormalColor);
 
-    const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
+    const QString antiAliasingSamples = QString::number(settings.advanced.antialiasingSamples.get());
     const int index = utils::clampNonNegative(
         ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
     ui->antialiasingSamplesComboBox->setCurrentIndex(index);
@@ -131,12 +134,6 @@ void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *cons
         namedColor = Color(newColor);
         setIconColor(pushButton, namedColor);
     }
-}
-
-void GraphicsPage::slot_antialiasingSamplesTextChanged(const QString & /*unused*/)
-{
-    setConfig().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
-    graphicsSettingsChanged();
 }
 
 void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)

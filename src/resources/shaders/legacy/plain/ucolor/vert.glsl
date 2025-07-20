@@ -3,7 +3,7 @@
 
 uniform mat4 uMVP;
 
-attribute vec3 aVert;
+layout(location = 0) in vec3 aVert;
 
 void main()
 {

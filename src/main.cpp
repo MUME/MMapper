@@ -93,8 +93,8 @@ static void setSurfaceFormat()
     // Probe for supported OpenGL versions
     QSurfaceFormat fmt = OpenGL::createDefaultSurfaceFormat();
 
-    const auto &config = getConfig().canvas;
-    fmt.setSamples(config.antialiasingSamples);
+    //const auto &config = getConfig().canvas;
+    //fmt.setSamples(config.advanced.antialiasingSamples.get());
     QSurfaceFormat::setDefaultFormat(fmt);
 }
 

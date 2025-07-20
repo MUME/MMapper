@@ -27,7 +27,7 @@
 #include <QtCore>
 
 static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
-static constexpr float PATH_LINE_WIDTH = 4.f;
+static constexpr float PATH_LINE_WIDTH = 0.1f;
 static constexpr float PATH_POINT_SIZE = 8.f;
 
 DistantObjectTransform DistantObjectTransform::construct(const glm::vec3 &pos,
@@ -102,6 +102,29 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color &color, bool
     gl.drawBox(c, fill, beacon, isFar);
 }
 
+void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
+                                                 const glm::vec3 &p2,
+                                                 const Color &color)
+{
+    // Calculate direction vector and perpendicular vector
+    glm::vec3 direction = glm::normalize(p2 - p1);
+    glm::vec3 perpendicular = glm::vec3(-direction.y, direction.x, 0.0f);
+
+    glm::vec3 offset = perpendicular * (PATH_LINE_WIDTH * 0.5f);
+
+    // Vertices for the quad
+    glm::vec3 v1 = p1 + offset;
+    glm::vec3 v2 = p1 - offset;
+    glm::vec3 v3 = p2 - offset;
+    glm::vec3 v4 = p2 + offset;
+
+    // Add vertices to m_pathLineQuads as a quad
+    m_pathLineQuads.emplace_back(color, v1);
+    m_pathLineQuads.emplace_back(color, v2);
+    m_pathLineQuads.emplace_back(color, v3);
+    m_pathLineQuads.emplace_back(color, v4);
+}
+
 void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
                                         const std::vector<Coordinate> &path,
                                         const Color &color)
@@ -127,7 +150,13 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
     }();
 
     auto &gl = getOpenGL();
-    gl.drawPathLineStrip(color, verts);
+
+    // Generate vertices for the thick line
+    for (size_t i = 0; i < verts.size() - 1; ++i) {
+        const glm::vec3 p1 = verts[i];
+        const glm::vec3 p2 = verts[i + 1];
+        gl.drawPathSegment(p1, p2, color);
+    }
     gl.drawPathPoint(color, verts.back());
 }
 
@@ -343,8 +372,9 @@ void CharacterBatch::CharFakeGL::reallyDrawPaths(OpenGL &gl)
         = GLRenderState().withDepthFunction(std::nullopt).withBlend(BlendModeEnum::TRANSPARENCY);
 
     gl.renderPoints(m_pathPoints, blended_noDepth.withPointSize(PATH_POINT_SIZE));
-    gl.renderColoredLines(m_pathLineVerts,
-                          blended_noDepth.withLineParams(LineParams{PATH_LINE_WIDTH}));
+    if (!m_pathLineQuads.empty()) {
+        gl.renderColoredQuads(m_pathLineQuads, blended_noDepth);
+    }
 }
 
 void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 &pos,
