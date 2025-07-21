@@ -96,6 +96,7 @@ jobs:
             -DOPENSSL_ROOT_DIR="C:/OpenSSL" `
             -DWITH_WEBSOCKET=ON `
             -DWITH_QTKEYCHAIN=ON `
+            -DWITH_DRMINGW=OFF `
             -S .. `
             -B . `
             -DCMAKE_BUILD_TYPE=Release
