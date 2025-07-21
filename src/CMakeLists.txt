@@ -650,6 +650,7 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_RCS}
     ${mmapper_QRC}
     ${mmapper_DATA}
+    display/GhostRegistry.h
 )
 
 set(mm_libs mm_map mm_global)
