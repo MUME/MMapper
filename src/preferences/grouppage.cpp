@@ -55,7 +55,11 @@ GroupPage::GroupPage(QWidget *const parent)
         setConfig().groupManager.tokenIconSize = value;
         emit sig_groupSettingsChanged(); // live update
     });
-
+    ui->chkShowNpcGhosts->setChecked(getConfig().groupManager.showNpcGhosts);
+    connect(ui->chkShowNpcGhosts, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showNpcGhosts = checked;
+        emit sig_groupSettingsChanged();
+    });
     slot_loadConfig();
 }
 
@@ -81,6 +85,7 @@ void GroupPage::slot_loadConfig()
     ui->npcHideCheckbox->setChecked(settings.npcHide);
     ui->showTokensCheckbox->setChecked(settings.showTokens);
     ui->showMapTokensCheckbox->setChecked(settings.showMapTokens);
+    ui->chkShowNpcGhosts->setChecked(settings.showNpcGhosts);
     ui->tokenSizeComboBox->setCurrentText(QString::number(settings.tokenIconSize) + " px");
 }
 
