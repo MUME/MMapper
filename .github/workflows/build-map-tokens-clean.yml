@@ -82,7 +82,7 @@ jobs:
           echo "C:/Qt/Tools/mingw1310_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
           $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-          ccmake -G "MinGW Makefiles" \
+          cmake -G "MinGW Makefiles" \
             -DCPACK_PACKAGE_DIRECTORY="$packageDir" \
             -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" \
             -DOPENSSL_ROOT_DIR=C:/OpenSSL/ \
