@@ -4,7 +4,6 @@ MMapper
 [![Code Coverage](https://codecov.io/gh/MUME/MMapper/branch/master/graph/badge.svg)](https://codecov.io/gh/MUME/MMapper)
 [![GitHub](https://img.shields.io/github/license/MUME/MMapper.svg)](https://github.com/MUME/MMapper/blob/master/COPYING.txt)
 [![snapcraft](https://snapcraft.io/mmapper/badge.svg)](https://snapcraft.io/mmapper)
-[![Flathub Downloads](https://img.shields.io/flathub/downloads/org.mume.MMapper)](https://flathub.org/apps/org.mume.MMapper)
 
 [![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")<br>Download the latest version of MMapper](https://github.com/MUME/MMapper/releases)
 
@@ -28,4 +27,5 @@ MMapper is a graphical mapping tool for the MUD (Multi-User Dungeon) game MUME (
 To get started with MMapper, follow the [setup instructions](https://github.com/MUME/MMapper/wiki) in our wiki. It includes detailed steps for configuring MMapper with your MUME client and installing it on Linux, Windows, and macOS. Once installed, you'll be ready to start your mapping with ease.
 
 ## Contributing
-We welcome contributions to MMapper! If you're interested in improving the tool, simply submit a pull request on GitHub. Your contributions will help improve the experience for all MUME players. You can also read the [BUILD.md](BUILD.md) to get started with building MMapper from source.
+We welcome contributions to MMapper! If you're interested in improving the tool, simply submit a pull request on GitHub. Your contributions will help improve the experience for all MUME players. You can also check out the [build instructions](https://github.com/MUME/MMapper/wiki/Build) on the wiki to get started with building MMapper from source.
+# trigger CI
