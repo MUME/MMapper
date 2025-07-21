@@ -70,42 +70,41 @@ jobs:
           args: install openssl --version=1.1.1.2100
 
       # Build on Windows
-  - if: runner.os == 'Windows'
-    name: Build MMapper for Windows
-    shell: pwsh
-    run: |
-      # Copy OpenSSL into C:\
-      xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
+      - if: runner.os == 'Windows'
+        name: Build MMapper for Windows
+        shell: pwsh
+        run: |
+          # Copy OpenSSL into C:\
+          xcopy "C:\Program Files\OpenSSL" "C:\OpenSSL" /E /I /H /K /Y
 
-      # Create build and artifact directories
-      New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\artifact"
-      New-Item -ItemType Directory -Force -Path build
+          # Create build and artifact directories
+          New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\artifact"
+          New-Item -ItemType Directory -Force -Path build
 
-      # Enter build dir
-      Push-Location build
+          # Enter build dir
+          Push-Location build
 
-      # Verify CMake version and add Qt MinGW to PATH
-      cmake --version
-      $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
+          # Verify CMake version and add Qt MinGW to PATH
+          cmake --version
+          $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
 
-      # Configure CMake (source = .., build = .)
-      $packageDir = "$env:GITHUB_WORKSPACE\artifact"
-      cmake -G "MinGW Makefiles" `
-        -DCPACK_PACKAGE_DIRECTORY="$packageDir" `
-        -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" `
-        -DOPENSSL_ROOT_DIR="C:/OpenSSL" `
-        -DWITH_WEBSOCKET=ON `
-        -DWITH_QTKEYCHAIN=ON `
-        -S .. `
-        -B . `
-        -DCMAKE_BUILD_TYPE=Release
+          # Configure CMake (source = .., build = .)
+          $packageDir = "$env:GITHUB_WORKSPACE\artifact"
+          cmake -G "MinGW Makefiles" `
+            -DCPACK_PACKAGE_DIRECTORY="$packageDir" `
+            -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" `
+            -DOPENSSL_ROOT_DIR="C:/OpenSSL" `
+            -DWITH_WEBSOCKET=ON `
+            -DWITH_QTKEYCHAIN=ON `
+            -S .. `
+            -B . `
+            -DCMAKE_BUILD_TYPE=Release
 
-      # Build in parallel
-      cmake --build . --parallel $env:NUMBER_OF_PROCESSORS
+          # Build in parallel
+          cmake --build . --parallel $env:NUMBER_OF_PROCESSORS
 
-      # Exit build dir
-      Pop-Location
-
+          # Return to workspace root
+          Pop-Location
 
       # Build on macOS & Linux
       - if: runner.os == 'Linux' || runner.os == 'macOS'
@@ -171,4 +170,3 @@ jobs:
         with:
           name: release-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
           path: ${{ github.workspace }}/artifact/*.exe*
-
