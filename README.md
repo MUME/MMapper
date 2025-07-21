@@ -28,3 +28,4 @@ To get started with MMapper, follow the [setup instructions](https://github.com/
 
 ## Contributing
 We welcome contributions to MMapper! If you're interested in improving the tool, simply submit a pull request on GitHub. Your contributions will help improve the experience for all MUME players. You can also check out the [build instructions](https://github.com/MUME/MMapper/wiki/Build) on the wiki to get started with building MMapper from source.
+# trigger CI
