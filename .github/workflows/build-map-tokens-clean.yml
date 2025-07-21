@@ -88,8 +88,8 @@ jobs:
           cmake --version
           $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
 
-          # Configure CMake (source = .., build = .)
-          $packageDir = "$env:GITHUB_WORKSPACE\artifact"
+          # Convert to forward-slash path so CPack doesn’t see \a, \M etc.
+          $packageDir = ($env:GITHUB_WORKSPACE -replace '\\','/') + '/artifact'
           cmake -G "MinGW Makefiles" `
             -DCPACK_PACKAGE_DIRECTORY="$packageDir" `
             -DCMAKE_PREFIX_PATH="C:\Qt\5.15.2\mingw81_64" `
