@@ -163,7 +163,8 @@ QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject
                                                      QRegularExpression::CaseInsensitiveOption);
 
     const auto assets = releaseObject.value("assets").toArray();
-    for (const auto item : assets) {
+    for (QJsonArray::const_iterator it = assets.constBegin(); it != assets.constEnd(); ++it) {
+        const QJsonValue &item = *it;
         const auto asset = item.toObject();
         const QString name = asset.value("name").toString();
         const QString url = asset.value("browser_download_url").toString();

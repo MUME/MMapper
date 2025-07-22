@@ -660,7 +660,7 @@ void check_utf16(std::u16string_view sv,
     if (sv.size() != size) {
         qFatal("test failed: wrong size");
     }
-    for (const auto c : expect) {
+    for (const char32_t c : expect) {
         const auto got = charset::conversion::try_pop_utf16(sv);
         if (!got.has_value() || got.value() != c) {
             qFatal("test failed: wrong codepoint");
@@ -675,7 +675,7 @@ void check_utf8(std::string_view sv, const size_t size, const std::initializer_l
     if (sv.size() != size) {
         qFatal("test failed: wrong size");
     }
-    for (const auto c : expect) {
+    for (const char32_t c : expect) {
         const auto got = charset::conversion::try_pop_utf8(sv);
         if (!got.has_value() || got.value() != c) {
             qFatal("test failed: wrong codepoint");
@@ -692,7 +692,7 @@ void check_latin1(std::string_view sv,
     if (sv.size() != size) {
         qFatal("test failed: wrong size");
     }
-    for (const auto c : expect) {
+    for (const char32_t c : expect) {
         const auto got = charset::conversion::try_pop_latin1(sv);
         if (!got.has_value() || got.value() != c) {
             qFatal("test failed: wrong codepoint");

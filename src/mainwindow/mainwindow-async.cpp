@@ -1006,7 +1006,7 @@ bool MainWindow::slot_generateBaseMap()
                     seen.insert(maybe);
                     const auto oldr = oldMap.findRoomHandle(maybe);
                     for (const auto &ex : oldr.getExits()) {
-                        for (const auto to : ex.outgoing) {
+                        for (const RoomId to : ex.outgoing) {
                             if (!seen.contains(to)) {
                                 todo.push_back(to);
                             }

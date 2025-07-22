@@ -139,9 +139,11 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
     static const auto map = []() -> ParserRoomFieldMap {
         ParserRoomFieldMap result;
 
-        auto add = [&result](auto &&flags, auto &&convert) {
-            for (const auto flag : flags) {
-                static_assert(std::is_enum_v<decltype(flag)>);
+        auto add_all = [&result](const auto &flags, auto &&convert) {
+            // assumes it's an array or vector of enum flags.
+            using Flag = std::decay_t<decltype(*flags.begin())>;
+            static_assert(std::is_enum_v<Flag>);
+            for (const Flag flag : flags) {
                 const auto abb = getParserCommandName(flag);
                 if (!abb) {
                     throw std::invalid_argument("flag");
@@ -161,13 +163,13 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
         // REVISIT: separate these into their own args, and don't try to group them.
         // (Hint: That would allow you set each category as "UNDEFINED.")
 
-        add(ALL_MOB_FLAGS, [](auto flag) { return RoomMobFlags{flag}; });
-        add(ALL_LOAD_FLAGS, [](auto flag) { return RoomLoadFlags{flag}; });
-        add(DEFINED_ROOM_ALIGN_TYPES, identity);
-        add(DEFINED_ROOM_LIGHT_TYPES, identity);
-        add(DEFINED_ROOM_RIDABLE_TYPES, identity);
-        add(DEFINED_ROOM_PORTABLE_TYPES, identity);
-        add(DEFINED_ROOM_SUNDEATH_TYPES, identity);
+        add_all(ALL_MOB_FLAGS, [](auto flag) { return RoomMobFlags{flag}; });
+        add_all(ALL_LOAD_FLAGS, [](auto flag) { return RoomLoadFlags{flag}; });
+        add_all(DEFINED_ROOM_ALIGN_TYPES, identity);
+        add_all(DEFINED_ROOM_LIGHT_TYPES, identity);
+        add_all(DEFINED_ROOM_RIDABLE_TYPES, identity);
+        add_all(DEFINED_ROOM_PORTABLE_TYPES, identity);
+        add_all(DEFINED_ROOM_SUNDEATH_TYPES, identity);
         return result;
     }();
     const std::string key = toLowerUtf8(args);

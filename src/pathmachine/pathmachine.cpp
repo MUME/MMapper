@@ -189,7 +189,7 @@ void PathMachine::tryExits(const RoomHandle &room,
 
 void PathMachine::tryExit(const RawExit &possible, PathProcessor &recipient, const bool out)
 {
-    for (auto idx : (out ? possible.getOutgoingSet() : possible.getIncomingSet())) {
+    for (const RoomId idx : (out ? possible.getOutgoingSet() : possible.getIncomingSet())) {
         if (auto rh = m_map.findRoomHandle(idx)) {
             recipient.receiveRoom(rh);
         }

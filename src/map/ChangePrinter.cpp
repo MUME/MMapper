@@ -698,7 +698,7 @@ void ChangePrinter::print(const RoomIdSet &set)
     os.writeWithColor(type_name_color, "RoomIdSet");
     os << "{";
     size_t rooms_printed = 0;
-    for (auto id : set) {
+    for (const RoomId id : set) {
         os << prefix;
         prefix = ", ";
         if (rooms_printed++ >= max_roomids_printed) {
