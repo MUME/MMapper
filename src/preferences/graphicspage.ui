@@ -167,7 +167,7 @@
      <property name="title">
       <string>Mapping Hints</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
+     <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
        <widget class="QCheckBox" name="drawNeedsUpdate">
         <property name="text">
@@ -197,7 +197,7 @@
      <property name="title">
       <string>Colors</string>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_3">
       <property name="leftMargin">
        <number>9</number>
       </property>
