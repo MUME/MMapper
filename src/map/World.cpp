@@ -860,7 +860,7 @@ bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate &off
     if (rooms.empty()) {
         return false;
     }
-    for (const auto id : rooms) {
+    for (const RoomId id : rooms) {
         if (!hasRoom(id)) {
             return false; // avoid throwing
         }
@@ -897,7 +897,7 @@ void World::moveRelative(const RoomIdSet &rooms, const Coordinate &offset)
     };
     std::vector<MoveInfo> infos;
     infos.reserve(rooms.size());
-    for (const auto id : rooms) {
+    for (const RoomId id : rooms) {
         const auto &oldPos = getPosition(id);
         infos.emplace_back(MoveInfo{id, oldPos + offset});
         m_spatialDb.remove(id, oldPos);
@@ -2381,7 +2381,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         auto &lo = stats.lo;
         auto &hi = stats.hi;
         lo = hi = getPosition(rooms.first()).to_ivec3();
-        for (auto id : rooms) {
+        for (const RoomId id : rooms) {
             const auto pos = getPosition(id).to_ivec3();
             sum += pos;
             lo = glm::min(lo, pos);
@@ -2390,7 +2390,7 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
         stats.center = sum / static_cast<int>(rooms.size());
 
         auto &nearest = stats.nearest;
-        for (auto id : rooms) {
+        for (const RoomId id : rooms) {
             const auto pos = getPosition(id).to_ivec3();
             const auto dist = glm::vec3{pos - stats.center};
             const auto len2 = glm::dot(dist, dist);
@@ -2519,7 +2519,7 @@ NODISCARD bool hasMeshDifference(const RawExit &a, const RawExit &b)
 
 NODISCARD bool hasMeshDifference(const RawRoom::Exits &a, const RawRoom::Exits &b)
 {
-    for (auto dir : ALL_EXITS7) {
+    for (const ExitDirEnum dir : ALL_EXITS7) {
         if (hasMeshDifference(a[dir], b[dir])) {
             return true;
         }

@@ -716,7 +716,10 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
         if (flags.empty()) {
             os << " (none)";
         } else {
-            for (const auto flag : flags) {
+            // assumes it's templated based on Flags in Flags.h
+            using Flag = typename decltype(flags)::Flag;
+            static_assert(std::is_enum_v<Flag>);
+            for (const Flag flag : flags) {
                 os << " ";
                 os.writeWithColor(ansi_green, to_string_view(flag));
             }

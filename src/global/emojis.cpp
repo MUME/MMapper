@@ -264,7 +264,7 @@ public:
             void operator()(const std::u32string_view sv) const
             {
                 if constexpr (IS_DEBUG_BUILD) {
-                    for (const auto c : sv) {
+                    for (const char32_t c : sv) {
                         assert(c != INVALID_CODEPOINT);
                     }
                 }

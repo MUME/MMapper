@@ -606,7 +606,7 @@ public:
     }
     StringBuilder &operator+=(const std::u32string_view codepoints)
     {
-        for (const auto codepoint : codepoints) {
+        for (const char32_t codepoint : codepoints) {
             append(codepoint);
         }
         return *this;

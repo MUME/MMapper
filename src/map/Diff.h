@@ -192,9 +192,13 @@ private:
     template<typename Flags>
     void printFlags(const Flags flags)
     {
+        // assumes it's templated based on Flags in Flags.h
+        using Flag = typename decltype(flags)::Flag;
+        static_assert(std::is_enum_v<Flag>);
+
         bool first = true;
         // m_os << "[";
-        for (const auto flag : flags) {
+        for (const Flag flag : flags) {
             if (first) {
                 first = false;
             } else {

@@ -436,7 +436,7 @@ RawAnsi updateFormat(QTextCharFormat &format,
     // auto added = updated.flags & ~before.flags;
     const auto diff = before.getFlags() ^ updated.getFlags();
 
-    for (const auto flag : diff) {
+    for (const AnsiStyleFlagEnum flag : diff) {
         switch (flag) {
         case AnsiStyleFlagEnum::Italic:
             format.setFontItalic(updated.hasItalic());

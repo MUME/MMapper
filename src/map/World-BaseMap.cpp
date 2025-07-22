@@ -94,7 +94,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
                 // Use a copy instead of a reference, to avoid crashing when trying out different
                 // immer-like backend implementations that use copy-on-write.
                 const RawRoom room = deref(getRoom(id));
-                for (const auto dir : ALL_EXITS7) {
+                for (const ExitDirEnum dir : ALL_EXITS7) {
                     if (room.hasTrivialExit(dir)) {
                         continue;
                     }

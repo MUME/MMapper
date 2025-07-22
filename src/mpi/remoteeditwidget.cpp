@@ -51,7 +51,7 @@ namespace mmqt {
 NODISCARD static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
-    for (auto token : mmqt::AnsiTokenizer{s}) {
+    for (const AnsiStringToken token : mmqt::AnsiTokenizer{s}) {
         using Type = decltype(token.type);
         switch (token.type) {
         case Type::Ansi:

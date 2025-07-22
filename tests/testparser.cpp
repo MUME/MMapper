@@ -114,7 +114,7 @@ static QDebug operator<<(QDebug debug, const ExitFlags flags)
     auto &&ns = debug.nospace();
     ns << "ExitFlags{";
     auto prefix = "";
-    for (auto f : flags) {
+    for (const ExitFlagEnum f : flags) {
         ns << prefix;
         prefix = " | ";
         ns << f;
@@ -130,9 +130,8 @@ static QDebug operator<<(QDebug debug, const ExitsFlagsType f)
     ns << "ExitsFlagsType{";
     if (f != ExitsFlagsType{}) {
         ns << ".valid=" << f.isValid();
-        for (auto dir : ALL_EXITS_NESWUD) {
-            auto x = f.get(dir);
-            if (!x.empty()) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+            if (const ExitFlags x = f.get(dir); !x.empty()) {
                 ns << ", [" << dir << "] = " << x;
             }
         }
