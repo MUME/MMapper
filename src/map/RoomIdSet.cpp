@@ -86,30 +86,6 @@ void runRoomIdSetTests()
     TEST_ASSERT(!defaultConstructorSet.containsElementNotIn(emptyTestSet));
     TEST_ASSERT(!setForIteration.containsElementNotIn(setForIteration));
 
-    Type set1ForInsertAll;
-    set1ForInsertAll.insert(RoomId(1));
-    set1ForInsertAll.insert(RoomId(2));
-    Type set2ForInsertAll;
-    set2ForInsertAll.insert(RoomId(2));
-    set2ForInsertAll.insert(RoomId(3));
-    set1ForInsertAll.insertAll(set2ForInsertAll);
-    TEST_ASSERT(set1ForInsertAll.size() == 3ULL);
-    TEST_ASSERT(set1ForInsertAll.contains(RoomId(1)));
-    TEST_ASSERT(set1ForInsertAll.contains(RoomId(2)));
-    TEST_ASSERT(set1ForInsertAll.contains(RoomId(3)));
-
-    Type nonEmptySetForInsertAll;
-    nonEmptySetForInsertAll.insert(RoomId(100));
-    Type emptySetForInsertAll;
-    nonEmptySetForInsertAll.insertAll(emptySetForInsertAll);
-    TEST_ASSERT(nonEmptySetForInsertAll.size() == 1ULL);
-    TEST_ASSERT(nonEmptySetForInsertAll.contains(RoomId(100)));
-
-    Type emptySetAForInsertAll;
-    Type emptySetBForInsertAll;
-    emptySetAForInsertAll.insertAll(emptySetBForInsertAll);
-    TEST_ASSERT(emptySetAForInsertAll.empty());
-
     Type setForFirstLast;
     setForFirstLast.insert(RoomId(50));
     setForFirstLast.insert(RoomId(30));

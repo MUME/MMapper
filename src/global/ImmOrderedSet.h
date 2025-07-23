@@ -70,58 +70,25 @@ public:
 public:
     void erase(const Type id)
     {
-        auto it = std::lower_bound(m_vector.begin(), m_vector.end(), id);
+        const auto it = std::lower_bound(m_vector.begin(), m_vector.end(), id);
         if (it != m_vector.end() && *it == id) {
-            size_t index = static_cast<size_t>(std::distance(m_vector.begin(), it));
-            m_vector = m_vector.erase(index);
+            const auto index = static_cast<size_t>(std::distance(m_vector.begin(), it));
+            m_vector = std::move(m_vector).erase(index);
         }
     }
 
     void insert(const Type id)
     {
-        auto it = std::lower_bound(m_vector.begin(), m_vector.end(), id);
+        const auto it = std::lower_bound(m_vector.begin(), m_vector.end(), id);
         if (it != m_vector.end() && *it == id) {
             return;
         }
-        size_t index = static_cast<size_t>(std::distance(m_vector.begin(), it));
+        const auto index = static_cast<size_t>(std::distance(m_vector.begin(), it));
         if (index == m_vector.size()) {
-            m_vector = m_vector.push_back(id);
+            m_vector = std::move(m_vector).push_back(id);
             return;
         }
-        m_vector = m_vector.insert(index, id);
-    }
-
-public:
-    void insertAll(const ImmOrderedSet &other)
-    {
-        if (other.empty() || this == &other) {
-            return;
-        }
-
-        auto transient = typename Vector::transient_type{};
-
-        auto this_it = this->begin();
-        const auto this_end = this->end();
-        auto other_it = other.begin();
-        const auto other_end = other.end();
-
-        // Perform a sorted merge, adding unique elements from both vectors.
-        while (this_it != this_end && other_it != other_end) {
-            if (*this_it < *other_it) {
-                transient.push_back(*this_it++);
-            } else if (*other_it < *this_it) {
-                transient.push_back(*other_it++);
-            } else {
-                transient.push_back(*this_it++);
-                ++other_it;
-            }
-        }
-
-        // Append any remaining elements from whichever vector was not fully consumed.
-        immer::copy(this_it, this_end, std::back_inserter(transient));
-        immer::copy(other_it, other_end, std::back_inserter(transient));
-
-        m_vector = transient.persistent();
+        m_vector = std::move(m_vector).insert(index, id);
     }
 
 public:
