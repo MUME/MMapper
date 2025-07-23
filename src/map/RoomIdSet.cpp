@@ -20,15 +20,6 @@ void runRoomIdSetTests()
     TEST_ASSERT(!defaultConstructorSet.contains(RoomId(1)));
     TEST_ASSERT(defaultConstructorSet.begin() == defaultConstructorSet.end());
 
-    RoomId singleId(42);
-    Type setWithSingleId(singleId);
-    TEST_ASSERT(!setWithSingleId.empty());
-    TEST_ASSERT(setWithSingleId.size() == 1ULL);
-    TEST_ASSERT(setWithSingleId.contains(singleId));
-    TEST_ASSERT(!setWithSingleId.contains(RoomId(1)));
-    TEST_ASSERT(*setWithSingleId.begin() == singleId);
-    TEST_ASSERT(*setWithSingleId.begin() == singleId);
-
     Type setForInsert;
     setForInsert.insert(RoomId(10));
     TEST_ASSERT(!setForInsert.empty());

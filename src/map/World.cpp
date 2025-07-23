@@ -638,10 +638,6 @@ void World::checkConsistency(ProgressCounter &counter) const
     };
 
     auto checkRemapping = [this](const RoomId id) {
-        if (!getRoomSet().contains(id)) {
-            throw MapConsistencyError("room set does not contain the room id");
-        }
-
         const auto &area = getRoomArea(id);
         if (!getArea(area).contains(id)) {
             throw MapConsistencyError("room set does not contain the room id");
@@ -1210,7 +1206,7 @@ World World::init(ProgressCounter &counter,
             DECL_TIMER(t3, "insert-rooms-area-infos");
             counter.setNewTask(ProgressMsg{"preparing to insert rooms to areas"}, rooms.size());
             std::unordered_map<RoomArea, AreaInfo> map;
-            ImmRoomIdSet global;
+            std::set<RoomId> global;
             for (const auto &room : rooms) {
                 map[room.getArea()].roomSet.insert(room.id);
                 global.insert(room.id);

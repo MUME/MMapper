@@ -27,10 +27,11 @@ AreaInfoMap::AreaInfoMap()
     assert(find(RoomArea{}) != nullptr);
 }
 
-void AreaInfoMap::init(const std::unordered_map<RoomArea, AreaInfo> &map, const ImmRoomIdSet &global)
+void AreaInfoMap::init(const std::unordered_map<RoomArea, AreaInfo> &map,
+                       const std::set<RoomId> &global)
 {
     m_map.init(map);
-    m_global = global;
+    m_global = ImmRoomIdSet{global};
 }
 
 const AreaInfo *AreaInfoMap::find(const RoomArea &area) const
