@@ -31,7 +31,7 @@ private:
 
 public:
     NODISCARD explicit AreaInfoMap();
-    void init(const std::unordered_map<RoomArea, AreaInfo> &map, const ImmRoomIdSet &global);
+    void init(const std::unordered_map<RoomArea, AreaInfo> &map, const std::set<RoomId> &global);
 
 public:
     NODISCARD const ImmRoomIdSet &getGlobal() const { return m_global; }

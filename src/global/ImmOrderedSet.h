@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <set>
 #include <stdexcept>
 
 #include <immer/algorithm.hpp>
@@ -29,28 +30,9 @@ public:
     DEFAULT_RULE_OF_5(ImmOrderedSet);
 
 public:
-    explicit ImmOrderedSet(const Type id)
-        : m_vector{id}
+    explicit ImmOrderedSet(const std::set<T> &from)
+        : m_vector{from.begin(), from.end()}
     {}
-    explicit ImmOrderedSet(const Vector &other)
-        : m_vector{other}
-    {}
-    explicit ImmOrderedSet(Vector &&other)
-        : m_vector{std::move(other)}
-    {}
-
-    ImmOrderedSet &operator=(const Vector &other)
-    {
-        if (m_vector == other)
-            return *this;
-        m_vector = other;
-        return *this;
-    }
-    ImmOrderedSet &operator=(Vector &&other)
-    {
-        m_vector = std::move(other);
-        return *this;
-    }
 
 public:
     NODISCARD size_t size() const { return m_vector.size(); }
