@@ -152,13 +152,12 @@ void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const 
 void InfomarksBatch::renderText(const glm::vec3 &pos,
                                 const std::string &text,
                                 const Color &color,
-                                std::optional<Color> moved_bgcolor,
+                                const std::optional<Color> bgcolor,
                                 const FontFormatFlags fontFormatFlag,
                                 const int rotationAngle)
 {
     assert(!m_text.locked);
-    m_text.text
-        .emplace_back(pos, text, color, std::move(moved_bgcolor), fontFormatFlag, rotationAngle);
+    m_text.text.emplace_back(pos, text, color, bgcolor, fontFormatFlag, rotationAngle);
 }
 
 InfomarksMeshes InfomarksBatch::getMeshes()

@@ -69,9 +69,8 @@ NODISCARD static VisitRoomOptions getVisitRoomOptions()
     const auto &config = getConfig();
     auto &canvas = config.canvas;
     VisitRoomOptions result;
-    result.canvasColors = static_cast<const Configuration::CanvasNamedColorOptions &>(canvas).clone();
-    result.colorSettings
-        = static_cast<const Configuration::NamedColorOptions &>(config.colorSettings).clone();
+    result.canvasColors = canvas.clone();
+    result.colorSettings = config.colorSettings.clone();
     result.drawNotMappedExits = canvas.showUnmappedExits.get();
     return result;
 }

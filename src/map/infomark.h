@@ -216,5 +216,5 @@ using InfomarkPtr = std::optional<InfomarkHandle>;
 
 NODISCARD extern InfomarkText makeInfomarkText(std::string text);
 namespace mmqt {
-NODISCARD extern InfomarkText makeInfomarkText(QString text);
+NODISCARD extern InfomarkText makeInfomarkText(const QString &text);
 }

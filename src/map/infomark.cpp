@@ -18,30 +18,30 @@ void maybeModify(T &ours, T value)
     }
 }
 
-void RawInfomark::setPosition1(Coordinate pos)
+void RawInfomark::setPosition1(const Coordinate pos)
 {
     if (Type == InfomarkTypeEnum::TEXT) {
         // See comment in setPosition2()
         Position2 = pos;
     }
-    maybeModify(Position1, std::move(pos));
+    maybeModify(Position1, pos);
 }
 
-void RawInfomark::setPosition2(Coordinate pos)
+void RawInfomark::setPosition2(const Coordinate pos)
 {
     if (Type == InfomarkTypeEnum::TEXT) {
         // Text Infomarks utilize Position1 exclusively
         return;
     }
-    maybeModify(Position2, std::move(pos));
+    maybeModify(Position2, pos);
 }
 
 // REVISIT: consider rounding rotation to 45 degrees, since that's all the dialog can handle?
 void RawInfomark::setRotationAngle(const int rotationAngle)
 {
     // mod twice avoids separate case for negative.
-    int adjusted = (rotationAngle % 360 + 360) % 360;
-    maybeModify(RotationAngle, std::move(adjusted));
+    const int adjusted = (rotationAngle % 360 + 360) % 360;
+    maybeModify(RotationAngle, adjusted);
 }
 
 void RawInfomark::setText(InfomarkText text)
@@ -49,14 +49,14 @@ void RawInfomark::setText(InfomarkText text)
     maybeModify(Text, std::move(text));
 }
 
-void RawInfomark::setType(InfomarkTypeEnum type)
+void RawInfomark::setType(const InfomarkTypeEnum type)
 {
-    maybeModify(Type, std::move(type));
+    maybeModify(Type, type);
 }
 
-void RawInfomark::setClass(InfomarkClassEnum markClass)
+void RawInfomark::setClass(const InfomarkClassEnum markClass)
 {
-    maybeModify(Class, std::move(markClass));
+    maybeModify(Class, markClass);
 }
 
 struct NODISCARD InfomarkDb::Pimpl final
@@ -274,7 +274,7 @@ InfomarkText makeInfomarkText(std::string text)
 }
 
 namespace mmqt {
-InfomarkText makeInfomarkText(QString text)
+InfomarkText makeInfomarkText(const QString &text)
 {
     return ::makeInfomarkText(toStdStringUtf8(text));
 }

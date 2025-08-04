@@ -72,7 +72,7 @@ public:
     void renderText(const glm::vec3 &pos,
                     const std::string &text,
                     const Color &color,
-                    std::optional<Color> moved_bgcolor,
+                    std::optional<Color> bgcolor,
                     FontFormatFlags fontFormatFlag,
                     int rotationAngle);
 
