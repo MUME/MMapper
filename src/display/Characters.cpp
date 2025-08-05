@@ -280,10 +280,9 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
         addTransformed(d);
 
         // ── NEW: also queue a token quad (drawn under coloured overlay) ──
-        if (!dispName.isEmpty()                     // only if we have a key
-            && getConfig().groupManager.showMapTokens)
+        if (!dispName.isEmpty() && getConfig().groupManager.showMapTokens)
         {
-            const Color &tokenColor = color;            // inherits alpha from caller
+            const Color &tokenColor = color;        // inherits alpha from caller
             const auto &mtx = m_stack.top().modelView;
 
             auto pushVert = [this, &tokenColor, &mtx](const glm::vec2 &roomPos,
@@ -292,18 +291,26 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
                 m_charTokenQuads.emplace_back(tokenColor, uv, glm::vec3{tmp / tmp.w});
             };
 
-            /* four corners, matching the room square */
-            pushVert(a, {0.f, 0.f});   // lower-left
-            pushVert(b, {1.f, 0.f});   // lower-right
-            pushVert(c, {1.f, 1.f});   // upper-right
-            pushVert(d, {0.f, 1.f});   // upper-left
+            // Scale the room quad around its center to 85%
+            static constexpr float kTokenScale = 0.85f;
+            const glm::vec2 center = 0.5f * (a + c);               // midpoint of opposite corners
+            const auto scaleAround = [&](const glm::vec2 &p) {
+                return center + (p - center) * kTokenScale;
+            };
+
+            const glm::vec2 sa = scaleAround(a);
+            const glm::vec2 sb = scaleAround(b);
+            const glm::vec2 sc = scaleAround(c);
+            const glm::vec2 sd = scaleAround(d);
+
+            // Keep full UVs so the whole texture shows on the smaller quad
+            pushVert(sa, {0.f, 0.f});   // lower-left
+            pushVert(sb, {1.f, 0.f});   // lower-right
+            pushVert(sc, {1.f, 1.f});   // upper-right
+            pushVert(sd, {0.f, 1.f});   // upper-left
 
             QString key = TokenManager::overrideFor(dispName);
-            if (key.isEmpty())
-                key = canonicalTokenKey(dispName);
-            else
-                key = canonicalTokenKey(key);
-
+            key = key.isEmpty() ? canonicalTokenKey(dispName) : canonicalTokenKey(key);
             m_charTokenKeys.emplace_back(key);
         }
 
