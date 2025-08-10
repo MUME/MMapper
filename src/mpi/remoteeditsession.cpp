@@ -6,8 +6,11 @@
 
 #include "../global/utils.h"
 #include "remoteedit.h"
-#include "remoteeditprocess.h"
 #include "remoteeditwidget.h"
+
+#ifndef Q_OS_WASM
+#include "remoteeditprocess.h"
+#endif
 
 #include <cassert>
 
@@ -64,6 +67,7 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
     }
 }
 
+#ifndef Q_OS_WASM
 RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId internalId,
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
@@ -85,3 +89,4 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
         p->deleteLater();
     }
 }
+#endif

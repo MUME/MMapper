@@ -137,6 +137,14 @@ GeneralPage::GeneralPage(QWidget *parent)
             passCfg.getPassword();
         }
     });
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->remotePort->setDisabled(true);
+        ui->localPort->setDisabled(true);
+        ui->charsetComboBox->setDisabled(true);
+        ui->proxyListensOnAnyInterfaceCheckBox->setDisabled(true);
+        ui->proxyConnectionStatusCheckBox->setDisabled(true);
+    }
 }
 
 GeneralPage::~GeneralPage()
@@ -156,12 +164,17 @@ void GeneralPage::slot_loadConfig()
     ui->remoteName->setText(connection.remoteServerName);
     ui->remotePort->setValue(connection.remotePort);
     ui->localPort->setValue(connection.localPort);
+#ifdef Q_OS_WASM
+    ui->encryptionCheckBox->setDisabled(true);
+    ui->encryptionCheckBox->setChecked(true);
+#else
     if (!QSslSocket::supportsSsl() && NO_WEBSOCKET) {
         ui->encryptionCheckBox->setEnabled(false);
         ui->encryptionCheckBox->setChecked(false);
     } else {
         ui->encryptionCheckBox->setChecked(connection.tlsEncryption);
     }
+#endif
     ui->proxyListensOnAnyInterfaceCheckBox->setChecked(connection.proxyListensOnAnyInterface);
     ui->charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
 
@@ -173,8 +186,13 @@ void GeneralPage::slot_loadConfig()
     ui->checkForUpdateCheckBox->setDisabled(NO_UPDATER);
     ui->autoLoadFileName->setText(autoLoad.fileName);
     ui->autoLoadCheck->setChecked(autoLoad.autoLoadMap);
-    ui->autoLoadFileName->setEnabled(autoLoad.autoLoadMap);
-    ui->selectWorldFileButton->setEnabled(autoLoad.autoLoadMap);
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->autoLoadFileName->setDisabled(true);
+        ui->selectWorldFileButton->setDisabled(true);
+    } else {
+        ui->autoLoadFileName->setEnabled(autoLoad.autoLoadMap);
+        ui->selectWorldFileButton->setEnabled(autoLoad.autoLoadMap);
+    }
 
     ui->displayMumeClockCheckBox->setChecked(config.mumeClock.display);
 

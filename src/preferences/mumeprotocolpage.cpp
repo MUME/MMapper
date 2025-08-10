@@ -45,6 +45,10 @@ void MumeProtocolPage::slot_loadConfig()
     ui->externalEditorCommand->setText(settings.externalRemoteEditorCommand);
     ui->externalEditorCommand->setEnabled(!settings.internalRemoteEditor);
     ui->externalEditorBrowseButton->setEnabled(!settings.internalRemoteEditor);
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->externalEditorRadioButton->setDisabled(true);
+    }
 }
 
 void MumeProtocolPage::slot_internalEditorRadioButtonChanged(bool /*unused*/)

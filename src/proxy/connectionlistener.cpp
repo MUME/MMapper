@@ -53,6 +53,9 @@ ConnectionListener::~ConnectionListener() = default;
 
 void ConnectionListener::listen()
 {
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        return;
+    }
     const auto &settings = getConfig().connection;
     const auto hostAdress = settings.proxyListensOnAnyInterface ? QHostAddress::Any
                                                                 : QHostAddress::LocalHost;

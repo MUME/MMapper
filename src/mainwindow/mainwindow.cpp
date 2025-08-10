@@ -368,7 +368,9 @@ void MainWindow::readSettings()
     MySettings settings = MySettings::get();
 
     if (settings.firstRun) {
-        adjustSize();
+        if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+            adjustSize();
+        }
         setGeometry(QStyle::alignedRect(Qt::LeftToRight,
                                         Qt::AlignCenter,
                                         size(),
@@ -568,6 +570,9 @@ void MainWindow::createActions()
     exportWebMapAct = new QAction(tr("Export &Web Map As..."), this);
     exportWebMapAct->setStatusTip(tr("Save a copy of the map for webclients"));
     connect(exportWebMapAct, &QAction::triggered, this, &MainWindow::slot_exportWebMap);
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        exportWebMapAct->setDisabled(true);
+    }
 
     exportMmpMapAct = new QAction(tr("Export &MMP Map As..."), this);
     exportMmpMapAct->setStatusTip(tr("Save a copy of the map in the MMP format"));
@@ -581,6 +586,9 @@ void MainWindow::createActions()
     exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, &QAction::triggered, this, &QWidget::close);
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        exitAct->setDisabled(true);
+    }
 
     m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
     m_undoAction->setShortcut(QKeySequence::Undo);
@@ -1075,9 +1083,11 @@ void MainWindow::disableActions(bool value)
     saveAsAct->setDisabled(value);
     exportBaseMapAct->setDisabled(value);
     exportMm2xmlMapAct->setDisabled(value);
-    exportWebMapAct->setDisabled(value);
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        exportWebMapAct->setDisabled(value);
+        exitAct->setDisabled(value);
+    }
     exportMmpMapAct->setDisabled(value);
-    exitAct->setDisabled(value);
 }
 
 void MainWindow::hideCanvas(const bool hide)
@@ -1099,9 +1109,11 @@ void MainWindow::setupMenuBar()
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
-    fileMenu->addAction(reloadAct);
     fileMenu->addAction(saveAct);
-    fileMenu->addAction(saveAsAct);
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        fileMenu->addAction(saveAsAct);
+        fileMenu->addAction(reloadAct);
+    }
     fileMenu->addSeparator();
     QMenu *exportMenu = fileMenu->addMenu(QIcon::fromTheme("document-send"), tr("&Export"));
     exportMenu->addAction(exportBaseMapAct);
@@ -1109,8 +1121,10 @@ void MainWindow::setupMenuBar()
     exportMenu->addAction(exportWebMapAct);
     exportMenu->addAction(exportMmpMapAct);
     fileMenu->addAction(mergeAct);
-    fileMenu->addSeparator();
-    fileMenu->addAction(exitAct);
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        fileMenu->addSeparator();
+        fileMenu->addAction(exitAct);
+    }
 
     editMenu = menuBar()->addMenu(tr("&Edit"));
     modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));

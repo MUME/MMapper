@@ -6,6 +6,7 @@
 
 #include "configdialog.h"
 
+#include "../configuration/configuration.h"
 #include "autologpage.h"
 #include "clientpage.h"
 #include "generalpage.h"
@@ -89,6 +90,12 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
 ConfigDialog::~ConfigDialog()
 {
     delete ui;
+}
+
+void ConfigDialog::closeEvent(QCloseEvent *const event)
+{
+    getConfig().write();
+    event->accept();
 }
 
 void ConfigDialog::showEvent(QShowEvent *const event)

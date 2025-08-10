@@ -51,11 +51,18 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               body,
                                                               this);
     } else {
+#ifndef Q_OS_WASM
         session = std::make_unique<RemoteEditExternalSession>(internalId,
                                                               sessionId,
                                                               title,
                                                               body,
                                                               this);
+#else
+        QMessageBox::information(nullptr,
+                                 "External Editor Not Supported",
+                                 "Editing in an external editor is not supported on this platform.");
+        return;
+#endif
     }
     m_sessions.insert(std::make_pair(internalId, std::move(session)));
 

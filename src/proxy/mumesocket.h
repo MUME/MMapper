@@ -21,7 +21,9 @@
 #include <QWebSocket>
 #endif
 
+#ifndef Q_OS_WASM
 class QSslError;
+#endif
 
 struct NODISCARD AnsiWarningMessage final
 {
@@ -81,6 +83,7 @@ public:
 private:
     void onSocketError(const QString &errorString);
     void stopTimer() { m_timer.stop(); }
+    void advanceSocketType();
 };
 
 class NODISCARD_QOBJECT MumeSocket : public QObject
@@ -140,6 +143,7 @@ public:
     }
 };
 
+#ifndef Q_OS_WASM
 class NODISCARD_QOBJECT MumeSslSocket : public MumeSocket
 {
     Q_OBJECT
@@ -179,6 +183,7 @@ private:
     void virt_connectToHost() final;
     void virt_onConnect() final;
 };
+#endif
 
 class NODISCARD_QOBJECT MumeWebSocket final : public MumeSocket
 {
@@ -215,5 +220,7 @@ protected slots:
     {
         virt_onError(e);
     }
+#ifndef Q_OS_WASM
     void onSslErrors(const QList<QSslError> &errors);
+#endif
 };
