@@ -26,15 +26,15 @@
 #include <io.h>
 #endif
 
-static inline constexpr const size_t PAGE_SIZE = 1u << 12;
-static_assert(PAGE_SIZE != 0 && (PAGE_SIZE & (PAGE_SIZE - 1)) == 0,
-              "PAGE_SIZE must be a power of two");
+static inline constexpr const size_t MM_PAGE_SIZE = 1u << 12;
+static_assert(MM_PAGE_SIZE != 0 && (MM_PAGE_SIZE & (MM_PAGE_SIZE - 1)) == 0,
+              "MM_PAGE_SIZE must be a power of two");
 
-#define PAGE_ALIGN alignas(PAGE_SIZE)
+#define PAGE_ALIGN alignas(MM_PAGE_SIZE)
 
-static inline constexpr const size_t CHUNK = 1u << 14;
-static_assert(CHUNK != 0 && (CHUNK & (CHUNK - 1)) == 0, "CHUNK must be a power of two");
-static_assert(CHUNK >= PAGE_SIZE);
+static inline constexpr const size_t MM_CHUNK = 1u << 14;
+static_assert(MM_CHUNK != 0 && (MM_CHUNK & (MM_CHUNK - 1)) == 0, "MM_CHUNK must be a power of two");
+static_assert(MM_CHUNK >= MM_PAGE_SIZE);
 
 namespace mmz {
 
@@ -67,8 +67,8 @@ int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
     int flush = Z_NO_FLUSH;
     unsigned have = 0;
     z_stream strm{};
-    PAGE_ALIGN unsigned char in[CHUNK];
-    PAGE_ALIGN unsigned char out[CHUNK];
+    PAGE_ALIGN unsigned char in[MM_CHUNK];
+    PAGE_ALIGN unsigned char out[MM_CHUNK];
 
     /* allocate deflate state */
     strm.zalloc = Z_NULL;
@@ -82,7 +82,7 @@ int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
 
     /* compress until end of file */
     do {
-        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, MM_CHUNK));
         if (source.ferror()) {
             (void) deflateEnd(&strm);
             return Z_ERRNO;
@@ -93,11 +93,11 @@ int zpipe_deflate(ProgressCounter &pc, IFile &source, IFile &dest, int level)
         /* run deflate() on input until output buffer not full, finish
            compression if all of source has been read in */
         do {
-            strm.avail_out = CHUNK;
+            strm.avail_out = MM_CHUNK;
             strm.next_out = out;
             ret = deflate(&strm, flush);   /* no bad return value */
             assert(ret != Z_STREAM_ERROR); /* state not clobbered */
-            have = CHUNK - strm.avail_out;
+            have = MM_CHUNK - strm.avail_out;
             if (dest.fwrite(out, have) != have || dest.ferror()) {
                 (void) deflateEnd(&strm);
                 return Z_ERRNO;
@@ -130,8 +130,8 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
     int ret = Z_OK;
     unsigned have = 0;
     z_stream strm{};
-    PAGE_ALIGN unsigned char in[CHUNK];
-    PAGE_ALIGN unsigned char out[CHUNK];
+    PAGE_ALIGN unsigned char in[MM_CHUNK];
+    PAGE_ALIGN unsigned char out[MM_CHUNK];
 
     /* allocate inflate state */
     strm.zalloc = Z_NULL;
@@ -147,7 +147,7 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
 
     /* decompress until deflate stream ends or end of file */
     do {
-        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, CHUNK));
+        auto got = strm.avail_in = int_cast::exact::checked_cast<uInt>(source.fread(in, MM_CHUNK));
         if (source.ferror()) {
             (void) inflateEnd(&strm);
             return Z_ERRNO;
@@ -159,7 +159,7 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
 
         /* run inflate() on input until output buffer not full */
         do {
-            strm.avail_out = CHUNK;
+            strm.avail_out = MM_CHUNK;
             strm.next_out = out;
             ret = inflate(&strm, Z_NO_FLUSH);
             assert(ret != Z_STREAM_ERROR); /* state not clobbered */
@@ -172,7 +172,7 @@ int zpipe_inflate(ProgressCounter &pc, IFile &source, IFile &dest)
                 (void) inflateEnd(&strm);
                 return ret;
             }
-            have = CHUNK - strm.avail_out;
+            have = MM_CHUNK - strm.avail_out;
             if (dest.fwrite(out, have) != have || dest.ferror()) {
                 (void) inflateEnd(&strm);
                 return Z_ERRNO;
