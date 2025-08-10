@@ -372,8 +372,6 @@ set(mmapper_SRCS
     mpi/mpifilter.h
     mpi/remoteedit.cpp
     mpi/remoteedit.h
-    mpi/remoteeditprocess.cpp
-    mpi/remoteeditprocess.h
     mpi/remoteeditsession.cpp
     mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
@@ -558,6 +556,10 @@ set(mmapper_SRCS
     viewers/TopLevelWindows.h
 )
 
+if(NOT EMSCRIPTEN)
+    list(APPEND mmapper_SRCS mpi/remoteeditprocess.cpp mpi/remoteeditprocess.h)
+endif()
+
 qt_add_resources(mmapper_QRC resources/mmapper2.qrc)
 
 if(MMAPPER_BETA)
@@ -658,13 +660,21 @@ add_library(mm_global STATIC ${mmapper_global_SRCS})
 add_library(mm_map STATIC ${mmapper_map_SRCS})
 
 # Build the executable
-add_executable(mmapper WIN32 MACOSX_BUNDLE
+set(mmapper_EXECUTABLE_ARGS
     ${mmapper_SRCS}
     ${mmapper_UIS}
     ${mmapper_RCS}
     ${mmapper_QRC}
     ${mmapper_DATA}
 )
+if(EMSCRIPTEN)
+    qt_add_executable(mmapper ${mmapper_EXECUTABLE_ARGS})
+    target_link_options(mmapper PRIVATE -s FULL_ES3=1)
+    target_link_options(mmapper PUBLIC -sASYNCIFY -Os)
+    target_link_libraries(mmapper PUBLIC z)
+else()
+    add_executable(mmapper WIN32 MACOSX_BUNDLE ${mmapper_EXECUTABLE_ARGS})
+endif()
 
 set(mm_libs mm_map mm_global)
 
@@ -760,7 +770,7 @@ if(WITH_IMAGES)
     add_dependencies(mmapper images_qrc)
 endif()
 
-if(WITH_ZLIB)
+if(WITH_ZLIB AND NOT EMSCRIPTEN)
     target_include_directories(mmapper SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
     target_include_directories(mm_global SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
     target_link_libraries(mmapper PUBLIC ${ZLIB_LIBRARIES})

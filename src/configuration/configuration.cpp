@@ -46,6 +46,7 @@ NODISCARD const char *getPlatformEditor()
         // look for gnome-open, mate-open, etc.
         return "gedit";
 
+    case PlatformEnum::Wasm:
     case PlatformEnum::Unknown:
     default:
         return "";
@@ -475,7 +476,7 @@ void Configuration::read()
         canvas.advanced.use3D.set(true);
 
         // New users get autologger turned on by default
-        autoLog.autoLog = true;
+        autoLog.autoLog = (CURRENT_PLATFORM != PlatformEnum::Wasm);
     }
 
     assert(canvas.backgroundColor == colorSettings.BACKGROUND);
@@ -560,8 +561,13 @@ void Configuration::ConnectionSettings::read(const QSettings &conf)
                                 static_cast<uint16_t>(DEFAULT_PORT));
     localPort = sanitizeUint16(conf.value(KEY_PROXY_LOCAL_PORT, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
+#ifndef Q_OS_WASM
+    // REVISIT: This should be true if WebSocket mode is enabled?
     tlsEncryption = QSslSocket::supportsSsl() ? conf.value(KEY_TLS_ENCRYPTION, true).toBool()
                                               : false;
+#else
+    tlsEncryption = true;
+#endif
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
     proxyListensOnAnyInterface = conf.value(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, false).toBool();
 }
@@ -719,7 +725,7 @@ void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
     autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, true).toBool();
     linesOfPeekPreview = conf.value(KEY_LINES_OF_PEEK_PREVIEW, 7).toInt();
     audibleBell = conf.value(KEY_BELL_AUDIBLE, true).toBool();
-    visualBell = conf.value(KEY_BELL_VISUAL, false).toBool();
+    visualBell = conf.value(KEY_BELL_VISUAL, (CURRENT_PLATFORM == PlatformEnum::Wasm)).toBool();
 }
 
 void Configuration::RoomPanelSettings::read(const QSettings &conf)

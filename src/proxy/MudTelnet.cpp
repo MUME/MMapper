@@ -54,6 +54,7 @@ NODISCARD std::string getOsName()
     switch (CURRENT_PLATFORM) {
         X_CASE(Linux);
         X_CASE(Mac);
+        X_CASE(Wasm);
         X_CASE(Windows);
         X_CASE(Unknown);
     }

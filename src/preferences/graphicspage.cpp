@@ -94,6 +94,11 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             &AdvancedGraphicsGroupBox::sig_graphicsSettingsChanged,
             this,
             &GraphicsPage::slot_graphicsSettingsChanged);
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->resourceLineEdit->setDisabled(true);
+        ui->resourcePushButton->setDisabled(true);
+    }
 }
 
 GraphicsPage::~GraphicsPage()

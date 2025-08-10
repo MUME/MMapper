@@ -33,6 +33,7 @@ public:
     ~ConfigDialog() final;
 
 protected:
+    void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
 
 private:

@@ -42,6 +42,12 @@ ClientWidget::ClientWidget(ConnectionListener &listener, QWidget *const parent)
 
     ui.input->installEventFilter(this);
     ui.display->setFocusPolicy(Qt::TabFocus);
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui.clientFrame->setHidden(true);
+        ui.helpLabel->setHidden(true);
+        ui.hostnamePortFrame->setHidden(true);
+    }
 }
 
 ClientWidget::~ClientWidget() = default;

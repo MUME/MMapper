@@ -58,6 +58,19 @@ AutoLogPage::AutoLogPage(QWidget *const parent)
             [](const int size) {
                 setConfig().autoLog.deleteWhenLogsReachBytes = size * MEGABYTE_IN_BYTES;
             });
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->autoLogCheckBox->setDisabled(true);
+        ui->autoLogLocation->setDisabled(true);
+        ui->selectAutoLogLocationButton->setDisabled(true);
+        ui->radioButtonKeepForever->setDisabled(true);
+        ui->radioButtonDeleteDays->setDisabled(true);
+        ui->spinBoxDays->setDisabled(true);
+        ui->radioButtonDeleteSize->setDisabled(true);
+        ui->spinBoxSize->setDisabled(true);
+        ui->askDeleteCheckBox->setDisabled(true);
+        ui->autoLogMaxBytes->setDisabled(true);
+    }
 }
 
 AutoLogPage::~AutoLogPage()

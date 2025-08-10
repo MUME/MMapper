@@ -128,8 +128,12 @@ endif()
 
 # Try to find the system copy of zlib
 if(WITH_ZLIB)
-    find_package(ZLIB)
-    add_subdirectory(external/zlib)
+    if(EMSCRIPTEN)
+        add_compile_options(-s USE_ZLIB=1)
+    else()
+        find_package(ZLIB)
+        add_subdirectory(external/zlib)
+    endif()
     add_definitions(/DZLIB_CONST)
 else()
     message(STATUS "Building without zlib")
@@ -343,6 +347,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         # Clang on MSYS2 need an additional option to work
         add_compile_options(-femulated-tls)
         add_link_options(-femulated-tls)
+    endif()
+
+    if(EMSCRIPTEN)
+        add_compile_options(-Werror=bad-function-cast)
+        add_compile_options(-Werror=cast-function-type)
     endif()
 
     if(MMAPPER_IS_DEBUG)

@@ -16,6 +16,8 @@ static inline constexpr const PlatformEnum CURRENT_PLATFORM = [] {
     return PlatformEnum::Mac;
 #elif defined(Q_OS_LINUX)
     return PlatformEnum::Linux;
+#elif defined(Q_OS_WASM)
+    return PlatformEnum::Wasm;
 #else
     throw std::runtime_error("unsupported platform");
 #endif
