@@ -1,0 +1,116 @@
+name: Qt6 Tripack (Linux/macOS/Windows)
+
+on:
+  push:
+    branches: [ feature/map-tokens-clean, master ]
+  pull_request:
+    branches: [ feature/map-tokens-clean, master ]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: Linux (Ubuntu)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ninja-build libgl1-mesa-dev libglu1-mesa-dev zlib1g-dev libssl-dev qtkeychain-qt6-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Package artifact (rename binary)
+        run: |
+          mkdir -p out/Linux
+          if [ -f build/src/mmapper ]; then
+            cp build/src/mmapper out/Linux/Mmapper-Token-Beta
+          else
+            cp build/mmapper out/Linux/Mmapper-Token-Beta || true
+          fi
+          tar -C out -czf Mmapper-Token-Beta-Linux.tar.gz Linux
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mmapper-Token-Beta-Linux
+          path: Mmapper-Token-Beta-Linux.tar.gz
+
+  macos:
+    name: macOS (Intel)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+      - name: Ensure Ninja
+        run: brew install ninja
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Deploy .app with Qt frameworks
+        run: |
+          APP_PATH="build/src/mmapper.app"
+          if [ ! -d "$APP_PATH" ]; then
+            APP_PATH="$(/usr/bin/find build -name 'mmapper.app' -maxdepth 3 | head -n1)"
+          fi
+          echo "Using app: $APP_PATH"
+          macdeployqt "$APP_PATH" -always-overwrite
+          DEST="Mmapper-Token-Beta.app"
+          rm -rf "$DEST"
+          cp -R "$APP_PATH" "$DEST"
+          /usr/bin/zip -r Mmapper-Token-Beta-macOS.zip "$DEST"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mmapper-Token-Beta-macOS
+          path: Mmapper-Token-Beta-macOS.zip
+
+  windows:
+    name: Windows (MSVC)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+      - name: Install Ninja
+        run: choco install ninja --no-progress
+      - name: Configure
+        shell: bash
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel
+      - name: Deploy with windeployqt and package
+        shell: bash
+        run: |
+          set -e
+          EXE="$(/usr/bin/find build -name 'mmapper.exe' -maxdepth 4 | head -n1)"
+          echo "Using exe: $EXE"
+          OUT="Mmapper-Token-Beta"
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+          cp "$EXE" "$OUT/Mmapper-Token-Beta.exe"
+          windeployqt --release "$OUT/Mmapper-Token-Beta.exe"
+          powershell -Command "Compress-Archive -Path '$OUT/*' -DestinationPath 'Mmapper-Token-Beta-Windows.zip' -Force"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mmapper-Token-Beta-Windows
+          path: Mmapper-Token-Beta-Windows.zip
