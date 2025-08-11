@@ -101,6 +101,50 @@ NODISCARD static const char *getColumnFriendlyName(const ColumnTypeEnum column)
 }
 } // namespace
 
+namespace {
+class TokenCenteringDelegate : public QStyledItemDelegate
+{
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override
+    {
+        if (index.column() == static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN)) {
+            // Draw the default cell background (selection, grid, etc.)
+            QStyledItemDelegate::paint(painter, option, index);
+
+            // Draw the icon centered over the background
+            QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
+            if (!icon.isNull()) {
+                QSize iconSize = option.decorationSize;
+                QRect iconRect = QStyle::alignedRect(
+                    option.direction,
+                    Qt::AlignCenter,
+                    iconSize,
+                    option.rect
+                    );
+                icon.paint(painter, iconRect, Qt::AlignCenter);
+            }
+            return;
+        }
+
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+
+
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override
+    {
+        if (index.column() == static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN)) {
+            // Match icon size with padding to avoid clipping
+            return option.decorationSize + QSize(4, 4);
+        }
+        return QStyledItemDelegate::sizeHint(option, index);
+    }
+};
+} // namespace
+
 GroupProxyModel::GroupProxyModel(QObject *const parent)
     : QSortFilterProxyModel(parent)
 {}
@@ -745,12 +789,24 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setSelectionMode(QAbstractItemView::SingleSelection);
     m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    m_table->horizontalHeader()->setStretchLastSection(true);
-    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-
     m_proxyModel = new GroupProxyModel(this);
     m_proxyModel->setSourceModel(&m_model);
     m_table->setModel(m_proxyModel);
+
+    // Token column: size to contents so it tracks icon size.
+    // Name & Room: stretch to fill; others: contents is fine.
+    auto *hh = m_table->horizontalHeader();
+    hh->setStretchLastSection(false);
+    for (int c = 0; c < m_table->model()->columnCount(); ++c) {
+        if (c == static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN)) {
+            hh->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+        } else if (c == static_cast<int>(ColumnTypeEnum::NAME)
+                   || c == static_cast<int>(ColumnTypeEnum::ROOM_NAME)) {
+            hh->setSectionResizeMode(c, QHeaderView::Stretch);
+        } else {
+            hh->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+        }
+    }
 
     m_table->setDragEnabled(true);
     m_table->setAcceptDrops(true);
@@ -759,6 +815,9 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setDropIndicatorShown(true);
 
     m_table->setItemDelegate(new GroupDelegate(this));
+    m_table->setItemDelegateForColumn(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN),
+                                      new TokenCenteringDelegate(m_table));
+
     layout->addWidget(m_table);
 
     // Row height follows configured size; draw token at 85% of that
@@ -768,6 +827,9 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
     const int shown = std::max(1, static_cast<int>(std::lround(row * 0.85f)));
     m_table->setIconSize(QSize(shown, shown));
+    m_table->resizeColumnToContents(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN));
+    m_table->resizeRowsToContents();
+    m_table->viewport()->update();
 
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {
@@ -908,6 +970,8 @@ void GroupWidget::updateColumnVisibility()
     const bool hide_tokens = !getConfig().groupManager.showTokens;
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
 
+ //   m_table->resizeColumnsToContents();
+
     // Apply current icon-size preference every time settings change
     {
         const int icon = getConfig().groupManager.tokenIconSize;
@@ -917,6 +981,11 @@ void GroupWidget::updateColumnVisibility()
 
         const int shown = std::max(1, static_cast<int>(std::lround(row * 0.85f)));
         m_table->setIconSize(QSize(shown, shown));
+
+        // Recalculate column/row sizes for token column
+        m_table->resizeColumnToContents(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN));
+        m_table->resizeRowsToContents();
+        m_table->viewport()->update();
     }
 }
 
