@@ -970,8 +970,6 @@ void GroupWidget::updateColumnVisibility()
     const bool hide_tokens = !getConfig().groupManager.showTokens;
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
 
- //   m_table->resizeColumnsToContents();
-
     // Apply current icon-size preference every time settings change
     {
         const int icon = getConfig().groupManager.tokenIconSize;
