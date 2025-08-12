@@ -40,7 +40,6 @@ signals:
 
 public slots:
     void slot_loadConfig();
-    void slot_antialiasingSamplesTextChanged(const QString &);
     void slot_trilinearFilteringStateChanged(int);
     void slot_drawNeedsUpdateStateChanged(int);
     void slot_drawNotMappedExitsStateChanged(int);
