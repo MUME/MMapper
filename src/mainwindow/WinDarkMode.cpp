@@ -119,7 +119,7 @@ void WinDarkMode::applyDarkPalette()
     dark.setColor(QPalette::WindowText, Qt::white);
     dark.setColor(QPalette::Base, QColor(25, 25, 25));
     dark.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-    dark.setColor(QPalette::ToolTipBase, Qt::white);
+    dark.setColor(QPalette::ToolTipBase, QColor(53, 53, 53));
     dark.setColor(QPalette::ToolTipText, Qt::white);
     dark.setColor(QPalette::Text, Qt::white);
     dark.setColor(QPalette::Button, QColor(53, 53, 53));
