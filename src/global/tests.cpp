@@ -13,7 +13,7 @@ NORETURN
 void test_assert_fail(const mm::source_location loc, const char *const reason)
 {
     QMessageLogger(loc.file_name(), static_cast<int>(loc.line()), loc.function_name())
-        .fatal("test assertion failed: expression (%s) is false at %s:%d",
+        .fatal("test assertion failed: expression (%s) is false at %s:%u",
                (reason != nullptr) ? reason : "false",
                loc.file_name(),
                loc.line());

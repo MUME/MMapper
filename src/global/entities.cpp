@@ -365,11 +365,11 @@ auto entities::encode(const DecodedString &name, const EncodingEnum encodingType
 
         /* this will be statically true until Qt changes the type to uint32_t */
         assert(static_cast<uint32_t>(codepoint) <= MAX_UNICODE_CODEPOINT);
-        const auto masked = static_cast<int32_t>(codepoint & 0x1FFFFFu);
+        const auto masked = static_cast<uint32_t>(codepoint & 0x1FFFFFu);
         assert(masked == codepoint);
 
         char decbuf[16];
-        std::snprintf(decbuf, sizeof(decbuf), "&#%d;", masked);
+        std::snprintf(decbuf, sizeof(decbuf), "&#%u;", masked);
         const size_t declen = strlen(decbuf);
         assert(declen <= 10);
 
