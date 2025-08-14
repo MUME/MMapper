@@ -73,21 +73,24 @@ private:
     struct NODISCARD Diff final
     {
         struct NODISCARD MaybeDataOrMesh final
-            : public std::variant<std::monostate, TexVertVector, UniqueMesh>
+            : public std::variant<std::monostate, ColoredTexVertVector, UniqueMesh>
         {
         public:
-            using base = std::variant<std::monostate, TexVertVector, UniqueMesh>;
+            using base = std::variant<std::monostate, ColoredTexVertVector, UniqueMesh>;
             using base::base;
 
         public:
             NODISCARD bool empty() const { return std::holds_alternative<std::monostate>(*this); }
-            NODISCARD bool hasData() const { return std::holds_alternative<TexVertVector>(*this); }
+            NODISCARD bool hasData() const
+            {
+                return std::holds_alternative<ColoredTexVertVector>(*this);
+            }
             NODISCARD bool hasMesh() const { return std::holds_alternative<UniqueMesh>(*this); }
 
         public:
-            NODISCARD const TexVertVector &getData() const
+            NODISCARD const ColoredTexVertVector &getData() const
             {
-                return std::get<TexVertVector>(*this);
+                return std::get<ColoredTexVertVector>(*this);
             }
             NODISCARD const UniqueMesh &getMesh() const { return std::get<UniqueMesh>(*this); }
 
@@ -99,7 +102,7 @@ private:
                 }
 
                 if (hasData()) {
-                    *this = gl.createTexturedQuadBatch(getData(), texId);
+                    *this = gl.createColoredTexturedQuadBatch(getData(), texId);
                     assert(hasMesh());
                     // REVISIT: rendering immediately after uploading the mesh may lag,
                     // so consider delaying until the data is already on the GPU.
@@ -110,8 +113,7 @@ private:
                     return;
                 }
                 auto &mesh = getMesh();
-                mesh.render(
-                    GLRenderState().withColor(Colors::white).withBlend(BlendModeEnum::TRANSPARENCY));
+                mesh.render(GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY));
             }
         };
 
@@ -119,8 +121,7 @@ private:
         {
             Map saved;
             Map current;
-            MaybeDataOrMesh needsUpdate;
-            MaybeDataOrMesh modified;
+            MaybeDataOrMesh highlights;
         };
 
         std::optional<std::future<HighlightDiff>> futureHighlight;

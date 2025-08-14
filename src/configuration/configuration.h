@@ -181,13 +181,16 @@ public:
 
 #define XFOREACH_NAMED_COLOR_OPTIONS(X) \
     X(BACKGROUND, BACKGROUND_NAME) \
+    X(CONNECTION_NORMAL, CONNECTION_NORMAL_NAME) \
+    X(HIGHLIGHT_NEEDS_SERVER_ID, "highlight-needs-server-id") \
+    X(HIGHLIGHT_UNSAVED, "highlight-unsaved") \
+    X(HIGHLIGHT_TEMPORARY, "highlight-temporary") \
     X(INFOMARK_COMMENT, "infomark-comment") \
     X(INFOMARK_HERB, "infomark-herb") \
     X(INFOMARK_MOB, "infomark-mob") \
     X(INFOMARK_OBJECT, "infomark-object") \
     X(INFOMARK_RIVER, "infomark-river") \
     X(INFOMARK_ROAD, "infomark-road") \
-    X(CONNECTION_NORMAL, CONNECTION_NORMAL_NAME) \
     X(ROOM_DARK, ROOM_DARK_NAME) \
     X(ROOM_NO_SUNDEATH, ROOM_NO_SUNDEATH_NAME) \
     X(STREAM, "stream") \

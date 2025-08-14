@@ -251,8 +251,7 @@ void MapCanvas::initTextures()
     textures.room_sel_move_bad = loadTexture(getPixmapFilenameRaw("room-sel-move-bad.png"));
     textures.room_sel_move_good = loadTexture(getPixmapFilenameRaw("room-sel-move-good.png"));
     // 256
-    textures.room_needs_update = loadTexture(getPixmapFilenameRaw("room-needs-update.png"));
-    textures.room_modified = loadTexture(getPixmapFilenameRaw("room-modified.png"));
+    textures.room_highlight = loadTexture(getPixmapFilenameRaw("room-highlight.png"));
 
     {
         textures.for_each([this](SharedMMTexture &pTex) -> void {

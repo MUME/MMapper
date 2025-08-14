@@ -158,12 +158,11 @@
         <file>pixmaps/road-s.png</file>
         <file>pixmaps/road-sw.png</file>
         <file>pixmaps/road-w.png</file>
+        <file>pixmaps/room-highlight.png</file>
         <file>pixmaps/room-sel-distant.png</file>
         <file>pixmaps/room-sel-move-bad.png</file>
         <file>pixmaps/room-sel-move-good.png</file>
         <file>pixmaps/room-sel.png</file>
-        <file>pixmaps/room-modified.png</file>
-        <file>pixmaps/room-needs-update.png</file>
         <file>pixmaps/stream-in-down.png</file>
         <file>pixmaps/stream-in-east.png</file>
         <file>pixmaps/stream-in-north.png</file>

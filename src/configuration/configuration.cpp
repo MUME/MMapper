@@ -934,13 +934,16 @@ void Configuration::NamedColorOptions::resetToDefaults()
     static const Color water{76, 216, 255};   // closest well-known color is "Malibu"
 
     BACKGROUND = background;
+    CONNECTION_NORMAL = Colors::white;
+    HIGHLIGHT_UNSAVED = Colors::cyan;
+    HIGHLIGHT_TEMPORARY = Colors::red;
+    HIGHLIGHT_NEEDS_SERVER_ID = Colors::yellow;
     INFOMARK_COMMENT = Colors::gray75;
     INFOMARK_HERB = Colors::green;
     INFOMARK_MOB = Colors::red;
     INFOMARK_OBJECT = Colors::yellow;
     INFOMARK_RIVER = water;
     INFOMARK_ROAD = road;
-    CONNECTION_NORMAL = Colors::white;
     ROOM_DARK = darkRoom;
     ROOM_NO_SUNDEATH = noSundeath;
     STREAM = water;

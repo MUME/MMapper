@@ -253,14 +253,14 @@ void MapCanvas::initializeGL()
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
-            && m_diff.highlight->modified.empty()) {
+            && m_diff.highlight->highlights.empty()) {
             this->forceUpdateMeshes();
         }
     });
 
     setConfig().canvas.showMissingMapId.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showMissingMapId.get() && m_diff.highlight.has_value()
-            && m_diff.highlight->needsUpdate.empty()) {
+            && m_diff.highlight->highlights.empty()) {
             this->forceUpdateMeshes();
         }
     });
@@ -465,7 +465,7 @@ void MapCanvas::setViewportAndMvp(int width, int height)
 
 void MapCanvas::resizeGL(int width, int height)
 {
-    if (m_textures.room_modified == nullptr) {
+    if (m_textures.room_highlight == nullptr) {
         // resizeGL called but initializeGL was not called yet
         return;
     }
@@ -670,13 +670,20 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
         return;
     }
 
-    const bool showNeedsServerId = getConfig().canvas.showMissingMapId.get();
-    const bool showChanged = getConfig().canvas.showUnsavedChanges.get();
+    const auto &config = getConfig();
+    const auto &canvas = config.canvas;
+    const bool showNeedsServerId = canvas.showMissingMapId.get();
+    const bool showChanged = canvas.showUnsavedChanges.get();
+    const auto colorSettings = config.colorSettings.clone();
 
     diff.futureHighlight = std::async(
         std::launch::async,
-        [saved, current, showNeedsServerId, showChanged]() -> Diff::HighlightDiff {
-            DECL_TIMER(t2, "[async] actuallyPaintGL: highlight differences and needs update");
+        [saved, current, showNeedsServerId, showChanged, colorSettings]() -> Diff::HighlightDiff {
+            DECL_TIMER(t2,
+                       "[async] actuallyPaintGL: highlight changes, temporary, and needs update");
+
+            const auto &colors = deref(colorSettings);
+
             // 3-2
             // |/|
             // 0-1
@@ -687,56 +694,49 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                 glm::vec3{0, 1, 0},
             };
 
-            // REVISIT: Just send the position and convert from point to quad in a shader?
-            auto getChanged = [&saved, &current, showChanged]() -> Diff::MaybeDataOrMesh {
-                if (!showChanged) {
+            auto getHighlights = [&saved, &current, showChanged, showNeedsServerId, &colors]()
+                -> Diff::MaybeDataOrMesh {
+                if (!showChanged && !showNeedsServerId) {
                     return Diff::MaybeDataOrMesh{};
                 }
-                DECL_TIMER(t3, "[async] actuallyPaintGL: compute differences");
-                TexVertVector changed;
-                auto drawQuad = [&changed](const RawRoom &room) {
+
+                DECL_TIMER(t3, "[async] actuallyPaintGL: compute highlights");
+                ColoredTexVertVector highlights;
+                auto drawQuad = [&highlights](const RawRoom &room, const XNamedColor &color) {
                     const auto &pos = room.getPosition().to_vec3();
                     for (auto &corner : corners) {
-                        changed.emplace_back(corner, pos + corner);
+                        highlights.emplace_back(color.getColor(), corner, pos + corner);
                     }
                 };
 
-                ProgressCounter dummyPc;
-                Map::foreachChangedRoom(dummyPc, saved, current, drawQuad);
-                if (changed.empty()) {
-                    return Diff::MaybeDataOrMesh{};
-                }
-
-                return Diff::MaybeDataOrMesh{std::move(changed)};
-            };
-
-            auto getNeedsUpdate = [&current, showNeedsServerId]() -> Diff::MaybeDataOrMesh {
-                if (!showNeedsServerId) {
-                    return MapCanvas::Diff::MaybeDataOrMesh{};
-                }
-                DECL_TIMER(t3, "[async] actuallyPaintGL: compute needs update");
-
-                TexVertVector needsUpdate;
-                auto drawQuad = [&needsUpdate](const RoomHandle &h) {
-                    const auto &pos = h.getPosition().to_vec3();
-                    for (auto &corner : corners) {
-                        needsUpdate.emplace_back(corner, pos + corner);
-                    }
-                };
-                current.getRooms().for_each([&current, &drawQuad](auto id) {
-                    if (auto h = current.getRoomHandle(id)) {
-                        if (h.getServerId() == INVALID_SERVER_ROOMID) {
-                            drawQuad(h);
+                // Handle rooms needing a server ID or that are temporary
+                if (showNeedsServerId) {
+                    current.getRooms().for_each([&](auto id) {
+                        if (auto h = current.getRoomHandle(id)) {
+                            if (h.isTemporary()) {
+                                drawQuad(h.getRaw(), colors.HIGHLIGHT_TEMPORARY);
+                            } else if (h.getServerId() == INVALID_SERVER_ROOMID) {
+                                drawQuad(h.getRaw(), colors.HIGHLIGHT_NEEDS_SERVER_ID);
+                            }
                         }
-                    }
-                });
-                if (needsUpdate.empty()) {
+                    });
+                }
+
+                // Handle changed rooms
+                if (showChanged) {
+                    ProgressCounter dummyPc;
+                    Map::foreachChangedRoom(dummyPc, saved, current, [&](const RawRoom &room) {
+                        drawQuad(room, colors.HIGHLIGHT_UNSAVED);
+                    });
+                }
+
+                if (highlights.empty()) {
                     return Diff::MaybeDataOrMesh{};
                 }
-                return Diff::MaybeDataOrMesh{std::move(needsUpdate)};
+                return Diff::MaybeDataOrMesh{std::move(highlights)};
             };
 
-            return Diff::HighlightDiff{saved, current, getNeedsUpdate(), getChanged()};
+            return Diff::HighlightDiff{saved, current, getHighlights()};
         });
 }
 
@@ -754,13 +754,8 @@ void MapCanvas::paintDifferences()
     auto &highlight = deref(diff.highlight);
     auto &gl = getOpenGL();
 
-    if (getConfig().canvas.showMissingMapId.get()) {
-        if (auto &needsUpdate = highlight.needsUpdate; !needsUpdate.empty()) {
-            needsUpdate.render(gl, m_textures.room_needs_update->getId());
-        }
-    }
-    if (auto &modified = highlight.modified; !modified.empty()) {
-        modified.render(gl, m_textures.room_modified->getId());
+    if (auto &highlights = highlight.highlights; !highlights.empty()) {
+        highlights.render(gl, m_textures.room_highlight->getId());
     }
 }
 

@@ -48,6 +48,8 @@ struct NODISCARD ColoredTexVert final
     {}
 };
 
+using ColoredTexVertVector = std::vector<ColoredTexVert>;
+
 struct NODISCARD ColorVert final
 {
     Color color;
