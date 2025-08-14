@@ -141,11 +141,11 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           ERROR_QUIET
         )
 
-        # Detect last annotated tag for map downloading
+        # Detect commit date
         execute_process(
-          COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+          COMMAND ${GIT_EXECUTABLE} log -1 --format=%cd --date=format:%Y-%m-%d
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-	  OUTPUT_VARIABLE GIT_LAST_ANNOTATED_TAG
+          OUTPUT_VARIABLE MMAPPER_BUILD_DATE
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
@@ -166,6 +166,9 @@ if(NOT MMAPPER_VERSION_STRING)
 endif()
 if(NOT GIT_BRANCH)
     set(GIT_BRANCH "unknown")
+endif()
+if(NOT MMAPPER_BUILD_DATE)
+    string(TIMESTAMP MMAPPER_BUILD_DATE "%Y-%m-%d")
 endif()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)

@@ -25,7 +25,7 @@
     </ul>
   </description>
   <developer id="org.mume.MMapper.authors">
-    <name>The MMapper Authors</name>
+    <name>the MMapper Authors</name>
   </developer>
   <screenshots>
     <screenshot type="default">
@@ -71,4 +71,9 @@
     <content_attribute id="violence-sexual">none</content_attribute>
     <content_attribute id="violence-slavery">mild</content_attribute>
   </content_rating>
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <display_length compare="ge">768</display_length>
+  </recommends>
 </component>
