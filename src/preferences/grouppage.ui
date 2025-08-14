@@ -7,8 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>329</width>
-    <height>262</height>
+    <height>359</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>.AppleSystemUIFont</family>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -20,19 +25,6 @@
       <string>Appearance</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Override NPC color:</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-        <property name="buddy">
-         <cstring>npcOverrideColorPushButton</cstring>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="5">
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -46,8 +38,18 @@
         </property>
        </spacer>
       </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="npcOverrideColorCheckBox">
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="showMapTokensCheckbox">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="chkShowNpcGhosts">
         <property name="text">
          <string/>
         </property>
@@ -63,10 +65,26 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="yourColorPushButton">
+      <item row="1" column="1">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Select</string>
+         <string>Override NPC color:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>npcOverrideColorPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="showTokensCheckbox">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -74,6 +92,72 @@
        <widget class="QPushButton" name="npcOverrideColorPushButton">
         <property name="text">
          <string>Select</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="npcOverrideColorCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Dude, Where's my Horse?</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Show Images on Map</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Show GM Character Images</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="yourColorPushButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QComboBox" name="tokenSizeComboBox">
+        <item>
+         <property name="text">
+          <string>16 px</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>32 px</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>48 px</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>64 px</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>GM Character Image Size:</string>
         </property>
        </widget>
       </item>
@@ -86,10 +170,10 @@
       <string>Filtering and Order</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="npcSortBottomCheckbox">
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="npcHideCheckbox">
         <property name="text">
-         <string>Sort NPCs to bottom</string>
+         <string>Hide NPCs</string>
         </property>
        </widget>
       </item>
@@ -106,10 +190,10 @@
         </property>
        </spacer>
       </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="npcHideCheckbox">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="npcSortBottomCheckbox">
         <property name="text">
-         <string>Hide NPCs</string>
+         <string>Sort NPCs to bottom</string>
         </property>
        </widget>
       </item>
