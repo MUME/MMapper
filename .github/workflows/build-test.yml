@@ -40,7 +40,7 @@ jobs:
       id: git_info
       run: |
         echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'Windows' || runner.os == 'macOS'
       uses: lukka/get-cmake@latest
     - if: matrix.compiler == 'msvc'
       uses: ilammy/msvc-dev-cmd@v1
@@ -89,7 +89,7 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install cmake ninja lcov
+        brew install lcov
         echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DUSE_CODE_COVERAGE=true" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV
 

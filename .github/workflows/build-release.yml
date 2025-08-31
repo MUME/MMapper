@@ -32,7 +32,7 @@ jobs:
       id: git_info
       run: |
         echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
-    - if: runner.os == 'Windows'
+    - if: runner.os == 'Windows' || runner.os == 'macOS'
       uses: lukka/get-cmake@latest
     - if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
@@ -63,7 +63,6 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install cmake ninja
         echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR" >> $GITHUB_ENV
 
     # Install Dependencies (Windows)
