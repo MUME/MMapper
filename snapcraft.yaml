@@ -73,8 +73,7 @@ parts:
       - zlib1g
     override-pull: |
       craftctl default
-      git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
-      craftctl set version=$(git describe --tags --always --long)
+      craftctl set version=$(git describe --tags --always --long --exclude beta | sed 's/^v//')
     override-build: |
       craftctl default
       sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $CRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop

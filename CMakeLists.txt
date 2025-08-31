@@ -126,7 +126,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
 
         # Describe the most recent tag, number of commits since, and abbreviated commit hash
         execute_process(
-          COMMAND ${GIT_EXECUTABLE} describe --tags --always --long
+          COMMAND ${GIT_EXECUTABLE} describe --tags --always --long --exclude beta
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
           OUTPUT_VARIABLE GIT_TAG_COMMIT_HASH
           OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -134,7 +134,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
 
         # Detect if this checkout is a tag and extract its name if so
         execute_process(
-          COMMAND ${GIT_EXECUTABLE} name-rev --name-only --tags --no-undefined HEAD
+          COMMAND ${GIT_EXECUTABLE} name-rev --name-only --tags --no-undefined HEAD --exclude beta
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
           OUTPUT_VARIABLE GIT_TAG_NAME
           OUTPUT_STRIP_TRAILING_WHITESPACE

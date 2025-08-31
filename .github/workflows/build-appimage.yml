@@ -17,11 +17,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - name: Get Git tag description
-      id: git_info
-      run: |
-        git tag -d beta 2>/dev/null || echo "Tag 'beta' not found"
-        echo "GIT_TAG=$(git describe --tags --always --long)" >> $GITHUB_ENV
 
     - name: Install Build Dependencies
       run: |

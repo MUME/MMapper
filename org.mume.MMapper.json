@@ -133,9 +133,6 @@
                     "path": "."
                 }
             ],
-            "build-commands": [
-                "git tag -d beta || true"
-            ],
             "config-opts": [
                 "-DCMAKE_BUILD_TYPE=Release",
                 "-DWITH_WEBSOCKET=ON",
