@@ -218,6 +218,8 @@ set(mmapper_SRCS
     group/mmapper2character.h
     group/mmapper2group.cpp
     group/mmapper2group.h
+    group/tokenmanager.cpp
+    group/tokenmanager.h
     logger/autologger.cpp
     logger/autologger.h
     mainwindow/DescriptionWidget.cpp
@@ -648,6 +650,7 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_RCS}
     ${mmapper_QRC}
     ${mmapper_DATA}
+    display/GhostRegistry.h
 )
 
 set(mm_libs mm_map mm_global)
