@@ -15,7 +15,7 @@ jobs:
       successful_run_ids: ${{ steps.check_builds.outputs.successful_run_ids }}
     steps:
       - name: Check if all required builds are complete and get run IDs
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: check_builds
         with:
           script: |
@@ -73,7 +73,7 @@ jobs:
         run: npm install adm-zip
 
       - name: Download all build artifacts
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: download_artifacts
         with:
           script: |
