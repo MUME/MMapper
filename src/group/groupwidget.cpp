@@ -761,14 +761,12 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setItemDelegate(new GroupDelegate(this));
     layout->addWidget(m_table);
 
-    // Row height follows configured size; draw token at 85% of that
+    // Minimize row height
     const int icon = getConfig().groupManager.tokenIconSize;
-    const int row  = std::max(icon, m_table->fontMetrics().height() + 4);
+    const int row = std::max(icon, m_table->fontMetrics().height() + 4);
+
     m_table->verticalHeader()->setDefaultSectionSize(row);
-
-    const int shown = std::max(1, static_cast<int>(std::lround(row * 0.85f)));
-    m_table->setIconSize(QSize(shown, shown));
-
+    m_table->setIconSize(QSize(icon, icon));
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {
         // Center map on the clicked character
@@ -911,12 +909,11 @@ void GroupWidget::updateColumnVisibility()
     // Apply current icon-size preference every time settings change
     {
         const int icon = getConfig().groupManager.tokenIconSize;
-        QFontMetrics fm = m_table->fontMetrics();
-        const int row = std::max(icon, fm.height() + 4);
-        m_table->verticalHeader()->setDefaultSectionSize(row);
+        m_table->setIconSize(QSize(icon, icon));
 
-        const int shown = std::max(1, static_cast<int>(std::lround(row * 0.85f)));
-        m_table->setIconSize(QSize(shown, shown));
+        QFontMetrics fm = m_table->fontMetrics();
+        int row = std::max(icon, fm.height() + 4);
+        m_table->verticalHeader()->setDefaultSectionSize(row);
     }
 }
 
