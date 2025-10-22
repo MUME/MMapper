@@ -6,12 +6,12 @@
 
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
-#include "display/GhostRegistry.h"
 #include "../global/Timer.h"
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
 #include "CGroupChar.h"
+#include "display/GhostRegistry.h"
 #include "enums.h"
 #include "mmapper2group.h"
 #include "tokenmanager.h"
@@ -228,12 +228,12 @@ GroupModel::GroupModel(QObject *const parent)
     : QAbstractTableModel(parent)
 {}
 
-namespace {    // anonymous – helpers local to this file
-static void insertNewCharactersInto(GroupVector           &dest,
-                                    bool                   npcSortBottom,
-                                    const GroupVector     &newPlayers,
-                                    const GroupVector     &newNpcs,
-                                    const GroupVector     &newAll)
+namespace { // anonymous – helpers local to this file
+static void insertNewCharactersInto(GroupVector &dest,
+                                    bool npcSortBottom,
+                                    const GroupVector &newPlayers,
+                                    const GroupVector &newNpcs,
+                                    const GroupVector &newAll)
 {
     auto eraseGhosts = [](const GroupVector &vec) {
         if (!getConfig().groupManager.showNpcGhosts)
@@ -243,8 +243,9 @@ static void insertNewCharactersInto(GroupVector           &dest,
     };
     if (npcSortBottom) {
         // players go before first NPC already present
-        auto firstNpc = std::find_if(dest.begin(), dest.end(),
-                                     [](const SharedGroupChar &c) { return c && c->isNpc(); });
+        auto firstNpc = std::find_if(dest.begin(), dest.end(), [](const SharedGroupChar &c) {
+            return c && c->isNpc();
+        });
         dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
         eraseGhosts(newPlayers);
         dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
@@ -366,7 +367,7 @@ void GroupModel::removeCharacterById(const GroupId charId)
 
     /*** NEW: store a ghost entry if this row is a mount ***/
     if (getConfig().groupManager.showNpcGhosts && c->isNpc()) {
-        g_ghosts[c->getServerId()] = { c->getDisplayName() };
+        g_ghosts[c->getServerId()] = {c->getDisplayName()};
     }
 
     beginRemoveRows(QModelIndex(), index, index);
@@ -450,13 +451,9 @@ NODISCARD static QStringView getPrettyName(const CharacterAffectEnum affect)
 /*─────────────────────  complexity helpers  ─────────────────────*/
 namespace {
 
-static QString formatStatHelper(int num,
-                                int den,
-                                ColumnTypeEnum col,
-                                bool isNpc)
+static QString formatStatHelper(int num, int den, ColumnTypeEnum col, bool isNpc)
 {
-    if (col == ColumnTypeEnum::HP_PERCENT
-        || col == ColumnTypeEnum::MANA_PERCENT
+    if (col == ColumnTypeEnum::HP_PERCENT || col == ColumnTypeEnum::MANA_PERCENT
         || col == ColumnTypeEnum::MOVES_PERCENT) {
         if (den == 0)
             return {};
@@ -464,9 +461,7 @@ static QString formatStatHelper(int num,
         return QString("%1%").arg(pct);
     }
 
-    if (col == ColumnTypeEnum::HP
-        || col == ColumnTypeEnum::MANA
-        || col == ColumnTypeEnum::MOVES) {
+    if (col == ColumnTypeEnum::HP || col == ColumnTypeEnum::MANA || col == ColumnTypeEnum::MOVES) {
         // hide “0/0” for NPCs -- same behaviour as before
         if (isNpc && num == 0 && den == 0)
             return {};
@@ -476,21 +471,17 @@ static QString formatStatHelper(int num,
 }
 
 /// Big switch for DisplayRole, extracted out of dataForCharacter
-static QVariant makeDisplayRole(const CGroupChar &ch, ColumnTypeEnum c,
-                                TokenManager *tm)
+static QVariant makeDisplayRole(const CGroupChar &ch, ColumnTypeEnum c, TokenManager *tm)
 {
     switch (c) {
     case ColumnTypeEnum::CHARACTER_TOKEN:
         return tm ? QIcon(tm->getToken(ch.getDisplayName())) : QVariant();
     case ColumnTypeEnum::NAME:
         if (ch.getLabel().isEmpty()
-            || ch.getName().getStdStringViewUtf8()
-                   == ch.getLabel().getStdStringViewUtf8()) {
+            || ch.getName().getStdStringViewUtf8() == ch.getLabel().getStdStringViewUtf8()) {
             return ch.getName().toQString();
         } else {
-            return QString("%1 (%2)")
-                .arg(ch.getName().toQString(),
-                     ch.getLabel().toQString());
+            return QString("%1 (%2)").arg(ch.getName().toQString(), ch.getLabel().toQString());
         }
     case ColumnTypeEnum::HP_PERCENT:
         return formatStatHelper(ch.getHits(), ch.getMaxHits(), c, false);
@@ -499,31 +490,32 @@ static QVariant makeDisplayRole(const CGroupChar &ch, ColumnTypeEnum c,
     case ColumnTypeEnum::MOVES_PERCENT:
         return formatStatHelper(ch.getMoves(), ch.getMaxMoves(), c, false);
     case ColumnTypeEnum::HP:
-        return formatStatHelper(ch.getHits(), ch.getMaxHits(), c,
+        return formatStatHelper(ch.getHits(),
+                                ch.getMaxHits(),
+                                c,
                                 ch.getType() == CharacterTypeEnum::NPC);
     case ColumnTypeEnum::MANA:
-        return formatStatHelper(ch.getMana(), ch.getMaxMana(), c,
+        return formatStatHelper(ch.getMana(),
+                                ch.getMaxMana(),
+                                c,
                                 ch.getType() == CharacterTypeEnum::NPC);
     case ColumnTypeEnum::MOVES:
-        return formatStatHelper(ch.getMoves(), ch.getMaxMoves(), c,
+        return formatStatHelper(ch.getMoves(),
+                                ch.getMaxMoves(),
+                                c,
                                 ch.getType() == CharacterTypeEnum::NPC);
     case ColumnTypeEnum::STATE:
-        return QVariant::fromValue(
-            GroupStateData(ch.getColor(),
-                           ch.getPosition(),
-                           ch.getAffects()));
+        return QVariant::fromValue(GroupStateData(ch.getColor(), ch.getPosition(), ch.getAffects()));
     case ColumnTypeEnum::ROOM_NAME:
-        return ch.getRoomName().isEmpty()
-                   ? QStringLiteral("Somewhere")
-                   : ch.getRoomName().toQString();
+        return ch.getRoomName().isEmpty() ? QStringLiteral("Somewhere")
+                                          : ch.getRoomName().toQString();
     default:
         return QVariant();
     }
 }
 
 /// Big switch for ToolTipRole, extracted out as well
-static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c,
-                                bool useStatFmt)
+static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c, bool useStatFmt)
 {
     auto statTip = [&](int n, int d) -> QVariant {
         return useStatFmt ? formatStatHelper(n, d, c, false) : QVariant();
@@ -533,9 +525,9 @@ static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c,
     case ColumnTypeEnum::CHARACTER_TOKEN:
         return QVariant();
     case ColumnTypeEnum::HP_PERCENT:
-        return statTip(ch.getHits(),  ch.getMaxHits());
+        return statTip(ch.getHits(), ch.getMaxHits());
     case ColumnTypeEnum::MANA_PERCENT:
-        return statTip(ch.getMana(),  ch.getMaxMana());
+        return statTip(ch.getMana(), ch.getMaxMana());
     case ColumnTypeEnum::MOVES_PERCENT:
         return statTip(ch.getMoves(), ch.getMaxMoves());
     case ColumnTypeEnum::STATE: {
@@ -558,8 +550,8 @@ static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c,
 /*──────────────────────────────────────────────────────────────────*/
 
 QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
-                                      const ColumnTypeEnum   column,
-                                      const int              role) const
+                                      const ColumnTypeEnum column,
+                                      const int role) const
 {
     const CGroupChar &character = deref(pCharacter);
 
@@ -585,8 +577,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         return mmqt::textColor(character.getColor());
 
     case Qt::TextAlignmentRole:
-        if (column != ColumnTypeEnum::NAME &&
-            column != ColumnTypeEnum::ROOM_NAME) {
+        if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
             // QVariant(AlignmentFlag) ctor doesn’t exist;
             return static_cast<int>(Qt::AlignCenter);
         }
@@ -856,10 +847,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         emit sig_characterUpdated(selectedCharacter);
     });
 
-    connect(m_table,
-            &QAbstractItemView::clicked,
-            this,
-            &GroupWidget::showContextMenu);
+    connect(m_table, &QAbstractItemView::clicked, this, &GroupWidget::showContextMenu);
 
     connect(m_group, &Mmapper2Group::sig_characterAdded, this, &GroupWidget::slot_onCharacterAdded);
     connect(m_group,
@@ -975,8 +963,7 @@ void GroupWidget::buildAndExecMenu()
 
     m_recolor->setText(QString("&Recolor %1").arg(c.getName().toQString()));
     m_setIcon->setText(QString("&Set icon for %1…").arg(c.getName().toQString()));
-    m_useDefaultIcon->setText(QString("&Use default icon for %1")
-                                  .arg(c.getName().toQString()));
+    m_useDefaultIcon->setText(QString("&Use default icon for %1").arg(c.getName().toQString()));
 
     QMenu menu(tr("Context menu"), this);
     menu.addAction(m_center);

@@ -27,12 +27,11 @@ static QPixmap fetchPixmap(const QString &path)
         QPixmapCache::insert(path, px);
         return px;
     }
-    return {};          // null means load failed
+    return {}; // null means load failed
 }
 
 /// Case-insensitive lookup: “mount_pony” matches “Mount_Pony”
-static QString matchAvailableKey(const QMap<QString, QString> &files,
-                                 const QString &resolvedKey)
+static QString matchAvailableKey(const QMap<QString, QString> &files, const QString &resolvedKey)
 {
     for (const QString &k : files.keys())
         if (k.compare(resolvedKey, Qt::CaseInsensitive) == 0)
@@ -40,7 +39,7 @@ static QString matchAvailableKey(const QMap<QString, QString> &files,
     return {};
 }
 
-}
+} // namespace
 
 const QString kForceFallback(QStringLiteral("__force_fallback__"));
 
@@ -129,8 +128,8 @@ QPixmap TokenManager::getToken(const QString &key)
         return m_fallbackPixmap;
 
     // 1. resolve overrides and normalise key
-    const QString lookup      = overrideFor(key).isEmpty() ? key : overrideFor(key);
-    QString       resolvedKey = normalizeKey(lookup);
+    const QString lookup = overrideFor(key).isEmpty() ? key : overrideFor(key);
+    QString resolvedKey = normalizeKey(lookup);
     if (resolvedKey.isEmpty()) {
         qWarning() << "TokenManager: empty key — defaulting to 'blank_character'";
         resolvedKey = "blank_character";
@@ -157,9 +156,8 @@ QPixmap TokenManager::getToken(const QString &key)
     }
 
     // 4. user-defined fallback (AppData/tokens/blank_character.png)
-    const QString userFallback =
-        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
-        "/tokens/blank_character.png";
+    const QString userFallback = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+                                 + "/tokens/blank_character.png";
     if (QFile::exists(userFallback)) {
         m_tokenPathCache[resolvedKey] = userFallback;
         return fetchPixmap(userFallback);

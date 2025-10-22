@@ -124,9 +124,8 @@ public:
     /* ---------- temporary helper until GMCP flags real mounts ---------- */
     inline bool isMount() const
     {
-        return isNpc();          // treat every NPC as a “mount” for now
+        return isNpc(); // treat every NPC as a “mount” for now
     }
-
 
 public:
     NODISCARD GroupId getId() const
@@ -165,15 +164,9 @@ public:
     {
         return m_internal.color;
     }
-    void setCharacterToken(const QString &tokenPath)
-    {
-        m_characterToken = tokenPath;
-    }
+    void setCharacterToken(const QString &tokenPath) { m_characterToken = tokenPath; }
 
-    NODISCARD const QString &getCharacterToken() const
-    {
-        return m_characterToken;
-    }
+    NODISCARD const QString &getCharacterToken() const { return m_characterToken; }
     NODISCARD bool updateFromGmcp(const JsonObj &obj);
     NODISCARD ServerRoomId getServerId() const
     {
