@@ -185,6 +185,10 @@ MainWindow::MainWindow()
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
+    auto *canvas = getCanvas();
+    connect(m_groupWidget, &GroupWidget::sig_characterUpdated, canvas, [canvas](SharedGroupChar) {
+        canvas->slot_requestUpdate();
+    });
 
     // View -> Side Panels -> Room Panel (Mobs)
     m_roomManager = new RoomManager(this);
