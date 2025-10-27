@@ -59,7 +59,7 @@ jobs:
         "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
 
     - name: Upload AppX
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: appx-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.appxupload*

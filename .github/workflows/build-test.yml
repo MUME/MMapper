@@ -145,7 +145,7 @@ jobs:
         QT_QPA_PLATFORM: offscreen
         ASAN_OPTIONS: detect_leaks=0
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-results ${{ matrix.os }} ${{ matrix.compiler }}
         path: ctest-to-junit-results.xml
@@ -206,19 +206,19 @@ jobs:
         "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
     - if: runner.os == 'macOS'
       name: Upload Package for Mac
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: debug-${{ steps.get_mac_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.dmg*
     - if: runner.os == 'Linux'
       name: Upload Package for Ubuntu
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: debug-${{ matrix.compiler }}-${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.deb*
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: debug-${{ matrix.compiler }}-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.exe*
