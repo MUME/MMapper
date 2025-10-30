@@ -380,7 +380,7 @@ if(MSVC)
     add_compile_options(/Zc:__cplusplus)
     add_compile_options(/utf-8)
     add_compile_options(/permissive-)
-    if(CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
+    if(CMAKE_BUILD_TYPE_UPPER MATCHES "^RELWITHDEBINFO$")
 	    # improve performance
 	    add_compile_options(/Ob2)
 	endif()
