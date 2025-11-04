@@ -879,10 +879,19 @@ void MainWindow::createActions()
     connect(clientAct, &QAction::triggered, this, &MainWindow::slot_onLaunchClient);
 
     saveLogAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
-                             tr("&Save log as..."),
+                             tr("Save Log as &Plain Text..."),
                              this);
     connect(saveLogAct, &QAction::triggered, m_clientWidget, &ClientWidget::slot_saveLog);
-    saveLogAct->setStatusTip(tr("Save log as file"));
+    saveLogAct->setStatusTip(tr("Save log as plain text file"));
+
+    saveLogAsHtmlAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
+                                   tr("Save Log as &HTML..."),
+                                   this);
+    connect(saveLogAsHtmlAct,
+            &QAction::triggered,
+            m_clientWidget,
+            &ClientWidget::slot_saveLogAsHtml);
+    saveLogAsHtmlAct->setStatusTip(tr("Save log as HTML file"));
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release all paths"));
@@ -1186,6 +1195,7 @@ void MainWindow::setupMenuBar()
                                               tr("&Integrated Mud Client"));
     clientMenu->addAction(clientAct);
     clientMenu->addAction(saveLogAct);
+    clientMenu->addAction(saveLogAsHtmlAct);
     QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/goto.png"), tr("&Path Machine"));
     pathMachineMenu->addAction(mouseMode.modeRoomSelectAct);
     pathMachineMenu->addSeparator();

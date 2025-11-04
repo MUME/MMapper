@@ -93,4 +93,5 @@ public slots:
     void slot_onVisibilityChanged(bool);
     void slot_onShowMessage(const QString &);
     void slot_saveLog();
+    void slot_saveLogAsHtml();
 };
