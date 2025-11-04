@@ -222,6 +222,7 @@ private:
 
     QAction *clientAct = nullptr;
     QAction *saveLogAct = nullptr;
+    QAction *saveLogAsHtmlAct = nullptr;
 
     QAction *gotoRoomAct = nullptr;
     QAction *forceRoomAct = nullptr;
