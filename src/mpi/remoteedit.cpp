@@ -15,6 +15,7 @@
 #include <QClipboard>
 #include <QFileDialog>
 #include <QGuiApplication>
+#include <QMessageBox>
 #include <QMessageLogContext>
 #include <QString>
 
@@ -130,24 +131,20 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
         assert(false);
     }
 
-    // Prompt the user to save the file somewhere since we disconnected
-    const QString name = QFileDialog::getSaveFileName(
-        checked_dynamic_downcast<QWidget *>(parent()), // MainWindow
-        "MUME disconnected and you need to save the file locally",
-        getConfig().autoLoad.lastMapDirectory + QDir::separator()
-            + QString("MMapper-Edit-%1.txt").arg(session.getInternalId().asUint32()),
-        "Text files (*.txt)");
-
-    QFile file(name);
-    if (!name.isEmpty() && file.open(QFile::WriteOnly | QFile::Text)) {
-        qDebug() << "Session" << session.getInternalId().asUint32() << "was was saved to" << name;
-        file.write(session.getContent().toUtf8());
-        file.close();
-    } else {
-        QGuiApplication::clipboard()->setText(session.getContent());
-        qWarning() << "Session" << session.getInternalId().asUint32()
-                   << "was copied to the clipboard";
+    QMessageBox dlg(
+        QMessageBox::Critical,
+        "MUME Disconnected",
+        "The connection to MUME was lost. Your unsaved changes will be lost unless you save the file locally now.",
+        QMessageBox::StandardButtons{QMessageBox::Save | QMessageBox::Discard
+                                     | QMessageBox::Cancel});
+    const auto id = session.getInternalId().asUint32();
+    const auto body = session.getContent().toUtf8();
+    if (dlg.exec() == QMessageBox::Save) {
+        qDebug() << "Session" << id << "was saved";
+        QFileDialog::saveFileContent(body, QString("MMapper-Edit-%1.txt").arg(id));
     }
+    QGuiApplication::clipboard()->setText(body);
+    qWarning() << "Session" << id << "was copied to the clipboard";
 }
 
 void RemoteEdit::onDisconnected()
