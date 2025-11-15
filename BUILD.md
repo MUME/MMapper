@@ -76,6 +76,7 @@ cd build
 cmake -G Ninja -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S ..
 cmake --build . --parallel
 ```
+**macOS 15+ users**: If you encounter a linker error `ld: framework 'AGL' not found`, edit the file `~/6.5.3/macos/lib/cmake/Qt6/FindWrapOpenGL.cmake` and comment out lines 40-51 (the AGL framework references). The AGL framework was removed from macOS 15.
 
 ---
 
