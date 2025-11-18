@@ -7,12 +7,14 @@
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
 
+#include <QApplication>
 #include <QMessageLogContext>
 #include <QRegularExpression>
 #include <QScrollBar>
 #include <QString>
 #include <QStyle>
 #include <QTextCursor>
+#include <QTimer>
 #include <QToolTip>
 #include <QtGui>
 
@@ -21,23 +23,31 @@ namespace { // anonymous
 const constexpr int TAB_WIDTH_SPACES = 8;
 const volatile bool ignore_non_default_underline_colors = false;
 
-void foreach_backspace(const QStringView text,
-                       const std::function<void()> &callback_backspace,
-                       const std::function<void(const QStringView nonBackspace)> &callback_between)
+void foreach_char(const QChar qchar,
+                  const QStringView text,
+                  const std::function<void()> &callback_qchar,
+                  const std::function<void(const QStringView nonQchar)> &callback_between)
 {
     qsizetype pos = 0;
     const qsizetype end = text.length();
     while (pos != end) {
-        const qsizetype backspaceIndex = text.indexOf(char_consts::C_BACKSPACE, pos);
-        if (backspaceIndex < 0) {
+        const qsizetype qcharIndex = text.indexOf(qchar, pos);
+        if (qcharIndex < 0) {
             callback_between(text.mid(pos));
             break;
         }
 
-        callback_between(text.mid(pos, backspaceIndex - pos));
-        callback_backspace();
-        pos = backspaceIndex + 1;
+        callback_between(text.mid(pos, qcharIndex - pos));
+        callback_qchar();
+        pos = qcharIndex + 1;
     }
+}
+
+void foreach_backspace(const QStringView text,
+                       const std::function<void()> &callback_backspace,
+                       const std::function<void(const QStringView nonBackspace)> &callback_between)
+{
+    foreach_char(char_consts::C_BACKSPACE, text, callback_backspace, callback_between);
 }
 
 } // namespace
@@ -70,10 +80,18 @@ DisplayWidgetOutputs::~DisplayWidgetOutputs() = default;
 DisplayWidget::DisplayWidget(QWidget *const parent)
     : QTextBrowser(parent)
     , m_ansiTextHelper{static_cast<QTextEdit &>(*this)}
+    , m_timer{new QTimer(this)}
 {
     setReadOnly(true);
     setOverwriteMode(true);
     setUndoRedoEnabled(false);
+
+    m_timer->setSingleShot(true);
+    connect(m_timer, &QTimer::timeout, this, [this]() {
+        QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
+        frameFormat.setBackground(getConfig().integratedClient.backgroundColor);
+        document()->rootFrame()->setFrameFormat(frameFormat);
+    });
     setDocumentTitle("MMapper Mud Client");
     setTextInteractionFlags(Qt::TextBrowserInteraction);
     setOpenExternalLinks(true);
@@ -213,7 +231,7 @@ void setDefaultFormat(QTextCharFormat &format, const FontDefaults &defaults)
     format.setFontStrikeOut(false);
 }
 
-void AnsiTextHelper::displayText(const QString &input_str)
+void AnsiTextHelper::displayText(const QStringView input_str)
 {
     // ANSI codes are formatted as the following:
     // escape + [ + n1 (+ n2) + m
@@ -311,7 +329,7 @@ void AnsiTextHelper::displayText(const QString &input_str)
                 try_remove_backspace();
                 cursor.insertHtml(link);
             },
-            [this, &add_raw](const QStringView &non_url) { add_raw(non_url, format); });
+            [this, &add_raw](const QStringView non_url) { add_raw(non_url, format); });
     };
 
     // Display text using a cursor
@@ -352,7 +370,7 @@ void AnsiTextHelper::limitScrollback(int lineLimit)
     }
 }
 
-void DisplayWidget::slot_displayText(const QString &str)
+void DisplayWidget::slot_displayText(const QStringView str)
 {
     const int lineLimit = getConfig().integratedClient.linesOfScrollback;
 
@@ -360,7 +378,29 @@ void DisplayWidget::slot_displayText(const QString &str)
     constexpr int ALMOST_ALL_THE_WAY = 4;
     const bool wasAtBottom = (vscroll.sliderPosition() >= vscroll.maximum() - ALMOST_ALL_THE_WAY);
 
-    m_ansiTextHelper.displayText(str);
+    auto on_bell = [this]() {
+        const auto &settings = getConfig().integratedClient;
+        if (settings.audibleBell) {
+            QApplication::beep();
+        }
+        if (settings.visualBell) {
+            auto setBackgroundColor = [this](const QColor &color) {
+                QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
+                frameFormat.setBackground(color);
+                document()->rootFrame()->setFrameFormat(frameFormat);
+            };
+
+            QColor flashColor = getConfig().integratedClient.backgroundColor;
+            flashColor.setRed(std::min(255, flashColor.red() + 80));
+            setBackgroundColor(flashColor);
+
+            m_timer->start(250);
+        }
+    };
+
+    foreach_char(mmqt::QC_ALERT, str, on_bell, [this](const QStringView nonBellText) {
+        m_ansiTextHelper.displayText(nonBellText);
+    });
 
     // REVISIT: include option to limit scrollback in the displayText function,
     // so it can choose to remove lines from the top when the overflow occurs,

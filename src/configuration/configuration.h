@@ -347,6 +347,8 @@ public:
         bool clearInputOnEnter = false;
         bool autoResizeTerminal = false;
         int linesOfPeekPreview = 0;
+        bool audibleBell = false;
+        bool visualBell = false;
 
     private:
         SUBGROUP();

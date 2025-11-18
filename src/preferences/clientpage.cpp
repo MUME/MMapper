@@ -66,6 +66,14 @@ ClientPage::ClientPage(QWidget *parent)
         /* NOTE: This directly modifies the global setting. */
         setConfig().integratedClient.autoResizeTerminal = isChecked;
     });
+
+    connect(ui->audibleBellCheckBox, &QCheckBox::toggled, [](bool isChecked) {
+        setConfig().integratedClient.audibleBell = isChecked;
+    });
+
+    connect(ui->visualBellCheckBox, &QCheckBox::toggled, [](bool isChecked) {
+        setConfig().integratedClient.visualBell = isChecked;
+    });
 }
 
 ClientPage::~ClientPage()
@@ -86,6 +94,8 @@ void ClientPage::slot_loadConfig()
     ui->tabDictionarySpinBox->setValue(settings.tabCompletionDictionarySize);
     ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);
     ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
+    ui->audibleBellCheckBox->setChecked(settings.audibleBell);
+    ui->visualBellCheckBox->setChecked(settings.visualBell);
 }
 
 void ClientPage::updateFontAndColors()

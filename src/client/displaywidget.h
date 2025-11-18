@@ -16,6 +16,7 @@
 #include <QTextCursor>
 #include <QTextEdit>
 #include <QTextFormat>
+#include <QTimer>
 #include <QtCore>
 #include <QtGui>
 
@@ -62,7 +63,7 @@ struct NODISCARD AnsiTextHelper final
     {}
 
     void init();
-    void displayText(const QString &str);
+    void displayText(const QStringView str);
     void limitScrollback(int lineLimit);
 };
 
@@ -101,6 +102,7 @@ private:
 private:
     DisplayWidgetOutputs *m_output = nullptr;
     AnsiTextHelper m_ansiTextHelper;
+    QTimer *m_timer = nullptr;
     bool m_canCopy = false;
 
 public:
@@ -135,5 +137,5 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 public slots:
-    void slot_displayText(const QString &str);
+    void slot_displayText(const QStringView str);
 };
