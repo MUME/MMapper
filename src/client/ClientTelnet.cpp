@@ -13,7 +13,6 @@
 #include <limits>
 #include <tuple>
 
-#include <QApplication>
 #include <QByteArray>
 #include <QHostAddress>
 #include <QMessageLogContext>
@@ -134,14 +133,6 @@ void ClientTelnet::virt_sendToMapper(const RawBytes &data, bool /*goAhead*/)
     // The encoding for the built-in client is always Utf8.
     assert(getEncoding() == CharacterEncodingEnum::UTF8);
     QString out = QString::fromUtf8(data.getQByteArray());
-
-    // Replace BEL character with an application beep
-    // REVISIT: This seems like the WRONG place to do this.
-    static constexpr const QChar BEL = mmqt::QC_ALERT;
-    if (out.contains(BEL)) {
-        out.remove(BEL);
-        QApplication::beep();
-    }
 
     // REVISIT: Why is virt_sendToMapper() calling sendToUser()? One needs to be renamed?
     m_output.sendToUser(out);

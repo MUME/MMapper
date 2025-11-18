@@ -163,7 +163,7 @@ void ClientWidget::initClientTelnet()
         }
         void virt_disconnected() final
         {
-            getDisplay().slot_displayText("\n\n\n");
+            getDisplay().slot_displayText(QStringLiteral("\n\n\n"));
             getClient().relayMessage("Disconnected using the integrated client");
         }
         void virt_socketError(const QString &errorStr) final

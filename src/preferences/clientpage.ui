@@ -207,6 +207,26 @@
       <item row="5" column="1">
        <widget class="QSpinBox" name="previewSpinBox"/>
       </item>
+      <item row="7" column="0" colspan="2">
+       <widget class="QCheckBox" name="audibleBellCheckBox">
+        <property name="text">
+         <string>Audible bell</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="2">
+       <widget class="QCheckBox" name="visualBellCheckBox">
+        <property name="text">
+         <string>Visual bell</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
