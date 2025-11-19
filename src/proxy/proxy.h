@@ -50,6 +50,7 @@ class RemoteEdit;
 class RoomManager;
 class TelnetLineFilter;
 class UserTelnet;
+class AbstractSocket;
 
 struct AbstractParserOutputs;
 struct AnsiWarningMessage;
@@ -75,8 +76,8 @@ private:
     MumeClock &m_mumeClock;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
-    const qintptr m_socketDescriptor;
     MainWindow &m_mainWindow;
+    std::unique_ptr<AbstractSocket> m_userSocket;
 
 private:
     class UserSocket;
@@ -172,7 +173,7 @@ public:
                                                MumeClock &,
                                                MapCanvas &,
                                                GameObserver &,
-                                               qintptr &,
+                                               std::unique_ptr<AbstractSocket>,
                                                ConnectionListener &);
 
 public:
@@ -184,7 +185,7 @@ public:
                    MumeClock &,
                    MapCanvas &,
                    GameObserver &,
-                   qintptr &,
+                   std::unique_ptr<AbstractSocket>,
                    ConnectionListener &);
     ~Proxy() final;
 

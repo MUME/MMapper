@@ -7,12 +7,15 @@
 #include "connectionlistener.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiOstream.h"
 #include "../global/Charset.h"
 #include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
+#include "TcpSocket.h"
 #include "proxy.h"
 
 #include <memory>
+#include <sstream>
 
 #include <QTcpSocket>
 #include <QThread>
@@ -87,10 +90,15 @@ void ConnectionListener::listen()
 
 void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
 {
+    auto socket = std::make_unique<TcpSocket>(socketDescriptor, this);
+    emit sig_clientSuccessfullyConnected();
+    startClient(std::move(socket));
+}
+
+void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
+{
     if (m_proxy == nullptr) {
         log("New connection: accepted.");
-        emit sig_clientSuccessfullyConnected();
-
         m_proxy = Proxy::allocInit(m_mapData,
                                    m_pathMachine,
                                    m_prespammedPath,
@@ -98,32 +106,23 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                    m_mumeClock,
                                    m_mapCanvas,
                                    m_gameOberver,
-                                   socketDescriptor,
+                                   std::move(socket),
                                    *this);
     } else {
         log("New connection: rejected.");
-        QTcpSocket tcpSocket;
-        if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
-            const QByteArray msg = []() {
-                constexpr const auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white,
-                                                             AnsiColor16Enum::red);
-                std::stringstream oss;
-                AnsiOstream aos{oss};
-                aos.writeWithColor(whiteOnRed, "You can't connect to MMapper more than once!\n");
-                aos.write("\n");
-                aos.writeWithColor(whiteOnRed, "Please close the existing connection.\n");
-                // As long as the message is just ASCII, it doesn't matter that we send utf8,
-                // but hypothetically this function should do charset conversion and escape IACs
-                // if the message is ever changed to include non-ASCII characters.
-                return mmqt::toQByteArrayUtf8(oss.str());
-            }();
+        const QByteArray msg = []() {
+            constexpr const auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white,
+                                                         AnsiColor16Enum::red);
+            std::stringstream oss;
+            AnsiOstream aos{oss};
+            aos.writeWithColor(whiteOnRed, "You can't connect to MMapper more than once!\n");
+            aos.write("\n");
+            aos.writeWithColor(whiteOnRed, "Please close the existing connection.\n");
+            return mmqt::toQByteArrayUtf8(oss.str());
+        }();
 
-            tcpSocket.write(msg);
-            tcpSocket.flush();
-            tcpSocket.disconnectFromHost();
-            if (tcpSocket.state() != QAbstractSocket::UnconnectedState) {
-                tcpSocket.waitForDisconnected();
-            }
-        }
+        socket->write(msg);
+        socket->flush();
+        socket->disconnectFromHost();
     }
 }

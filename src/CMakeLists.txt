@@ -480,6 +480,7 @@ set(mmapper_SRCS
     preferences/parserpage.h
     preferences/pathmachinepage.cpp
     preferences/pathmachinepage.h
+    proxy/AbstractSocket.h
     proxy/AbstractTelnet.cpp
     proxy/AbstractTelnet.h
     proxy/GmcpMessage.cpp
@@ -492,10 +493,14 @@ set(mmapper_SRCS
     proxy/MudTelnet.h
     proxy/ProxyParserApi.cpp
     proxy/ProxyParserApi.h
+    proxy/TcpSocket.cpp
+    proxy/TcpSocket.h
     proxy/TextCodec.cpp
     proxy/TextCodec.h
     proxy/UserTelnet.cpp
     proxy/UserTelnet.h
+    proxy/VirtualSocket.cpp
+    proxy/VirtualSocket.h
     proxy/connectionlistener.cpp
     proxy/connectionlistener.h
     proxy/mumesocket.cpp
