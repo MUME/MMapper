@@ -8,10 +8,12 @@
 #include "../global/io.h"
 #include "../global/utils.h"
 #include "../proxy/AbstractTelnet.h"
+#include "../proxy/VirtualSocket.h"
 
 #include <QAbstractSocket>
 #include <QObject>
-#include <QTcpSocket>
+
+class ConnectionListener;
 
 struct ClientTelnetOutputs
 {
@@ -43,7 +45,7 @@ class NODISCARD ClientTelnet final : AbstractTelnet
 private:
     ClientTelnetOutputs &m_output;
     io::buffer<(1 << 15)> m_buffer;
-    QTcpSocket m_socket;
+    VirtualSocket m_socket;
     QObject m_dummy;
 
 public:
@@ -54,8 +56,9 @@ private:
     NODISCARD ClientTelnetOutputs &getOutput() { return m_output; }
 
 public:
-    void connectToHost();
+    void connectToHost(ConnectionListener *listener);
     void disconnectFromHost();
+    NODISCARD bool isConnected() const { return m_socket.isConnected(); }
 
 private:
     void virt_sendToMapper(const RawBytes &, bool goAhead) final;

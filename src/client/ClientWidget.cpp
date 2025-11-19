@@ -5,6 +5,8 @@
 #include "ClientWidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiOstream.h"
+#include "../proxy/connectionlistener.h"
 #include "ClientTelnet.h"
 #include "PreviewWidget.h"
 #include "displaywidget.h"
@@ -19,8 +21,9 @@
 #include <QString>
 #include <QTimer>
 
-ClientWidget::ClientWidget(QWidget *const parent)
+ClientWidget::ClientWidget(ConnectionListener *listener, QWidget *const parent)
     : QWidget(parent)
+    , m_listener{listener}
 {
     setWindowTitle("MMapper Client");
 
@@ -34,7 +37,7 @@ ClientWidget::ClientWidget(QWidget *const parent)
     ui.playButton->setFocus();
     QObject::connect(ui.playButton, &QAbstractButton::clicked, this, [this]() {
         getUi().parent->setCurrentIndex(1);
-        getTelnet().connectToHost();
+        getTelnet().connectToHost(m_listener);
     });
 
     ui.input->installEventFilter(this);
@@ -84,7 +87,14 @@ void ClientWidget::initStackedInputWidget()
         NODISCARD PreviewWidget &getPreview() { return getSelf().getPreview(); }
 
     private:
-        void virt_sendUserInput(const QString &msg) final { getTelnet().sendToMud(msg); }
+        void virt_sendUserInput(const QString &msg) final
+        {
+            if (!getTelnet().isConnected()) {
+                getTelnet().connectToHost(getSelf().m_listener);
+            } else {
+                getTelnet().sendToMud(msg);
+            }
+        }
 
         void virt_displayMessage(const QString &msg) final
         {
@@ -164,7 +174,7 @@ void ClientWidget::initClientTelnet()
         }
         void virt_disconnected() final
         {
-            getDisplay().slot_displayText(QStringLiteral("\n\n\n"));
+            getClient().displayReconnectHint();
             getClient().relayMessage("Disconnected using the integrated client");
         }
         void virt_socketError(const QString &errorStr) final
@@ -220,13 +230,11 @@ void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 
     // Delay connecting to verify that visibility is not just the dock popping back in
     QTimer::singleShot(500, [this]() {
-        if (!isVisible()) {
+        if (getTelnet().isConnected() && !isVisible()) {
             // Disconnect if the widget is closed or minimized
             getTelnet().disconnectFromHost();
-
-        } else {
-            // Connect if the client was previously activated and the widget is re-opened
-            getTelnet().connectToHost();
+        } else if (!getTelnet().isConnected() && isVisible()) {
+            getInput().setFocus();
         }
     });
 }
@@ -234,6 +242,15 @@ void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 bool ClientWidget::isUsingClient() const
 {
     return getUi().parent->currentIndex() != 0;
+}
+
+void ClientWidget::displayReconnectHint()
+{
+    constexpr const auto whiteOnCyan = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::cyan);
+    std::stringstream oss;
+    AnsiOstream aos{oss};
+    aos.writeWithColor(whiteOnCyan, "\n\n\nPress return to reconnect.\n");
+    getDisplay().slot_displayText(mmqt::toQStringUtf8(oss.str()));
 }
 
 void ClientWidget::slot_onShowMessage(const QString &message)

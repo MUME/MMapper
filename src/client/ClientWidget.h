@@ -19,6 +19,7 @@ class QEvent;
 class QObject;
 class StackedInputWidget;
 class PreviewWidget;
+class ConnectionListener;
 
 struct ClientTelnetOutputs;
 struct DisplayWidgetOutputs;
@@ -54,9 +55,10 @@ private:
     };
 
     Pipeline m_pipeline;
+    ConnectionListener *m_listener = nullptr;
 
 public:
-    explicit ClientWidget(QWidget *parent);
+    explicit ClientWidget(ConnectionListener *listener, QWidget *parent);
     ~ClientWidget() final;
 
 private:
@@ -78,6 +80,7 @@ private:
 
 public:
     NODISCARD bool isUsingClient() const;
+    void displayReconnectHint();
 
 private:
     void relayMessage(const QString &msg) { emit sig_relayMessage(msg); }
