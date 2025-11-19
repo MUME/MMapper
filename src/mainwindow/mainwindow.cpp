@@ -148,18 +148,6 @@ MainWindow::MainWindow()
     m_gameObserver = std::make_unique<GameObserver>();
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
 
-    // View -> Side Panels -> Client Panel
-    m_clientWidget = new ClientWidget(this);
-    m_clientWidget->setObjectName("InternalMudClientWidget");
-    m_dockDialogClient = new QDockWidget("Client Panel", this);
-    m_dockDialogClient->setObjectName("DockWidgetClient");
-    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
-    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
-                                    | QDockWidget::DockWidgetFloatable
-                                    | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
-    m_dockDialogClient->setWidget(m_clientWidget);
-
     // View -> Side Panels -> Log Panel
     m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
@@ -234,16 +222,6 @@ MainWindow::MainWindow()
         m_updateDialog = new UpdateDialog(this);
     }
 
-    createActions();
-    setupToolBars();
-    setupMenuBar();
-    setupStatusBar();
-
-    setCorner(Qt::TopLeftCorner, Qt::TopDockWidgetArea);
-    setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
-    setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
-    setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
-
     m_logger = new AutoLogger(this);
 
     // TODO move this connect() wiring into AutoLogger::ctor ?
@@ -270,6 +248,28 @@ MainWindow::MainWindow()
                                         deref(getCanvas()),
                                         deref(m_gameObserver),
                                         this);
+
+    // View -> Side Panels -> Client Panel
+    m_clientWidget = new ClientWidget(deref(m_listener), this);
+    m_clientWidget->setObjectName("InternalMudClientWidget");
+    m_dockDialogClient = new QDockWidget("Client Panel", this);
+    m_dockDialogClient->setObjectName("DockWidgetClient");
+    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
+                                    | QDockWidget::DockWidgetFloatable
+                                    | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
+    m_dockDialogClient->setWidget(m_clientWidget);
+
+    createActions();
+    setupToolBars();
+    setupMenuBar();
+    setupStatusBar();
+
+    setCorner(Qt::TopLeftCorner, Qt::TopDockWidgetArea);
+    setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
     // update connections
     wireConnections();
@@ -1675,7 +1675,6 @@ void MainWindow::slot_onFindRoom()
 void MainWindow::slot_onLaunchClient()
 {
     m_dockDialogClient->show();
-    m_clientWidget->setFocus();
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)

@@ -11,6 +11,9 @@ class NODISCARD_QOBJECT PreviewWidget final : public QTextEdit
 {
     Q_OBJECT
 
+private:
+    AnsiTextHelper helper;
+
 public:
     explicit PreviewWidget(QWidget *parent = nullptr);
     ~PreviewWidget() final = default;
@@ -19,7 +22,4 @@ public:
 
 public:
     void displayText(const QString &fullText);
-
-private:
-    AnsiTextHelper helper;
 };
