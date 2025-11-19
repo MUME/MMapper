@@ -10,19 +10,23 @@
 
 #include <tuple>
 
-#include <QMainWindow>
+#include <QDialog>
 #include <QStyle>
 #include <QTextBrowser>
+#include <QVBoxLayout>
 
 AnsiViewWindow::AnsiViewWindow(const QString &program,
                                const QString &title,
                                const std::string_view message)
     : m_view{std::make_unique<QTextBrowser>(this)}
 {
-    setWindowFlags(windowFlags() | Qt::WindowType::Widget);
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     mmqt::setWindowTitle2(*this, program, title);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
     auto &view = deref(m_view);
     setAnsiText(&view, message);
@@ -38,7 +42,7 @@ AnsiViewWindow::AnsiViewWindow(const QString &program,
     show();
     raise();
     activateWindow();
-    setCentralWidget(&view);
+    mainLayout->addWidget(&view, 0);
     view.setFocus(); // REVISIT: can this be done in the creation function?
 }
 

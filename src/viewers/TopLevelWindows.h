@@ -5,8 +5,8 @@
 #include <memory>
 
 class QString;
-class QMainWindow;
+class QDialog;
 
 extern void initTopLevelWindows();
 extern void destroyTopLevelWindows();
-extern void addTopLevelWindow(std::unique_ptr<QMainWindow> window);
+extern void addTopLevelWindow(std::unique_ptr<QDialog> window);

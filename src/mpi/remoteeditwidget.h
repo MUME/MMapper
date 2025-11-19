@@ -9,14 +9,12 @@
 #include <memory>
 
 #include <QAction>
-#include <QMainWindow>
+#include <QDialog>
 #include <QPlainTextEdit>
 #include <QScopedPointer>
 #include <QSize>
 #include <QString>
 #include <QtCore>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QVBoxLayout>
 
 struct EditViewCommand;
 struct EditCommand2;
@@ -27,8 +25,9 @@ class QMenu;
 class QMenuBar;
 class QObject;
 class QPlainTextEdit;
-class QWidget;
 class QStatusBar;
+class QVBoxLayout;
+class QWidget;
 class GotoWidget;
 class FindReplaceWidget;
 
@@ -132,9 +131,13 @@ private:
     void handle_toolTip(QEvent *event) const;
 };
 
-class NODISCARD_QOBJECT RemoteEditWidget : public QMainWindow
+class NODISCARD_QOBJECT RemoteEditWidget : public QDialog
 {
     Q_OBJECT
+
+private:
+    QMenuBar *m_menuBar;
+    QStatusBar *m_statusBar;
 
 public:
     using Editor = RemoteTextEdit;
@@ -159,8 +162,8 @@ public:
     NODISCARD QSize sizeHint() const override;
     void closeEvent(QCloseEvent *event) override;
 
-public:
-    void setVisible(bool visible) override;
+protected:
+    void showEvent(QShowEvent *event) override;
 
 private:
     NODISCARD Editor *createTextEdit();
@@ -170,8 +173,8 @@ private:
     void addToMenu(QMenu *menu, const EditViewCommand &cmd);
     void addToMenu(QMenu *menu, const EditCommand2 &cmd, const Editor *pTextEdit);
 
-    void addFileMenu(QMenuBar *menuBar, const Editor *pTextEdit);
-    void addEditAndViewMenus(QMenuBar *menuBar, const Editor *pTextEdit);
+    void addFileMenu(const Editor *pTextEdit);
+    void addEditAndViewMenus(const Editor *pTextEdit);
     void addSave(QMenu *fileMenu);
     void addExit(QMenu *fileMenu);
     void addStatusBar(const Editor *pTextEdit);

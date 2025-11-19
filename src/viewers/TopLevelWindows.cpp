@@ -12,7 +12,7 @@
 #include <memory>
 
 #include <QDebug>
-#include <QMainWindow>
+#include <QDialog>
 #include <QPointer>
 #include <QTimer>
 
@@ -28,12 +28,12 @@ private:
     class NODISCARD Entry final
     {
     private:
-        std::unique_ptr<QMainWindow> m_unique;
+        std::unique_ptr<QDialog> m_unique;
         QString m_name;
-        QPointer<QMainWindow> m_weak_ptr;
+        QPointer<QDialog> m_weak_ptr;
 
     public:
-        explicit Entry(std::unique_ptr<QMainWindow> ptr)
+        explicit Entry(std::unique_ptr<QDialog> ptr)
             : m_unique{std::move(ptr)}
             , m_name{deref(m_unique).windowTitle()}
             , m_weak_ptr{m_unique.get()}
@@ -51,14 +51,14 @@ private:
         NODISCARD const QString &getName() const { return m_name; }
 
     private:
-        NODISCARD QMainWindow *try_get() { return m_weak_ptr.data(); }
-        NODISCARD const QMainWindow *try_get() const { return m_weak_ptr.data(); }
+        NODISCARD QDialog *try_get() { return m_weak_ptr.data(); }
+        NODISCARD const QDialog *try_get() const { return m_weak_ptr.data(); }
 
     public:
         NODISCARD bool isVisible() const
         {
-            if (const QMainWindow *const ptr = try_get()) {
-                const QMainWindow &w = deref(ptr);
+            if (const QDialog *const ptr = try_get()) {
+                const QDialog &w = deref(ptr);
                 if (w.isVisible()) {
                     return true;
                 }
@@ -68,7 +68,7 @@ private:
 
         void disconnectAllChildren()
         {
-            if (QMainWindow *const ptr = try_get()) {
+            if (QDialog *const ptr = try_get()) {
                 if (verbose_debugging) {
                     qDebug() << "Disconnecting all chidren of window" << getName();
                 }
@@ -78,8 +78,8 @@ private:
 
         void deleteWindowLater()
         {
-            if (QMainWindow *const ptr = try_get()) {
-                QMainWindow &w = deref(ptr);
+            if (QDialog *const ptr = try_get()) {
+                QDialog &w = deref(ptr);
                 if (verbose_debugging) {
                     qDebug() << "Marking window" << getName() << "for destruction.";
                 }
@@ -160,7 +160,7 @@ private:
     }
 
 public:
-    void add(std::unique_ptr<QMainWindow> pWindow)
+    void add(std::unique_ptr<QDialog> pWindow)
     {
         auto &window = deref(pWindow);
         const auto title = window.windowTitle();
@@ -205,7 +205,7 @@ void destroyTopLevelWindows()
     g_topLevelWindows.reset();
 }
 
-void addTopLevelWindow(std::unique_ptr<QMainWindow> window)
+void addTopLevelWindow(std::unique_ptr<QDialog> window)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
     deref(g_topLevelWindows).add(std::move(window));

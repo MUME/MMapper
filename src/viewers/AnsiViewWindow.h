@@ -7,12 +7,12 @@
 #include <memory>
 #include <string_view>
 
-#include <QMainWindow>
+#include <QDialog>
 #include <QString>
 
 class QTextBrowser;
 
-class NODISCARD AnsiViewWindow final : public QMainWindow
+class NODISCARD AnsiViewWindow final : public QDialog
 {
 private:
     std::unique_ptr<QTextBrowser> m_view;
