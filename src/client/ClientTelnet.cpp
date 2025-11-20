@@ -9,6 +9,7 @@
 #include "../global/io.h"
 #include "../global/utils.h"
 #include "../proxy/TextCodec.h"
+#include "../proxy/connectionlistener.h"
 
 #include <limits>
 #include <tuple>
@@ -26,16 +27,12 @@ ClientTelnet::ClientTelnet(ClientTelnetOutputs &output)
     , m_output{output}
 {
     auto &socket = m_socket;
-    QObject::connect(&socket, &QAbstractSocket::connected, &m_dummy, [this]() { onConnected(); });
-    QObject::connect(&socket, &QAbstractSocket::disconnected, &m_dummy, [this]() {
+    QObject::connect(&socket, &VirtualSocket::sig_connected, &m_dummy, [this]() { onConnected(); });
+    QObject::connect(&socket, &VirtualSocket::sig_disconnected, &m_dummy, [this]() {
         onDisconnected();
     });
 
     QObject::connect(&socket, &QIODevice::readyRead, &m_dummy, [this]() { onReadyRead(); });
-    QObject::connect(&socket,
-                     QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
-                     &m_dummy,
-                     [this](QAbstractSocket::SocketError err) { onError(err); });
 }
 
 ClientTelnet::~ClientTelnet()
@@ -43,26 +40,17 @@ ClientTelnet::~ClientTelnet()
     m_socket.disconnectFromHost();
 }
 
-void ClientTelnet::connectToHost()
+void ClientTelnet::connectToHost(ConnectionListener *listener)
 {
-    auto &socket = m_socket;
-    if (socket.state() == QAbstractSocket::ConnectedState) {
-        return;
-    }
-
-    if (socket.state() != QAbstractSocket::UnconnectedState) {
-        socket.abort();
-    }
-
-    socket.connectToHost(QHostAddress::LocalHost, getConfig().connection.localPort);
-    socket.waitForConnected(3000);
+    auto peerSocket = std::make_unique<VirtualSocket>();
+    m_socket.connectToPeer(peerSocket.get());
+    listener->startClient(std::move(peerSocket));
+    onConnected();
 }
 
 void ClientTelnet::onConnected()
 {
     reset();
-    m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
-    m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     m_output.connected();
 }
 
@@ -76,18 +64,6 @@ void ClientTelnet::onDisconnected()
     reset();
     m_output.echoModeChanged(true);
     m_output.disconnected();
-}
-
-void ClientTelnet::onError(QAbstractSocket::SocketError error)
-{
-    if (error == QAbstractSocket::SocketError::RemoteHostClosedError) {
-        // The connection closing isn't an error
-        return;
-    }
-
-    QString err = m_socket.errorString();
-    m_socket.abort();
-    m_output.socketError(err);
 }
 
 void ClientTelnet::sendToMud(const QString &data)

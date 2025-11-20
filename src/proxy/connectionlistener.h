@@ -43,9 +43,14 @@ signals:
     void signal_incomingConnection(qintptr socketDescriptor);
 };
 
+#include "AbstractSocket.h"
+
 class NODISCARD_QOBJECT ConnectionListener final : public QObject
 {
     Q_OBJECT
+
+public:
+    void startClient(std::unique_ptr<AbstractSocket> socket);
 
 private:
     MapData &m_mapData;
