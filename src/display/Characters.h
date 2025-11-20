@@ -102,6 +102,8 @@ private:
         MatrixStack m_stack;
         std::vector<ColorVert> m_charTris;
         std::vector<ColorVert> m_charBeaconQuads;
+        std::vector<ColoredTexVert> m_charTokenQuads;
+        std::vector<QString> m_charTokenKeys;
         std::vector<ColorVert> m_charLines;
         std::vector<ColorVert> m_pathPoints;
         std::vector<ColorVert> m_pathLineVerts;
@@ -149,7 +151,8 @@ private:
             m = glm::translate(m, v);
         }
         void drawArrow(bool fill, bool beacon);
-        void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
+        void drawBox(
+            const Coordinate &coord, bool fill, bool beacon, bool isFar, const QString &dispName);
         void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color &color, bool fill);
 
         // with blending, without depth; always size 4
@@ -215,7 +218,10 @@ public:
     NODISCARD bool isVisible(const Coordinate &c, float margin) const;
 
 public:
-    void drawCharacter(const Coordinate &coordinate, const Color &color, bool fill = true);
+    void drawCharacter(const Coordinate &coordinate,
+                       const Color &color,
+                       bool fill = true,
+                       const QString &dispName = QString());
 
     void drawPreSpammedPath(const Coordinate &coordinate,
                             const std::vector<Coordinate> &path,
