@@ -185,11 +185,11 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();
 
-    QFile *const file = getFile();
-    QXmlStreamReader xml{file};
+    QIODevice *const device = &getDevice();
+    QXmlStreamReader xml{device};
 
     // Discover total number of rooms
-    const QString &file_fileName = file->fileName();
+    const QString &file_fileName = getFilename();
     if (xml.readNextStartElement() && xml.error() != QXmlStreamReader::NoError) {
         qWarning() << "File cannot be read" << file_fileName;
         return std::nullopt;
@@ -222,7 +222,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
     }
 
     log(QString("Finished reading %1 rooms.").arg(loading.size()));
-    file->close();
+    device->close();
 
     if (!exitsToDeathTrap.empty()) {
         log(QString("Adding %1 death trap rooms").arg(exitsToDeathTrap.size()));

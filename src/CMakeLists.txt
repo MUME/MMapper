@@ -352,6 +352,10 @@ set(mmapper_SRCS
     mapfrontend/MapHistory.h
     mapfrontend/mapfrontend.cpp
     mapfrontend/mapfrontend.h
+    mapstorage/MapDestination.cpp
+    mapstorage/MapDestination.h
+    mapstorage/MapSource.cpp
+    mapstorage/MapSource.h
     mapstorage/MmpMapStorage.cpp
     mapstorage/MmpMapStorage.h
     mapstorage/PandoraMapStorage.cpp

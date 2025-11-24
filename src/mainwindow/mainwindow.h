@@ -5,20 +5,19 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../configuration/configuration.h"
 #include "../display/CanvasMouseModeEnum.h"
-#include "../global/Connections.h"
 #include "../global/Signal2.h"
 #include "../global/macros.h"
 #include "../group/mmapper2group.h"
-#include "../map/Changes.h"
 #include "../mapdata/roomselection.h"
+#include "../mapstorage/MapDestination.h"
+#include "../mapstorage/MapSource.h"
 
-#include <exception>
 #include <memory>
 #include <optional>
 
 #include <QActionGroup>
+#include <QByteArray>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMainWindow>
@@ -28,6 +27,7 @@
 #include <QTextBrowser>
 #include <QtCore>
 #include <QtGlobal>
+#include <QtWidgets>
 
 class AbstractMapStorage;
 class AdventureTracker;
@@ -66,8 +66,8 @@ class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
 class DescriptionWidget;
-
 struct MapLoadData;
+class MapDestination;
 
 enum class NODISCARD AsyncTypeEnum : uint8_t { Load, Merge, Save };
 
@@ -267,19 +267,15 @@ public:
     explicit MainWindow();
     ~MainWindow() final;
 
-    enum class NODISCARD SaveModeEnum { FULL, BASEMAP };
-    enum class NODISCARD SaveFormatEnum { MM2, MM2XML, WEB, MMP };
     NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
-    void loadFile(const QString &fileName);
+    void loadFile(std::shared_ptr<MapSource> source);
     void setCurrentFile(const QString &fileName);
     void percentageChanged(uint32_t);
 
 private:
     void showAsyncFailure(const QString &fileName, AsyncTypeEnum mode, bool wasCanceled);
     NODISCARD std::unique_ptr<AbstractMapStorage> getLoadOrMergeMapStorage(
-        const std::shared_ptr<ProgressCounter> &pc,
-        const QString &fileName,
-        std::shared_ptr<QFile> &pFile);
+        const std::shared_ptr<ProgressCounter> &pc, std::shared_ptr<MapSource> &source);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -374,12 +370,9 @@ private:
 
 private:
     void applyGroupAction(const std::function<Change(const RawRoom &)> &getChange);
-    NODISCARD QString chooseLoadOrMergeFileName();
     void onSuccessfulLoad(const MapLoadData &mapLoadData);
     void onSuccessfulMerge(const Map &map);
     void onSuccessfulSave(SaveModeEnum mode, SaveFormatEnum format, const QString &fileName);
-    void reportOpenFileFailure(const QString &fileName, const QString &reason);
-    void reportOpenFileException(const QString &fileName, const std::exception_ptr &eptr);
 
 public slots:
     void slot_newFile();
