@@ -163,7 +163,7 @@ void ConnectionLineBuilder::drawConnLineEnd1Way(const ExitDirEnum endDir,
     case ExitDirEnum::UP:
     case ExitDirEnum::DOWN:
         addVertex(dX + 0.75f, dY + 0.25f, dstZ);
-        addVertex(dX + 0.5f, dY + 0.5f, dstZ);
+        addVertex(dX + 0.55f, dY + 0.45f, dstZ);
         break;
     case ExitDirEnum::UNKNOWN:
         addVertex(dX + 0.75f, dY + 0.25f, dstZ);

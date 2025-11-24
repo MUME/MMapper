@@ -4,13 +4,13 @@
 #include "Infomarks.h"
 
 #include "../configuration/configuration.h"
-#include "../global/AnsiTextUtils.h"
 #include "../global/Charset.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
+#include "../opengl/LineRendering.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
 #include "InfomarkSelection.h"
@@ -27,11 +27,12 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtx/norm.hpp>
 
 #include <QMessageLogContext>
-#include <QtCore>
 
-static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 2.f;
+static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 0.045f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;
 static constexpr float INFOMARK_POINT_SIZE = 6.f;
 
@@ -138,8 +139,10 @@ void InfomarksBatch::drawPoint(const glm::vec3 &a)
 
 void InfomarksBatch::drawLine(const glm::vec3 &a, const glm::vec3 &b)
 {
-    m_lines.emplace_back(m_color, a + m_offset);
-    m_lines.emplace_back(m_color, b + m_offset);
+    const glm::vec3 start_v = a + m_offset;
+    const glm::vec3 end_v = b + m_offset;
+
+    mmgl::generateLineQuadsSafe(m_quads, start_v, end_v, INFOMARK_ARROW_LINE_WIDTH, m_color);
 }
 
 void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
@@ -166,8 +169,8 @@ InfomarksMeshes InfomarksBatch::getMeshes()
 
     auto &gl = m_realGL;
     result.points = gl.createPointBatch(m_points);
-    result.lines = gl.createColoredLineBatch(m_lines);
     result.tris = gl.createColoredTriBatch(m_tris);
+    result.quads = gl.createColoredQuadBatch(m_quads);
 
     {
         assert(!m_text.locked);
@@ -185,11 +188,11 @@ void InfomarksBatch::renderImmediate(const GLRenderState &state)
 {
     auto &gl = m_realGL;
 
-    if (!m_lines.empty()) {
-        gl.renderColoredLines(m_lines, state);
-    }
     if (!m_tris.empty()) {
         gl.renderColoredTris(m_tris, state);
+    }
+    if (!m_quads.empty()) {
+        gl.renderColoredQuads(m_quads, state);
     }
     if (!m_text.text.empty()) {
         m_font.render3dTextImmediate(m_text.text);
@@ -209,8 +212,8 @@ void InfomarksMeshes::render()
         = GLRenderState().withDepthFunction(std::nullopt).withBlend(BlendModeEnum::TRANSPARENCY);
 
     points.render(common_state.withPointSize(INFOMARK_POINT_SIZE));
-    lines.render(common_state.withLineParams(LineParams{INFOMARK_ARROW_LINE_WIDTH}));
     tris.render(common_state);
+    quads.render(common_state);
     textMesh.render(common_state);
 }
 
@@ -272,7 +275,10 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
         break;
 
     case InfomarkTypeEnum::ARROW:
-        batch.drawLineStrip(glm::vec3{0.f}, glm::vec3{dx - 0.3f, dy, 0.f}, glm::vec3{dx, dy, 0.f});
+        // Draw the main shaft line quad, extending it to the arrowhead's base
+        batch.drawLine(glm::vec3{0.f}, glm::vec3{dx - 0.2f, dy, 0.f});
+
+        // Draw the arrowhead triangle
         batch.drawTriangle(glm::vec3{dx - 0.2f, dy + 0.07f, 0.f},
                            glm::vec3{dx - 0.2f, dy - 0.07f, 0.f},
                            glm::vec3{dx, dy, 0.f});
