@@ -74,17 +74,6 @@ NODISCARD static const char *basic_plural(size_t n)
     return (n == 1) ? "" : "s";
 }
 
-QString MainWindow::chooseLoadOrMergeFileName()
-{
-    const QString &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    return QFileDialog::getOpenFileName(this,
-                                        "Choose map file ...",
-                                        savedLastMapDir,
-                                        "MMapper2 maps (*.mm2)"
-                                        ";;MMapper2 XML or Pandora maps (*.xml)"
-                                        ";;Alternate suffix for MMapper2 XML maps (*.mm2xml)");
-}
-
 static void addApplicationFont()
 {
     const auto id = QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
@@ -1569,15 +1558,36 @@ void MainWindow::slot_open()
         return;
     }
 
-    const QString fileName = chooseLoadOrMergeFileName();
-    if (fileName.isEmpty()) {
-        showStatusShort(tr("No filename provided"));
-        return;
+    auto openFile = [this](const QString &fileName, std::optional<QByteArray> fileContent) {
+        if (fileName.isEmpty()) {
+            showStatusShort(tr("No filename provided"));
+            return;
+        }
+
+        try {
+            loadFile(MapSource::alloc(fileName, fileContent));
+
+            QFileInfo file(fileName);
+            auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
+            savedLastMapDir = file.dir().absolutePath();
+        } catch (const std::runtime_error &e) {
+            showWarning(tr("Cannot open file %1:\n%2.").arg(fileName, e.what()));
+            return;
+        }
+    };
+    const auto nameFilter = QStringLiteral("MMapper2 maps (*.mm2)"
+                                           ";;MMapper2 XML or Pandora maps (*.xml)"
+                                           ";;Alternate suffix for MMapper2 XML maps (*.mm2xml)");
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        QFileDialog::getOpenFileContent(nameFilter, openFile);
+    } else {
+        const QString &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
+        const QString fileName = QFileDialog::getOpenFileName(this,
+                                                              "Choose map file ...",
+                                                              savedLastMapDir,
+                                                              nameFilter);
+        openFile(fileName, std::nullopt);
     }
-    QFileInfo file(fileName);
-    auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    savedLastMapDir = file.dir().absolutePath();
-    loadFile(file.absoluteFilePath());
 }
 
 void MainWindow::slot_reload()
@@ -1585,7 +1595,12 @@ void MainWindow::slot_reload()
     if (maybeSave()) {
         // make a copy of the filename, since it will be modified by loadFile().
         const QString filename = m_mapData->getFileName();
-        loadFile(filename);
+        try {
+            loadFile(MapSource::alloc(filename));
+        } catch (const std::runtime_error &e) {
+            showWarning(tr("Cannot open file %1:\n%2.").arg(filename, e.what()));
+            return;
+        }
     }
 }
 
@@ -2139,6 +2154,10 @@ void MainWindow::onSuccessfulSave(const SaveModeEnum mode,
     // Update last directory
     auto &config = setConfig().autoLoad;
     config.lastMapDirectory = file.absoluteDir().absolutePath();
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        return;
+    }
 
     const QString &absoluteFilePath = file.absoluteFilePath();
     if (!config.autoLoadMap || config.fileName != absoluteFilePath) {
