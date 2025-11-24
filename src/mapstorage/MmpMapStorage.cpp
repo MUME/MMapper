@@ -119,7 +119,7 @@ bool MmpMapStorage::virt_saveData(const MapLoadData &mapData)
     progressCounter.reset();
     progressCounter.increaseTotalStepsBy(roomsCount + 3);
 
-    QXmlStreamWriter stream(getFile());
+    QXmlStreamWriter stream(&getDevice());
     stream.setAutoFormatting(true);
     stream.writeStartDocument();
 

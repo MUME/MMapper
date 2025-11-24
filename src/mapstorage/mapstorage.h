@@ -56,4 +56,4 @@ struct NODISCARD MM2FileVersion final
     Relative relative = Relative::Older;
 };
 
-NODISCARD extern std::optional<MM2FileVersion> getMM2FileVersion(const QString &fileName);
+NODISCARD extern std::optional<MM2FileVersion> getMM2FileVersion(QIODevice &file);
