@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [windows-2022, macos-15-intel, macos-15, ubuntu-22.04, ubuntu-22.04-arm]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
         submodules: true
