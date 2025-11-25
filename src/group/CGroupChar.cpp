@@ -326,3 +326,13 @@ bool CGroupChar::setScore(const QString &textHP, const QString &textMana, const 
 #undef X_SCORE
     return updated;
 }
+
+QString CGroupChar::getDisplayName() const
+{
+    if (getLabel().isEmpty()
+        || getName().getStdStringViewUtf8() == getLabel().getStdStringViewUtf8()) {
+        return getName().toQString();
+    } else {
+        return QString("%1 (%2)").arg(getName().toQString(), getLabel().toQString());
+    }
+}

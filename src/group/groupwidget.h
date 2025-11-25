@@ -5,6 +5,7 @@
 
 #include "CGroupChar.h"
 #include "mmapper2character.h"
+#include "tokenmanager.h"
 
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
@@ -73,6 +74,7 @@ public:
 };
 
 #define XFOREACH_COLUMNTYPE(X) \
+    X(CHARACTER_TOKEN, character_token, CharacterToken, "Icon") \
     X(NAME, name, Name, "Name") \
     X(HP_PERCENT, hp_percent, HpPercent, "HP") \
     X(MANA_PERCENT, mana_percent, ManaPercent, "Mana") \
@@ -103,6 +105,7 @@ class NODISCARD_QOBJECT GroupModel final : public QAbstractTableModel
 private:
     GroupVector m_characters;
     bool m_mapLoaded = false;
+    TokenManager *m_tokenManager = nullptr;
 
 public:
     explicit GroupModel(QObject *parent = nullptr);
@@ -117,6 +120,7 @@ public:
     void insertCharacter(const SharedGroupChar &newCharacter);
     void removeCharacterById(GroupId charId);
     void updateCharacter(const SharedGroupChar &updatedCharacter);
+    void setTokenManager(TokenManager *manager) { m_tokenManager = manager; }
     void resetModel();
 
 private:
@@ -154,12 +158,17 @@ private:
     MapData *m_map = nullptr;
     GroupProxyModel *m_proxyModel = nullptr;
     GroupModel m_model;
+    // TokenManager tokenManager;
 
     void updateColumnVisibility();
+    void showContextMenu(const QModelIndex &proxyIndex);
+    void buildAndExecMenu();
 
 private:
     QAction *m_center = nullptr;
     QAction *m_recolor = nullptr;
+    QAction *m_setIcon = nullptr;
+    QAction *m_useDefaultIcon = nullptr;
     SharedGroupChar selectedCharacter;
 
 public:
@@ -172,6 +181,7 @@ protected:
 signals:
     void sig_kickCharacter(const QString &);
     void sig_center(glm::vec2);
+    void sig_characterUpdated(SharedGroupChar character);
 
 public slots:
     void slot_mapUnloaded() { m_model.setMapLoaded(false); }
@@ -182,4 +192,5 @@ private slots:
     void slot_onCharacterRemoved(GroupId characterId);
     void slot_onCharacterUpdated(SharedGroupChar character);
     void slot_onGroupReset(const GroupVector &newCharacterList);
+    void slot_updateLabels();
 };

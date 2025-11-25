@@ -36,7 +36,30 @@ GroupPage::GroupPage(QWidget *const parent)
         setConfig().groupManager.npcHide = checked;
         emit sig_groupSettingsChanged();
     });
+    ui->showTokensCheckbox->setChecked(getConfig().groupManager.showTokens);
+    connect(ui->showTokensCheckbox, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showTokens = checked;
+        emit sig_groupSettingsChanged();
+    });
+    ui->showMapTokensCheckbox->setChecked(getConfig().groupManager.showMapTokens);
+    connect(ui->showMapTokensCheckbox, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showMapTokens = checked;
+        emit sig_groupSettingsChanged(); // refresh map instantly
+    });
+    ui->tokenSizeComboBox->setCurrentText(QString::number(getConfig().groupManager.tokenIconSize)
+                                          + " px");
 
+    connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this, [this](const QString &txt) {
+        // strip " px" and convert to int
+        int value = txt.section(' ', 0, 0).toInt();
+        setConfig().groupManager.tokenIconSize = value;
+        emit sig_groupSettingsChanged(); // live update
+    });
+    ui->chkShowNpcGhosts->setChecked(getConfig().groupManager.showNpcGhosts);
+    connect(ui->chkShowNpcGhosts, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showNpcGhosts = checked;
+        emit sig_groupSettingsChanged();
+    });
     slot_loadConfig();
 }
 
@@ -60,6 +83,10 @@ void GroupPage::slot_loadConfig()
 
     ui->npcSortBottomCheckbox->setChecked(settings.npcSortBottom);
     ui->npcHideCheckbox->setChecked(settings.npcHide);
+    ui->showTokensCheckbox->setChecked(settings.showTokens);
+    ui->showMapTokensCheckbox->setChecked(settings.showMapTokens);
+    ui->chkShowNpcGhosts->setChecked(settings.showNpcGhosts);
+    ui->tokenSizeComboBox->setCurrentText(QString::number(settings.tokenIconSize) + " px");
 }
 
 void GroupPage::slot_chooseColor()

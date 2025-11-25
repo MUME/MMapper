@@ -11,17 +11,24 @@
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
 #include "CGroupChar.h"
+#include "display/GhostRegistry.h"
 #include "enums.h"
 #include "mmapper2group.h"
+#include "tokenmanager.h"
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
 #include <QAction>
 #include <QColorDialog>
 #include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QFileInfo>
 #include <QHeaderView>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPainter>
 #include <QString>
@@ -29,6 +36,10 @@
 #include <QStyledItemDelegate>
 #include <QTableView>
 #include <QVBoxLayout>
+
+extern const QString kForceFallback;
+
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(ColumnTypeEnum::ROOM_NAME) + 1, "# of columns");
 
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
 
@@ -217,6 +228,35 @@ GroupModel::GroupModel(QObject *const parent)
     : QAbstractTableModel(parent)
 {}
 
+namespace { // anonymous – helpers local to this file
+static void insertNewCharactersInto(GroupVector &dest,
+                                    bool npcSortBottom,
+                                    const GroupVector &newPlayers,
+                                    const GroupVector &newNpcs,
+                                    const GroupVector &newAll)
+{
+    auto eraseGhosts = [](const GroupVector &vec) {
+        if (!getConfig().groupManager.showNpcGhosts)
+            return;
+        for (const auto &p : vec)
+            g_ghosts.erase(deref(p).getServerId());
+    };
+    if (npcSortBottom) {
+        // players go before first NPC already present
+        auto firstNpc = std::find_if(dest.begin(), dest.end(), [](const SharedGroupChar &c) {
+            return c && c->isNpc();
+        });
+        dest.insert(firstNpc, newPlayers.begin(), newPlayers.end());
+        eraseGhosts(newPlayers);
+        dest.insert(dest.end(), newNpcs.begin(), newNpcs.end());
+        eraseGhosts(newNpcs);
+    } else {
+        dest.insert(dest.end(), newAll.begin(), newAll.end());
+        eraseGhosts(newAll);
+    }
+}
+} // namespace
+
 void GroupModel::setCharacters(const GroupVector &newGameChars)
 {
     DECL_TIMER(t, __FUNCTION__);
@@ -253,6 +293,10 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
     // Identify truly new characters and categorize them as NPC or player
     for (const auto &pGameChar : newGameChars) {
         const auto &gameChar = deref(pGameChar);
+
+        if (getConfig().groupManager.showNpcGhosts)
+            g_ghosts.erase(gameChar.getServerId());
+
         if (existingIds.find(gameChar.getId()) == existingIds.end()) {
             allTrulyNewCharsInOriginalOrder.push_back(pGameChar);
             if (gameChar.isNpc()) {
@@ -263,37 +307,11 @@ void GroupModel::setCharacters(const GroupVector &newGameChars)
         }
     }
 
-    // Insert the newly identified characters into the resulting list based on configuration.
-    if (getConfig().groupManager.npcSortBottom) {
-        // Find the insertion point for new players: before the first NPC in the preserved list.
-        auto itPlayerInsertPos = resultingCharacterList.begin();
-        while (itPlayerInsertPos != resultingCharacterList.end()) {
-            if (*itPlayerInsertPos && (*itPlayerInsertPos)->isNpc()) {
-                break;
-            }
-            ++itPlayerInsertPos;
-        }
-
-        // Insert truly new players at the determined position.
-        if (!trulyNewPlayers.empty()) {
-            resultingCharacterList.insert(itPlayerInsertPos,
-                                          trulyNewPlayers.begin(),
-                                          trulyNewPlayers.end());
-        }
-        // Insert truly new NPCs at the end of the list.
-        if (!trulyNewNpcs.empty()) {
-            resultingCharacterList.insert(resultingCharacterList.end(),
-                                          trulyNewNpcs.begin(),
-                                          trulyNewNpcs.end());
-        }
-    } else {
-        // If no special NPC sorting, just append all truly new characters in their original order.
-        if (!allTrulyNewCharsInOriginalOrder.empty()) {
-            resultingCharacterList.insert(resultingCharacterList.end(),
-                                          allTrulyNewCharsInOriginalOrder.begin(),
-                                          allTrulyNewCharsInOriginalOrder.end());
-        }
-    }
+    insertNewCharactersInto(resultingCharacterList,
+                            getConfig().groupManager.npcSortBottom,
+                            trulyNewPlayers,
+                            trulyNewNpcs,
+                            allTrulyNewCharsInOriginalOrder);
 
     beginResetModel();
     m_characters = std::move(resultingCharacterList);
@@ -342,8 +360,14 @@ void GroupModel::insertCharacter(const SharedGroupChar &newCharacter)
 void GroupModel::removeCharacterById(const GroupId charId)
 {
     const int index = findIndexById(charId);
-    if (index == -1) {
+    if (index == -1)
         return;
+
+    SharedGroupChar &c = m_characters[static_cast<size_t>(index)];
+
+    /*** NEW: store a ghost entry if this row is a mount ***/
+    if (getConfig().groupManager.showNpcGhosts && c->isNpc()) {
+        g_ghosts[c->getServerId()] = {c->getDisplayName()};
     }
 
     beginRemoveRows(QModelIndex(), index, index);
@@ -424,100 +448,128 @@ NODISCARD static QStringView getPrettyName(const CharacterAffectEnum affect)
 #undef X_CASE
 }
 
+/*─────────────────────  complexity helpers  ─────────────────────*/
+namespace {
+
+static QString formatStatHelper(int num, int den, ColumnTypeEnum col, bool isNpc)
+{
+    if (col == ColumnTypeEnum::HP_PERCENT || col == ColumnTypeEnum::MANA_PERCENT
+        || col == ColumnTypeEnum::MOVES_PERCENT) {
+        if (den == 0)
+            return {};
+        int pct = static_cast<int>(100.0 * double(num) / double(den));
+        return QString("%1%").arg(pct);
+    }
+
+    if (col == ColumnTypeEnum::HP || col == ColumnTypeEnum::MANA || col == ColumnTypeEnum::MOVES) {
+        // hide “0/0” for NPCs -- same behaviour as before
+        if (isNpc && num == 0 && den == 0)
+            return {};
+        return QString("%1/%2").arg(num).arg(den);
+    }
+    return {};
+}
+
+/// Big switch for DisplayRole, extracted out of dataForCharacter
+static QVariant makeDisplayRole(const CGroupChar &ch, ColumnTypeEnum c, TokenManager *tm)
+{
+    switch (c) {
+    case ColumnTypeEnum::CHARACTER_TOKEN:
+        return tm ? QIcon(tm->getToken(ch.getDisplayName())) : QVariant();
+    case ColumnTypeEnum::NAME:
+        if (ch.getLabel().isEmpty()
+            || ch.getName().getStdStringViewUtf8() == ch.getLabel().getStdStringViewUtf8()) {
+            return ch.getName().toQString();
+        } else {
+            return QString("%1 (%2)").arg(ch.getName().toQString(), ch.getLabel().toQString());
+        }
+    case ColumnTypeEnum::HP_PERCENT:
+        return formatStatHelper(ch.getHits(), ch.getMaxHits(), c, false);
+    case ColumnTypeEnum::MANA_PERCENT:
+        return formatStatHelper(ch.getMana(), ch.getMaxMana(), c, false);
+    case ColumnTypeEnum::MOVES_PERCENT:
+        return formatStatHelper(ch.getMoves(), ch.getMaxMoves(), c, false);
+    case ColumnTypeEnum::HP:
+        return formatStatHelper(ch.getHits(),
+                                ch.getMaxHits(),
+                                c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::MANA:
+        return formatStatHelper(ch.getMana(),
+                                ch.getMaxMana(),
+                                c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::MOVES:
+        return formatStatHelper(ch.getMoves(),
+                                ch.getMaxMoves(),
+                                c,
+                                ch.getType() == CharacterTypeEnum::NPC);
+    case ColumnTypeEnum::STATE:
+        return QVariant::fromValue(GroupStateData(ch.getColor(), ch.getPosition(), ch.getAffects()));
+    case ColumnTypeEnum::ROOM_NAME:
+        return ch.getRoomName().isEmpty() ? QStringLiteral("Somewhere")
+                                          : ch.getRoomName().toQString();
+    default:
+        return QVariant();
+    }
+}
+
+/// Big switch for ToolTipRole, extracted out as well
+static QVariant makeTooltipRole(const CGroupChar &ch, ColumnTypeEnum c, bool useStatFmt)
+{
+    auto statTip = [&](int n, int d) -> QVariant {
+        return useStatFmt ? formatStatHelper(n, d, c, false) : QVariant();
+    };
+
+    switch (c) {
+    case ColumnTypeEnum::CHARACTER_TOKEN:
+        return QVariant();
+    case ColumnTypeEnum::HP_PERCENT:
+        return statTip(ch.getHits(), ch.getMaxHits());
+    case ColumnTypeEnum::MANA_PERCENT:
+        return statTip(ch.getMana(), ch.getMaxMana());
+    case ColumnTypeEnum::MOVES_PERCENT:
+        return statTip(ch.getMoves(), ch.getMaxMoves());
+    case ColumnTypeEnum::STATE: {
+        QString pretty = getPrettyName(ch.getPosition()).toString();
+        for (const CharacterAffectEnum a : ALL_CHARACTER_AFFECTS)
+            if (ch.getAffects().contains(a))
+                pretty.append(", ").append(getPrettyName(a));
+        return pretty;
+    }
+    case ColumnTypeEnum::ROOM_NAME:
+        if (ch.getServerId() != INVALID_SERVER_ROOMID)
+            return QString::number(ch.getServerId().asUint32());
+        return QVariant();
+    default:
+        return QVariant();
+    }
+}
+
+} // anonymous namespace
+/*──────────────────────────────────────────────────────────────────*/
+
 QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
                                       const ColumnTypeEnum column,
                                       const int role) const
 {
     const CGroupChar &character = deref(pCharacter);
 
-    const auto formatStat =
-        [](int numerator, int denomenator, ColumnTypeEnum statColumn) -> QString {
-        if (denomenator == 0
-            && (statColumn == ColumnTypeEnum::HP_PERCENT
-                || statColumn == ColumnTypeEnum::MANA_PERCENT
-                || statColumn == ColumnTypeEnum::MOVES_PERCENT)) {
-            return QLatin1String("");
-        }
-        // The NPC check for ratio is handled below in the switch statement
-        if ((numerator == 0 && denomenator == 0)
-            && (statColumn == ColumnTypeEnum::HP || statColumn == ColumnTypeEnum::MANA
-                || statColumn == ColumnTypeEnum::MOVES)) {
-            return QLatin1String("");
-        }
-
-        switch (statColumn) {
-        case ColumnTypeEnum::HP_PERCENT:
-        case ColumnTypeEnum::MANA_PERCENT:
-        case ColumnTypeEnum::MOVES_PERCENT: {
-            int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
-                                              / static_cast<double>(denomenator));
-            return QString("%1%").arg(percentage);
-        }
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
-            return QString("%1/%2").arg(numerator).arg(denomenator);
-        default:
-        case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::STATE:
-        case ColumnTypeEnum::ROOM_NAME:
-            return QLatin1String("");
-        }
-    };
-
-    // Map column to data
     switch (role) {
+    /* display / icons ---------------------------------------------------- */
+    case Qt::DecorationRole:
     case Qt::DisplayRole:
-        switch (column) {
-        case ColumnTypeEnum::NAME:
-            if (character.getLabel().isEmpty()
-                || character.getName().getStdStringViewUtf8()
-                       == character.getLabel().getStdStringViewUtf8()) {
-                return character.getName().toQString();
-            } else {
-                return QString("%1 (%2)").arg(character.getName().toQString(),
-                                              character.getLabel().toQString());
-            }
-        case ColumnTypeEnum::HP_PERCENT:
-            return formatStat(character.getHits(), character.getMaxHits(), column);
-        case ColumnTypeEnum::MANA_PERCENT:
-            return formatStat(character.getMana(), character.getMaxMana(), column);
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return formatStat(character.getMoves(), character.getMaxMoves(), column);
-        case ColumnTypeEnum::HP:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getHits(), character.getMaxHits(), column);
-            }
-        case ColumnTypeEnum::MANA:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMana(), character.getMaxMana(), column);
-            }
-        case ColumnTypeEnum::MOVES:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMoves(), character.getMaxMoves(), column);
-            }
-        case ColumnTypeEnum::STATE:
-            return QVariant::fromValue(GroupStateData(character.getColor(),
-                                                      character.getPosition(),
-                                                      character.getAffects()));
-        case ColumnTypeEnum::ROOM_NAME:
-            if (character.getRoomName().isEmpty()) {
-                return QStringLiteral("Somewhere");
-            } else {
-                return character.getRoomName().toQString();
-            }
-        default:
-            qWarning() << "Unsupported column" << static_cast<int>(column);
-            break;
-        }
-        break;
+        return makeDisplayRole(character, column, m_tokenManager);
 
+    /* tooltips ----------------------------------------------------------- */
+    case Qt::ToolTipRole:
+        return makeTooltipRole(character,
+                               column,
+                               (column == ColumnTypeEnum::HP_PERCENT
+                                || column == ColumnTypeEnum::MANA_PERCENT
+                                || column == ColumnTypeEnum::MOVES_PERCENT));
+
+    /* colours & alignment ------------------------------------------------ */
     case Qt::BackgroundRole:
         return character.getColor();
 
@@ -526,50 +578,10 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 
     case Qt::TextAlignmentRole:
         if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
-            // NOTE: There's no QVariant(AlignmentFlag) constructor.
+            // QVariant(AlignmentFlag) ctor doesn’t exist;
             return static_cast<int>(Qt::AlignCenter);
         }
         break;
-
-    case Qt::ToolTipRole: {
-        const auto getRatioTooltip = [&](int numerator, int denomenator) -> QVariant {
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QVariant();
-            } else {
-                return formatStat(numerator, denomenator, column);
-            }
-        };
-
-        switch (column) {
-        case ColumnTypeEnum::HP_PERCENT:
-            return getRatioTooltip(character.getHits(), character.getMaxHits());
-        case ColumnTypeEnum::MANA_PERCENT:
-            return getRatioTooltip(character.getMana(), character.getMaxMana());
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return getRatioTooltip(character.getMoves(), character.getMaxMoves());
-        case ColumnTypeEnum::STATE: {
-            QString prettyName;
-            prettyName += getPrettyName(character.getPosition());
-            for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
-                if (character.getAffects().contains(affect)) {
-                    prettyName.append(QStringLiteral(", ")).append(getPrettyName(affect));
-                }
-            }
-            return prettyName;
-        }
-        case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
-            break;
-        case ColumnTypeEnum::ROOM_NAME:
-            if (character.getServerId() != INVALID_SERVER_ROOMID) {
-                return QString("%1").arg(character.getServerId().asUint32());
-            }
-            break;
-        }
-        break;
-    }
 
     default:
         break;
@@ -584,12 +596,14 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
         return QVariant();
     }
 
-    if (index.row() >= 0 && index.row() < static_cast<int>(m_characters.size())) {
-        const SharedGroupChar &character = m_characters.at(static_cast<size_t>(index.row()));
-        return dataForCharacter(character, static_cast<ColumnTypeEnum>(index.column()), role);
+    if (index.row() < 0 || index.row() >= static_cast<int>(m_characters.size())) {
+        return QVariant();
     }
 
-    return QVariant();
+    const SharedGroupChar &character = m_characters.at(static_cast<size_t>(index.row()));
+    const ColumnTypeEnum column = static_cast<ColumnTypeEnum>(index.column());
+
+    return dataForCharacter(character, column, role);
 }
 
 QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -711,6 +725,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     } else {
         m_model.setCharacters({});
     }
+    m_model.setTokenManager(&tokenManager());
 
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -738,9 +753,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     layout->addWidget(m_table);
 
     // Minimize row height
-    m_table->verticalHeader()->setDefaultSectionSize(
-        m_table->verticalHeader()->minimumSectionSize());
+    const int icon = getConfig().groupManager.tokenIconSize;
+    const int row = std::max(icon, m_table->fontMetrics().height() + 4);
 
+    m_table->verticalHeader()->setDefaultSectionSize(row);
+    m_table->setIconSize(QSize(icon, icon));
     m_center = new QAction(QIcon(":/icons/roomfind.png"), tr("&Center"), this);
     connect(m_center, &QAction::triggered, this, [this]() {
         // Center map on the clicked character
@@ -773,32 +790,64 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
     });
 
-    connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
-        if (!proxyIndex.isValid()) {
+    // ── Set-icon action ───────────────────────────────────────────
+    m_setIcon = new QAction(QIcon(":/icons/group-set-icon.png"), tr("Set &Icon…"), this);
+
+    connect(m_setIcon, &QAction::triggered, this, [this]() {
+        if (!selectedCharacter) // safety
             return;
+
+        // 1. Character name (key)
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+
+        // 2. Tokens folder  (=  <resourcesDirectory>/tokens )
+        const QString tokensDir = QDir(getConfig().canvas.resourcesDirectory).filePath("tokens");
+
+        if (!QDir(tokensDir).exists()) {
+            QMessageBox::information(this,
+                                     tr("Tokens folder not found"),
+                                     tr("No 'tokens' folder was found at:\n%1\n\n"
+                                        "Create a folder named 'tokens' inside that directory, "
+                                        "put your images there, then restart MMapper.")
+                                         .arg(tokensDir));
+            return; // abort setting an icon
         }
 
-        QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
+        const QString file = QFileDialog::getOpenFileName(this,
+                                                          tr("Choose icon for %1").arg(charName),
+                                                          tokensDir,
+                                                          tr("Images (*.png *.jpg *.bmp *.svg)"));
 
-        if (!sourceIndex.isValid()) {
-            return;
-        }
+        if (file.isEmpty())
+            return; // user cancelled
 
-        selectedCharacter = m_model.getCharacter(sourceIndex.row());
-        if (selectedCharacter) {
-            // Build Context menu
-            m_center->setText(
-                QString("&Center on %1").arg(selectedCharacter->getName().toQString()));
-            m_recolor->setText(QString("&Recolor %1").arg(selectedCharacter->getName().toQString()));
-            m_center->setDisabled(!selectedCharacter->isYou()
-                                  && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
+        // 3. store only the basename (without path / extension)
+        const QString base = QFileInfo(file).completeBaseName();
+        setConfig().groupManager.tokenOverrides[charName] = base;
 
-            QMenu contextMenu(tr("Context menu"), this);
-            contextMenu.addAction(m_center);
-            contextMenu.addAction(m_recolor);
-            contextMenu.exec(QCursor::pos());
-        }
+        // 4. immediately refresh this widget
+        slot_updateLabels();
+        emit sig_characterUpdated(selectedCharacter);
     });
+
+    m_useDefaultIcon = new QAction(QIcon(":/icons/group-clear-icon.png"),
+                                   tr("&Use default icon"),
+                                   this);
+
+    connect(m_useDefaultIcon, &QAction::triggered, this, [this]() {
+        if (!selectedCharacter)
+            return;
+
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+
+        // store the sentinel so TokenManager shows char-room-sel.png
+        setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+
+        slot_updateLabels(); // live refresh
+        emit sig_characterUpdated(selectedCharacter);
+    });
+
+    connect(m_table, &QAbstractItemView::clicked, this, &GroupWidget::showContextMenu);
 
     connect(m_group, &Mmapper2Group::sig_characterAdded, this, &GroupWidget::slot_onCharacterAdded);
     connect(m_group,
@@ -841,6 +890,19 @@ void GroupWidget::updateColumnVisibility()
     const bool hide_mana = !one_character_had_mana();
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA), hide_mana);
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA_PERCENT), hide_mana);
+
+    const bool hide_tokens = !getConfig().groupManager.showTokens;
+    m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
+
+    // Apply current icon-size preference every time settings change
+    {
+        const int icon = getConfig().groupManager.tokenIconSize;
+        m_table->setIconSize(QSize(icon, icon));
+
+        QFontMetrics fm = m_table->fontMetrics();
+        int row = std::max(icon, fm.height() + 4);
+        m_table->verticalHeader()->setDefaultSectionSize(row);
+    }
 }
 
 void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
@@ -861,6 +923,7 @@ void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
 {
     assert(character);
     m_model.updateCharacter(character);
+    updateColumnVisibility();
 }
 
 void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
@@ -868,3 +931,45 @@ void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
     m_model.setCharacters(newCharacterList);
     updateColumnVisibility();
 }
+
+void GroupWidget::slot_updateLabels()
+{
+    m_model.resetModel(); // This re-fetches characters and refreshes the table
+}
+
+// ───────────────────────── context-menu helpers ─────────────────────────
+void GroupWidget::showContextMenu(const QModelIndex &proxyIndex)
+{
+    if (!proxyIndex.isValid())
+        return;
+
+    QModelIndex src = m_proxyModel->mapToSource(proxyIndex);
+    if (!src.isValid())
+        return;
+
+    selectedCharacter = m_model.getCharacter(src.row());
+    if (!selectedCharacter)
+        return;
+
+    buildAndExecMenu();
+}
+
+void GroupWidget::buildAndExecMenu()
+{
+    const CGroupChar &c = deref(selectedCharacter);
+
+    m_center->setText(QString("&Center on %1").arg(c.getName().toQString()));
+    m_center->setDisabled(!c.isYou() && c.getServerId() == INVALID_SERVER_ROOMID);
+
+    m_recolor->setText(QString("&Recolor %1").arg(c.getName().toQString()));
+    m_setIcon->setText(QString("&Set icon for %1…").arg(c.getName().toQString()));
+    m_useDefaultIcon->setText(QString("&Use default icon for %1").arg(c.getName().toQString()));
+
+    QMenu menu(tr("Context menu"), this);
+    menu.addAction(m_center);
+    menu.addAction(m_recolor);
+    menu.addAction(m_setIcon);
+    menu.addAction(m_useDefaultIcon);
+    menu.exec(QCursor::pos());
+}
+// ─────────────────────────────────────────────────────────────────────────

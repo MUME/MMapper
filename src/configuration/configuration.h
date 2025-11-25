@@ -291,6 +291,11 @@ public:
         bool npcColorOverride = false;
         bool npcSortBottom = false;
         bool npcHide = false;
+        bool showTokens = true;
+        bool showMapTokens = true;
+        int tokenIconSize = 32;
+        bool showNpcGhosts = true;
+        QMap<QString, QString> tokenOverrides;
 
     private:
         SUBGROUP();
