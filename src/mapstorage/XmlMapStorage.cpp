@@ -284,14 +284,14 @@ std::optional<RawMapLoadData> XmlMapStorage::virt_loadData()
 {
     try {
         log("Loading data ...");
-        QFile &file = deref(getFile());
-        QXmlStreamReader stream(&file);
+        QIODevice &device = getDevice();
+        QXmlStreamReader stream(&device);
 
         m_loading = std::make_unique<Loading>();
-        m_loading->result.filename = file.fileName();
-        m_loading->result.readonly = !QFileInfo(file).isWritable();
+        m_loading->result.filename = getFilename();
+        m_loading->result.readonly = !device.isWritable();
         m_loading->loadProgressDivisor = static_cast<uint64_t>(
-            std::max<int64_t>(1, file.size() / LOAD_PROGRESS_MAX));
+            std::max<int64_t>(1, device.size() / LOAD_PROGRESS_MAX));
 
         loadWorld(stream);
         log("Finished loading.");
@@ -709,7 +709,7 @@ bool XmlMapStorage::virt_saveData(const MapLoadData &map)
     m_saving = std::make_unique<Saving>(map);
     try {
         log("Writing data to file ...");
-        QXmlStreamWriter stream(getFile());
+        QXmlStreamWriter stream(&getDevice());
         saveWorld(stream);
         stream.writeEndDocument();
         log("Writing data finished.");

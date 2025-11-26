@@ -227,14 +227,10 @@ NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(LoadRoomHelper &helper
 
 } // namespace
 
-NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(const QString &fileName)
+NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(QIODevice &file)
 {
     try {
-        QFile f{fileName};
-        if (!f.open(QIODevice::ReadOnly)) {
-            return std::nullopt;
-        }
-        QDataStream stream{&f};
+        QDataStream stream(&file);
         auto helper = LoadRoomHelper{stream};
         return getMM2FileVersion(helper);
     } catch (...) {
@@ -364,7 +360,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
 
-        QDataStream stream{getFile()};
+        QDataStream stream{&getDevice()};
         auto helper = LoadRoomHelper{stream};
 
         // Read the version and magic
@@ -600,7 +596,7 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
 
     const auto &map = mapData.mapPair.modified;
 
-    QDataStream fileStream(getFile());
+    QDataStream fileStream(&getDevice());
     fileStream.setVersion(QDataStream::Qt_4_8);
 
     // Collect the room and marker lists. The room list can't be acquired

@@ -8,9 +8,8 @@
 #include "../global/macros.h"
 #include "../global/progresscounter.h"
 #include "../map/Map.h"
-#include "../map/coordinate.h"
-#include "../map/infomark.h"
-#include "../mapdata/MarkerList.h"
+#include "MapDestination.h"
+#include "MapSource.h"
 #include "RawMapData.h"
 
 #include <memory>
@@ -18,11 +17,9 @@
 
 #include <QObject>
 #include <QString>
-#include <QtCore>
 
 class MapData;
 class ProgressCounter;
-class QFile;
 
 struct NODISCARD MapStorageError final : public std::runtime_error
 {
@@ -40,24 +37,34 @@ public:
     struct NODISCARD Data final
     {
         const std::shared_ptr<ProgressCounter> progressCounter;
-        QString fileName;
-        QFile *file = nullptr;
+        // For loading:
+        std::shared_ptr<MapSource> loadSource;
+        // For saving:
+        std::shared_ptr<MapDestination> saveDestination;
 
-        explicit Data(std::shared_ptr<ProgressCounter> moved_pc, QString moved_name, QFile &f)
+        explicit Data(std::shared_ptr<ProgressCounter> moved_pc,
+                      std::shared_ptr<MapSource> moved_src)
             : progressCounter(std::move(moved_pc))
-            , fileName(std::move(moved_name))
-            , file(&f)
+            , loadSource(std::move(moved_src))
         {
             if (!progressCounter) {
                 throw std::invalid_argument("pc");
             }
+            if (!loadSource) {
+                throw std::invalid_argument("src");
+            }
         }
-        explicit Data(std::shared_ptr<ProgressCounter> moved_pc, QString moved_name)
+
+        explicit Data(std::shared_ptr<ProgressCounter> moved_pc,
+                      std::shared_ptr<MapDestination> moved_dest)
             : progressCounter(std::move(moved_pc))
-            , fileName(std::move(moved_name))
+            , saveDestination(std::move(moved_dest))
         {
             if (!progressCounter) {
                 throw std::invalid_argument("pc");
+            }
+            if (!saveDestination) {
+                throw std::invalid_argument("dest");
             }
         }
     };
@@ -70,15 +77,9 @@ public:
     ~AbstractMapStorage() override;
 
 protected:
-    NODISCARD const QString &getFilename() const { return m_data.fileName; }
+    NODISCARD const QString &getFilename() const;
     NODISCARD ProgressCounter &getProgressCounter() const { return *m_data.progressCounter; }
-    NODISCARD QFile *getFile() const
-    {
-        if (QFile *const pFile = m_data.file) {
-            return pFile;
-        }
-        throw NullPointerException();
-    }
+    NODISCARD QIODevice &getDevice() const;
 
 public:
     NODISCARD bool canLoad() const { return virt_canLoad(); }

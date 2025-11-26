@@ -69,8 +69,13 @@ NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &in
         return false;
     }
 
-    mw.loadFile(absoluteFilePath);
-    return true;
+    try {
+        mw.loadFile(MapSource::alloc(absoluteFilePath, std::nullopt));
+        return true;
+    } catch (const std::runtime_error &e) {
+        qCritical() << "Failed to load autoload map:" << e.what();
+        return false;
+    }
 }
 
 static void tryAutoLoadMap(MainWindow &mw)
