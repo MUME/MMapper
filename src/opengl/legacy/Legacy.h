@@ -17,7 +17,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
 
 class OpenGL;
 
@@ -74,14 +74,13 @@ class Functions;
 using SharedFunctions = std::shared_ptr<Functions>;
 using WeakFunctions = std::weak_ptr<Functions>;
 
-/// \c Legacy::Functions implements both GL 2.0 and ES 2.0 (based on a subset of
-/// GL 2.0); this is accomplished by using separate implementation files for the
-/// differences between GL 2.0 and ES 2.0.
-class NODISCARD Functions final : private QOpenGLFunctions,
+/// \c Legacy::Functions implements both GL 3.X and ES 3.X (based on a subset of
+/// ES 3.X)
+class NODISCARD Functions final : private QOpenGLExtraFunctions,
                                   public std::enable_shared_from_this<Functions>
 {
 private:
-    using Base = QOpenGLFunctions;
+    using Base = QOpenGLExtraFunctions;
     glm::mat4 m_viewProj = glm::mat4(1);
     Viewport m_viewport;
     float m_devicePixelRatio = 1.f;
@@ -89,9 +88,12 @@ private:
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
+    bool m_isCompat = false;
 
 public:
     NODISCARD static std::shared_ptr<Functions> alloc();
+
+    void setIsCompat(bool canRenderQuads);
 
 public:
     explicit Functions(Badge<Functions>);
@@ -170,9 +172,19 @@ public:
     using Base::glUseProgram;
     using Base::glVertexAttribPointer;
 
+    // VAO functions
+    using Base::glBindVertexArray;
+    using Base::glDeleteVertexArrays;
+    using Base::glGenVertexArrays;
+
 public:
-    // OpenGL man page says "Only width 1 is guaranteed to be supported."
-    void glLineWidth(const GLfloat lineWidth) { Base::glLineWidth(scalef(lineWidth)); }
+    void glLineWidth(const GLfloat lineWidth)
+    {
+        // REVISIT: Only width 1 is guaranteed to be supported for core profiles
+        if (m_isCompat) {
+            Base::glLineWidth(lineWidth);
+        }
+    }
 
 public:
     void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height)
@@ -250,10 +262,10 @@ private:
 
 public:
     /// platform-specific (ES vs GL)
-    NODISCARD static bool canRenderQuads();
+    NODISCARD bool canRenderQuads();
 
     /// platform-specific (ES vs GL)
-    NODISCARD static std::optional<GLenum> toGLenum(DrawModeEnum mode);
+    NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode);
 
 public:
     void enableAttrib(const GLuint index,

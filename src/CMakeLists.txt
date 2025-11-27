@@ -409,9 +409,11 @@ set(mmapper_SRCS
     opengl/legacy/Shaders.h
     opengl/legacy/SimpleMesh.cpp
     opengl/legacy/SimpleMesh.h
+    opengl/legacy/VAO.cpp
+    opengl/legacy/VAO.h
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
-    opengl/legacy/impl_gl20.cpp
+    opengl/legacy/impl_gl33.cpp
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Actions.cpp

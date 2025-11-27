@@ -6,7 +6,7 @@ namespace Legacy {
 
 bool Functions::canRenderQuads()
 {
-    return true;
+    return m_isCompat;
 }
 
 std::optional<GLenum> Functions::toGLenum(const DrawModeEnum mode)
@@ -19,7 +19,7 @@ std::optional<GLenum> Functions::toGLenum(const DrawModeEnum mode)
     case DrawModeEnum::TRIANGLES:
         return GL_TRIANGLES;
     case DrawModeEnum::QUADS:
-        return GL_QUADS;
+        return m_isCompat ? std::make_optional(GL_QUADS) : std::nullopt;
     case DrawModeEnum::INVALID:
         break;
     }
@@ -29,7 +29,7 @@ std::optional<GLenum> Functions::toGLenum(const DrawModeEnum mode)
 
 const char *Functions::getShaderVersion()
 {
-    return "#version 110\n\n";
+    return "#version 330\n\n";
 }
 
 void Functions::enableProgramPointSize(const bool enable)
@@ -60,10 +60,8 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
     if (hasMultisampling && requestedSamples > 0) {
         Base::glEnable(GL_MULTISAMPLE);
 
-        Base::glEnable(GL_POINT_SMOOTH);
         Base::glEnable(GL_LINE_SMOOTH);
         Base::glDisable(GL_POLYGON_SMOOTH);
-        Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
         Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
         return true;
@@ -71,14 +69,11 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
         // NOTE: Currently we can use OpenGL 2.1 to fake multisampling with point/line/polygon smoothing.
         // TODO: We can use OpenGL 3.x FBOs to do multisampling even if the default framebuffer doesn't support it.
         if (requestedSamples > 0) {
-            Base::glEnable(GL_POINT_SMOOTH);
             Base::glEnable(GL_LINE_SMOOTH);
             Base::glDisable(GL_POLYGON_SMOOTH);
-            Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
             Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
             return true;
         } else {
-            Base::glDisable(GL_POINT_SMOOTH);
             Base::glDisable(GL_LINE_SMOOTH);
             Base::glDisable(GL_POLYGON_SMOOTH);
             return false;
