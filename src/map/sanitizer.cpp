@@ -19,6 +19,7 @@
 using char_consts::C_ESC;
 using char_consts::C_NBSP;
 using char_consts::C_NEWLINE;
+using char_consts::C_NUL;
 using char_consts::C_SPACE;
 using namespace string_consts;
 
@@ -551,6 +552,36 @@ void test_conversion_to_ascii()
 
 } // namespace
 
+namespace { // anonymous
+void test_nul()
+{
+    using sanitizer::SanitizedString;
+
+    // C-style strings are null-terminated, so we need to construct it like this.
+    const std::string input_nul = std::string("a") + C_NUL + std::string("b");
+
+    auto testcase = [&](const std::string_view input, const std::string_view expect) {
+        {
+            const SanitizedString output = sanitizer::sanitizeOneLine(std::string{input});
+            const std::string_view got = output.getStdStringUtf8();
+            TEST_ASSERT(got == expect);
+        }
+        {
+            const SanitizedString output = sanitizer::sanitizeMultiline(std::string{input});
+            const std::string_view got = output.getStdStringUtf8();
+            TEST_ASSERT(got == (std::string{expect} + C_NEWLINE));
+        }
+        {
+            const SanitizedString output = sanitizer::sanitizeWordWrapped(std::string{input}, 80);
+            const std::string_view got = output.getStdStringUtf8();
+            TEST_ASSERT(got == (std::string{expect} + C_NEWLINE));
+        }
+    };
+
+    testcase(input_nul, "a?b");
+}
+} // namespace
+
 namespace test {
 void testSanitizer()
 {
@@ -558,5 +589,6 @@ void testSanitizer()
     ::sanitizer::detail::test_sanitize_multiline();
     ::sanitizer::detail::test_sanitize_wordwrap();
     test_conversion_to_ascii();
+    test_nul();
 }
 } // namespace test
