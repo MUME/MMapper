@@ -37,10 +37,10 @@ NODISCARD int pm(const int h)
     return h + 12;
 }
 
-const MMapper::Array<int, 12> g_dawnHour
-    = {am(8), am(9), am(8), am(7), am(7), am(6), am(5), am(4), am(5), am(6), am(7), am(7)};
-const MMapper::Array<int, 12> g_duskHour
-    = {pm(6), pm(5), pm(6), pm(7), pm(8), pm(8), pm(9), pm(10), pm(9), pm(8), pm(8), pm(7)};
+const MMapper::Array<int, 12>
+    g_dawnHour{am(8), am(9), am(8), am(7), am(7), am(6), am(5), am(4), am(5), am(6), am(7), am(7)};
+const MMapper::Array<int, 12>
+    g_duskHour{pm(6), pm(5), pm(6), pm(7), pm(8), pm(8), pm(9), pm(10), pm(9), pm(8), pm(8), pm(7)};
 
 // TODO: move this somewhere useful?
 NODISCARD const char *getOrdinalSuffix(const int day)

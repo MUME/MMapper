@@ -17,9 +17,10 @@ template<typename T, typename E, size_t SIZE_ = enums::CountOf<E>::value>
 class NODISCARD EnumIndexedArray : private MMapper::Array<T, SIZE_>
 {
 public:
+    using base = MMapper::Array<T, SIZE_>;
+    using value_type = typename base::value_type;
     using index_type = E;
-    using base = typename MMapper::Array<T, SIZE_>;
-    static constexpr const size_t SIZE = SIZE_;
+    static constexpr size_t SIZE = SIZE_;
 
 public:
     // inherits all constructors

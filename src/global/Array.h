@@ -35,9 +35,11 @@ public:
 
 public:
     template<typename First, typename... Types>
-    constexpr Array(First &&first, Types &&...args)
+    explicit constexpr Array(First &&first, Types &&...args)
         : std::array<T, N>{std::forward<First>(first), std::forward<Types>(args)...}
-    {}
+    {
+        static_assert(N == 1 + sizeof...(Types), "missing initializers");
+    }
 };
 
 #if __cpp_deduction_guides >= 201606
