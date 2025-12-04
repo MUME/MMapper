@@ -94,6 +94,9 @@ template<RoadTagEnum Tag>
 struct NODISCARD road_texture_array : private texture_array<RoadIndexMaskEnum>
 {
     using base = texture_array<RoadIndexMaskEnum>;
+    using base::index_type;
+    using base::SIZE;
+    using base::value_type;
     decltype(auto) operator[](TaggedRoadIndex<Tag> x) { return base::operator[](x.index); }
     using base::operator[];
     using base::begin;
@@ -164,10 +167,11 @@ public:
 namespace mctp {
 
 namespace detail {
-template<typename E_, size_t Size_>
-auto typeHack(EnumIndexedArray<SharedMMTexture, E_, Size_>)
-    -> EnumIndexedArray<MMTextureId, E_, Size_>;
-
+// converts from EnumIndexedArray<SharedMMTexture, ...> to EnumIndexedArray<MMTextureId, ...>
+template<typename T>
+auto typeHack(const T &)
+    -> std::enable_if_t<std::is_same_v<typename T::value_type, SharedMMTexture>,
+                        EnumIndexedArray<MMTextureId, typename T::index_type, T::SIZE>>;
 template<typename T>
 struct NODISCARD Proxy
 {

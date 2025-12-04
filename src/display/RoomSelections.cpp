@@ -81,8 +81,8 @@ public:
 
     void draw(OpenGL &gl, const MapCanvasTextures &textures)
     {
-        static const MMapper::Array<SelTypeEnum, NUM_SEL_TYPES> ALL_SEL_TYPES
-            = {SelTypeEnum::Near, SelTypeEnum::Distant, SelTypeEnum::MoveBad, SelTypeEnum::MoveGood};
+        static constexpr MMapper::Array<SelTypeEnum, NUM_SEL_TYPES> ALL_SEL_TYPES{
+            SelTypeEnum::Near, SelTypeEnum::Distant, SelTypeEnum::MoveBad, SelTypeEnum::MoveGood};
 
         const auto rs
             = GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY).withDepthFunction(std::nullopt);
