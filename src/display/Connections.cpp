@@ -209,7 +209,7 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
         return 0.f;
     };
 
-    const glm::vec2 xy = [sourceDir, together, &sourcePos, &targetPos]() -> glm::vec2 {
+    const glm::vec2 xy = std::invoke([sourceDir, together, &sourcePos, &targetPos]() -> glm::vec2 {
         const glm::vec2 srcPos = sourcePos.to_vec2();
         if (together) {
             const auto centerPos = (srcPos + targetPos.to_vec2()) * 0.5f;
@@ -218,7 +218,7 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
         } else {
             return srcPos + glm::vec2{XOFFSET, getYOffset(sourceDir)};
         }
-    }();
+    });
 
     static const auto bg = Colors::black.withAlpha(0.4f);
     const glm::vec3 pos{xy, m_currentLayer};
@@ -629,12 +629,12 @@ ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl) const
 
 void ConnectionMeshes::render(const int thisLayer, const int focusedLayer) const
 {
-    const auto color = [&thisLayer, &focusedLayer]() {
+    const auto color = std::invoke([&thisLayer, &focusedLayer]() -> Color {
         if (thisLayer == focusedLayer) {
             return getCanvasNamedColorOptions().connectionNormalColor.getColor();
         }
         return Colors::gray70.withAlpha(FAINT_CONNECTION_ALPHA);
-    }();
+    });
     const auto common_style = GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY).withColor(color);
 
     // Even though we can draw colored lines and tris,
@@ -652,13 +652,13 @@ void MapCanvas::paintNearbyConnectionPoints()
     const bool isSelection = m_canvasMouseMode == CanvasMouseModeEnum::SELECT_CONNECTIONS;
     using CD = ConnectionSelection::ConnectionDescriptor;
 
-    static const ExitDirFlags allExits = []() {
+    static const auto allExits = std::invoke([]() -> ExitDirFlags {
         ExitDirFlags tmp;
         for (const ExitDirEnum dir : ALL_EXITS7) {
             tmp |= dir;
         }
         return tmp;
-    }();
+    });
 
     std::vector<ColorVert> points;
     const auto addPoint = [isSelection, &points](const Coordinate &roomCoord,
@@ -743,7 +743,7 @@ void MapCanvas::paintSelectedConnection()
     const auto pos1 = getPosition(first);
     // REVISIT: How about not dashed lines to the nearest possible connections
     // if the second isn't valid?
-    const auto optPos2 = [this, &sel]() -> std::optional<glm::vec3> {
+    const auto optPos2 = std::invoke([this, &sel]() -> std::optional<glm::vec3> {
         if (sel.isSecondValid()) {
             return getPosition(sel.getSecond());
         } else if (hasSel2()) {
@@ -751,7 +751,7 @@ void MapCanvas::paintSelectedConnection()
         } else {
             return std::nullopt;
         }
-    }();
+    });
 
     if (!optPos2) {
         return;

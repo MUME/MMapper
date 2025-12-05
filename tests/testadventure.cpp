@@ -29,7 +29,7 @@ void testQStringAsAscii(const QString &qs, std::string_view expected_ascii)
     TEST_ASSERT(ascii == expected_ascii);
 }
 
-const QString dunadan = []() -> QString {
+const QString dunadan = std::invoke([]() -> QString {
     const std::array<char, 7> latin1_bytes = {'D', '\xFA', 'n', 'a', 'd', 'a', 'n'};
     const std::array<char, 8> utf8_bytes = {'D', '\xC3', '\xBA', 'n', 'a', 'd', 'a', 'n'};
     TEST_ASSERT(charset::conversion::latin1ToAscii('\xFA') == 'u'); // sanity checking
@@ -40,9 +40,9 @@ const QString dunadan = []() -> QString {
     testQStringAsAscii(result, "Dunadan");
 
     return result;
-}();
+});
 
-const auto gomgal = []() {
+const auto gomgal = std::invoke([]() -> QString {
     const std::array<char, 6> latin1_bytes = {'G', 'o', 'm', 'g', '\xE2', 'l'};
     const std::array<char, 7> utf8_bytes = {'G', 'o', 'm', 'g', '\xC3', '\xA2', 'l'};
 
@@ -52,7 +52,7 @@ const auto gomgal = []() {
     testQStringAsAscii(result, "Gomgal");
 
     return result;
-}();
+});
 
 QDebug operator<<(QDebug debug, const LineParserResult &result)
 {

@@ -133,7 +133,7 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
                 // 16:
                 // ##..##..##..##..
 
-                const int width = [i]() -> int {
+                const int width = std::invoke([i]() -> int {
                     switch (MAX_BITS - i) {
                     case 4:
                         return 1;
@@ -146,7 +146,7 @@ NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
                         assert(false);
                         return 4;
                     }
-                }();
+                });
 
                 assert(isClamped(width, 1, 4));
 

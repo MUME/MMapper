@@ -255,7 +255,7 @@ RoomId ParserCommon::getTailPosition() const
 
 void ParserCommon::emulateExits(AnsiOstream &os, const CommandEnum move)
 {
-    const auto nextRoom = [this, &move]() -> RoomId {
+    const auto nextRoom = std::invoke([this, &move]() -> RoomId {
         // Use movement direction to find the next coordinate
         if (isDirectionNESWUD(move)) {
             if (const auto sourceRoom = m_mapData.getCurrentRoom()) {
@@ -270,7 +270,7 @@ void ParserCommon::emulateExits(AnsiOstream &os, const CommandEnum move)
         }
         // Fallback to next position in prespammed path
         return getNextPosition();
-    }();
+    });
 
     if (const auto &r = m_mapData.findRoomHandle(nextRoom)) {
         sendRoomExitsInfoToUser(os, r);
@@ -619,14 +619,14 @@ void AbstractParser::showHeader(const QString &s)
 
 void AbstractParser::showMiscHelp()
 {
-    static const Helps helps = []() -> Helps {
+    static const Helps helps = std::invoke([]() -> Helps {
         std::vector<Help> h;
         h.emplace_back(Help{cmdBack, "delete prespammed commands from queue"});
         h.emplace_back(Help{cmdMap, "modify or display stats about the map"});
         h.emplace_back(Help{cmdTime, "display current MUME time"});
         h.emplace_back(Help{cmdVote, "vote for MUME on TMC!"});
         return Helps{std::move(h)};
-    }();
+    });
 
     showHeader("Miscellaneous commands");
     sendToUser(SendToUserSourceEnum::FromMMapper, helps.format(getPrefixChar()));

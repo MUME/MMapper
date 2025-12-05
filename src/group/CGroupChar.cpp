@@ -59,7 +59,7 @@ bool CGroupChar::updateFromGmcp(const JsonObj &obj)
 
     if (auto optInt = obj.getInt("mapid")) {
         const int32_t i = optInt.value();
-        const auto newServerId = [i]() -> ServerRoomId {
+        const auto newServerId = std::invoke([i]() -> ServerRoomId {
             static constexpr const ServerRoomId DEFAULT_SERVER_ROOMID{0};
             ServerRoomId id{static_cast<uint32_t>(i)};
             if (id == DEFAULT_SERVER_ROOMID) {
@@ -67,7 +67,7 @@ bool CGroupChar::updateFromGmcp(const JsonObj &obj)
                 return DEFAULT_SERVER_ROOMID;
             }
             return id;
-        }();
+        });
         if (newServerId != getServerId()) {
             setServerId(newServerId);
             updated = true;
@@ -102,7 +102,7 @@ bool CGroupChar::updateFromGmcp(const JsonObj &obj)
 
     const auto tryUpdateInt = [&obj, &updated](const char *const attr, int &n) {
         if (auto optInt = obj.getInt(attr)) {
-            const auto i = [&optInt, attr]() {
+            const auto i = std::invoke([&optInt, attr]() -> int {
                 const auto tmp = optInt.value();
                 if (tmp < 0) {
                     qWarning() << "[tryUpdateInt] Input" << attr << "(" << tmp
@@ -110,7 +110,7 @@ bool CGroupChar::updateFromGmcp(const JsonObj &obj)
                     return 0;
                 }
                 return tmp;
-            }();
+            });
 
             if (i != n) {
                 n = i;

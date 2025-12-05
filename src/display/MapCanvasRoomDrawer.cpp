@@ -542,12 +542,12 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
         return {};
     }
 
-    const size_t numUniqueTextures = [&textures]() -> size_t {
+    const size_t numUniqueTextures = std::invoke([&textures]() -> size_t {
         size_t texCount = 0;
         ::foreach_texture(textures,
                           [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
         return texCount;
-    }();
+    });
 
     LayerMeshesIntermediate::FnVec tmp_meshes;
     tmp_meshes.reserve(numUniqueTextures);
@@ -589,12 +589,12 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
         return {};
     }
 
-    const size_t numUniqueTextures = [&textures]() -> size_t {
+    const size_t numUniqueTextures = std::invoke([&textures]() -> size_t {
         size_t texCount = 0;
         ::foreach_texture(textures,
                           [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
         return texCount;
-    }();
+    });
 
     LayerMeshesIntermediate::FnVec tmp_meshes;
     tmp_meshes.reserve(numUniqueTextures);
@@ -990,12 +990,12 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     const GLRenderState equal_blended = equal.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState equal_multiplied = equal.withBlend(BlendModeEnum::MODULATE);
 
-    const auto color = [&thisLayer, &focusedLayer]() {
+    const auto color = std::invoke([&thisLayer, &focusedLayer]() -> Color {
         if (thisLayer <= focusedLayer) {
             return Colors::white.withAlpha(0.90f);
         }
         return Colors::gray70.withAlpha(0.20f);
-    }();
+    });
 
     {
         /* REVISIT: For the modern case, we could render each layer separately,
@@ -1013,7 +1013,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     // REVISIT: move trails to their own batch also colored by the tint?
     for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
         static_assert(NUM_ROOM_TINTS == 2);
-        const auto namedColor = [tint]() -> XNamedColor {
+        const auto namedColor = std::invoke([tint]() -> XNamedColor {
             switch (tint) {
             case RoomTintEnum::DARK:
                 return LOOKUP_COLOR(ROOM_DARK);
@@ -1021,7 +1021,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
                 return LOOKUP_COLOR(ROOM_NO_SUNDEATH);
             }
             std::abort();
-        }();
+        });
 
         if (const auto optColor = getColor(namedColor)) {
             tints[tint].render(equal_multiplied.withColor(optColor.value()));
@@ -1108,7 +1108,7 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                           ProgressCounter dummyPc;
                           map.checkConsistency(dummyPc);
 
-                          const LayerToRooms layerToRooms = [map]() -> LayerToRooms {
+                          const auto layerToRooms = std::invoke([map]() -> LayerToRooms {
                               DECL_TIMER(t2, "[ASYNC] generateBatches.layerToRooms");
                               LayerToRooms ltr;
                               map.getRooms().for_each([&map, &ltr](const RoomId id) {
@@ -1118,7 +1118,7 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                                   layer.emplace_back(r);
                               });
                               return ltr;
-                          }();
+                          });
 
                           auto result = std::make_shared<InternalData>();
                           auto &data = deref(result);

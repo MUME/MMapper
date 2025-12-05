@@ -31,12 +31,12 @@
 #include <QtCore>
 #include <QtGui>
 
-static const bool VERBOSE_FONT_DEBUG = []() -> bool {
+static const bool VERBOSE_FONT_DEBUG = std::invoke([]() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_FONT_DEBUG")) {
         return opt.value();
     }
     return false;
-}();
+});
 
 // NOTE: Rect doesn't actually include the hi value.
 struct NODISCARD Rect final
@@ -710,7 +710,7 @@ NODISCARD static QString getFontFilename(const float devicePixelRatio)
 {
     const char *const FONT_KEY = "MMAPPER_FONT";
     const char *const font = "Cantarell";
-    const char *const size = [&devicePixelRatio]() {
+    const char *const size = std::invoke([devicePixelRatio]() -> const char * {
         if (devicePixelRatio > 1.75f) {
             return "36";
         }
@@ -718,7 +718,7 @@ NODISCARD static QString getFontFilename(const float devicePixelRatio)
             return "27";
         }
         return "18";
-    }();
+    });
     const QString fontFilename = QString(":/fonts/%1%2.fnt").arg(font).arg(size);
     if (qEnvironmentVariableIsSet(FONT_KEY)) {
         const QString tmp = qgetenv(FONT_KEY);
@@ -814,14 +814,14 @@ void FontMetrics::getFontBatchRawData(const GLText *const text,
     const auto before = output.size();
     const auto end = text + count;
 
-    const size_t expectedVerts = [text, end]() -> size_t {
+    const size_t expectedVerts = std::invoke([text, end]() -> size_t {
         int numGlyphs = 0;
         for (const GLText *it = text; it != end; ++it) {
             numGlyphs += static_cast<int>(it->text.size()) + (it->bgcolor.has_value() ? 1 : 0)
                          + (it->fontFormatFlag.contains(FontFormatFlagEnum::UNDERLINE) ? 1 : 0);
         }
         return 4 * static_cast<size_t>(numGlyphs);
-    }();
+    });
 
     output.reserve(before + expectedVerts);
 

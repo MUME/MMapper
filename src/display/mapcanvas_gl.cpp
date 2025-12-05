@@ -146,7 +146,7 @@ void MapCanvas::reportGLVersion()
     logString("OpenGL Vendor:", GL_VENDOR);
     logString("OpenGL GLSL:", GL_SHADING_LANGUAGE_VERSION);
 
-    const auto version = [this]() -> std::string {
+    const auto version = std::invoke([this]() -> std::string {
         const QSurfaceFormat &format = context()->format();
         std::ostringstream oss;
         switch (format.renderableType()) {
@@ -166,7 +166,7 @@ void MapCanvas::reportGLVersion()
         }
         oss << format.majorVersion() << "." << format.minorVersion();
         return std::move(oss).str();
-    }();
+    });
 
     logMsg("Current OpenGL Context:",
            QString("%1 (%2)")
@@ -375,7 +375,7 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
     const auto yawRadians = glm::radians(advanced.horizontalAngle.getFloat());
     const auto layerHeight = advanced.layerHeight.getFloat();
 
-    const auto pixelScale = [aspect, fovDegrees, width]() -> float {
+    const auto pixelScale = std::invoke([aspect, fovDegrees, width]() -> float {
         constexpr float HARDCODED_LOGICAL_PIXELS = 44.f;
         const auto dummyProj = glm::perspective(glm::radians(fovDegrees), aspect, 1.f, 10.f);
 
@@ -391,7 +391,7 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
         const float screenDist = ndcDist * static_cast<float>(width);
         const auto pixels = std::abs(centerRoom.z) * screenDist;
         return pixels / HARDCODED_LOGICAL_PIXELS;
-    }();
+    });
 
     const float ZSCALE = layerHeight;
     const float camDistance = pixelScale / zoomScale;
@@ -855,7 +855,7 @@ void MapCanvas::paintGL()
     const auto &afterTextures = optAfterTextures.value();
     const auto &afterBatches = optAfterBatches.value();
     const auto afterPaint = Clock::now();
-    const bool calledFinish = [this]() -> bool {
+    const bool calledFinish = std::invoke([this]() -> bool {
         if (auto *const ctxt = QOpenGLWidget::context()) {
             if (auto *const func = ctxt->functions()) {
                 func->glFinish();
@@ -863,7 +863,7 @@ void MapCanvas::paintGL()
             }
         }
         return false;
-    }();
+    });
 
     const auto end = Clock::now();
 

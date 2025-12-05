@@ -247,7 +247,7 @@ void MapData::setMapData(const MapLoadData &mapLoadData)
 // Finally, accept any additions, but do so at offset and nextid.
 Map MapData::mergeMapData(ProgressCounter &counter, const Map &currentMap, RawMapLoadData newMapData)
 {
-    const Bounds newBounds = [&newMapData]() {
+    const auto newBounds = std::invoke([&newMapData]() -> Bounds {
         const auto &rooms = newMapData.rooms;
         const auto &front = rooms.front().position;
         Bounds bounds{front, front};
@@ -255,9 +255,9 @@ Map MapData::mergeMapData(ProgressCounter &counter, const Map &currentMap, RawMa
             bounds.insert(room.getPosition());
         }
         return bounds;
-    }();
+    });
 
-    const Coordinate mapOffset = [&currentMap, &newBounds]() -> Coordinate {
+    const Coordinate mapOffset = std::invoke([&currentMap, &newBounds]() -> Coordinate {
         const auto currentBounds = currentMap.getBounds().value();
 
         // NOTE: current and new map origins may not be at the same place relative to the bounds,
@@ -270,7 +270,7 @@ Map MapData::mergeMapData(ProgressCounter &counter, const Map &currentMap, RawMa
         tmp.z = -1;
 
         return tmp;
-    }();
+    });
 
     return Map::merge(counter,
                       currentMap,

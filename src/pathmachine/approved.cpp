@@ -33,7 +33,7 @@ void Approved::virt_receiveRoom(const RoomHandle &perhaps)
     auto &event = m_myEvent.deref();
 
     const auto id = perhaps.getId();
-    const auto cmp = [this, &event, &id, &perhaps]() {
+    const auto cmp = std::invoke([this, &event, &id, &perhaps]() -> ComparisonResultEnum {
         // Cache comparisons because we regularly call releaseMatch() and try the same rooms again
         auto it = m_compareCache.find(id);
         if (it != m_compareCache.end()) {
@@ -42,7 +42,7 @@ void Approved::virt_receiveRoom(const RoomHandle &perhaps)
         const auto result = ::compare(perhaps.getRaw(), event, m_matchingTolerance);
         m_compareCache.emplace(id, result);
         return result;
-    }();
+    });
 
     if (cmp == ComparisonResultEnum::DIFFERENT) {
         std::ignore = m_map.tryRemoveTemporary(id);

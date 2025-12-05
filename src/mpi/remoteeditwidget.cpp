@@ -401,14 +401,14 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
         return;
     }
 
-    const int to_remove = [&text, max_spaces]() -> int {
+    const int to_remove = std::invoke([&text, max_spaces]() -> int {
         const int len = std::min(max_spaces, static_cast<int>(text.length()));
         int n = 0;
         while (n < len && text.at(n) == C_SPACE) {
             ++n;
         }
         return n;
-    }();
+    });
 
     if (to_remove == 0) {
         return;

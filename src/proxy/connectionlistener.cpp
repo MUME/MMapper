@@ -113,7 +113,7 @@ void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
                                    *this);
     } else {
         log("New connection: rejected.");
-        const QByteArray msg = []() {
+        const auto msg = std::invoke([]() -> QByteArray {
             constexpr const auto whiteOnRed = getRawAnsi(AnsiColor16Enum::white,
                                                          AnsiColor16Enum::red);
             std::stringstream oss;
@@ -122,7 +122,7 @@ void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
             aos.write("\n");
             aos.writeWithColor(whiteOnRed, "Please close the existing connection.\n");
             return mmqt::toQByteArrayUtf8(oss.str());
-        }();
+        });
 
         socket->write(msg);
         socket->flush();

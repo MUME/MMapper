@@ -208,11 +208,11 @@ void test_telnetfilter()
     }
 
     const QByteArray with_lf_only = "\n\n\b0\b1\n2\b\n3\b4\n5";
-    const auto with_crlf = [&with_lf_only]() {
+    const auto with_crlf = std::invoke([&with_lf_only]() -> QByteArray {
         auto copy = with_lf_only;
         copy.replace("\n", "\r\n");
         return copy;
-    }();
+    });
 
     {
         auto fromMud = TestHelper::from_mud();

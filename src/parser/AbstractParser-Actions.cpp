@@ -38,14 +38,14 @@ void MumeXmlParserBase::initActionMap()
 
     auto addRegex = [&map](const std::string &match, const ActionCallback &callback) {
         assert(!match.empty());
-        const char hint = [&match]() -> char {
+        const char hint = std::invoke([&match]() -> char {
             using namespace char_consts;
             if (match.length() > 2 && match[0] == C_CARET && match[1] != C_BACKSLASH
                 && match[1] != C_OPEN_PARENS) {
                 return match[1];
             }
             return 0;
-        }();
+        });
         map.emplace(hint, std::make_unique<RegexAction>(match, callback));
     };
 

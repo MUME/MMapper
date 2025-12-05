@@ -1070,7 +1070,7 @@ public:
     template<typename Callback, typename Callback2>
     static void for_each_code(const QStringView ansi, Callback &&callback, Callback2 &&callback2)
     {
-        auto erased1 = [&callback]() {
+        const auto erased1 = std::invoke([&callback]() -> Erased1 {
             auto ptr = &callback;
             using ptr_type = decltype(ptr);
 
@@ -1080,9 +1080,9 @@ public:
                 cb(n);
             };
             return Erased1{reinterpret_cast<void *>(ptr), type_erased};
-        }();
+        });
 
-        auto erased2 = [&callback2]() {
+        const auto erased2 = std::invoke([&callback2]() -> Erased2 {
             auto ptr2 = &callback2;
             using ptr2_type = decltype(ptr2);
 
@@ -1092,7 +1092,7 @@ public:
                 cb(codes);
             };
             return Erased2{reinterpret_cast<void *>(ptr2), type_erased2};
-        }();
+        });
 
         AnsiColorParser{erased1, erased2}.for_each(ansi);
     }

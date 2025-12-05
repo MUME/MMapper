@@ -65,10 +65,10 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color &color, bool
     const bool isFar = m_scale <= settings.charBeaconScaleCutoff;
     const bool wantBeacons = settings.drawCharBeacons && isFar;
     if (!visible) {
-        static const bool useScreenSpacePlayerArrow = []() -> bool {
+        static const bool useScreenSpacePlayerArrow = std::invoke([]() -> bool {
             auto opt = utils::getEnvBool("MMAPPER_SCREEN_SPACE_ARROW");
             return opt ? opt.value() : true;
-        }();
+        });
         const auto dot = DistantObjectTransform::construct(roomCenter, m_mapScreen, marginPixels);
         // Player is distant
         if (useScreenSpacePlayerArrow) {
@@ -118,9 +118,10 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
         return;
     }
 
-    const std::vector<glm::vec3> verts = [&c1, &path]() {
-        std::vector<glm::vec3> translated;
-        translated.reserve(static_cast<size_t>(path.size()) + 1);
+    using TranslatedVerts = std::vector<glm::vec3>;
+    const auto verts = std::invoke([&c1, &path]() -> TranslatedVerts {
+        TranslatedVerts translated;
+        translated.reserve(path.size() + 1);
 
         const auto add = [&translated](const Coordinate &c) -> void {
             static const glm::vec3 PATH_OFFSET{0.5f, 0.5f, 0.f};
@@ -132,7 +133,7 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
             add(c2);
         }
         return translated;
-    }();
+    });
 
     auto &gl = getOpenGL();
 
@@ -400,7 +401,7 @@ void MapCanvas::paintCharacters()
     CharacterBatch characterBatch{m_mapScreen, m_currentLayer, getTotalScaleFactor()};
 
     // IIFE to abuse return to avoid duplicate else branches
-    [this, &characterBatch]() {
+    std::invoke([this, &characterBatch]() -> void {
         if (const std::optional<RoomId> opt_pos = m_data.getCurrentRoomId()) {
             const auto &id = opt_pos.value();
             if (const auto room = m_data.findRoomHandle(id)) {
@@ -425,7 +426,7 @@ void MapCanvas::paintCharacters()
             }
         }
         drawGroupCharacters(characterBatch);
-    }();
+    });
 
     characterBatch.reallyDraw(getOpenGL(), m_textures);
 }
@@ -445,7 +446,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 
         const CGroupChar &character = deref(pCharacter);
 
-        const auto &r = [&character, &map]() -> RoomHandle {
+        const auto &r = std::invoke([&character, &map]() -> RoomHandle {
             const ServerRoomId srvId = character.getServerId();
             if (srvId != INVALID_SERVER_ROOMID) {
                 if (const auto &room = map.findRoomHandle(srvId)) {
@@ -453,7 +454,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
                 }
             }
             return RoomHandle{};
-        }();
+        });
 
         // Do not draw the character if they're in an "Unknown" room
         if (!r) {

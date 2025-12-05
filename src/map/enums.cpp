@@ -23,7 +23,7 @@
     const std::vector<E> &name() \
     { \
         static_assert(std::is_enum_v<E>); \
-        static const auto things = []() { \
+        static const auto things = std::invoke([]() { \
             std::vector<E> result; \
             for (const E x : ::enums::genEnumValues<E, N>()) { \
                 if (x != E::UNDEFINED) { \
@@ -31,7 +31,7 @@
                 } \
             } \
             return result; \
-        }(); \
+        }); \
         return things; \
     }
 

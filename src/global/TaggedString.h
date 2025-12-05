@@ -98,11 +98,11 @@ private:
     // each tag has a distinct empty string.
     NODISCARD static SharedConstCharArray getEmptyString()
     {
-        static const SharedConstCharArray g_default = []() {
+        static const auto g_default = std::invoke([]() -> SharedConstCharArray {
             auto buf = std::make_shared<const std::string>();
             assert(deref(buf).empty());
             return buf;
-        }();
+        });
         return g_default;
     }
 

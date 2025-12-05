@@ -193,12 +193,12 @@ void DescriptionWidget::updateBackground()
 
     // Decide if widget is padded
     const QSize widgetSize = size();
-    const auto hasRoomRightOfTextEdit = [&]() -> bool {
+    const auto hasRoomRightOfTextEdit = std::invoke([&]() -> bool {
         const QRect textEditGeometry = m_textEdit->geometry();
         const int spaceRightOfTextEdit = widgetSize.width()
                                          - (textEditGeometry.x() + textEditGeometry.width());
         return baseImage->width() <= spaceRightOfTextEdit;
-    }();
+    });
     const int topPadding = hasRoomRightOfTextEdit
                                ? 0
                                : TOP_PADDING_LINES * QFontMetrics(m_textEdit->font()).lineSpacing();

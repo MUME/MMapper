@@ -31,7 +31,7 @@ NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
     }
 
     // note: static variable initialized by IIFE guarantees thread safety.
-    static const auto names = []() {
+    static const auto names = std::invoke([]() {
         using CharArray = char[8];
         static_assert(sizeof(CharArray) >= NUM_COMPASS_DIRS + 1);
         EnumIndexedArray<CharArray, RoadIndexMaskEnum> arr{};
@@ -53,7 +53,7 @@ NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
             *ptr = char_consts::C_NUL;
         }
         return arr;
-    }();
+    });
 
     return names[x];
 }

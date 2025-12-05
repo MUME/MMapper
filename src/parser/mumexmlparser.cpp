@@ -135,9 +135,10 @@ bool MumeXmlParser::element(const QString &line)
     using namespace char_consts;
     const auto length = line.length();
 
+    using Attributes = std::list<std::pair<std::string, std::string>>;
     // REVISIT: Merge this logic with the state machine in parse()
-    const auto attrs = [&line]() {
-        std::list<std::pair<std::string, std::string>> attributes;
+    const auto attrs = std::invoke([&line]() -> Attributes {
+        Attributes attributes;
 
         std::ostringstream os;
         std::optional<std::string> key;
@@ -216,7 +217,7 @@ bool MumeXmlParser::element(const QString &line)
             makeAttribute();
         }
         return attributes;
-    }();
+    });
 
     switch (m_xmlMode) {
     case XmlModeEnum::NONE:
@@ -444,7 +445,7 @@ QString MumeXmlParser::characters(QString &ch)
 
     QString toUser;
 
-    const XmlModeEnum mode = [this]() -> XmlModeEnum {
+    const XmlModeEnum mode = std::invoke([this]() -> XmlModeEnum {
         if (m_lineFlags.isPrompt()) {
             return XmlModeEnum::PROMPT;
         } else if (m_lineFlags.isExits()) {
@@ -457,7 +458,7 @@ QString MumeXmlParser::characters(QString &ch)
             return XmlModeEnum::ROOM;
         }
         return m_xmlMode;
-    }();
+    });
 
     switch (mode) {
     case XmlModeEnum::NONE: // non room info

@@ -85,18 +85,18 @@ void testDiff()
     const auto r1 = Range<char>::fromStringView("The quick brown fox jumps over the lazy dog.");
     const auto r2 = Range<char>::fromStringView("The lazy fox hides from the dog.");
 
-    const auto s1 = [&r1, &r2]() -> std::string {
+    const auto s1 = std::invoke([&r1, &r2]() -> std::string {
         std::ostringstream os;
         MyDiff lcs{os};
         lcs.compare(r1, r2);
         return std::move(os).str();
-    }();
-    const auto s2 = [&r1, &r2]() -> std::string {
+    });
+    const auto s2 = std::invoke([&r1, &r2]() -> std::string {
         std::ostringstream os;
         MyDiff lcs{os};
         lcs.compare(r2, r1);
         return std::move(os).str();
-    }();
+    });
 
     const std::string_view RESET = "\x1B[0m";
     const std::string_view FG_RED = "\x1B[0;31m";

@@ -51,7 +51,7 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
         NODISCARD bool contains(const ExternalRoomId id) const { return find(id) != end(); }
     };
 
-    const LookupTable lookupTable = [&input]() -> LookupTable {
+    const LookupTable lookupTable = std::invoke([&input]() -> LookupTable {
         DECL_TIMER(t2, "build-lookup-table");
         LookupTable roomMap;
         const auto inputSize = static_cast<uint32_t>(input.size());
@@ -63,7 +63,7 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
             roomMap[r.id] = i;
         }
         return roomMap;
-    }();
+    });
 
     auto checkAndRepairExits = [&input, &lookupTable](ExternalRawRoom &r,
                                                       const ExitDirEnum dir,
@@ -377,22 +377,25 @@ static ChangeList buildChangelist(ProgressCounter &pc,
             continue;
         }
 
-        std::string_view name = x.name.getStdStringViewUtf8();
-        trim_newline_inplace(name);
+        const auto name = std::invoke([&x]() -> std::string_view {
+            auto tmp = x.name.getStdStringViewUtf8();
+            trim_newline_inplace(tmp);
+            return tmp; // NOLINT (no, clang-tidy, the local does not escape)
+        });
 
         if (name.empty()) {
             assert(false);
             continue;
         }
 
-        RoomNote before = [&notes, &room]() -> RoomNote {
+        const RoomNote before = std::invoke([&notes, &room]() -> RoomNote {
             if (const auto it = notes.find(room.getId()); it != notes.end()) {
                 return it->second;
             }
             return room.getNote();
-        }();
+        });
 
-        notes[room.getId()] = [&before, dir = x.dir, name]() -> RoomNote {
+        notes[room.getId()] = std::invoke([&before, dir = x.dir, name]() -> RoomNote {
             std::ostringstream oss;
             const auto &old = before.getStdStringViewUtf8();
             oss << old;
@@ -403,7 +406,7 @@ static ChangeList buildChangelist(ProgressCounter &pc,
             oss << name;
             oss << C_NEWLINE;
             return RoomNote{std::move(oss).str()};
-        }();
+        });
         pc.step();
     }
 

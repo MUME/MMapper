@@ -52,7 +52,7 @@ NODISCARD static QString normalizeForUser(const CharacterEncodingEnum userEncodi
                                           const QString &s,
                                           const bool goAhead)
 {
-    auto out = [goAhead, &userEncoding, &s]() -> std::string {
+    const auto out = std::invoke([goAhead, &userEncoding, &s]() -> std::string {
         std::ostringstream oss;
         normalizeForUser(oss,
                          goAhead,
@@ -62,7 +62,7 @@ NODISCARD static QString normalizeForUser(const CharacterEncodingEnum userEncodi
                                                    ? mmqt::decodeEmojiShortCodes(s)
                                                    : s));
         return std::move(oss).str();
-    }();
+    });
 
     return mmqt::toQStringUtf8(out);
 }

@@ -19,7 +19,7 @@
 #define DEFINE_GETTER_DEFINED(E, N, name) \
     const std::vector<E> &name() \
     { \
-        static const auto things = []() { \
+        static const auto things = std::invoke([]() { \
             static_assert(std::is_enum_v<E>); \
             std::vector<E> result; \
             for (const E x : ::enums::genEnumValues<E, N>()) { \
@@ -28,7 +28,7 @@
                 } \
             } \
             return result; \
-        }(); \
+        }); \
         return things; \
     }
 

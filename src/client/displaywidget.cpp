@@ -485,7 +485,7 @@ RawAnsi updateFormat(QTextCharFormat &format,
             // QTextCharFormat doesn't support other underline styles.
             format.setFontUnderline(updated.hasUnderline());
             using ULS = QTextCharFormat::UnderlineStyle;
-            const auto style = [&updated]() -> QTextCharFormat::UnderlineStyle {
+            const auto style = std::invoke([&updated]() -> QTextCharFormat::UnderlineStyle {
                 switch (updated.getUnderlineStyle()) {
                 case AnsiUnderlineStyleEnum::Dotted:
                     return ULS::DotLine;
@@ -499,7 +499,7 @@ RawAnsi updateFormat(QTextCharFormat &format,
                 default:
                     return ULS::SingleUnderline;
                 }
-            }();
+            });
             format.setUnderlineStyle(style);
             break;
         }

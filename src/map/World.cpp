@@ -1070,7 +1070,7 @@ void World::mergeRelative(const RoomId id, const Coordinate &offset)
         return;
     }
 
-    const auto targetId = [this, id, &offset]() -> std::optional<RoomId> {
+    const auto targetId = std::invoke([this, id, &offset]() -> std::optional<RoomId> {
         const auto pos = m_rooms.getPosition(id) + offset;
 
         const auto optTarget = findRoom(pos);
@@ -1093,7 +1093,7 @@ void World::mergeRelative(const RoomId id, const Coordinate &offset)
         }
 
         return result_targetId;
-    }();
+    });
 
     if (!targetId) {
         return;
@@ -1222,7 +1222,7 @@ World World::init(ProgressCounter &counter,
             counter.setNewTask(ProgressMsg{"preparing to insert room name/desc lookups"},
                                rooms.size());
 
-            auto initializer = [&rooms, &counter]() {
+            const auto initializer = std::invoke([&rooms, &counter]() -> ParseTreeInitializer {
                 DECL_TIMER(t4, "insert-rooms-parsekey (prepare)");
                 ParseTreeInitializer tmp;
                 for (const auto &room : rooms) {
@@ -1235,7 +1235,7 @@ World World::init(ProgressCounter &counter,
                     counter.step();
                 }
                 return tmp;
-            }();
+            });
 
             counter.setNewTask(ProgressMsg{"inserting room name/desc lookups"}, 1);
             {
@@ -1408,11 +1408,11 @@ void World::undeleteRoom(const ExternalRoomId extid, const RawRoom &raw)
 
 void World::addRoom2(const Coordinate &desiredPosition, const ParseEvent &event)
 {
-    const auto position = [this, desiredPosition]() -> Coordinate {
+    const auto position = std::invoke([this, desiredPosition]() -> Coordinate {
         return ::getNearestFree(desiredPosition, [this](const Coordinate &check) -> FindCoordEnum {
             return findRoom(check).has_value() ? FindCoordEnum::InUse : FindCoordEnum::Available;
         });
-    }();
+    });
 
     const RoomId roomId = addRoom(position);
 
@@ -2598,14 +2598,14 @@ WorldComparisonStats World::getComparisonStats(const World &base, const World &m
 
     const auto anyRoomsAdded = modified.containsRoomsNotIn(base);
     const auto anyRoomsRemoved = base.containsRoomsNotIn(modified);
-    const auto anyRoomsMoved = [&base, &modified]() -> bool {
+    const auto anyRoomsMoved = std::invoke([&base, &modified]() -> bool {
         DECL_TIMER(t2, "anyRoomsMoved");
         return base.m_spatialDb != modified.m_spatialDb;
-    }();
-    const auto serverIdsChanged = [&base, &modified]() -> bool {
+    });
+    const auto serverIdsChanged = std::invoke([&base, &modified]() -> bool {
         DECL_TIMER(t2, "serverIdsChanged");
         return base.m_serverIds != modified.m_serverIds;
-    }();
+    });
 
     WorldComparisonStats result;
     result.boundsChanged = base.getBounds() != modified.getBounds();

@@ -25,7 +25,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
     static volatile bool fallbackToRemainder = true;
     static volatile bool fallbackToWholeMap = true;
 
-    const auto *const pSet = [&map, &event, &tree]() -> const ImmUnorderedRoomIdSet * {
+    const auto *const pSet = std::invoke([&map, &event, &tree]() -> const ImmUnorderedRoomIdSet * {
         DECL_TIMER(t1, "part0. lookup rooms in areas");
         const World &world = map.getWorld();
         const RoomArea &areaName = event.getRoomArea();
@@ -81,7 +81,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
             }
         }
         return nullptr;
-    }();
+    });
 
     const auto filterRoomsByEvent = [&map, &event](const auto &set) -> RoomIdSet {
         DECL_TIMER(t2, "part2. for(...) tryReport() ");

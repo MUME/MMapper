@@ -25,7 +25,7 @@ private:
 public:
     explicit JsonDoc(const TaggedStringUtf8<Tag> &json)
         : m_doc{QJsonDocument::fromJson(json.toQByteArray())}
-        , m_int{[this, &json]() -> OptJsonInt {
+        , m_int{std::invoke([this, &json]() -> OptJsonInt {
             if (m_doc.isArray() || m_doc.isObject() || json.isEmpty())
                 return std::nullopt;
 
@@ -39,7 +39,7 @@ public:
                 return std::nullopt;
             }
             return OptJsonInt(static_cast<JsonInt>(num));
-        }()}
+        })}
     {}
 
 public:

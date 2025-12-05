@@ -371,7 +371,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
 
         const auto version = opt_ver.value().version;
 
-        const bool supported = [version]() -> bool {
+        const bool supported = std::invoke([version]() -> bool {
             switch (version) {
             case schema::v2_0_0_initial:
             case schema::v2_0_2_ridable:
@@ -391,7 +391,7 @@ std::optional<RawMapLoadData> MapStorage::virt_loadData()
                 break;
             }
             return false;
-        }();
+        });
 
         if (!supported) {
             const bool isNewer = version >= schema::CURRENT;

@@ -181,11 +181,11 @@ void TestParser::createParseEventTest()
 
     const auto name = RoomName{"Room"};
     const auto desc = makeRoomDesc("Description");
-    const auto promptFlags = []() {
+    const auto promptFlags = std::invoke([]() -> PromptFlagsType {
         PromptFlagsType pf{};
         pf.setValid();
         return pf;
-    }();
+    });
 
     // all 3 valid
     check(name, desc, promptFlags, 0);

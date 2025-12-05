@@ -429,12 +429,12 @@ void TestExpandoraCommon::roomCompareTest()
     QFETCH(ParseEvent, event);
     QFETCH(ComparisonResultEnum, comparison);
 
-    const auto result = [&room, &event]() {
+    const auto result = std::invoke([&room, &event]() -> ComparisonResultEnum {
         // REVISIT: Config has default matching tolerance of 8
         const int matchingTolerance = 8;
         mmqt::HideQDebug forThisFunctionCall; // e.g. "Updating room to be LIT"
         return ::compare(room.shared->getRaw(), event, matchingTolerance);
-    }();
+    });
 
     if (comparison != result) {
         auto temp = createTemporaryRoom(event);

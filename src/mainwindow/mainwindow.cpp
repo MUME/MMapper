@@ -677,26 +677,26 @@ void MainWindow::createActions()
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
-    layerUpAct->setShortcut(tr([]() -> const char * {
+    layerUpAct->setShortcut(tr(std::invoke([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             return "Meta+Tab";
         }
         return "Ctrl+Tab";
-    }()));
+    })));
     layerUpAct->setStatusTip(tr("Layer Up"));
     connect(layerUpAct, &QAction::triggered, this, &MainWindow::slot_onLayerUp);
     layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")),
                                tr("Layer Down"),
                                this);
 
-    layerDownAct->setShortcut(tr([]() -> const char * {
+    layerDownAct->setShortcut(tr(std::invoke([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             return "Meta+Shift+Tab";
         }
         return "Ctrl+Shift+Tab";
-    }()));
+    })));
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, &QAction::triggered, this, &MainWindow::slot_onLayerDown);
 

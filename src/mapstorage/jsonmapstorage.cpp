@@ -313,7 +313,8 @@ void JsonWorld::writeMetadata(const QFileInfo &path, const Bounds &bounds) const
     meta["maxY"] = std::max(-min.y, -max.y);
     meta["maxZ"] = max.z;
 
-    meta["directions"] = []() {
+    // note: assignment implicitly converts the returned QJsonArray to QJsonValue
+    meta["directions"] = std::invoke([]() -> QJsonArray {
         QJsonArray arr;
         // why is there no QJsonArray::resize()?
         for (size_t i = 0; i <= NUM_EXITS; ++i) {
@@ -323,7 +324,7 @@ void JsonWorld::writeMetadata(const QFileInfo &path, const Bounds &bounds) const
             arr[static_cast<int>(i)] = getNameUpper(static_cast<ExitDirEnum>(i));
         }
         return arr;
-    }();
+    });
 
     writeJson(path.filePath(), meta, "metadata");
 }

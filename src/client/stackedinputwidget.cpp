@@ -112,7 +112,7 @@ void StackedInputWidget::requestPassword()
         return;
     }
 
-    QPoint clampedGlobalPos = [this, &dlg]() {
+    const auto clampedGlobalPos = std::invoke([this, &dlg]() -> QPoint {
         auto &input = getInputWidget();
         QPoint cursorGlobalPos = input.mapToGlobal(input.cursorRect(input.textCursor()).topLeft());
         QPoint desiredGlobalPos = cursorGlobalPos - QPoint(dlg.width(), dlg.height());
@@ -125,7 +125,7 @@ void StackedInputWidget::requestPassword()
         int y = std::max(inputRect.top(),
                          std::min(desiredLocalPos.y(), inputRect.bottom() - dlg.height()));
         return input.mapToGlobal(QPoint(x, y));
-    }();
+    });
     dlg.move(clampedGlobalPos);
     dlg.show();
     dlg.raise();

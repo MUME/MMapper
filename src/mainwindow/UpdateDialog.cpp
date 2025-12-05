@@ -145,18 +145,18 @@ void UpdateDialog::setUpdateStatus(const QString &message,
 QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject) const
 {
     // Compile platform-specific regex
-    static const auto platformRegex = QRegularExpression(
-        []() -> const char * {
-            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-                return R"(^.+\.dmg$)";
-            } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                return R"(^.+\.(deb|AppImage|flatpak)$)";
-            } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-                return R"(^.+\.exe$)";
-            }
-            abort();
-        }(),
-        QRegularExpression::CaseInsensitiveOption);
+    static const auto platformRegex
+        = QRegularExpression(std::invoke([]() -> const char * {
+                                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+                                     return R"(^.+\.dmg$)";
+                                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+                                     return R"(^.+\.(deb|AppImage|flatpak)$)";
+                                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+                                     return R"(^.+\.exe$)";
+                                 }
+                                 abort();
+                             }),
+                             QRegularExpression::CaseInsensitiveOption);
 
     // Compile architecture-specific regex
     static const auto archRegex = QRegularExpression(getArchitectureRegexPattern(),
@@ -225,14 +225,14 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     if (isMMapperBeta() && reply->request().url().toString().contains("/ref/tags/")) {
         const QJsonObject objNode = obj.value("object").toObject();
         const QString remoteCommitHash = objNode.value("sha").toString();
-        const QString localCommitHash = []() -> QString {
+        const QString localCommitHash = std::invoke([]() -> QString {
             static const QRegularExpression hashRegex(R"(-g([0-9a-fA-F]+)$)");
             QRegularExpressionMatch match = hashRegex.match(QString::fromUtf8(getMMapperVersion()));
             if (match.hasMatch()) {
                 return match.captured(1);
             }
             return "";
-        }();
+        });
         qInfo() << "Updater comparing: CURRENT=" << localCommitHash
                 << "LATEST=" << remoteCommitHash.left(10);
         if (!localCommitHash.isEmpty() && remoteCommitHash.startsWith(localCommitHash)) {

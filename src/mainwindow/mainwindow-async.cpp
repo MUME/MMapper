@@ -696,7 +696,7 @@ MainWindow::AsyncSaver::~AsyncSaver() = default;
 std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
     const std::shared_ptr<ProgressCounter> &pc, std::shared_ptr<MapSource> &source)
 {
-    auto tmp = [this, pc, &source]() -> std::unique_ptr<AbstractMapStorage> {
+    auto tmp = std::invoke([this, pc, &source]() -> std::unique_ptr<AbstractMapStorage> {
         const AbstractMapStorage::Data data{pc, source};
         auto pDevice = source->getIODevice();
         for (const auto &fmt : mwa_detail::formats) {
@@ -708,7 +708,7 @@ std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
             }
         }
         throw std::runtime_error("Unrecognized file format");
-    }();
+    });
 
     AbstractMapStorage *const pStorage = tmp.get();
     connect(pStorage, &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
@@ -822,25 +822,26 @@ bool MainWindow::saveFile(const QString &fileName,
 
     auto pc = std::make_shared<ProgressCounter>();
 
-    auto pStorage = [this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
-        auto storage = [this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
-            AbstractMapStorage::Data data{pc, pDest};
-            switch (format) {
-            case SaveFormatEnum::MM2:
-                return std::make_unique<MapStorage>(data, this);
-            case SaveFormatEnum::MM2XML:
-                return std::make_unique<XmlMapStorage>(data, this);
-            case SaveFormatEnum::MMP:
-                return std::make_unique<MmpMapStorage>(data, this);
-            case SaveFormatEnum::WEB:
-                return std::make_unique<JsonMapStorage>(data, this);
-            }
-            assert(false);
-            return {};
-        }();
+    auto pStorage = std::invoke([this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
+        auto storage = std::invoke(
+            [this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
+                AbstractMapStorage::Data data{pc, pDest};
+                switch (format) {
+                case SaveFormatEnum::MM2:
+                    return std::make_unique<MapStorage>(data, this);
+                case SaveFormatEnum::MM2XML:
+                    return std::make_unique<XmlMapStorage>(data, this);
+                case SaveFormatEnum::MMP:
+                    return std::make_unique<MmpMapStorage>(data, this);
+                case SaveFormatEnum::WEB:
+                    return std::make_unique<JsonMapStorage>(data, this);
+                }
+                assert(false);
+                return {};
+            });
         connect(storage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
         return storage;
-    }();
+    });
 
     if (!pStorage || !pStorage->canSave()) {
         showWarning(tr("Selected format cannot save."));
@@ -960,7 +961,7 @@ bool MainWindow::slot_generateBaseMap()
             result.map = oldMap.filterBaseMap(pc);
 
             const auto &newMap = result.map;
-            result.pNewRoom = [&pOldRoom, &oldMap, &newMap, &pc]() -> OptRoomId {
+            result.pNewRoom = std::invoke([&pOldRoom, &oldMap, &newMap, &pc]() -> OptRoomId {
                 if (!pOldRoom) {
                     return std::nullopt;
                 }
@@ -994,7 +995,7 @@ bool MainWindow::slot_generateBaseMap()
                     pc.step();
                 }
                 return std::nullopt;
-            }();
+            });
             return result;
         }
 

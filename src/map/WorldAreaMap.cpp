@@ -57,14 +57,14 @@ void AreaInfoMap::insert(const RoomArea &areaName, const RoomId id)
     m_global.insert(id);
 
     // REVISIT: use update()?
-    m_map.set(areaName, [id, ptr = m_map.find(areaName)]() -> AreaInfo {
-        AreaInfo tmp;
-        if (ptr != nullptr) {
-            tmp = *ptr;
-        }
-        tmp.roomSet.insert(id);
-        return tmp;
-    }());
+    m_map.set(areaName, std::invoke([id, ptr = m_map.find(areaName)]() -> AreaInfo {
+                  AreaInfo tmp;
+                  if (ptr != nullptr) {
+                      tmp = *ptr;
+                  }
+                  tmp.roomSet.insert(id);
+                  return tmp;
+              }));
 }
 
 void AreaInfoMap::remove(const RoomArea &areaName, const RoomId id)

@@ -43,7 +43,7 @@ static void foreach_line(const Source &source, Callback &&callback)
 
 static void print(std::ostream &os, const Source &source)
 {
-    const int width = [&source]() -> int {
+    const int width = std::invoke([&source]() -> int {
         int line = 0;
         bool was_newline = true;
         foreach_line(source, [&line, &was_newline](auto /*sv*/, bool has_newline) {
@@ -53,7 +53,7 @@ static void print(std::ostream &os, const Source &source)
             was_newline = has_newline;
         });
         return static_cast<int>(std::to_string(line).size());
-    }();
+    });
 
     int line = 0;
     bool was_newline = true;

@@ -10,7 +10,7 @@
 
 #include <QtTest>
 namespace { // anonymous
-const auto mysterieuse = []() -> QString {
+const auto mysterieuse = std::invoke([]() -> QString {
     const QString result = "myst\u00E9rieuse cr\u00E9ature";
     {
         const auto expected_ascii = "mysterieuse creature";
@@ -34,7 +34,7 @@ const auto mysterieuse = []() -> QString {
         TEST_ASSERT(utf8[5] == '\xA9');
     }
     return result;
-}();
+});
 
 const QJsonObject gmcpRoomCharsAddObj = {{"desc",
                                           "A magpie is flying around looking for some food."},

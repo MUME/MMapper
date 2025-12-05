@@ -136,7 +136,7 @@ NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::st
 NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string_view args)
 {
     using ParserRoomFieldMap = std::map<std::string, RoomFieldVariant>;
-    static const auto map = []() -> ParserRoomFieldMap {
+    static const auto map = std::invoke([]() -> ParserRoomFieldMap {
         ParserRoomFieldMap result;
 
         auto add_all = [&result](const auto &flags, auto &&convert) {
@@ -171,7 +171,7 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
         add_all(DEFINED_ROOM_PORTABLE_TYPES, identity);
         add_all(DEFINED_ROOM_SUNDEATH_TYPES, identity);
         return result;
-    }();
+    });
     const std::string key = toLowerUtf8(args);
     const auto it = map.find(key);
     if (it == map.end()) {

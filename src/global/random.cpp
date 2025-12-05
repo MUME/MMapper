@@ -4,9 +4,11 @@
 
 #include "random.h"
 
+#include <functional>
+
 NODISCARD static auto expensiveSeed()
 {
-    return std::random_device{}();
+    return std::invoke(std::random_device{});
 }
 
 RandomEngine::RandomEngine()

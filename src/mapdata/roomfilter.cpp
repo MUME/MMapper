@@ -97,7 +97,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
         first = view.takeFirstWord();
     }
 
-    const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
+    const auto opt = std::invoke([&first]() -> std::optional<PatternKindsEnum> {
         if (Abbrev("desc", 1).matches(first)) {
             return PatternKindsEnum::DESC;
         } else if (Abbrev("contents", 2).matches(first)) {
@@ -119,7 +119,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view lin
         } else {
             return std::nullopt;
         }
-    }();
+    });
     if (!opt.has_value()) {
         return std::nullopt;
     }

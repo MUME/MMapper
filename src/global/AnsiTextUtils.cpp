@@ -2177,11 +2177,11 @@ void test_itu()
 #define X_CASE(_n, _lower, _UPPER, _Snake) \
     do { \
         const bool isNone = (AnsiUnderlineStyleEnum::_Snake) == AnsiUnderlineStyleEnum::None; \
-        const auto copy = []() { \
+        const auto copy = std::invoke([]() -> RawAnsi { \
             auto tmp = ul; \
             tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::_Snake); \
             return tmp; \
-        }(); \
+        }); \
         TEST_ASSERT(copy.getUnderlineStyle() == AnsiUnderlineStyleEnum::_Snake); \
         const auto str = ansi_string(ANSI_COLOR_SUPPORT_ALL, copy); \
         const auto opt = mmqt::parseAnsiColor({}, QString::fromUtf8(str.c_str())); \
@@ -2200,13 +2200,13 @@ void test_itu()
 
         // round-trip test with high ansi fg, Itu256 bg, and ItuRGB underline color,
         // and Itu underline style, all in the same code.
-        const auto kitchenSink = []() {
+        const auto kitchenSink = std::invoke([]() -> RawAnsi {
             auto tmp = ul;
             tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Curly);
             tmp.fg = AnsiColorVariant{AnsiColor16Enum::RED};
             tmp.bg = AnsiColorVariant{AnsiColor256{42}};
             return tmp;
-        }();
+        });
         {
             const auto str = ansi_string(ANSI_COLOR_SUPPORT_ALL, kitchenSink);
             if (debugging) {
@@ -2219,13 +2219,13 @@ void test_itu()
             TEST_ASSERT(opt == kitchenSink);
         }
         {
-            const auto expect = []() {
+            const auto expect = std::invoke([]() -> RawAnsi {
                 RawAnsi tmp;
                 tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
                 tmp.fg = AnsiColorVariant(AnsiColor16Enum::red);
                 tmp.bg = AnsiColorVariant(AnsiColor16Enum::cyan);
                 return tmp;
-            }();
+            });
             const auto str = ansi_string(ANSI_COLOR_SUPPORT_LO, kitchenSink);
             if (debugging) {
                 print_string_quoted(std::cout, str.getStdStringView());
@@ -2241,14 +2241,14 @@ void test_itu()
             TEST_ASSERT(!opt.value().hasUnderlineColor()); // NOTE: underline color requires ansi256
         }
         {
-            const auto expect = []() {
+            const auto expect = std::invoke([]() -> RawAnsi {
                 RawAnsi tmp;
                 tmp.setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
                 tmp.fg = AnsiColorVariant(AnsiColor16Enum::red);
                 tmp.bg = AnsiColorVariant{AnsiColor256{42}};
                 tmp.ul = AnsiColorVariant{AnsiColor256{89}};
                 return tmp;
-            }();
+            });
             const auto str = ansi_string(ANSI_COLOR_SUPPORT_256, kitchenSink);
             if (debugging) {
                 print_string_quoted(std::cout, str.getStdStringView());
@@ -2521,7 +2521,7 @@ void testAnsiTextUtils()
                 continue;
             }
 
-            const bool shouldWarn = [input, roundTrip]() -> bool {
+            const bool shouldWarn = std::invoke([input, roundTrip]() -> bool {
                 switch (input.color) {
                 case 59:
                     return roundTrip.color != 240;
@@ -2534,7 +2534,7 @@ void testAnsiTextUtils()
                 default:
                     return input.color >= ANSI256_RGB6_START;
                 }
-            }();
+            });
 
             // values < 16 aren't expected to be able to round-trip.
             os << (shouldWarn ? "WARNING: round-trip-failure" : "INFO");

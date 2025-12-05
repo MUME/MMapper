@@ -713,7 +713,7 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
 
         // can this ever be nullptr?
         if (roomStatTextEdit != nullptr) {
-            const auto s = [&r]() -> std::string {
+            const auto s = std::invoke([&r]() -> std::string {
                 try {
                     std::ostringstream os;
                     {
@@ -724,14 +724,14 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
                 } catch (const std::exception &ex) {
                     return std::string("Exception: ") + ex.what();
                 }
-            }();
+            });
             setAnsiText(roomStatTextEdit, s);
         }
 
         // can this ever be nullptr?
         if (roomDiffTextEdit != nullptr) {
             bool revertible = false;
-            const auto s = [this, &r, &revertible]() -> std::string {
+            const auto s = std::invoke([this, &r, &revertible]() -> std::string {
                 auto &md = deref(m_mapData);
                 auto saved = md.getSavedMap();
                 auto current = md.getCurrentMap();
@@ -762,7 +762,7 @@ void RoomEditAttrDlg::updateDialog(const RoomHandle &r)
                 } catch (const std::exception &ex) {
                     return std::string("Exception: ") + ex.what();
                 }
-            }();
+            });
 
             setAnsiText(roomDiffTextEdit, s);
             revertDiffButton->setEnabled(revertible);
@@ -1222,13 +1222,13 @@ void RoomEditAttrDlg::toggleHiddenDoor()
 }
 
 // terrain tab
-void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
+void RoomEditAttrDlg::terrainToolButtonToggled(const bool val)
 {
     if (!val) {
         return;
     }
 
-    const RoomTerrainEnum rtt = [this]() -> RoomTerrainEnum {
+    const RoomTerrainEnum rtt = std::invoke([this]() -> RoomTerrainEnum {
         // returns the first one that's checked, or UNDEFINED.
         for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
             const auto tmp = static_cast<RoomTerrainEnum>(i);
@@ -1241,7 +1241,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 
         // oops
         return RoomTerrainEnum::UNDEFINED;
-    }();
+    });
 
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
     this->setFieldCommon(RoomFieldVariant{rtt}, FlagModifyModeEnum::ASSIGN);

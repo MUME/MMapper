@@ -590,7 +590,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
     if (m_canvasMouseMode != CanvasMouseModeEnum::MOVE) {
         // NOTE: Y is opposite of what you might expect here.
-        const int vScroll = [this, event]() -> int {
+        const int vScroll = std::invoke([this, event]() -> int {
             const int h = height();
             const int MARGIN = std::min(100, h / 4);
             const auto y = event->position().y();
@@ -601,8 +601,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
             } else {
                 return 0;
             }
-        }();
-        const int hScroll = [this, event]() -> int {
+        });
+        const int hScroll = std::invoke([this, event]() -> int {
             const int w = width();
             const int MARGIN = std::min(100, w / 4);
             const auto x = event->position().x();
@@ -613,7 +613,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
             } else {
                 return 0;
             }
-        }();
+        });
 
         emit sig_continuousScroll(hScroll, vScroll);
     }

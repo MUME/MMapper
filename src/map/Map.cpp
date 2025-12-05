@@ -743,22 +743,22 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
     os << "Area: ";
     {
         const RoomArea &areaName = room.getArea();
-        const auto numInArea = [this, &areaName]() {
+        const auto numInArea = std::invoke([this, &areaName]() -> size_t {
             if (auto opt = countRoomsWithArea(areaName)) {
                 return *opt;
             }
             // Other callers might be willing to tolerate failure,
             // but it's a hard map consistency error here if the area doesn't exist.
             throw std::runtime_error("invalid area");
-        }();
-        const auto relativeSize = [this, &numInArea]() {
+        });
+        const auto relativeSize = std::invoke([this, &numInArea]() -> std::string {
             // std::fmt should make this a lot easier when that's available.
             char buf[32];
             const auto pct = 100.0 * static_cast<double>(numInArea)
                              / static_cast<double>(getRoomsCount());
             std::snprintf(buf, sizeof(buf), "%.1f", pct);
             return std::string{buf};
-        }();
+        });
         if (!areaName.empty()) {
             os.writeQuotedWithColor(ansi_green, ansi_yellow, areaName.getStdStringViewUtf8());
         } else {
@@ -1203,10 +1203,10 @@ Map Map::merge(ProgressCounter &pc,
             pc.step();
         });
 
-        const auto infomarkOffset = [&mapOffset]() -> Coordinate {
+        const auto infomarkOffset = std::invoke([&mapOffset]() -> Coordinate {
             const auto tmp = mapOffset.to_ivec3() * glm::ivec3{INFOMARK_SCALE, INFOMARK_SCALE, 1};
             return Coordinate{tmp.x, tmp.y, tmp.z};
-        }();
+        });
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: new marks"});
         for (auto &im : newMarks) {
@@ -1556,7 +1556,7 @@ void enhanceExits(AnsiOstream &os, const RoomHandle &sourceRoom)
 void displayExits(AnsiOstream &os, const RoomHandle &r, const char sunCharacter)
 {
     const Map &map = r.getMap();
-    const bool hasExits = [&r]() {
+    const auto hasExits = std::invoke([&r]() -> bool {
         for (const ExitDirEnum direction : ALL_EXITS_NESWUD) {
             const auto &e = r.getExit(direction);
             if (e.exitIsExit()) {
@@ -1564,7 +1564,7 @@ void displayExits(AnsiOstream &os, const RoomHandle &r, const char sunCharacter)
             }
         }
         return false;
-    }();
+    });
 
     auto prefix = " ";
 
@@ -1804,13 +1804,13 @@ void testAddAndRemoveIsNoChange()
     TEST_ASSERT(m2 != m1);
     TEST_ASSERT(m2.getRoomsCount() == 2);
 
-    const auto secondId = [&m2, &secondCoord]() -> RoomId {
+    const auto secondId = std::invoke([&m2, &secondCoord]() -> RoomId {
         // REVISIT: add should we add Map::findRoomId(Coordinate)?
         if (const auto r2 = m2.findRoomHandle(secondCoord)) {
             return r2.getId();
         }
         return INVALID_ROOMID;
-    }();
+    });
     TEST_ASSERT(secondId != INVALID_ROOMID);
     const auto secondChangeResult = m2.applySingleChange(pc,
                                                          Change{room_change_types::RemoveRoom{

@@ -203,14 +203,15 @@ void AbstractParser::doConfig(const StringView cmd)
 
     auto &advanced = setConfig().canvas.advanced;
 
-    auto getZoom = []() -> float {
+    // static because it has no captures
+    static const auto getZoom = []() -> float {
         if (auto primary = MapCanvas::getPrimary()) {
             return primary->getRawZoom();
         }
         return 1.f;
     };
 
-    auto setZoom = [this](float f) -> bool {
+    const auto setZoom = [this](float f) -> bool {
         if (auto primary = MapCanvas::getPrimary()) {
             primary->setZoom(f);
             this->graphicsSettingsChanged();
@@ -220,11 +221,11 @@ void AbstractParser::doConfig(const StringView cmd)
         return false;
     };
 
-    auto zoomSyntax = [&getZoom, &setZoom]() -> SharedConstSublist {
-        auto argZoom = TokenMatcher::alloc_copy<ArgFloat>(
+    const auto zoomSyntax = std::invoke([&setZoom]() -> SharedConstSublist {
+        const auto argZoom = TokenMatcher::alloc_copy<ArgFloat>(
             ArgFloat::withMinMax(ScaleFactor::MIN_VALUE, ScaleFactor::MAX_VALUE));
-        auto acceptZoom = Accept(
-            [&getZoom, &setZoom](User &user, const Pair *const args) -> void {
+        const auto acceptZoom = Accept(
+            [&setZoom](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
 
                 if (args == nullptr || !args->car.isFloat()) {
@@ -252,11 +253,11 @@ void AbstractParser::doConfig(const StringView cmd)
             },
             "set zoom");
         return syn("zoom", syn("set", argZoom, acceptZoom));
-    }();
+    });
 
-    auto opt = [this, argBool, optArgEquals](const char *const name,
-                                             NamedConfig<bool> &conf,
-                                             std::string help) {
+    const auto opt = [this, argBool, optArgEquals](const char *const name,
+                                                   NamedConfig<bool> &conf,
+                                                   std::string help) {
         return syn(name,
                    optArgEquals,
                    argBool,
