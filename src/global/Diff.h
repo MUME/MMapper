@@ -16,14 +16,17 @@
 namespace diff {
 
 namespace detail {
+
+// clang-format off
 template<typename Token>
-struct NODISCARD DefaultGetScore
+struct NODISCARD DefaultGetScore final
 {
     NODISCARD float operator()(const Token a, const Token b) const
     {
         return static_cast<float>(a == b);
     }
 };
+// clang-format on
 
 // REVISIT: Consider using a tagged int to make sure we know these are reversed indices.
 struct NODISCARD Pair final
