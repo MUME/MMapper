@@ -161,7 +161,7 @@ QSize DescriptionWidget::sizeHint() const
 
 void DescriptionWidget::updateBackground()
 {
-    auto loadAndCacheImage = [&](const QString &fileName) -> QImage * {
+    const auto loadAndCacheImage = [&](const QString &fileName) -> QImage * {
         if (fileName.isEmpty()) {
             return nullptr;
         }
@@ -185,7 +185,7 @@ void DescriptionWidget::updateBackground()
         return m_imageCache.object(fileName);
     };
 
-    QImage *baseImage = loadAndCacheImage(m_fileName);
+    QImage *const baseImage = loadAndCacheImage(m_fileName);
     if (!baseImage || baseImage->isNull()) {
         m_label->clear();
         return;
@@ -193,15 +193,15 @@ void DescriptionWidget::updateBackground()
 
     // Decide if widget is padded
     const QSize widgetSize = size();
-    bool hasRoomRightOfTextEdit = [&]() {
+    const auto hasRoomRightOfTextEdit = [&]() -> bool {
         const QRect textEditGeometry = m_textEdit->geometry();
         const int spaceRightOfTextEdit = widgetSize.width()
                                          - (textEditGeometry.x() + textEditGeometry.width());
         return baseImage->width() <= spaceRightOfTextEdit;
     }();
-    int topPadding = hasRoomRightOfTextEdit
-                         ? 0
-                         : TOP_PADDING_LINES * QFontMetrics(m_textEdit->font()).lineSpacing();
+    const int topPadding = hasRoomRightOfTextEdit
+                               ? 0
+                               : TOP_PADDING_LINES * QFontMetrics(m_textEdit->font()).lineSpacing();
 
     // Scale image and paint last
     QImage resultImage(widgetSize, QImage::Format_ARGB32_Premultiplied);
@@ -209,21 +209,22 @@ void DescriptionWidget::updateBackground()
     QPainter painter(&resultImage);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     const RAIICallback painterEndRAII{[&]() {
-        QSize imageFitSize(widgetSize.width(), widgetSize.height() - topPadding);
-        QImage scaledImageForCenter = baseImage->scaled(imageFitSize,
-                                                        Qt::KeepAspectRatio,
-                                                        Qt::SmoothTransformation);
-        QPoint center((widgetSize.width() - scaledImageForCenter.width()) / 2,
-                      (widgetSize.height() - scaledImageForCenter.height()) / 2
-                          + (hasRoomRightOfTextEdit ? 0 : topPadding / 2));
+        const QSize imageFitSize(widgetSize.width(), widgetSize.height() - topPadding);
+        const QImage scaledImageForCenter = baseImage->scaled(imageFitSize,
+                                                              Qt::KeepAspectRatio,
+                                                              Qt::SmoothTransformation);
+        const QPoint center((widgetSize.width() - scaledImageForCenter.width()) / 2,
+                            (widgetSize.height() - scaledImageForCenter.height()) / 2
+                                + (hasRoomRightOfTextEdit ? 0 : topPadding / 2));
         painter.drawImage(center, scaledImageForCenter);
         painter.end();
         m_label->setPixmap(QPixmap::fromImage(resultImage));
     }};
 
     // Blur background
-    QSize downscaledBlurSourceSize = QSize(std::max(1, widgetSize.width() / DOWNSCALE_FACTOR),
-                                           std::max(1, widgetSize.height() / DOWNSCALE_FACTOR));
+    const QSize downscaledBlurSourceSize = QSize(std::max(1, widgetSize.width() / DOWNSCALE_FACTOR),
+                                                 std::max(1,
+                                                          widgetSize.height() / DOWNSCALE_FACTOR));
     QImage blurSource = baseImage
                             ->scaled(downscaledBlurSourceSize,
                                      Qt::IgnoreAspectRatio,
@@ -235,16 +236,16 @@ void DescriptionWidget::updateBackground()
         return;
     }
 
-    int blurRadius = std::max(0,
-                              std::min(std::min(BASE_BLUR_RADIUS / DOWNSCALE_FACTOR,
-                                                (blurSource.width() - 1) / 2),
-                                       (blurSource.height() - 1) / 2));
+    const int blurRadius = std::max(0,
+                                    std::min(std::min(BASE_BLUR_RADIUS / DOWNSCALE_FACTOR,
+                                                      (blurSource.width() - 1) / 2),
+                                             (blurSource.height() - 1) / 2));
     if (blurRadius == 0) {
         qDebug() << "Actual blur radius is 0. Skipping blur.";
         return;
     }
 
-    auto stackBlur = [&](QImage &image, int radius) {
+    const auto stackBlur = [&](QImage &image, int radius) {
         const int w = image.width();
         const int h = image.height();
         const int div = 2 * radius + 1;
@@ -293,9 +294,9 @@ void DescriptionWidget::updateBackground()
 
     stackBlur(blurSource, blurRadius);
 
-    QImage fullBlurredBgImage = blurSource.scaled(widgetSize,
-                                                  Qt::IgnoreAspectRatio,
-                                                  Qt::SmoothTransformation);
+    const QImage fullBlurredBgImage = blurSource.scaled(widgetSize,
+                                                        Qt::IgnoreAspectRatio,
+                                                        Qt::SmoothTransformation);
     painter.drawImage(0, 0, fullBlurredBgImage);
 }
 
