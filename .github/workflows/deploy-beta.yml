@@ -2,7 +2,7 @@ name: deploy-beta
 
 on:
   workflow_run:
-    workflows: ["build-release", "build-appimage", "build-flatpak", "build-appx", "build-snap"]
+    workflows: ["build-release", "build-appimage", "build-flatpak", "build-appx", "build-snap", "build-wasm"]
     types:
       - completed
 
@@ -19,7 +19,7 @@ jobs:
         id: check_builds
         with:
           script: |
-            const requiredWorkflows = ['build-release', 'build-appimage', 'build-flatpak', 'build-appx', 'build-snap'];
+            const requiredWorkflows = ['build-release', 'build-appimage', 'build-flatpak', 'build-appx', 'build-snap', 'build-wasm'];
             const commitSha = context.payload.workflow_run.head_sha;
             console.log(`Checking build status for commit: ${commitSha}`);
 

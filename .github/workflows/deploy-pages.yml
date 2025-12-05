@@ -7,7 +7,7 @@ on:
     paths:
       - 'docs/**'
   workflow_run:
-    workflows: ["deploy-release"]
+    workflows: ["deploy-release", "deploy-beta"]
     types:
       - completed
   workflow_dispatch:
@@ -25,6 +25,41 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Download and deploy wasm artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          BETA_DOWNLOADED=false
+          STABLE_DOWNLOADED=false
+
+          # Attempt to download and deploy beta artifact
+          if gh release download beta --pattern 'mmapper-*-wasm.zip' --clobber -O beta_artifact.zip; then
+            unzip -o beta_artifact.zip
+            mv demo docs/beta
+            BETA_DOWNLOADED=true
+            echo "Beta artifact deployed to docs/beta."
+          else
+            echo "Beta wasm artifact not found."
+          fi
+
+          # Attempt to download and deploy stable artifact
+          LATEST_TAG=$(gh release list --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName')
+          if [ -n "$LATEST_TAG" ] && gh release download "$LATEST_TAG" --pattern 'mmapper-*-wasm.zip' --clobber -O stable_artifact.zip; then
+            unzip -o stable_artifact.zip
+            mv demo docs/demo
+            STABLE_DOWNLOADED=true
+            echo "Latest stable release artifact deployed to docs/demo."
+          else
+            echo "Wasm artifact not found in latest stable release."
+          fi
+
+          # Fallback logic
+          if [ "$STABLE_DOWNLOADED" = false ] && [ "$BETA_DOWNLOADED" = true ]; then
+            echo "Stable release not found, using beta as fallback for /demo."
+            cp -r docs/beta docs/demo
+          fi
 
       - name: Prepare Author and Changelog Include
         run: |
