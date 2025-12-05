@@ -11,8 +11,8 @@
 
 #include <vector>
 
-#define X_DECL_GETTER(E, N, name) const MMapper::Array<E, N> &name();
-#define X_DECL_GETTER_DEFINED(E, N, name) const std::vector<E> &name();
+#define X_DECL_GETTER(E, N, name) NODISCARD const MMapper::Array<E, N> &name();
+#define X_DECL_GETTER_DEFINED(E, N, name) NODISCARD const std::vector<E> &name();
 
 namespace enums {
 X_DECL_GETTER_DEFINED(RoomLightEnum, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
