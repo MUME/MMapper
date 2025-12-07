@@ -9,8 +9,8 @@ else()
     message(STATUS "Could not find a local glm; downloading to local source tree")
     include(ExternalProject)
     ExternalProject_Add(glm
-        URL "https://github.com/g-truc/glm/releases/download/0.9.9.7/glm-0.9.9.7.zip"
-        URL_HASH SHA1=CCA9124F1E06FAB44B17D0C0BE651977E508F3AC
+        URL "https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip"
+        URL_HASH SHA1=45408897f419944fb28d8fd835791f237be2ec19
 
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/glm"
         UPDATE_COMMAND ""
