@@ -111,7 +111,7 @@ endif()
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum OS X deployment version" FORCE)
 endif()
 
 if(WIN32)
