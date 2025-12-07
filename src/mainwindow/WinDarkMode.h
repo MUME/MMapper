@@ -17,7 +17,6 @@ public:
     ~WinDarkMode() override;
 
     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;
 
     static bool isDarkMode();
 

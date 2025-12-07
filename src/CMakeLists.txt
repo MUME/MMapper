@@ -763,7 +763,6 @@ endif()
 
 if(WIN32)
     target_link_libraries(mmapper PRIVATE ws2_32)
-    target_link_libraries(mmapper PRIVATE dwmapi)
 endif()
 
 if(WITH_MAP)

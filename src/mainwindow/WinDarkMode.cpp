@@ -11,7 +11,6 @@
 #include <QWidget>
 
 #ifdef WIN32
-#include <dwmapi.h>
 #include <windows.h>
 #endif
 
@@ -20,7 +19,6 @@ WinDarkMode::WinDarkMode(QObject *const parent)
 {
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
         qApp->installNativeEventFilter(this);
-        qApp->installEventFilter(this);
         applyCurrentPalette();
     }
 }
@@ -79,26 +77,6 @@ bool WinDarkMode::isDarkMode()
         }
         RegCloseKey(hKey);
     }
-#endif
-    return false;
-}
-
-bool WinDarkMode::eventFilter(QObject *watched, QEvent *event)
-{
-#ifdef WIN32
-    if (event->type() == QEvent::Show) {
-        QWidget *widget = qobject_cast<QWidget *>(watched);
-        if (widget && widget->isWindow() && isDarkMode()) {
-            //  Enable dark title bar
-            HWND hwnd = reinterpret_cast<HWND>(widget->winId());
-            const DWORD DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-            BOOL useDark = TRUE;
-            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &useDark, sizeof(useDark));
-        }
-    }
-#else
-    std::ignore = watched;
-    std::ignore = event;
 #endif
     return false;
 }
