@@ -13,7 +13,7 @@ else()
     include(ExternalProject)
     ExternalProject_Add(qtkeychain_repo
         GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
-        GIT_TAG "35c4f40186a6ac3260982256e846bb0774ea91de"
+        GIT_TAG "7668a63a3669400223c5a563928ae042f499dbf4"
 
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
         BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"
