@@ -226,8 +226,8 @@ set(mmapper_SRCS
     mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
-    mainwindow/WinDarkMode.cpp
-    mainwindow/WinDarkMode.h
+    mainwindow/ThemeManager.cpp
+    mainwindow/ThemeManager.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp

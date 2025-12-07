@@ -47,4 +47,5 @@ public slots:
 
     void slot_displayMumeClockStateChanged(int);
     void slot_displayXPStatusStateChanged(int);
+    void slot_themeComboBoxChanged(int);
 };

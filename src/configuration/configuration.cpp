@@ -287,6 +287,7 @@ ConstString KEY_SHOW_NOTES = "Show notes";
 ConstString KEY_SHOW_UNSAVED_CHANGES = "Show unsaved changes";
 ConstString KEY_SHOW_MISSING_MAP_ID = "Show missing map id";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
+ConstString KEY_THEME = "Theme";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
@@ -350,6 +351,17 @@ NODISCARD static bool isValidMapMode(const MapModeEnum mode)
     return false;
 }
 
+NODISCARD static bool isValidTheme(const ThemeEnum theme)
+{
+    switch (theme) {
+    case ThemeEnum::System:
+    case ThemeEnum::Dark:
+    case ThemeEnum::Light:
+        return true;
+    }
+    return false;
+}
+
 NODISCARD static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
 {
     switch (encoding) {
@@ -395,6 +407,17 @@ NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
 
     qWarning() << "invalid MapMode:" << input;
     return MapModeEnum::PLAY;
+}
+
+NODISCARD static ThemeEnum sanitizeTheme(const uint32_t input)
+{
+    const auto theme = static_cast<ThemeEnum>(input);
+    if (isValidTheme(theme)) {
+        return theme;
+    }
+
+    qWarning() << "invalid ThemeEnum:" << input;
+    return ThemeEnum::System;
 }
 
 NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
@@ -550,6 +573,8 @@ void Configuration::GeneralSettings::read(const QSettings &conf)
     characterEncoding = sanitizeCharacterEncoding(
         conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncodingEnum::LATIN1))
             .toUInt());
+    m_theme = sanitizeTheme(
+        conf.value(KEY_THEME, static_cast<uint32_t>(ThemeEnum::System)).toUInt());
 }
 
 void Configuration::ConnectionSettings::read(const QSettings &conf)
@@ -760,6 +785,7 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_MAP_MODE, static_cast<uint32_t>(mapMode));
     conf.setValue(KEY_CHECK_FOR_UPDATE, checkForUpdate);
     conf.setValue(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(characterEncoding));
+    conf.setValue(KEY_THEME, static_cast<uint32_t>(m_theme));
 }
 
 void Configuration::ConnectionSettings::write(QSettings &conf) const

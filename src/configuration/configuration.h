@@ -13,6 +13,7 @@
 #include "../global/FixedPoint.h"
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
+#include "../global/Signal2.h"
 #include "NamedConfig.h"
 
 #include <memory>
@@ -44,6 +45,30 @@ public:
 public:
     struct NODISCARD GeneralSettings final
     {
+    private:
+        ChangeMonitor m_changeMonitor;
+        ThemeEnum m_theme = ThemeEnum::System;
+
+    public:
+        explicit GeneralSettings() = default;
+        ~GeneralSettings() = default;
+        DELETE_CTORS_AND_ASSIGN_OPS(GeneralSettings);
+
+    public:
+        NODISCARD ThemeEnum getTheme() const { return m_theme; }
+        void setTheme(const ThemeEnum theme)
+        {
+            m_theme = theme;
+            m_changeMonitor.notifyAll();
+        }
+
+        void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                                    const ChangeMonitor::Function &callback)
+        {
+            return m_changeMonitor.registerChangeCallback(lifetime, callback);
+        }
+
+    public:
         bool firstRun = false;
         QByteArray windowGeometry;
         QByteArray windowState;
@@ -57,7 +82,7 @@ public:
 
     private:
         SUBGROUP();
-    } general{};
+    } general;
 
     struct NODISCARD ConnectionSettings final
     {
