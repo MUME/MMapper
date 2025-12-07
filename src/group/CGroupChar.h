@@ -119,94 +119,31 @@ public:
 #undef X_DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD GroupId getId() const
-    {
-        return m_server.id;
-    }
+    NODISCARD GroupId getId() const { return m_server.id; }
     void setId(GroupId id);
-    NODISCARD const CharacterName &getName() const
-    {
-        return m_server.name;
-    }
-    void setName(CharacterName name)
-    {
-        m_server.name = std::move(name);
-    }
-    NODISCARD const CharacterLabel &getLabel() const
-    {
-        return m_server.label;
-    }
-    void setLabel(CharacterLabel label)
-    {
-        m_server.label = std::move(label);
-    }
-    void setColor(QColor col)
-    {
-        m_internal.color = std::move(col);
-    }
-    void setServerId(ServerRoomId id)
-    {
-        m_server.serverId = id;
-    }
-    NODISCARD const QColor &getColor() const
-    {
-        return m_internal.color;
-    }
+    NODISCARD const CharacterName &getName() const { return m_server.name; }
+    void setName(CharacterName name) { m_server.name = std::move(name); }
+    NODISCARD const CharacterLabel &getLabel() const { return m_server.label; }
+    void setLabel(CharacterLabel label) { m_server.label = std::move(label); }
+    void setColor(QColor col) { m_internal.color = std::move(col); }
+    void setServerId(ServerRoomId id) { m_server.serverId = id; }
+    NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD bool updateFromGmcp(const JsonObj &obj);
-    NODISCARD ServerRoomId getServerId() const
-    {
-        return m_server.serverId;
-    }
-    void setType(CharacterTypeEnum type)
-    {
-        m_server.type = type;
-    }
-    NODISCARD CharacterTypeEnum getType() const
-    {
-        return m_server.type;
-    }
-    NODISCARD CharacterPositionEnum getPosition() const
-    {
-        return m_server.position;
-    }
-    NODISCARD const CharacterAffectFlags &getAffects() const
-    {
-        return m_server.affects;
-    }
-    NODISCARD int getHits() const
-    {
-        return m_server.hp;
-    }
-    NODISCARD int getMaxHits() const
-    {
-        return m_server.maxhp;
-    }
-    NODISCARD int getMana() const
-    {
-        return m_server.mana;
-    }
-    NODISCARD int getMaxMana() const
-    {
-        return m_server.maxmana;
-    }
-    NODISCARD int getMoves() const
-    {
-        return m_server.mp;
-    }
-    NODISCARD int getMaxMoves() const
-    {
-        return m_server.maxmp;
-    }
+    NODISCARD ServerRoomId getServerId() const { return m_server.serverId; }
+    void setType(CharacterTypeEnum type) { m_server.type = type; }
+    NODISCARD CharacterTypeEnum getType() const { return m_server.type; }
+    NODISCARD CharacterPositionEnum getPosition() const { return m_server.position; }
+    NODISCARD const CharacterAffectFlags &getAffects() const { return m_server.affects; }
+    NODISCARD int getHits() const { return m_server.hp; }
+    NODISCARD int getMaxHits() const { return m_server.maxhp; }
+    NODISCARD int getMana() const { return m_server.mana; }
+    NODISCARD int getMaxMana() const { return m_server.maxmana; }
+    NODISCARD int getMoves() const { return m_server.mp; }
+    NODISCARD int getMaxMoves() const { return m_server.maxmp; }
     bool setPosition(CharacterPositionEnum pos);
     bool setScore(const QString &hp, const QString &mana, const QString &moves);
-    void setRoomName(CharacterRoomName name)
-    {
-        m_server.roomName = std::move(name);
-    }
-    NODISCARD const CharacterRoomName &getRoomName() const
-    {
-        return m_server.roomName;
-    }
+    void setRoomName(CharacterRoomName name) { m_server.roomName = std::move(name); }
+    NODISCARD const CharacterRoomName &getRoomName() const { return m_server.roomName; }
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {

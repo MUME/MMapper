@@ -73,64 +73,28 @@ public:
 public:
     NODISCARD QString toQString() const;
     explicit operator QString() const = delete;
-    friend QDebug operator<<(QDebug os, const ParseEvent &ev)
-    {
-        return os << ev.toQString();
-    }
+    friend QDebug operator<<(QDebug os, const ParseEvent &ev) { return os << ev.toQString(); }
 
 public:
     virtual ~ParseEvent();
 
 public:
-    NODISCARD ServerRoomId getServerId() const
-    {
-        return m_serverId;
-    }
-    NODISCARD const RoomArea &getRoomArea() const
-    {
-        return m_roomArea;
-    }
-    NODISCARD const RoomName &getRoomName() const
-    {
-        return m_roomName;
-    }
-    NODISCARD const RoomDesc &getRoomDesc() const
-    {
-        return m_roomDesc;
-    }
-    NODISCARD const RoomContents &getRoomContents() const
-    {
-        return m_roomContents;
-    }
-    NODISCARD const ServerExitIds &getExitIds() const
-    {
-        return m_exitIds;
-    }
+    NODISCARD ServerRoomId getServerId() const { return m_serverId; }
+    NODISCARD const RoomArea &getRoomArea() const { return m_roomArea; }
+    NODISCARD const RoomName &getRoomName() const { return m_roomName; }
+    NODISCARD const RoomDesc &getRoomDesc() const { return m_roomDesc; }
+    NODISCARD const RoomContents &getRoomContents() const { return m_roomContents; }
+    NODISCARD const ServerExitIds &getExitIds() const { return m_exitIds; }
 
-    NODISCARD const RawExits &getExits() const
-    {
-        return m_exits;
-    }
+    NODISCARD const RawExits &getExits() const { return m_exits; }
 
     // DEPRECATED_MSG("use getExits()")
     NODISCARD ExitsFlagsType getExitsFlags() const;
 
-    NODISCARD PromptFlagsType getPromptFlags() const
-    {
-        return m_promptFlags;
-    }
-    NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const
-    {
-        return m_connectedRoomFlags;
-    }
-    NODISCARD CommandEnum getMoveType() const
-    {
-        return m_moveType;
-    }
-    NODISCARD RoomTerrainEnum getTerrainType() const
-    {
-        return m_terrain;
-    }
+    NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
+    NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
+    NODISCARD CommandEnum getMoveType() const { return m_moveType; }
+    NODISCARD RoomTerrainEnum getTerrainType() const { return m_terrain; }
 
     // DEPRECATED: Do not use this in new code;
     // use hasNameDescFlags() or canCreateNewRoom() instead.
@@ -146,18 +110,9 @@ public:
     }
 
     // Returns true of the event specifies room name, room desc, and prompt flags.
-    NODISCARD bool hasNameDescFlags() const
-    {
-        return getNumSkipped() == 0;
-    }
-    NODISCARD bool hasServerId() const
-    {
-        return getServerId() != INVALID_SERVER_ROOMID;
-    }
-    NODISCARD bool canCreateNewRoom() const
-    {
-        return hasServerId() || hasNameDescFlags();
-    }
+    NODISCARD bool hasNameDescFlags() const { return getNumSkipped() == 0; }
+    NODISCARD bool hasServerId() const { return getServerId() != INVALID_SERVER_ROOMID; }
+    NODISCARD bool canCreateNewRoom() const { return hasServerId() || hasNameDescFlags(); }
 
 private:
     template<typename RefType>

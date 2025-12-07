@@ -26,20 +26,11 @@ public:
 #undef X_CHECK
         return true;
     }
-    NODISCARD bool operator!=(const RoomFields &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator!=(const RoomFields &rhs) const { return !(rhs == *this); }
 
 private:
     friend RoomFieldsGetters<RoomFields>;
     friend RoomFieldsSetters<RoomFields>;
-    NODISCARD RoomFields &getRoomFields()
-    {
-        return *this;
-    }
-    NODISCARD const RoomFields &getRoomFields() const
-    {
-        return *this;
-    }
+    NODISCARD RoomFields &getRoomFields() { return *this; }
+    NODISCARD const RoomFields &getRoomFields() const { return *this; }
 };

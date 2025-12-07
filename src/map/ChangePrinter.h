@@ -109,8 +109,5 @@ private:
 #undef X_NOP
 
 public:
-    void print(const Change &change)
-    {
-        this->accept(change);
-    }
+    void print(const Change &change) { this->accept(change); }
 };

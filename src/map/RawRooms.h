@@ -177,10 +177,7 @@ public:
     }
 
 public:
-    NODISCARD RoomStatusEnum getStatus(const RoomId id) const
-    {
-        return getRawRoomRef(id).status;
-    }
+    NODISCARD RoomStatusEnum getStatus(const RoomId id) const { return getRawRoomRef(id).status; }
     void setStatus(const RoomId id, RoomStatusEnum status)
     {
         if (status != getStatus(id)) {
@@ -189,12 +186,6 @@ public:
     }
 
 public:
-    NODISCARD bool operator==(const RawRooms &rhs) const
-    {
-        return m_rooms == rhs.m_rooms;
-    }
-    NODISCARD bool operator!=(const RawRooms &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator==(const RawRooms &rhs) const { return m_rooms == rhs.m_rooms; }
+    NODISCARD bool operator!=(const RawRooms &rhs) const { return !(rhs == *this); }
 };

@@ -64,10 +64,8 @@ struct FloatToSmallIntConversionLimits
 {
     static_assert(std::is_integral_v<IntType>);
     static_assert(std::is_floating_point_v<FloatType>);
-    static_assert(
-        std::is_same_v<
-            FloatType,
-            float> || std::is_same_v<FloatType, double> || std::is_same_v<FloatType, long double>);
+    static_assert(std::is_same_v<FloatType, float> || std::is_same_v<FloatType, double>
+                  || std::is_same_v<FloatType, long double>);
     static_assert(sizeof(IntType) <= sizeof(FloatType));
     static_assert(sizeof(IntType) * CHAR_BIT
                   <= std::numeric_limits<FloatType>::digits + std::is_signed_v<IntType>);
@@ -82,10 +80,8 @@ struct FloatToLargeIntConversionLimits
 public:
     static_assert(std::is_integral_v<IntType>);
     static_assert(std::is_floating_point_v<FloatType>);
-    static_assert(
-        std::is_same_v<
-            FloatType,
-            float> || std::is_same_v<FloatType, double> || std::is_same_v<FloatType, long double>);
+    static_assert(std::is_same_v<FloatType, float> || std::is_same_v<FloatType, double>
+                  || std::is_same_v<FloatType, long double>);
 
 private:
     static inline constexpr auto trueIntMax = std::numeric_limits<IntType>::max();

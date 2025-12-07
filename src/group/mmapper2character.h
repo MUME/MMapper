@@ -110,10 +110,7 @@ class NODISCARD CharacterAffectFlags final
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    NODISCARD bool is##CamelCase() const \
-    { \
-        return contains(CharacterAffectEnum::UPPER_CASE); \
-    }
+    NODISCARD bool is##CamelCase() const { return contains(CharacterAffectEnum::UPPER_CASE); }
     XFOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };

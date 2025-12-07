@@ -40,19 +40,13 @@ public:
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    NODISCARD bool is##CamelCase() const \
-    { \
-        return contains(DoorFlagEnum::UPPER_CASE); \
-    }
+    NODISCARD bool is##CamelCase() const { return contains(DoorFlagEnum::UPPER_CASE); }
     XFOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
 public:
     // REVISIT: this name is different from the rest
-    NODISCARD bool needsKey() const
-    {
-        return isNeedKey();
-    }
+    NODISCARD bool needsKey() const { return isNeedKey(); }
 };
 
 NODISCARD inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagEnum rhs) noexcept

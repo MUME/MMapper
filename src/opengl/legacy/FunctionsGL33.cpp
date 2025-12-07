@@ -7,7 +7,8 @@
 namespace Legacy {
 
 FunctionsGL33::FunctionsGL33(Badge<Functions> badge)
-    : Functions(badge){};
+    : Functions(badge)
+{}
 
 bool FunctionsGL33::virt_canRenderQuads()
 {

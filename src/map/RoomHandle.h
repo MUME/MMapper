@@ -48,14 +48,8 @@ public:
     NODISCARD ExternalRawRoom getRawCopyExternal() const;
 
 public:
-    NODISCARD Map getMap() const
-    {
-        return m_map;
-    }
-    NODISCARD RoomId getId() const
-    {
-        return deref(m_room).getId();
-    }
+    NODISCARD Map getMap() const { return m_map; }
+    NODISCARD RoomId getId() const { return deref(m_room).getId(); }
     NODISCARD ExternalRoomId getIdExternal() const;
 
 private:
@@ -63,10 +57,7 @@ private:
 
 public:
     NODISCARD bool exists() const;
-    NODISCARD explicit operator bool() const
-    {
-        return exists();
-    }
+    NODISCARD explicit operator bool() const { return exists(); }
 
 public:
     NODISCARD ServerRoomId getServerId() const;
@@ -78,21 +69,12 @@ public:
     NODISCARD ExitsFlagsType computeExitsFlags() const;
 
 public:
-    NODISCARD const auto &getExits() const
-    {
-        return getRaw().getExits();
-    }
-    NODISCARD const RawExit &getExit(const ExitDirEnum dir) const
-    {
-        return getRaw().getExit(dir);
-    }
+    NODISCARD const auto &getExits() const { return getRaw().getExits(); }
+    NODISCARD const RawExit &getExit(const ExitDirEnum dir) const { return getRaw().getExit(dir); }
 
 public:
     NODISCARD bool operator==(const RoomHandle &rhs) const;
-    NODISCARD bool operator!=(const RoomHandle &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator!=(const RoomHandle &rhs) const { return !(rhs == *this); }
 
 public:
     // REVISIT: Only used by compareWeakProps() and TestExpandoraCommon::roomCompareTest().

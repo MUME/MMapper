@@ -79,10 +79,7 @@ struct NODISCARD InfomarkDb::Pimpl final
 #undef X_DEFINE_VECTOR
             return true;
         }
-        NODISCARD bool operator!=(const Data &rhs) const
-        {
-            return !(rhs == *this);
-        }
+        NODISCARD bool operator!=(const Data &rhs) const { return !(rhs == *this); }
     };
 
     InfomarkId m_next;
@@ -110,10 +107,7 @@ struct NODISCARD InfomarkDb::Pimpl final
 #undef X_DEFINE_GETTERS
 
 public:
-    NODISCARD const ImmInfomarkIdSet &getIdSet() const
-    {
-        return m_set;
-    }
+    NODISCARD const ImmInfomarkIdSet &getIdSet() const { return m_set; }
 
 public:
     void updateMarker(const InfomarkId id, const RawInfomark &im)
@@ -170,15 +164,9 @@ public:
     {
         return m_next == rhs.m_next && m_set == rhs.m_set && m_data == rhs.m_data;
     }
-    NODISCARD bool operator!=(const Pimpl &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator!=(const Pimpl &rhs) const { return !(rhs == *this); }
 
-    NODISCARD auto clone() const
-    {
-        return std::make_shared<Pimpl>(*this);
-    }
+    NODISCARD auto clone() const { return std::make_shared<Pimpl>(*this); }
 };
 
 InfomarkDb::InfomarkDb()

@@ -341,10 +341,7 @@ public:
     HexPrefixTree hexPrefixTree;
 
 public:
-    void reset()
-    {
-        *this = {};
-    }
+    void reset() { *this = {}; }
 };
 
 NODISCARD Emojis &getEmojis()

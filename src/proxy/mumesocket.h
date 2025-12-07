@@ -216,10 +216,7 @@ private:
 
 protected slots:
     void slot_onBinaryMessageReceived(const QByteArray &);
-    void slot_onError(QAbstractSocket::SocketError e)
-    {
-        virt_onError(e);
-    }
+    void slot_onError(QAbstractSocket::SocketError e) { virt_onError(e); }
 #ifndef Q_OS_WASM
     void onSslErrors(const QList<QSslError> &errors);
 #endif

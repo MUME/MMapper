@@ -29,18 +29,12 @@ private:
 
 public:
 #define X_IMPL_GETTER(_Type, _Prop, _OptInit) \
-    NODISCARD const _Type &get##_Type() const \
-    { \
-        return crtp_get_fields()._Prop; \
-    }
+    NODISCARD const _Type &get##_Type() const { return crtp_get_fields()._Prop; }
     XFOREACH_EXIT_PROPERTY(X_IMPL_GETTER)
 #undef X_IMPL_GETTER
 
 #define X_IMPL_GETTER(UPPER_CASE, lower_case, CamelCase, friendly) \
-    NODISCARD bool exitIs##CamelCase() const \
-    { \
-        return crtp_get_fields().exitFlags.is##CamelCase(); \
-    }
+    NODISCARD bool exitIs##CamelCase() const { return crtp_get_fields().exitFlags.is##CamelCase(); }
     XFOREACH_EXIT_FLAG(X_IMPL_GETTER)
 #undef X_IMPL_GETTER
 
@@ -53,10 +47,7 @@ public:
 #undef X_IMPL_GETTER
 
 public:
-    NODISCARD inline bool hasDoorName() const
-    {
-        return exitIsDoor() && !getDoorName().isEmpty();
-    }
+    NODISCARD inline bool hasDoorName() const { return exitIsDoor() && !getDoorName().isEmpty(); }
 
 public:
     /* older aliases */
@@ -69,22 +60,13 @@ public:
 
 public:
 #define X_DECL_INOUT_FNS(lower, SnakeCase) \
-    NODISCARD bool lower##IsUnique() const \
-    { \
-        return crtp_get_##lower().size() == 1; \
-    } \
+    NODISCARD bool lower##IsUnique() const { return crtp_get_##lower().size() == 1; } \
     NODISCARD bool contains##SnakeCase(RoomId id) const \
     { \
         return crtp_get_##lower().contains(id); \
     } \
-    NODISCARD bool lower##IsEmpty() const \
-    { \
-        return crtp_get_##lower().empty(); \
-    } \
-    NODISCARD auto lower##First() const \
-    { \
-        return crtp_get_##lower().first(); \
-    }
+    NODISCARD bool lower##IsEmpty() const { return crtp_get_##lower().empty(); } \
+    NODISCARD auto lower##First() const { return crtp_get_##lower().first(); }
 
     X_DECL_INOUT_FNS(out, Out)
     X_DECL_INOUT_FNS(in, In)
@@ -103,22 +85,13 @@ private:
 
 public:
 #define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void set##_Type(_Type value) \
-    { \
-        crtp_get_fields()._Prop = std::move(value); \
-    }
+    void set##_Type(_Type value) { crtp_get_fields()._Prop = std::move(value); }
     XFOREACH_EXIT_PROPERTY(X_DEFINE_SETTERS)
 #undef X_DEFINE_SETTERS
 
 #define X_DEFINE_SETTERS(_Type, _Prop, _OptInit) \
-    void add##_Type(_Type value) \
-    { \
-        crtp_get_fields()._Prop |= value; \
-    } \
-    void remove##_Type(_Type value) \
-    { \
-        crtp_get_fields()._Prop &= ~value; \
-    }
+    void add##_Type(_Type value) { crtp_get_fields()._Prop |= value; } \
+    void remove##_Type(_Type value) { crtp_get_fields()._Prop &= ~value; }
     XFOREACH_EXIT_FLAG_PROPERTY(X_DEFINE_SETTERS)
 #undef X_DEFINE_SETTERS
 
@@ -158,10 +131,7 @@ private:
 
 public:
 #define X_IMPL_GETTER(_Type, _Prop, _OptInit) \
-    NODISCARD const _Type &get##_Prop() const \
-    { \
-        return crtp_get_fields()._Prop; \
-    }
+    NODISCARD const _Type &get##_Prop() const { return crtp_get_fields()._Prop; }
     XFOREACH_ROOM_PROPERTY(X_IMPL_GETTER)
 #undef X_IMPL_GETTER
 };
@@ -177,22 +147,13 @@ private:
 
 public:
 #define X_IMPL_SETTER(_Type, _Prop, _OptInit) \
-    void set##_Prop(_Type value) \
-    { \
-        crtp_get_fields()._Prop = std::move(value); \
-    }
+    void set##_Prop(_Type value) { crtp_get_fields()._Prop = std::move(value); }
     XFOREACH_ROOM_PROPERTY(X_IMPL_SETTER)
 #undef X_IMPL_SETTER
 
 #define X_IMPL_SETTER(_Type, _Prop, _OptInit) \
-    void add##_Prop(const _Type value) \
-    { \
-        crtp_get_fields()._Prop |= value; \
-    } \
-    void remove##_Prop(const _Type value) \
-    { \
-        crtp_get_fields()._Prop &= ~value; \
-    }
+    void add##_Prop(const _Type value) { crtp_get_fields()._Prop |= value; } \
+    void remove##_Prop(const _Type value) { crtp_get_fields()._Prop &= ~value; }
     XFOREACH_ROOM_FLAG_PROPERTY(X_IMPL_SETTER)
 #undef X_IMPL_SETTER
 

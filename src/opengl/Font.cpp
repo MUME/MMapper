@@ -514,9 +514,9 @@ private:
             , rotation{(rotationDegrees == 0)
                            ? std::optional<glm::mat4>(std::nullopt)
                            : std::optional<glm::mat4>(
-                               glm::rotate(glm::mat4(1),
-                                           glm::radians(static_cast<float>(rotationDegrees)),
-                                           glm::vec3(0, 0, 1)))}
+                                 glm::rotate(glm::mat4(1),
+                                             glm::radians(static_cast<float>(rotationDegrees)),
+                                             glm::vec3(0, 0, 1)))}
         {}
     };
 

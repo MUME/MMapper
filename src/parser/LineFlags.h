@@ -40,10 +40,7 @@ public:
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    NODISCARD bool is##CamelCase() const \
-    { \
-        return contains(LineFlagEnum::UPPER_CASE); \
-    }
+    NODISCARD bool is##CamelCase() const { return contains(LineFlagEnum::UPPER_CASE); }
     XFOREACH_LINE_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };

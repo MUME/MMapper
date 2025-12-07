@@ -63,10 +63,7 @@ public:
     explicit ExitFieldVariant(CamelCase val) \
         : m_data{std::move(val)} \
     {} \
-    const CamelCase &get##CamelCase() const \
-    { \
-        return std::get<CamelCase>(m_data); \
-    }
+    const CamelCase &get##CamelCase() const { return std::get<CamelCase>(m_data); }
     XFOREACH_EXIT_FIELD(X_DEFINE_CTOR_AND_GETTER, X_NOP)
 #undef X_DEFINE_CTOR_AND_GETTER
 #undef X_NOP
@@ -104,10 +101,7 @@ public:
     {
         return m_data == other.m_data;
     }
-    NODISCARD bool operator!=(const ExitFieldVariant &other) const
-    {
-        return !operator==(other);
-    }
+    NODISCARD bool operator!=(const ExitFieldVariant &other) const { return !operator==(other); }
 };
 
 NODISCARD extern DoorName makeDoorName(std::string doorName);

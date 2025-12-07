@@ -424,14 +424,8 @@ public:
     { \
         return m_flags.contains(AnsiStyleFlagEnum::_Snake); \
     } \
-    constexpr void set##_Snake() \
-    { \
-        m_flags.insert(AnsiStyleFlagEnum::_Snake); \
-    } \
-    constexpr void clear##_Snake() \
-    { \
-        m_flags.remove(AnsiStyleFlagEnum::_Snake); \
-    }
+    constexpr void set##_Snake() { m_flags.insert(AnsiStyleFlagEnum::_Snake); } \
+    constexpr void clear##_Snake() { m_flags.remove(AnsiStyleFlagEnum::_Snake); }
     XFOREACH_ANSI_STYLE_EXCEPT_UNDERLINE(X_DECL_ACCESSORS)
 #undef X_DECL_ACCESSORS
 
@@ -452,10 +446,7 @@ public:
     {
         return m_flags.contains(AnsiStyleFlagEnum::Underline);
     }
-    constexpr void setUnderline()
-    {
-        setUnderlineStyle(AnsiUnderlineStyleEnum::Normal);
-    }
+    constexpr void setUnderline() { setUnderlineStyle(AnsiUnderlineStyleEnum::Normal); }
     constexpr void clearUnderline()
     {
         m_flags.remove(AnsiStyleFlagEnum::Underline);
@@ -474,10 +465,7 @@ public:
     }
 
 public:
-    NODISCARD constexpr AnsiStyleFlags getFlags() const
-    {
-        return m_flags;
-    }
+    NODISCARD constexpr AnsiStyleFlags getFlags() const { return m_flags; }
     NODISCARD constexpr AnsiUnderlineStyleEnum getUnderlineStyle() const
     {
         return m_underlineStyle;
@@ -519,10 +507,7 @@ public:
         return fg == rhs.fg && bg == rhs.bg && ul == rhs.ul && m_flags == rhs.m_flags
                && m_underlineStyle == rhs.m_underlineStyle;
     }
-    NODISCARD constexpr bool operator!=(const RawAnsi &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD constexpr bool operator!=(const RawAnsi &rhs) const { return !(rhs == *this); }
 
 public:
     friend std::ostream &to_stream(std::ostream &os, const RawAnsi &raw);

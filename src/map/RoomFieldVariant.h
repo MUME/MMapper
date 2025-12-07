@@ -69,10 +69,7 @@ public:
     explicit RoomFieldVariant(Type val) \
         : m_data{std::move(val)} \
     {} \
-    NODISCARD const Type &get##CamelCase() const \
-    { \
-        return std::get<Type>(m_data); \
-    }
+    NODISCARD const Type &get##CamelCase() const { return std::get<Type>(m_data); }
     XFOREACH_ROOM_FIELD(X_DEFINE_CTOR_AND_GETTER, X_NOP)
 #undef X_DEFINE_CTOR_AND_GETTER
 #undef X_NOP
@@ -111,8 +108,5 @@ public:
     {
         return m_data == other.m_data;
     }
-    NODISCARD bool operator!=(const RoomFieldVariant &other) const
-    {
-        return !operator==(other);
-    }
+    NODISCARD bool operator!=(const RoomFieldVariant &other) const { return !operator==(other); }
 };

@@ -136,17 +136,11 @@ public:
 #undef X_DECL
 
 private:
-    void log(const QString &msg)
-    {
-        emit sig_log("MumeClock", msg);
-    }
+    void log(const QString &msg) { emit sig_log("MumeClock", msg); }
 
 public:
     void setPrecision(MumeClockPrecisionEnum state);
-    void setLastSyncEpoch(int64_t epoch)
-    {
-        m_lastSyncEpoch = epoch;
-    }
+    void setLastSyncEpoch(int64_t epoch) { m_lastSyncEpoch = epoch; }
 
     NODISCARD static int getMumeMonth(const QString &monthName);
     NODISCARD static int getMumeWeekday(const QString &weekdayName);

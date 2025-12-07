@@ -76,44 +76,20 @@ public:
                                RemoteEdit *remoteEdit);
 
 public:
-    NODISCARD auto getInternalId() const
-    {
-        return m_internalId;
-    }
-    NODISCARD auto getSessionId() const
-    {
-        return m_sessionId;
-    }
-    NODISCARD bool isEditSession() const
-    {
-        return m_sessionId != REMOTE_VIEW_SESSION_ID;
-    }
-    NODISCARD const QString &getContent() const
-    {
-        return m_content;
-    }
-    void setContent(QString content)
-    {
-        m_content = std::move(content);
-    }
+    NODISCARD auto getInternalId() const { return m_internalId; }
+    NODISCARD auto getSessionId() const { return m_sessionId; }
+    NODISCARD bool isEditSession() const { return m_sessionId != REMOTE_VIEW_SESSION_ID; }
+    NODISCARD const QString &getContent() const { return m_content; }
+    void setContent(QString content) { m_content = std::move(content); }
     void cancel();
     void save();
 
 public:
-    NODISCARD bool isConnected() const
-    {
-        return m_connected;
-    }
-    void setDisconnected()
-    {
-        m_connected = false;
-    }
+    NODISCARD bool isConnected() const { return m_connected; }
+    void setDisconnected() { m_connected = false; }
 
 protected slots:
-    void slot_onCancel()
-    {
-        cancel();
-    }
+    void slot_onCancel() { cancel(); }
     void slot_onSave(const QString &content)
     {
         setContent(content);

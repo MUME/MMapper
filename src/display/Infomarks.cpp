@@ -123,9 +123,8 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
     for (auto &it : result) {
         const int layer = it.first;
         InfomarksBatch batch{getOpenGL(), getGLFont()};
-        db.getIdSet().for_each([&](const InfomarkId id) {
-            drawInfomark(batch, InfomarkHandle{db, id}, layer);
-        });
+        db.getIdSet().for_each(
+            [&](const InfomarkId id) { drawInfomark(batch, InfomarkHandle{db, id}, layer); });
         it.second = batch.getMeshes();
     }
 

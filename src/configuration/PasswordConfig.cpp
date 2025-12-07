@@ -34,7 +34,8 @@ PasswordConfig::PasswordConfig(QObject *const parent)
     });
 }
 #else
-{}
+{
+}
 #endif
 
 void PasswordConfig::setPassword(const QString &password)

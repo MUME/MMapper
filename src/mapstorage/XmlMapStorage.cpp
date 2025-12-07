@@ -122,10 +122,7 @@ private:
     // converting an enumeration type to its corresponding Type value,
     // which can be used as argument in enumToString() and stringToEnum()
 #define X_DECL(X) \
-    MAYBE_UNUSED NODISCARD static constexpr TypeEnum enumToType(X) \
-    { \
-        return TypeEnum::X; \
-    }
+    MAYBE_UNUSED NODISCARD static constexpr TypeEnum enumToType(X) { return TypeEnum::X; }
     XFOREACH_TYPE_ENUM(X_DECL)
 #undef X_DECL
 
@@ -137,23 +134,23 @@ Converter::Converter()
     : m_enumToStrings{
 #define X_DECL(X) /* */ {#X},
 #define X_DECL2(X, ...) {#X},
-        /* these must match the enum types listed in XFOREACH_TYPE_ENUM above */
-        {XFOREACH_RoomAlignEnum(X_DECL)},
-        {XFOREACH_DOOR_FLAG(X_DECL2)},
-        {XFOREACH_EXIT_FLAG(X_DECL2)},
-        {XFOREACH_RoomLightEnum(X_DECL)},
-        {XFOREACH_ROOM_LOAD_FLAG(X_DECL)},
-        {XFOREACH_INFOMARK_CLASS(X_DECL)},
-        {XFOREACH_INFOMARK_TYPE(X_DECL)},
-        {XFOREACH_ROOM_MOB_FLAG(X_DECL)},
-        {XFOREACH_RoomPortableEnum(X_DECL)},
-        {XFOREACH_RoomRidableEnum(X_DECL)},
-        {XFOREACH_RoomSundeathEnum(X_DECL)},
-        {XFOREACH_RoomTerrainEnum(X_DECL)},
-        {XFOREACH_TYPE_ENUM(X_DECL)},
+          /* these must match the enum types listed in XFOREACH_TYPE_ENUM above */
+          {XFOREACH_RoomAlignEnum(X_DECL)},
+          {XFOREACH_DOOR_FLAG(X_DECL2)},
+          {XFOREACH_EXIT_FLAG(X_DECL2)},
+          {XFOREACH_RoomLightEnum(X_DECL)},
+          {XFOREACH_ROOM_LOAD_FLAG(X_DECL)},
+          {XFOREACH_INFOMARK_CLASS(X_DECL)},
+          {XFOREACH_INFOMARK_TYPE(X_DECL)},
+          {XFOREACH_ROOM_MOB_FLAG(X_DECL)},
+          {XFOREACH_RoomPortableEnum(X_DECL)},
+          {XFOREACH_RoomRidableEnum(X_DECL)},
+          {XFOREACH_RoomSundeathEnum(X_DECL)},
+          {XFOREACH_RoomTerrainEnum(X_DECL)},
+          {XFOREACH_TYPE_ENUM(X_DECL)},
 #undef X_DECL
 #undef X_DECL2
-    }
+      }
 {
     if (m_enumToStrings.size() != NUM_XMLMAPSTORAGE_TYPE) {
         throw std::runtime_error("XmlMapStorage internal error: enum names do not match enum types");

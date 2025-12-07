@@ -113,18 +113,9 @@ public:
 #undef X_DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD const GmcpMessageName &getName() const
-    {
-        return m_name;
-    }
-    NODISCARD const std::optional<GmcpJson> &getJson() const
-    {
-        return m_json;
-    }
-    NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const
-    {
-        return m_document;
-    }
+    NODISCARD const GmcpMessageName &getName() const { return m_name; }
+    NODISCARD const std::optional<GmcpJson> &getJson() const { return m_json; }
+    NODISCARD const std::optional<GmcpJsonDocument> &getJsonDocument() const { return m_document; }
 
 public:
     NODISCARD QByteArray toRawBytes() const;

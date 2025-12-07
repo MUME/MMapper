@@ -52,8 +52,8 @@ public:
     template<typename U>
     NODISCARD constexpr bool operator==(const U intValue) const
     {
-        static_assert((std::is_integral_v<
-                           U> && std::is_integral_v<T> && std::is_signed_v<U> == std::is_signed_v<T>)
+        static_assert((std::is_integral_v<U> && std::is_integral_v<T>
+                       && std::is_signed_v<U> == std::is_signed_v<T>)
                       || (std::is_floating_point_v<U> && std::is_floating_point_v<T>) );
         return is_valid() && m_value == intValue;
     }

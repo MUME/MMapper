@@ -520,9 +520,9 @@ public:
     NODISCARD constexpr bool empty() const noexcept { return size() == 0; }
     NODISCARD constexpr bool has_value() const noexcept { return !empty(); }
     NODISCARD constexpr explicit operator bool() const noexcept { return has_value(); }
-    NODISCARD constexpr StringViewType value() const &&noexcept = delete;
-    NODISCARD constexpr StringViewType value() const &noexcept { return lvalue(); }
-    NODISCARD constexpr StringViewType rvalue() const &&noexcept { return lvalue(); }
+    NODISCARD constexpr StringViewType value() const && noexcept = delete;
+    NODISCARD constexpr StringViewType value() const & noexcept { return lvalue(); }
+    NODISCARD constexpr StringViewType rvalue() const && noexcept { return lvalue(); }
     NODISCARD constexpr StringViewType lvalue() const &
     {
         if (!has_value()) {
@@ -561,12 +561,12 @@ public:
     NODISCARD StringType steal_buffer() { return std::exchange(m_units, {}); }
 
 public:
-    NODISCARD const StringType &str() const &noexcept { return m_units; }
+    NODISCARD const StringType &str() const & noexcept { return m_units; }
     NODISCARD StringType str() && { return steal_buffer(); }
 
 public:
     NODISCARD ViewType get_string_view() const && = delete;
-    NODISCARD ViewType get_string_view() const &noexcept { return m_units; }
+    NODISCARD ViewType get_string_view() const & noexcept { return m_units; }
 
 public:
     void set_unknown(const CharType codepoint)

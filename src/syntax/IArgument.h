@@ -21,7 +21,8 @@ public:
 
 private:
     NODISCARD virtual MatchResult virt_match(const ParserInput &input,
-                                             IMatchErrorLogger *logger) const = 0;
+                                             IMatchErrorLogger *logger) const
+        = 0;
     virtual std::ostream &virt_to_stream(std::ostream &) const = 0;
 
 public:

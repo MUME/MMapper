@@ -18,23 +18,14 @@ public:
     void add(const Change &change) { m_changes.emplace_back(change); }
 #define X_NOP()
 #define X_DEFINE_ADD(_Type) \
-    void add(const _Type &change) \
-    { \
-        add(Change{change}); \
-    }
+    void add(const _Type &change) { add(Change{change}); }
     XFOREACH_CHANGE_TYPE(X_DEFINE_ADD, X_NOP)
 #undef X_DEFINE_ADD
 #undef X_NOP
 
 public:
-    const std::vector<Change> &getChanges() const
-    {
-        return m_changes;
-    }
-    NODISCARD bool empty() const
-    {
-        return m_changes.empty();
-    }
+    const std::vector<Change> &getChanges() const { return m_changes; }
+    NODISCARD bool empty() const { return m_changes.empty(); }
 };
 
 using SigMapChangeList = MmQtHandle<ChangeList>;

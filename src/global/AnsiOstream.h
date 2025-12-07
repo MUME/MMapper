@@ -137,11 +137,11 @@ public:
     void write(std::string_view sv);
 
     template<typename T>
-    auto write(const T n) -> std::enable_if_t<
-        (std::is_integral_v<
-             T> && !std::is_same_v<char32_t, std::decay_t<T>> && sizeof(char) < sizeof(T))
-            || std::is_floating_point_v<T>,
-        void>
+    auto write(const T n)
+        -> std::enable_if_t<(std::is_integral_v<T> && !std::is_same_v<char32_t, std::decay_t<T>>
+                             && sizeof(char) < sizeof(T))
+                                || std::is_floating_point_v<T>,
+                            void>
     {
         auto s = std::to_string(n);
         write(std::string_view{s});

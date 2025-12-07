@@ -134,12 +134,12 @@ cpack
 
 ## Optional: Code Style Check
 
-Run `clang-format` via Docker:
+Run `clang-format-18` via Docker:
 
 ```bash
 docker run --rm --platform linux/amd64 \
   -v "$(pwd):$(pwd)" -w "$(pwd)" \
-  ghcr.io/jidicula/clang-format:14 \
+  ghcr.io/jidicula/clang-format:18 \
   --dry-run --Werror --style=file \
   $(find src tests -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.hpp')
 ```

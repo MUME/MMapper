@@ -73,10 +73,7 @@ struct NODISCARD RawInfomark final
 
 public:
 #define X_DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
-    NODISCARD inline const _Type &get##_Prop() const \
-    { \
-        return _Prop; \
-    } \
+    NODISCARD inline const _Type &get##_Prop() const { return _Prop; } \
     void set##_Prop(_Type value);
     XFOREACH_INFOMARK_PROPERTY(X_DECL_GETTERS_AND_SETTERS)
 #undef X_DECL_GETTERS_AND_SETTERS
@@ -153,10 +150,7 @@ public:
 
 public:
     NODISCARD const ImmInfomarkIdSet &getIdSet() const;
-    NODISCARD bool empty() const
-    {
-        return getIdSet().empty();
-    }
+    NODISCARD bool empty() const { return getIdSet().empty(); }
 
 public:
     NODISCARD InfomarkId addMarker(const RawInfomark &im);
@@ -169,10 +163,7 @@ public:
 public:
     NODISCARD InfomarkHandle find(InfomarkId) const;
     NODISCARD bool operator==(const InfomarkDb &rhs) const;
-    NODISCARD bool operator!=(const InfomarkDb &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator!=(const InfomarkDb &rhs) const { return !(rhs == *this); }
 };
 
 struct NODISCARD InfomarkHandle final
@@ -194,22 +185,10 @@ public:
 #undef X_DECL_GETTERS_AND_SETTERS
 
 public:
-    NODISCARD InfomarkId getId() const
-    {
-        return m_id;
-    }
-    NODISCARD bool exists() const
-    {
-        return m_id != INVALID_INFOMARK_ID;
-    }
-    NODISCARD explicit operator bool() const
-    {
-        return exists();
-    }
-    NODISCARD RawInfomark getRawCopy() const
-    {
-        return m_db.getRawCopy(m_id);
-    }
+    NODISCARD InfomarkId getId() const { return m_id; }
+    NODISCARD bool exists() const { return m_id != INVALID_INFOMARK_ID; }
+    NODISCARD explicit operator bool() const { return exists(); }
+    NODISCARD RawInfomark getRawCopy() const { return m_db.getRawCopy(m_id); }
 };
 
 using InfomarkPtr = std::optional<InfomarkHandle>;

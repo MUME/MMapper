@@ -24,20 +24,11 @@ public:
 #undef X_CHECK
         return true;
     }
-    NODISCARD bool operator!=(const ExitFields &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    NODISCARD bool operator!=(const ExitFields &rhs) const { return !(rhs == *this); }
 
 private:
     friend ExitFieldsGetters<ExitFields>;
     friend ExitFieldsSetters<ExitFields>;
-    NODISCARD ExitFields &getExitFields()
-    {
-        return *this;
-    }
-    NODISCARD const ExitFields &getExitFields() const
-    {
-        return *this;
-    }
+    NODISCARD ExitFields &getExitFields() { return *this; }
+    NODISCARD const ExitFields &getExitFields() const { return *this; }
 };
