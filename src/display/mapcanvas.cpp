@@ -264,7 +264,7 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
 
                     emit sig_mapMove(-delta2.x, -delta2.y);
 
-                    // NOTE: caller is expected to call resizeGL() after this function,
+                    // NOTE: caller is expected to call update() after this function,
                     // so we don't have to update the viewport.
                 }
 
@@ -276,7 +276,7 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
             if (numSteps != 0) {
                 zoomAndMaybeRecenter(numSteps);
                 zoomChanged();
-                resizeGL();
+                update();
             }
         }
         break;
@@ -325,7 +325,7 @@ bool MapCanvas::event(QEvent *const event)
             m_scaleFactor.endPinch();
             zoomChanged(); // might not have actually changed
         }
-        resizeGL();
+        update();
         return true;
     };
 
@@ -951,40 +951,40 @@ QSize MapCanvas::sizeHint() const
 void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)
 {
     m_scroll = worldPos;
-    resizeGL();
+    update();
 }
 
 void MapCanvas::slot_setHorizontalScroll(const float worldX)
 {
     m_scroll.x = worldX;
-    resizeGL();
+    update();
 }
 
 void MapCanvas::slot_setVerticalScroll(const float worldY)
 {
     m_scroll.y = worldY;
-    resizeGL();
+    update();
 }
 
 void MapCanvas::slot_zoomIn()
 {
     m_scaleFactor.logStep(1);
     zoomChanged();
-    resizeGL();
+    update();
 }
 
 void MapCanvas::slot_zoomOut()
 {
     m_scaleFactor.logStep(-1);
     zoomChanged();
-    resizeGL();
+    update();
 }
 
 void MapCanvas::slot_zoomReset()
 {
     m_scaleFactor.set(1.f);
     zoomChanged();
-    resizeGL();
+    update();
 }
 
 void MapCanvas::onMovement()

@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
+#include "../opengl/OpenGLConfig.h"
 #include "AdvancedGraphics.h"
 #include "ui_graphicspage.h"
 
@@ -49,11 +50,19 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     connect(ui->antialiasingSamplesComboBox,
             &QComboBox::currentTextChanged,
             this,
-            &GraphicsPage::slot_antialiasingSamplesTextChanged);
-    connect(ui->trilinearFilteringCheckBox,
-            &QCheckBox::stateChanged,
-            this,
-            &GraphicsPage::slot_trilinearFilteringStateChanged);
+            [this](const QString & /*text*/) {
+                if (ui->antialiasingSamplesComboBox->isEnabled()) {
+                    setConfig().canvas.antialiasingSamples.set(
+                        ui->antialiasingSamplesComboBox
+                            ->itemData(ui->antialiasingSamplesComboBox->currentIndex())
+                            .toInt());
+                    graphicsSettingsChanged();
+                }
+            });
+    connect(ui->trilinearFilteringCheckBox, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
+        setConfig().canvas.trilinearFiltering.set(ui->trilinearFilteringCheckBox->isChecked());
+        graphicsSettingsChanged();
+    });
 
     connect(ui->drawUnsavedChanges, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
         setConfig().canvas.showUnsavedChanges.set(ui->drawUnsavedChanges->isChecked());
@@ -114,11 +123,23 @@ void GraphicsPage::slot_loadConfig()
     setIconColor(ui->darkLitPushButton, settings.roomDarkLitColor);
     setIconColor(ui->connectionNormalPushButton, settings.connectionNormalColor);
 
-    const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
-    const int index = utils::clampNonNegative(
-        ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
-    ui->antialiasingSamplesComboBox->setCurrentIndex(index);
-    ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering);
+    {
+        ui->antialiasingSamplesComboBox->setEnabled(false);
+        ui->antialiasingSamplesComboBox->clear();
+        const int maxSamples = OpenGLConfig::getMaxSamples();
+        for (int i = 0; i <= maxSamples; i *= 2) {
+            ui->antialiasingSamplesComboBox->addItem(i != 0 ? QString("%1x").arg(i) : "Off", i);
+            if (i == 0) {
+                i = 1;
+            }
+        }
+        const auto samples = std::min(settings.antialiasingSamples.get(), maxSamples);
+        const int index = utils::clampNonNegative(
+            ui->antialiasingSamplesComboBox->findData(QVariant(samples), Qt::UserRole));
+        ui->antialiasingSamplesComboBox->setCurrentIndex(index);
+        ui->antialiasingSamplesComboBox->setEnabled(true);
+    }
+    ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering.get());
 
     ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
     ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());
@@ -136,18 +157,6 @@ void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *cons
         namedColor = Color(newColor);
         setIconColor(pushButton, namedColor);
     }
-}
-
-void GraphicsPage::slot_antialiasingSamplesTextChanged(const QString & /*unused*/)
-{
-    setConfig().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
-    graphicsSettingsChanged();
-}
-
-void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)
-{
-    setConfig().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
-    graphicsSettingsChanged();
 }
 
 void GraphicsPage::slot_drawNeedsUpdateStateChanged(int /*unused*/)

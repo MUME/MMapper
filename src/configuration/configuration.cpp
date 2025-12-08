@@ -629,8 +629,8 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     connectionNormalColor = lookupColor(KEY_CONNECTION_NORMAL_COLOR, Colors::white.toHex());
     roomDarkColor = lookupColor(KEY_ROOM_DARK_COLOR, DEFAULT_DARK_COLOR);
     roomDarkLitColor = lookupColor(KEY_ROOM_DARK_LIT_COLOR, DEFAULT_NO_SUNDEATH_COLOR);
-    antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
-    trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, true).toBool();
+    antialiasingSamples.set(conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt());
+    trilinearFiltering.set(conf.value(KEY_USE_TRILINEAR_FILTERING, true).toBool());
     advanced.use3D.set(conf.value(KEY_3D_CANVAS, false).toBool());
     advanced.autoTilt.set(conf.value(KEY_3D_AUTO_TILT, true).toBool());
     advanced.printPerfStats.set(conf.value(KEY_3D_PERFSTATS, IS_DEBUG_BUILD).toBool());
@@ -815,8 +815,8 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_ROOM_DARK_COLOR, getQColorName(roomDarkColor));
     conf.setValue(KEY_ROOM_DARK_LIT_COLOR, getQColorName(roomDarkLitColor));
     conf.setValue(KEY_CONNECTION_NORMAL_COLOR, getQColorName(connectionNormalColor));
-    conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples);
-    conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering);
+    conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples.get());
+    conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering.get());
     conf.setValue(KEY_3D_CANVAS, advanced.use3D.get());
     conf.setValue(KEY_3D_AUTO_TILT, advanced.autoTilt.get());
     conf.setValue(KEY_3D_PERFSTATS, advanced.printPerfStats.get());

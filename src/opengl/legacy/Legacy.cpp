@@ -237,6 +237,7 @@ Functions::Functions(Badge<Functions>)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
+    , m_fbo{std::make_unique<FBO>()}
 {}
 
 Functions::~Functions()
@@ -283,6 +284,10 @@ TexLookup &Functions::getTexLookup()
 {
     return deref(m_texLookup);
 }
+FBO &Functions::getFBO()
+{
+    return deref(m_fbo);
+}
 
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().
 void Functions::checkError()
@@ -317,6 +322,26 @@ void Functions::checkError()
     }
 
 #undef CASE
+}
+
+void Functions::configureFbo(int samples)
+{
+    getFBO().configure(getPhysicalViewport(), samples);
+}
+
+void Functions::bindFbo()
+{
+    getFBO().bind();
+}
+
+void Functions::releaseFbo()
+{
+    getFBO().release();
+}
+
+void Functions::blitFboToDefault()
+{
+    getFBO().blitToDefault();
 }
 
 } // namespace Legacy

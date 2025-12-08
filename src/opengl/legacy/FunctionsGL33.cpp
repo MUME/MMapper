@@ -51,45 +51,4 @@ void FunctionsGL33::virt_enableProgramPointSize(const bool enable)
 #endif
 }
 
-bool FunctionsGL33::virt_tryEnableMultisampling(const int requestedSamples)
-{
-#ifndef MMAPPER_NO_OPENGL
-    const auto getSampleBuffers = [this]() -> GLint {
-        GLint buffers;
-        Base::glGetIntegerv(GL_SAMPLE_BUFFERS, &buffers);
-        return buffers;
-    };
-
-    const auto getSamples = [this]() -> GLint {
-        GLint samples;
-        Base::glGetIntegerv(GL_SAMPLES, &samples);
-        return samples;
-    };
-
-    const bool hasMultisampling = getSampleBuffers() > 1 || getSamples() > 1;
-    if (hasMultisampling && requestedSamples > 0) {
-        Base::glEnable(GL_MULTISAMPLE);
-        Base::glEnable(GL_LINE_SMOOTH);
-        Base::glDisable(GL_POLYGON_SMOOTH);
-        Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        return true;
-    } else {
-        // NOTE: Currently we can use OpenGL 2.1 to fake multisampling with point/line/polygon smoothing.
-        // TODO: We can use OpenGL 3.x FBOs to do multisampling even if the default framebuffer doesn't support it.
-        if (requestedSamples > 0) {
-            Base::glEnable(GL_LINE_SMOOTH);
-            Base::glDisable(GL_POLYGON_SMOOTH);
-            Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            return true;
-        } else {
-            Base::glDisable(GL_LINE_SMOOTH);
-            Base::glDisable(GL_POLYGON_SMOOTH);
-            return false;
-        }
-    }
-#else
-    return false;
-#endif
-}
-
 } // namespace Legacy

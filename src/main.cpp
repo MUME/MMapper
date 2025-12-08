@@ -118,7 +118,6 @@ static bool setSurfaceFormat()
     OpenGLConfig::setHighestReportableVersionString(probeResult.highestVersionString);
     OpenGLConfig::setBackendType(probeResult.backendType);
     OpenGLConfig::setIsCompat(probeResult.isCompat);
-    fmt.setSamples(getConfig().canvas.antialiasingSamples);
     QSurfaceFormat::setDefaultFormat(fmt);
     return true;
 }

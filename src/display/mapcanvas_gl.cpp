@@ -238,6 +238,7 @@ void MapCanvas::initializeGL()
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
     font.init();
+    updateTextures();
 
     // compile all shaders
     {
@@ -268,6 +269,16 @@ void MapCanvas::initializeGL()
 
     setConfig().canvas.showUnmappedExits.registerChangeCallback(m_lifetime, [this]() {
         this->forceUpdateMeshes();
+    });
+
+    setConfig().canvas.antialiasingSamples.registerChangeCallback(m_lifetime, [this]() {
+        this->updateMultisampling();
+        this->update();
+    });
+
+    setConfig().canvas.trilinearFiltering.registerChangeCallback(m_lifetime, [this]() {
+        this->updateTextures();
+        this->update();
     });
 }
 
@@ -472,6 +483,7 @@ void MapCanvas::resizeGL(int width, int height)
     }
 
     setViewportAndMvp(width, height);
+    updateMultisampling();
 
     // Render
     update();
@@ -622,6 +634,8 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
+
+    gl.bindFbo();
     gl.clear(Color{getConfig().canvas.backgroundColor});
 
     if (m_data.isEmpty()) {
@@ -634,6 +648,9 @@ void MapCanvas::actuallyPaintGL()
     paintSelections();
     paintCharacters();
     paintDifferences();
+
+    gl.releaseFbo();
+    gl.blitFboToDefault();
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
@@ -825,8 +842,6 @@ void MapCanvas::paintGL()
     }
 
     {
-        updateMultisampling();
-        updateTextures();
         if (showPerfStats) {
             optAfterTextures = Clock::now();
         }
@@ -1003,15 +1018,8 @@ void MapCanvas::paintSelectionArea()
 
 void MapCanvas::updateMultisampling()
 {
-    const int wantMultisampling = getConfig().canvas.antialiasingSamples;
-    std::optional<int> &activeStatus = m_graphicsOptionsStatus.multisampling;
-    if (activeStatus == wantMultisampling) {
-        return;
-    }
-
-    // REVISIT: check return value?
-    MAYBE_UNUSED const bool enabled = getOpenGL().tryEnableMultisampling(wantMultisampling);
-    activeStatus = wantMultisampling;
+    const int wantMultisampling = getConfig().canvas.antialiasingSamples.get();
+    getOpenGL().configureFbo(wantMultisampling);
 }
 
 void MapCanvas::renderMapBatches()

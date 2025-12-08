@@ -64,12 +64,6 @@ private:
         bool animating = false;
     };
 
-    struct NODISCARD OptionStatus final
-    {
-        std::optional<int> multisampling;
-        std::optional<bool> trilinear;
-    };
-
     struct NODISCARD Diff final
     {
         struct NODISCARD MaybeDataOrMesh final
@@ -147,7 +141,6 @@ private:
     MapCanvasTextures m_textures;
     MapData &m_data;
     Mmapper2Group &m_groupManager;
-    OptionStatus m_graphicsOptionsStatus;
     Diff m_diff;
     FrameRateController m_frameRateController;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
