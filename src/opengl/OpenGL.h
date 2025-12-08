@@ -15,6 +15,7 @@
 #include <QSurfaceFormat>
 #include <qopengl.h>
 
+class FBO;
 class MapCanvas;
 namespace Legacy {
 class Functions;
@@ -57,7 +58,10 @@ public:
     void glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 
 public:
-    NODISCARD bool tryEnableMultisampling(int samples);
+    void configureFbo(int samples);
+    void bindFbo();
+    void releaseFbo();
+    void blitFboToDefault();
 
 public:
     NODISCARD UniqueMesh createPointBatch(const std::vector<ColorVert> &verts);
@@ -156,4 +160,7 @@ public:
 public:
     void cleanup();
     void setTextureLookup(MMTextureId, SharedMMTexture);
+
+public:
+    void initArray(const SharedMMTexture &array, const std::vector<SharedMMTexture> &input);
 };

@@ -7,6 +7,7 @@
 #include "../../global/utils.h"
 #include "../OpenGLConfig.h"
 #include "../OpenGLTypes.h"
+#include "FBO.h"
 
 #include <cmath>
 #include <memory>
@@ -100,6 +101,7 @@ private:
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
+    std::unique_ptr<FBO> m_fbo;
     std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
 
 protected:
@@ -239,18 +241,12 @@ public:
 
     NODISCARD TexLookup &getTexLookup();
 
+    NODISCARD FBO &getFBO();
+
 private:
     friend PointSizeBinder;
     /// platform-specific (ES vs GL)
     void enableProgramPointSize(bool enable) { virt_enableProgramPointSize(enable); }
-
-private:
-    friend OpenGL;
-    /// platform-specific (ES vs GL)
-    NODISCARD bool tryEnableMultisampling(int requestedSamples)
-    {
-        return virt_tryEnableMultisampling(requestedSamples);
-    }
 
 public:
     /// platform-specific (ES vs GL)
@@ -260,7 +256,6 @@ protected:
     NODISCARD virtual bool virt_canRenderQuads() = 0;
     NODISCARD virtual std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) = 0;
     virtual void virt_enableProgramPointSize(bool enable) = 0;
-    NODISCARD virtual bool virt_tryEnableMultisampling(int requestedSamples) = 0;
     NODISCARD virtual const char *virt_getShaderVersion() const = 0;
 
 private:
@@ -356,5 +351,11 @@ public:
 
 public:
     void checkError();
+
+public:
+    void configureFbo(int samples);
+    void bindFbo();
+    void releaseFbo();
+    void blitFboToDefault();
 };
 } // namespace Legacy

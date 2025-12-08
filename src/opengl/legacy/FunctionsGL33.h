@@ -16,7 +16,6 @@ public:
 
 private:
     void virt_enableProgramPointSize(bool enable) override;
-    NODISCARD bool virt_tryEnableMultisampling(int requestedSamples) override;
     NODISCARD const char *virt_getShaderVersion() const override;
     NODISCARD bool virt_canRenderQuads() override;
     NODISCARD std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) override;

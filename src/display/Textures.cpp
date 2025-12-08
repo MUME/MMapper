@@ -320,18 +320,12 @@ MapCanvasTexturesProxy getProxy(const MapCanvasTextures &mct)
 
 void MapCanvas::updateTextures()
 {
-    const bool wantTrilinear = getConfig().canvas.trilinearFiltering;
-    std::optional<bool> &activeStatus = m_graphicsOptionsStatus.trilinear;
-    if (activeStatus == wantTrilinear) {
-        return;
-    }
-
+    const bool wantTrilinear = getConfig().canvas.trilinearFiltering.get();
     m_textures.for_each([wantTrilinear](SharedMMTexture &tex) -> void {
         if (tex->canBeUpdated()) {
             ::setTrilinear(tex, wantTrilinear);
         }
     });
-    activeStatus = wantTrilinear;
 
     // called to trigger an early error
     std::ignore = mctp::getProxy(m_textures);

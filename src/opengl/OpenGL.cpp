@@ -63,9 +63,24 @@ void OpenGL::setProjectionMatrix(const glm::mat4 &m)
     getFunctions().setProjectionMatrix(m);
 }
 
-bool OpenGL::tryEnableMultisampling(const int requestedSamples)
+void OpenGL::configureFbo(int samples)
 {
-    return getFunctions().tryEnableMultisampling(requestedSamples);
+    getFunctions().configureFbo(samples);
+}
+
+void OpenGL::bindFbo()
+{
+    getFunctions().bindFbo();
+}
+
+void OpenGL::releaseFbo()
+{
+    getFunctions().releaseFbo();
+}
+
+void OpenGL::blitFboToDefault()
+{
+    getFunctions().blitFboToDefault();
 }
 
 UniqueMesh OpenGL::createPointBatch(const std::vector<ColorVert> &batch)
@@ -209,6 +224,12 @@ void OpenGL::cleanup()
 void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
     setDevicePixelRatio(devicePixelRatio);
+
+    // REVISIT: Move this somewhere else?
+    GLint maxSamples = 0;
+    getFunctions().glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    OpenGLConfig::setMaxSamples(maxSamples);
+
     m_rendererInitialized = true;
 }
 

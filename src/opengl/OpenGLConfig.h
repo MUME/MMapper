@@ -17,4 +17,7 @@ extern void setIsCompat(bool isCompat);
 NODISCARD extern std::string getHighestReportableVersionString();
 extern void setHighestReportableVersionString(const std::string &versionString);
 
+NODISCARD extern int getMaxSamples();
+extern void setMaxSamples(int maxSamples);
+
 } // namespace OpenGLConfig

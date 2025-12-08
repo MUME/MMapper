@@ -159,13 +159,13 @@ public:
 
     struct NODISCARD CanvasSettings final : public CanvasNamedColorOptions
     {
+        NamedConfig<int> antialiasingSamples{"ANTIALIASING_SAMPLES", 0};
+        NamedConfig<bool> trilinearFiltering{"TRILINEAR_FILTERING", true};
         NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
         NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
         NamedConfig<bool> showUnmappedExits{"SHOW_UNMAPPED_EXITS", false};
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
-        int antialiasingSamples = 0;
-        bool trilinearFiltering = false;
         bool softwareOpenGL = false;
         QString resourcesDirectory;
 

@@ -41,9 +41,4 @@ void FunctionsES30::virt_enableProgramPointSize(bool /* enable */)
     // nop
 }
 
-bool FunctionsES30::virt_tryEnableMultisampling(int /* requestedSamples */)
-{
-    return false;
-}
-
 } // namespace Legacy
