@@ -12,8 +12,38 @@
 #include <QPalette>
 #include <QSpinBox>
 #include <QString>
+#include <QValidator>
 #include <QtGui>
 #include <QtWidgets>
+
+class NODISCARD CustomSeparatorValidator final : public QValidator
+{
+public:
+    explicit CustomSeparatorValidator(QObject *parent);
+    ~CustomSeparatorValidator() final;
+
+    void fixup(QString &input) const override
+    {
+        mmqt::toLatin1InPlace(input); // transliterates non-latin1 codepoints
+    }
+
+    QValidator::State validate(QString &input, int & /* pos */) const override
+    {
+        if (input.length() != 1) {
+            return QValidator::State::Intermediate;
+        }
+
+        const auto c = input.at(0);
+        const bool valid = c != char_consts::C_BACKSLASH && c.isPrint() && !c.isSpace();
+        return valid ? QValidator::State::Acceptable : QValidator::State::Invalid;
+    }
+};
+
+CustomSeparatorValidator::CustomSeparatorValidator(QObject *const parent)
+    : QValidator(parent)
+{}
+
+CustomSeparatorValidator::~CustomSeparatorValidator() = default;
 
 ClientPage::ClientPage(QWidget *parent)
     : QWidget(parent)
@@ -74,6 +104,19 @@ ClientPage::ClientPage(QWidget *parent)
     connect(ui->visualBellCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         setConfig().integratedClient.visualBell = isChecked;
     });
+
+    connect(ui->commandSeparatorCheckBox, &QCheckBox::toggled, this, [this](bool isChecked) {
+        setConfig().integratedClient.useCommandSeparator = isChecked;
+        ui->commandSeparatorLineEdit->setEnabled(isChecked);
+    });
+
+    connect(ui->commandSeparatorLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
+        if (text.length() == 1) {
+            setConfig().integratedClient.commandSeparator = text;
+        }
+    });
+
+    ui->commandSeparatorLineEdit->setValidator(new CustomSeparatorValidator(this));
 }
 
 ClientPage::~ClientPage()
@@ -96,6 +139,9 @@ void ClientPage::slot_loadConfig()
     ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
     ui->audibleBellCheckBox->setChecked(settings.audibleBell);
     ui->visualBellCheckBox->setChecked(settings.visualBell);
+    ui->commandSeparatorCheckBox->setChecked(settings.useCommandSeparator);
+    ui->commandSeparatorLineEdit->setText(settings.commandSeparator);
+    ui->commandSeparatorLineEdit->setEnabled(settings.useCommandSeparator);
 }
 
 void ClientPage::updateFontAndColors()
