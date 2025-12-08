@@ -249,13 +249,29 @@ bool InputWidget::tryHistory(const int key)
 
 void InputWidget::gotInput()
 {
+    const auto &settings = getConfig().integratedClient;
+
     QString input = toPlainText();
-    if (getConfig().integratedClient.clearInputOnEnter) {
+    if (settings.clearInputOnEnter) {
         clear();
     } else {
         selectAll();
     }
-    sendUserInput(input);
+
+    if (settings.useCommandSeparator) {
+        const QString &sep = settings.commandSeparator;
+        assert(!settings.commandSeparator.isEmpty());
+        const QString escaped = QRegularExpression::escape(sep);
+        const QRegularExpression regex(QString("(?<!\\\\)%1").arg(escaped));
+        const QStringList commands = input.split(regex);
+        for (QString command : commands) {
+            command.replace("\\" + sep, sep);
+            sendUserInput(command);
+        }
+    } else {
+        sendUserInput(input);
+    }
+
     m_inputHistory.addInputLine(input);
     m_tabHistory.addInputLine(input);
 }

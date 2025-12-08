@@ -364,6 +364,7 @@ public:
         QString font;
         QColor foregroundColor;
         QColor backgroundColor;
+        QString commandSeparator;
         int columns = 0;
         int rows = 0;
         int linesOfScrollback = 0;
@@ -374,6 +375,7 @@ public:
         int linesOfPeekPreview = 0;
         bool audibleBell = false;
         bool visualBell = false;
+        bool useCommandSeparator = false;
 
     private:
         SUBGROUP();

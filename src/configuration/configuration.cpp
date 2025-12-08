@@ -295,6 +295,8 @@ ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
 ConstString KEY_BELL_AUDIBLE = "Bell audible";
 ConstString KEY_BELL_VISUAL = "Bell visual";
+ConstString KEY_USE_COMMAND_SEPARATOR = "Use command separator";
+ConstString KEY_COMMAND_SEPARATOR = "Command separator";
 
 void Settings::tryCopyOldSettings()
 {
@@ -751,6 +753,9 @@ void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
     linesOfPeekPreview = conf.value(KEY_LINES_OF_PEEK_PREVIEW, 7).toInt();
     audibleBell = conf.value(KEY_BELL_AUDIBLE, true).toBool();
     visualBell = conf.value(KEY_BELL_VISUAL, (CURRENT_PLATFORM == PlatformEnum::Wasm)).toBool();
+    useCommandSeparator = conf.value(KEY_USE_COMMAND_SEPARATOR, false).toBool();
+    commandSeparator = conf.value(KEY_COMMAND_SEPARATOR, QString(char_consts::C_SEMICOLON))
+                           .toString();
 }
 
 void Configuration::RoomPanelSettings::read(const QSettings &conf)
@@ -920,6 +925,8 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_LINES_OF_PEEK_PREVIEW, linesOfPeekPreview);
     conf.setValue(KEY_BELL_AUDIBLE, audibleBell);
     conf.setValue(KEY_BELL_VISUAL, visualBell);
+    conf.setValue(KEY_USE_COMMAND_SEPARATOR, useCommandSeparator);
+    conf.setValue(KEY_COMMAND_SEPARATOR, commandSeparator);
 }
 
 void Configuration::RoomPanelSettings::write(QSettings &conf) const
