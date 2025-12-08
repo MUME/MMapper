@@ -279,8 +279,10 @@ void GeneralPage::slot_autoLoadFileNameTextChanged(const QString & /*unused*/)
 void GeneralPage::slot_autoLoadCheckStateChanged(int /*unused*/)
 {
     setConfig().autoLoad.autoLoadMap = ui->autoLoadCheck->isChecked();
-    ui->autoLoadFileName->setEnabled(ui->autoLoadCheck->isChecked());
-    ui->selectWorldFileButton->setEnabled(ui->autoLoadCheck->isChecked());
+    if (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        ui->autoLoadFileName->setEnabled(ui->autoLoadCheck->isChecked());
+        ui->selectWorldFileButton->setEnabled(ui->autoLoadCheck->isChecked());
+    }
 }
 
 void GeneralPage::slot_displayMumeClockStateChanged(int /*unused*/)
