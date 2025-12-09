@@ -164,6 +164,8 @@ public:
     {
         auto &window = deref(pWindow);
         const auto title = window.windowTitle();
+        window.setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint
+                              | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
 
         if (!window.isVisible()) {
             window.setVisible(true);

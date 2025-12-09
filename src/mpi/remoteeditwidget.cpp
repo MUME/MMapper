@@ -686,8 +686,8 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     , m_title(std::move(title))
     , m_body(std::move(body))
 {
-    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint
+                   | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
     mmqt::setWindowTitle2(*this,
                           QString("MMapper %1").arg(m_editSession ? "Editor" : "Viewer"),
                           m_title);
