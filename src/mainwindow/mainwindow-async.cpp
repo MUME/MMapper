@@ -1014,7 +1014,7 @@ bool MainWindow::slot_generateBaseMap()
                 mainWindow.showWarning(tr(msg));
                 return;
             }
-            onSuccess(std::move(*result));
+            onSuccess(*result);
         }
         void onSuccess(BaseMapData result)
         {

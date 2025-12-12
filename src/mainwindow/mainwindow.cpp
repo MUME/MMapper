@@ -440,7 +440,7 @@ void MainWindow::wireConnections()
             auto anyRoomAtOffset = [this](const Coordinate &offset) -> bool {
                 const auto &sel = deref(m_roomSelection);
                 for (const RoomId id : sel) {
-                    const Coordinate &here = m_mapData->getRoomHandle(id).getPosition();
+                    const Coordinate here = m_mapData->getRoomHandle(id).getPosition();
                     const Coordinate target = here + offset;
                     if (m_mapData->findRoomHandle(target)) {
                         return true;
