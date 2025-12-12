@@ -762,7 +762,8 @@ void OstreamDiffReporter::virt_exitFieldDifference(const RoomHandle &a,
 
 void OstreamDiffReporter::printOutgoing(const RoomHandle &room, const ExitDirEnum dir)
 {
-    const World &w = room.getMap().getWorld();
+    const auto &map = room.getMap();
+    const World &w = map.getWorld();
 
     exitPrefix(room, dir);
     printSep();
@@ -826,5 +827,6 @@ void OstreamDiffReporter::print(const ExitFieldVariant &var)
 
 void OstreamDiffReporter::printQuoted(const std::string_view sv)
 {
-    m_os.writeQuotedWithColor(m_os.getNextAnsi(), getRawAnsi(AnsiColor16Enum::yellow), sv);
+    const auto yellowAnsi = getRawAnsi(AnsiColor16Enum::yellow);
+    m_os.writeQuotedWithColor(m_os.getNextAnsi(), yellowAnsi, sv);
 }

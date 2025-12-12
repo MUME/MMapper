@@ -67,7 +67,8 @@ void InfomarkSelection::init()
         return isCoordInSelection(pos2);
     };
 
-    const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
+    const auto &map = m_mapData.getCurrentMap();
+    const auto &db = map.getInfomarkDb();
     for (const InfomarkId id : db.getIdSet()) {
         if (isMarkerInSelection(InfomarkHandle{db, id})) {
             m_markerList.emplace_back(id);
@@ -83,7 +84,8 @@ void InfomarkSelection::applyOffset(const Coordinate &offset) const
     }
 
     ChangeList changes;
-    const auto &db = m_mapData.getCurrentMap().getInfomarkDb();
+    const auto &map = m_mapData.getCurrentMap();
+    const auto &db = map.getInfomarkDb();
     for (const InfomarkId id : m_markerList) {
         try {
             RawInfomark fields = db.getRawCopy(id);

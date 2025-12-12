@@ -1006,7 +1006,7 @@ bool MainWindow::slot_generateBaseMap()
         }
         void virt_finish() override
         {
-            const Result result = mwa_detail::extract(future, mainWindow);
+            Result result = mwa_detail::extract(future, mainWindow);
             if (!result) {
                 const bool wasCanceled = progressCounter->requestedCancel();
                 const char *const msg = wasCanceled ? "User canceled generation of the base map"
@@ -1014,7 +1014,7 @@ bool MainWindow::slot_generateBaseMap()
                 mainWindow.showWarning(tr(msg));
                 return;
             }
-            onSuccess(std::move(*result));
+            onSuccess(std::move(result.value()));
         }
         void onSuccess(BaseMapData result)
         {

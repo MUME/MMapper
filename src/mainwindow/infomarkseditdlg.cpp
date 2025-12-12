@@ -279,7 +279,8 @@ InfomarkClassEnum InfomarksEditDlg::getClass()
 
 InfomarkHandle InfomarksEditDlg::getCurrentInfomark()
 {
-    const auto &db = m_mapData->getCurrentMap().getInfomarkDb();
+    const auto &map = m_mapData->getCurrentMap();
+    const auto &db = map.getInfomarkDb();
     bool ok = false;
     int n = objectsList->itemData(objectsList->currentIndex()).toInt(&ok);
     if (!ok || n == -1 || n >= static_cast<int>(m_markers.size())) {

@@ -166,7 +166,7 @@ void TextBuffer::appendJustified(const QStringView input_line, const int maxLen)
                 }
 
                 append(word);
-                col += word.length();
+                col += static_cast<int>(word.length());
 
             } else {
                 assert(line.isEmpty());
