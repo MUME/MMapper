@@ -180,7 +180,7 @@ void AbstractParser::parseMark(StringView input)
             throw std::runtime_error("invalid mark");
         }
         auto id = static_cast<InfomarkId>(static_cast<uint32_t>(n));
-        const auto map = m_mapData.getCurrentMap();
+        const auto &map = m_mapData.getCurrentMap();
         auto mark = map.getInfomarkDb().find(id);
         if (!mark.exists()) {
             throw std::runtime_error("invalid mark");
@@ -253,8 +253,8 @@ void AbstractParser::parseMark(StringView input)
 
     using Callback = std::function<void(RawInfomark & mark)>;
     auto modify_mark = [this](InfomarkId id, const Callback &callback) {
-        const auto map = m_mapData.getCurrentMap();
-        auto &db = map.getInfomarkDb();
+        const auto &map = m_mapData.getCurrentMap();
+        const auto &db = map.getInfomarkDb();
         auto mark = db.getRawCopy(id);
         callback(mark);
         return this->m_mapData.applySingleChange(
@@ -283,8 +283,8 @@ void AbstractParser::parseMark(StringView input)
             const auto id = lookup_mark(v[1].getInt());
 
             {
-                const auto map = m_mapData.getCurrentMap();
-                auto &db = map.getInfomarkDb();
+                const auto &map = m_mapData.getCurrentMap();
+                const auto &db = map.getInfomarkDb();
                 const auto mark = db.getRawCopy(id);
                 if (mark.getType() != InfomarkTypeEnum::TEXT) {
                     throw std::runtime_error("unable to set text to this mark");

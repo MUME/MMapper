@@ -97,7 +97,7 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
 {
     BatchedInfomarksMeshes result;
     {
-        const auto map = m_data.getCurrentMap();
+        const auto &map = m_data.getCurrentMap();
         const auto &db = map.getInfomarkDb();
         db.getIdSet().for_each([&](const InfomarkId id) {
             InfomarkHandle mark{db, id};
@@ -120,7 +120,7 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
     // If the performance gets too bad, count # in each layer,
     // allocate vectors, fill the vectors, and then only visit
     // each one once per layer.
-    const auto map = m_data.getCurrentMap();
+    const auto &map = m_data.getCurrentMap();
     const auto &db = map.getInfomarkDb();
     for (auto &it : result) {
         const int layer = it.first;
@@ -365,7 +365,7 @@ void MapCanvas::paintSelectedInfomarks()
                 drawPoint(pos2, color);
             };
 
-            const auto map = m_data.getCurrentMap();
+            const auto &map = m_data.getCurrentMap();
             const InfomarkDb &db = map.getInfomarkDb();
             db.getIdSet().for_each([&](const InfomarkId id) {
                 InfomarkHandle marker{db, id};
