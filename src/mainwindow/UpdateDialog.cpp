@@ -5,6 +5,7 @@
 #include "UpdateDialog.h"
 
 #include "../configuration/configuration.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../global/RAII.h"
 #include "../global/Version.h"
 
@@ -21,9 +22,6 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSysInfo>
-
-static constexpr const char *APPIMAGE_KEY = "APPIMAGE";
-static constexpr const char *FLATPAK_KEY = "container";
 
 namespace { // anonymous
 
@@ -144,20 +142,6 @@ void UpdateDialog::setUpdateStatus(const QString &message,
 
 QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject) const
 {
-    // Compile platform-specific regex
-    static const auto platformRegex
-        = QRegularExpression(std::invoke([]() -> const char * {
-                                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-                                     return R"(^.+\.dmg$)";
-                                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-                                     return R"(^.+\.(deb|AppImage|flatpak)$)";
-                                 } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-                                     return R"(^.+\.exe$)";
-                                 }
-                                 abort();
-                             }),
-                             QRegularExpression::CaseInsensitiveOption);
-
     // Compile architecture-specific regex
     static const auto archRegex = QRegularExpression(getArchitectureRegexPattern(),
                                                      QRegularExpression::CaseInsensitiveOption);
@@ -172,25 +156,54 @@ QString UpdateDialog::findDownloadUrlForRelease(const QJsonObject &releaseObject
             continue;
         }
 
-        if (!name.contains(platformRegex) || !name.contains(archRegex)) {
+        if (!name.contains(archRegex)) {
             continue;
         }
 
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-            const bool isAssetAppImage = name.contains("AppImage", Qt::CaseInsensitive);
-            const bool isEnvAppImage = qEnvironmentVariableIsSet(APPIMAGE_KEY);
-            if (isAssetAppImage != isEnvAppImage) {
-                continue;
+        switch (CURRENT_PACKAGE) {
+        case PackageEnum::Source:
+            break;
+        case PackageEnum::Deb:
+            if (name.endsWith(".deb", Qt::CaseInsensitive)) {
+                return url;
             }
-
-            const bool isAssetFlatpak = name.contains("flatpak", Qt::CaseInsensitive);
-            const bool isEnvFlatpak = qEnvironmentVariableIsSet(FLATPAK_KEY);
-            if (isAssetFlatpak != isEnvFlatpak) {
-                continue;
+            break;
+        case PackageEnum::Dmg:
+            if (name.endsWith(".dmg", Qt::CaseInsensitive)) {
+                return url;
             }
+            break;
+        case PackageEnum::Nsis:
+            if (name.endsWith(".exe", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
+        case PackageEnum::AppImage:
+            if (name.endsWith(".AppImage", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
+        case PackageEnum::AppX:
+            if (name.endsWith(".appx", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
+        case PackageEnum::Flatpak:
+            if (name.endsWith(".flatpak", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
+        case PackageEnum::Snap:
+            if (name.endsWith(".snap", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
+        case PackageEnum::Wasm:
+            if (name.endsWith(".zip", Qt::CaseInsensitive)) {
+                return url;
+            }
+            break;
         }
-
-        return url;
     }
 
     const QString fallbackUrl = releaseObject.value("html_url").toString();

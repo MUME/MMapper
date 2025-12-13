@@ -40,7 +40,7 @@ jobs:
         cd build
         cmake --version
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=AppX -S .. || exit -1
         cmake --build . --parallel
 
     # Package

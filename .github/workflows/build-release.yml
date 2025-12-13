@@ -39,7 +39,7 @@ jobs:
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
         echo "CC=gcc-12" >> $GITHUB_ENV
         echo "CXX=g++-12" >> $GITHUB_ENV
-        echo "MMAPPER_CMAKE_EXTRA=-DUSE_MOLD=true" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DUSE_MOLD=true -DPACKAGE_TYPE=Deb" >> $GITHUB_ENV
 
     # Install Dependencies (Mac)
     - if: runner.os == 'macOS'
@@ -53,7 +53,7 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
 
     # Install Dependencies (Windows)
     - if: runner.os == 'Windows'
@@ -76,7 +76,7 @@ jobs:
         cd build
         cmake --version
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Nsis -S .. || exit -1
         cmake --build . --parallel
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac

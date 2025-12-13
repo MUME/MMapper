@@ -22,6 +22,8 @@
 #include <string_view>
 
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QOperatingSystemVersion>
 #include <QSysInfo>
 
@@ -70,17 +72,25 @@ NODISCARD std::string getOs()
     return getOsName();
 }
 
-NODISCARD TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefix)
+NODISCARD std::string getPackage()
 {
-    // It's probably required to be ASCII.
-    const auto arch = mmqt::toStdStringUtf8(QSysInfo::currentCpuArchitecture().toUtf8());
+#define X_CASE(X) \
+    case (PackageEnum::X): \
+        return #X
 
-    std::ostringstream ss;
-    ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
-       << OpenGLConfig::getHighestReportableVersionString() << "/" << getOs() << "/" << arch;
-    auto str = std::move(ss).str();
-
-    return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(str)};
+    switch (CURRENT_PACKAGE) {
+        X_CASE(Source);
+        X_CASE(Deb);
+        X_CASE(Dmg);
+        X_CASE(Nsis);
+        X_CASE(AppImage);
+        X_CASE(AppX);
+        X_CASE(Flatpak);
+        X_CASE(Snap);
+        X_CASE(Wasm);
+    }
+    std::abort();
+#undef X_CASE
 }
 
 using OptStdString = std::optional<std::string>;
@@ -232,7 +242,7 @@ NODISCARD bool isOneLineCrlf(const QString &s)
 MudTelnetOutputs::~MudTelnetOutputs() = default;
 
 MudTelnet::MudTelnet(MudTelnetOutputs &outputs)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, addTerminalTypeSuffix("unknown"))
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_UTF_8, TelnetTermTypeBytes{"unknown"})
     , m_outputs{outputs}
 {
     // RFC 2066 states we can provide many character sets but we force UTF-8 when
@@ -364,8 +374,7 @@ void MudTelnet::onRelayNaws(const int width, const int height)
 
 void MudTelnet::onRelayTermType(const TelnetTermTypeBytes &terminalType)
 {
-    // Append the MMapper version suffix to the terminal type
-    setTerminalType(addTerminalTypeSuffix(terminalType.getQByteArray().constData()));
+    setTerminalType(terminalType);
     if (getOptions().myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(getTerminalType());
     }
@@ -472,10 +481,22 @@ void MudTelnet::virt_onGmcpEnabled()
         qDebug() << "Requesting GMCP from MUME";
     }
 
-    sendGmcpMessage(
-        GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
-                    GmcpJson{QString(R"({ "client": "MMapper", "version": "%1" })")
-                                 .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))}));
+    QJsonObject obj;
+    obj["client"] = QStringLiteral("MMapper");
+    obj["version"] = mmqt::toQStringUtf8(getMMapperVersion());
+    if constexpr (!NO_OPENGL) {
+        obj["opengl"] = mmqt::toQStringUtf8(OpenGLConfig::getGLVersionString());
+    }
+    if constexpr (!NO_GLES) {
+        obj["gles"] = mmqt::toQStringUtf8(OpenGLConfig::getESVersionString());
+    }
+    obj["os"] = mmqt::toQStringUtf8(getOs());
+    obj["arch"] = QSysInfo::currentCpuArchitecture();
+    obj["package"] = mmqt::toQStringUtf8(getPackage());
+
+    const QJsonDocument doc(obj);
+    const QString json = doc.toJson(QJsonDocument::Compact);
+    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO, GmcpJson{json}));
 
     // Request GMCP modules that might have already been sent by the local client
     sendCoreSupports();

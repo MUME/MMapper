@@ -50,6 +50,7 @@ parts:
     source-type: local
     cmake-generator: Ninja
     cmake-parameters:
+      - -DPACKAGE_TYPE=Snap
       - -DCMAKE_INSTALL_PREFIX=/usr
       - -DCMAKE_BUILD_TYPE=Release
       - -DWITH_UPDATER=OFF
