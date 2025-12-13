@@ -5,6 +5,7 @@
 
 #include "../global/ConfigConsts.h"
 #include "../global/logging.h"
+#include "OpenGLConfig.h"
 
 #include <optional>
 #include <sstream>
@@ -232,6 +233,12 @@ NODISCARD QSurfaceFormat getOptimalFormat(std::optional<GLContextCheckResult> re
 
 OpenGLProber::ProbeResult probeOpenGL()
 {
+    if constexpr (NO_OPENGL) {
+        return {};
+    }
+
+    MMLOG_DEBUG() << "Probing for OpenGL support...";
+
     QSurfaceFormat format;
     format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setDepthBufferSize(24);
@@ -254,6 +261,7 @@ OpenGLProber::ProbeResult probeOpenGL()
     if (compatResult || coreResult) {
         result.backendType = OpenGLProber::BackendType::GL;
         result.highestVersionString = getHighestGLVersion(coreResult, compatResult);
+        OpenGLConfig::setGLVersionString(result.highestVersionString);
         result.format = getOptimalFormat(compatResult ? compatResult : coreResult);
         result.isCompat = (compatResult && compatResult->isCompat);
     }
@@ -262,41 +270,49 @@ OpenGLProber::ProbeResult probeOpenGL()
 
 OpenGLProber::ProbeResult probeOpenGLES()
 {
-    QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGLES);
-    format.setVersion(3, 0);
-
-    QOpenGLContext context;
-    context.setFormat(format);
-    if (!context.create()) {
-        MMLOG_DEBUG() << "Failed to create GLES 3.0 context";
+    if constexpr (NO_GLES) {
         return {};
     }
 
-    OpenGLProber::ProbeResult result;
-    result.backendType = OpenGLProber::BackendType::GLES;
-    result.format = format;
-    result.highestVersionString = "ES3.0";
-    return result;
+    MMLOG_DEBUG() << "Probing for OpenGL ES support...";
+
+    std::vector<GLVersion> glesVersions = {{3, 2}, {3, 1}, {3, 0}};
+
+    for (const auto &version : glesVersions) {
+        QSurfaceFormat format;
+        format.setRenderableType(QSurfaceFormat::OpenGLES);
+        format.setVersion(version.major, version.minor);
+
+        QOpenGLContext context;
+        context.setFormat(format);
+        if (context.create()) {
+            MMLOG_DEBUG() << "[GL Probe] Found highest supported GLES version: " << version;
+            OpenGLProber::ProbeResult result;
+            result.backendType = OpenGLProber::BackendType::GLES;
+            result.format = format;
+            std::ostringstream oss;
+            oss << "ES" << version;
+            result.highestVersionString = oss.str();
+            OpenGLConfig::setESVersionString(result.highestVersionString);
+            return result;
+        }
+    }
+
+    MMLOG_DEBUG() << "No suitable GLES context found.";
+    return {};
 }
 
 } // namespace
 
 OpenGLProber::ProbeResult OpenGLProber::probe()
 {
-    if constexpr (!NO_OPENGL) {
-        MMLOG_DEBUG() << "Probing for OpenGL support...";
-        auto glResult = probeOpenGL();
-        if (glResult.backendType != BackendType::None) {
-            return glResult;
-        }
+    auto glResult = probeOpenGL();
+    auto glesResult = probeOpenGLES();
+    if (glResult.backendType != BackendType::None) {
+        return glResult;
     }
-    if constexpr (!NO_GLES) {
-        MMLOG_DEBUG() << "Probing for OpenGL ES support...";
-        auto glesResult = probeOpenGLES();
-        if (glesResult.backendType != BackendType::None) {
-            return glesResult;
-        }
+    if (glesResult.backendType != BackendType::None) {
+        return glesResult;
     }
     MMLOG_DEBUG() << "No suitable backend found.";
     return {};

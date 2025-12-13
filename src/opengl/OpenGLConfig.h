@@ -14,8 +14,11 @@ extern void setBackendType(OpenGLProber::BackendType type);
 NODISCARD extern bool getIsCompat();
 extern void setIsCompat(bool isCompat);
 
-NODISCARD extern std::string getHighestReportableVersionString();
-extern void setHighestReportableVersionString(const std::string &versionString);
+NODISCARD extern std::string getGLVersionString();
+extern void setGLVersionString(const std::string &versionString);
+
+NODISCARD std::string getESVersionString();
+void setESVersionString(const std::string &versionString);
 
 NODISCARD extern int getMaxSamples();
 extern void setMaxSamples(int maxSamples);

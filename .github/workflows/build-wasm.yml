@@ -41,7 +41,8 @@ jobs:
           -DWITH_TESTS=OFF \
           -DWITH_WEBSOCKET=ON \
           -DWITH_UPDATER=OFF \
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Release \
+          -DPACKAGE_TYPE=Wasm
         cmake --build build
 
     - name: Add coi-serviceworker.js

@@ -107,18 +107,19 @@ static bool setSurfaceFormat()
             msg += " or ";
         }
         if constexpr (!NO_GLES) {
-            msg += "OpenGL ES 3.0";
+            if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+                msg += "WebGL 2.0";
+            } else {
+                msg += "GLES 3.0";
+            }
         }
         msg += " support to run.";
         QMessageBox::critical(nullptr, "Fatal Error", msg);
         return false;
     }
-
-    QSurfaceFormat fmt = probeResult.format;
-    OpenGLConfig::setHighestReportableVersionString(probeResult.highestVersionString);
     OpenGLConfig::setBackendType(probeResult.backendType);
     OpenGLConfig::setIsCompat(probeResult.isCompat);
-    QSurfaceFormat::setDefaultFormat(fmt);
+    QSurfaceFormat::setDefaultFormat(probeResult.format);
     return true;
 }
 

@@ -174,9 +174,12 @@ void MapCanvas::reportGLVersion()
                // FIXME: This is a bit late to report an invalid context.
                .arg(context()->isValid() ? "valid" : "invalid")
                .toUtf8());
-
-    logMsg("Highest Reportable OpenGL:",
-           mmqt::toQByteArrayUtf8(OpenGLConfig::getHighestReportableVersionString()));
+    if constexpr (!NO_OPENGL) {
+        logMsg("Highest OpenGL:", mmqt::toQByteArrayUtf8(OpenGLConfig::getGLVersionString()));
+    }
+    if constexpr (!NO_GLES) {
+        logMsg("Highest GLES:", mmqt::toQByteArrayUtf8(OpenGLConfig::getESVersionString()));
+    }
 
     logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
 }
