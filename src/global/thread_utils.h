@@ -7,7 +7,6 @@
 #include "progresscounter.h"
 
 #include <exception>
-#include <execution>
 #include <future>
 #include <thread>
 
