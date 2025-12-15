@@ -246,7 +246,6 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
 {
     // Check if this key was already handled in ShortcutOverride
     if (m_handledInShortcutOverride) {
-        qDebug() << "[InputWidget::keyPressEvent] Skipping - already handled in ShortcutOverride";
         m_handledInShortcutOverride = false; // Reset for next key
         event->accept();
         return;
@@ -277,9 +276,6 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
             setTextCursor(current);
         }
     }
-
-    // Debug logging
-    qDebug() << "[InputWidget::keyPressEvent] Key:" << key << "Modifiers:" << mods;
 
     // Classify the key ONCE
     auto classification = classifyKey(key, mods);
@@ -353,17 +349,12 @@ void InputWidget::functionKeyPressed(const QString &keyName, Qt::KeyboardModifie
 {
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
 
-    qDebug() << "[InputWidget::functionKeyPressed] Function key pressed:" << fullKeyString;
-
     // Check if there's a configured hotkey for this key combination
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
 
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::functionKeyPressed] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
     } else {
-        qDebug() << "[InputWidget::functionKeyPressed] No hotkey configured, sending literal:"
-                 << fullKeyString;
         sendCommandWithSeparator(fullKeyString);
     }
 }
@@ -373,24 +364,19 @@ bool InputWidget::numpadKeyPressed(int key, Qt::KeyboardModifiers modifiers)
     // Reuse the helper function to avoid duplicate switch statements
     QString keyName = getNumpadKeyName(key);
     if (keyName.isEmpty()) {
-        qDebug() << "[InputWidget::numpadKeyPressed] Unknown numpad key:" << key;
         return false;
     }
 
     // Build the full key string with modifiers in canonical order: CTRL, SHIFT, ALT, META
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
 
-    qDebug() << "[InputWidget::numpadKeyPressed] Numpad key pressed:" << fullKeyString;
-
     // Check if there's a configured hotkey for this numpad key
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
 
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::numpadKeyPressed] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
         return true;
     } else {
-        qDebug() << "[InputWidget::numpadKeyPressed] No hotkey configured for:" << fullKeyString;
         return false;
     }
 }
@@ -400,24 +386,19 @@ bool InputWidget::navigationKeyPressed(int key, Qt::KeyboardModifiers modifiers)
     // Reuse the helper function to avoid duplicate switch statements
     QString keyName = getNavigationKeyName(key);
     if (keyName.isEmpty()) {
-        qDebug() << "[InputWidget::navigationKeyPressed] Unknown navigation key:" << key;
         return false;
     }
 
     // Build the full key string with modifiers in canonical order: CTRL, SHIFT, ALT, META
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
 
-    qDebug() << "[InputWidget::navigationKeyPressed] Navigation key pressed:" << fullKeyString;
-
     // Check if there's a configured hotkey for this key
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
 
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::navigationKeyPressed] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
         return true;
     } else {
-        qDebug() << "[InputWidget::navigationKeyPressed] No hotkey configured for:" << fullKeyString;
         return false;
     }
 }
@@ -476,12 +457,10 @@ bool InputWidget::arrowKeyPressed(const int key, Qt::KeyboardModifiers modifiers
     }
 
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
-    qDebug() << "[InputWidget::arrowKeyPressed] Arrow key pressed:" << fullKeyString;
 
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
 
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::arrowKeyPressed] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
         return true;
     }
@@ -495,23 +474,18 @@ bool InputWidget::miscKeyPressed(int key, Qt::KeyboardModifiers modifiers)
     // Reuse the helper function to avoid duplicate switch statements
     QString keyName = getMiscKeyName(key);
     if (keyName.isEmpty()) {
-        qDebug() << "[InputWidget::miscKeyPressed] Unknown misc key:" << key;
         return false;
     }
 
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
 
-    qDebug() << "[InputWidget::miscKeyPressed] Misc key pressed:" << fullKeyString;
-
     // Check if there's a configured hotkey for this key
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
 
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::miscKeyPressed] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
         return true;
     } else {
-        qDebug() << "[InputWidget::miscKeyPressed] No hotkey configured for:" << fullKeyString;
         return false;
     }
 }
@@ -569,7 +543,6 @@ bool InputWidget::handlePageKey(int key, Qt::KeyboardModifiers modifiers)
     // PageUp/PageDown without modifiers scroll the display widget
     if (modifiers == Qt::NoModifier) {
         bool isPageUp = (key == Qt::Key_PageUp);
-        qDebug() << "[InputWidget::handlePageKey]" << (isPageUp ? "PageUp" : "PageDown");
         m_outputs.scrollDisplay(isPageUp);
         return true;
     }
@@ -578,11 +551,8 @@ bool InputWidget::handlePageKey(int key, Qt::KeyboardModifiers modifiers)
     QString keyName = (key == Qt::Key_PageUp) ? "PAGEUP" : "PAGEDOWN";
     QString fullKeyString = buildHotkeyString(keyName, modifiers);
 
-    qDebug() << "[InputWidget::handlePageKey] Page key with modifiers:" << fullKeyString;
-
     const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
     if (!command.isEmpty()) {
-        qDebug() << "[InputWidget::handlePageKey] Using configured hotkey command:" << command;
         sendCommandWithSeparator(command);
         return true;
     }
@@ -927,9 +897,6 @@ bool InputWidget::event(QEvent *const event)
         auto classification = classifyKey(keyEvent->key(), keyEvent->modifiers());
 
         if (classification.shouldHandle) {
-            qDebug() << "[InputWidget::event] ShortcutOverride - Key:" << keyEvent->key()
-                     << "Type:" << static_cast<int>(classification.type);
-
             // Handle directly if there are real modifiers (some don't generate KeyPress)
             if (classification.realModifiers != Qt::NoModifier) {
                 bool handled = false;

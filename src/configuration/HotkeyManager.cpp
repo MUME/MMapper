@@ -82,11 +82,9 @@ void HotkeyManager::loadFromSettings()
 
         if (keys.isEmpty()) {
             // First run - use default hotkeys
-            qDebug() << "[HotkeyManager] No hotkeys in settings, using defaults";
             m_rawContent = DEFAULT_HOTKEYS_CONTENT;
         } else {
             // Migrate from legacy format: build raw content from existing keys
-            qDebug() << "[HotkeyManager] Migrating from legacy hotkey format";
             QString migrated;
             QTextStream stream(&migrated);
             stream << "# Hotkey Configuration\n";
@@ -108,7 +106,6 @@ void HotkeyManager::loadFromSettings()
 
     // Parse the raw content to populate lookup structures
     parseRawContent();
-    qDebug() << "[HotkeyManager] Loaded" << m_hotkeys.size() << "hotkeys from settings";
 }
 
 void HotkeyManager::parseRawContent()
@@ -151,15 +148,12 @@ void HotkeyManager::saveToSettings() const
 
     // Save the raw content (preserves comments, order, and formatting)
     settings.setValue(SETTINGS_RAW_CONTENT_KEY, m_rawContent);
-
-    qDebug() << "[HotkeyManager] Saved" << m_hotkeys.size() << "hotkeys to settings";
 }
 
 void HotkeyManager::setHotkey(const QString &keyName, const QString &command)
 {
     QString normalizedKey = normalizeKeyString(keyName);
     if (normalizedKey.isEmpty()) {
-        qDebug() << "[HotkeyManager::setHotkey] Invalid key name:" << keyName;
         return;
     }
 
@@ -198,20 +192,16 @@ void HotkeyManager::setHotkey(const QString &keyName, const QString &command)
     // Re-parse and save
     parseRawContent();
     saveToSettings();
-
-    qDebug() << "[HotkeyManager::setHotkey] Set hotkey:" << normalizedKey << "=" << command;
 }
 
 void HotkeyManager::removeHotkey(const QString &keyName)
 {
     QString normalizedKey = normalizeKeyString(keyName);
     if (normalizedKey.isEmpty()) {
-        qDebug() << "[HotkeyManager::removeHotkey] Invalid key name:" << keyName;
         return;
     }
 
     if (!m_hotkeys.contains(normalizedKey)) {
-        qDebug() << "[HotkeyManager::removeHotkey] Hotkey not found:" << normalizedKey;
         return;
     }
 
@@ -238,8 +228,6 @@ void HotkeyManager::removeHotkey(const QString &keyName)
     // Re-parse and save
     parseRawContent();
     saveToSettings();
-
-    qDebug() << "[HotkeyManager::removeHotkey] Removed hotkey:" << normalizedKey;
 }
 
 QString HotkeyManager::getCommand(const QString &keyName) const
@@ -319,7 +307,6 @@ void HotkeyManager::resetToDefaults()
     m_rawContent = DEFAULT_HOTKEYS_CONTENT;
     parseRawContent();
     saveToSettings();
-    qDebug() << "[HotkeyManager] Reset to defaults:" << m_hotkeys.size() << "hotkeys";
 }
 
 QString HotkeyManager::exportToCliFormat() const
@@ -339,9 +326,7 @@ int HotkeyManager::importFromCliFormat(const QString &content)
     // Save to settings
     saveToSettings();
 
-    int importedCount = static_cast<int>(m_orderedHotkeys.size());
-    qDebug() << "[HotkeyManager] Imported" << importedCount << "hotkeys";
-    return importedCount;
+    return static_cast<int>(m_orderedHotkeys.size());
 }
 
 QStringList HotkeyManager::getAvailableKeyNames()

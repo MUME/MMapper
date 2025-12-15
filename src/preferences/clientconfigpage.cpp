@@ -119,8 +119,7 @@ bool ClientConfigPage::importFromString(const QString &content)
     }
 
     if (foundHotkeysSection) {
-        int count = setConfig().hotkeyManager.importFromCliFormat(hotkeyLines.join('\n'));
-        qDebug() << "[ClientConfigPage::importFromString] Imported" << count << "hotkeys";
+        setConfig().hotkeyManager.importFromCliFormat(hotkeyLines.join('\n'));
     }
 
     return foundHotkeysSection;
