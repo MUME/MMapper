@@ -20,6 +20,9 @@ CMakeUserPresets.json
 CMakeSettings.json
 cmake-build-debug/
 
+# Qt installation from aqtinstall
+6.5.3/
+
 
 # snapcraft
 parts/

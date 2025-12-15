@@ -16,32 +16,43 @@
 #include <QtGui>
 #include <QtWidgets>
 
+#include "../global/macros.h"
+
 class NODISCARD CustomSeparatorValidator final : public QValidator
 {
 public:
-    explicit CustomSeparatorValidator(QObject *parent);
+    explicit CustomSeparatorValidator(QObject *parent)
+        : QValidator(parent)
+    {}
     ~CustomSeparatorValidator() final;
 
     void fixup(QString &input) const override
     {
-        mmqt::toLatin1InPlace(input); // transliterates non-latin1 codepoints
+        // Remove any non-printable or whitespace characters
+        QString cleaned;
+        for (const QChar &c : input) {
+            if (c.isPrint() && !c.isSpace()) {
+                cleaned.append(c);
+            }
+        }
+        input = cleaned;
     }
 
     QValidator::State validate(QString &input, int & /* pos */) const override
     {
-        if (input.length() != 1) {
+        if (input.isEmpty()) {
             return QValidator::State::Intermediate;
         }
 
-        const auto c = input.at(0);
-        const bool valid = c != char_consts::C_BACKSLASH && c.isPrint() && !c.isSpace();
-        return valid ? QValidator::State::Acceptable : QValidator::State::Invalid;
+        // Check that all characters are printable and not whitespace or backslash
+        for (const QChar &c : input) {
+            if (c == '\\' || !c.isPrint() || c.isSpace()) {
+                return QValidator::State::Invalid;
+            }
+        }
+        return QValidator::State::Acceptable;
     }
 };
-
-CustomSeparatorValidator::CustomSeparatorValidator(QObject *const parent)
-    : QValidator(parent)
-{}
 
 CustomSeparatorValidator::~CustomSeparatorValidator() = default;
 
@@ -105,18 +116,30 @@ ClientPage::ClientPage(QWidget *parent)
         setConfig().integratedClient.visualBell = isChecked;
     });
 
+    connect(ui->autoStartClientCheck, &QCheckBox::toggled, [](bool isChecked) {
+        setConfig().integratedClient.autoStartClient = isChecked;
+    });
+
     connect(ui->commandSeparatorCheckBox, &QCheckBox::toggled, this, [this](bool isChecked) {
         setConfig().integratedClient.useCommandSeparator = isChecked;
         ui->commandSeparatorLineEdit->setEnabled(isChecked);
     });
 
     connect(ui->commandSeparatorLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
-        if (text.length() == 1) {
+        if (!text.isEmpty()) {
             setConfig().integratedClient.commandSeparator = text;
         }
     });
 
     ui->commandSeparatorLineEdit->setValidator(new CustomSeparatorValidator(this));
+
+    // Disable auto-start option on WASM (client always starts automatically there)
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->autoStartClientCheck->setDisabled(true);
+        ui->autoStartClientCheck->setToolTip(
+            "This option is not available in the web version.\n"
+            "The client always starts automatically.");
+    }
 }
 
 ClientPage::~ClientPage()
@@ -139,6 +162,7 @@ void ClientPage::slot_loadConfig()
     ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
     ui->audibleBellCheckBox->setChecked(settings.audibleBell);
     ui->visualBellCheckBox->setChecked(settings.visualBell);
+    ui->autoStartClientCheck->setChecked(settings.autoStartClient);
     ui->commandSeparatorCheckBox->setChecked(settings.useCommandSeparator);
     ui->commandSeparatorLineEdit->setText(settings.commandSeparator);
     ui->commandSeparatorLineEdit->setEnabled(settings.useCommandSeparator);

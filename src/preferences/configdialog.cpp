@@ -8,6 +8,7 @@
 
 #include "../configuration/configuration.h"
 #include "autologpage.h"
+#include "clientconfigpage.h"
 #include "clientpage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
@@ -35,6 +36,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     auto graphicsPage = new GraphicsPage(this);
     auto parserPage = new ParserPage(this);
     auto clientPage = new ClientPage(this);
+    auto clientConfigPage = new ClientConfigPage(this);
     auto groupPage = new GroupPage(this);
     auto autoLogPage = new AutoLogPage(this);
     auto mumeProtocolPage = new MumeProtocolPage(this);
@@ -47,6 +49,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     pagesWidget->addWidget(graphicsPage);
     pagesWidget->addWidget(parserPage);
     pagesWidget->addWidget(clientPage);
+    pagesWidget->addWidget(clientConfigPage);
     pagesWidget->addWidget(groupPage);
     pagesWidget->addWidget(autoLogPage);
     pagesWidget->addWidget(mumeProtocolPage);
@@ -70,6 +73,10 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::slot_loadConfig);
+    connect(this,
+            &ConfigDialog::sig_loadConfig,
+            clientConfigPage,
+            &ClientConfigPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, groupPage, &GroupPage::slot_loadConfig);
     connect(groupPage,
@@ -131,6 +138,7 @@ void ConfigDialog::createIcons()
     addItem(":/icons/graphicscfg.png", tr("Graphics"));
     addItem(":/icons/parsercfg.png", tr("Parser"));
     addItem(":/icons/terminal.png", tr("Integrated\nMud Client"));
+    addItem(":/icons/generalcfg.png", tr("Import /\nExport"));
     addItem(":/icons/group-recolor.png", tr("Group Panel"));
     addItem(":/icons/autologgercfg.png", tr("Auto\nLogger"));
     addItem(":/icons/mumeprotocolcfg.png", tr("Mume\nProtocol"));

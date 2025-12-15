@@ -56,6 +56,8 @@ add_test(NAME TestClock COMMAND TestClock)
 set(expandoracommon_SRCS
     ../src/configuration/configuration.cpp
     ../src/configuration/configuration.h
+    ../src/configuration/HotkeyManager.cpp
+    ../src/configuration/HotkeyManager.h
     ../src/parser/Abbrev.cpp
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
@@ -82,6 +84,8 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 set(parser_SRCS
     ../src/configuration/configuration.cpp
     ../src/configuration/configuration.h
+    ../src/configuration/HotkeyManager.cpp
+    ../src/configuration/HotkeyManager.h
 )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
@@ -174,6 +178,8 @@ add_test(NAME TestGlobal COMMAND TestGlobal)
 set(TestMap_SRCS
         ../src/configuration/configuration.cpp
         ../src/configuration/configuration.h
+        ../src/configuration/HotkeyManager.cpp
+        ../src/configuration/HotkeyManager.h
         TestMap.cpp
 )
 add_executable(TestMap ${TestMap_SRCS})
@@ -205,6 +211,8 @@ set(adventure_SRCS
         ../src/adventure/lineparsers.h
         ../src/configuration/configuration.cpp
         ../src/configuration/configuration.h
+        ../src/configuration/HotkeyManager.cpp
+        ../src/configuration/HotkeyManager.h
         ../src/observer/gameobserver.cpp
         ../src/observer/gameobserver.h
         )
@@ -300,3 +308,21 @@ set_target_properties(
         COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 add_test(NAME TestRoomManager COMMAND TestRoomManager)
+
+# HotkeyManager
+set(hotkey_manager_SRCS
+        ../src/configuration/HotkeyManager.cpp
+        ../src/configuration/HotkeyManager.h
+)
+set(TestHotkeyManager_SRCS TestHotkeyManager.cpp TestHotkeyManager.h)
+add_executable(TestHotkeyManager ${TestHotkeyManager_SRCS} ${hotkey_manager_SRCS})
+add_dependencies(TestHotkeyManager mm_global)
+target_link_libraries(TestHotkeyManager mm_global Qt6::Test coverage_config)
+set_target_properties(
+        TestHotkeyManager PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestHotkeyManager COMMAND TestHotkeyManager)

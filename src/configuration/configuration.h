@@ -14,6 +14,7 @@
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
 #include "../global/Signal2.h"
+#include "HotkeyManager.h"
 #include "NamedConfig.h"
 
 #include <memory>
@@ -364,7 +365,6 @@ public:
         QString font;
         QColor foregroundColor;
         QColor backgroundColor;
-        QString commandSeparator;
         int columns = 0;
         int rows = 0;
         int linesOfScrollback = 0;
@@ -375,7 +375,9 @@ public:
         int linesOfPeekPreview = 0;
         bool audibleBell = false;
         bool visualBell = false;
+        bool autoStartClient = false;
         bool useCommandSeparator = false;
+        QString commandSeparator;
 
     private:
         SUBGROUP();
@@ -412,6 +414,9 @@ public:
     private:
         SUBGROUP();
     } findRoomsDialog;
+
+    // Hotkey manager for integrated MUD client
+    HotkeyManager hotkeyManager;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Configuration);

@@ -81,6 +81,7 @@ private:
 public:
     NODISCARD bool isUsingClient() const;
     void displayReconnectHint();
+    void playMume();
 
 private:
     void relayMessage(const QString &msg) { emit sig_relayMessage(msg); }

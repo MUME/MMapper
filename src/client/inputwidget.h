@@ -22,6 +22,27 @@ class QKeyEvent;
 class QObject;
 class QWidget;
 
+// Key classification system for unified key handling
+enum class KeyType {
+    FunctionKey,      // F1-F12
+    NumpadKey,        // NUMPAD0-9, NUMPAD_SLASH, etc.
+    NavigationKey,    // HOME, END, INSERT
+    ArrowKey,         // UP, DOWN (for history), LEFT, RIGHT (for hotkeys)
+    MiscKey,          // ACCENT, number row, HYPHEN, EQUAL
+    TerminalShortcut, // Ctrl+U, Ctrl+W, Ctrl+H
+    BasicKey,         // Enter, Tab (no modifiers)
+    PageKey,          // PageUp, PageDown (for scrolling display)
+    Other             // Not handled by us
+};
+
+struct NODISCARD KeyClassification
+{
+    KeyType type = KeyType::Other;
+    QString keyName;
+    Qt::KeyboardModifiers realModifiers = Qt::NoModifier;
+    bool shouldHandle = false;
+};
+
 class NODISCARD InputHistory final : private std::list<QString>
 {
 private:
@@ -82,12 +103,14 @@ public:
     void displayMessage(const QString &msg) { virt_displayMessage(msg); }
     void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
     void gotPasswordInput(const QString &password) { virt_gotPasswordInput(password); }
+    void scrollDisplay(bool pageUp) { virt_scrollDisplay(pageUp); }
 
 private:
     virtual void virt_sendUserInput(const QString &msg) = 0;
     virtual void virt_displayMessage(const QString &msg) = 0;
     virtual void virt_showMessage(const QString &msg, int timeout) = 0;
     virtual void virt_gotPasswordInput(const QString &password) = 0;
+    virtual void virt_scrollDisplay(bool pageUp) = 0;
 };
 
 class NODISCARD_QOBJECT InputWidget final : public QPlainTextEdit
@@ -104,6 +127,7 @@ private:
     InputHistory m_inputHistory;
     PaletteManager m_paletteManager;
     bool m_tabbing = false;
+    bool m_handledInShortcutOverride = false; // Track if key was already handled in ShortcutOverride
 
 public:
     explicit InputWidget(QWidget *parent, InputWidgetOutputs &);
@@ -118,8 +142,15 @@ protected:
 private:
     void gotInput();
     NODISCARD bool tryHistory(int);
-    void keypadMovement(int);
-    void functionKeyPressed(const QString &keyName);
+    NODISCARD bool numpadKeyPressed(int key, Qt::KeyboardModifiers modifiers);
+    NODISCARD bool navigationKeyPressed(int key, Qt::KeyboardModifiers modifiers);
+    NODISCARD bool arrowKeyPressed(int key, Qt::KeyboardModifiers modifiers);
+    NODISCARD bool miscKeyPressed(int key, Qt::KeyboardModifiers modifiers);
+    void functionKeyPressed(const QString &keyName, Qt::KeyboardModifiers modifiers);
+    NODISCARD QString buildHotkeyString(const QString &keyName, Qt::KeyboardModifiers modifiers);
+    NODISCARD bool handleTerminalShortcut(int key);
+    NODISCARD bool handleBasicKey(int key);
+    NODISCARD bool handlePageKey(int key, Qt::KeyboardModifiers modifiers);
 
 private:
     void tabComplete();
@@ -130,4 +161,5 @@ private:
 
 private:
     void sendUserInput(const QString &msg) { m_outputs.sendUserInput(msg); }
+    void sendCommandWithSeparator(const QString &command);
 };

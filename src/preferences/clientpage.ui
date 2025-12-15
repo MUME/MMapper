@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>331</width>
-    <height>687</height>
+    <width>303</width>
+    <height>534</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -236,6 +236,32 @@
       <string>Input</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Tab word completion dictionary size:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>tabDictionarySpinBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Lines of input history:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>inputHistorySpinBox</cstring>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="QSpinBox" name="tabDictionarySpinBox">
         <property name="showGroupSeparator" stdset="0">
@@ -268,27 +294,14 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QCheckBox" name="clearInputCheckBox">
         <property name="text">
          <string>Clear input on send</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Tab word completion dictionary size:</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-        <property name="buddy">
-         <cstring>tabDictionarySpinBox</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -301,21 +314,8 @@
         </property>
        </spacer>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Lines of input history:</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-        <property name="buddy">
-         <cstring>inputHistorySpinBox</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout">
+      <item row="4" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="commandSeparatorLayout">
         <item>
          <widget class="QCheckBox" name="commandSeparatorCheckBox">
           <property name="text">
@@ -329,14 +329,30 @@
            <bool>false</bool>
           </property>
           <property name="maxLength">
-           <number>1</number>
+           <number>2</number>
           </property>
           <property name="placeholderText">
-           <string>;</string>
+           <string>;;</string>
           </property>
          </widget>
         </item>
        </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="startupGroupBox">
+     <property name="title">
+      <string>Startup</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QCheckBox" name="autoStartClientCheck">
+        <property name="text">
+         <string>Automatically start client on startup</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -360,18 +376,17 @@
   <tabstop>fontPushButton</tabstop>
   <tabstop>fgColorPushButton</tabstop>
   <tabstop>bgColorPushButton</tabstop>
-  <tabstop>rowsSpinBox</tabstop>
   <tabstop>columnsSpinBox</tabstop>
+  <tabstop>rowsSpinBox</tabstop>
   <tabstop>scrollbackSpinBox</tabstop>
   <tabstop>previewSpinBox</tabstop>
   <tabstop>autoResizeTerminalCheckBox</tabstop>
-  <tabstop>audibleBellCheckBox</tabstop>
-  <tabstop>visualBellCheckBox</tabstop>
   <tabstop>inputHistorySpinBox</tabstop>
   <tabstop>tabDictionarySpinBox</tabstop>
+  <tabstop>clearInputCheckBox</tabstop>
   <tabstop>commandSeparatorCheckBox</tabstop>
   <tabstop>commandSeparatorLineEdit</tabstop>
-  <tabstop>clearInputCheckBox</tabstop>
+  <tabstop>autoStartClientCheck</tabstop>
  </tabstops>
  <resources/>
  <connections/>
