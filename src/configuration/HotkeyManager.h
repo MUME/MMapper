@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#include "../global/macros.h"
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
+
+#include <vector>
 
 #include <QHash>
 #include <QString>
 #include <QStringList>
-#include <vector>
 
 class NODISCARD HotkeyManager final
 {

@@ -158,9 +158,8 @@ void HotkeyManager::setHotkey(const QString &keyName, const QString &command)
     }
 
     // Update or add in raw content
-    static const QRegularExpression hotkeyLineRegex(
-        R"(^(\s*_hotkey\s+)(\S+)(\s+)(.+)$)",
-        QRegularExpression::MultilineOption);
+    static const QRegularExpression hotkeyLineRegex(R"(^(\s*_hotkey\s+)(\S+)(\s+)(.+)$)",
+                                                    QRegularExpression::MultilineOption);
 
     QString newLine = "_hotkey " + normalizedKey + " " + command;
     bool found = false;
@@ -331,20 +330,60 @@ int HotkeyManager::importFromCliFormat(const QString &content)
 
 QStringList HotkeyManager::getAvailableKeyNames()
 {
-    return QStringList{
-        // Function keys
-        "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-        // Numpad
-        "NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4",
-        "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
-        "NUMPAD_SLASH", "NUMPAD_ASTERISK", "NUMPAD_MINUS", "NUMPAD_PLUS", "NUMPAD_PERIOD",
-        // Navigation
-        "HOME", "END", "INSERT", "PAGEUP", "PAGEDOWN",
-        // Arrow keys
-        "UP", "DOWN", "LEFT", "RIGHT",
-        // Misc
-        "ACCENT", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "HYPHEN", "EQUAL"
-    };
+    return QStringList{// Function keys
+                       "F1",
+                       "F2",
+                       "F3",
+                       "F4",
+                       "F5",
+                       "F6",
+                       "F7",
+                       "F8",
+                       "F9",
+                       "F10",
+                       "F11",
+                       "F12",
+                       // Numpad
+                       "NUMPAD0",
+                       "NUMPAD1",
+                       "NUMPAD2",
+                       "NUMPAD3",
+                       "NUMPAD4",
+                       "NUMPAD5",
+                       "NUMPAD6",
+                       "NUMPAD7",
+                       "NUMPAD8",
+                       "NUMPAD9",
+                       "NUMPAD_SLASH",
+                       "NUMPAD_ASTERISK",
+                       "NUMPAD_MINUS",
+                       "NUMPAD_PLUS",
+                       "NUMPAD_PERIOD",
+                       // Navigation
+                       "HOME",
+                       "END",
+                       "INSERT",
+                       "PAGEUP",
+                       "PAGEDOWN",
+                       // Arrow keys
+                       "UP",
+                       "DOWN",
+                       "LEFT",
+                       "RIGHT",
+                       // Misc
+                       "ACCENT",
+                       "0",
+                       "1",
+                       "2",
+                       "3",
+                       "4",
+                       "5",
+                       "6",
+                       "7",
+                       "8",
+                       "9",
+                       "HYPHEN",
+                       "EQUAL"};
 }
 
 QStringList HotkeyManager::getAvailableModifiers()
