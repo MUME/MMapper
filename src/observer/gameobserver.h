@@ -19,6 +19,7 @@ public:
 
     Signal2<GmcpMessage> sig2_sentToUserGmcp;
     Signal2<bool> sig2_toggledEchoMode;
+    Signal2<QString> sig2_rawGameText; // raw text from MUD parser (for fallback parsing)
 
 public:
     void observeConnected();
@@ -26,4 +27,5 @@ public:
     void observeSentToUser(const QString &ba);
     void observeSentToUserGmcp(const GmcpMessage &m);
     void observeToggledEchoMode(bool echo);
+    void observeRawGameText(const QString &text);
 };

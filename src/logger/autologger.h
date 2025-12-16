@@ -26,6 +26,9 @@ public:
     explicit AutoLogger(QObject *parent);
     ~AutoLogger() final;
 
+    NODISCARD const std::string &getRunId() const { return m_runId; }
+    NODISCARD int getCurrentFileNumber() const { return m_curFile; }
+
 private:
     NODISCARD bool writeLine(const QString &str);
     void deleteOldLogs();

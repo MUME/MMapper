@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../clock/mumemoment.h"
 #include "../display/IMapBatchesFinisher.h"
 #include "../map/Changes.h"
 #include "../map/DoorFlags.h"
@@ -12,6 +13,7 @@
 #include "../map/ExitFieldVariant.h"
 #include "../map/ExitFlags.h"
 #include "../map/Map.h"
+#include "../map/PromptFlags.h"
 #include "../map/coordinate.h"
 #include "../map/mmapper2room.h"
 #include "../map/roomid.h"
@@ -35,6 +37,7 @@
 #include <QtGlobal>
 
 class ExitFieldVariant;
+class MumeClock;
 class ProgressCounter;
 class QObject;
 class RoomFieldVariant;
@@ -64,9 +67,13 @@ private:
     bool m_fileReadOnly = false;
     QString m_fileName;
     std::optional<RoomId> m_selectedRoom;
+    MumeClock &m_mumeClock;
+    MumeTimeEnum m_lastTimeOfDay = MumeTimeEnum::UNKNOWN;
+    PromptFlagsType m_currentPromptFlags{};
+    QTimer *m_lightingUpdateTimer = nullptr;
 
 public:
-    explicit MapData(QObject *parent);
+    explicit MapData(MumeClock &mumeClock, QObject *parent);
     ~MapData() final;
 
     NODISCARD FutureSharedMapBatchFinisher
@@ -147,33 +154,41 @@ private:
     void setDataChanged() { emit sig_onDataChanged(); }
 
 public:
-    void clearSelectedRoom() { m_selectedRoom.reset(); }
-
-    void setRoom(const RoomId id)
+    void setPromptFlags(const PromptFlagsType &flags)
     {
-        auto before = m_selectedRoom;
-        if (const auto &room = findRoomHandle(id)) {
-            m_selectedRoom = id;
-        } else {
-            clearSelectedRoom();
-        }
-        if (before != m_selectedRoom) {
-            emit sig_onPositionChange();
-        }
-    }
+        // Check if light status changed
+        const bool wasLit = m_currentPromptFlags.isValid()
+                            && (m_currentPromptFlags.isLit() || !m_currentPromptFlags.isDark());
+        const bool isLit = flags.isValid() && (flags.isLit() || !flags.isDark());
 
-    void setPosition(const Coordinate &pos)
-    {
-        if (const auto &room = findRoomHandle(pos)) {
-            setRoom(room.getId());
-        } else {
-            auto before = m_selectedRoom;
-            clearSelectedRoom();
-            if (before != m_selectedRoom) {
-                emit sig_onPositionChange();
+        m_currentPromptFlags = flags;
+
+        // Debug: Log light status changes
+        if (flags.isValid()) {
+            static bool lastWasLit = false;
+            if (isLit != lastWasLit) {
+                const char *lightStatus = flags.isLit()       ? "NATURAL_LIGHT"
+                                        : !flags.isDark()     ? "ARTIFICIAL_LIGHT"
+                                        : flags.isDark()      ? "DARK"
+                                                              : "UNKNOWN";
+                log(QString("Player light status: %1 (has light: %2)")
+                        .arg(lightStatus)
+                        .arg(isLit ? "YES" : "NO"));
+                lastWasLit = isLit;
             }
         }
+
+        // Regenerate meshes if light status changed
+        if (wasLit != isLit) {
+            log(QString("Light status changed, regenerating meshes"));
+            notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+        }
     }
+
+    void clearSelectedRoom() { m_selectedRoom.reset(); }
+
+    void setRoom(const RoomId id);
+    void setPosition(const Coordinate &pos);
 
 public:
     void forceToRoom(RoomId id)
@@ -185,21 +200,13 @@ public:
         }
     }
 
-    void forcePosition(const Coordinate &pos)
-    {
-        if (const auto &room = findRoomHandle(pos)) {
-            forceToRoom(room.getId());
-        } else {
-            auto before = m_selectedRoom;
-            clearSelectedRoom();
-            if (before != m_selectedRoom) {
-                emit sig_onForcedPositionChange();
-            }
-        }
-    }
+    void forcePosition(const Coordinate &pos);
 
 private:
     void removeMissing(RoomIdSet &set) const;
+
+private slots:
+    void slot_checkTimeOfDay();
 
 signals:
     void sig_log(const QString &, const QString &);

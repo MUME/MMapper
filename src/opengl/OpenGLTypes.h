@@ -87,6 +87,16 @@ struct NODISCARD FontVert3d final
 
 enum class NODISCARD DrawModeEnum { INVALID = 0, POINTS = 1, LINES = 2, TRIANGLES = 3, QUADS = 4 };
 
+// Background image fit modes (similar to 3D compositing software)
+enum class NODISCARD BackgroundFitModeEnum {
+    FIT = 0,     // Scale uniformly to fit inside viewport (letterbox/pillarbox)
+    FILL = 1,    // Scale uniformly to cover viewport (crop excess)
+    STRETCH = 2, // Non-uniform scale to fill exactly
+    CENTER = 3,  // No scale, center in viewport
+    TILE = 4,    // Repeat texture
+    FOCUSED = 5  // Follow player position with adjustable scale
+};
+
 struct NODISCARD LineParams final
 {
     float width = 1.f;
@@ -190,6 +200,12 @@ struct NODISCARD GLRenderState final
         // glEnable(TEXTURE_2D), or glEnable(TEXTURE_3D)
         Textures textures;
         std::optional<float> pointSize;
+        // For radial transparency around player on upper layers
+        glm::vec3 playerPos = glm::vec3(0.f, 0.f, 0.f);
+        int currentLayer = 0;
+        bool enableRadialTransparency = false;
+        bool texturesDisabled = false;
+        bool isNight = false;  // True if current time is night (for darker tinting)
     };
 
     Uniforms uniforms;

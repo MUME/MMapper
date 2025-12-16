@@ -171,10 +171,16 @@ struct NODISCARD Batches final
     }
 };
 
+enum class MumeTimeEnum : uint8_t;
+class RoomId;
+
 NODISCARD FutureSharedMapBatchFinisher
 generateMapDataFinisher(const mctp::MapCanvasTexturesProxy &textures,
                         const std::shared_ptr<const FontMetrics> &font,
-                        const Map &map);
+                        const Map &map,
+                        MumeTimeEnum timeOfDay,
+                        std::optional<RoomId> playerRoom,
+                        bool playerHasLight);
 
 extern void finish(const IMapBatchesFinisher &finisher,
                    std::optional<MapBatches> &batches,

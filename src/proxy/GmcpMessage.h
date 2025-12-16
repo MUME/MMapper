@@ -22,6 +22,8 @@ class ParseEvent;
     X(CHAR_STATUSVARS, CharStatusVars, "char.statusvars", "Char.StatusVars") \
     X(CHAR_VITALS, CharVitals, "char.vitals", "Char.Vitals") \
     X(CHAR_LOGIN, CharLogin, "char.login", "Char.Login") \
+    X(COMM_CHANNEL_LIST, CommChannelList, "comm.channel.list", "Comm.Channel.List") \
+    X(COMM_CHANNEL_TEXT, CommChannelText, "comm.channel.text", "Comm.Channel.Text") \
     X(CORE_GOODBYE, CoreGoodbye, "core.goodbye", "Core.Goodbye") \
     X(CORE_HELLO, CoreHello, "core.hello", "Core.Hello") \
     X(CORE_SUPPORTS_ADD, CoreSupportsAdd, "core.supports.add", "Core.Supports.Add") \
@@ -48,6 +50,7 @@ class ParseEvent;
       "MUME.Client.CancelEdit") \
     X(MUME_CLIENT_WRITE, MumeClientWrite, "mume.client.write", "MUME.Client.Write") \
     X(MUME_CLIENT_XML, MumeClientXml, "mume.client.xml", "MUME.Client.XML") \
+    X(MUME_TIME_INFO, MumeTimeInfo, "mume.time.info", "MUME.Time.Info") \
     X(ROOM_CHARS_ADD, RoomCharsAdd, "room.chars.add", "Room.Chars.Add") \
     X(ROOM_CHARS_REMOVE, RoomCharsRemove, "room.chars.remove", "Room.Chars.Remove") \
     X(ROOM_CHARS_SET, RoomCharsSet, "room.chars.set", "Room.Chars.Set") \
@@ -66,7 +69,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MESSAGES = XFOREACH_GMCP_MESSAGE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MESSAGES == 30);
+static_assert(NUM_GMCP_MESSAGES == 33);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {

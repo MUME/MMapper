@@ -159,8 +159,12 @@ void UserTelnet::onRelayEchoMode(const bool isDisabled)
 
 void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
-    // Eat Core.Hello since MMapper sends its own to MUME
+    qDebug() << "UserTelnet received GMCP:" << msg.getName().getStdStringUtf8().c_str();
+
+    // Respond to Core.Hello by advertising MMapper's supported modules
     if (msg.isCoreHello()) {
+        qDebug() << "  Responding to Core.Hello";
+        sendSupportedGmcpModules();
         return;
     }
 
@@ -254,19 +258,30 @@ bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) const
 
 void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
 {
+    qDebug() << "receiveGmcpModule:" << mod.getNormalizedName().c_str()
+             << "enabled:" << enabled << "isSupported:" << mod.isSupported();
+
     if (enabled) {
         if (!mod.hasVersion()) {
             throw std::runtime_error("missing version");
         }
         m_gmcp.modules.insert(mod);
         if (mod.isSupported()) {
+            qDebug() << "  Module IS supported, type:" << static_cast<int>(mod.getType());
             m_gmcp.supported[mod.getType()] = mod.getVersion();
+            // Notify outputs that a supported module was enabled
+            qDebug() << "  Calling onGmcpModuleEnabled callback";
+            m_outputs.onGmcpModuleEnabled(mod.getType(), true);
+        } else {
+            qDebug() << "  Module NOT supported by MMapper";
         }
 
     } else {
         m_gmcp.modules.erase(mod);
         if (mod.isSupported()) {
             m_gmcp.supported[mod.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+            // Notify outputs that a supported module was disabled
+            m_outputs.onGmcpModuleEnabled(mod.getType(), false);
         }
     }
 }
@@ -281,4 +296,33 @@ void UserTelnet::resetGmcpModules()
     XFOREACH_GMCP_MODULE_TYPE(X_CASE)
 #undef X_CASE
     m_gmcp.modules.clear();
+}
+
+void UserTelnet::sendSupportedGmcpModules()
+{
+    // Build list of modules that MMapper supports
+    std::ostringstream oss;
+    oss << "[ ";
+    bool comma = false;
+
+#define X_ADD_MODULE(UPPER_CASE, CamelCase, normalized, friendly) \
+    if (comma) { \
+        oss << ", "; \
+    } \
+    oss << "\"" << friendly << " 1\""; \
+    comma = true;
+
+    XFOREACH_GMCP_MODULE_TYPE(X_ADD_MODULE)
+#undef X_ADD_MODULE
+
+    oss << " ]";
+
+    // Send Core.Supports.Set to advertise MMapper's modules
+    const GmcpMessage supportMsg(GmcpMessageTypeEnum::CORE_SUPPORTS_SET,
+                                 GmcpJson{std::move(oss).str()});
+    sendGmcpMessage(supportMsg);
+
+    if (getDebug()) {
+        qDebug() << "Sent MMapper supported GMCP modules to client";
+    }
 }

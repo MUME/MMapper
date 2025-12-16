@@ -4,6 +4,7 @@
 
 #include "MapCanvasRoomDrawer.h"
 
+#include "../clock/mumemoment.h"
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../global/Array.h"
@@ -227,14 +228,21 @@ IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
 static void visitRoom(const RoomHandle &room,
                       const mctp::MapCanvasTexturesProxy &textures,
                       IRoomVisitorCallbacks &callbacks,
-                      const VisitRoomOptions &visitRoomOptions)
+                      const VisitRoomOptions &visitRoomOptions,
+                      const MumeTimeEnum timeOfDay,
+                      const std::optional<RoomId> playerRoom,
+                      const bool playerHasLight)
 {
     if (!callbacks.acceptRoom(room)) {
         return;
     }
 
+    // Check if this is the player's current room
+    const bool isPlayerRoom = playerRoom.has_value() && room.getId() == playerRoom.value();
+
     // const auto &pos = room.getPosition();
-    const bool isDark = room.getLightType() == RoomLightEnum::DARK;
+    const RoomLightEnum roomLight = room.getLightType();
+    const RoomTerrainEnum terrain = room.getTerrainType();
     const bool hasNoSundeath = room.getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
     const bool notRideable = room.getRidableType() == RoomRidableEnum::NOT_RIDABLE;
     const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room.getRaw());
@@ -245,6 +253,38 @@ static void visitRoom(const RoomHandle &room,
 
     if (auto trail = terrainAndTrail.trail) {
         callbacks.visitOverlayTexture(room, trail);
+    }
+
+    // Dynamic lighting based on time of day, room properties, terrain, and player's light
+    // DEFAULT: All rooms are LIT unless explicitly dark or affected by conditions below
+    bool isDark = false;
+
+    // PRIORITY 0: Player's room with light source - ALWAYS LIT
+    if (isPlayerRoom && playerHasLight) {
+        isDark = false;
+    }
+    // Priority 1: Explicit DARK status (highest priority for non-player rooms - always dark)
+    else if (roomLight == RoomLightEnum::DARK) {
+        isDark = true;
+    }
+    // Priority 2: Explicit LIT status (overrides time/terrain - always lit, e.g., cities at night)
+    else if (roomLight == RoomLightEnum::LIT) {
+        isDark = false;
+    }
+    // Priority 3: UNDEFINED rooms - apply dynamic lighting rules
+    else {
+        // Rule 1: Always-dark terrains (underground areas for trolls)
+        if (terrain == RoomTerrainEnum::CAVERN || terrain == RoomTerrainEnum::TUNNEL) {
+            isDark = true;
+        }
+        // Rule 2: Time-based lighting for outdoor areas only
+        else if ((timeOfDay == MumeTimeEnum::NIGHT || timeOfDay == MumeTimeEnum::DUSK)
+                 && terrain != RoomTerrainEnum::INDOORS) {
+            // Only outdoor (non-INDOORS) UNDEFINED rooms become dark at night/dusk
+            isDark = true;
+        }
+        // Rule 3: Default for all other UNDEFINED rooms: LIT
+        // (day time, indoors, or any terrain during day)
     }
 
     if (isDark) {
@@ -395,11 +435,14 @@ static void visitRoom(const RoomHandle &room,
 static void visitRooms(const RoomVector &rooms,
                        const mctp::MapCanvasTexturesProxy &textures,
                        IRoomVisitorCallbacks &callbacks,
-                       const VisitRoomOptions &visitRoomOptions)
+                       const VisitRoomOptions &visitRoomOptions,
+                       const MumeTimeEnum timeOfDay,
+                       const std::optional<RoomId> playerRoom,
+                       const bool playerHasLight)
 {
     DECL_TIMER(t, __FUNCTION__);
     for (const auto &room : rooms) {
-        visitRoom(room, textures, callbacks, visitRoomOptions);
+        visitRoom(room, textures, callbacks, visitRoomOptions, timeOfDay, playerRoom, playerHasLight);
     }
 }
 
@@ -840,13 +883,16 @@ NODISCARD static LayerMeshesIntermediate generateLayerMeshes(
     const RoomVector &rooms,
     const mctp::MapCanvasTexturesProxy &textures,
     const OptBounds &bounds,
-    const VisitRoomOptions &visitRoomOptions)
+    const VisitRoomOptions &visitRoomOptions,
+    const MumeTimeEnum timeOfDay,
+    const std::optional<RoomId> playerRoom,
+    const bool playerHasLight)
 {
     DECL_TIMER(t, "generateLayerMeshes");
 
     LayerBatchData data;
     LayerBatchBuilder builder{data, textures, bounds};
-    visitRooms(rooms, textures, builder, visitRoomOptions);
+    visitRooms(rooms, textures, builder, visitRoomOptions, timeOfDay, playerRoom, playerHasLight);
 
     data.sort();
     return data.buildIntermediate();
@@ -858,6 +904,7 @@ public:
     std::unordered_map<int, LayerMeshesIntermediate> batchedMeshes;
     BatchedConnections connectionDrawerBuffers;
     std::unordered_map<int, RoomNameBatchIntermediate> roomNameBatches;
+    MumeTimeEnum timeOfDay = MumeTimeEnum::UNKNOWN;
 
 private:
     void virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const final;
@@ -867,7 +914,10 @@ static void generateAllLayerMeshes(InternalData &internalData,
                                    const FontMetrics &font,
                                    const LayerToRooms &layerToRooms,
                                    const mctp::MapCanvasTexturesProxy &textures,
-                                   const VisitRoomOptions &visitRoomOptions)
+                                   const VisitRoomOptions &visitRoomOptions,
+                                   const MumeTimeEnum timeOfDay,
+                                   const std::optional<RoomId> playerRoom,
+                                   const bool playerHasLight)
 
 {
     // This feature has been removed, but it's passed to a lot of functions,
@@ -890,7 +940,13 @@ static void generateAllLayerMeshes(InternalData &internalData,
 
         {
             DECL_TIMER(t3, "generateAllLayerMeshes.loop.part2");
-            layerMeshes = ::generateLayerMeshes(rooms, textures, bounds, visitRoomOptions);
+            layerMeshes = ::generateLayerMeshes(rooms,
+                                                textures,
+                                                bounds,
+                                                visitRoomOptions,
+                                                timeOfDay,
+                                                playerRoom,
+                                                playerHasLight);
         }
 
         {
@@ -969,7 +1025,10 @@ LayerMeshes LayerMeshesIntermediate::getLayerMeshes(OpenGL &gl) const
     return lm;
 }
 
-void LayerMeshes::render(const int thisLayer, const int focusedLayer)
+void LayerMeshes::render(const int thisLayer,
+                         const int focusedLayer,
+                         const glm::vec3 &playerPos,
+                         const bool isNight)
 {
     bool disableTextures = false;
     if (thisLayer > focusedLayer) {
@@ -981,20 +1040,66 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
         }
     }
 
-    const GLRenderState less = GLRenderState().withDepthFunction(DepthFunctionEnum::LESS);
-    const GLRenderState equal = GLRenderState().withDepthFunction(DepthFunctionEnum::EQUAL);
-    const GLRenderState lequal = GLRenderState().withDepthFunction(DepthFunctionEnum::LEQUAL);
+    GLRenderState less = GLRenderState().withDepthFunction(DepthFunctionEnum::LESS);
+    GLRenderState equal = GLRenderState().withDepthFunction(DepthFunctionEnum::EQUAL);
+    GLRenderState lequal = GLRenderState().withDepthFunction(DepthFunctionEnum::LEQUAL);
+
+    // Set player position and layer for radial transparency
+    const bool enableRadialTransparency = getConfig().canvas.enableRadialTransparency;
+    less.uniforms.playerPos = playerPos;
+    less.uniforms.currentLayer = focusedLayer;
+    less.uniforms.enableRadialTransparency = enableRadialTransparency;
+    less.uniforms.texturesDisabled = disableTextures;
+    less.uniforms.isNight = isNight;
+
+    equal.uniforms.playerPos = playerPos;
+    equal.uniforms.currentLayer = focusedLayer;
+    equal.uniforms.enableRadialTransparency = enableRadialTransparency;
+    equal.uniforms.texturesDisabled = disableTextures;
+    equal.uniforms.isNight = isNight;
+
+    lequal.uniforms.playerPos = playerPos;
+    lequal.uniforms.currentLayer = focusedLayer;
+    lequal.uniforms.enableRadialTransparency = enableRadialTransparency;
+    lequal.uniforms.texturesDisabled = disableTextures;
+    lequal.uniforms.isNight = isNight;
 
     const GLRenderState less_blended = less.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState lequal_blended = lequal.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState equal_blended = equal.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState equal_multiplied = equal.withBlend(BlendModeEnum::MODULATE);
 
-    const auto color = [&thisLayer, &focusedLayer]() {
-        if (thisLayer <= focusedLayer) {
+    const float layerTransparency = getConfig().canvas.layerTransparency;
+    const auto color = [&thisLayer, &focusedLayer, &disableTextures, layerTransparency]() {
+        if (thisLayer == focusedLayer) {
+            // Focused layer: full opacity
             return Colors::white.withAlpha(0.90f);
+        } else if (thisLayer > focusedLayer) {
+            // Upper layers: render up to 10 layers above with progressive fading
+            const int layersAbove = thisLayer - focusedLayer;
+            if (layersAbove > 10) {
+                // More than 10 layers above: don't render
+                return Colors::gray70.withAlpha(0.0f);
+            }
+            // User-controlled transparency: at slider=1, layer 1=1.0, layer 2=0.9, ..., layer 10=0.1
+            // Base alpha decreases by 0.1 per layer: 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1
+            float baseAlpha = glm::clamp(1.1f - (layersAbove * 0.1f), 0.1f, 1.0f);
+            float opacity = baseAlpha * layerTransparency;
+            if (disableTextures) {
+                // Non-textured: use 70% of the opacity for better distinction
+                return Colors::gray70.withAlpha(opacity * 0.7f);
+            } else {
+                return Colors::gray70.withAlpha(opacity);
+            }
+        } else {
+            // Layers below focused: calculate decreasing opacity
+            const int layersBelow = focusedLayer - thisLayer;
+            // User-controlled transparency: at slider=1, layer 1=1.0, layer 2=0.9, ..., layer 10=0.1
+            // Base alpha decreases by 0.1 per layer: 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1
+            float baseAlpha = glm::clamp(1.1f - (layersBelow * 0.1f), 0.1f, 1.0f);
+            float opacity = baseAlpha * layerTransparency;
+            return Colors::white.withAlpha(opacity);
         }
-        return Colors::gray70.withAlpha(0.20f);
     }();
 
     {
@@ -1003,30 +1108,37 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
          * give higher contrast for the base textures.
          */
         if (disableTextures) {
-            const auto layerWhite = Colors::white.withAlpha(0.20f);
-            layerBoost.render(less_blended.withColor(layerWhite));
+            // Use the same opacity calculation as textured layers
+            layerBoost.render(less_blended.withColor(color));
         } else {
             terrain.render(less_blended.withColor(color));
         }
     }
 
     // REVISIT: move trails to their own batch also colored by the tint?
-    for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
-        static_assert(NUM_ROOM_TINTS == 2);
-        const auto namedColor = [tint]() -> XNamedColor {
-            switch (tint) {
-            case RoomTintEnum::DARK:
-                return LOOKUP_COLOR(ROOM_DARK);
-            case RoomTintEnum::NO_SUNDEATH:
-                return LOOKUP_COLOR(ROOM_NO_SUNDEATH);
-            }
-            std::abort();
-        }();
+    // Only render tints on the focused layer
+    // Tints use MODULATE blend which multiplies colors - this works well on opaque layers
+    // but creates washed-out appearance on transparent layers
+    if (thisLayer == focusedLayer) {
+        // Only render tints on the focused layer to avoid appearance changes with slider adjustments
+        for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
+            static_assert(NUM_ROOM_TINTS == 2);
+            const auto namedColor = [tint]() -> XNamedColor {
+                switch (tint) {
+                case RoomTintEnum::DARK:
+                    return LOOKUP_COLOR(ROOM_DARK);
+                case RoomTintEnum::NO_SUNDEATH:
+                    return LOOKUP_COLOR(ROOM_NO_SUNDEATH);
+                }
+                std::abort();
+            }();
 
-        if (const auto optColor = getColor(namedColor)) {
-            tints[tint].render(equal_multiplied.withColor(optColor.value()));
-        } else {
-            assert(false);
+            if (const auto optColor = getColor(namedColor)) {
+                // Use original modulate blend at full strength for focused layer
+                tints[tint].render(equal_multiplied.withColor(optColor.value()));
+            } else {
+                assert(false);
+            }
         }
     }
 
@@ -1051,22 +1163,16 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
         dottedWalls.render(lequal_blended.withColor(color));
     }
 
-    if (thisLayer != focusedLayer) {
-        // Darker when below, lighter when above
-        const auto baseAlpha = (thisLayer < focusedLayer) ? 0.5f : 0.1f;
-        const auto alpha
-            = glm::clamp(baseAlpha + 0.03f * static_cast<float>(std::abs(focusedLayer - thisLayer)),
-                         0.f,
-                         1.f);
-        const Color &baseColor = (thisLayer < focusedLayer || disableTextures) ? Colors::black
-                                                                               : Colors::white;
-        layerBoost.render(equal_blended.withColor(baseColor.withAlpha(alpha)));
-    }
+    // Don't apply any additional darkening overlay since we're using opacity-based fading
+    // The original code used a black overlay which made layers too dark when combined with opacity fading
 }
 
 void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) const
 {
     DECL_TIMER(t, "InternalData::virt_finish");
+
+    // Set night status for shader darkening
+    output.isNight = (timeOfDay == MumeTimeEnum::NIGHT || timeOfDay == MumeTimeEnum::DUSK);
 
     {
         DECL_TIMER(t2, "InternalData::virt_finish batchedMeshes");
@@ -1095,12 +1201,16 @@ void InternalData::virt_finish(MapBatches &output, OpenGL &gl, GLFont &font) con
 // NOTE: All of the lamda captures are copied, including the texture data!
 FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTexturesProxy &textures,
                                                      const std::shared_ptr<const FontMetrics> &font,
-                                                     const Map &map)
+                                                     const Map &map,
+                                                     const MumeTimeEnum timeOfDay,
+                                                     const std::optional<RoomId> playerRoom,
+                                                     const bool playerHasLight)
 {
     const auto visitRoomOptions = getVisitRoomOptions();
 
     return std::async(std::launch::async,
-                      [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
+                      [textures, font, map, visitRoomOptions, timeOfDay, playerRoom, playerHasLight]()
+                          -> SharedMapBatchFinisher {
                           ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
                                                            visitRoomOptions.colorSettings};
                           DECL_TIMER(t, "[ASYNC] generateAllLayerMeshes");
@@ -1122,11 +1232,15 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
 
                           auto result = std::make_shared<InternalData>();
                           auto &data = deref(result);
+                          data.timeOfDay = timeOfDay;
                           generateAllLayerMeshes(data,
                                                  deref(font),
                                                  layerToRooms,
                                                  textures,
-                                                 visitRoomOptions);
+                                                 visitRoomOptions,
+                                                 timeOfDay,
+                                                 playerRoom,
+                                                 playerHasLight);
                           return SharedMapBatchFinisher{result};
                       });
 }

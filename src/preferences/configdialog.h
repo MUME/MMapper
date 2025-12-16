@@ -40,7 +40,10 @@ private:
 
 signals:
     void sig_graphicsSettingsChanged();
+    void sig_textureSettingsChanged();
     void sig_groupSettingsChanged();
+    void sig_hotkeysChanged();
+    void sig_commsSettingsChanged();
     void sig_loadConfig();
 
 public slots:

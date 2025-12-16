@@ -9,10 +9,12 @@ attribute vec3 aVert;
 
 varying vec4 vColor;
 varying vec2 vTexCoord;
+varying vec3 vWorldPos;
 
 void main()
 {
     vColor = aColor;
     vTexCoord = aTexCoord;
+    vWorldPos = aVert;
     gl_Position = uMVP * vec4(aVert, 1.0);
 }

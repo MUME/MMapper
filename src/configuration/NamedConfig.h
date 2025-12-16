@@ -28,7 +28,7 @@ public:
     {}
 
 public:
-    NODISCARD const std::string &getName() { return m_name; }
+    NODISCARD const std::string &getName() const { return m_name; }
     NODISCARD inline T get() const { return m_value; }
     void set(const T newValue)
     {

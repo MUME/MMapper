@@ -73,6 +73,7 @@ public:
 public:
     void setUniform1iv(GLint location, GLsizei count, const GLint *value);
     void setUniform1fv(GLint location, GLsizei count, const GLfloat *value);
+    void setUniform3fv(GLint location, GLsizei count, const GLfloat *value);
     void setUniform4fv(GLint location, GLsizei count, const GLfloat *value);
     void setUniform4iv(GLint location, GLsizei count, const GLint *value);
     void setUniformMatrix4fv(GLint location,
@@ -89,6 +90,8 @@ public:
     void setMatrix(const char *name, const glm::mat4 &m);
     void setTexture(const char *name, int textureUnit);
     void setViewport(const char *name, const Viewport &input_viewport);
+    void setVec3(const char *name, const glm::vec3 &v);
+    void setInt(const char *name, int value);
 };
 
 } // namespace Legacy

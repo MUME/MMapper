@@ -80,15 +80,22 @@ NODISCARD QIcon getIcon(T flag)
 {
     const QString filename = getPixmapFilename(flag);
     try {
+        if (!QFile::exists(filename)) {
+            qWarning() << "Resource file does not exist:" << filename;
+            // Return empty icon instead of crashing
+            return QIcon();
+        }
         QIcon result(filename);
         if (result.isNull()) {
-            throw std::runtime_error(
-                mmqt::toStdStringUtf8(QString("failed to load icon '%1'").arg(filename)));
+            qWarning() << "Failed to load icon from:" << filename;
+            // Return empty icon instead of throwing
+            return QIcon();
         }
         return result;
     } catch (...) {
-        qWarning() << "Oops: Unable to create icon:" << filename;
-        throw;
+        qWarning() << "Exception while loading icon:" << filename;
+        // Return empty icon instead of crashing
+        return QIcon();
     }
 }
 
@@ -197,6 +204,15 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
         const auto rtt = static_cast<RoomTerrainEnum>(i);
         m_roomTerrainButtons[rtt] = getTerrainToolButton(rtt);
+    }
+
+    // Set terrain button icons dynamically based on current texture set
+    for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
+        const auto rtt = static_cast<RoomTerrainEnum>(i);
+        if (auto *button = getTerrainToolButton(rtt)) {
+            button->setIcon(getIcon(rtt));
+            button->setIconSize(QSize(64, 64));
+        }
     }
 
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);

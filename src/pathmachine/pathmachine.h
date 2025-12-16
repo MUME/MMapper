@@ -97,6 +97,7 @@ private:
 protected:
     NODISCARD PathStateEnum getState() const { return m_state; }
     NODISCARD MapModeEnum getMapMode() const { return getConfig().general.mapMode; }
+    NODISCARD MapFrontend &getMap() { return m_map; }
 
 private:
     NODISCARD bool hasMostLikelyRoom() const { return m_mostLikelyRoom.has_value(); }

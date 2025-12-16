@@ -19,7 +19,9 @@ Makefile
 CMakeUserPresets.json
 CMakeSettings.json
 cmake-build-debug/
-
+.claude/
+*.bat
+nul
 
 # snapcraft
 parts/

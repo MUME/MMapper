@@ -357,6 +357,11 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
     }
+
+    // Immediately update MapData with new prompt flags for real-time lighting updates
+    // This ensures the map updates when light status changes (e.g., covering/uncovering light)
+    // even without moving or looking
+    m_mapData.setPromptFlags(promptFlags);
 }
 
 void MumeXmlParser::parseGmcpEventMoved(const JsonObj &obj)

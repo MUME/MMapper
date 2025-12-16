@@ -8,6 +8,7 @@
 #include "../configuration/configuration.h"
 #include "../global/SendToUser.h"
 #include "../map/parseevent.h"
+#include "../mapdata/mapdata.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
 
@@ -40,7 +41,7 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
 {
     /*
      * REVISIT: replace PathParameters with Configuration::PathMachineSettings
-     * and then just do: params = config.pathMachine; ? 
+     * and then just do: params = config.pathMachine; ?
      */
     const auto &settings = getConfig().pathMachine;
     auto &params = m_params;
@@ -53,6 +54,13 @@ void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEve
     params.maxPaths = utils::clampNonNegative(settings.maxPaths);
     params.matchingTolerance = utils::clampNonNegative(settings.matchingTolerance);
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
+
+    // Extract prompt flags and update MapData for dynamic lighting
+    const ParseEvent &event = sigParseEvent.deref();
+    const PromptFlagsType promptFlags = event.getPromptFlags();
+    if (auto *mapData = dynamic_cast<MapData *>(&getMap())) {
+        mapData->setPromptFlags(promptFlags);
+    }
 
     try {
         PathMachine::handleParseEvent(sigParseEvent);

@@ -108,6 +108,16 @@
         </layout>
        </widget>
       </item>
+      <item row="7" column="0" colspan="4">
+       <widget class="QCheckBox" name="autoLogCommsCheckBox">
+        <property name="text">
+         <string>Save communications log on exit (saved as *_Com.txt)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -320,6 +330,7 @@
   <tabstop>autoLogCheckBox</tabstop>
   <tabstop>autoLogLocation</tabstop>
   <tabstop>selectAutoLogLocationButton</tabstop>
+  <tabstop>autoLogCommsCheckBox</tabstop>
   <tabstop>radioButtonKeepForever</tabstop>
   <tabstop>radioButtonDeleteDays</tabstop>
   <tabstop>spinBoxDays</tabstop>

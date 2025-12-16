@@ -97,6 +97,15 @@ void AbstractShaderProgram::setUniform1fv(const GLint location,
     deref(functions).glUniform1fv(location, count, value);
 }
 
+void AbstractShaderProgram::setUniform3fv(const GLint location,
+                                          const GLsizei count,
+                                          const GLfloat *const value)
+{
+    assert(m_isBound);
+    auto functions = m_functions.lock();
+    deref(functions).glUniform3fv(location, count, value);
+}
+
 void AbstractShaderProgram::setUniform4fv(const GLint location,
                                           const GLsizei count,
                                           const GLfloat *const value)
@@ -165,6 +174,18 @@ void AbstractShaderProgram::setViewport(const char *const name, const Viewport &
     const glm::ivec4 viewport{input_viewport.offset, input_viewport.size};
     const GLint location = getUniformLocation(name);
     setUniform4iv(location, 1, glm::value_ptr(viewport));
+}
+
+void AbstractShaderProgram::setVec3(const char *const name, const glm::vec3 &v)
+{
+    const auto location = getUniformLocation(name);
+    setUniform3fv(location, 1, glm::value_ptr(v));
+}
+
+void AbstractShaderProgram::setInt(const char *const name, const int value)
+{
+    const GLint location = getUniformLocation(name);
+    setUniform1iv(location, 1, &value);
 }
 
 } // namespace Legacy

@@ -31,4 +31,6 @@ public slots:
     void slot_internalEditorRadioButtonChanged(bool);
     void slot_externalEditorCommandTextChanged(QString);
     void slot_externalEditorBrowseButtonClicked(bool);
+    void slot_gmcpBroadcastCheckBoxChanged(int);
+    void slot_gmcpIntervalSpinBoxChanged(int);
 };

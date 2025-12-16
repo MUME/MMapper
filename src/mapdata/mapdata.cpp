@@ -6,6 +6,8 @@
 
 #include "mapdata.h"
 
+#include "../clock/mumeclock.h"
+#include "../clock/mumemoment.h"
 #include "../display/MapCanvasRoomDrawer.h"
 #include "../display/Textures.h"
 #include "../global/AnsiOstream.h"
@@ -47,10 +49,18 @@
 #include <QApplication>
 #include <QList>
 #include <QString>
+#include <QTimer>
 
-MapData::MapData(QObject *const parent)
+MapData::MapData(MumeClock &mumeClock, QObject *const parent)
     : MapFrontend(parent)
-{}
+    , m_mumeClock(mumeClock)
+{
+    // Set up timer to periodically check for day/night transitions
+    // Check every 10 seconds (MUME time changes relatively slowly)
+    m_lightingUpdateTimer = new QTimer(this);
+    connect(m_lightingUpdateTimer, &QTimer::timeout, this, &MapData::slot_checkTimeOfDay);
+    m_lightingUpdateTimer->start(10000); // 10 seconds
+}
 
 DoorName MapData::getDoorName(const RoomId id, const ExitDirEnum dir)
 {
@@ -62,6 +72,113 @@ DoorName MapData::getDoorName(const RoomId id, const ExitDirEnum dir)
 
     static const DoorName tmp{"exit"};
     return tmp;
+}
+
+void MapData::setRoom(const RoomId id)
+{
+    auto before = m_selectedRoom;
+    if (const auto &room = findRoomHandle(id)) {
+        m_selectedRoom = id;
+    } else {
+        clearSelectedRoom();
+    }
+    if (before != m_selectedRoom) {
+        emit sig_onPositionChange();
+
+        // Regenerate meshes when player moves (the lit player room changes position)
+        // or when nighttime (outdoor rooms affected by player position)
+        const bool playerHasLight = m_currentPromptFlags.isValid()
+                                    && (m_currentPromptFlags.isLit()
+                                        || !m_currentPromptFlags.isDark());
+        const MumeMoment moment = m_mumeClock.getMumeMoment();
+        const MumeTimeEnum timeOfDay = moment.toTimeOfDay();
+        const bool isNight = (timeOfDay == MumeTimeEnum::NIGHT || timeOfDay == MumeTimeEnum::DUSK);
+
+        if (playerHasLight || isNight) {
+            log(QString("Player moved to new room, regenerating meshes"));
+            notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+        }
+    }
+}
+
+void MapData::setPosition(const Coordinate &pos)
+{
+    if (const auto &room = findRoomHandle(pos)) {
+        setRoom(room.getId());
+    } else {
+        auto before = m_selectedRoom;
+        clearSelectedRoom();
+        if (before != m_selectedRoom) {
+            emit sig_onPositionChange();
+
+            // Regenerate meshes when player position changes
+            const bool playerHasLight = m_currentPromptFlags.isValid()
+                                        && (m_currentPromptFlags.isLit()
+                                            || !m_currentPromptFlags.isDark());
+            const MumeMoment moment = m_mumeClock.getMumeMoment();
+            const MumeTimeEnum timeOfDay = moment.toTimeOfDay();
+            const bool isNight = (timeOfDay == MumeTimeEnum::NIGHT || timeOfDay == MumeTimeEnum::DUSK);
+
+            if (playerHasLight || isNight) {
+                log(QString("Player position cleared, regenerating meshes"));
+                notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+            }
+        }
+    }
+}
+
+void MapData::forcePosition(const Coordinate &pos)
+{
+    if (const auto &room = findRoomHandle(pos)) {
+        forceToRoom(room.getId());
+    } else {
+        auto before = m_selectedRoom;
+        clearSelectedRoom();
+        if (before != m_selectedRoom) {
+            emit sig_onForcedPositionChange();
+
+            // Regenerate meshes when player position changes
+            const bool playerHasLight = m_currentPromptFlags.isValid()
+                                        && (m_currentPromptFlags.isLit()
+                                            || !m_currentPromptFlags.isDark());
+            const MumeMoment moment = m_mumeClock.getMumeMoment();
+            const MumeTimeEnum timeOfDay = moment.toTimeOfDay();
+            const bool isNight = (timeOfDay == MumeTimeEnum::NIGHT || timeOfDay == MumeTimeEnum::DUSK);
+
+            if (playerHasLight || isNight) {
+                log(QString("Player forced position cleared, regenerating meshes"));
+                notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+            }
+        }
+    }
+}
+
+void MapData::slot_checkTimeOfDay()
+{
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    const MumeTimeEnum timeOfDay = moment.toTimeOfDay();
+
+    // Helper function to determine if a time is "night" (dark) or "day" (bright)
+    auto isNightTime = [](MumeTimeEnum time) {
+        return time == MumeTimeEnum::NIGHT || time == MumeTimeEnum::DUSK;
+    };
+
+    // Check if we've transitioned between day and night
+    if (m_lastTimeOfDay != MumeTimeEnum::UNKNOWN) {
+        const bool wasNight = isNightTime(m_lastTimeOfDay);
+        const bool isNight = isNightTime(timeOfDay);
+
+        if (wasNight != isNight) {
+            log(QString("Day/Night transition detected (%1 -> %2), regenerating meshes")
+                    .arg(wasNight ? "NIGHT" : "DAY")
+                    .arg(isNight ? "NIGHT" : "DAY"));
+            m_lastTimeOfDay = timeOfDay;
+            notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+        }
+    } else {
+        // Initialize on first check
+        m_lastTimeOfDay = timeOfDay;
+    }
 }
 
 ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
@@ -139,7 +256,48 @@ std::optional<RoomId> MapData::getLast(const RoomId start, const CommandQueue &d
 FutureSharedMapBatchFinisher MapData::generateBatches(const mctp::MapCanvasTexturesProxy &textures,
                                                       const std::shared_ptr<const FontMetrics> &font)
 {
-    return generateMapDataFinisher(textures, font, getCurrentMap());
+    // Get current time of day from MumeClock
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    const MumeTimeEnum timeOfDay = moment.toTimeOfDay();
+
+    // Debug: Log current time and lighting state
+    static MumeTimeEnum lastLoggedTime = MumeTimeEnum::UNKNOWN;
+    if (timeOfDay != lastLoggedTime) {
+        const char *timeStr = (timeOfDay == MumeTimeEnum::NIGHT) ? "NIGHT"
+                            : (timeOfDay == MumeTimeEnum::DAWN)  ? "DAWN"
+                            : (timeOfDay == MumeTimeEnum::DAY)   ? "DAY"
+                            : (timeOfDay == MumeTimeEnum::DUSK)  ? "DUSK"
+                                                                 : "UNKNOWN";
+        log(QString("Time of day changed to: %1").arg(timeStr));
+        lastLoggedTime = timeOfDay;
+    }
+
+    // Helper function to determine if a time is "bright" (day) or "dark" (night/dusk)
+    auto isNightTime = [](MumeTimeEnum time) {
+        return time == MumeTimeEnum::NIGHT || time == MumeTimeEnum::DUSK;
+    };
+
+    // Check if time transitioned between day and night
+    if (m_lastTimeOfDay != MumeTimeEnum::UNKNOWN) {
+        const bool wasNight = isNightTime(m_lastTimeOfDay);
+        const bool isNight = isNightTime(timeOfDay);
+
+        if (wasNight != isNight) {
+            // Day↔Night transition detected - force mesh regeneration
+            notifyModified(RoomUpdateFlags{RoomUpdateEnum::RoomMeshNeedsUpdate});
+        }
+    }
+
+    // Update last time for next check
+    m_lastTimeOfDay = timeOfDay;
+
+    // Get player's current room and light status
+    const std::optional<RoomId> playerRoom = m_selectedRoom;
+    const bool playerHasLight = m_currentPromptFlags.isValid()
+                                    && (m_currentPromptFlags.isLit()
+                                        || !m_currentPromptFlags.isDark());
+
+    return generateMapDataFinisher(textures, font, getCurrentMap(), timeOfDay, playerRoom, playerHasLight);
 }
 
 void MapData::applyChangesToList(const RoomSelection &sel,

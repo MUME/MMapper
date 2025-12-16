@@ -52,6 +52,11 @@ AutoLogPage::AutoLogPage(QWidget *const parent)
             this,
             [](const bool askDelete) { setConfig().autoLog.askDelete = askDelete; });
 
+    connect(ui->autoLogCommsCheckBox,
+            QOverload<bool>::of(&QCheckBox::toggled),
+            this,
+            [](const bool saveCommsLog) { setConfig().comms.saveLogOnExit.set(saveCommsLog); });
+
     connect(ui->autoLogMaxBytes,
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
@@ -70,6 +75,7 @@ void AutoLogPage::slot_loadConfig()
     const auto &config = getConfig().autoLog;
     ui->autoLogCheckBox->setChecked(config.autoLog);
     ui->autoLogLocation->setText(config.autoLogDirectory);
+    ui->autoLogCommsCheckBox->setChecked(getConfig().comms.saveLogOnExit.get());
     ui->autoLogMaxBytes->setValue(config.rotateWhenLogsReachBytes / MEGABYTE_IN_BYTES);
     switch (config.cleanupStrategy) {
     case AutoLoggerEnum::KeepForever:

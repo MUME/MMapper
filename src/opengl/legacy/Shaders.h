@@ -35,6 +35,10 @@ private:
     {
         setColor("uColor", uniforms.color);
         setMatrix("uMVP", mvp);
+        setVec3("uPlayerPos", uniforms.playerPos);
+        setInt("uCurrentLayer", uniforms.currentLayer);
+        setInt("uEnableRadial", uniforms.enableRadialTransparency ? 1 : 0);
+        setInt("uIsNight", uniforms.isNight ? 1 : 0);
     }
 };
 
@@ -53,6 +57,11 @@ private:
         setColor("uColor", uniforms.color);
         setMatrix("uMVP", mvp);
         setTexture("uTexture", 0);
+        setVec3("uPlayerPos", uniforms.playerPos);
+        setInt("uCurrentLayer", uniforms.currentLayer);
+        setInt("uEnableRadial", uniforms.enableRadialTransparency ? 1 : 0);
+        setInt("uTexturesDisabled", uniforms.texturesDisabled ? 1 : 0);
+        setInt("uIsNight", uniforms.isNight ? 1 : 0);
     }
 };
 
@@ -71,6 +80,10 @@ private:
         setColor("uColor", uniforms.color);
         setMatrix("uMVP", mvp);
         setTexture("uTexture", 0);
+        setVec3("uPlayerPos", uniforms.playerPos);
+        setInt("uCurrentLayer", uniforms.currentLayer);
+        setInt("uEnableRadial", uniforms.enableRadialTransparency ? 1 : 0);
+        setInt("uIsNight", uniforms.isNight ? 1 : 0);
     }
 };
 

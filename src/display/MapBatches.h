@@ -29,7 +29,7 @@ struct NODISCARD LayerMeshes final
     DEFAULT_MOVES_DELETE_COPIES(LayerMeshes);
     ~LayerMeshes() = default;
 
-    void render(int thisLayer, int focusedLayer);
+    void render(int thisLayer, int focusedLayer, const glm::vec3 &playerPos, bool isNight);
     explicit operator bool() const { return isValid; }
 };
 
@@ -68,6 +68,7 @@ struct NODISCARD MapBatches final
     BatchedMeshes batchedMeshes;
     BatchedConnectionMeshes connectionMeshes;
     BatchedRoomNames roomNameBatches;
+    bool isNight = false;  // True if current time is night (for darker tinting)
 
     MapBatches() = default;
     ~MapBatches() = default;

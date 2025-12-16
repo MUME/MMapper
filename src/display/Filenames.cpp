@@ -4,17 +4,66 @@
 
 #include "Filenames.h"
 
+#include "../clock/mumemoment.h"
 #include "../configuration/configuration.h"
 #include "../global/Consts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
+
+// Thread-safe storage for current season
+namespace {
+std::atomic<MumeSeasonEnum> g_currentSeason{MumeSeasonEnum::SPRING};
+
+NODISCARD const char *seasonToString(MumeSeasonEnum season)
+{
+    switch (season) {
+    case MumeSeasonEnum::WINTER:
+        return "Winter";
+    case MumeSeasonEnum::SPRING:
+        return "Spring";
+    case MumeSeasonEnum::SUMMER:
+        return "Summer";
+    case MumeSeasonEnum::AUTUMN:
+        return "Autumn";
+    case MumeSeasonEnum::UNKNOWN:
+    default:
+        return "Spring"; // Default to Spring
+    }
+}
+
+NODISCARD const char *textureSetToString(TextureSetEnum textureSet)
+{
+    switch (textureSet) {
+    case TextureSetEnum::CLASSIC:
+        return "Classic";
+    case TextureSetEnum::MODERN:
+        return "Modern";
+    case TextureSetEnum::CUSTOM:
+        return ""; // Custom uses resourcesDirectory directly
+    default:
+        return "Modern";
+    }
+}
+
+} // namespace
+
+void setCurrentSeason(MumeSeasonEnum season)
+{
+    g_currentSeason.store(season);
+}
+
+MumeSeasonEnum getCurrentSeason()
+{
+    return g_currentSeason.load();
+}
 
 // NOTE: This isn't used by the parser (currently only used for filenames).
 // If we were going to use it for parsing, then we'd probably want to
@@ -78,18 +127,119 @@ NODISCARD static const char *getFilenameSuffix(const E x)
 
 QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
-    const auto filename = QString("/%1/%2").arg(dir, name);
+    const auto &config = getConfig().canvas;
+    const auto textureSet = config.textureSet;
+    const auto enableSeasonalTextures = config.enableSeasonalTextures;
 
-    // Check if the user provided a custom resource
-    auto custom = getConfig().canvas.resourcesDirectory + filename;
-    if (QFile{custom}.exists()) {
-        return custom;
+    // Determine the base directory for the texture set
+    QString setDir;
+    QString customBasePath;
+
+    if (textureSet == TextureSetEnum::CUSTOM) {
+        // Use custom resources directory directly
+        customBasePath = config.resourcesDirectory;
+    } else {
+        // Use Classic or Modern from bundled or custom resources
+        setDir = textureSetToString(textureSet);
     }
 
-    // Fallback to the qrc resource
-    const auto qrc = ":" + filename;
+    // Determine which season to use
+    const char *seasonStr = nullptr;
+    if (dir == "pixmaps" && enableSeasonalTextures) {
+        // Only apply seasonal logic when seasonal textures are enabled
+        seasonStr = seasonToString(getCurrentSeason());
+    }
+
+    // Try multiple paths with fallback logic
+    QStringList pathsToTry;
+
+    if (textureSet == TextureSetEnum::CUSTOM) {
+        // Custom texture set paths
+        const auto baseFilename = QString("/%1/%2").arg(dir, name);
+
+        if (seasonStr != nullptr) {
+            // Try: custom/pixmaps/[Season]/file.png
+            pathsToTry << customBasePath + QString("/%1/%2/%3").arg(dir, seasonStr, name);
+        }
+        // Try: custom/pixmaps/file.png
+        pathsToTry << customBasePath + baseFilename;
+
+        // Fallback to Modern tileset for missing custom textures
+        const QString modernDir = "Modern";
+
+        // Try Modern with current season (if seasonal textures enabled)
+        if (seasonStr != nullptr) {
+            if (!config.resourcesDirectory.isEmpty()) {
+                pathsToTry << config.resourcesDirectory + QString("/%1/%2/%3/%4")
+                                                              .arg(dir, modernDir, seasonStr, name);
+            }
+            pathsToTry << QString(":/%1/%2/%3/%4").arg(dir, modernDir, seasonStr, name);
+        }
+
+        // Try Modern base folder
+        if (!config.resourcesDirectory.isEmpty()) {
+            pathsToTry << config.resourcesDirectory + QString("/%1/%2/%3")
+                                                          .arg(dir, modernDir, name);
+        }
+        pathsToTry << QString(":/%1/%2/%3").arg(dir, modernDir, name);
+
+        // Try Modern/Spring as final fallback for pixmaps
+        if (dir == "pixmaps") {
+            if (!config.resourcesDirectory.isEmpty()) {
+                pathsToTry << config.resourcesDirectory + QString("/%1/%2/Spring/%3")
+                                                              .arg(dir, modernDir, name);
+            }
+            pathsToTry << QString(":/%1/%2/Spring/%3").arg(dir, modernDir, name);
+        }
+    } else {
+        // Classic or Modern texture sets
+        if (seasonStr != nullptr) {
+            // Try: resourcesDir/pixmaps/Modern/[Season]/file.png (custom location)
+            if (!config.resourcesDirectory.isEmpty()) {
+                pathsToTry << config.resourcesDirectory + QString("/%1/%2/%3/%4")
+                                                              .arg(dir, setDir, seasonStr, name);
+            }
+            // Try: :pixmaps/Modern/[Season]/file.png (bundled)
+            pathsToTry << QString(":/%1/%2/%3/%4").arg(dir, setDir, seasonStr, name);
+
+            // Try: resourcesDir/pixmaps/Modern/file.png (fallback without season, custom)
+            if (!config.resourcesDirectory.isEmpty()) {
+                pathsToTry << config.resourcesDirectory + QString("/%1/%2/%3")
+                                                              .arg(dir, setDir, name);
+            }
+            // Try: :pixmaps/Modern/file.png (fallback without season, bundled)
+            pathsToTry << QString(":/%1/%2/%3").arg(dir, setDir, name);
+        } else {
+            // Seasonal textures disabled - try base folder first, then Spring as fallback
+            if (!config.resourcesDirectory.isEmpty()) {
+                pathsToTry << config.resourcesDirectory + QString("/%1/%2/%3")
+                                                              .arg(dir, setDir, name);
+            }
+            pathsToTry << QString(":/%1/%2/%3").arg(dir, setDir, name);
+
+            // For Modern tileset with seasonal disabled, fallback to Spring for pixmaps
+            if (dir == "pixmaps" && textureSet == TextureSetEnum::MODERN) {
+                if (!config.resourcesDirectory.isEmpty()) {
+                    pathsToTry << config.resourcesDirectory + QString("/%1/%2/Spring/%3")
+                                                                  .arg(dir, setDir, name);
+                }
+                pathsToTry << QString(":/%1/%2/Spring/%3").arg(dir, setDir, name);
+            }
+        }
+    }
+
+    // Try each path in order
+    for (const auto &path : pathsToTry) {
+        if (QFile{path}.exists()) {
+            return path;
+        }
+    }
+
+    // Final fallback to original bundled resource location (without texture set)
+    const auto qrc = QString(":/%1/%2").arg(dir, name);
     if (!QFile{qrc}.exists()) {
-        qWarning() << "WARNING:" << dir << filename << "does not exist.";
+        qWarning() << "WARNING: Resource not found:" << dir << "/" << name
+                   << "(tried" << pathsToTry.size() << "locations)";
     }
     return qrc;
 }

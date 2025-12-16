@@ -69,6 +69,9 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(decodeEmoji, &QCheckBox::clicked, this, [](bool checked) {
         setConfig().parser.decodeEmoji = checked;
     });
+    connect(enableYellFallbackParsing, &QCheckBox::clicked, this, [](bool checked) {
+        setConfig().parser.enableYellFallbackParsing = checked;
+    });
 }
 
 void ParserPage::slot_loadConfig()
@@ -83,6 +86,7 @@ void ParserPage::slot_loadConfig()
 
     encodeEmoji->setChecked(settings.encodeEmoji);
     decodeEmoji->setChecked(settings.decodeEmoji);
+    enableYellFallbackParsing->setChecked(settings.enableYellFallbackParsing);
 }
 
 void ParserPage::slot_roomNameColorClicked()
