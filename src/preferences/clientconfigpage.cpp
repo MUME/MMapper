@@ -3,8 +3,8 @@
 
 #include "clientconfigpage.h"
 
-#include "../configuration/configuration.h"
 #include "../configuration/HotkeyManager.h"
+#include "../configuration/configuration.h"
 #include "../global/macros.h"
 #include "ui_clientconfigpage.h"
 

@@ -166,7 +166,7 @@ void TestHotkeyManager::exportSortOrderTest()
 {
     HotkeyManager manager;
 
-    // Import hotkeys with various modifier counts
+    // Import hotkeys in a specific order - order should be preserved (no auto-sorting)
     QString testConfig = "_hotkey CTRL+SHIFT+F1 two_mods\n"
                          "_hotkey F2 no_mods\n"
                          "_hotkey ALT+F3 one_mod\n"
@@ -184,17 +184,12 @@ void TestHotkeyManager::exportSortOrderTest()
     const auto posCtrlF5 = exported.indexOf("_hotkey CTRL+F5");
     const auto posCtrlShiftF1 = exported.indexOf("_hotkey CTRL+SHIFT+F1");
 
-    // Verify no-modifier keys come first
+    // Verify order is preserved exactly as imported (no auto-sorting)
+    // Original order: CTRL+SHIFT+F1, F2, ALT+F3, F4, CTRL+F5
+    QVERIFY(posCtrlShiftF1 < posF2);
     QVERIFY(posF2 < posAltF3);
-    QVERIFY(posF4 < posAltF3);
-
-    // Verify one-modifier keys come before two-modifier keys
-    QVERIFY(posAltF3 < posCtrlShiftF1);
-    QVERIFY(posCtrlF5 < posCtrlShiftF1);
-
-    // Verify alphabetical order within same modifier count
-    QVERIFY(posF2 < posF4); // F2 before F4
-    QVERIFY(posAltF3 < posCtrlF5); // ALT+F3 before CTRL+F5
+    QVERIFY(posAltF3 < posF4);
+    QVERIFY(posF4 < posCtrlF5);
 }
 
 QTEST_MAIN(TestHotkeyManager)

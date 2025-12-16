@@ -5,6 +5,7 @@
 #include "clientpage.h"
 
 #include "../configuration/configuration.h"
+#include "../global/macros.h"
 #include "ui_clientpage.h"
 
 #include <QFont>
@@ -15,8 +16,6 @@
 #include <QValidator>
 #include <QtGui>
 #include <QtWidgets>
-
-#include "../global/macros.h"
 
 class NODISCARD CustomSeparatorValidator final : public QValidator
 {
@@ -136,9 +135,8 @@ ClientPage::ClientPage(QWidget *parent)
     // Disable auto-start option on WASM (client always starts automatically there)
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         ui->autoStartClientCheck->setDisabled(true);
-        ui->autoStartClientCheck->setToolTip(
-            "This option is not available in the web version.\n"
-            "The client always starts automatically.");
+        ui->autoStartClientCheck->setToolTip("This option is not available in the web version.\n"
+                                             "The client always starts automatically.");
     }
 }
 
