@@ -49,6 +49,7 @@ const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroup{"group", 2};
 const Abbrev cmdHelp{"help", 2};
+const Abbrev cmdHotkey{"hotkey", 3};
 const Abbrev cmdMap{"map"};
 const Abbrev cmdMark{"mark", 3};
 const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
@@ -1101,6 +1102,15 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Perform actions on the group manager."));
+
+    /* hotkey commands */
+    add(
+        cmdHotkey,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseHotkey(rest);
+            return true;
+        },
+        makeSimpleHelp("Define keyboard hotkeys for quick commands."));
 
     /* timers command */
     add(

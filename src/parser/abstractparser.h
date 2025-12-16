@@ -405,6 +405,7 @@ private:
     NODISCARD bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
+    void parseHotkey(StringView input);
     void parseMark(StringView input);
     void parseRoom(StringView input);
     void parseGroup(StringView input);

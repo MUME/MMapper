@@ -4,8 +4,8 @@
 
 #include "inputwidget.h"
 
-#include "../configuration/configuration.h"
 #include "../configuration/HotkeyManager.h"
+#include "../configuration/configuration.h"
 #include "../global/Color.h"
 #include "../mpi/remoteeditwidget.h"
 
@@ -585,85 +585,6 @@ bool InputWidget::tryHistory(const int key)
     return false;
 }
 
-// Process _hotkey commands and return true if handled
-static bool processHotkeyCommand(const QString &input, InputWidgetOutputs &outputs)
-{
-    if (!input.startsWith("_hotkey")) {
-        return false;
-    }
-
-    auto &hotkeyManager = setConfig().hotkeyManager;
-    QString output;
-
-    // Parse the command
-    QStringList parts = input.split(' ', Qt::SkipEmptyParts);
-
-    if (parts.size() == 1) {
-        // _hotkey - show help (same as _hotkey help)
-        output = "\nHotkey commands:\n"
-                 "  _hotkey              - Show this help\n"
-                 "  _hotkey config       - List all configured hotkeys\n"
-                 "  _hotkey keys         - List available key names and modifiers\n"
-                 "  _hotkey reset        - Reset hotkeys to defaults\n"
-                 "  _hotkey KEY cmd      - Set a hotkey (e.g., _hotkey NUMPAD8 north)\n"
-                 "  _hotkey KEY          - Remove a hotkey (e.g., _hotkey NUMPAD8)\n";
-    } else if (parts.size() == 2) {
-        QString arg = parts[1];
-
-        if (arg.compare("help", Qt::CaseInsensitive) == 0) {
-            // _hotkey help - same as _hotkey
-            output = "\nHotkey commands:\n"
-                     "  _hotkey              - Show this help\n"
-                     "  _hotkey config       - List all configured hotkeys\n"
-                     "  _hotkey keys         - List available key names and modifiers\n"
-                     "  _hotkey reset        - Reset hotkeys to defaults\n"
-                     "  _hotkey KEY cmd      - Set a hotkey (e.g., _hotkey NUMPAD8 north)\n"
-                     "  _hotkey KEY          - Remove a hotkey (e.g., _hotkey NUMPAD8)\n";
-        } else if (arg.compare("config", Qt::CaseInsensitive) == 0) {
-            // _hotkey config - list all configured hotkeys in their saved order
-            const auto &hotkeys = hotkeyManager.getAllHotkeys();
-            if (hotkeys.empty()) {
-                output = "\nNo hotkeys configured.\n";
-            } else {
-                output = "\nConfigured hotkeys:\n";
-                for (const auto &[key, command] : hotkeys) {
-                    output += QString("  %1 = %2\n").arg(key, -20).arg(command);
-                }
-            }
-        } else if (arg.compare("keys", Qt::CaseInsensitive) == 0) {
-            // _hotkey keys
-            output = "\nAvailable key names:\n"
-                     "  Function keys: F1-F12\n"
-                     "  Numpad: NUMPAD0-9, NUMPAD_SLASH, NUMPAD_ASTERISK,\n"
-                     "          NUMPAD_MINUS, NUMPAD_PLUS, NUMPAD_PERIOD\n"
-                     "  Navigation: HOME, END, INSERT\n"
-                     "  Misc: ACCENT, 0-9, HYPHEN, EQUAL\n"
-                     "\n"
-                     "Available modifiers:\n"
-                     "  CTRL, SHIFT, ALT, META\n"
-                     "\n"
-                     "Example: CTRL+SHIFT+F1, ALT+NUMPAD8\n";
-        } else if (arg.compare("reset", Qt::CaseInsensitive) == 0) {
-            // _hotkey reset - reset to defaults
-            hotkeyManager.resetToDefaults();
-            output = "\nHotkeys reset to defaults.\n";
-        } else {
-            // _hotkey KEY - remove a hotkey
-            hotkeyManager.removeHotkey(arg);
-            output = QString("\nHotkey removed: %1\n").arg(arg.toUpper());
-        }
-    } else {
-        // _hotkey KEY command - set a hotkey
-        QString key = parts[1];
-        QString command = parts.mid(2).join(' ');
-        hotkeyManager.setHotkey(key, command);
-        output = QString("\nHotkey set: %1 = %2\n").arg(key.toUpper()).arg(command);
-    }
-
-    outputs.displayMessage(output);
-    return true;
-}
-
 // Process _config commands and return true if handled
 static bool processConfigCommand(const QString &input, InputWidgetOutputs &outputs)
 {
@@ -750,13 +671,6 @@ void InputWidget::gotInput()
         clear();
     } else {
         selectAll();
-    }
-
-    // Check for _hotkey command
-    if (processHotkeyCommand(input, m_outputs)) {
-        m_inputHistory.addInputLine(input);
-        m_tabHistory.addInputLine(input);
-        return;
     }
 
     // Check for _config command

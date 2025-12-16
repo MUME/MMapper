@@ -434,6 +434,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
     parser/AbstractParser-Group.cpp
+    parser/AbstractParser-Hotkey.cpp
     parser/AbstractParser-Mark.cpp
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Timer.cpp
