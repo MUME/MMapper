@@ -5,8 +5,8 @@ set -e
 # IMPORTANT: Change this path to match your emsdk installation location
 source "$HOME/dev/emsdk/emsdk_env.sh"
 
-# Paths - automatically detect script location
-MMAPPER_SRC="$(cd "$(dirname "$0")" && pwd)"
+# Paths - automatically detect project root (parent of scripts directory)
+MMAPPER_SRC="$(cd "$(dirname "$0")/.." && pwd)"
 QT_WASM="$MMAPPER_SRC/6.5.3/wasm_multithread"
 QT_HOST="$MMAPPER_SRC/6.5.3/macos"
 

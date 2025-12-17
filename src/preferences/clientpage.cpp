@@ -128,9 +128,8 @@ ClientPage::ClientPage(QWidget *parent)
     });
 
     connect(ui->commandSeparatorLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
-        if (!text.isEmpty()) {
-            setConfig().integratedClient.commandSeparator = text;
-        }
+        // Keep config in sync with the UI, including when the separator is cleared
+        setConfig().integratedClient.commandSeparator = text;
     });
 
     ui->commandSeparatorLineEdit->setValidator(new CustomSeparatorValidator(this));

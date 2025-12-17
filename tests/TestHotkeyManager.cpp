@@ -5,6 +5,8 @@
 
 #include "../src/configuration/HotkeyManager.h"
 
+#include <QSettings>
+#include <QStringList>
 #include <QtTest/QtTest>
 
 TestHotkeyManager::TestHotkeyManager() = default;
@@ -370,6 +372,113 @@ void TestHotkeyManager::invalidKeyValidationTest()
 
     manager.setHotkey("HYPHEN", "test");
     QVERIFY(manager.hasHotkey("HYPHEN"));
+}
+
+void TestHotkeyManager::duplicateKeyBehaviorTest()
+{
+    HotkeyManager manager;
+
+    // Test that duplicate keys in imported content use the last definition
+    QString contentWithDuplicates = "_hotkey F1 first\n"
+                                    "_hotkey F2 middle\n"
+                                    "_hotkey F1 second\n";
+
+    manager.importFromCliFormat(contentWithDuplicates);
+
+    // getCommand should return the last definition
+    QCOMPARE(manager.getCommand("F1"), QString("second"));
+    QCOMPARE(manager.getCommand("F2"), QString("middle"));
+
+    // Test that setHotkey replaces existing entry
+    manager.importFromCliFormat("_hotkey F1 original\n");
+    QCOMPARE(manager.getCommand("F1"), QString("original"));
+    QCOMPARE(manager.getAllHotkeys().size(), 1);
+
+    manager.setHotkey("F1", "replaced");
+    QCOMPARE(manager.getCommand("F1"), QString("replaced"));
+    QCOMPARE(manager.getAllHotkeys().size(), 1); // Still 1, not 2
+}
+
+void TestHotkeyManager::commentPreservationTest()
+{
+    HotkeyManager manager;
+
+    // Test that comments and formatting survive import/export round trip
+    const QString cliFormat = "# Leading comment\n"
+                              "\n"
+                              "# Section header\n"
+                              "_hotkey F1 open\n"
+                              "\n"
+                              "# Another comment\n"
+                              "_hotkey F2 close\n";
+
+    manager.importFromCliFormat(cliFormat);
+    const QString exported = manager.exportToCliFormat();
+
+    // Verify comments are preserved in export
+    QVERIFY(exported.contains("# Leading comment"));
+    QVERIFY(exported.contains("# Section header"));
+    QVERIFY(exported.contains("# Another comment"));
+
+    // Verify hotkeys are still correct
+    QVERIFY(exported.contains("_hotkey F1 open"));
+    QVERIFY(exported.contains("_hotkey F2 close"));
+
+    // Verify order is preserved (comments before their hotkeys)
+    int posLeading = exported.indexOf("# Leading comment");
+    int posSection = exported.indexOf("# Section header");
+    int posF1 = exported.indexOf("_hotkey F1");
+    int posAnother = exported.indexOf("# Another comment");
+    int posF2 = exported.indexOf("_hotkey F2");
+
+    QVERIFY(posLeading < posSection);
+    QVERIFY(posSection < posF1);
+    QVERIFY(posF1 < posAnother);
+    QVERIFY(posAnother < posF2);
+}
+
+void TestHotkeyManager::settingsPersistenceTest()
+{
+    // Use a unique organization/app name to avoid conflicts with real settings
+    const QString testOrg = "MMapperTest";
+    const QString testApp = "HotkeyManagerTest";
+
+    // Clean up any existing test settings
+    QSettings cleanupSettings(testOrg, testApp);
+    cleanupSettings.clear();
+    cleanupSettings.sync();
+
+    {
+        // Create a manager and set some hotkeys
+        HotkeyManager manager;
+        manager.importFromCliFormat("# Test config\n"
+                                    "_hotkey F1 look\n"
+                                    "_hotkey CTRL+F2 attack\n");
+
+        QCOMPARE(manager.getCommand("F1"), QString("look"));
+        QCOMPARE(manager.getCommand("CTRL+F2"), QString("attack"));
+
+        // Save to settings
+        manager.saveToSettings();
+    }
+
+    {
+        // Create a new manager and load from settings
+        HotkeyManager manager;
+        manager.loadFromSettings();
+
+        // Verify hotkeys were persisted
+        QCOMPARE(manager.getCommand("F1"), QString("look"));
+        QCOMPARE(manager.getCommand("CTRL+F2"), QString("attack"));
+
+        // Verify comment was preserved
+        QString exported = manager.exportToCliFormat();
+        QVERIFY(exported.contains("# Test config"));
+    }
+
+    // Clean up test settings
+    cleanupSettings.clear();
+    cleanupSettings.sync();
 }
 
 QTEST_MAIN(TestHotkeyManager)

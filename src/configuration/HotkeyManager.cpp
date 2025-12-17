@@ -253,6 +253,7 @@ QString HotkeyManager::normalizeKeyString(const QString &keyString)
     QStringList parts = keyString.split('+', Qt::SkipEmptyParts);
 
     if (parts.isEmpty()) {
+        qWarning() << "HotkeyManager: empty or invalid key string:" << keyString;
         return QString();
     }
 
@@ -279,13 +280,16 @@ QString HotkeyManager::normalizeKeyString(const QString &keyString)
             hasAlt = true;
         } else if (upperPart == "META" || upperPart == "CMD" || upperPart == "COMMAND") {
             hasMeta = true;
+        } else {
+            qWarning() << "HotkeyManager: unrecognized modifier:" << part << "in:" << keyString;
         }
     }
 
     // Validate the base key
     QString upperBaseKey = baseKey.toUpper();
     if (!isValidBaseKey(upperBaseKey)) {
-        return QString(); // Invalid key name
+        qWarning() << "HotkeyManager: invalid base key:" << baseKey << "in:" << keyString;
+        return QString();
     }
 
     // Add modifiers in canonical order

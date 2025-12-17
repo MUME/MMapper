@@ -24,4 +24,7 @@ private Q_SLOTS:
     void removeHotkeyTest();
     void hasHotkeyTest();
     void invalidKeyValidationTest();
+    void duplicateKeyBehaviorTest();
+    void commentPreservationTest();
+    void settingsPersistenceTest();
 };
