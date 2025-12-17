@@ -20,14 +20,15 @@
 #include <glm/glm.hpp>
 
 #include <QDebug>
+#include <QOpenGLTexture>
 #include <qopengl.h>
 
 struct NODISCARD TexVert final
 {
-    glm::vec2 tex{};
+    glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit TexVert(const glm::vec2 &tex_, const glm::vec3 &vert_)
+    explicit TexVert(const glm::vec3 &tex_, const glm::vec3 &vert_)
         : tex{tex_}
         , vert{vert_}
     {}
@@ -38,10 +39,10 @@ using TexVertVector = std::vector<TexVert>;
 struct NODISCARD ColoredTexVert final
 {
     Color color;
-    glm::vec2 tex{};
+    glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit ColoredTexVert(const Color &color_, const glm::vec2 &tex_, const glm::vec3 &vert_)
+    explicit ColoredTexVert(const Color &color_, const glm::vec3 &tex_, const glm::vec3 &vert_)
         : color{color_}
         , tex{tex_}
         , vert{vert_}

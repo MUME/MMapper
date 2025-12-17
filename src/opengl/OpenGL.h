@@ -12,6 +12,8 @@
 
 #include <glm/glm.hpp>
 
+#include <QImage>
+#include <QString>
 #include <QSurfaceFormat>
 #include <qopengl.h>
 
@@ -162,5 +164,7 @@ public:
     void setTextureLookup(MMTextureId, SharedMMTexture);
 
 public:
-    void initArray(const SharedMMTexture &array, const std::vector<SharedMMTexture> &input);
+    void initArrayFromFiles(const SharedMMTexture &array, const std::vector<QString> &input);
+    void initArrayFromImages(const SharedMMTexture &array,
+                             const std::vector<std::vector<QImage>> &input);
 };

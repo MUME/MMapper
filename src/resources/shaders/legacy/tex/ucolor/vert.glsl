@@ -3,10 +3,10 @@
 
 uniform mat4 uMVP;
 
-layout(location = 0) in vec2 aTexCoord;
+layout(location = 0) in vec3 aTexCoord;
 layout(location = 1) in vec3 aVert;
 
-out vec2 vTexCoord;
+out vec3 vTexCoord;
 
 void main()
 {

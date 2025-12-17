@@ -137,8 +137,11 @@ public:
     using Base::initializeOpenGLFunctions;
 
 public:
+    using Base::glActiveTexture;
     using Base::glAttachShader;
     using Base::glBindBuffer;
+    using Base::glBindTexture;
+    using Base::glBindVertexArray;
     using Base::glBlendFunc;
     using Base::glBlendFuncSeparate;
     using Base::glBufferData;
@@ -151,6 +154,7 @@ public:
     using Base::glDeleteBuffers;
     using Base::glDeleteProgram;
     using Base::glDeleteShader;
+    using Base::glDeleteVertexArrays;
     using Base::glDepthFunc;
     using Base::glDetachShader;
     using Base::glDisable;
@@ -159,6 +163,8 @@ public:
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
     using Base::glGenBuffers;
+    using Base::glGenerateMipmap;
+    using Base::glGenVertexArrays;
     using Base::glGetAttribLocation;
     using Base::glGetIntegerv;
     using Base::glGetProgramInfoLog;
@@ -166,6 +172,8 @@ public:
     using Base::glGetShaderInfoLog;
     using Base::glGetShaderiv;
     using Base::glGetString;
+    using Base::glGetTexLevelParameteriv;
+    using Base::glGetTexParameteriv;
     using Base::glGetUniformLocation;
     using Base::glHint;
     using Base::glIsBuffer;
@@ -173,7 +181,9 @@ public:
     using Base::glIsShader;
     using Base::glIsTexture;
     using Base::glLinkProgram;
+    using Base::glPixelStorei;
     using Base::glShaderSource;
+    using Base::glTexSubImage3D;
     using Base::glUniform1fv;
     using Base::glUniform1iv;
     using Base::glUniform4fv;
@@ -181,11 +191,6 @@ public:
     using Base::glUniformMatrix4fv;
     using Base::glUseProgram;
     using Base::glVertexAttribPointer;
-
-    // VAO functions
-    using Base::glBindVertexArray;
-    using Base::glDeleteVertexArrays;
-    using Base::glGenVertexArrays;
 
 public:
     void glLineWidth(const GLfloat lineWidth)

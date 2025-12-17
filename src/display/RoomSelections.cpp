@@ -57,7 +57,7 @@ public:
 #define DECL(name, a, b) \
     const TexVert name \
     { \
-        glm::vec2{(a), (b)}, glm::vec3 \
+        glm::vec3{(a), (b), 0}, glm::vec3 \
         { \
             (a), (b), 0 \
         } \
@@ -109,7 +109,7 @@ public:
                 std::abort();
             });
 
-            gl.renderTexturedQuads(arr, rs.withTexture0(texture->getId()));
+            gl.renderTexturedQuads(arr, rs.withTexture0(texture->getArrayPosition().array));
         }
     }
 };
