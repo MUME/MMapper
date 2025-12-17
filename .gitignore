@@ -21,6 +21,7 @@ CMakeSettings.json
 cmake-build-debug/
 .claude/
 *.bat
+*.exe
 nul
 
 # snapcraft

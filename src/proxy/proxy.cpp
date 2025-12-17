@@ -876,6 +876,19 @@ void Proxy::init()
             getGameObserver().observeRawGameText(text);
         });
 
+        // Register change callbacks for GMCP broadcast settings
+        setConfig().mumeClock.gmcpBroadcast.registerChangeCallback(m_lifetime, [this]() {
+            qDebug() << "GMCP broadcast setting changed, restarting broadcaster...";
+            stopClockBroadcaster();
+            startClockBroadcaster();
+        });
+
+        setConfig().mumeClock.gmcpBroadcastInterval.registerChangeCallback(m_lifetime, [this]() {
+            qDebug() << "GMCP broadcast interval changed, restarting broadcaster...";
+            stopClockBroadcaster();
+            startClockBroadcaster();
+        });
+
         // Clock broadcaster will be started automatically when client enables MUME.Time module
     };
 
@@ -904,11 +917,11 @@ void Proxy::startClockBroadcaster()
     const auto &config = getConfig();
 
     qDebug() << "=== startClockBroadcaster called ===";
-    qDebug() << "  gmcpBroadcast config:" << config.mumeClock.gmcpBroadcast;
+    qDebug() << "  gmcpBroadcast config:" << config.mumeClock.gmcpBroadcast.get();
     qDebug() << "  MUME_TIME enabled:" << isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME);
 
     // Only start if GMCP broadcasting is enabled and client supports MUME.Time module
-    if (!config.mumeClock.gmcpBroadcast || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+    if (!config.mumeClock.gmcpBroadcast.get() || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
         qDebug() << "  NOT starting (requirements not met)";
         return;
     }
@@ -923,9 +936,9 @@ void Proxy::startClockBroadcaster()
     }
 
     // Set interval and start
-    m_clockBroadcastTimer->setInterval(config.mumeClock.gmcpBroadcastInterval);
+    m_clockBroadcastTimer->setInterval(config.mumeClock.gmcpBroadcastInterval.get());
     m_clockBroadcastTimer->start();
-    qDebug() << "  Timer started, interval:" << config.mumeClock.gmcpBroadcastInterval << "ms";
+    qDebug() << "  Timer started, interval:" << config.mumeClock.gmcpBroadcastInterval.get() << "ms";
 
     // Send initial update immediately
     qDebug() << "  Sending initial broadcast...";

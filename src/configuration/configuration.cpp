@@ -814,13 +814,15 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
 }
 
+Configuration::MumeClockSettings::MumeClockSettings() = default;
+
 void Configuration::MumeClockSettings::read(const QSettings &conf)
 {
     // NOTE: old values might be stored as int32
     startEpoch = conf.value(KEY_MUME_START_EPOCH, 1517443173).toLongLong();
     display = conf.value(KEY_DISPLAY_CLOCK, true).toBool();
-    gmcpBroadcast = conf.value(KEY_GMCP_BROADCAST_CLOCK, true).toBool();
-    gmcpBroadcastInterval = conf.value(KEY_GMCP_BROADCAST_INTERVAL, 2500).toInt();
+    gmcpBroadcast.set(conf.value(KEY_GMCP_BROADCAST_CLOCK, true).toBool());
+    gmcpBroadcastInterval.set(conf.value(KEY_GMCP_BROADCAST_INTERVAL, 2500).toInt());
 }
 
 void Configuration::AdventurePanelSettings::read(const QSettings &conf)
@@ -1223,8 +1225,8 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
     // Note: There's no QVariant(int64_t) constructor.
     conf.setValue(KEY_MUME_START_EPOCH, static_cast<qlonglong>(startEpoch));
     conf.setValue(KEY_DISPLAY_CLOCK, display);
-    conf.setValue(KEY_GMCP_BROADCAST_CLOCK, gmcpBroadcast);
-    conf.setValue(KEY_GMCP_BROADCAST_INTERVAL, gmcpBroadcastInterval);
+    conf.setValue(KEY_GMCP_BROADCAST_CLOCK, gmcpBroadcast.get());
+    conf.setValue(KEY_GMCP_BROADCAST_INTERVAL, gmcpBroadcastInterval.get());
 }
 
 void Configuration::AdventurePanelSettings::write(QSettings &conf) const

@@ -56,9 +56,9 @@ void MumeProtocolPage::slot_loadConfig()
 
     // Load GMCP clock broadcasting settings
     const auto &clockSettings = getConfig().mumeClock;
-    ui->gmcpBroadcastCheckBox->setChecked(clockSettings.gmcpBroadcast);
-    ui->gmcpIntervalSpinBox->setValue(clockSettings.gmcpBroadcastInterval);
-    ui->gmcpIntervalSpinBox->setEnabled(clockSettings.gmcpBroadcast);
+    ui->gmcpBroadcastCheckBox->setChecked(clockSettings.gmcpBroadcast.get());
+    ui->gmcpIntervalSpinBox->setValue(clockSettings.gmcpBroadcastInterval.get());
+    ui->gmcpIntervalSpinBox->setEnabled(clockSettings.gmcpBroadcast.get());
 }
 
 void MumeProtocolPage::slot_internalEditorRadioButtonChanged(bool /*unused*/)
@@ -92,11 +92,11 @@ void MumeProtocolPage::slot_externalEditorBrowseButtonClicked(bool /*unused*/)
 void MumeProtocolPage::slot_gmcpBroadcastCheckBoxChanged(int /*unused*/)
 {
     const bool enabled = ui->gmcpBroadcastCheckBox->isChecked();
-    setConfig().mumeClock.gmcpBroadcast = enabled;
+    setConfig().mumeClock.gmcpBroadcast.set(enabled);
     ui->gmcpIntervalSpinBox->setEnabled(enabled);
 }
 
 void MumeProtocolPage::slot_gmcpIntervalSpinBoxChanged(int value)
 {
-    setConfig().mumeClock.gmcpBroadcastInterval = value;
+    setConfig().mumeClock.gmcpBroadcastInterval.set(value);
 }

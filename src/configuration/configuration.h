@@ -454,8 +454,10 @@ public:
     {
         int64_t startEpoch = 0;
         bool display = false;
-        bool gmcpBroadcast = true;  // Enable GMCP clock broadcasting
-        int gmcpBroadcastInterval = 2500;  // Update interval in milliseconds (default: 2.5 seconds = 1 MUME minute)
+        NamedConfig<bool> gmcpBroadcast{"GMCP_BROADCAST_CLOCK", true};  // Enable GMCP clock broadcasting
+        NamedConfig<int> gmcpBroadcastInterval{"GMCP_BROADCAST_INTERVAL", 2500};  // Update interval in milliseconds (default: 2.5 seconds = 1 MUME minute)
+
+        MumeClockSettings();
 
     private:
         SUBGROUP();
