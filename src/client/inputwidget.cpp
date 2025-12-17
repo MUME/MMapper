@@ -22,92 +22,67 @@ static constexpr const int MIN_WORD_LENGTH = 3;
 
 static const QRegularExpression g_whitespaceRx(R"(\s+)");
 
-// Helper functions for key name mapping
+// Lookup tables for key name mapping (reduces cyclomatic complexity)
+static const QHash<int, QString> &getNumpadKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_0, "NUMPAD0"},
+                                         {Qt::Key_1, "NUMPAD1"},
+                                         {Qt::Key_2, "NUMPAD2"},
+                                         {Qt::Key_3, "NUMPAD3"},
+                                         {Qt::Key_4, "NUMPAD4"},
+                                         {Qt::Key_5, "NUMPAD5"},
+                                         {Qt::Key_6, "NUMPAD6"},
+                                         {Qt::Key_7, "NUMPAD7"},
+                                         {Qt::Key_8, "NUMPAD8"},
+                                         {Qt::Key_9, "NUMPAD9"},
+                                         {Qt::Key_Slash, "NUMPAD_SLASH"},
+                                         {Qt::Key_Asterisk, "NUMPAD_ASTERISK"},
+                                         {Qt::Key_Minus, "NUMPAD_MINUS"},
+                                         {Qt::Key_Plus, "NUMPAD_PLUS"},
+                                         {Qt::Key_Period, "NUMPAD_PERIOD"}};
+    return map;
+}
+
 static QString getNumpadKeyName(int key)
 {
-    switch (key) {
-    case Qt::Key_0:
-        return "NUMPAD0";
-    case Qt::Key_1:
-        return "NUMPAD1";
-    case Qt::Key_2:
-        return "NUMPAD2";
-    case Qt::Key_3:
-        return "NUMPAD3";
-    case Qt::Key_4:
-        return "NUMPAD4";
-    case Qt::Key_5:
-        return "NUMPAD5";
-    case Qt::Key_6:
-        return "NUMPAD6";
-    case Qt::Key_7:
-        return "NUMPAD7";
-    case Qt::Key_8:
-        return "NUMPAD8";
-    case Qt::Key_9:
-        return "NUMPAD9";
-    case Qt::Key_Slash:
-        return "NUMPAD_SLASH";
-    case Qt::Key_Asterisk:
-        return "NUMPAD_ASTERISK";
-    case Qt::Key_Minus:
-        return "NUMPAD_MINUS";
-    case Qt::Key_Plus:
-        return "NUMPAD_PLUS";
-    case Qt::Key_Period:
-        return "NUMPAD_PERIOD";
-    default:
-        return QString();
-    }
+    return getNumpadKeyMap().value(key);
+}
+
+static const QHash<int, QString> &getNavigationKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_Home, "HOME"},
+                                         {Qt::Key_End, "END"},
+                                         {Qt::Key_Insert, "INSERT"},
+                                         {Qt::Key_Help, "INSERT"}}; // macOS maps Insert to Help
+    return map;
 }
 
 static QString getNavigationKeyName(int key)
 {
-    switch (key) {
-    case Qt::Key_Home:
-        return "HOME";
-    case Qt::Key_End:
-        return "END";
-    case Qt::Key_Insert:
-    case Qt::Key_Help: // macOS maps Insert to Help
-        return "INSERT";
-    default:
-        return QString();
-    }
+    return getNavigationKeyMap().value(key);
+}
+
+static const QHash<int, QString> &getMiscKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_QuoteLeft, "ACCENT"},
+                                         {Qt::Key_1, "1"},
+                                         {Qt::Key_2, "2"},
+                                         {Qt::Key_3, "3"},
+                                         {Qt::Key_4, "4"},
+                                         {Qt::Key_5, "5"},
+                                         {Qt::Key_6, "6"},
+                                         {Qt::Key_7, "7"},
+                                         {Qt::Key_8, "8"},
+                                         {Qt::Key_9, "9"},
+                                         {Qt::Key_0, "0"},
+                                         {Qt::Key_Minus, "HYPHEN"},
+                                         {Qt::Key_Equal, "EQUAL"}};
+    return map;
 }
 
 static QString getMiscKeyName(int key)
 {
-    switch (key) {
-    case Qt::Key_QuoteLeft:
-        return "ACCENT";
-    case Qt::Key_1:
-        return "1";
-    case Qt::Key_2:
-        return "2";
-    case Qt::Key_3:
-        return "3";
-    case Qt::Key_4:
-        return "4";
-    case Qt::Key_5:
-        return "5";
-    case Qt::Key_6:
-        return "6";
-    case Qt::Key_7:
-        return "7";
-    case Qt::Key_8:
-        return "8";
-    case Qt::Key_9:
-        return "9";
-    case Qt::Key_0:
-        return "0";
-    case Qt::Key_Minus:
-        return "HYPHEN";
-    case Qt::Key_Equal:
-        return "EQUAL";
-    default:
-        return QString();
-    }
+    return getMiscKeyMap().value(key);
 }
 
 static KeyClassification classifyKey(int key, Qt::KeyboardModifiers mods)

@@ -311,7 +311,7 @@ void TestHotkeyManager::invalidKeyValidationTest()
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test that invalid base keys are rejected
-    manager.setHotkey("F13", "invalid"); // F13 doesn't exist
+    manager.setHotkey("F13", "invalid");            // F13 doesn't exist
     QCOMPARE(manager.getCommand("F13"), QString()); // Should not be set
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
