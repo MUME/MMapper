@@ -2,6 +2,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
@@ -46,12 +47,13 @@ void AbstractParser::parseHotkey(StringView input)
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
-            const auto keyName = QString::fromStdString(v[1].getString());
+            const auto keyName = mmqt::toQStringUtf8(v[1].getString());
             const std::string cmdStr = concatenate_unquoted(v[2].getVector());
-            const auto command = QString::fromStdString(cmdStr);
+            const auto command = mmqt::toQStringUtf8(cmdStr);
 
             setConfig().hotkeyManager.setHotkey(keyName, command);
-            os << "Hotkey set: " << keyName.toUpper().toStdString() << " = " << cmdStr << "\n";
+            os << "Hotkey set: " << mmqt::toStdStringUtf8(keyName.toUpper()) << " = " << cmdStr
+               << "\n";
             send_ok(os);
         },
         "set hotkey");
@@ -62,13 +64,14 @@ void AbstractParser::parseHotkey(StringView input)
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
-            const auto keyName = QString::fromStdString(v[1].getString());
+            const auto keyName = mmqt::toQStringUtf8(v[1].getString());
 
             if (getConfig().hotkeyManager.hasHotkey(keyName)) {
                 setConfig().hotkeyManager.removeHotkey(keyName);
-                os << "Hotkey removed: " << keyName.toUpper().toStdString() << "\n";
+                os << "Hotkey removed: " << mmqt::toStdStringUtf8(keyName.toUpper()) << "\n";
             } else {
-                os << "No hotkey configured for: " << keyName.toUpper().toStdString() << "\n";
+                os << "No hotkey configured for: " << mmqt::toStdStringUtf8(keyName.toUpper())
+                   << "\n";
             }
             send_ok(os);
         },
@@ -85,7 +88,8 @@ void AbstractParser::parseHotkey(StringView input)
             } else {
                 os << "Configured hotkeys:\n";
                 for (const auto &[key, cmd] : hotkeys) {
-                    os << "  " << key.toStdString() << " = " << cmd.toStdString() << "\n";
+                    os << "  " << mmqt::toStdStringUtf8(key) << " = " << mmqt::toStdStringUtf8(cmd)
+                       << "\n";
                 }
             }
             send_ok(os);
