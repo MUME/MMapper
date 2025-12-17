@@ -282,7 +282,7 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
         const auto &m = m_stack.top().modelView;
         const auto addTransformed = [this, &color, &m](const glm::vec2 &in_vert) -> void {
             const auto tmp = m * glm::vec4(in_vert, 0.f, 1.f);
-            m_charRoomQuads.emplace_back(color, in_vert, glm::vec3{tmp / tmp.w});
+            m_charRoomQuads.emplace_back(color, glm::vec3{in_vert, 0}, glm::vec3{tmp / tmp.w});
         };
         addTransformed(a);
         addTransformed(b);
@@ -329,7 +329,8 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
 
     if (!m_charRoomQuads.empty()) {
         gl.renderColoredTexturedQuads(m_charRoomQuads,
-                                      blended_noDepth.withTexture0(textures.char_room_sel->getId()));
+                                      blended_noDepth.withTexture0(
+                                          textures.char_room_sel->getArrayPosition().array));
     }
 
     if (!m_charTris.empty()) {
