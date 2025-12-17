@@ -875,6 +875,17 @@ set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
 set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 # Note: MATCH_5 because MATCH_4 is the full "-42" group, MATCH_5 is just "42"
 set(CPACK_PACKAGE_VERSION_TWEAK ${CMAKE_MATCH_5})
+
+# If parsing failed (e.g., version is just a commit hash like "cd668441"),
+# fall back to MMAPPER_VERSION from the version file
+if(NOT CPACK_PACKAGE_VERSION_MAJOR)
+    message(STATUS "Version '${CPACK_PACKAGE_VERSION}' is not a semantic version, falling back to MMAPPER_VERSION")
+    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+).*$" _ "${MMAPPER_VERSION}")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
+endif()
+
 if(NOT CPACK_PACKAGE_VERSION_TWEAK)
     # Set to 0 if the commit count is missing
     set(CPACK_PACKAGE_VERSION_TWEAK 0)
