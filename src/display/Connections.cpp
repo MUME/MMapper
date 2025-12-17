@@ -226,6 +226,10 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
 
 void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
 {
+    // Note: We always build connection meshes regardless of visibility filter.
+    // The visibility is handled during rendering by using alpha transparency,
+    // which avoids expensive texture rebuilds when toggling visibility.
+
     const Map &map = room.getMap();
 
     // Ooops, this is wrong since we may reject a connection that would be visible
@@ -624,6 +628,11 @@ ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl) const
 
 void ConnectionMeshes::render(const int thisLayer, const int focusedLayer) const
 {
+    // Check visibility filter - use alpha 0 to hide without rebuilding batches
+    if (!getConfig().canvas.visibilityFilter.isConnectionsVisible()) {
+        return;  // Early return when hidden - no rendering needed at all
+    }
+
     const auto color = [&thisLayer, &focusedLayer]() {
         if (thisLayer == focusedLayer) {
             return getCanvasNamedColorOptions().connectionNormalColor.getColor();

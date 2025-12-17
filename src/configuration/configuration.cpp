@@ -7,6 +7,7 @@
 #include "configuration.h"
 
 #include "../global/utils.h"
+#include "../map/infomark.h"
 
 #include <cassert>
 #include <mutex>
@@ -50,6 +51,25 @@ NODISCARD const char *getPlatformEditor()
     default:
         return "";
     }
+}
+
+NODISCARD TextureSetEnum intToTextureSet(int value)
+{
+    switch (value) {
+    case 0:
+        return TextureSetEnum::CLASSIC;
+    case 1:
+        return TextureSetEnum::MODERN;
+    case 2:
+        return TextureSetEnum::CUSTOM;
+    default:
+        return TextureSetEnum::MODERN; // Default to Modern
+    }
+}
+
+NODISCARD int textureSetToInt(TextureSetEnum value)
+{
+    return static_cast<int>(value);
 }
 
 } // namespace
@@ -194,10 +214,12 @@ ConstString GRP_ACCOUNT = "Account";
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
 ConstString GRP_CANVAS = "Canvas";
+ConstString GRP_COMMS = "Communications";
 ConstString GRP_CONNECTION = "Connection";
 ConstString GRP_FINDROOMS_DIALOG = "FindRooms Dialog";
 ConstString GRP_GENERAL = "General";
 ConstString GRP_GROUP_MANAGER = "Group Manager";
+ConstString GRP_HOTKEYS = "Hotkeys";
 ConstString GRP_INFOMARKS_DIALOG = "InfoMarks Dialog";
 ConstString GRP_INTEGRATED_MUD_CLIENT = "Integrated Mud Client";
 ConstString GRP_MUME_CLIENT_PROTOCOL = "Mume client protocol";
@@ -227,9 +249,12 @@ ConstString KEY_CONNECTION_NORMAL_COLOR = "Connection normal color";
 ConstString KEY_CORRECT_POSITION_BONUS = "correct position bonus";
 ConstString KEY_DISPLAY_XP_STATUS = "Display XP status bar widget";
 ConstString KEY_DISPLAY_CLOCK = "Display clock";
+ConstString KEY_GMCP_BROADCAST_CLOCK = "GMCP broadcast clock";
+ConstString KEY_GMCP_BROADCAST_INTERVAL = "GMCP broadcast interval";
 ConstString KEY_DRAW_DOOR_NAMES = "Draw door names";
 ConstString KEY_DRAW_NOT_MAPPED_EXITS = "Draw not mapped exits";
 ConstString KEY_DRAW_UPPER_LAYERS_TEXTURED = "Draw upper layers textured";
+ConstString KEY_LAYER_TRANSPARENCY = "Layer transparency";
 ConstString KEY_EMOJI_ENCODE = "encode emoji";
 ConstString KEY_EMOJI_DECODE = "decode emoji";
 ConstString KEY_EMULATED_EXITS = "Emulated Exits";
@@ -256,6 +281,73 @@ ConstString KEY_3D_FOV = "canvas.advanced.fov";
 ConstString KEY_3D_VERTICAL_ANGLE = "canvas.advanced.verticalAngle";
 ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
 ConstString KEY_3D_LAYER_HEIGHT = "canvas.advanced.layerHeight";
+ConstString KEY_BACKGROUND_IMAGE_ENABLED = "canvas.advanced.backgroundImageEnabled";
+ConstString KEY_BACKGROUND_IMAGE_PATH = "canvas.advanced.backgroundImagePath";
+ConstString KEY_BACKGROUND_IMAGE_FIT_MODE = "canvas.advanced.backgroundFitMode";
+ConstString KEY_BACKGROUND_IMAGE_OPACITY = "canvas.advanced.backgroundOpacity";
+ConstString KEY_BACKGROUND_IMAGE_FOCUSED_SCALE = "canvas.advanced.backgroundFocusedScale";
+ConstString KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_X = "canvas.advanced.backgroundFocusedOffsetX";
+ConstString KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_Y = "canvas.advanced.backgroundFocusedOffsetY";
+ConstString KEY_VISIBLE_MARKER_GENERIC = "canvas.visibleMarkers.generic";
+ConstString KEY_VISIBLE_MARKER_HERB = "canvas.visibleMarkers.herb";
+ConstString KEY_VISIBLE_MARKER_RIVER = "canvas.visibleMarkers.river";
+ConstString KEY_VISIBLE_MARKER_PLACE = "canvas.visibleMarkers.place";
+ConstString KEY_VISIBLE_MARKER_MOB = "canvas.visibleMarkers.mob";
+ConstString KEY_VISIBLE_MARKER_COMMENT = "canvas.visibleMarkers.comment";
+ConstString KEY_VISIBLE_MARKER_ROAD = "canvas.visibleMarkers.road";
+ConstString KEY_VISIBLE_MARKER_OBJECT = "canvas.visibleMarkers.object";
+ConstString KEY_VISIBLE_MARKER_ACTION = "canvas.visibleMarkers.action";
+ConstString KEY_VISIBLE_MARKER_LOCALITY = "canvas.visibleMarkers.locality";
+ConstString KEY_VISIBLE_CONNECTIONS = "canvas.visibilityFilter.connections";
+
+// Hotkey configuration keys
+ConstString KEY_HOTKEY_FILE_OPEN = "hotkeys.fileOpen";
+ConstString KEY_HOTKEY_FILE_SAVE = "hotkeys.fileSave";
+ConstString KEY_HOTKEY_FILE_RELOAD = "hotkeys.fileReload";
+ConstString KEY_HOTKEY_FILE_QUIT = "hotkeys.fileQuit";
+ConstString KEY_HOTKEY_EDIT_UNDO = "hotkeys.editUndo";
+ConstString KEY_HOTKEY_EDIT_REDO = "hotkeys.editRedo";
+ConstString KEY_HOTKEY_EDIT_PREFERENCES = "hotkeys.editPreferences";
+ConstString KEY_HOTKEY_EDIT_PREFERENCES_ALT = "hotkeys.editPreferencesAlt";
+ConstString KEY_HOTKEY_EDIT_FIND_ROOMS = "hotkeys.editFindRooms";
+ConstString KEY_HOTKEY_EDIT_ROOM = "hotkeys.editRoom";
+ConstString KEY_HOTKEY_VIEW_ZOOM_IN = "hotkeys.viewZoomIn";
+ConstString KEY_HOTKEY_VIEW_ZOOM_OUT = "hotkeys.viewZoomOut";
+ConstString KEY_HOTKEY_VIEW_ZOOM_RESET = "hotkeys.viewZoomReset";
+ConstString KEY_HOTKEY_VIEW_LAYER_UP = "hotkeys.viewLayerUp";
+ConstString KEY_HOTKEY_VIEW_LAYER_DOWN = "hotkeys.viewLayerDown";
+ConstString KEY_HOTKEY_VIEW_LAYER_RESET = "hotkeys.viewLayerReset";
+ConstString KEY_HOTKEY_VIEW_RADIAL_TRANSPARENCY = "hotkeys.viewRadialTransparency";
+ConstString KEY_HOTKEY_VIEW_STATUS_BAR = "hotkeys.viewStatusBar";
+ConstString KEY_HOTKEY_VIEW_SCROLL_BARS = "hotkeys.viewScrollBars";
+ConstString KEY_HOTKEY_VIEW_MENU_BAR = "hotkeys.viewMenuBar";
+ConstString KEY_HOTKEY_VIEW_ALWAYS_ON_TOP = "hotkeys.viewAlwaysOnTop";
+ConstString KEY_HOTKEY_PANEL_LOG = "hotkeys.panelLog";
+ConstString KEY_HOTKEY_PANEL_CLIENT = "hotkeys.panelClient";
+ConstString KEY_HOTKEY_PANEL_GROUP = "hotkeys.panelGroup";
+ConstString KEY_HOTKEY_PANEL_ROOM = "hotkeys.panelRoom";
+ConstString KEY_HOTKEY_PANEL_ADVENTURE = "hotkeys.panelAdventure";
+ConstString KEY_HOTKEY_PANEL_COMMS = "hotkeys.panelComms";
+ConstString KEY_HOTKEY_PANEL_DESCRIPTION = "hotkeys.panelDescription";
+ConstString KEY_HOTKEY_MODE_MOVE_MAP = "hotkeys.modeMoveMap";
+ConstString KEY_HOTKEY_MODE_RAYPICK = "hotkeys.modeRaypick";
+ConstString KEY_HOTKEY_MODE_SELECT_ROOMS = "hotkeys.modeSelectRooms";
+ConstString KEY_HOTKEY_MODE_SELECT_MARKERS = "hotkeys.modeSelectMarkers";
+ConstString KEY_HOTKEY_MODE_SELECT_CONNECTION = "hotkeys.modeSelectConnection";
+ConstString KEY_HOTKEY_MODE_CREATE_MARKER = "hotkeys.modeCreateMarker";
+ConstString KEY_HOTKEY_MODE_CREATE_ROOM = "hotkeys.modeCreateRoom";
+ConstString KEY_HOTKEY_MODE_CREATE_CONNECTION = "hotkeys.modeCreateConnection";
+ConstString KEY_HOTKEY_MODE_CREATE_ONEWAY_CONNECTION = "hotkeys.modeCreateOnewayConnection";
+ConstString KEY_HOTKEY_ROOM_CREATE = "hotkeys.roomCreate";
+ConstString KEY_HOTKEY_ROOM_MOVE_UP = "hotkeys.roomMoveUp";
+ConstString KEY_HOTKEY_ROOM_MOVE_DOWN = "hotkeys.roomMoveDown";
+ConstString KEY_HOTKEY_ROOM_MERGE_UP = "hotkeys.roomMergeUp";
+ConstString KEY_HOTKEY_ROOM_MERGE_DOWN = "hotkeys.roomMergeDown";
+ConstString KEY_HOTKEY_ROOM_DELETE = "hotkeys.roomDelete";
+ConstString KEY_HOTKEY_ROOM_CONNECT_NEIGHBORS = "hotkeys.roomConnectNeighbors";
+ConstString KEY_HOTKEY_ROOM_MOVE_TO_SELECTED = "hotkeys.roomMoveToSelected";
+ConstString KEY_HOTKEY_ROOM_UPDATE_SELECTED = "hotkeys.roomUpdateSelected";
+
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_PEEK_PREVIEW = "Lines of peek preview";
@@ -270,6 +362,8 @@ ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
+ConstString KEY_TEXTURE_SET = "canvas.textureSet";
+ConstString KEY_ENABLE_SEASONAL_TEXTURES = "canvas.enableSeasonalTextures";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_REMEMBER_LOGIN = "remember login";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
@@ -441,6 +535,8 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_GENERAL, general); \
         GROUP_CALLBACK(callback, GRP_CONNECTION, connection); \
         GROUP_CALLBACK(callback, GRP_CANVAS, canvas); \
+        GROUP_CALLBACK(callback, GRP_HOTKEYS, hotkeys); \
+        GROUP_CALLBACK(callback, GRP_COMMS, comms); \
         GROUP_CALLBACK(callback, GRP_ACCOUNT, account); \
         GROUP_CALLBACK(callback, GRP_AUTO_LOAD_WORLD, autoLoad); \
         GROUP_CALLBACK(callback, GRP_AUTO_LOG, autoLog); \
@@ -565,7 +661,7 @@ void Configuration::ConnectionSettings::read(const QSettings &conf)
 }
 
 // closest well-known color is "Outer Space"
-static constexpr const std::string_view DEFAULT_BGCOLOR = "#2E3436";
+static constexpr const std::string_view DEFAULT_BGCOLOR = "#161f21";
 // closest well-known color is "Dusty Gray"
 static constexpr const std::string_view DEFAULT_DARK_COLOR = "#A19494";
 // closest well-known color is "Cold Turkey"
@@ -587,11 +683,14 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
                                         .append(DEFAULT_MMAPPER_SUBDIR)
                                         .append(DEFAULT_RESOURCES_SUBDIR))
                              .toString();
+    textureSet = intToTextureSet(conf.value(KEY_TEXTURE_SET, 1).toInt()); // Default: MODERN
+    enableSeasonalTextures = conf.value(KEY_ENABLE_SEASONAL_TEXTURES, true).toBool();
     showMissingMapId.set(conf.value(KEY_SHOW_MISSING_MAP_ID, true).toBool());
     showUnsavedChanges.set(conf.value(KEY_SHOW_UNSAVED_CHANGES, true).toBool());
     showUnmappedExits.set(conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool());
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
+    layerTransparency = conf.value(KEY_LAYER_TRANSPARENCY, 1.0).toFloat();
     backgroundColor = lookupColor(KEY_BACKGROUND_COLOR, DEFAULT_BGCOLOR);
     connectionNormalColor = lookupColor(KEY_CONNECTION_NORMAL_COLOR, Colors::white.toHex());
     roomDarkColor = lookupColor(KEY_ROOM_DARK_COLOR, DEFAULT_DARK_COLOR);
@@ -605,6 +704,30 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
+
+    // Load background image settings
+    advanced.useBackgroundImage = conf.value(KEY_BACKGROUND_IMAGE_ENABLED, false).toBool();
+    advanced.backgroundImagePath = conf.value(KEY_BACKGROUND_IMAGE_PATH, "").toString();
+    advanced.backgroundFitMode = conf.value(KEY_BACKGROUND_IMAGE_FIT_MODE, 0).toInt();
+    advanced.backgroundOpacity = conf.value(KEY_BACKGROUND_IMAGE_OPACITY, 1.0f).toFloat();
+    advanced.backgroundFocusedScale = conf.value(KEY_BACKGROUND_IMAGE_FOCUSED_SCALE, 1.0f).toFloat();
+    advanced.backgroundFocusedOffsetX = conf.value(KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_X, 0.0f)
+                                            .toFloat();
+    advanced.backgroundFocusedOffsetY = conf.value(KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_Y, 0.0f)
+                                            .toFloat();
+
+    // Load visible markers settings
+    visibilityFilter.generic.set(conf.value(KEY_VISIBLE_MARKER_GENERIC, true).toBool());
+    visibilityFilter.herb.set(conf.value(KEY_VISIBLE_MARKER_HERB, true).toBool());
+    visibilityFilter.river.set(conf.value(KEY_VISIBLE_MARKER_RIVER, true).toBool());
+    visibilityFilter.place.set(conf.value(KEY_VISIBLE_MARKER_PLACE, true).toBool());
+    visibilityFilter.mob.set(conf.value(KEY_VISIBLE_MARKER_MOB, true).toBool());
+    visibilityFilter.comment.set(conf.value(KEY_VISIBLE_MARKER_COMMENT, true).toBool());
+    visibilityFilter.road.set(conf.value(KEY_VISIBLE_MARKER_ROAD, true).toBool());
+    visibilityFilter.object.set(conf.value(KEY_VISIBLE_MARKER_OBJECT, true).toBool());
+    visibilityFilter.action.set(conf.value(KEY_VISIBLE_MARKER_ACTION, true).toBool());
+    visibilityFilter.locality.set(conf.value(KEY_VISIBLE_MARKER_LOCALITY, true).toBool());
+    visibilityFilter.connections.set(conf.value(KEY_VISIBLE_CONNECTIONS, true).toBool());
 }
 
 void Configuration::AccountSettings::read(const QSettings &conf)
@@ -691,11 +814,15 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
 }
 
+Configuration::MumeClockSettings::MumeClockSettings() = default;
+
 void Configuration::MumeClockSettings::read(const QSettings &conf)
 {
     // NOTE: old values might be stored as int32
     startEpoch = conf.value(KEY_MUME_START_EPOCH, 1517443173).toLongLong();
     display = conf.value(KEY_DISPLAY_CLOCK, true).toBool();
+    gmcpBroadcast.set(conf.value(KEY_GMCP_BROADCAST_CLOCK, true).toBool());
+    gmcpBroadcastInterval.set(conf.value(KEY_GMCP_BROADCAST_INTERVAL, 2500).toInt());
 }
 
 void Configuration::AdventurePanelSettings::read(const QSettings &conf)
@@ -770,11 +897,14 @@ NODISCARD static auto getQColorName(const XNamedColor &color)
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_RESOURCES_DIRECTORY, resourcesDirectory);
+    conf.setValue(KEY_TEXTURE_SET, textureSetToInt(textureSet));
+    conf.setValue(KEY_ENABLE_SEASONAL_TEXTURES, enableSeasonalTextures);
     conf.setValue(KEY_SHOW_MISSING_MAP_ID, showMissingMapId.get());
     conf.setValue(KEY_SHOW_UNSAVED_CHANGES, showUnsavedChanges.get());
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, showUnmappedExits.get());
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
     conf.setValue(KEY_DRAW_DOOR_NAMES, drawDoorNames);
+    conf.setValue(KEY_LAYER_TRANSPARENCY, layerTransparency);
     conf.setValue(KEY_BACKGROUND_COLOR, getQColorName(backgroundColor));
     conf.setValue(KEY_ROOM_DARK_COLOR, getQColorName(roomDarkColor));
     conf.setValue(KEY_ROOM_DARK_LIT_COLOR, getQColorName(roomDarkLitColor));
@@ -788,6 +918,239 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_3D_VERTICAL_ANGLE, advanced.verticalAngle.get());
     conf.setValue(KEY_3D_HORIZONTAL_ANGLE, advanced.horizontalAngle.get());
     conf.setValue(KEY_3D_LAYER_HEIGHT, advanced.layerHeight.get());
+
+    // Save background image settings
+    conf.setValue(KEY_BACKGROUND_IMAGE_ENABLED, advanced.useBackgroundImage);
+    conf.setValue(KEY_BACKGROUND_IMAGE_PATH, advanced.backgroundImagePath);
+    conf.setValue(KEY_BACKGROUND_IMAGE_FIT_MODE, advanced.backgroundFitMode);
+    conf.setValue(KEY_BACKGROUND_IMAGE_OPACITY, advanced.backgroundOpacity);
+    conf.setValue(KEY_BACKGROUND_IMAGE_FOCUSED_SCALE, advanced.backgroundFocusedScale);
+    conf.setValue(KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_X, advanced.backgroundFocusedOffsetX);
+    conf.setValue(KEY_BACKGROUND_IMAGE_FOCUSED_OFFSET_Y, advanced.backgroundFocusedOffsetY);
+
+    // Save visible markers settings
+    conf.setValue(KEY_VISIBLE_MARKER_GENERIC, visibilityFilter.generic.get());
+    conf.setValue(KEY_VISIBLE_MARKER_HERB, visibilityFilter.herb.get());
+    conf.setValue(KEY_VISIBLE_MARKER_RIVER, visibilityFilter.river.get());
+    conf.setValue(KEY_VISIBLE_MARKER_PLACE, visibilityFilter.place.get());
+    conf.setValue(KEY_VISIBLE_MARKER_MOB, visibilityFilter.mob.get());
+    conf.setValue(KEY_VISIBLE_MARKER_COMMENT, visibilityFilter.comment.get());
+    conf.setValue(KEY_VISIBLE_MARKER_ROAD, visibilityFilter.road.get());
+    conf.setValue(KEY_VISIBLE_MARKER_OBJECT, visibilityFilter.object.get());
+    conf.setValue(KEY_VISIBLE_MARKER_ACTION, visibilityFilter.action.get());
+    conf.setValue(KEY_VISIBLE_MARKER_LOCALITY, visibilityFilter.locality.get());
+    conf.setValue(KEY_VISIBLE_CONNECTIONS, visibilityFilter.connections.get());
+}
+
+void Configuration::Hotkeys::read(const QSettings &conf)
+{
+    // File operations
+    fileOpen.set(conf.value(KEY_HOTKEY_FILE_OPEN, "Ctrl+O").toString());
+    fileSave.set(conf.value(KEY_HOTKEY_FILE_SAVE, "Ctrl+S").toString());
+    fileReload.set(conf.value(KEY_HOTKEY_FILE_RELOAD, "Ctrl+R").toString());
+    fileQuit.set(conf.value(KEY_HOTKEY_FILE_QUIT, "Ctrl+Q").toString());
+
+    // Edit operations
+    editUndo.set(conf.value(KEY_HOTKEY_EDIT_UNDO, "Ctrl+Z").toString());
+    editRedo.set(conf.value(KEY_HOTKEY_EDIT_REDO, "Ctrl+Y").toString());
+    editPreferences.set(conf.value(KEY_HOTKEY_EDIT_PREFERENCES, "Ctrl+P").toString());
+    editPreferencesAlt.set(conf.value(KEY_HOTKEY_EDIT_PREFERENCES_ALT, "Esc").toString());
+    editFindRooms.set(conf.value(KEY_HOTKEY_EDIT_FIND_ROOMS, "Ctrl+F").toString());
+    editRoom.set(conf.value(KEY_HOTKEY_EDIT_ROOM, "Ctrl+E").toString());
+
+    // View operations
+    viewZoomIn.set(conf.value(KEY_HOTKEY_VIEW_ZOOM_IN, "").toString());
+    viewZoomOut.set(conf.value(KEY_HOTKEY_VIEW_ZOOM_OUT, "").toString());
+    viewZoomReset.set(conf.value(KEY_HOTKEY_VIEW_ZOOM_RESET, "Ctrl+0").toString());
+    viewLayerUp.set(conf.value(KEY_HOTKEY_VIEW_LAYER_UP, "").toString());
+    viewLayerDown.set(conf.value(KEY_HOTKEY_VIEW_LAYER_DOWN, "").toString());
+    viewLayerReset.set(conf.value(KEY_HOTKEY_VIEW_LAYER_RESET, "").toString());
+
+    // View toggles
+    viewRadialTransparency.set(conf.value(KEY_HOTKEY_VIEW_RADIAL_TRANSPARENCY, "").toString());
+    viewStatusBar.set(conf.value(KEY_HOTKEY_VIEW_STATUS_BAR, "").toString());
+    viewScrollBars.set(conf.value(KEY_HOTKEY_VIEW_SCROLL_BARS, "").toString());
+    viewMenuBar.set(conf.value(KEY_HOTKEY_VIEW_MENU_BAR, "").toString());
+    viewAlwaysOnTop.set(conf.value(KEY_HOTKEY_VIEW_ALWAYS_ON_TOP, "").toString());
+
+    // Side panels
+    panelLog.set(conf.value(KEY_HOTKEY_PANEL_LOG, "Ctrl+L").toString());
+    panelClient.set(conf.value(KEY_HOTKEY_PANEL_CLIENT, "").toString());
+    panelGroup.set(conf.value(KEY_HOTKEY_PANEL_GROUP, "").toString());
+    panelRoom.set(conf.value(KEY_HOTKEY_PANEL_ROOM, "").toString());
+    panelAdventure.set(conf.value(KEY_HOTKEY_PANEL_ADVENTURE, "").toString());
+    panelComms.set(conf.value(KEY_HOTKEY_PANEL_COMMS, "").toString());
+    panelDescription.set(conf.value(KEY_HOTKEY_PANEL_DESCRIPTION, "").toString());
+
+    // Mouse modes
+    modeMoveMap.set(conf.value(KEY_HOTKEY_MODE_MOVE_MAP, "").toString());
+    modeRaypick.set(conf.value(KEY_HOTKEY_MODE_RAYPICK, "").toString());
+    modeSelectRooms.set(conf.value(KEY_HOTKEY_MODE_SELECT_ROOMS, "").toString());
+    modeSelectMarkers.set(conf.value(KEY_HOTKEY_MODE_SELECT_MARKERS, "").toString());
+    modeSelectConnection.set(conf.value(KEY_HOTKEY_MODE_SELECT_CONNECTION, "").toString());
+    modeCreateMarker.set(conf.value(KEY_HOTKEY_MODE_CREATE_MARKER, "").toString());
+    modeCreateRoom.set(conf.value(KEY_HOTKEY_MODE_CREATE_ROOM, "").toString());
+    modeCreateConnection.set(conf.value(KEY_HOTKEY_MODE_CREATE_CONNECTION, "").toString());
+    modeCreateOnewayConnection.set(
+        conf.value(KEY_HOTKEY_MODE_CREATE_ONEWAY_CONNECTION, "").toString());
+
+    // Room operations
+    roomCreate.set(conf.value(KEY_HOTKEY_ROOM_CREATE, "").toString());
+    roomMoveUp.set(conf.value(KEY_HOTKEY_ROOM_MOVE_UP, "").toString());
+    roomMoveDown.set(conf.value(KEY_HOTKEY_ROOM_MOVE_DOWN, "").toString());
+    roomMergeUp.set(conf.value(KEY_HOTKEY_ROOM_MERGE_UP, "").toString());
+    roomMergeDown.set(conf.value(KEY_HOTKEY_ROOM_MERGE_DOWN, "").toString());
+    roomDelete.set(conf.value(KEY_HOTKEY_ROOM_DELETE, "Del").toString());
+    roomConnectNeighbors.set(conf.value(KEY_HOTKEY_ROOM_CONNECT_NEIGHBORS, "").toString());
+    roomMoveToSelected.set(conf.value(KEY_HOTKEY_ROOM_MOVE_TO_SELECTED, "").toString());
+    roomUpdateSelected.set(conf.value(KEY_HOTKEY_ROOM_UPDATE_SELECTED, "").toString());
+}
+
+void Configuration::Hotkeys::write(QSettings &conf) const
+{
+    // File operations
+    conf.setValue(KEY_HOTKEY_FILE_OPEN, fileOpen.get());
+    conf.setValue(KEY_HOTKEY_FILE_SAVE, fileSave.get());
+    conf.setValue(KEY_HOTKEY_FILE_RELOAD, fileReload.get());
+    conf.setValue(KEY_HOTKEY_FILE_QUIT, fileQuit.get());
+
+    // Edit operations
+    conf.setValue(KEY_HOTKEY_EDIT_UNDO, editUndo.get());
+    conf.setValue(KEY_HOTKEY_EDIT_REDO, editRedo.get());
+    conf.setValue(KEY_HOTKEY_EDIT_PREFERENCES, editPreferences.get());
+    conf.setValue(KEY_HOTKEY_EDIT_PREFERENCES_ALT, editPreferencesAlt.get());
+    conf.setValue(KEY_HOTKEY_EDIT_FIND_ROOMS, editFindRooms.get());
+    conf.setValue(KEY_HOTKEY_EDIT_ROOM, editRoom.get());
+
+    // View operations
+    conf.setValue(KEY_HOTKEY_VIEW_ZOOM_IN, viewZoomIn.get());
+    conf.setValue(KEY_HOTKEY_VIEW_ZOOM_OUT, viewZoomOut.get());
+    conf.setValue(KEY_HOTKEY_VIEW_ZOOM_RESET, viewZoomReset.get());
+    conf.setValue(KEY_HOTKEY_VIEW_LAYER_UP, viewLayerUp.get());
+    conf.setValue(KEY_HOTKEY_VIEW_LAYER_DOWN, viewLayerDown.get());
+    conf.setValue(KEY_HOTKEY_VIEW_LAYER_RESET, viewLayerReset.get());
+
+    // View toggles
+    conf.setValue(KEY_HOTKEY_VIEW_RADIAL_TRANSPARENCY, viewRadialTransparency.get());
+    conf.setValue(KEY_HOTKEY_VIEW_STATUS_BAR, viewStatusBar.get());
+    conf.setValue(KEY_HOTKEY_VIEW_SCROLL_BARS, viewScrollBars.get());
+    conf.setValue(KEY_HOTKEY_VIEW_MENU_BAR, viewMenuBar.get());
+    conf.setValue(KEY_HOTKEY_VIEW_ALWAYS_ON_TOP, viewAlwaysOnTop.get());
+
+    // Side panels
+    conf.setValue(KEY_HOTKEY_PANEL_LOG, panelLog.get());
+    conf.setValue(KEY_HOTKEY_PANEL_CLIENT, panelClient.get());
+    conf.setValue(KEY_HOTKEY_PANEL_GROUP, panelGroup.get());
+    conf.setValue(KEY_HOTKEY_PANEL_ROOM, panelRoom.get());
+    conf.setValue(KEY_HOTKEY_PANEL_ADVENTURE, panelAdventure.get());
+    conf.setValue(KEY_HOTKEY_PANEL_COMMS, panelComms.get());
+    conf.setValue(KEY_HOTKEY_PANEL_DESCRIPTION, panelDescription.get());
+
+    // Mouse modes
+    conf.setValue(KEY_HOTKEY_MODE_MOVE_MAP, modeMoveMap.get());
+    conf.setValue(KEY_HOTKEY_MODE_RAYPICK, modeRaypick.get());
+    conf.setValue(KEY_HOTKEY_MODE_SELECT_ROOMS, modeSelectRooms.get());
+    conf.setValue(KEY_HOTKEY_MODE_SELECT_MARKERS, modeSelectMarkers.get());
+    conf.setValue(KEY_HOTKEY_MODE_SELECT_CONNECTION, modeSelectConnection.get());
+    conf.setValue(KEY_HOTKEY_MODE_CREATE_MARKER, modeCreateMarker.get());
+    conf.setValue(KEY_HOTKEY_MODE_CREATE_ROOM, modeCreateRoom.get());
+    conf.setValue(KEY_HOTKEY_MODE_CREATE_CONNECTION, modeCreateConnection.get());
+    conf.setValue(KEY_HOTKEY_MODE_CREATE_ONEWAY_CONNECTION, modeCreateOnewayConnection.get());
+
+    // Room operations
+    conf.setValue(KEY_HOTKEY_ROOM_CREATE, roomCreate.get());
+    conf.setValue(KEY_HOTKEY_ROOM_MOVE_UP, roomMoveUp.get());
+    conf.setValue(KEY_HOTKEY_ROOM_MOVE_DOWN, roomMoveDown.get());
+    conf.setValue(KEY_HOTKEY_ROOM_MERGE_UP, roomMergeUp.get());
+    conf.setValue(KEY_HOTKEY_ROOM_MERGE_DOWN, roomMergeDown.get());
+    conf.setValue(KEY_HOTKEY_ROOM_DELETE, roomDelete.get());
+    conf.setValue(KEY_HOTKEY_ROOM_CONNECT_NEIGHBORS, roomConnectNeighbors.get());
+    conf.setValue(KEY_HOTKEY_ROOM_MOVE_TO_SELECTED, roomMoveToSelected.get());
+    conf.setValue(KEY_HOTKEY_ROOM_UPDATE_SELECTED, roomUpdateSelected.get());
+}
+
+void Configuration::CommsSettings::read(const QSettings &conf)
+{
+    // Communication colors
+    tellColor.set(conf.value(tellColor.getName(), QColor(32, 108, 9)).value<QColor>());
+    whisperColor.set(conf.value(whisperColor.getName(), QColor(103, 135, 149)).value<QColor>());
+    groupColor.set(conf.value(groupColor.getName(), QColor(15, 123, 255)).value<QColor>());
+    askColor.set(conf.value(askColor.getName(), QColor(Qt::yellow)).value<QColor>());
+    sayColor.set(conf.value(sayColor.getName(), QColor(80, 173, 199)).value<QColor>());
+    emoteColor.set(conf.value(emoteColor.getName(), QColor(203, 37, 111)).value<QColor>());
+    socialColor.set(conf.value(socialColor.getName(), QColor(217, 140, 151)).value<QColor>());
+    yellColor.set(conf.value(yellColor.getName(), QColor(176, 80, 189)).value<QColor>());
+    narrateColor.set(conf.value(narrateColor.getName(), QColor(119, 197, 203)).value<QColor>());
+    prayColor.set(conf.value(prayColor.getName(), QColor(173, 216, 230)).value<QColor>());
+    shoutColor.set(conf.value(shoutColor.getName(), QColor(160, 9, 198)).value<QColor>());
+    singColor.set(conf.value(singColor.getName(), QColor(144, 238, 144)).value<QColor>());
+    backgroundColor.set(conf.value(backgroundColor.getName(), QColor(22, 31, 33)).value<QColor>());
+
+    // Font styling options
+    yellAllCaps.set(conf.value(yellAllCaps.getName(), true).toBool());
+    whisperItalic.set(conf.value(whisperItalic.getName(), true).toBool());
+    emoteItalic.set(conf.value(emoteItalic.getName(), true).toBool());
+
+    // Display options
+    showTimestamps.set(conf.value(showTimestamps.getName(), false).toBool());
+    saveLogOnExit.set(conf.value(saveLogOnExit.getName(), false).toBool());
+    logDirectory.set(conf.value(logDirectory.getName(), QString("")).toString());
+
+    // Talker colors
+    talkerYouColor.set(conf.value(talkerYouColor.getName(), QColor(228, 250, 255)).value<QColor>());
+    talkerPlayerColor.set(
+        conf.value(talkerPlayerColor.getName(), QColor(255, 187, 16)).value<QColor>());
+    talkerNpcColor.set(conf.value(talkerNpcColor.getName(), QColor(25, 138, 23)).value<QColor>());
+    talkerAllyColor.set(conf.value(talkerAllyColor.getName(), QColor(33, 166, 255)).value<QColor>());
+    talkerNeutralColor.set(
+        conf.value(talkerNeutralColor.getName(), QColor(166, 168, 168)).value<QColor>());
+    talkerEnemyColor.set(conf.value(talkerEnemyColor.getName(), QColor(173, 7, 37)).value<QColor>());
+
+    // Tab muting (filters)
+    muteDirectTab.set(conf.value(muteDirectTab.getName(), false).toBool());
+    muteLocalTab.set(conf.value(muteLocalTab.getName(), false).toBool());
+    muteGlobalTab.set(conf.value(muteGlobalTab.getName(), false).toBool());
+}
+
+void Configuration::CommsSettings::write(QSettings &conf) const
+{
+    // Communication colors
+    conf.setValue(tellColor.getName(), tellColor.get());
+    conf.setValue(whisperColor.getName(), whisperColor.get());
+    conf.setValue(groupColor.getName(), groupColor.get());
+    conf.setValue(askColor.getName(), askColor.get());
+    conf.setValue(sayColor.getName(), sayColor.get());
+    conf.setValue(emoteColor.getName(), emoteColor.get());
+    conf.setValue(socialColor.getName(), socialColor.get());
+    conf.setValue(yellColor.getName(), yellColor.get());
+    conf.setValue(narrateColor.getName(), narrateColor.get());
+    conf.setValue(prayColor.getName(), prayColor.get());
+    conf.setValue(shoutColor.getName(), shoutColor.get());
+    conf.setValue(singColor.getName(), singColor.get());
+    conf.setValue(backgroundColor.getName(), backgroundColor.get());
+
+    // Font styling options
+    conf.setValue(yellAllCaps.getName(), yellAllCaps.get());
+    conf.setValue(whisperItalic.getName(), whisperItalic.get());
+    conf.setValue(emoteItalic.getName(), emoteItalic.get());
+
+    // Display options
+    conf.setValue(showTimestamps.getName(), showTimestamps.get());
+    conf.setValue(saveLogOnExit.getName(), saveLogOnExit.get());
+    conf.setValue(logDirectory.getName(), logDirectory.get());
+
+    // Talker colors
+    conf.setValue(talkerYouColor.getName(), talkerYouColor.get());
+    conf.setValue(talkerPlayerColor.getName(), talkerPlayerColor.get());
+    conf.setValue(talkerNpcColor.getName(), talkerNpcColor.get());
+    conf.setValue(talkerAllyColor.getName(), talkerAllyColor.get());
+    conf.setValue(talkerNeutralColor.getName(), talkerNeutralColor.get());
+    conf.setValue(talkerEnemyColor.getName(), talkerEnemyColor.get());
+
+    // Tab muting (filters)
+    conf.setValue(muteDirectTab.getName(), muteDirectTab.get());
+    conf.setValue(muteLocalTab.getName(), muteLocalTab.get());
+    conf.setValue(muteGlobalTab.getName(), muteGlobalTab.get());
 }
 
 void Configuration::AccountSettings::write(QSettings &conf) const
@@ -862,6 +1225,8 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
     // Note: There's no QVariant(int64_t) constructor.
     conf.setValue(KEY_MUME_START_EPOCH, static_cast<qlonglong>(startEpoch));
     conf.setValue(KEY_DISPLAY_CLOCK, display);
+    conf.setValue(KEY_GMCP_BROADCAST_CLOCK, gmcpBroadcast.get());
+    conf.setValue(KEY_GMCP_BROADCAST_INTERVAL, gmcpBroadcastInterval.get());
 }
 
 void Configuration::AdventurePanelSettings::write(QSettings &conf) const
@@ -992,6 +1357,118 @@ void Configuration::CanvasSettings::Advanced::registerChangeCallback(
     verticalAngle.registerChangeCallback(lifetime, callback);
     horizontalAngle.registerChangeCallback(lifetime, callback);
     layerHeight.registerChangeCallback(lifetime, callback);
+}
+
+Configuration::CanvasSettings::VisibilityFilter::VisibilityFilter() = default;
+
+bool Configuration::CanvasSettings::VisibilityFilter::isVisible(InfomarkClassEnum markerClass) const
+{
+    switch (markerClass) {
+    case InfomarkClassEnum::GENERIC:
+        return generic.get();
+    case InfomarkClassEnum::HERB:
+        return herb.get();
+    case InfomarkClassEnum::RIVER:
+        return river.get();
+    case InfomarkClassEnum::PLACE:
+        return place.get();
+    case InfomarkClassEnum::MOB:
+        return mob.get();
+    case InfomarkClassEnum::COMMENT:
+        return comment.get();
+    case InfomarkClassEnum::ROAD:
+        return road.get();
+    case InfomarkClassEnum::OBJECT:
+        return object.get();
+    case InfomarkClassEnum::ACTION:
+        return action.get();
+    case InfomarkClassEnum::LOCALITY:
+        return locality.get();
+    }
+    return true; // Default to visible for unknown types
+}
+
+void Configuration::CanvasSettings::VisibilityFilter::setVisible(InfomarkClassEnum markerClass,
+                                                                 bool visible)
+{
+    switch (markerClass) {
+    case InfomarkClassEnum::GENERIC:
+        generic.set(visible);
+        break;
+    case InfomarkClassEnum::HERB:
+        herb.set(visible);
+        break;
+    case InfomarkClassEnum::RIVER:
+        river.set(visible);
+        break;
+    case InfomarkClassEnum::PLACE:
+        place.set(visible);
+        break;
+    case InfomarkClassEnum::MOB:
+        mob.set(visible);
+        break;
+    case InfomarkClassEnum::COMMENT:
+        comment.set(visible);
+        break;
+    case InfomarkClassEnum::ROAD:
+        road.set(visible);
+        break;
+    case InfomarkClassEnum::OBJECT:
+        object.set(visible);
+        break;
+    case InfomarkClassEnum::ACTION:
+        action.set(visible);
+        break;
+    case InfomarkClassEnum::LOCALITY:
+        locality.set(visible);
+        break;
+    }
+}
+
+void Configuration::CanvasSettings::VisibilityFilter::showAll()
+{
+    generic.set(true);
+    herb.set(true);
+    river.set(true);
+    place.set(true);
+    mob.set(true);
+    comment.set(true);
+    road.set(true);
+    object.set(true);
+    action.set(true);
+    locality.set(true);
+    connections.set(true);
+}
+
+void Configuration::CanvasSettings::VisibilityFilter::hideAll()
+{
+    generic.set(false);
+    herb.set(false);
+    river.set(false);
+    place.set(false);
+    mob.set(false);
+    comment.set(false);
+    road.set(false);
+    object.set(false);
+    action.set(false);
+    locality.set(false);
+    connections.set(false);
+}
+
+void Configuration::CanvasSettings::VisibilityFilter::registerChangeCallback(
+    const ChangeMonitor::Lifetime &lifetime, const ChangeMonitor::Function &callback)
+{
+    generic.registerChangeCallback(lifetime, callback);
+    herb.registerChangeCallback(lifetime, callback);
+    river.registerChangeCallback(lifetime, callback);
+    place.registerChangeCallback(lifetime, callback);
+    mob.registerChangeCallback(lifetime, callback);
+    comment.registerChangeCallback(lifetime, callback);
+    road.registerChangeCallback(lifetime, callback);
+    object.registerChangeCallback(lifetime, callback);
+    action.registerChangeCallback(lifetime, callback);
+    locality.registerChangeCallback(lifetime, callback);
+    connections.registerChangeCallback(lifetime, callback);
 }
 
 void setEnteredMain()

@@ -32,6 +32,10 @@ set(mmapper_SRCS
     clock/mumeclockwidget.h
     clock/mumemoment.cpp
     clock/mumemoment.h
+    comms/CommsManager.cpp
+    comms/CommsManager.h
+    comms/CommsWidget.cpp
+    comms/CommsWidget.h
     configuration/NamedConfig.h
     configuration/PasswordConfig.cpp
     configuration/PasswordConfig.h
@@ -226,6 +230,8 @@ set(mmapper_SRCS
     mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
+    mainwindow/VisibilityFilterWidget.cpp
+    mainwindow/VisibilityFilterWidget.h
     mainwindow/WinDarkMode.cpp
     mainwindow/WinDarkMode.h
     mainwindow/aboutdialog.cpp
@@ -466,12 +472,16 @@ set(mmapper_SRCS
     preferences/autologpage.h
     preferences/clientpage.cpp
     preferences/clientpage.h
+    preferences/commspage.cpp
+    preferences/commspage.h
     preferences/configdialog.cpp
     preferences/configdialog.h
     preferences/generalpage.cpp
     preferences/generalpage.h
     preferences/graphicspage.cpp
     preferences/graphicspage.h
+    preferences/hotkeyspage.cpp
+    preferences/hotkeyspage.h
     preferences/grouppage.cpp
     preferences/grouppage.h
     preferences/mumeprotocolpage.cpp

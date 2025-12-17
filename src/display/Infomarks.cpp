@@ -233,6 +233,12 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
         return;
     }
 
+    // Check marker visibility settings
+    const auto infoMarkClass = marker.getClass();
+    if (!getConfig().canvas.visibilityFilter.isVisible(infoMarkClass)) {
+        return;
+    }
+
     const Coordinate &pos2 = marker.getPosition2();
     const float x1 = static_cast<float>(pos1.x) / INFOMARK_SCALE + offset.x;
     const float y1 = static_cast<float>(pos1.y) / INFOMARK_SCALE + offset.y;
@@ -242,7 +248,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
     const float dy = y2 - y1;
 
     const auto infoMarkType = marker.getType();
-    const auto infoMarkClass = marker.getClass();
+    // infoMarkClass already retrieved above for visibility check
 
     // Color depends of the class of the Infomark
     const Color infoMarkColor = getInfomarkColor(infoMarkType, infoMarkClass).withAlpha(0.55f);
