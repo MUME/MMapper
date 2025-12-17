@@ -27,9 +27,12 @@ public:
 
     void fixup(QString &input) const override
     {
-        // Remove any non-printable or whitespace characters
+        // Remove any non-printable, whitespace, or backslash characters
         QString cleaned;
         for (const QChar &c : input) {
+            if (c == '\\') {
+                continue;
+            }
             if (c.isPrint() && !c.isSpace()) {
                 cleaned.append(c);
             }

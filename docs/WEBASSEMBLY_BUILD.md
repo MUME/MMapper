@@ -18,8 +18,8 @@ cd <MMAPPER_ROOT>  # your MMapper source directory
 aqt install-qt mac desktop 6.5.3 wasm_multithread -m qtwebsockets -O .
 ```
 
-### 3. Create build script
-Save as `build-wasm.sh` in MMapper root:
+### 3. Build script
+The build script is located at `scripts/build-wasm.sh`:
 ```bash
 #!/bin/bash
 set -e
@@ -49,12 +49,8 @@ QT_HOST="$MMAPPER_SRC/6.5.3/macos"
 cmake --build "$MMAPPER_SRC/build-wasm" --parallel 4
 ```
 
-```bash
-chmod +x build-wasm.sh
-```
-
-### 4. Create server script
-Save as `server.py` in MMapper root:
+### 4. Server script
+The server script is located at `scripts/server.py`:
 ```python
 import http.server
 import socketserver
@@ -80,13 +76,13 @@ with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
 ### Build
 ```bash
 cd <MMAPPER_ROOT>
-./build-wasm.sh
+./scripts/build-wasm.sh
 ```
 
 ### Run
 ```bash
 cd build-wasm/src
-python3 ../../server.py
+python3 ../../scripts/server.py
 ```
 
 ### Open
@@ -96,7 +92,7 @@ http://localhost:9742/mmapper.html
 
 ### Clean rebuild
 ```bash
-rm -rf build-wasm && ./build-wasm.sh
+rm -rf build-wasm && ./scripts/build-wasm.sh
 ```
 
 ---

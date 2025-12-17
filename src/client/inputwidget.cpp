@@ -588,7 +588,7 @@ bool InputWidget::tryHistory(const int key)
 // Process _config commands and return true if handled
 static bool processConfigCommand(const QString &input, InputWidgetOutputs &outputs)
 {
-    if (!input.startsWith("_config")) {
+    if (!(input == "_config" || input.startsWith("_config "))) {
         return false;
     }
 

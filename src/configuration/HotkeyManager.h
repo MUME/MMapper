@@ -25,7 +25,11 @@ private:
 
     /// Normalize a key string to canonical modifier order: CTRL+SHIFT+ALT+META+Key
     /// Example: "ALT+CTRL+F1" -> "CTRL+ALT+F1"
+    /// Returns empty string if the base key is invalid
     NODISCARD static QString normalizeKeyString(const QString &keyString);
+
+    /// Check if a base key name (without modifiers) is valid
+    NODISCARD static bool isValidBaseKey(const QString &baseKey);
 
     /// Parse raw content to populate m_hotkeys and m_orderedHotkeys
     void parseRawContent();

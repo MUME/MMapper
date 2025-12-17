@@ -20,4 +20,8 @@ private Q_SLOTS:
     void importEdgeCasesTest();
     void resetToDefaultsTest();
     void exportSortOrderTest();
+    void setHotkeyTest();
+    void removeHotkeyTest();
+    void hasHotkeyTest();
+    void invalidKeyValidationTest();
 };

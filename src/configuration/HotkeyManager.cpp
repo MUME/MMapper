@@ -5,6 +5,7 @@
 
 #include <QDebug>
 #include <QRegularExpression>
+#include <QSet>
 #include <QSettings>
 #include <QTextStream>
 
@@ -281,6 +282,12 @@ QString HotkeyManager::normalizeKeyString(const QString &keyString)
         }
     }
 
+    // Validate the base key
+    QString upperBaseKey = baseKey.toUpper();
+    if (!isValidBaseKey(upperBaseKey)) {
+        return QString(); // Invalid key name
+    }
+
     // Add modifiers in canonical order
     if (hasCtrl) {
         normalizedParts << "CTRL";
@@ -296,7 +303,7 @@ QString HotkeyManager::normalizeKeyString(const QString &keyString)
     }
 
     // Add the base key
-    normalizedParts << baseKey.toUpper();
+    normalizedParts << upperBaseKey;
 
     return normalizedParts.join("+");
 }
@@ -326,6 +333,71 @@ int HotkeyManager::importFromCliFormat(const QString &content)
     saveToSettings();
 
     return static_cast<int>(m_orderedHotkeys.size());
+}
+
+// Static set of valid base key names for validation
+static const QSet<QString> &getValidBaseKeys()
+{
+    static const QSet<QString> validKeys{// Function keys
+                                         "F1",
+                                         "F2",
+                                         "F3",
+                                         "F4",
+                                         "F5",
+                                         "F6",
+                                         "F7",
+                                         "F8",
+                                         "F9",
+                                         "F10",
+                                         "F11",
+                                         "F12",
+                                         // Numpad
+                                         "NUMPAD0",
+                                         "NUMPAD1",
+                                         "NUMPAD2",
+                                         "NUMPAD3",
+                                         "NUMPAD4",
+                                         "NUMPAD5",
+                                         "NUMPAD6",
+                                         "NUMPAD7",
+                                         "NUMPAD8",
+                                         "NUMPAD9",
+                                         "NUMPAD_SLASH",
+                                         "NUMPAD_ASTERISK",
+                                         "NUMPAD_MINUS",
+                                         "NUMPAD_PLUS",
+                                         "NUMPAD_PERIOD",
+                                         // Navigation
+                                         "HOME",
+                                         "END",
+                                         "INSERT",
+                                         "PAGEUP",
+                                         "PAGEDOWN",
+                                         // Arrow keys
+                                         "UP",
+                                         "DOWN",
+                                         "LEFT",
+                                         "RIGHT",
+                                         // Misc
+                                         "ACCENT",
+                                         "0",
+                                         "1",
+                                         "2",
+                                         "3",
+                                         "4",
+                                         "5",
+                                         "6",
+                                         "7",
+                                         "8",
+                                         "9",
+                                         "HYPHEN",
+                                         "EQUAL"};
+    return validKeys;
+}
+
+bool HotkeyManager::isValidBaseKey(const QString &baseKey)
+{
+    return getValidBaseKeys().contains(baseKey.toUpper());
 }
 
 QStringList HotkeyManager::getAvailableKeyNames()
