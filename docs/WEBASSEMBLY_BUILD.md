@@ -1,5 +1,7 @@
 # WebAssembly Build Guide
+
 ## First-Time Setup
+
 ### 1. Install Emscripten SDK
 
 ```bash
