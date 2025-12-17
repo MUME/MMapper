@@ -46,6 +46,7 @@ class QOpenGLDebugMessage;
 class QWheelEvent;
 class QWidget;
 class RoomSelFakeGL;
+enum class MumeSeasonEnum : uint8_t;
 
 class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
                                           private MapCanvasViewport,
@@ -145,6 +146,8 @@ private:
     GLFont m_glFont;
     Batches m_batches;
     MapCanvasTextures m_textures;
+    SharedMMTexture m_backgroundTexture;
+    QString m_backgroundImagePath;
     MapData &m_data;
     Mmapper2Group &m_groupManager;
     OptionStatus m_graphicsOptionsStatus;
@@ -187,6 +190,7 @@ public:
 
 private:
     void onMovement();
+    void restoreCursorForMouseMode();
 
 private:
     void reportGLVersion();
@@ -241,6 +245,8 @@ private:
     void updateInfomarkBatches();
 
     void actuallyPaintGL();
+    void renderBackgroundImage();
+    void loadBackgroundImageIfNeeded();
     void paintMap();
     void renderMapBatches();
     void paintBatchedInfomarks();
@@ -259,6 +265,7 @@ private:
 public:
     void slot_rebuildMeshes() { forceUpdateMeshes(); }
     void infomarksChanged();
+    void mapBatchesChanged();
     void layerChanged();
     void slot_mapChanged();
     void slot_requestUpdate();
@@ -292,6 +299,8 @@ signals:
 public slots:
     void slot_onForcedPositionChange();
     void slot_createRoom();
+    void slot_onSeasonChanged(MumeSeasonEnum newSeason);
+    void slot_reloadTextures();
 
     void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
 
