@@ -37,6 +37,7 @@ private:
 
 signals:
     void sig_graphicsSettingsChanged();
+    void sig_textureSettingsChanged();
 
 public slots:
     void slot_loadConfig();
@@ -46,6 +47,8 @@ public slots:
     void slot_drawNotMappedExitsStateChanged(int);
     void slot_drawDoorNamesStateChanged(int);
     void slot_drawUpperLayersTexturedStateChanged(int);
+    void slot_textureSetChanged(int index);
+    void slot_enableSeasonalTexturesStateChanged(int state);
     // this slot just calls the signal... not useful
     void slot_graphicsSettingsChanged() { graphicsSettingsChanged(); }
 };

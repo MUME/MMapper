@@ -57,7 +57,8 @@ namespace MapCanvasConfig {
 void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
                             ChangeMonitor::Function callback)
 {
-    return setConfig().canvas.advanced.registerChangeCallback(lifetime, std::move(callback));
+    setConfig().canvas.advanced.registerChangeCallback(lifetime, callback);
+    setConfig().canvas.visibilityFilter.registerChangeCallback(lifetime, std::move(callback));
 }
 
 bool isIn3dMode()
@@ -602,13 +603,284 @@ void MapCanvas::finishPendingMapBatches()
 #undef LOG
 }
 
+void MapCanvas::loadBackgroundImageIfNeeded()
+{
+    const auto &config = getConfig().canvas.advanced;
+    if (!config.useBackgroundImage || config.backgroundImagePath.isEmpty()) {
+        m_backgroundTexture.reset();
+        m_backgroundImagePath.clear();
+        return;
+    }
+
+    // Reload if path changed
+    if (m_backgroundImagePath != config.backgroundImagePath) {
+        try {
+            // Use simple MMTexture::alloc like other textures in the codebase
+            m_backgroundTexture = MMTexture::alloc(config.backgroundImagePath);
+
+            // Set texture wrap mode to border with transparent color (like "Canvas" mode)
+            auto *tex = m_backgroundTexture->get();
+            tex->setWrapMode(QOpenGLTexture::ClampToBorder);
+            // Set border color to transparent (0,0,0,0)
+            const float borderColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+            tex->setBorderColor(borderColor[0], borderColor[1], borderColor[2], borderColor[3]);
+
+            // Allocate texture ID and register with OpenGL (like initTextures() does)
+            auto id = allocateTextureId();
+            m_backgroundTexture->setId(id);
+            m_opengl.setTextureLookup(id, m_backgroundTexture);
+
+            m_backgroundImagePath = config.backgroundImagePath;
+
+            qDebug() << "Background texture loaded:" << config.backgroundImagePath;
+            if (m_backgroundTexture) {
+                qDebug() << "  Size:" << tex->width() << "x" << tex->height();
+                qDebug() << "  Created:" << tex->isCreated();
+            }
+        } catch (const std::exception &e) {
+            qWarning() << "Failed to load background image:" << e.what();
+            m_backgroundTexture.reset();
+            m_backgroundImagePath.clear();
+        }
+    }
+}
+
+void MapCanvas::renderBackgroundImage()
+{
+    loadBackgroundImageIfNeeded();
+
+    auto &gl = getOpenGL();
+    const auto &config = getConfig().canvas.advanced;
+
+    if (!m_backgroundTexture || !config.useBackgroundImage) {
+        // No background image, use solid color
+        // Clear framebuffer first
+        gl.clear(Color{getConfig().canvas.backgroundColor}.withAlpha(1.0f));
+
+        // Render a full-screen opaque quad to ensure proper background color
+        // This prevents blending artifacts with map tiles
+        const Color bgColor = Color{getConfig().canvas.backgroundColor}.withAlpha(1.0f);
+        std::vector<ColorVert> verts;
+        verts.reserve(4);
+        verts.emplace_back(bgColor, glm::vec3{-1.0f, -1.0f, 0.0f});  // Bottom-left
+        verts.emplace_back(bgColor, glm::vec3{+1.0f, -1.0f, 0.0f});  // Bottom-right
+        verts.emplace_back(bgColor, glm::vec3{+1.0f, +1.0f, 0.0f});  // Top-right
+        verts.emplace_back(bgColor, glm::vec3{-1.0f, +1.0f, 0.0f});  // Top-left
+
+        // Set identity matrix for screen-space rendering
+        setMvp(glm::mat4{1.f});
+
+        // Render state: no blending, no depth test for background
+        auto state = GLRenderState{};
+        state.blend = BlendModeEnum::NONE;  // Opaque background
+        state.depth.reset();  // No depth testing
+        state.uniforms.color = Colors::white;
+        state.uniforms.enableRadialTransparency = false;
+        state.uniforms.texturesDisabled = true;  // No textures for solid color
+        state.uniforms.isNight = false;
+
+        // Render the opaque background quad
+        gl.renderColoredQuads(verts, state);
+
+        // Restore viewport and matrices for 3D rendering
+        setViewportAndMvp(width(), height());
+        return;
+    }
+
+    // Clear to background color with full opacity
+    // Force alpha to 1.0 to ensure opaque background (no blending artifacts)
+    gl.clear(Color{getConfig().canvas.backgroundColor}.withAlpha(1.0f));
+
+    const auto texId = m_backgroundTexture->getId();
+    const float opacity = config.backgroundOpacity;
+    const auto fitMode = static_cast<BackgroundFitModeEnum>(config.backgroundFitMode);
+
+    // Get texture and viewport dimensions
+    auto *tex = m_backgroundTexture->get();
+    const float texWidth = static_cast<float>(tex->width());
+    const float texHeight = static_cast<float>(tex->height());
+    const float viewWidth = static_cast<float>(width());
+    const float viewHeight = static_cast<float>(height());
+
+    // Calculate quad vertices and UV coordinates based on fit mode
+    glm::vec3 quadMin{-1.f, -1.f, 0.0f};  // NDC coordinates
+    glm::vec3 quadMax{+1.f, +1.f, 0.0f};
+    glm::vec2 uvMin{0.0f, 0.0f};  // Fixed: UV coordinates (0,0 = top-left)
+    glm::vec2 uvMax{1.0f, 1.0f};  // Fixed: (1,1 = bottom-right)
+
+    switch (fitMode) {
+    case BackgroundFitModeEnum::FIT: {
+        // Scale uniformly to fit inside viewport (letterbox/pillarbox)
+        const float texAspect = texWidth / texHeight;
+        const float viewAspect = viewWidth / viewHeight;
+        if (texAspect > viewAspect) {
+            // Image is wider - pillarbox (black bars on top/bottom)
+            const float scale = viewAspect / texAspect;
+            quadMin.y = -scale;
+            quadMax.y = scale;
+        } else {
+            // Image is taller - letterbox (black bars on sides)
+            const float scale = texAspect / viewAspect;
+            quadMin.x = -scale;
+            quadMax.x = scale;
+        }
+        break;
+    }
+    case BackgroundFitModeEnum::FILL: {
+        // Scale uniformly to cover viewport (crop excess)
+        const float texAspect = texWidth / texHeight;
+        const float viewAspect = viewWidth / viewHeight;
+        if (texAspect > viewAspect) {
+            // Image is wider - crop left/right
+            const float uvWidth = viewAspect / texAspect;
+            const float uvOffset = (1.0f - uvWidth) * 0.5f;
+            uvMin.x = uvOffset;
+            uvMax.x = 1.0f - uvOffset;
+        } else {
+            // Image is taller - crop top/bottom
+            const float uvHeight = texAspect / viewAspect;
+            const float uvOffset = (1.0f - uvHeight) * 0.5f;
+            uvMin.y = uvOffset;
+            uvMax.y = 1.0f - uvOffset;
+        }
+        break;
+    }
+    case BackgroundFitModeEnum::STRETCH:
+        // Non-uniform scale to fill exactly (default, no changes needed)
+        break;
+    case BackgroundFitModeEnum::CENTER: {
+        // No scale, center in viewport
+        const float quadWidth = (texWidth / viewWidth) * 2.0f;   // Convert to NDC
+        const float quadHeight = (texHeight / viewHeight) * 2.0f;
+        quadMin.x = -quadWidth * 0.5f;
+        quadMax.x = quadWidth * 0.5f;
+        quadMin.y = -quadHeight * 0.5f;
+        quadMax.y = quadHeight * 0.5f;
+        break;
+    }
+    case BackgroundFitModeEnum::TILE: {
+        // Repeat texture to fill viewport
+        uvMax.x = viewWidth / texWidth;
+        uvMax.y = viewHeight / texHeight;
+        break;
+    }
+    case BackgroundFitModeEnum::FOCUSED: {
+        // FOCUSED mode: Render in WORLD SPACE (like map tiles)
+        // This ensures background pans and zooms perfectly with the map
+
+        const float focusScale = config.backgroundFocusedScale;
+        const float offsetX = config.backgroundFocusedOffsetX;
+        const float offsetY = config.backgroundFocusedOffsetY;
+
+        // Texture aspect ratio
+        const float texAspect = texWidth / texHeight;
+
+        // Base size in world units (how many tiles the texture covers)
+        // focusScale: larger values = bigger background = more world units covered
+        const float baseWorldSize = 100.0f * focusScale;
+
+        // Calculate world-space quad size preserving aspect ratio
+        float worldWidth, worldHeight;
+        if (texAspect > 1.0f) {
+            // Wider texture
+            worldWidth = baseWorldSize;
+            worldHeight = baseWorldSize / texAspect;
+        } else {
+            // Taller texture
+            worldHeight = baseWorldSize;
+            worldWidth = baseWorldSize * texAspect;
+        }
+
+        // Position background in world space
+        // Center of texture is at (offsetX, offsetY) in world coordinates
+        const float worldCenterX = offsetX;
+        const float worldCenterY = offsetY;
+
+        // CRITICAL: Place background at CURRENT LAYER depth (eliminates parallax!)
+        // Slightly below (-0.01) so tiles always render on top via depth testing
+        const float worldZ = static_cast<float>(m_currentLayer) - 0.01f;
+
+        // Calculate world-space quad corners
+        quadMin.x = worldCenterX - (worldWidth * 0.5f);
+        quadMax.x = worldCenterX + (worldWidth * 0.5f);
+        quadMin.y = worldCenterY - (worldHeight * 0.5f);
+        quadMax.y = worldCenterY + (worldHeight * 0.5f);
+        quadMin.z = worldZ;
+        quadMax.z = worldZ;
+
+        // Use full texture (no UV manipulation needed)
+        uvMin = glm::vec2{0.0f, 0.0f};
+        uvMax = glm::vec2{1.0f, 1.0f};
+
+        // Create quad in WORLD SPACE
+        const Color white = Colors::white.withAlpha(opacity);
+        std::vector<ColoredTexVert> verts;
+        verts.reserve(4);
+        verts.emplace_back(white, glm::vec2{uvMin.x, uvMin.y}, glm::vec3{quadMin.x, quadMin.y, worldZ});
+        verts.emplace_back(white, glm::vec2{uvMax.x, uvMin.y}, glm::vec3{quadMax.x, quadMin.y, worldZ});
+        verts.emplace_back(white, glm::vec2{uvMax.x, uvMax.y}, glm::vec3{quadMax.x, quadMax.y, worldZ});
+        verts.emplace_back(white, glm::vec2{uvMin.x, uvMax.y}, glm::vec3{quadMin.x, quadMax.y, worldZ});
+
+        // Use world-space rendering (same matrix as map tiles)
+        setViewportAndMvp(width(), height());
+
+        // Render state - DISABLE depth testing so background never occludes tiles
+        // Background renders first, then all tiles render on top with normal depth testing
+        auto state = GLRenderState{};
+        state.blend = (opacity < 1.0f) ? BlendModeEnum::TRANSPARENCY : BlendModeEnum::NONE;
+        state.depth.reset();  // No depth testing - background is always "behind" everything
+        state.uniforms.color = Colors::white;
+        state.uniforms.enableRadialTransparency = false;  // Don't apply layer effects
+        state.uniforms.texturesDisabled = false;
+        state.uniforms.isNight = false;
+
+        // Render the world-space background quad
+        gl.renderColoredTexturedQuads(verts, state.withTexture0(texId));
+
+        // Early return - already rendered and set matrices
+        return;
+    }
+    }
+
+    // Create fullscreen quad with calculated UV coordinates (for screen-space modes)
+    // Note: Texture is mirrored when loaded, so V coordinates are flipped
+    const Color white = Colors::white.withAlpha(opacity);
+    std::vector<ColoredTexVert> verts;
+    verts.reserve(4);
+    verts.emplace_back(white, glm::vec2{uvMin.x, uvMin.y}, glm::vec3{quadMin.x, quadMin.y, 0.0f});  // Bottom-left
+    verts.emplace_back(white, glm::vec2{uvMax.x, uvMin.y}, glm::vec3{quadMax.x, quadMin.y, 0.0f});  // Bottom-right
+    verts.emplace_back(white, glm::vec2{uvMax.x, uvMax.y}, glm::vec3{quadMax.x, quadMax.y, 0.0f});  // Top-right
+    verts.emplace_back(white, glm::vec2{uvMin.x, uvMax.y}, glm::vec3{quadMin.x, quadMax.y, 0.0f});  // Top-left
+
+    // Set identity matrix for screen-space rendering (non-FOCUSED modes)
+    setMvp(glm::mat4{1.f});
+
+    // Simple render state
+    auto state = GLRenderState{};
+    state.blend = (opacity < 1.0f) ? BlendModeEnum::TRANSPARENCY : BlendModeEnum::NONE;
+    state.depth.reset();
+    state.uniforms.color = Colors::white;
+    state.uniforms.enableRadialTransparency = false;
+    state.uniforms.texturesDisabled = false;
+    state.uniforms.isNight = false;
+
+    qDebug() << "Rendering background with texture ID:" << static_cast<int>(texId);
+
+    // Render the textured background
+    gl.renderColoredTexturedQuads(verts, state.withTexture0(texId));
+
+    // Restore viewport and matrices for 3D rendering
+    setViewportAndMvp(width(), height());
+}
+
 void MapCanvas::actuallyPaintGL()
 {
     // DECL_TIMER(t, __FUNCTION__);
-    setViewportAndMvp(width(), height());
+    // NOTE: setViewportAndMvp is called by renderBackgroundImage(), so we don't call it here
+    // to avoid clearing the background that was just rendered
 
     auto &gl = getOpenGL();
-    gl.clear(Color{getConfig().canvas.backgroundColor});
+    renderBackgroundImage(); // Render background or clear to solid color (also sets viewport/MVP)
 
     if (m_data.isEmpty()) {
         getGLFont().renderTextCentered("No map loaded");
@@ -777,14 +1049,13 @@ void MapCanvas::paintMap()
         return;
     }
 
-    // TODO: add a GUI indicator for pending update?
     renderMapBatches();
 
-    if (pending) {
-        if (m_batches.pendingUpdateFlashState.tick()) {
-            const QString msg = "CAUTION: Async map update pending!";
-            getGLFont().renderTextCentered(msg);
-        }
+    // Show a subtle indicator for pending async updates (less intrusive than the old CAUTION message)
+    if (pending && m_batches.pendingUpdateFlashState.tick()) {
+        // Just show a small "●" symbol - much less intrusive than the large CAUTION message
+        const QString msg = "●";  // Small circle indicator
+        getGLFont().renderTextCentered(msg);
     }
 }
 
@@ -1018,13 +1289,16 @@ void MapCanvas::renderMapBatches()
 
     auto &gl = getOpenGL();
     BatchedMeshes &batchedMeshes = batches.batchedMeshes;
+    // Player position is approximated by scroll position (camera center) + current layer Z
+    const glm::vec3 playerPos = glm::vec3(m_scroll.x, m_scroll.y, static_cast<float>(m_currentLayer));
+    const bool isNight = batches.isNight;
     const auto drawLayer =
-        [&batches, &batchedMeshes, wantExtraDetail, wantDoorNames](const int thisLayer,
-                                                                   const int currentLayer) {
+        [&batches, &batchedMeshes, &playerPos, isNight, wantExtraDetail, wantDoorNames](const int thisLayer,
+                                                                                         const int currentLayer) {
             const auto it_mesh = batchedMeshes.find(thisLayer);
             if (it_mesh != batchedMeshes.end()) {
                 LayerMeshes &meshes = it_mesh->second;
-                meshes.render(thisLayer, currentLayer);
+                meshes.render(thisLayer, currentLayer, playerPos, isNight);
             }
 
             if (wantExtraDetail) {

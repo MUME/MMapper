@@ -10,8 +10,11 @@
 #include "../adventure/adventurewidget.h"
 #include "../adventure/xpstatuswidget.h"
 #include "../client/ClientWidget.h"
+#include "../comms/CommsManager.h"
+#include "../comms/CommsWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
+#include "../display/Filenames.h"
 #include "../display/InfomarkSelection.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
@@ -32,6 +35,7 @@
 #include "DescriptionWidget.h"
 #include "MapZoomSlider.h"
 #include "UpdateDialog.h"
+#include "VisibilityFilterWidget.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
@@ -128,7 +132,11 @@ MainWindow::MainWindow()
     addApplicationFont();
     registerMetatypes();
 
-    m_mapData = new MapData(this);
+    // Create game observer and clock first, as MapData depends on them
+    m_gameObserver = std::make_unique<GameObserver>();
+    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
+
+    m_mapData = new MapData(deref(m_mumeClock), this);
     MapData &mapData = deref(m_mapData);
 
     m_mapData->setObjectName("MapData");
@@ -145,8 +153,20 @@ MainWindow::MainWindow()
     m_pathMachine = new Mmapper2PathMachine(mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
-    m_gameObserver = std::make_unique<GameObserver>();
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
+
+    // Create AutoLogger early (needed by CommsWidget)
+    m_logger = new AutoLogger(this);
+
+    // Communications Manager
+    m_commsManager = new CommsManager(this);
+    deref(m_gameObserver).sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+        deref(m_commsManager).slot_parseGmcpInput(gmcp);
+    });
+    deref(m_gameObserver).sig2_rawGameText.connect(m_lifetime, [this](const QString &text) {
+        deref(m_commsManager).slot_parseRawGameText(text);
+    });
+    connect(m_commsManager, &CommsManager::sig_log, this, &MainWindow::slot_log);
 
     // View -> Side Panels -> Client Panel
     m_clientWidget = new ClientWidget(this);
@@ -166,7 +186,6 @@ MainWindow::MainWindow()
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
                                  | QDockWidget::DockWidgetClosable);
-    m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
     logWindow = new QTextBrowser(m_dockDialogLog);
@@ -218,6 +237,18 @@ MainWindow::MainWindow()
     m_dockDialogAdventure->setWidget(m_adventureWidget);
     m_dockDialogAdventure->hide();
 
+    // View -> Side Panels -> Communications Panel
+    m_dockDialogComms = new QDockWidget(tr("Communications"), this);
+    m_dockDialogComms->setObjectName("DockWidgetComms");
+    m_dockDialogComms->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_dockDialogComms->setFeatures(QDockWidget::DockWidgetClosable
+                                    | QDockWidget::DockWidgetFloatable
+                                    | QDockWidget::DockWidgetMovable);
+    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogComms);
+    m_commsWidget = new CommsWidget(deref(m_commsManager), m_logger, this);
+    m_dockDialogComms->setWidget(m_commsWidget);
+    m_dockDialogComms->hide();
+
     // View -> Side Panels -> Description / Area Panel
     m_descriptionWidget = new DescriptionWidget(this);
     m_dockDialogDescription = new QDockWidget(tr("Description Panel"), this);
@@ -229,12 +260,40 @@ MainWindow::MainWindow()
     addDockWidget(Qt::RightDockWidgetArea, m_dockDialogDescription);
     m_dockDialogDescription->setWidget(m_descriptionWidget);
 
-    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
+    // View -> Toolbars -> Visibility Filter
+    m_visibilityFilterWidget = new VisibilityFilterWidget(this);
+    m_dockDialogVisibleMarkers = new QDockWidget(tr("Visibility Filter"), this);
+    m_dockDialogVisibleMarkers->setObjectName("DockWidgetVisibilityFilter");
+    m_dockDialogVisibleMarkers->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_dockDialogVisibleMarkers->setFeatures(QDockWidget::DockWidgetMovable
+                                            | QDockWidget::DockWidgetFloatable
+                                            | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::RightDockWidgetArea, m_dockDialogVisibleMarkers);
+    m_dockDialogVisibleMarkers->setWidget(m_visibilityFilterWidget);
+    m_dockDialogVisibleMarkers->hide();
+
+    // Connect visibility filter changes to map update
+    // Separate signals ensure we only rebuild what's necessary:
+    // - Infomarks visibility -> only rebuild infomark meshes
+    // - Connections visibility -> only rebuild map/connection batches
+    connect(m_visibilityFilterWidget, &VisibilityFilterWidget::sig_visibilityChanged,
+            this, [this]() {
+                m_mapWindow->getCanvas()->infomarksChanged();
+            });
+
+    connect(m_visibilityFilterWidget, &VisibilityFilterWidget::sig_connectionsVisibilityChanged,
+            this, [this]() {
+                // Just trigger a repaint - connections use alpha transparency so no batch rebuild needed
+                m_mapWindow->getCanvas()->update();
+            });
+
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
     }
 
     createActions();
+    applyHotkeys();
+    registerGlobalShortcuts();
     setupToolBars();
     setupMenuBar();
     setupStatusBar();
@@ -243,8 +302,6 @@ MainWindow::MainWindow()
     setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
     setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
-
-    m_logger = new AutoLogger(this);
 
     // TODO move this connect() wiring into AutoLogger::ctor ?
     GameObserver &observer = deref(m_gameObserver);
@@ -293,6 +350,8 @@ MainWindow::MainWindow()
         alwaysOnTopAct->setChecked(true);
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
+
+    radialTransparencyAct->setChecked(getConfig().canvas.enableRadialTransparency);
 
     showStatusBarAct->setChecked(getConfig().general.showStatusBar);
     slot_setShowStatusBar();
@@ -483,6 +542,13 @@ void MainWindow::wireConnections()
     connect(m_mapData, &MapFrontend::sig_clearingMap, m_groupWidget, &GroupWidget::slot_mapUnloaded);
 
     connect(m_mumeClock, &MumeClock::sig_log, this, &MainWindow::slot_log);
+    connect(m_mumeClock, &MumeClock::sig_seasonChanged, m_mapWindow->getCanvas(), &MapCanvas::slot_onSeasonChanged);
+
+    // Initialize the current season for seasonal textures
+    // This sets the global season variable so textures load correctly on startup
+    // Note: We only call setCurrentSeason() here, NOT slot_onSeasonChanged()
+    // because the OpenGL context isn't ready yet during construction
+    setCurrentSeason(m_mumeClock->getMumeMoment().toSeason());
 
     connect(m_listener, &ConnectionListener::sig_log, this, &MainWindow::slot_log);
     connect(m_dockDialogClient,
@@ -534,21 +600,18 @@ void MainWindow::createActions()
     openAct = new QAction(QIcon::fromTheme("document-open", QIcon(":/icons/open.png")),
                           tr("&Open..."),
                           this);
-    openAct->setShortcut(tr("Ctrl+O"));
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, &QAction::triggered, this, &MainWindow::slot_open);
 
     reloadAct = new QAction(QIcon::fromTheme("document-open-recent", QIcon(":/icons/reload.png")),
                             tr("&Reload"),
                             this);
-    reloadAct->setShortcut(tr("Ctrl+R"));
     reloadAct->setStatusTip(tr("Reload the current map"));
     connect(reloadAct, &QAction::triggered, this, &MainWindow::slot_reload);
 
     saveAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
                           tr("&Save"),
                           this);
-    saveAct->setShortcut(tr("Ctrl+S"));
     saveAct->setStatusTip(tr("Save the document to disk"));
     saveAct->setEnabled(false);
     connect(saveAct, &QAction::triggered, this, &MainWindow::slot_save);
@@ -578,19 +641,16 @@ void MainWindow::createActions()
     connect(mergeAct, &QAction::triggered, this, &MainWindow::slot_merge);
 
     exitAct = new QAction(QIcon::fromTheme("application-exit"), tr("E&xit"), this);
-    exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, &QAction::triggered, this, &QWidget::close);
 
     m_undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
-    m_undoAction->setShortcut(QKeySequence::Undo);
     m_undoAction->setStatusTip(tr("Undo the last action"));
     connect(m_undoAction, &QAction::triggered, m_mapData, &MapData::slot_undo);
     connect(m_mapData, &MapData::sig_undoAvailable, m_undoAction, &QAction::setEnabled);
     m_undoAction->setEnabled(false);
 
     m_redoAction = new QAction(QIcon::fromTheme("edit-redo"), tr("&Redo"), this);
-    m_redoAction->setShortcut(QKeySequence::Redo);
     m_redoAction->setStatusTip(tr("Redo the last undone action"));
     connect(m_redoAction, &QAction::triggered, m_mapData, &MapData::slot_redo);
     connect(m_mapData, &MapData::sig_redoAvailable, m_redoAction, &QAction::setEnabled);
@@ -600,7 +660,6 @@ void MainWindow::createActions()
                                                   QIcon(":/icons/preferences.png")),
                                  tr("&Preferences"),
                                  this);
-    preferencesAct->setShortcut(tr("Ctrl+P"));
     preferencesAct->setStatusTip(tr("MMapper preferences"));
     connect(preferencesAct, &QAction::triggered, this, &MainWindow::slot_onPreferences);
 
@@ -647,21 +706,22 @@ void MainWindow::createActions()
                             tr("Zoom In"),
                             this);
     zoomInAct->setStatusTip(tr("Zooms In current map"));
-    zoomInAct->setShortcut(tr("Ctrl++"));
     zoomOutAct = new QAction(QIcon::fromTheme("zoom-out", QIcon(":/icons/viewmag-.png")),
                              tr("Zoom Out"),
                              this);
-    zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setStatusTip(tr("Zooms Out current map"));
     zoomResetAct = new QAction(QIcon::fromTheme("zoom-original", QIcon(":/icons/viewmagfit.png")),
                                tr("Zoom Reset"),
                                this);
-    zoomResetAct->setShortcut(tr("Ctrl+0"));
     zoomResetAct->setStatusTip(tr("Zoom to original size"));
 
     alwaysOnTopAct = new QAction(tr("Always On Top"), this);
     alwaysOnTopAct->setCheckable(true);
     connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::slot_alwaysOnTop);
+
+    radialTransparencyAct = new QAction(tr("Radial Transparency"), this);
+    radialTransparencyAct->setCheckable(true);
+    connect(radialTransparencyAct, &QAction::triggered, this, &MainWindow::slot_setRadialTransparency);
 
     showStatusBarAct = new QAction(tr("Always Show Status Bar"), this);
     showStatusBarAct->setCheckable(true);
@@ -680,26 +740,11 @@ void MainWindow::createActions()
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
-    layerUpAct->setShortcut(tr([]() -> const char * {
-        // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-            return "Meta+Tab";
-        }
-        return "Ctrl+Tab";
-    }()));
     layerUpAct->setStatusTip(tr("Layer Up"));
     connect(layerUpAct, &QAction::triggered, this, &MainWindow::slot_onLayerUp);
     layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")),
                                tr("Layer Down"),
                                this);
-
-    layerDownAct->setShortcut(tr([]() -> const char * {
-        // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-            return "Meta+Shift+Tab";
-        }
-        return "Ctrl+Shift+Tab";
-    }()));
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, &QAction::triggered, this, &MainWindow::slot_onLayerDown);
 
@@ -816,7 +861,6 @@ void MainWindow::createActions()
                                        tr("Edit Selected Rooms"),
                                        this);
     editRoomSelectionAct->setStatusTip(tr("Edit Selected Rooms"));
-    editRoomSelectionAct->setShortcut(tr("Ctrl+E"));
     connect(editRoomSelectionAct, &QAction::triggered, this, &MainWindow::slot_onEditRoomSelection);
 
     deleteRoomSelectionAct = new QAction(QIcon(":/icons/roomdelete.png"),
@@ -871,7 +915,6 @@ void MainWindow::createActions()
 
     findRoomsAct = new QAction(QIcon(":/icons/roomfind.png"), tr("&Find Rooms"), this);
     findRoomsAct->setStatusTip(tr("Find matching rooms"));
-    findRoomsAct->setShortcut(tr("Ctrl+F"));
     connect(findRoomsAct, &QAction::triggered, this, &MainWindow::slot_onFindRoom);
 
     clientAct = new QAction(QIcon(":/icons/online.png"), tr("&Launch mud client"), this);
@@ -883,6 +926,12 @@ void MainWindow::createActions()
                              this);
     connect(saveLogAct, &QAction::triggered, m_clientWidget, &ClientWidget::slot_saveLog);
     saveLogAct->setStatusTip(tr("Save log as file"));
+
+    saveCommsLogAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
+                                  tr("Save &communications log as..."),
+                                  this);
+    connect(saveCommsLogAct, &QAction::triggered, m_commsWidget, &CommsWidget::slot_saveLog);
+    saveCommsLogAct->setStatusTip(tr("Save communications log as file"));
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release all paths"));
@@ -1003,6 +1052,104 @@ void MainWindow::createActions()
     rebuildMeshesAct->setStatusTip(tr("Reconstruct the world mesh to fix graphical rendering bugs"));
     rebuildMeshesAct->setCheckable(false);
     connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::slot_rebuildMeshes);
+}
+
+void MainWindow::registerGlobalShortcuts()
+{
+    // Register all actions with the main window so their shortcuts work globally
+    // This is required for keyboard shortcuts to work anywhere in the application
+
+    // File operations
+    addAction(newAct);
+    addAction(openAct);
+    addAction(mergeAct);
+    addAction(reloadAct);
+    addAction(saveAct);
+    addAction(saveAsAct);
+    addAction(exportBaseMapAct);
+    addAction(exportMm2xmlMapAct);
+    addAction(exportWebMapAct);
+    addAction(exportMmpMapAct);
+    addAction(exitAct);
+
+    // Edit operations
+    addAction(m_undoAction);
+    addAction(m_redoAction);
+    addAction(preferencesAct);
+    addAction(findRoomsAct);
+    addAction(editRoomSelectionAct);
+
+    // View operations
+    addAction(zoomInAct);
+    addAction(zoomOutAct);
+    addAction(zoomResetAct);
+    addAction(layerUpAct);
+    addAction(layerDownAct);
+    addAction(layerResetAct);
+
+    // View toggles
+    addAction(radialTransparencyAct);
+    addAction(showStatusBarAct);
+    addAction(showScrollBarsAct);
+    addAction(showMenuBarAct);
+    addAction(alwaysOnTopAct);
+
+    // Side panels
+    if (m_dockDialogLog && m_dockDialogLog->toggleViewAction()) {
+        addAction(m_dockDialogLog->toggleViewAction());
+    }
+    if (m_dockDialogClient && m_dockDialogClient->toggleViewAction()) {
+        addAction(m_dockDialogClient->toggleViewAction());
+    }
+    if (m_dockDialogGroup && m_dockDialogGroup->toggleViewAction()) {
+        addAction(m_dockDialogGroup->toggleViewAction());
+    }
+    if (m_dockDialogRoom && m_dockDialogRoom->toggleViewAction()) {
+        addAction(m_dockDialogRoom->toggleViewAction());
+    }
+    if (m_dockDialogAdventure && m_dockDialogAdventure->toggleViewAction()) {
+        addAction(m_dockDialogAdventure->toggleViewAction());
+    }
+    if (m_dockDialogComms && m_dockDialogComms->toggleViewAction()) {
+        addAction(m_dockDialogComms->toggleViewAction());
+    }
+    if (m_dockDialogDescription && m_dockDialogDescription->toggleViewAction()) {
+        addAction(m_dockDialogDescription->toggleViewAction());
+    }
+
+    // Mouse modes
+    addAction(mouseMode.modeMoveSelectAct);
+    addAction(mouseMode.modeRoomRaypickAct);
+    addAction(mouseMode.modeRoomSelectAct);
+    addAction(mouseMode.modeConnectionSelectAct);
+    addAction(mouseMode.modeInfomarkSelectAct);
+    addAction(mouseMode.modeCreateInfomarkAct);
+    addAction(mouseMode.modeCreateRoomAct);
+    addAction(mouseMode.modeCreateConnectionAct);
+    addAction(mouseMode.modeCreateOnewayConnectionAct);
+
+    // Room operations
+    addAction(createRoomAct);
+    addAction(moveUpRoomSelectionAct);
+    addAction(moveDownRoomSelectionAct);
+    addAction(mergeUpRoomSelectionAct);
+    addAction(mergeDownRoomSelectionAct);
+    addAction(deleteRoomSelectionAct);
+    addAction(connectToNeighboursRoomSelectionAct);
+    addAction(gotoRoomAct);
+    addAction(forceRoomAct);
+
+    // Connection operations
+    addAction(deleteConnectionSelectionAct);
+
+    // Infomark operations
+    addAction(infomarkActions.deleteInfomarkAct);
+    addAction(infomarkActions.editInfomarkAct);
+
+    // Other
+    addAction(rebuildMeshesAct);
+
+    qDebug() << "Registered all actions with main window for global shortcuts";
 }
 
 static void setConfigMapMode(const MapModeEnum mode)
@@ -1156,12 +1303,14 @@ void MainWindow::setupMenuBar()
     toolbars->addAction(roomToolBar->toggleViewAction());
     toolbars->addAction(connectionToolBar->toggleViewAction());
     toolbars->addAction(settingsToolBar->toggleViewAction());
+    toolbars->addAction(m_dockDialogVisibleMarkers->toggleViewAction());
     QMenu *sidepanels = viewMenu->addMenu(tr("&Side Panels"));
     sidepanels->addAction(m_dockDialogLog->toggleViewAction());
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
     sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
+    sidepanels->addAction(m_dockDialogComms->toggleViewAction());
     sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
@@ -1174,6 +1323,8 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(rebuildMeshesAct);
     viewMenu->addSeparator();
+    viewMenu->addAction(radialTransparencyAct);
+
     viewMenu->addAction(showStatusBarAct);
     viewMenu->addAction(showScrollBarsAct);
     if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
@@ -1186,6 +1337,8 @@ void MainWindow::setupMenuBar()
                                               tr("&Integrated Mud Client"));
     clientMenu->addAction(clientAct);
     clientMenu->addAction(saveLogAct);
+    clientMenu->addSeparator();
+    clientMenu->addAction(saveCommsLogAct);
     QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/goto.png"), tr("&Path Machine"));
     pathMachineMenu->addAction(mouseMode.modeRoomSelectAct);
     pathMachineMenu->addSeparator();
@@ -1267,6 +1420,15 @@ void MainWindow::slot_alwaysOnTop()
     setWindowFlag(Qt::WindowStaysOnTopHint, alwaysOnTop);
     setConfig().general.alwaysOnTop = alwaysOnTop;
     show();
+}
+
+void MainWindow::slot_setRadialTransparency()
+{
+    const bool enableRadialTransparency = this->radialTransparencyAct->isChecked();
+    setConfig().canvas.enableRadialTransparency = enableRadialTransparency;
+    if (m_mapWindow) {
+        m_mapWindow->update();
+    }
 }
 
 void MainWindow::slot_setShowStatusBar()
@@ -1415,9 +1577,21 @@ void MainWindow::slot_onPreferences()
             m_mapWindow,
             &MapWindow::slot_graphicsSettingsChanged);
     connect(m_configDialog.get(),
+            &ConfigDialog::sig_textureSettingsChanged,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::slot_reloadTextures);
+    connect(m_configDialog.get(),
             &ConfigDialog::sig_groupSettingsChanged,
             m_groupManager,
             &Mmapper2Group::slot_groupSettingsChanged);
+    connect(m_configDialog.get(),
+            &ConfigDialog::sig_commsSettingsChanged,
+            m_commsWidget,
+            &CommsWidget::slot_loadSettings);
+    connect(m_configDialog.get(),
+            &ConfigDialog::sig_hotkeysChanged,
+            this,
+            &MainWindow::applyHotkeys);
     m_configDialog->show();
 }
 
@@ -1478,6 +1652,12 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
 void MainWindow::closeEvent(QCloseEvent *const event)
 {
     // REVISIT: wait and see if we're actually exiting first?
+
+    // Save communications log if enabled
+    if (m_commsWidget) {
+        m_commsWidget->slot_saveLogOnExit();
+    }
+
     writeSettings();
 
     if (!maybeSave()) {
@@ -2130,4 +2310,108 @@ void MainWindow::onSuccessfulSave(const SaveModeEnum mode,
             config.fileName = absoluteFilePath;
         }
     }
+}
+
+void MainWindow::applyHotkeys()
+{
+    const auto &hotkeys = getConfig().hotkeys;
+
+    qDebug() << "=== Applying hotkeys ===";
+
+    // Helper lambda to apply shortcut only if not empty
+    auto applyShortcut = [](QAction *action, const QString &shortcut) {
+        if (action && !shortcut.isEmpty()) {
+            action->setShortcut(QKeySequence(shortcut));
+            qDebug() << "  Setting shortcut:" << action->text() << "=" << shortcut;
+        } else if (action) {
+            action->setShortcut(QKeySequence());
+            qDebug() << "  Clearing shortcut:" << action->text();
+        }
+    };
+
+    // File operations
+    applyShortcut(openAct, hotkeys.fileOpen.get());
+    applyShortcut(saveAct, hotkeys.fileSave.get());
+    applyShortcut(reloadAct, hotkeys.fileReload.get());
+    applyShortcut(exitAct, hotkeys.fileQuit.get());
+
+    // Edit operations
+    applyShortcut(m_undoAction, hotkeys.editUndo.get());
+    applyShortcut(m_redoAction, hotkeys.editRedo.get());
+    applyShortcut(preferencesAct, hotkeys.editPreferences.get());
+    applyShortcut(findRoomsAct, hotkeys.editFindRooms.get());
+    applyShortcut(editRoomSelectionAct, hotkeys.editRoom.get());
+
+    // View operations
+    applyShortcut(zoomInAct, hotkeys.viewZoomIn.get());
+    applyShortcut(zoomOutAct, hotkeys.viewZoomOut.get());
+    applyShortcut(zoomResetAct, hotkeys.viewZoomReset.get());
+    applyShortcut(layerUpAct, hotkeys.viewLayerUp.get());
+    applyShortcut(layerDownAct, hotkeys.viewLayerDown.get());
+    applyShortcut(layerResetAct, hotkeys.viewLayerReset.get());
+
+    // View toggles
+    applyShortcut(radialTransparencyAct, hotkeys.viewRadialTransparency.get());
+    applyShortcut(showStatusBarAct, hotkeys.viewStatusBar.get());
+    applyShortcut(showScrollBarsAct, hotkeys.viewScrollBars.get());
+    applyShortcut(showMenuBarAct, hotkeys.viewMenuBar.get());
+    applyShortcut(alwaysOnTopAct, hotkeys.viewAlwaysOnTop.get());
+
+    // Side panels
+    if (m_dockDialogLog && m_dockDialogLog->toggleViewAction()) {
+        applyShortcut(m_dockDialogLog->toggleViewAction(), hotkeys.panelLog.get());
+    }
+    if (m_dockDialogClient && m_dockDialogClient->toggleViewAction()) {
+        applyShortcut(m_dockDialogClient->toggleViewAction(), hotkeys.panelClient.get());
+    }
+    if (m_dockDialogGroup && m_dockDialogGroup->toggleViewAction()) {
+        applyShortcut(m_dockDialogGroup->toggleViewAction(), hotkeys.panelGroup.get());
+    }
+    if (m_dockDialogRoom && m_dockDialogRoom->toggleViewAction()) {
+        applyShortcut(m_dockDialogRoom->toggleViewAction(), hotkeys.panelRoom.get());
+    }
+    if (m_dockDialogAdventure && m_dockDialogAdventure->toggleViewAction()) {
+        applyShortcut(m_dockDialogAdventure->toggleViewAction(), hotkeys.panelAdventure.get());
+    }
+    if (m_dockDialogComms && m_dockDialogComms->toggleViewAction()) {
+        applyShortcut(m_dockDialogComms->toggleViewAction(), hotkeys.panelComms.get());
+    }
+    if (m_dockDialogDescription && m_dockDialogDescription->toggleViewAction()) {
+        applyShortcut(m_dockDialogDescription->toggleViewAction(), hotkeys.panelDescription.get());
+    }
+
+    // Mouse modes
+    applyShortcut(mouseMode.modeMoveSelectAct, hotkeys.modeMoveMap.get());
+    applyShortcut(mouseMode.modeRoomRaypickAct, hotkeys.modeRaypick.get());
+    applyShortcut(mouseMode.modeRoomSelectAct, hotkeys.modeSelectRooms.get());
+    applyShortcut(mouseMode.modeInfomarkSelectAct, hotkeys.modeSelectMarkers.get());
+    applyShortcut(mouseMode.modeConnectionSelectAct, hotkeys.modeSelectConnection.get());
+    applyShortcut(mouseMode.modeCreateInfomarkAct, hotkeys.modeCreateMarker.get());
+    applyShortcut(mouseMode.modeCreateRoomAct, hotkeys.modeCreateRoom.get());
+    applyShortcut(mouseMode.modeCreateConnectionAct, hotkeys.modeCreateConnection.get());
+    applyShortcut(mouseMode.modeCreateOnewayConnectionAct, hotkeys.modeCreateOnewayConnection.get());
+
+    // Room operations
+    applyShortcut(createRoomAct, hotkeys.roomCreate.get());
+    applyShortcut(moveUpRoomSelectionAct, hotkeys.roomMoveUp.get());
+    applyShortcut(moveDownRoomSelectionAct, hotkeys.roomMoveDown.get());
+    applyShortcut(mergeUpRoomSelectionAct, hotkeys.roomMergeUp.get());
+    applyShortcut(mergeDownRoomSelectionAct, hotkeys.roomMergeDown.get());
+    applyShortcut(deleteRoomSelectionAct, hotkeys.roomDelete.get());
+    applyShortcut(connectToNeighboursRoomSelectionAct, hotkeys.roomConnectNeighbors.get());
+    applyShortcut(gotoRoomAct, hotkeys.roomMoveToSelected.get());
+    applyShortcut(forceRoomAct, hotkeys.roomUpdateSelected.get());
+
+    // Apply alternative preferences shortcut (Esc)
+    if (preferencesAct && !hotkeys.editPreferencesAlt.get().isEmpty()) {
+        QList<QKeySequence> shortcuts;
+        if (!hotkeys.editPreferences.get().isEmpty()) {
+            shortcuts << QKeySequence(hotkeys.editPreferences.get());
+        }
+        shortcuts << QKeySequence(hotkeys.editPreferencesAlt.get());
+        preferencesAct->setShortcuts(shortcuts);
+        qDebug() << "  Setting dual shortcuts for Preferences:" << shortcuts;
+    }
+
+    qDebug() << "=== Hotkeys applied ===";
 }
