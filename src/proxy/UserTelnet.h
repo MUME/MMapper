@@ -29,6 +29,10 @@ public:
     {
         virt_onRelayTermTypeFromUserToMud(bytes);
     }
+    void onGmcpModuleEnabled(const GmcpModuleTypeEnum type, const bool enabled)
+    {
+        virt_onGmcpModuleEnabled(type, enabled);
+    }
 
 private:
     virtual void virt_onAnalyzeUserStream(const RawBytes &, bool) = 0;
@@ -36,6 +40,7 @@ private:
     virtual void virt_onRelayGmcpFromUserToMud(const GmcpMessage &) = 0;
     virtual void virt_onRelayNawsFromUserToMud(int, int) = 0;
     virtual void virt_onRelayTermTypeFromUserToMud(const TelnetTermTypeBytes &) = 0;
+    virtual void virt_onGmcpModuleEnabled(GmcpModuleTypeEnum, bool) = 0;
 };
 
 class NODISCARD UserTelnet final : public AbstractTelnet
@@ -68,6 +73,7 @@ private:
 private:
     void receiveGmcpModule(const GmcpModule &, bool);
     void resetGmcpModules();
+    void sendSupportedGmcpModules();
 
 public:
     void onAnalyzeUserStream(const TelnetIacBytes &);

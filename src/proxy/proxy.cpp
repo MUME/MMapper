@@ -37,11 +37,14 @@
 #include <tuple>
 
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QScopedPointer>
 #include <QSslSocket>
 #include <QTcpSocket>
+#include <QTimer>
 
 using mmqt::makeQPointer;
 
@@ -163,6 +166,9 @@ Proxy::~Proxy()
     // This can happen as a result of the user hitting Alt-F4 to close the MMapper window.
     sendNewlineToUser();
     sendStatusToUser("MMapper proxy is shutting down.");
+
+    // Stop clock broadcaster
+    stopClockBroadcaster();
 
     {
         qDebug() << "disconnecting mud socket...";
@@ -399,6 +405,19 @@ void Proxy::allocUserTelnet()
         {
             // forwarded (to mud)
             getMudTelnet().onRelayTermType(bytes);
+        }
+        void virt_onGmcpModuleEnabled(const GmcpModuleTypeEnum type, const bool enabled) final
+        {
+            // Check if MUME.Time module was enabled/disabled
+            if (type == GmcpModuleTypeEnum::MUME_TIME) {
+                if (enabled) {
+                    qDebug() << "MUME.Time module enabled by client, starting broadcaster";
+                    getProxy().startClockBroadcaster();
+                } else {
+                    qDebug() << "MUME.Time module disabled by client, stopping broadcaster";
+                    getProxy().stopClockBroadcaster();
+                }
+            }
         }
     };
 
@@ -851,6 +870,26 @@ void Proxy::init()
         QObject::connect(&m_mapData, &MapData::sig_onForcedPositionChange, this, [this]() {
             getMudParser().onForcedPositionChange();
         });
+
+        // Connect parser's raw game text signal to GameObserver for fallback parsing
+        QObject::connect(&getMudParser(), &MumeXmlParser::sig_rawGameText, this, [this](const QString &text) {
+            getGameObserver().observeRawGameText(text);
+        });
+
+        // Register change callbacks for GMCP broadcast settings
+        setConfig().mumeClock.gmcpBroadcast.registerChangeCallback(m_lifetime, [this]() {
+            qDebug() << "GMCP broadcast setting changed, restarting broadcaster...";
+            stopClockBroadcaster();
+            startClockBroadcaster();
+        });
+
+        setConfig().mumeClock.gmcpBroadcastInterval.registerChangeCallback(m_lifetime, [this]() {
+            qDebug() << "GMCP broadcast interval changed, restarting broadcaster...";
+            stopClockBroadcaster();
+            startClockBroadcaster();
+        });
+
+        // Clock broadcaster will be started automatically when client enables MUME.Time module
     };
 
     allocPipelineObjects();
@@ -871,6 +910,190 @@ void Proxy::gmcpToMud(const GmcpMessage &msg)
 void Proxy::gmcpToUser(const GmcpMessage &msg)
 {
     getUserTelnet().onGmcpToUser(msg);
+}
+
+void Proxy::startClockBroadcaster()
+{
+    const auto &config = getConfig();
+
+    qDebug() << "=== startClockBroadcaster called ===";
+    qDebug() << "  gmcpBroadcast config:" << config.mumeClock.gmcpBroadcast.get();
+    qDebug() << "  MUME_TIME enabled:" << isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME);
+
+    // Only start if GMCP broadcasting is enabled and client supports MUME.Time module
+    if (!config.mumeClock.gmcpBroadcast.get() || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        qDebug() << "  NOT starting (requirements not met)";
+        return;
+    }
+
+    qDebug() << "  Creating/starting broadcaster...";
+
+    // Create timer if it doesn't exist
+    if (m_clockBroadcastTimer == nullptr) {
+        m_clockBroadcastTimer = new QTimer(this);
+        QObject::connect(m_clockBroadcastTimer, &QTimer::timeout, this, &Proxy::broadcastClockInfo);
+        qDebug() << "  Created new timer";
+    }
+
+    // Set interval and start
+    m_clockBroadcastTimer->setInterval(config.mumeClock.gmcpBroadcastInterval.get());
+    m_clockBroadcastTimer->start();
+    qDebug() << "  Timer started, interval:" << config.mumeClock.gmcpBroadcastInterval.get() << "ms";
+
+    // Send initial update immediately
+    qDebug() << "  Sending initial broadcast...";
+    broadcastClockInfo();
+    qDebug() << "=== startClockBroadcaster done ===";
+}
+
+void Proxy::stopClockBroadcaster()
+{
+    if (m_clockBroadcastTimer != nullptr && m_clockBroadcastTimer->isActive()) {
+        m_clockBroadcastTimer->stop();
+    }
+}
+
+void Proxy::broadcastClockInfo()
+{
+    qDebug() << "broadcastClockInfo called";
+
+    // Don't broadcast if client doesn't support MUME.Time
+    if (!isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        qDebug() << "  Client doesn't support MUME.Time, aborting";
+        return;
+    }
+
+    qDebug() << "  Building clock data...";
+
+    // Get current MUME time
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    const auto precision = m_mumeClock.getPrecision();
+
+    // Get dawn/dusk hours for current month
+    const auto [dawnHour, duskHour] = MumeClock::getDawnDusk(moment.month);
+
+    // Build JSON object
+    QJsonObject json;
+    json["year"] = moment.year;
+    json["month"] = moment.month;
+    json["day"] = moment.day;
+    json["hour"] = moment.hour;
+    json["minute"] = moment.minute;
+
+    // Add precision level
+    switch (precision) {
+    case MumeClockPrecisionEnum::UNSET:
+        json["precision"] = "unset";
+        break;
+    case MumeClockPrecisionEnum::DAY:
+        json["precision"] = "day";
+        break;
+    case MumeClockPrecisionEnum::HOUR:
+        json["precision"] = "hour";
+        break;
+    case MumeClockPrecisionEnum::MINUTE:
+        json["precision"] = "minute";
+        break;
+    }
+
+    // Add season
+    switch (moment.toSeason()) {
+    case MumeSeasonEnum::WINTER:
+        json["season"] = "winter";
+        break;
+    case MumeSeasonEnum::SPRING:
+        json["season"] = "spring";
+        break;
+    case MumeSeasonEnum::SUMMER:
+        json["season"] = "summer";
+        break;
+    case MumeSeasonEnum::AUTUMN:
+        json["season"] = "autumn";
+        break;
+    case MumeSeasonEnum::UNKNOWN:
+        json["season"] = "unknown";
+        break;
+    }
+
+    // Add time of day
+    switch (moment.toTimeOfDay()) {
+    case MumeTimeEnum::DAWN:
+        json["timeOfDay"] = "dawn";
+        break;
+    case MumeTimeEnum::DAY:
+        json["timeOfDay"] = "day";
+        break;
+    case MumeTimeEnum::DUSK:
+        json["timeOfDay"] = "dusk";
+        break;
+    case MumeTimeEnum::NIGHT:
+        json["timeOfDay"] = "night";
+        break;
+    case MumeTimeEnum::UNKNOWN:
+        json["timeOfDay"] = "unknown";
+        break;
+    }
+
+    // Add moon information
+    switch (moment.moonPhase()) {
+    case MumeMoonPhaseEnum::NEW_MOON:
+        json["moonPhase"] = "new_moon";
+        break;
+    case MumeMoonPhaseEnum::WAXING_CRESCENT:
+        json["moonPhase"] = "waxing_crescent";
+        break;
+    case MumeMoonPhaseEnum::FIRST_QUARTER:
+        json["moonPhase"] = "first_quarter";
+        break;
+    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
+        json["moonPhase"] = "waxing_gibbous";
+        break;
+    case MumeMoonPhaseEnum::FULL_MOON:
+        json["moonPhase"] = "full_moon";
+        break;
+    case MumeMoonPhaseEnum::WANING_GIBBOUS:
+        json["moonPhase"] = "waning_gibbous";
+        break;
+    case MumeMoonPhaseEnum::THIRD_QUARTER:
+        json["moonPhase"] = "third_quarter";
+        break;
+    case MumeMoonPhaseEnum::WANING_CRESCENT:
+        json["moonPhase"] = "waning_crescent";
+        break;
+    case MumeMoonPhaseEnum::UNKNOWN:
+        json["moonPhase"] = "unknown";
+        break;
+    }
+
+    switch (moment.moonVisibility()) {
+    case MumeMoonVisibilityEnum::BRIGHT:
+        json["moonVisibility"] = "bright";
+        break;
+    case MumeMoonVisibilityEnum::DIM:
+        json["moonVisibility"] = "dim";
+        break;
+    case MumeMoonVisibilityEnum::INVISIBLE:
+        json["moonVisibility"] = "invisible";
+        break;
+    case MumeMoonVisibilityEnum::UNKNOWN:
+        json["moonVisibility"] = "unknown";
+        break;
+    }
+
+    json["moonLevel"] = moment.moonLevel();
+    json["dawnHour"] = dawnHour;
+    json["duskHour"] = duskHour;
+    json["syncEpoch"] = static_cast<qint64>(m_mumeClock.getLastSyncEpoch());
+
+    // Convert to JSON string
+    const QJsonDocument doc(json);
+    const QString jsonString = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+
+    // Create and send GMCP message
+    qDebug() << "  Sending MUME.Time.Info:" << jsonString;
+    const GmcpMessage msg(GmcpMessageTypeEnum::MUME_TIME_INFO, GmcpJson{jsonString.toStdString()});
+    gmcpToUser(msg);
+    qDebug() << "  Broadcast sent";
 }
 
 void Proxy::sendToMud(const QString &s)

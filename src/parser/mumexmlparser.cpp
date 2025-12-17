@@ -123,6 +123,9 @@ void MumeXmlParser::parse(const TelnetData &data, const bool isGoAhead)
     if (!m_lineToUser.isEmpty()) {
         sendToUser(SendToUserSourceEnum::FromMud, m_lineToUser, isGoAhead);
 
+        // Emit raw game text for fallback parsing (e.g., yells when GMCP unavailable)
+        emit sig_rawGameText(m_lineToUser);
+
         // Simplify the output and run actions
         QString tempStr = m_lineToUser;
         tempStr = normalizeStringCopy(tempStr.trimmed());

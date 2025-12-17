@@ -85,6 +85,9 @@ public:
                            ParserCommonData &parserCommonData);
     ~MumeXmlParser() final;
 
+signals:
+    void sig_rawGameText(const QString &text);
+
 private:
     void parse(const TelnetData &, bool isGoAhead);
 

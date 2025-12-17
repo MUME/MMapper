@@ -221,6 +221,13 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         qWarning() << "Calculated week day does not match MUME";
     }
     m_mumeStartEpoch = newStartEpoch;
+
+    // Check if season changed and emit signal
+    const auto currentSeason = capturedMoment.toSeason();
+    if (currentSeason != m_lastSeasonEmitted && currentSeason != MumeSeasonEnum::UNKNOWN) {
+        m_lastSeasonEmitted = currentSeason;
+        emit sig_seasonChanged(currentSeason);
+    }
 }
 
 void MumeClock::onUserGmcp(const GmcpMessage &msg)
@@ -319,6 +326,13 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
     if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR) {
         m_precision = MumeClockPrecisionEnum::MINUTE;
     }
+
+    // Check if season changed and emit signal
+    const auto currentSeason = moment.toSeason();
+    if (currentSeason != m_lastSeasonEmitted && currentSeason != MumeSeasonEnum::UNKNOWN) {
+        m_lastSeasonEmitted = currentSeason;
+        emit sig_seasonChanged(currentSeason);
+    }
 }
 
 void MumeClock::parseClockTime(const QString &clockTime)
@@ -357,6 +371,13 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
     log("Synchronized with clock in room (" + QString::number(newStartEpoch - m_mumeStartEpoch)
         + " seconds from previous)");
     m_mumeStartEpoch = newStartEpoch;
+
+    // Check if season changed and emit signal
+    const auto currentSeason = moment.toSeason();
+    if (currentSeason != m_lastSeasonEmitted && currentSeason != MumeSeasonEnum::UNKNOWN) {
+        m_lastSeasonEmitted = currentSeason;
+        emit sig_seasonChanged(currentSeason);
+    }
 }
 
 void MumeClock::parseMSSP(const MsspTime &msspTime)

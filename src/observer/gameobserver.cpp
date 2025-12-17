@@ -34,3 +34,8 @@ void GameObserver::observeToggledEchoMode(const bool echo)
 {
     sig2_toggledEchoMode.invoke(echo);
 }
+
+void GameObserver::observeRawGameText(const QString &text)
+{
+    sig2_rawGameText.invoke(text);
+}

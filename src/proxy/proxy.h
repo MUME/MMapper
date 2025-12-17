@@ -152,6 +152,9 @@ private:
     // it outlives this object when the connection closes.
     QPointer<RemoteEdit> m_remoteEdit;
 
+    // Clock GMCP broadcaster
+    QTimer *m_clockBroadcastTimer = nullptr;
+
     enum class NODISCARD ServerStateEnum {
         Initialized,
         Offline,
@@ -225,6 +228,11 @@ private:
     NODISCARD bool isUserGmcpModuleEnabled(const GmcpModuleTypeEnum &mod) const;
     void gmcpToMud(const GmcpMessage &msg);
     void gmcpToUser(const GmcpMessage &msg);
+
+private:
+    void startClockBroadcaster();
+    void stopClockBroadcaster();
+    void broadcastClockInfo();
 
 private:
     void sendToMud(const QString &s);
