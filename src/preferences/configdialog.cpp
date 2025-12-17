@@ -8,9 +8,11 @@
 
 #include "autologpage.h"
 #include "clientpage.h"
+#include "commspage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
 #include "grouppage.h"
+#include "hotkeyspage.h"
 #include "mumeprotocolpage.h"
 #include "parserpage.h"
 #include "pathmachinepage.h"
@@ -38,12 +40,16 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     auto autoLogPage = new AutoLogPage(this);
     auto mumeProtocolPage = new MumeProtocolPage(this);
     auto pathmachinePage = new PathmachinePage(this);
+    auto hotkeysPage = new HotkeysPage(this);
+    auto commsPage = new CommsPage(this);
 
     m_pagesWidget = new QStackedWidget(this);
 
     auto *const pagesWidget = m_pagesWidget;
     pagesWidget->addWidget(generalPage);
     pagesWidget->addWidget(graphicsPage);
+    pagesWidget->addWidget(hotkeysPage);
+    pagesWidget->addWidget(commsPage);
     pagesWidget->addWidget(parserPage);
     pagesWidget->addWidget(clientPage);
     pagesWidget->addWidget(groupPage);
@@ -80,10 +86,21 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
             mumeProtocolPage,
             &MumeProtocolPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, hotkeysPage, &HotkeysPage::slot_loadConfig);
+    connect(hotkeysPage, &HotkeysPage::sig_hotkeysChanged, this, &ConfigDialog::sig_hotkeysChanged);
+    connect(this, &ConfigDialog::sig_loadConfig, commsPage, &CommsPage::slot_loadConfig);
+    connect(commsPage,
+            &CommsPage::sig_commsSettingsChanged,
+            this,
+            &ConfigDialog::sig_commsSettingsChanged);
     connect(graphicsPage,
             &GraphicsPage::sig_graphicsSettingsChanged,
             this,
             &ConfigDialog::sig_graphicsSettingsChanged);
+    connect(graphicsPage,
+            &GraphicsPage::sig_textureSettingsChanged,
+            this,
+            &ConfigDialog::sig_textureSettingsChanged);
 }
 
 ConfigDialog::~ConfigDialog()
@@ -122,6 +139,8 @@ void ConfigDialog::createIcons()
 
     addItem(":/icons/generalcfg.png", tr("General"));
     addItem(":/icons/graphicscfg.png", tr("Graphics"));
+    addItem(":/icons/hotkeys.png", tr("Hotkeys"));
+    addItem(":/icons/comms.png", tr("Comms"));
     addItem(":/icons/parsercfg.png", tr("Parser"));
     addItem(":/icons/terminal.png", tr("Integrated\nMud Client"));
     addItem(":/icons/group-recolor.png", tr("Group Panel"));

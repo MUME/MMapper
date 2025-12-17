@@ -34,6 +34,8 @@ class AdventureTracker;
 class AdventureWidget;
 class AutoLogger;
 class ClientWidget;
+class CommsManager;
+class CommsWidget;
 class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
@@ -66,6 +68,7 @@ class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
 class DescriptionWidget;
+class VisibilityFilterWidget;
 
 struct MapLoadData;
 
@@ -85,6 +88,8 @@ private:
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogAdventure = nullptr;
     QDockWidget *m_dockDialogDescription = nullptr;
+    QDockWidget *m_dockDialogComms = nullptr;
+    QDockWidget *m_dockDialogVisibleMarkers = nullptr;
 
     std::unique_ptr<GameObserver> m_gameObserver;
     AutoLogger *m_logger = nullptr;
@@ -108,7 +113,11 @@ private:
     AdventureTracker *m_adventureTracker = nullptr;
     AdventureWidget *m_adventureWidget = nullptr;
 
+    CommsManager *m_commsManager = nullptr;
+    CommsWidget *m_commsWidget = nullptr;
+
     DescriptionWidget *m_descriptionWidget = nullptr;
+    VisibilityFilterWidget *m_visibilityFilterWidget = nullptr;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
@@ -166,6 +175,7 @@ private:
     QAction *zoomOutAct = nullptr;
     QAction *zoomResetAct = nullptr;
     QAction *alwaysOnTopAct = nullptr;
+    QAction *radialTransparencyAct = nullptr;
     QAction *showStatusBarAct = nullptr;
     QAction *showScrollBarsAct = nullptr;
     QAction *showMenuBarAct = nullptr;
@@ -222,6 +232,7 @@ private:
 
     QAction *clientAct = nullptr;
     QAction *saveLogAct = nullptr;
+    QAction *saveCommsLogAct = nullptr;
 
     QAction *gotoRoomAct = nullptr;
     QAction *forceRoomAct = nullptr;
@@ -304,6 +315,8 @@ private:
     void setupMenuBar();
     void setupToolBars();
     void setupStatusBar();
+    void applyHotkeys();
+    void registerGlobalShortcuts();
 
     void readSettings();
     void writeSettings();
@@ -432,6 +445,7 @@ public slots:
     void slot_onOfflineMode();
     void slot_setMode(MapModeEnum mode);
     void slot_alwaysOnTop();
+    void slot_setRadialTransparency();
     void slot_setShowStatusBar();
     void slot_setShowScrollBars();
     void slot_setShowMenuBar();
