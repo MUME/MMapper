@@ -3,11 +3,9 @@ layout: default
 title: WebAssembly Build Guide
 ---
 
-# WebAssembly Build Guide
+## WebAssembly Build Guide
 
-## First-Time Setup
-
-### 1. Install Emscripten SDK
+### First-Time Setup: 1. Install Emscripten SDK
 
 ```bash
 cd ~/dev  # or any directory you prefer
