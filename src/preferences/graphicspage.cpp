@@ -90,6 +90,15 @@ GraphicsPage::GraphicsPage(QWidget *parent)
         }
     });
 
+    connect(ui->tileSetComboBox,
+            qOverload<int>(&QComboBox::currentIndexChanged),
+            this,
+            &GraphicsPage::slot_textureSetChanged);
+    connect(ui->enableSeasonalTilesCheckBox,
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::slot_enableSeasonalTexturesStateChanged);
+
     connect(m_advanced.get(),
             &AdvancedGraphicsGroupBox::sig_graphicsSettingsChanged,
             this,
@@ -119,8 +128,19 @@ void GraphicsPage::slot_loadConfig()
     ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());
     ui->drawNotMappedExits->setChecked(settings.showUnmappedExits.get());
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
+    ui->drawUpperLayersTextured->setChecked(settings.drawUpperLayersTextured);
 
     ui->resourceLineEdit->setText(settings.resourcesDirectory);
+
+    // Block signals to prevent texture reload when just loading config
+    ui->tileSetComboBox->blockSignals(true);
+    ui->enableSeasonalTilesCheckBox->blockSignals(true);
+
+    ui->tileSetComboBox->setCurrentIndex(static_cast<int>(settings.textureSet));
+    ui->enableSeasonalTilesCheckBox->setChecked(settings.enableSeasonalTextures);
+
+    ui->tileSetComboBox->blockSignals(false);
+    ui->enableSeasonalTilesCheckBox->blockSignals(false);
 }
 
 void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *const pushButton)
@@ -167,4 +187,32 @@ void GraphicsPage::slot_drawUpperLayersTexturedStateChanged(int /*unused*/)
 {
     setConfig().canvas.drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
     graphicsSettingsChanged();
+}
+
+void GraphicsPage::slot_textureSetChanged(int index)
+{
+    auto &config = setConfig().canvas;
+    switch (index) {
+    case 0:
+        config.textureSet = TextureSetEnum::CLASSIC;
+        break;
+    case 1:
+        config.textureSet = TextureSetEnum::MODERN;
+        break;
+    case 2:
+        config.textureSet = TextureSetEnum::CUSTOM;
+        break;
+    default:
+        config.textureSet = TextureSetEnum::MODERN;
+        break;
+    }
+    graphicsSettingsChanged();
+    emit sig_textureSettingsChanged();
+}
+
+void GraphicsPage::slot_enableSeasonalTexturesStateChanged(int /*unused*/)
+{
+    setConfig().canvas.enableSeasonalTextures = ui->enableSeasonalTilesCheckBox->isChecked();
+    graphicsSettingsChanged();
+    emit sig_textureSettingsChanged();
 }

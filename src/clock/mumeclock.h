@@ -159,9 +159,11 @@ protected:
 
 private:
     void onUserGmcp(const GmcpMessage &msg);
+    MumeSeasonEnum m_lastSeasonEmitted = MumeSeasonEnum::UNKNOWN;
 
 signals:
     void sig_log(const QString &, const QString &);
+    void sig_seasonChanged(MumeSeasonEnum newSeason);
 
 public slots:
     void parseMumeTime(const QString &mumeTime);

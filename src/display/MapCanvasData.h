@@ -166,6 +166,7 @@ struct NODISCARD MapCanvasInputState
 
     bool m_mouseRightPressed = false;
     bool m_mouseLeftPressed = false;
+    bool m_mouseMiddlePressed = false;
     bool m_altPressed = false;
     bool m_ctrlPressed = false;
 
@@ -195,6 +196,15 @@ struct NODISCARD MapCanvasInputState
     };
     std::optional<InfomarkSelectionMove> m_infoMarkSelectionMove;
     NODISCARD bool hasInfomarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
+
+    struct NODISCARD CameraRotationState final
+    {
+        glm::vec2 initialMousePos;
+        float initialVerticalAngle;
+        float initialHorizontalAngle;
+    };
+    std::optional<CameraRotationState> m_cameraRotation;
+    NODISCARD bool isCameraRotating() const { return m_cameraRotation.has_value(); }
 
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
 
