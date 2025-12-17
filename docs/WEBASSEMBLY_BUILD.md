@@ -109,9 +109,10 @@ rm -rf build-wasm && ./scripts/build-wasm.sh
 
 ## Path Reference
 
-| Placeholder            | Description                  | Example                       |
-|------------------------|------------------------------|-------------------------------|
-| `<MMAPPER_ROOT>`       | MMapper source directory     | `/Users/yourname/dev/MMapper` |
-| `$HOME/dev/emsdk`      | Emscripten SDK location      | `~/dev/emsdk`                 |
-| `6.5.3/wasm_multithread` | Qt WASM installed by aqt   | Inside `<MMAPPER_ROOT>`       |
-| `6.5.3/macos`          | Qt native macOS (host tools) | Inside `<MMAPPER_ROOT>`       |
+- **`<MMAPPER_ROOT>`**: MMapper source directory
+  (e.g., `/Users/yourname/dev/MMapper`)
+- **`$HOME/dev/emsdk`**: Emscripten SDK location (`~/dev/emsdk`)
+- **`6.5.3/wasm_multithread`**: Qt WASM installed by aqt
+  (inside `<MMAPPER_ROOT>`)
+- **`6.5.3/macos`**: Qt native macOS host tools
+  (inside `<MMAPPER_ROOT>`)
