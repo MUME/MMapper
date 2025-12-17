@@ -1,3 +1,8 @@
+---
+layout: default
+title: WebAssembly Build Guide
+---
+
 # WebAssembly Build Guide
 
 ## First-Time Setup
