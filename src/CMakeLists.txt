@@ -868,11 +868,13 @@ else()
     set(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})
 endif()
 # Parse CPACK_PACKAGE_VERSION to get individual components
-string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)-?([0-9]+)?.*$" _ "${CPACK_PACKAGE_VERSION}")
+# Handle formats like "25.01.0" or "25.01.0-42-ge248f51b"
+string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(-([0-9]+))?.*$" _ "${CPACK_PACKAGE_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
 set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
-set(CPACK_PACKAGE_VERSION_TWEAK ${CMAKE_MATCH_4})
+# Note: MATCH_5 because MATCH_4 is the full "-42" group, MATCH_5 is just "42"
+set(CPACK_PACKAGE_VERSION_TWEAK ${CMAKE_MATCH_5})
 if(NOT CPACK_PACKAGE_VERSION_TWEAK)
     # Set to 0 if the commit count is missing
     set(CPACK_PACKAGE_VERSION_TWEAK 0)
