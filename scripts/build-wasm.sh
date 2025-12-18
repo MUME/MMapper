@@ -25,5 +25,7 @@ QT_HOST="$MMAPPER_SRC/6.5.3/macos"
 cmake --build "$MMAPPER_SRC/build-wasm" --parallel 4
 
 echo ""
-echo "Build complete! Run: cd build-wasm/src && python3 ../../server.py"
+echo "Build complete!"
+echo "To run, from the MMapper root directory:"
+echo "  cd build-wasm/src && python3 ../../scripts/server.py"
 echo "Then open: http://localhost:9742/mmapper.html"
