@@ -464,4 +464,42 @@ void TestHotkeyManager::settingsPersistenceTest()
     QVERIFY(manager.exportToCliFormat().contains("# Persistence test"));
 }
 
+void TestHotkeyManager::directLookupTest()
+{
+    HotkeyManager manager;
+
+    // Import hotkeys for testing
+    manager.importFromCliFormat("_hotkey F1 look\n"
+                                "_hotkey CTRL+F2 flee\n"
+                                "_hotkey NUMPAD8 n\n"
+                                "_hotkey CTRL+NUMPAD5 s\n"
+                                "_hotkey SHIFT+ALT+UP north\n");
+
+    // Test direct lookup for function keys (isNumpad=false)
+    QCOMPARE(manager.getCommand(Qt::Key_F1, Qt::NoModifier, false), QString("look"));
+    QCOMPARE(manager.getCommand(Qt::Key_F2, Qt::ControlModifier, false), QString("flee"));
+
+    // Test that wrong modifiers don't match
+    QCOMPARE(manager.getCommand(Qt::Key_F1, Qt::ControlModifier, false), QString());
+    QCOMPARE(manager.getCommand(Qt::Key_F2, Qt::NoModifier, false), QString());
+
+    // Test numpad keys (isNumpad=true) - Qt::Key_8 with isNumpad=true
+    QCOMPARE(manager.getCommand(Qt::Key_8, Qt::NoModifier, true), QString("n"));
+    QCOMPARE(manager.getCommand(Qt::Key_5, Qt::ControlModifier, true), QString("s"));
+
+    // Test that numpad keys don't match non-numpad lookups
+    QCOMPARE(manager.getCommand(Qt::Key_8, Qt::NoModifier, false), QString());
+
+    // Test arrow keys (isNumpad=false)
+    QCOMPARE(manager.getCommand(Qt::Key_Up, Qt::ShiftModifier | Qt::AltModifier, false),
+             QString("north"));
+
+    // Test that order of modifiers doesn't matter for lookup
+    QCOMPARE(manager.getCommand(Qt::Key_Up, Qt::AltModifier | Qt::ShiftModifier, false),
+             QString("north"));
+
+    // Test non-existent hotkey
+    QCOMPARE(manager.getCommand(Qt::Key_F12, Qt::NoModifier, false), QString());
+}
+
 QTEST_MAIN(TestHotkeyManager)

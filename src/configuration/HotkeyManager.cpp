@@ -4,8 +4,8 @@
 #include "HotkeyManager.h"
 
 #include <QDebug>
+#include <QHash>
 #include <QRegularExpression>
-#include <QSet>
 #include <QSettings>
 #include <QTextStream>
 
@@ -58,6 +58,204 @@ _hotkey NUMPAD0 bash
 _hotkey NUMPAD1 ride
 _hotkey NUMPAD3 stand
 )";
+
+// Key name to Qt::Key mapping
+const QHash<QString, int> &getKeyNameToQtKeyMap()
+{
+    static const QHash<QString, int> map{// Function keys
+                                         {"F1", Qt::Key_F1},
+                                         {"F2", Qt::Key_F2},
+                                         {"F3", Qt::Key_F3},
+                                         {"F4", Qt::Key_F4},
+                                         {"F5", Qt::Key_F5},
+                                         {"F6", Qt::Key_F6},
+                                         {"F7", Qt::Key_F7},
+                                         {"F8", Qt::Key_F8},
+                                         {"F9", Qt::Key_F9},
+                                         {"F10", Qt::Key_F10},
+                                         {"F11", Qt::Key_F11},
+                                         {"F12", Qt::Key_F12},
+                                         // Numpad
+                                         {"NUMPAD0", Qt::Key_0},
+                                         {"NUMPAD1", Qt::Key_1},
+                                         {"NUMPAD2", Qt::Key_2},
+                                         {"NUMPAD3", Qt::Key_3},
+                                         {"NUMPAD4", Qt::Key_4},
+                                         {"NUMPAD5", Qt::Key_5},
+                                         {"NUMPAD6", Qt::Key_6},
+                                         {"NUMPAD7", Qt::Key_7},
+                                         {"NUMPAD8", Qt::Key_8},
+                                         {"NUMPAD9", Qt::Key_9},
+                                         {"NUMPAD_SLASH", Qt::Key_Slash},
+                                         {"NUMPAD_ASTERISK", Qt::Key_Asterisk},
+                                         {"NUMPAD_MINUS", Qt::Key_Minus},
+                                         {"NUMPAD_PLUS", Qt::Key_Plus},
+                                         {"NUMPAD_PERIOD", Qt::Key_Period},
+                                         // Navigation
+                                         {"HOME", Qt::Key_Home},
+                                         {"END", Qt::Key_End},
+                                         {"INSERT", Qt::Key_Insert},
+                                         {"PAGEUP", Qt::Key_PageUp},
+                                         {"PAGEDOWN", Qt::Key_PageDown},
+                                         // Arrow keys
+                                         {"UP", Qt::Key_Up},
+                                         {"DOWN", Qt::Key_Down},
+                                         {"LEFT", Qt::Key_Left},
+                                         {"RIGHT", Qt::Key_Right},
+                                         // Misc
+                                         {"ACCENT", Qt::Key_QuoteLeft},
+                                         {"0", Qt::Key_0},
+                                         {"1", Qt::Key_1},
+                                         {"2", Qt::Key_2},
+                                         {"3", Qt::Key_3},
+                                         {"4", Qt::Key_4},
+                                         {"5", Qt::Key_5},
+                                         {"6", Qt::Key_6},
+                                         {"7", Qt::Key_7},
+                                         {"8", Qt::Key_8},
+                                         {"9", Qt::Key_9},
+                                         {"HYPHEN", Qt::Key_Minus},
+                                         {"EQUAL", Qt::Key_Equal}};
+    return map;
+}
+
+// Qt::Key to key name mapping (for non-numpad keys)
+const QHash<int, QString> &getQtKeyToKeyNameMap()
+{
+    static const QHash<int, QString> map{// Function keys
+                                         {Qt::Key_F1, "F1"},
+                                         {Qt::Key_F2, "F2"},
+                                         {Qt::Key_F3, "F3"},
+                                         {Qt::Key_F4, "F4"},
+                                         {Qt::Key_F5, "F5"},
+                                         {Qt::Key_F6, "F6"},
+                                         {Qt::Key_F7, "F7"},
+                                         {Qt::Key_F8, "F8"},
+                                         {Qt::Key_F9, "F9"},
+                                         {Qt::Key_F10, "F10"},
+                                         {Qt::Key_F11, "F11"},
+                                         {Qt::Key_F12, "F12"},
+                                         // Navigation
+                                         {Qt::Key_Home, "HOME"},
+                                         {Qt::Key_End, "END"},
+                                         {Qt::Key_Insert, "INSERT"},
+                                         {Qt::Key_PageUp, "PAGEUP"},
+                                         {Qt::Key_PageDown, "PAGEDOWN"},
+                                         // Arrow keys
+                                         {Qt::Key_Up, "UP"},
+                                         {Qt::Key_Down, "DOWN"},
+                                         {Qt::Key_Left, "LEFT"},
+                                         {Qt::Key_Right, "RIGHT"},
+                                         // Misc
+                                         {Qt::Key_QuoteLeft, "ACCENT"},
+                                         {Qt::Key_Equal, "EQUAL"}};
+    return map;
+}
+
+// Numpad Qt::Key to key name mapping (requires KeypadModifier to be set)
+const QHash<int, QString> &getNumpadQtKeyToKeyNameMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_0, "NUMPAD0"},
+                                         {Qt::Key_1, "NUMPAD1"},
+                                         {Qt::Key_2, "NUMPAD2"},
+                                         {Qt::Key_3, "NUMPAD3"},
+                                         {Qt::Key_4, "NUMPAD4"},
+                                         {Qt::Key_5, "NUMPAD5"},
+                                         {Qt::Key_6, "NUMPAD6"},
+                                         {Qt::Key_7, "NUMPAD7"},
+                                         {Qt::Key_8, "NUMPAD8"},
+                                         {Qt::Key_9, "NUMPAD9"},
+                                         {Qt::Key_Slash, "NUMPAD_SLASH"},
+                                         {Qt::Key_Asterisk, "NUMPAD_ASTERISK"},
+                                         {Qt::Key_Minus, "NUMPAD_MINUS"},
+                                         {Qt::Key_Plus, "NUMPAD_PLUS"},
+                                         {Qt::Key_Period, "NUMPAD_PERIOD"}};
+    return map;
+}
+
+// Non-numpad digit/symbol key names
+const QHash<int, QString> &getNonNumpadDigitKeyNameMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_0, "0"},
+                                         {Qt::Key_1, "1"},
+                                         {Qt::Key_2, "2"},
+                                         {Qt::Key_3, "3"},
+                                         {Qt::Key_4, "4"},
+                                         {Qt::Key_5, "5"},
+                                         {Qt::Key_6, "6"},
+                                         {Qt::Key_7, "7"},
+                                         {Qt::Key_8, "8"},
+                                         {Qt::Key_9, "9"},
+                                         {Qt::Key_Minus, "HYPHEN"}};
+    return map;
+}
+
+// Static set of valid base key names for validation
+const QSet<QString> &getValidBaseKeys()
+{
+    static const QSet<QString> validKeys{// Function keys
+                                         "F1",
+                                         "F2",
+                                         "F3",
+                                         "F4",
+                                         "F5",
+                                         "F6",
+                                         "F7",
+                                         "F8",
+                                         "F9",
+                                         "F10",
+                                         "F11",
+                                         "F12",
+                                         // Numpad
+                                         "NUMPAD0",
+                                         "NUMPAD1",
+                                         "NUMPAD2",
+                                         "NUMPAD3",
+                                         "NUMPAD4",
+                                         "NUMPAD5",
+                                         "NUMPAD6",
+                                         "NUMPAD7",
+                                         "NUMPAD8",
+                                         "NUMPAD9",
+                                         "NUMPAD_SLASH",
+                                         "NUMPAD_ASTERISK",
+                                         "NUMPAD_MINUS",
+                                         "NUMPAD_PLUS",
+                                         "NUMPAD_PERIOD",
+                                         // Navigation
+                                         "HOME",
+                                         "END",
+                                         "INSERT",
+                                         "PAGEUP",
+                                         "PAGEDOWN",
+                                         // Arrow keys
+                                         "UP",
+                                         "DOWN",
+                                         "LEFT",
+                                         "RIGHT",
+                                         // Misc
+                                         "ACCENT",
+                                         "0",
+                                         "1",
+                                         "2",
+                                         "3",
+                                         "4",
+                                         "5",
+                                         "6",
+                                         "7",
+                                         "8",
+                                         "9",
+                                         "HYPHEN",
+                                         "EQUAL"};
+    return validKeys;
+}
+
+// Check if key name is a numpad key
+bool isNumpadKeyName(const QString &keyName)
+{
+    return keyName.startsWith("NUMPAD");
+}
+
 } // namespace
 
 HotkeyManager::HotkeyManager()
@@ -130,11 +328,15 @@ void HotkeyManager::parseRawContent()
         // Parse hotkey command
         QRegularExpressionMatch match = hotkeyRegex.match(trimmedLine);
         if (match.hasMatch()) {
-            QString key = normalizeKeyString(match.captured(1));
+            QString keyStr = normalizeKeyString(match.captured(1));
             QString command = match.captured(2).trimmed();
-            if (!key.isEmpty() && !command.isEmpty()) {
-                m_hotkeys[key] = command;
-                m_orderedHotkeys.emplace_back(key, command);
+            if (!keyStr.isEmpty() && !command.isEmpty()) {
+                // Convert string to HotkeyKey for fast lookup
+                HotkeyKey hk = stringToHotkeyKey(keyStr);
+                if (hk.key != 0) {
+                    m_hotkeys[hk] = command;
+                    m_orderedHotkeys.emplace_back(keyStr, command);
+                }
             }
         }
     }
@@ -201,7 +403,8 @@ void HotkeyManager::removeHotkey(const QString &keyName)
         return;
     }
 
-    if (!m_hotkeys.contains(normalizedKey)) {
+    HotkeyKey hk = stringToHotkeyKey(normalizedKey);
+    if (!m_hotkeys.contains(hk)) {
         return;
     }
 
@@ -230,21 +433,45 @@ void HotkeyManager::removeHotkey(const QString &keyName)
     saveToSettings();
 }
 
+QString HotkeyManager::getCommand(int key, Qt::KeyboardModifiers modifiers, bool isNumpad) const
+{
+    // Strip KeypadModifier from modifiers - numpad distinction is tracked via isNumpad flag
+    HotkeyKey hk(key, modifiers & ~Qt::KeypadModifier, isNumpad);
+    auto it = m_hotkeys.find(hk);
+    if (it != m_hotkeys.end()) {
+        return it.value();
+    }
+    return QString();
+}
+
 QString HotkeyManager::getCommand(const QString &keyName) const
 {
     QString normalizedKey = normalizeKeyString(keyName);
-
-    if (m_hotkeys.contains(normalizedKey)) {
-        return m_hotkeys[normalizedKey];
+    if (normalizedKey.isEmpty()) {
+        return QString();
     }
 
+    HotkeyKey hk = stringToHotkeyKey(normalizedKey);
+    if (hk.key == 0) {
+        return QString();
+    }
+
+    auto it = m_hotkeys.find(hk);
+    if (it != m_hotkeys.end()) {
+        return it.value();
+    }
     return QString();
 }
 
 bool HotkeyManager::hasHotkey(const QString &keyName) const
 {
     QString normalizedKey = normalizeKeyString(keyName);
-    return m_hotkeys.contains(normalizedKey);
+    if (normalizedKey.isEmpty()) {
+        return false;
+    }
+
+    HotkeyKey hk = stringToHotkeyKey(normalizedKey);
+    return hk.key != 0 && m_hotkeys.contains(hk);
 }
 
 QString HotkeyManager::normalizeKeyString(const QString &keyString)
@@ -312,6 +539,111 @@ QString HotkeyManager::normalizeKeyString(const QString &keyString)
     return normalizedParts.join("+");
 }
 
+HotkeyKey HotkeyManager::stringToHotkeyKey(const QString &keyString)
+{
+    QString normalized = normalizeKeyString(keyString);
+    if (normalized.isEmpty()) {
+        return HotkeyKey();
+    }
+
+    QStringList parts = normalized.split('+', Qt::SkipEmptyParts);
+    if (parts.isEmpty()) {
+        return HotkeyKey();
+    }
+
+    QString baseKey = parts.last();
+    parts.removeLast();
+
+    // Build modifiers
+    Qt::KeyboardModifiers mods = Qt::NoModifier;
+    for (const QString &part : parts) {
+        if (part == "CTRL") {
+            mods |= Qt::ControlModifier;
+        } else if (part == "SHIFT") {
+            mods |= Qt::ShiftModifier;
+        } else if (part == "ALT") {
+            mods |= Qt::AltModifier;
+        } else if (part == "META") {
+            mods |= Qt::MetaModifier;
+        }
+    }
+
+    // Check if this is a numpad key
+    bool isNumpad = isNumpadKeyName(baseKey);
+
+    // Convert base key name to Qt::Key
+    int qtKey = baseKeyNameToQtKey(baseKey);
+    if (qtKey == 0) {
+        return HotkeyKey();
+    }
+
+    return HotkeyKey(qtKey, mods, isNumpad);
+}
+
+QString HotkeyManager::hotkeyKeyToString(const HotkeyKey &hk)
+{
+    if (hk.key == 0) {
+        return QString();
+    }
+
+    QStringList parts;
+
+    // Add modifiers in canonical order
+    if (hk.modifiers & Qt::ControlModifier) {
+        parts << "CTRL";
+    }
+    if (hk.modifiers & Qt::ShiftModifier) {
+        parts << "SHIFT";
+    }
+    if (hk.modifiers & Qt::AltModifier) {
+        parts << "ALT";
+    }
+    if (hk.modifiers & Qt::MetaModifier) {
+        parts << "META";
+    }
+
+    // Add the base key name - use numpad map if isNumpad is set
+    QString keyName;
+    if (hk.isNumpad) {
+        keyName = getNumpadQtKeyToKeyNameMap().value(hk.key);
+    }
+    if (keyName.isEmpty()) {
+        keyName = qtKeyToBaseKeyName(hk.key);
+    }
+    if (keyName.isEmpty()) {
+        return QString();
+    }
+    parts << keyName;
+
+    return parts.join("+");
+}
+
+int HotkeyManager::baseKeyNameToQtKey(const QString &keyName)
+{
+    auto it = getKeyNameToQtKeyMap().find(keyName.toUpper());
+    if (it != getKeyNameToQtKeyMap().end()) {
+        return it.value();
+    }
+    return 0;
+}
+
+QString HotkeyManager::qtKeyToBaseKeyName(int qtKey)
+{
+    // First check regular keys
+    auto it = getQtKeyToKeyNameMap().find(qtKey);
+    if (it != getQtKeyToKeyNameMap().end()) {
+        return it.value();
+    }
+
+    // Check non-numpad digit keys
+    auto it2 = getNonNumpadDigitKeyNameMap().find(qtKey);
+    if (it2 != getNonNumpadDigitKeyNameMap().end()) {
+        return it2.value();
+    }
+
+    return QString();
+}
+
 void HotkeyManager::resetToDefaults()
 {
     m_rawContent = DEFAULT_HOTKEYS_CONTENT;
@@ -337,66 +669,6 @@ int HotkeyManager::importFromCliFormat(const QString &content)
     saveToSettings();
 
     return static_cast<int>(m_orderedHotkeys.size());
-}
-
-// Static set of valid base key names for validation
-static const QSet<QString> &getValidBaseKeys()
-{
-    static const QSet<QString> validKeys{// Function keys
-                                         "F1",
-                                         "F2",
-                                         "F3",
-                                         "F4",
-                                         "F5",
-                                         "F6",
-                                         "F7",
-                                         "F8",
-                                         "F9",
-                                         "F10",
-                                         "F11",
-                                         "F12",
-                                         // Numpad
-                                         "NUMPAD0",
-                                         "NUMPAD1",
-                                         "NUMPAD2",
-                                         "NUMPAD3",
-                                         "NUMPAD4",
-                                         "NUMPAD5",
-                                         "NUMPAD6",
-                                         "NUMPAD7",
-                                         "NUMPAD8",
-                                         "NUMPAD9",
-                                         "NUMPAD_SLASH",
-                                         "NUMPAD_ASTERISK",
-                                         "NUMPAD_MINUS",
-                                         "NUMPAD_PLUS",
-                                         "NUMPAD_PERIOD",
-                                         // Navigation
-                                         "HOME",
-                                         "END",
-                                         "INSERT",
-                                         "PAGEUP",
-                                         "PAGEDOWN",
-                                         // Arrow keys
-                                         "UP",
-                                         "DOWN",
-                                         "LEFT",
-                                         "RIGHT",
-                                         // Misc
-                                         "ACCENT",
-                                         "0",
-                                         "1",
-                                         "2",
-                                         "3",
-                                         "4",
-                                         "5",
-                                         "6",
-                                         "7",
-                                         "8",
-                                         "9",
-                                         "HYPHEN",
-                                         "EQUAL"};
-    return validKeys;
 }
 
 bool HotkeyManager::isValidBaseKey(const QString &baseKey)

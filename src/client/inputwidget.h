@@ -146,7 +146,7 @@ private:
     NODISCARD bool navigationKeyPressed(int key, Qt::KeyboardModifiers modifiers);
     NODISCARD bool arrowKeyPressed(int key, Qt::KeyboardModifiers modifiers);
     NODISCARD bool miscKeyPressed(int key, Qt::KeyboardModifiers modifiers);
-    void functionKeyPressed(const QString &keyName, Qt::KeyboardModifiers modifiers);
+    void functionKeyPressed(int key, Qt::KeyboardModifiers modifiers);
     NODISCARD QString buildHotkeyString(const QString &keyName, Qt::KeyboardModifiers modifiers);
     NODISCARD bool handleTerminalShortcut(int key);
     NODISCARD bool handleBasicKey(int key);

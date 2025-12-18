@@ -7,7 +7,6 @@
 #include "../configuration/HotkeyManager.h"
 #include "../configuration/configuration.h"
 #include "../global/Color.h"
-#include "../mpi/remoteeditwidget.h"
 
 #include <QFont>
 #include <QMessageLogContext>
@@ -258,7 +257,7 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
     if (classification.shouldHandle) {
         switch (classification.type) {
         case KeyType::FunctionKey:
-            functionKeyPressed(classification.keyName, classification.realModifiers);
+            functionKeyPressed(key, classification.realModifiers);
             event->accept();
             return;
 
@@ -320,55 +319,38 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
     base::keyPressEvent(event);
 }
 
-void InputWidget::functionKeyPressed(const QString &keyName, Qt::KeyboardModifiers modifiers)
+void InputWidget::functionKeyPressed(int key, Qt::KeyboardModifiers modifiers)
 {
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
     // Check if there's a configured hotkey for this key combination
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // Function keys are never numpad keys
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, false);
 
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
     } else {
+        // No hotkey configured, send the key name as-is (e.g., "CTRL+F1")
+        QString keyName = QString("F%1").arg(key - Qt::Key_F1 + 1);
+        QString fullKeyString = buildHotkeyString(keyName, modifiers);
         sendCommandWithSeparator(fullKeyString);
     }
 }
 
 bool InputWidget::numpadKeyPressed(int key, Qt::KeyboardModifiers modifiers)
 {
-    // Reuse the helper function to avoid duplicate switch statements
-    QString keyName = getNumpadKeyName(key);
-    if (keyName.isEmpty()) {
-        return false;
-    }
-
-    // Build the full key string with modifiers in canonical order: CTRL, SHIFT, ALT, META
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
-    // Check if there's a configured hotkey for this numpad key
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // Check if there's a configured hotkey for this numpad key (isNumpad=true)
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, true);
 
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 bool InputWidget::navigationKeyPressed(int key, Qt::KeyboardModifiers modifiers)
 {
-    // Reuse the helper function to avoid duplicate switch statements
-    QString keyName = getNavigationKeyName(key);
-    if (keyName.isEmpty()) {
-        return false;
-    }
-
-    // Build the full key string with modifiers in canonical order: CTRL, SHIFT, ALT, META
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
-    // Check if there's a configured hotkey for this key
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // Check if there's a configured hotkey for this navigation key (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, false);
 
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
@@ -412,28 +394,8 @@ bool InputWidget::arrowKeyPressed(const int key, Qt::KeyboardModifiers modifiers
         }
     }
 
-    // Arrow keys with modifiers check for hotkeys
-    QString keyName;
-    switch (key) {
-    case Qt::Key_Up:
-        keyName = "UP";
-        break;
-    case Qt::Key_Down:
-        keyName = "DOWN";
-        break;
-    case Qt::Key_Left:
-        keyName = "LEFT";
-        break;
-    case Qt::Key_Right:
-        keyName = "RIGHT";
-        break;
-    default:
-        return false;
-    }
-
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // Arrow keys with modifiers check for hotkeys (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, false);
 
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
@@ -446,23 +408,14 @@ bool InputWidget::arrowKeyPressed(const int key, Qt::KeyboardModifiers modifiers
 
 bool InputWidget::miscKeyPressed(int key, Qt::KeyboardModifiers modifiers)
 {
-    // Reuse the helper function to avoid duplicate switch statements
-    QString keyName = getMiscKeyName(key);
-    if (keyName.isEmpty()) {
-        return false;
-    }
-
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
-    // Check if there's a configured hotkey for this key
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // Check if there's a configured hotkey for this misc key (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, false);
 
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 bool InputWidget::handleTerminalShortcut(int key)
@@ -522,11 +475,8 @@ bool InputWidget::handlePageKey(int key, Qt::KeyboardModifiers modifiers)
         return true;
     }
 
-    // With modifiers, check for hotkeys
-    QString keyName = (key == Qt::Key_PageUp) ? "PAGEUP" : "PAGEDOWN";
-    QString fullKeyString = buildHotkeyString(keyName, modifiers);
-
-    const QString command = getConfig().hotkeyManager.getCommand(fullKeyString);
+    // With modifiers, check for hotkeys (isNumpad=false for page keys)
+    const QString command = getConfig().hotkeyManager.getCommand(key, modifiers, false);
     if (!command.isEmpty()) {
         sendCommandWithSeparator(command);
         return true;
@@ -560,64 +510,6 @@ bool InputWidget::tryHistory(const int key)
     return false;
 }
 
-// Process _config commands and return true if handled
-static bool processConfigCommand(const QString &input, InputWidgetOutputs &outputs)
-{
-    if (!(input == "_config" || input.startsWith("_config "))) {
-        return false;
-    }
-
-    QString output;
-
-    // Parse the command
-    QStringList parts = input.split(' ', Qt::SkipEmptyParts);
-
-    if (parts.size() == 1) {
-        // _config - show help
-        output = "\nConfiguration commands:\n"
-                 "  _config              - Show this help\n"
-                 "  _config edit         - Open all config in editor\n"
-                 "  _config edit hotkey  - Open hotkey config in editor\n"
-                 "\n";
-    } else if (parts.size() >= 2 && parts[1].compare("edit", Qt::CaseInsensitive) == 0) {
-        // _config edit [section]
-        QString section = (parts.size() >= 3) ? parts[2].toLower() : "all";
-
-        if (section == "all" || section == "hotkey" || section == "hotkeys") {
-            // Serialize current hotkeys using HotkeyManager
-            QString content = getConfig().hotkeyManager.exportToCliFormat();
-
-            // Create the editor widget
-            auto *editor = new RemoteEditWidget(true, // editSession = true (editable)
-                                                "MMapper Configuration - Hotkeys",
-                                                content,
-                                                nullptr);
-
-            // Connect save signal to import the edited content
-            QObject::connect(editor, &RemoteEditWidget::sig_save, [&outputs](const QString &edited) {
-                int count = setConfig().hotkeyManager.importFromCliFormat(edited);
-                outputs.displayMessage(QString("\n%1 hotkeys imported.\n").arg(count));
-            });
-
-            // Show the editor
-            editor->setAttribute(Qt::WA_DeleteOnClose);
-            editor->show();
-            editor->activateWindow();
-
-            output = "\nOpening configuration editor...\n";
-        } else {
-            output = QString("\nUnknown config section: %1\n"
-                             "Available sections: hotkey\n")
-                         .arg(section);
-        }
-    } else {
-        output = "\nUnknown config command. Type '_config' for help.\n";
-    }
-
-    outputs.displayMessage(output);
-    return true;
-}
-
 void InputWidget::sendCommandWithSeparator(const QString &command)
 {
     const auto &settings = getConfig().integratedClient;
@@ -646,13 +538,6 @@ void InputWidget::gotInput()
         clear();
     } else {
         selectAll();
-    }
-
-    // Check for _config command
-    if (processConfigCommand(input, m_outputs)) {
-        m_inputHistory.addInputLine(input);
-        m_tabHistory.addInputLine(input);
-        return;
     }
 
     // Send input (with command separator handling if enabled)
@@ -792,7 +677,7 @@ bool InputWidget::event(QEvent *const event)
 
                 switch (classification.type) {
                 case KeyType::FunctionKey:
-                    functionKeyPressed(classification.keyName, classification.realModifiers);
+                    functionKeyPressed(keyEvent->key(), classification.realModifiers);
                     handled = true;
                     break;
                 case KeyType::NumpadKey:

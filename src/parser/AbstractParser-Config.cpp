@@ -363,7 +363,16 @@ void AbstractParser::doConfig(const StringView cmd)
                     makeFixedPointArg(advanced.fov, "fov"),
                     makeFixedPointArg(advanced.verticalAngle, "pitch"),
                     makeFixedPointArg(advanced.horizontalAngle, "yaw"),
-                    makeFixedPointArg(advanced.layerHeight, "layer-height")))));
+                    makeFixedPointArg(advanced.layerHeight, "layer-height")))),
+        syn("edit",
+            syn("hotkey",
+                Accept(
+                    [this](User &user, auto) {
+                        auto &os = user.getOstream();
+                        os << "Opening hotkey configuration editor...\n";
+                        openHotkeyEditor();
+                    },
+                    "edit hotkey configuration"))));
 
     eval("config", configSyntax, cmd);
 }

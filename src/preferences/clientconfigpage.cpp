@@ -9,10 +9,8 @@
 #include "ui_clientconfigpage.h"
 
 #include <QDebug>
-#include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QTextStream>
 
 ClientConfigPage::ClientConfigPage(QWidget *parent)
     : QWidget(parent)
@@ -56,37 +54,7 @@ void ClientConfigPage::slot_onExport()
         content += exportHotkeysToString();
     }
 
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
-        // Use browser's native file download dialog
-        QFileDialog::saveFileContent(content.toUtf8(), "mmapper-config.ini");
-    } else {
-        // Get file path using native dialog
-        QString fileName = QFileDialog::getSaveFileName(this,
-                                                        tr("Export Configuration"),
-                                                        "mmapper-config.ini",
-                                                        tr("INI Files (*.ini);;All Files (*)"));
-
-        if (fileName.isEmpty()) {
-            return;
-        }
-
-        // Write to file
-        QFile file(fileName);
-        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QMessageBox::critical(this,
-                                  tr("Export Failed"),
-                                  tr("Could not open file for writing: %1").arg(file.errorString()));
-            return;
-        }
-
-        QTextStream out(&file);
-        out << content;
-        file.close();
-
-        QMessageBox::information(this,
-                                 tr("Export Successful"),
-                                 tr("Configuration exported to:\n%1").arg(fileName));
-    }
+    QFileDialog::saveFileContent(content.toUtf8(), "mmapper-config.ini");
 }
 
 bool ClientConfigPage::importFromString(const QString &content)
@@ -152,33 +120,5 @@ void ClientConfigPage::slot_onImport()
         }
     };
 
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
-        // Use browser's native file upload dialog
-        QFileDialog::getOpenFileContent(nameFilter, processImportedFile);
-    } else {
-        QString fileName = QFileDialog::getOpenFileName(this,
-                                                        tr("Import Configuration"),
-                                                        QString(),
-                                                        nameFilter);
-
-        if (fileName.isEmpty()) {
-            return;
-        }
-
-        // Read file
-        QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QMessageBox::critical(this,
-                                  tr("Import Failed"),
-                                  tr("Could not open file for reading: %1").arg(file.errorString()));
-            return;
-        }
-
-        QTextStream in(&file);
-        QString content = in.readAll();
-        file.close();
-
-        // Use the same processing logic
-        processImportedFile(fileName, content.toUtf8());
-    }
+    QFileDialog::getOpenFileContent(nameFilter, processImportedFile);
 }

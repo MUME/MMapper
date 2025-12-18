@@ -27,4 +27,5 @@ private Q_SLOTS:
     void duplicateKeyBehaviorTest();
     void commentPreservationTest();
     void settingsPersistenceTest();
+    void directLookupTest();
 };
