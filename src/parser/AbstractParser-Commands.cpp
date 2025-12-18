@@ -614,7 +614,22 @@ syntax::MatchResult ArgHelpCommand::virt_match(const syntax::ParserInput &input,
         const auto &next = input.front();
         const auto it = map.find(next);
         if (it != map.end()) {
-            return syntax::MatchResult::success(1, input, Value(next));
+            // Collect remaining tokens as subcommand string
+            std::string subcommand;
+            auto iter = input.begin();
+            ++iter; // skip command name
+            for (; iter != input.end(); ++iter) {
+                if (!subcommand.empty()) {
+                    subcommand += " ";
+                }
+                subcommand += *iter;
+            }
+            // Create vector with command name and subcommand
+            std::vector<Value> result;
+            result.emplace_back(next); // command name
+            result.emplace_back(subcommand);
+            // Consume all tokens
+            return syntax::MatchResult::success(input.size(), input, Value(Vector(std::move(result))));
         }
     }
 
@@ -642,18 +657,24 @@ void AbstractParser::parseHelp(StringView words)
                     Accept(
                         [this](User &user, const Pair *const matched) -> void {
                             auto &os = user.getOstream();
-                            if (!matched || !matched->car.isString()) {
+                            if (!matched || !matched->car.isVector()) {
+                                os << "Internal error.\n";
+                                return;
+                            }
+                            const auto &vec = matched->car.getVector();
+                            if (vec.size() < 2 || !vec[0].isString() || !vec[1].isString()) {
                                 os << "Internal error.\n";
                                 return;
                             }
                             const auto &map = m_specialCommandMap;
-                            const auto &name = matched->car.getString();
+                            const auto &name = vec[0].getString();
+                            const auto &subcommand = vec[1].getString();
                             const auto it = map.find(name);
                             if (it == map.end()) {
                                 os << "Internal error.\n";
                                 return;
                             }
-                            it->second.help(name);
+                            it->second.help(name, subcommand);
                         },
                         "detailed help pages")),
 
@@ -899,7 +920,7 @@ void AbstractParser::initSpecialCommandMap()
     };
 
     const auto makeSimpleHelp = [this](const std::string &help) {
-        return [this, help](const std::string &name) {
+        return [this, help](const std::string &name, const std::string & /*subcommand*/) {
             sendToUser(SendToUserSourceEnum::FromMMapper,
                        QString("Help for %1%2:\n"
                                "  %3\n"
@@ -963,7 +984,83 @@ void AbstractParser::initSpecialCommandMap()
             this->doConfig(rest);
             return true;
         },
-        makeSimpleHelp("Configuration commands."));
+        [this](const std::string &name, const std::string &subcommand) {
+            std::string help;
+            std::string cmdDisplay = name;
+
+            if (subcommand.empty()) {
+                help = "Client configuration commands.\n"
+                       "\n"
+                       "Subcommands:\n"
+                       "\tedit                        # Open editor for hotkeys and client config\n"
+                       "\tmode play                   # Switch to play mode\n"
+                       "\tmode mapping                # Switch to mapping mode\n"
+                       "\tmode emulation              # Switch to offline emulation mode\n"
+                       "\tfile save                   # Save config file\n"
+                       "\tfile load                   # Load saved config file\n"
+                       "\tfile factory reset \"Yes, I'm sure!\"  # Factory reset\n"
+                       "\tmap colors list             # List customizable colors\n"
+                       "\tmap colors set <name> <hex> # Set a named color\n"
+                       "\tmap zoom set <value>        # Set map zoom level\n"
+                       "\tmap 3d-camera set ...       # Configure 3D camera settings\n"
+                       "\n"
+                       "Use \"help config <subcommand>\" for detailed help on each subcommand.";
+            } else if (subcommand == "edit") {
+                cmdDisplay = name + " " + subcommand;
+                help = "Open an interactive editor for client configuration.\n"
+                       "\n"
+                       "Usage: config edit\n"
+                       "\n"
+                       "Opens a text editor where you can view and modify all hotkeys\n"
+                       "using _hotkey command syntax. Each line should be in the format:\n"
+                       "\n"
+                       "\t_hotkey <key> <command>\n"
+                       "\n"
+                       "Examples:\n"
+                       "\t_hotkey F1 kill orc\n"
+                       "\t_hotkey CTRL+NUMPAD8 unlock north\n"
+                       "\n"
+                       "Changes are applied when you save and close the editor.";
+            } else if (subcommand == "mode" || subcommand.rfind("mode ", 0) == 0) {
+                cmdDisplay = name + " mode";
+                help = "Switch MMapper operating mode.\n"
+                       "\n"
+                       "Usage:\n"
+                       "\tconfig mode play       # Normal play mode\n"
+                       "\tconfig mode mapping    # Mapping mode for creating/editing map\n"
+                       "\tconfig mode emulation  # Offline emulation mode\n";
+            } else if (subcommand == "file" || subcommand.rfind("file ", 0) == 0) {
+                cmdDisplay = name + " file";
+                help = "Configuration file operations.\n"
+                       "\n"
+                       "Usage:\n"
+                       "\tconfig file save     # Save current configuration to file\n"
+                       "\tconfig file load     # Load configuration from saved file\n"
+                       "\tconfig file factory reset \"Yes, I'm sure!\"  # Reset to defaults\n";
+            } else if (subcommand == "map" || subcommand.rfind("map ", 0) == 0) {
+                cmdDisplay = name + " map";
+                help = "Map display configuration.\n"
+                       "\n"
+                       "Usage:\n"
+                       "\tconfig map colors list              # List customizable colors\n"
+                       "\tconfig map colors set <name> <hex>  # Set a named color\n"
+                       "\tconfig map zoom set <value>         # Set map zoom level\n"
+                       "\tconfig map 3d-camera set ...        # Configure 3D camera\n";
+            } else {
+                cmdDisplay = name + " " + subcommand;
+                help = "Unknown subcommand: " + subcommand + "\n"
+                       "\n"
+                       "Available subcommands: edit, mode, file, map";
+            }
+
+            sendToUser(SendToUserSourceEnum::FromMMapper,
+                       QString("Help for %1%2:\n"
+                               "%3\n"
+                               "\n")
+                           .arg(getPrefixChar())
+                           .arg(mmqt::toQStringUtf8(cmdDisplay))
+                           .arg(mmqt::toQStringUtf8(help)));
+        });
     add(
         cmdConnect,
         [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
@@ -1025,7 +1122,7 @@ void AbstractParser::initSpecialCommandMap()
             this->parseSetCommand(rest);
             return true;
         },
-        [this](const std::string &name) {
+        [this](const std::string &name, const std::string & /*subcommand*/) {
             const char help[]
                 = "Subcommands:\n"
                   "\tprefix              # Displays the current prefix.\n"
@@ -1110,7 +1207,88 @@ void AbstractParser::initSpecialCommandMap()
             parseHotkey(rest);
             return true;
         },
-        makeSimpleHelp("Define keyboard hotkeys for quick commands."));
+        [this](const std::string &name, const std::string &subcommand) {
+            std::string help;
+            std::string cmdDisplay = name;
+
+            if (subcommand.empty()) {
+                help = "Define keyboard hotkeys for quick commands.\n"
+                       "\n"
+                       "Subcommands:\n"
+                       "\tset <key> <command>  # Assign a command to a key\n"
+                       "\tremove <key>         # Remove a hotkey binding\n"
+                       "\tconfig               # List all configured hotkeys\n"
+                       "\tkeys                 # Show available key names\n"
+                       "\treset                # Reset hotkeys to defaults\n"
+                       "\n"
+                       "Use \"help hotkey <subcommand>\" for detailed help on each subcommand.\n"
+                       "To edit all hotkeys interactively, use: config edit";
+            } else if (subcommand == "set" || subcommand.rfind("set ", 0) == 0) {
+                cmdDisplay = name + " set";
+                help = "Assign a command to a hotkey.\n"
+                       "\n"
+                       "Usage: hotkey set <key> <command>\n"
+                       "\n"
+                       "Available key names:\n"
+                       "\tFunction keys: F1-F12\n"
+                       "\tNumpad: NUMPAD0-9, NUMPAD_SLASH, NUMPAD_ASTERISK,\n"
+                       "\t        NUMPAD_MINUS, NUMPAD_PLUS, NUMPAD_PERIOD\n"
+                       "\tNavigation: HOME, END, INSERT, PAGEUP, PAGEDOWN\n"
+                       "\tArrow keys: UP, DOWN, LEFT, RIGHT\n"
+                       "\tMisc: ACCENT, 0-9, HYPHEN, EQUAL\n"
+                       "\n"
+                       "Modifiers: CTRL, SHIFT, ALT, META\n"
+                       "\n"
+                       "Examples:\n"
+                       "\thotkey set F1 kill orc\n"
+                       "\thotkey set CTRL+NUMPAD8 unlock north\n"
+                       "\thotkey set SHIFT+F5 cast 'cure light'";
+            } else if (subcommand == "remove" || subcommand.rfind("remove ", 0) == 0) {
+                cmdDisplay = name + " remove";
+                help = "Remove a hotkey binding.\n"
+                       "\n"
+                       "Usage: hotkey remove <key>\n"
+                       "\n"
+                       "Examples:\n"
+                       "\thotkey remove F1\n"
+                       "\thotkey remove CTRL+NUMPAD8";
+            } else if (subcommand == "config") {
+                cmdDisplay = name + " config";
+                help = "List all configured hotkeys.\n"
+                       "\n"
+                       "Usage: hotkey config\n"
+                       "\n"
+                       "Shows all currently defined hotkey bindings.";
+            } else if (subcommand == "keys") {
+                cmdDisplay = name + " keys";
+                help = "Show available key names for hotkey bindings.\n"
+                       "\n"
+                       "Usage: hotkey keys\n"
+                       "\n"
+                       "Lists all key names that can be used with hotkey set.";
+            } else if (subcommand == "reset") {
+                cmdDisplay = name + " reset";
+                help = "Reset all hotkeys to default values.\n"
+                       "\n"
+                       "Usage: hotkey reset\n"
+                       "\n"
+                       "Warning: This will remove all custom hotkey bindings\n"
+                       "and restore the default configuration.";
+            } else {
+                cmdDisplay = name + " " + subcommand;
+                help = "Unknown subcommand: " + subcommand + "\n"
+                       "\n"
+                       "Available subcommands: set, remove, config, keys, reset";
+            }
+
+            sendToUser(SendToUserSourceEnum::FromMMapper,
+                       QString("Help for %1%2:\n"
+                               "%3\n"
+                               "\n")
+                           .arg(getPrefixChar())
+                           .arg(mmqt::toQStringUtf8(cmdDisplay))
+                           .arg(mmqt::toQStringUtf8(help)));
+        });
 
     /* timers command */
     add(

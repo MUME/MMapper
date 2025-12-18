@@ -484,8 +484,6 @@ set(mmapper_SRCS
     preferences/autologpage.h
     preferences/clientpage.cpp
     preferences/clientpage.h
-    preferences/clientconfigpage.cpp
-    preferences/clientconfigpage.h
     preferences/configdialog.cpp
     preferences/configdialog.h
     preferences/generalpage.cpp
@@ -603,7 +601,6 @@ set(mmapper_UIS
     preferences/autologpage.ui
     preferences/configdialog.ui
     preferences/clientpage.ui
-    preferences/clientconfigpage.ui
     preferences/generalpage.ui
     preferences/graphicspage.ui
     preferences/grouppage.ui
