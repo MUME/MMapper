@@ -651,6 +651,22 @@ void HotkeyManager::resetToDefaults()
     saveToSettings();
 }
 
+void HotkeyManager::clear()
+{
+    m_hotkeys.clear();
+    m_orderedHotkeys.clear();
+    m_rawContent.clear();
+}
+
+QStringList HotkeyManager::getAllKeyNames() const
+{
+    QStringList result;
+    for (const auto &pair : m_orderedHotkeys) {
+        result << pair.first;
+    }
+    return result;
+}
+
 QString HotkeyManager::exportToCliFormat() const
 {
     // Return the raw content exactly as saved (preserves order, comments, and formatting)

@@ -117,6 +117,12 @@ public:
     /// Reset hotkeys to defaults (clears all and loads defaults)
     void resetToDefaults();
 
+    /// Clear all hotkeys (does not save to settings)
+    void clear();
+
+    /// Get all key names that have hotkeys configured
+    NODISCARD QStringList getAllKeyNames() const;
+
     /// Export hotkeys to CLI command format (for _config edit and export)
     NODISCARD QString exportToCliFormat() const;
 

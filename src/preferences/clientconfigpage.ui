@@ -21,45 +21,11 @@
      </property>
      <layout class="QVBoxLayout" name="exportLayout">
       <item>
-       <widget class="QLabel" name="exportLabel">
+       <widget class="QPushButton" name="exportButton">
         <property name="text">
-         <string>Select what to include:</string>
+         <string>Export to File</string>
         </property>
        </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="exportHotkeysCheckBox">
-        <property name="text">
-         <string>Hotkeys</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="exportButtonLayout">
-        <item>
-         <spacer name="exportSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="exportButton">
-          <property name="text">
-           <string>Export to File</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
      </layout>
     </widget>
@@ -74,16 +40,6 @@
        <widget class="QPushButton" name="importButton">
         <property name="text">
          <string>Import from File</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="importNoteLabel">
-        <property name="text">
-         <string>Note: Only overwrites sections found in the imported file.</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
         </property>
        </widget>
       </item>

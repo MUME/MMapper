@@ -701,22 +701,55 @@ void Proxy::allocParser()
         // (via user command)
         void virt_onSetMode(const MapModeEnum mode) final { getMainWindow().slot_setMode(mode); }
 
-        void virt_onOpenHotkeyEditor() final
+        void virt_onOpenClientConfigEditor() final
         {
-            // Serialize current hotkeys using HotkeyManager
-            QString content = getConfig().hotkeyManager.exportToCliFormat();
+            // Build content using _hotkey command syntax
+            QString content;
+            {
+                const auto &hotkeyManager = getConfig().hotkeyManager;
+                const QStringList keyNames = hotkeyManager.getAllKeyNames();
+                for (const QString &keyName : keyNames) {
+                    QString command = hotkeyManager.getCommand(keyName);
+                    if (!command.isEmpty()) {
+                        content += QString("_hotkey %1 %2\n").arg(keyName, command);
+                    }
+                }
+            }
 
             // Create the editor widget
             auto *editor = new RemoteEditWidget(true, // editSession = true (editable)
-                                                "MMapper Configuration - Hotkeys",
+                                                "MMapper Client Configuration",
                                                 content,
                                                 nullptr);
 
             // Connect save signal to import the edited content
             QObject::connect(editor, &RemoteEditWidget::sig_save, [this](const QString &edited) {
-                int count = setConfig().hotkeyManager.importFromCliFormat(edited);
+                int hotkeyCount = 0;
+
+                // Clear existing hotkeys and import new ones
+                setConfig().hotkeyManager.clear();
+
+                // Parse _hotkey commands line by line
+                const QStringList lines = edited.split('\n', Qt::SkipEmptyParts);
+                for (const QString &line : lines) {
+                    QString trimmed = line.trimmed();
+                    if (trimmed.startsWith("_hotkey ")) {
+                        // Parse: _hotkey KEY command...
+                        QString rest = trimmed.mid(8); // Skip "_hotkey "
+                        qsizetype spaceIdx = rest.indexOf(' ');
+                        if (spaceIdx > 0) {
+                            QString keyName = rest.left(spaceIdx);
+                            QString command = rest.mid(spaceIdx + 1);
+                            if (!keyName.isEmpty() && !command.isEmpty()) {
+                                setConfig().hotkeyManager.setHotkey(keyName, command);
+                                hotkeyCount++;
+                            }
+                        }
+                    }
+                }
+
                 // Send feedback to user
-                QString msg = QString("\n%1 hotkeys imported.\n").arg(count);
+                QString msg = QString("\n%1 hotkeys imported.\n").arg(hotkeyCount);
                 getUserTelnet().onSendToUser(msg, false);
             });
 

@@ -31,8 +31,4 @@ public slots:
 private slots:
     void slot_onExport();
     void slot_onImport();
-
-private:
-    QString exportHotkeysToString() const;
-    bool importFromString(const QString &content);
 };

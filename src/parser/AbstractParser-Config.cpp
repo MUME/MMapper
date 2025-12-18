@@ -365,14 +365,13 @@ void AbstractParser::doConfig(const StringView cmd)
                     makeFixedPointArg(advanced.horizontalAngle, "yaw"),
                     makeFixedPointArg(advanced.layerHeight, "layer-height")))),
         syn("edit",
-            syn("hotkey",
-                Accept(
-                    [this](User &user, auto) {
-                        auto &os = user.getOstream();
-                        os << "Opening hotkey configuration editor...\n";
-                        openHotkeyEditor();
-                    },
-                    "edit hotkey configuration"))));
+            Accept(
+                [this](User &user, auto) {
+                    auto &os = user.getOstream();
+                    os << "Opening client configuration editor...\n";
+                    openClientConfigEditor();
+                },
+                "edit client configuration")));
 
     eval("config", configSyntax, cmd);
 }

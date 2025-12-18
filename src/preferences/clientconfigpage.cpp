@@ -8,7 +8,6 @@
 #include "../global/macros.h"
 #include "ui_clientconfigpage.h"
 
-#include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
 
@@ -32,70 +31,29 @@ void ClientConfigPage::slot_loadConfig()
     // Nothing to load - checkboxes maintain their own state
 }
 
-QString ClientConfigPage::exportHotkeysToString() const
-{
-    // Add [Hotkeys] section header for .ini file format
-    return "[Hotkeys]\n" + getConfig().hotkeyManager.exportToCliFormat();
-}
-
 void ClientConfigPage::slot_onExport()
 {
-    // Check if anything is selected
-    if (!ui->exportHotkeysCheckBox->isChecked()) {
-        QMessageBox::warning(this,
-                             tr("Export Configuration"),
-                             tr("Please select at least one section to export."));
-        return;
-    }
-
-    // Build export content
+    // Build content using _hotkey command syntax
     QString content;
-    if (ui->exportHotkeysCheckBox->isChecked()) {
-        content += exportHotkeysToString();
-    }
-
-    QFileDialog::saveFileContent(content.toUtf8(), "mmapper-config.ini");
-}
-
-bool ClientConfigPage::importFromString(const QString &content)
-{
-    // Extract content from [Hotkeys] section
-    bool inHotkeysSection = false;
-    bool foundHotkeysSection = false;
-    QStringList hotkeyLines;
-
-    const QStringList lines = content.split('\n');
-    for (const QString &line : lines) {
-        QString trimmedLine = line.trimmed();
-
-        // Check for section headers
-        if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
-            QString section = trimmedLine.mid(1, trimmedLine.length() - 2);
-            if (section.compare("Hotkeys", Qt::CaseInsensitive) == 0) {
-                inHotkeysSection = true;
-                foundHotkeysSection = true;
-            } else {
-                inHotkeysSection = false;
+    {
+        const auto &hotkeyManager = getConfig().hotkeyManager;
+        const QStringList keyNames = hotkeyManager.getAllKeyNames();
+        for (const QString &keyName : keyNames) {
+            QString command = hotkeyManager.getCommand(keyName);
+            if (!command.isEmpty()) {
+                content += QString("_hotkey %1 %2\n").arg(keyName, command);
             }
-            continue;
-        }
-
-        // Collect lines from the Hotkeys section
-        if (inHotkeysSection) {
-            hotkeyLines.append(line);
         }
     }
 
-    if (foundHotkeysSection) {
-        setConfig().hotkeyManager.importFromCliFormat(hotkeyLines.join('\n'));
-    }
+    // Future: add more sections here (aliases, triggers, etc.)
 
-    return foundHotkeysSection;
+    QFileDialog::saveFileContent(content.toUtf8(), "mmapper-config.txt");
 }
 
 void ClientConfigPage::slot_onImport()
 {
-    const auto nameFilter = tr("INI Files (*.ini);;All Files (*)");
+    const auto nameFilter = tr("Text Files (*.txt);;All Files (*)");
 
     // Callback to process the imported file content
     const auto processImportedFile = [this](const QString &fileName, const QByteArray &fileContent) {
@@ -103,20 +61,44 @@ void ClientConfigPage::slot_onImport()
             return; // User cancelled
         }
 
+        int hotkeyCount = 0;
+
+        // Clear existing hotkeys and import new ones
+        setConfig().hotkeyManager.clear();
+
+        // Parse _hotkey commands line by line
         const QString content = QString::fromUtf8(fileContent);
+        const QStringList lines = content.split('\n', Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            QString trimmed = line.trimmed();
+            if (trimmed.startsWith("_hotkey ")) {
+                // Parse: _hotkey KEY command...
+                QString rest = trimmed.mid(8); // Skip "_hotkey "
+                qsizetype spaceIdx = rest.indexOf(' ');
+                if (spaceIdx > 0) {
+                    QString keyName = rest.left(spaceIdx);
+                    QString command = rest.mid(spaceIdx + 1);
+                    if (!keyName.isEmpty() && !command.isEmpty()) {
+                        setConfig().hotkeyManager.setHotkey(keyName, command);
+                        hotkeyCount++;
+                    }
+                }
+            }
+        }
 
-        // Import the content
-        bool importedAnything = importFromString(content);
+        // Future: import more sections here (aliases, triggers, etc.)
 
-        if (importedAnything) {
+        if (hotkeyCount > 0) {
             QMessageBox::information(this,
                                      tr("Import Successful"),
-                                     tr("Configuration imported from:\n%1").arg(fileName));
+                                     tr("Configuration imported from:\n%1\n\n%2 hotkeys imported.")
+                                         .arg(fileName)
+                                         .arg(hotkeyCount));
         } else {
             QMessageBox::warning(this,
                                  tr("Import Warning"),
-                                 tr("No recognized sections found in file.\n\n"
-                                    "Expected sections: [Hotkeys]"));
+                                 tr("No hotkeys found in file.\n\n"
+                                    "Expected format: _hotkey KEY command"));
         }
     };
 
