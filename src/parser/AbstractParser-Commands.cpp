@@ -629,7 +629,9 @@ syntax::MatchResult ArgHelpCommand::virt_match(const syntax::ParserInput &input,
             result.emplace_back(next); // command name
             result.emplace_back(subcommand);
             // Consume all tokens
-            return syntax::MatchResult::success(input.size(), input, Value(Vector(std::move(result))));
+            return syntax::MatchResult::success(input.size(),
+                                                input,
+                                                Value(Vector(std::move(result))));
         }
     }
 
@@ -1048,9 +1050,10 @@ void AbstractParser::initSpecialCommandMap()
                        "\tconfig map 3d-camera set ...        # Configure 3D camera\n";
             } else {
                 cmdDisplay = name + " " + subcommand;
-                help = "Unknown subcommand: " + subcommand + "\n"
-                       "\n"
-                       "Available subcommands: edit, mode, file, map";
+                help = "Unknown subcommand: " + subcommand
+                       + "\n"
+                         "\n"
+                         "Available subcommands: edit, mode, file, map";
             }
 
             sendToUser(SendToUserSourceEnum::FromMMapper,
@@ -1276,9 +1279,10 @@ void AbstractParser::initSpecialCommandMap()
                        "and restore the default configuration.";
             } else {
                 cmdDisplay = name + " " + subcommand;
-                help = "Unknown subcommand: " + subcommand + "\n"
-                       "\n"
-                       "Available subcommands: set, remove, config, keys, reset";
+                help = "Unknown subcommand: " + subcommand
+                       + "\n"
+                         "\n"
+                         "Available subcommands: set, remove, config, keys, reset";
             }
 
             sendToUser(SendToUserSourceEnum::FromMMapper,
