@@ -1002,17 +1002,23 @@ if(WIN32)
         USE_SOURCE_PERMISSIONS
         PATTERN "*.exe" EXCLUDE
     )
-    if(MSVC)
-        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
-            ExecWait '\\$INSTDIR\\\\vc_redist.x64.exe /q /norestart'
-            Delete '\\$INSTDIR\\\\vc_redist.x64.exe'
-            ")
-    endif()
 
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
-    if(WITH_UPDATER)
+    if(PACKAGE_TYPE_NORMALIZED STREQUAL "Nsis")
         set(CPACK_GENERATOR "NSIS")
+
+        if(MSVC AND NOT MMAPPER_IS_DEBUG)
+            install(FILES
+                "${WINDEPLOYQT_STAGING}/vc_redist.x64.exe"
+                DESTINATION .
+                COMPONENT libraries
+            )
+            set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
+                ExecWait '\\$INSTDIR\\\\vc_redist.x64.exe /q /norestart'
+                Delete '\\$INSTDIR\\\\vc_redist.x64.exe'
+                ")
+        endif()
 
         # Windows (NSIS) Settings
         set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
@@ -1052,7 +1058,7 @@ if(WIN32)
         endif()
         # NSIS always displays a license page
         set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.txt")
-    else()
+    elseif(PACKAGE_TYPE_NORMALIZED STREQUAL "AppX")
         # Windows AppX Settings
         set(CPACK_GENERATOR "External")
         set(APPX_NAME "${PROJECT_NAME}")
