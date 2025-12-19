@@ -5,12 +5,31 @@
 
 #include "../src/configuration/HotkeyManager.h"
 
+#include <QCoreApplication>
 #include <QSettings>
 #include <QStringList>
 #include <QtTest/QtTest>
 
 TestHotkeyManager::TestHotkeyManager() = default;
 TestHotkeyManager::~TestHotkeyManager() = default;
+
+void TestHotkeyManager::initTestCase()
+{
+    // Save original QSettings namespace to avoid polluting real user settings
+    m_originalOrganization = QCoreApplication::organizationName();
+    m_originalApplication = QCoreApplication::applicationName();
+
+    // Use test-specific namespace for isolation
+    QCoreApplication::setOrganizationName(QStringLiteral("MMapperTest"));
+    QCoreApplication::setApplicationName(QStringLiteral("HotkeyManagerTest"));
+}
+
+void TestHotkeyManager::cleanupTestCase()
+{
+    // Restore original QSettings namespace
+    QCoreApplication::setOrganizationName(m_originalOrganization);
+    QCoreApplication::setApplicationName(m_originalApplication);
+}
 
 void TestHotkeyManager::keyNormalizationTest()
 {

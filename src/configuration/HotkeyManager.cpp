@@ -195,62 +195,16 @@ const QHash<int, QString> &getNonNumpadDigitKeyNameMap()
 }
 
 // Static set of valid base key names for validation
+// Derived from HotkeyManager::getAvailableKeyNames() to avoid duplication and drift
 const QSet<QString> &getValidBaseKeys()
 {
-    static const QSet<QString> validKeys{// Function keys
-                                         "F1",
-                                         "F2",
-                                         "F3",
-                                         "F4",
-                                         "F5",
-                                         "F6",
-                                         "F7",
-                                         "F8",
-                                         "F9",
-                                         "F10",
-                                         "F11",
-                                         "F12",
-                                         // Numpad
-                                         "NUMPAD0",
-                                         "NUMPAD1",
-                                         "NUMPAD2",
-                                         "NUMPAD3",
-                                         "NUMPAD4",
-                                         "NUMPAD5",
-                                         "NUMPAD6",
-                                         "NUMPAD7",
-                                         "NUMPAD8",
-                                         "NUMPAD9",
-                                         "NUMPAD_SLASH",
-                                         "NUMPAD_ASTERISK",
-                                         "NUMPAD_MINUS",
-                                         "NUMPAD_PLUS",
-                                         "NUMPAD_PERIOD",
-                                         // Navigation
-                                         "HOME",
-                                         "END",
-                                         "INSERT",
-                                         "PAGEUP",
-                                         "PAGEDOWN",
-                                         // Arrow keys
-                                         "UP",
-                                         "DOWN",
-                                         "LEFT",
-                                         "RIGHT",
-                                         // Misc
-                                         "ACCENT",
-                                         "0",
-                                         "1",
-                                         "2",
-                                         "3",
-                                         "4",
-                                         "5",
-                                         "6",
-                                         "7",
-                                         "8",
-                                         "9",
-                                         "HYPHEN",
-                                         "EQUAL"};
+    static const QSet<QString> validKeys = []() {
+        QSet<QString> keys;
+        for (const QString &key : HotkeyManager::getAvailableKeyNames()) {
+            keys.insert(key);
+        }
+        return keys;
+    }();
     return validKeys;
 }
 
@@ -359,11 +313,11 @@ void HotkeyManager::saveToSettings() const
     settings.setValue(SETTINGS_RAW_CONTENT_KEY, m_rawContent);
 }
 
-void HotkeyManager::setHotkey(const QString &keyName, const QString &command)
+bool HotkeyManager::setHotkey(const QString &keyName, const QString &command)
 {
     QString normalizedKey = normalizeKeyString(keyName);
     if (normalizedKey.isEmpty()) {
-        return;
+        return false; // Invalid key name
     }
 
     // Update or add in raw content
@@ -400,6 +354,7 @@ void HotkeyManager::setHotkey(const QString &keyName, const QString &command)
     // Re-parse and save
     parseRawContent();
     saveToSettings();
+    return true;
 }
 
 void HotkeyManager::removeHotkey(const QString &keyName)

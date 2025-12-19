@@ -98,7 +98,8 @@ public:
 
     /// Set a hotkey using string key name (saves to QSettings immediately)
     /// This is used by the _hotkey command for user convenience
-    void setHotkey(const QString &keyName, const QString &command);
+    /// Returns true if the hotkey was set successfully, false if the key name is invalid
+    NODISCARD bool setHotkey(const QString &keyName, const QString &command);
 
     /// Remove a hotkey using string key name (saves to QSettings immediately)
     void removeHotkey(const QString &keyName);

@@ -15,6 +15,11 @@ public:
     ~TestHotkeyManager() final;
 
 private Q_SLOTS:
+    // Setup/teardown for QSettings isolation
+    void initTestCase();
+    void cleanupTestCase();
+
+    // Tests
     void keyNormalizationTest();
     void importExportRoundTripTest();
     void importEdgeCasesTest();
@@ -28,4 +33,9 @@ private Q_SLOTS:
     void commentPreservationTest();
     void settingsPersistenceTest();
     void directLookupTest();
+
+private:
+    // Original QSettings namespace (restored in cleanupTestCase)
+    QString m_originalOrganization;
+    QString m_originalApplication;
 };

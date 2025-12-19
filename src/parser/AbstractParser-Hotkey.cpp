@@ -51,10 +51,14 @@ void AbstractParser::parseHotkey(StringView input)
             const std::string cmdStr = concatenate_unquoted(v[2].getVector());
             const auto command = mmqt::toQStringUtf8(cmdStr);
 
-            setConfig().hotkeyManager.setHotkey(keyName, command);
-            os << "Hotkey set: " << mmqt::toStdStringUtf8(keyName.toUpper()) << " = " << cmdStr
-               << "\n";
-            send_ok(os);
+            if (setConfig().hotkeyManager.setHotkey(keyName, command)) {
+                os << "Hotkey set: " << mmqt::toStdStringUtf8(keyName.toUpper()) << " = " << cmdStr
+                   << "\n";
+                send_ok(os);
+            } else {
+                os << "Invalid key name: " << mmqt::toStdStringUtf8(keyName.toUpper()) << "\n";
+                os << "Use '_hotkey keys' to see available key names.\n";
+            }
         },
         "set hotkey");
 
