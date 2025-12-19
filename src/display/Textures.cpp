@@ -39,13 +39,13 @@ MMTexture::MMTexture(Badge<MMTexture>, const QString &name)
 }
 
 MMTexture::MMTexture(Badge<MMTexture>, std::vector<QImage> images)
-    : m_qt_texture{[&images] {
+    : m_qt_texture{std::invoke([&images] {
         if (images.empty()) {
             throw std::logic_error("cannot construct MMTexture from empty vector of images");
         }
         assert(!images.empty());
-        return QOpenGLTexture{images.front().mirrored()};
-    }()}
+        return QOpenGLTexture{images.front()};
+    })}
     , m_sourceData{std::make_unique<SourceData>(std::move(images))}
 {
     const auto &front = m_sourceData->m_images.front();
@@ -326,7 +326,7 @@ void MapCanvas::initTextures()
             int max_mip_levels = 0;
         };
 
-        const Measurements m = [&textures]() -> Measurements {
+        const Measurements m = std::invoke([&textures]() -> Measurements {
             Measurements m2;
             textures.for_each([&m2](const SharedMMTexture &pTex) -> void {
                 const auto &tex = deref(pTex);
@@ -342,7 +342,7 @@ void MapCanvas::initTextures()
                 m2.max_mip_levels = std::max(m2.max_mip_levels, qtex.mipLevels());
             });
             return m2;
-        }();
+        });
 
         auto maybeCreateArray2 = [&assignId, &opengl](auto &thing, SharedMMTexture &pArrayTex) {
             std::optional<std::pair<int, int>> bounds;

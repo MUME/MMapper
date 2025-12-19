@@ -330,7 +330,7 @@ void OpenGL::initArrayFromImages(const SharedMMTexture &array,
         assert(ipow2 == layer.front().height());
 
         for (size_t level_num = 0; level_num < numLevels; ++level_num) {
-            QImage image = layer[level_num].mirrored();
+            const QImage &image = layer[level_num];
             if (image.width() != (qtex.width() >> level_num)
                 || image.height() != (qtex.height() >> level_num)) {
                 std::ostringstream oss;
