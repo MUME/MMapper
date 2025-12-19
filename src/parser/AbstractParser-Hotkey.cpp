@@ -88,8 +88,8 @@ void AbstractParser::parseHotkey(StringView input)
             } else {
                 os << "Configured hotkeys:\n";
                 for (const auto &[key, cmd] : hotkeys) {
-                    os << "  " << mmqt::toStdStringUtf8(key) << " = " << mmqt::toStdStringUtf8(cmd)
-                       << "\n";
+                    // key is QString (needs conversion), cmd is already std::string
+                    os << "  " << mmqt::toStdStringUtf8(key) << " = " << cmd << "\n";
                 }
             }
             send_ok(os);

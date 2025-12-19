@@ -3,8 +3,12 @@
 
 #include "HotkeyManager.h"
 
+#include "../global/TextUtils.h"
+
+#include <unordered_map>
+#include <unordered_set>
+
 #include <QDebug>
-#include <QHash>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QTextStream>
@@ -329,11 +333,13 @@ void HotkeyManager::parseRawContent()
         QRegularExpressionMatch match = hotkeyRegex.match(trimmedLine);
         if (match.hasMatch()) {
             QString keyStr = normalizeKeyString(match.captured(1));
-            QString command = match.captured(2).trimmed();
-            if (!keyStr.isEmpty() && !command.isEmpty()) {
+            QString commandQStr = match.captured(2).trimmed();
+            if (!keyStr.isEmpty() && !commandQStr.isEmpty()) {
                 // Convert string to HotkeyKey for fast lookup
                 HotkeyKey hk = stringToHotkeyKey(keyStr);
                 if (hk.key != 0) {
+                    // Convert command to std::string for storage (cold path - OK)
+                    std::string command = mmqt::toStdStringUtf8(commandQStr);
                     m_hotkeys[hk] = command;
                     m_orderedHotkeys.emplace_back(keyStr, command);
                 }
@@ -404,7 +410,7 @@ void HotkeyManager::removeHotkey(const QString &keyName)
     }
 
     HotkeyKey hk = stringToHotkeyKey(normalizedKey);
-    if (!m_hotkeys.contains(hk)) {
+    if (m_hotkeys.count(hk) == 0) {
         return;
     }
 
@@ -433,34 +439,54 @@ void HotkeyManager::removeHotkey(const QString &keyName)
     saveToSettings();
 }
 
-QString HotkeyManager::getCommand(int key, Qt::KeyboardModifiers modifiers, bool isNumpad) const
+std::string HotkeyManager::getCommand(int key, Qt::KeyboardModifiers modifiers, bool isNumpad) const
 {
     // Strip KeypadModifier from modifiers - numpad distinction is tracked via isNumpad flag
     HotkeyKey hk(key, modifiers & ~Qt::KeypadModifier, isNumpad);
     auto it = m_hotkeys.find(hk);
     if (it != m_hotkeys.end()) {
-        return it.value();
+        return it->second;
     }
-    return QString();
+    return std::string();
 }
 
-QString HotkeyManager::getCommand(const QString &keyName) const
+std::string HotkeyManager::getCommand(const QString &keyName) const
 {
     QString normalizedKey = normalizeKeyString(keyName);
     if (normalizedKey.isEmpty()) {
-        return QString();
+        return std::string();
     }
 
     HotkeyKey hk = stringToHotkeyKey(normalizedKey);
     if (hk.key == 0) {
-        return QString();
+        return std::string();
     }
 
     auto it = m_hotkeys.find(hk);
     if (it != m_hotkeys.end()) {
-        return it.value();
+        return it->second;
     }
-    return QString();
+    return std::string();
+}
+
+QString HotkeyManager::getCommandQString(int key,
+                                         Qt::KeyboardModifiers modifiers,
+                                         bool isNumpad) const
+{
+    const std::string cmd = getCommand(key, modifiers, isNumpad);
+    if (cmd.empty()) {
+        return QString();
+    }
+    return mmqt::toQStringUtf8(cmd);
+}
+
+QString HotkeyManager::getCommandQString(const QString &keyName) const
+{
+    const std::string cmd = getCommand(keyName);
+    if (cmd.empty()) {
+        return QString();
+    }
+    return mmqt::toQStringUtf8(cmd);
 }
 
 bool HotkeyManager::hasHotkey(const QString &keyName) const
@@ -471,7 +497,7 @@ bool HotkeyManager::hasHotkey(const QString &keyName) const
     }
 
     HotkeyKey hk = stringToHotkeyKey(normalizedKey);
-    return hk.key != 0 && m_hotkeys.contains(hk);
+    return hk.key != 0 && m_hotkeys.count(hk) > 0;
 }
 
 QString HotkeyManager::normalizeKeyString(const QString &keyString)
@@ -658,11 +684,12 @@ void HotkeyManager::clear()
     m_rawContent.clear();
 }
 
-QStringList HotkeyManager::getAllKeyNames() const
+std::vector<QString> HotkeyManager::getAllKeyNames() const
 {
-    QStringList result;
+    std::vector<QString> result;
+    result.reserve(m_orderedHotkeys.size());
     for (const auto &pair : m_orderedHotkeys) {
-        result << pair.first;
+        result.push_back(pair.first);
     }
     return result;
 }
@@ -692,65 +719,65 @@ bool HotkeyManager::isValidBaseKey(const QString &baseKey)
     return getValidBaseKeys().contains(baseKey.toUpper());
 }
 
-QStringList HotkeyManager::getAvailableKeyNames()
+std::vector<QString> HotkeyManager::getAvailableKeyNames()
 {
-    return QStringList{// Function keys
-                       "F1",
-                       "F2",
-                       "F3",
-                       "F4",
-                       "F5",
-                       "F6",
-                       "F7",
-                       "F8",
-                       "F9",
-                       "F10",
-                       "F11",
-                       "F12",
-                       // Numpad
-                       "NUMPAD0",
-                       "NUMPAD1",
-                       "NUMPAD2",
-                       "NUMPAD3",
-                       "NUMPAD4",
-                       "NUMPAD5",
-                       "NUMPAD6",
-                       "NUMPAD7",
-                       "NUMPAD8",
-                       "NUMPAD9",
-                       "NUMPAD_SLASH",
-                       "NUMPAD_ASTERISK",
-                       "NUMPAD_MINUS",
-                       "NUMPAD_PLUS",
-                       "NUMPAD_PERIOD",
-                       // Navigation
-                       "HOME",
-                       "END",
-                       "INSERT",
-                       "PAGEUP",
-                       "PAGEDOWN",
-                       // Arrow keys
-                       "UP",
-                       "DOWN",
-                       "LEFT",
-                       "RIGHT",
-                       // Misc
-                       "ACCENT",
-                       "0",
-                       "1",
-                       "2",
-                       "3",
-                       "4",
-                       "5",
-                       "6",
-                       "7",
-                       "8",
-                       "9",
-                       "HYPHEN",
-                       "EQUAL"};
+    return std::vector<QString>{// Function keys
+                                "F1",
+                                "F2",
+                                "F3",
+                                "F4",
+                                "F5",
+                                "F6",
+                                "F7",
+                                "F8",
+                                "F9",
+                                "F10",
+                                "F11",
+                                "F12",
+                                // Numpad
+                                "NUMPAD0",
+                                "NUMPAD1",
+                                "NUMPAD2",
+                                "NUMPAD3",
+                                "NUMPAD4",
+                                "NUMPAD5",
+                                "NUMPAD6",
+                                "NUMPAD7",
+                                "NUMPAD8",
+                                "NUMPAD9",
+                                "NUMPAD_SLASH",
+                                "NUMPAD_ASTERISK",
+                                "NUMPAD_MINUS",
+                                "NUMPAD_PLUS",
+                                "NUMPAD_PERIOD",
+                                // Navigation
+                                "HOME",
+                                "END",
+                                "INSERT",
+                                "PAGEUP",
+                                "PAGEDOWN",
+                                // Arrow keys
+                                "UP",
+                                "DOWN",
+                                "LEFT",
+                                "RIGHT",
+                                // Misc
+                                "ACCENT",
+                                "0",
+                                "1",
+                                "2",
+                                "3",
+                                "4",
+                                "5",
+                                "6",
+                                "7",
+                                "8",
+                                "9",
+                                "HYPHEN",
+                                "EQUAL"};
 }
 
-QStringList HotkeyManager::getAvailableModifiers()
+std::vector<QString> HotkeyManager::getAvailableModifiers()
 {
-    return QStringList{"CTRL", "SHIFT", "ALT", "META"};
+    return std::vector<QString>{"CTRL", "SHIFT", "ALT", "META"};
 }

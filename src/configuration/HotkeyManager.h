@@ -5,11 +5,12 @@
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
+#include <functional>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
-#include <QHash>
 #include <QString>
-#include <QStringList>
 #include <Qt>
 
 /// Represents a hotkey as (key, modifiers, isNumpad) for efficient lookup
@@ -32,21 +33,27 @@ struct NODISCARD HotkeyKey final
     }
 };
 
-/// Hash function for HotkeyKey to use in QHash
-inline size_t qHash(const HotkeyKey &k, size_t seed = 0)
+/// Hash function for HotkeyKey to use in std::unordered_map
+struct HotkeyKeyHash final
 {
-    return qHash(k.key, seed) ^ qHash(static_cast<int>(k.modifiers), seed)
-           ^ qHash(k.isNumpad, seed);
-}
+    NODISCARD std::size_t operator()(const HotkeyKey &k) const noexcept
+    {
+        // Combine hash values using XOR and bit shifting
+        std::size_t h1 = std::hash<int>{}(k.key);
+        std::size_t h2 = std::hash<int>{}(static_cast<int>(k.modifiers));
+        std::size_t h3 = std::hash<bool>{}(k.isNumpad);
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
 
 class NODISCARD HotkeyManager final
 {
 private:
-    // Fast lookup map for runtime hotkey resolution: (key, modifiers) -> command
-    QHash<HotkeyKey, QString> m_hotkeys;
+    // Fast lookup map for runtime hotkey resolution: (key, modifiers) -> command (std::string)
+    std::unordered_map<HotkeyKey, std::string, HotkeyKeyHash> m_hotkeys;
 
     // Ordered list of hotkey entries (key string, command) to preserve user's order for display
-    std::vector<std::pair<QString, QString>> m_orderedHotkeys;
+    std::vector<std::pair<QString, std::string>> m_orderedHotkeys;
 
     // Raw content preserving comments and formatting (used for export)
     QString m_rawContent;
@@ -99,17 +106,27 @@ public:
     /// Get the command for a given key and modifiers (optimized for runtime lookup)
     /// isNumpad should be true if the key was pressed on the numpad (KeypadModifier was set)
     /// Returns empty string if no hotkey is configured
-    NODISCARD QString getCommand(int key, Qt::KeyboardModifiers modifiers, bool isNumpad) const;
+    NODISCARD std::string getCommand(int key, Qt::KeyboardModifiers modifiers, bool isNumpad) const;
 
     /// Get the command for a given key name string (for _hotkey command)
     /// Returns empty string if no hotkey is configured
-    NODISCARD QString getCommand(const QString &keyName) const;
+    NODISCARD std::string getCommand(const QString &keyName) const;
+
+    /// Convenience: Get command as QString (for Qt UI layer)
+    /// Returns empty QString if no hotkey is configured
+    NODISCARD QString getCommandQString(int key,
+                                        Qt::KeyboardModifiers modifiers,
+                                        bool isNumpad) const;
+
+    /// Convenience: Get command as QString by key name (for Qt UI layer)
+    /// Returns empty QString if no hotkey is configured
+    NODISCARD QString getCommandQString(const QString &keyName) const;
 
     /// Check if a hotkey is configured for the given key name
     NODISCARD bool hasHotkey(const QString &keyName) const;
 
-    /// Get all configured hotkeys in their original order (key string, command)
-    NODISCARD const std::vector<std::pair<QString, QString>> &getAllHotkeys() const
+    /// Get all configured hotkeys in their original order (key string, command as std::string)
+    NODISCARD const std::vector<std::pair<QString, std::string>> &getAllHotkeys() const
     {
         return m_orderedHotkeys;
     }
@@ -121,7 +138,7 @@ public:
     void clear();
 
     /// Get all key names that have hotkeys configured
-    NODISCARD QStringList getAllKeyNames() const;
+    NODISCARD std::vector<QString> getAllKeyNames() const;
 
     /// Export hotkeys to CLI command format (for _config edit and export)
     NODISCARD QString exportToCliFormat() const;
@@ -131,8 +148,8 @@ public:
     int importFromCliFormat(const QString &content);
 
     /// Get list of available key names for _hotkey keys command
-    NODISCARD static QStringList getAvailableKeyNames();
+    NODISCARD static std::vector<QString> getAvailableKeyNames();
 
     /// Get list of available modifiers for _hotkey keys command
-    NODISCARD static QStringList getAvailableModifiers();
+    NODISCARD static std::vector<QString> getAvailableModifiers();
 };
