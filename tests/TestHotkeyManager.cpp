@@ -37,7 +37,7 @@ void TestHotkeyManager::keyNormalizationTest()
 
     // Test that modifiers are normalized to canonical order: CTRL+SHIFT+ALT+META
     // Set a hotkey with non-canonical modifier order
-    manager.setHotkey("ALT+CTRL+F1", "test1");
+    QVERIFY(manager.setHotkey("ALT+CTRL+F1", "test1"));
 
     // Should be retrievable with canonical order
     QCOMPARE(manager.getCommandQString("CTRL+ALT+F1"), QString("test1"));
@@ -46,30 +46,30 @@ void TestHotkeyManager::keyNormalizationTest()
     QCOMPARE(manager.getCommandQString("ALT+CTRL+F1"), QString("test1"));
 
     // Test all modifier combinations normalize correctly
-    manager.setHotkey("META+ALT+SHIFT+CTRL+F2", "test2");
+    QVERIFY(manager.setHotkey("META+ALT+SHIFT+CTRL+F2", "test2"));
     QCOMPARE(manager.getCommandQString("CTRL+SHIFT+ALT+META+F2"), QString("test2"));
 
     // Test that case is normalized to uppercase
-    manager.setHotkey("ctrl+f3", "test3");
+    QVERIFY(manager.setHotkey("ctrl+f3", "test3"));
     QCOMPARE(manager.getCommandQString("CTRL+F3"), QString("test3"));
 
     // Test CONTROL alias normalizes to CTRL
-    manager.setHotkey("CONTROL+F4", "test4");
+    QVERIFY(manager.setHotkey("CONTROL+F4", "test4"));
     QCOMPARE(manager.getCommandQString("CTRL+F4"), QString("test4"));
 
     // Test CMD/COMMAND aliases normalize to META
-    manager.setHotkey("CMD+F5", "test5");
+    QVERIFY(manager.setHotkey("CMD+F5", "test5"));
     QCOMPARE(manager.getCommandQString("META+F5"), QString("test5"));
 
-    manager.setHotkey("COMMAND+F6", "test6");
+    QVERIFY(manager.setHotkey("COMMAND+F6", "test6"));
     QCOMPARE(manager.getCommandQString("META+F6"), QString("test6"));
 
     // Test simple key without modifiers
-    manager.setHotkey("f7", "test7");
+    QVERIFY(manager.setHotkey("f7", "test7"));
     QCOMPARE(manager.getCommandQString("F7"), QString("test7"));
 
     // Test numpad keys
-    manager.setHotkey("numpad8", "north");
+    QVERIFY(manager.setHotkey("numpad8", "north"));
     QCOMPARE(manager.getCommandQString("NUMPAD8"), QString("north"));
 }
 
@@ -222,27 +222,27 @@ void TestHotkeyManager::setHotkeyTest()
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test setting a new hotkey directly
-    manager.setHotkey("F1", "look");
+    QVERIFY(manager.setHotkey("F1", "look"));
     QCOMPARE(manager.getCommandQString("F1"), QString("look"));
     QCOMPARE(manager.getAllHotkeys().size(), 1);
 
     // Test setting another hotkey
-    manager.setHotkey("F2", "flee");
+    QVERIFY(manager.setHotkey("F2", "flee"));
     QCOMPARE(manager.getCommandQString("F2"), QString("flee"));
     QCOMPARE(manager.getAllHotkeys().size(), 2);
 
     // Test updating an existing hotkey (should replace, not add)
-    manager.setHotkey("F1", "inventory");
+    QVERIFY(manager.setHotkey("F1", "inventory"));
     QCOMPARE(manager.getCommandQString("F1"), QString("inventory"));
     QCOMPARE(manager.getAllHotkeys().size(), 2); // Still 2, not 3
 
     // Test setting hotkey with modifiers
-    manager.setHotkey("CTRL+F3", "open exit n");
+    QVERIFY(manager.setHotkey("CTRL+F3", "open exit n"));
     QCOMPARE(manager.getCommandQString("CTRL+F3"), QString("open exit n"));
     QCOMPARE(manager.getAllHotkeys().size(), 3);
 
     // Test updating hotkey with modifiers
-    manager.setHotkey("CTRL+F3", "close exit n");
+    QVERIFY(manager.setHotkey("CTRL+F3", "close exit n"));
     QCOMPARE(manager.getCommandQString("CTRL+F3"), QString("close exit n"));
     QCOMPARE(manager.getAllHotkeys().size(), 3); // Still 3
 
@@ -332,27 +332,27 @@ void TestHotkeyManager::invalidKeyValidationTest()
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test that invalid base keys are rejected
-    manager.setHotkey("F13", "invalid");
+    QVERIFY(!manager.setHotkey("F13", "invalid"));
     QCOMPARE(manager.getCommandQString("F13"), QString()); // Should not be set
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test typo in key name
-    manager.setHotkey("NUMPDA8", "typo"); // Typo: NUMPDA instead of NUMPAD
+    QVERIFY(!manager.setHotkey("NUMPDA8", "typo")); // Typo: NUMPDA instead of NUMPAD
     QCOMPARE(manager.getCommandQString("NUMPDA8"), QString());
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test completely invalid key
-    manager.setHotkey("INVALID", "test");
+    QVERIFY(!manager.setHotkey("INVALID", "test"));
     QCOMPARE(manager.getCommandQString("INVALID"), QString());
     QCOMPARE(manager.getAllHotkeys().size(), 0);
 
     // Test that valid keys still work
-    manager.setHotkey("F12", "valid");
+    QVERIFY(manager.setHotkey("F12", "valid"));
     QCOMPARE(manager.getCommandQString("F12"), QString("valid"));
     QCOMPARE(manager.getAllHotkeys().size(), 1);
 
     // Test invalid key with valid modifiers
-    manager.setHotkey("CTRL+F13", "invalid");
+    QVERIFY(!manager.setHotkey("CTRL+F13", "invalid"));
     QCOMPARE(manager.getCommandQString("CTRL+F13"), QString());
     QCOMPARE(manager.getAllHotkeys().size(), 1); // Still just F12
 
@@ -367,29 +367,29 @@ void TestHotkeyManager::invalidKeyValidationTest()
     manager.importFromCliFormat("");
 
     // Function keys
-    manager.setHotkey("F1", "test");
+    QVERIFY(manager.setHotkey("F1", "test"));
     QVERIFY(manager.hasHotkey("F1"));
 
     // Numpad
-    manager.setHotkey("NUMPAD5", "test");
+    QVERIFY(manager.setHotkey("NUMPAD5", "test"));
     QVERIFY(manager.hasHotkey("NUMPAD5"));
 
     // Navigation
-    manager.setHotkey("HOME", "test");
+    QVERIFY(manager.setHotkey("HOME", "test"));
     QVERIFY(manager.hasHotkey("HOME"));
 
     // Arrow keys
-    manager.setHotkey("UP", "test");
+    QVERIFY(manager.setHotkey("UP", "test"));
     QVERIFY(manager.hasHotkey("UP"));
 
     // Misc
-    manager.setHotkey("ACCENT", "test");
+    QVERIFY(manager.setHotkey("ACCENT", "test"));
     QVERIFY(manager.hasHotkey("ACCENT"));
 
-    manager.setHotkey("0", "test");
+    QVERIFY(manager.setHotkey("0", "test"));
     QVERIFY(manager.hasHotkey("0"));
 
-    manager.setHotkey("HYPHEN", "test");
+    QVERIFY(manager.setHotkey("HYPHEN", "test"));
     QVERIFY(manager.hasHotkey("HYPHEN"));
 }
 
@@ -413,7 +413,7 @@ void TestHotkeyManager::duplicateKeyBehaviorTest()
     QCOMPARE(manager.getCommandQString("F1"), QString("original"));
     QCOMPARE(manager.getAllHotkeys().size(), 1);
 
-    manager.setHotkey("F1", "replaced");
+    QVERIFY(manager.setHotkey("F1", "replaced"));
     QCOMPARE(manager.getCommandQString("F1"), QString("replaced"));
     QCOMPARE(manager.getAllHotkeys().size(), 1); // Still 1, not 2
 }
