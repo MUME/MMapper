@@ -6,6 +6,7 @@
 
 #include "mapcanvas.h"
 
+#include "../clock/mumemoment.h"
 #include "../configuration/configuration.h"
 #include "../global/parserutils.h"
 #include "../global/progresscounter.h"
@@ -18,7 +19,9 @@
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
+#include "Filenames.h"
 #include "InfomarkSelection.h"
+#include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
@@ -109,19 +112,9 @@ void MapCanvas::slot_layerReset()
     layerChanged();
 }
 
-void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
+void MapCanvas::restoreCursorForMouseMode()
 {
-    // FIXME: This probably isn't what you actually want here,
-    // since it clears selections when re-choosing the same mode,
-    // or when changing to a compatible mode.
-    //
-    // e.g. RAYPICK_ROOMS vs SELECT_CONNECTIONS,
-    // or if you're trying to use MOVE to pan to reach more rooms
-    // (granted, the latter isn't "necessary" because you can use
-    // scrollbars or use the new zoom-recenter feature).
-    slot_clearAllSelections();
-
-    switch (mode) {
+    switch (m_canvasMouseMode) {
     case CanvasMouseModeEnum::MOVE:
         setCursor(Qt::OpenHandCursor);
         break;
@@ -142,8 +135,22 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
         setCursor(Qt::ArrowCursor);
         break;
     }
+}
+
+void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
+{
+    // FIXME: This probably isn't what you actually want here,
+    // since it clears selections when re-choosing the same mode,
+    // or when changing to a compatible mode.
+    //
+    // e.g. RAYPICK_ROOMS vs SELECT_CONNECTIONS,
+    // or if you're trying to use MOVE to pan to reach more rooms
+    // (granted, the latter isn't "necessary" because you can use
+    // scrollbars or use the new zoom-recenter feature).
+    slot_clearAllSelections();
 
     m_canvasMouseMode = mode;
+    restoreCursorForMouseMode();
     m_selectedArea = false;
     selectionChanged();
 }
@@ -354,6 +361,48 @@ void MapCanvas::slot_createRoom()
     }
 }
 
+void MapCanvas::slot_onSeasonChanged(MumeSeasonEnum newSeason)
+{
+    if (!getConfig().canvas.enableSeasonalTextures) {
+        return; // Don't reload if seasonal textures are disabled
+    }
+
+    qInfo() << "Season changed to:" << static_cast<int>(newSeason) << "- Reloading textures...";
+
+    // Update the current season for filename resolution
+    setCurrentSeason(newSeason);
+
+    // Reload all textures
+    makeCurrent();
+    m_textures.destroyAll();
+    initTextures();
+    doneCurrent();
+
+    // Mark batches as dirty to trigger redraw
+    m_diff.resetExistingMeshesAndIgnorePendingRemesh();
+    slot_requestUpdate();
+
+    qInfo() << "Texture reload complete.";
+}
+
+void MapCanvas::slot_reloadTextures()
+{
+    qInfo() << "Texture settings changed - Reloading textures...";
+
+    // Reload all textures with new settings
+    makeCurrent();
+    m_textures.destroyAll();
+    initTextures();
+    doneCurrent();
+
+    // Force complete mesh rebuild and redraw
+    m_batches.resetExistingMeshesButKeepPendingRemesh();
+    m_diff.resetExistingMeshesAndIgnorePendingRemesh();
+    graphicsSettingsChanged();
+
+    qInfo() << "Texture reload complete.";
+}
+
 // REVISIT: This function doesn't need to return a shared ptr. Consider refactoring InfomarkSelection?
 std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSel &sel)
 {
@@ -412,18 +461,28 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 {
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
     const bool hasRightButton = (event->buttons() & Qt::RightButton) != 0u;
+    const bool hasMiddleButton = (event->buttons() & Qt::MiddleButton) != 0u;
     const bool hasCtrl = (event->modifiers() & Qt::CTRL) != 0u;
-    MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
+    const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
     m_sel1 = m_sel2 = getUnprojectedMouseSel(event);
     m_mouseLeftPressed = hasLeftButton;
     m_mouseRightPressed = hasRightButton;
+    m_mouseMiddlePressed = hasMiddleButton;
 
     if (event->button() == Qt::ForwardButton) {
         slot_layerUp();
         return event->accept();
     } else if (event->button() == Qt::BackButton) {
         slot_layerDown();
+        return event->accept();
+    } else if (hasMiddleButton && hasAlt && !MapCanvasConfig::isAutoTilt()) {
+        // Alt + Middle Mouse: Camera rotation (only when auto-tilt is disabled)
+        auto &advanced = setConfig().canvas.advanced;
+        m_cameraRotation.emplace(CameraRotationState{getMouseCoords(event),
+                                                     advanced.verticalAngle.getFloat(),
+                                                     advanced.horizontalAngle.getFloat()});
+        setCursor(Qt::SizeAllCursor);
         return event->accept();
     } else if (!m_mouseLeftPressed && m_mouseRightPressed) {
         if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE && hasSel1()) {
@@ -586,6 +645,31 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 {
+    // Handle camera rotation with Alt + Middle Mouse
+    if (isCameraRotating() && m_mouseMiddlePressed) {
+        const glm::vec2 currentMousePos = getMouseCoords(event);
+        const glm::vec2 delta = currentMousePos - m_cameraRotation->initialMousePos;
+
+        // Camera rotation sensitivity: 1.0 degree per pixel
+        constexpr float ROTATION_SENSITIVITY = 0.3f;
+
+        auto &advanced = setConfig().canvas.advanced;
+
+        // Horizontal mouse movement controls horizontal angle (yaw)
+        const float newHorizontalAngle = m_cameraRotation->initialHorizontalAngle
+                                         + (delta.x * ROTATION_SENSITIVITY);
+        advanced.horizontalAngle.setFloat(newHorizontalAngle);
+
+        // Vertical mouse movement controls vertical angle (pitch)
+        // Inverted: moving mouse down should decrease pitch angle
+        const float newVerticalAngle = m_cameraRotation->initialVerticalAngle
+                                       + (delta.y * ROTATION_SENSITIVITY);
+        advanced.verticalAngle.setFloat(newVerticalAngle);
+
+        slot_requestUpdate();
+        return event->accept();
+    }
+
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
 
     if (m_canvasMouseMode != CanvasMouseModeEnum::MOVE) {
@@ -721,6 +805,14 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     if (m_mouseRightPressed) {
         m_mouseRightPressed = false;
+    }
+
+    // Handle camera rotation release
+    if (event->button() == Qt::MiddleButton && isCameraRotating()) {
+        m_cameraRotation.reset();
+        m_mouseMiddlePressed = false;
+        restoreCursorForMouseMode();
+        return event->accept();
     }
 
     switch (m_canvasMouseMode) {
@@ -1014,6 +1106,12 @@ void MapCanvas::slot_moveMarker(const RoomId id)
 void MapCanvas::infomarksChanged()
 {
     m_batches.infomarksMeshes.reset();
+    update();
+}
+
+void MapCanvas::mapBatchesChanged()
+{
+    m_batches.mapBatches.reset();
     update();
 }
 
