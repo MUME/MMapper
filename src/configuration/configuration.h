@@ -188,8 +188,8 @@ public:
             FixedPoint<1> fov{50, 900, 765};
             // 0..90 degrees
             FixedPoint<1> verticalAngle{0, 900, 450};
-            // -45..45 degrees
-            FixedPoint<1> horizontalAngle{-450, 450, 0};
+            // -180..180 degrees
+            FixedPoint<1> horizontalAngle{-1800, 1800, 0};
             // 1..10 rooms
             FixedPoint<1> layerHeight{10, 100, 15};
 
