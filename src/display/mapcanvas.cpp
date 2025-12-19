@@ -415,6 +415,13 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     const bool hasCtrl = (event->modifiers() & Qt::CTRL) != 0u;
     MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
+    if (hasLeftButton && hasAlt) {
+        m_altDragState.emplace(AltDragState{event->pos(), cursor()});
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+        return;
+    }
+
     m_sel1 = m_sel2 = getUnprojectedMouseSel(event);
     m_mouseLeftPressed = hasLeftButton;
     m_mouseRightPressed = hasRightButton;
@@ -586,6 +593,52 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 {
+    if (m_altDragState.has_value()) {
+        // The user released the Alt key mid-drag.
+        if (!((event->modifiers() & Qt::ALT) != 0u)) {
+            setCursor(m_altDragState->originalCursor);
+            m_altDragState.reset();
+            // Don't accept the event; let the underlying widgets handle it.
+            return;
+        }
+
+        auto &conf = setConfig().canvas.advanced;
+        auto &dragState = m_altDragState.value();
+        bool angleChanged = false;
+
+        const auto pos = event->pos();
+        const auto delta = pos - dragState.lastPos;
+        dragState.lastPos = pos;
+
+        // Camera rotation sensitivity: 3 degree per pixel
+        constexpr float SENSITIVITY = 0.3f;
+
+        // Horizontal movement adjusts yaw (horizontalAngle)
+        const int dx = delta.x();
+        if (dx != 0) {
+            conf.horizontalAngle.set(conf.horizontalAngle.get()
+                                     + static_cast<int>(static_cast<float>(dx) * SENSITIVITY));
+            angleChanged = true;
+        }
+
+        // Vertical movement adjusts pitch (verticalAngle), if auto-tilt is off
+        if (!conf.autoTilt.get()) {
+            const int dy = delta.y();
+            if (dy != 0) {
+                // Negated to match intuitive up/down dragging
+                conf.verticalAngle.set(conf.verticalAngle.get()
+                                       + static_cast<int>(static_cast<float>(-dy) * SENSITIVITY));
+                angleChanged = true;
+            }
+        }
+
+        if (angleChanged) {
+            graphicsSettingsChanged();
+        }
+        event->accept();
+        return;
+    }
+
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
 
     if (m_canvasMouseMode != CanvasMouseModeEnum::MOVE) {
@@ -716,6 +769,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 {
+    if (m_altDragState.has_value()) {
+        setCursor(m_altDragState->originalCursor);
+        m_altDragState.reset();
+        event->accept();
+        return;
+    }
+
     emit sig_continuousScroll(0, 0);
     m_sel2 = getUnprojectedMouseSel(event);
 
