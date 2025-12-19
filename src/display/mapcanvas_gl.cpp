@@ -789,7 +789,7 @@ void MapCanvas::paintDifferences()
     auto &gl = getOpenGL();
 
     if (auto &highlights = highlight.highlights; !highlights.empty()) {
-        highlights.render(gl, m_textures.room_highlight->getId());
+        highlights.render(gl, m_textures.room_highlight->getArrayPosition().array);
     }
 }
 

@@ -114,19 +114,19 @@ jobs:
         "PACKAGE_BASENAME=$packageBasename" >> $env:GITHUB_OUTPUT
     - if: runner.os == 'macOS'
       name: Upload Package for Mac
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: release-${{ steps.get_mac_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.dmg*
     - if: runner.os == 'Linux'
       name: Upload Package for Ubuntu
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: release-${{ steps.get_linux_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.deb*
     - if: runner.os == 'Windows'
       name: Upload Package for Windows
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: release-${{ steps.get_windows_package_name.outputs.PACKAGE_BASENAME }}
         path: ${{ github.workspace }}/artifact/*.exe*

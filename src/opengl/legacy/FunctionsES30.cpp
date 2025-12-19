@@ -33,7 +33,7 @@ std::optional<GLenum> FunctionsES30::virt_toGLenum(const DrawModeEnum mode)
 
 const char *FunctionsES30::virt_getShaderVersion() const
 {
-    return "#version 300 es\n\nprecision highp float;\n\n";
+    return "#version 300 es\n\nprecision highp float;\nprecision mediump sampler2DArray;\n\n";
 }
 
 void FunctionsES30::virt_enableProgramPointSize(bool /* enable */)
