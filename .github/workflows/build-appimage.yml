@@ -18,6 +18,12 @@ jobs:
         fetch-depth: 0
         submodules: true
 
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        create-symlink: true
+        key: ${{ github.job }}
+
     - name: Install Build Dependencies
       run: |
         sudo apt update -qq
@@ -47,7 +53,9 @@ jobs:
           -DWITH_WEBSOCKET=ON \
           -DWITH_QTKEYCHAIN=ON \
           -DWITH_TESTS=OFF \
-          -DPACKAGE_TYPE=AppImage
+          -DPACKAGE_TYPE=AppImage \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         make -j$(getconf _NPROCESSORS_ONLN)
         make DESTDIR=appdir install
 

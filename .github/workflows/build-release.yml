@@ -22,6 +22,12 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+    - if: runner.os == 'Linux' || runner.os == 'macOS'
+      name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        create-symlink: true
+        key: ${{ github.job }}-${{ matrix.os }}
     - if: runner.os == 'Windows' || runner.os == 'macOS'
       uses: lukka/get-cmake@latest
     - if: runner.os == 'Windows'
@@ -84,7 +90,7 @@ jobs:
         mkdir -p build ${{ github.workspace }}/artifact
         cd build
         cmake --version
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY=${{ github.workspace }}/artifact $MMAPPER_CMAKE_EXTRA -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -S .. || exit -1
         cmake --build . --parallel
 
     # Package
