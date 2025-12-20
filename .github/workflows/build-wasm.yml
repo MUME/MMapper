@@ -18,6 +18,12 @@ jobs:
         fetch-depth: 0
         submodules: true
 
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        create-symlink: true
+        key: ${{ github.job }}
+
     - name: Install Qt for Wasm
       uses: jurplel/install-qt-action@v4
       with:
@@ -42,7 +48,9 @@ jobs:
           -DWITH_WEBSOCKET=ON \
           -DWITH_UPDATER=OFF \
           -DCMAKE_BUILD_TYPE=Release \
-          -DPACKAGE_TYPE=Wasm
+          -DPACKAGE_TYPE=Wasm \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         cmake --build build
 
     - name: Add coi-serviceworker.js
