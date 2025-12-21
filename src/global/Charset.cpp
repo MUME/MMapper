@@ -59,6 +59,7 @@ using namespace string_consts;
     X(0x201Eu, C_DQUOTE,       "bdquo")  XSEP() \
     X(0x201Fu, C_DQUOTE,       "double high reversed quotation mark") XSEP() \
     X(0x2022u, C_ASTERISK,     "bull")   XSEP() \
+    X(0x202Fu, C_NBSP,         "nnbsp")  XSEP() \
     X(0x2039u, C_LESS_THAN,    "lsaquo") XSEP() \
     X(0x203Au, C_GREATER_THAN, "rsaquo")
 
@@ -76,12 +77,10 @@ NODISCARD constexpr bool is_latin_control(const T uc)
            && (uc >= 0x80u && uc < 0xA0u); // Latin1 control character
 }
 template<typename T>
-NODISCARD constexpr bool is_noncontrol_ascii(const T ascii)
+NODISCARD constexpr bool is_noncontrol_latin1(const T byte)
 {
     // non-control ASCII
-    return std::is_same_v<char, T>                                                 //
-           && (static_cast<uint8_t>(ascii) & 0x7Fu) == static_cast<uint8_t>(ascii) //
-           && static_cast<uint8_t>(ascii) >= 0x20u;                                //
+    return std::is_same_v<char, T> && !is_latin_control(static_cast<uint8_t>(byte));
 }
 template<typename T>
 NODISCARD constexpr bool is_16bit_unicode(const T uc)
@@ -98,7 +97,7 @@ XFOREACH_WINDOWS_125x(XCASE, XSEMI);
 #undef XCASE
 
 #define XCASE(_unicode, _ascii, _name) \
-    static_assert(is_noncontrol_ascii(_ascii)); \
+    static_assert(is_noncontrol_latin1(_ascii)); \
     static_assert(is_16bit_unicode(_unicode))
 XFOREACH_UNICODE_TRANSLIT(XCASE, XSEMI);
 #undef XCASE
@@ -194,8 +193,7 @@ NODISCARD static constexpr char16_t simple_unicode_translit(const char16_t input
     case (_unicode): \
         return conversion::to_char16(_ascii)
 
-    const auto maybe_bigger = windows125x_to_unicode(input);
-    switch (maybe_bigger) {
+    switch (MAYBE_UNUSED const auto maybe_bigger = windows125x_to_unicode(input)) {
         XFOREACH_UNICODE_TRANSLIT(XCASE, XSEMI);
     default:
         return input;
@@ -297,6 +295,23 @@ NODISCARD QChar simple_unicode_translit(const QChar qc) noexcept
     return QChar{charset::simple_unicode_translit(static_cast<char16_t>(qc.unicode()))};
 }
 
+NODISCARD static bool isValidLatin1(char latin1)
+{
+    // Eventually we may want to exclude some other ASCII control codes,
+    // but be careful not to exclude things like "\t\r\n".
+    return latin1 != C_NUL && !is_latin_control(latin1);
+}
+
+NODISCARD static QLatin1Char toQLatin1Char(const QChar input)
+{
+    const QChar qc = mmqt::simple_unicode_translit(input);
+    if (const char latin1 = qc.toLatin1(); isValidLatin1(latin1)) {
+        return QLatin1Char{latin1};
+    } else {
+        return QLatin1Char{'?'};
+    }
+}
+
 ALLOW_DISCARD QString &toLatin1InPlace(QString &str)
 {
     if (containsAnySurrogates(str)) {
@@ -308,8 +323,7 @@ ALLOW_DISCARD QString &toLatin1InPlace(QString &str)
     }
 
     for (QChar &qc : str) {
-        mmqt::simple_unicode_translit_in_place(qc);
-        qc = QLatin1Char{qc.toLatin1()};
+        qc = mmqt::toQLatin1Char(qc);
     }
     return str;
 }
@@ -978,6 +992,23 @@ void testStringsExtreme()
 
 void testMmqtLatin1()
 {
+    {
+        const QString narrowNbspStr{"\U0000202F"}; // NNBSP (narrow NBSP)
+        {
+            const auto latin1 = mmqt::toLatin1(narrowNbspStr);
+            TEST_ASSERT(latin1 == mmqt::QS_NBSP);
+        }
+        {
+            // thumbs up uses a surrogate pair, which forces mmqt::toLatin1() to call
+            // a different code path.
+            const auto thumbsUpStr = QString{"\U0001F44D"};
+            const QString input = narrowNbspStr + mmqt::QS_COMMA + thumbsUpStr + mmqt::QS_NEWLINE;
+            const QString expect = mmqt::QS_NBSP + mmqt::QS_COMMA + mmqt::QS_QUESTION_MARK
+                                   + mmqt::QS_NEWLINE;
+            const auto latin1 = mmqt::toLatin1(input);
+            TEST_ASSERT(latin1 == expect);
+        }
+    }
     // verify that surrogates are handled as expected.
     {
         const QString thumbsUpQstr{"\U0001F44D"};
