@@ -213,7 +213,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        if(GIT_TAG_NAME)
+        if(GIT_TAG_NAME MATCHES "^v")
            message(STATUS "Building from branch ${GIT_BRANCH} with tag ${GIT_TAG_NAME}")
            set(MMAPPER_VERSION_STRING "${GIT_TAG_NAME}")
            set(MMAPPER_BETA "false")
