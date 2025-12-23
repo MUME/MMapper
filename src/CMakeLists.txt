@@ -37,6 +37,8 @@ set(mmapper_SRCS
     configuration/PasswordConfig.h
     configuration/configuration.cpp
     configuration/configuration.h
+    configuration/HotkeyManager.cpp
+    configuration/HotkeyManager.h
     display/CanvasMouseModeEnum.h
     display/Characters.cpp
     display/Characters.h
@@ -432,6 +434,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
     parser/AbstractParser-Group.cpp
+    parser/AbstractParser-Hotkey.cpp
     parser/AbstractParser-Mark.cpp
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Timer.cpp
@@ -859,6 +862,13 @@ set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
 set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 set(CPACK_PACKAGE_VERSION_TWEAK ${CMAKE_MATCH_4})
+# If parsing failed (e.g., version is just a commit hash), fall back to MMAPPER_VERSION
+if(NOT CPACK_PACKAGE_VERSION_MAJOR)
+    string(REGEX MATCH "^([0-9]+)\\.([0-9]+)\\.([0-9]+).*$" _ "${MMAPPER_VERSION}")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
+endif()
 if(NOT CPACK_PACKAGE_VERSION_TWEAK)
     set(CPACK_PACKAGE_VERSION_TWEAK 0)
 endif()

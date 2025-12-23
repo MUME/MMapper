@@ -218,6 +218,7 @@ ConstString KEY_SHOW_SCROLL_BARS = "Show Scroll Bars";
 ConstString KEY_SHOW_MENU_BAR = "Show Menu Bar";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
+ConstString KEY_AUTO_START_CLIENT = "Auto start client";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
 ConstString KEY_CHECK_FOR_UPDATE = "Check for update";
@@ -753,9 +754,9 @@ void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
     linesOfPeekPreview = conf.value(KEY_LINES_OF_PEEK_PREVIEW, 7).toInt();
     audibleBell = conf.value(KEY_BELL_AUDIBLE, true).toBool();
     visualBell = conf.value(KEY_BELL_VISUAL, (CURRENT_PLATFORM == PlatformEnum::Wasm)).toBool();
+    autoStartClient = conf.value(KEY_AUTO_START_CLIENT, false).toBool();
     useCommandSeparator = conf.value(KEY_USE_COMMAND_SEPARATOR, false).toBool();
-    commandSeparator = conf.value(KEY_COMMAND_SEPARATOR, QString(char_consts::C_SEMICOLON))
-                           .toString();
+    commandSeparator = conf.value(KEY_COMMAND_SEPARATOR, QString(";;")).toString();
 }
 
 void Configuration::RoomPanelSettings::read(const QSettings &conf)
@@ -925,6 +926,7 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_LINES_OF_PEEK_PREVIEW, linesOfPeekPreview);
     conf.setValue(KEY_BELL_AUDIBLE, audibleBell);
     conf.setValue(KEY_BELL_VISUAL, visualBell);
+    conf.setValue(KEY_AUTO_START_CLIENT, autoStartClient);
     conf.setValue(KEY_USE_COMMAND_SEPARATOR, useCommandSeparator);
     conf.setValue(KEY_COMMAND_SEPARATOR, commandSeparator);
 }

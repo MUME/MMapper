@@ -21,6 +21,7 @@
 #include "../map/parseevent.h"
 #include "../mpi/mpifilter.h"
 #include "../mpi/remoteedit.h"
+#include "../mpi/remoteeditwidget.h"
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
 #include "../pathmachine/mmapper2pathmachine.h"
@@ -699,6 +700,33 @@ void Proxy::allocParser()
 
         // (via user command)
         void virt_onSetMode(const MapModeEnum mode) final { getMainWindow().slot_setMode(mode); }
+
+        void virt_onOpenClientConfigEditor() final
+        {
+            // Get content in CLI format (preserves comments and order)
+            const QString content = getConfig().hotkeyManager.exportToCliFormat();
+
+            // Create the editor widget
+            auto *editor = new RemoteEditWidget(true, // editSession = true (editable)
+                                                "MMapper Client Configuration",
+                                                content,
+                                                nullptr);
+
+            // Connect save signal to import the edited content
+            QObject::connect(editor, &RemoteEditWidget::sig_save, [this](const QString &edited) {
+                // Import using HotkeyManager (handles parsing, clears existing, saves to QSettings)
+                int hotkeyCount = setConfig().hotkeyManager.importFromCliFormat(edited);
+
+                // Send feedback to user
+                QString msg = QString("\n%1 hotkeys imported.\n").arg(hotkeyCount);
+                getUserTelnet().onSendToUser(msg, false);
+            });
+
+            // Show the editor
+            editor->setAttribute(Qt::WA_DeleteOnClose);
+            editor->show();
+            editor->activateWindow();
+        }
     };
 
     auto &pipe = getPipeline();

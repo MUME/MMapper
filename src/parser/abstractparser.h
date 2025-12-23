@@ -95,6 +95,8 @@ public:
     // for commands that set the mode (emulation, play, map)
     // these are connected to MainWindow
     void onSetMode(const MapModeEnum mode) { virt_onSetMode(mode); }
+    // opens the client configuration editor (hotkeys, etc.)
+    void onOpenClientConfigEditor() { virt_onOpenClientConfigEditor(); }
 
 private:
     // sent to MudTelnet
@@ -122,6 +124,8 @@ private:
     // for commands that set the mode (emulation, play, map)
     // these are connected to MainWindow
     virtual void virt_onSetMode(MapModeEnum) = 0;
+    // opens the client configuration editor (hotkeys, etc.)
+    virtual void virt_onOpenClientConfigEditor() = 0;
 };
 
 struct NODISCARD ParserCommonData final
@@ -311,7 +315,7 @@ private:
     std::shared_ptr<ParseRoomHelper> m_parseRoomHelper;
 
 public:
-    using HelpCallback = std::function<void(const std::string &name)>;
+    using HelpCallback = std::function<void(const std::string &name, const std::string &subcommand)>;
     using ParserCallback
         = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
     struct NODISCARD ParserRecord final
@@ -405,6 +409,7 @@ private:
     NODISCARD bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
+    void parseHotkey(StringView input);
     void parseMark(StringView input);
     void parseRoom(StringView input);
     void parseGroup(StringView input);
@@ -425,6 +430,7 @@ protected:
 
 private:
     void graphicsSettingsChanged() { m_outputs.onGraphicsSettingsChanged(); }
+    void openClientConfigEditor() { m_outputs.onOpenClientConfigEditor(); }
 
     void sendToMud(const QByteArray &msg) = delete;
     void sendToMud(const QString &msg) { m_outputs.onSendToMud(msg); }

@@ -377,6 +377,14 @@ void MainWindow::readSettings()
         // Check if the window was moved to a screen with a different DPI
         getCanvas()->screenChanged();
     }
+
+    // Auto-start mud client if enabled
+    const auto &clientSettings = getConfig().integratedClient;
+    if (clientSettings.autoStartClient) {
+        qDebug() << "[MainWindow::MainWindow] Auto-starting mud client";
+        m_dockDialogClient->show();
+        m_clientWidget->playMume();
+    }
 }
 
 void MainWindow::writeSettings()

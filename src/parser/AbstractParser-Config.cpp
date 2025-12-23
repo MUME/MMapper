@@ -363,7 +363,15 @@ void AbstractParser::doConfig(const StringView cmd)
                     makeFixedPointArg(advanced.fov, "fov"),
                     makeFixedPointArg(advanced.verticalAngle, "pitch"),
                     makeFixedPointArg(advanced.horizontalAngle, "yaw"),
-                    makeFixedPointArg(advanced.layerHeight, "layer-height")))));
+                    makeFixedPointArg(advanced.layerHeight, "layer-height")))),
+        syn("edit",
+            Accept(
+                [this](User &user, auto) {
+                    auto &os = user.getOstream();
+                    os << "Opening client configuration editor...\n";
+                    openClientConfigEditor();
+                },
+                "edit client configuration")));
 
     eval("config", configSyntax, cmd);
 }

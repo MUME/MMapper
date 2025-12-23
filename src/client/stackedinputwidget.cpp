@@ -77,6 +77,8 @@ void StackedInputWidget::initInput()
         {
             getSelf().gotPasswordInput(password);
         }
+
+        void virt_scrollDisplay(bool pageUp) final { getOutput().scrollDisplay(pageUp); }
     };
 
     auto &out = m_pipeline.outputs.inputOutputs;

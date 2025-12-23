@@ -4,6 +4,7 @@
 
 #include "inputwidget.h"
 
+#include "../configuration/HotkeyManager.h"
 #include "../configuration/configuration.h"
 #include "../global/Color.h"
 
@@ -12,12 +13,171 @@
 #include <QRegularExpression>
 #include <QSize>
 #include <QString>
+#include <QTextStream>
 #include <QtGui>
 #include <QtWidgets>
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 
 static const QRegularExpression g_whitespaceRx(R"(\s+)");
+
+// Lookup tables for key name mapping (reduces cyclomatic complexity)
+static const QHash<int, QString> &getNumpadKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_0, "NUMPAD0"},
+                                         {Qt::Key_1, "NUMPAD1"},
+                                         {Qt::Key_2, "NUMPAD2"},
+                                         {Qt::Key_3, "NUMPAD3"},
+                                         {Qt::Key_4, "NUMPAD4"},
+                                         {Qt::Key_5, "NUMPAD5"},
+                                         {Qt::Key_6, "NUMPAD6"},
+                                         {Qt::Key_7, "NUMPAD7"},
+                                         {Qt::Key_8, "NUMPAD8"},
+                                         {Qt::Key_9, "NUMPAD9"},
+                                         {Qt::Key_Slash, "NUMPAD_SLASH"},
+                                         {Qt::Key_Asterisk, "NUMPAD_ASTERISK"},
+                                         {Qt::Key_Minus, "NUMPAD_MINUS"},
+                                         {Qt::Key_Plus, "NUMPAD_PLUS"},
+                                         {Qt::Key_Period, "NUMPAD_PERIOD"}};
+    return map;
+}
+
+static QString getNumpadKeyName(int key)
+{
+    return getNumpadKeyMap().value(key);
+}
+
+static const QHash<int, QString> &getNavigationKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_Home, "HOME"},
+                                         {Qt::Key_End, "END"},
+                                         {Qt::Key_Insert, "INSERT"},
+                                         {Qt::Key_Help, "INSERT"}}; // macOS maps Insert to Help
+    return map;
+}
+
+static QString getNavigationKeyName(int key)
+{
+    return getNavigationKeyMap().value(key);
+}
+
+static const QHash<int, QString> &getMiscKeyMap()
+{
+    static const QHash<int, QString> map{{Qt::Key_QuoteLeft, "ACCENT"},
+                                         {Qt::Key_1, "1"},
+                                         {Qt::Key_2, "2"},
+                                         {Qt::Key_3, "3"},
+                                         {Qt::Key_4, "4"},
+                                         {Qt::Key_5, "5"},
+                                         {Qt::Key_6, "6"},
+                                         {Qt::Key_7, "7"},
+                                         {Qt::Key_8, "8"},
+                                         {Qt::Key_9, "9"},
+                                         {Qt::Key_0, "0"},
+                                         {Qt::Key_Minus, "HYPHEN"},
+                                         {Qt::Key_Equal, "EQUAL"}};
+    return map;
+}
+
+static QString getMiscKeyName(int key)
+{
+    return getMiscKeyMap().value(key);
+}
+
+static KeyClassification classifyKey(int key, Qt::KeyboardModifiers mods)
+{
+    KeyClassification result;
+    result.realModifiers = mods & ~Qt::KeypadModifier;
+
+    // Function keys F1-F12 (always handled)
+    if (key >= Qt::Key_F1 && key <= Qt::Key_F12) {
+        result.type = KeyType::FunctionKey;
+        result.keyName = QString("F%1").arg(key - Qt::Key_F1 + 1);
+        result.shouldHandle = true;
+        return result;
+    }
+
+    // Numpad keys (only with KeypadModifier)
+    if (mods & Qt::KeypadModifier) {
+        QString name = getNumpadKeyName(key);
+        if (!name.isEmpty()) {
+            result.type = KeyType::NumpadKey;
+            result.keyName = name;
+            result.shouldHandle = true;
+            return result;
+        }
+    }
+
+    // Navigation keys (HOME, END, INSERT - from any source)
+    {
+        QString name = getNavigationKeyName(key);
+        if (!name.isEmpty()) {
+            result.type = KeyType::NavigationKey;
+            result.keyName = name;
+            result.shouldHandle = true;
+            return result;
+        }
+    }
+
+    // Arrow keys (UP, DOWN, LEFT, RIGHT)
+    if (key == Qt::Key_Up || key == Qt::Key_Down || key == Qt::Key_Left || key == Qt::Key_Right) {
+        result.type = KeyType::ArrowKey;
+        switch (key) {
+        case Qt::Key_Up:
+            result.keyName = "UP";
+            break;
+        case Qt::Key_Down:
+            result.keyName = "DOWN";
+            break;
+        case Qt::Key_Left:
+            result.keyName = "LEFT";
+            break;
+        case Qt::Key_Right:
+            result.keyName = "RIGHT";
+            break;
+        }
+        result.shouldHandle = true;
+        return result;
+    }
+
+    // Misc keys (only when NOT from numpad)
+    if (!(mods & Qt::KeypadModifier)) {
+        QString name = getMiscKeyName(key);
+        if (!name.isEmpty()) {
+            result.type = KeyType::MiscKey;
+            result.keyName = name;
+            result.shouldHandle = true;
+            return result;
+        }
+    }
+
+    // Terminal shortcuts (Ctrl+U, Ctrl+W, Ctrl+H or Cmd+U, Cmd+W, Cmd+H)
+    if ((key == Qt::Key_U || key == Qt::Key_W || key == Qt::Key_H)
+        && (result.realModifiers == Qt::ControlModifier
+            || result.realModifiers == Qt::MetaModifier)) {
+        result.type = KeyType::TerminalShortcut;
+        result.shouldHandle = true;
+        return result;
+    }
+
+    // Basic keys (Tab, Enter - only without modifiers)
+    if ((key == Qt::Key_Tab || key == Qt::Key_Return || key == Qt::Key_Enter)
+        && result.realModifiers == Qt::NoModifier) {
+        result.type = KeyType::BasicKey;
+        result.shouldHandle = true;
+        return result;
+    }
+
+    // Page keys (PageUp, PageDown - for scrolling display)
+    if (key == Qt::Key_PageUp || key == Qt::Key_PageDown) {
+        result.type = KeyType::PageKey;
+        result.keyName = (key == Qt::Key_PageUp) ? "PAGEUP" : "PAGEDOWN";
+        result.shouldHandle = true;
+        return result;
+    }
+
+    return result;
+}
 
 InputWidgetOutputs::~InputWidgetOutputs() = default;
 
@@ -58,24 +218,32 @@ InputWidget::~InputWidget() = default;
 
 void InputWidget::keyPressEvent(QKeyEvent *const event)
 {
-    const auto currentKey = event->key();
-    const auto currentModifiers = event->modifiers();
+    // Check if this key was already handled in ShortcutOverride
+    if (m_handledInShortcutOverride) {
+        m_handledInShortcutOverride = false; // Reset for next key
+        event->accept();
+        return;
+    }
 
+    const auto key = event->key();
+    const auto mods = event->modifiers();
+
+    // Handle tabbing state (unchanged)
     if (m_tabbing) {
-        if (currentKey != Qt::Key_Tab) {
+        if (key != Qt::Key_Tab) {
             m_tabbing = false;
         }
 
         // If Backspace or Escape is pressed, reject the completion
         QTextCursor current = textCursor();
-        if (currentKey == Qt::Key_Backspace || currentKey == Qt::Key_Escape) {
+        if (key == Qt::Key_Backspace || key == Qt::Key_Escape) {
             current.removeSelectedText();
             event->accept();
             return;
         }
 
         // For any other key press, accept the completion
-        if (currentKey != Qt::Key_Tab) {
+        if (key != Qt::Key_Tab) {
             current.movePosition(QTextCursor::Right,
                                  QTextCursor::MoveAnchor,
                                  static_cast<int>(current.selectedText().length()));
@@ -83,90 +251,67 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
         }
     }
 
-    // REVISIT: if (useConsoleEscapeKeys) ...
-    if (currentModifiers == Qt::ControlModifier) {
-        switch (currentKey) {
-        case Qt::Key_H: // ^H = backspace
-            // REVISIT: can this be translated to backspace key?
-            break;
-        case Qt::Key_U: // ^U = delete line (clear the input)
-            base::clear();
-            return;
-        case Qt::Key_W: // ^W = delete word
-            // REVISIT: can this be translated to ctrl+shift+leftarrow + backspace?
-            break;
-        }
+    // Classify the key ONCE
+    auto classification = classifyKey(key, mods);
 
-    } else if (currentModifiers == Qt::NoModifier) {
-        switch (currentKey) {
-        /** Submit the current text */
-        case Qt::Key_Return:
-        case Qt::Key_Enter:
-            gotInput();
+    if (classification.shouldHandle) {
+        switch (classification.type) {
+        case KeyType::FunctionKey:
+            functionKeyPressed(key, classification.realModifiers);
             event->accept();
             return;
 
-#define X_CASE(_Name) \
-    case Qt::Key_##_Name: { \
-        event->accept(); \
-        functionKeyPressed(#_Name); \
-        break; \
-    }
-            X_CASE(F1);
-            X_CASE(F2);
-            X_CASE(F3);
-            X_CASE(F4);
-            X_CASE(F5);
-            X_CASE(F6);
-            X_CASE(F7);
-            X_CASE(F8);
-            X_CASE(F9);
-            X_CASE(F10);
-            X_CASE(F11);
-            X_CASE(F12);
-
-#undef X_CASE
-
-            /** Key bindings for word history and tab completion */
-        case Qt::Key_Up:
-        case Qt::Key_Down:
-        case Qt::Key_Tab:
-            if (tryHistory(currentKey)) {
+        case KeyType::NumpadKey:
+            if (numpadKeyPressed(key, classification.realModifiers)) {
                 event->accept();
                 return;
             }
             break;
-        }
 
-    } else if (currentModifiers == Qt::KeypadModifier) {
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-            // NOTE: MacOS does not differentiate between arrow keys and the keypad keys
-            // and as such we disable keypad movement functionality in favor of history
-            switch (currentKey) {
-            case Qt::Key_Up:
-            case Qt::Key_Down:
-            case Qt::Key_Tab:
-                if (tryHistory(currentKey)) {
-                    event->accept();
-                    return;
-                }
-                break;
-            }
-        } else {
-            switch (currentKey) {
-            case Qt::Key_Up:
-            case Qt::Key_Down:
-            case Qt::Key_Left:
-            case Qt::Key_Right:
-            case Qt::Key_PageUp:
-            case Qt::Key_PageDown:
-            case Qt::Key_Clear: // Numpad 5
-            case Qt::Key_Home:
-            case Qt::Key_End:
-                keypadMovement(currentKey);
+        case KeyType::NavigationKey:
+            if (navigationKeyPressed(key, classification.realModifiers)) {
                 event->accept();
                 return;
             }
+            break;
+
+        case KeyType::ArrowKey:
+            if (arrowKeyPressed(key, classification.realModifiers)) {
+                event->accept();
+                return;
+            }
+            break;
+
+        case KeyType::MiscKey:
+            if (miscKeyPressed(key, classification.realModifiers)) {
+                event->accept();
+                return;
+            }
+            break;
+
+        case KeyType::TerminalShortcut:
+            if (handleTerminalShortcut(key)) {
+                event->accept();
+                return;
+            }
+            break;
+
+        case KeyType::BasicKey:
+            if (handleBasicKey(key)) {
+                event->accept();
+                return;
+            }
+            break;
+
+        case KeyType::PageKey:
+            if (handlePageKey(key, classification.realModifiers)) {
+                event->accept();
+                return;
+            }
+            break;
+
+        case KeyType::Other:
+            break;
         }
     }
 
@@ -174,52 +319,170 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
     base::keyPressEvent(event);
 }
 
-void InputWidget::functionKeyPressed(const QString &keyName)
+void InputWidget::functionKeyPressed(int key, Qt::KeyboardModifiers modifiers)
 {
-    sendUserInput(keyName);
+    // Check if there's a configured hotkey for this key combination
+    // Function keys are never numpad keys
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, false);
+
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+    } else {
+        // No hotkey configured, send the key name as-is (e.g., "CTRL+F1")
+        QString keyName = QString("F%1").arg(key - Qt::Key_F1 + 1);
+        QString fullKeyString = buildHotkeyString(keyName, modifiers);
+        sendCommandWithSeparator(fullKeyString);
+    }
 }
 
-void InputWidget::keypadMovement(const int key)
+bool InputWidget::numpadKeyPressed(int key, Qt::KeyboardModifiers modifiers)
+{
+    // Check if there's a configured hotkey for this numpad key (isNumpad=true)
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, true);
+
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+        return true;
+    }
+    return false;
+}
+
+bool InputWidget::navigationKeyPressed(int key, Qt::KeyboardModifiers modifiers)
+{
+    // Check if there's a configured hotkey for this navigation key (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, false);
+
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+QString InputWidget::buildHotkeyString(const QString &keyName, Qt::KeyboardModifiers modifiers)
+{
+    QStringList parts;
+
+    if (modifiers & Qt::ControlModifier) {
+        parts << "CTRL";
+    }
+    if (modifiers & Qt::ShiftModifier) {
+        parts << "SHIFT";
+    }
+    if (modifiers & Qt::AltModifier) {
+        parts << "ALT";
+    }
+    if (modifiers & Qt::MetaModifier) {
+        parts << "META";
+    }
+
+    parts << keyName;
+    return parts.join("+");
+}
+
+bool InputWidget::arrowKeyPressed(const int key, Qt::KeyboardModifiers modifiers)
+{
+    // UP/DOWN with no modifiers cycle through command history
+    if (modifiers == Qt::NoModifier) {
+        if (key == Qt::Key_Up) {
+            backwardHistory();
+            return true;
+        } else if (key == Qt::Key_Down) {
+            forwardHistory();
+            return true;
+        }
+    }
+
+    // Arrow keys with modifiers check for hotkeys (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, false);
+
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+        return true;
+    }
+
+    // Let default behavior handle bare arrow keys (cursor movement)
+    return false;
+}
+
+bool InputWidget::miscKeyPressed(int key, Qt::KeyboardModifiers modifiers)
+{
+    // Check if there's a configured hotkey for this misc key (isNumpad=false)
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, false);
+
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+        return true;
+    }
+    return false;
+}
+
+bool InputWidget::handleTerminalShortcut(int key)
 {
     switch (key) {
-    case Qt::Key_Up:
-        sendUserInput("north");
-        break;
-    case Qt::Key_Down:
-        sendUserInput("south");
-        break;
-    case Qt::Key_Left:
-        sendUserInput("west");
-        break;
-    case Qt::Key_Right:
-        sendUserInput("east");
-        break;
-    case Qt::Key_PageUp:
-        sendUserInput("up");
-        break;
-    case Qt::Key_PageDown:
-        sendUserInput("down");
-        break;
-    case Qt::Key_Clear: // Numpad 5
-        sendUserInput("exits");
-        break;
-    case Qt::Key_Home:
-        sendUserInput("open exit");
-        break;
-    case Qt::Key_End:
-        sendUserInput("close exit");
-        break;
-    case Qt::Key_Insert:
-        sendUserInput("flee");
-        break;
-    case Qt::Key_Delete:
-    case Qt::Key_Plus:
-    case Qt::Key_Minus:
-    case Qt::Key_Slash:
-    case Qt::Key_Asterisk:
-    default:
-        qDebug() << "! Unknown keypad movement" << key;
+    case Qt::Key_H: // ^H = backspace
+        textCursor().deletePreviousChar();
+        return true;
+
+    case Qt::Key_U: // ^U = delete line (clear the input)
+        base::clear();
+        return true;
+
+    case Qt::Key_W: // ^W = delete word (whitespace-delimited)
+    {
+        QTextCursor cursor = textCursor();
+        // If at start, nothing to delete
+        if (cursor.atStart()) {
+            return true;
+        }
+        // First, skip any trailing whitespace before the word
+        while (!cursor.atStart() && document()->characterAt(cursor.position() - 1).isSpace()) {
+            cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
+        }
+        // Then, select the word (non-whitespace characters)
+        while (!cursor.atStart() && !document()->characterAt(cursor.position() - 1).isSpace()) {
+            cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor);
+        }
+        cursor.removeSelectedText();
+        setTextCursor(cursor);
+        return true;
     }
+    }
+    return false;
+}
+
+bool InputWidget::handleBasicKey(int key)
+{
+    switch (key) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        gotInput();
+        return true;
+
+    case Qt::Key_Tab:
+        return tryHistory(key);
+    }
+    return false;
+}
+
+bool InputWidget::handlePageKey(int key, Qt::KeyboardModifiers modifiers)
+{
+    // PageUp/PageDown without modifiers scroll the display widget
+    if (modifiers == Qt::NoModifier) {
+        bool isPageUp = (key == Qt::Key_PageUp);
+        m_outputs.scrollDisplay(isPageUp);
+        return true;
+    }
+
+    // With modifiers, check for hotkeys (isNumpad=false for page keys)
+    const QString command = getConfig().hotkeyManager.getCommandQString(key, modifiers, false);
+    if (!command.isEmpty()) {
+        sendCommandWithSeparator(command);
+        return true;
+    }
+
+    return false;
 }
 
 bool InputWidget::tryHistory(const int key)
@@ -247,6 +510,25 @@ bool InputWidget::tryHistory(const int key)
     return false;
 }
 
+void InputWidget::sendCommandWithSeparator(const QString &command)
+{
+    const auto &settings = getConfig().integratedClient;
+
+    // Handle command separator (e.g., "l;;look" sends "l" then "look")
+    if (settings.useCommandSeparator && !settings.commandSeparator.isEmpty()) {
+        const QString &sep = settings.commandSeparator;
+        const QString escaped = QRegularExpression::escape(sep);
+        const QRegularExpression regex(QString("(?<!\\\\)%1").arg(escaped));
+        const QStringList commands = command.split(regex);
+        for (QString cmd : commands) {
+            cmd.replace("\\" + sep, sep);
+            sendUserInput(cmd);
+        }
+    } else {
+        sendUserInput(command);
+    }
+}
+
 void InputWidget::gotInput()
 {
     const auto &settings = getConfig().integratedClient;
@@ -258,19 +540,8 @@ void InputWidget::gotInput()
         selectAll();
     }
 
-    if (settings.useCommandSeparator) {
-        const QString &sep = settings.commandSeparator;
-        assert(!settings.commandSeparator.isEmpty());
-        const QString escaped = QRegularExpression::escape(sep);
-        const QRegularExpression regex(QString("(?<!\\\\)%1").arg(escaped));
-        const QStringList commands = input.split(regex);
-        for (QString command : commands) {
-            command.replace("\\" + sep, sep);
-            sendUserInput(command);
-        }
-    } else {
-        sendUserInput(input);
-    }
+    // Send input (with command separator handling if enabled)
+    sendCommandWithSeparator(input);
 
     m_inputHistory.addInputLine(input);
     m_tabHistory.addInputLine(input);
@@ -395,6 +666,54 @@ void InputWidget::tabComplete()
 
 bool InputWidget::event(QEvent *const event)
 {
+    if (event->type() == QEvent::ShortcutOverride) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        auto classification = classifyKey(keyEvent->key(), keyEvent->modifiers());
+
+        if (classification.shouldHandle) {
+            // Handle directly if there are real modifiers (some don't generate KeyPress)
+            if (classification.realModifiers != Qt::NoModifier) {
+                bool handled = false;
+
+                switch (classification.type) {
+                case KeyType::FunctionKey:
+                    functionKeyPressed(keyEvent->key(), classification.realModifiers);
+                    handled = true;
+                    break;
+                case KeyType::NumpadKey:
+                    handled = numpadKeyPressed(keyEvent->key(), classification.realModifiers);
+                    break;
+                case KeyType::NavigationKey:
+                    handled = navigationKeyPressed(keyEvent->key(), classification.realModifiers);
+                    break;
+                case KeyType::ArrowKey:
+                    handled = arrowKeyPressed(keyEvent->key(), classification.realModifiers);
+                    break;
+                case KeyType::MiscKey:
+                    handled = miscKeyPressed(keyEvent->key(), classification.realModifiers);
+                    break;
+                case KeyType::PageKey:
+                    handled = handlePageKey(keyEvent->key(), classification.realModifiers);
+                    break;
+                case KeyType::TerminalShortcut:
+                case KeyType::BasicKey:
+                case KeyType::Other:
+                    break;
+                }
+
+                if (handled) {
+                    m_handledInShortcutOverride = true;
+                    event->accept();
+                    return true;
+                }
+            }
+
+            // Accept so KeyPress comes through
+            event->accept();
+            return true;
+        }
+    }
+
     m_paletteManager.tryUpdateFromFocusEvent(*this, deref(event).type());
     return QPlainTextEdit::event(event);
 }
