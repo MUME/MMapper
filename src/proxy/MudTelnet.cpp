@@ -461,7 +461,7 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
             const auto result = optString.value_or("missing text");
             qDebug() << "Failure" << action << "remote message" << id << result;
             // Mume doesn't send anything, so we have to make our own message.
-            global::sendToUser(QString("Failure %1 remote message: %1").arg(action, result));
+            global::sendToUser(QString("Failure %1 remote message: %2\n").arg(action, result));
         }
         return;
     }

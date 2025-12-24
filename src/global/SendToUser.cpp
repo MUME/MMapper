@@ -25,8 +25,14 @@ void registerSendToUser(Signal2Lifetime &lifetime, Signal2<QString>::Function ca
 
 void sendToUser(const QString &str)
 {
+    using namespace mmqt;
     ABORT_IF_NOT_ON_MAIN_THREAD();
     auto &fn = getSendToUser();
-    fn.invoke(str);
+    if (str.endsWith(QC_NEWLINE)) {
+        fn.invoke(str);
+    } else {
+        qWarning() << "sendToUser() missing a newline: " << str;
+        fn.invoke(str + QS_NEWLINE);
+    }
 }
 } // namespace global
