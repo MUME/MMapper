@@ -19,7 +19,7 @@ namespace charset::ascii {
 // ASCII 00 to 1F, and 7F only; Latin1 control codes 80 to 9F don't count.
 NODISCARD static inline bool isCntrl(const char c)
 {
-    const unsigned char uc = static_cast<unsigned char>(c);
+    const auto uc = static_cast<unsigned char>(c);
     return (uc <= 0x1F) || (uc == 0x7F);
 }
 
@@ -38,7 +38,7 @@ NODISCARD static inline bool isLower(const char c)
 // ASCII only; Latin1 punctuations don't count.
 NODISCARD static inline bool isPunct(const char c)
 {
-    const unsigned char uc = static_cast<unsigned char>(c);
+    const auto uc = static_cast<unsigned char>(c);
     // 33–47    !"#$%&'()*+,-./
     // 58–64    :;<=>?@
     // 91–96    [\]^_`
@@ -105,8 +105,13 @@ inline void simple_unicode_translit_in_place(QChar &qc) noexcept
     qc = simple_unicode_translit(qc);
 }
 
+NODISCARD QLatin1Char toQLatin1Char(QChar qc);
+NODISCARD char toLatin1(QChar qc);
 NODISCARD QString toAscii(const QString &str);
 NODISCARD QString toLatin1(const QString &str);
+
+NODISCARD QByteArray toAsciiByteArray(const QString &str);
+NODISCARD QByteArray toLatin1ByteArray(const QString &str);
 
 // REVISIT: should these functions correctly handle surrogates or not?
 // Currently they do, but some other "in place" functions do not.

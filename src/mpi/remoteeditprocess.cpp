@@ -68,7 +68,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     m_fileName = file.fileName();
     qDebug() << "View session file template" << m_fileName;
-    file.write(m_body.toLatin1()); // MPI is always Latin1
+    file.write(mmqt::toQByteArrayLatin1(m_body)); // MPI is always Latin1
     file.flush();
 
     // REVISIT: check return value?

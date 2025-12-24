@@ -957,10 +957,7 @@ struct NODISCARD AnsiTokenizer final
             return it - start;
         }
         NODISCARD size_type skip_ansi() const;
-        NODISCARD static bool isControl(const QChar c)
-        {
-            return ascii::isCntrl(c.toLatin1()) && c != QC_NBSP;
-        }
+        NODISCARD static bool isControl(QChar c);
         NODISCARD size_type skip_control() const;
         NODISCARD size_type skip_space() const;
         NODISCARD size_type skip_word() const;

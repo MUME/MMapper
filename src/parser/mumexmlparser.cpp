@@ -158,7 +158,7 @@ bool MumeXmlParser::element(const QString &line)
             if (qc.unicode() >= 256) {
                 continue;
             }
-            const char c = qc.toLatin1();
+            const char c = mmqt::toLatin1(qc);
 
             switch (state) {
             case XmlAttributeStateEnum::ELEMENT:

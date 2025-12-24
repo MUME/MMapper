@@ -9,6 +9,7 @@
 #include "../global/EnumIndexedArray.h"
 #include "../global/enums.h"
 #include "coordinate.h"
+#include "global/Charset.h"
 
 namespace enums {
 const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()
@@ -143,6 +144,11 @@ ExitDirEnum dirForChar(const char dir)
     default:
         return ExitDirEnum::UNKNOWN;
     }
+}
+
+ExitDirEnum dirForChar(const QChar dir)
+{
+    return dirForChar(mmqt::toLatin1(dir));
 }
 
 char charForDir(const ExitDirEnum dir)

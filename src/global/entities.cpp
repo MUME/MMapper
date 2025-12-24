@@ -4,6 +4,7 @@
 
 #include "entities.h"
 
+#include "Charset.h"
 #include "Consts.h"
 #include "RuleOf5.h"
 
@@ -28,17 +29,17 @@ NODISCARD static bool isLatin1(const QChar qc)
 
 NODISCARD static bool isLatin1Digit(const QChar qc)
 {
-    return isLatin1(qc) && isdigit(qc.toLatin1());
+    return isLatin1(qc) && isdigit(mmqt::toLatin1(qc));
 }
 
 NODISCARD static bool isLatin1HexDigit(const QChar qc)
 {
-    return isLatin1(qc) && isxdigit(qc.toLatin1());
+    return isLatin1(qc) && isxdigit(mmqt::toLatin1(qc));
 }
 
 NODISCARD static bool isLatin1Alpha(const QChar qc)
 {
-    return isLatin1(qc) && isalpha(qc.toLatin1());
+    return isLatin1(qc) && isalpha(mmqt::toLatin1(qc));
 }
 
 entities::EntityCallback::~EntityCallback() = default;
@@ -310,7 +311,7 @@ auto entities::encode(const DecodedString &name, const EncodingEnum encodingType
     for (const QChar qc : name) {
         const auto codepoint = qc.unicode();
         if (codepoint < 256) {
-            const char c = qc.toLatin1();
+            const char c = mmqt::toLatin1(qc);
             switch (c) {
             case C_AMPERSAND:
                 out += "&amp;";
@@ -403,7 +404,7 @@ NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const
         if (!isLatin1(qc)) {
             return OptQChar{};
         }
-        const char c = qc.toLatin1();
+        const char c = mmqt::toLatin1(qc);
         if (!isdigit(c)) {
             return OptQChar{};
         }
@@ -437,7 +438,7 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
         if (!isLatin1(qc)) {
             return OptQChar{};
         }
-        const char c = qc.toLatin1();
+        const char c = mmqt::toLatin1(qc);
         if (!isxdigit(c)) {
             return OptQChar{};
         }

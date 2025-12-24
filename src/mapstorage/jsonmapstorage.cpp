@@ -49,22 +49,24 @@ public:
         : m_hash(QCryptographicHash::Md5)
     {}
 
-    void add(const RoomName &roomName, const RoomDesc &roomDesc)
+    NODISCARD static auto normalizeWhitespace(const RoomDesc &roomDesc)
     {
-        auto name = roomName.toQString();
-        // This is most likely unnecessary because the parser did it for us...
-        // We need plain ASCII so that accentuation changes do not affect the
-        // hashes and because MD5 is defined on bytes, not encoded chars.
-        mmqt::toAsciiInPlace(name);
         // Roomdescs may see whitespacing fixes over the years (ex: removing double
         // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces makes the hash more resilient.
-        auto desc = mmqt::toQStringUtf8(
-            ParserUtils::normalizeWhitespace(roomDesc.toStdStringUtf8()));
-        mmqt::toAsciiInPlace(desc);
+        return mmqt::toQStringUtf8(ParserUtils::normalizeWhitespace(roomDesc.toStdStringUtf8()));
+    }
 
-        m_hash.addData(name.toLatin1() + char_consts::C_NEWLINE + desc.toLatin1()); // ASCII
+    void add(const RoomName &roomName, const RoomDesc &roomDesc)
+    {
+        const auto name = roomName.toQString();
+        const auto desc = normalizeWhitespace(roomDesc);
+        const auto msg = QString("%1%2%3").arg(name, mmqt::QS_NEWLINE, desc);
+        // Conversion to ASCII is most likely unnecessary because the parser did it for us...
+        // We need plain ASCII so that accentuation changes do not affect the
+        // hashes and because MD5 is defined on bytes, not encoded chars.
+        m_hash.addData(mmqt::toAsciiByteArray(msg));
     }
 
     NODISCARD QByteArray result() const { return m_hash.result(); }

@@ -94,7 +94,7 @@ NODISCARD static int parsePositiveInt(const QStringView number)
             return -1;
         }
 
-        const char c = qc.toLatin1();
+        const char c = mmqt::toLatin1(qc);
         if (c < '0' || c > '9') {
             return -1;
         }
@@ -2023,6 +2023,12 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_ansi() const
     });
 }
 
+NODISCARD bool AnsiTokenizer::Iterator::isControl(const QChar qc)
+{
+    const auto latin = mmqt::toLatin1(qc);
+    return latin != C_NBSP && ascii::isCntrl(latin);
+}
+
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_control() const
 {
     return skip([](const QChar c) -> ResultEnum {
@@ -2032,30 +2038,30 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_control() const
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_space() const
 {
-    return skip([](const QChar c) -> ResultEnum {
-        switch (c.toLatin1()) {
+    return skip([](const QChar qc) -> ResultEnum {
+        switch (mmqt::toLatin1(qc)) {
         case C_ESC:
         case C_NBSP:
         case C_CARRIAGE_RETURN:
         case C_NEWLINE:
             return ResultEnum::STOP;
         default:
-            return c.isSpace() ? ResultEnum::KEEPGOING : ResultEnum::STOP;
+            return qc.isSpace() ? ResultEnum::KEEPGOING : ResultEnum::STOP;
         }
     });
 }
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word() const
 {
-    return skip([](const QChar c) -> ResultEnum {
-        switch (c.toLatin1()) {
+    return skip([](const QChar qc) -> ResultEnum {
+        switch (mmqt::toLatin1(qc)) {
         case C_ESC:
         case C_NBSP:
         case C_CARRIAGE_RETURN:
         case C_NEWLINE:
             return ResultEnum::STOP;
         default:
-            return (c.isSpace() || isControl(c)) ? ResultEnum::STOP : ResultEnum::KEEPGOING;
+            return (qc.isSpace() || isControl(qc)) ? ResultEnum::STOP : ResultEnum::KEEPGOING;
         }
     });
 }

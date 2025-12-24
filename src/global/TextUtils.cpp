@@ -103,11 +103,9 @@ QByteArray toQByteArrayUtf8(const std::string_view sv)
     return toQByteArrayRaw(sv);
 }
 
-QByteArray toQByteArrayLatin1(const QString &input_qs)
+QByteArray toQByteArrayLatin1(const QString &qs)
 {
-    auto qs = input_qs;
-    mmqt::toLatin1InPlace(qs);
-    return qs.toLatin1();
+    return mmqt::toLatin1ByteArray(qs);
 }
 
 std::string toStdStringLatin1(const QString &qs)
