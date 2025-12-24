@@ -154,7 +154,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     int year = MUME_START_YEAR;
     int weekDay = -1;
 
-    if (mumeTime.at(0).isDigit()) {
+    if (mumeTime.front().isDigit()) {
         // 3 pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
         static const QRegularExpression rx(
             R"(^(\d+)(?::\d{2})?\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
@@ -163,7 +163,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
             return;
         }
         hour = match.captured(1).toInt();
-        if (match.captured(2).at(0) == 'p') {
+        if (match.captured(2).front() == 'p') {
             // pm
             if (hour != 12) {
                 // add 12 if not noon
@@ -243,7 +243,7 @@ void MumeClock::onUserGmcp(const GmcpMessage &msg)
 
     MumeTimeEnum time = MumeTimeEnum::UNKNOWN;
     if (msg.isEventSun()) {
-        switch (what.at(0).toLatin1()) {
+        switch (what.front().toLatin1()) {
         case 'l': // light
             time = MumeTimeEnum::DAY;
             break;
@@ -342,7 +342,7 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
 
     int hour = match.captured(1).toInt();
     int minute = match.captured(2).toInt();
-    if (match.captured(3).at(0) == 'p') {
+    if (match.captured(3).front() == 'p') {
         // pm
         if (hour != 12) {
             // add 12 if not noon

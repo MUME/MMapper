@@ -185,7 +185,7 @@ bool RoomModel::isEnemy(const int row, const int column) const
         // *Foobar the Elf*
         // etc.
         const QString &str = variant.toString();
-        return !str.isEmpty() && str.at(0) == mmqt::QC_ASTERISK;
+        return !str.isEmpty() && str.front() == mmqt::QC_ASTERISK;
     }
     return false;
 }

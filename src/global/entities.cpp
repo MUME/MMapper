@@ -685,7 +685,7 @@ void test_entities()
         const auto in = EncodedString{"&#xFFFF;"};
         const auto out = decode(in);
         assert(out.length() == 1);
-        assert(out.at(0).unicode() == 0xFFFF);
+        assert(out.front().unicode() == 0xFFFF);
         const auto roundtrip = encode(out);
         if (roundtrip != in) {
             throw std::runtime_error("test failed");
@@ -697,7 +697,7 @@ void test_entities()
         const auto in = EncodedString{"&#x10FFFF;"};
         const auto out = decode(in);
         assert(out.length() == 1);
-        assert(out.at(0).unicode() == C_QUESTION_MARK);
+        assert(out.front().unicode() == C_QUESTION_MARK);
         // REVISIT: Consider using U+FFFD replacement character instead?
     }
 }
