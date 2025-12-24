@@ -33,7 +33,7 @@ public:
             return QValidator::State::Intermediate;
         }
 
-        const auto c = input.at(0);
+        const auto c = input.front();
         const bool valid = c != char_consts::C_BACKSLASH && c.isPrint() && !c.isSpace();
         return valid ? QValidator::State::Acceptable : QValidator::State::Invalid;
     }

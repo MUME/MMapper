@@ -60,7 +60,7 @@ ParserPage::ParserPage(QWidget *const parent)
             &ParserPage::slot_roomDescColorClicked);
 
     connect(charPrefixLineEdit, &QLineEdit::editingFinished, this, [this]() {
-        setConfig().parser.prefixChar = charPrefixLineEdit->text().at(0).toLatin1();
+        setConfig().parser.prefixChar = charPrefixLineEdit->text().front().toLatin1();
     });
 
     connect(encodeEmoji, &QCheckBox::clicked, this, [](bool checked) {
