@@ -146,6 +146,13 @@ private:
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
 
+    struct AltDragState
+    {
+        QPoint lastPos;
+        QCursor originalCursor;
+    };
+    std::optional<AltDragState> m_altDragState;
+
 public:
     explicit MapCanvas(MapData &mapData,
                        PrespammedPath &prespammedPath,
