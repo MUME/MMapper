@@ -243,7 +243,7 @@ void MumeClock::onUserGmcp(const GmcpMessage &msg)
 
     MumeTimeEnum time = MumeTimeEnum::UNKNOWN;
     if (msg.isEventSun()) {
-        switch (what.front().toLatin1()) {
+        switch (mmqt::toLatin1(what.front())) {
         case 'l': // light
             time = MumeTimeEnum::DAY;
             break;

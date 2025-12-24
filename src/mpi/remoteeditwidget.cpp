@@ -254,7 +254,7 @@ public:
 
                 setFormat(pos, 1, get_unicode_fmt());
             } else {
-                const char c = qc.toLatin1();
+                const char c = mmqt::toLatin1(qc);
                 switch (c) {
                 case C_NBSP:
                     setFormat(pos, 1, get_nbsp_fmt());

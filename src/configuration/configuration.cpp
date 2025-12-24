@@ -685,9 +685,8 @@ void Configuration::ParserSettings::read(const QSettings &conf)
                                  QString(ANSI_GREEN));
     roomDescColor = sanitizeAnsi(conf.value(KEY_ROOM_DESC_ANSI_COLOR, ANSI_RESET).toString(),
                                  QString(ANSI_RESET));
-    prefixChar = conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(char_consts::C_UNDERSCORE))
-                     .toChar()
-                     .toLatin1();
+    prefixChar = mmqt::toLatin1(
+        conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(char_consts::C_UNDERSCORE)).toChar());
     encodeEmoji = conf.value(KEY_EMOJI_ENCODE, true).toBool();
     decodeEmoji = conf.value(KEY_EMOJI_DECODE, true).toBool();
 }

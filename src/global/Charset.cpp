@@ -309,14 +309,21 @@ NODISCARD static bool isValidLatin1(const char latin1)
     return latin1 != C_NUL && !is_latin_control(latin1);
 }
 
-NODISCARD static QLatin1Char toQLatin1Char(const QChar input)
+NODISCARD QLatin1Char toQLatin1Char(const QChar qc)
 {
-    const QChar qc = mmqt::simple_unicode_translit(input);
-    if (const char latin1 = qc.toLatin1(); isValidLatin1(latin1)) {
+    // CAUTION: This is the only valid use of QChar::toLatin1() in the entire MMapper codebase;
+    // all other uses should call toLatin1() or toQLatin1Char() instead.
+    if (const char latin1 = mmqt::simple_unicode_translit(qc).toLatin1(); isValidLatin1(latin1)) {
         return QLatin1Char{latin1};
     } else {
         return QLatin1Char{'?'};
     }
+}
+
+NODISCARD char toLatin1(const QChar qc)
+{
+    // CAUTION: This is one of the few valid uses of QLatin1Char::toLatin1().
+    return toQLatin1Char(qc).toLatin1();
 }
 
 ALLOW_DISCARD QString &toLatin1InPlace(QString &str)
@@ -342,7 +349,7 @@ ALLOW_DISCARD QString &toAsciiInPlace(QString &str)
     // NOTE: 128 (0x80) was not converted to 'z' before.
     for (QChar &qc : str) {
         // c++17 if statement with initializer
-        if (const char ch = qc.toLatin1(); !isAscii(ch)) {
+        if (const char ch = mmqt::toLatin1(qc); !isAscii(ch)) {
             qc = QLatin1Char{charset::conversion::latin1ToAscii(ch)};
         }
     }
@@ -361,6 +368,16 @@ NODISCARD QString toLatin1(const QString &str)
     QString copy = str;
     toLatin1InPlace(copy);
     return copy;
+}
+
+NODISCARD QByteArray toAsciiByteArray(const QString &str)
+{
+    return toAscii(str).toLatin1();
+}
+
+NODISCARD QByteArray toLatin1ByteArray(const QString &str)
+{
+    return toLatin1(str).toLatin1();
 }
 
 } // namespace mmqt

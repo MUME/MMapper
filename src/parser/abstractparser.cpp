@@ -333,7 +333,7 @@ NODISCARD static QString compressDirections(const QString &original)
         }
         ans.append(curval);
 
-        const auto dir = Mmapper2Exit::dirForChar(curval.toLatin1());
+        const auto dir = Mmapper2Exit::dirForChar(curval);
         delta += ::exitDir(dir) * curnum;
     };
 

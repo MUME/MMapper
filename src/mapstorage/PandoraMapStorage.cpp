@@ -129,7 +129,7 @@ void PandoraMapStorage::loadExits(ExternalRawRoom &room,
                 if (attr.hasAttribute("dir") && attr.hasAttribute("to")
                     && attr.hasAttribute("door")) {
                     const auto dirStr = xml.attributes().value("dir").toString();
-                    const auto dir = Mmapper2Exit::dirForChar(dirStr.front().toLatin1());
+                    const auto dir = Mmapper2Exit::dirForChar(dirStr.front());
 
                     ExternalRawExit &exit = room.exits[dir];
                     // REVISIT: This is now controlled by the map

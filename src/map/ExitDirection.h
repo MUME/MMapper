@@ -55,6 +55,7 @@ public:
 namespace Mmapper2Exit {
 
 NODISCARD ExitDirEnum dirForChar(char dir);
+NODISCARD ExitDirEnum dirForChar(QChar dir);
 
 NODISCARD char charForDir(ExitDirEnum dir);
 } // namespace Mmapper2Exit
