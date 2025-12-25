@@ -406,11 +406,11 @@ static void visitRooms(const RoomVector &rooms,
 
 struct NODISCARD RoomTex
 {
-    RoomHandle room;
+    Coordinate coord;
     MMTexArrayPosition pos;
 
-    explicit RoomTex(RoomHandle moved_room, const MMTexArrayPosition &input_pos)
-        : room{std::move(moved_room)}
+    explicit RoomTex(const Coordinate input_coord, const MMTexArrayPosition &input_pos)
+        : coord{input_coord}
         , pos{input_pos}
     {
         if (input_pos.array == INVALID_MM_TEXTURE_ID)
@@ -426,12 +426,12 @@ struct NODISCARD RoomTex
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
-    ColoredRoomTex(const RoomHandle &room, const MMTexArrayPosition &tex) = delete;
+    ColoredRoomTex(Coordinate input_coord, const MMTexArrayPosition &tex) = delete;
 
-    explicit ColoredRoomTex(RoomHandle moved_room,
+    explicit ColoredRoomTex(const Coordinate input_coord,
                             const MMTexArrayPosition input_pos,
                             const Color &input_color)
-        : RoomTex{std::move(moved_room), input_pos}
+        : RoomTex{input_coord, input_pos}
         , color{input_color}
     {}
 };
@@ -563,7 +563,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
         // A-B
         for (size_t i = beg; i < end; ++i) {
             const RoomTex &thisVert = textures[i];
-            const auto &pos = thisVert.room.getPosition();
+            const auto &pos = thisVert.coord;
             const auto v0 = pos.to_vec3();
             const auto z = thisVert.pos.position;
 
@@ -627,7 +627,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
         // A-B
         for (size_t i = beg; i < end; ++i) {
             const ColoredRoomTex &thisVert = textures[i];
-            const auto &pos = thisVert.room.getPosition();
+            const auto &pos = thisVert.coord;
             const auto v0 = pos.to_vec3();
             const auto color = thisVert.color;
             const auto z = thisVert.pos.position;
@@ -737,9 +737,10 @@ private:
             return;
         }
 
-        m_data.roomTerrains.emplace_back(room, terrain);
+        const auto pos = room.getPosition();
+        m_data.roomTerrains.emplace_back(pos, terrain);
 
-        const auto v0 = room.getPosition().to_vec3();
+        const auto v0 = pos.to_vec3();
 #define EMIT(x, y) m_data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
@@ -751,14 +752,14 @@ private:
     void virt_visitTrailTexture(const RoomHandle &room, const MMTexArrayPosition &trail) final
     {
         if (trail.array != INVALID_MM_TEXTURE_ID) {
-            m_data.roomTrails.emplace_back(room, trail);
+            m_data.roomTrails.emplace_back(room.getPosition(), trail);
         }
     }
 
     void virt_visitOverlayTexture(const RoomHandle &room, const MMTexArrayPosition &overlay) final
     {
         if (overlay.array != INVALID_MM_TEXTURE_ID) {
-            m_data.roomOverlays.emplace_back(room, overlay);
+            m_data.roomOverlays.emplace_back(room.getPosition(), overlay);
         }
     }
 
@@ -795,16 +796,16 @@ private:
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
             const MMTexArrayPosition &tex = m_textures.door[dir];
-            m_data.doors.emplace_back(room, tex, glcolor);
+            m_data.doors.emplace_back(room.getPosition(), tex, glcolor);
 
         } else {
             if (isNESW(dir)) {
                 if (wallType == WallTypeEnum::SOLID) {
                     const MMTexArrayPosition &tex = m_textures.wall[dir];
-                    m_data.solidWallLines.emplace_back(room, tex, glcolor);
+                    m_data.solidWallLines.emplace_back(room.getPosition(), tex, glcolor);
                 } else {
                     const MMTexArrayPosition &tex = m_textures.dotted_wall[dir];
-                    m_data.dottedWallLines.emplace_back(room, tex, glcolor);
+                    m_data.dottedWallLines.emplace_back(room.getPosition(), tex, glcolor);
                 }
             } else {
                 const bool isUp = dir == ExitDirEnum::UP;
@@ -815,7 +816,7 @@ private:
                                                         : (isUp ? m_textures.exit_up
                                                                 : m_textures.exit_down);
 
-                m_data.roomUpDownExits.emplace_back(room, tex, glcolor);
+                m_data.roomUpDownExits.emplace_back(room.getPosition(), tex, glcolor);
             }
         }
     }
@@ -827,10 +828,10 @@ private:
         const Color color = LOOKUP_COLOR(STREAM).getColor();
         switch (type) {
         case StreamTypeEnum::OutFlow:
-            m_data.streamOuts.emplace_back(room, m_textures.stream_out[dir], color);
+            m_data.streamOuts.emplace_back(room.getPosition(), m_textures.stream_out[dir], color);
             return;
         case StreamTypeEnum::InFlow:
-            m_data.streamIns.emplace_back(room, m_textures.stream_in[dir], color);
+            m_data.streamIns.emplace_back(room.getPosition(), m_textures.stream_in[dir], color);
             return;
         default:
             break;
