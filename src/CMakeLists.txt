@@ -675,8 +675,14 @@ set(mmapper_EXECUTABLE_ARGS
 )
 if(EMSCRIPTEN)
     qt_add_executable(mmapper ${mmapper_EXECUTABLE_ARGS})
+    target_compile_options(mmapper PRIVATE -pthread)
+    target_link_options(mmapper PRIVATE -pthread)
     target_link_options(mmapper PRIVATE -s FULL_ES3=1)
     target_link_options(mmapper PUBLIC -sASYNCIFY -Os)
+    target_link_options(mmapper
+        PUBLIC
+            -sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency
+    )
     target_link_libraries(mmapper PUBLIC z)
 else()
     add_executable(mmapper WIN32 MACOSX_BUNDLE ${mmapper_EXECUTABLE_ARGS})

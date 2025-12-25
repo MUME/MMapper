@@ -23,11 +23,7 @@ void parallel_for_each_tl_range(Container &&container,
                                 Callback &&callback,
                                 MergeThreadLocals &&merge_threadlocals)
 {
-#ifdef Q_OS_WASM
-    const auto numThreads = 1;
-#else
     const auto numThreads = std::max<size_t>(1, std::thread::hardware_concurrency());
-#endif
     if (numThreads == 1) {
         std::array<ThreadLocals, 1> thread_locals;
         auto &tl = thread_locals.front();
