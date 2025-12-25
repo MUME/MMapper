@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide describes how to build **MMapper** from source on Linux, macOS, and Windows using CMake and Ninja. For tested build configurations, see the [GitHub Actions workflows](.github/workflows).
+This guide describes how to build **MMapper** from source on Linux, macOS, and Windows using CMake and Ninja. For tested build configurations, see the [GitHub Actions workflows](.github/workflows). Additional information can be found in [AGENTS.md](AGENTS.md).
 
 ## Prerequisites
 
@@ -128,20 +128,6 @@ ctest
 
 ```bash
 cpack
-```
-
----
-
-## Optional: Code Style Check
-
-Run `clang-format-18` via Docker:
-
-```bash
-docker run --rm --platform linux/amd64 \
-  -v "$(pwd):$(pwd)" -w "$(pwd)" \
-  ghcr.io/jidicula/clang-format:18 \
-  --dry-run --Werror --style=file \
-  $(find src tests -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' -o -iname '*.hpp')
 ```
 
 ---
