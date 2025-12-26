@@ -211,6 +211,15 @@ public:
         XFOREACH_MAPCANVAS_TEXTURES(X_EACH)
 #undef X_EACH
     }
+    template<typename Callback>
+    void for_each_array(Callback &&callback)
+    {
+        static_assert(std::is_invocable_v<Callback, std::string_view, SharedMMTexture &>
+                      or std::is_invocable_v<Callback, std::string_view, const SharedMMTexture &>);
+#define X_EACH(_Type, _Name) callback(std::string_view{#_Name "_Array"}, _Name##_Array);
+        XFOREACH_MAPCANVAS_TEXTURES(X_EACH)
+#undef X_EACH
+    }
 
     void destroyAll();
 };

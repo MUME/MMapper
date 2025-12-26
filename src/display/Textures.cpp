@@ -91,14 +91,7 @@ void MapCanvasTextures::destroyAll()
     if constexpr (verbose_logging) {
         os << "destroying...\n";
     }
-
-#define XTEX(_TYPE, _NAME) \
-    do { \
-        reset_one_array(#_NAME "_Array", _NAME##_Array); \
-    } while (false);
-    XFOREACH_MAPCANVAS_TEXTURES(XTEX)
-#undef XTEX
-
+    for_each_array(reset_one_array);
     if constexpr (verbose_logging) {
         os << "Done\n";
     }
@@ -601,16 +594,10 @@ void MapCanvas::updateTextures()
     const bool wantTrilinear = getConfig().canvas.trilinearFiltering.get();
     m_textures.for_each(
         [wantTrilinear](SharedMMTexture &tex) -> void { ::setTrilinear(tex, wantTrilinear); });
-
-#define XTEX(_TYPE, _NAME) \
-    do { \
-        const SharedMMTexture &arr = m_textures._NAME##_Array; \
-        if (arr) { \
-            ::setTrilinear(arr, wantTrilinear); \
-        } \
-    } while (false);
-    XFOREACH_MAPCANVAS_TEXTURES(XTEX)
-#undef XTEX
+    m_textures.for_each_array(
+        [wantTrilinear](std::string_view /*array_name*/, const SharedMMTexture &arr) {
+            ::setTrilinear(arr, wantTrilinear);
+        });
 
     // called to trigger an early error
     std::ignore = mctp::getProxy(m_textures);
