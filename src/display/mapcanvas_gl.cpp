@@ -248,12 +248,7 @@ void MapCanvas::initializeGL()
         auto &sharedFuncs = gl.getSharedFunctions(Badge<MapCanvas>{});
         Legacy::Functions &funcs = deref(sharedFuncs);
         Legacy::ShaderPrograms &programs = funcs.getShaderPrograms();
-        std::ignore = programs.getPlainAColorShader();
-        std::ignore = programs.getPlainUColorShader();
-        std::ignore = programs.getTexturedAColorShader();
-        std::ignore = programs.getTexturedUColorShader();
-        std::ignore = programs.getFontShader();
-        std::ignore = programs.getPointShader();
+        programs.early_init();
     }
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
@@ -628,6 +623,8 @@ void MapCanvas::finishPendingMapBatches()
                            .arg(msg);
         qWarning().noquote() << s;
         global::sendToUser(s);
+
+        // FIXME: This causes a cycle when the remeshing throws.
         m_data.restoreSnapshot();
     }
 #undef LOG
@@ -639,6 +636,7 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
+    gl.bindNamedColorsBuffer();
 
     gl.bindFbo();
     gl.clear(Color{getConfig().canvas.backgroundColor});
@@ -711,45 +709,23 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
     const bool showNeedsServerId = canvas.showMissingMapId.get();
     const bool showChanged = canvas.showUnsavedChanges.get();
 
-    // Note: Eventually just want to use NamedColorEnum and then reading from the
-    // NamedColors Uniform Buffer instead of making copies of the current values.
-    const struct NODISCARD HighlightColors final
-    {
-        Color HIGHLIGHT_TEMPORARY = XNamedColor{NamedColorEnum::HIGHLIGHT_TEMPORARY}.getColor();
-        Color HIGHLIGHT_NEEDS_SERVER_ID = XNamedColor{NamedColorEnum::HIGHLIGHT_NEEDS_SERVER_ID}
-                                              .getColor();
-        Color HIGHLIGHT_UNSAVED = XNamedColor{NamedColorEnum::HIGHLIGHT_UNSAVED}.getColor();
-    } colors;
-
     diff.futureHighlight = std::async(
         std::launch::async,
-        [saved, current, showNeedsServerId, showChanged, colors]() -> Diff::HighlightDiff {
+        [saved, current, showNeedsServerId, showChanged]() -> Diff::HighlightDiff {
             DECL_TIMER(t2,
                        "[async] actuallyPaintGL: highlight changes, temporary, and needs update");
 
-            // 3-2
-            // |/|
-            // 0-1
-            static constexpr std::array<glm::vec3, 4> corners{
-                glm::vec3{0, 0, 0},
-                glm::vec3{1, 0, 0},
-                glm::vec3{1, 1, 0},
-                glm::vec3{0, 1, 0},
-            };
-
-            auto getHighlights = [&saved, &current, showChanged, showNeedsServerId, &colors]()
-                -> Diff::MaybeDataOrMesh {
+            auto getHighlights =
+                [&saved, &current, showChanged, showNeedsServerId]() -> Diff::MaybeDataOrMesh {
                 if (!showChanged && !showNeedsServerId) {
                     return Diff::MaybeDataOrMesh{};
                 }
 
                 DECL_TIMER(t3, "[async] actuallyPaintGL: compute highlights");
-                ColoredTexVertVector highlights;
-                auto drawQuad = [&highlights](const RawRoom &room, const Color color) {
-                    const auto &pos = room.getPosition().to_vec3();
-                    for (auto &corner : corners) {
-                        highlights.emplace_back(color, corner, pos + corner);
-                    }
+                DiffQuadVector highlights;
+                auto drawQuad = [&highlights](const RawRoom &room, const NamedColorEnum color) {
+                    const auto pos = room.getPosition().to_ivec3();
+                    highlights.emplace_back(pos, 0, color);
                 };
 
                 // Handle rooms needing a server ID or that are temporary
@@ -757,9 +733,9 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                     current.getRooms().for_each([&](auto id) {
                         if (auto h = current.getRoomHandle(id)) {
                             if (h.isTemporary()) {
-                                drawQuad(h.getRaw(), colors.HIGHLIGHT_TEMPORARY);
+                                drawQuad(h.getRaw(), NamedColorEnum::HIGHLIGHT_TEMPORARY);
                             } else if (h.getServerId() == INVALID_SERVER_ROOMID) {
-                                drawQuad(h.getRaw(), colors.HIGHLIGHT_NEEDS_SERVER_ID);
+                                drawQuad(h.getRaw(), NamedColorEnum::HIGHLIGHT_NEEDS_SERVER_ID);
                             }
                         }
                     });
@@ -769,7 +745,7 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                 if (showChanged) {
                     ProgressCounter dummyPc;
                     Map::foreachChangedRoom(dummyPc, saved, current, [&](const RawRoom &room) {
-                        drawQuad(room, colors.HIGHLIGHT_UNSAVED);
+                        drawQuad(room, NamedColorEnum::HIGHLIGHT_UNSAVED);
                     });
                 }
 
@@ -1053,6 +1029,7 @@ void MapCanvas::renderMapBatches()
     auto &gl = getOpenGL();
 
     BatchedMeshes &batchedMeshes = batches.batchedMeshes;
+
     const auto drawLayer =
         [&batches, &batchedMeshes, wantExtraDetail, wantDoorNames](const int thisLayer,
                                                                    const int currentLayer) {
@@ -1063,13 +1040,11 @@ void MapCanvas::renderMapBatches()
             }
 
             if (wantExtraDetail) {
-                {
-                    BatchedConnectionMeshes &connectionMeshes = batches.connectionMeshes;
-                    const auto it_conn = connectionMeshes.find(thisLayer);
-                    if (it_conn != connectionMeshes.end()) {
-                        ConnectionMeshes &meshes = it_conn->second;
-                        meshes.render(thisLayer, currentLayer);
-                    }
+                BatchedConnectionMeshes &connectionMeshes = batches.connectionMeshes;
+                const auto it_conn = connectionMeshes.find(thisLayer);
+                if (it_conn != connectionMeshes.end()) {
+                    ConnectionMeshes &meshes = it_conn->second;
+                    meshes.render(thisLayer, currentLayer);
                 }
 
                 // NOTE: This can display room names in lower layers, but the text

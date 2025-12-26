@@ -5,6 +5,7 @@
 
 #include "../../global/ConfigConsts.h"
 #include "../../global/Consts.h"
+#include "../../global/NamedColors.h"
 #include "../../global/PrintUtils.h"
 #include "../../global/TextUtils.h"
 
@@ -211,7 +212,12 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     // NOTE: GLES 2.0 required `const char**` instead of `const char*const*`,
     // so Qt uses the least common denominator without the middle const;
     // that's the reason the `ptrs` array below is not `const`.
-    std::array<const char *, 3> ptrs = {gl.getShaderVersion(), "#line 1\n", source.source.c_str()};
+    std::string defineNamedColors = "#define MAX_NAMED_COLORS " + std::to_string(MAX_NAMED_COLORS)
+                                    + "\n";
+    std::array<const char *, 4> ptrs = {gl.getShaderVersion(),
+                                        defineNamedColors.c_str(),
+                                        "#line 1\n",
+                                        source.source.c_str()};
     gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
     gl.glCompileShader(shaderId);
     checkShaderInfo(gl, shaderId);
@@ -248,6 +254,7 @@ Program loadShaders(Functions &gl, const Source &vert, const Source &frag)
 
     gl.glLinkProgram(prog);
     checkProgramInfo(gl, prog);
+    gl.applyDefaultUniformBlockBindings(prog);
 
     for (const GLuint s : shaders) {
         if (is_valid(s)) {

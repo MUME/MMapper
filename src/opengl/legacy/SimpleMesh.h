@@ -17,6 +17,8 @@
 
 namespace Legacy {
 
+void drawRoomQuad(Functions &gl, GLsizei numVerts);
+
 template<typename VertexType_, typename ProgramType_>
 class NODISCARD SimpleMesh : public IRenderable
 {
@@ -108,7 +110,13 @@ private:
                    const BufferUsageEnum usage)
     {
         const auto numVerts = verts.size();
-        assert(mode == DrawModeEnum::INVALID || numVerts % static_cast<size_t>(mode) == 0);
+
+        static_assert(static_cast<size_t>(DrawModeEnum::POINTS) == 1);
+        static_assert(static_cast<size_t>(DrawModeEnum::LINES) == 2);
+        static_assert(static_cast<size_t>(DrawModeEnum::TRIANGLES) == 3);
+        static_assert(static_cast<size_t>(DrawModeEnum::QUADS) == 4);
+        assert(mode == DrawModeEnum::INVALID || mode == DrawModeEnum::INSTANCED_QUADS
+               || numVerts % static_cast<size_t>(mode) == 0);
 
         if (!m_vbo && numVerts != 0) {
             m_vbo.emplace(m_shared_functions);
@@ -179,11 +187,14 @@ private:
 
         auto attribUnbinder = bindAttribs();
 
-        if (const std::optional<GLenum> &optMode = m_functions.toGLenum(m_drawMode)) {
+        if (m_drawMode == DrawModeEnum::INSTANCED_QUADS) {
+            drawRoomQuad(m_functions, m_numVerts);
+        } else if (const std::optional<GLenum> &optMode = m_functions.toGLenum(m_drawMode)) {
             m_functions.glDrawArrays(optMode.value(), 0, m_numVerts);
         } else {
             assert(false);
         }
     }
 };
+
 } // namespace Legacy

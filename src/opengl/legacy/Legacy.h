@@ -26,8 +26,24 @@ class OpenGL;
 namespace Legacy {
 
 class StaticVbos;
+class SharedVbos;
 struct ShaderPrograms;
 struct PointSizeBinder;
+
+// X(EnumName, GL_String_Name, IsUniform)
+#define XFOREACH_SHARED_VBO(X) \
+    X(NamedColorsBlock, "NamedColorsBlock", true) \
+    X(InstancedQuadIbo, nullptr, false)
+
+enum class SharedVboEnum : uint8_t {
+#define X_ENUM(element, name, isUniform) element,
+    XFOREACH_SHARED_VBO(X_ENUM)
+#undef X_ENUM
+};
+
+#define X_COUNT(element, name, isUniform) +1
+static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT);
+#undef X_COUNT
 
 NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
@@ -100,6 +116,7 @@ private:
     float m_devicePixelRatio = 1.f;
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
+    std::unique_ptr<SharedVbos> m_sharedVbos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
     std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
@@ -140,6 +157,21 @@ public:
     using Base::glActiveTexture;
     using Base::glAttachShader;
     using Base::glBindBuffer;
+    using Base::glBindBufferBase;
+
+    /**
+     * @brief Binds a buffer to a uniform block binding point.
+     * @param target Must be GL_UNIFORM_BUFFER.
+     * @param block The uniform block to bind to.
+     * @param buffer The buffer ID.
+     *
+     * Note: This uses the enum value as the fixed binding point.
+     */
+    void glBindBufferBase(const GLenum target, const SharedVboEnum block, const GLuint buffer)
+    {
+        assert(target == GL_UNIFORM_BUFFER);
+        Base::glBindBufferBase(target, static_cast<GLuint>(block), buffer);
+    }
     using Base::glBindTexture;
     using Base::glBindVertexArray;
     using Base::glBlendFunc;
@@ -160,6 +192,7 @@ public:
     using Base::glDisable;
     using Base::glDisableVertexAttribArray;
     using Base::glDrawArrays;
+    using Base::glDrawElementsInstanced;
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
     using Base::glGenBuffers;
@@ -174,6 +207,7 @@ public:
     using Base::glGetString;
     using Base::glGetTexLevelParameteriv;
     using Base::glGetTexParameteriv;
+    using Base::glGetUniformBlockIndex;
     using Base::glGetUniformLocation;
     using Base::glHint;
     using Base::glIsBuffer;
@@ -188,8 +222,28 @@ public:
     using Base::glUniform1iv;
     using Base::glUniform4fv;
     using Base::glUniform4iv;
+    using Base::glUniformBlockBinding;
+
+    /**
+     * @brief Assigns a fixed binding point to a uniform block in a program.
+     * @param program The shader program.
+     * @param block The uniform block.
+     *
+     * Note: This uses the enum value as the fixed binding point.
+     */
+    void glUniformBlockBinding(const GLuint program, const SharedVboEnum block)
+    {
+        virt_glUniformBlockBinding(program, block);
+    }
+
+    /**
+     * @brief Automatically assigns fixed binding points to all known uniform blocks.
+     * @param program The shader program after linking.
+     */
+    void applyDefaultUniformBlockBindings(GLuint program);
     using Base::glUniformMatrix4fv;
     using Base::glUseProgram;
+    using Base::glVertexAttribDivisor;
     using Base::glVertexAttribPointer;
 
 public:
@@ -244,6 +298,8 @@ public:
 
     NODISCARD StaticVbos &getStaticVbos();
 
+    NODISCARD SharedVbos &getSharedVbos();
+
     NODISCARD TexLookup &getTexLookup();
 
     NODISCARD FBO &getFBO();
@@ -262,20 +318,25 @@ protected:
     NODISCARD virtual std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) = 0;
     virtual void virt_enableProgramPointSize(bool enable) = 0;
     NODISCARD virtual const char *virt_getShaderVersion() const = 0;
+    virtual void virt_glUniformBlockBinding(GLuint program, SharedVboEnum block);
+
+protected:
+    NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
 
 private:
-    template<typename VertexType_>
-    NODISCARD GLsizei setVbo_internal(const GLuint vbo,
-                                      const std::vector<VertexType_> &batch,
+    template<typename T>
+    NODISCARD GLsizei setVbo_internal(const GLenum target,
+                                      const GLuint buffer,
+                                      const std::vector<T> &batch,
                                       const BufferUsageEnum usage)
     {
-        const auto numVerts = static_cast<GLsizei>(batch.size());
-        const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
-        const auto numBytes = numVerts * vertSize;
-        Base::glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        Base::glBufferData(GL_ARRAY_BUFFER, numBytes, batch.data(), Legacy::toGLenum(usage));
-        Base::glBindBuffer(GL_ARRAY_BUFFER, 0);
-        return numVerts;
+        const auto numElements = static_cast<GLsizei>(batch.size());
+        const auto elementSize = static_cast<GLsizei>(sizeof(T));
+        const auto numBytes = numElements * elementSize;
+        Base::glBindBuffer(target, buffer);
+        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
+        Base::glBindBuffer(target, 0);
+        return numElements;
     }
 
 public:
@@ -297,6 +358,16 @@ public:
         Base::glVertexAttribPointer(index, size, type, normalized, stride, pointer);
     }
 
+    void enableAttribI(const GLuint index,
+                       const GLint size,
+                       const GLenum type,
+                       const GLsizei stride,
+                       const GLvoid *const pointer)
+    {
+        Base::glEnableVertexAttribArray(index);
+        Base::glVertexAttribIPointer(index, size, type, stride, pointer);
+    }
+
     template<typename T>
     NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
         const DrawModeEnum mode,
@@ -306,9 +377,25 @@ public:
     {
         if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
             return std::pair(DrawModeEnum::TRIANGLES,
-                             setVbo_internal(vbo, convertQuadsToTris(batch), usage));
+                             setVbo_internal(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
         }
-        return std::pair(mode, setVbo_internal(vbo, batch, usage));
+        return std::pair(mode, setVbo_internal(GL_ARRAY_BUFFER, vbo, batch, usage));
+    }
+
+    template<typename T>
+    NODISCARD GLsizei setIbo(const GLuint ibo,
+                             const std::vector<T> &batch,
+                             const BufferUsageEnum usage = BufferUsageEnum::STATIC_DRAW)
+    {
+        return setVbo_internal(GL_ELEMENT_ARRAY_BUFFER, ibo, batch, usage);
+    }
+
+    template<typename T>
+    NODISCARD GLsizei setUbo(const GLuint ubo,
+                             const std::vector<T> &batch,
+                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
     }
 
     void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
@@ -330,6 +417,10 @@ public:
     NODISCARD UniqueMesh createColoredTexturedBatch(DrawModeEnum mode,
                                                     const std::vector<ColoredTexVert> &batch,
                                                     MMTextureId texture);
+
+public:
+    NODISCARD UniqueMesh createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &batch,
+                                                MMTextureId texture);
 
 public:
     NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,

@@ -11,6 +11,7 @@
 #include "./legacy/FunctionsGL33.h"
 #include "./legacy/Legacy.h"
 #include "./legacy/Meshes.h"
+#include "./legacy/VBO.h"
 #include "OpenGLConfig.h"
 #include "OpenGLProber.h"
 #include "OpenGLTypes.h"
@@ -133,6 +134,12 @@ UniqueMesh OpenGL::createColoredTexturedQuadBatch(const std::vector<ColoredTexVe
     return getFunctions().createColoredTexturedBatch(DrawModeEnum::QUADS, batch, texture);
 }
 
+UniqueMesh OpenGL::createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &batch,
+                                          const MMTextureId texture)
+{
+    return getFunctions().createRoomQuadTexBatch(batch, texture);
+}
+
 UniqueMesh OpenGL::createFontMesh(const SharedMMTexture &texture,
                                   const DrawModeEnum mode,
                                   const std::vector<FontVert3d> &batch)
@@ -222,6 +229,31 @@ void OpenGL::renderPlainFullScreenQuad(const GLRenderState &renderState)
 void OpenGL::cleanup()
 {
     getFunctions().cleanup();
+}
+
+GLRenderState OpenGL::getDefaultRenderState()
+{
+    return GLRenderState{};
+}
+
+void OpenGL::bindNamedColorsBuffer()
+{
+    auto &gl = getFunctions();
+    const auto buffer = Legacy::SharedVboEnum::NamedColorsBlock;
+    const auto shared = gl.getSharedVbos().get(buffer);
+    Legacy::VBO &vbo = deref(shared);
+    if (!vbo) {
+        vbo.emplace(gl.shared_from_this());
+        // the shader is declared vec4, so the data has to be 4 floats per entry.
+        const auto &vec4_colors = XNamedColor::getAllColorsAsVec4();
+        std::ignore = gl.setUbo(vbo.get(), vec4_colors, BufferUsageEnum::DYNAMIC_DRAW);
+    }
+    gl.glBindBufferBase(GL_UNIFORM_BUFFER, buffer, vbo.get());
+}
+
+void OpenGL::resetNamedColorsBuffer()
+{
+    getFunctions().getSharedVbos().reset(Legacy::SharedVboEnum::NamedColorsBlock);
 }
 
 void OpenGL::initializeRenderer(const float devicePixelRatio)

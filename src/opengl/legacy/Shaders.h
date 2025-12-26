@@ -56,6 +56,24 @@ private:
     }
 };
 
+struct NODISCARD RoomQuadTexShader final : public AbstractShaderProgram
+{
+public:
+    using AbstractShaderProgram::AbstractShaderProgram;
+
+    ~RoomQuadTexShader() final;
+
+private:
+    void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
+    {
+        assert(uniforms.textures[0] != INVALID_MM_TEXTURE_ID);
+
+        setColor("uColor", uniforms.color);
+        setMatrix("uMVP", mvp);
+        setTexture("uTexture", 0);
+    }
+};
+
 struct NODISCARD UColorTexturedShader final : public AbstractShaderProgram
 {
 public:
@@ -116,10 +134,17 @@ struct NODISCARD ShaderPrograms final
 {
 private:
     Functions &m_functions;
+
+private:
     std::shared_ptr<AColorPlainShader> m_aColorShader;
     std::shared_ptr<UColorPlainShader> m_uColorShader;
     std::shared_ptr<AColorTexturedShader> m_aTexturedShader;
     std::shared_ptr<UColorTexturedShader> m_uTexturedShader;
+
+private:
+    std::shared_ptr<RoomQuadTexShader> m_roomQuadTexShader;
+
+private:
     std::shared_ptr<FontShader> m_font;
     std::shared_ptr<PointShader> m_point;
 
@@ -134,15 +159,7 @@ private:
     NODISCARD Functions &getFunctions() { return m_functions; }
 
 public:
-    void resetAll()
-    {
-        m_aColorShader.reset();
-        m_uColorShader.reset();
-        m_aTexturedShader.reset();
-        m_uTexturedShader.reset();
-        m_font.reset();
-        m_point.reset();
-    }
+    void resetAll();
 
 public:
     // attribute color (aka "Colored")
@@ -153,8 +170,16 @@ public:
     NODISCARD const std::shared_ptr<AColorTexturedShader> &getTexturedAColorShader();
     // uniform color + textured (aka "Textured")
     NODISCARD const std::shared_ptr<UColorTexturedShader> &getTexturedUColorShader();
+
+public:
+    NODISCARD const std::shared_ptr<RoomQuadTexShader> &getRoomQuadTexShader();
+
+public:
     NODISCARD const std::shared_ptr<FontShader> &getFontShader();
     NODISCARD const std::shared_ptr<PointShader> &getPointShader();
+
+public:
+    void early_init();
 };
 
 } // namespace Legacy

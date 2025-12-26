@@ -27,6 +27,7 @@
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
 #include "../opengl/OpenGLTypes.h"
+#include "../opengl/legacy/VBO.h"
 #include "ConnectionLineBuilder.h"
 #include "MapCanvasData.h"
 #include "RoadIndex.h"
@@ -75,17 +76,21 @@ NODISCARD static VisitRoomOptions getVisitRoomOptions()
     return result;
 }
 
+NODISCARD static NamedColorEnum getTintColor(const RoomTintEnum tint)
+{
+    static_assert(NUM_ROOM_TINTS == 2);
+    switch (tint) {
+    case RoomTintEnum::DARK:
+        return NamedColorEnum::ROOM_DARK;
+    case RoomTintEnum::NO_SUNDEATH:
+        return NamedColorEnum::ROOM_NO_SUNDEATH;
+    }
+    std::abort();
+}
+
 NODISCARD static bool isTransparent(const NamedColorEnum namedColor)
 {
     return namedColor == NamedColorEnum::TRANSPARENT;
-}
-
-NODISCARD static std::optional<Color> getColor(const NamedColorEnum namedColor)
-{
-    if (isTransparent(namedColor)) {
-        return std::nullopt;
-    }
-    return XNamedColor{namedColor}.getColor();
 }
 
 enum class NODISCARD WallOrientationEnum { HORIZONTAL, VERTICAL };
@@ -404,7 +409,18 @@ static void visitRooms(const RoomVector &rooms,
     }
 }
 
-struct NODISCARD RoomTex
+struct NODISCARD RoomTint final
+{
+    Coordinate coord;
+    NamedColorEnum color = NamedColorEnum::DEFAULT;
+
+    explicit RoomTint(const Coordinate input_coord, const NamedColorEnum input_color)
+        : coord{input_coord}
+        , color{input_color}
+    {}
+};
+
+struct NODISCARD RoomTex final
 {
     Coordinate coord;
     MMTexArrayPosition pos;
@@ -424,17 +440,23 @@ struct NODISCARD RoomTex
     }
 };
 
-struct NODISCARD ColoredRoomTex : public RoomTex
+struct NODISCARD ColoredRoomTex final
 {
+    Coordinate coord;
+    MMTexArrayPosition pos;
     NamedColorEnum colorId = NamedColorEnum::DEFAULT;
 
     explicit ColoredRoomTex(const Coordinate input_coord,
                             const MMTexArrayPosition input_pos,
                             const NamedColorEnum input_color)
-        : RoomTex{input_coord, input_pos}
+        : coord{input_coord}
+        , pos{input_pos}
         , colorId{input_color}
     {}
 };
+
+struct NODISCARD RoomTintVector final : public std::vector<RoomTint>
+{};
 
 // Caution: Although O(n) partitioning into an array indexed by constant number of texture IDs
 // is theoretically faster than O(n log n) sorting, one naive attempt to prematurely optimize
@@ -502,11 +524,14 @@ struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
 template<typename T, typename Callback>
 static void foreach_texture(const T &textures, Callback &&callback)
 {
+    using U = utils::remove_cvref_t<decltype(textures.front())>;
+    static_assert(std::is_same_v<U, RoomTex> or std::is_same_v<U, ColoredRoomTex>);
+
     assert(textures.isSorted());
 
     const auto size = textures.size();
     for (size_t beg = 0, next = size; beg < size; beg = next) {
-        const RoomTex &rtex = textures[beg];
+        const auto &rtex = textures[beg];
         const auto textureId = rtex.pos.array;
 
         size_t end = beg + 1;
@@ -520,6 +545,41 @@ static void foreach_texture(const T &textures, Callback &&callback)
         /* note: casting to avoid passing references to beg and end */
         callback(static_cast<size_t>(beg), static_cast<size_t>(end));
     }
+}
+
+NODISCARD static LayerMeshesIntermediate::Fn createMeshFn(MAYBE_UNUSED const std::string_view what,
+                                                          const RoomTintVector &room_tints,
+                                                          const MMTexArrayPosition texture)
+{
+    if (room_tints.empty()) {
+        return {};
+    }
+
+    const size_t count = room_tints.size();
+    std::vector<RoomQuadTexVert> verts;
+    verts.reserve(count);
+
+    for (auto &thisVert : room_tints) {
+        const auto &pos = thisVert.coord;
+        const auto v0 = pos.to_ivec3();
+        verts.emplace_back(v0, texture.position, thisVert.color);
+    }
+
+    return [v = std::move(verts), texture](OpenGL &g) {
+        return g.createRoomQuadTexBatch(v, texture.array);
+    };
+}
+
+NODISCARD static RoomTintArray<LayerMeshesIntermediate::Fn> createMeshFns(
+    MAYBE_UNUSED const std::string_view what,
+    const RoomTintArray<RoomTintVector> &room_tints,
+    const MMTexArrayPosition texture)
+{
+    RoomTintArray<LayerMeshesIntermediate::Fn> result;
+    for (auto tint : ALL_ROOM_TINTS) {
+        result[tint] = createMeshFn(what, room_tints[tint], texture);
+    }
+    return result;
 }
 
 NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
@@ -555,28 +615,19 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
         const RoomTex &rtex = textures[beg];
         const size_t count = end - beg;
 
-        std::vector<TexVert> verts;
-        verts.reserve(count * VERTS_PER_QUAD); /* quads */
+        std::vector<RoomQuadTexVert> verts;
+        verts.reserve(count);
 
-        // D-C
-        // | |  ccw winding
-        // A-B
         for (size_t i = beg; i < end; ++i) {
             const RoomTex &thisVert = textures[i];
             const auto &pos = thisVert.coord;
-            const auto v0 = pos.to_vec3();
+            const auto v0 = pos.to_ivec3();
             const auto z = thisVert.pos.position;
-
-#define EMIT(x, y) verts.emplace_back(glm::vec3((x), (y), z), v0 + glm::vec3((x), (y), 0))
-            EMIT(0, 0);
-            EMIT(1, 0);
-            EMIT(1, 1);
-            EMIT(0, 1);
-#undef EMIT
+            verts.emplace_back(v0, z);
         }
 
         tmp_meshes.emplace_back([v = std::move(verts), t = rtex.pos.array](OpenGL &g) {
-            return g.createTexturedQuadBatch(v, t);
+            return g.createRoomQuadTexBatch(v, t);
         });
     };
 
@@ -616,32 +667,23 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
     tmp_meshes.reserve(numUniqueTextures);
 
     const auto lambda = [&tmp_meshes, &textures](const size_t beg, const size_t end) -> void {
-        const RoomTex &rtex = textures[beg];
+        const ColoredRoomTex &rtex = textures[beg];
         const size_t count = end - beg;
 
-        std::vector<ColoredTexVert> verts;
-        verts.reserve(count * VERTS_PER_QUAD); /* quads */
+        std::vector<RoomQuadTexVert> verts;
+        verts.reserve(count);
 
-        // D-C
-        // | |  ccw winding
-        // A-B
         for (size_t i = beg; i < end; ++i) {
             const ColoredRoomTex &thisVert = textures[i];
             const auto &pos = thisVert.coord;
-            const auto v0 = pos.to_vec3();
-            const auto color = XNamedColor{thisVert.colorId}.getColor();
+            const auto v0 = pos.to_ivec3();
+            const auto color = thisVert.colorId;
             const auto z = thisVert.pos.position;
-
-#define EMIT(x, y) verts.emplace_back(color, glm::vec3((x), (y), z), v0 + glm::vec3((x), (y), 0))
-            EMIT(0, 0);
-            EMIT(1, 0);
-            EMIT(1, 1);
-            EMIT(0, 1);
-#undef EMIT
+            verts.emplace_back(v0, z, color);
         }
 
         tmp_meshes.emplace_back([v = std::move(verts), t = rtex.pos.array](OpenGL &g) {
-            return g.createColoredTexturedQuadBatch(v, t);
+            return g.createRoomQuadTexBatch(v, t);
         });
     };
 
@@ -652,6 +694,8 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
 
 struct NODISCARD LayerBatchData final
 {
+    MMTexArrayPosition white_pixel;
+
     RoomTexVector roomTerrains;
     RoomTexVector roomTrails;
     RoomTexVector roomOverlays = RoomTexVector::sortedRoomTexVector();
@@ -663,11 +707,12 @@ struct NODISCARD LayerBatchData final
     ColoredRoomTexVector roomUpDownExits;
     RoomTexVector streamIns;
     RoomTexVector streamOuts;
-    RoomTintArray<PlainQuadBatch> roomTints;
-    PlainQuadBatch roomLayerBoostQuads;
+    RoomTintArray<RoomTintVector> roomTints;
+    RoomTintVector roomLayerBoostQuads;
 
-    // So it can be used in std containers
-    explicit LayerBatchData() = default;
+    explicit LayerBatchData(MMTexArrayPosition white_pixel_)
+        : white_pixel{white_pixel_}
+    {}
 
     ~LayerBatchData() = default;
     DEFAULT_MOVES_DELETE_COPIES(LayerBatchData);
@@ -685,7 +730,7 @@ struct NODISCARD LayerBatchData final
         LayerMeshesIntermediate meshes;
         meshes.terrain = ::createSortedTexturedMeshes("terrain", roomTerrains);
         meshes.trails = ::createSortedTexturedMeshes("trails", roomTrails);
-        meshes.tints = roomTints; // REVISIT: this is a copy instead of a move
+        meshes.tints = ::createMeshFns("tints", roomTints, white_pixel);
         meshes.overlays = ::createSortedTexturedMeshes("overlays", roomOverlays);
         meshes.doors = ::createSortedColoredTexturedMeshes("doors", doors);
         meshes.walls = ::createSortedColoredTexturedMeshes("solidWalls", solidWallLines);
@@ -693,7 +738,7 @@ struct NODISCARD LayerBatchData final
         meshes.upDownExits = ::createSortedColoredTexturedMeshes("upDownExits", roomUpDownExits);
         meshes.streamIns = ::createSortedTexturedMeshes("streamIns", streamIns);
         meshes.streamOuts = ::createSortedTexturedMeshes("streamOuts", streamOuts);
-        meshes.layerBoost = roomLayerBoostQuads; // REVISIT: this is a copy instead of a move
+        meshes.layerBoost = ::createMeshFn("layerBoost", roomLayerBoostQuads, white_pixel);
         meshes.isValid = true;
         return meshes;
     }
@@ -739,14 +784,7 @@ private:
 
         const auto pos = room.getPosition();
         m_data.roomTerrains.emplace_back(pos, terrain);
-
-        const auto v0 = pos.to_vec3();
-#define EMIT(x, y) m_data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
-        EMIT(0, 0);
-        EMIT(1, 0);
-        EMIT(1, 1);
-        EMIT(0, 1);
-#undef EMIT
+        m_data.roomLayerBoostQuads.emplace_back(pos, NamedColorEnum::DEFAULT);
     }
 
     void virt_visitTrailTexture(const RoomHandle &room, const MMTexArrayPosition &trail) final
@@ -765,13 +803,8 @@ private:
 
     void virt_visitNamedColorTint(const RoomHandle &room, const RoomTintEnum tint) final
     {
-        const auto v0 = room.getPosition().to_vec3();
-#define EMIT(x, y) m_data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
-        EMIT(0, 0);
-        EMIT(1, 0);
-        EMIT(1, 1);
-        EMIT(0, 1);
-#undef EMIT
+        const auto pos = room.getPosition();
+        m_data.roomTints[tint].emplace_back(pos, getTintColor(tint));
     }
 
     void virt_visitWall(const RoomHandle &room,
@@ -842,7 +875,7 @@ NODISCARD static LayerMeshesIntermediate generateLayerMeshes(
 {
     DECL_TIMER(t, "generateLayerMeshes");
 
-    LayerBatchData data;
+    LayerBatchData data{textures.white_pixel};
     LayerBatchBuilder builder{data, textures, bounds};
     visitRooms(rooms, textures, builder, visitRoomOptions);
 
@@ -924,6 +957,14 @@ LayerMeshes LayerMeshesIntermediate::getLayerMeshes(OpenGL &gl) const
     struct NODISCARD Resolver final
     {
         OpenGL &m_gl;
+
+        NODISCARD UniqueMesh resolve(const Fn &fn)
+        {
+            if (!fn) {
+                return {};
+            }
+            return fn(m_gl);
+        }
         NODISCARD UniqueMeshVector resolve(const FnVec &v)
         {
             std::vector<UniqueMesh> result;
@@ -933,16 +974,12 @@ LayerMeshes LayerMeshesIntermediate::getLayerMeshes(OpenGL &gl) const
             }
             return UniqueMeshVector{std::move(result)};
         }
-        NODISCARD UniqueMesh resolve(const PlainQuadBatch &batch)
-        {
-            return m_gl.createPlainQuadBatch(batch);
-        }
-        NODISCARD RoomTintArray<UniqueMesh> resolve(const RoomTintArray<PlainQuadBatch> &arr)
+        NODISCARD RoomTintArray<UniqueMesh> resolve(const RoomTintArray<Fn> &arr)
         {
             RoomTintArray<UniqueMesh> result;
             for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
-                const PlainQuadBatch &b = arr[tint];
-                result[tint] = m_gl.createPlainQuadBatch(b);
+                const Fn &fn = arr[tint];
+                result[tint] = resolve(fn);
             }
             return result;
         }
@@ -975,9 +1012,10 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     const bool disableTextures = (thisLayer > focusedLayer)
                                  && !getConfig().canvas.drawUpperLayersTextured;
 
-    const GLRenderState less = GLRenderState().withDepthFunction(DepthFunctionEnum::LESS);
-    const GLRenderState equal = GLRenderState().withDepthFunction(DepthFunctionEnum::EQUAL);
-    const GLRenderState lequal = GLRenderState().withDepthFunction(DepthFunctionEnum::LEQUAL);
+    const GLRenderState defaultState;
+    const GLRenderState less = defaultState.withDepthFunction(DepthFunctionEnum::LESS);
+    const GLRenderState equal = defaultState.withDepthFunction(DepthFunctionEnum::EQUAL);
+    const GLRenderState lequal = defaultState.withDepthFunction(DepthFunctionEnum::LEQUAL);
 
     const GLRenderState less_blended = less.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState lequal_blended = lequal.withBlend(BlendModeEnum::TRANSPARENCY);
@@ -1003,20 +1041,8 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     // REVISIT: move trails to their own batch also colored by the tint?
     for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
         static_assert(NUM_ROOM_TINTS == 2);
-        const auto namedColor = std::invoke([tint]() -> NamedColorEnum {
-            switch (tint) {
-            case RoomTintEnum::DARK:
-                return LOOKUP_COLOR(ROOM_DARK);
-            case RoomTintEnum::NO_SUNDEATH:
-                return LOOKUP_COLOR(ROOM_NO_SUNDEATH);
-            }
-            std::abort();
-        });
-
-        if (const auto optColor = getColor(namedColor)) {
-            tints[tint].render(equal_multiplied.withColor(optColor.value()));
-        } else {
-            assert(false);
+        if (const UniqueMesh &mesh = tints[tint]) {
+            mesh.render(equal_multiplied);
         }
     }
 
