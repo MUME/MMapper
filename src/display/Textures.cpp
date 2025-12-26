@@ -72,26 +72,36 @@ void MapCanvasTextures::destroyAll()
 {
     for_each([](SharedMMTexture &tex) -> void { tex.reset(); });
 
-    auto &&os = MMLOG();
+    static constexpr bool verbose_logging = IS_DEBUG_BUILD;
 
-    if constexpr (IS_DEBUG_BUILD)
+    // REVISIT: what happens to this MMLOG() in non-debug build, since it doesn't print anything?
+    auto &&os = MMLOG();
+    const auto reset_one_array = [&os](const std::string_view name, SharedMMTexture &tex) {
+        if constexpr (verbose_logging) {
+            const QOpenGLTexture &qtex = deref(deref(tex).get());
+            const auto layers = qtex.layers();
+            os << "... " << name;
+            os << " w/ " << layers << " layer" << ((layers == 1) ? "" : "s");
+            os << " at " << qtex.width() << "x" << qtex.height();
+            os << "\n";
+        }
+        tex.reset();
+    };
+
+    if constexpr (verbose_logging) {
         os << "destroying...\n";
+    }
+
 #define XTEX(_TYPE, _NAME) \
     do { \
-        if (auto &tex = _NAME##_Array) { \
-            if constexpr (IS_DEBUG_BUILD) { \
-                const auto layers = deref(deref(tex).get()).layers(); \
-                os << "... " #_NAME << "_Array w/ " << layers << " layer" \
-                   << ((layers == 1) ? "" : "s") << "\n"; \
-            } \
-            tex.reset(); \
-        } \
+        reset_one_array(#_NAME "_Array", _NAME##_Array); \
     } while (false);
     XFOREACH_MAPCANVAS_TEXTURES(XTEX)
 #undef XTEX
 
-    if constexpr (IS_DEBUG_BUILD)
+    if constexpr (verbose_logging) {
         os << "Done\n";
+    }
 }
 
 NODISCARD static SharedMMTexture loadTexture(const QString &name)
