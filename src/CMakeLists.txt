@@ -1135,11 +1135,18 @@ if(APPLE)
     # Codesign the bundle without a personal certificate
     find_program(CODESIGN_APP codesign)
     message(" - codesign path: ${CODESIGN_APP}")
+    if(MMAPPER_IS_DEBUG)
+      set(ENTITLEMENTS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/entitlements.debug.plist")
+      message(" - entitlements file: ${ENTITLEMENTS_FILE}")
+    else()
+      set(ENTITLEMENTS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/entitlements.plist")
+      message(" - entitlements file: ${ENTITLEMENTS_FILE}")
+    endif()
     add_custom_command(
         TARGET mmapper
         POST_BUILD
         COMMAND ${CODESIGN_APP} --remove-signature ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
-        COMMAND ${CODESIGN_APP} --deep -f -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -o runtime --entitlements ${CMAKE_CURRENT_SOURCE_DIR}/entitlements.plist
+        COMMAND ${CODESIGN_APP} --deep -f -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -o runtime --entitlements ${ENTITLEMENTS_FILE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Code signing the bundle"
         VERBATIM
