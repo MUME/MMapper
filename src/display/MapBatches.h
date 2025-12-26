@@ -33,15 +33,13 @@ struct NODISCARD LayerMeshes final
     explicit operator bool() const { return isValid; }
 };
 
-using PlainQuadBatch = std::vector<glm::vec3>;
-
 struct NODISCARD LayerMeshesIntermediate final
 {
     using Fn = std::function<UniqueMesh(OpenGL &)>;
     using FnVec = std::vector<Fn>;
     FnVec terrain;
     FnVec trails;
-    RoomTintArray<PlainQuadBatch> tints;
+    RoomTintArray<Fn> tints;
     FnVec overlays;
     FnVec doors;
     FnVec walls;
@@ -49,7 +47,7 @@ struct NODISCARD LayerMeshesIntermediate final
     FnVec upDownExits;
     FnVec streamIns;
     FnVec streamOuts;
-    PlainQuadBatch layerBoost;
+    Fn layerBoost;
     bool isValid = false;
 
     LayerMeshesIntermediate() = default;

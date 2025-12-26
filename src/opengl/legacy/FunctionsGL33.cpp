@@ -1,5 +1,6 @@
 #include "FunctionsGL33.h"
 
+#include "../../global/ConfigConsts.h"
 #include "../OpenGLConfig.h"
 
 #include <optional>
@@ -27,7 +28,10 @@ std::optional<GLenum> FunctionsGL33::virt_toGLenum(const DrawModeEnum mode)
     case DrawModeEnum::QUADS:
 #ifndef MMAPPER_NO_OPENGL
         return canRenderQuads() ? std::make_optional(GL_QUADS) : std::nullopt;
+#else
+        FALLTHROUGH;
 #endif
+    case DrawModeEnum::INSTANCED_QUADS:
     case DrawModeEnum::INVALID:
         break;
     }

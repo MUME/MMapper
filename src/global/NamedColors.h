@@ -48,6 +48,9 @@ enum class NODISCARD NamedColorEnum : uint8_t { DEFAULT = 0, XFOREACH_NAMED_COLO
 static inline constexpr size_t NUM_NAMED_COLORS = XFOREACH_NAMED_COLOR_OPTIONS(X_COUNT) + 1;
 #undef X_COUNT
 
+static inline constexpr size_t MAX_NAMED_COLORS = 32;
+static_assert(MAX_NAMED_COLORS >= NUM_NAMED_COLORS);
+
 // TODO: rename this, but to what? NamedColorHandle?
 class NODISCARD XNamedColor final
 {
@@ -98,5 +101,6 @@ public:
 
 public:
     NODISCARD static const std::vector<Color> &getAllColors();
+    NODISCARD static const std::vector<glm::vec4> &getAllColorsAsVec4();
     NODISCARD static const std::vector<std::string> &getAllNames();
 };

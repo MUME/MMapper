@@ -3,6 +3,8 @@
 
 #include "AbstractShaderProgram.h"
 
+#include "../../global/ConfigConsts.h"
+
 namespace Legacy {
 
 AbstractShaderProgram::AbstractShaderProgram(std::string dirName,

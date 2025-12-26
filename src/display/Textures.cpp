@@ -305,6 +305,12 @@ void MapCanvas::initTextures()
         textures.stream_out[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("stream-out-%s.png", lowercaseDirection(dir))));
     }
+    {
+        // 1x1
+        QImage whitePixel(1, 1, QImage::Format_RGBA8888);
+        whitePixel.fill(Qt::white);
+        textures.white_pixel = MMTexture::alloc(std::vector<QImage>{whitePixel});
+    }
 
     // char images are 256
     textures.char_arrows = loadTexture(getPixmapFilenameRaw("char-arrows.png"));
@@ -478,6 +484,13 @@ void MapCanvas::initTextures()
             auto thing = combine(textures.terrain, textures.road);
             maybeCreateArray2(thing, pArrayTex);
             textures.terrain_Array = textures.road_Array = pArrayTex;
+        }
+
+        {
+            SharedMMTexture pArrayTex;
+            std::vector<SharedMMTexture> pixels{textures.white_pixel};
+            maybeCreateArray2(pixels, pArrayTex);
+            textures.white_pixel_Array = pArrayTex;
         }
 
         {

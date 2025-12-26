@@ -31,8 +31,37 @@ AColorPlainShader::~AColorPlainShader() = default;
 UColorPlainShader::~UColorPlainShader() = default;
 AColorTexturedShader::~AColorTexturedShader() = default;
 UColorTexturedShader::~UColorTexturedShader() = default;
+
+RoomQuadTexShader::~RoomQuadTexShader() = default;
+
 FontShader::~FontShader() = default;
 PointShader::~PointShader() = default;
+
+void ShaderPrograms::early_init()
+{
+    std::ignore = getPlainAColorShader();
+    std::ignore = getPlainUColorShader();
+    std::ignore = getTexturedAColorShader();
+    std::ignore = getTexturedUColorShader();
+
+    std::ignore = getRoomQuadTexShader();
+
+    std::ignore = getFontShader();
+    std::ignore = getPointShader();
+}
+
+void ShaderPrograms::resetAll()
+{
+    m_aColorShader.reset();
+    m_uColorShader.reset();
+    m_aTexturedShader.reset();
+    m_uTexturedShader.reset();
+
+    m_roomQuadTexShader.reset();
+
+    m_font.reset();
+    m_point.reset();
+}
 
 // essentially a private member of ShaderPrograms
 template<typename T>
@@ -76,6 +105,11 @@ const std::shared_ptr<UColorPlainShader> &ShaderPrograms::getPlainUColorShader()
 const std::shared_ptr<AColorTexturedShader> &ShaderPrograms::getTexturedAColorShader()
 {
     return getInitialized<AColorTexturedShader>(m_aTexturedShader, getFunctions(), "tex/acolor");
+}
+
+const std::shared_ptr<RoomQuadTexShader> &ShaderPrograms::getRoomQuadTexShader()
+{
+    return getInitialized<RoomQuadTexShader>(m_roomQuadTexShader, getFunctions(), "room/tex/acolor");
 }
 
 const std::shared_ptr<UColorTexturedShader> &ShaderPrograms::getTexturedUColorShader()

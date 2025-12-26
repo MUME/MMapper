@@ -35,6 +35,44 @@
 #include <QOpenGLTexture>
 
 namespace Legacy {
+
+const char *Functions::getUniformBlockName(const SharedVboEnum block)
+{
+    switch (block) {
+#define X_CASE(EnumName, StringName, isUniform) \
+    case SharedVboEnum::EnumName: \
+        if constexpr (isUniform) { \
+            return StringName; \
+        } \
+        return nullptr;
+        XFOREACH_SHARED_VBO(X_CASE)
+#undef X_CASE
+    }
+    return nullptr;
+}
+
+void Functions::virt_glUniformBlockBinding(const GLuint program, const SharedVboEnum block)
+{
+    const char *const block_name = getUniformBlockName(block);
+    if (block_name == nullptr) {
+        return;
+    }
+    const GLuint block_index = Base::glGetUniformBlockIndex(program, block_name);
+    if (block_index != GL_INVALID_INDEX) {
+        Base::glUniformBlockBinding(program, block_index, static_cast<GLuint>(block));
+    }
+}
+
+void Functions::applyDefaultUniformBlockBindings(const GLuint program)
+{
+#define X_BIND(EnumName, StringName, isUniform) \
+    if constexpr (isUniform) { \
+        virt_glUniformBlockBinding(program, SharedVboEnum::EnumName); \
+    }
+    XFOREACH_SHARED_VBO(X_BIND)
+#undef X_BIND
+}
+
 template<template<typename> typename Mesh_, typename VertType_, typename ProgType_>
 NODISCARD static auto createMesh(const SharedFunctions &functions,
                                  const DrawModeEnum mode,
@@ -105,6 +143,14 @@ UniqueMesh Functions::createColoredTexturedBatch(const DrawModeEnum mode,
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     const auto &prog = getShaderPrograms().getTexturedAColorShader();
     return createTexturedMesh<ColoredTexturedMesh>(shared_from_this(), mode, batch, prog, texture);
+}
+
+UniqueMesh Functions::createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &batch,
+                                             const MMTextureId texture)
+{
+    const auto mode = DrawModeEnum::INSTANCED_QUADS;
+    const auto &prog = getShaderPrograms().getRoomQuadTexShader();
+    return createTexturedMesh<RoomQuadTexMesh>(shared_from_this(), mode, batch, prog, texture);
 }
 
 template<typename VertexType_, template<typename> typename Mesh_, typename ShaderType_>
@@ -236,6 +282,7 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
 Functions::Functions(Badge<Functions>)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
+    , m_sharedVbos{std::make_unique<SharedVbos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
     , m_fbo{std::make_unique<FBO>()}
 {}
@@ -268,6 +315,7 @@ void Functions::cleanup()
 
     getShaderPrograms().resetAll();
     getStaticVbos().resetAll();
+    getSharedVbos().resetAll();
     getTexLookup().clear();
 }
 
@@ -279,7 +327,10 @@ StaticVbos &Functions::getStaticVbos()
 {
     return deref(m_staticVbos);
 }
-
+SharedVbos &Functions::getSharedVbos()
+{
+    return deref(m_sharedVbos);
+}
 TexLookup &Functions::getTexLookup()
 {
     return deref(m_texLookup);
