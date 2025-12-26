@@ -88,6 +88,10 @@ public:
     std::ostream &toHex(std::ostream &os) const;
     friend std::ostream &operator<<(std::ostream &os, const Color &c) { return c.toHex(os); }
     friend AnsiOstream &operator<<(AnsiOstream &os, const Color &c);
+
+public:
+    // note: this is not done in linear color space.
+    NODISCARD static Color multiplyAsVec4(const Color a, const Color b);
 };
 
 static_assert(sizeof(Color) == sizeof(uint32_t));

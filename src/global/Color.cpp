@@ -194,6 +194,13 @@ AnsiOstream &operator<<(AnsiOstream &os, const Color &c)
     return os;
 }
 
+// note: this is not done in linear color space.
+Color Color::multiplyAsVec4(const Color a, const Color b)
+{
+    const auto c = a.getVec4() * b.getVec4();
+    return Color{c};
+}
+
 namespace Colors {
 
 #define X_DECL(name, hex) const Color name = Color::fromHex(#hex);

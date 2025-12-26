@@ -419,6 +419,7 @@ struct NODISCARD RoomTex
 
     NODISCARD static bool isPartitioned(const RoomTex &a, const RoomTex &b)
     {
+        assert(a.pos.array == b.pos.array);
         return a.pos.array < b.pos.array;
     }
 };
@@ -430,9 +431,9 @@ struct NODISCARD ColoredRoomTex : public RoomTex
 
     explicit ColoredRoomTex(const Coordinate input_coord,
                             const MMTexArrayPosition input_pos,
-                            const Color &input_color)
+                            const XNamedColor &input_color)
         : RoomTex{input_coord, input_pos}
-        , color{input_color}
+        , color{input_color.getColor()}
     {}
 };
 
@@ -661,8 +662,8 @@ struct NODISCARD LayerBatchData final
     ColoredRoomTexVector solidWallLines;
     ColoredRoomTexVector dottedWallLines;
     ColoredRoomTexVector roomUpDownExits;
-    ColoredRoomTexVector streamIns;
-    ColoredRoomTexVector streamOuts;
+    RoomTexVector streamIns;
+    RoomTexVector streamOuts;
     RoomTintArray<PlainQuadBatch> roomTints;
     PlainQuadBatch roomLayerBoostQuads;
 
@@ -691,8 +692,8 @@ struct NODISCARD LayerBatchData final
         meshes.walls = ::createSortedColoredTexturedMeshes("solidWalls", solidWallLines);
         meshes.dottedWalls = ::createSortedColoredTexturedMeshes("dottedWalls", dottedWallLines);
         meshes.upDownExits = ::createSortedColoredTexturedMeshes("upDownExits", roomUpDownExits);
-        meshes.streamIns = ::createSortedColoredTexturedMeshes("streamIns", streamIns);
-        meshes.streamOuts = ::createSortedColoredTexturedMeshes("streamOuts", streamOuts);
+        meshes.streamIns = ::createSortedTexturedMeshes("streamIns", streamIns);
+        meshes.streamOuts = ::createSortedTexturedMeshes("streamOuts", streamOuts);
         meshes.layerBoost = roomLayerBoostQuads; // REVISIT: this is a copy instead of a move
         meshes.isValid = true;
         return meshes;
@@ -780,32 +781,25 @@ private:
                         const WallTypeEnum wallType,
                         const bool isClimb) final
     {
+        assert(color.isInitialized());
         if (isTransparent(color)) {
             return;
         }
-
-        const std::optional<Color> optColor = getColor(color);
-        if (!optColor.has_value()) {
-            assert(false);
-            return;
-        }
-
-        const auto glcolor = optColor.value();
 
         if (wallType == WallTypeEnum::DOOR) {
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
             const MMTexArrayPosition &tex = m_textures.door[dir];
-            m_data.doors.emplace_back(room.getPosition(), tex, glcolor);
+            m_data.doors.emplace_back(room.getPosition(), tex, color);
 
         } else {
             if (isNESW(dir)) {
                 if (wallType == WallTypeEnum::SOLID) {
                     const MMTexArrayPosition &tex = m_textures.wall[dir];
-                    m_data.solidWallLines.emplace_back(room.getPosition(), tex, glcolor);
+                    m_data.solidWallLines.emplace_back(room.getPosition(), tex, color);
                 } else {
                     const MMTexArrayPosition &tex = m_textures.dotted_wall[dir];
-                    m_data.dottedWallLines.emplace_back(room.getPosition(), tex, glcolor);
+                    m_data.dottedWallLines.emplace_back(room.getPosition(), tex, color);
                 }
             } else {
                 const bool isUp = dir == ExitDirEnum::UP;
@@ -816,7 +810,7 @@ private:
                                                         : (isUp ? m_textures.exit_up
                                                                 : m_textures.exit_down);
 
-                m_data.roomUpDownExits.emplace_back(room.getPosition(), tex, glcolor);
+                m_data.roomUpDownExits.emplace_back(room.getPosition(), tex, color);
             }
         }
     }
@@ -825,13 +819,12 @@ private:
                           const ExitDirEnum dir,
                           const StreamTypeEnum type) final
     {
-        const Color color = LOOKUP_COLOR(STREAM).getColor();
         switch (type) {
         case StreamTypeEnum::OutFlow:
-            m_data.streamOuts.emplace_back(room.getPosition(), m_textures.stream_out[dir], color);
+            m_data.streamOuts.emplace_back(room.getPosition(), m_textures.stream_out[dir]);
             return;
         case StreamTypeEnum::InFlow:
-            m_data.streamIns.emplace_back(room.getPosition(), m_textures.stream_in[dir], color);
+            m_data.streamIns.emplace_back(room.getPosition(), m_textures.stream_in[dir]);
             return;
         default:
             break;
@@ -978,15 +971,11 @@ LayerMeshes LayerMeshesIntermediate::getLayerMeshes(OpenGL &gl) const
 
 void LayerMeshes::render(const int thisLayer, const int focusedLayer)
 {
-    bool disableTextures = false;
-    if (thisLayer > focusedLayer) {
-        if (!getConfig().canvas.drawUpperLayersTextured) {
-            // Disable texturing for this layer. We want to draw
-            // all of the squares in white (using layer boost quads),
-            // and then still draw the walls.
-            disableTextures = true;
-        }
-    }
+    // Disable texturing for this layer. We want to draw
+    // all of the squares in white (using layer boost quads),
+    // and then still draw the walls.
+    const bool disableTextures = (thisLayer > focusedLayer)
+                                 && !getConfig().canvas.drawUpperLayersTextured;
 
     const GLRenderState less = GLRenderState().withDepthFunction(DepthFunctionEnum::LESS);
     const GLRenderState equal = GLRenderState().withDepthFunction(DepthFunctionEnum::EQUAL);
@@ -997,12 +986,8 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     const GLRenderState equal_blended = equal.withBlend(BlendModeEnum::TRANSPARENCY);
     const GLRenderState equal_multiplied = equal.withBlend(BlendModeEnum::MODULATE);
 
-    const auto color = std::invoke([&thisLayer, &focusedLayer]() -> Color {
-        if (thisLayer <= focusedLayer) {
-            return Colors::white.withAlpha(0.90f);
-        }
-        return Colors::gray70.withAlpha(0.20f);
-    });
+    const auto color = (thisLayer <= focusedLayer) ? Colors::white.withAlpha(0.90f)
+                                                   : Colors::gray70.withAlpha(0.20f);
 
     {
         /* REVISIT: For the modern case, we could render each layer separately,
@@ -1039,8 +1024,12 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
 
     if (!disableTextures) {
         // streams go under everything else, including trails
-        streamIns.render(lequal_blended.withColor(color));
-        streamOuts.render(lequal_blended.withColor(color));
+        {
+            const Color streamColor = LOOKUP_COLOR(STREAM).getColor();
+            const auto combined = Color::multiplyAsVec4(streamColor, color);
+            streamIns.render(lequal_blended.withColor(combined));
+            streamOuts.render(lequal_blended.withColor(combined));
+        }
 
         trails.render(equal_blended.withColor(color));
         overlays.render(equal_blended.withColor(color));
