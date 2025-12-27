@@ -61,7 +61,7 @@ enum class NODISCARD WallTypeEnum { SOLID, DOTTED, DOOR };
 static constexpr const size_t NUM_WALL_TYPES = 3;
 DEFINE_ENUM_COUNT(WallTypeEnum, NUM_WALL_TYPES)
 
-#define LOOKUP_COLOR(X) (getNamedColorOptions().X)
+#define LOOKUP_COLOR(_X) (NamedColorEnum::_X)
 
 // must be called from the main thread
 NODISCARD static VisitRoomOptions getVisitRoomOptions()
@@ -75,22 +75,22 @@ NODISCARD static VisitRoomOptions getVisitRoomOptions()
     return result;
 }
 
-NODISCARD static bool isTransparent(const XNamedColor &namedColor)
+NODISCARD static bool isTransparent(const NamedColorEnum namedColor)
 {
-    return !namedColor.isInitialized() || namedColor == LOOKUP_COLOR(TRANSPARENT);
+    return namedColor == NamedColorEnum::TRANSPARENT;
 }
 
-NODISCARD static std::optional<Color> getColor(const XNamedColor &namedColor)
+NODISCARD static std::optional<Color> getColor(const NamedColorEnum namedColor)
 {
     if (isTransparent(namedColor)) {
         return std::nullopt;
     }
-    return namedColor.getColor();
+    return XNamedColor{namedColor}.getColor();
 }
 
 enum class NODISCARD WallOrientationEnum { HORIZONTAL, VERTICAL };
-NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags flags,
-                                                     const WallOrientationEnum wallOrientation)
+NODISCARD static NamedColorEnum getWallNamedColorCommon(const ExitFlags flags,
+                                                        const WallOrientationEnum wallOrientation)
 {
     const bool isVertical = wallOrientation == WallOrientationEnum::VERTICAL;
 
@@ -128,12 +128,12 @@ NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags flags,
     }
 }
 
-NODISCARD static XNamedColor getWallNamedColor(const ExitFlags flags)
+NODISCARD static NamedColorEnum getWallNamedColor(const ExitFlags flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::HORIZONTAL);
 }
 
-NODISCARD static XNamedColor getVerticalNamedColor(const ExitFlags flags)
+NODISCARD static NamedColorEnum getVerticalNamedColor(const ExitFlags flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::VERTICAL);
 }
@@ -179,7 +179,7 @@ private:
 
     // Walls
     virtual void virt_visitWall(
-        const RoomHandle &, ExitDirEnum, const XNamedColor &, WallTypeEnum, bool isClimb)
+        const RoomHandle &, ExitDirEnum, NamedColorEnum, WallTypeEnum, bool isClimb)
         = 0;
 
     // Streams
@@ -209,7 +209,7 @@ public:
     // Walls
     void visitWall(const RoomHandle &room,
                    const ExitDirEnum dir,
-                   const XNamedColor &color,
+                   const NamedColorEnum color,
                    const WallTypeEnum wallType,
                    const bool isClimb)
     {
@@ -426,14 +426,13 @@ struct NODISCARD RoomTex
 
 struct NODISCARD ColoredRoomTex : public RoomTex
 {
-    Color color;
-    ColoredRoomTex(Coordinate input_coord, const MMTexArrayPosition &tex) = delete;
+    NamedColorEnum colorId = NamedColorEnum::DEFAULT;
 
     explicit ColoredRoomTex(const Coordinate input_coord,
                             const MMTexArrayPosition input_pos,
-                            const XNamedColor &input_color)
+                            const NamedColorEnum input_color)
         : RoomTex{input_coord, input_pos}
-        , color{input_color.getColor()}
+        , colorId{input_color}
     {}
 };
 
@@ -630,7 +629,7 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
             const ColoredRoomTex &thisVert = textures[i];
             const auto &pos = thisVert.coord;
             const auto v0 = pos.to_vec3();
-            const auto color = thisVert.color;
+            const auto color = XNamedColor{thisVert.colorId}.getColor();
             const auto z = thisVert.pos.position;
 
 #define EMIT(x, y) verts.emplace_back(color, glm::vec3((x), (y), z), v0 + glm::vec3((x), (y), 0))
@@ -777,11 +776,10 @@ private:
 
     void virt_visitWall(const RoomHandle &room,
                         const ExitDirEnum dir,
-                        const XNamedColor &color,
+                        const NamedColorEnum color,
                         const WallTypeEnum wallType,
                         const bool isClimb) final
     {
-        assert(color.isInitialized());
         if (isTransparent(color)) {
             return;
         }
@@ -1005,7 +1003,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     // REVISIT: move trails to their own batch also colored by the tint?
     for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
         static_assert(NUM_ROOM_TINTS == 2);
-        const auto namedColor = std::invoke([tint]() -> XNamedColor {
+        const auto namedColor = std::invoke([tint]() -> NamedColorEnum {
             switch (tint) {
             case RoomTintEnum::DARK:
                 return LOOKUP_COLOR(ROOM_DARK);
@@ -1025,7 +1023,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     if (!disableTextures) {
         // streams go under everything else, including trails
         {
-            const Color streamColor = LOOKUP_COLOR(STREAM).getColor();
+            const Color streamColor = XNamedColor{NamedColorEnum::STREAM}.getColor();
             const auto combined = Color::multiplyAsVec4(streamColor, color);
             streamIns.render(lequal_blended.withColor(combined));
             streamOuts.render(lequal_blended.withColor(combined));

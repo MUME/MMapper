@@ -140,7 +140,7 @@ void AbstractShaderProgram::setPointSize(const float in_pointSize)
     }
 }
 
-void AbstractShaderProgram::setColor(const char *const name, const Color &color)
+void AbstractShaderProgram::setColor(const char *const name, const Color color)
 {
     const auto location = getUniformLocation(name);
     const glm::vec4 v = color.getVec4();

@@ -108,9 +108,14 @@ void AbstractParser::doConfig(const StringView cmd)
                 if (name.empty() || name.front() == char_consts::C_PERIOD) {
                     continue;
                 }
-                XNamedColor color(name);
-                os << " " << SmartQuotedString{name} << " = " << color.getColor()
-                   << AnsiOstream::endl;
+                os << " " << SmartQuotedString{name} << " = ";
+                if (auto opt = XNamedColor::lookup(name)) {
+                    const XNamedColor &color = *opt;
+                    os << color.getColor();
+                } else {
+                    os << "(error)";
+                }
+                os << AnsiOstream::endl;
             }
         },
         "list colors");
@@ -126,7 +131,12 @@ void AbstractParser::doConfig(const StringView cmd)
             const std::string name = args->cdr->car.getString();
             const auto rgb = static_cast<uint32_t>(args->car.getLong());
 
-            auto color = XNamedColor{name};
+            auto opt = XNamedColor::lookup(name);
+            if (!opt.has_value()) {
+                throw std::runtime_error("invalid name: " + name);
+            }
+
+            auto &color = deref(opt);
             const auto oldColor = color.getColor();
             const auto newColor = Color::fromRGB(rgb);
 
@@ -136,7 +146,12 @@ void AbstractParser::doConfig(const StringView cmd)
                 return;
             }
 
-            color.setColor(newColor);
+            if (!color.setColor(newColor)) {
+                os << "Color " << SmartQuotedString{name} << " cannot be changed from "
+                   << color.getColor() << ".\n";
+                return;
+            }
+
             os << "Color " << SmartQuotedString{name} << " has been changed from " << oldColor
                << " to " << color.getColor() << ".\n";
 

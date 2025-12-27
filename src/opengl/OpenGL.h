@@ -155,7 +155,7 @@ public:
     void renderFont3d(const SharedMMTexture &texture, const std::vector<FontVert3d> &verts);
 
 public:
-    void clear(const Color &color);
+    void clear(const Color color);
     void clearDepth();
     void renderPlainFullScreenQuad(const GLRenderState &state);
 

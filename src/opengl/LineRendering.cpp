@@ -13,8 +13,8 @@ namespace mmgl {
 void generateLineQuad(std::vector<ColorVert> &verts,
                       const glm::vec3 &p1,
                       const glm::vec3 &p2,
-                      float width,
-                      const Color &color,
+                      const float width,
+                      const Color color,
                       const glm::vec3 &perpendicular_normal)
 {
     // Assert that perpendicular_normal is unit length
@@ -67,8 +67,8 @@ glm::vec3 getOrthogonalNormal(const glm::vec3 &direction, const glm::vec3 &perp_
 void generateLineQuadsSafe(std::vector<ColorVert> &verts,
                            const glm::vec3 &p1,
                            const glm::vec3 &p2,
-                           float width,
-                           const Color &color)
+                           const float width,
+                           const Color color)
 {
     const glm::vec3 segment = p2 - p1;
     if (isNearZero(segment)) {
@@ -84,7 +84,7 @@ void generateLineQuadsSafe(std::vector<ColorVert> &verts,
 void drawZeroLengthSquare(std::vector<ColorVert> &verts,
                           const glm::vec3 &center,
                           float width,
-                          const Color &color)
+                          const Color color)
 {
     float half_size = width / 2.0f;
     glm::vec3 v1 = center + glm::vec3(-half_size, -half_size, 0.0f);

@@ -644,13 +644,13 @@ public:
 
         // measurement, background color, and underline.
         {
-            const auto add = [this](const Color &c, const glm::ivec2 &ivert, const glm::ivec2 &itc) {
+            const auto add = [this](const Color c, const glm::ivec2 &ivert, const glm::ivec2 &itc) {
                 const glm::vec2 tc = getTexCoord(itc);
                 const glm::vec2 vert = transformVert(ivert);
                 m_verts3d.emplace_back(m_opts.pos, c, tc, vert);
             };
 
-            const auto quad = [&add](const Color &c, const Rect &vert, const Rect &tc) {
+            const auto quad = [&add](const Color c, const Rect &vert, const Rect &tc) {
 #define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y})
                 // note: lo and hi refer to members of vert and tc.
                 ADD(lo, lo);
@@ -886,8 +886,8 @@ UniqueMesh GLFont::getFontMesh(const std::vector<FontVert3d> &rawVerts)
 }
 
 void GLFont::renderTextCentered(const QString &text,
-                                const Color &color,
-                                const std::optional<Color> &bgcolor)
+                                const Color color,
+                                const std::optional<Color> bgcolor)
 {
     // here we're converting to latin1 because we cannot display unicode codepoints above 255
     const auto center = glm::vec2{getScreenCenter()};

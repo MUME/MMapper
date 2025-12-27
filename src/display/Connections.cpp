@@ -631,7 +631,7 @@ void ConnectionMeshes::render(const int thisLayer, const int focusedLayer) const
 {
     const auto color = std::invoke([&thisLayer, &focusedLayer]() -> Color {
         if (thisLayer == focusedLayer) {
-            return getCanvasNamedColorOptions().connectionNormalColor.getColor();
+            return XNamedColor{NamedColorEnum::CONNECTION_NORMAL}.getColor();
         }
         return Colors::gray70.withAlpha(FAINT_CONNECTION_ALPHA);
     });
@@ -785,7 +785,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
                                                       const glm::vec3 &b,
                                                       const glm::vec3 &c)
 {
-    const auto &color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor.getColor()
+    const auto &color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor
                                    : Colors::red;
     auto &verts = deref(m_currentBuffer).triVerts;
     verts.emplace_back(color, a + m_offset);
@@ -799,7 +799,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     const float extension = CONNECTION_LINE_WIDTH * 0.5f;
 
     // Helper lambda to generate a quad between two points with a specific color.
-    auto generateQuad = [&](const glm::vec3 &p1, const glm::vec3 &p2, const Color &quad_color) {
+    auto generateQuad = [&](const glm::vec3 &p1, const glm::vec3 &p2, const Color quad_color) {
         auto &verts = deref(m_currentBuffer).quadVerts;
 
         const glm::vec3 segment = p2 - p1;
@@ -822,9 +822,8 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     const auto size = points.size();
     assert(size >= 2);
 
-    const Color base_color = isNormal()
-                                 ? getCanvasNamedColorOptions().connectionNormalColor.getColor()
-                                 : Colors::red;
+    const Color base_color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor
+                                        : Colors::red;
 
     for (size_t i = 1; i < size; ++i) {
         const glm::vec3 start_orig = points[i - 1u];

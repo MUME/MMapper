@@ -32,13 +32,13 @@ void generateLineQuad(std::vector<ColorVert> &verts,
                       const glm::vec3 &p1,
                       const glm::vec3 &p2,
                       float width,
-                      const Color &color,
+                      Color color,
                       const glm::vec3 &perpendicular_normal);
 
 void drawZeroLengthSquare(std::vector<ColorVert> &verts,
                           const glm::vec3 &center,
                           float width,
-                          const Color &color);
+                          Color color);
 
 // Returns a normalized vector perpendicular to the input direction, primarily in the XY plane.
 // Handles near-zero direction vectors by returning a default perpendicular (1,0,0).
@@ -54,7 +54,7 @@ void generateLineQuadsSafe(std::vector<ColorVert> &verts,
                            const glm::vec3 &p1,
                            const glm::vec3 &p2,
                            float width,
-                           const Color &color);
+                           Color color);
 
 // Checks if the squared length of a vector is below the degeneration threshold.
 NODISCARD bool isDegenerate(const glm::vec3 &vec);

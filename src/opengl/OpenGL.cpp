@@ -140,7 +140,7 @@ UniqueMesh OpenGL::createFontMesh(const SharedMMTexture &texture,
     return getFunctions().createFontMesh(texture, mode, batch);
 }
 
-void OpenGL::clear(const Color &color)
+void OpenGL::clear(const Color color)
 {
     const auto v = color.getVec4();
     auto &gl = getFunctions();

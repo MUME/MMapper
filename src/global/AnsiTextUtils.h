@@ -210,7 +210,7 @@ NODISCARD AnsiColor256 toAnsiColor256(AnsiColorRGB rgb);
 
 NODISCARD AnsiColorRGB toAnsiColorRGB(AnsiColor16Enum ansi);
 NODISCARD AnsiColorRGB toAnsiColorRGB(AnsiColor256 ansiColor);
-NODISCARD AnsiColorRGB toAnsiColorRGB(const Color &c);
+NODISCARD AnsiColorRGB toAnsiColorRGB(Color c);
 
 // lossy, except when rgb is one of the table entries
 NODISCARD AnsiColor16Enum toAnsiColor16Enum(AnsiColorRGB rgb);

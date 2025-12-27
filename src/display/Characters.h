@@ -126,9 +126,9 @@ private:
         void reallyDrawPaths(OpenGL &gl);
 
     public:
-        void setColor(const Color &color) { m_color = color; }
-        void reserve(Coordinate c) { m_coordCounts[c]++; }
-        void clear(Coordinate c) { m_coordCounts[c] = 0; }
+        void setColor(const Color color) { m_color = color; }
+        void reserve(const Coordinate c) { m_coordCounts[c]++; }
+        void clear(const Coordinate c) { m_coordCounts[c] = 0; }
 
     public:
         void glPushMatrix() { m_stack.push(); }
@@ -150,11 +150,11 @@ private:
         }
         void drawArrow(bool fill, bool beacon);
         void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
-        void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color &color, bool fill);
-        void drawPathSegment(const glm::vec3 &p1, const glm::vec3 &p2, const Color &color);
+        void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color color, bool fill);
+        void drawPathSegment(const glm::vec3 &p1, const glm::vec3 &p2, const Color color);
 
         // with blending, without depth; always size 8
-        void drawPathPoint(const Color &color, const glm::vec3 &pos)
+        void drawPathPoint(const Color color, const glm::vec3 &pos)
         {
             m_pathPoints.emplace_back(color, pos);
         }
@@ -207,11 +207,11 @@ public:
     NODISCARD bool isVisible(const Coordinate &c, float margin) const;
 
 public:
-    void drawCharacter(const Coordinate &coordinate, const Color &color, bool fill = true);
+    void drawCharacter(const Coordinate &coordinate, const Color color, bool fill = true);
 
     void drawPreSpammedPath(const Coordinate &coordinate,
                             const std::vector<Coordinate> &path,
-                            const Color &color);
+                            const Color color);
 
 public:
     void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures)

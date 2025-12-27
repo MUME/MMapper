@@ -992,7 +992,7 @@ std::string_view to_string_view(const AnsiColor16Enum color)
 #undef X_CASE
 }
 
-AnsiColorRGB toAnsiColorRGB(const Color &color)
+AnsiColorRGB toAnsiColorRGB(const Color color)
 {
     const uint8_t red = clamp255(color.getRed());
     const uint8_t green = clamp255(color.getGreen());
