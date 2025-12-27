@@ -710,15 +710,22 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
     const auto &canvas = config.canvas;
     const bool showNeedsServerId = canvas.showMissingMapId.get();
     const bool showChanged = canvas.showUnsavedChanges.get();
-    const auto colorSettings = config.colorSettings.clone();
+
+    // Note: Eventually just want to use NamedColorEnum and then reading from the
+    // NamedColors Uniform Buffer instead of making copies of the current values.
+    const struct NODISCARD HighlightColors final
+    {
+        Color HIGHLIGHT_TEMPORARY = XNamedColor{NamedColorEnum::HIGHLIGHT_TEMPORARY}.getColor();
+        Color HIGHLIGHT_NEEDS_SERVER_ID = XNamedColor{NamedColorEnum::HIGHLIGHT_NEEDS_SERVER_ID}
+                                              .getColor();
+        Color HIGHLIGHT_UNSAVED = XNamedColor{NamedColorEnum::HIGHLIGHT_UNSAVED}.getColor();
+    } colors;
 
     diff.futureHighlight = std::async(
         std::launch::async,
-        [saved, current, showNeedsServerId, showChanged, colorSettings]() -> Diff::HighlightDiff {
+        [saved, current, showNeedsServerId, showChanged, colors]() -> Diff::HighlightDiff {
             DECL_TIMER(t2,
                        "[async] actuallyPaintGL: highlight changes, temporary, and needs update");
-
-            const auto &colors = deref(colorSettings);
 
             // 3-2
             // |/|
@@ -738,10 +745,10 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
 
                 DECL_TIMER(t3, "[async] actuallyPaintGL: compute highlights");
                 ColoredTexVertVector highlights;
-                auto drawQuad = [&highlights](const RawRoom &room, const XNamedColor &color) {
+                auto drawQuad = [&highlights](const RawRoom &room, const Color color) {
                     const auto &pos = room.getPosition().to_vec3();
                     for (auto &corner : corners) {
-                        highlights.emplace_back(color.getColor(), corner, pos + corner);
+                        highlights.emplace_back(color, corner, pos + corner);
                     }
                 };
 
@@ -1044,6 +1051,7 @@ void MapCanvas::renderMapBatches()
                                && (totalScaleFactor >= settings.doorNameScaleCutoff);
 
     auto &gl = getOpenGL();
+
     BatchedMeshes &batchedMeshes = batches.batchedMeshes;
     const auto drawLayer =
         [&batches, &batchedMeshes, wantExtraDetail, wantDoorNames](const int thisLayer,

@@ -20,7 +20,7 @@ static constexpr const int SHIFT_g = 8;
 static constexpr const int SHIFT_b = 16;
 static constexpr const int SHIFT_a = 24;
 
-Color::Color(const Color &rgb, const float alpha)
+Color::Color(const Color rgb, const float alpha)
     : Color{rgb.withAlpha(alpha)}
 {}
 
@@ -179,7 +179,7 @@ Color Color::fromRGB(const uint32_t rgb)
     return c;
 }
 
-AnsiOstream &operator<<(AnsiOstream &os, const Color &c)
+AnsiOstream &operator<<(AnsiOstream &os, const Color c)
 {
     // These may not display as RGB on the client's terminal, but they'll
     // probably look better than showing them all in the default color.

@@ -49,7 +49,7 @@ bool CharacterBatch::isVisible(const Coordinate &c, float margin) const
     return m_mapScreen.isRoomVisible(c, margin);
 }
 
-void CharacterBatch::drawCharacter(const Coordinate &c, const Color &color, bool fill)
+void CharacterBatch::drawCharacter(const Coordinate &c, const Color color, bool fill)
 {
     const Configuration::CanvasSettings &settings = getConfig().canvas;
 
@@ -105,14 +105,14 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color &color, bool
 
 void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
                                                  const glm::vec3 &p2,
-                                                 const Color &color)
+                                                 const Color color)
 {
     mmgl::generateLineQuadsSafe(m_pathLineQuads, p1, p2, PATH_LINE_WIDTH, color);
 }
 
 void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
                                         const std::vector<Coordinate> &path,
-                                        const Color &color)
+                                        const Color color)
 {
     if (path.empty()) {
         return;
@@ -366,7 +366,7 @@ void CharacterBatch::CharFakeGL::reallyDrawPaths(OpenGL &gl)
 
 void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 &pos,
                                                      const float degrees,
-                                                     const Color &color,
+                                                     const Color color,
                                                      const bool fill)
 {
     std::array<glm::vec2, 4> texCoords{

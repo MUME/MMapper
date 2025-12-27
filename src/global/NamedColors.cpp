@@ -3,101 +3,95 @@
 
 #include "NamedColors.h"
 
+#include "EnumIndexedArray.h"
+
 #include <cassert>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
 
-using Index = size_t;
-using Map = std::map<std::string, Index>;
-
-using ColorVector = std::vector<Color>;
-using ReverseLookup = std::vector<std::optional<Map::iterator>>;
-
 struct NODISCARD GlobalData final
 {
-private:
-    ColorVector colors;
-    Map map;
-    ReverseLookup reverseLookup;
-
-public:
-    NODISCARD Color &getColor(const Index index)
-    {
-        if (index == XNamedColor::UNINITIALIZED) {
-            throw std::invalid_argument("index");
-        }
-        return colors.at(index - 1);
-    }
-    NODISCARD std::string getName(const Index index) const
-    {
-        if (index == XNamedColor::UNINITIALIZED) {
-            throw std::invalid_argument("index");
-        }
-        if (auto opt = reverseLookup.at(index - 1)) {
-            return opt.value()->first;
-        }
-        return {};
-    }
+    using ColorVector = std::vector<Color>;
+    using InitArray = EnumIndexedArray<bool, NamedColorEnum, NUM_NAMED_COLORS>;
+    using Map = std::map<std::string, NamedColorEnum>;
+    using NamesVector = std::vector<std::string>;
 
 private:
-    NODISCARD Index verifyIndex(Index index) const;
-    NODISCARD Index allocNewIndex(std::string_view name);
+    Map m_map;
+    NamesVector m_names;
+    ColorVector m_colors;
+    InitArray m_initialized;
+
+private:
+    NODISCARD static size_t getIndex(NamedColorEnum e) { return static_cast<uint8_t>(e); }
 
 public:
-    NODISCARD Index lookupOrCreateIndex(std::string_view name);
-
-public:
-    // NOTE: This allocates memory.
-    NODISCARD std::vector<std::string> getAllNames() const
+    GlobalData()
     {
-        std::vector<std::string> result;
-        result.reserve(map.size());
-        for (const auto &kv : map) {
-            result.emplace_back(kv.first);
+        m_colors.resize(NUM_NAMED_COLORS);
+        m_names.resize(NUM_NAMED_COLORS);
+
+        static const auto white = Colors::white;
+        static const auto transparent_black = Colors::black.withAlpha(0);
+        assert(white.getRGBA() == ~0u);
+        assert(transparent_black.getRGBA() == 0);
+
+        const auto init = [this](const NamedColorEnum id, const std::string_view name) {
+            const auto idx = getIndex(id);
+            const auto color = (id == NamedColorEnum::TRANSPARENT) ? transparent_black : white;
+
+            m_colors[idx] = color;
+            m_names[idx] = name;
+            m_map.emplace(name, id);
+        };
+
+#define X_INIT_MAP(_id, _name) init((NamedColorEnum::_id), std::string_view{_name});
+        XFOREACH_NAMED_COLOR_OPTIONS(X_INIT_MAP)
+#undef X_INIT_MAP
+
+        init(NamedColorEnum::DEFAULT, ".default");
+        m_initialized[NamedColorEnum::DEFAULT] = true;
+        m_initialized[NamedColorEnum::TRANSPARENT] = true;
+    }
+
+public:
+    NODISCARD bool isInitialized(const NamedColorEnum id) const { return m_initialized[id]; }
+
+public:
+    NODISCARD Color getColor(const NamedColorEnum id) { return m_colors.at(getIndex(id)); }
+    NODISCARD bool setColor(const NamedColorEnum id, Color c)
+    {
+        if (id == NamedColorEnum::DEFAULT || id == NamedColorEnum::TRANSPARENT) {
+            return false;
         }
-        return result;
+
+        const auto idx = getIndex(id);
+        m_colors.at(idx) = c;
+        m_initialized.at(id) = true;
+        return true;
+    }
+
+public:
+    NODISCARD const std::string &getName(const NamedColorEnum id) const
+    {
+        return m_names[getIndex(id)];
+    }
+
+    NODISCARD const std::vector<std::string> &getAllNames() const { return m_names; }
+    NODISCARD const std::vector<Color> &getAllColors() const { return m_colors; }
+
+public:
+    NODISCARD std::optional<NamedColorEnum> lookup(std::string_view name) const
+    {
+        const auto &map = m_map;
+        if (const auto it = map.find(std::string(name)); it != map.end()) {
+            return it->second;
+        }
+        return std::nullopt;
     }
 };
-
-Index GlobalData::verifyIndex(const Index index) const
-{
-    if (index == XNamedColor::UNINITIALIZED) {
-        throw std::invalid_argument("index");
-    }
-
-    const auto &rev = reverseLookup.at(index - 1);
-    assert(rev.has_value() && rev.value()->second == index);
-    return index;
-}
-
-Index GlobalData::allocNewIndex(std::string_view name)
-{
-    assert(colors.size() == reverseLookup.size());
-    const Index index = colors.size() + 1;
-    colors.emplace_back();
-
-    const auto emplace_result = map.emplace(name, index);
-    if (!emplace_result.second) {
-        assert(false);
-        reverseLookup.emplace_back();
-        return XNamedColor::UNINITIALIZED;
-    }
-
-    reverseLookup.emplace_back(emplace_result.first);
-    return verifyIndex(index);
-}
-
-Index GlobalData::lookupOrCreateIndex(std::string_view name)
-{
-    const auto it = map.find(std::string(name));
-    if (it != map.end()) {
-        return verifyIndex(it->second);
-    }
-
-    return allocNewIndex(name);
-}
 
 NODISCARD static GlobalData &getGlobalData()
 {
@@ -105,43 +99,43 @@ NODISCARD static GlobalData &getGlobalData()
     return globalData;
 }
 
-XNamedColor::XNamedColor(std::string_view name)
-    : m_index{getGlobalData().lookupOrCreateIndex(name)}
-{}
-
 XNamedColor::~XNamedColor() = default;
 
-std::string XNamedColor::getName() const
+std::optional<XNamedColor> XNamedColor::lookup(std::string_view sv)
 {
-    if (!isInitialized()) {
-        assert(false);
-        return {};
+    if (auto opt = getGlobalData().lookup(sv)) {
+        return XNamedColor{*opt};
     }
+    return std::nullopt;
+}
 
-    return getGlobalData().getName(getIndex());
+bool XNamedColor::isInitialized() const
+{
+    return getGlobalData().isInitialized(m_value);
+}
+
+const std::string &XNamedColor::getName() const
+{
+    return getGlobalData().getName(m_value);
 }
 
 Color XNamedColor::getColor() const
 {
-    if (!isInitialized()) {
-        assert(false);
-        return {};
-    }
-
-    return getGlobalData().getColor(getIndex());
+    assert(isInitialized());
+    return getGlobalData().getColor(m_value);
 }
 
-void XNamedColor::setColor(const Color new_color)
+bool XNamedColor::setColor(const Color new_color)
 {
-    if (!isInitialized()) {
-        assert(false);
-        return;
-    }
-
-    getGlobalData().getColor(getIndex()) = new_color;
+    return getGlobalData().setColor(m_value, new_color);
 }
 
-std::vector<std::string> XNamedColor::getAllNames()
+const std::vector<std::string> &XNamedColor::getAllNames()
 {
     return getGlobalData().getAllNames();
+}
+
+const std::vector<Color> &XNamedColor::getAllColors()
+{
+    return getGlobalData().getAllColors();
 }

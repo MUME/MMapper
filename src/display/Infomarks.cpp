@@ -36,7 +36,7 @@ static constexpr const float INFOMARK_ARROW_LINE_WIDTH = 0.045f;
 static constexpr float INFOMARK_GUIDE_LINE_WIDTH = 3.f;
 static constexpr float INFOMARK_POINT_SIZE = 6.f;
 
-#define LOOKUP_COLOR_INFOMARK(X) (getNamedColorOptions().X.getColor())
+#define LOOKUP_COLOR_INFOMARK(_X) (XNamedColor{NamedColorEnum::_X}.getColor())
 
 // NOTE: This currently requires rebuilding the infomark meshes if a color changes.
 NODISCARD static Color getInfomarkColor(const InfomarkTypeEnum infoMarkType,
@@ -155,7 +155,7 @@ void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const 
 
 void InfomarksBatch::renderText(const glm::vec3 &pos,
                                 const std::string &text,
-                                const Color &color,
+                                const Color color,
                                 const std::optional<Color> bgcolor,
                                 const FontFormatFlags fontFormatFlag,
                                 const int rotationAngle)
@@ -255,7 +255,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
     const glm::vec3 pos{x1, y1, static_cast<float>(layer)};
     batch.setOffset(pos);
 
-    const Color &bgColor = (overrideColor) ? overrideColor.value() : infoMarkColor;
+    const Color bgColor = (overrideColor) ? overrideColor.value() : infoMarkColor;
     batch.setColor(bgColor);
 
     switch (infoMarkType) {
@@ -335,7 +335,7 @@ void MapCanvas::paintSelectedInfomarks()
 
         // draw selection points
         if (m_canvasMouseMode == CanvasMouseModeEnum::SELECT_INFOMARKS) {
-            const auto drawPoint = [&batch](const Coordinate &c, const Color &color) {
+            const auto drawPoint = [&batch](const Coordinate &c, const Color color) {
                 batch.setColor(color);
                 batch.setOffset(glm::vec3{0});
                 const glm::vec3 point{static_cast<glm::vec2>(c.to_vec3())

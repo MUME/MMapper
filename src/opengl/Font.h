@@ -32,7 +32,7 @@ struct NODISCARD GLText final
 
     explicit GLText(const glm::vec3 &pos_,
                     std::string moved_text,
-                    const Color &color_ = {},
+                    const Color color_ = {},
                     std::optional<Color> bgcolor_ = {},
                     const FontFormatFlags fontFormatFlag_ = {},
                     int rotationAngle_ = 0)
@@ -88,8 +88,8 @@ private:
 
 public:
     void renderTextCentered(const QString &text,
-                            const Color &color = {},
-                            const std::optional<Color> &bgcolor = {});
+                            Color color = {},
+                            std::optional<Color> bgcolor = {});
     void render2dTextImmediate(const std::vector<GLText> &text);
     void render3dTextImmediate(const std::vector<GLText> &text);
     void render3dTextImmediate(const std::vector<FontVert3d> &rawVerts);

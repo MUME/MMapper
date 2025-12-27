@@ -44,7 +44,7 @@ public:
 
 public:
     explicit Color(uint32_t, float) = delete;
-    explicit Color(const Color &rgb, float alpha);
+    explicit Color(Color rgb, float alpha);
 
 public:
     explicit Color(int r, int g, int b);
@@ -73,10 +73,10 @@ public:
     NODISCARD uint32_t getBlue() const;  // 0..255
 
 public:
-    bool operator==(const Color &rhs) const { return m_color == rhs.m_color; }
-    bool operator!=(const Color &rhs) const { return !operator==(rhs); }
-    explicit operator glm::vec4() const { return getVec4(); }
-    explicit operator QColor() const;
+    NODISCARD bool operator==(const Color &rhs) const { return m_color == rhs.m_color; }
+    NODISCARD bool operator!=(const Color &rhs) const { return !operator==(rhs); }
+    NODISCARD explicit operator glm::vec4() const { return getVec4(); }
+    NODISCARD explicit operator QColor() const;
 
 public:
     NODISCARD Color withAlpha(float alpha) const;
@@ -86,8 +86,8 @@ public:
     NODISCARD static Color fromHex(std::string_view sv);
     NODISCARD std::string toHex() const;
     std::ostream &toHex(std::ostream &os) const;
-    friend std::ostream &operator<<(std::ostream &os, const Color &c) { return c.toHex(os); }
-    friend AnsiOstream &operator<<(AnsiOstream &os, const Color &c);
+    friend std::ostream &operator<<(std::ostream &os, const Color c) { return c.toHex(os); }
+    friend AnsiOstream &operator<<(AnsiOstream &os, Color c);
 
 public:
     // note: this is not done in linear color space.

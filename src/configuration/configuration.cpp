@@ -1044,21 +1044,39 @@ void setEnteredMain()
     g_config_enteredMain = true;
 }
 
-const Configuration::NamedColorOptions &getNamedColorOptions()
+void Configuration::ResolvedNamedColorOptions::setFrom(const NamedColorOptions &from)
+{
+#define X_CLONE(_id, _name) (this->_id) = (from._id).getColor();
+    XFOREACH_NAMED_COLOR_OPTIONS(X_CLONE)
+#undef X_CLONE
+}
+
+void Configuration::ResolvedCanvasNamedColorOptions::setFrom(const CanvasNamedColorOptions &from)
+{
+#define X_CLONE(_id, _name) (this->_id) = (from._id).getColor();
+    XFOREACH_CANVAS_NAMED_COLOR_OPTIONS(X_CLONE)
+#undef X_CLONE
+}
+
+const Configuration::ResolvedNamedColorOptions &getNamedColorOptions()
 {
     assert(g_config_enteredMain);
     if (g_thread == std::this_thread::get_id()) {
-        return getConfig().colorSettings;
+        thread_local Configuration::ResolvedNamedColorOptions tl_res;
+        tl_res.setFrom(getConfig().colorSettings);
+        return tl_res;
     }
 
     return deref(tl_named_color_options);
 }
 
-const Configuration::CanvasNamedColorOptions &getCanvasNamedColorOptions()
+const Configuration::ResolvedCanvasNamedColorOptions &getCanvasNamedColorOptions()
 {
     assert(g_config_enteredMain);
     if (g_thread == std::this_thread::get_id()) {
-        return getConfig().canvas;
+        thread_local Configuration::ResolvedCanvasNamedColorOptions tl_res;
+        tl_res.setFrom(getConfig().canvas);
+        return tl_res;
     }
 
     return deref(tl_canvas_named_color_options);
