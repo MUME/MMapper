@@ -4,6 +4,7 @@
 #include "testclock.h"
 
 #include "../src/clock/mumeclock.h"
+#include "../src/configuration/configuration.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/observer/gameobserver.h"
 #include "../src/proxy/GmcpMessage.h"
@@ -11,7 +12,10 @@
 #include <QDebug>
 #include <QtTest/QtTest>
 
-TestClock::TestClock() = default;
+TestClock::TestClock()
+{
+    setEnteredMain();
+}
 
 TestClock::~TestClock() = default;
 
@@ -244,6 +248,16 @@ void TestClock::parseWeatherTest()
 
     clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Moon {"what":"rise"})"));
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+
+    QCOMPARE(static_cast<int>(observer.getTimeOfDay()), static_cast<int>(MumeTimeEnum::NIGHT));
+
+    QCOMPARE(static_cast<int>(observer.getMoonPhase()),
+             static_cast<int>(MumeMoonPhaseEnum::WANING_GIBBOUS));
+
+    QCOMPARE(static_cast<int>(observer.getMoonVisibility()),
+             static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
+
+    QCOMPARE(static_cast<int>(observer.getSeason()), static_cast<int>(MumeSeasonEnum::SUMMER));
 }
 
 void TestClock::parseClockTimeTest()

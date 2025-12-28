@@ -1402,7 +1402,10 @@ void MainWindow::setupToolBars()
 void MainWindow::setupStatusBar()
 {
     showStatusForever(tr("Say friend and enter..."));
-    statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock, this));
+    statusBar()->insertPermanentWidget(0,
+                                       new MumeClockWidget(deref(m_gameObserver),
+                                                           deref(m_mumeClock),
+                                                           this));
 
     XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
     xpStatus->setToolTip("Click to toggle the Adventure Panel.");

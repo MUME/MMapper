@@ -4,14 +4,12 @@
 
 #include "mumeclock.h"
 
+#include "../configuration/configuration.h"
 #include "../global/Array.h"
 #include "../global/JsonObj.h"
 #include "../proxy/GmcpMessage.h"
+#include "../proxy/MudTelnet.h" // FIXME: move MsspTime somewhere more appropriate, or just use MumeMoment.
 #include "mumemoment.h"
-#if 1
-// FIXME: move MsspTime somewhere more appropriate, or just use MumeMoment.
-#include "../proxy/MudTelnet.h"
-#endif
 
 #include <cassert>
 
@@ -111,12 +109,14 @@ using westronWeekDayNames = mmqt::QME<MumeClock::WestronWeekDayNamesEnum>;
 
 MumeClock::MumeClock(int64_t mumeEpoch, GameObserver &observer, QObject *const parent)
     : QObject(parent)
+    , m_observer{observer}
     , m_mumeStartEpoch(mumeEpoch)
     , m_precision(MumeClockPrecisionEnum::UNSET)
-    , m_observer{observer}
 {
     m_observer.sig2_sentToUserGmcp.connect(m_lifetime,
                                            [this](const GmcpMessage &gmcp) { onUserGmcp(gmcp); });
+    connect(&m_timer, &QTimer::timeout, this, &MumeClock::slot_tick);
+    m_timer.start(1000);
 }
 
 MumeClock::MumeClock(GameObserver &observer)
@@ -125,13 +125,12 @@ MumeClock::MumeClock(GameObserver &observer)
 
 MumeMoment MumeClock::getMumeMoment() const
 {
-    const int64_t t = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t t = QDateTime::currentSecsSinceEpoch();
     return MumeMoment::sinceMumeEpoch(t - m_mumeStartEpoch);
 }
 
 MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch) const
 {
-    /* This will break on 2038-01-19 if you use 32-bit. */
     if (secsSinceUnixEpoch < 0) {
         assert(secsSinceUnixEpoch == -1);
         return getMumeMoment();
@@ -141,7 +140,7 @@ MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch) const
 
 void MumeClock::parseMumeTime(const QString &mumeTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t secsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     parseMumeTime(mumeTime, secsSinceEpoch);
 }
 
@@ -221,6 +220,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         qWarning() << "Calculated week day does not match MUME";
     }
     m_mumeStartEpoch = newStartEpoch;
+    setConfig().mumeClock.startEpoch = newStartEpoch;
 }
 
 void MumeClock::onUserGmcp(const GmcpMessage &msg)
@@ -262,12 +262,15 @@ void MumeClock::onUserGmcp(const GmcpMessage &msg)
             break;
         }
     }
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t secsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     parseWeather(time, secsSinceEpoch);
 }
 
 void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
 {
+    // Restart the timer to sync with the game's tick
+    m_timer.start(1000);
+
     // Update last sync timestamp
     setLastSyncEpoch(secsSinceEpoch);
 
@@ -312,18 +315,19 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
         log(QString("Unsychronized tick detected using %1 (off by %2 seconds)")
                 .arg(reason)
                 .arg(moment.minute));
-        return;
+    } else {
+        log(QString("Synchronized tick using %1").arg(reason));
+        if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR) {
+            m_precision = MumeClockPrecisionEnum::MINUTE;
+        }
     }
 
-    log(QString("Synchronized tick using %1").arg(reason));
-    if (time != MumeTimeEnum::UNKNOWN || m_precision >= MumeClockPrecisionEnum::HOUR) {
-        m_precision = MumeClockPrecisionEnum::MINUTE;
-    }
+    updateObserver(moment);
 }
 
 void MumeClock::parseClockTime(const QString &clockTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t secsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     parseClockTime(clockTime, secsSinceEpoch);
 }
 
@@ -366,7 +370,7 @@ void MumeClock::parseMSSP(const MsspTime &msspTime)
         return;
     }
 
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t secsSinceEpoch = QDateTime::currentSecsSinceEpoch();
 
     auto moment = getMumeMoment();
     moment.year = msspTime.year;
@@ -390,9 +394,14 @@ void MumeClock::setPrecision(const MumeClockPrecisionEnum precision)
     m_precision = precision;
 }
 
+void MumeClock::setLastSyncEpoch(int64_t epoch)
+{
+    m_lastSyncEpoch = epoch;
+}
+
 MumeClockPrecisionEnum MumeClock::getPrecision()
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentSecsSinceEpoch();
     if (m_precision >= MumeClockPrecisionEnum::HOUR
         && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
         m_precision = MumeClockPrecisionEnum::DAY;
@@ -421,14 +430,13 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
     QString time;
     switch (m_precision) {
     case MumeClockPrecisionEnum::HOUR:
-        time = QString("%1%2 on %3").arg(hour).arg(period).arg(weekDay);
+        time = QString("%1%2 on %3").arg(hour).arg(period, weekDay);
         break;
     case MumeClockPrecisionEnum::MINUTE:
         time = QString("%1:%2%3 on %4")
                    .arg(hour)
                    .arg(moment.minute, 2, 10, QChar('0'))
-                   .arg(period)
-                   .arg(weekDay);
+                   .arg(period, weekDay);
         break;
     case MumeClockPrecisionEnum::UNSET:
     case MumeClockPrecisionEnum::DAY:
@@ -443,8 +451,7 @@ QString MumeClock::toMumeTime(const MumeMoment &moment) const
     return QString("%1, the %2%3 of %4, year %5 of the Third Age.")
         .arg(time)
         .arg(day)
-        .arg(QString{getOrdinalSuffix(day)})
-        .arg(monthName)
+        .arg(QString{getOrdinalSuffix(day)}, monthName)
         .arg(moment.year);
 }
 
@@ -490,4 +497,38 @@ int MumeClock::getMumeMonth(const QString &monthName)
 int MumeClock::getMumeWeekday(const QString &weekdayName)
 {
     return mmqt::parseTwoEnums<WestronWeekDayNamesEnum, SindarinWeekDayNamesEnum>(weekdayName);
+}
+
+void MumeClock::slot_tick()
+{
+    const MumeMoment moment = getMumeMoment();
+    m_observer.observeTick(moment);
+    updateObserver(moment);
+}
+
+void MumeClock::updateObserver(const MumeMoment &moment)
+{
+    const auto timeOfDay = moment.toTimeOfDay();
+    if (timeOfDay != m_timeOfDay) {
+        m_timeOfDay = timeOfDay;
+        m_observer.observeTimeOfDay(m_timeOfDay);
+    }
+
+    const auto moonPhase = moment.moonPhase();
+    if (moonPhase != m_moonPhase) {
+        m_moonPhase = moonPhase;
+        m_observer.observeMoonPhase(m_moonPhase);
+    }
+
+    const auto moonVisibility = moment.moonVisibility();
+    if (moonVisibility != m_moonVisibility) {
+        m_moonVisibility = moonVisibility;
+        m_observer.observeMoonVisibility(m_moonVisibility);
+    }
+
+    const auto season = moment.toSeason();
+    if (season != m_season) {
+        m_season = season;
+        m_observer.observeSeason(m_season);
+    }
 }

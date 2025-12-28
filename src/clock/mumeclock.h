@@ -76,11 +76,16 @@ private:
     friend class TestClock;
 
 private:
+    Signal2Lifetime m_lifetime;
+    QTimer m_timer;
+    GameObserver &m_observer;
     int64_t m_lastSyncEpoch = 0;
     int64_t m_mumeStartEpoch = 0;
     MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
-    GameObserver &m_observer;
-    Signal2Lifetime m_lifetime;
+    MumeTimeEnum m_timeOfDay = MumeTimeEnum::UNKNOWN;
+    MumeMoonPhaseEnum m_moonPhase = MumeMoonPhaseEnum::UNKNOWN;
+    MumeMoonVisibilityEnum m_moonVisibility = MumeMoonVisibilityEnum::UNKNOWN;
+    MumeSeasonEnum m_season = MumeSeasonEnum::UNKNOWN;
 
 public:
     static inline constexpr const int NUM_MONTHS = 12;
@@ -140,7 +145,7 @@ private:
 
 public:
     void setPrecision(MumeClockPrecisionEnum state);
-    void setLastSyncEpoch(int64_t epoch) { m_lastSyncEpoch = epoch; }
+    void setLastSyncEpoch(int64_t epoch);
 
     NODISCARD static int getMumeMonth(const QString &monthName);
     NODISCARD static int getMumeWeekday(const QString &weekdayName);
@@ -153,6 +158,7 @@ protected:
 
 private:
     void onUserGmcp(const GmcpMessage &msg);
+    void updateObserver(const MumeMoment &moment);
 
 signals:
     void sig_log(const QString &, const QString &);
@@ -160,4 +166,5 @@ signals:
 public slots:
     void parseMumeTime(const QString &mumeTime);
     void parseClockTime(const QString &clockTime);
+    void slot_tick();
 };
