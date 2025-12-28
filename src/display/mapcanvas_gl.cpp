@@ -624,8 +624,10 @@ void MapCanvas::finishPendingMapBatches()
         } catch (...) {
             msg = QStringLiteral("unknown");
         }
-        global::sendToUser(
-            QString("ERROR: %1\nReverting map to previous snapshot. Please file a bug!\n").arg(msg));
+        const auto s = QString("ERROR: %1\nReverting map to previous snapshot. Please file a bug!\n")
+                           .arg(msg);
+        qWarning().noquote() << s;
+        global::sendToUser(s);
         m_data.restoreSnapshot();
     }
 #undef LOG
