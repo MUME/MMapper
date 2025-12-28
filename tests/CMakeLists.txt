@@ -25,6 +25,8 @@ endif()
 
 # Clock
 set(clock_SRCS
+    ../src/configuration/configuration.cpp
+    ../src/configuration/configuration.h
     ../src/clock/mumeclock.cpp
     ../src/clock/mumeclock.h
     ../src/clock/mumemoment.cpp
@@ -39,6 +41,7 @@ add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
 add_dependencies(TestClock mm_global)
 target_link_libraries(TestClock
         mm_global
+        Qt6::Network
         Qt6::Gui
         Qt6::Test
         Qt6::Widgets

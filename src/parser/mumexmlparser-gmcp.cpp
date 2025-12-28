@@ -357,6 +357,18 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
     }
+
+    const auto fog = promptFlags.getFogType();
+    if (fog != m_fog) {
+        m_fog = fog;
+        m_observer.observeFog(m_fog);
+    }
+
+    const auto weather = promptFlags.getWeatherType();
+    if (weather != m_weather) {
+        m_weather = weather;
+        m_observer.observeWeather(m_weather);
+    }
 }
 
 void MumeXmlParser::parseGmcpEventMoved(const JsonObj &obj)

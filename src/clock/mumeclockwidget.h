@@ -3,41 +3,40 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/Signal2.h"
+#include "../observer/gameobserver.h"
 #include "mumeclock.h"
 #include "mumemoment.h"
 #include "ui_mumeclockwidget.h"
-
-#include <memory>
 
 #include <QString>
 #include <QWidget>
 #include <QtCore>
 
+class QEvent;
 class QMouseEvent;
-class QObject;
-class QTimer;
 
 class NODISCARD_QOBJECT MumeClockWidget final : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
 
 private:
-    MumeClock *m_clock = nullptr;
-    std::unique_ptr<QTimer> m_timer;
-
-    MumeTimeEnum m_lastTime = MumeTimeEnum::UNKNOWN;
-    MumeSeasonEnum m_lastSeason = MumeSeasonEnum::UNKNOWN;
-    MumeMoonPhaseEnum m_lastPhase = MumeMoonPhaseEnum::UNKNOWN;
-    MumeMoonVisibilityEnum m_lastVisibility = MumeMoonVisibilityEnum::UNKNOWN;
-    MumeClockPrecisionEnum m_lastPrecision = MumeClockPrecisionEnum::UNSET;
+    Signal2Lifetime m_lifetime;
+    MumeClock &m_clock;
 
 public:
-    explicit MumeClockWidget(MumeClock *clock, QWidget *parent);
+    explicit MumeClockWidget(GameObserver &observer, MumeClock &clock, QWidget *parent);
     ~MumeClockWidget() final;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
+    bool event(QEvent *event) override;
 
-public slots:
-    void slot_updateLabel();
+private:
+    void updateCountdown(const MumeMoment &moment);
+    void updateTime(MumeTimeEnum time);
+    void updateMoonPhase(MumeMoonPhaseEnum phase);
+    void updateMoonVisibility(MumeMoonVisibilityEnum visibility);
+    void updateSeason(MumeSeasonEnum season);
+    void updateStatusTips(const MumeMoment &moment);
 };

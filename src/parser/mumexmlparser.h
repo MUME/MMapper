@@ -7,6 +7,8 @@
 
 #include "../global/Charset.h"
 #include "../map/CommandId.h"
+#include "../map/PromptFlags.h"
+#include "../observer/gameobserver.h"
 #include "LineFlags.h"
 #include "abstractparser.h"
 
@@ -18,7 +20,6 @@
 #include <QtCore/QFile>
 #include <QtCore>
 #include <QtGlobal>
-
 class GmcpMessage;
 class GroupManagerApi;
 class JsonObj;
@@ -57,6 +58,9 @@ private:
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
     bool m_eventReady = false;
+    PromptWeatherEnum m_weather = PromptWeatherEnum::NICE;
+    PromptFogEnum m_fog = PromptFogEnum::NO_FOG;
+    GameObserver &m_observer;
 
 private:
     enum class NODISCARD XmlAttributeStateEnum : uint8_t {
@@ -80,6 +84,7 @@ public:
                            ProxyMudConnectionApi &,
                            ProxyUserGmcpApi &,
                            GroupManagerApi &,
+                           GameObserver &,
                            QObject *parent,
                            AbstractParserOutputs &outputs,
                            ParserCommonData &parserCommonData);
