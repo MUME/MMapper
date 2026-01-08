@@ -18,6 +18,12 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        create-symlink: false
+        key: ${{ github.job }}-${{ runner.os }}
+        variant: sccache
     - uses: lukka/get-cmake@latest
     - uses: ilammy/msvc-dev-cmd@v1
 
@@ -40,7 +46,7 @@ jobs:
         cd build
         cmake --version
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=AppX -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=AppX -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -S .. || exit -1
         cmake --build . --parallel
 
     # Package

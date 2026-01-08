@@ -22,12 +22,12 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - if: runner.os == 'Linux' || runner.os == 'macOS'
-      name: ccache
+    - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        create-symlink: true
+        create-symlink: ${{ runner.os != 'Windows' }}
         key: ${{ github.job }}-${{ matrix.os }}
+        variant: ${{ matrix.compiler == 'msvc' && 'sccache' || 'ccache' }}
     - if: runner.os == 'Windows' || runner.os == 'macOS'
       uses: lukka/get-cmake@latest
     - if: runner.os == 'Windows'
@@ -82,7 +82,8 @@ jobs:
         cd build
         cmake --version
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
-        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Nsis -S .. || exit -1
+        $launcher = ${{ matrix.compiler == 'msvc' && 'sccache' || 'ccache' }}
+        cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -G 'Ninja' -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Nsis -DCMAKE_C_COMPILER_LAUNCHER="$launcher" -DCMAKE_CXX_COMPILER_LAUNCHER="$launcher" -S .. || exit -1
         cmake --build . --parallel
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac
