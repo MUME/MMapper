@@ -14,6 +14,7 @@
 #include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
 #include "../global/Signal2.h"
+#include "GroupConfig.h"
 #include "NamedConfig.h"
 
 #include <memory>
@@ -396,6 +397,8 @@ public:
     private:
         SUBGROUP();
     } findRoomsDialog;
+
+    GroupConfig hotkeys;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Configuration);

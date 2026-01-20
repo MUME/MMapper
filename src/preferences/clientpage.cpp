@@ -5,6 +5,7 @@
 #include "clientpage.h"
 
 #include "../configuration/configuration.h"
+#include "../global/macros.h"
 #include "ui_clientpage.h"
 
 #include <QFont>

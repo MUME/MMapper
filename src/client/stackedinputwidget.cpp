@@ -77,6 +77,13 @@ void StackedInputWidget::initInput()
         {
             getSelf().gotPasswordInput(password);
         }
+
+        void virt_scrollDisplay(bool pageUp) final { getOutput().scrollDisplay(pageUp); }
+
+        std::optional<QString> virt_getHotkey(const Hotkey &hk) final
+        {
+            return getOutput().getHotkey(hk);
+        }
     };
 
     auto &out = m_pipeline.outputs.inputOutputs;

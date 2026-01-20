@@ -8,6 +8,7 @@
 #include "../global/AnsiOstream.h"
 #include "../proxy/connectionlistener.h"
 #include "ClientTelnet.h"
+#include "HotkeyManager.h"
 #include "PreviewWidget.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
@@ -21,9 +22,12 @@
 #include <QString>
 #include <QTimer>
 
-ClientWidget::ClientWidget(ConnectionListener &listener, QWidget *const parent)
+ClientWidget::ClientWidget(ConnectionListener &listener,
+                           HotkeyManager &hotkeyManager,
+                           QWidget *const parent)
     : QWidget(parent)
     , m_listener{listener}
+    , m_hotkeyManager{hotkeyManager}
 {
     setWindowTitle("MMapper Client");
 
@@ -112,6 +116,23 @@ void ClientWidget::initStackedInputWidget()
             getSelf().slot_onShowMessage(msg);
         }
         void virt_requestPassword() final { getSelf().getInput().requestPassword(); }
+        void virt_scrollDisplay(bool pageUp) final
+        {
+            if (auto *scrollBar = getDisplay().verticalScrollBar()) {
+                int pageStep = scrollBar->pageStep();
+                int delta = pageUp ? -pageStep : pageStep;
+                scrollBar->setValue(scrollBar->value() + delta);
+            }
+        }
+
+        std::optional<QString> virt_getHotkey(const Hotkey &hk) final
+        {
+            auto &hotkeys = getSelf().getHotkeys();
+            if (auto cmd = hotkeys.getCommand(hk)) {
+                return mmqt::toQStringUtf8(*cmd);
+            }
+            return std::nullopt;
+        }
     };
     auto &out = m_pipeline.outputs.stackedInputWidgetOutputs;
     out = std::make_unique<LocalStackedInputWidgetOutputs>(*this);
@@ -224,6 +245,11 @@ StackedInputWidget &ClientWidget::getInput()
 ClientTelnet &ClientWidget::getTelnet() // NOLINT (no, this shouldn't be const)
 {
     return deref(m_pipeline.objs.clientTelnet);
+}
+
+HotkeyManager &ClientWidget::getHotkeys()
+{
+    return m_hotkeyManager;
 }
 
 void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)

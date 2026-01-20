@@ -20,6 +20,7 @@ class QObject;
 class StackedInputWidget;
 class PreviewWidget;
 class ConnectionListener;
+class HotkeyManager;
 
 struct ClientTelnetOutputs;
 struct DisplayWidgetOutputs;
@@ -56,9 +57,12 @@ private:
 
     Pipeline m_pipeline;
     ConnectionListener &m_listener;
+    HotkeyManager &m_hotkeyManager;
 
 public:
-    explicit ClientWidget(ConnectionListener &listener, QWidget *parent);
+    explicit ClientWidget(ConnectionListener &listener,
+                          HotkeyManager &hotkeyManager,
+                          QWidget *parent);
     ~ClientWidget() final;
 
 private:
@@ -79,6 +83,7 @@ private:
     NODISCARD PreviewWidget &getPreview();
 
 public:
+    NODISCARD HotkeyManager &getHotkeys();
     NODISCARD bool isUsingClient() const;
     void displayReconnectHint();
 
