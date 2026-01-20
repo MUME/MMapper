@@ -10,6 +10,7 @@
 #include "../global/Consts.h"
 #include "../global/NamedColors.h"
 #include "../global/PrintUtils.h"
+#include "../mpi/remoteeditwidget.h"
 #include "../proxy/proxy.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -19,6 +20,11 @@
 #include <ostream>
 
 #include <QColor>
+#include <QDir>
+#include <QFile>
+#include <QPointer>
+#include <QSettings>
+#include <QTemporaryFile>
 
 class NODISCARD ArgNamedColor final : public syntax::IArgument
 {
@@ -344,6 +350,87 @@ void AbstractParser::doConfig(const StringView cmd)
                         send_ok(os);
                     },
                     "read config file")),
+            syn("edit",
+                Accept(
+                    [this](User &user, auto) {
+                        auto &os = user.getOstream();
+                        if (isConnected()) {
+                            os << "You must disconnect before you can edit the saved configuration.\n";
+                            return;
+                        }
+                        os << "Opening configuration editor...\n";
+
+                        QString content;
+                        QString fileName;
+                        {
+                            QTemporaryFile temp(QDir::tempPath() + "/mmapper_XXXXXX.ini");
+                            temp.setAutoRemove(false);
+                            if (!temp.open()) {
+                                os << "Failed to create temporary file.\n";
+                                return;
+                            }
+                            fileName = temp.fileName();
+                            temp.close();
+
+                            {
+                                QSettings settings(fileName, QSettings::IniFormat);
+                                getConfig().writeTo(settings);
+                                settings.sync();
+                            }
+
+                            QFile file(fileName);
+                            if (file.open(QIODevice::ReadOnly)) {
+                                content = QString::fromUtf8(file.readAll());
+                                file.close();
+                            }
+                            QFile::remove(fileName);
+                        }
+
+                        if (content.isEmpty()) {
+                            os << "Configuration is empty or failed to export.\n";
+                            return;
+                        }
+
+                        // REVISIT: Ideally we support external editor as well
+                        auto *editor = new RemoteEditWidget(true,
+                                                            "MMapper Client Configuration",
+                                                            content,
+                                                            nullptr);
+                        QObject::connect(editor,
+                                         &RemoteEditWidget::sig_save,
+                                         [weakParser = QPointer<AbstractParser>(this)](
+                                             const QString &edited) {
+                                             if (weakParser.isNull()) {
+                                                 return;
+                                             }
+
+                                             QTemporaryFile tempRead(QDir::tempPath()
+                                                                     + "/mmapper_XXXXXX.ini");
+                                             tempRead.setAutoRemove(true);
+                                             if (tempRead.open()) {
+                                                 QString name = tempRead.fileName();
+                                                 tempRead.write(edited.toUtf8());
+                                                 tempRead.close();
+
+                                                 {
+                                                     auto &cfg = setConfig();
+                                                     QSettings settings(name, QSettings::IniFormat);
+                                                     cfg.readFrom(settings);
+                                                     cfg.write();
+                                                 }
+
+                                                 weakParser->sendToUser(
+                                                     SendToUserSourceEnum::FromMMapper,
+                                                     "\nConfiguration imported and persisted.\n");
+                                                 weakParser->sendOkToUser();
+                                             }
+                                         });
+
+                        editor->setAttribute(Qt::WA_DeleteOnClose);
+                        editor->show();
+                        editor->activateWindow();
+                    },
+                    "edit client configuration")),
             syn("factory",
                 "reset",
                 TokenMatcher::alloc<ArgStringExact>("Yes, I'm sure!"),
