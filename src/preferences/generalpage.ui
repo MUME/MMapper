@@ -397,23 +397,10 @@
       <string>Advanced</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="1">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="configurationResetButton">
+      <item row="3" column="1">
+       <widget class="QPushButton" name="configurationImportButton">
         <property name="text">
-         <string>Reset to Default Settings</string>
+         <string>Import Settings...</string>
         </property>
        </widget>
       </item>
@@ -427,6 +414,13 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="configurationExportButton">
+        <property name="text">
+         <string>Export Settings...</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QCheckBox" name="proxyListensOnAnyInterfaceCheckBox">
         <property name="toolTip">
@@ -436,6 +430,26 @@
          <string>Proxy listens on any interface</string>
         </property>
        </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="configurationResetButton">
+        <property name="text">
+         <string>Reset to Default Settings</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -477,7 +491,6 @@
   <tabstop>showNotesCheckBox</tabstop>
   <tabstop>proxyListensOnAnyInterfaceCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
-  <tabstop>configurationResetButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

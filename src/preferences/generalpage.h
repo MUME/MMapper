@@ -29,7 +29,7 @@ public:
     ~GeneralPage() final;
 
 signals:
-    void sig_factoryReset();
+    void sig_reloadConfig();
 
 public slots:
     void slot_loadConfig();
