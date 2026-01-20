@@ -205,6 +205,8 @@ void MumeFallbackSocket::onSocketError(const QString &errorString)
         m_outputs.onSocketStatus("Attempting insecure plain text...");
         break;
     case SocketTypeEnum::SSL:
+        m_outputs.onSocketError("Unable to connect to MUME.");
+        return;
     default:
         assert(false);
     };
