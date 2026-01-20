@@ -85,6 +85,7 @@ public:
                            ProxyUserGmcpApi &,
                            GroupManagerApi &,
                            GameObserver &,
+                           HotkeyManager &,
                            QObject *parent,
                            AbstractParserOutputs &outputs,
                            ParserCommonData &parserCommonData);

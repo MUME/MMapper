@@ -577,9 +577,9 @@ void MudTelnet::parseMudServerStatus(const TelnetMsspBytes &data)
     const OptStdString dayStr = map.lookup(GAME_DAY);
     const OptStdString hourStr = map.lookup(GAME_HOUR);
 
-    MMLOG() << "MSSP game time received with"
-            << " year:" << yearStr.value_or("unknown") << " month:" << monthStr.value_or("unknown")
-            << " day:" << dayStr.value_or("unknown") << " hour:" << hourStr.value_or("unknown");
+    MMLOG() << "MSSP game time received with" << " year:" << yearStr.value_or("unknown")
+            << " month:" << monthStr.value_or("unknown") << " day:" << dayStr.value_or("unknown")
+            << " hour:" << hourStr.value_or("unknown");
 
     if (!yearStr.has_value() || !monthStr.has_value() || !dayStr.has_value()
         || !hourStr.has_value()) {

@@ -22,6 +22,10 @@ set(mmapper_SRCS
     client/inputwidget.h
     client/stackedinputwidget.cpp
     client/stackedinputwidget.h
+    client/Hotkey.cpp
+    client/Hotkey.h
+    client/HotkeyManager.cpp
+    client/HotkeyManager.h
     client/PasswordDialog.cpp
     client/PasswordDialog.h
     client/PreviewWidget.cpp
@@ -32,6 +36,8 @@ set(mmapper_SRCS
     clock/mumeclockwidget.h
     clock/mumemoment.cpp
     clock/mumemoment.h
+    configuration/GroupConfig.cpp
+    configuration/GroupConfig.h
     configuration/NamedConfig.h
     configuration/PasswordConfig.cpp
     configuration/PasswordConfig.h
@@ -432,6 +438,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
     parser/AbstractParser-Group.cpp
+    parser/AbstractParser-Hotkey.cpp
     parser/AbstractParser-Mark.cpp
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Timer.cpp

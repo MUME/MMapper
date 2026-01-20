@@ -6,6 +6,7 @@
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
 #include "../global/utils.h"
+#include "Hotkey.h"
 
 #include <QStackedWidget>
 #include <QString>
@@ -39,6 +40,10 @@ public:
     void showMessage(const QString &msg, const int timeout) { virt_showMessage(msg, timeout); }
     // request password
     void requestPassword() { virt_requestPassword(); }
+    // scroll display (pageUp=true for PageUp, false for PageDown)
+    void scrollDisplay(bool pageUp) { virt_scrollDisplay(pageUp); }
+    // try to get a hotkey command
+    std::optional<QString> getHotkey(const Hotkey &hk) { return virt_getHotkey(hk); }
 
 private:
     // sent to the mud
@@ -49,6 +54,10 @@ private:
     virtual void virt_showMessage(const QString &msg, int timeout) = 0;
     // request password
     virtual void virt_requestPassword() = 0;
+    // scroll display
+    virtual void virt_scrollDisplay(bool pageUp) = 0;
+    // try to get a hotkey command
+    virtual std::optional<QString> virt_getHotkey(const Hotkey &hk) = 0;
 };
 
 class NODISCARD_QOBJECT StackedInputWidget final : public QStackedWidget

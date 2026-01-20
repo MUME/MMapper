@@ -6,6 +6,7 @@
 
 #include "proxy.h"
 
+#include "../client/HotkeyManager.h"
 #include "../clock/mumeclock.h"
 #include "../configuration/PasswordConfig.h"
 #include "../configuration/configuration.h"
@@ -21,6 +22,7 @@
 #include "../map/parseevent.h"
 #include "../mpi/mpifilter.h"
 #include "../mpi/remoteedit.h"
+#include "../mpi/remoteeditwidget.h"
 #include "../observer/gameobserver.h"
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
@@ -722,6 +724,7 @@ void Proxy::allocParser()
                                                          deref(gmcp),
                                                          m_groupManager.getGroupManagerApi(),
                                                          m_gameObserver,
+                                                         m_mainWindow.getHotkeyManager(),
                                                          this,
                                                          deref(out),
                                                          deref(parserCommon));
@@ -730,6 +733,7 @@ void Proxy::allocParser()
                                                             deref(conn),
                                                             deref(gmcp),
                                                             m_groupManager.getGroupManagerApi(),
+                                                            m_mainWindow.getHotkeyManager(),
                                                             this,
                                                             deref(out),
                                                             deref(parserCommon));

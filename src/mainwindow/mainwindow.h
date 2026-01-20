@@ -40,6 +40,7 @@ class ConnectionSelection;
 class FindRoomsDlg;
 class GameObserver;
 class GroupWidget;
+class HotkeyManager;
 class InfomarkSelection;
 class MapCanvas;
 class MapData;
@@ -109,6 +110,7 @@ private:
     AdventureWidget *m_adventureWidget = nullptr;
 
     DescriptionWidget *m_descriptionWidget = nullptr;
+    std::unique_ptr<HotkeyManager> m_hotkeyManager;
 
     SharedRoomSelection m_roomSelection;
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
@@ -266,6 +268,8 @@ private:
 public:
     explicit MainWindow();
     ~MainWindow() final;
+
+    NODISCARD HotkeyManager &getHotkeyManager() const { return deref(m_hotkeyManager); }
 
     NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(std::shared_ptr<MapSource> source);

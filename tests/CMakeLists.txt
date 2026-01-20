@@ -23,23 +23,42 @@ if(MMAPPER_IS_DEBUG)
     endif()
 endif()
 
-# Clock
-set(clock_SRCS
+# Common test library
+add_library(mm_test STATIC
     ../src/configuration/configuration.cpp
     ../src/configuration/configuration.h
-    ../src/clock/mumeclock.cpp
-    ../src/clock/mumeclock.h
-    ../src/clock/mumemoment.cpp
-    ../src/clock/mumemoment.h
+    ../src/configuration/GroupConfig.cpp
+    ../src/configuration/GroupConfig.h
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
     ../src/proxy/GmcpMessage.cpp
     ../src/proxy/GmcpMessage.h
+)
+set_target_properties(mm_test PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+    COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+target_link_libraries(mm_test
+    mm_global
+    Qt6::Core
+    Qt6::Network
+    coverage_config
+)
+
+# Clock
+set(clock_SRCS
+    ../src/clock/mumeclock.cpp
+    ../src/clock/mumeclock.h
+    ../src/clock/mumemoment.cpp
+    ../src/clock/mumemoment.h
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
-add_dependencies(TestClock mm_global)
+add_dependencies(TestClock mm_test mm_global)
 target_link_libraries(TestClock
+        mm_test
         mm_global
         Qt6::Network
         Qt6::Gui
@@ -57,15 +76,14 @@ add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
 set(expandoracommon_SRCS
-    ../src/configuration/configuration.cpp
-    ../src/configuration/configuration.h
     ../src/parser/Abbrev.cpp
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
-add_dependencies(TestExpandoraCommon mm_global mm_map)
+add_dependencies(TestExpandoraCommon mm_test mm_global mm_map)
 target_link_libraries(TestExpandoraCommon
         mm_map
+        mm_test
         mm_global
         Qt6::Gui
         Qt6::Network
@@ -82,15 +100,12 @@ set_target_properties(
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
-set(parser_SRCS
-    ../src/configuration/configuration.cpp
-    ../src/configuration/configuration.h
-)
 set(TestParser_SRCS testparser.cpp)
-add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
-add_dependencies(TestParser mm_global mm_map)
+add_executable(TestParser ${TestParser_SRCS})
+add_dependencies(TestParser mm_test mm_global mm_map)
 target_link_libraries(TestParser
         mm_map
+        mm_test
         mm_global
         Qt6::Gui
         Qt6::Network
@@ -108,8 +123,6 @@ add_test(NAME TestParser COMMAND TestParser)
 
 # Proxy
 set(proxy_SRCS
-    ../src/proxy/GmcpMessage.cpp
-    ../src/proxy/GmcpMessage.h
     ../src/proxy/GmcpModule.cpp
     ../src/proxy/GmcpModule.h
     ../src/proxy/GmcpUtils.cpp
@@ -119,8 +132,8 @@ set(proxy_SRCS
      )
 set(TestProxy_SRCS TestProxy.cpp)
 add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
-add_dependencies(TestProxy mm_global)
-target_link_libraries(TestProxy mm_global Qt6::Test coverage_config)
+add_dependencies(TestProxy mm_test mm_global)
+target_link_libraries(TestProxy mm_test mm_global Qt6::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
   CXX_STANDARD 17
@@ -138,8 +151,9 @@ set(mainwindow_SRCS
     )
 set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
-add_dependencies(TestMainWindow mm_global)
+add_dependencies(TestMainWindow mm_test mm_global)
 target_link_libraries(TestMainWindow
+        mm_test
         mm_global
         Qt6::Network
         Qt6::Test
@@ -175,14 +189,13 @@ add_test(NAME TestGlobal COMMAND TestGlobal)
 
 # Global
 set(TestMap_SRCS
-        ../src/configuration/configuration.cpp
-        ../src/configuration/configuration.h
         TestMap.cpp
 )
 add_executable(TestMap ${TestMap_SRCS})
-add_dependencies(TestMap mm_global mm_map)
+add_dependencies(TestMap mm_test mm_global mm_map)
 target_link_libraries(TestMap
         mm_map
+        mm_test
         mm_global
         Qt6::Gui
         Qt6::Network
@@ -206,15 +219,11 @@ set(adventure_SRCS
         ../src/adventure/adventuretracker.h
         ../src/adventure/lineparsers.cpp
         ../src/adventure/lineparsers.h
-        ../src/configuration/configuration.cpp
-        ../src/configuration/configuration.h
-        ../src/observer/gameobserver.cpp
-        ../src/observer/gameobserver.h
         )
 set(TestAdventure_SRCS testadventure.cpp testadventure.h)
 add_executable(TestAdventure ${TestAdventure_SRCS} ${adventure_SRCS})
-add_dependencies(TestAdventure mm_global)
-target_link_libraries(TestAdventure mm_global Qt6::Widgets Qt6::Network Qt6::Test coverage_config)
+add_dependencies(TestAdventure mm_test mm_global)
+target_link_libraries(TestAdventure mm_test mm_global Qt6::Widgets Qt6::Network Qt6::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
         CXX_STANDARD 17
@@ -289,12 +298,11 @@ set(room_manager
         ../src/roompanel/RoomMob.cpp
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
-        ../src/proxy/GmcpMessage.cpp
 )
 set(RoomManager roompanel/TestRoomManager.cpp)
 add_executable(TestRoomManager ${room_manager} ${RoomManager})
-add_dependencies(TestRoomManager mm_global)
-target_link_libraries(TestRoomManager mm_global Qt6::Test Qt6::Gui Qt6::Widgets coverage_config)
+add_dependencies(TestRoomManager mm_test mm_global)
+target_link_libraries(TestRoomManager mm_test mm_global Qt6::Test Qt6::Gui Qt6::Widgets coverage_config)
 set_target_properties(
         TestRoomManager PROPERTIES
         CXX_STANDARD 17
@@ -303,3 +311,23 @@ set_target_properties(
         COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 add_test(NAME TestRoomManager COMMAND TestRoomManager)
+
+# HotkeyManager
+set(hotkey_manager_SRCS
+        ../src/client/Hotkey.cpp
+        ../src/client/Hotkey.h
+        ../src/client/HotkeyManager.cpp
+        ../src/client/HotkeyManager.h
+)
+set(TestHotkeyManager_SRCS TestHotkeyManager.cpp TestHotkeyManager.h)
+add_executable(TestHotkeyManager ${TestHotkeyManager_SRCS} ${hotkey_manager_SRCS})
+add_dependencies(TestHotkeyManager mm_test mm_global mm_map)
+target_link_libraries(TestHotkeyManager mm_map mm_test mm_global Qt6::Test Qt6::Network coverage_config)
+set_target_properties(
+        TestHotkeyManager PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestHotkeyManager COMMAND TestHotkeyManager)
