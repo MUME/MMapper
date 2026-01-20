@@ -488,10 +488,21 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
 
 void Configuration::read()
 {
+    SETTINGS(conf);
+    readFrom(conf);
+}
+
+void Configuration::write() const
+{
+    SETTINGS(conf);
+    writeTo(conf);
+}
+
+void Configuration::readFrom(QSettings &conf)
+{
     // reset to defaults before reading colors that might override them
     colorSettings.resetToDefaults();
 
-    SETTINGS(conf);
     FOREACH_CONFIG_GROUP(read);
 
     // This logic only runs once on a MMapper fresh install (or factory reset)
@@ -514,9 +525,8 @@ void Configuration::read()
            && !colorSettings.BACKGROUND.getColor().isTransparent());
 }
 
-void Configuration::write() const
+void Configuration::writeTo(QSettings &conf) const
 {
-    SETTINGS(conf);
     FOREACH_CONFIG_GROUP(write);
 }
 

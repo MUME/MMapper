@@ -42,6 +42,9 @@ public:
     void write() const;
     void reset();
 
+    void readFrom(QSettings &conf);
+    void writeTo(QSettings &conf) const;
+
 public:
     struct NODISCARD GeneralSettings final
     {
