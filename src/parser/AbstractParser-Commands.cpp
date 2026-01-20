@@ -45,7 +45,6 @@ const Abbrev cmdConfig{"config", 4};
 const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
-const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroup{"group", 2};
 const Abbrev cmdHelp{"help", 2};
@@ -921,16 +920,6 @@ void AbstractParser::initSpecialCommandMap()
         },
         // TODO: create a parse tree, and show all of the help topics.
         makeSimpleHelp("Provides help."));
-    add(
-        cmdDoorHelp,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty()) {
-                return false;
-            }
-            this->showDoorCommandHelp();
-            return true;
-        },
-        makeSimpleHelp("Help for door console commands."));
 
     // door actions
     for (const DoorActionEnum x : ALL_DOOR_ACTION_TYPES) {
