@@ -108,8 +108,66 @@ GeneralPage::GeneralPage(QWidget *parent)
                                     QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             setConfig().reset();
-            emit sig_factoryReset();
+            emit sig_reloadConfig();
         }
+    });
+
+    connect(ui->configurationExportButton, &QAbstractButton::clicked, this, []() {
+        QTemporaryFile temp(QDir::tempPath() + "/mmapper_XXXXXX.ini");
+        temp.setAutoRemove(false);
+        if (!temp.open()) {
+            qWarning() << "Failed to create temporary file for export";
+            return;
+        }
+        const QString fileName = temp.fileName();
+        temp.close();
+
+        {
+            QSettings settings(fileName, QSettings::IniFormat);
+            getConfig().writeTo(settings);
+            settings.sync();
+        }
+
+        QFile file(fileName);
+        if (file.open(QIODevice::ReadOnly)) {
+            const QByteArray content = file.readAll();
+            file.close();
+            QFileDialog::saveFileContent(content, "mmapper.ini");
+        }
+
+        QFile::remove(fileName);
+    });
+
+    connect(ui->configurationImportButton, &QAbstractButton::clicked, this, [this]() {
+        auto importFile = [this](const QString &fileName,
+                                 const std::optional<QByteArray> &fileContent) {
+            if (fileName.isEmpty() || !fileContent.has_value()) {
+                return;
+            }
+
+            const QByteArray &content = fileContent.value();
+            if (content.isEmpty()) {
+                return;
+            }
+
+            QTemporaryFile temp(QDir::tempPath() + "/mmapper_import_XXXXXX.ini");
+            temp.setAutoRemove(true);
+            if (temp.open()) {
+                temp.write(content);
+                temp.close();
+
+                {
+                    auto &cfg = setConfig();
+                    QSettings settings(temp.fileName(), QSettings::IniFormat);
+                    cfg.readFrom(settings);
+                    cfg.write();
+                }
+                emit sig_reloadConfig();
+            }
+        };
+
+        const auto nameFilter = QStringLiteral("Configuration (*.ini);;All files (*)");
+        QFileDialog::getOpenFileContent(nameFilter, importFile);
     });
 
     connect(ui->autoLogin, &QCheckBox::stateChanged, this, [this]() {
