@@ -653,7 +653,6 @@ void AbstractParser::showHelp()
                      "Help commands:\n"
                      "  %1help      - this help text\n"
                      "  %1help ??   - full syntax help for the help command\n"
-                     "  %1doorhelp  - help for door console commands\n"
                      "\n"
                      "Other commands:\n"
                      "  %1dirs [-options] pattern   - directions to matching rooms\n"
