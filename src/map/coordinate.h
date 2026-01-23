@@ -51,6 +51,20 @@ public:
     }
 
     NODISCARD glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
+
+    NODISCARD bool operator==(const Coordinate2i &rhs) const { return x == rhs.x && y == rhs.y; }
+    NODISCARD bool operator!=(const Coordinate2i &rhs) const { return !operator==(rhs); }
+};
+
+template<>
+struct std::hash<Coordinate2i>
+{
+    std::size_t operator()(const Coordinate2i &c) const noexcept
+    {
+        const auto hx = numeric_hash(c.x);
+        const auto hy = numeric_hash(c.y);
+        return hx ^ utils::rotate_bits64<32>(hy);
+    }
 };
 
 struct NODISCARD Coordinate2f final

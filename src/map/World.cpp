@@ -593,10 +593,13 @@ void World::checkConsistency(ProgressCounter &counter) const
 
     auto checkPosition = [this](const RoomId id) {
         const Coordinate &coord = getPosition(id);
-        // Is there a unique owner of the coord?
-        if (const RoomId *const maybe = m_spatialDb.findUnique(coord);
-            maybe == nullptr || *maybe != id) {
-            throw MapConsistencyError("two rooms using the same coordinate found");
+        // Is this room present in the spatial index at its coordinate?
+        const auto rooms = m_spatialDb.findRooms(coord);
+        if (!rooms.contains(id)) {
+            qWarning() << "checkPosition failed: room" << id.asUint32() << "at coord"
+                       << coord.x << coord.y << coord.z << "not in spatial index. Found"
+                       << rooms.size() << "rooms at that coord.";
+            throw MapConsistencyError("room not found at its coordinate in spatial index");
         }
     };
 

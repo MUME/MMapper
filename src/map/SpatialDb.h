@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
-#include "../global/ImmUnorderedMap.h"
 #include "../global/macros.h"
+#include "SpatialIndex.h"
+#include "TinyRoomIdSet.h"
 #include "coordinate.h"
 #include "roomid.h"
 
@@ -12,25 +13,37 @@
 class AnsiOstream;
 class ProgressCounter;
 
+/// SpatialDb provides spatial indexing for rooms.
+/// Now backed by SpatialIndex (quadtree) which supports multiple rooms per coordinate.
 struct NODISCARD SpatialDb final
 {
 private:
-    /// Value is the last room assigned to the coordinate.
-    ImmUnorderedMap<Coordinate, RoomId> m_unique;
-
-private:
-    std::optional<Bounds> m_bounds;
-    bool m_needsBoundsUpdate = true;
+    SpatialIndex m_index;
 
 public:
-    NODISCARD bool needsBoundsUpdate() const
-    {
-        return m_needsBoundsUpdate || !m_bounds.has_value();
-    }
-    NODISCARD const std::optional<Bounds> &getBounds() const { return m_bounds; }
+    NODISCARD bool needsBoundsUpdate() const { return m_index.needsBoundsUpdate(); }
+    NODISCARD std::optional<Bounds> getBounds() const { return m_index.getBounds(); }
 
 public:
+    /// Find first room at coordinate (legacy interface, returns nullptr if none)
+    /// @deprecated Use findRooms() for new code
     NODISCARD const RoomId *findUnique(const Coordinate &key) const;
+
+    /// Find all rooms at coordinate (new interface)
+    NODISCARD TinyRoomIdSet findRooms(const Coordinate &key) const;
+
+    /// Find first room at coordinate (new interface, cleaner than findUnique)
+    NODISCARD std::optional<RoomId> findFirst(const Coordinate &key) const;
+
+    /// Check if any room exists at coordinate
+    NODISCARD bool hasRoomAt(const Coordinate &key) const;
+
+public:
+    /// Find all rooms within bounding box
+    NODISCARD TinyRoomIdSet findInBounds(const Bounds &bounds) const;
+
+    /// Find all rooms within radius of center
+    NODISCARD TinyRoomIdSet findInRadius(const Coordinate &center, int radius) const;
 
 public:
     void remove(RoomId id, const Coordinate &coord);
@@ -45,11 +58,18 @@ public:
     void for_each(Callback &&callback) const
     {
         static_assert(std::is_invocable_r_v<void, Callback, const Coordinate &, RoomId>);
-        m_unique.for_each([&callback](const auto &p) { callback(p.first, p.second); });
+        m_index.forEach([&callback](const RoomId id, const Coordinate &coord) {
+            callback(coord, id);
+        });
     }
-    NODISCARD auto size() const { return m_unique.size(); }
+
+    NODISCARD size_t size() const { return m_index.size(); }
 
 public:
-    NODISCARD bool operator==(const SpatialDb &rhs) const { return m_unique == rhs.m_unique; }
+    NODISCARD bool operator==(const SpatialDb &rhs) const { return m_index == rhs.m_index; }
     NODISCARD bool operator!=(const SpatialDb &rhs) const { return !(rhs == *this); }
+
+private:
+    /// Cached result for findUnique (to return pointer)
+    mutable std::optional<RoomId> m_cachedFindResult;
 };

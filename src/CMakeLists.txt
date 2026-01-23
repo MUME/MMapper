@@ -308,6 +308,8 @@ set(mmapper_SRCS
     map/ServerIdMap.h
     map/SpatialDb.cpp
     map/SpatialDb.h
+    map/SpatialIndex.cpp
+    map/SpatialIndex.h
     map/TinyRoomIdSet.cpp
     map/TinyRoomIdSet.h
     map/World-BaseMap.cpp
