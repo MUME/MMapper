@@ -352,7 +352,7 @@ MatchResult ArgFloat::virt_match(const ParserInput &input, IMatchErrorLogger *lo
 
     const std::string &firstWord = input.front();
     using Limits = std::numeric_limits<float>;
-    const float minVal = arg.min.value_or(Limits::min());
+    const float minVal = arg.min.value_or(Limits::lowest());
     const float maxVal = arg.max.value_or(Limits::max());
 
     char *end = nullptr;
@@ -506,7 +506,7 @@ std::ostream &ArgRest::virt_to_stream(std::ostream &os) const
 
 MatchResult ArgString::virt_match(const ParserInput &input, IMatchErrorLogger * /*logger*/) const
 {
-    if (input.length() != 1) {
+    if (input.empty()) {
         return MatchResult::failure(input);
     }
 

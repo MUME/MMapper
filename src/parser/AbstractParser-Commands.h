@@ -18,6 +18,7 @@ extern const Abbrev cmdDirections;
 extern const Abbrev cmdDoorHelp;
 extern const Abbrev cmdGroupTell;
 extern const Abbrev cmdHelp;
+extern const Abbrev cmdLocalspace;
 extern const Abbrev cmdMap;
 extern const Abbrev cmdSearch;
 extern const Abbrev cmdSet;

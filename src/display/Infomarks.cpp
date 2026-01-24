@@ -16,6 +16,7 @@
 #include "InfomarkSelection.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
+#include "RoomRenderTransform.h"
 #include "connectionselection.h"
 #include "mapcanvas.h"
 
@@ -94,15 +95,7 @@ NODISCARD static FontFormatFlags getFontFormatFlags(const InfomarkClassEnum info
     return {};
 }
 
-NODISCARD static float sanitizeRoomScale(const float scale)
-{
-    if (!std::isfinite(scale) || scale <= 0.f) {
-        return 1.f;
-    }
-    return scale;
-}
-
-NODISCARD static glm::vec2 scaleInfomarkPoint(const MapData &data,
+NODISCARD static glm::vec3 scaleInfomarkPoint(const MapData &data,
                                               const glm::vec2 &pos,
                                               const int layer)
 {
@@ -110,12 +103,11 @@ NODISCARD static glm::vec2 scaleInfomarkPoint(const MapData &data,
     const int roomY = static_cast<int>(std::floor(pos.y));
     const Coordinate roomCoord{roomX, roomY, layer};
     if (const auto room = data.findRoomHandle(roomCoord)) {
-        const float scale = sanitizeRoomScale(room.getScaleFactor());
-        const glm::vec2 center{static_cast<float>(roomX) + 0.5f,
-                               static_cast<float>(roomY) + 0.5f};
-        return center + (pos - center) * scale;
+        const auto transform = getRoomRenderTransform(room);
+        return applyRoomGeometryTransform(transform,
+                                          glm::vec3{pos, static_cast<float>(layer)});
     }
-    return pos;
+    return glm::vec3{pos, static_cast<float>(layer)};
 }
 
 BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
@@ -267,8 +259,8 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
                              static_cast<float>(pos1.y) / INFOMARK_SCALE + offset.y};
     const glm::vec2 pos2_raw{static_cast<float>(pos2.x) / INFOMARK_SCALE + offset.x,
                              static_cast<float>(pos2.y) / INFOMARK_SCALE + offset.y};
-    const glm::vec2 pos1_scaled = scaleInfomarkPoint(m_data, pos1_raw, layer);
-    const glm::vec2 pos2_scaled = scaleInfomarkPoint(m_data, pos2_raw, layer);
+    const glm::vec3 pos1_scaled = scaleInfomarkPoint(m_data, pos1_raw, layer);
+    const glm::vec3 pos2_scaled = scaleInfomarkPoint(m_data, pos2_raw, layer);
     const float dx = pos2_scaled.x - pos1_scaled.x;
     const float dy = pos2_scaled.y - pos1_scaled.y;
 
@@ -279,8 +271,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
     const Color infoMarkColor = getInfomarkColor(infoMarkType, infoMarkClass).withAlpha(0.55f);
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
-    const glm::vec3 pos{pos1_scaled, static_cast<float>(layer)};
-    batch.setOffset(pos);
+    batch.setOffset(pos1_scaled);
 
     const Color bgColor = (overrideColor) ? overrideColor.value() : infoMarkColor;
     batch.setColor(bgColor);
@@ -289,7 +280,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
     case InfomarkTypeEnum::TEXT: {
         const auto utf8 = marker.getText().getStdStringViewUtf8();
         const auto latin1_to_render = charset::conversion::utf8ToLatin1(utf8); // GL font is latin1
-        batch.renderText(pos,
+        batch.renderText(pos1_scaled,
                          latin1_to_render,
                          textColor(bgColor),
                          bgColor,
@@ -367,9 +358,8 @@ void MapCanvas::paintSelectedInfomarks()
                 batch.setOffset(glm::vec3{0});
                 const glm::vec2 rawPoint
                     = static_cast<glm::vec2>(c.to_vec3()) / static_cast<float>(INFOMARK_SCALE);
-                const glm::vec2 scaledPoint = scaleInfomarkPoint(m_data, rawPoint, c.z);
-                const glm::vec3 point{scaledPoint, static_cast<float>(c.z)};
-                batch.drawPoint(point);
+                const glm::vec3 scaledPoint = scaleInfomarkPoint(m_data, rawPoint, c.z);
+                batch.drawPoint(scaledPoint);
             };
 
             const auto drawSelectionPoints = [this, &drawPoint](const InfomarkHandle &marker) {

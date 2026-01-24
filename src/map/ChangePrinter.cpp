@@ -161,6 +161,11 @@ void ChangePrinter::print(const float value)
     m_os.writeWithColor(const_color, value);
 }
 
+void ChangePrinter::print(const std::string_view value)
+{
+    print_string_color_quoted(m_os, value);
+}
+
 void ChangePrinter::print(const Coordinate &coord)
 {
     auto &os = m_os;
@@ -746,6 +751,36 @@ void ChangePrinter::virt_accept(const RemoveAllDoorNames &)
 void ChangePrinter::virt_accept(const GenerateBaseMap &)
 {
     m_os << "GenerateBaseMap{}";
+}
+
+void ChangePrinter::virt_accept(const CreateLocalSpace &change)
+{
+    BEGIN_STRUCT_HELPER("CreateLocalSpace")
+    {
+        HELPER_ADD_MEMBER(name);
+    }
+}
+
+void ChangePrinter::virt_accept(const SetLocalSpacePortal &change)
+{
+    BEGIN_STRUCT_HELPER("SetLocalSpacePortal")
+    {
+        HELPER_ADD_MEMBER(name);
+        HELPER_ADD_MEMBER(x);
+        HELPER_ADD_MEMBER(y);
+        HELPER_ADD_MEMBER(z);
+        HELPER_ADD_MEMBER(w);
+        HELPER_ADD_MEMBER(h);
+    }
+}
+
+void ChangePrinter::virt_accept(const AddRoomToLocalSpace &change)
+{
+    BEGIN_STRUCT_HELPER("AddRoomToLocalSpace")
+    {
+        HELPER_ADD_MEMBER(name);
+        HELPER_ADD_MEMBER(room);
+    }
 }
 
 void ChangePrinter::virt_accept(const AddPermanentRoom &change)

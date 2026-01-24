@@ -14,6 +14,7 @@
 #include "../map/CommandId.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitFlags.h"
+#include "../map/World.h"
 #include "../map/enums.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
@@ -49,6 +50,7 @@ const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroup{"group", 2};
 const Abbrev cmdHelp{"help", 2};
+const Abbrev cmdLocalspace{"_localspace"};
 const Abbrev cmdMap{"map"};
 const Abbrev cmdMark{"mark", 3};
 const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
@@ -587,6 +589,120 @@ void AbstractParser::parseDirections(StringView view)
     }
 }
 
+void AbstractParser::parseLocalspace(StringView view)
+{
+    using namespace syntax;
+    static const auto abb = syntax::abbrevToken;
+
+    auto createLocalspace = Accept(
+        [this](User &user, const Pair *const args) {
+            auto &os = user.getOstream();
+            const auto v = getAnyVectorReversed(args);
+
+            if constexpr (IS_DEBUG_BUILD) {
+                const auto &name = v[0].getString();
+                assert(name == "create");
+            }
+
+            const std::string spaceName = v[1].getString();
+            if (spaceName.empty()) {
+                os << "Localspace name is required.\n";
+                return;
+            }
+
+            if (!m_mapData.applySingleChange(Change{world_change_types::CreateLocalSpace{spaceName}})) {
+                os << "Failed to create localspace.\n";
+                return;
+            }
+            send_ok(os);
+        },
+        "create localspace");
+
+    auto setPortal = Accept(
+        [this](User &user, const Pair *const args) {
+            auto &os = user.getOstream();
+            const auto v = getAnyVectorReversed(args);
+
+            if constexpr (IS_DEBUG_BUILD) {
+                const auto &name = v[0].getString();
+                assert(name == "portal");
+            }
+
+            const std::string spaceName = v[1].getString();
+            if (spaceName.empty()) {
+                os << "Localspace name is required.\n";
+                return;
+            }
+
+            const auto &world = m_mapData.getCurrentMap().getWorld();
+            if (!world.findLocalSpaceId(spaceName)) {
+                os << "Unknown localspace name.\n";
+                return;
+            }
+
+            const float x = v[2].getFloat();
+            const float y = v[3].getFloat();
+            const float z = v[4].getFloat();
+            const float w = v[5].getFloat();
+            const float h = v[6].getFloat();
+
+            if (!m_mapData.applySingleChange(Change{world_change_types::SetLocalSpacePortal{
+                    spaceName, x, y, z, w, h}})) {
+                os << "Failed to set portal.\n";
+                return;
+            }
+            send_ok(os);
+        },
+        "set localspace portal");
+
+    auto addRoom = Accept(
+        [this](User &user, const Pair *const args) {
+            auto &os = user.getOstream();
+            const auto v = getAnyVectorReversed(args);
+
+            if constexpr (IS_DEBUG_BUILD) {
+                const auto &name = v[0].getString();
+                assert(name == "addroom");
+            }
+
+            const std::string spaceName = v[1].getString();
+            if (spaceName.empty()) {
+                os << "Localspace name is required.\n";
+                return;
+            }
+
+            const auto &world = m_mapData.getCurrentMap().getWorld();
+            if (!world.findLocalSpaceId(spaceName)) {
+                os << "Unknown localspace name.\n";
+                return;
+            }
+
+            const RoomId roomId = getOtherRoom(v[2].getInt());
+            if (!m_mapData.applySingleChange(
+                    Change{world_change_types::AddRoomToLocalSpace{spaceName, roomId}})) {
+                os << "Failed to add room to localspace.\n";
+                return;
+            }
+            send_ok(os);
+        },
+        "add room to localspace");
+
+    auto localspaceSyntax = buildSyntax(
+        buildSyntax(abb("create"), TokenMatcher::alloc<ArgString>(), createLocalspace),
+        buildSyntax(abb("portal"),
+                    TokenMatcher::alloc<ArgString>(),
+                    TokenMatcher::alloc<ArgFloat>(),
+                    TokenMatcher::alloc<ArgFloat>(),
+                    TokenMatcher::alloc<ArgFloat>(),
+                    TokenMatcher::alloc<ArgFloat>(),
+                    TokenMatcher::alloc<ArgFloat>(),
+                    setPortal),
+        buildSyntax(abb("addroom"), TokenMatcher::alloc<ArgString>(), TokenMatcher::alloc<ArgInt>(),
+                    addRoom));
+
+    eval(cmdLocalspace.getCommand(), localspaceSyntax, view);
+}
+
 class NODISCARD ArgHelpCommand final : public syntax::IArgument
 {
 private:
@@ -1011,6 +1127,13 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Print the changes changes since the last save"));
+    add(
+        cmdLocalspace,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseLocalspace(rest);
+            return true;
+        },
+        makeSimpleHelp("Create localspaces and assign portals/rooms."));
     add(
         cmdSearch,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {

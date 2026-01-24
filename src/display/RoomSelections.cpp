@@ -2,6 +2,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/EnumIndexedArray.h"
+#include "../map/RoomHandle.h"
 #include "../map/coordinate.h"
 #include "../map/room.h"
 #include "../mapdata/roomselection.h"
@@ -9,6 +10,7 @@
 #include "../opengl/OpenGLTypes.h"
 #include "Characters.h"
 #include "MapCanvasData.h"
+#include "RoomRenderTransform.h"
 #include "Textures.h"
 #include "mapcanvas.h"
 
@@ -123,31 +125,33 @@ NODISCARD static float sanitizeRoomScale(const float scale)
     return scale;
 }
 
-void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
+void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RoomHandle &room)
 {
-    const Coordinate &roomPos = room.getPosition();
-    const float x = static_cast<float>(roomPos.x);
-    const float y = static_cast<float>(roomPos.y);
-    const float z = static_cast<float>(roomPos.z);
-    const float roomScale = sanitizeRoomScale(room.getScaleFactor());
+    const auto transform = getRoomRenderTransform(room);
+    const glm::vec3 &renderCenter = transform.renderCenter;
+    const glm::vec3 &roomCenter = transform.roomCenter;
+    const float roomScale = sanitizeRoomScale(transform.roomScale);
+    const float combinedScale = roomScale * transform.localspaceScale;
 
     // This fake GL uses resetMatrix() before this function.
     gl.resetMatrix();
 
     const float marginPixels = MapScreen::DEFAULT_MARGIN_PIXELS;
     const bool isMoving = hasRoomSelectionMove();
+    const bool isVisible = glm::distance(m_mapScreen.getProxyLocation(renderCenter, marginPixels / 2.f),
+                                         renderCenter)
+                           < 0.001f;
 
-    if (!isMoving && !m_mapScreen.isRoomVisible(roomPos, marginPixels / 2.f)) {
-        const glm::vec3 roomCenter = roomPos.to_vec3() + glm::vec3{0.5f, 0.5f, 0.f};
-        const auto dot = DistantObjectTransform::construct(roomCenter, m_mapScreen, marginPixels);
+    if (!isMoving && !isVisible) {
+        const auto dot = DistantObjectTransform::construct(renderCenter, m_mapScreen, marginPixels);
         gl.glTranslatef(dot.offset.x, dot.offset.y, dot.offset.z);
         gl.glRotatef(dot.rotationDegrees, 0.f, 0.f, 1.f);
         const glm::vec2 iconCenter{0.5f, 0.5f};
         gl.glTranslatef(-iconCenter.x, -iconCenter.y, 0.f);
 
         // Scale based upon distance
-        const auto scaleFactor = std::invoke([this, roomCenter]() -> float {
-            const auto delta = roomCenter - m_mapScreen.getCenter();
+        const auto scaleFactor = std::invoke([this, &renderCenter]() -> float {
+            const auto delta = renderCenter - m_mapScreen.getCenter();
             const auto distance = std::sqrt((delta.y * delta.y) + (delta.x * delta.x));
             // If we're too far away just scale down to 50% at most
             if (distance >= static_cast<float>(BASESIZE)) {
@@ -160,8 +164,8 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
         gl.drawColoredQuad(RoomSelFakeGL::SelTypeEnum::Distant);
     } else {
         // Room is close
-        gl.glTranslatef(x + 0.5f, y + 0.5f, z);
-        gl.glScalef(roomScale, roomScale, 1.f);
+        gl.glTranslatef(renderCenter.x, renderCenter.y, renderCenter.z);
+        gl.glScalef(combinedScale, combinedScale, 1.f);
         gl.glTranslatef(-0.5f, -0.5f, 0.f);
         gl.drawColoredQuad(RoomSelFakeGL::SelTypeEnum::Near);
         gl.resetMatrix();
@@ -170,10 +174,14 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
     if (isMoving) {
         gl.resetMatrix();
         const auto &relativeOffset = m_roomSelectionMove->pos;
-        gl.glTranslatef(x + static_cast<float>(relativeOffset.x) + 0.5f,
-                        y + static_cast<float>(relativeOffset.y) + 0.5f,
-                        z);
-        gl.glScalef(roomScale, roomScale, 1.f);
+        const glm::vec3 movedCenter
+            = applyLocalspaceTransform(transform,
+                                       roomCenter
+                                           + glm::vec3{static_cast<float>(relativeOffset.x),
+                                                       static_cast<float>(relativeOffset.y),
+                                                       0.f});
+        gl.glTranslatef(movedCenter.x, movedCenter.y, movedCenter.z);
+        gl.glScalef(combinedScale, combinedScale, 1.f);
         gl.glTranslatef(-0.5f, -0.5f, 0.f);
         gl.drawColoredQuad(m_roomSelectionMove->wrongPlace ? RoomSelFakeGL::SelTypeEnum::MoveBad
                                                            : RoomSelFakeGL::SelTypeEnum::MoveGood);
@@ -191,7 +199,7 @@ void MapCanvas::paintSelectedRooms()
     for (const RoomId id : deref(m_roomSelection)) {
         if (const auto room = m_data.findRoomHandle(id)) {
             gl.resetMatrix();
-            paintSelectedRoom(gl, room.getRaw());
+            paintSelectedRoom(gl, room);
         }
     }
 

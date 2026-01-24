@@ -6,6 +6,7 @@
 #include "../configuration/configuration.h"
 #include "../group/CGroupChar.h"
 #include "../group/mmapper2group.h"
+#include "../map/Map.h"
 #include "../map/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomselection.h"
@@ -44,35 +45,27 @@ DistantObjectTransform DistantObjectTransform::construct(const glm::vec3 &pos,
     return DistantObjectTransform{hint, degrees};
 }
 
-bool CharacterBatch::isVisible(const Coordinate &c, float margin) const
+bool CharacterBatch::isVisible(const glm::vec3 &pos, const float margin) const
 {
-    return m_mapScreen.isRoomVisible(c, margin);
+    return glm::distance(m_mapScreen.getProxyLocation(pos, margin), pos) < 0.001f;
 }
 
-NODISCARD static float sanitizeRoomScale(const float scale)
-{
-    if (!std::isfinite(scale) || scale <= 0.f) {
-        return 1.f;
-    }
-    return scale;
-}
-
-void CharacterBatch::drawCharacter(const Coordinate &c,
-                                   const float roomScale,
-                                   const Color color,
-                                   const bool fill)
+void CharacterBatch::drawCharacter(const RoomHandle &room, const Color color, const bool fill)
 {
     const Configuration::CanvasSettings &settings = getConfig().canvas;
 
-    const glm::vec3 roomCenter = c.to_vec3() + glm::vec3{0.5f, 0.5f, 0.f};
-    const int layerDifference = c.z - m_currentLayer;
+    const auto transform = getRoomRenderTransform(room);
+    const glm::vec3 &roomCenter = transform.roomCenter;
+    const glm::vec3 &renderCenter = transform.renderCenter;
+    const Coordinate &coord = room.getPosition();
+    const int layerDifference = coord.z - m_currentLayer;
 
     auto &gl = getOpenGL();
     gl.setColor(color);
 
     // REVISIT: The margin probably needs to be modified for high-dpi.
     const float marginPixels = MapScreen::DEFAULT_MARGIN_PIXELS;
-    const bool visible = isVisible(c, marginPixels / 2.f);
+    const bool visible = isVisible(renderCenter, marginPixels / 2.f);
     const bool isFar = m_scale <= settings.charBeaconScaleCutoff;
     const bool wantBeacons = settings.drawCharBeacons && isFar;
     if (!visible) {
@@ -80,7 +73,7 @@ void CharacterBatch::drawCharacter(const Coordinate &c,
             auto opt = utils::getEnvBool("MMAPPER_SCREEN_SPACE_ARROW");
             return opt ? opt.value() : true;
         });
-        const auto dot = DistantObjectTransform::construct(roomCenter, m_mapScreen, marginPixels);
+        const auto dot = DistantObjectTransform::construct(renderCenter, m_mapScreen, marginPixels);
         // Player is distant
         if (useScreenSpacePlayerArrow) {
             gl.addScreenSpaceArrow(dot.offset, dot.rotationDegrees, color, fill);
@@ -97,8 +90,9 @@ void CharacterBatch::drawCharacter(const Coordinate &c,
 
     const bool differentLayer = layerDifference != 0;
     if (differentLayer) {
-        const glm::vec3 centerOnCurrentLayer{static_cast<glm::vec2>(roomCenter),
-                                             static_cast<float>(m_currentLayer)};
+        const glm::vec3 centerOnCurrentLayer = applyLocalspaceTransform(
+            transform,
+            glm::vec3{roomCenter.x, roomCenter.y, static_cast<float>(m_currentLayer)});
         // Draw any arrow on the current layer pointing in either up or down
         // (this may not make sense graphically in an angled 3D view).
         gl.glPushMatrix();
@@ -111,7 +105,7 @@ void CharacterBatch::drawCharacter(const Coordinate &c,
     }
 
     const bool beacon = visible && !differentLayer && wantBeacons;
-    gl.drawBox(c, sanitizeRoomScale(roomScale), fill, beacon, isFar);
+    gl.drawBox(coord, transform, fill, beacon, isFar);
 }
 
 void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
@@ -121,7 +115,8 @@ void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
     mmgl::generateLineQuadsSafe(m_pathLineQuads, p1, p2, PATH_LINE_WIDTH, color);
 }
 
-void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
+void CharacterBatch::drawPreSpammedPath(const Map &map,
+                                        const Coordinate &c1,
                                         const std::vector<Coordinate> &path,
                                         const Color color)
 {
@@ -130,13 +125,19 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
     }
 
     using TranslatedVerts = std::vector<glm::vec3>;
-    const auto verts = std::invoke([&c1, &path]() -> TranslatedVerts {
+    const auto verts = std::invoke([&c1, &path, &map]() -> TranslatedVerts {
         TranslatedVerts translated;
         translated.reserve(path.size() + 1);
 
-        const auto add = [&translated](const Coordinate &c) -> void {
+        const auto add = [&translated, &map](const Coordinate &c) -> void {
             static const glm::vec3 PATH_OFFSET{0.5f, 0.5f, 0.f};
-            translated.push_back(c.to_vec3() + PATH_OFFSET);
+            const glm::vec3 pos = c.to_vec3() + PATH_OFFSET;
+            if (const auto room = map.findRoomHandle(c)) {
+                const auto transform = getRoomRenderTransform(room);
+                translated.push_back(applyLocalspaceTransform(transform, pos));
+            } else {
+                translated.push_back(pos);
+            }
         };
 
         add(c1);
@@ -238,7 +239,7 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
 }
 
 void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
-                                         const float roomScale,
+                                         const RoomRenderTransform &transform,
                                          const bool fill,
                                          const bool beacon,
                                          const bool isFar)
@@ -253,9 +254,9 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
 
     glPushMatrix();
 
-    glTranslatef(coord.to_vec3());
-    glTranslatef(glm::vec3{0.5f, 0.5f, 0.f});
-    glScalef(roomScale, roomScale, 1.f);
+    glTranslatef(transform.renderCenter);
+    const float combinedScale = getCombinedRoomScale(transform);
+    glScalef(combinedScale, combinedScale, 1.f);
     glTranslatef(glm::vec3{-0.5f, -0.5f, 0.f});
 
     if (numAlreadyInRoom != 0) {
@@ -423,19 +424,21 @@ void MapCanvas::paintCharacters()
         if (const std::optional<RoomId> opt_pos = m_data.getCurrentRoomId()) {
             const auto &id = opt_pos.value();
             if (const auto room = m_data.findRoomHandle(id)) {
-                const auto &pos = room.getPosition();
                 // draw the characters before the current position
-                characterBatch.incrementCount(pos);
+                characterBatch.incrementCount(room.getPosition());
                 drawGroupCharacters(characterBatch);
-                characterBatch.resetCount(pos);
+                characterBatch.resetCount(room.getPosition());
 
                 // paint char current position
                 const Color color{getConfig().groupManager.color};
-                characterBatch.drawCharacter(pos, room.getScaleFactor(), color);
+                characterBatch.drawCharacter(room, color);
 
                 // paint prespam
                 const auto prespam = m_data.getPath(id, m_prespammedPath.getQueue());
-                characterBatch.drawPreSpammedPath(pos, prespam, color);
+                characterBatch.drawPreSpammedPath(m_data.getCurrentMap(),
+                                                  room.getPosition(),
+                                                  prespam,
+                                                  color);
                 return;
             } else {
                 // this can happen if the "current room" is deleted
@@ -480,11 +483,10 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         }
 
         const RoomId id = r.getId();
-        const auto &pos = r.getPosition();
         const auto color = Color{character.getColor()};
         const bool fill = !drawnRoomIds.contains(id);
 
-        batch.drawCharacter(pos, r.getScaleFactor(), color, fill);
+        batch.drawCharacter(r, color, fill);
         drawnRoomIds.insert(id);
     }
 }

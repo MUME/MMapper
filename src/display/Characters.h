@@ -5,6 +5,7 @@
 #include "../global/RuleOf5.h"
 #include "../global/utils.h"
 #include "../map/coordinate.h"
+#include "RoomRenderTransform.h"
 #include "../opengl/Font.h"
 #include "../opengl/OpenGLTypes.h"
 
@@ -21,6 +22,7 @@
 #include <QColor>
 
 class MapScreen;
+class Map;
 class OpenGL;
 struct MapCanvasTextures;
 
@@ -150,7 +152,7 @@ private:
         }
         void drawArrow(bool fill, bool beacon);
         void drawBox(const Coordinate &coord,
-                     float roomScale,
+                     const RoomRenderTransform &transform,
                      bool fill,
                      bool beacon,
                      bool isFar);
@@ -208,15 +210,13 @@ public:
 
     void resetCount(const Coordinate &c) { getOpenGL().clear(c); }
 
-    NODISCARD bool isVisible(const Coordinate &c, float margin) const;
+    NODISCARD bool isVisible(const glm::vec3 &pos, float margin) const;
 
 public:
-    void drawCharacter(const Coordinate &coordinate,
-                       float roomScale,
-                       const Color color,
-                       bool fill = true);
+    void drawCharacter(const RoomHandle &room, const Color color, bool fill = true);
 
-    void drawPreSpammedPath(const Coordinate &coordinate,
+    void drawPreSpammedPath(const Map &map,
+                            const Coordinate &coordinate,
                             const std::vector<Coordinate> &path,
                             const Color color);
 

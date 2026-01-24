@@ -16,6 +16,7 @@
 
 #include <iosfwd>
 #include <ostream>
+#include <string_view>
 
 struct NODISCARD ChangePrinter final : public AbstractChangeVisitor
 {
@@ -47,6 +48,7 @@ private:
     void print(ServerRoomId serverId);
     void print(const Coordinate &coord);
     void print(float value);
+    void print(std::string_view value);
 
 private:
     void print(const DoorName &name);

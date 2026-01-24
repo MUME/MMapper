@@ -61,6 +61,8 @@ set(mmapper_SRCS
     display/MapCanvasRoomDrawer.h
     display/RoadIndex.cpp
     display/RoadIndex.h
+    display/RoomRenderTransform.cpp
+    display/RoomRenderTransform.h
     display/RoomSelections.cpp
     display/Textures.cpp
     display/Textures.h
@@ -281,6 +283,7 @@ set(mmapper_SRCS
     map/InvalidMapOperation.h
     map/Map.cpp
     map/Map.h
+    map/localspace.h
     map/MapConsistencyError.cpp
     map/MapConsistencyError.h
     map/ParseTree.cpp

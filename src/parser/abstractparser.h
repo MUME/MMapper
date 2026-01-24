@@ -407,6 +407,7 @@ private:
     void parseHelp(StringView words);
     void parseMark(StringView input);
     void parseRoom(StringView input);
+    void parseLocalspace(StringView input);
     void parseGroup(StringView input);
     void parseTimer(StringView input);
 

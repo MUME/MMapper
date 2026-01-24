@@ -30,6 +30,7 @@
 #include "ConnectionLineBuilder.h"
 #include "MapCanvasData.h"
 #include "RoadIndex.h"
+#include "RoomRenderTransform.h"
 #include "mapcanvas.h" // hack, since we're now definining some of its symbols
 
 #include <cassert>
@@ -405,36 +406,27 @@ static void visitRooms(const RoomVector &rooms,
     }
 }
 
-NODISCARD static float sanitizeRoomScale(const float scale)
-{
-    if (!std::isfinite(scale) || scale <= 0.f) {
-        return 1.f;
-    }
-    return scale;
-}
-
-NODISCARD static glm::vec3 scaledRoomVertex(const Coordinate &pos,
+NODISCARD static glm::vec3 scaledRoomVertex(const glm::vec3 &center,
                                             const float scale,
                                             const float x,
                                             const float y)
 {
-    const auto center = pos.to_vec3() + glm::vec3{0.5f, 0.5f, 0.f};
     const auto offset = glm::vec3{x - 0.5f, y - 0.5f, 0.f} * scale;
     return center + offset;
 }
 
 struct NODISCARD RoomTex
 {
-    Coordinate coord;
+    glm::vec3 center{};
     MMTexArrayPosition pos;
     float scale = 1.f;
 
-    explicit RoomTex(const Coordinate input_coord,
+    explicit RoomTex(const glm::vec3 input_center,
                      const MMTexArrayPosition &input_pos,
                      const float input_scale)
-        : coord{input_coord}
+        : center{input_center}
         , pos{input_pos}
-        , scale{sanitizeRoomScale(input_scale)}
+        , scale{input_scale}
     {
         if (input_pos.array == INVALID_MM_TEXTURE_ID)
             throw std::invalid_argument("input_pos");
@@ -451,11 +443,11 @@ struct NODISCARD ColoredRoomTex : public RoomTex
 {
     NamedColorEnum colorId = NamedColorEnum::DEFAULT;
 
-    explicit ColoredRoomTex(const Coordinate input_coord,
+    explicit ColoredRoomTex(const glm::vec3 input_center,
                             const MMTexArrayPosition input_pos,
                             const NamedColorEnum input_color,
                             const float input_scale)
-        : RoomTex{input_coord, input_pos, input_scale}
+        : RoomTex{input_center, input_pos, input_scale}
         , colorId{input_color}
     {}
 };
@@ -587,12 +579,12 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedTexturedMeshes(
         // A-B
         for (size_t i = beg; i < end; ++i) {
             const RoomTex &thisVert = textures[i];
-            const auto &pos = thisVert.coord;
+            const auto &center = thisVert.center;
             const float scale = thisVert.scale;
             const auto z = thisVert.pos.position;
 
 #define EMIT(x, y) \
-    verts.emplace_back(glm::vec3((x), (y), z), ::scaledRoomVertex(pos, scale, (x), (y)))
+    verts.emplace_back(glm::vec3((x), (y), z), ::scaledRoomVertex(center, scale, (x), (y)))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -652,13 +644,13 @@ NODISCARD static LayerMeshesIntermediate::FnVec createSortedColoredTexturedMeshe
         // A-B
         for (size_t i = beg; i < end; ++i) {
             const ColoredRoomTex &thisVert = textures[i];
-            const auto &pos = thisVert.coord;
+            const auto &center = thisVert.center;
             const float scale = thisVert.scale;
             const auto color = XNamedColor{thisVert.colorId}.getColor();
             const auto z = thisVert.pos.position;
 
 #define EMIT(x, y) \
-    verts.emplace_back(color, glm::vec3((x), (y), z), ::scaledRoomVertex(pos, scale, (x), (y)))
+    verts.emplace_back(color, glm::vec3((x), (y), z), ::scaledRoomVertex(center, scale, (x), (y)))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -754,7 +746,16 @@ public:
 private:
     NODISCARD bool virt_acceptRoom(const RoomHandle &room) const final
     {
-        return m_bounds.contains(room.getPosition());
+        if (!m_bounds.isRestricted()) {
+            return true;
+        }
+
+        const auto &bounds = m_bounds.getBounds();
+        const auto transform = getRoomRenderTransform(room);
+        const auto &center = transform.renderCenter;
+        return center.x >= bounds.min.x && center.x <= bounds.max.x + 1.f
+               && center.y >= bounds.min.y && center.y <= bounds.max.y + 1.f
+               && center.z >= bounds.min.z && center.z <= bounds.max.z + 1.f;
     }
 
     void virt_visitTerrainTexture(const RoomHandle &room, const MMTexArrayPosition &terrain) final
@@ -763,12 +764,12 @@ private:
             return;
         }
 
-        const auto pos = room.getPosition();
-        const float scale = sanitizeRoomScale(room.getScaleFactor());
-        m_data.roomTerrains.emplace_back(pos, terrain, scale);
+        const auto transform = getRoomRenderTransform(room);
+        const float scale = getCombinedRoomScale(transform);
+        m_data.roomTerrains.emplace_back(transform.renderCenter, terrain, scale);
 
 #define EMIT(x, y) \
-    m_data.roomLayerBoostQuads.emplace_back(::scaledRoomVertex(pos, scale, (x), (y)))
+    m_data.roomLayerBoostQuads.emplace_back(::scaledRoomVertex(transform.renderCenter, scale, (x), (y)))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);
@@ -779,26 +780,29 @@ private:
     void virt_visitTrailTexture(const RoomHandle &room, const MMTexArrayPosition &trail) final
     {
         if (trail.array != INVALID_MM_TEXTURE_ID) {
-            m_data.roomTrails.emplace_back(room.getPosition(),
+            const auto transform = getRoomRenderTransform(room);
+            m_data.roomTrails.emplace_back(transform.renderCenter,
                                            trail,
-                                           sanitizeRoomScale(room.getScaleFactor()));
+                                           getCombinedRoomScale(transform));
         }
     }
 
     void virt_visitOverlayTexture(const RoomHandle &room, const MMTexArrayPosition &overlay) final
     {
         if (overlay.array != INVALID_MM_TEXTURE_ID) {
-            m_data.roomOverlays.emplace_back(room.getPosition(),
+            const auto transform = getRoomRenderTransform(room);
+            m_data.roomOverlays.emplace_back(transform.renderCenter,
                                              overlay,
-                                             sanitizeRoomScale(room.getScaleFactor()));
+                                             getCombinedRoomScale(transform));
         }
     }
 
     void virt_visitNamedColorTint(const RoomHandle &room, const RoomTintEnum tint) final
     {
-        const auto pos = room.getPosition();
-        const float scale = sanitizeRoomScale(room.getScaleFactor());
-#define EMIT(x, y) m_data.roomTints[tint].emplace_back(::scaledRoomVertex(pos, scale, (x), (y)))
+        const auto transform = getRoomRenderTransform(room);
+        const float scale = getCombinedRoomScale(transform);
+#define EMIT(x, y) \
+    m_data.roomTints[tint].emplace_back(::scaledRoomVertex(transform.renderCenter, scale, (x), (y)))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);
@@ -820,27 +824,30 @@ private:
             // Note: We could use two door textures (NESW and UD), and then just rotate the
             // texture coordinates, but doing that would require a different code path.
             const MMTexArrayPosition &tex = m_textures.door[dir];
-            m_data.doors.emplace_back(room.getPosition(),
+            const auto transform = getRoomRenderTransform(room);
+            m_data.doors.emplace_back(transform.renderCenter,
                                       tex,
                                       color,
-                                      sanitizeRoomScale(room.getScaleFactor()));
+                                      getCombinedRoomScale(transform));
 
         } else {
             if (isNESW(dir)) {
+                const auto transform = getRoomRenderTransform(room);
                 if (wallType == WallTypeEnum::SOLID) {
                     const MMTexArrayPosition &tex = m_textures.wall[dir];
-                    m_data.solidWallLines.emplace_back(room.getPosition(),
+                    m_data.solidWallLines.emplace_back(transform.renderCenter,
                                                        tex,
                                                        color,
-                                                       sanitizeRoomScale(room.getScaleFactor()));
+                                                       getCombinedRoomScale(transform));
                 } else {
                     const MMTexArrayPosition &tex = m_textures.dotted_wall[dir];
-                    m_data.dottedWallLines.emplace_back(room.getPosition(),
+                    m_data.dottedWallLines.emplace_back(transform.renderCenter,
                                                         tex,
                                                         color,
-                                                        sanitizeRoomScale(room.getScaleFactor()));
+                                                        getCombinedRoomScale(transform));
                 }
             } else {
+                const auto transform = getRoomRenderTransform(room);
                 const bool isUp = dir == ExitDirEnum::UP;
                 assert(isUp || dir == ExitDirEnum::DOWN);
 
@@ -850,7 +857,7 @@ private:
                                                                 : m_textures.exit_down);
 
                 m_data.roomUpDownExits.emplace_back(
-                    room.getPosition(), tex, color, sanitizeRoomScale(room.getScaleFactor()));
+                    transform.renderCenter, tex, color, getCombinedRoomScale(transform));
             }
         }
     }
@@ -861,14 +868,20 @@ private:
     {
         switch (type) {
         case StreamTypeEnum::OutFlow:
-            m_data.streamOuts.emplace_back(room.getPosition(),
-                                           m_textures.stream_out[dir],
-                                           sanitizeRoomScale(room.getScaleFactor()));
+            {
+                const auto transform = getRoomRenderTransform(room);
+                m_data.streamOuts.emplace_back(transform.renderCenter,
+                                               m_textures.stream_out[dir],
+                                               getCombinedRoomScale(transform));
+            }
             return;
         case StreamTypeEnum::InFlow:
-            m_data.streamIns.emplace_back(room.getPosition(),
-                                          m_textures.stream_in[dir],
-                                          sanitizeRoomScale(room.getScaleFactor()));
+            {
+                const auto transform = getRoomRenderTransform(room);
+                m_data.streamIns.emplace_back(transform.renderCenter,
+                                              m_textures.stream_in[dir],
+                                              getCombinedRoomScale(transform));
+            }
             return;
         default:
             break;

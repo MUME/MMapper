@@ -15,6 +15,7 @@
 #include "../opengl/OpenGLTypes.h"
 #include "ConnectionLineBuilder.h"
 #include "MapCanvasData.h"
+#include "RoomRenderTransform.h"
 #include "connectionselection.h"
 #include "mapcanvas.h"
 
@@ -70,6 +71,19 @@ NODISCARD static float sanitizeRoomScale(const float scale)
     return scale;
 }
 
+NODISCARD static bool isRoomWithinBounds(const RoomHandle &room, const OptBounds &bounds)
+{
+    if (!bounds.isRestricted()) {
+        return true;
+    }
+
+    const auto &bb = bounds.getBounds();
+    const auto transform = getRoomRenderTransform(room);
+    const auto &center = transform.renderCenter;
+    return center.x >= bb.min.x && center.x <= bb.max.x + 1.f && center.y >= bb.min.y
+           && center.y <= bb.max.y + 1.f && center.z >= bb.min.z && center.z <= bb.max.z + 1.f;
+}
+
 NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir, const float scale)
 {
     const float roomScale = sanitizeRoomScale(scale);
@@ -116,7 +130,10 @@ NODISCARD static glm::vec3 getConnectionOffset(const RoomHandle &room, const Exi
 
 NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
 {
-    return cd.room.getPosition().to_vec3() + getConnectionOffset(cd.room, cd.direction);
+    const auto transform = getRoomRenderTransform(cd.room);
+    const glm::vec3 worldPos
+        = cd.room.getPosition().to_vec3() + getConnectionOffset(cd.room, cd.direction);
+    return applyLocalspaceTransform(transform, worldPos);
 }
 
 NODISCARD static glm::vec3 scalePointInRoom(const glm::vec3 &pos,
@@ -181,6 +198,8 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
 
     const Coordinate &sourcePos = sourceRoom.getPosition();
     const Coordinate &targetPos = targetRoom.getPosition();
+    const auto sourceTransform = getRoomRenderTransform(sourceRoom);
+    const auto targetTransform = getRoomRenderTransform(targetRoom);
 
     if (sourcePos.z != m_currentLayer && targetPos.z != m_currentLayer) {
         return;
@@ -255,8 +274,17 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
     });
 
     static const auto bg = Colors::black.withAlpha(0.4f);
-    const glm::vec3 pos{xy, m_currentLayer};
-    m_roomNameBatch.emplace_back(GLText{pos,
+    const glm::vec3 pos{xy, static_cast<float>(m_currentLayer)};
+    const auto &transform = std::invoke([&]() -> const RoomRenderTransform & {
+        if (sourceTransform.localspaceId == targetTransform.localspaceId) {
+            return sourceTransform;
+        }
+        const float distSource = glm::distance(xy, sourcePos.to_vec2());
+        const float distTarget = glm::distance(xy, targetPos.to_vec2());
+        return (distSource <= distTarget) ? sourceTransform : targetTransform;
+    });
+    const glm::vec3 renderPos = applyLocalspaceTransform(transform, pos);
+    m_roomNameBatch.emplace_back(GLText{renderPos,
                                         mmqt::toStdStringLatin1(name), // GL font is latin1
                                         Colors::white,
                                         bg,
@@ -270,7 +298,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
     // Ooops, this is wrong since we may reject a connection that would be visible
     // if we looked at the other side.
     const auto room_pos = room.getPosition();
-    const bool sourceWithinBounds = m_bounds.contains(room_pos);
+    const bool sourceWithinBounds = isRoomWithinBounds(room, m_bounds);
 
     const auto sourceId = room.getId();
 
@@ -294,7 +322,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
                     continue;
                 }
                 const auto &target_coord = targetRoom.getPosition();
-                const bool targetOutsideBounds = !m_bounds.contains(target_coord);
+                const bool targetOutsideBounds = !isRoomWithinBounds(targetRoom, m_bounds);
 
                 // Two way means that the target room directly connects back to source room
                 const ExitDirEnum targetDir = opposite(sourceDir);
@@ -350,7 +378,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
 
             // Only draw the connection if the target room is within the bounds
             const Coordinate &target_coord = targetRoom.getPosition();
-            if (!m_bounds.contains(target_coord)) {
+            if (!isRoomWithinBounds(targetRoom, m_bounds)) {
                 continue;
             }
 
@@ -438,7 +466,38 @@ void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
 
     auto &gl = getFakeGL();
 
-    gl.setOffset(static_cast<float>(leftX), static_cast<float>(leftY), 0.f);
+    const auto leftTransform = getRoomRenderTransform(leftRoom);
+    const auto rightTransform = getRoomRenderTransform(rightRoom);
+    const glm::vec3 leftOrigin = leftPos.to_vec3();
+    const glm::vec2 startOrigin{0.f, 0.f};
+    const glm::vec2 endOrigin{static_cast<float>(dX), static_cast<float>(dY)};
+    const bool sameLocalspace = leftTransform.localspaceId == rightTransform.localspaceId;
+
+    gl.setOffset(0.f, 0.f, 0.f);
+    gl.setPointTransform([leftTransform,
+                          rightTransform,
+                          leftOrigin,
+                          startOrigin,
+                          endOrigin,
+                          sameLocalspace](const glm::vec3 &point) -> glm::vec3 {
+        const glm::vec3 worldPoint = point + leftOrigin;
+        if (sameLocalspace) {
+            return applyLocalspaceTransform(leftTransform, worldPoint);
+        }
+        if (isWithinRoomBounds(point, startOrigin, ROOM_SCALE_MARGIN)) {
+            return applyLocalspaceTransform(leftTransform, worldPoint);
+        }
+        if (isWithinRoomBounds(point, endOrigin, ROOM_SCALE_MARGIN)) {
+            return applyLocalspaceTransform(rightTransform, worldPoint);
+        }
+        const glm::vec2 worldXY{worldPoint.x, worldPoint.y};
+        const glm::vec2 leftXY{leftTransform.roomCenter.x, leftTransform.roomCenter.y};
+        const glm::vec2 rightXY{rightTransform.roomCenter.x, rightTransform.roomCenter.y};
+        const float distLeft = glm::distance(worldXY, leftXY);
+        const float distRight = glm::distance(worldXY, rightXY);
+        const auto &transform = (distLeft <= distRight) ? leftTransform : rightTransform;
+        return applyLocalspaceTransform(transform, worldPoint);
+    });
 
     if (inExitFlags) {
         gl.setNormal();
@@ -473,6 +532,7 @@ void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
                                 endScale);
     }
 
+    gl.clearPointTransform();
     gl.setOffset(0, 0, 0);
     gl.setNormal();
 }
@@ -748,7 +808,9 @@ void MapCanvas::paintNearbyConnectionPoints()
             }
         }
 
-        points.emplace_back(Colors::cyan, roomCoord.to_vec3() + getConnectionOffset(room, dir));
+        const auto transform = getRoomRenderTransform(room);
+        const glm::vec3 worldPoint = roomCoord.to_vec3() + getConnectionOffset(room, dir);
+        points.emplace_back(Colors::cyan, applyLocalspaceTransform(transform, worldPoint));
     };
     const auto addPoints =
         [this, isSelection, &addPoint](const std::optional<MouseSel> &sel,
@@ -783,8 +845,10 @@ void MapCanvas::paintNearbyConnectionPoints()
         const CD valid = m_connectionSelection->isFirstValid() ? m_connectionSelection->getFirst()
                                                                : m_connectionSelection->getSecond();
         const Coordinate &c = valid.room.getPosition();
-        const glm::vec3 &pos = c.to_vec3();
-        points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.room, valid.direction));
+        const glm::vec3 pos = c.to_vec3();
+        const auto transform = getRoomRenderTransform(valid.room);
+        const glm::vec3 worldPos = pos + getConnectionOffset(valid.room, valid.direction);
+        points.emplace_back(Colors::cyan, applyLocalspaceTransform(transform, worldPos));
 
         addPoints(MouseSel{Coordinate2f{pos.x, pos.y}, c.z}, valid);
         addPoints(m_sel1, valid);
@@ -858,14 +922,16 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
     const auto &color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor
                                    : Colors::red;
     auto &verts = deref(m_currentBuffer).triVerts;
-    verts.emplace_back(color, a + m_offset);
-    verts.emplace_back(color, b + m_offset);
-    verts.emplace_back(color, c + m_offset);
+    verts.emplace_back(color, applyTransform(a) + m_offset);
+    verts.emplace_back(color, applyTransform(b) + m_offset);
+    verts.emplace_back(color, applyTransform(c) + m_offset);
 }
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
-    const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
+    const auto transform = [this](const glm::vec3 &vert) {
+        return applyTransform(vert) + m_offset;
+    };
     const float extension = CONNECTION_LINE_WIDTH * 0.5f;
 
     // Helper lambda to generate a quad between two points with a specific color.

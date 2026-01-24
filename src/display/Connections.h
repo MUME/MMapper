@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -123,9 +124,13 @@ private:
     struct NODISCARD ConnectionFakeGL final
     {
     private:
+        using PointTransform = std::function<glm::vec3(const glm::vec3 &)>;
+
+    private:
         ConnectionDrawerBuffers &m_buffers;
         ConnectionDrawerColorBuffer *m_currentBuffer = nullptr;
         glm::vec3 m_offset{0.f};
+        PointTransform m_pointTransform;
 
     public:
         explicit ConnectionFakeGL(ConnectionDrawerBuffers &buffers)
@@ -141,6 +146,14 @@ private:
         void setRed() { m_currentBuffer = &m_buffers.red; }
         void setNormal() { m_currentBuffer = &m_buffers.normal; }
         NODISCARD bool isNormal() const { return m_currentBuffer == &m_buffers.normal; }
+        void setPointTransform(PointTransform transform) { m_pointTransform = std::move(transform); }
+        void clearPointTransform() { m_pointTransform = nullptr; }
+
+    private:
+        NODISCARD glm::vec3 applyTransform(const glm::vec3 &point) const
+        {
+            return m_pointTransform ? m_pointTransform(point) : point;
+        }
 
     public:
         void drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c);

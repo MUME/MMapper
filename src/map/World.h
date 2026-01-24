@@ -7,6 +7,7 @@
 #include "Changes.h"
 #include "ExitFields.h"
 #include "InvalidMapOperation.h"
+#include "localspace.h"
 #include "ParseTree.h"
 #include "RawRooms.h"
 #include "Remapping.h"
@@ -18,7 +19,9 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 class RawRooms;
@@ -43,6 +46,36 @@ NODISCARD bool hasMeshDifference(const World &a, const World &b);
 class NODISCARD World final
 {
 private:
+    struct NODISCARD LocalSpace final
+    {
+        LocalSpaceId id = INVALID_LOCALSPACE_ID;
+        std::string name;
+        float portalX = 0.f;
+        float portalY = 0.f;
+        float portalZ = 0.f;
+        float portalW = 0.f;
+        float portalH = 0.f;
+        bool hasPortal = false;
+        RoomIdSet rooms;
+
+        mutable bool boundsDirty = true;
+        mutable bool hasBounds = false;
+        mutable float minX = 0.f;
+        mutable float maxX = 0.f;
+        mutable float minY = 0.f;
+        mutable float maxY = 0.f;
+        mutable float minZ = 0.f;
+        mutable float maxZ = 0.f;
+
+        NODISCARD bool operator==(const LocalSpace &rhs) const
+        {
+            return id == rhs.id && name == rhs.name && portalX == rhs.portalX
+                   && portalY == rhs.portalY && portalZ == rhs.portalZ && portalW == rhs.portalW
+                   && portalH == rhs.portalH && hasPortal == rhs.hasPortal && rooms == rhs.rooms;
+        }
+        NODISCARD bool operator!=(const LocalSpace &rhs) const { return !(*this == rhs); }
+    };
+
     Remapping m_remapping;
     RawRooms m_rooms;
     /// This must be updated any time a room's position changes.
@@ -51,6 +84,9 @@ private:
     ParseTree m_parseTree;
     AreaInfoMap m_areaInfos;
     InfomarkDb m_infomarks;
+    std::vector<LocalSpace> m_localSpaces;
+    std::unordered_map<RoomId, LocalSpaceId> m_roomLocalSpaces;
+    LocalSpaceId m_nextLocalSpaceId{1};
     bool m_checkedConsistency = false;
 
 public:
@@ -77,6 +113,14 @@ public:
 
 public:
     NODISCARD const InfomarkDb &getInfomarkDb() const { return m_infomarks; }
+
+public:
+    NODISCARD std::optional<LocalSpaceId> findLocalSpaceId(std::string_view name) const;
+    NODISCARD std::optional<LocalSpaceId> getRoomLocalSpace(RoomId id) const;
+    NODISCARD std::optional<LocalSpaceRenderData> getLocalSpaceRenderData(LocalSpaceId id) const;
+    NODISCARD std::vector<LocalSpaceRenderData> getLocalSpaceRenderDataList() const;
+    NODISCARD std::optional<LocalSpaceRenderData>
+    getLocalSpaceRenderDataForRoom(RoomId id) const;
 
 public:
     NODISCARD const RawRoom *getRoom(RoomId id) const;
@@ -184,6 +228,18 @@ public:
     void printStats(ProgressCounter &pc, AnsiOstream &aos) const;
     NODISCARD static WorldComparisonStats getComparisonStats(const World &base,
                                                              const World &modified);
+
+private:
+    LocalSpaceId createLocalSpace(std::string name);
+    bool setLocalSpacePortal(LocalSpaceId id, float x, float y, float z, float w, float h);
+    bool addRoomToLocalSpace(LocalSpaceId id, RoomId room);
+    void removeRoomFromLocalSpace(RoomId room);
+    void markLocalSpaceBoundsDirty(LocalSpaceId id);
+    void markAllLocalSpaceBoundsDirty();
+    LocalSpace *findLocalSpace(LocalSpaceId id);
+    const LocalSpace *findLocalSpace(LocalSpaceId id) const;
+    void updateLocalSpaceBounds(const LocalSpace &space) const;
+    NODISCARD float computePortalScale(const LocalSpace &space) const;
 
 private:
     void insertParse(RoomId id, ParseKeyFlags parseKeys);

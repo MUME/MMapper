@@ -15,6 +15,9 @@
 #include "sanitizer.h"
 #include "utils.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
 #include <optional>
 #include <ostream>
 #include <sstream>
@@ -165,6 +168,9 @@ World World::copy() const
     result.m_parseTree = m_parseTree;
     result.m_areaInfos = m_areaInfos;
     result.m_infomarks = m_infomarks;
+    result.m_localSpaces = m_localSpaces;
+    result.m_roomLocalSpaces = m_roomLocalSpaces;
+    result.m_nextLocalSpaceId = m_nextLocalSpaceId;
     result.m_checkedConsistency = false;
 
     return result;
@@ -179,7 +185,10 @@ bool World::operator==(const World &rhs) const
            && m_serverIds == rhs.m_serverIds //
            && m_parseTree == rhs.m_parseTree //
            && m_areaInfos == rhs.m_areaInfos //
-           && m_infomarks == rhs.m_infomarks;
+           && m_infomarks == rhs.m_infomarks //
+           && m_localSpaces == rhs.m_localSpaces
+           && m_roomLocalSpaces == rhs.m_roomLocalSpaces
+           && m_nextLocalSpaceId == rhs.m_nextLocalSpaceId;
 }
 
 const AreaInfo &World::getArea(const RoomArea &area) const
@@ -197,6 +206,248 @@ const RawRoom *World::getRoom(const RoomId id) const
     assert(ref.getId() == id);
 
     return std::addressof(ref);
+}
+
+std::optional<LocalSpaceId> World::findLocalSpaceId(const std::string_view name) const
+{
+    for (const auto &space : m_localSpaces) {
+        if (space.name == name) {
+            return space.id;
+        }
+    }
+    return std::nullopt;
+}
+
+std::optional<LocalSpaceId> World::getRoomLocalSpace(const RoomId id) const
+{
+    if (const auto it = m_roomLocalSpaces.find(id); it != m_roomLocalSpaces.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+std::optional<LocalSpaceRenderData> World::getLocalSpaceRenderData(const LocalSpaceId id) const
+{
+    const LocalSpace *space = findLocalSpace(id);
+    if (space == nullptr) {
+        return std::nullopt;
+    }
+
+    updateLocalSpaceBounds(*space);
+    if (!space->hasPortal || !space->hasBounds) {
+        return std::nullopt;
+    }
+
+    const float portalScale = computePortalScale(*space);
+    if (portalScale <= 0.f) {
+        return std::nullopt;
+    }
+
+    LocalSpaceRenderData data;
+    data.portalScale = portalScale;
+    data.portalX = space->portalX + 0.5f;
+    data.portalY = space->portalY + 0.5f;
+    data.portalZ = space->portalZ;
+    data.localCx = (space->minX + space->maxX + 1.f) * 0.5f;
+    data.localCy = (space->minY + space->maxY + 1.f) * 0.5f;
+    data.localCz = (space->minZ + space->maxZ) * 0.5f;
+    return data;
+}
+
+std::vector<LocalSpaceRenderData> World::getLocalSpaceRenderDataList() const
+{
+    std::vector<LocalSpaceRenderData> result;
+    result.reserve(m_localSpaces.size());
+
+    for (const auto &space : m_localSpaces) {
+        updateLocalSpaceBounds(space);
+        if (!space.hasPortal || !space.hasBounds) {
+            continue;
+        }
+
+        const float portalScale = computePortalScale(space);
+        if (portalScale <= 0.f) {
+            continue;
+        }
+
+        LocalSpaceRenderData data;
+        data.portalScale = portalScale;
+        data.portalX = space.portalX + 0.5f;
+        data.portalY = space.portalY + 0.5f;
+        data.portalZ = space.portalZ;
+        data.localCx = (space.minX + space.maxX + 1.f) * 0.5f;
+        data.localCy = (space.minY + space.maxY + 1.f) * 0.5f;
+        data.localCz = (space.minZ + space.maxZ) * 0.5f;
+        result.emplace_back(data);
+    }
+
+    return result;
+}
+
+std::optional<LocalSpaceRenderData> World::getLocalSpaceRenderDataForRoom(const RoomId id) const
+{
+    if (const auto optSpaceId = getRoomLocalSpace(id)) {
+        return getLocalSpaceRenderData(*optSpaceId);
+    }
+    return std::nullopt;
+}
+
+LocalSpaceId World::createLocalSpace(std::string name)
+{
+    if (const auto existing = findLocalSpaceId(name)) {
+        return *existing;
+    }
+
+    LocalSpace space;
+    space.id = m_nextLocalSpaceId;
+    space.name = std::move(name);
+    m_nextLocalSpaceId = LocalSpaceId{m_nextLocalSpaceId.asUint32() + 1};
+    m_localSpaces.emplace_back(std::move(space));
+    return m_localSpaces.back().id;
+}
+
+bool World::setLocalSpacePortal(const LocalSpaceId id,
+                                const float x,
+                                const float y,
+                                const float z,
+                                const float w,
+                                const float h)
+{
+    LocalSpace *space = findLocalSpace(id);
+    if (space == nullptr) {
+        return false;
+    }
+
+    space->portalX = x;
+    space->portalY = y;
+    space->portalZ = z;
+    space->portalW = w;
+    space->portalH = h;
+    space->hasPortal = true;
+    return true;
+}
+
+bool World::addRoomToLocalSpace(const LocalSpaceId id, const RoomId room)
+{
+    requireValidRoom(room);
+    LocalSpace *space = findLocalSpace(id);
+    if (space == nullptr) {
+        return false;
+    }
+
+    removeRoomFromLocalSpace(room);
+    space->rooms.insert(room);
+    m_roomLocalSpaces[room] = id;
+    space->boundsDirty = true;
+    return true;
+}
+
+void World::removeRoomFromLocalSpace(const RoomId room)
+{
+    if (const auto it = m_roomLocalSpaces.find(room); it != m_roomLocalSpaces.end()) {
+        const LocalSpaceId id = it->second;
+        m_roomLocalSpaces.erase(it);
+        if (LocalSpace *space = findLocalSpace(id)) {
+            space->rooms.erase(room);
+            space->boundsDirty = true;
+        }
+    }
+}
+
+void World::markLocalSpaceBoundsDirty(const LocalSpaceId id)
+{
+    if (LocalSpace *space = findLocalSpace(id)) {
+        space->boundsDirty = true;
+    }
+}
+
+void World::markAllLocalSpaceBoundsDirty()
+{
+    for (auto &space : m_localSpaces) {
+        space.boundsDirty = true;
+    }
+}
+
+World::LocalSpace *World::findLocalSpace(const LocalSpaceId id)
+{
+    for (auto &space : m_localSpaces) {
+        if (space.id == id) {
+            return &space;
+        }
+    }
+    return nullptr;
+}
+
+const World::LocalSpace *World::findLocalSpace(const LocalSpaceId id) const
+{
+    for (const auto &space : m_localSpaces) {
+        if (space.id == id) {
+            return &space;
+        }
+    }
+    return nullptr;
+}
+
+void World::updateLocalSpaceBounds(const LocalSpace &space) const
+{
+    if (!space.boundsDirty) {
+        return;
+    }
+
+    space.boundsDirty = false;
+    space.hasBounds = false;
+
+    for (const RoomId id : space.rooms) {
+        const RawRoom *room = getRoom(id);
+        if (room == nullptr) {
+            continue;
+        }
+
+        const auto &pos = room->getPosition();
+        const float x = static_cast<float>(pos.x);
+        const float y = static_cast<float>(pos.y);
+        const float z = static_cast<float>(pos.z);
+
+        if (!space.hasBounds) {
+            space.minX = space.maxX = x;
+            space.minY = space.maxY = y;
+            space.minZ = space.maxZ = z;
+            space.hasBounds = true;
+            continue;
+        }
+
+        space.minX = std::min(space.minX, x);
+        space.maxX = std::max(space.maxX, x);
+        space.minY = std::min(space.minY, y);
+        space.maxY = std::max(space.maxY, y);
+        space.minZ = std::min(space.minZ, z);
+        space.maxZ = std::max(space.maxZ, z);
+    }
+}
+
+float World::computePortalScale(const LocalSpace &space) const
+{
+    if (!space.hasPortal || !space.hasBounds) {
+        return 0.f;
+    }
+
+    const float localW = space.maxX - space.minX + 1.f;
+    const float localH = space.maxY - space.minY + 1.f;
+    const bool hasW = localW > 0.f;
+    const bool hasH = localH > 0.f;
+    const bool hasPortalW = space.portalW > 0.f;
+    const bool hasPortalH = space.portalH > 0.f;
+
+    if (hasW && hasH && hasPortalW && hasPortalH) {
+        return std::min(space.portalW / localW, space.portalH / localH);
+    }
+    if (hasW && hasPortalW) {
+        return space.portalW / localW;
+    }
+    if (hasH && hasPortalH) {
+        return space.portalH / localH;
+    }
+    return 0.f;
 }
 
 bool World::hasRoom(const RoomId id) const
@@ -865,6 +1116,10 @@ void World::setPosition(const RoomId id, const Coordinate &coord)
     const Coordinate &ref = m_rooms.getPosition(id);
     m_spatialDb.move(id, ref, coord);
     m_rooms.setPosition(id, coord);
+
+    if (const auto it = m_roomLocalSpaces.find(id); it != m_roomLocalSpaces.end()) {
+        markLocalSpaceBoundsDirty(it->second);
+    }
 }
 
 bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate &offset) const
@@ -945,6 +1200,8 @@ void World::removeFromWorld(const RoomId id, const bool removeLinks)
     if (id == INVALID_ROOMID) {
         throw InvalidMapOperation("Invalid RoomId");
     }
+
+    removeRoomFromLocalSpace(id);
 
     const auto coord = getPosition(id);
     const auto server_id = getServerId(id);
@@ -1499,6 +1756,34 @@ void World::apply(ProgressCounter &pc, const world_change_types::RemoveAllDoorNa
 
     MMLOG() << "#NOTE: removed " << numRemoved << " hidden door name"
             << ((numRemoved == 1) ? "" : "s") << ".";
+}
+
+void World::apply(ProgressCounter &, const world_change_types::CreateLocalSpace &change)
+{
+    static_cast<void>(createLocalSpace(change.name));
+}
+
+void World::apply(ProgressCounter &, const world_change_types::SetLocalSpacePortal &change)
+{
+    const auto id = findLocalSpaceId(change.name);
+    if (!id) {
+        throw InvalidMapOperation("Unknown localspace name");
+    }
+    if (!setLocalSpacePortal(*id, change.x, change.y, change.z, change.w, change.h)) {
+        throw InvalidMapOperation("Unable to set localspace portal");
+    }
+}
+
+void World::apply(ProgressCounter &, const world_change_types::AddRoomToLocalSpace &change)
+{
+    requireValidRoom(change.room);
+    const auto id = findLocalSpaceId(change.name);
+    if (!id) {
+        throw InvalidMapOperation("Unknown localspace name");
+    }
+    if (!addRoomToLocalSpace(*id, change.room)) {
+        throw InvalidMapOperation("Unable to add room to localspace");
+    }
 }
 
 void World::apply(ProgressCounter &, const exit_change_types::NukeExit &change)
@@ -2572,6 +2857,10 @@ NODISCARD bool hasMeshDifference(const RawRoom &a, const RawRoom &b)
 NODISCARD bool hasMeshDifference(const World &a, const World &b)
 {
     DECL_TIMER(t, "hasMeshDifference (parallel)");
+
+    if (a.m_localSpaces != b.m_localSpaces || a.m_roomLocalSpaces != b.m_roomLocalSpaces) {
+        return true;
+    }
 
     struct NODISCARD ThreadLocal final
     {

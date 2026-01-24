@@ -12,6 +12,7 @@
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
 #include "../map/RoomHandle.h"
+#include "../map/World.h"
 #include "../map/coordinate.h"
 #include "../map/exit.h"
 #include "../map/infomark.h"
@@ -22,12 +23,15 @@
 #include "InfomarkSelection.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
+#include "RoomRenderTransform.h"
 #include "connectionselection.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -1119,9 +1123,15 @@ void MapCanvas::slot_zoomReset()
 
 void MapCanvas::onMovement()
 {
-    const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
-    m_currentLayer = pos.z;
-    emit sig_onCenter(pos.to_vec2() + glm::vec2{0.5f, 0.5f});
+    if (const auto room = m_data.getCurrentRoom()) {
+        const auto transform = getRoomRenderTransform(room);
+        m_currentLayer = room.getPosition().z;
+        emit sig_onCenter(glm::vec2{transform.renderCenter.x, transform.renderCenter.y});
+    } else {
+        const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
+        m_currentLayer = pos.z;
+        emit sig_onCenter(pos.to_vec2() + glm::vec2{0.5f, 0.5f});
+    }
     updateEffectiveScale();
     update();
 }
@@ -1136,9 +1146,55 @@ void MapCanvas::updateEffectiveScale()
 void MapCanvas::updateEffectiveScaleForRoom(const RoomHandle &room)
 {
     const float roomScale = room.getScaleFactor();
-    // When entering a room with scale < 1.0, we need to zoom out (increase effective scale)
-    // so that the room appears at normal size but surroundings appear larger
-    m_targetEffectiveScale = (roomScale > 0.f) ? (1.f / roomScale) : 1.f;
+    float target = (roomScale > 0.f) ? (1.f / roomScale) : 1.f;
+
+    const auto &world = room.getMap().getWorld();
+    const auto localData = world.getLocalSpaceRenderDataForRoom(room.getId());
+    if (localData) {
+        const float portalScale = localData->portalScale;
+        if (portalScale > 0.f) {
+            target *= 1.f / portalScale;
+        }
+    } else {
+        static constexpr float maxZoom = 3.0f;
+        static constexpr float outerRadius = 3.0f;
+        static constexpr float minStrength = 1.0f / 3.0f;
+        static constexpr float maxStrength = 0.5f;
+        if (outerRadius > 0.f) {
+            const auto spaces = world.getLocalSpaceRenderDataList();
+            const glm::vec3 pos = room.getPosition().to_vec3() + glm::vec3{0.5f, 0.5f, 0.f};
+            float bestDist = std::numeric_limits<float>::max();
+            float bestPortalScale = 0.f;
+            for (const auto &space : spaces) {
+                const float portalScale = space.portalScale;
+                if (portalScale <= 0.f) {
+                    continue;
+                }
+                const float dx = pos.x - space.portalX;
+                const float dy = pos.y - space.portalY;
+                const float dist = std::sqrt(dx * dx + dy * dy);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestPortalScale = portalScale;
+                }
+            }
+
+            if (bestPortalScale > 0.f) {
+                const float zoomIn = std::max(1.f, std::min(maxZoom, 1.f / bestPortalScale));
+                float strength = 0.f;
+                if (bestDist <= outerRadius) {
+                    const float t = std::clamp((outerRadius - bestDist) / outerRadius, 0.f, 1.f);
+                    const float smooth = t * t * (3.f - 2.f * t);
+                    strength = minStrength + (maxStrength - minStrength) * smooth;
+                }
+                if (strength > 0.f) {
+                    target *= std::exp(std::log(zoomIn) * strength);
+                }
+            }
+        }
+    }
+
+    m_targetEffectiveScale = target;
 }
 
 void MapCanvas::slot_dataLoaded()

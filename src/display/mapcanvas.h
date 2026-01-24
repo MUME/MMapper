@@ -39,6 +39,7 @@ class Coordinate;
 class InfomarkSelection;
 class MapData;
 class RoomHandle;
+class RoomHandle;
 class Mmapper2Group;
 class PrespammedPath;
 class QMouseEvent;
@@ -257,7 +258,7 @@ private:
     void paintSelectionArea();
     void paintNewInfomarkSelection();
     void paintSelectedRooms();
-    void paintSelectedRoom(RoomSelFakeGL &, const RawRoom &room);
+    void paintSelectedRoom(RoomSelFakeGL &, const RoomHandle &room);
     void paintSelectedConnection();
     void paintNearbyConnectionPoints();
     void paintSelectedInfomarks();

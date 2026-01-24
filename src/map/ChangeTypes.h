@@ -10,9 +10,11 @@
 #include "Map.h"
 #include "RoomHandle.h"
 #include "infomark.h"
+#include "localspace.h"
 #include "mmapper2room.h"
 #include "roomid.h"
 
+#include <string>
 #include <utility>
 
 #define XFOREACH_ChangeTypeEnum(X) \
@@ -52,6 +54,27 @@ struct NODISCARD RemoveAllDoorNames final
 
 struct NODISCARD GenerateBaseMap final
 {};
+
+struct NODISCARD CreateLocalSpace final
+{
+    std::string name;
+};
+
+struct NODISCARD SetLocalSpacePortal final
+{
+    std::string name;
+    float x = 0.f;
+    float y = 0.f;
+    float z = 0.f;
+    float w = 0.f;
+    float h = 0.f;
+};
+
+struct NODISCARD AddRoomToLocalSpace final
+{
+    std::string name;
+    RoomId room = INVALID_ROOMID;
+};
 
 }; // namespace world_change_types
 
@@ -291,7 +314,13 @@ struct NODISCARD ConnectToNeighborsArgs final
     SEP() \
     X(world_change_types::RemoveAllDoorNames) \
     SEP() \
-    X(world_change_types::GenerateBaseMap)
+    X(world_change_types::GenerateBaseMap) \
+    SEP() \
+    X(world_change_types::CreateLocalSpace) \
+    SEP() \
+    X(world_change_types::SetLocalSpacePortal) \
+    SEP() \
+    X(world_change_types::AddRoomToLocalSpace)
 
 #define XFOREACH_ROOM_CHANGE_TYPES(X, SEP) \
     X(room_change_types::AddPermanentRoom) \
