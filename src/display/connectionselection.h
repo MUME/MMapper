@@ -71,12 +71,22 @@ public:
     {
         return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, map, sel);
     }
+    NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend &map,
+                                                                const RoomHandle &room,
+                                                                const MouseSel &sel)
+    {
+        return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, map, room, sel);
+    }
     NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend &map)
     {
         return std::make_shared<ConnectionSelection>(Badge<ConnectionSelection>{}, map);
     }
 
     explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend &map, const MouseSel &sel);
+    explicit ConnectionSelection(Badge<ConnectionSelection>,
+                                 MapFrontend &map,
+                                 const RoomHandle &room,
+                                 const MouseSel &sel);
     explicit ConnectionSelection(Badge<ConnectionSelection>, MapFrontend &map);
     ~ConnectionSelection();
     DELETE_CTORS_AND_ASSIGN_OPS(ConnectionSelection);

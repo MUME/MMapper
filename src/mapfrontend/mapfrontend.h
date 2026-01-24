@@ -142,14 +142,17 @@ public:
     NODISCARD bool tryMakePermanent(RoomId id);
 
     NODISCARD RoomHandle findRoomHandle(RoomId) const;
+    /// Find first room at coordinate (legacy, prefer findRoomHandles for new code)
     NODISCARD RoomHandle findRoomHandle(const Coordinate &) const;
     NODISCARD RoomHandle findRoomHandle(ExternalRoomId id) const;
     NODISCARD RoomHandle findRoomHandle(ServerRoomId id) const;
+    /// Find all rooms at coordinate
+    NODISCARD std::vector<RoomHandle> findRoomHandles(const Coordinate &) const;
 
     NODISCARD RoomHandle getRoomHandle(RoomId id) const;
     NODISCARD const RawRoom &getRawRoom(RoomId id) const;
 
-    // Will technically be 0 or 1
+    /// Find all room IDs at coordinate (can be multiple if rooms overlap)
     NODISCARD RoomIdSet findAllRooms(const Coordinate &) const;
     NODISCARD RoomIdSet findAllRooms(const SigParseEvent &) const;
     // bounding box

@@ -6,15 +6,6 @@
 #include "../global/AnsiOstream.h"
 #include "../global/progresscounter.h"
 
-const RoomId *SpatialDb::findUnique(const Coordinate &key) const
-{
-    m_cachedFindResult = m_index.findFirst(key);
-    if (m_cachedFindResult.has_value()) {
-        return &m_cachedFindResult.value();
-    }
-    return nullptr;
-}
-
 TinyRoomIdSet SpatialDb::findRooms(const Coordinate &key) const
 {
     return m_index.findAt(key);

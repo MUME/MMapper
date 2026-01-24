@@ -131,6 +131,19 @@ RoomHandle Map::findRoomHandle(const Coordinate &coord) const
     return RoomHandle{};
 }
 
+std::vector<RoomHandle> Map::findRoomHandles(const Coordinate &coord) const
+{
+    std::vector<RoomHandle> result;
+    const auto rooms = getWorld().findRooms(coord);
+    result.reserve(rooms.size());
+    for (const RoomId id : rooms) {
+        if (auto h = findRoomHandle(id)) {
+            result.push_back(std::move(h));
+        }
+    }
+    return result;
+}
+
 RoomHandle Map::getRoomHandle(const RoomId id) const
 {
     if (auto h = findRoomHandle(id)) {

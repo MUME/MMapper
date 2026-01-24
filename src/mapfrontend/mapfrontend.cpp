@@ -153,6 +153,11 @@ RoomHandle MapFrontend::findRoomHandle(const ServerRoomId id) const
     return getCurrentMap().findRoomHandle(id);
 }
 
+std::vector<RoomHandle> MapFrontend::findRoomHandles(const Coordinate &coord) const
+{
+    return getCurrentMap().findRoomHandles(coord);
+}
+
 RoomHandle MapFrontend::getRoomHandle(const RoomId id) const
 {
     return getCurrentMap().getRoomHandle(id);
@@ -165,10 +170,11 @@ const RawRoom &MapFrontend::getRawRoom(const RoomId id) const
 
 RoomIdSet MapFrontend::findAllRooms(const Coordinate &coord) const
 {
-    if (const auto room = findRoomHandle(coord)) {
-        return RoomIdSet{room.getId()};
+    RoomIdSet result;
+    for (const auto &room : getCurrentMap().findRoomHandles(coord)) {
+        result.insert(room.getId());
     }
-    return RoomIdSet{};
+    return result;
 }
 
 RoomIdSet MapFrontend::findAllRooms(const SigParseEvent &event) const

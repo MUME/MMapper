@@ -25,11 +25,7 @@ public:
     NODISCARD std::optional<Bounds> getBounds() const { return m_index.getBounds(); }
 
 public:
-    /// Find first room at coordinate (legacy interface, returns nullptr if none)
-    /// @deprecated Use findRooms() for new code
-    NODISCARD const RoomId *findUnique(const Coordinate &key) const;
-
-    /// Find all rooms at coordinate (new interface)
+    /// Find all rooms at coordinate
     NODISCARD TinyRoomIdSet findRooms(const Coordinate &key) const;
 
     /// Find first room at coordinate (new interface, cleaner than findUnique)
@@ -68,8 +64,4 @@ public:
 public:
     NODISCARD bool operator==(const SpatialDb &rhs) const { return m_index == rhs.m_index; }
     NODISCARD bool operator!=(const SpatialDb &rhs) const { return !(rhs == *this); }
-
-private:
-    /// Cached result for findUnique (to return pointer)
-    mutable std::optional<RoomId> m_cachedFindResult;
 };

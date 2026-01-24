@@ -100,6 +100,11 @@ public:
     void requireValidRoom(RoomId id) const;
 
 public:
+    /// Check if any room exists at coordinate
+    NODISCARD bool hasRoomAt(const Coordinate &coord) const;
+    /// Find all rooms at coordinate
+    NODISCARD TinyRoomIdSet findRooms(const Coordinate &coord) const;
+    /// Find first room at coordinate (legacy, prefer findRooms for new code)
     NODISCARD std::optional<RoomId> findRoom(const Coordinate &coord) const;
     NODISCARD const Coordinate &getPosition(RoomId id) const;
 

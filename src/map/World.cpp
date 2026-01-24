@@ -216,12 +216,19 @@ void World::requireValidRoom(const RoomId id) const
     }
 }
 
+bool World::hasRoomAt(const Coordinate &coord) const
+{
+    return m_spatialDb.hasRoomAt(coord);
+}
+
+TinyRoomIdSet World::findRooms(const Coordinate &coord) const
+{
+    return m_spatialDb.findRooms(coord);
+}
+
 std::optional<RoomId> World::findRoom(const Coordinate &coord) const
 {
-    if (const RoomId *const id = m_spatialDb.findUnique(coord)) {
-        return *id;
-    }
-    return std::nullopt;
+    return m_spatialDb.findFirst(coord);
 }
 
 ServerRoomId World::getServerId(const RoomId id) const
@@ -1328,7 +1335,7 @@ const ImmUnorderedRoomIdSet *World::findAreaRoomSet(const RoomArea &area) const
 
 RoomId World::addRoom(const Coordinate &position)
 {
-    if (findRoom(position)) {
+    if (hasRoomAt(position)) {
         throw InvalidMapOperation("Position in use");
     }
 
@@ -1352,7 +1359,7 @@ RoomId World::addRoom(const Coordinate &position)
 
     initRoom(r);
     assert(hasRoom(id));
-    assert(findRoom(position) == id);
+    assert(findRooms(position).contains(id));
     const auto ext = convertToExternal(id);
     MMLOG() << "Added new room " << ext.value() << ".";
     return id;
@@ -1364,7 +1371,7 @@ void World::undeleteRoom(const ExternalRoomId extid, const RawRoom &raw)
         throw InvalidMapOperation("Invalid room id");
     }
 
-    if (findRoom(raw.position)) {
+    if (hasRoomAt(raw.position)) {
         throw InvalidMapOperation("Position in use");
     }
 
@@ -1401,7 +1408,7 @@ void World::undeleteRoom(const ExternalRoomId extid, const RawRoom &raw)
     initRoom(raw);
 
     assert(hasRoom(raw.id));
-    assert(findRoom(raw.position) == raw.id);
+    assert(findRooms(raw.position).contains(raw.id));
     const auto ext = convertToExternal(raw.id);
     if (ext != extid) {
         throw std::runtime_error("failed sanity check");
@@ -1413,7 +1420,7 @@ void World::addRoom2(const Coordinate &desiredPosition, const ParseEvent &event)
 {
     const auto position = std::invoke([this, desiredPosition]() -> Coordinate {
         return ::getNearestFree(desiredPosition, [this](const Coordinate &check) -> FindCoordEnum {
-            return findRoom(check).has_value() ? FindCoordEnum::InUse : FindCoordEnum::Available;
+            return hasRoomAt(check) ? FindCoordEnum::InUse : FindCoordEnum::Available;
         });
     });
 
@@ -1899,7 +1906,7 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::TryMoveClos
     }
 
     auto check = [this, z = desired.z](const Coordinate &suggested) -> FindCoordEnum {
-        if (suggested.z == z && !findRoom(suggested)) {
+        if (suggested.z == z && !hasRoomAt(suggested)) {
             return FindCoordEnum::Available;
         } else {
             return FindCoordEnum::InUse;

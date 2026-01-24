@@ -38,6 +38,7 @@ class ConnectionSelection;
 class Coordinate;
 class InfomarkSelection;
 class MapData;
+class RoomHandle;
 class Mmapper2Group;
 class PrespammedPath;
 class QMouseEvent;
@@ -218,6 +219,11 @@ private:
     void updateMultisampling();
 
     NODISCARD std::shared_ptr<InfomarkSelection> getInfomarkSelection(const MouseSel &sel);
+
+    /// Show a picker menu if multiple rooms exist at coordinate, returns selected room
+    /// Returns invalid handle if user cancels or no rooms at coordinate
+    NODISCARD RoomHandle pickRoomAt(const Coordinate &coord);
+
     NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                                const glm::ivec2 &size,
                                                float zoomScale,

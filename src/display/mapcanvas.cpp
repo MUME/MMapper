@@ -11,6 +11,7 @@
 #include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
+#include "../map/RoomHandle.h"
 #include "../map/coordinate.h"
 #include "../map/exit.h"
 #include "../map/infomark.h"
@@ -408,6 +409,48 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
     return InfomarkSelection::alloc(m_data, lo, hi);
 }
 
+RoomHandle MapCanvas::pickRoomAt(const Coordinate &coord)
+{
+    const auto rooms = m_data.findRoomHandles(coord);
+
+    if (rooms.empty()) {
+        return RoomHandle{};
+    }
+
+    if (rooms.size() == 1) {
+        return rooms.front();
+    }
+
+    // Multiple rooms at this coordinate - show picker menu
+    QMenu menu(tr("Select Room"), this);
+
+    for (const auto &room : rooms) {
+        const auto extId = room.getIdExternal();
+        const auto name = room.getName().toQString();
+        const QString label = QString("#%1: %2").arg(extId.asUint32()).arg(name);
+
+        QAction *action = menu.addAction(label);
+        action->setData(QVariant::fromValue(room.getId().asUint32()));
+    }
+
+    menu.addSeparator();
+    menu.addAction(tr("Cancel"));
+
+    QAction *selected = menu.exec(QCursor::pos());
+    if (selected == nullptr || !selected->data().isValid()) {
+        return RoomHandle{};
+    }
+
+    const uint32_t selectedId = selected->data().toUInt();
+    for (const auto &room : rooms) {
+        if (room.getId().asUint32() == selectedId) {
+            return room;
+        }
+    }
+
+    return RoomHandle{};
+}
+
 void MapCanvas::mousePressEvent(QMouseEvent *const event)
 {
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
@@ -503,7 +546,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 const auto pos = glm::mix(near, far, t);
                 assert(static_cast<int>(std::lround(pos.z)) == z);
                 const Coordinate c2 = MouseSel{Coordinate2f{pos.x, pos.y}, z}.getCoordinate();
-                if (const auto r = m_data.findRoomHandle(c2)) {
+                for (const auto &r : m_data.findRoomHandles(c2)) {
                     tmpSel.insert(r.getId());
                 }
             }
@@ -526,7 +569,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Select rooms
         if (hasLeftButton && hasSel1()) {
             if (!hasCtrl) {
-                const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
+                const auto pRoom = pickRoomAt(getSel1().getCoordinate());
                 if (pRoom.exists() && m_roomSelection != nullptr
                     && m_roomSelection->contains(pRoom.getId())) {
                     m_roomSelectionMove.emplace(RoomSelMove{});
@@ -546,8 +589,10 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         // Select connection
         if (hasLeftButton && hasSel1()) {
-            m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
-            if (!m_connectionSelection->isFirstValid()) {
+            const auto room = pickRoomAt(getSel1().getCoordinate());
+            if (room.exists()) {
+                m_connectionSelection = ConnectionSelection::alloc(m_data, room, getSel1());
+            } else {
                 m_connectionSelection = nullptr;
             }
             emit sig_newConnectionSelection(nullptr);
@@ -561,8 +606,13 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if (hasLeftButton && hasSel1()) {
-            m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
-            if (!m_connectionSelection->isFirstValid()) {
+            const auto room = pickRoomAt(getSel1().getCoordinate());
+            if (room.exists()) {
+                m_connectionSelection = ConnectionSelection::alloc(m_data, room, getSel1());
+            } else {
+                m_connectionSelection = nullptr;
+            }
+            if (!m_connectionSelection || !m_connectionSelection->isFirstValid()) {
                 m_connectionSelection = nullptr;
             } else {
                 const auto &r1 = m_connectionSelection->getFirst().room;
@@ -843,11 +893,20 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         // Display a room info tooltip if there was no mouse movement
         if (hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
-            if (const auto room = m_data.findRoomHandle(getSel1().getCoordinate())) {
+            const auto rooms = m_data.findRoomHandles(getSel1().getCoordinate());
+            if (!rooms.empty()) {
                 // Tooltip doesn't support ANSI, and there's no way to add formatted text.
-                auto message = mmqt::previewRoom(room,
+                QString message;
+                for (size_t i = 0; i < rooms.size(); ++i) {
+                    if (i > 0) {
+                        message += QString("\n\n--- Room %1 of %2 ---\n\n")
+                                       .arg(i + 1)
+                                       .arg(rooms.size());
+                    }
+                    message += mmqt::previewRoom(rooms[i],
                                                  mmqt::StripAnsiEnum::Yes,
                                                  mmqt::PreviewStyleEnum::ForDisplay);
+                }
 
                 QToolTip::showText(mapToGlobal(event->position().toPoint()),
                                    message,
@@ -920,11 +979,16 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr) {
-                m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
+                const auto room = pickRoomAt(getSel1().getCoordinate());
+                if (room.exists()) {
+                    m_connectionSelection = ConnectionSelection::alloc(m_data, room, getSel1());
+                }
             }
-            m_connectionSelection->setSecond(getSel2());
+            if (m_connectionSelection) {
+                m_connectionSelection->setSecond(getSel2());
+            }
 
-            if (!m_connectionSelection->isValid()) {
+            if (!m_connectionSelection || !m_connectionSelection->isValid()) {
                 m_connectionSelection = nullptr;
             } else {
                 const auto first = m_connectionSelection->getFirst();
@@ -971,11 +1035,17 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr && hasSel1()) {
-                m_connectionSelection = ConnectionSelection::alloc(m_data, getSel1());
+                const auto room = pickRoomAt(getSel1().getCoordinate());
+                if (room.exists()) {
+                    m_connectionSelection = ConnectionSelection::alloc(m_data, room, getSel1());
+                }
             }
-            m_connectionSelection->setSecond(getSel2());
+            if (m_connectionSelection) {
+                m_connectionSelection->setSecond(getSel2());
+            }
 
-            if (!m_connectionSelection->isValid() || !m_connectionSelection->isCompleteExisting()) {
+            if (!m_connectionSelection || !m_connectionSelection->isValid()
+                || !m_connectionSelection->isCompleteExisting()) {
                 m_connectionSelection = nullptr;
             }
             slot_setConnectionSelection(m_connectionSelection);

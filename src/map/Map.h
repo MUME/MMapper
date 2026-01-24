@@ -69,7 +69,10 @@ public:
     NODISCARD RoomHandle findRoomHandle(RoomId id) const;
     NODISCARD RoomHandle findRoomHandle(ExternalRoomId id) const;
     NODISCARD RoomHandle findRoomHandle(ServerRoomId id) const;
+    /// Find first room at coordinate (legacy, prefer findRoomHandles for new code)
     NODISCARD RoomHandle findRoomHandle(const Coordinate &coord) const;
+    /// Find all rooms at coordinate
+    NODISCARD std::vector<RoomHandle> findRoomHandles(const Coordinate &coord) const;
 
 public:
     // Semantics: "getRoomHandle()" functions throw if the handle is invalid;

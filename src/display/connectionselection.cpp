@@ -38,6 +38,22 @@ ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
     m_connectionDescriptor[0].direction = computeDirection(sel.pos);
 }
 
+ConnectionSelection::ConnectionSelection(Badge<ConnectionSelection>,
+                                         MapFrontend &map,
+                                         const RoomHandle &room,
+                                         const MouseSel &sel)
+    : m_map{map}
+{
+    for (const auto &x : m_connectionDescriptor) {
+        assert(!x.room.exists());
+    }
+
+    if (room.exists()) {
+        this->receiveRoom(room);
+    }
+    m_connectionDescriptor[0].direction = computeDirection(sel.pos);
+}
+
 ConnectionSelection::~ConnectionSelection() = default;
 
 bool ConnectionSelection::isValid() const
