@@ -238,6 +238,7 @@ private:
     void moveRelative(const RoomIdSet &rooms, const Coordinate &offset);
     void setPosition(RoomId id, const Coordinate &coord);
     void setServerId(RoomId id, ServerRoomId serverId);
+    void setScaleFactor(RoomId id, float scale);
 
 private:
     void removeFromWorld(RoomId id, bool removeLinks);

@@ -49,7 +49,18 @@ bool CharacterBatch::isVisible(const Coordinate &c, float margin) const
     return m_mapScreen.isRoomVisible(c, margin);
 }
 
-void CharacterBatch::drawCharacter(const Coordinate &c, const Color color, bool fill)
+NODISCARD static float sanitizeRoomScale(const float scale)
+{
+    if (!std::isfinite(scale) || scale <= 0.f) {
+        return 1.f;
+    }
+    return scale;
+}
+
+void CharacterBatch::drawCharacter(const Coordinate &c,
+                                   const float roomScale,
+                                   const Color color,
+                                   const bool fill)
 {
     const Configuration::CanvasSettings &settings = getConfig().canvas;
 
@@ -100,7 +111,7 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color color, bool 
     }
 
     const bool beacon = visible && !differentLayer && wantBeacons;
-    gl.drawBox(c, fill, beacon, isFar);
+    gl.drawBox(c, sanitizeRoomScale(roomScale), fill, beacon, isFar);
 }
 
 void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
@@ -227,10 +238,13 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
 }
 
 void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
-                                         bool fill,
-                                         bool beacon,
+                                         const float roomScale,
+                                         const bool fill,
+                                         const bool beacon,
                                          const bool isFar)
 {
+    bool canFill = fill;
+    bool canBeacon = beacon;
     const bool dontFillRotatedQuads = true;
     const bool shrinkRotatedQuads = false; // REVISIT: make this a user option?
 
@@ -240,6 +254,9 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
     glPushMatrix();
 
     glTranslatef(coord.to_vec3());
+    glTranslatef(glm::vec3{0.5f, 0.5f, 0.f});
+    glScalef(roomScale, roomScale, 1.f);
+    glTranslatef(glm::vec3{-0.5f, -0.5f, 0.f});
 
     if (numAlreadyInRoom != 0) {
         // NOTE: use of 45/PI here is NOT a botched conversion to radians;
@@ -257,9 +274,9 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
         glRotateZ(degrees);
         glTranslatef(-quadCenter);
         if (dontFillRotatedQuads) {
-            fill = false; // avoid highlighting the room multiple times
+            canFill = false; // avoid highlighting the room multiple times
         }
-        beacon = false;
+        canBeacon = false;
     }
 
     // d-c
@@ -272,8 +289,8 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
 
     if (isFar) {
         const auto options = QuadOptsEnum::OUTLINE
-                             | (fill ? QuadOptsEnum::FILL : QuadOptsEnum::NONE)
-                             | (beacon ? QuadOptsEnum::BEACON : QuadOptsEnum::NONE);
+                             | (canFill ? QuadOptsEnum::FILL : QuadOptsEnum::NONE)
+                             | (canBeacon ? QuadOptsEnum::BEACON : QuadOptsEnum::NONE);
         drawQuadCommon(a, b, c, d, options);
     } else {
         /* ignoring fill for now; that'll require a different icon */
@@ -289,7 +306,7 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
         addTransformed(c);
         addTransformed(d);
 
-        if (beacon) {
+        if (canBeacon) {
             drawQuadCommon(a, b, c, d, QuadOptsEnum::BEACON);
         }
     }
@@ -414,7 +431,7 @@ void MapCanvas::paintCharacters()
 
                 // paint char current position
                 const Color color{getConfig().groupManager.color};
-                characterBatch.drawCharacter(pos, color);
+                characterBatch.drawCharacter(pos, room.getScaleFactor(), color);
 
                 // paint prespam
                 const auto prespam = m_data.getPath(id, m_prespammedPath.getQueue());
@@ -467,7 +484,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
         const auto color = Color{character.getColor()};
         const bool fill = !drawnRoomIds.contains(id);
 
-        batch.drawCharacter(pos, color, fill);
+        batch.drawCharacter(pos, r.getScaleFactor(), color, fill);
         drawnRoomIds.insert(id);
     }
 }

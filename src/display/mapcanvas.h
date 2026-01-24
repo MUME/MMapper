@@ -188,6 +188,8 @@ public:
 
 private:
     void onMovement();
+    void updateEffectiveScale();
+    void updateEffectiveScaleForRoom(const RoomHandle &room);
 
 private:
     void reportGLVersion();
@@ -231,7 +233,8 @@ private:
     NODISCARD static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
                                            const glm::ivec2 &size,
                                            float zoomScale,
-                                           int currentLayer);
+                                           int currentLayer,
+                                           float tiltZoomScale);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 

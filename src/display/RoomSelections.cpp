@@ -12,6 +12,7 @@
 #include "Textures.h"
 #include "mapcanvas.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <memory>
 #include <optional>
@@ -114,12 +115,21 @@ public:
     }
 };
 
+NODISCARD static float sanitizeRoomScale(const float scale)
+{
+    if (!std::isfinite(scale) || scale <= 0.f) {
+        return 1.f;
+    }
+    return scale;
+}
+
 void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
 {
     const Coordinate &roomPos = room.getPosition();
-    const int x = roomPos.x;
-    const int y = roomPos.y;
-    const int z = roomPos.z;
+    const float x = static_cast<float>(roomPos.x);
+    const float y = static_cast<float>(roomPos.y);
+    const float z = static_cast<float>(roomPos.z);
+    const float roomScale = sanitizeRoomScale(room.getScaleFactor());
 
     // This fake GL uses resetMatrix() before this function.
     gl.resetMatrix();
@@ -150,7 +160,9 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
         gl.drawColoredQuad(RoomSelFakeGL::SelTypeEnum::Distant);
     } else {
         // Room is close
-        gl.glTranslatef(x, y, z);
+        gl.glTranslatef(x + 0.5f, y + 0.5f, z);
+        gl.glScalef(roomScale, roomScale, 1.f);
+        gl.glTranslatef(-0.5f, -0.5f, 0.f);
         gl.drawColoredQuad(RoomSelFakeGL::SelTypeEnum::Near);
         gl.resetMatrix();
     }
@@ -158,7 +170,11 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
     if (isMoving) {
         gl.resetMatrix();
         const auto &relativeOffset = m_roomSelectionMove->pos;
-        gl.glTranslatef(x + relativeOffset.x, y + relativeOffset.y, z);
+        gl.glTranslatef(x + static_cast<float>(relativeOffset.x) + 0.5f,
+                        y + static_cast<float>(relativeOffset.y) + 0.5f,
+                        z);
+        gl.glScalef(roomScale, roomScale, 1.f);
+        gl.glTranslatef(-0.5f, -0.5f, 0.f);
         gl.drawColoredQuad(m_roomSelectionMove->wrongPlace ? RoomSelFakeGL::SelTypeEnum::MoveBad
                                                            : RoomSelFakeGL::SelTypeEnum::MoveGood);
     }

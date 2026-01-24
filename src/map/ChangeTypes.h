@@ -106,6 +106,12 @@ struct NODISCARD SetServerId final
     ServerRoomId server_id = INVALID_SERVER_ROOMID;
 };
 
+struct NODISCARD SetScaleFactor final
+{
+    RoomId room = INVALID_ROOMID;
+    float scale = 1.0f;
+};
+
 struct NODISCARD MoveRelative final
 {
     RoomId room = INVALID_ROOMID;
@@ -303,6 +309,8 @@ struct NODISCARD ConnectToNeighborsArgs final
     X(room_change_types::MoveRelative2) \
     SEP() \
     X(room_change_types::RemoveRoom) \
+    SEP() \
+    X(room_change_types::SetScaleFactor) \
     SEP() \
     X(room_change_types::SetServerId) \
     SEP() \

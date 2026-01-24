@@ -149,7 +149,11 @@ private:
             m = glm::translate(m, v);
         }
         void drawArrow(bool fill, bool beacon);
-        void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
+        void drawBox(const Coordinate &coord,
+                     float roomScale,
+                     bool fill,
+                     bool beacon,
+                     bool isFar);
         void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color color, bool fill);
         void drawPathSegment(const glm::vec3 &p1, const glm::vec3 &p2, const Color color);
 
@@ -207,7 +211,10 @@ public:
     NODISCARD bool isVisible(const Coordinate &c, float margin) const;
 
 public:
-    void drawCharacter(const Coordinate &coordinate, const Color color, bool fill = true);
+    void drawCharacter(const Coordinate &coordinate,
+                       float roomScale,
+                       const Color color,
+                       bool fill = true);
 
     void drawPreSpammedPath(const Coordinate &coordinate,
                             const std::vector<Coordinate> &path,

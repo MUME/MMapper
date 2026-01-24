@@ -19,6 +19,7 @@
 #include "mapcanvas.h"
 
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <optional>
 #include <vector>
@@ -33,6 +34,7 @@
 static constexpr const float CONNECTION_LINE_WIDTH = 0.045f;
 static constexpr const float VALID_CONNECTION_POINT_SIZE = 6.f;
 static constexpr const float NEW_CONNECTION_POINT_SIZE = 8.f;
+static constexpr const float ROOM_SCALE_MARGIN = 0.4f;
 
 static constexpr const float FAINT_CONNECTION_ALPHA = 0.1f;
 
@@ -60,25 +62,35 @@ NODISCARD static bool isConnectionMode(const CanvasMouseModeEnum mode)
     return false;
 }
 
-NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
+NODISCARD static float sanitizeRoomScale(const float scale)
 {
+    if (!std::isfinite(scale) || scale <= 0.f) {
+        return 1.f;
+    }
+    return scale;
+}
+
+NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir, const float scale)
+{
+    const float roomScale = sanitizeRoomScale(scale);
+
     switch (dir) {
     // NOTE: These are flipped north/south.
     case ExitDirEnum::NORTH:
-        return {0.f, +0.4f};
+        return {0.f, +0.4f * roomScale};
     case ExitDirEnum::SOUTH:
-        return {0.f, -0.4f};
+        return {0.f, -0.4f * roomScale};
 
     case ExitDirEnum::EAST:
-        return {0.4f, 0.f};
+        return {0.4f * roomScale, 0.f};
     case ExitDirEnum::WEST:
-        return {-0.4f, 0.f};
+        return {-0.4f * roomScale, 0.f};
 
         // NOTE: These are flipped north/south.
     case ExitDirEnum::UP:
-        return {0.25f, 0.25f};
+        return {0.25f * roomScale, 0.25f * roomScale};
     case ExitDirEnum::DOWN:
-        return {-0.25f, -0.25f};
+        return {-0.25f * roomScale, -0.25f * roomScale};
 
     case ExitDirEnum::UNKNOWN:
         return {0.f, 0.f};
@@ -92,14 +104,36 @@ NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
     return {};
 };
 
-NODISCARD static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
+NODISCARD static glm::vec3 getConnectionOffset(const ExitDirEnum dir, const float scale)
 {
-    return glm::vec3{getConnectionOffsetRelative(dir), 0.f} + glm::vec3{0.5f, 0.5f, 0.f};
+    return glm::vec3{getConnectionOffsetRelative(dir, scale), 0.f} + glm::vec3{0.5f, 0.5f, 0.f};
+}
+
+NODISCARD static glm::vec3 getConnectionOffset(const RoomHandle &room, const ExitDirEnum dir)
+{
+    return getConnectionOffset(dir, room.getScaleFactor());
 }
 
 NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
 {
-    return cd.room.getPosition().to_vec3() + getConnectionOffset(cd.direction);
+    return cd.room.getPosition().to_vec3() + getConnectionOffset(cd.room, cd.direction);
+}
+
+NODISCARD static glm::vec3 scalePointInRoom(const glm::vec3 &pos,
+                                            const glm::vec2 &origin,
+                                            const float scale)
+{
+    const glm::vec2 center = origin + glm::vec2{0.5f, 0.5f};
+    const glm::vec2 xy = center + (glm::vec2{pos.x, pos.y} - center) * scale;
+    return glm::vec3{xy, pos.z};
+}
+
+NODISCARD static bool isWithinRoomBounds(const glm::vec3 &pos,
+                                         const glm::vec2 &origin,
+                                         const float margin)
+{
+    return pos.x >= origin.x - margin && pos.x <= origin.x + 1.f + margin
+           && pos.y >= origin.y - margin && pos.y <= origin.y + 1.f + margin;
 }
 
 NODISCARD static QString getDoorPostFix(const RoomHandle &room, const ExitDirEnum dir)
@@ -415,6 +449,8 @@ void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
     {
         const auto srcZ = static_cast<float>(leftZ);
         const auto dstZ = static_cast<float>(rightZ);
+        const float startScale = sanitizeRoomScale(leftRoom.getScaleFactor());
+        const float endScale = sanitizeRoomScale(rightRoom.getScaleFactor());
 
         drawConnectionLine(startDir,
                            endDir,
@@ -423,14 +459,18 @@ void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
                            static_cast<float>(dX),
                            static_cast<float>(dY),
                            srcZ,
-                           dstZ);
+                           dstZ,
+                           startScale,
+                           endScale);
         drawConnectionTriangles(startDir,
                                 endDir,
                                 oneway,
                                 static_cast<float>(dX),
                                 static_cast<float>(dY),
                                 srcZ,
-                                dstZ);
+                                dstZ,
+                                startScale,
+                                endScale);
     }
 
     gl.setOffset(0, 0, 0);
@@ -443,13 +483,15 @@ void ConnectionDrawer::drawConnectionTriangles(const ExitDirEnum startDir,
                                                const float dX,
                                                const float dY,
                                                const float srcZ,
-                                               const float dstZ)
+                                               const float dstZ,
+                                               const float startScale,
+                                               const float endScale)
 {
     if (oneway) {
-        drawConnEndTri1Way(endDir, dX, dY, dstZ);
+        drawConnEndTri1Way(endDir, dX, dY, dstZ, endScale);
     } else {
-        drawConnStartTri(startDir, srcZ);
-        drawConnEndTri(endDir, dX, dY, dstZ);
+        drawConnStartTri(startDir, srcZ, startScale);
+        drawConnEndTri(endDir, dX, dY, dstZ, endScale);
     }
 }
 
@@ -460,7 +502,9 @@ void ConnectionDrawer::drawConnectionLine(const ExitDirEnum startDir,
                                           const float dX,
                                           const float dY,
                                           const float srcZ,
-                                          const float dstZ)
+                                          const float dstZ,
+                                          const float startScale,
+                                          const float endScale)
 {
     std::vector<glm::vec3> points{};
     ConnectionLineBuilder lb{points};
@@ -479,6 +523,16 @@ void ConnectionDrawer::drawConnectionLine(const ExitDirEnum startDir,
         return;
     }
 
+    const glm::vec2 startOrigin{0.f, 0.f};
+    const glm::vec2 endOrigin{dX, dY};
+    for (auto &point : points) {
+        if (isWithinRoomBounds(point, startOrigin, ROOM_SCALE_MARGIN)) {
+            point = scalePointInRoom(point, startOrigin, startScale);
+        } else if (isWithinRoomBounds(point, endOrigin, ROOM_SCALE_MARGIN)) {
+            point = scalePointInRoom(point, endOrigin, endScale);
+        }
+    }
+
     drawLineStrip(points);
 }
 
@@ -487,30 +541,34 @@ void ConnectionDrawer::drawLineStrip(const std::vector<glm::vec3> &points)
     getFakeGL().drawLineStrip(points);
 }
 
-void ConnectionDrawer::drawConnStartTri(const ExitDirEnum startDir, const float srcZ)
+void ConnectionDrawer::drawConnStartTri(const ExitDirEnum startDir,
+                                        const float srcZ,
+                                        const float roomScale)
 {
     auto &gl = getFakeGL();
+    const glm::vec2 origin{0.f, 0.f};
+    const float scale = sanitizeRoomScale(roomScale);
 
     switch (startDir) {
     case ExitDirEnum::NORTH:
-        gl.drawTriangle(glm::vec3{0.82f, 0.9f, srcZ},
-                        glm::vec3{0.68f, 0.9f, srcZ},
-                        glm::vec3{0.75f, 0.7f, srcZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{0.82f, 0.9f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.68f, 0.9f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.75f, 0.7f, srcZ}, origin, scale));
         break;
     case ExitDirEnum::SOUTH:
-        gl.drawTriangle(glm::vec3{0.18f, 0.1f, srcZ},
-                        glm::vec3{0.32f, 0.1f, srcZ},
-                        glm::vec3{0.25f, 0.3f, srcZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{0.18f, 0.1f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.32f, 0.1f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.25f, 0.3f, srcZ}, origin, scale));
         break;
     case ExitDirEnum::EAST:
-        gl.drawTriangle(glm::vec3{0.9f, 0.68f, srcZ},
-                        glm::vec3{0.9f, 0.82f, srcZ},
-                        glm::vec3{0.7f, 0.75f, srcZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{0.9f, 0.68f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.9f, 0.82f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.7f, 0.75f, srcZ}, origin, scale));
         break;
     case ExitDirEnum::WEST:
-        gl.drawTriangle(glm::vec3{0.1f, 0.32f, srcZ},
-                        glm::vec3{0.1f, 0.18f, srcZ},
-                        glm::vec3{0.3f, 0.25f, srcZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{0.1f, 0.32f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.1f, 0.18f, srcZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{0.3f, 0.25f, srcZ}, origin, scale));
         break;
 
     case ExitDirEnum::UP:
@@ -518,7 +576,7 @@ void ConnectionDrawer::drawConnStartTri(const ExitDirEnum startDir, const float 
         // Do not draw triangles for 2-way up/down
         break;
     case ExitDirEnum::UNKNOWN:
-        drawConnEndTriUpDownUnknown(0, 0, srcZ);
+        drawConnEndTriUpDownUnknown(0, 0, srcZ, scale);
         break;
     case ExitDirEnum::NONE:
         assert(false);
@@ -529,30 +587,33 @@ void ConnectionDrawer::drawConnStartTri(const ExitDirEnum startDir, const float 
 void ConnectionDrawer::drawConnEndTri(const ExitDirEnum endDir,
                                       const float dX,
                                       const float dY,
-                                      const float dstZ)
+                                      const float dstZ,
+                                      const float roomScale)
 {
     auto &gl = getFakeGL();
+    const glm::vec2 origin{dX, dY};
+    const float scale = sanitizeRoomScale(roomScale);
 
     switch (endDir) {
     case ExitDirEnum::NORTH:
-        gl.drawTriangle(glm::vec3{dX + 0.82f, dY + 0.9f, dstZ},
-                        glm::vec3{dX + 0.68f, dY + 0.9f, dstZ},
-                        glm::vec3{dX + 0.75f, dY + 0.7f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.82f, dY + 0.9f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.68f, dY + 0.9f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.75f, dY + 0.7f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::SOUTH:
-        gl.drawTriangle(glm::vec3{dX + 0.18f, dY + 0.1f, dstZ},
-                        glm::vec3{dX + 0.32f, dY + 0.1f, dstZ},
-                        glm::vec3{dX + 0.25f, dY + 0.3f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.18f, dY + 0.1f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.32f, dY + 0.1f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.25f, dY + 0.3f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::EAST:
-        gl.drawTriangle(glm::vec3{dX + 0.9f, dY + 0.68f, dstZ},
-                        glm::vec3{dX + 0.9f, dY + 0.82f, dstZ},
-                        glm::vec3{dX + 0.7f, dY + 0.75f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.9f, dY + 0.68f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.9f, dY + 0.82f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.7f, dY + 0.75f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::WEST:
-        gl.drawTriangle(glm::vec3{dX + 0.1f, dY + 0.32f, dstZ},
-                        glm::vec3{dX + 0.1f, dY + 0.18f, dstZ},
-                        glm::vec3{dX + 0.3f, dY + 0.25f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.1f, dY + 0.32f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.1f, dY + 0.18f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.3f, dY + 0.25f, dstZ}, origin, scale));
         break;
 
     case ExitDirEnum::UP:
@@ -561,7 +622,7 @@ void ConnectionDrawer::drawConnEndTri(const ExitDirEnum endDir,
         break;
     case ExitDirEnum::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
+        drawConnEndTriUpDownUnknown(dX, dY, dstZ, scale);
         break;
     case ExitDirEnum::NONE:
         assert(false);
@@ -572,37 +633,40 @@ void ConnectionDrawer::drawConnEndTri(const ExitDirEnum endDir,
 void ConnectionDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
                                           const float dX,
                                           const float dY,
-                                          const float dstZ)
+                                          const float dstZ,
+                                          const float roomScale)
 {
     auto &gl = getFakeGL();
+    const glm::vec2 origin{dX, dY};
+    const float scale = sanitizeRoomScale(roomScale);
 
     switch (endDir) {
     case ExitDirEnum::NORTH:
-        gl.drawTriangle(glm::vec3{dX + 0.32f, dY + 0.9f, dstZ},
-                        glm::vec3{dX + 0.18f, dY + 0.9f, dstZ},
-                        glm::vec3{dX + 0.25f, dY + 0.7f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.32f, dY + 0.9f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.18f, dY + 0.9f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.25f, dY + 0.7f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::SOUTH:
-        gl.drawTriangle(glm::vec3{dX + 0.68f, dY + 0.1f, dstZ},
-                        glm::vec3{dX + 0.82f, dY + 0.1f, dstZ},
-                        glm::vec3{dX + 0.75f, dY + 0.3f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.68f, dY + 0.1f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.82f, dY + 0.1f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.75f, dY + 0.3f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::EAST:
-        gl.drawTriangle(glm::vec3{dX + 0.9f, dY + 0.18f, dstZ},
-                        glm::vec3{dX + 0.9f, dY + 0.32f, dstZ},
-                        glm::vec3{dX + 0.7f, dY + 0.25f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.9f, dY + 0.18f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.9f, dY + 0.32f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.7f, dY + 0.25f, dstZ}, origin, scale));
         break;
     case ExitDirEnum::WEST:
-        gl.drawTriangle(glm::vec3{dX + 0.1f, dY + 0.82f, dstZ},
-                        glm::vec3{dX + 0.1f, dY + 0.68f, dstZ},
-                        glm::vec3{dX + 0.3f, dY + 0.75f, dstZ});
+        gl.drawTriangle(scalePointInRoom(glm::vec3{dX + 0.1f, dY + 0.82f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.1f, dY + 0.68f, dstZ}, origin, scale),
+                        scalePointInRoom(glm::vec3{dX + 0.3f, dY + 0.75f, dstZ}, origin, scale));
         break;
 
     case ExitDirEnum::UP:
     case ExitDirEnum::DOWN:
     case ExitDirEnum::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
+        drawConnEndTriUpDownUnknown(dX, dY, dstZ, scale);
         break;
     case ExitDirEnum::NONE:
         assert(false);
@@ -610,11 +674,17 @@ void ConnectionDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
     }
 }
 
-void ConnectionDrawer::drawConnEndTriUpDownUnknown(float dX, float dY, float dstZ)
+void ConnectionDrawer::drawConnEndTriUpDownUnknown(float dX,
+                                                   float dY,
+                                                   float dstZ,
+                                                   const float roomScale)
 {
-    getFakeGL().drawTriangle(glm::vec3{dX + 0.5f, dY + 0.5f, dstZ},
-                             glm::vec3{dX + 0.55f, dY + 0.3f, dstZ},
-                             glm::vec3{dX + 0.7f, dY + 0.45f, dstZ});
+    const glm::vec2 origin{dX, dY};
+    const float scale = sanitizeRoomScale(roomScale);
+    getFakeGL().drawTriangle(
+        scalePointInRoom(glm::vec3{dX + 0.5f, dY + 0.5f, dstZ}, origin, scale),
+        scalePointInRoom(glm::vec3{dX + 0.55f, dY + 0.3f, dstZ}, origin, scale),
+        scalePointInRoom(glm::vec3{dX + 0.7f, dY + 0.45f, dstZ}, origin, scale));
 }
 
 ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl) const
@@ -678,7 +748,7 @@ void MapCanvas::paintNearbyConnectionPoints()
             }
         }
 
-        points.emplace_back(Colors::cyan, roomCoord.to_vec3() + getConnectionOffset(dir));
+        points.emplace_back(Colors::cyan, roomCoord.to_vec3() + getConnectionOffset(room, dir));
     };
     const auto addPoints =
         [this, isSelection, &addPoint](const std::optional<MouseSel> &sel,
@@ -714,7 +784,7 @@ void MapCanvas::paintNearbyConnectionPoints()
                                                                : m_connectionSelection->getSecond();
         const Coordinate &c = valid.room.getPosition();
         const glm::vec3 &pos = c.to_vec3();
-        points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.direction));
+        points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.room, valid.direction));
 
         addPoints(MouseSel{Coordinate2f{pos.x, pos.y}, c.z}, valid);
         addPoints(m_sel1, valid);

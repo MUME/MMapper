@@ -848,6 +848,12 @@ void World::setServerId(const RoomId id, const ServerRoomId serverId)
     m_serverIds.set(serverId, id);
 }
 
+void World::setScaleFactor(const RoomId id, const float scale)
+{
+    requireValidRoom(id);
+    m_rooms.setScaleFactor(id, scale);
+}
+
 void World::setPosition(const RoomId id, const Coordinate &coord)
 {
     requireValidRoom(id);
@@ -1658,6 +1664,12 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::SetServerId
 {
     //
     setServerId(change.room, change.server_id);
+}
+
+void World::apply(ProgressCounter & /*pc*/, const room_change_types::SetScaleFactor &change)
+{
+    //
+    setScaleFactor(change.room, change.scale);
 }
 
 void World::apply(ProgressCounter & /*pc*/, const room_change_types::MoveRelative &change)
@@ -2549,6 +2561,7 @@ NODISCARD bool hasMeshDifference(const RoomFields &a, const RoomFields &b)
 NODISCARD bool hasMeshDifference(const RawRoom &a, const RawRoom &b)
 {
     return a.position != b.position                 //
+           || a.scaleFactor != b.scaleFactor        //
            || hasMeshDifference(a.fields, b.fields) //
            || hasMeshDifference(a.exits, b.exits);  //
 }

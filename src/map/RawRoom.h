@@ -28,6 +28,7 @@ public:
     IdType id = INVALID_ID;
     ServerRoomId server_id = INVALID_SERVER_ROOMID;
     RoomStatusEnum status = RoomStatusEnum::Temporary;
+    float scaleFactor = 1.0f; // Effective scale factor for rendering (default 1.0)
 
 public:
     NODISCARD IdType getId() const { return id; }
@@ -40,6 +41,10 @@ public:
 public:
     NODISCARD const Coordinate &getPosition() const { return position; }
     void setPosition(const Coordinate &c) { this->position = c; }
+
+public:
+    NODISCARD float getScaleFactor() const { return scaleFactor; }
+    void setScaleFactor(const float scale) { this->scaleFactor = scale; }
 
 public:
     NODISCARD RoomFields &getRoomFields() { return fields; }
@@ -55,7 +60,8 @@ public:
     NODISCARD bool operator==(const TaggedRawRoom &rhs) const
     {
         return fields == rhs.fields && exits == rhs.exits && server_id == rhs.server_id
-               && position == rhs.position && id == rhs.id && status == rhs.status;
+               && position == rhs.position && id == rhs.id && status == rhs.status
+               && scaleFactor == rhs.scaleFactor;
     }
     NODISCARD bool operator!=(const TaggedRawRoom &rhs) const { return !(rhs == *this); }
     NODISCARD bool isTrivial() const { return *this == TaggedRawRoom{}; }

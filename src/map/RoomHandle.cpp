@@ -51,6 +51,11 @@ bool RoomHandle::isTemporary() const
     return deref(m_room).status == RoomStatusEnum::Temporary;
 }
 
+float RoomHandle::getScaleFactor() const
+{
+    return deref(m_room).getScaleFactor();
+}
+
 ExitDirFlags RoomHandle::computeExitDirections() const
 {
     return ::computeExitDirections(deref(m_room));

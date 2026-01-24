@@ -374,7 +374,8 @@ NODISCARD static float getPitchDegrees(const float zoomScale)
 glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
                                  const glm::ivec2 &size,
                                  const float zoomScale,
-                                 const int currentLayer)
+                                 const int currentLayer,
+                                 const float tiltZoomScale)
 {
     static_assert(GLM_CONFIG_CLIP_CONTROL == GLM_CLIP_CONTROL_RH_NO);
 
@@ -385,7 +386,7 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
 
     const auto &advanced = getConfig().canvas.advanced;
     const float fovDegrees = advanced.fov.getFloat();
-    const auto pitchRadians = glm::radians(getPitchDegrees(zoomScale));
+    const auto pitchRadians = glm::radians(getPitchDegrees(tiltZoomScale));
     const auto yawRadians = glm::radians(advanced.horizontalAngle.getFloat());
     const auto layerHeight = advanced.layerHeight.getFloat();
 
@@ -472,9 +473,15 @@ void MapCanvas::setViewportAndMvp(int width, int height)
     assert(size.x == width);
     assert(size.y == height);
 
+    // Apply effective scale: when in a room with scale < 1, we increase effectiveScale
+    // to make surrounding rooms appear larger (zoomed in view)
     const float zoomScale = getTotalScaleFactor();
-    const auto viewProj = (!want3D) ? getViewProj_old(m_scroll, size, zoomScale, m_currentLayer)
-                                    : getViewProj(m_scroll, size, zoomScale, m_currentLayer);
+    const float effectiveZoom = zoomScale * m_effectiveScale;
+
+    const auto viewProj =
+        (!want3D)
+            ? getViewProj_old(m_scroll, size, effectiveZoom, m_currentLayer)
+            : getViewProj(m_scroll, size, effectiveZoom, m_currentLayer, zoomScale);
     setMvp(viewProj);
 }
 
@@ -636,6 +643,20 @@ void MapCanvas::finishPendingMapBatches()
 void MapCanvas::actuallyPaintGL()
 {
     // DECL_TIMER(t, __FUNCTION__);
+
+    // Smoothly interpolate effective scale toward target
+    {
+        constexpr float EFFECTIVE_SCALE_LERP_ALPHA = 0.2f;
+        const float delta = m_targetEffectiveScale - m_effectiveScale;
+        if (std::abs(delta) > 0.001f) {
+            m_effectiveScale += delta * EFFECTIVE_SCALE_LERP_ALPHA;
+            // Continue animating if we're still interpolating
+            setAnimating(true);
+        } else {
+            m_effectiveScale = m_targetEffectiveScale;
+        }
+    }
+
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();

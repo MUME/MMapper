@@ -151,6 +151,16 @@ void ChangePrinter::print(const bool val)
     m_os.writeWithColor(const_color, val ? "true" : "false");
 }
 
+void ChangePrinter::print(const int value)
+{
+    m_os.writeWithColor(const_color, value);
+}
+
+void ChangePrinter::print(const float value)
+{
+    m_os.writeWithColor(const_color, value);
+}
+
 void ChangePrinter::print(const Coordinate &coord)
 {
     auto &os = m_os;
@@ -773,6 +783,15 @@ void ChangePrinter::virt_accept(const SetServerId &change)
     {
         HELPER_ADD_MEMBER(room);
         HELPER_ADD_MEMBER(server_id);
+    }
+}
+
+void ChangePrinter::virt_accept(const SetScaleFactor &change)
+{
+    BEGIN_STRUCT_HELPER("SetScaleFactor")
+    {
+        HELPER_ADD_MEMBER(room);
+        HELPER_ADD_MEMBER(scale);
     }
 }
 

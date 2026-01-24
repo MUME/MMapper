@@ -191,13 +191,13 @@ public:
                         bool oneway,
                         bool inExitFlags = true);
 
-    void drawConnEndTriUpDownUnknown(float dX, float dY, float dstZ);
+    void drawConnEndTriUpDownUnknown(float dX, float dY, float dstZ, float roomScale);
 
-    void drawConnStartTri(ExitDirEnum startDir, float srcZ);
+    void drawConnStartTri(ExitDirEnum startDir, float srcZ, float roomScale);
 
-    void drawConnEndTri(ExitDirEnum endDir, float dX, float dY, float dstZ);
+    void drawConnEndTri(ExitDirEnum endDir, float dX, float dY, float dstZ, float roomScale);
 
-    void drawConnEndTri1Way(ExitDirEnum endDir, float dX, float dY, float dstZ);
+    void drawConnEndTri1Way(ExitDirEnum endDir, float dX, float dY, float dstZ, float roomScale);
 
     void drawConnectionLine(ExitDirEnum startDir,
                             ExitDirEnum endDir,
@@ -206,7 +206,9 @@ public:
                             float dX,
                             float dY,
                             float srcZ,
-                            float dstZ);
+                            float dstZ,
+                            float startScale,
+                            float endScale);
 
     void drawConnectionTriangles(ExitDirEnum startDir,
                                  ExitDirEnum endDir,
@@ -214,7 +216,9 @@ public:
                                  float dX,
                                  float dY,
                                  float srcZ,
-                                 float dstZ);
+                                 float dstZ,
+                                 float startScale,
+                                 float endScale);
 };
 
 using BatchedConnections = std::unordered_map<int, ConnectionDrawerBuffers>;

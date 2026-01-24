@@ -63,6 +63,7 @@ public:
     NODISCARD ServerRoomId getServerId() const;
     NODISCARD const Coordinate &getPosition() const;
     NODISCARD bool isTemporary() const;
+    NODISCARD float getScaleFactor() const;
 
 public:
     NODISCARD ExitDirFlags computeExitDirections() const;

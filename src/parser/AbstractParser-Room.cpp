@@ -776,6 +776,23 @@ private:
         }
     }
 
+    void onSetScale(User &user, const Vector &v) const
+    {
+        const auto roomId = getRoomId();
+        auto &os = user.getOstream();
+
+        if constexpr (IS_DEBUG_BUILD) {
+            const auto &name = v[1].getString();
+            assert(name == "scale");
+        }
+
+        const float scale = v[2].getFloat();
+        m_self.applySingleChange(Change{room_change_types::SetScaleFactor{roomId, scale}});
+
+        os << "Scale factor set to " << scale << ".\n";
+        send_ok(os);
+    }
+
     void onNoexit(User &user, const Vector &v) const
     {
         const auto roomId = getRoomId();
@@ -1094,6 +1111,9 @@ private:
         auto setServerId = processHiddenParam([this](User &u,
                                                      const Vector &argv) { onSetServerId(u, argv); },
                                               "set server id");
+        auto setScale = processHiddenParam([this](User &u,
+                                                  const Vector &argv) { onSetScale(u, argv); },
+                                           "set scale factor");
 
         auto noexit = processHiddenParam([this](User &u, const Vector &argv) { onNoexit(u, argv); },
                                          "remove an exit (or -1 for all exits)");
@@ -1128,6 +1148,9 @@ private:
         auto setSyntax
             = buildSyntax(abb("set"),
                           buildSyntax(abb("name"), TokenMatcher::alloc<ArgString>(), setRoomName),
+                          buildSyntax(abb("scale"),
+                                      TokenMatcher::alloc_copy(ArgFloat::withMinMax(0.01f, 100.f)),
+                                      setScale),
                           buildSyntax(abb("server_id"), TokenMatcher::alloc<ArgInt>(), setServerId));
 
         auto makeExitSyn = [this, &makeConn](WaysEnum ways, std::string name, std::string desc) {

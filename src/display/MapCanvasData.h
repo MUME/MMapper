@@ -107,6 +107,8 @@ public:
     glm::vec2 m_scroll{0.f};
     ScaleFactor m_scaleFactor;
     int m_currentLayer = 0;
+    float m_effectiveScale = 1.f;       // Current effective scale (smoothly interpolated)
+    float m_targetEffectiveScale = 1.f; // Target effective scale based on current room
 
 public:
     explicit MapCanvasViewport(QWidget &sizeWidget)
@@ -122,6 +124,7 @@ public:
         return Viewport{glm::ivec2{r.x(), r.y()}, glm::ivec2{r.width(), r.height()}};
     }
     NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
+    NODISCARD float getEffectiveScale() const { return m_effectiveScale; }
 
 public:
     NODISCARD std::optional<glm::vec3> project(const glm::vec3 &) const;

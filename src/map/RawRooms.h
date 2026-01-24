@@ -167,6 +167,13 @@ public:
     }
 
 public:
+    void setScaleFactor(const RoomId id, const float scale)
+    {
+        updateRawRoomRef(id, [scale](auto &r) { r.scaleFactor = scale; });
+    }
+    NODISCARD float getScaleFactor(const RoomId id) const { return getRawRoomRef(id).scaleFactor; }
+
+public:
     void setPosition(const RoomId id, const Coordinate &coord)
     {
         updateRawRoomRef(id, [&coord](auto &r) { r.position = coord; });

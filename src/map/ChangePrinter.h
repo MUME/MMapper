@@ -43,8 +43,10 @@ private:
     void print(ExternalRoomId room);
 
 private:
+    void print(int value);
     void print(ServerRoomId serverId);
     void print(const Coordinate &coord);
+    void print(float value);
 
 private:
     void print(const DoorName &name);

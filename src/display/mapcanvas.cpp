@@ -1122,7 +1122,23 @@ void MapCanvas::onMovement()
     const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
     m_currentLayer = pos.z;
     emit sig_onCenter(pos.to_vec2() + glm::vec2{0.5f, 0.5f});
+    updateEffectiveScale();
     update();
+}
+
+void MapCanvas::updateEffectiveScale()
+{
+    if (const auto &room = m_data.getCurrentRoom()) {
+        updateEffectiveScaleForRoom(room);
+    }
+}
+
+void MapCanvas::updateEffectiveScaleForRoom(const RoomHandle &room)
+{
+    const float roomScale = room.getScaleFactor();
+    // When entering a room with scale < 1.0, we need to zoom out (increase effective scale)
+    // so that the room appears at normal size but surroundings appear larger
+    m_targetEffectiveScale = (roomScale > 0.f) ? (1.f / roomScale) : 1.f;
 }
 
 void MapCanvas::slot_dataLoaded()
