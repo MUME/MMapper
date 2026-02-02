@@ -4,13 +4,13 @@
 
 #include "../global/Array.h"
 #include "../global/Color.h"
+#include "../global/ConfigConsts.h"
 #include "../global/IndexedVector.h"
 #include "../global/NamedColors.h"
 #include "../global/TaggedInt.h"
 #include "../global/hash.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
-#include "global/ConfigConsts.h"
 
 #include <cstdint>
 #include <memory>

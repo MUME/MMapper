@@ -5,11 +5,11 @@
 #include "ExitDirection.h"
 
 #include "../global/Array.h"
+#include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/enums.h"
 #include "coordinate.h"
-#include "global/Charset.h"
 
 namespace enums {
 const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()

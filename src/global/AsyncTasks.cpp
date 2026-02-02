@@ -3,8 +3,8 @@
 
 #include "AsyncTasks.h"
 
+#include "../global/PrintUtils.h"
 #include "ConfigConsts.h"
-#include "global/PrintUtils.h"
 #include "logging.h"
 #include "thread_utils.h"
 

@@ -3,10 +3,10 @@
 
 #include "TopLevelWindows.h"
 
-#include "global/ConfigConsts.h"
-#include "global/thread_utils.h"
-#include "global/utils.h"
-#include "global/window_utils.h"
+#include "../global/ConfigConsts.h"
+#include "../global/thread_utils.h"
+#include "../global/utils.h"
+#include "../global/window_utils.h"
 
 #include <list>
 #include <memory>
