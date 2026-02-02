@@ -339,9 +339,9 @@ void Functions::releaseFbo()
     getFBO().release();
 }
 
-void Functions::blitFboToDefault()
+void Functions::blitFboToTarget(const GLuint targetId)
 {
-    getFBO().blitToDefault();
+    getFBO().blitToTarget(targetId, *this);
 }
 
 } // namespace Legacy

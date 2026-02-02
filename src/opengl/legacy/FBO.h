@@ -14,6 +14,8 @@ namespace Legacy {
 
 extern bool LOG_FBO_ALLOCATIONS;
 
+class Functions;
+
 class FBO final
 {
 public:
@@ -25,7 +27,7 @@ public:
     void configure(const Viewport &physicalViewport, int samples);
     void bind();
     void release();
-    void blitToDefault();
+    void blitToTarget(GLuint targetId, Functions &gl);
 
 private:
     std::unique_ptr<QOpenGLFramebufferObject> m_multisamplingFbo;

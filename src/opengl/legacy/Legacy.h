@@ -140,10 +140,12 @@ public:
     using Base::glActiveTexture;
     using Base::glAttachShader;
     using Base::glBindBuffer;
+    using Base::glBindFramebuffer;
     using Base::glBindTexture;
     using Base::glBindVertexArray;
     using Base::glBlendFunc;
     using Base::glBlendFuncSeparate;
+    using Base::glBlitFramebuffer;
     using Base::glBufferData;
     using Base::glClear;
     using Base::glClearColor;
@@ -361,6 +363,6 @@ public:
     void configureFbo(int samples);
     void bindFbo();
     void releaseFbo();
-    void blitFboToDefault();
+    void blitFboToTarget(GLuint targetId);
 };
 } // namespace Legacy

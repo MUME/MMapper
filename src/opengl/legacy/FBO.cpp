@@ -5,6 +5,7 @@
 
 #include "../../global/logging.h"
 #include "../OpenGLConfig.h"
+#include "Legacy.h"
 
 namespace Legacy {
 
@@ -81,7 +82,7 @@ void FBO::release()
     }
 }
 
-void FBO::blitToDefault()
+void FBO::blitToTarget(const GLuint targetId, Functions &gl)
 {
     if (!m_resolvedFbo) {
         return; // Nothing to blit from
@@ -95,11 +96,16 @@ void FBO::blitToDefault()
                                                   GL_LINEAR);
     }
 
-    // Now blit the (potentially resolved) FBO to the default framebuffer.
-    QOpenGLFramebufferObject::blitFramebuffer(nullptr,
-                                              m_resolvedFbo.get(),
-                                              GL_COLOR_BUFFER_BIT,
-                                              GL_NEAREST);
+    // Now blit the (potentially resolved) FBO to the target framebuffer.
+    const GLsizei width = m_resolvedFbo->width();
+    const GLsizei height = m_resolvedFbo->height();
+
+    gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, m_resolvedFbo->handle());
+    gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetId);
+    gl.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    // Leave the target FBO bound so that subsequent commands (like stats) hit it.
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, targetId);
 }
 
 } // namespace Legacy

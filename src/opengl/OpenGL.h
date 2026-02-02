@@ -63,7 +63,7 @@ public:
     void configureFbo(int samples);
     void bindFbo();
     void releaseFbo();
-    void blitFboToDefault();
+    void blitFboToTarget(GLuint targetId);
 
 public:
     NODISCARD UniqueMesh createPointBatch(const std::vector<ColorVert> &verts);
