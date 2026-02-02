@@ -71,14 +71,19 @@ void OpenGL::configureFbo(int samples)
     getFunctions().configureFbo(samples);
 }
 
-void OpenGL::bindFbo()
+void OpenGL::bindFbo(const GLuint targetId)
 {
-    getFunctions().bindFbo();
+    getFunctions().bindFbo(targetId);
 }
 
 void OpenGL::releaseFbo()
 {
     getFunctions().releaseFbo();
+}
+
+bool OpenGL::isMultisampling() const
+{
+    return getFunctions().isMultisampling();
 }
 
 void OpenGL::bindFramebuffer(const GLuint targetId)
@@ -157,6 +162,11 @@ void OpenGL::clearDepth()
 {
     auto &gl = getFunctions();
     gl.glClear(static_cast<GLbitfield>(GL_DEPTH_BUFFER_BIT));
+}
+
+void OpenGL::finish()
+{
+    getFunctions().glFinish();
 }
 
 void OpenGL::flush()

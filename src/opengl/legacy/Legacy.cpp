@@ -329,14 +329,19 @@ void Functions::configureFbo(int samples)
     getFBO().configure(getPhysicalViewport(), samples);
 }
 
-void Functions::bindFbo()
+void Functions::bindFbo(const GLuint targetId)
 {
-    getFBO().bind();
+    getFBO().bind(targetId, *this);
 }
 
 void Functions::releaseFbo()
 {
     getFBO().release();
+}
+
+bool Functions::isMultisampling() const
+{
+    return m_fbo->isMultisampling();
 }
 
 void Functions::bindFramebuffer(const GLuint targetId)

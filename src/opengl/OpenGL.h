@@ -61,8 +61,9 @@ public:
 
 public:
     void configureFbo(int samples);
-    void bindFbo();
+    void bindFbo(GLuint targetId);
     void releaseFbo();
+    NODISCARD bool isMultisampling() const;
     void bindFramebuffer(GLuint targetId);
     void blitFboToTarget(GLuint targetId);
 
@@ -158,6 +159,7 @@ public:
 public:
     void clear(const Color color);
     void clearDepth();
+    void finish();
     void flush();
     void resetState();
     void renderPlainFullScreenQuad(const GLRenderState &state);

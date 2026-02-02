@@ -180,6 +180,7 @@ public:
     using Base::glGetTexLevelParameteriv;
     using Base::glGetTexParameteriv;
     using Base::glGetUniformLocation;
+    using Base::glFinish;
     using Base::glHint;
     using Base::glIsBuffer;
     using Base::glIsProgram;
@@ -365,8 +366,9 @@ public:
 
 public:
     void configureFbo(int samples);
-    void bindFbo();
+    void bindFbo(GLuint targetId);
     void releaseFbo();
+    NODISCARD bool isMultisampling() const;
     void bindFramebuffer(GLuint targetId);
     void blitFboToTarget(GLuint targetId);
 };

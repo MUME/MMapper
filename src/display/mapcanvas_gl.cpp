@@ -485,6 +485,9 @@ void MapCanvas::resizeGL(int width, int height)
         return;
     }
 
+    // Ensure our internal state is updated for potentially new DPI.
+    getOpenGL().setDevicePixelRatio(static_cast<float>(QPaintDevice::devicePixelRatioF()));
+
     setViewportAndMvp(width, height);
     updateMultisampling();
 
@@ -641,25 +644,38 @@ void MapCanvas::actuallyPaintGL()
     auto &gl = getOpenGL();
     gl.resetState();
 
-    gl.bindFbo();
+    const GLuint widgetFbo = defaultFramebufferObject();
+
+    // 1. Prepare and clear the target surface
+    gl.bindFramebuffer(widgetFbo);
     gl.clear(Color{getConfig().canvas.backgroundColor});
+
+    // 2. Bind the primary rendering target (either multisampling FBO or widget FBO)
+    gl.bindFbo(widgetFbo);
+    if (gl.isMultisampling()) {
+        // Must clear the multisampling buffer if we are using it.
+        gl.clear(Color{getConfig().canvas.backgroundColor});
+    }
 
     if (m_data.isEmpty()) {
         getGLFont().renderTextCentered("No map loaded");
-        return;
+    } else {
+        paintMap();
+        paintBatchedInfomarks();
+        paintSelections();
+        paintCharacters();
+        paintDifferences();
     }
 
-    paintMap();
-    paintBatchedInfomarks();
-    paintSelections();
-    paintCharacters();
-    paintDifferences();
+    // 3. Resolve multisampling if necessary
+    if (gl.isMultisampling()) {
+        gl.blitFboToTarget(widgetFbo);
+    }
 
-    const GLuint widgetFbo = defaultFramebufferObject();
+    // 4. Ensure widget FBO is bound for any follow-up draws (stats, etc)
     gl.bindFramebuffer(widgetFbo);
-    gl.clear(Color{getConfig().canvas.backgroundColor});
-    gl.blitFboToTarget(widgetFbo);
     gl.flush();
+    gl.finish();
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const

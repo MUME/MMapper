@@ -25,13 +25,15 @@ public:
 
 public:
     void configure(const Viewport &physicalViewport, int samples);
-    void bind();
+    void bind(GLuint targetId, Functions &gl);
     void release();
     void blitToTarget(GLuint targetId, Functions &gl);
 
+public:
+    NODISCARD bool isMultisampling() const { return m_multisamplingFbo != nullptr; }
+
 private:
     std::unique_ptr<QOpenGLFramebufferObject> m_multisamplingFbo;
-    std::unique_ptr<QOpenGLFramebufferObject> m_resolvedFbo;
 };
 
 } // namespace Legacy
