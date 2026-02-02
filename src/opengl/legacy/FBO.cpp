@@ -88,6 +88,13 @@ void FBO::blitToTarget(const GLuint targetId, Functions &gl)
         return; // Nothing to blit from
     }
 
+    // Preserve existing framebuffer bindings so we don't surprise callers that
+    // expect their GL_FRAMEBUFFER state to remain unchanged across this call.
+    GLint prevReadFbo = 0;
+    GLint prevDrawFbo = 0;
+    gl.glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
+    gl.glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevDrawFbo);
+
     // If we have a valid multisampling FBO, resolve it to the resolved FBO first.
     if (m_multisamplingFbo && m_multisamplingFbo->isValid()) {
         QOpenGLFramebufferObject::blitFramebuffer(m_resolvedFbo.get(),
@@ -99,13 +106,6 @@ void FBO::blitToTarget(const GLuint targetId, Functions &gl)
     // Now blit the (potentially resolved) FBO to the target framebuffer.
     const GLsizei width = m_resolvedFbo->width();
     const GLsizei height = m_resolvedFbo->height();
-
-    // Preserve existing framebuffer bindings so we don't surprise callers that
-    // expect their GL_FRAMEBUFFER state to remain unchanged across this call.
-    GLint prevReadFbo = 0;
-    GLint prevDrawFbo = 0;
-    gl.glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
-    gl.glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevDrawFbo);
 
     gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, m_resolvedFbo->handle());
     gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetId);

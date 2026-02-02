@@ -639,6 +639,7 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
+    gl.resetState();
 
     gl.bindFbo();
     gl.clear(Color{getConfig().canvas.backgroundColor});
@@ -655,8 +656,10 @@ void MapCanvas::actuallyPaintGL()
     paintDifferences();
 
     const GLuint widgetFbo = defaultFramebufferObject();
-    gl.blitFboToTarget(widgetFbo);
     gl.bindFramebuffer(widgetFbo);
+    gl.clear(Color{getConfig().canvas.backgroundColor});
+    gl.blitFboToTarget(widgetFbo);
+    gl.flush();
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
