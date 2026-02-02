@@ -7,6 +7,7 @@
 
 #include "../global/macros.h"
 
+#include <functional>
 #include <memory>
 
 #include <QDialog>
@@ -20,7 +21,9 @@ class NODISCARD_QOBJECT AnsiColorDialog final : public QDialog
     Q_OBJECT
 
 public:
-    NODISCARD static QString getColor(const QString &ansiString, QWidget *parent);
+    static void getColor(const QString &ansiString,
+                         QWidget *parent,
+                         std::function<void(QString)> callback);
 
 private:
     QString m_resultAnsiString;

@@ -75,31 +75,36 @@ if(Qt6Core_FOUND)
 endif()
 
 if(Qt6OpenGL_FOUND)
-    file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
-        "#include <QOpenGLExtraFunctions>
-        #ifndef GL_TRIANGLES
-        # error
-        #endif
-        #ifdef Q_OS_MAC
-        # error
-        #endif
-        int main(int argc, char** argv) { return 0; }")
-    try_compile(QT_HAS_GLES
-                    ${CMAKE_BINARY_DIR}
-                    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
-                    LINK_LIBRARIES Qt6::OpenGL
-                    OUTPUT_VARIABLE OUTPUT)
-    file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
-        "#include <QOpenGLFunctions_3_3_Core>
-        #ifndef GL_QUADS
-        # error
-        #endif
-        int main(int argc, char** argv) { return 0; }")
-    try_compile(QT_HAS_OPENGL
-                    ${CMAKE_BINARY_DIR}
-                    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
-                    LINK_LIBRARIES Qt6::OpenGL
-                    OUTPUT_VARIABLE OUTPUT)
+    if(EMSCRIPTEN)
+        set(QT_HAS_GLES TRUE)
+        set(QT_HAS_OPENGL FALSE)
+    else()
+        file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
+            "#include <QOpenGLExtraFunctions>
+            #ifndef GL_TRIANGLES
+            # error
+            #endif
+            #ifdef Q_OS_MAC
+            # error
+            #endif
+            int main(int argc, char** argv) { return 0; }")
+        try_compile(QT_HAS_GLES
+                        ${CMAKE_BINARY_DIR}
+                        ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
+                        LINK_LIBRARIES Qt6::OpenGL
+                        OUTPUT_VARIABLE OUTPUT)
+        file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
+            "#include <QOpenGLFunctions_3_3_Core>
+            #ifndef GL_QUADS
+            # error
+            #endif
+            int main(int argc, char** argv) { return 0; }")
+        try_compile(QT_HAS_OPENGL
+                        ${CMAKE_BINARY_DIR}
+                        ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
+                        LINK_LIBRARIES Qt6::OpenGL
+                        OUTPUT_VARIABLE OUTPUT)
+    endif()
     if (NOT QT_HAS_GLES)
         add_definitions(/DMMAPPER_NO_GLES)
     endif()

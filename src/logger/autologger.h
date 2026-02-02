@@ -6,6 +6,7 @@
 #include "../global/macros.h"
 
 #include <fstream>
+#include <functional>
 #include <string>
 
 #include <QFileInfoList>
@@ -30,7 +31,7 @@ private:
     NODISCARD bool writeLine(const QString &str);
     void deleteOldLogs();
     static void deleteLogs(const QFileInfoList &files);
-    NODISCARD bool showDeleteDialog(QString message);
+    void showDeleteDialog(QString message, std::function<void(bool)> callback);
     NODISCARD bool createFile();
 
 public slots:

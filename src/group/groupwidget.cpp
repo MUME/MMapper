@@ -793,10 +793,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             m_center->setDisabled(!selectedCharacter->isYou()
                                   && selectedCharacter->getServerId() == INVALID_SERVER_ROOMID);
 
-            QMenu contextMenu(tr("Context menu"), this);
-            contextMenu.addAction(m_center);
-            contextMenu.addAction(m_recolor);
-            contextMenu.exec(QCursor::pos());
+            auto *contextMenu = new QMenu(tr("Context menu"), this);
+            contextMenu->setAttribute(Qt::WA_DeleteOnClose);
+            contextMenu->addAction(m_center);
+            contextMenu->addAction(m_recolor);
+            contextMenu->popup(QCursor::pos());
         }
     });
 
