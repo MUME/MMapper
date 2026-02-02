@@ -24,9 +24,14 @@ jobs:
         create-symlink: true
         key: ${{ github.job }}
 
+    - name: Add KDE Neon repository
+      run: |
+        wget -qO - http://archive.neon.kde.org/public.key | sudo gpg --dearmor -o /usr/share/keyrings/kde-neon.gpg
+        echo "deb [signed-by=/usr/share/keyrings/kde-neon.gpg] http://archive.neon.kde.org/user jammy main" | sudo tee /etc/apt/sources.list.d/kde-neon.list
+        sudo apt update -qq
+
     - name: Install Build Dependencies
       run: |
-        sudo apt update -qq
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
           libgl1-mesa-dev qt6-wayland qtkeychain-qt6-dev build-essential mold git \
