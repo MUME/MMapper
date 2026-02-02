@@ -224,10 +224,10 @@
          <item row="1" column="5">
           <widget class="QSpinBox" name="m_layer">
            <property name="minimum">
-            <number>-10</number>
+            <number>-15</number>
            </property>
            <property name="maximum">
-            <number>10</number>
+            <number>15</number>
            </property>
           </widget>
          </item>
