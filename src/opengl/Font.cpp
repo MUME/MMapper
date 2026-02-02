@@ -766,10 +766,17 @@ void GLFont::init()
             fm.tryAddSyntheticGlyphs(img);
             img = img.mirrored();
 
+            const QImage converted = img.convertToFormat(QImage::Format_RGBA8888);
+            tex.setFormat(QOpenGLTexture::TextureFormat::RGBA8_UNorm);
             tex.setMinMagFilters(QOpenGLTexture::Filter::Linear, QOpenGLTexture::Filter::Linear);
             tex.setAutoMipMapGenerationEnabled(false);
             tex.setMipLevels(0);
-            tex.setData(img, QOpenGLTexture::MipMapGeneration::DontGenerateMipMaps);
+            tex.setSize(converted.width(), converted.height());
+            tex.allocateStorage();
+            tex.setData(0,
+                        QOpenGLTexture::PixelFormat::RGBA,
+                        QOpenGLTexture::PixelType::UInt8,
+                        converted.constBits());
         },
         true);
 

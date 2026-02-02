@@ -284,7 +284,8 @@ void OpenGL::initArrayFromFiles(const SharedMMTexture &array, const std::vector<
 
     const auto numLayers = static_cast<GLsizei>(input.size());
     for (GLsizei i = 0; i < numLayers; ++i) {
-        QImage image = QImage{input[static_cast<size_t>(i)]}.mirrored();
+        const QImage image = QImage{input[static_cast<size_t>(i)]}.mirrored().convertToFormat(
+            QImage::Format_RGBA8888);
         if (image.width() != qtex.width() || image.height() != qtex.height()) {
             std::ostringstream oss;
             oss << "Image is " << image.width() << "x" << image.height() << ", but expected "
@@ -292,18 +293,17 @@ void OpenGL::initArrayFromFiles(const SharedMMTexture &array, const std::vector<
             auto s = std::move(oss).str();
             MMLOG_ERROR() << s.c_str();
         }
-        const QImage swappedImage = std::move(image).rgbSwapped();
         gl.glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                            0,
                            0,
                            0,
                            i,
-                           swappedImage.width(),
-                           swappedImage.height(),
+                           image.width(),
+                           image.height(),
                            1,
                            GL_RGBA,
                            GL_UNSIGNED_BYTE,
-                           swappedImage.constBits());
+                           image.constBits());
     }
 
     gl.glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
@@ -330,7 +330,7 @@ void OpenGL::initArrayFromImages(const SharedMMTexture &array,
         assert(ipow2 == layer.front().height());
 
         for (size_t level_num = 0; level_num < numLevels; ++level_num) {
-            const QImage &image = layer[level_num];
+            const QImage image = layer[level_num].convertToFormat(QImage::Format_RGBA8888);
             if (image.width() != (qtex.width() >> level_num)
                 || image.height() != (qtex.height() >> level_num)) {
                 std::ostringstream oss;
@@ -341,18 +341,17 @@ void OpenGL::initArrayFromImages(const SharedMMTexture &array,
                 MMLOG_ERROR() << s.c_str();
             }
 
-            const QImage swappedImage = std::move(image).rgbSwapped();
             gl.glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                                static_cast<GLint>(level_num),
                                0,
                                0,
                                static_cast<GLint>(z),
-                               swappedImage.width(),
-                               swappedImage.height(),
+                               image.width(),
+                               image.height(),
                                1,
                                GL_RGBA,
                                GL_UNSIGNED_BYTE,
-                               swappedImage.constBits());
+                               image.constBits());
         }
     }
 
