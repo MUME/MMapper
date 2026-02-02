@@ -153,6 +153,11 @@ void AutoLogger::deleteOldLogs()
         return;
     }
 
+    auto doDelete = [filesToDelete]() {
+        QFileInfoList fileList(filesToDelete);
+        deleteLogs(fileList);
+    };
+
     if (conf.askDelete) {
         QString unit = "KB";
         QStringList list = {"MB", "GB", "TB"};
@@ -162,15 +167,17 @@ void AutoLogger::deleteOldLogs()
             unit = it.next();
             num /= 1024.0;
         }
-        if (!showDeleteDialog(QString("There are %1 %2 of old logs.\n\nDo you want to delete them?")
-                                  .arg(QString::number(num, 'f', 1))
-                                  .arg(unit))) {
-            return;
-        }
+        showDeleteDialog(QString("There are %1 %2 of old logs.\n\nDo you want to delete them?")
+                             .arg(QString::number(num, 'f', 1))
+                             .arg(unit),
+                         [doDelete](bool accepted) {
+                             if (accepted) {
+                                 doDelete();
+                             }
+                         });
+    } else {
+        doDelete();
     }
-
-    QFileInfoList fileList(filesToDelete);
-    deleteLogs(fileList);
 }
 
 void AutoLogger::deleteLogs(const QFileInfoList &files)
@@ -184,16 +191,19 @@ void AutoLogger::deleteLogs(const QFileInfoList &files)
     }
 }
 
-bool AutoLogger::showDeleteDialog(QString message)
+void AutoLogger::showDeleteDialog(QString message, std::function<void(bool)> callback)
 {
-    QMessageBox msgBox(checked_dynamic_downcast<QWidget *>(parent())); // MainWindow
-    msgBox.setText(message);
-    msgBox.setWindowTitle("MMapper AutoLogger");
-    msgBox.setStandardButtons(QMessageBox::No | QMessageBox::Yes);
-    msgBox.setDefaultButton(QMessageBox::No);
+    auto *msgBox = new QMessageBox(checked_dynamic_downcast<QWidget *>(parent())); // MainWindow
+    msgBox->setAttribute(Qt::WA_DeleteOnClose);
+    msgBox->setText(message);
+    msgBox->setWindowTitle("MMapper AutoLogger");
+    msgBox->setStandardButtons(QMessageBox::No | QMessageBox::Yes);
+    msgBox->setDefaultButton(QMessageBox::No);
 
-    int result = msgBox.exec();
-    return result == QMessageBox::Yes;
+    connect(msgBox, &QMessageBox::finished, this, [callback](int result) {
+        callback(result == QMessageBox::Yes);
+    });
+    msgBox->open();
 }
 
 void AutoLogger::slot_writeToLog(const QString &str)

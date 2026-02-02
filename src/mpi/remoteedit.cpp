@@ -138,18 +138,22 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
         assert(false);
     }
 
-    QMessageBox dlg(
+    auto *dlg = new QMessageBox(
         QMessageBox::Critical,
         "MUME Disconnected",
         "The connection to MUME was lost. Your unsaved changes will be lost unless you save the file locally now.",
-        QMessageBox::StandardButtons{QMessageBox::Save | QMessageBox::Discard
-                                     | QMessageBox::Cancel});
+        QMessageBox::StandardButtons{QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel},
+        nullptr);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     const auto id = session.getInternalId().asUint32();
     const auto body = session.getContent().toUtf8();
-    if (dlg.exec() == QMessageBox::Save) {
-        qDebug() << "Session" << id << "was saved";
-        QFileDialog::saveFileContent(body, QString("MMapper-Edit-%1.txt").arg(id));
-    }
+    connect(dlg, &QMessageBox::finished, this, [id, body](int result) {
+        if (result == QMessageBox::Save) {
+            qDebug() << "Session" << id << "was saved";
+            QFileDialog::saveFileContent(body, QString("MMapper-Edit-%1.txt").arg(id));
+        }
+    });
+    dlg->open();
     QGuiApplication::clipboard()->setText(body);
     qWarning() << "Session" << id << "was copied to the clipboard";
 }

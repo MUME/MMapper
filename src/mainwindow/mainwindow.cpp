@@ -1229,40 +1229,41 @@ void MainWindow::setupMenuBar()
 
 void MainWindow::slot_showContextMenu(const QPoint &pos)
 {
-    QMenu contextMenu(tr("Context menu"), this);
+    auto *contextMenu = new QMenu(tr("Context menu"), this);
+    contextMenu->setAttribute(Qt::WA_DeleteOnClose);
     if (m_connectionSelection != nullptr) {
         // Connections cannot be selected alongside rooms and infomarks
         // ^^^ Let's enforce that with a variant then?
-        contextMenu.addAction(deleteConnectionSelectionAct);
+        contextMenu->addAction(deleteConnectionSelectionAct);
 
     } else {
         // However, both rooms and infomarks can be selected at once
         if (m_roomSelection != nullptr) {
             if (m_roomSelection->empty()) {
-                contextMenu.addAction(createRoomAct);
+                contextMenu->addAction(createRoomAct);
             } else {
-                contextMenu.addAction(editRoomSelectionAct);
-                contextMenu.addAction(moveUpRoomSelectionAct);
-                contextMenu.addAction(moveDownRoomSelectionAct);
-                contextMenu.addAction(mergeUpRoomSelectionAct);
-                contextMenu.addAction(mergeDownRoomSelectionAct);
-                contextMenu.addAction(deleteRoomSelectionAct);
-                contextMenu.addAction(connectToNeighboursRoomSelectionAct);
-                contextMenu.addSeparator();
-                contextMenu.addAction(gotoRoomAct);
-                contextMenu.addAction(forceRoomAct);
+                contextMenu->addAction(editRoomSelectionAct);
+                contextMenu->addAction(moveUpRoomSelectionAct);
+                contextMenu->addAction(moveDownRoomSelectionAct);
+                contextMenu->addAction(mergeUpRoomSelectionAct);
+                contextMenu->addAction(mergeDownRoomSelectionAct);
+                contextMenu->addAction(deleteRoomSelectionAct);
+                contextMenu->addAction(connectToNeighboursRoomSelectionAct);
+                contextMenu->addSeparator();
+                contextMenu->addAction(gotoRoomAct);
+                contextMenu->addAction(forceRoomAct);
             }
         }
         if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->empty()) {
             if (m_roomSelection != nullptr) {
-                contextMenu.addSeparator();
+                contextMenu->addSeparator();
             }
-            contextMenu.addAction(infomarkActions.editInfomarkAct);
-            contextMenu.addAction(infomarkActions.deleteInfomarkAct);
+            contextMenu->addAction(infomarkActions.editInfomarkAct);
+            contextMenu->addAction(infomarkActions.deleteInfomarkAct);
         }
     }
-    contextMenu.addSeparator();
-    QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
+    contextMenu->addSeparator();
+    QMenu *mouseMenu = contextMenu->addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
     mouseMenu->addAction(mouseMode.modeMoveSelectAct);
     mouseMenu->addAction(mouseMode.modeRoomRaypickAct);
     mouseMenu->addAction(mouseMode.modeRoomSelectAct);
@@ -1273,7 +1274,7 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
     mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
     mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
 
-    contextMenu.exec(getCanvas()->mapToGlobal(pos));
+    contextMenu->popup(getCanvas()->mapToGlobal(pos));
 }
 
 void MainWindow::slot_alwaysOnTop()
@@ -1612,8 +1613,9 @@ void MainWindow::slot_reload()
 
 void MainWindow::slot_about()
 {
-    AboutDialog about(this);
-    about.exec();
+    auto *about = new AboutDialog(this);
+    about->setAttribute(Qt::WA_DeleteOnClose);
+    about->open();
 }
 
 MainWindow::ProgressDialogLifetime MainWindow::createNewProgressDialog(const QString &text,
@@ -1730,7 +1732,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
     mmqt::setWindowTitle2(*this,
                           QString("MMapper%1").arg(appSuffix),
-                          QString("%1[*]%2").arg(shownName).arg(fileSuffix));
+                          QString("%1[*]%2").arg(shownName, fileSuffix));
 }
 
 void MainWindow::slot_onLayerUp()
@@ -1799,10 +1801,10 @@ void MainWindow::slot_onEditInfomarkSelection()
         return;
     }
 
-    InfomarksEditDlg dlg(this);
-    dlg.setInfomarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
-    dlg.exec();
-    dlg.show();
+    auto *dlg = new InfomarksEditDlg(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setInfomarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
+    dlg->show();
 }
 
 void MainWindow::slot_onCreateRoom()
@@ -2168,14 +2170,18 @@ void MainWindow::onSuccessfulSave(const SaveModeEnum mode,
     const QString &absoluteFilePath = file.absoluteFilePath();
     if (!config.autoLoadMap || config.fileName != absoluteFilePath) {
         // Check if this should be the new autoload map
-        QMessageBox dlg(QMessageBox::Question,
-                        "Autoload Map?",
-                        "Autoload this map when MMapper starts?",
-                        QMessageBox::StandardButtons{QMessageBox::Yes | QMessageBox::No},
-                        this);
-        if (dlg.exec() == QMessageBox::Yes) {
-            config.autoLoadMap = true;
-            config.fileName = absoluteFilePath;
-        }
+        auto *dlg = new QMessageBox(QMessageBox::Question,
+                                    "Autoload Map?",
+                                    "Autoload this map when MMapper starts?",
+                                    QMessageBox::StandardButtons{QMessageBox::Yes | QMessageBox::No},
+                                    this);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        connect(dlg, &QMessageBox::finished, this, [&config, absoluteFilePath](int result) {
+            if (result == QMessageBox::Yes) {
+                config.autoLoadMap = true;
+                config.fileName = absoluteFilePath;
+            }
+        });
+        dlg->open();
     }
 }

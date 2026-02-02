@@ -87,14 +87,16 @@ void ParserPage::slot_loadConfig()
 
 void ParserPage::slot_roomNameColorClicked()
 {
-    QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomNameColor, this);
-    AnsiCombo::makeWidgetColoured(roomNameColorLabel, ansiString);
-    setConfig().parser.roomNameColor = ansiString;
+    AnsiColorDialog::getColor(getConfig().parser.roomNameColor, this, [this](QString ansiString) {
+        AnsiCombo::makeWidgetColoured(roomNameColorLabel, ansiString);
+        setConfig().parser.roomNameColor = ansiString;
+    });
 }
 
 void ParserPage::slot_roomDescColorClicked()
 {
-    QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomDescColor, this);
-    AnsiCombo::makeWidgetColoured(roomDescColorLabel, ansiString);
-    setConfig().parser.roomDescColor = ansiString;
+    AnsiColorDialog::getColor(getConfig().parser.roomDescColor, this, [this](QString ansiString) {
+        AnsiCombo::makeWidgetColoured(roomDescColorLabel, ansiString);
+        setConfig().parser.roomDescColor = ansiString;
+    });
 }

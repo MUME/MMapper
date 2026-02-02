@@ -54,13 +54,18 @@ AnsiColorDialog::AnsiColorDialog(QWidget *parent)
     : AnsiColorDialog("[0m", parent)
 {}
 
-QString AnsiColorDialog::getColor(const QString &ansiColor, QWidget *parent)
+void AnsiColorDialog::getColor(const QString &ansiColor,
+                               QWidget *parent,
+                               std::function<void(QString)> callback)
 {
-    AnsiColorDialog dlg(ansiColor, parent);
-    if (dlg.exec() == QDialog::Accepted) {
-        return dlg.getAnsiString();
-    }
-    return ansiColor;
+    auto *dlg = new AnsiColorDialog(ansiColor, parent);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dlg, &QDialog::finished, [dlg, callback](int result) {
+        if (result == QDialog::Accepted) {
+            callback(dlg->getAnsiString());
+        }
+    });
+    dlg->open();
 }
 
 AnsiColorDialog::~AnsiColorDialog() = default;

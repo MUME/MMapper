@@ -438,10 +438,11 @@ void RoomEditAttrDlg::connectAll()
                 // title is cut off, and stack-overflow solutions don't work.
                 // we need a generic message box class that actually works.
                 // let's hope nobody actually has to see this message.
-                QMessageBox box(this);
-                box.setWindowTitle(title);
-                box.setText(qnote);
-                box.exec();
+                auto *box = new QMessageBox(this);
+                box->setAttribute(Qt::WA_DeleteOnClose);
+                box->setWindowTitle(title);
+                box->setText(qnote);
+                box->open();
             }
         }
 
