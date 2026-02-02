@@ -2,6 +2,7 @@ name: mmapper
 adopt-info: mmapper
 icon: src/resources/icons/m-release.png
 summary: MUME Mapper
+license: GPL-2.0-or-later
 description: |
   MMapper is a graphical mapper for a MUD named MUME (Multi-Users in Middle
   Earth). The game is traditionally played in a text-only mode, but MMapper tries
@@ -11,12 +12,12 @@ description: |
 
 grade: stable
 confinement: strict
-base: core22
+base: core24
 compression: lzo
 
-architectures:
-  - build-on: arm64
-  - build-on: amd64
+platforms:
+  amd64:
+  arm64:
 
 apps:
   mmapper:
@@ -31,20 +32,13 @@ apps:
       - network-bind
       - opengl
 
-package-repositories:
-  - type: apt
-    components:
-      - main
-    suites:
-      - jammy
-    key-id: 444DABCF3667D0283F894EDDE6D4736255751E5D
-    url: http://origin.archive.neon.kde.org/user
-    key-server: keyserver.ubuntu.com
-
 parts:
   mmapper:
     parse-info:
       - usr/share/metainfo/org.mume.MMapper.xml
+    build-snaps:
+      - kde-qt6-core24-sdk/latest/stable
+      - kf6-core24-sdk/latest/stable
     plugin: cmake
     source: .
     source-type: local
@@ -56,6 +50,7 @@ parts:
       - -DWITH_UPDATER=OFF
       - -DWITH_WEBSOCKET=ON
       - -DWITH_QTKEYCHAIN=ON
+      - -DUSE_MOLD=ON
       - -DCMAKE_INSTALL_SYSCONFDIR=/etc
       - -DCMAKE_INSTALL_LOCALSTATEDIR=/var
       - -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF
@@ -69,8 +64,9 @@ parts:
       - libglm-dev
       - libssl-dev
       - zlib1g-dev
+      - mold
     stage-packages:
-      - libssl3
+      - libssl3t64
       - zlib1g
     override-pull: |
       craftctl default
@@ -82,20 +78,30 @@ parts:
       - -usr/lib/*/cmake/*
       - -usr/include/*
       - -usr/share/ECM/*
+      - -usr/share/doc/*
       - -usr/share/man/*
       - -usr/bin/X11
       - -usr/lib/gcc/$CRAFT_ARCH_TRIPLET_BUILD_FOR/6.0.0
       - -usr/lib/aspell/*
       - -usr/share/lintian
+  gpu-2404:
+    after: [mmapper]
+    source: https://github.com/canonical/gpu-snap.git
+    plugin: dump
+    override-prime: |
+      craftctl default
+      ${CRAFT_PART_SRC}/bin/gpu-2404-cleanup mesa-2404
+    prime:
+      - bin/gpu-2404-wrapper
   cleanup:
     after:
       - mmapper
     plugin: nil
     build-snaps:
-      - core22
-      - kf6-core22
+      - core24
+      - kf6-core24
     override-prime: |
       set -eux
-      for snap in "core22" "kf6-core22"; do
+      for snap in "core24" "kf6-core24"; do
           cd "/snap/$snap/current" && find . -type f,l -exec rm -rf "${CRAFT_PRIME}/{}" \;
       done
