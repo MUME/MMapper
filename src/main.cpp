@@ -28,8 +28,7 @@
 static void setHighDpiScaleFactorRoundingPolicy()
 {
     // High Dpi is enabled by default in Qt6
-    QApplication::setHighDpiScaleFactorRoundingPolicy(
-        Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+    QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
 }
 
 static void tryInitDrMingw()
