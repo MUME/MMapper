@@ -100,12 +100,20 @@ void FBO::blitToTarget(const GLuint targetId, Functions &gl)
     const GLsizei width = m_resolvedFbo->width();
     const GLsizei height = m_resolvedFbo->height();
 
+    // Preserve existing framebuffer bindings so we don't surprise callers that
+    // expect their GL_FRAMEBUFFER state to remain unchanged across this call.
+    GLint prevReadFbo = 0;
+    GLint prevDrawFbo = 0;
+    gl.glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prevReadFbo);
+    gl.glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevDrawFbo);
+
     gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, m_resolvedFbo->handle());
     gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetId);
     gl.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    // Leave the target FBO bound so that subsequent commands (like stats) hit it.
-    gl.glBindFramebuffer(GL_FRAMEBUFFER, targetId);
+    // Restore previous framebuffer bindings to avoid leaking global GL state.
+    gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, static_cast<GLuint>(prevReadFbo));
+    gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, static_cast<GLuint>(prevDrawFbo));
 }
 
 } // namespace Legacy

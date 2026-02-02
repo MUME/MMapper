@@ -363,6 +363,7 @@ public:
     void configureFbo(int samples);
     void bindFbo();
     void releaseFbo();
+    void bindFramebuffer(GLuint targetId);
     void blitFboToTarget(GLuint targetId);
 };
 } // namespace Legacy

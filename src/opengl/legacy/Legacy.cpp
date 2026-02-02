@@ -339,6 +339,11 @@ void Functions::releaseFbo()
     getFBO().release();
 }
 
+void Functions::bindFramebuffer(const GLuint targetId)
+{
+    Base::glBindFramebuffer(GL_FRAMEBUFFER, targetId);
+}
+
 void Functions::blitFboToTarget(const GLuint targetId)
 {
     getFBO().blitToTarget(targetId, *this);

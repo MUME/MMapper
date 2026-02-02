@@ -81,6 +81,11 @@ void OpenGL::releaseFbo()
     getFunctions().releaseFbo();
 }
 
+void OpenGL::bindFramebuffer(const GLuint targetId)
+{
+    getFunctions().bindFramebuffer(targetId);
+}
+
 void OpenGL::blitFboToTarget(const GLuint targetId)
 {
     getFunctions().blitFboToTarget(targetId);
