@@ -169,21 +169,6 @@ void OpenGL::finish()
     getFunctions().glFinish();
 }
 
-void OpenGL::flush()
-{
-    getFunctions().glFlush();
-}
-
-void OpenGL::resetState()
-{
-    auto &gl = getFunctions();
-    gl.glDisable(GL_SCISSOR_TEST);
-    gl.glDisable(GL_STENCIL_TEST);
-    gl.glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    gl.glDepthMask(GL_TRUE);
-    gl.glStencilMask(0xFF);
-}
-
 void OpenGL::renderPlain(const DrawModeEnum type,
                          const std::vector<glm::vec3> &verts,
                          const GLRenderState &state)

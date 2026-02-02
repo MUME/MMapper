@@ -160,8 +160,6 @@ public:
     void clear(const Color color);
     void clearDepth();
     void finish();
-    void flush();
-    void resetState();
     void renderPlainFullScreenQuad(const GLRenderState &state);
 
 public:

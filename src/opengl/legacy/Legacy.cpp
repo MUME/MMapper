@@ -339,14 +339,14 @@ void Functions::releaseFbo()
     getFBO().release();
 }
 
-bool Functions::isMultisampling() const
-{
-    return m_fbo->isMultisampling();
-}
-
 void Functions::bindFramebuffer(const GLuint targetId)
 {
     Base::glBindFramebuffer(GL_FRAMEBUFFER, targetId);
+}
+
+bool Functions::isMultisampling() const
+{
+    return m_fbo->isMultisampling();
 }
 
 void Functions::blitFboToTarget(const GLuint targetId)

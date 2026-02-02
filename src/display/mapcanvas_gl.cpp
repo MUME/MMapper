@@ -642,18 +642,16 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
-    gl.resetState();
-
     const GLuint widgetFbo = defaultFramebufferObject();
 
-    // 1. Prepare and clear the target surface
+    // 1. Clear the widget's FBO first (ensures no stale pixels on Wayland/containers)
     gl.bindFramebuffer(widgetFbo);
+    gl.getSharedFunctions(Badge<MapCanvas>{})->glDisable(GL_SCISSOR_TEST);
     gl.clear(Color{getConfig().canvas.backgroundColor});
 
-    // 2. Bind the primary rendering target (either multisampling FBO or widget FBO)
+    // 2. Bind the primary rendering target (MSAA FBO or widget FBO)
     gl.bindFbo(widgetFbo);
     if (gl.isMultisampling()) {
-        // Must clear the multisampling buffer if we are using it.
         gl.clear(Color{getConfig().canvas.backgroundColor});
     }
 
@@ -667,14 +665,10 @@ void MapCanvas::actuallyPaintGL()
         paintDifferences();
     }
 
-    // 3. Resolve multisampling if necessary
-    if (gl.isMultisampling()) {
-        gl.blitFboToTarget(widgetFbo);
-    }
+    // 2. Resolve MSAA to the widget's FBO if active.
+    gl.blitFboToTarget(widgetFbo);
 
-    // 4. Ensure widget FBO is bound for any follow-up draws (stats, etc)
-    gl.bindFramebuffer(widgetFbo);
-    gl.flush();
+    // 3. Ensure all commands are dispatched for composition.
     gl.finish();
 }
 

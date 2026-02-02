@@ -143,13 +143,12 @@ public:
     using Base::glBindFramebuffer;
     using Base::glBindTexture;
     using Base::glBindVertexArray;
+    using Base::glBlitFramebuffer;
     using Base::glBlendFunc;
     using Base::glBlendFuncSeparate;
-    using Base::glBlitFramebuffer;
     using Base::glBufferData;
     using Base::glClear;
     using Base::glClearColor;
-    using Base::glColorMask;
     using Base::glCompileShader;
     using Base::glCreateProgram;
     using Base::glCreateShader;
@@ -159,14 +158,12 @@ public:
     using Base::glDeleteShader;
     using Base::glDeleteVertexArrays;
     using Base::glDepthFunc;
-    using Base::glDepthMask;
     using Base::glDetachShader;
     using Base::glDisable;
     using Base::glDisableVertexAttribArray;
     using Base::glDrawArrays;
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
-    using Base::glFlush;
     using Base::glGenBuffers;
     using Base::glGenerateMipmap;
     using Base::glGenVertexArrays;
@@ -189,7 +186,6 @@ public:
     using Base::glLinkProgram;
     using Base::glPixelStorei;
     using Base::glShaderSource;
-    using Base::glStencilMask;
     using Base::glTexSubImage3D;
     using Base::glUniform1fv;
     using Base::glUniform1iv;
