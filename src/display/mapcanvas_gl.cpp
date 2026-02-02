@@ -636,23 +636,79 @@ void MapCanvas::finishPendingMapBatches()
 #undef LOG
 }
 
-void MapCanvas::actuallyPaintGL()
+void MapCanvas::paintEvent(QPaintEvent *event)
 {
-    // DECL_TIMER(t, __FUNCTION__);
+    Q_UNUSED(event);
+    const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
+
+    using Clock = std::chrono::high_resolution_clock;
+    std::optional<Clock::time_point> optStart;
+    std::optional<Clock::time_point> optAfterTextures;
+    std::optional<Clock::time_point> optAfterBatches;
+
+    if (showPerfStats) {
+        optStart = Clock::now();
+    }
+
+    QPainter painter(this);
+    // Standard Qt clear - handles many compositor edge cases
+    painter.fillRect(rect(), QColor(getConfig().canvas.backgroundColor.getColor()));
+
+    painter.beginNativePainting();
+
+    if (showPerfStats) {
+        optAfterTextures = Clock::now();
+    }
+
+    updateBatches();
+
+    if (showPerfStats) {
+        optAfterBatches = Clock::now();
+    }
+
+    finishPendingMapBatches();
+
+    const auto ms = [](auto delta) -> double {
+        return double(std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count()) * 1e-6;
+    };
+
+    const double texturesMs = showPerfStats ? ms(optAfterTextures.value() - optStart.value()) : 0.0;
+    const double batchesMs = showPerfStats ? ms(optAfterBatches.value() - optAfterTextures.value())
+                                           : 0.0;
+
+    actuallyPaintGL(texturesMs, batchesMs);
+
+    painter.endNativePainting();
+
+    // Final synchronization for Wayland/Containers
+    getOpenGL().finish();
+}
+
+void MapCanvas::actuallyPaintGL(double texturesMs, double batchesMs)
+{
+    using Clock = std::chrono::high_resolution_clock;
+    auto startPaint = Clock::now();
+
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
     const GLuint widgetFbo = defaultFramebufferObject();
 
-    // 1. Clear the widget's FBO first (ensures no stale pixels on Wayland/containers)
+    // 1. Reset state and clear the widget's FBO (ensures no stale pixels on Wayland/containers)
+    {
+        auto &funcs = *gl.getSharedFunctions(Badge<MapCanvas>{});
+        funcs.glDisable(GL_SCISSOR_TEST);
+        funcs.glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        funcs.glDepthMask(GL_TRUE);
+        funcs.glStencilMask(0xFF);
+    }
     gl.bindFramebuffer(widgetFbo);
-    gl.getSharedFunctions(Badge<MapCanvas>{})->glDisable(GL_SCISSOR_TEST);
-    gl.clear(Color{getConfig().canvas.backgroundColor});
+    gl.clear(Color{getConfig().canvas.backgroundColor}.withAlpha(1.0f));
 
     // 2. Bind the primary rendering target (MSAA FBO or widget FBO)
     gl.bindFbo(widgetFbo);
     if (gl.isMultisampling()) {
-        gl.clear(Color{getConfig().canvas.backgroundColor});
+        gl.clear(Color{getConfig().canvas.backgroundColor}.withAlpha(1.0f));
     }
 
     if (m_data.isEmpty()) {
@@ -665,11 +721,17 @@ void MapCanvas::actuallyPaintGL()
         paintDifferences();
     }
 
+    if (MapCanvasConfig::getShowPerfStats()) {
+        const auto ms = [](auto delta) -> double {
+            return double(std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count())
+                   * 1e-6;
+        };
+        const double paintMs = ms(Clock::now() - startPaint);
+        renderPerfStats(texturesMs, batchesMs, paintMs);
+    }
+
     // 2. Resolve MSAA to the widget's FBO if active.
     gl.blitFboToTarget(widgetFbo);
-
-    // 3. Ensure all commands are dispatched for composition.
-    gl.finish();
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
@@ -855,62 +917,12 @@ void MapCanvas::paintSelections()
 
 void MapCanvas::paintGL()
 {
+    // paintEvent handles everything in this widget's lifecycle.
+}
+
+void MapCanvas::renderPerfStats(double texturesMs, double batchesMs, double paintMs)
+{
     static thread_local double longestBatchMs = 0.0;
-
-    const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
-
-    using Clock = std::chrono::high_resolution_clock;
-    std::optional<Clock::time_point> optStart;
-    std::optional<Clock::time_point> optAfterTextures;
-    std::optional<Clock::time_point> optAfterBatches;
-    if (showPerfStats) {
-        optStart = Clock::now();
-    }
-
-    {
-        if (showPerfStats) {
-            optAfterTextures = Clock::now();
-        }
-
-        // Note: The real work happens here!
-        updateBatches();
-
-        // And here
-        finishPendingMapBatches();
-
-        // For accurate timing of the update, we'd need to call glFinish(),
-        // or at least set up an OpenGL query object. The update will send
-        // a lot of data to the GPU, so it could take a while...
-        if (showPerfStats) {
-            optAfterBatches = Clock::now();
-        }
-
-        actuallyPaintGL();
-    }
-
-    if (!showPerfStats) {
-        return; /* don't wait to finish */
-    }
-
-    const auto &start = optStart.value();
-    const auto &afterTextures = optAfterTextures.value();
-    const auto &afterBatches = optAfterBatches.value();
-    const auto afterPaint = Clock::now();
-    const bool calledFinish = std::invoke([this]() -> bool {
-        if (auto *const ctxt = QOpenGLWidget::context()) {
-            if (auto *const func = ctxt->functions()) {
-                func->glFinish();
-                return true;
-            }
-        }
-        return false;
-    });
-
-    const auto end = Clock::now();
-
-    const auto ms = [](auto delta) -> double {
-        return double(std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count()) * 1e-6;
-    };
 
     const auto w = width();
     const auto h = height();
@@ -924,7 +936,6 @@ void MapCanvas::paintGL()
                               - static_cast<float>(font.getGlyphAdvance('e').value_or(5));
 
     // x and y are in physical (device) pixels
-    // TODO: change API to use logical pixels.
     auto y = lineHeight;
     const auto print = [lineHeight, rightMargin, &text, &y](const QString &msg) {
         text.emplace_back(glm::vec3(rightMargin, y, 0),
@@ -935,24 +946,13 @@ void MapCanvas::paintGL()
         y += lineHeight;
     };
 
-    const auto texturesTime = ms(afterTextures - start);
-    const auto batchTime = ms(afterBatches - afterTextures);
+    print(QString::asprintf("%.1f (updateTextures) + %.1f (updateBatches) + %.1f (paintGL) = %.1f ms",
+                            texturesMs,
+                            batchesMs,
+                            paintMs,
+                            texturesMs + batchesMs + paintMs));
 
-    const auto total = ms(end - start);
-    print(QString::asprintf(
-        "%.1f (updateTextures) + %.1f (updateBatches) + %.1f (paintGL) + %.1f (glFinish%s) = %.1f ms",
-        texturesTime,
-        batchTime,
-        ms(afterPaint - afterBatches),
-        ms(end - afterPaint),
-        calledFinish ? "" : "*",
-        total));
-
-    if (!calledFinish) {
-        print("* = unable to call glFinish()");
-    }
-
-    longestBatchMs = std::max(batchTime, longestBatchMs);
+    longestBatchMs = std::max(batchesMs, longestBatchMs);
     print(QString::asprintf("Worst updateBatches: %.1f ms", longestBatchMs));
 
     const auto &advanced = getConfig().canvas.advanced;

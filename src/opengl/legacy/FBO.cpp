@@ -71,6 +71,10 @@ void FBO::blitToTarget(const GLuint targetId, Functions &gl)
         return;
     }
 
+    GLint oldReadFbo, oldDrawFbo;
+    gl.glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &oldReadFbo);
+    gl.glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &oldDrawFbo);
+
     const GLsizei width = m_multisamplingFbo->width();
     const GLsizei height = m_multisamplingFbo->height();
 
@@ -79,8 +83,9 @@ void FBO::blitToTarget(const GLuint targetId, Functions &gl)
     gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetId);
     gl.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    // Leave the target FBO bound.
-    gl.glBindFramebuffer(GL_FRAMEBUFFER, targetId);
+    // Restore bindings, but ensure the target FBO is bound for subsequent drawing (like stats).
+    gl.glBindFramebuffer(GL_READ_FRAMEBUFFER, static_cast<GLuint>(oldReadFbo));
+    gl.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, targetId);
 }
 
 } // namespace Legacy

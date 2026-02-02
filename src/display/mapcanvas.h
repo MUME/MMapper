@@ -195,6 +195,7 @@ private:
 protected:
     void initializeGL() override;
     void paintGL() override;
+    void paintEvent(QPaintEvent *event) override;
 
     void drawGroupCharacters(CharacterBatch &characterBatch);
 
@@ -240,7 +241,8 @@ private:
     void updateMapBatches();
     void updateInfomarkBatches();
 
-    void actuallyPaintGL();
+    void actuallyPaintGL(double texturesMs, double batchesMs);
+    void renderPerfStats(double texturesMs, double batchesMs, double paintMs);
     void paintMap();
     void renderMapBatches();
     void paintBatchedInfomarks();

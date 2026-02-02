@@ -145,6 +145,7 @@ public:
     using Base::glBindVertexArray;
     using Base::glBlitFramebuffer;
     using Base::glBlendFunc;
+    using Base::glColorMask;
     using Base::glBlendFuncSeparate;
     using Base::glBufferData;
     using Base::glClear;
@@ -158,6 +159,7 @@ public:
     using Base::glDeleteShader;
     using Base::glDeleteVertexArrays;
     using Base::glDepthFunc;
+    using Base::glDepthMask;
     using Base::glDetachShader;
     using Base::glDisable;
     using Base::glDisableVertexAttribArray;
@@ -178,6 +180,7 @@ public:
     using Base::glGetTexParameteriv;
     using Base::glGetUniformLocation;
     using Base::glFinish;
+    using Base::glFlush;
     using Base::glHint;
     using Base::glIsBuffer;
     using Base::glIsProgram;
@@ -186,6 +189,7 @@ public:
     using Base::glLinkProgram;
     using Base::glPixelStorei;
     using Base::glShaderSource;
+    using Base::glStencilMask;
     using Base::glTexSubImage3D;
     using Base::glUniform1fv;
     using Base::glUniform1iv;
