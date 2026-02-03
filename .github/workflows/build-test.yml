@@ -11,6 +11,9 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     continue-on-error: false
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -145,7 +148,7 @@ jobs:
       #
     - if: env.COVERAGE == 'true'
       name: Prepare lcov counters
-      run: cd build && lcov --zerocounters --directory .
+      run: lcov --zerocounters --directory build
     - name: Run unit tests
       run: cd build && ctest -V --no-compress-output -T test --output-junit ../ctest-to-junit-results.xml
       env:
@@ -156,17 +159,19 @@ jobs:
       with:
         name: test-results ${{ matrix.os }} ${{ matrix.compiler }}
         path: ctest-to-junit-results.xml
-    - if: env.COVERAGE == 'true'
+    - if: env.COVERAGE == 'true' && !cancelled()
       name: Run lcov
       run: |
-        cd build
-        lcov --directory . --capture --output-file coverage.info
-        lcov --list coverage.info
-        lcov --remove coverage.info '/usr/*' --output-file filtered.info
-    - if: env.COVERAGE == 'true'
+        lcov --directory build --capture --output-file build/coverage.info
+        lcov --list build/coverage.info
+        lcov --remove build/coverage.info '/usr/*' --output-file build/filtered.info
+    - if: env.COVERAGE == 'true' && !cancelled()
       uses: codecov/codecov-action@v5
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: ${{ github.repository }}
         files: ./build/filtered.info
+        fail_ci_if_error: true
     - if: env.STYLE == 'true'
       name: Text Encoding Sanity Check
       run: |
