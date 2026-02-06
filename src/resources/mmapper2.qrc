@@ -39,6 +39,7 @@
         <file>icons/generalcfg.png</file>
         <file>icons/graphicscfg.png</file>
         <file>icons/group-recolor.png</file>
+        <file>icons/hotkeys.png</file>
         <file>icons/infomarkcreate.png</file>
         <file>icons/infomarkdelete.png</file>
         <file>icons/infomarkedit.png</file>
@@ -80,6 +81,7 @@
         <file>icons/roommoveup.png</file>
         <file>icons/roomselection.png</file>
         <file>icons/save.png</file>
+        <file>icons/comms.png</file>
         <file>icons/terminal.png</file>
         <file>icons/viewmag+.png</file>
         <file>icons/viewmag-.png</file>
