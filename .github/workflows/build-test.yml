@@ -164,9 +164,9 @@ jobs:
       run: |
         lcov --version
         gcov --version
-        lcov --directory build --capture --base-directory $(pwd) --output-file build/coverage.info --no-external --ignore-errors mismatch
-        lcov --list build/coverage.info
-        lcov --remove build/coverage.info '/usr/*' '*/tests/*' '*/external/*' '*/build/*' --output-file build/filtered.info
+        lcov --directory build --capture --base-directory $(pwd) --output-file build/coverage.info --no-external --ignore-errors mismatch --ignore-errors negative --ignore-errors gcov --ignore-errors inconsistent --rc geninfo_unexecuted_blocks=1
+        lcov --list build/coverage.info --ignore-errors inconsistent
+        lcov --remove build/coverage.info '/usr/*' '*/tests/*' '*/external/*' '*/build/*' --output-file build/filtered.info --ignore-errors unused --ignore-errors inconsistent
     - if: env.COVERAGE == 'true' && !cancelled()
       uses: codecov/codecov-action@v5
       with:
