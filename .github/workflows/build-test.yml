@@ -164,16 +164,18 @@ jobs:
       run: |
         lcov --version
         gcov --version
-        lcov --directory build --capture --base-directory . --output-file build/coverage.info --no-external
+        lcov --directory build --capture --base-directory $(pwd) --output-file build/coverage.info --no-external --ignore-errors mismatch
         lcov --list build/coverage.info
-        lcov --remove build/coverage.info '/usr/*' '*/tests/*' '*/external/*' --output-file build/filtered.info
+        lcov --remove build/coverage.info '/usr/*' '*/tests/*' '*/external/*' '*/build/*' --output-file build/filtered.info
     - if: env.COVERAGE == 'true' && !cancelled()
       uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
         slug: ${{ github.repository }}
         files: ./build/filtered.info
         fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
     - if: env.STYLE == 'true'
       name: Text Encoding Sanity Check
       run: |
