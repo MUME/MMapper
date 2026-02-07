@@ -271,6 +271,7 @@ if(USE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -O0        # no optimization
         -g         # generate debug info
         --coverage # sets all required flags
+        $<$<CXX_COMPILER_ID:GNU>:-fprofile-update=atomic>
     )
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
         target_link_options(coverage_config INTERFACE --coverage)

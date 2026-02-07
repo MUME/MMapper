@@ -706,6 +706,7 @@ target_link_libraries(mmapper PUBLIC
     # note: link order matters on some platforms. include ${mm_libs} twice if you have a link failure.
     ${mm_libs}
     ${CMAKE_THREAD_LIBS_INIT}
+    coverage_config
 )
 
 set_target_properties(
@@ -757,10 +758,12 @@ target_include_directories(mm_map SYSTEM PUBLIC
 target_link_libraries(mm_global PUBLIC
     Qt6::Core
     Qt6::Widgets
+    coverage_config
 )
 target_link_libraries(mm_map PUBLIC
     Qt6::Core
     Qt6::Widgets
+    coverage_config
 )
 add_dependencies(mmapper mm_global mm_map)
 add_dependencies(mm_map mm_global)

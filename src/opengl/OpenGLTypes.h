@@ -63,22 +63,14 @@ struct NODISCARD RoomQuadTexVert final
     {}
 
     explicit RoomQuadTexVert(const glm::ivec3 &vert, const int tex_z, const NamedColorEnum color)
-        : vertTexCol{vert, pack(tex_z, color)}
+        : vertTexCol{vert, (static_cast<uint8_t>(color) << 8) | tex_z}
     {
         if (IS_DEBUG_BUILD) {
             constexpr auto max_texture_layers = 256;
-            const auto c = static_cast<int>(color);
-            assert(c >= 0 && c < static_cast<int>(NUM_NAMED_COLORS));
-            assert(tex_z >= 0 && tex_z < max_texture_layers);
+            const auto c = static_cast<uint8_t>(color);
+            assert(c == std::clamp<uint8_t>(c, 0, NUM_NAMED_COLORS - 1));
+            assert(tex_z == std::clamp(tex_z, 0, max_texture_layers - 1));
         }
-    }
-
-    static int pack(const int tex_z, const NamedColorEnum color)
-    {
-        constexpr int max_texture_layers = 256;
-        const int z = std::clamp(tex_z, 0, max_texture_layers - 1);
-        const int c = std::clamp(static_cast<int>(color), 0, static_cast<int>(MAX_NAMED_COLORS) - 1);
-        return (c << 8) | z;
     }
 };
 
