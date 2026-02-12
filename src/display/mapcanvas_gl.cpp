@@ -28,8 +28,8 @@
 #include "mapcanvas.h"
 
 #include <algorithm>
-#include <atomic>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -232,17 +232,20 @@ bool MapCanvas::isBlacklistedDriver()
     return false;
 }
 
-// WASM: Track initialization and context state globally
+// WASM: Static member definitions for context state tracking
 #ifdef __EMSCRIPTEN__
-static bool g_wasmInitialized = false;
-static std::atomic<bool> g_wasmContextLost{false};
-static std::atomic<int> g_wasmInitAttempts{0};
-#endif
+bool MapCanvas::s_wasmInitialized = false;
+std::atomic<bool> MapCanvas::s_wasmContextLost{false};
 
-#ifdef __EMSCRIPTEN__
 bool MapCanvas::isWasmContextLost()
 {
-    return g_wasmContextLost.load();
+    return s_wasmContextLost.load();
+}
+
+void MapCanvas::resetWasmContextState()
+{
+    s_wasmInitialized = false;
+    s_wasmContextLost.store(false);
 }
 #endif
 
@@ -251,12 +254,11 @@ void MapCanvas::initializeGL()
 #ifdef __EMSCRIPTEN__
     // WASM: Track reinitialization attempts.
     // With QOpenGLWindow approach, reinit should not happen as frequently.
-    if (g_wasmInitialized) {
-        ++g_wasmInitAttempts;
-        g_wasmContextLost.store(true);
+    if (s_wasmInitialized) {
+        s_wasmContextLost.store(true);
         return;
     }
-    g_wasmInitialized = true;
+    s_wasmInitialized = true;
 #endif
 
     OpenGL &gl = getOpenGL();
@@ -269,7 +271,7 @@ void MapCanvas::initializeGL()
         }
     } catch (const std::exception &) {
 #ifdef __EMSCRIPTEN__
-        close();  // QOpenGLWindow uses close() instead of hide()
+        close(); // QOpenGLWindow uses close() instead of hide()
 #else
         hide();
 #endif
@@ -552,7 +554,7 @@ void MapCanvas::resizeGL(int width, int height)
     // WASM: Check if WebGL context is valid
     auto *ctx = context();
     if (ctx == nullptr || !ctx->isValid()) {
-        g_wasmContextLost.store(true);
+        s_wasmContextLost.store(true);
         return;
     }
 #endif
@@ -617,7 +619,7 @@ void MapCanvas::updateMapBatches()
 #ifdef __EMSCRIPTEN__
     // WASM: Don't start new async batch generation if context is unstable.
     // This prevents crashes in the async task.
-    if (g_wasmContextLost.load()) {
+    if (s_wasmContextLost.load()) {
         return;
     }
 #endif
@@ -932,7 +934,7 @@ void MapCanvas::paintGL()
     // WASM: Check if WebGL context is valid
     auto *ctx = context();
     if (ctx == nullptr || !ctx->isValid()) {
-        g_wasmContextLost.store(true);
+        s_wasmContextLost.store(true);
         return;
     }
 #endif

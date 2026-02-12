@@ -55,9 +55,7 @@ NODISCARD static NonOwningPointer &primaryMapCanvas()
 
 #ifdef __EMSCRIPTEN__
 // WASM: QOpenGLWindow-based constructor
-MapCanvas::MapCanvas(MapData &mapData,
-                     PrespammedPath &prespammedPath,
-                     Mmapper2Group &groupManager)
+MapCanvas::MapCanvas(MapData &mapData, PrespammedPath &prespammedPath, Mmapper2Group &groupManager)
     : QOpenGLWindow{QOpenGLWindow::NoPartialUpdate}
     , MapCanvasViewport{static_cast<QWindow &>(*this)}
     , MapCanvasInputState{prespammedPath}

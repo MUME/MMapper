@@ -1128,48 +1128,44 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
     // Async execution causes crashes because the WebGL context can become
     // invalid while the async task is running, and there's no way to
     // safely cancel the task mid-execution.
-    return std::async(std::launch::deferred,
-                      [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
-                          // Check context before starting
-                          if (MapCanvas::isWasmContextLost()) {
-                              qWarning() << "[SYNC] generateMapDataFinisher - context lost, aborting";
-                              return SharedMapBatchFinisher{};
-                          }
+    return std::async(
+        std::launch::deferred, [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
+            // Check context before starting
+            if (MapCanvas::isWasmContextLost()) {
+                qWarning() << "[SYNC] generateMapDataFinisher - context lost, aborting";
+                return SharedMapBatchFinisher{};
+            }
 
-                          ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
-                                                           visitRoomOptions.colorSettings};
-                          DECL_TIMER(t, "[SYNC] generateAllLayerMeshes");
+            ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
+                                             visitRoomOptions.colorSettings};
+            DECL_TIMER(t, "[SYNC] generateAllLayerMeshes");
 
-                          ProgressCounter dummyPc;
-                          map.checkConsistency(dummyPc);
+            ProgressCounter dummyPc;
+            map.checkConsistency(dummyPc);
 
-                          const auto layerToRooms = std::invoke([map]() -> LayerToRooms {
-                              DECL_TIMER(t2, "[SYNC] generateBatches.layerToRooms");
-                              LayerToRooms ltr;
-                              map.getRooms().for_each([&map, &ltr](const RoomId id) {
-                                  const auto &r = map.getRoomHandle(id);
-                                  const auto z = r.getPosition().z;
-                                  auto &layer = ltr[z];
-                                  layer.emplace_back(r);
-                              });
-                              return ltr;
-                          });
+            const auto layerToRooms = std::invoke([map]() -> LayerToRooms {
+                DECL_TIMER(t2, "[SYNC] generateBatches.layerToRooms");
+                LayerToRooms ltr;
+                map.getRooms().for_each([&map, &ltr](const RoomId id) {
+                    const auto &r = map.getRoomHandle(id);
+                    const auto z = r.getPosition().z;
+                    auto &layer = ltr[z];
+                    layer.emplace_back(r);
+                });
+                return ltr;
+            });
 
-                          // Check again before the expensive operation
-                          if (MapCanvas::isWasmContextLost()) {
-                              qWarning() << "[SYNC] generateMapDataFinisher - context lost before mesh gen, aborting";
-                              return SharedMapBatchFinisher{};
-                          }
+            // Check again before the expensive operation
+            if (MapCanvas::isWasmContextLost()) {
+                qWarning() << "[SYNC] generateMapDataFinisher - context lost before mesh gen, aborting";
+                return SharedMapBatchFinisher{};
+            }
 
-                          auto result = std::make_shared<InternalData>();
-                          auto &data = deref(result);
-                          generateAllLayerMeshes(data,
-                                                 deref(font),
-                                                 layerToRooms,
-                                                 textures,
-                                                 visitRoomOptions);
-                          return SharedMapBatchFinisher{result};
-                      });
+            auto result = std::make_shared<InternalData>();
+            auto &data = deref(result);
+            generateAllLayerMeshes(data, deref(font), layerToRooms, textures, visitRoomOptions);
+            return SharedMapBatchFinisher{result};
+        });
 #else
     // Desktop: Use async execution for better performance
     return std::async(std::launch::async,

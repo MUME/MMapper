@@ -17,6 +17,7 @@
 #include "Textures.h"
 
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -71,12 +72,19 @@ public:
     static constexpr const int SCROLL_SCALE = 64;
 
 #ifdef __EMSCRIPTEN__
-    // WASM: Check if WebGL context was lost
+    // WASM: WebGL context state management
+    // These are static because WebGL has one context per page/canvas
     static bool isWasmContextLost();
+    static void resetWasmContextState();
+
     // WASM: Helper to access the container widget
     QWidget *getContainerWidget() const { return m_containerWidget; }
     void setContainerWidget(QWidget *widget) { m_containerWidget = widget; }
+
 private:
+    // WASM: Static context tracking (one WebGL context per page)
+    static bool s_wasmInitialized;
+    static std::atomic<bool> s_wasmContextLost;
     QWidget *m_containerWidget = nullptr;
 #endif
 
