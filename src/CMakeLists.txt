@@ -686,8 +686,9 @@ if(EMSCRIPTEN)
         -sFULL_ES3=1
         -sMAX_WEBGL_VERSION=2
         -sMIN_WEBGL_VERSION=2
-        -sASSERTIONS
+        -sASSERTIONS=0
         -sASYNCIFY
+        -sGL_POOL_TEMP_BUFFERS=0
         -Os
     )
     target_link_libraries(mmapper PUBLIC z)
@@ -1133,14 +1134,28 @@ if(APPLE)
     # Bundle the libraries with the binary
     find_program(MACDEPLOYQT_APP macdeployqt)
     message(" - macdeployqt path: ${MACDEPLOYQT_APP}")
-    add_custom_command(
-        TARGET mmapper
-        POST_BUILD
-        COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -libpath ${QTKEYCHAIN_LIBRARY_DIR}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Deploying the Qt Framework onto the bundle"
-        VERBATIM
-        )
+    # Qt 6.8+ has a bug where macdeployqt -libpath fails with "Missing library search path"
+    # The library is still found via @rpath, so we can safely omit -libpath for Qt 6.8+
+    if(Qt6Core_VERSION VERSION_GREATER_EQUAL "6.8.0")
+        message(" - Qt 6.8+ detected: skipping -libpath option (macdeployqt bug workaround)")
+        add_custom_command(
+            TARGET mmapper
+            POST_BUILD
+            COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Deploying the Qt Framework onto the bundle"
+            VERBATIM
+            )
+    else()
+        add_custom_command(
+            TARGET mmapper
+            POST_BUILD
+            COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -libpath ${QTKEYCHAIN_LIBRARY_DIR}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Deploying the Qt Framework onto the bundle"
+            VERBATIM
+            )
+    endif()
 
     # Codesign the bundle without a personal certificate
     find_program(CODESIGN_APP codesign)

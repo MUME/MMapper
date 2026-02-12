@@ -30,7 +30,11 @@
 #include <QColor>
 #include <QMatrix4x4>
 #include <QOpenGLDebugMessage>
+#ifdef __EMSCRIPTEN__
+#include <QOpenGLWindow>
+#else
 #include <QOpenGLWidget>
+#endif
 #include <QtCore>
 
 class CharacterBatch;
@@ -47,15 +51,34 @@ class QWheelEvent;
 class QWidget;
 class RoomSelFakeGL;
 
+#ifdef __EMSCRIPTEN__
+// WASM: Use QOpenGLWindow to bypass Qt's RHI compositing issues with WebGL
+// QOpenGLWindow is embedded via QWidget::createWindowContainer()
+class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWindow,
+                                          private MapCanvasViewport,
+                                          private MapCanvasInputState
+#else
+// Desktop: Use QOpenGLWidget for normal widget integration
 class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
                                           private MapCanvasViewport,
                                           private MapCanvasInputState
+#endif
 {
     Q_OBJECT
 
 public:
     static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
     static constexpr const int SCROLL_SCALE = 64;
+
+#ifdef __EMSCRIPTEN__
+    // WASM: Check if WebGL context was lost
+    static bool isWasmContextLost();
+    // WASM: Helper to access the container widget
+    QWidget *getContainerWidget() const { return m_containerWidget; }
+    void setContainerWidget(QWidget *widget) { m_containerWidget = widget; }
+private:
+    QWidget *m_containerWidget = nullptr;
+#endif
 
 private:
     struct NODISCARD FrameRateController final
@@ -153,10 +176,18 @@ private:
     std::optional<AltDragState> m_altDragState;
 
 public:
+#ifdef __EMSCRIPTEN__
+    // WASM: QOpenGLWindow-based constructor (no parent widget)
+    explicit MapCanvas(MapData &mapData,
+                       PrespammedPath &prespammedPath,
+                       Mmapper2Group &groupManager);
+#else
+    // Desktop: QOpenGLWidget-based constructor
     explicit MapCanvas(MapData &mapData,
                        PrespammedPath &prespammedPath,
                        Mmapper2Group &groupManager,
                        QWidget *parent);
+#endif
     ~MapCanvas() final;
 
 public:
@@ -168,8 +199,11 @@ private:
     void cleanupOpenGL();
 
 public:
+#ifndef __EMSCRIPTEN__
+    // QWidget-only methods (QOpenGLWindow doesn't have these)
     NODISCARD QSize minimumSizeHint() const override;
     NODISCARD QSize sizeHint() const override;
+#endif
 
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
@@ -180,9 +214,15 @@ public:
     NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
 
 public:
+#ifdef __EMSCRIPTEN__
+    NODISCARD auto width() const { return QOpenGLWindow::width(); }
+    NODISCARD auto height() const { return QOpenGLWindow::height(); }
+    NODISCARD auto rect() const { return QRect(0, 0, width(), height()); }
+#else
     NODISCARD auto width() const { return QOpenGLWidget::width(); }
     NODISCARD auto height() const { return QOpenGLWidget::height(); }
     NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
+#endif
 
 private:
     void onMovement();
@@ -194,15 +234,14 @@ private:
 protected:
     void initializeGL() override;
     void paintGL() override;
-
-    void drawGroupCharacters(CharacterBatch &characterBatch);
-
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *e) override;
+
+    void drawGroupCharacters(CharacterBatch &characterBatch);
 
 private:
     void setAnimating(bool value);

@@ -21,6 +21,7 @@
 
 #include <QOpenGLTexture>
 #include <QWidget>
+#include <QWindow>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
 #include <QtGui/qopengl.h>
@@ -97,10 +98,53 @@ public:
     }
 };
 
+// Abstraction to get size from either QWidget or QWindow
+struct NODISCARD SizeSource final
+{
+private:
+    QWidget *m_widget = nullptr;
+    QWindow *m_window = nullptr;
+
+public:
+    explicit SizeSource(QWidget &widget)
+        : m_widget{&widget}
+    {}
+    explicit SizeSource(QWindow &window)
+        : m_window{&window}
+    {}
+
+    NODISCARD int width() const
+    {
+        if (m_widget)
+            return m_widget->width();
+        if (m_window)
+            return m_window->width();
+        return 0;
+    }
+
+    NODISCARD int height() const
+    {
+        if (m_widget)
+            return m_widget->height();
+        if (m_window)
+            return m_window->height();
+        return 0;
+    }
+
+    NODISCARD QRect rect() const
+    {
+        if (m_widget)
+            return m_widget->rect();
+        if (m_window)
+            return QRect(0, 0, m_window->width(), m_window->height());
+        return QRect();
+    }
+};
+
 struct NODISCARD MapCanvasViewport
 {
 private:
-    QWidget &m_sizeWidget;
+    SizeSource m_sizeSource;
 
 public:
     glm::mat4 m_viewProj{1.f};
@@ -109,16 +153,22 @@ public:
     int m_currentLayer = 0;
 
 public:
-    explicit MapCanvasViewport(QWidget &sizeWidget)
-        : m_sizeWidget{sizeWidget}
+    explicit MapCanvasViewport(QWidget &sizeSource)
+        : m_sizeSource{sizeSource}
     {}
 
+#ifdef __EMSCRIPTEN__
+    explicit MapCanvasViewport(QWindow &sizeSource)
+        : m_sizeSource{sizeSource}
+    {}
+#endif
+
 public:
-    NODISCARD auto width() const { return m_sizeWidget.width(); }
-    NODISCARD auto height() const { return m_sizeWidget.height(); }
+    NODISCARD auto width() const { return m_sizeSource.width(); }
+    NODISCARD auto height() const { return m_sizeSource.height(); }
     NODISCARD Viewport getViewport() const
     {
-        const auto &r = m_sizeWidget.rect();
+        const auto &r = m_sizeSource.rect();
         return Viewport{glm::ivec2{r.x(), r.y()}, glm::ivec2{r.width(), r.height()}};
     }
     NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }

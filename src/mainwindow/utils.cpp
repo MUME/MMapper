@@ -9,12 +9,18 @@
 CanvasDisabler::CanvasDisabler(MapWindow &in_window)
     : window{in_window}
 {
+#ifndef __EMSCRIPTEN__
+    // setEnabled is QWidget-specific
     window.getCanvas()->setEnabled(false);
+#endif
 }
 
 CanvasDisabler::~CanvasDisabler()
 {
+#ifndef __EMSCRIPTEN__
+    // setEnabled is QWidget-specific
     window.getCanvas()->setEnabled(true);
+#endif
     window.hideSplashImage();
 }
 

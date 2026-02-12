@@ -53,6 +53,9 @@ else()
     add_compile_definitions(MMAPPER_PACKAGE_TYPE="${PACKAGE_TYPE_NORMALIZED}")
 endif()
 
+# Required for newer GLM versions that mark gtx/ extensions as experimental
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
+
 set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL OpenGLWidgets Test)
 if(WITH_WEBSOCKET)
     list(APPEND MMAPPER_QT_COMPONENTS WebSockets)
@@ -78,6 +81,11 @@ if(Qt6OpenGL_FOUND)
     if(EMSCRIPTEN)
         set(QT_HAS_GLES TRUE)
         set(QT_HAS_OPENGL FALSE)
+    elseif(APPLE)
+        # Force OpenGL on macOS - the try_compile check can fail with some Qt versions
+        # but macOS always has OpenGL 3.3 support via the compatibility profile
+        set(QT_HAS_GLES FALSE)
+        set(QT_HAS_OPENGL TRUE)
     else()
         file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
             "#include <QOpenGLExtraFunctions>
@@ -423,7 +431,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-extra-semi-stmt) # enabled only for src/ directory
 
         # require explicit template parameters when deduction guides are missing
-        add_compile_options(-Werror=ctad-maybe-unsupported)
+        # NOTE: Disabled for Qt 6.10+ because moc-generated code uses CTAD without deduction guides
+        if(Qt6_VERSION VERSION_LESS "6.10.0")
+            add_compile_options(-Werror=ctad-maybe-unsupported)
+        endif()
 
         # always errors
         add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.

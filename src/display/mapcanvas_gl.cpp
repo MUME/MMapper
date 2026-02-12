@@ -28,6 +28,7 @@
 #include "mapcanvas.h"
 
 #include <algorithm>
+#include <atomic>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -48,7 +49,11 @@
 
 #include <QMessageBox>
 #include <QMessageLogContext>
+#ifdef __EMSCRIPTEN__
+#include <QOpenGLWindow>
+#else
 #include <QOpenGLWidget>
+#endif
 #include <QtCore>
 #include <QtGui/qopengl.h>
 #include <QtGui>
@@ -93,6 +98,25 @@ void setShowPerfStats(const bool show)
 
 } // namespace MapCanvasConfig
 
+#ifdef __EMSCRIPTEN__
+// WASM: MakeCurrentRaii for QOpenGLWindow
+class NODISCARD MakeCurrentRaii final
+{
+private:
+    QOpenGLWindow &m_glWindow;
+
+public:
+    explicit MakeCurrentRaii(QOpenGLWindow &window)
+        : m_glWindow{window}
+    {
+        m_glWindow.makeCurrent();
+    }
+    ~MakeCurrentRaii() { m_glWindow.doneCurrent(); }
+
+    DELETE_CTORS_AND_ASSIGN_OPS(MakeCurrentRaii);
+};
+#else
+// Desktop: MakeCurrentRaii for QOpenGLWidget
 class NODISCARD MakeCurrentRaii final
 {
 private:
@@ -108,6 +132,7 @@ public:
 
     DELETE_CTORS_AND_ASSIGN_OPS(MakeCurrentRaii);
 };
+#endif
 
 void MapCanvas::cleanupOpenGL()
 {
@@ -168,11 +193,12 @@ void MapCanvas::reportGLVersion()
         return std::move(oss).str();
     });
 
+    const bool contextValid = context()->isValid();
     logMsg("Current OpenGL Context:",
            QString("%1 (%2)")
                .arg(version.c_str())
                // FIXME: This is a bit late to report an invalid context.
-               .arg(context()->isValid() ? "valid" : "invalid")
+               .arg(contextValid ? "valid" : "invalid")
                .toUtf8());
     if constexpr (!NO_OPENGL) {
         logMsg("Highest OpenGL:", mmqt::toQByteArrayUtf8(OpenGLConfig::getGLVersionString()));
@@ -181,7 +207,11 @@ void MapCanvas::reportGLVersion()
         logMsg("Highest GLES:", mmqt::toQByteArrayUtf8(OpenGLConfig::getESVersionString()));
     }
 
+#ifdef __EMSCRIPTEN__
+    logMsg("Display:", QString("%1 DPI").arg(devicePixelRatio()).toUtf8());
+#else
     logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
+#endif
 }
 
 bool MapCanvas::isBlacklistedDriver()
@@ -202,8 +232,33 @@ bool MapCanvas::isBlacklistedDriver()
     return false;
 }
 
+// WASM: Track initialization and context state globally
+#ifdef __EMSCRIPTEN__
+static bool g_wasmInitialized = false;
+static std::atomic<bool> g_wasmContextLost{false};
+static std::atomic<int> g_wasmInitAttempts{0};
+#endif
+
+#ifdef __EMSCRIPTEN__
+bool MapCanvas::isWasmContextLost()
+{
+    return g_wasmContextLost.load();
+}
+#endif
+
 void MapCanvas::initializeGL()
 {
+#ifdef __EMSCRIPTEN__
+    // WASM: Track reinitialization attempts.
+    // With QOpenGLWindow approach, reinit should not happen as frequently.
+    if (g_wasmInitialized) {
+        ++g_wasmInitAttempts;
+        g_wasmContextLost.store(true);
+        return;
+    }
+    g_wasmInitialized = true;
+#endif
+
     OpenGL &gl = getOpenGL();
     try {
         gl.initializeOpenGLFunctions();
@@ -213,9 +268,13 @@ void MapCanvas::initializeGL()
             throw std::runtime_error("unsupported driver");
         }
     } catch (const std::exception &) {
+#ifdef __EMSCRIPTEN__
+        close();  // QOpenGLWindow uses close() instead of hide()
+#else
         hide();
+#endif
         doneCurrent();
-        QMessageBox::critical(this,
+        QMessageBox::critical(nullptr,
                               "Unable to initialize OpenGL",
                               "Upgrade your video card drivers");
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
@@ -233,7 +292,11 @@ void MapCanvas::initializeGL()
     // because the logger purposely calls std::abort() when it receives an error.
     initLogger();
 
+#ifdef __EMSCRIPTEN__
+    gl.initializeRenderer(static_cast<float>(devicePixelRatio()));
+#else
     gl.initializeRenderer(static_cast<float>(QPaintDevice::devicePixelRatioF()));
+#endif
     updateMultisampling();
 
     // REVISIT: should the font texture have the lowest ID?
@@ -250,6 +313,16 @@ void MapCanvas::initializeGL()
         Legacy::ShaderPrograms &programs = funcs.getShaderPrograms();
         programs.early_init();
     }
+
+#ifdef __EMSCRIPTEN__
+    // Clear any GL errors that may have accumulated during initialization.
+    // WebGL can generate errors for operations that succeed on desktop OpenGL.
+    {
+        auto &sharedFuncs = gl.getSharedFunctions(Badge<MapCanvas>{});
+        Legacy::Functions &funcs = deref(sharedFuncs);
+        funcs.clearErrors();
+    }
+#endif
 
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
@@ -475,6 +548,15 @@ void MapCanvas::setViewportAndMvp(int width, int height)
 
 void MapCanvas::resizeGL(int width, int height)
 {
+#ifdef __EMSCRIPTEN__
+    // WASM: Check if WebGL context is valid
+    auto *ctx = context();
+    if (ctx == nullptr || !ctx->isValid()) {
+        g_wasmContextLost.store(true);
+        return;
+    }
+#endif
+
     if (m_textures.room_highlight == nullptr) {
         // resizeGL called but initializeGL was not called yet
         return;
@@ -532,6 +614,14 @@ void MapCanvas::updateBatches()
 
 void MapCanvas::updateMapBatches()
 {
+#ifdef __EMSCRIPTEN__
+    // WASM: Don't start new async batch generation if context is unstable.
+    // This prevents crashes in the async task.
+    if (g_wasmContextLost.load()) {
+        return;
+    }
+#endif
+
     RemeshCookie &remeshCookie = m_batches.remeshCookie;
     if (remeshCookie.isPending()) {
         return;
@@ -638,6 +728,26 @@ void MapCanvas::actuallyPaintGL()
     auto &gl = getOpenGL();
     gl.bindNamedColorsBuffer();
 
+#ifdef __EMSCRIPTEN__
+    // WASM with QOpenGLWindow: Render directly to default framebuffer (no FBO)
+    // This avoids potential blit issues with WebGL
+    if (auto *ctx = QOpenGLContext::currentContext()) {
+        ctx->functions()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    gl.clear(Color{getConfig().canvas.backgroundColor});
+
+    if (m_data.isEmpty()) {
+        getGLFont().renderTextCentered("No map loaded");
+        return;
+    }
+
+    paintMap();
+    paintBatchedInfomarks();
+    paintSelections();
+    paintCharacters();
+    paintDifferences();
+#else
+    // Desktop with QOpenGLWidget: Use FBO for compositing
     gl.bindFbo();
     gl.clear(Color{getConfig().canvas.backgroundColor});
 
@@ -654,6 +764,7 @@ void MapCanvas::actuallyPaintGL()
 
     gl.releaseFbo();
     gl.blitFboToDefault();
+#endif
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
@@ -817,6 +928,15 @@ void MapCanvas::paintSelections()
 
 void MapCanvas::paintGL()
 {
+#ifdef __EMSCRIPTEN__
+    // WASM: Check if WebGL context is valid
+    auto *ctx = context();
+    if (ctx == nullptr || !ctx->isValid()) {
+        g_wasmContextLost.store(true);
+        return;
+    }
+#endif
+
     static thread_local double longestBatchMs = 0.0;
 
     const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
@@ -859,7 +979,11 @@ void MapCanvas::paintGL()
     const auto &afterBatches = optAfterBatches.value();
     const auto afterPaint = Clock::now();
     const bool calledFinish = std::invoke([this]() -> bool {
+#ifdef __EMSCRIPTEN__
+        if (auto *const ctxt = QOpenGLWindow::context()) {
+#else
         if (auto *const ctxt = QOpenGLWidget::context()) {
+#endif
             if (auto *const func = ctxt->functions()) {
                 func->glFinish();
                 return true;
