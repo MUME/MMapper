@@ -66,9 +66,11 @@ public:
 public:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-
     NODISCARD MapCanvas *getCanvas() const;
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+    bool event(QEvent *event) override;
 
 public:
     void updateScrollBars();

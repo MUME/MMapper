@@ -4,13 +4,10 @@
 
 #include "MapCanvasRoomDrawer.h"
 
-#ifdef __EMSCRIPTEN__
-#include "mapcanvas.h"
-#endif
-
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../global/Array.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../global/ConfigConsts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
@@ -1123,62 +1120,30 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
 {
     const auto visitRoomOptions = getVisitRoomOptions();
 
-#ifdef __EMSCRIPTEN__
-    // WASM: Use synchronous (deferred) execution instead of async.
-    // Async execution causes crashes because the WebGL context can become
-    // invalid while the async task is running, and there's no way to
-    // safely cancel the task mid-execution.
-    return std::async(
-        std::launch::deferred, [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
-            // Check context before starting
-            if (MapCanvas::isWasmContextLost()) {
-                qWarning() << "[SYNC] generateMapDataFinisher - context lost, aborting";
-                return SharedMapBatchFinisher{};
-            }
+    // WASM: Use deferred (synchronous) execution to avoid context invalidation during async.
+    // Desktop: Use async execution for better performance.
+    constexpr auto launchPolicy = (CURRENT_PLATFORM == PlatformEnum::Wasm) ? std::launch::deferred
+                                                                           : std::launch::async;
 
-            ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
-                                             visitRoomOptions.colorSettings};
-            DECL_TIMER(t, "[SYNC] generateAllLayerMeshes");
-
-            ProgressCounter dummyPc;
-            map.checkConsistency(dummyPc);
-
-            const auto layerToRooms = std::invoke([map]() -> LayerToRooms {
-                DECL_TIMER(t2, "[SYNC] generateBatches.layerToRooms");
-                LayerToRooms ltr;
-                map.getRooms().for_each([&map, &ltr](const RoomId id) {
-                    const auto &r = map.getRoomHandle(id);
-                    const auto z = r.getPosition().z;
-                    auto &layer = ltr[z];
-                    layer.emplace_back(r);
-                });
-                return ltr;
-            });
-
-            // Check again before the expensive operation
-            if (MapCanvas::isWasmContextLost()) {
-                qWarning() << "[SYNC] generateMapDataFinisher - context lost before mesh gen, aborting";
-                return SharedMapBatchFinisher{};
-            }
-
-            auto result = std::make_shared<InternalData>();
-            auto &data = deref(result);
-            generateAllLayerMeshes(data, deref(font), layerToRooms, textures, visitRoomOptions);
-            return SharedMapBatchFinisher{result};
-        });
-#else
-    // Desktop: Use async execution for better performance
-    return std::async(std::launch::async,
+    return std::async(launchPolicy,
                       [textures, font, map, visitRoomOptions]() -> SharedMapBatchFinisher {
+                          // WASM: Check if WebGL context was lost before starting
+                          if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+                              if (MapCanvas::isWasmContextLost()) {
+                                  qWarning() << "[generateMapDataFinisher] context lost, aborting";
+                                  return SharedMapBatchFinisher{};
+                              }
+                          }
+
                           ThreadLocalNamedColorRaii tlRaii{visitRoomOptions.canvasColors,
                                                            visitRoomOptions.colorSettings};
-                          DECL_TIMER(t, "[ASYNC] generateAllLayerMeshes");
+                          DECL_TIMER(t, "generateAllLayerMeshes");
 
                           ProgressCounter dummyPc;
                           map.checkConsistency(dummyPc);
 
                           const auto layerToRooms = std::invoke([map]() -> LayerToRooms {
-                              DECL_TIMER(t2, "[ASYNC] generateBatches.layerToRooms");
+                              DECL_TIMER(t2, "generateBatches.layerToRooms");
                               LayerToRooms ltr;
                               map.getRooms().for_each([&map, &ltr](const RoomId id) {
                                   const auto &r = map.getRoomHandle(id);
@@ -1189,6 +1154,15 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                               return ltr;
                           });
 
+                          // WASM: Check again before the expensive mesh generation
+                          if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+                              if (MapCanvas::isWasmContextLost()) {
+                                  qWarning() << "[generateMapDataFinisher] context lost before "
+                                                "mesh gen, aborting";
+                                  return SharedMapBatchFinisher{};
+                              }
+                          }
+
                           auto result = std::make_shared<InternalData>();
                           auto &data = deref(result);
                           generateAllLayerMeshes(data,
@@ -1198,7 +1172,6 @@ FutureSharedMapBatchFinisher generateMapDataFinisher(const mctp::MapCanvasTextur
                                                  visitRoomOptions);
                           return SharedMapBatchFinisher{result};
                       });
-#endif
 }
 
 void finish(const IMapBatchesFinisher &finisher,

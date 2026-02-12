@@ -688,7 +688,6 @@ if(EMSCRIPTEN)
         -sMIN_WEBGL_VERSION=2
         -sASSERTIONS=0
         -sASYNCIFY
-        -sGL_POOL_TEMP_BUFFERS=0
         -Os
     )
     target_link_libraries(mmapper PUBLIC z)

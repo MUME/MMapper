@@ -232,8 +232,9 @@ bool MapCanvas::isBlacklistedDriver()
     return false;
 }
 
-// WASM: Static member definitions for context state tracking
+// Context state tracking
 #ifdef __EMSCRIPTEN__
+// WASM: Static member definitions
 bool MapCanvas::s_wasmInitialized = false;
 std::atomic<bool> MapCanvas::s_wasmContextLost{false};
 
@@ -246,6 +247,12 @@ void MapCanvas::resetWasmContextState()
 {
     s_wasmInitialized = false;
     s_wasmContextLost.store(false);
+}
+#else
+// Desktop: Context is never "lost" in the WASM sense
+bool MapCanvas::isWasmContextLost()
+{
+    return false;
 }
 #endif
 

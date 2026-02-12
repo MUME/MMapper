@@ -83,7 +83,7 @@ if(Qt6OpenGL_FOUND)
         set(QT_HAS_OPENGL FALSE)
     elseif(APPLE)
         # Force OpenGL on macOS - the try_compile check can fail with some Qt versions
-        # but macOS always has OpenGL 3.3 support via the compatibility profile
+        # but macOS always has OpenGL 3.3 support via the core profile
         set(QT_HAS_GLES FALSE)
         set(QT_HAS_OPENGL TRUE)
     else()

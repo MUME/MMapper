@@ -32,7 +32,6 @@
 #include <utility>
 #include <vector>
 
-#include <QGestureEvent>
 #include <QMessageLogContext>
 #include <QOpenGLDebugMessage>
 #include <QSize>
@@ -99,7 +98,6 @@ MapCanvas::MapCanvas(MapData &mapData,
     }
 
     setCursor(Qt::OpenHandCursor);
-    grabGesture(Qt::PinchGesture);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 #endif
@@ -326,46 +324,7 @@ void MapCanvas::slot_onForcedPositionChange()
 
 bool MapCanvas::event(QEvent *const event)
 {
-#ifndef __EMSCRIPTEN__
-    // Gesture handling is only available on desktop
-    auto tryHandlePinchZoom = [this, event]() -> bool {
-        if (event->type() != QEvent::Gesture) {
-            return false;
-        }
-
-        const auto *const gestureEvent = dynamic_cast<QGestureEvent *>(event);
-        if (gestureEvent == nullptr) {
-            return false;
-        }
-
-        // Zoom in / out
-        QGesture *const gesture = gestureEvent->gesture(Qt::PinchGesture);
-        const auto *const pinch = dynamic_cast<QPinchGesture *>(gesture);
-        if (pinch == nullptr) {
-            return false;
-        }
-
-        const QPinchGesture::ChangeFlags changeFlags = pinch->changeFlags();
-        if (changeFlags & QPinchGesture::ScaleFactorChanged) {
-            const auto pinchFactor = static_cast<float>(pinch->totalScaleFactor());
-            m_scaleFactor.setPinch(pinchFactor);
-            if ((false)) {
-                zoomChanged(); // Don't call this here, because it's not true yet.
-            }
-        }
-        if (pinch->state() == Qt::GestureFinished) {
-            m_scaleFactor.endPinch();
-            zoomChanged(); // might not have actually changed
-        }
-        update();
-        return true;
-    };
-
-    if (tryHandlePinchZoom()) {
-        return true;
-    }
-#endif
-
+    // Note: Must use #ifdef here because QOpenGLWidget is not declared on WASM
 #ifdef __EMSCRIPTEN__
     return QOpenGLWindow::event(event);
 #else

@@ -71,10 +71,11 @@ public:
     static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
     static constexpr const int SCROLL_SCALE = 64;
 
-#ifdef __EMSCRIPTEN__
-    // WASM: WebGL context state management
-    // These are static because WebGL has one context per page/canvas
+    // Context state management (meaningful on WASM, always returns false on desktop)
     static bool isWasmContextLost();
+
+#ifdef __EMSCRIPTEN__
+    // WASM-only: Additional context management
     static void resetWasmContextState();
 
     // WASM: Helper to access the container widget
@@ -220,6 +221,19 @@ public:
         zoomChanged();
     }
     NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
+
+    // Pinch gesture support (called from MapWindow)
+    void setPinchZoom(float pinchFactor)
+    {
+        m_scaleFactor.setPinch(pinchFactor);
+        update();
+    }
+    void endPinchZoom()
+    {
+        m_scaleFactor.endPinch();
+        zoomChanged();
+        update();
+    }
 
 public:
 #ifdef __EMSCRIPTEN__
