@@ -6,12 +6,16 @@
 
 #include "../opengl/LineRendering.h"
 
+#include <cassert>
 #include <cmath>
 #include <optional>
 
 #include <glm/gtc/epsilon.hpp>
 
+#include <QDebug>
+#include <QNativeGestureEvent>
 #include <QPointF>
+#include <QTouchEvent>
 
 const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints()
 {
@@ -58,6 +62,12 @@ std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 &v) const
 // output: world coordinates.
 glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth) const
 {
+    return unproject_raw(mouse_depth, m_viewProj);
+}
+
+glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth,
+                                           const glm::mat4 &viewProj) const
+{
     const float depth = mouse_depth.z;
     assert(::isClamped(depth, 0.f, 1.f));
 
@@ -67,7 +77,7 @@ glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth) const
     const glm::vec3 screen{screen2d, depth};
     const auto ndc = screen * 2.f - 1.f;
 
-    const auto tmp = glm::inverse(m_viewProj) * glm::vec4(ndc, 1.f);
+    const auto tmp = glm::inverse(viewProj) * glm::vec4(ndc, 1.f);
     // clamp to avoid division by zero
     constexpr float limit = 1e-6f;
     const auto w = (std::abs(tmp.w) < limit) ? std::copysign(limit, tmp.w) : tmp.w;
@@ -80,28 +90,53 @@ glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth) const
 // because it could be
 glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse) const
 {
+    return unproject_clamped(mouse, m_viewProj);
+}
+
+glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse,
+                                               const glm::mat4 &viewProj) const
+{
     const auto flayer = static_cast<float>(m_currentLayer);
     const auto &x = mouse.x;
     const auto &y = mouse.y;
-    const auto a = unproject_raw(glm::vec3{x, y, 0.f}); // near
-    const auto b = unproject_raw(glm::vec3{x, y, 1.f}); // far
+    const auto a = unproject_raw(glm::vec3{x, y, 0.f}, viewProj); // near
+    const auto b = unproject_raw(glm::vec3{x, y, 1.f}, viewProj); // far
     const float t = (flayer - a.z) / (b.z - a.z);
     const auto result = glm::mix(a, b, std::clamp(t, 0.f, 1.f));
     return glm::vec3{glm::vec2{result}, flayer};
 }
 
-glm::vec2 MapCanvasViewport::getMouseCoords(const QInputEvent *const event) const
+std::optional<glm::vec2> MapCanvasViewport::getMouseCoords(const QInputEvent *const event) const
 {
     if (const auto *const mouse = dynamic_cast<const QMouseEvent *>(event)) {
-        const auto x = static_cast<float>(mouse->pos().x());
-        const auto y = static_cast<float>(height() - mouse->pos().y());
+        const auto x = static_cast<float>(mouse->position().x());
+        const auto y = static_cast<float>(height() - mouse->position().y());
         return glm::vec2{x, y};
     } else if (const auto *const wheel = dynamic_cast<const QWheelEvent *>(event)) {
         const auto x = static_cast<float>(wheel->position().x());
         const auto y = static_cast<float>(height() - wheel->position().y());
         return glm::vec2{x, y};
+    } else if (const auto *const gesture = dynamic_cast<const QNativeGestureEvent *>(event)) {
+        const auto x = static_cast<float>(gesture->position().x());
+        const auto y = static_cast<float>(height() - gesture->position().y());
+        return glm::vec2{x, y};
+    } else if (const auto *const touch = dynamic_cast<const QTouchEvent *>(event)) {
+        const auto &points = touch->points();
+        if (points.isEmpty()) {
+            return std::nullopt;
+        }
+        QPointF centroid(0, 0);
+        for (const auto &p : points) {
+            centroid += p.position();
+        }
+        centroid /= static_cast<qreal>(points.size());
+        const auto x = static_cast<float>(centroid.x());
+        const auto y = static_cast<float>(height() - centroid.y());
+        return glm::vec2{x, y};
     } else {
-        throw std::invalid_argument("event");
+        qWarning() << "MapCanvasViewport::getMouseCoords: unhandled event type" << event->type();
+        assert(false);
+        return std::nullopt;
     }
 }
 
@@ -110,6 +145,14 @@ glm::vec2 MapCanvasViewport::getMouseCoords(const QInputEvent *const event) cons
 std::optional<glm::vec3> MapCanvasViewport::unproject(const QInputEvent *const event) const
 {
     const auto xy = getMouseCoords(event);
+    if (!xy) {
+        return std::nullopt;
+    }
+    return unproject(*xy);
+}
+
+std::optional<glm::vec3> MapCanvasViewport::unproject(const glm::vec2 &xy) const
+{
     // We don't actually know the depth we're trying to unproject;
     // technically we're solving for a ray, so we should unproject
     // two different depths and find where the ray intersects the
@@ -130,7 +173,16 @@ std::optional<glm::vec3> MapCanvasViewport::unproject(const QInputEvent *const e
 
 std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const QInputEvent *const event) const
 {
-    const auto opt_v = unproject(event);
+    const auto xy = getMouseCoords(event);
+    if (!xy) {
+        return std::nullopt;
+    }
+    return getUnprojectedMouseSel(*xy);
+}
+
+std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const glm::vec2 &xy) const
+{
+    const auto opt_v = unproject(xy);
     if (!opt_v.has_value()) {
         return std::nullopt;
     }

@@ -8,11 +8,10 @@
 #include "../map/coordinate.h"
 #include "mapcanvas.h"
 
-#include <memory>
-
 #include <QLabel>
 #include <QPixmap>
 #include <QPoint>
+#include <QPointer>
 #include <QSize>
 #include <QString>
 #include <QWidget>
@@ -36,15 +35,15 @@ class NODISCARD_QOBJECT MapWindow final : public QWidget
     Q_OBJECT
 
 protected:
-    std::unique_ptr<QTimer> scrollTimer;
+    QPointer<QGridLayout> m_gridLayout;
+    QPointer<QScrollBar> m_horizontalScrollBar;
+    QPointer<QScrollBar> m_verticalScrollBar;
+    QPointer<MapCanvas> m_canvas;
+    QPointer<QWidget> m_canvasContainer;
+    QPointer<QLabel> m_splashLabel;
+    QPointer<QTimer> m_scrollTimer;
     int m_verticalScrollStep = 0;
     int m_horizontalScrollStep = 0;
-
-    std::unique_ptr<QGridLayout> m_gridLayout;
-    std::unique_ptr<QScrollBar> m_horizontalScrollBar;
-    std::unique_ptr<QScrollBar> m_verticalScrollBar;
-    std::unique_ptr<MapCanvas> m_canvas;
-    std::unique_ptr<QLabel> m_splashLabel;
 
 private:
     struct NODISCARD KnownMapSize final
@@ -91,4 +90,7 @@ public slots:
     void slot_scrollTimerTimeout();
     void slot_graphicsSettingsChanged();
     void slot_zoomChanged(const float zoom) { emit sig_zoomChanged(zoom); }
+    void slot_showTooltip(const QString &text, const QPoint &pos);
+
+    void setCanvasEnabled(bool enabled);
 };

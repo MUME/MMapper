@@ -30,7 +30,7 @@
 #include <QColor>
 #include <QMatrix4x4>
 #include <QOpenGLDebugMessage>
-#include <QOpenGLWidget>
+#include <QOpenGLWindow>
 #include <QtCore>
 
 class CharacterBatch;
@@ -47,7 +47,7 @@ class QWheelEvent;
 class QWidget;
 class RoomSelFakeGL;
 
-class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWidget,
+class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWindow,
                                           private MapCanvasViewport,
                                           private MapCanvasInputState
 {
@@ -152,11 +152,23 @@ private:
     };
     std::optional<AltDragState> m_altDragState;
 
+    struct DragState
+    {
+        glm::vec3 startWorldPos;
+        glm::vec2 startScroll;
+        glm::mat4 startViewProj;
+    };
+    std::optional<DragState> m_dragState;
+
+    float m_initialPinchDistance = 0.f;
+    float m_lastPinchFactor = 1.f;
+    float m_lastMagnification = 1.f;
+
 public:
     explicit MapCanvas(MapData &mapData,
                        PrespammedPath &prespammedPath,
                        Mmapper2Group &groupManager,
-                       QWidget *parent);
+                       QWindow *parent = nullptr);
     ~MapCanvas() final;
 
 public:
@@ -168,9 +180,6 @@ private:
     void cleanupOpenGL();
 
 public:
-    NODISCARD QSize minimumSizeHint() const override;
-    NODISCARD QSize sizeHint() const override;
-
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
     {
@@ -180,12 +189,14 @@ public:
     NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
 
 public:
-    NODISCARD auto width() const { return QOpenGLWidget::width(); }
-    NODISCARD auto height() const { return QOpenGLWidget::height(); }
-    NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
+    NODISCARD auto width() const { return QOpenGLWindow::width(); }
+    NODISCARD auto height() const { return QOpenGLWindow::height(); }
+    NODISCARD QRect rect() const { return QRect(0, 0, width(), height()); }
 
 private:
     void onMovement();
+    void startMoving(const MouseSel &startPos);
+    void stopMoving();
 
 private:
     void reportGLVersion();
@@ -202,6 +213,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
+    void touchEvent(QTouchEvent *event) override;
     bool event(QEvent *e) override;
 
 private:
@@ -227,6 +239,9 @@ private:
                                            int currentLayer);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
+
+    void zoomAt(float factor, const glm::vec2 &mousePos);
+    void handleZoomAtEvent(const QInputEvent *event, float deltaFactor);
 
     NODISCARD BatchedInfomarksMeshes getInfomarksMeshes();
     void drawInfomark(InfomarksBatch &batch,
@@ -287,6 +302,10 @@ signals:
 
     void sig_setCurrentRoom(RoomId id, bool update);
     void sig_zoomChanged(float);
+
+    void sig_showTooltip(const QString &text, const QPoint &pos);
+    void sig_customContextMenuRequested(const QPoint &pos);
+    void sig_dismissContextMenu();
 
 public slots:
     void slot_onForcedPositionChange();
