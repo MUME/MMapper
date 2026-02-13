@@ -20,7 +20,7 @@
 #include <unordered_map>
 
 #include <QOpenGLTexture>
-#include <QWidget>
+#include <QWindow>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
 #include <QtGui/qopengl.h>
@@ -48,8 +48,6 @@ public:
 
 private:
     float m_scaleFactor = 1.f;
-    // pinch gesture
-    float m_pinchFactor = 1.f;
 
 private:
     NODISCARD static float clamp(float x)
@@ -63,21 +61,10 @@ public:
 
 public:
     NODISCARD float getRaw() const { return clamp(m_scaleFactor); }
-    NODISCARD float getTotal() const { return clamp(m_scaleFactor * m_pinchFactor); }
+    NODISCARD float getTotal() const { return clamp(m_scaleFactor); }
 
 public:
     void set(const float scale) { m_scaleFactor = clamp(scale); }
-    void setPinch(const float pinch)
-    {
-        // Don't bother to clamp this, since the total is clamped.
-        m_pinchFactor = pinch;
-    }
-    void endPinch()
-    {
-        const float total = getTotal();
-        m_scaleFactor = total;
-        m_pinchFactor = 1.f;
-    }
     void reset() { *this = ScaleFactor(); }
 
 public:
@@ -100,7 +87,7 @@ public:
 struct NODISCARD MapCanvasViewport
 {
 private:
-    QWidget &m_sizeWidget;
+    QWindow &m_window;
 
 public:
     glm::mat4 m_viewProj{1.f};
@@ -109,27 +96,30 @@ public:
     int m_currentLayer = 0;
 
 public:
-    explicit MapCanvasViewport(QWidget &sizeWidget)
-        : m_sizeWidget{sizeWidget}
+    explicit MapCanvasViewport(QWindow &window)
+        : m_window{window}
     {}
 
 public:
-    NODISCARD auto width() const { return m_sizeWidget.width(); }
-    NODISCARD auto height() const { return m_sizeWidget.height(); }
+    NODISCARD auto width() const { return m_window.width(); }
+    NODISCARD auto height() const { return m_window.height(); }
     NODISCARD Viewport getViewport() const
     {
-        const auto &r = m_sizeWidget.rect();
-        return Viewport{glm::ivec2{r.x(), r.y()}, glm::ivec2{r.width(), r.height()}};
+        return Viewport{glm::ivec2{0, 0}, glm::ivec2{m_window.width(), m_window.height()}};
     }
     NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
 
 public:
     NODISCARD std::optional<glm::vec3> project(const glm::vec3 &) const;
     NODISCARD glm::vec3 unproject_raw(const glm::vec3 &) const;
+    NODISCARD glm::vec3 unproject_raw(const glm::vec3 &, const glm::mat4 &) const;
     NODISCARD glm::vec3 unproject_clamped(const glm::vec2 &) const;
+    NODISCARD glm::vec3 unproject_clamped(const glm::vec2 &, const glm::mat4 &) const;
     NODISCARD std::optional<glm::vec3> unproject(const QInputEvent *event) const;
+    NODISCARD std::optional<glm::vec3> unproject(const glm::vec2 &xy) const;
     NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(const QInputEvent *event) const;
-    NODISCARD glm::vec2 getMouseCoords(const QInputEvent *event) const;
+    NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(const glm::vec2 &xy) const;
+    NODISCARD std::optional<glm::vec2> getMouseCoords(const QInputEvent *event) const;
 };
 
 class NODISCARD MapScreen final

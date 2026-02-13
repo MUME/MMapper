@@ -9,12 +9,12 @@
 CanvasDisabler::CanvasDisabler(MapWindow &in_window)
     : window{in_window}
 {
-    window.getCanvas()->setEnabled(false);
+    window.setCanvasEnabled(false);
 }
 
 CanvasDisabler::~CanvasDisabler()
 {
-    window.getCanvas()->setEnabled(true);
+    window.setCanvasEnabled(true);
     window.hideSplashImage();
 }
 

@@ -465,7 +465,11 @@ void MainWindow::wireConnections()
             &MapCanvas::sig_newInfomarkSelection,
             this,
             &MainWindow::slot_newInfomarkSelection);
-    connect(canvas, &QWidget::customContextMenuRequested, this, &MainWindow::slot_showContextMenu);
+    connect(canvas,
+            &MapCanvas::sig_customContextMenuRequested,
+            this,
+            &MainWindow::slot_showContextMenu);
+    connect(canvas, &MapCanvas::sig_dismissContextMenu, this, &MainWindow::slot_closeContextMenu);
 
     // Group
     connect(m_groupManager, &Mmapper2Group::sig_log, this, &MainWindow::slot_log);
@@ -1224,46 +1228,51 @@ void MainWindow::setupMenuBar()
     mumeMenu->addAction(mumeWikiAct);
     helpMenu->addSeparator();
     helpMenu->addAction(aboutAct);
-    helpMenu->addAction(aboutQtAct);
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        helpMenu->addAction(aboutQtAct);
+    }
 }
 
 void MainWindow::slot_showContextMenu(const QPoint &pos)
 {
-    auto *contextMenu = new QMenu(tr("Context menu"), this);
-    contextMenu->setAttribute(Qt::WA_DeleteOnClose);
+    slot_closeContextMenu();
+
+    m_contextMenu = new QMenu(tr("Context menu"), this);
+    auto &contextMenu = deref(m_contextMenu);
+    contextMenu.setAttribute(Qt::WA_DeleteOnClose);
     if (m_connectionSelection != nullptr) {
         // Connections cannot be selected alongside rooms and infomarks
         // ^^^ Let's enforce that with a variant then?
-        contextMenu->addAction(deleteConnectionSelectionAct);
+        contextMenu.addAction(deleteConnectionSelectionAct);
 
     } else {
         // However, both rooms and infomarks can be selected at once
         if (m_roomSelection != nullptr) {
             if (m_roomSelection->empty()) {
-                contextMenu->addAction(createRoomAct);
+                contextMenu.addAction(createRoomAct);
             } else {
-                contextMenu->addAction(editRoomSelectionAct);
-                contextMenu->addAction(moveUpRoomSelectionAct);
-                contextMenu->addAction(moveDownRoomSelectionAct);
-                contextMenu->addAction(mergeUpRoomSelectionAct);
-                contextMenu->addAction(mergeDownRoomSelectionAct);
-                contextMenu->addAction(deleteRoomSelectionAct);
-                contextMenu->addAction(connectToNeighboursRoomSelectionAct);
-                contextMenu->addSeparator();
-                contextMenu->addAction(gotoRoomAct);
-                contextMenu->addAction(forceRoomAct);
+                contextMenu.addAction(editRoomSelectionAct);
+                contextMenu.addAction(moveUpRoomSelectionAct);
+                contextMenu.addAction(moveDownRoomSelectionAct);
+                contextMenu.addAction(mergeUpRoomSelectionAct);
+                contextMenu.addAction(mergeDownRoomSelectionAct);
+                contextMenu.addAction(deleteRoomSelectionAct);
+                contextMenu.addAction(connectToNeighboursRoomSelectionAct);
+                contextMenu.addSeparator();
+                contextMenu.addAction(gotoRoomAct);
+                contextMenu.addAction(forceRoomAct);
             }
         }
         if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->empty()) {
             if (m_roomSelection != nullptr) {
-                contextMenu->addSeparator();
+                contextMenu.addSeparator();
             }
-            contextMenu->addAction(infomarkActions.editInfomarkAct);
-            contextMenu->addAction(infomarkActions.deleteInfomarkAct);
+            contextMenu.addAction(infomarkActions.editInfomarkAct);
+            contextMenu.addAction(infomarkActions.deleteInfomarkAct);
         }
     }
-    contextMenu->addSeparator();
-    QMenu *mouseMenu = contextMenu->addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
+    contextMenu.addSeparator();
+    QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
     mouseMenu->addAction(mouseMode.modeMoveSelectAct);
     mouseMenu->addAction(mouseMode.modeRoomRaypickAct);
     mouseMenu->addAction(mouseMode.modeRoomSelectAct);
@@ -1274,7 +1283,14 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
     mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
     mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
 
-    contextMenu->popup(getCanvas()->mapToGlobal(pos));
+    contextMenu.popup(getCanvas()->mapToGlobal(pos));
+}
+
+void MainWindow::slot_closeContextMenu()
+{
+    if (m_contextMenu) {
+        m_contextMenu->close();
+    }
 }
 
 void MainWindow::slot_alwaysOnTop()
@@ -1313,7 +1329,6 @@ void MainWindow::slot_setShowMenuBar()
     m_dockDialogGroup->setMouseTracking(!showMenuBar);
     m_dockDialogLog->setMouseTracking(!showMenuBar);
     m_dockDialogRoom->setMouseTracking(!showMenuBar);
-    getCanvas()->setMouseTracking(!showMenuBar);
 
     if (showMenuBar) {
         menuBar()->show();
@@ -1322,14 +1337,16 @@ void MainWindow::slot_setShowMenuBar()
         m_dockDialogGroup->removeEventFilter(this);
         m_dockDialogLog->removeEventFilter(this);
         m_dockDialogRoom->removeEventFilter(this);
-        getCanvas()->removeEventFilter(this);
+        m_mapWindow->removeEventFilter(this);
+        m_mapWindow->getCanvas()->removeEventFilter(this);
     } else {
         m_dockDialogAdventure->installEventFilter(this);
         m_dockDialogClient->installEventFilter(this);
         m_dockDialogGroup->installEventFilter(this);
         m_dockDialogLog->installEventFilter(this);
         m_dockDialogRoom->installEventFilter(this);
-        getCanvas()->installEventFilter(this);
+        m_mapWindow->installEventFilter(this);
+        m_mapWindow->getCanvas()->installEventFilter(this);
     }
 }
 
