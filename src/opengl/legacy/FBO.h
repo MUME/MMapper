@@ -25,7 +25,9 @@ public:
     void configure(const Viewport &physicalViewport, int samples);
     void bind();
     void release();
-    void blitToDefault();
+    void resolve();
+
+    NODISCARD GLuint resolvedTextureId() const;
 
 private:
     std::unique_ptr<QOpenGLFramebufferObject> m_multisamplingFbo;

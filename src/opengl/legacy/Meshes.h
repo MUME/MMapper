@@ -27,10 +27,10 @@ private:
     {
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
+        NODISCARD static Attribs getLocations(AbstractShaderProgram &shader)
         {
             Attribs result;
-            result.vertPos = fontShader.getAttribLocation("aVert");
+            result.vertPos = shader.getAttribLocation("aVert");
             return result;
         }
     };

@@ -283,6 +283,7 @@ Functions::Functions(Badge<Functions>)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_sharedVbos{std::make_unique<SharedVbos>()}
+    , m_sharedVaos{std::make_unique<SharedVaos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
     , m_fbo{std::make_unique<FBO>()}
 {}
@@ -316,6 +317,7 @@ void Functions::cleanup()
     getShaderPrograms().resetAll();
     getStaticVbos().resetAll();
     getSharedVbos().resetAll();
+    getSharedVaos().resetAll();
     getTexLookup().clear();
 }
 
@@ -330,6 +332,10 @@ StaticVbos &Functions::getStaticVbos()
 SharedVbos &Functions::getSharedVbos()
 {
     return deref(m_sharedVbos);
+}
+SharedVaos &Functions::getSharedVaos()
+{
+    return deref(m_sharedVaos);
 }
 TexLookup &Functions::getTexLookup()
 {
@@ -392,7 +398,45 @@ void Functions::releaseFbo()
 
 void Functions::blitFboToDefault()
 {
-    getFBO().blitToDefault();
+    getFBO().resolve();
+
+    const GLuint textureId = getFBO().resolvedTextureId();
+    if (textureId != 0) {
+        const auto state = GLRenderState()
+                               .withBlend(BlendModeEnum::NONE)
+                               .withDepthFunction(std::nullopt)
+                               .withCulling(CullingEnum::DISABLED);
+
+        Base::glActiveTexture(GL_TEXTURE0);
+        Base::glBindTexture(GL_TEXTURE_2D, textureId);
+
+        renderFullScreenTriangle(getShaderPrograms().getBlitShader(), state);
+
+        Base::glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
+
+void Functions::renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog,
+                                         const GLRenderState &state)
+{
+    checkError();
+
+    auto programUnbinder = prog->bind();
+    prog->setUniforms(glm::mat4(1.0f), state.uniforms);
+    RenderStateBinder renderStateBinder(*this, getTexLookup(), state);
+
+    SharedVao shared = getSharedVaos().get(SharedVaoEnum::EmptyVao);
+    VAO &vao = deref(shared);
+    if (!vao) {
+        if (IS_DEBUG_BUILD) {
+            qDebug() << "allocating shared empty VAO for renderFullScreenTriangle";
+        }
+        vao.emplace(shared_from_this());
+    }
+    glBindVertexArray(vao.get());
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+    checkError();
 }
 
 } // namespace Legacy

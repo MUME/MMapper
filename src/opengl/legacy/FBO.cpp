@@ -81,25 +81,26 @@ void FBO::release()
     }
 }
 
-void FBO::blitToDefault()
+void FBO::resolve()
 {
     if (!m_resolvedFbo) {
-        return; // Nothing to blit from
+        return; // Nothing to resolve to
     }
 
     // If we have a valid multisampling FBO, resolve it to the resolved FBO first.
     if (m_multisamplingFbo && m_multisamplingFbo->isValid()) {
+        // NOTE: In WebGL2/GLES 3.0 environments, resolving a multisampled framebuffer
+        // requires GL_NEAREST.
         QOpenGLFramebufferObject::blitFramebuffer(m_resolvedFbo.get(),
                                                   m_multisamplingFbo.get(),
                                                   GL_COLOR_BUFFER_BIT,
-                                                  GL_LINEAR);
+                                                  GL_NEAREST);
     }
+}
 
-    // Now blit the (potentially resolved) FBO to the default framebuffer.
-    QOpenGLFramebufferObject::blitFramebuffer(nullptr,
-                                              m_resolvedFbo.get(),
-                                              GL_COLOR_BUFFER_BIT,
-                                              GL_NEAREST);
+GLuint FBO::resolvedTextureId() const
+{
+    return m_resolvedFbo ? m_resolvedFbo->texture() : 0;
 }
 
 } // namespace Legacy

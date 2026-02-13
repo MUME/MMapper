@@ -36,6 +36,8 @@ RoomQuadTexShader::~RoomQuadTexShader() = default;
 
 FontShader::~FontShader() = default;
 PointShader::~PointShader() = default;
+BlitShader::~BlitShader() = default;
+FullScreenShader::~FullScreenShader() = default;
 
 void ShaderPrograms::early_init()
 {
@@ -48,6 +50,8 @@ void ShaderPrograms::early_init()
 
     std::ignore = getFontShader();
     std::ignore = getPointShader();
+    std::ignore = getBlitShader();
+    std::ignore = getFullScreenShader();
 }
 
 void ShaderPrograms::resetAll()
@@ -61,6 +65,8 @@ void ShaderPrograms::resetAll()
 
     m_font.reset();
     m_point.reset();
+    m_blit.reset();
+    m_fullscreen.reset();
 }
 
 // essentially a private member of ShaderPrograms
@@ -125,6 +131,16 @@ const std::shared_ptr<FontShader> &ShaderPrograms::getFontShader()
 const std::shared_ptr<PointShader> &ShaderPrograms::getPointShader()
 {
     return getInitialized<PointShader>(m_point, getFunctions(), "point");
+}
+
+const std::shared_ptr<BlitShader> &ShaderPrograms::getBlitShader()
+{
+    return getInitialized<BlitShader>(m_blit, getFunctions(), "blit");
+}
+
+const std::shared_ptr<FullScreenShader> &ShaderPrograms::getFullScreenShader()
+{
+    return getInitialized<FullScreenShader>(m_fullscreen, getFunctions(), "fullscreen");
 }
 
 } // namespace Legacy
