@@ -262,6 +262,8 @@ void MapCanvas::initializeGL()
     // WASM: Track reinitialization attempts.
     // With QOpenGLWindow approach, reinit should not happen as frequently.
     if (s_wasmInitialized) {
+        qWarning() << "[MapCanvas] initializeGL called again - WebGL context likely lost. "
+                   << "Call resetWasmContextState() before retrying initialization.";
         s_wasmContextLost.store(true);
         return;
     }
@@ -279,13 +281,19 @@ void MapCanvas::initializeGL()
     } catch (const std::exception &) {
 #ifdef __EMSCRIPTEN__
         close(); // QOpenGLWindow uses close() instead of hide()
-#else
-        hide();
-#endif
         doneCurrent();
+        // WASM: MapCanvas is QOpenGLWindow (not QWidget), use nullptr for dialog parent
         QMessageBox::critical(nullptr,
                               "Unable to initialize OpenGL",
                               "Upgrade your video card drivers");
+#else
+        hide();
+        doneCurrent();
+        // Desktop: MapCanvas is QOpenGLWidget, use this for proper modality
+        QMessageBox::critical(this,
+                              "Unable to initialize OpenGL",
+                              "Upgrade your video card drivers");
+#endif
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
             // Link to Microsoft OpenGL Compatibility Pack
             QDesktopServices::openUrl(

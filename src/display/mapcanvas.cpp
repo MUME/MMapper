@@ -97,7 +97,7 @@ MapCanvas::MapCanvas(MapData &mapData,
         pmc = this;
     }
 
-    setCursor(Qt::OpenHandCursor);
+    setCanvasCursor(Qt::OpenHandCursor);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 #endif
@@ -115,6 +115,37 @@ MapCanvas::~MapCanvas()
 MapCanvas *MapCanvas::getPrimary()
 {
     return primaryMapCanvas();
+}
+
+QWidget *MapCanvas::getParentWidget() const
+{
+#ifdef __EMSCRIPTEN__
+    return m_containerWidget;
+#else
+    return qobject_cast<QWidget *>(parent());
+#endif
+}
+
+void MapCanvas::setCanvasCursor(const QCursor &cursor)
+{
+    if (QWidget *w = getParentWidget()) {
+        w->setCursor(cursor);
+    }
+}
+
+QCursor MapCanvas::getCanvasCursor() const
+{
+    if (QWidget *w = getParentWidget()) {
+        return w->cursor();
+    }
+    return QCursor();
+}
+
+void MapCanvas::showCanvasTooltip(const QPoint &localPos, const QString &text)
+{
+    if (QWidget *w = getParentWidget()) {
+        QToolTip::showText(w->mapToGlobal(localPos), text, w, w->rect(), 5000);
+    }
 }
 
 void MapCanvas::slot_layerUp()
@@ -147,10 +178,9 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     // scrollbars or use the new zoom-recenter feature).
     slot_clearAllSelections();
 
-#ifndef __EMSCRIPTEN__
     switch (mode) {
     case CanvasMouseModeEnum::MOVE:
-        setCursor(Qt::OpenHandCursor);
+        setCanvasCursor(Qt::OpenHandCursor);
         break;
 
     default:
@@ -158,7 +188,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::RAYPICK_ROOMS:
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
-        setCursor(Qt::CrossCursor);
+        setCanvasCursor(Qt::CrossCursor);
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
@@ -166,10 +196,9 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-        setCursor(Qt::ArrowCursor);
+        setCanvasCursor(Qt::ArrowCursor);
         break;
     }
-#endif
 
     m_canvasMouseMode = mode;
     m_selectedArea = false;
@@ -412,12 +441,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
     if (hasLeftButton && hasAlt) {
-#ifndef __EMSCRIPTEN__
-        m_altDragState.emplace(AltDragState{event->pos(), cursor()});
-        setCursor(Qt::ClosedHandCursor);
-#else
-        m_altDragState.emplace(AltDragState{event->pos(), QCursor()});
-#endif
+        m_altDragState.emplace(AltDragState{event->pos(), getCanvasCursor()});
+        setCanvasCursor(Qt::ClosedHandCursor);
         event->accept();
         return;
     }
@@ -470,9 +495,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         break;
     case CanvasMouseModeEnum::MOVE:
         if (hasLeftButton && hasSel1()) {
-#ifndef __EMSCRIPTEN__
-            setCursor(Qt::ClosedHandCursor);
-#endif
+            setCanvasCursor(Qt::ClosedHandCursor);
             startMoving(m_sel1.value());
         }
         break;
@@ -598,9 +621,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     if (m_altDragState.has_value()) {
         // The user released the Alt key mid-drag.
         if (!((event->modifiers() & Qt::ALT) != 0u)) {
-#ifndef __EMSCRIPTEN__
-            setCursor(m_altDragState->originalCursor);
-#endif
+            setCanvasCursor(m_altDragState->originalCursor);
             m_altDragState.reset();
             // Don't accept the event; let the underlying widgets handle it.
             return;
@@ -682,9 +703,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         if (hasLeftButton && hasSel1() && hasSel2()) {
             if (hasInfomarkSelectionMove()) {
                 m_infoMarkSelectionMove->pos = getSel2().pos - getSel1().pos;
-#ifndef __EMSCRIPTEN__
-                setCursor(Qt::ClosedHandCursor);
-#endif
+                setCanvasCursor(Qt::ClosedHandCursor);
             } else {
                 m_selectedArea = true;
             }
@@ -726,9 +745,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                 m_roomSelectionMove->pos = diff;
                 m_roomSelectionMove->wrongPlace = wrongPlace;
 
-#ifndef __EMSCRIPTEN__
-                setCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
-#endif
+                setCanvasCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
             } else {
                 m_selectedArea = true;
             }
@@ -777,9 +794,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 {
     if (m_altDragState.has_value()) {
-#ifndef __EMSCRIPTEN__
-        setCursor(m_altDragState->originalCursor);
-#endif
+        setCanvasCursor(m_altDragState->originalCursor);
         m_altDragState.reset();
         event->accept();
         return;
@@ -794,9 +809,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     switch (m_canvasMouseMode) {
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-#ifndef __EMSCRIPTEN__
-        setCursor(Qt::ArrowCursor);
-#endif
+        setCanvasCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
             if (hasInfomarkSelectionMove()) {
@@ -848,9 +861,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     case CanvasMouseModeEnum::MOVE:
         stopMoving();
-#ifndef __EMSCRIPTEN__
-        setCursor(Qt::OpenHandCursor);
-#endif
+        setCanvasCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
         }
@@ -862,16 +873,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                                  mmqt::StripAnsiEnum::Yes,
                                                  mmqt::PreviewStyleEnum::ForDisplay);
 
-#ifdef __EMSCRIPTEN__
-                // QToolTip requires QWidget; on WASM we skip tooltips for now
-                Q_UNUSED(message);
-#else
-                QToolTip::showText(mapToGlobal(event->position().toPoint()),
-                                   message,
-                                   this,
-                                   rect(),
-                                   5000);
-#endif
+                showCanvasTooltip(event->position().toPoint(), message);
             }
         }
         break;
@@ -880,9 +882,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
-#ifndef __EMSCRIPTEN__
-        setCursor(Qt::ArrowCursor);
-#endif
+        setCanvasCursor(Qt::ArrowCursor);
         // This seems very unusual.
         if (m_ctrlPressed && m_altPressed) {
             break;

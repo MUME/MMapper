@@ -235,6 +235,14 @@ public:
         update();
     }
 
+    // Cursor and tooltip helpers (forward to parent widget for cross-platform support)
+    void setCanvasCursor(const QCursor &cursor);
+    NODISCARD QCursor getCanvasCursor() const;
+    void showCanvasTooltip(const QPoint &localPos, const QString &text);
+
+private:
+    NODISCARD QWidget *getParentWidget() const;
+
 public:
 #ifdef __EMSCRIPTEN__
     NODISCARD auto width() const { return QOpenGLWindow::width(); }
