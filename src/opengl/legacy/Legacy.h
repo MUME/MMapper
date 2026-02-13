@@ -27,6 +27,9 @@ namespace Legacy {
 
 class StaticVbos;
 class SharedVbos;
+class SharedVaos;
+class VAO;
+struct AbstractShaderProgram;
 struct ShaderPrograms;
 struct PointSizeBinder;
 
@@ -40,6 +43,18 @@ enum class SharedVboEnum : uint8_t {
     XFOREACH_SHARED_VBO(X_ENUM)
 #undef X_ENUM
 };
+
+#define XFOREACH_SHARED_VAO(X) X(EmptyVao)
+
+enum class SharedVaoEnum : uint8_t {
+#define X_ENUM(element) element,
+    XFOREACH_SHARED_VAO(X_ENUM)
+#undef X_ENUM
+};
+
+#define X_COUNT_VAO(element) +1
+static constexpr size_t NUM_SHARED_VAOS = 0 XFOREACH_SHARED_VAO(X_COUNT_VAO);
+#undef X_COUNT_VAO
 
 #define X_COUNT(element, name, isUniform) +1
 static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT);
@@ -117,9 +132,9 @@ private:
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<SharedVbos> m_sharedVbos;
+    std::unique_ptr<SharedVaos> m_sharedVaos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
-    std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
 
 protected:
     explicit Functions(Badge<Functions>);
@@ -139,15 +154,6 @@ public:
             throw std::invalid_argument("devicePixelRatio");
         }
         m_devicePixelRatio = devicePixelRatio;
-    }
-
-public:
-    // The purpose of this function is to safely manage the lifetime of reused meshes
-    // like the full screen quad mesh. Caller is expected to only keep a weak pointer
-    // to the mesh. See OpenGL::renderPlainFullScreenQuad().
-    void addSharedMesh(Badge<OpenGL>, std::shared_ptr<IRenderable> mesh)
-    {
-        m_staticMeshes.emplace_back(std::move(mesh));
     }
 
 public:
@@ -300,6 +306,8 @@ public:
 
     NODISCARD SharedVbos &getSharedVbos();
 
+    NODISCARD SharedVaos &getSharedVaos();
+
     NODISCARD TexLookup &getTexLookup();
 
     NODISCARD FBO &getFBO();
@@ -430,7 +438,6 @@ public:
 public:
     void renderPoints(const std::vector<ColorVert> &verts, const GLRenderState &state);
 
-public:
     void renderPlain(DrawModeEnum mode,
                      const std::vector<glm::vec3> &verts,
                      const GLRenderState &state);
@@ -444,6 +451,10 @@ public:
                                const std::vector<ColoredTexVert> &verts,
                                const GLRenderState &state);
     void renderFont3d(const SharedMMTexture &texture, const std::vector<FontVert3d> &verts);
+
+public:
+    void renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog,
+                                  const GLRenderState &state);
 
 public:
     void checkError();
