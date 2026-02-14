@@ -27,8 +27,9 @@ jobs:
     - name: Install Qt for Wasm
       uses: jurplel/install-qt-action@v4
       with:
-        version: 6.5.3
-        host: mac
+        version: 6.10.2
+        target: wasm
+        host: all_os
         arch: wasm_multithread
         cache: true
         modules: 'qtwebsockets'
@@ -36,7 +37,7 @@ jobs:
     - name: Setup emsdk
       uses: mymindstorm/setup-emsdk@v14
       with:
-        version: 3.1.25
+        version: 4.0.7
 
     - name: Configure and Build
       shell: bash
@@ -74,7 +75,6 @@ jobs:
       run: |
         mkdir -p demo
         cp build/src/mmapper.js demo/
-        cp build/src/mmapper.worker.js demo/
         cp build/src/mmapper.wasm demo/
         cp build/src/qtloader.js demo/
         cp build/src/qtlogo.svg demo/
