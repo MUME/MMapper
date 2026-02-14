@@ -58,8 +58,6 @@ private:
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
     bool m_eventReady = false;
-    PromptWeatherEnum m_weather = PromptWeatherEnum::NICE;
-    PromptFogEnum m_fog = PromptFogEnum::NO_FOG;
     GameObserver &m_observer;
 
 private:

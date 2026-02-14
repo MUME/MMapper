@@ -40,9 +40,11 @@ public:
     static constexpr const auto LIGHT_MASK = LIT_ROOM | DARK_ROOM;
     static constexpr const auto PROMPT_FLAGS_VALID = 1u << 2;
     // bit3-4 -> PromptFogEnum
-    static constexpr const auto FOG_TYPE = 0b11u << 3;
+    static constexpr uint32_t FOG_SHIFT = 3u;
+    static constexpr const auto FOG_TYPE = 0b11u << FOG_SHIFT;
     // bit5-9 -> PromptWeatherEnum
-    static constexpr const auto WEATHER_TYPE = 0b111u << 5;
+    static constexpr uint32_t WEATHER_SHIFT = 5u;
+    static constexpr const auto WEATHER_TYPE = 0b111u << WEATHER_SHIFT;
 
 private:
     uint32_t m_flags = 0u;
@@ -72,25 +74,26 @@ public:
 public:
     NODISCARD PromptFogEnum getFogType() const
     {
-        return static_cast<PromptFogEnum>(m_flags & static_cast<uint32_t>(FOG_TYPE));
+        return static_cast<PromptFogEnum>((m_flags & FOG_TYPE) >> FOG_SHIFT);
     }
     void setFogType(const PromptFogEnum type)
     {
         using flags_type = decltype(m_flags);
         m_flags = static_cast<flags_type>(m_flags & ~FOG_TYPE);
-        m_flags = static_cast<flags_type>(m_flags | (encodeFogType(type) & FOG_TYPE));
+        m_flags = static_cast<flags_type>(m_flags | ((encodeFogType(type) << FOG_SHIFT) & FOG_TYPE));
     }
 
 public:
     NODISCARD PromptWeatherEnum getWeatherType() const
     {
-        return static_cast<PromptWeatherEnum>(m_flags & WEATHER_TYPE);
+        return static_cast<PromptWeatherEnum>((m_flags & WEATHER_TYPE) >> WEATHER_SHIFT);
     }
     void setWeatherType(const PromptWeatherEnum type)
     {
         using flags_type = decltype(m_flags);
         m_flags = static_cast<flags_type>(m_flags & ~WEATHER_TYPE);
-        m_flags = static_cast<flags_type>(m_flags | (encodeWeatherType(type) & WEATHER_TYPE));
+        m_flags = static_cast<flags_type>(
+            m_flags | ((encodeWeatherType(type) << WEATHER_SHIFT) & WEATHER_TYPE));
     }
 
 public:

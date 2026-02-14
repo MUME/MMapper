@@ -302,12 +302,7 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
 
     promptFlags.setValid();
 
-    if (!obj.getNull("fog")) {
-        if (verbose_debugging && promptFlags.getFogType() != PromptFogEnum::NO_FOG) {
-            qInfo().noquote() << "fog null";
-        }
-        promptFlags.setFogType(PromptFogEnum::NO_FOG);
-    } else if (auto fog = obj.getString("fog")) {
+    if (auto fog = obj.getString("fog")) {
         if (verbose_debugging) {
             qInfo().noquote() << "fog" << *fog;
         }
@@ -318,7 +313,13 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         } else {
             qWarning().noquote() << "prompt has unknown fog flag:" << *fog;
         }
+    } else if (!obj.getNull("fog")) {
+        if (verbose_debugging) {
+            qInfo().noquote() << "fog null";
+        }
+        promptFlags.setFogType(PromptFogEnum::NO_FOG);
     }
+    m_observer.observeFog(promptFlags.getFogType());
 
     if (auto light = obj.getString("light")) {
         if (verbose_debugging) {
@@ -336,12 +337,7 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         }
     }
 
-    if (!obj.getNull("weather")) {
-        if (verbose_debugging && promptFlags.getWeatherType() != PromptWeatherEnum::NICE) {
-            qInfo().noquote() << "weather null";
-        }
-        promptFlags.setWeatherType(PromptWeatherEnum::NICE);
-    } else if (auto weather = obj.getString("weather")) {
+    if (auto weather = obj.getString("weather")) {
         if (verbose_debugging) {
             qInfo().noquote() << "weather" << *weather;
         }
@@ -353,22 +349,13 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
             promptFlags.setWeatherType(PromptWeatherEnum::HEAVY_RAIN);
         } else if (weather == mmqt::QS_ASTERISK) {
             promptFlags.setWeatherType(PromptWeatherEnum::SNOW);
-        } else if (weather != mmqt::QS_SPACE) {
+        } else if (weather == mmqt::QS_SPACE) {
+            promptFlags.setWeatherType(PromptWeatherEnum::NICE);
+        } else {
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
     }
-
-    const auto fog = promptFlags.getFogType();
-    if (fog != m_fog) {
-        m_fog = fog;
-        m_observer.observeFog(m_fog);
-    }
-
-    const auto weather = promptFlags.getWeatherType();
-    if (weather != m_weather) {
-        m_weather = weather;
-        m_observer.observeWeather(m_weather);
-    }
+    m_observer.observeWeather(promptFlags.getWeatherType());
 }
 
 void MumeXmlParser::parseGmcpEventMoved(const JsonObj &obj)
