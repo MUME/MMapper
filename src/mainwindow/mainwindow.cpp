@@ -465,7 +465,10 @@ void MainWindow::wireConnections()
             &MapCanvas::sig_newInfomarkSelection,
             this,
             &MainWindow::slot_newInfomarkSelection);
+#ifndef __EMSCRIPTEN__
+    // QOpenGLWindow doesn't have customContextMenuRequested signal
     connect(canvas, &QWidget::customContextMenuRequested, this, &MainWindow::slot_showContextMenu);
+#endif
 
     // Group
     connect(m_groupManager, &Mmapper2Group::sig_log, this, &MainWindow::slot_log);
@@ -1087,6 +1090,10 @@ void MainWindow::hideCanvas(const bool hide)
     // REVISIT: It seems that updates don't work if the canvas is hidden,
     // so we may want to save mapChanged() and other similar requests
     // and send them after we show the canvas.
+#ifdef __EMSCRIPTEN__
+    // For WASM, MapCanvas is QObject-based and has no show/hide methods
+    Q_UNUSED(hide);
+#else
     if (MapCanvas *const canvas = getCanvas()) {
         if (hide) {
             canvas->hide();
@@ -1094,6 +1101,7 @@ void MainWindow::hideCanvas(const bool hide)
             canvas->show();
         }
     }
+#endif
 }
 
 void MainWindow::setupMenuBar()
@@ -1274,7 +1282,12 @@ void MainWindow::slot_showContextMenu(const QPoint &pos)
     mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
     mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
 
+#ifdef __EMSCRIPTEN__
+    // On WASM, MapCanvas is a QObject without mapToGlobal; use MapWindow instead
+    contextMenu->popup(m_mapWindow->mapToGlobal(pos));
+#else
     contextMenu->popup(getCanvas()->mapToGlobal(pos));
+#endif
 }
 
 void MainWindow::slot_alwaysOnTop()
@@ -1313,7 +1326,10 @@ void MainWindow::slot_setShowMenuBar()
     m_dockDialogGroup->setMouseTracking(!showMenuBar);
     m_dockDialogLog->setMouseTracking(!showMenuBar);
     m_dockDialogRoom->setMouseTracking(!showMenuBar);
+#ifndef __EMSCRIPTEN__
+    // setMouseTracking is QWidget-specific
     getCanvas()->setMouseTracking(!showMenuBar);
+#endif
 
     if (showMenuBar) {
         menuBar()->show();

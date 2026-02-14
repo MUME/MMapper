@@ -458,6 +458,8 @@ public:
 
 public:
     void checkError();
+    // Clears any pending GL errors without aborting. Returns the count of errors cleared.
+    int clearErrors();
 
 public:
     void configureFbo(int samples);

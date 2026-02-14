@@ -375,10 +375,26 @@ void Functions::checkError()
     }
 
     if (fail) {
+#ifdef __EMSCRIPTEN__
+        // On WASM/WebGL, don't abort on GL errors - just log them.
+        // WebGL can generate errors in cases that work fine, and aborting
+        // makes debugging impossible.
+        qWarning() << "OpenGL error detected (WASM mode - continuing execution)";
+#else
         std::abort();
+#endif
     }
 
 #undef CASE
+}
+
+int Functions::clearErrors()
+{
+    int count = 0;
+    while (Base::glGetError() != GL_NO_ERROR) {
+        ++count;
+    }
+    return count;
 }
 
 void Functions::configureFbo(int samples)

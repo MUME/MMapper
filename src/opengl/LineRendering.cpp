@@ -6,6 +6,7 @@
 #include <cassert>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/norm.hpp>
 
 namespace mmgl {

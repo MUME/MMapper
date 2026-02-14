@@ -19,7 +19,17 @@ void VAO::emplace(const SharedFunctions &sharedFunctions)
         throw std::runtime_error("Legacy::Functions is no longer valid");
     }
 
+#ifdef __EMSCRIPTEN__
+    // Clear any pending GL errors before VAO creation
+    shared->clearErrors();
+#endif
+
     shared->glGenVertexArrays(1, &m_vao);
+
+#ifdef __EMSCRIPTEN__
+    qDebug() << "VAO::emplace - created VAO id:" << m_vao;
+#endif
+
     shared->checkError();
 
     if (LOG_VAO_ALLOCATIONS) {

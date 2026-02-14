@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include <QGestureEvent>
 #include <QGridLayout>
 #include <QLabel>
 #include <QPixmap>
@@ -43,11 +44,30 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
 
     m_gridLayout->addWidget(m_horizontalScrollBar.get(), 1, 0, 1, 1);
 
-    m_canvas = std::make_unique<MapCanvas>(mapData, pp, gm, this);
+#ifdef __EMSCRIPTEN__
+    // WASM: Use QOpenGLWindow embedded via createWindowContainer
+    // This bypasses Qt's RHI compositing issues with WebGL
+    m_canvas = std::make_unique<MapCanvas>(mapData, pp, gm);
     MapCanvas *const canvas = m_canvas.get();
 
+    // Create a container widget to embed the QOpenGLWindow
+    QWidget *container = QWidget::createWindowContainer(canvas, this);
+    container->setMinimumSize(200, 200);
+    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    container->setFocusPolicy(Qt::StrongFocus);
+    canvas->setContainerWidget(container);
+
+    m_gridLayout->addWidget(container, 0, 0, 1, 1);
+    m_gridLayout->setRowStretch(0, 1);
+    m_gridLayout->setColumnStretch(0, 1);
+    setMinimumSize(200, 200);
+#else
+    // Desktop: Use QOpenGLWidget directly in layout
+    m_canvas = std::make_unique<MapCanvas>(mapData, pp, gm, this);
+    MapCanvas *const canvas = m_canvas.get();
     m_gridLayout->addWidget(canvas, 0, 0, 1, 1);
     setMinimumSize(canvas->minimumSizeHint());
+#endif
 
     // Splash setup
     auto createSplashPixmap = [](const QSize &targetLogicalSize, qreal dpr) -> QPixmap {
@@ -125,6 +145,9 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
         connect(canvas, &MapCanvas::sig_mapMove, this, &MapWindow::slot_mapMove);
         connect(canvas, &MapCanvas::sig_zoomChanged, this, &MapWindow::slot_zoomChanged);
     }
+
+    // Pinch-to-zoom gesture (handled here since MapWindow is always a QWidget)
+    grabGesture(Qt::PinchGesture);
 }
 
 void MapWindow::hideSplashImage()
@@ -151,6 +174,30 @@ void MapWindow::keyReleaseEvent(QKeyEvent *const event)
         return;
     }
     QWidget::keyReleaseEvent(event);
+}
+
+bool MapWindow::event(QEvent *const event)
+{
+    // Handle pinch-to-zoom gesture
+    if (event->type() == QEvent::Gesture) {
+        const auto *const gestureEvent = dynamic_cast<QGestureEvent *>(event);
+        if (gestureEvent != nullptr) {
+            QGesture *const gesture = gestureEvent->gesture(Qt::PinchGesture);
+            const auto *const pinch = dynamic_cast<QPinchGesture *>(gesture);
+            if (pinch != nullptr) {
+                const QPinchGesture::ChangeFlags changeFlags = pinch->changeFlags();
+                if (changeFlags & QPinchGesture::ScaleFactorChanged) {
+                    const auto pinchFactor = static_cast<float>(pinch->totalScaleFactor());
+                    m_canvas->setPinchZoom(pinchFactor);
+                }
+                if (pinch->state() == Qt::GestureFinished) {
+                    m_canvas->endPinchZoom();
+                }
+                return true;
+            }
+        }
+    }
+    return QWidget::event(event);
 }
 
 MapWindow::~MapWindow() = default;

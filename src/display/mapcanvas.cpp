@@ -32,7 +32,6 @@
 #include <utility>
 #include <vector>
 
-#include <QGestureEvent>
 #include <QMessageLogContext>
 #include <QOpenGLDebugMessage>
 #include <QSize>
@@ -53,6 +52,33 @@ NODISCARD static NonOwningPointer &primaryMapCanvas()
     return primary;
 }
 
+#ifdef __EMSCRIPTEN__
+// WASM: QOpenGLWindow-based constructor
+MapCanvas::MapCanvas(MapData &mapData, PrespammedPath &prespammedPath, Mmapper2Group &groupManager)
+    : QOpenGLWindow{QOpenGLWindow::NoPartialUpdate}
+    , MapCanvasViewport{static_cast<QWindow &>(*this)}
+    , MapCanvasInputState{prespammedPath}
+    , m_mapScreen{static_cast<MapCanvasViewport &>(*this)}
+    , m_opengl{}
+    , m_glFont{m_opengl}
+    , m_data{mapData}
+    , m_groupManager{groupManager}
+{
+    NonOwningPointer &pmc = primaryMapCanvas();
+    if (pmc == nullptr) {
+        pmc = this;
+    }
+
+    // Set up surface format for WebGL 2.0
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGLES);
+    format.setVersion(3, 0); // WebGL 2.0 = OpenGL ES 3.0
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+    setFormat(format);
+}
+#else
+// Desktop: QOpenGLWidget-based constructor
 MapCanvas::MapCanvas(MapData &mapData,
                      PrespammedPath &prespammedPath,
                      Mmapper2Group &groupManager,
@@ -71,10 +97,10 @@ MapCanvas::MapCanvas(MapData &mapData,
         pmc = this;
     }
 
-    setCursor(Qt::OpenHandCursor);
-    grabGesture(Qt::PinchGesture);
+    setCanvasCursor(Qt::OpenHandCursor);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
+#endif
 
 MapCanvas::~MapCanvas()
 {
@@ -89,6 +115,37 @@ MapCanvas::~MapCanvas()
 MapCanvas *MapCanvas::getPrimary()
 {
     return primaryMapCanvas();
+}
+
+QWidget *MapCanvas::getParentWidget() const
+{
+#ifdef __EMSCRIPTEN__
+    return m_containerWidget;
+#else
+    return qobject_cast<QWidget *>(parent());
+#endif
+}
+
+void MapCanvas::setCanvasCursor(const QCursor &cursor)
+{
+    if (QWidget *w = getParentWidget()) {
+        w->setCursor(cursor);
+    }
+}
+
+QCursor MapCanvas::getCanvasCursor() const
+{
+    if (QWidget *w = getParentWidget()) {
+        return w->cursor();
+    }
+    return QCursor();
+}
+
+void MapCanvas::showCanvasTooltip(const QPoint &localPos, const QString &text)
+{
+    if (QWidget *w = getParentWidget()) {
+        QToolTip::showText(w->mapToGlobal(localPos), text, w, w->rect(), 5000);
+    }
 }
 
 void MapCanvas::slot_layerUp()
@@ -123,7 +180,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
 
     switch (mode) {
     case CanvasMouseModeEnum::MOVE:
-        setCursor(Qt::OpenHandCursor);
+        setCanvasCursor(Qt::OpenHandCursor);
         break;
 
     default:
@@ -131,7 +188,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::RAYPICK_ROOMS:
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
-        setCursor(Qt::CrossCursor);
+        setCanvasCursor(Qt::CrossCursor);
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
@@ -139,7 +196,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-        setCursor(Qt::ArrowCursor);
+        setCanvasCursor(Qt::ArrowCursor);
         break;
     }
 
@@ -296,44 +353,12 @@ void MapCanvas::slot_onForcedPositionChange()
 
 bool MapCanvas::event(QEvent *const event)
 {
-    auto tryHandlePinchZoom = [this, event]() -> bool {
-        if (event->type() != QEvent::Gesture) {
-            return false;
-        }
-
-        const auto *const gestureEvent = dynamic_cast<QGestureEvent *>(event);
-        if (gestureEvent == nullptr) {
-            return false;
-        }
-
-        // Zoom in / out
-        QGesture *const gesture = gestureEvent->gesture(Qt::PinchGesture);
-        const auto *const pinch = dynamic_cast<QPinchGesture *>(gesture);
-        if (pinch == nullptr) {
-            return false;
-        }
-
-        const QPinchGesture::ChangeFlags changeFlags = pinch->changeFlags();
-        if (changeFlags & QPinchGesture::ScaleFactorChanged) {
-            const auto pinchFactor = static_cast<float>(pinch->totalScaleFactor());
-            m_scaleFactor.setPinch(pinchFactor);
-            if ((false)) {
-                zoomChanged(); // Don't call this here, because it's not true yet.
-            }
-        }
-        if (pinch->state() == Qt::GestureFinished) {
-            m_scaleFactor.endPinch();
-            zoomChanged(); // might not have actually changed
-        }
-        update();
-        return true;
-    };
-
-    if (tryHandlePinchZoom()) {
-        return true;
-    }
-
+    // Note: Must use #ifdef here because QOpenGLWidget is not declared on WASM
+#ifdef __EMSCRIPTEN__
+    return QOpenGLWindow::event(event);
+#else
     return QOpenGLWidget::event(event);
+#endif
 }
 
 void MapCanvas::slot_createRoom()
@@ -416,8 +441,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
     if (hasLeftButton && hasAlt) {
-        m_altDragState.emplace(AltDragState{event->pos(), cursor()});
-        setCursor(Qt::ClosedHandCursor);
+        m_altDragState.emplace(AltDragState{event->pos(), getCanvasCursor()});
+        setCanvasCursor(Qt::ClosedHandCursor);
         event->accept();
         return;
     }
@@ -470,7 +495,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         break;
     case CanvasMouseModeEnum::MOVE:
         if (hasLeftButton && hasSel1()) {
-            setCursor(Qt::ClosedHandCursor);
+            setCanvasCursor(Qt::ClosedHandCursor);
             startMoving(m_sel1.value());
         }
         break;
@@ -596,7 +621,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     if (m_altDragState.has_value()) {
         // The user released the Alt key mid-drag.
         if (!((event->modifiers() & Qt::ALT) != 0u)) {
-            setCursor(m_altDragState->originalCursor);
+            setCanvasCursor(m_altDragState->originalCursor);
             m_altDragState.reset();
             // Don't accept the event; let the underlying widgets handle it.
             return;
@@ -678,8 +703,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         if (hasLeftButton && hasSel1() && hasSel2()) {
             if (hasInfomarkSelectionMove()) {
                 m_infoMarkSelectionMove->pos = getSel2().pos - getSel1().pos;
-                setCursor(Qt::ClosedHandCursor);
-
+                setCanvasCursor(Qt::ClosedHandCursor);
             } else {
                 m_selectedArea = true;
             }
@@ -721,7 +745,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                 m_roomSelectionMove->pos = diff;
                 m_roomSelectionMove->wrongPlace = wrongPlace;
 
-                setCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
+                setCanvasCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
             } else {
                 m_selectedArea = true;
             }
@@ -770,7 +794,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 {
     if (m_altDragState.has_value()) {
-        setCursor(m_altDragState->originalCursor);
+        setCanvasCursor(m_altDragState->originalCursor);
         m_altDragState.reset();
         event->accept();
         return;
@@ -785,7 +809,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     switch (m_canvasMouseMode) {
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-        setCursor(Qt::ArrowCursor);
+        setCanvasCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
             if (hasInfomarkSelectionMove()) {
@@ -837,7 +861,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     case CanvasMouseModeEnum::MOVE:
         stopMoving();
-        setCursor(Qt::OpenHandCursor);
+        setCanvasCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
         }
@@ -849,11 +873,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                                  mmqt::StripAnsiEnum::Yes,
                                                  mmqt::PreviewStyleEnum::ForDisplay);
 
-                QToolTip::showText(mapToGlobal(event->position().toPoint()),
-                                   message,
-                                   this,
-                                   rect(),
-                                   5000);
+                showCanvasTooltip(event->position().toPoint(), message);
             }
         }
         break;
@@ -862,8 +882,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
-        setCursor(Qt::ArrowCursor);
-
+        setCanvasCursor(Qt::ArrowCursor);
         // This seems very unusual.
         if (m_ctrlPressed && m_altPressed) {
             break;
@@ -998,6 +1017,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
     m_ctrlPressed = false;
 }
 
+#ifndef __EMSCRIPTEN__
+// QWidget-only methods (QOpenGLWindow doesn't have these)
 QSize MapCanvas::minimumSizeHint() const
 {
     return {sizeHint().width() / 4, sizeHint().height() / 4};
@@ -1007,6 +1028,7 @@ QSize MapCanvas::sizeHint() const
 {
     return {1280, 720};
 }
+#endif
 
 void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)
 {
@@ -1111,7 +1133,11 @@ void MapCanvas::screenChanged()
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    const auto newDpi = static_cast<float>(devicePixelRatio()); // QOpenGLWindow's DPR
+#else
     const auto newDpi = static_cast<float>(QPaintDevice::devicePixelRatioF());
+#endif
     const auto oldDpi = gl.getDevicePixelRatio();
 
     if (!utils::equals(newDpi, oldDpi)) {

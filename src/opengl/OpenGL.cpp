@@ -26,6 +26,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <QDebug>
 #include <QOpenGLContext>
 #include <QSurfaceFormat>
 
@@ -237,7 +238,14 @@ void OpenGL::initializeRenderer(const float devicePixelRatio)
 
     // REVISIT: Move this somewhere else?
     GLint maxSamples = 0;
+#ifdef __EMSCRIPTEN__
+    // WebGL doesn't support GL_TEXTURE_2D_MULTISAMPLE which is needed for our
+    // multisampling FBO approach. Force disable multisampling on WASM.
+    maxSamples = 0;
+    qDebug() << "WASM: Multisampling disabled";
+#else
     getFunctions().glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+#endif
     OpenGLConfig::setMaxSamples(maxSamples);
 
     m_rendererInitialized = true;
