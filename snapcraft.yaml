@@ -27,18 +27,39 @@ apps:
     extensions:
       - kde-neon-6
     plugs:
+      - audio-playback
       - home
       - network
       - network-bind
       - opengl
+    environment:
+      ALSA_CONFIG_PATH: "$SNAP/kf6/etc/asound.conf"
+      LD_LIBRARY_PATH: "$SNAP/kf6/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:$SNAP/ffmpeg-platform/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:$SNAP/usr/lib:$SNAP/lib/:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/blas:/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/pulseaudio:${LD_LIBRARY_PATH}"
+      PATH: $SNAP/ffmpeg-platform/usr/bin:$SNAP/usr/bin:${PATH}
+      QT_MEDIA_BACKEND: "ffmpeg"
+
+plugs:
+  ffmpeg-2404:
+    interface: content
+    target: ffmpeg-platform
+    default-provider: ffmpeg-2404
+
+layout:
+  "/usr/lib/$CRAFT_ARCH_TRIPLET/alsa-lib":
+    bind: "$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/alsa-lib"
+  "/usr/share/alsa":
+    bind: "$SNAP/usr/share/alsa"
+  "/etc/alsa/conf.d":
+    bind: "$SNAP/etc/alsa/conf.d"
 
 parts:
   mmapper:
     parse-info:
       - usr/share/metainfo/org.mume.MMapper.xml
     build-snaps:
-      - kde-qt6-core24-sdk/latest/stable
-      - kf6-core24-sdk/latest/stable
+      - kde-qt6-core24-sdk
+      - kf6-core24-sdk
+      - ffmpeg-2404-sdk
     plugin: cmake
     source: .
     source-type: local
@@ -102,6 +123,6 @@ parts:
       - kf6-core24
     override-prime: |
       set -eux
-      for snap in "core24" "kf6-core24"; do
+      for snap in "core24" "kf6-core24" "ffmpeg-2404"; do
           cd "/snap/$snap/current" && find . -type f,l -exec rm -rf "${CRAFT_PRIME}/{}" \;
       done

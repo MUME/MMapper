@@ -7,6 +7,7 @@
         "--share=network",
         "--socket=wayland",
         "--socket=fallback-x11",
+        "--socket=pulseaudio",
         "--share=ipc",
         "--device=dri",
         "--filesystem=xdg-documents"
@@ -15,6 +16,7 @@
     "cleanup": [
         "*.a",
         "/arda.xml",
+        "/audio",
         "/images",
         "/include",
         "/lib/cmake",
@@ -109,6 +111,21 @@
             ]
         },
         {
+            "name": "audio",
+            "buildsystem": "simple",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/MUME/audio.git",
+                    "commit": "7d9c33fcbde7f5bf2906e4460f1a0e1aed8b5ad9"
+                }
+            ],
+            "build-commands": [
+                "mkdir -p /app/audio",
+                "cp -r . /app/audio/"
+            ]
+        },
+        {
             "name": "images",
             "buildsystem": "simple",
             "sources": [
@@ -138,6 +155,7 @@
                 "-DWITH_WEBSOCKET=ON",
                 "-DWITH_QTKEYCHAIN=ON",
                 "-DWITH_MAP=/app/arda.xml",
+                "-DWITH_AUDIO=/app/audio",
                 "-DWITH_IMAGES=/app/images/",
                 "-DWITH_TESTS=OFF",
                 "-DWITH_UPDATER=ON",

@@ -34,6 +34,7 @@
 class AbstractMapStorage;
 class AdventureTracker;
 class AdventureWidget;
+class AudioManager;
 class AutoLogger;
 class ClientWidget;
 class ConfigDialog;
@@ -69,6 +70,7 @@ class RoomSelection;
 class RoomWidget;
 class UpdateDialog;
 class DescriptionWidget;
+class MediaLibrary;
 struct MapLoadData;
 class MapDestination;
 
@@ -110,6 +112,8 @@ private:
 
     AdventureTracker *m_adventureTracker = nullptr;
     AdventureWidget *m_adventureWidget = nullptr;
+    MediaLibrary *m_mediaLibrary = nullptr;
+    AudioManager *m_audioManager = nullptr;
 
     DescriptionWidget *m_descriptionWidget = nullptr;
     std::unique_ptr<HotkeyManager> m_hotkeyManager;

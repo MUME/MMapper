@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AnsiOstream.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../proxy/connectionlistener.h"
 #include "ClientTelnet.h"
 #include "HotkeyManager.h"
@@ -49,6 +50,12 @@ ClientWidget::ClientWidget(ConnectionListener &listener,
 
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         ui.playButton->click();
+    }
+
+    auto &cfg = getConfig().audio;
+    if (NO_AUDIO || CURRENT_PLATFORM != PlatformEnum::Wasm
+        || (cfg.getMusicVolume() == 0 && cfg.getSoundVolume() == 0)) {
+        ui.audioHint->setVisible(false);
     }
 }
 

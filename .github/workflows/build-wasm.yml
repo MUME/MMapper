@@ -32,7 +32,7 @@ jobs:
         host: all_os
         arch: wasm_multithread
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
 
     - name: Setup emsdk
       uses: mymindstorm/setup-emsdk@v14

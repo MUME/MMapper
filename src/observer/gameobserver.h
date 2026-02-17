@@ -27,6 +27,8 @@ public:
     Signal2<PromptFogEnum> sig2_fogChanged;
     Signal2<MumeMoment> sig2_tick;
 
+    Signal2<> sig2_gainedLevel;
+
 private:
     MumeTimeEnum m_timeOfDay = MumeTimeEnum::UNKNOWN;
     MumeMoonPhaseEnum m_moonPhase = MumeMoonPhaseEnum::UNKNOWN;
@@ -49,6 +51,8 @@ public:
     void observeWeather(PromptWeatherEnum weather);
     void observeFog(PromptFogEnum fog);
     void observeTick(const MumeMoment &moment) { sig2_tick.invoke(moment); }
+
+    void observeGainedLevel() { sig2_gainedLevel.invoke(); }
 
 public:
     MumeTimeEnum getTimeOfDay() const { return m_timeOfDay; }

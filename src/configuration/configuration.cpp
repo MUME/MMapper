@@ -186,6 +186,7 @@ void Settings::initSettings()
     QSettings &conf = static_cast<QSettings &>(settings)
 
 ConstString GRP_ADVENTURE_PANEL = "Adventure Panel";
+ConstString GRP_AUDIO = "Audio";
 ConstString GRP_ACCOUNT = "Account";
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
@@ -265,6 +266,8 @@ ConstString KEY_LINES_OF_PEEK_PREVIEW = "Lines of peek preview";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
 ConstString KEY_PROXY_LOCAL_PORT = "Local port number";
 ConstString KEY_MAP_MODE = "Map Mode";
+ConstString KEY_MUSIC_VOLUME = "Music volume";
+ConstString KEY_SOUND_VOLUME = "Sound volume";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
@@ -481,6 +484,7 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
         GROUP_CALLBACK(callback, GRP_GROUP_MANAGER, groupManager); \
         GROUP_CALLBACK(callback, GRP_MUME_CLOCK, mumeClock); \
         GROUP_CALLBACK(callback, GRP_ADVENTURE_PANEL, adventurePanel); \
+        GROUP_CALLBACK(callback, GRP_AUDIO, audio); \
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
         GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infomarksDialog); \
         GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
@@ -752,6 +756,13 @@ void Configuration::AdventurePanelSettings::read(const QSettings &conf)
     m_displayXPStatus = conf.value(KEY_DISPLAY_XP_STATUS, true).toBool();
 }
 
+void Configuration::AudioSettings::read(const QSettings &conf)
+{
+    m_unlocked = (CURRENT_PLATFORM != PlatformEnum::Wasm);
+    m_musicVolume = std::clamp(conf.value(KEY_MUSIC_VOLUME, 50).toInt(), 0, 100);
+    m_soundVolume = std::clamp(conf.value(KEY_SOUND_VOLUME, 50).toInt(), 0, 100);
+}
+
 void Configuration::IntegratedMudClientSettings::read(const QSettings &conf)
 {
     font = conf.value(KEY_FONT, "").toString();
@@ -922,6 +933,12 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
 void Configuration::AdventurePanelSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_DISPLAY_XP_STATUS, m_displayXPStatus);
+}
+
+void Configuration::AudioSettings::write(QSettings &conf) const
+{
+    conf.setValue(KEY_MUSIC_VOLUME, m_musicVolume);
+    conf.setValue(KEY_SOUND_VOLUME, m_soundVolume);
 }
 
 void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const

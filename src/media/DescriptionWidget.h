@@ -4,33 +4,32 @@
 
 #include "../map/RoomHandle.h"
 
-#include <map>
-
 #include <QCache>
-#include <QFileSystemWatcher>
 #include <QImage>
 #include <QLabel>
 #include <QTextEdit>
 #include <QWidget>
+
+class MediaLibrary;
 
 class NODISCARD_QOBJECT DescriptionWidget final : public QWidget
 {
     Q_OBJECT
 
 private:
+    MediaLibrary &m_library;
+
     QLabel *m_label;
     QTextEdit *m_textEdit;
 
 private:
     QCache<QString, QImage> m_imageCache;
-    std::map<QString, QString> m_availableFiles;
-    QFileSystemWatcher m_watcher;
 
 private:
     QString m_fileName;
 
 public:
-    explicit DescriptionWidget(QWidget *parent = nullptr);
+    explicit DescriptionWidget(MediaLibrary &library, QWidget *parent = nullptr);
     ~DescriptionWidget() final = default;
 
 public:
@@ -44,6 +43,5 @@ protected:
     NODISCARD QSize sizeHint() const override;
 
 private:
-    void scanDirectories();
     void updateBackground();
 };

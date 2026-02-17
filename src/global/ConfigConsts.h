@@ -57,3 +57,9 @@ static inline constexpr const bool NO_GLES = true;
 #else
 static inline constexpr const bool NO_GLES = false;
 #endif
+
+#if defined(MMAPPER_NO_AUDIO) && MMAPPER_NO_AUDIO
+static inline constexpr const bool NO_AUDIO = true;
+#else
+static inline constexpr const bool NO_AUDIO = false;
+#endif

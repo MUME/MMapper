@@ -44,6 +44,7 @@ void AdventureTracker::onUserText(const QString &line)
 
     if (GainedLevelParser::parse(line)) {
         emit sig_gainedLevel();
+        m_observer.observeGainedLevel();
         return;
     }
 

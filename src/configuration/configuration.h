@@ -344,6 +344,51 @@ public:
         SUBGROUP();
     } adventurePanel;
 
+    struct NODISCARD AudioSettings final
+    {
+    private:
+        ChangeMonitor m_changeMonitor;
+        int m_musicVolume = 50;
+        int m_soundVolume = 50;
+        bool m_unlocked = false;
+
+    public:
+        explicit AudioSettings() = default;
+        ~AudioSettings() = default;
+        DELETE_CTORS_AND_ASSIGN_OPS(AudioSettings);
+
+    public:
+        NODISCARD int getMusicVolume() const { return m_musicVolume; }
+        void setMusicVolume(const int volume)
+        {
+            m_musicVolume = volume;
+            m_changeMonitor.notifyAll();
+        }
+
+        NODISCARD int getSoundVolume() const { return m_soundVolume; }
+        void setSoundVolume(const int volume)
+        {
+            m_soundVolume = volume;
+            m_changeMonitor.notifyAll();
+        }
+
+        NODISCARD bool isUnlocked() const { return m_unlocked; }
+        void setUnlocked()
+        {
+            m_unlocked = true;
+            m_changeMonitor.notifyAll();
+        }
+
+        void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
+                                    const ChangeMonitor::Function &callback)
+        {
+            return m_changeMonitor.registerChangeCallback(lifetime, callback);
+        }
+
+    private:
+        SUBGROUP();
+    } audio;
+
     struct NODISCARD IntegratedMudClientSettings final
     {
         QString font;

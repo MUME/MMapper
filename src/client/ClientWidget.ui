@@ -343,6 +343,8 @@
         <bool>true</bool>
        </property>
       </widget>
+      <widget class="AudioHintWidget" name="audioHint">
+      </widget>
       <widget class="StackedInputWidget" name="input" native="true"/>
      </widget>
     </widget>
@@ -366,6 +368,12 @@
    <class>PreviewWidget</class>
    <extends>QTextEdit</extends>
    <header>client/PreviewWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AudioHintWidget</class>
+   <extends>QWidget</extends>
+   <header>client/AudioHintWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

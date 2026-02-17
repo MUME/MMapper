@@ -9,13 +9,12 @@
 #include "../global/RAII.h"
 #include "../map/mmapper2room.h"
 #include "../preferences/ansicombo.h"
+#include "MediaLibrary.h"
 
 #include <memory>
 #include <optional>
-#include <set>
 #include <vector>
 
-#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QImageReader>
@@ -28,8 +27,9 @@ static constexpr int TOP_PADDING_LINES = 5; // Padding for the room title and de
 static constexpr int BASE_BLUR_RADIUS = 16;
 static constexpr int DOWNSCALE_FACTOR = 10;
 
-DescriptionWidget::DescriptionWidget(QWidget *const parent)
+DescriptionWidget::DescriptionWidget(MediaLibrary &library, QWidget *const parent)
     : QWidget(parent)
+    , m_library(library)
     , m_label(new QLabel(this))
     , m_textEdit(new QTextEdit(this))
 {
@@ -53,86 +53,12 @@ DescriptionWidget::DescriptionWidget(QWidget *const parent)
     font.fromString(getConfig().integratedClient.font);
     m_textEdit->setFont(font);
 
-    scanDirectories();
-
-    const auto &resourcesDir = getConfig().canvas.resourcesDirectory;
-    m_watcher.addPath(resourcesDir + "/rooms");
-    m_watcher.addPath(resourcesDir + "/areas");
-    connect(&m_watcher,
-            &QFileSystemWatcher::directoryChanged,
-            this,
-            [this](const QString & /*path*/) {
-                scanDirectories();
-                m_imageCache.clear();
-                updateBackground();
-            });
+    connect(&m_library, &MediaLibrary::sig_mediaChanged, this, [this]() {
+        m_imageCache.clear();
+        updateBackground();
+    });
 
     updateBackground();
-}
-
-void DescriptionWidget::scanDirectories()
-{
-    m_availableFiles.clear();
-
-    // Get supported image formats
-    const QByteArrayList supportedFormatsList = QImageReader::supportedImageFormats();
-    qInfo() << "Supported Image Formats:" << supportedFormatsList;
-    std::set<QString> supportedFormats;
-    for (const QByteArray &format : supportedFormatsList) {
-        supportedFormats.insert(QString::fromUtf8(format).toLower());
-    }
-
-    auto scanPath = [&](const QString &path) {
-        QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QFileInfo fileInfo(it.next());
-            QString suffix = fileInfo.suffix();
-
-            // Check if the file has a supported image extension
-            if (supportedFormats.find(suffix.toLower()) != supportedFormats.end()) {
-                QString filePath = fileInfo.filePath();
-                auto dotIndex = filePath.lastIndexOf('.');
-                if (dotIndex == -1) {
-                    assert(false);
-                    continue;
-                }
-
-                const bool isQrc = filePath.startsWith(":/");
-                QString baseName;
-                if (isQrc) {
-                    baseName = filePath.left(dotIndex);
-                } else {
-                    QString resourcesPath = getConfig().canvas.resourcesDirectory;
-                    if (!filePath.startsWith(resourcesPath)) {
-                        assert(false);
-                        continue;
-                    }
-                    baseName = filePath.mid(resourcesPath.length())
-                                   .left(dotIndex - resourcesPath.length());
-                }
-
-                if (baseName.isEmpty()) {
-                    assert(false);
-                    continue;
-                }
-
-                if (!isQrc) {
-                    qDebug() << "Found file:" << fileInfo.filePath() << "Base name:" << baseName
-                             << "Suffix:" << suffix;
-                }
-                m_availableFiles.insert({baseName, suffix});
-            }
-        }
-    };
-
-    // Scan file system directories and QRC resources
-    const auto &resourcesDir = getConfig().canvas.resourcesDirectory;
-    scanPath(resourcesDir + "/rooms");
-    scanPath(resourcesDir + "/areas");
-    scanPath(":/rooms");
-    scanPath(":/areas");
-
-    qInfo() << "Scanned background directories. Found" << m_availableFiles.size() << "files.";
 }
 
 void DescriptionWidget::resizeEvent(QResizeEvent *event)
@@ -161,18 +87,13 @@ QSize DescriptionWidget::sizeHint() const
 
 void DescriptionWidget::updateBackground()
 {
-    const auto loadAndCacheImage = [&](const QString &fileName) -> QImage * {
-        if (fileName.isEmpty()) {
+    const auto loadAndCacheImage = [&](const QString &imagePath) -> QImage * {
+        if (imagePath.isEmpty()) {
             return nullptr;
         }
 
-        if (QImage *cachedImage = m_imageCache.object(fileName)) {
+        if (QImage *cachedImage = m_imageCache.object(imagePath)) {
             return cachedImage;
-        }
-
-        QString imagePath = fileName;
-        if (!fileName.startsWith(":/")) {
-            imagePath = getConfig().canvas.resourcesDirectory + fileName;
         }
 
         std::unique_ptr<QImage> temp = std::make_unique<QImage>();
@@ -181,8 +102,8 @@ void DescriptionWidget::updateBackground()
             return nullptr;
         }
 
-        m_imageCache.insert(fileName, temp.release());
-        return m_imageCache.object(fileName);
+        m_imageCache.insert(imagePath, temp.release());
+        return m_imageCache.object(imagePath);
     };
 
     QImage *const baseImage = loadAndCacheImage(m_fileName);
@@ -312,57 +233,23 @@ void DescriptionWidget::updateRoom(const RoomHandle &r)
 
     // Track if a new filename is being set to avoid redundant updates
     QString newFileName;
-    bool fileNameChanged = false;
-
-    auto findPrioritizedImage =
-        [&](const QString &baseNameWithoutPrefix) -> std::optional<std::pair<QString, QString>> {
-        // Check file system path first
-        QString fileSystemBaseName = "/" + baseNameWithoutPrefix;
-        auto it = m_availableFiles.find(fileSystemBaseName);
-        if (it != m_availableFiles.end()) {
-            return std::make_optional(std::pair<QString, QString>(it->first, it->second));
-        }
-
-        // If not found, check QRC path
-        QString qrcBaseName = ":/" + baseNameWithoutPrefix;
-        it = m_availableFiles.find(qrcBaseName);
-        if (it != m_availableFiles.end()) {
-            return std::make_optional<std::pair<QString, QString>>(it->first, it->second);
-        }
-
-        return std::nullopt;
-    };
-
-    auto trySetFileName = [&](const QString &baseNameWithoutPrefix) {
-        if (auto optFound = findPrioritizedImage(baseNameWithoutPrefix)) {
-            const auto &found = optFound.value();
-            newFileName = found.first + "." + found.second;
-            fileNameChanged = true;
-        }
-    };
 
     const ServerRoomId id = r.getServerId();
     if (id != INVALID_SERVER_ROOMID) {
-        QString baseNameWithoutPrefix = QString("rooms/%1").arg(id.asUint32());
-        trySetFileName(baseNameWithoutPrefix);
+        newFileName = m_library.findImage("rooms", QString::number(id.asUint32()));
     }
 
-    if (!fileNameChanged || newFileName.isEmpty()) {
+    if (newFileName.isEmpty()) {
         const RoomArea &area = r.getArea();
         static const QRegularExpression regex("^the\\s+");
-        QString baseNameWithoutPrefix = area.toQString().toLower().remove(regex).replace(' ', '-');
-        mmqt::toAsciiInPlace(baseNameWithoutPrefix);
-        baseNameWithoutPrefix = "areas/" + baseNameWithoutPrefix;
-        trySetFileName(baseNameWithoutPrefix);
+        QString areaName = area.toQString().toLower().remove(regex).replace(' ', '-');
+        mmqt::toAsciiInPlace(areaName);
+        newFileName = m_library.findImage("areas", areaName);
     }
 
     // Only update background if the filename has changed
-    if (fileNameChanged && newFileName != m_fileName) {
+    if (newFileName != m_fileName) {
         m_fileName = newFileName;
-        updateBackground();
-    } else if (!fileNameChanged && !m_fileName.isEmpty()) {
-        // If no new file was found and there was a previous file, clear it.
-        m_fileName = "";
         updateBackground();
     }
 

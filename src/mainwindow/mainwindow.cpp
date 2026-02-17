@@ -24,13 +24,15 @@
 #include "../global/window_utils.h"
 #include "../group/groupwidget.h"
 #include "../logger/autologger.h"
+#include "../media/AudioManager.h"
+#include "../media/DescriptionWidget.h"
+#include "../media/MediaLibrary.h"
 #include "../pathmachine/mmapper2pathmachine.h"
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
 #include "../viewers/TopLevelWindows.h"
-#include "DescriptionWidget.h"
 #include "MapZoomSlider.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
@@ -136,7 +138,9 @@ MainWindow::MainWindow()
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_gameObserver = std::make_unique<GameObserver>();
+    m_mediaLibrary = new MediaLibrary(this);
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
+    m_audioManager = new AudioManager(deref(m_mediaLibrary), deref(m_gameObserver), this);
 
     // View -> Side Panels -> Log Panel
     m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
@@ -197,7 +201,7 @@ MainWindow::MainWindow()
     m_dockDialogAdventure->hide();
 
     // View -> Side Panels -> Description / Area Panel
-    m_descriptionWidget = new DescriptionWidget(this);
+    m_descriptionWidget = new DescriptionWidget(deref(m_mediaLibrary), this);
     m_dockDialogDescription = new QDockWidget(tr("Description Panel"), this);
 
     m_hotkeyManager = std::make_unique<HotkeyManager>();
@@ -410,12 +414,14 @@ void MainWindow::wireConnections()
             [this](const RoomId &id) {
                 if (const auto room = m_mapData->getRoomHandle(id)) {
                     m_descriptionWidget->updateRoom(room);
+                    m_audioManager->onAreaChanged(room.getArea());
                 }
             });
 
     connect(m_mapData, &MapData::sig_onPositionChange, this, [this]() {
         m_pathMachine->onPositionChange(m_mapData->getCurrentRoomId());
         m_descriptionWidget->updateRoom(m_mapData->getCurrentRoom());
+        m_audioManager->onAreaChanged(m_mapData->getCurrentRoom().getArea());
     });
 
     connect(m_mapData,
@@ -1569,6 +1575,7 @@ void MainWindow::forceNewFile()
     getCanvas()->slot_dataLoaded();
     m_groupWidget->slot_mapLoaded();
     m_descriptionWidget->updateRoom(RoomHandle{});
+    m_audioManager->onAreaChanged(RoomArea{});
 
     /*
     updateMapModified();
@@ -2127,6 +2134,7 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
     if (const auto room = mapData.getCurrentRoom()) {
         auto &widget = deref(m_descriptionWidget);
         widget.updateRoom(room);
+        deref(m_audioManager).onAreaChanged(room.getArea());
     }
 
     // Should this be part of mapChanged?

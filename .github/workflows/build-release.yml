@@ -40,6 +40,7 @@ jobs:
         sudo apt update -qq
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          qt6-multimedia-dev libqt6multimedia6 \
           libgl1-mesa-dev qtkeychain-qt6-dev build-essential cmake ninja-build mold git \
           zlib1g-dev libssl-dev
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV
@@ -55,11 +56,11 @@ jobs:
         version: 6.5.3
         arch: clang_64
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
 
     # Install Dependencies (Windows)
     - if: runner.os == 'Windows'
@@ -70,7 +71,7 @@ jobs:
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
 
     # Build
     - if: runner.os == 'Windows'

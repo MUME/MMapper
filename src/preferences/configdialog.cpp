@@ -7,6 +7,7 @@
 #include "configdialog.h"
 
 #include "../configuration/configuration.h"
+#include "audiopage.h"
 #include "autologpage.h"
 #include "clientpage.h"
 #include "generalpage.h"
@@ -37,6 +38,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     auto clientPage = new ClientPage(this);
     auto groupPage = new GroupPage(this);
     auto autoLogPage = new AutoLogPage(this);
+    auto audioPage = new AudioPage(this);
     auto mumeProtocolPage = new MumeProtocolPage(this);
     auto pathmachinePage = new PathmachinePage(this);
 
@@ -49,6 +51,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     pagesWidget->addWidget(clientPage);
     pagesWidget->addWidget(groupPage);
     pagesWidget->addWidget(autoLogPage);
+    pagesWidget->addWidget(audioPage);
     pagesWidget->addWidget(mumeProtocolPage);
     pagesWidget->addWidget(pathmachinePage);
     pagesWidget->setCurrentIndex(0);
@@ -68,6 +71,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, audioPage, &AudioPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, groupPage, &GroupPage::slot_loadConfig);
     connect(groupPage,
             &GroupPage::sig_groupSettingsChanged,
@@ -130,6 +134,7 @@ void ConfigDialog::createIcons()
     addItem(":/icons/terminal.png", tr("Integrated\nMud Client"));
     addItem(":/icons/group-recolor.png", tr("Group Panel"));
     addItem(":/icons/autologgercfg.png", tr("Auto\nLogger"));
+    addItem(":/icons/audiocfg.png", tr("Audio"));
     addItem(":/icons/mumeprotocolcfg.png", tr("Mume\nProtocol"));
     addItem(":/icons/pathmachinecfg.png", tr("Path\nMachine"));
 }

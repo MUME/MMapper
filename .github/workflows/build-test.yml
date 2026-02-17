@@ -53,6 +53,7 @@ jobs:
         sudo apt update -qq
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          qt6-multimedia-dev libqt6multimedia6 \
           libgl1-mesa-dev qtkeychain-qt6-dev build-essential cmake ninja-build mold git \
           zlib1g-dev libssl-dev
     - if: runner.os == 'Linux' && matrix.compiler == 'gcc'
@@ -84,12 +85,12 @@ jobs:
         version: 6.5.3
         arch: clang_64
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
         brew install lcov
-        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DUSE_CODE_COVERAGE=true -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
+        echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR -DUSE_CODE_COVERAGE=true -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
         echo "COVERAGE=false" >> $GITHUB_ENV
 
       #
@@ -103,7 +104,7 @@ jobs:
         dir: 'C:\'
         arch: win64_msvc2019_64
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
     - if: runner.os == 'Windows' && matrix.compiler == 'gcc'
       name: Install Qt for Windows (MinGW)
       uses: jurplel/install-qt-action@v4
@@ -112,7 +113,7 @@ jobs:
         dir: 'C:\'
         arch: win64_mingw
         cache: true
-        modules: 'qtwebsockets'
+        modules: 'qtwebsockets qtmultimedia'
         tools: 'tools_mingw1310'
 
       #

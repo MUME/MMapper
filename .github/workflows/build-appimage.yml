@@ -34,6 +34,7 @@ jobs:
       run: |
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
+          qt6-multimedia-dev libqt6multimedia6 \
           libgl1-mesa-dev qt6-wayland qtkeychain-qt6-dev build-essential mold git \
           zlib1g-dev libssl-dev wget zsync fuse file cmake libxcb-cursor-dev
 
