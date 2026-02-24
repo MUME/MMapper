@@ -172,7 +172,8 @@ public:
     void setTextureLookup(MMTextureId, SharedMMTexture);
 
 public:
-    void initArrayFromFiles(const SharedMMTexture &array, const std::vector<QString> &input);
-    void initArrayFromImages(const SharedMMTexture &array,
-                             const std::vector<std::vector<QImage>> &input);
+    void uploadArrayLayer(const SharedMMTexture &array,
+                          int layer,
+                          const std::vector<QImage> &images);
+    void generateMipmaps(const SharedMMTexture &array);
 };

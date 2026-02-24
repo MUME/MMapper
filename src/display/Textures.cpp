@@ -4,6 +4,7 @@
 #include "Textures.h"
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/thread_utils.h"
 #include "../global/utils.h"
 #include "../opengl/OpenGLTypes.h"
@@ -11,10 +12,13 @@
 #include "RoadIndex.h"
 #include "mapcanvas.h"
 
+#include <algorithm>
 #include <array>
-#include <optional>
+#include <map>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -27,6 +31,102 @@ MMTextureId allocateTextureId()
     static MMTextureId next{0};
     return next++;
 }
+
+namespace { // anonymous
+struct NODISCARD Measurements final
+{
+    int max_input_w = 0;
+    int max_input_h = 0;
+    int total_layers = 0;
+    int max_manual_mip_levels = 0;
+    bool has_file = false;
+    bool has_image = false;
+    std::map<int, int> counts;
+
+    void add(const std::string_view groupName, const SharedMMTexture &pTex)
+    {
+        const MMTexture &tex = deref(pTex);
+        const QOpenGLTexture &qtex = deref(tex.get());
+
+        const int w = qtex.width();
+        const int h = qtex.height();
+        const int s = std::max(w, h);
+
+        max_input_w = std::max(max_input_w, w);
+        max_input_h = std::max(max_input_h, h);
+        total_layers += 1;
+
+        const bool useImages = tex.getName().isEmpty();
+        if (useImages) {
+            has_image = true;
+            const int numImages = static_cast<int>(pTex->getImages().size());
+            max_manual_mip_levels = std::max(max_manual_mip_levels, numImages);
+        } else {
+            has_file = true;
+        }
+
+        const int nearest = static_cast<int>(utils::nearestPowerOfTwo(static_cast<uint32_t>(s)));
+        counts[nearest]++;
+
+        const std::string name = mmqt::toStdStringUtf8(tex.getName());
+        if (w != h) {
+            MMLOG_WARNING() << "[Textures] Warning in group '" << groupName << "': Image '" << name
+                            << "' is not square (" << w << "x" << h << ").";
+            if (useImages) {
+                throw std::runtime_error("image must be square");
+            }
+        }
+        if (!utils::isPowerOfTwo(static_cast<uint32_t>(w))
+            || !utils::isPowerOfTwo(static_cast<uint32_t>(h))) {
+            MMLOG_WARNING() << "[Textures] Warning in group '" << groupName << "': Image '" << name
+                            << "' is not a power of two (" << w << "x" << h << ").";
+            if (useImages) {
+                throw std::runtime_error("image size must be a power of two");
+            }
+        }
+    }
+
+    NODISCARD int getWinner() const
+    {
+        int winner = 0;
+        int maxCount = 0;
+        for (auto const &[size, count] : counts) {
+            if (count > maxCount || (count == maxCount && size > winner)) {
+                winner = size;
+                maxCount = count;
+            }
+        }
+        return winner;
+    }
+
+    void validate(const std::string_view groupName) const
+    {
+        if (total_layers == 0) {
+            throw std::runtime_error("Empty texture group: " + std::string(groupName));
+        }
+        if (has_file && has_image) {
+            throw std::runtime_error("Mixed file and image textures in group: "
+                                     + std::string(groupName));
+        }
+    }
+
+    void log(const std::string_view groupName, const int winner) const
+    {
+        auto &&os = MMLOG();
+        os << "[initTextures] Picking " << winner << "x" << winner << " for array group '"
+           << groupName << "' (distribution: ";
+        bool first = true;
+        for (auto const &[size, count] : counts) {
+            if (!first) {
+                os << ", ";
+            }
+            os << size << "x" << size << ":" << count;
+            first = false;
+        }
+        os << ")\n";
+    }
+};
+} // namespace
 
 MMTexture::MMTexture(Badge<MMTexture>, const QString &name)
     : m_qt_texture{QOpenGLTexture::Target2D}
@@ -265,10 +365,15 @@ NODISCARD static std::vector<QImage> createDottedWallImages(const ExitDirEnum di
 }
 
 template<typename Type>
-static void appendAll(std::vector<SharedMMTexture> &v, Type &&things)
+static void appendAll(std::vector<SharedMMTexture> &v, Type &&thing)
 {
-    for (const SharedMMTexture &t : things)
-        v.emplace_back(t);
+    if constexpr (std::is_same_v<std::decay_t<Type>, SharedMMTexture>) {
+        v.emplace_back(std::forward<Type>(thing));
+    } else {
+        for (const SharedMMTexture &t : thing) {
+            v.emplace_back(t);
+        }
+    }
 }
 
 template<typename... Types>
@@ -339,202 +444,152 @@ void MapCanvas::initTextures()
         return id;
     };
 
-    {
-        textures.for_each([&assignId](SharedMMTexture &pTex) {
-            //
-            MAYBE_UNUSED auto ignored = assignId(pTex);
-        });
-    }
+    Measurements global_m;
+    textures.for_each([&assignId, &global_m](SharedMMTexture &pTex) {
+        MAYBE_UNUSED auto ignored = assignId(pTex);
+        global_m.add("global", pTex);
+    });
 
     {
-        // We're going to create a texture with Target2DArray.
-        // Measure first.
-
-        struct NODISCARD Measurements final
-        {
-            int max_xy_size = 0;
-            int layer_count = 0;
-            int max_mip_levels = 0;
-        };
-
-        const Measurements m = std::invoke([&textures]() -> Measurements {
-            Measurements m2;
-            textures.for_each([&m2](const SharedMMTexture &pTex) -> void {
-                const auto &tex = deref(pTex);
-                const QOpenGLTexture &qtex = deref(tex.get());
-                assert(qtex.target() == QOpenGLTexture::Target2D);
-
-                const int width = qtex.width();
-                const int height = qtex.height();
-                assert(width == height);
-
-                m2.max_xy_size = std::max(m2.max_xy_size, std::max(width, height));
-                m2.layer_count += 1;
-                m2.max_mip_levels = std::max(m2.max_mip_levels, qtex.mipLevels());
-            });
-            return m2;
-        });
-
-        auto maybeCreateArray2 = [&assignId, &opengl](auto &thing, SharedMMTexture &pArrayTex) {
-            std::optional<std::pair<int, int>> bounds;
-            auto getBounds = [](const auto &x) {
-                return std::make_pair<int, int>(x->get()->width(), x->get()->height());
-            };
-            QOpenGLTexture *pFirst = nullptr;
-
+        auto maybeCreateArray2 = [&assignId, &opengl](const std::string_view groupName,
+                                                      const auto &thing,
+                                                      SharedMMTexture &pArrayTex) {
+            Measurements group_m;
             for (const SharedMMTexture &x : thing) {
-                if (!bounds) {
-                    pFirst = x->get();
-                    bounds = getBounds(x);
-                    const auto size = bounds->first;
-                    if (size != bounds->second)
-                        throw std::runtime_error("image must be square");
-                    if (!utils::isPowerOfTwo(static_cast<uint32_t>(size)))
-                        throw std::runtime_error("image size must be a power of two");
-                }
-
-                if (bounds != getBounds(x)) {
-                    throw std::runtime_error("oops");
-                }
+                group_m.add(groupName, x);
             }
 
-            auto &first = deref(pFirst);
-            std::vector<QString> fileInputs;
-            std::vector<std::vector<QImage>> imageInputs;
-            int maxWidth = 0;
-            int maxHeight = 0;
-            int maxMipLevel = 0;
+            group_m.validate(groupName);
 
-            for (const auto &x : thing) {
-                if (!x->getName().isEmpty()) {
-                    const QString filename = x->getName();
-                    fileInputs.emplace_back(filename);
-                    const QImage image{filename};
-                    maxWidth = std::max(maxWidth, image.width());
-                    maxHeight = std::max(maxHeight, image.height());
-                } else {
-                    const auto &images = x->getImages();
-                    imageInputs.emplace_back(images);
-                    auto &front = images.front();
-                    assert(front.width() == front.height());
-                    maxWidth = std::max(maxWidth, front.width());
-                    maxHeight = std::max(maxHeight, front.height());
-                    maxMipLevel = std::max(maxMipLevel, static_cast<int>(images.size()));
-                }
-            }
+            const int targetWidth = group_m.getWinner();
+            const int targetHeight = targetWidth;
 
-            const bool useImages = fileInputs.empty();
-            if (!useImages) {
-                assert(imageInputs.empty());
-            }
-            const auto numLayers = useImages ? imageInputs.size() : fileInputs.size();
-            if (useImages) {
-                assert(first.mipLevels() == maxMipLevel);
-            }
+            group_m.log(groupName, targetWidth);
 
-            auto init2dTextureArray =
-                [useImages, numLayers, maxWidth, maxHeight, maxMipLevel, &first](
-                    QOpenGLTexture &tex) {
-                    using Dir = QOpenGLTexture::CoordinateDirection;
-                    tex.setWrapMode(Dir::DirectionS, first.wrapMode(Dir::DirectionS));
-                    tex.setWrapMode(Dir::DirectionT, first.wrapMode(Dir::DirectionT));
-                    tex.setMinMagFilters(first.minificationFilter(), first.magnificationFilter());
-                    tex.setAutoMipMapGenerationEnabled(false);
-                    tex.create();
-                    tex.setSize(maxWidth, maxHeight, 1);
-                    tex.setLayers(static_cast<int>(numLayers));
-                    tex.setMipLevels(useImages ? maxMipLevel : tex.maximumMipLevels());
-                    tex.setFormat(first.format());
-                    tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA,
-                                        QOpenGLTexture::PixelType::UInt8);
-                };
+            auto &first = deref(thing.front()->get());
+            const bool useImages = !group_m.has_file;
+            const int manualMipLevels = group_m.max_manual_mip_levels;
 
-            {
-                const bool forbidUpdates = useImages;
-                pArrayTex = MMTexture::alloc(QOpenGLTexture::Target2DArray,
-                                             init2dTextureArray,
-                                             forbidUpdates);
-                if (useImages) {
-                    opengl.initArrayFromImages(pArrayTex, imageInputs);
-                } else {
-                    opengl.initArrayFromFiles(pArrayTex, fileInputs);
-                }
-                assert(pArrayTex->canBeUpdated() == !forbidUpdates);
-            }
+            auto init2dTextureArray = [useImages,
+                                       numLayers = static_cast<int>(thing.size()),
+                                       targetWidth,
+                                       targetHeight,
+                                       manualMipLevels,
+                                       &first](QOpenGLTexture &tex) {
+                using Dir = QOpenGLTexture::CoordinateDirection;
+                tex.setWrapMode(Dir::DirectionS, first.wrapMode(Dir::DirectionS));
+                tex.setWrapMode(Dir::DirectionT, first.wrapMode(Dir::DirectionT));
+                tex.setMinMagFilters(first.minificationFilter(), first.magnificationFilter());
+                tex.setAutoMipMapGenerationEnabled(false);
+                tex.create();
+                tex.setSize(targetWidth, targetHeight, 1);
+                tex.setLayers(numLayers);
+                tex.setMipLevels(useImages ? manualMipLevels : tex.maximumMipLevels());
+                tex.setFormat(first.format());
+                tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA,
+                                    QOpenGLTexture::PixelType::UInt8);
+            };
+
+            const bool forbidUpdates = useImages;
+            pArrayTex = MMTexture::alloc(QOpenGLTexture::Target2DArray,
+                                         init2dTextureArray,
+                                         forbidUpdates);
+            assert(pArrayTex->canBeUpdated() == !forbidUpdates);
             const auto id = assignId(pArrayTex);
 
             int pos = 0;
             for (const SharedMMTexture &x : thing) {
+                if (useImages) {
+                    auto images = x->getImages();
+                    for (size_t level = 0; level < images.size(); ++level) {
+                        const int tw = std::max(1, targetWidth >> level);
+                        const int th = std::max(1, targetHeight >> level);
+                        if (images[level].width() != tw || images[level].height() != th) {
+                            throw std::runtime_error("image size wrong for level");
+                        }
+                        images[level] = images[level].convertToFormat(QImage::Format_RGBA8888);
+                    }
+                    opengl.uploadArrayLayer(pArrayTex, pos, images);
+                } else {
+                    QImage image = QImage{x->getName()}.mirrored().convertToFormat(
+                        QImage::Format_RGBA8888);
+                    if (image.width() != targetWidth || image.height() != targetHeight) {
+                        MMLOG_WARNING()
+                            << "[initTextures] Group '" << groupName << "': Image '"
+                            << mmqt::toStdStringUtf8(x->getName()) << "' has dimensions "
+                            << image.width() << "x" << image.height() << ", but the array expects "
+                            << targetWidth << "x" << targetHeight << ". Resizing.";
+
+                        image = image.scaled(targetWidth,
+                                             targetHeight,
+                                             Qt::IgnoreAspectRatio,
+                                             Qt::SmoothTransformation);
+                    }
+                    opengl.uploadArrayLayer(pArrayTex, pos, {image});
+                }
                 x->setArrayPosition(MMTexArrayPosition{id, pos});
                 pos += 1;
             }
-        };
 
-        {
-            using One = std::array<SharedMMTexture, 1>;
-            One no_ride{textures.no_ride};
-            SharedMMTexture pArrayTex;
-            auto thing = combine(textures.load, textures.mob, no_ride);
-            maybeCreateArray2(thing, pArrayTex);
-            textures.load_Array = textures.mob_Array = textures.no_ride_Array = pArrayTex;
-        }
-
-        {
-            SharedMMTexture pArrayTex;
-            auto thing = combine(textures.terrain, textures.road);
-            maybeCreateArray2(thing, pArrayTex);
-            textures.terrain_Array = textures.road_Array = pArrayTex;
-        }
-
-        {
-            SharedMMTexture pArrayTex;
-            std::vector<SharedMMTexture> pixels{textures.white_pixel};
-            maybeCreateArray2(pixels, pArrayTex);
-            textures.white_pixel_Array = pArrayTex;
-        }
-
-        {
-            using Four = std::array<SharedMMTexture, 4>;
-            Four exits{textures.exit_climb_down,
-                       textures.exit_climb_up,
-                       textures.exit_down,
-                       textures.exit_up};
-            SharedMMTexture pArrayTex;
-            maybeCreateArray2(exits, pArrayTex);
-            textures.exit_climb_down_Array = textures.exit_climb_up_Array = textures.exit_down_Array
-                = textures.exit_up_Array = pArrayTex;
-        }
-
-        auto maybeCreateArray = [&maybeCreateArray2](auto &thing, SharedMMTexture &pArrayTex) {
-            if (pArrayTex)
-                return;
-            if constexpr (std::is_same_v<std::decay_t<decltype(thing)>, SharedMMTexture>) {
-                using JustOne = std::array<SharedMMTexture, 1>;
-                JustOne justOne{thing};
-                maybeCreateArray2(justOne, pArrayTex);
-            } else {
-                maybeCreateArray2(thing, pArrayTex);
+            if (!useImages) {
+                opengl.generateMipmaps(pArrayTex);
             }
         };
 
-#define XTEX(_TYPE, _NAME) maybeCreateArray(textures._NAME, textures._NAME##_Array);
+        auto initGroup = [&](const std::string_view groupName, auto &&...sources) {
+            SharedMMTexture pArrayTex;
+            auto thing = combine(std::forward<decltype(sources)>(sources)...);
+            maybeCreateArray2(groupName, thing, pArrayTex);
+            return pArrayTex;
+        };
+
+        textures.load_Array = textures.mob_Array = textures.no_ride_Array
+            = initGroup("load+mob+no_ride", textures.load, textures.mob, textures.no_ride);
+
+        textures.terrain_Array = textures.road_Array = initGroup("terrain+road",
+                                                                 textures.terrain,
+                                                                 textures.road);
+
+        textures.white_pixel_Array = initGroup("white_pixel", textures.white_pixel);
+
+        textures.exit_climb_down_Array = textures.exit_climb_up_Array = textures.exit_down_Array
+            = textures.exit_up_Array = initGroup("exits",
+                                                 textures.exit_climb_down,
+                                                 textures.exit_climb_up,
+                                                 textures.exit_down,
+                                                 textures.exit_up);
+
+        auto maybeCreateArray =
+            [&](const std::string_view groupName, auto &thing, SharedMMTexture &pArrayTex) {
+                if (pArrayTex)
+                    return;
+                pArrayTex = initGroup(groupName, thing);
+            };
+
+#define XTEX(_TYPE, _NAME) maybeCreateArray(#_NAME, textures._NAME, textures._NAME##_Array);
         XFOREACH_MAPCANVAS_TEXTURES(XTEX)
 #undef XTEX
 
         {
             auto &&os = MMLOG();
-            os << "[initTextures] measurements:\n";
+            os << "[initTextures] Global measurement summary:\n";
 
 #define PRINT(x) \
     do { \
-        os << " " #x " = " << (x) << "\n"; \
+        os << "  global_m." #x " = " << (global_m.x) << "\n"; \
     } while (false)
 
-            PRINT(m.max_xy_size);
-            PRINT(m.layer_count);
-            PRINT(m.max_mip_levels);
+            PRINT(max_input_w);
+            PRINT(max_input_h);
+            PRINT(total_layers);
+            PRINT(max_manual_mip_levels);
 
 #undef PRINT
+
+            os << " Global size distribution:\n";
+            for (auto const &[size, count] : global_m.counts) {
+                os << "  - " << size << "x" << size << ": " << count << " image(s)\n";
+            }
         }
     }
 

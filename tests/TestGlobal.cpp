@@ -24,6 +24,7 @@
 #include "../src/global/int_cast.h"
 #include "../src/global/string_view_utils.h"
 #include "../src/global/unquote.h"
+#include "../src/global/utils.h"
 
 #include <tuple>
 
@@ -293,6 +294,55 @@ void TestGlobal::indexedVectorWithDefaultTest()
 void TestGlobal::lineUtilsTest()
 {
     test::testLineUtils();
+}
+
+void TestGlobal::powerOfTwoTest()
+{
+    using namespace utils;
+
+    // Test isPowerOfTwo
+    QVERIFY(isPowerOfTwo(1u));
+    QVERIFY(isPowerOfTwo(2u));
+    QVERIFY(isPowerOfTwo(4u));
+    QVERIFY(isPowerOfTwo(1024u));
+    QVERIFY(!isPowerOfTwo(0u));
+    QVERIFY(!isPowerOfTwo(3u));
+    QVERIFY(!isPowerOfTwo(1023u));
+
+    // Test nextPowerOfTwo uint8_t
+    QCOMPARE(nextPowerOfTwo<uint8_t>(0), 1u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(1), 1u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(2), 2u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(3), 4u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(127), 128u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(128), 128u);
+    QCOMPARE(nextPowerOfTwo<uint8_t>(129), 128u); // Clamped!
+    QCOMPARE(nextPowerOfTwo<uint8_t>(255), 128u); // Clamped!
+
+    // Test nextPowerOfTwo uint32_t
+    QCOMPARE(nextPowerOfTwo<uint32_t>(0), 1u);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(1023), 1024u);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(1024), 1024u);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(1025), 2048u);
+    constexpr uint32_t maxP2_32 = 1u << 31;
+    QCOMPARE(nextPowerOfTwo<uint32_t>(maxP2_32 - 1), maxP2_32);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(maxP2_32), maxP2_32);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(maxP2_32 + 1), maxP2_32);
+    QCOMPARE(nextPowerOfTwo<uint32_t>(0xFFFFFFFFu), maxP2_32);
+
+    // Test nearestPowerOfTwo uint8_t
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(0), 1u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(1), 1u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(2), 2u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(3), 4u); // Ties round up
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(5), 4u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(6), 8u); // Ties round up
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(7), 8u);
+
+    // Test nearestPowerOfTwo near max
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(128), 128u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(129), 128u);
+    QCOMPARE(nearestPowerOfTwo<uint8_t>(255), 128u);
 }
 
 namespace { // anonymous

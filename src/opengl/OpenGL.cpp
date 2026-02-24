@@ -280,7 +280,9 @@ void OpenGL::setTextureLookup(const MMTextureId id, SharedMMTexture tex)
     getFunctions().getTexLookup().set(id, std::move(tex));
 }
 
-void OpenGL::initArrayFromFiles(const SharedMMTexture &array, const std::vector<QString> &input)
+void OpenGL::uploadArrayLayer(const SharedMMTexture &array,
+                              int layer,
+                              const std::vector<QImage> &images)
 {
     auto &gl = getFunctions();
     MMTexture &tex = deref(array);
@@ -289,22 +291,17 @@ void OpenGL::initArrayFromFiles(const SharedMMTexture &array, const std::vector<
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D_ARRAY, qtex.textureId());
 
-    const auto numLayers = static_cast<GLsizei>(input.size());
-    for (GLsizei i = 0; i < numLayers; ++i) {
-        const QImage image = QImage{input[static_cast<size_t>(i)]}.mirrored().convertToFormat(
-            QImage::Format_RGBA8888);
-        if (image.width() != qtex.width() || image.height() != qtex.height()) {
-            std::ostringstream oss;
-            oss << "Image is " << image.width() << "x" << image.height() << ", but expected "
-                << qtex.width() << "x" << qtex.height();
-            auto s = std::move(oss).str();
-            MMLOG_ERROR() << s.c_str();
-        }
+    assert(images.size() <= static_cast<size_t>(qtex.mipLevels()));
+    for (size_t level_num = 0; level_num < images.size(); ++level_num) {
+        assert(images[level_num].width() == std::max(1, qtex.width() >> level_num));
+        assert(images[level_num].height() == std::max(1, qtex.height() >> level_num));
+
+        const QImage &image = images[level_num];
         gl.glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+                           static_cast<GLint>(level_num),
                            0,
                            0,
-                           0,
-                           i,
+                           layer,
                            image.width(),
                            image.height(),
                            1,
@@ -313,12 +310,10 @@ void OpenGL::initArrayFromFiles(const SharedMMTexture &array, const std::vector<
                            image.constBits());
     }
 
-    gl.glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
-void OpenGL::initArrayFromImages(const SharedMMTexture &array,
-                                 const std::vector<std::vector<QImage>> &input)
+void OpenGL::generateMipmaps(const SharedMMTexture &array)
 {
     auto &gl = getFunctions();
     MMTexture &tex = deref(array);
@@ -326,41 +321,6 @@ void OpenGL::initArrayFromImages(const SharedMMTexture &array,
 
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D_ARRAY, qtex.textureId());
-
-    const auto numImages = input.size();
-    for (size_t z = 0; z < numImages; ++z) {
-        const auto &layer = input[z];
-        const auto numLevels = layer.size();
-        assert(numLevels > 0);
-        const auto ipow2 = 1 << (numLevels - 1);
-        assert(ipow2 == layer.front().width());
-        assert(ipow2 == layer.front().height());
-
-        for (size_t level_num = 0; level_num < numLevels; ++level_num) {
-            const QImage image = layer[level_num].convertToFormat(QImage::Format_RGBA8888);
-            if (image.width() != (qtex.width() >> level_num)
-                || image.height() != (qtex.height() >> level_num)) {
-                std::ostringstream oss;
-                oss << "Image is " << image.width() << "x" << image.height() << ", but expected "
-                    << (qtex.width() >> level_num) << "x" << (qtex.height() >> level_num)
-                    << " for level " << level_num;
-                auto s = std::move(oss).str();
-                MMLOG_ERROR() << s.c_str();
-            }
-
-            gl.glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
-                               static_cast<GLint>(level_num),
-                               0,
-                               0,
-                               static_cast<GLint>(z),
-                               image.width(),
-                               image.height(),
-                               1,
-                               GL_RGBA,
-                               GL_UNSIGNED_BYTE,
-                               image.constBits());
-        }
-    }
-
+    gl.glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }

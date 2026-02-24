@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <list>
 #include <memory>
 #include <optional>
@@ -66,6 +67,65 @@ NODISCARD constexpr bool isPowerOfTwo(const T x) noexcept
     } else {
         throw std::invalid_argument("x");
     }
+}
+
+/**
+ * @brief Returns the next power of two greater than or equal to x.
+ * For x=0 or 1, returns 1.
+ * If the next power of two would overflow T, it is clamped to the largest
+ * representable power of two.
+ */
+template<typename T>
+NODISCARD constexpr T nextPowerOfTwo(T x) noexcept
+{
+    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
+    if (x <= 1) {
+        return 1;
+    }
+
+    constexpr T kMaxPowerOfTwo = T(1) << (std::numeric_limits<T>::digits - 1);
+    if (x >= kMaxPowerOfTwo) {
+        return kMaxPowerOfTwo;
+    }
+
+    --x;
+    x |= static_cast<T>(x >> 1);
+    x |= static_cast<T>(x >> 2);
+    x |= static_cast<T>(x >> 4);
+    if constexpr (sizeof(T) >= 2) {
+        x |= static_cast<T>(x >> 8);
+    }
+    if constexpr (sizeof(T) >= 4) {
+        x |= static_cast<T>(x >> 16);
+    }
+    if constexpr (sizeof(T) >= 8) {
+        x |= static_cast<T>(x >> 32);
+    }
+    return ++x;
+}
+
+/**
+ * @brief Returns the power of two nearest to x.
+ * For x=0 or 1, returns 1.
+ * If x is beyond the largest representable power of two, that value is returned.
+ */
+template<typename T>
+NODISCARD constexpr T nearestPowerOfTwo(T x) noexcept
+{
+    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
+    if (x <= 1) {
+        return 1;
+    }
+    const T next = nextPowerOfTwo(x);
+    // Note: x > next can only happen if nextPowerOfTwo clamped the result.
+    if (x >= next) {
+        return next;
+    }
+    const T prev = next >> 1;
+    if (x - prev < next - x) {
+        return prev;
+    }
+    return next;
 }
 
 template<typename T>

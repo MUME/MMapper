@@ -31,6 +31,7 @@ private Q_SLOTS:
     static void hideQDebugTest();
     static void indexedVectorWithDefaultTest();
     static void lineUtilsTest();
+    static void powerOfTwoTest();
     static void signal2Test();
     static void stringViewTest();
     static void taggedStringTest();
