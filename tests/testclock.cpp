@@ -74,46 +74,47 @@ void TestClock::parseMumeTimeTest()
     QCOMPARE(testMumeStartEpochTime(clock, 0), expectedZeroEpoch);
 
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
+    const int64_t now = 1513753407;
     QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     QString expected1 = snapShot1;
-    clock.parseMumeTime(snapShot1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected1);
+    clock.parseMumeTime(snapShot1, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected1);
 
     // Real time is Wed Dec 20 07:18:02 2017 UTC.
     QString snapShot2 = "5am on Sterday, the 19th of Halimath, year 3030 of the Third Age.";
     QString expected2 = snapShot2;
-    clock.parseMumeTime(snapShot2);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected2);
+    clock.parseMumeTime(snapShot2, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected2);
 
     // Real time is Wed Dec 20 07:38:44 2017 UTC.
     QString snapShot3 = "2am on Sunday, the 20th of Halimath, year 3030 of the Third Age.";
     QString expected3 = snapShot3;
-    clock.parseMumeTime(snapShot3);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected3);
+    clock.parseMumeTime(snapShot3, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected3);
 
     // Real time is Thu Dec 21 05:27:35 2017 UTC.
     QString snapShot4 = "3pm on Highday, the 14th of Blotmath, year 3030 of the Third Age.";
     QString expected4 = snapShot4;
-    clock.parseMumeTime(snapShot4);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected4);
+    clock.parseMumeTime(snapShot4, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected4);
 
     // Sindarin Calendar
     QString sindarin = "3pm on Oraearon, the 14th of Hithui, year 3030 of the Third Age.";
     QString expectedSindarin = expected4;
-    clock.parseMumeTime(sindarin);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedSindarin);
+    clock.parseMumeTime(sindarin, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedSindarin);
 
     // Real time is Sat Mar  2 20:43:30 2019 UTC.
     QString snapShot5 = "6pm on Mersday, the 22nd of Winterfilth, year 2915 of the Third Age.";
     QString expected5 = snapShot5;
-    clock.parseMumeTime(snapShot5);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected5);
+    clock.parseMumeTime(snapShot5, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected5);
 
     // Real time is Thu Mar  7 06:28:11 2019 UTC.
     QString snapShot6 = "2am on Sunday, the 17th of Afterlithe, year 2916 of the Third Age.";
     QString expected6 = snapShot6;
-    clock.parseMumeTime(snapShot6);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected6);
+    clock.parseMumeTime(snapShot6, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected6);
 }
 
 void TestClock::getMumeMonthTest()
@@ -267,18 +268,19 @@ void TestClock::parseClockTimeTest()
 
     // Clock set to coarse
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
+    const int64_t now = 1513753407;
     const QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseMumeTime(snapShot1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), snapShot1);
+    clock.parseMumeTime(snapShot1, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), snapShot1);
 
     // Afternoon
-    clock.parseClockTime("The current time is 12:34pm.");
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()),
+    clock.parseClockTime("The current time is 12:34pm.", now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)),
              "12:34pm on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Midnight
-    clock.parseClockTime("The current time is 12:51am.");
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()),
+    clock.parseClockTime("The current time is 12:51am.", now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)),
              "12:51am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 }
 
