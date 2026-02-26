@@ -145,25 +145,6 @@ private:
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
 
-    struct AltDragState
-    {
-        QPoint lastPos;
-        QCursor originalCursor;
-    };
-    std::optional<AltDragState> m_altDragState;
-
-    struct DragState
-    {
-        glm::vec3 startWorldPos;
-        glm::vec2 startScroll;
-        glm::mat4 startViewProj;
-    };
-    std::optional<DragState> m_dragState;
-
-    float m_initialPinchDistance = 0.f;
-    float m_lastPinchFactor = 1.f;
-    float m_lastMagnification = 1.f;
-
 public:
     explicit MapCanvas(MapData &mapData,
                        PrespammedPath &prespammedPath,

@@ -18,6 +18,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <variant>
 
 #include <QOpenGLTexture>
 #include <QWindow>
@@ -151,6 +152,44 @@ private:
     NODISCARD VisiblityResultEnum testVisibility(const glm::vec3 &input_pos, float margin) const;
 };
 
+struct NODISCARD AltDragState
+{
+    QPoint lastPos;
+    QCursor originalCursor;
+};
+
+struct NODISCARD DragState
+{
+    glm::vec3 startWorldPos;
+    glm::vec2 startScroll;
+    glm::mat4 startViewProj;
+};
+
+struct NODISCARD PinchState
+{
+    float initialDistance = 0.f;
+    float lastFactor = 1.f;
+};
+
+struct NODISCARD MagnificationState
+{
+    float lastValue = 1.f;
+};
+
+struct NODISCARD RoomSelMove
+{
+    Coordinate2i pos;
+    bool wrongPlace = false;
+};
+
+struct NODISCARD InfomarkSelectionMove
+{
+    Coordinate2f pos;
+};
+
+struct NODISCARD AreaSelectionState
+{};
+
 struct NODISCARD MapCanvasInputState
 {
     CanvasMouseModeEnum m_canvasMouseMode = CanvasMouseModeEnum::MOVE;
@@ -163,29 +202,16 @@ struct NODISCARD MapCanvasInputState
     // mouse selection
     std::optional<MouseSel> m_sel1;
     std::optional<MouseSel> m_sel2;
-    // scroll origin of the current mouse movement
-    std::optional<MouseSel> m_moveBackup;
 
-    bool m_selectedArea = false; // no area selected at start time
+    std::optional<
+        std::variant<AltDragState, DragState, RoomSelMove, InfomarkSelectionMove, AreaSelectionState>>
+        m_activeInteraction;
+    std::optional<PinchState> m_pinchState;
+    std::optional<MagnificationState> m_magnificationState;
+
     SharedRoomSelection m_roomSelection;
 
-    struct NODISCARD RoomSelMove final
-    {
-        Coordinate2i pos;
-        bool wrongPlace = false;
-    };
-
-    std::optional<RoomSelMove> m_roomSelectionMove;
-    NODISCARD bool hasRoomSelectionMove() { return m_roomSelectionMove.has_value(); }
-
     std::shared_ptr<InfomarkSelection> m_infoMarkSelection;
-
-    struct NODISCARD InfomarkSelectionMove final
-    {
-        Coordinate2f pos;
-    };
-    std::optional<InfomarkSelectionMove> m_infoMarkSelectionMove;
-    NODISCARD bool hasInfomarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
 
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
 
@@ -209,14 +235,24 @@ public:
 public:
     NODISCARD bool hasSel1() const { return m_sel1.has_value(); }
     NODISCARD bool hasSel2() const { return m_sel2.has_value(); }
-    NODISCARD bool hasBackup() const { return m_moveBackup.has_value(); }
 
 public:
     NODISCARD MouseSel getSel1() const { return getMouseSel(m_sel1); }
     NODISCARD MouseSel getSel2() const { return getMouseSel(m_sel2); }
-    NODISCARD MouseSel getBackup() const { return getMouseSel(m_moveBackup); }
 
 public:
-    void startMoving(const MouseSel &startPos) { m_moveBackup = startPos; }
-    void stopMoving() { m_moveBackup.reset(); }
+    NODISCARD bool hasRoomSelectionMove() const
+    {
+        return m_activeInteraction && std::holds_alternative<RoomSelMove>(*m_activeInteraction);
+    }
+    NODISCARD bool hasInfomarkSelectionMove() const
+    {
+        return m_activeInteraction
+               && std::holds_alternative<InfomarkSelectionMove>(*m_activeInteraction);
+    }
+    NODISCARD bool hasAreaSelection() const
+    {
+        return m_activeInteraction
+               && std::holds_alternative<AreaSelectionState>(*m_activeInteraction);
+    }
 };
