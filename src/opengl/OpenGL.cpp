@@ -211,29 +211,16 @@ GLRenderState OpenGL::getDefaultRenderState()
     return GLRenderState{};
 }
 
-void OpenGL::bindNamedColorsBuffer()
-{
-    auto &gl = getFunctions();
-    const auto buffer = Legacy::SharedVboEnum::NamedColorsBlock;
-    const auto shared = gl.getSharedVbos().get(buffer);
-    Legacy::VBO &vbo = deref(shared);
-    if (!vbo) {
-        vbo.emplace(gl.shared_from_this());
-        // the shader is declared vec4, so the data has to be 4 floats per entry.
-        const auto &vec4_colors = XNamedColor::getAllColorsAsVec4();
-        std::ignore = gl.setUbo(vbo.get(), vec4_colors, BufferUsageEnum::DYNAMIC_DRAW);
-    }
-    gl.glBindBufferBase(GL_UNIFORM_BUFFER, buffer, vbo.get());
-}
-
 void OpenGL::resetNamedColorsBuffer()
 {
     getFunctions().getSharedVbos().reset(Legacy::SharedVboEnum::NamedColorsBlock);
+    m_uboManager.invalidate(Legacy::SharedVboEnum::NamedColorsBlock);
 }
 
 void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
     setDevicePixelRatio(devicePixelRatio);
+    getFunctions().setUboManager(&m_uboManager);
 
     // REVISIT: Move this somewhere else?
     GLint maxSamples = 0;

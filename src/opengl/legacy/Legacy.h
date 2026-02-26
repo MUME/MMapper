@@ -25,6 +25,7 @@ class OpenGL;
 
 namespace Legacy {
 
+class UboManager;
 class StaticVbos;
 class SharedVbos;
 class SharedVaos;
@@ -33,13 +34,11 @@ struct AbstractShaderProgram;
 struct ShaderPrograms;
 struct PointSizeBinder;
 
-// X(EnumName, GL_String_Name, IsUniform)
-#define XFOREACH_SHARED_VBO(X) \
-    X(NamedColorsBlock, "NamedColorsBlock", true) \
-    X(InstancedQuadIbo, nullptr, false)
+// X(EnumName, GL_String_Name)
+#define XFOREACH_SHARED_VBO(X) X(NamedColorsBlock, "NamedColorsBlock")
 
 enum class SharedVboEnum : uint8_t {
-#define X_ENUM(element, name, isUniform) element,
+#define X_ENUM(element, name) element,
     XFOREACH_SHARED_VBO(X_ENUM)
 #undef X_ENUM
 };
@@ -56,9 +55,9 @@ enum class SharedVaoEnum : uint8_t {
 static constexpr size_t NUM_SHARED_VAOS = 0 XFOREACH_SHARED_VAO(X_COUNT_VAO);
 #undef X_COUNT_VAO
 
-#define X_COUNT(element, name, isUniform) +1
-static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT);
-#undef X_COUNT
+#define X_COUNT_VBO(element, name) +1
+static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT_VBO);
+#undef X_COUNT_VBO
 
 NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
@@ -135,6 +134,7 @@ private:
     std::unique_ptr<SharedVaos> m_sharedVaos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
+    UboManager *m_uboManager = nullptr;
 
 protected:
     explicit Functions(Badge<Functions>);
@@ -198,6 +198,7 @@ public:
     using Base::glDisable;
     using Base::glDisableVertexAttribArray;
     using Base::glDrawArrays;
+    using Base::glDrawArraysInstanced;
     using Base::glDrawElementsInstanced;
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
@@ -312,6 +313,9 @@ public:
 
     NODISCARD FBO &getFBO();
 
+    void setUboManager(UboManager *manager);
+    NODISCARD UboManager &getUboManager();
+
 private:
     friend PointSizeBinder;
     /// platform-specific (ES vs GL)
@@ -406,6 +410,16 @@ public:
         return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
     }
 
+    template<typename T>
+    void setUboSingle(const GLuint ubo,
+                      const T &data,
+                      const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        Base::glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        Base::glBufferData(GL_UNIFORM_BUFFER, sizeof(T), &data, Legacy::toGLenum(usage));
+        Base::glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+
     void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         Base::glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -466,3 +480,5 @@ public:
     void blitFboToDefault();
 };
 } // namespace Legacy
+
+DEFINE_ENUM_COUNT(Legacy::SharedVboEnum, Legacy::NUM_SHARED_VBOS)

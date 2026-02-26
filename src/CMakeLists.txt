@@ -415,12 +415,15 @@ set(mmapper_SRCS
     opengl/LineRendering.h
     opengl/OpenGL.cpp
     opengl/OpenGL.h
+    opengl/UboManager.h
     opengl/OpenGLConfig.cpp
     opengl/OpenGLConfig.h
     opengl/OpenGLTypes.cpp
     opengl/OpenGLTypes.h
     opengl/legacy/AbstractShaderProgram.cpp
     opengl/legacy/AbstractShaderProgram.h
+    opengl/legacy/AttributeLessMeshes.cpp
+    opengl/legacy/AttributeLessMeshes.h
     opengl/legacy/Binders.cpp
     opengl/legacy/Binders.h
     opengl/legacy/FBO.cpp
