@@ -107,6 +107,7 @@ private:
         std::vector<ColorVert> m_pathPoints;
         std::vector<ColorVert> m_pathLineQuads;
         std::vector<FontVert3d> m_screenSpaceArrows;
+        std::vector<GLText> m_names;
         std::map<Coordinate, int, CoordCompare> m_coordCounts;
 
     public:
@@ -115,15 +116,17 @@ private:
         DELETE_CTORS_AND_ASSIGN_OPS(CharFakeGL);
 
     public:
-        void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures)
+        void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures, GLFont &font)
         {
             reallyDrawCharacters(gl, textures);
             reallyDrawPaths(gl);
+            reallyDrawNames(gl, font);
         }
 
     private:
         void reallyDrawCharacters(OpenGL &gl, const MapCanvasTextures &textures);
         void reallyDrawPaths(OpenGL &gl);
+        void reallyDrawNames(OpenGL &gl, GLFont &font);
 
     public:
         void setColor(const Color color) { m_color = color; }
@@ -151,6 +154,10 @@ private:
         void drawArrow(bool fill, bool beacon);
         void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
         void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color color, bool fill);
+        void addName(const Coordinate &c,
+                     const std::string &name,
+                     const Color color,
+                     const MapScreen &mapScreen);
         void drawPathSegment(const glm::vec3 &p1, const glm::vec3 &p2, const Color color);
 
         // with blending, without depth; always size 8
@@ -209,13 +216,18 @@ public:
 public:
     void drawCharacter(const Coordinate &coordinate, const Color color, bool fill = true);
 
+    void drawName(const Coordinate &c, const std::string &name, const Color color)
+    {
+        getOpenGL().addName(c, name, color, m_mapScreen);
+    }
+
     void drawPreSpammedPath(const Coordinate &coordinate,
                             const std::vector<Coordinate> &path,
                             const Color color);
 
 public:
-    void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures)
+    void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures, GLFont &font)
     {
-        m_fakeGL.reallyDraw(gl, textures);
+        m_fakeGL.reallyDraw(gl, textures, font);
     }
 };

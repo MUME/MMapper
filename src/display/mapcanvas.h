@@ -206,7 +206,7 @@ protected:
     void initializeGL() override;
     void paintGL() override;
 
-    void drawGroupCharacters(CharacterBatch &characterBatch);
+    void drawGroupCharacters(CharacterBatch &characterBatch, ServerRoomId yourServerId);
 
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;

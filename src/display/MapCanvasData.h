@@ -145,6 +145,7 @@ public:
     NODISCARD glm::vec3 getCenter() const;
     NODISCARD bool isRoomVisible(const Coordinate &c, float margin) const;
     NODISCARD glm::vec3 getProxyLocation(const glm::vec3 &pos, float margin) const;
+    NODISCARD const MapCanvasViewport &getViewport() const { return m_viewport; }
 
 private:
     NODISCARD VisiblityResultEnum testVisibility(const glm::vec3 &input_pos, float margin) const;
