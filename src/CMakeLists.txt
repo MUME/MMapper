@@ -504,8 +504,6 @@ set(mmapper_SRCS
     preferences/configdialog.h
     preferences/generalpage.cpp
     preferences/generalpage.h
-    preferences/WasmInputDeduplicateFilter.cpp
-    preferences/WasmInputDeduplicateFilter.h
     preferences/graphicspage.cpp
     preferences/graphicspage.h
     preferences/grouppage.cpp

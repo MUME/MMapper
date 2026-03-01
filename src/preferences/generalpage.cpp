@@ -13,10 +13,6 @@
 #include <QString>
 #include <QtWidgets>
 
-#ifdef Q_OS_WASM
-#include "WasmInputDeduplicateFilter.h"
-#endif
-
 // Order of entries in charsetComboBox drop down
 static_assert(static_cast<int>(CharacterEncodingEnum::LATIN1) == 0);
 static_assert(static_cast<int>(CharacterEncodingEnum::UTF8) == 1);
@@ -35,9 +31,10 @@ GeneralPage::GeneralPage(QWidget *parent)
     ui->setupUi(this);
 
 #ifdef Q_OS_WASM
-    // Install key deduplication filter on text inputs affected by the Qt WASM double-key bug
-    ui->accountPassword->installEventFilter(new WasmInputDeduplicateFilter(ui->accountPassword));
-    ui->accountName->installEventFilter(new WasmInputDeduplicateFilter(ui->accountName));
+    // Qt WASM fires both KeyPress and InputMethod events per keystroke, causing double
+    // characters. Disabling input method on these ASCII-only fields prevents the duplicate.
+    ui->accountPassword->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->accountName->setAttribute(Qt::WA_InputMethodEnabled, false);
 #endif
 
     connect(ui->remoteName, &QLineEdit::textChanged, this, &GeneralPage::slot_remoteNameTextChanged);

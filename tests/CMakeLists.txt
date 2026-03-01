@@ -312,29 +312,6 @@ set_target_properties(
 )
 add_test(NAME TestRoomManager COMMAND TestRoomManager)
 
-# WasmInputFilter
-set(wasm_input_filter_SRCS
-        ../src/preferences/WasmInputDeduplicateFilter.cpp
-        ../src/preferences/WasmInputDeduplicateFilter.h
-)
-set(TestWasmInputFilter_SRCS TestWasmInputFilter.cpp TestWasmInputFilter.h)
-add_executable(TestWasmInputFilter ${TestWasmInputFilter_SRCS} ${wasm_input_filter_SRCS})
-add_dependencies(TestWasmInputFilter mm_global)
-target_link_libraries(TestWasmInputFilter
-        mm_global
-        Qt6::Gui
-        Qt6::Test
-        Qt6::Widgets
-        coverage_config)
-set_target_properties(
-        TestWasmInputFilter PROPERTIES
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF
-        COMPILE_FLAGS "${WARNING_FLAGS}"
-)
-add_test(NAME TestWasmInputFilter COMMAND TestWasmInputFilter)
-
 # HotkeyManager
 set(hotkey_manager_SRCS
         ../src/client/Hotkey.cpp

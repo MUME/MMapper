@@ -11,23 +11,12 @@
 
 // clang-format off
 
-// Store a password encrypted with AES-GCM-256 in IndexedDB.
-// Generates a new CryptoKey on every save, exports the raw key bytes for
-// storage. We store raw bytes (not the CryptoKey object) because Firefox
-// throws DataCloneError when serializing non-extractable CryptoKey objects
-// into IndexedDB via structured clone.
+// Encrypt and store a password (AES-GCM-256) in IndexedDB.
+// The raw key is stored alongside the ciphertext because Firefox cannot
+// store non-extractable CryptoKey objects in IndexedDB (DataCloneError).
 //
-// Note: storing the raw key alongside the ciphertext means any same-origin JS
-// can decrypt. This is a deliberate trade-off — Firefox throws DataCloneError
-// when storing non-extractable CryptoKey objects in IndexedDB, and browser-
-// specific code paths proved unreliable. The encryption provides data-at-rest
-// protection and defense against accidental plaintext exposure in logs/UI.
-//
-// Fire-and-forget: uses EM_JS (not EM_ASYNC_JS) so the C++ call returns
-// immediately without suspending the ASYNCIFY stack. The actual encrypt +
-// IndexedDB write runs asynchronously in a JS promise chain. This prevents
-// the Qt event loop from being blocked during saves, which was causing
-// dropped keystrokes when typing fast.
+// Async (non-blocking): returns immediately; the JS promise chain runs
+// in the background so the Qt event loop is not stalled.
 EM_JS(void, wasm_store_password, (const char *key, const char *password), {
     var keyStr = UTF8ToString(key);
     var passwordStr = UTF8ToString(password);
@@ -140,7 +129,7 @@ EM_ASYNC_JS(char *, wasm_read_password, (const char *key), {
 });
 
 // Delete a password entry from IndexedDB.
-// Fire-and-forget: shares the same promise chain as wasm_store_password
+// Async (non-blocking): shares the same promise chain as wasm_store_password
 // to prevent a delete from racing with an in-flight store.
 EM_JS(void, wasm_delete_password, (const char *key), {
     var keyStr = UTF8ToString(key);
@@ -214,8 +203,7 @@ PasswordConfig::PasswordConfig(QObject *const parent)
 void PasswordConfig::setPassword(const QString &password)
 {
 #ifdef Q_OS_WASM
-    // Fire-and-forget: save runs asynchronously in JS without blocking the event loop.
-    // Errors are logged to the browser console.
+    // Async (non-blocking): errors are logged to the browser console.
     const QByteArray utf8 = password.toUtf8();
     wasm_store_password(WASM_PASSWORD_KEY, utf8.constData());
 #elif !defined(MMAPPER_NO_QTKEYCHAIN)
@@ -254,7 +242,7 @@ void PasswordConfig::deletePassword()
 #ifdef Q_OS_WASM
     wasm_delete_password(WASM_PASSWORD_KEY);
 #elif !defined(MMAPPER_NO_QTKEYCHAIN)
-    // QtKeychain delete job (fire and forget)
+    // QtKeychain delete job (async, non-blocking)
     auto *deleteJob = new QKeychain::DeletePasswordJob(APP_NAME);
     deleteJob->setAutoDelete(true);
     deleteJob->setKey(PASSWORD_KEY);
