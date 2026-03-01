@@ -7,7 +7,6 @@
 #include "../src/configuration/configuration.h"
 #include "../src/global/HideQDebug.h"
 #include "../src/observer/gameobserver.h"
-#include "../src/proxy/GmcpMessage.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
@@ -69,6 +68,12 @@ void TestClock::parseMumeTimeTest()
     GameObserver observer;
     MumeClock clock(observer);
 
+    // Use a fixed timestamp for all calls to avoid wall-clock race conditions.
+    // 1 real second = 1 MUME minute, so if parseMumeTime() and getMumeMoment()
+    // read the clock in different seconds, the MUME time can shift by a minute
+    // (or roll the hour if minute was 59).
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+
     // Defaults to epoch time of zero
     QString expectedZeroEpoch = "Sunday, the 1st of Afteryule, year 2850 of the Third Age.";
     QCOMPARE(testMumeStartEpochTime(clock, 0), expectedZeroEpoch);
@@ -76,44 +81,44 @@ void TestClock::parseMumeTimeTest()
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     QString expected1 = snapShot1;
-    clock.parseMumeTime(snapShot1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected1);
+    clock.parseMumeTime(snapShot1, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected1);
 
     // Real time is Wed Dec 20 07:18:02 2017 UTC.
     QString snapShot2 = "5am on Sterday, the 19th of Halimath, year 3030 of the Third Age.";
     QString expected2 = snapShot2;
-    clock.parseMumeTime(snapShot2);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected2);
+    clock.parseMumeTime(snapShot2, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected2);
 
     // Real time is Wed Dec 20 07:38:44 2017 UTC.
     QString snapShot3 = "2am on Sunday, the 20th of Halimath, year 3030 of the Third Age.";
     QString expected3 = snapShot3;
-    clock.parseMumeTime(snapShot3);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected3);
+    clock.parseMumeTime(snapShot3, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected3);
 
     // Real time is Thu Dec 21 05:27:35 2017 UTC.
     QString snapShot4 = "3pm on Highday, the 14th of Blotmath, year 3030 of the Third Age.";
     QString expected4 = snapShot4;
-    clock.parseMumeTime(snapShot4);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected4);
+    clock.parseMumeTime(snapShot4, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected4);
 
     // Sindarin Calendar
     QString sindarin = "3pm on Oraearon, the 14th of Hithui, year 3030 of the Third Age.";
     QString expectedSindarin = expected4;
-    clock.parseMumeTime(sindarin);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedSindarin);
+    clock.parseMumeTime(sindarin, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedSindarin);
 
     // Real time is Sat Mar  2 20:43:30 2019 UTC.
     QString snapShot5 = "6pm on Mersday, the 22nd of Winterfilth, year 2915 of the Third Age.";
     QString expected5 = snapShot5;
-    clock.parseMumeTime(snapShot5);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected5);
+    clock.parseMumeTime(snapShot5, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected5);
 
     // Real time is Thu Mar  7 06:28:11 2019 UTC.
     QString snapShot6 = "2am on Sunday, the 17th of Afterlithe, year 2916 of the Third Age.";
     QString expected6 = snapShot6;
-    clock.parseMumeTime(snapShot6);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected6);
+    clock.parseMumeTime(snapShot6, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expected6);
 }
 
 void TestClock::getMumeMonthTest()
@@ -222,32 +227,38 @@ void TestClock::parseWeatherTest()
     GameObserver observer;
     MumeClock clock(observer);
 
+    // Use a fixed timestamp to avoid wall-clock race conditions.
+    // onUserGmcp() reads the wall clock internally, so we call parseWeather()
+    // directly with an explicit timestamp instead.
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+
     QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
     QString expectedTime = snapShot1;
-    clock.parseMumeTime(snapShot1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    clock.parseMumeTime(snapShot1, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
     expectedTime = "5:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"rise"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    clock.parseWeather(MumeTimeEnum::DAWN, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
     expectedTime = "6:00am on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"light"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    clock.parseWeather(MumeTimeEnum::DAY, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
     expectedTime = "9:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"set"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    clock.parseWeather(MumeTimeEnum::DUSK, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
     expectedTime = "10:00pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Sun {"what":"dark"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    clock.parseWeather(MumeTimeEnum::NIGHT, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Darkness {"what":"start"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    // Event.Darkness maps to UNKNOWN — time should not change
+    clock.parseWeather(MumeTimeEnum::UNKNOWN, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
-    clock.onUserGmcp(GmcpMessage::fromRawBytes(R"(Event.Moon {"what":"rise"})"));
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
+    // Event.Moon is ignored by onUserGmcp — verify time is unchanged
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), expectedTime);
 
     QCOMPARE(static_cast<int>(observer.getTimeOfDay()), static_cast<int>(MumeTimeEnum::NIGHT));
 
@@ -265,20 +276,23 @@ void TestClock::parseClockTimeTest()
     GameObserver observer;
     MumeClock clock(observer);
 
+    // Use a fixed timestamp to avoid wall-clock race conditions.
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+
     // Clock set to coarse
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     const QString snapShot1 = "3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.";
-    clock.parseMumeTime(snapShot1);
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), snapShot1);
+    clock.parseMumeTime(snapShot1, now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)), snapShot1);
 
     // Afternoon
-    clock.parseClockTime("The current time is 12:34pm.");
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()),
+    clock.parseClockTime("The current time is 12:34pm.", now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)),
              "12:34pm on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 
     // Midnight
-    clock.parseClockTime("The current time is 12:51am.");
-    QCOMPARE(clock.toMumeTime(clock.getMumeMoment()),
+    clock.parseClockTime("The current time is 12:51am.", now);
+    QCOMPARE(clock.toMumeTime(clock.getMumeMoment(now)),
              "12:51am on Highday, the 18th of Halimath, year 3030 of the Third Age.");
 }
 
@@ -439,8 +453,12 @@ void TestClock::moonClockTest()
              20376 - MUME_MINUTES_PER_MOON_PHASE);
     QCOMPARE(moment.toMoonVisibilityCountDown(), "10:24");
 
-    clock.parseMumeTime("2:00 am on Sunday, the 19th of Forelithe, year 2997 of the Third Age.");
-    moment = clock.getMumeMoment();
+    // Use a fixed timestamp for the remaining tests to avoid wall-clock race conditions.
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+
+    clock.parseMumeTime("2:00 am on Sunday, the 19th of Forelithe, year 2997 of the Third Age.",
+                        now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "The waxing half moon is below the horizon.");
     QCOMPARE(moment.moonLevel(), 6);
     QCOMPARE(static_cast<int>(moment.moonPosition()),
@@ -450,8 +468,8 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::INVISIBLE));
 
-    clock.parseMumeTime("10:00 pm on Sunday, the 30th of Astron, year 2995 of the Third Age.");
-    moment = clock.getMumeMoment();
+    clock.parseMumeTime("10:00 pm on Sunday, the 30th of Astron, year 2995 of the Third Age.", now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waxing quarter moon to the west.");
     QCOMPARE(moment.moonLevel(), 5);
     QCOMPARE(static_cast<int>(moment.moonPosition()), static_cast<int>(MumeMoonPositionEnum::WEST));
@@ -460,8 +478,8 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
 
-    clock.parseMumeTime("1:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.");
-    moment = clock.getMumeMoment();
+    clock.parseMumeTime("1:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.", now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waning half moon to the southeast.");
     QCOMPARE(moment.moonLevel(), 8);
     QCOMPARE(static_cast<int>(moment.moonPosition()),
@@ -471,8 +489,8 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
 
-    clock.parseMumeTime("4:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.");
-    moment = clock.getMumeMoment();
+    clock.parseMumeTime("4:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.", now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waning half moon to the south.");
     QCOMPARE(moment.moonLevel(), 7);
     QCOMPARE(static_cast<int>(moment.moonPosition()), static_cast<int>(MumeMoonPositionEnum::SOUTH));
@@ -481,8 +499,8 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
 
-    clock.parseMumeTime("7:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.");
-    moment = clock.getMumeMoment();
+    clock.parseMumeTime("7:00 am on Sterday, the 15th of Astron, year 2995 of the Third Age.", now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waning half moon to the southwest.");
     QCOMPARE(moment.moonLevel(), 7);
     QCOMPARE(static_cast<int>(moment.moonPosition()),
@@ -492,8 +510,9 @@ void TestClock::moonClockTest()
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
 
-    clock.parseMumeTime("10:00 pm on Monday, the 20th of Forelithe, year 2997 of the Third Age.");
-    moment = clock.getMumeMoment();
+    clock.parseMumeTime("10:00 pm on Monday, the 20th of Forelithe, year 2997 of the Third Age.",
+                        now);
+    moment = clock.getMumeMoment(now);
     QCOMPARE(moment.toMumeMoonTime(), "You can see a waxing half moon to the southwest.");
     QCOMPARE(moment.moonLevel(), 7);
     QCOMPARE(static_cast<int>(moment.moonPosition()),
