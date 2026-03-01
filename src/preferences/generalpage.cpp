@@ -213,8 +213,10 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(ui->accountPassword, &QLineEdit::textEdited, this, [this](const QString &password) {
         if (m_passwordFieldHasDummy) {
             m_passwordFieldHasDummy = false;
-            // Strip dummy bullet characters (U+2022) that precede the real input.
-            // Handles both single keystrokes and multi-character paste.
+            // The password field shows 8 bullet dots as a placeholder when a
+            // stored password exists. When the user types or pastes, Qt fires
+            // textEdited with those bullets still prepended. Strip them so only
+            // the real input is kept. Handles single keystrokes and paste.
             QString cleaned = password;
             while (!cleaned.isEmpty() && cleaned.at(0) == QChar(0x2022))
                 cleaned.remove(0, 1);

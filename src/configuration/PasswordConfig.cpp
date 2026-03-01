@@ -10,6 +10,7 @@
 #include <emscripten.h>
 
 // clang-format off
+// (JS inside EM_JS macros is not valid C++)
 
 // Encrypt and store a password (AES-GCM-256) in IndexedDB.
 // The raw key is stored alongside the ciphertext because Firefox cannot
