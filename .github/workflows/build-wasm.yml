@@ -83,7 +83,7 @@ jobs:
         zip -r ${{ steps.git_info.outputs.FILE }} demo
 
     - name: Upload Package
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: mmapper-${{ steps.git_info.outputs.VERSION }}-wasm
         path: ${{ steps.git_info.outputs.FILE }}
