@@ -46,6 +46,7 @@
 #include <QScopedPointer>
 #include <QSslSocket>
 #include <QTcpSocket>
+#include <QTimer>
 
 using mmqt::makeQPointer;
 
@@ -504,8 +505,18 @@ void Proxy::allocMudTelnet()
         {
             const auto &account = getConfig().account;
             if (account.rememberLogin && !account.accountName.isEmpty() && account.accountPassword) {
-                // fetch asynchronously from keychain
-                getProxy().getPasswordConfig().getPassword();
+                // WASM: defer to next event loop iteration because
+                // getPassword() uses EM_ASYNC_JS which would crash
+                // if called from within the GMCP signal chain.
+                // The Proxy context guard cancels the call if the
+                // Proxy (and this object) are destroyed first.
+                if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+                    QTimer::singleShot(0, &getProxy(), [this]() {
+                        getProxy().getPasswordConfig().getPassword();
+                    });
+                } else {
+                    getProxy().getPasswordConfig().getPassword();
+                }
             }
         }
 

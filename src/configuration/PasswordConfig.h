@@ -28,6 +28,7 @@ public:
 
     void setPassword(const QString &password);
     void getPassword();
+    void deletePassword();
 
 signals:
     void sig_error(const QString &msg);

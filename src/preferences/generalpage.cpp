@@ -30,6 +30,13 @@ GeneralPage::GeneralPage(QWidget *parent)
 {
     ui->setupUi(this);
 
+#ifdef Q_OS_WASM
+    // Qt WASM fires both KeyPress and InputMethod events per keystroke, causing double
+    // characters. Disabling input method on these ASCII-only fields prevents the duplicate.
+    ui->accountPassword->setAttribute(Qt::WA_InputMethodEnabled, false);
+    ui->accountName->setAttribute(Qt::WA_InputMethodEnabled, false);
+#endif
+
     connect(ui->remoteName, &QLineEdit::textChanged, this, &GeneralPage::slot_remoteNameTextChanged);
     connect(ui->remotePort,
             QOverload<int>::of(&QSpinBox::valueChanged),
@@ -171,7 +178,21 @@ GeneralPage::GeneralPage(QWidget *parent)
     });
 
     connect(ui->autoLogin, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().account.rememberLogin = ui->autoLogin->isChecked();
+        const bool checked = ui->autoLogin->isChecked();
+        setConfig().account.rememberLogin = checked;
+        ui->accountName->setEnabled(checked);
+        ui->accountPassword->setEnabled(checked);
+        ui->showPassword->setEnabled(checked);
+        if (!checked) {
+            passCfg.deletePassword();
+            setConfig().account.accountPassword = false;
+            setConfig().account.accountName.clear();
+            ui->accountName->clear();
+            ui->accountPassword->clear();
+            ui->accountPassword->setEchoMode(QLineEdit::Password);
+            ui->showPassword->setText("Show Password");
+            m_passwordFieldHasDummy = false;
+        }
     });
 
     connect(ui->accountName, &QLineEdit::textChanged, this, [](const QString &account) {
@@ -190,17 +211,45 @@ GeneralPage::GeneralPage(QWidget *parent)
     });
 
     connect(ui->accountPassword, &QLineEdit::textEdited, this, [this](const QString &password) {
+        if (m_passwordFieldHasDummy) {
+            m_passwordFieldHasDummy = false;
+            // The password field shows 8 bullet dots as a placeholder when a
+            // stored password exists. When the user types or pastes, Qt fires
+            // textEdited with those bullets still prepended. Strip them so only
+            // the real input is kept. Handles single keystrokes and paste.
+            QString cleaned = password;
+            while (!cleaned.isEmpty() && cleaned.at(0) == QChar(0x2022))
+                cleaned.remove(0, 1);
+            const QSignalBlocker blocker(ui->accountPassword);
+            ui->accountPassword->setText(cleaned);
+            setConfig().account.accountPassword = !cleaned.isEmpty();
+            if (!cleaned.isEmpty()) {
+                passCfg.setPassword(cleaned);
+            }
+            return;
+        }
         setConfig().account.accountPassword = !password.isEmpty();
-        passCfg.setPassword(password);
+        if (!password.isEmpty()) {
+            passCfg.setPassword(password);
+        } else {
+            passCfg.deletePassword();
+        }
     });
 
     connect(ui->showPassword, &QAbstractButton::clicked, this, [this]() {
         if (ui->showPassword->text() == "Hide Password") {
+            // Hide: restore dummy dots in password mode
             ui->showPassword->setText("Show Password");
-            ui->accountPassword->clear();
             ui->accountPassword->setEchoMode(QLineEdit::Password);
-        } else if (getConfig().account.accountPassword && ui->accountPassword->text().isEmpty()) {
-            ui->showPassword->setText("Request Password");
+            if (getConfig().account.accountPassword) {
+                const QSignalBlocker blocker(ui->accountPassword);
+                ui->accountPassword->setText(QString(8, QChar(0x2022)));
+                m_passwordFieldHasDummy = true;
+            } else {
+                ui->accountPassword->clear();
+            }
+        } else if (getConfig().account.accountPassword) {
+            // Stored password exists — retrieve and reveal it
             passCfg.getPassword();
         }
     });
@@ -268,7 +317,7 @@ void GeneralPage::slot_loadConfig()
 
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 
-    if constexpr (NO_QTKEYCHAIN) {
+    if constexpr (NO_QTKEYCHAIN && CURRENT_PLATFORM != PlatformEnum::Wasm) {
         ui->autoLogin->setEnabled(false);
         ui->accountName->setEnabled(false);
         ui->accountPassword->setEnabled(false);
@@ -276,8 +325,19 @@ void GeneralPage::slot_loadConfig()
     } else {
         ui->autoLogin->setChecked(account.rememberLogin);
         ui->accountName->setText(account.accountName);
-        if (!account.accountPassword) {
-            ui->accountPassword->setPlaceholderText("");
+        ui->accountName->setEnabled(account.rememberLogin);
+        ui->accountPassword->setEnabled(account.rememberLogin);
+        ui->showPassword->setEnabled(account.rememberLogin);
+        ui->accountPassword->setEchoMode(QLineEdit::Password);
+        ui->showPassword->setText("Show Password");
+        if (account.accountPassword) {
+            // Show dots to indicate a password is stored, without triggering textEdited
+            const QSignalBlocker blocker(ui->accountPassword);
+            ui->accountPassword->setText(QString(8, QChar(0x2022)));
+            m_passwordFieldHasDummy = true;
+        } else {
+            ui->accountPassword->clear();
+            m_passwordFieldHasDummy = false;
         }
     }
 }

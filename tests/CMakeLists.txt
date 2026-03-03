@@ -331,3 +331,22 @@ set_target_properties(
         COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 add_test(NAME TestHotkeyManager COMMAND TestHotkeyManager)
+
+# PasswordField
+set(TestPasswordField_SRCS TestPasswordField.cpp TestPasswordField.h)
+add_executable(TestPasswordField ${TestPasswordField_SRCS})
+add_dependencies(TestPasswordField mm_global)
+target_link_libraries(TestPasswordField
+        mm_global
+        Qt6::Gui
+        Qt6::Test
+        Qt6::Widgets
+        coverage_config)
+set_target_properties(
+        TestPasswordField PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestPasswordField COMMAND TestPasswordField)

@@ -193,6 +193,8 @@ else()
 endif()
 
 add_subdirectory(external/glm)
+# Newer system GLM versions require this for gtx/ experimental extensions
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 add_subdirectory(external/immer)
 
 # Extract git branch and revision
@@ -437,7 +439,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-extra-semi-stmt) # enabled only for src/ directory
 
         # require explicit template parameters when deduction guides are missing
-        add_compile_options(-Werror=ctad-maybe-unsupported)
+        # NOTE: Downgraded from -Werror to -Wno because Qt 6.10.x MOC-generated
+        # code uses CTAD without deduction guides (in qtmochelpers.h).
+        add_compile_options(-Wno-ctad-maybe-unsupported)
 
         # always errors
         add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.

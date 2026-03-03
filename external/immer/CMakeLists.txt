@@ -9,8 +9,9 @@ else()
     message(STATUS "Could not find a local immer; downloading to local source tree")
     include(ExternalProject)
     ExternalProject_Add(immer
-        URL "https://github.com/arximboldi/immer/archive/v0.8.1.tar.gz"
-        URL_HASH SHA1=3ab24d01bc6952f5fc0258020271db74f9d30585
+        GIT_REPOSITORY "https://github.com/arximboldi/immer.git"
+        GIT_TAG v0.8.1
+        GIT_SHALLOW ON
 
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/immer"
         UPDATE_COMMAND ""

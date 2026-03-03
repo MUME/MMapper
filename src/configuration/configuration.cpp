@@ -666,7 +666,9 @@ void Configuration::AccountSettings::read(const QSettings &conf)
 {
     accountName = conf.value(KEY_ACCOUNT_NAME, "").toString();
     accountPassword = conf.value(KEY_ACCOUNT_PASSWORD, false).toBool();
-    rememberLogin = NO_QTKEYCHAIN ? false : conf.value(KEY_REMEMBER_LOGIN, false).toBool();
+    rememberLogin = (NO_QTKEYCHAIN && CURRENT_PLATFORM != PlatformEnum::Wasm)
+                        ? false
+                        : conf.value(KEY_REMEMBER_LOGIN, false).toBool();
 }
 
 void Configuration::AutoLoadSettings::read(const QSettings &conf)

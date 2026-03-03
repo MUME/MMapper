@@ -23,6 +23,7 @@ class NODISCARD_QOBJECT GeneralPage final : public QWidget
 private:
     Ui::GeneralPage *const ui;
     PasswordConfig passCfg;
+    bool m_passwordFieldHasDummy = false;
 
 public:
     explicit GeneralPage(QWidget *parent);

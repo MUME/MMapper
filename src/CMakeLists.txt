@@ -1164,7 +1164,7 @@ if(APPLE)
     add_custom_command(
         TARGET mmapper
         POST_BUILD
-        COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app -libpath ${QTKEYCHAIN_LIBRARY_DIR} -verbose=2
+        COMMAND ${MACDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app "-libpath=${QTKEYCHAIN_LIBRARY_DIR}" -verbose=2
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Deploying the Qt Framework onto the bundle"
         VERBATIM
