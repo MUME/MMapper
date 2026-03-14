@@ -14,6 +14,7 @@
 #include "connectionselection.h"
 #include "prespammedpath.h"
 
+#include <cassert>
 #include <map>
 #include <memory>
 #include <optional>
@@ -203,9 +204,13 @@ struct NODISCARD MapCanvasInputState
     std::optional<MouseSel> m_sel1;
     std::optional<MouseSel> m_sel2;
 
+    // Mutually exclusive mouse-based interactions.
     std::optional<
         std::variant<AltDragState, DragState, RoomSelMove, InfomarkSelectionMove, AreaSelectionState>>
         m_activeInteraction;
+
+    // Gesture states (pinch, magnification) can occur concurrently with mouse interactions
+    // and each other, so they are managed independently.
     std::optional<PinchState> m_pinchState;
     std::optional<MagnificationState> m_magnificationState;
 
@@ -256,15 +261,29 @@ public:
 public:
     void beginAltDrag(const QPoint &pos, const QCursor &cursor)
     {
+        assert(!m_activeInteraction);
         m_activeInteraction.emplace(AltDragState{pos, cursor});
     }
     void beginDrag(const glm::vec3 &worldPos, const glm::vec2 &scroll, const glm::mat4 &viewProj)
     {
+        assert(!m_activeInteraction);
         m_activeInteraction.emplace(DragState{worldPos, scroll, viewProj});
     }
-    void beginRoomMove() { m_activeInteraction.emplace(RoomSelMove{}); }
-    void beginInfomarkMove() { m_activeInteraction.emplace(InfomarkSelectionMove{}); }
-    void beginAreaSelection() { m_activeInteraction.emplace(AreaSelectionState{}); }
+    void beginRoomMove()
+    {
+        assert(!m_activeInteraction);
+        m_activeInteraction.emplace(RoomSelMove{});
+    }
+    void beginInfomarkMove()
+    {
+        assert(!m_activeInteraction);
+        m_activeInteraction.emplace(InfomarkSelectionMove{});
+    }
+    void beginAreaSelection()
+    {
+        assert(!m_activeInteraction);
+        m_activeInteraction.emplace(AreaSelectionState{});
+    }
     void endInteraction() { m_activeInteraction.reset(); }
 
 public:
