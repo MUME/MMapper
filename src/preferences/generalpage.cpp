@@ -205,12 +205,28 @@ GeneralPage::GeneralPage(QWidget *parent)
         }
     });
 
+    connect(ui->resourceLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
+        setConfig().canvas.resourcesDirectory = text;
+    });
+    connect(ui->resourcePushButton, &QAbstractButton::clicked, this, [this](bool /*unused*/) {
+        const auto &resourceDir = getConfig().canvas.resourcesDirectory;
+        QString directory = QFileDialog::getExistingDirectory(ui->resourcePushButton,
+                                                              "Choose resource location ...",
+                                                              resourceDir);
+        if (!directory.isEmpty()) {
+            ui->resourceLineEdit->setText(directory);
+            setConfig().canvas.resourcesDirectory = directory;
+        }
+    });
+
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         ui->remotePort->setDisabled(true);
         ui->localPort->setDisabled(true);
         ui->charsetComboBox->setDisabled(true);
         ui->proxyListensOnAnyInterfaceCheckBox->setDisabled(true);
         ui->proxyConnectionStatusCheckBox->setDisabled(true);
+        ui->resourceLineEdit->setDisabled(true);
+        ui->resourcePushButton->setDisabled(true);
     }
 }
 
@@ -267,6 +283,8 @@ void GeneralPage::slot_loadConfig()
     ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
 
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
+
+    ui->resourceLineEdit->setText(config.canvas.resourcesDirectory);
 
     if constexpr (NO_QTKEYCHAIN) {
         ui->autoLogin->setEnabled(false);

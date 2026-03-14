@@ -350,6 +350,29 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_modding">
+     <property name="title">
+      <string>Modding</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_modding">
+      <item>
+       <widget class="QLineEdit" name="resourceLineEdit">
+        <property name="placeholderText">
+         <string>Path to resources</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="resourcePushButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox_exits">
      <property name="minimumSize">
       <size>
@@ -486,6 +509,8 @@
   <tabstop>themeComboBox</tabstop>
   <tabstop>displayMumeClockCheckBox</tabstop>
   <tabstop>displayXPStatusCheckBox</tabstop>
+  <tabstop>resourceLineEdit</tabstop>
+  <tabstop>resourcePushButton</tabstop>
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
