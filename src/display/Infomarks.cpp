@@ -325,10 +325,8 @@ void MapCanvas::paintSelectedInfomarks()
             sel.for_each([this, &batch](const InfomarkHandle &marker) {
                 drawInfomark(batch, marker, m_currentLayer, {}, Colors::red);
             });
-            if (m_activeInteraction
-                && std::holds_alternative<InfomarkSelectionMove>(*m_activeInteraction)) {
-                const glm::vec2 offset = std::get<InfomarkSelectionMove>(*m_activeInteraction)
-                                             .pos.to_vec2();
+            if (auto *const move = getInfomarkSelectionMove()) {
+                const glm::vec2 offset = move->pos.to_vec2();
                 sel.for_each([this, &batch, &offset](const InfomarkHandle &marker) {
                     drawInfomark(batch, marker, m_currentLayer, offset, Colors::yellow);
                 });

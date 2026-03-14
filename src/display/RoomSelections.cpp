@@ -125,9 +125,8 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
     gl.resetMatrix();
 
     const float marginPixels = MapScreen::DEFAULT_MARGIN_PIXELS;
-    const bool isMoving = hasRoomSelectionMove();
 
-    if (!isMoving && !m_mapScreen.isRoomVisible(roomPos, marginPixels / 2.f)) {
+    if (!hasRoomSelectionMove() && !m_mapScreen.isRoomVisible(roomPos, marginPixels / 2.f)) {
         const glm::vec3 roomCenter = roomPos.to_vec3() + glm::vec3{0.5f, 0.5f, 0.f};
         const auto dot = DistantObjectTransform::construct(roomCenter, m_mapScreen, marginPixels);
         gl.glTranslatef(dot.offset.x, dot.offset.y, dot.offset.z);
@@ -155,8 +154,7 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
         gl.resetMatrix();
     }
 
-    if (auto *const move = m_activeInteraction ? std::get_if<RoomSelMove>(&*m_activeInteraction)
-                                               : nullptr) {
+    if (auto *const move = getRoomSelMove()) {
         gl.resetMatrix();
         const auto &relativeOffset = move->pos;
         gl.glTranslatef(x + relativeOffset.x, y + relativeOffset.y, z);
