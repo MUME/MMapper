@@ -10,6 +10,7 @@
 
 #include <tuple>
 
+#include <QDesktopServices>
 #include <QDialog>
 #include <QStyle>
 #include <QTextBrowser>
@@ -30,8 +31,12 @@ AnsiViewWindow::AnsiViewWindow(const QString &program,
 
     auto &view = deref(m_view);
     setAnsiText(&view, message);
-    view.setOpenExternalLinks(true);
+    view.setOpenExternalLinks(false);
     view.setTextInteractionFlags(Qt::TextBrowserInteraction);
+
+    connect(&view, &QTextBrowser::anchorClicked, [](const QUrl &url) {
+        QDesktopServices::openUrl(url);
+    });
 
     // REVISIT: Restore geometry from config?
     setGeometry(QStyle::alignedRect(Qt::LeftToRight,
