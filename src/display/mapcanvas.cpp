@@ -263,12 +263,10 @@ void MapCanvas::touchEvent(QTouchEvent *const event)
 
         if (event->type() == QEvent::TouchBegin || p1.state() == QEventPoint::Pressed
             || p2.state() == QEventPoint::Pressed) {
-            m_pinchState.emplace(
-                PinchState{glm::distance(glm::vec2(static_cast<float>(p1.position().x()),
-                                                   static_cast<float>(p1.position().y())),
-                                         glm::vec2(static_cast<float>(p2.position().x()),
-                                                   static_cast<float>(p2.position().y()))),
-                           1.f});
+            beginPinch(glm::distance(glm::vec2(static_cast<float>(p1.position().x()),
+                                               static_cast<float>(p1.position().y())),
+                                     glm::vec2(static_cast<float>(p2.position().x()),
+                                               static_cast<float>(p2.position().y()))));
         }
 
         if (m_pinchState && m_pinchState->initialDistance > PINCH_DISTANCE_THRESHOLD) {
@@ -281,12 +279,12 @@ void MapCanvas::touchEvent(QTouchEvent *const event)
             const float deltaFactor = currentPinchFactor / m_pinchState->lastFactor;
 
             handleZoomAtEvent(event, deltaFactor);
-            m_pinchState->lastFactor = currentPinchFactor;
+            updatePinch(currentPinchFactor);
         }
 
         if (event->type() == QEvent::TouchEnd || p1.state() == QEventPoint::Released
             || p2.state() == QEventPoint::Released) {
-            m_pinchState.reset();
+            endPinch();
         }
         event->accept();
     } else {
@@ -295,7 +293,7 @@ void MapCanvas::touchEvent(QTouchEvent *const event)
             qDebug() << "MapCanvas::touchEvent: ignoring" << points.size() << "touch points";
         }
 
-        m_pinchState.reset();
+        endPinch();
         QOpenGLWindow::touchEvent(event);
     }
 }
@@ -322,19 +320,17 @@ bool MapCanvas::event(QEvent *const event)
                 deltaFactor += value;
             } else {
                 // On other platforms, it's typically the cumulative scale factor (1.0 at start).
-                if (nativeEvent->isBeginEvent()) {
-                    m_magnificationState.emplace(MagnificationState{1.f});
-                } else if (!m_magnificationState) {
-                    m_magnificationState.emplace(MagnificationState{1.f});
+                if (nativeEvent->isBeginEvent() || !m_magnificationState) {
+                    beginMagnification();
                 }
 
                 if (std::abs(m_magnificationState->lastValue) > GESTURE_EPSILON) {
                     deltaFactor = value / m_magnificationState->lastValue;
                 }
-                m_magnificationState->lastValue = value;
+                updateMagnification(value);
 
                 if (nativeEvent->isEndEvent()) {
-                    m_magnificationState.reset();
+                    endMagnification();
                 }
             }
             handleZoomAtEvent(nativeEvent, deltaFactor);

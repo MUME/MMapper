@@ -7,6 +7,7 @@
 #include "../map/ExitDirection.h"
 #include "../map/mmapper2room.h"
 #include "../mapdata/mapdata.h"
+#include "../global/logging.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "CanvasMouseModeEnum.h"
@@ -259,47 +260,50 @@ public:
     }
 
 public:
-    void beginAltDrag(const QPoint &pos, const QCursor &cursor)
+    template<typename T>
+    void beginInteraction(T &&state)
     {
-        if (getInteraction<AltDragState>()) {
+        if (getInteraction<std::decay_t<T>>()) {
             return;
         }
-        assert(m_activeInteraction.has_value() == false);
-        m_activeInteraction.emplace(AltDragState{pos, cursor});
+
+        if (m_activeInteraction) {
+            MMLOG_WARNING() << "Starting new interaction while another is active. Overwriting.";
+            assert(false);
+        }
+
+        m_activeInteraction.emplace(std::forward<T>(state));
+    }
+
+    void beginAltDrag(const QPoint &pos, const QCursor &cursor)
+    {
+        beginInteraction(AltDragState{pos, cursor});
     }
     void beginDrag(const glm::vec3 &worldPos, const glm::vec2 &scroll, const glm::mat4 &viewProj)
     {
-        if (getInteraction<DragState>()) {
-            return;
-        }
-        assert(m_activeInteraction.has_value() == false);
-        m_activeInteraction.emplace(DragState{worldPos, scroll, viewProj});
+        beginInteraction(DragState{worldPos, scroll, viewProj});
     }
-    void beginRoomMove()
-    {
-        if (getInteraction<RoomSelMove>()) {
-            return;
-        }
-        assert(m_activeInteraction.has_value() == false);
-        m_activeInteraction.emplace(RoomSelMove{});
-    }
-    void beginInfomarkMove()
-    {
-        if (getInteraction<InfomarkSelectionMove>()) {
-            return;
-        }
-        assert(m_activeInteraction.has_value() == false);
-        m_activeInteraction.emplace(InfomarkSelectionMove{});
-    }
-    void beginAreaSelection()
-    {
-        if (getInteraction<AreaSelectionState>()) {
-            return;
-        }
-        assert(m_activeInteraction.has_value() == false);
-        m_activeInteraction.emplace(AreaSelectionState{});
-    }
+    void beginRoomMove() { beginInteraction(RoomSelMove{}); }
+    void beginInfomarkMove() { beginInteraction(InfomarkSelectionMove{}); }
+    void beginAreaSelection() { beginInteraction(AreaSelectionState{}); }
     void endInteraction() { m_activeInteraction.reset(); }
+
+public:
+    void beginPinch(const float initialDistance) { m_pinchState.emplace(PinchState{initialDistance}); }
+    void updatePinch(const float lastFactor)
+    {
+        assert(m_pinchState);
+        m_pinchState->lastFactor = lastFactor;
+    }
+    void endPinch() { m_pinchState.reset(); }
+
+    void beginMagnification() { m_magnificationState.emplace(MagnificationState{1.f}); }
+    void updateMagnification(const float lastValue)
+    {
+        assert(m_magnificationState);
+        m_magnificationState->lastValue = lastValue;
+    }
+    void endMagnification() { m_magnificationState.reset(); }
 
 public:
     NODISCARD bool hasRoomSelectionMove() const { return getInteraction<RoomSelMove>() != nullptr; }
