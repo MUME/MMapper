@@ -292,6 +292,9 @@ public:
 
 public:
     NODISCARD bool hasRoomSelectionMove() const { return getRoomSelMove() != nullptr; }
-    NODISCARD bool hasInfomarkSelectionMove() const { return getInfomarkSelectionMove() != nullptr; }
+    NODISCARD bool hasInfomarkSelectionMove() const
+    {
+        return getInfomarkSelectionMove() != nullptr;
+    }
     NODISCARD bool hasAreaSelection() const { return getAreaSelectionState() != nullptr; }
 };
