@@ -325,7 +325,7 @@ bool MapCanvas::event(QEvent *const event)
                 if (nativeEvent->isBeginEvent()) {
                     m_magnificationState.emplace(MagnificationState{1.f});
                 } else if (!m_magnificationState) {
-                    m_magnificationState.emplace(MagnificationState{value});
+                    m_magnificationState.emplace(MagnificationState{1.f});
                 }
 
                 if (std::abs(m_magnificationState->lastValue) > GESTURE_EPSILON) {
@@ -829,7 +829,6 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
             if (auto *const move = getInteraction<InfomarkSelectionMove>()) {
                 const auto pos_copy = move->pos;
-                endInteraction();
                 if (m_infoMarkSelection != nullptr) {
                     const auto offset = Coordinate{(pos_copy * INFOMARK_SCALE).truncate(), 0};
 
@@ -838,27 +837,25 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     sel.applyOffset(offset);
                     infomarksChanged();
                 }
-            } else {
-                if (hasSel1() && hasSel2()) {
-                    // Add infomarks to selection
-                    const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
-                    const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
-                    auto tmpSel = InfomarkSelection::alloc(m_data, c1, c2);
-                    if (tmpSel && tmpSel->size() == 1) {
-                        const InfomarkHandle &firstMark = tmpSel->front();
-                        const Coordinate &pos = firstMark.getPosition1();
-                        QString ctemp = QString("Selected Info Mark: [%1] (at %2,%3,%4)")
-                                            .arg(firstMark.getText().toQString())
-                                            .arg(pos.x)
-                                            .arg(pos.y)
-                                            .arg(pos.z);
-                        log(ctemp);
-                    }
-                    slot_setInfomarkSelection(tmpSel);
+            } else if (hasSel1() && hasSel2()) {
+                // Add infomarks to selection
+                const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
+                const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
+                auto tmpSel = InfomarkSelection::alloc(m_data, c1, c2);
+                if (tmpSel && tmpSel->size() == 1) {
+                    const InfomarkHandle &firstMark = tmpSel->front();
+                    const Coordinate &pos = firstMark.getPosition1();
+                    QString ctemp = QString("Selected Info Mark: [%1] (at %2,%3,%4)")
+                                        .arg(firstMark.getText().toQString())
+                                        .arg(pos.x)
+                                        .arg(pos.y)
+                                        .arg(pos.z);
+                    log(ctemp);
                 }
-                endInteraction();
+                slot_setInfomarkSelection(tmpSel);
             }
         }
+        endInteraction();
         selectionChanged();
         break;
 
@@ -872,6 +869,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             // Why??? Now it just allocates an empty selection.
             auto tmpSel = InfomarkSelection::allocEmpty(m_data, c1, c2);
             slot_setInfomarkSelection(tmpSel);
+            endInteraction();
         }
         infomarksChanged();
         break;
@@ -905,6 +903,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
         // This seems very unusual.
         if (m_ctrlPressed && m_altPressed) {
+            endInteraction();
             break;
         }
 
@@ -914,32 +913,28 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             if (auto *const move = getInteraction<RoomSelMove>()) {
                 const auto pos = move->pos;
                 const bool wrongPlace = move->wrongPlace;
-                endInteraction();
                 if (!wrongPlace && (m_roomSelection != nullptr)) {
                     const Coordinate moverel{pos, 0};
                     m_data.applySingleChange(Change{
                         room_change_types::MoveRelative2{m_roomSelection->getRoomIds(), moverel}});
                 }
 
-            } else {
-                if (hasSel1() && hasSel2()) {
-                    const Coordinate &c1 = getSel1().getCoordinate();
-                    const Coordinate &c2 = getSel2().getCoordinate();
-                    if (m_roomSelection == nullptr) {
-                        // add rooms to default selections
-                        m_roomSelection = RoomSelection::createSelection(
-                            m_data.findAllRooms(c1, c2));
-                    } else {
-                        auto &sel = deref(m_roomSelection);
-                        sel.removeMissing(m_data);
-                        // add or remove rooms to/from default selection
-                        const auto tmpSel = m_data.findAllRooms(c1, c2);
-                        for (const RoomId key : tmpSel) {
-                            if (sel.contains(key)) {
-                                sel.erase(key);
-                            } else {
-                                sel.insert(key);
-                            }
+            } else if (hasSel1() && hasSel2()) {
+                const Coordinate &c1 = getSel1().getCoordinate();
+                const Coordinate &c2 = getSel2().getCoordinate();
+                if (m_roomSelection == nullptr) {
+                    // add rooms to default selections
+                    m_roomSelection = RoomSelection::createSelection(m_data.findAllRooms(c1, c2));
+                } else {
+                    auto &sel = deref(m_roomSelection);
+                    sel.removeMissing(m_data);
+                    // add or remove rooms to/from default selection
+                    const auto tmpSel = m_data.findAllRooms(c1, c2);
+                    for (const RoomId key : tmpSel) {
+                        if (sel.contains(key)) {
+                            sel.erase(key);
+                        } else {
+                            sel.insert(key);
                         }
                     }
                 }
@@ -947,9 +942,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 if (m_roomSelection != nullptr && !m_roomSelection->empty()) {
                     slot_setRoomSelection(SigRoomSelection{m_roomSelection});
                 }
-                endInteraction();
             }
         }
+        endInteraction();
         selectionChanged();
         break;
 

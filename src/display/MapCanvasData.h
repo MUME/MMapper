@@ -261,27 +261,42 @@ public:
 public:
     void beginAltDrag(const QPoint &pos, const QCursor &cursor)
     {
-        assert(!m_activeInteraction);
+        if (getInteraction<AltDragState>()) {
+            return;
+        }
+        assert(m_activeInteraction.has_value() == false);
         m_activeInteraction.emplace(AltDragState{pos, cursor});
     }
     void beginDrag(const glm::vec3 &worldPos, const glm::vec2 &scroll, const glm::mat4 &viewProj)
     {
-        assert(!m_activeInteraction);
+        if (getInteraction<DragState>()) {
+            return;
+        }
+        assert(m_activeInteraction.has_value() == false);
         m_activeInteraction.emplace(DragState{worldPos, scroll, viewProj});
     }
     void beginRoomMove()
     {
-        assert(!m_activeInteraction);
+        if (getInteraction<RoomSelMove>()) {
+            return;
+        }
+        assert(m_activeInteraction.has_value() == false);
         m_activeInteraction.emplace(RoomSelMove{});
     }
     void beginInfomarkMove()
     {
-        assert(!m_activeInteraction);
+        if (getInteraction<InfomarkSelectionMove>()) {
+            return;
+        }
+        assert(m_activeInteraction.has_value() == false);
         m_activeInteraction.emplace(InfomarkSelectionMove{});
     }
     void beginAreaSelection()
     {
-        assert(!m_activeInteraction);
+        if (getInteraction<AreaSelectionState>()) {
+            return;
+        }
+        assert(m_activeInteraction.has_value() == false);
         m_activeInteraction.emplace(AreaSelectionState{});
     }
     void endInteraction() { m_activeInteraction.reset(); }
