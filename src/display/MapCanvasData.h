@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <map>
+#include <type_traits>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -270,6 +271,7 @@ public:
         if (m_activeInteraction) {
             MMLOG_WARNING() << "Starting new interaction while another is active. Overwriting.";
             assert(false);
+            endInteraction();
         }
 
         m_activeInteraction.emplace(std::forward<T>(state));
