@@ -241,60 +241,40 @@ public:
     NODISCARD MouseSel getSel2() const { return getMouseSel(m_sel2); }
 
 public:
-    NODISCARD const AltDragState *getAltDragState() const
+    template<typename T>
+    NODISCARD const T *getInteraction() const
     {
-        return m_activeInteraction ? std::get_if<AltDragState>(&*m_activeInteraction) : nullptr;
-    }
-    NODISCARD AltDragState *getAltDragState()
-    {
-        return m_activeInteraction ? std::get_if<AltDragState>(&*m_activeInteraction) : nullptr;
+        return m_activeInteraction ? std::get_if<T>(&*m_activeInteraction) : nullptr;
     }
 
-    NODISCARD const DragState *getDragState() const
+    template<typename T>
+    NODISCARD T *getInteraction()
     {
-        return m_activeInteraction ? std::get_if<DragState>(&*m_activeInteraction) : nullptr;
-    }
-    NODISCARD DragState *getDragState()
-    {
-        return m_activeInteraction ? std::get_if<DragState>(&*m_activeInteraction) : nullptr;
-    }
-
-    NODISCARD const RoomSelMove *getRoomSelMove() const
-    {
-        return m_activeInteraction ? std::get_if<RoomSelMove>(&*m_activeInteraction) : nullptr;
-    }
-    NODISCARD RoomSelMove *getRoomSelMove()
-    {
-        return m_activeInteraction ? std::get_if<RoomSelMove>(&*m_activeInteraction) : nullptr;
-    }
-
-    NODISCARD const InfomarkSelectionMove *getInfomarkSelectionMove() const
-    {
-        return m_activeInteraction ? std::get_if<InfomarkSelectionMove>(&*m_activeInteraction)
-                                   : nullptr;
-    }
-    NODISCARD InfomarkSelectionMove *getInfomarkSelectionMove()
-    {
-        return m_activeInteraction ? std::get_if<InfomarkSelectionMove>(&*m_activeInteraction)
-                                   : nullptr;
-    }
-
-    NODISCARD const AreaSelectionState *getAreaSelectionState() const
-    {
-        return m_activeInteraction ? std::get_if<AreaSelectionState>(&*m_activeInteraction)
-                                   : nullptr;
-    }
-    NODISCARD AreaSelectionState *getAreaSelectionState()
-    {
-        return m_activeInteraction ? std::get_if<AreaSelectionState>(&*m_activeInteraction)
-                                   : nullptr;
+        return m_activeInteraction ? std::get_if<T>(&*m_activeInteraction) : nullptr;
     }
 
 public:
-    NODISCARD bool hasRoomSelectionMove() const { return getRoomSelMove() != nullptr; }
+    void beginAltDrag(const QPoint &pos, const QCursor &cursor)
+    {
+        m_activeInteraction.emplace(AltDragState{pos, cursor});
+    }
+    void beginDrag(const glm::vec3 &worldPos, const glm::vec2 &scroll, const glm::mat4 &viewProj)
+    {
+        m_activeInteraction.emplace(DragState{worldPos, scroll, viewProj});
+    }
+    void beginRoomMove() { m_activeInteraction.emplace(RoomSelMove{}); }
+    void beginInfomarkMove() { m_activeInteraction.emplace(InfomarkSelectionMove{}); }
+    void beginAreaSelection() { m_activeInteraction.emplace(AreaSelectionState{}); }
+    void endInteraction() { m_activeInteraction.reset(); }
+
+public:
+    NODISCARD bool hasRoomSelectionMove() const { return getInteraction<RoomSelMove>() != nullptr; }
     NODISCARD bool hasInfomarkSelectionMove() const
     {
-        return getInfomarkSelectionMove() != nullptr;
+        return getInteraction<InfomarkSelectionMove>() != nullptr;
     }
-    NODISCARD bool hasAreaSelection() const { return getAreaSelectionState() != nullptr; }
+    NODISCARD bool hasAreaSelection() const
+    {
+        return getInteraction<AreaSelectionState>() != nullptr;
+    }
 };

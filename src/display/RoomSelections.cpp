@@ -154,7 +154,7 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
         gl.resetMatrix();
     }
 
-    if (auto *const move = getRoomSelMove()) {
+    if (auto *const move = getInteraction<RoomSelMove>()) {
         gl.resetMatrix();
         const auto &relativeOffset = move->pos;
         gl.glTranslatef(x + relativeOffset.x, y + relativeOffset.y, z);
