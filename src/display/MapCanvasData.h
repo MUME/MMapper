@@ -4,10 +4,10 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/EnumIndexedArray.h"
+#include "../global/logging.h"
 #include "../map/ExitDirection.h"
 #include "../map/mmapper2room.h"
 #include "../mapdata/mapdata.h"
-#include "../global/logging.h"
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "CanvasMouseModeEnum.h"
@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_map>
 #include <variant>
 
@@ -270,6 +271,7 @@ public:
         if (m_activeInteraction) {
             MMLOG_WARNING() << "Starting new interaction while another is active. Overwriting.";
             assert(false);
+            endInteraction();
         }
 
         m_activeInteraction.emplace(std::forward<T>(state));
@@ -289,7 +291,10 @@ public:
     void endInteraction() { m_activeInteraction.reset(); }
 
 public:
-    void beginPinch(const float initialDistance) { m_pinchState.emplace(PinchState{initialDistance}); }
+    void beginPinch(const float initialDistance)
+    {
+        m_pinchState.emplace(PinchState{initialDistance});
+    }
     void updatePinch(const float lastFactor)
     {
         assert(m_pinchState);
