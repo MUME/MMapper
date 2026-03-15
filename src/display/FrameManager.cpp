@@ -41,7 +41,7 @@ bool FrameManager::needsHeartbeat() const
 
     for (const auto &entry : m_callbacks) {
         if (auto shared = entry.lifetime.lock()) {
-            if (entry.callback() == AnimationStatus::Continue) {
+            if (entry.callback() == AnimationStatusEnum::Continue) {
                 anyActive = true;
                 // Defer thorough cleanup to when heartbeat is truly idle.
                 break;
@@ -115,11 +115,14 @@ void FrameManager::onHeartbeat()
 
 std::chrono::nanoseconds FrameManager::getJitterTolerance() const
 {
-    // Use 25% of the frame time as jitter tolerance, but cap it at 8ms.
+    // Use 25% of the frame time as jitter tolerance, but cap it at 8ms and also m_minFrameTime.
     // This ensures we are "ready early" for VSync at 60Hz (4ms) while avoiding
-    // over-rendering at very high frame rates.
+    // over-rendering at very high frame rates where the 8ms cap could effectively
+    // disable the rate limit.
     const auto tolerance = m_minFrameTime / 4;
-    return std::min(tolerance, std::chrono::nanoseconds(std::chrono::milliseconds(8)));
+    return std::min({tolerance,
+                     m_minFrameTime,
+                     std::chrono::nanoseconds(std::chrono::milliseconds(8))});
 }
 
 std::chrono::nanoseconds FrameManager::getTimeUntilNextFrame() const

@@ -11,6 +11,7 @@
 #include "../global/utils.h"
 
 #include <cassert>
+#include <type_traits>
 #include <memory>
 
 #include <QCheckBox>
@@ -172,8 +173,11 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
     auto *vertical = new QVBoxLayout(m_groupBox);
 
     auto makeSsb = [this, vertical](const QString &name, auto &fp, bool is3DOnly = true) {
-        addLine(*vertical);
         using FP = std::decay_t<decltype(fp)>;
+        static_assert(std::is_same_v<FP, FixedPoint<FP::digits>>,
+                      "makeSsb expects a FixedPoint<digits> argument");
+
+        addLine(*vertical);
         auto ssb = std::make_unique<SliderSpinboxButtonImpl<FP::digits>>(*this, *vertical, name, fp);
         if (is3DOnly) {
             m_3dSsbs.emplace_back(std::move(ssb));

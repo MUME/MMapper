@@ -453,7 +453,6 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
 void MapCanvas::updateViewProj(int width, int height)
 {
     if (width <= 0 || height <= 0) {
-        qDebug() << "Matrix update skipped: Invalid dimensions" << width << height;
         return;
     }
     const bool want3D = getConfig().canvas.advanced.use3D.get();

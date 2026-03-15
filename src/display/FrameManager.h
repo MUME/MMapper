@@ -34,8 +34,8 @@ class FrameManager final : public QObject
     Q_OBJECT
 
 public:
-    enum class AnimationStatus { Continue, Stop };
-    using AnimationCallback = std::function<AnimationStatus()>;
+    enum class AnimationStatusEnum { Continue, Stop };
+    using AnimationCallback = std::function<AnimationStatusEnum()>;
 
 private:
     struct Entry
@@ -83,7 +83,7 @@ public:
 public:
     /**
      * @brief Register a callback that will be executed once per heartbeat.
-     * The heartbeat continues as long as any callback returns AnimationStatus::Continue.
+     * The heartbeat continues as long as any callback returns AnimationStatusEnum::Continue.
      */
     void registerCallback(const Signal2Lifetime &lifetime, AnimationCallback callback);
 

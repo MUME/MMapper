@@ -71,8 +71,8 @@ MapCanvas::MapCanvas(MapData &mapData,
     , m_frameManager{static_cast<QOpenGLWindow &>(*this)}
 {
     m_frameManager.registerCallback(m_lifetime, [this]() {
-        return m_batches.remeshCookie.isPending() ? FrameManager::AnimationStatus::Continue
-                                                  : FrameManager::AnimationStatus::Stop;
+        return m_batches.remeshCookie.isPending() ? FrameManager::AnimationStatusEnum::Continue
+                                                  : FrameManager::AnimationStatusEnum::Stop;
     });
 
     NonOwningPointer &pmc = primaryMapCanvas();
