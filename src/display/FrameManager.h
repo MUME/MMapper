@@ -51,7 +51,6 @@ private:
     Signal2Lifetime m_configLifetime;
     QTimer m_heartbeatTimer;
     QOpenGLWindow &m_window;
-    bool m_animating = false;
     bool m_dirty = true;
 
     friend class TestFrameManager;
@@ -106,11 +105,6 @@ private:
      * Does not set the dirty flag.
      */
     void requestFrame();
-
-    /**
-     * @brief Enable or disable continuous background animation.
-     */
-    void setAnimating(bool value);
 
     /**
      * @brief Check if any registered animations or heartbeat are active.

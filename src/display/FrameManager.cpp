@@ -32,7 +32,7 @@ void FrameManager::registerCallback(const Signal2Lifetime &lifetime, AnimationCa
 
 bool FrameManager::needsHeartbeat() const
 {
-    if (m_animating || m_dirty) {
+    if (m_dirty) {
         return true;
     }
 
@@ -95,23 +95,9 @@ std::optional<FrameManager::Frame> FrameManager::beginFrame()
     return Frame(*this);
 }
 
-void FrameManager::setAnimating(bool value)
-{
-    if (m_animating == value) {
-        return;
-    }
-
-    m_animating = value;
-
-    if (m_animating && !m_heartbeatTimer.isActive()) {
-        onHeartbeat();
-    }
-}
-
 void FrameManager::onHeartbeat()
 {
     if (!needsHeartbeat()) {
-        m_animating = false;
         m_heartbeatTimer.stop();
         return;
     }

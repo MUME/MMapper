@@ -787,7 +787,6 @@ void MapCanvas::paintGL()
 {
     auto frame = m_frameManager.beginFrame();
     if (!frame) {
-        qDebug() << "Frame update skipped";
         return;
     }
 
