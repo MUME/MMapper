@@ -270,7 +270,6 @@ public:
 
         if (m_activeInteraction) {
             MMLOG_WARNING() << "Starting new interaction while another is active. Overwriting.";
-            assert(false);
             endInteraction();
         }
 
@@ -294,7 +293,9 @@ public:
     void beginPinch(const float initialDistance) { m_pinchState.emplace(PinchState{initialDistance}); }
     void updatePinch(const float lastFactor)
     {
-        assert(m_pinchState);
+        if (!m_pinchState) {
+            return;
+        }
         m_pinchState->lastFactor = lastFactor;
     }
     void endPinch() { m_pinchState.reset(); }
@@ -302,7 +303,9 @@ public:
     void beginMagnification() { m_magnificationState.emplace(MagnificationState{1.f}); }
     void updateMagnification(const float lastValue)
     {
-        assert(m_magnificationState);
+        if (!m_magnificationState) {
+            return;
+        }
         m_magnificationState->lastValue = lastValue;
     }
     void endMagnification() { m_magnificationState.reset(); }
