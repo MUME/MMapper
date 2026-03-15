@@ -301,7 +301,7 @@ void MapCanvas::paintNewInfomarkSelection()
     const auto layer = static_cast<float>(m_currentLayer);
 
     // Draw yellow guide when creating an infomark line/arrow
-    if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS && m_selectedArea) {
+    if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS && hasAreaSelection()) {
         const auto infomarksLineStyle = GLRenderState()
                                             .withColor(Color{Qt::yellow})
                                             .withLineParams(LineParams{INFOMARK_GUIDE_LINE_WIDTH});
@@ -325,8 +325,8 @@ void MapCanvas::paintSelectedInfomarks()
             sel.for_each([this, &batch](const InfomarkHandle &marker) {
                 drawInfomark(batch, marker, m_currentLayer, {}, Colors::red);
             });
-            if (hasInfomarkSelectionMove()) {
-                const glm::vec2 offset = m_infoMarkSelectionMove->pos.to_vec2();
+            if (auto *const move = getInteraction<InfomarkSelectionMove>()) {
+                const glm::vec2 offset = move->pos.to_vec2();
                 sel.for_each([this, &batch, &offset](const InfomarkHandle &marker) {
                     drawInfomark(batch, marker, m_currentLayer, offset, Colors::yellow);
                 });

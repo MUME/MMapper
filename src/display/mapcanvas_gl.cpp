@@ -962,7 +962,7 @@ void MapCanvas::paintSelectionArea()
     auto &gl = getOpenGL();
     const auto layer = static_cast<float>(m_currentLayer);
 
-    if (m_selectedArea) {
+    if (hasAreaSelection()) {
         const glm::vec3 A{pos1, layer};
         const glm::vec3 B{pos2.x, pos1.y, layer};
         const glm::vec3 C{pos2, layer};
