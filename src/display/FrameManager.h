@@ -22,9 +22,8 @@ class QOpenGLWindow;
  *
  * FrameManager provides:
  * 1. Pacing: Ensures the application doesn't exceed the target FPS limit.
- * 2. Delta Time: Calculates accurate time between frames for smooth animations.
- * 3. Heartbeat: Automatically requests new frames while animations are active.
- * 4. Dirty Tracking: Skips redundant renders when nothing has changed.
+ * 2. Heartbeat: Automatically requests new frames while animations are active.
+ * 3. Dirty Tracking: Skips redundant renders when nothing has changed.
  *
  * It uses a "start-to-start" interval pacing approach, which ensures the target
  * frame rate is hit regardless of how long each frame takes to render (as long
