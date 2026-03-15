@@ -260,15 +260,11 @@ public:
         return m_activeInteraction ? std::get_if<T>(&*m_activeInteraction) : nullptr;
     }
 
-public:
+private:
     template<typename T>
     void beginInteraction(T &&state)
     {
-        if (getInteraction<std::decay_t<T>>()) {
-            return;
-        }
-
-        if (m_activeInteraction) {
+        if (m_activeInteraction && !getInteraction<std::decay_t<T>>()) {
             MMLOG_WARNING() << "Starting new interaction while another is active. Overwriting.";
             endInteraction();
         }
@@ -276,6 +272,7 @@ public:
         m_activeInteraction.emplace(std::forward<T>(state));
     }
 
+public:
     void beginAltDrag(const QPoint &pos, const QCursor &cursor)
     {
         beginInteraction(AltDragState{pos, cursor});
