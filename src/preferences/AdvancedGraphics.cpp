@@ -23,32 +23,34 @@
 #include <QVector>
 #include <QWidget>
 
+SliderSpinboxButton::~SliderSpinboxButton() {}
+
+template<int D>
 class NODISCARD FpSlider final : public QSlider
 {
 private:
-    FixedPoint<1> &m_fp;
+    FixedPoint<D> &m_fp;
 
 public:
-    explicit FpSlider(FixedPoint<1> &fp)
+    explicit FpSlider(FixedPoint<D> &fp)
         : QSlider(Qt::Orientation::Horizontal)
         , m_fp{fp}
     {
         setRange(m_fp.min, m_fp.max);
         setValue(m_fp.get());
     }
-    ~FpSlider() final;
+    ~FpSlider() final = default;
 };
 
-FpSlider::~FpSlider() = default;
-
+template<int D>
 class NODISCARD FpSpinBox final : public QDoubleSpinBox
 {
 private:
-    using FP = FixedPoint<1>;
+    using FP = FixedPoint<D>;
     FP &m_fp;
 
 public:
-    explicit FpSpinBox(FixedPoint<1> &fp)
+    explicit FpSpinBox(FixedPoint<D> &fp)
         : QDoubleSpinBox()
         , m_fp{fp}
     {
@@ -58,7 +60,7 @@ public:
         setDecimals(FP::digits);
         setSingleStep(fraction);
     }
-    ~FpSpinBox() final;
+    ~FpSpinBox() final = default;
 
 public:
     NODISCARD int getIntValue() const
@@ -73,25 +75,23 @@ public:
     }
 };
 
-FpSpinBox::~FpSpinBox() = default;
-
-class NODISCARD SliderSpinboxButton final
+template<int D>
+class NODISCARD SliderSpinboxButtonImpl final : public SliderSpinboxButton
 {
 private:
-    using FP = FixedPoint<1>;
+    using FP = FixedPoint<D>;
     AdvancedGraphicsGroupBox &m_group;
     FP &m_fp;
-    FpSlider m_slider;
-    FpSpinBox m_spin;
+    FpSlider<D> m_slider;
+    FpSpinBox<D> m_spin;
     QPushButton m_reset;
     QHBoxLayout m_horizontal;
-    QVector<QWidget *> m_blockable;
 
 public:
-    explicit SliderSpinboxButton(AdvancedGraphicsGroupBox &in_group,
-                                 QVBoxLayout &vbox,
-                                 const QString &name,
-                                 FP &in_fp)
+    explicit SliderSpinboxButtonImpl(AdvancedGraphicsGroupBox &in_group,
+                                     QVBoxLayout &vbox,
+                                     const QString &name,
+                                     FP &in_fp)
         : m_group{in_group}
         , m_fp{in_fp}
         , m_slider(m_fp)
@@ -108,8 +108,8 @@ public:
         });
 
         QObject::connect(&m_spin,
-                         QOverload<double>::of(&FpSpinBox::valueChanged),
-                         &group,
+                         QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                         &m_group,
                          [this](double /*value*/) {
                              const SignalBlocker block_slider{m_slider};
                              const SignalBlocker block_spin{m_spin};
@@ -132,16 +132,16 @@ public:
         horizontal.addWidget(&m_reset);
         vbox.addLayout(&horizontal, 0);
     }
-    ~SliderSpinboxButton() = default;
+    ~SliderSpinboxButtonImpl() override = default;
 
-    void setEnabled(bool enabled)
+    void setEnabled(bool enabled) override
     {
         this->m_slider.setEnabled(enabled);
         this->m_spin.setEnabled(enabled);
         this->m_reset.setEnabled(enabled);
     }
 
-    void forcedUpdate()
+    void forcedUpdate() override
     {
         const SignalBlocker block_slider{m_slider};
         const SignalBlocker block_spin{m_spin};
@@ -154,7 +154,7 @@ public:
         }
     }
 
-    DELETE_CTORS_AND_ASSIGN_OPS(SliderSpinboxButton);
+    DELETE_CTORS_AND_ASSIGN_OPS(SliderSpinboxButtonImpl);
 };
 
 static void addLine(QLayout &layout)
@@ -171,11 +171,15 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
 {
     auto *vertical = new QVBoxLayout(m_groupBox);
 
-    using FP = FixedPoint<1>;
-
-    auto makeSsb = [this, vertical](const QString name, FP &fp) {
+    auto makeSsb = [this, vertical](const QString &name, auto &fp, bool is3DOnly = true) {
         addLine(*vertical);
-        m_ssbs.emplace_back(std::make_unique<SliderSpinboxButton>(*this, *vertical, name, fp));
+        using FP = std::decay_t<decltype(fp)>;
+        auto ssb = std::make_unique<SliderSpinboxButtonImpl<FP::digits>>(*this, *vertical, name, fp);
+        if (is3DOnly) {
+            m_3dSsbs.emplace_back(std::move(ssb));
+        } else {
+            m_globalSsbs.emplace_back(std::move(ssb));
+        }
     };
 
     auto *const checkboxDiag = new QCheckBox("Show Performance Stats");
@@ -198,6 +202,7 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
         makeSsb("Vertical Angle (pitch up from straight down)", advanced.verticalAngle);
         makeSsb("Horizontal Angle (yaw)", advanced.horizontalAngle);
         makeSsb("Layer height (in rooms)", advanced.layerHeight);
+        makeSsb("Maximum FPS", advanced.maximumFps, false);
     }
 
     enableSsbs(is3dAtInit);
@@ -230,7 +235,10 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
                                                 SignalBlocker sb1{*checkboxDiag};
                                                 SignalBlocker sb2{*checkbox3d};
                                                 SignalBlocker sb3{*autoTilt};
-                                                for (auto &ssb : m_ssbs) {
+                                                for (auto &ssb : m_globalSsbs) {
+                                                    ssb->forcedUpdate();
+                                                }
+                                                for (auto &ssb : m_3dSsbs) {
                                                     ssb->forcedUpdate();
                                                 }
                                                 checkboxDiag->setChecked(
@@ -245,7 +253,7 @@ AdvancedGraphicsGroupBox::~AdvancedGraphicsGroupBox() = default;
 
 void AdvancedGraphicsGroupBox::enableSsbs(bool enabled)
 {
-    for (auto &ssb : m_ssbs) {
+    for (auto &ssb : m_3dSsbs) {
         ssb->setEnabled(enabled);
     }
 }

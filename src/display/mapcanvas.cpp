@@ -68,7 +68,13 @@ MapCanvas::MapCanvas(MapData &mapData,
     , m_glFont{m_opengl}
     , m_data{mapData}
     , m_groupManager{groupManager}
+    , m_frameManager{static_cast<QOpenGLWindow &>(*this)}
 {
+    m_frameManager.registerCallback(m_lifetime, [this]() {
+        return m_batches.remeshCookie.isPending() ? FrameManager::AnimationStatus::Continue
+                                                  : FrameManager::AnimationStatus::Stop;
+    });
+
     NonOwningPointer &pmc = primaryMapCanvas();
     if (pmc == nullptr) {
         pmc = this;
@@ -416,6 +422,7 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
 
 void MapCanvas::mousePressEvent(QMouseEvent *const event)
 {
+    updateViewProj(width(), height());
     if (event->button() != Qt::RightButton) {
         emit sig_dismissContextMenu();
     }
@@ -611,6 +618,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 {
+    updateViewProj(width(), height());
     const auto optXy = getMouseCoords(event);
     if (!optXy) {
         return;
@@ -727,7 +735,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                     const glm::vec2 newWorldCenter = dragState->startScroll - delta;
                     m_scroll = newWorldCenter;
                     emit sig_onCenter(newWorldCenter);
-                    update();
+                    updateViewProj(width(), height());
+                    m_frameManager.requestUpdate();
                 }
             }
         }
@@ -798,6 +807,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 {
+    updateViewProj(width(), height());
     const auto optXy = getMouseCoords(event);
     if (!optXy) {
         return;
@@ -1044,7 +1054,8 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
     if (!optWorldPos) {
         m_scaleFactor *= factor;
         zoomChanged();
-        update();
+        updateViewProj(width(), height());
+        m_frameManager.requestUpdate();
         return;
     }
 
@@ -1060,7 +1071,7 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
     // Calculate new scroll position to keep worldPos under mousePos.
     // We update the viewport and MVP to the new zoom level temporarily
     // to perform the unprojection.
-    setViewportAndMvp(width(), height());
+    updateViewProj(width(), height());
 
     const auto optNewWorldPos = unproject(mousePos);
     if (optNewWorldPos) {
@@ -1075,47 +1086,59 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
     }
 
     // Refresh the viewport matrix with the final scroll and zoom before painting.
-    setViewportAndMvp(width(), height());
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)
 {
-    m_scroll = worldPos;
-    update();
+    if (!utils::isSameFloat(m_scroll.x, worldPos.x) || !utils::isSameFloat(m_scroll.y, worldPos.y)) {
+        m_scroll = worldPos;
+        updateViewProj(width(), height());
+        m_frameManager.requestUpdate();
+    }
 }
 
 void MapCanvas::slot_setHorizontalScroll(const float worldX)
 {
-    m_scroll.x = worldX;
-    update();
+    if (!utils::isSameFloat(m_scroll.x, worldX)) {
+        m_scroll.x = worldX;
+        updateViewProj(width(), height());
+        m_frameManager.requestUpdate();
+    }
 }
 
 void MapCanvas::slot_setVerticalScroll(const float worldY)
 {
-    m_scroll.y = worldY;
-    update();
+    if (!utils::isSameFloat(m_scroll.y, worldY)) {
+        m_scroll.y = worldY;
+        updateViewProj(width(), height());
+        m_frameManager.requestUpdate();
+    }
 }
 
 void MapCanvas::slot_zoomIn()
 {
     m_scaleFactor.logStep(1);
     zoomChanged();
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_zoomOut()
 {
     m_scaleFactor.logStep(-1);
     zoomChanged();
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_zoomReset()
 {
     m_scaleFactor.set(1.f);
     zoomChanged();
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::onMovement()
@@ -1123,9 +1146,13 @@ void MapCanvas::onMovement()
     const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
     m_currentLayer = pos.z;
     const glm::vec2 newScroll = pos.to_vec2() + glm::vec2{0.5f, 0.5f};
-    m_scroll = newScroll;
-    emit sig_onCenter(newScroll);
-    update();
+    if (!utils::isSameFloat(m_scroll.x, newScroll.x)
+        || !utils::isSameFloat(m_scroll.y, newScroll.y)) {
+        m_scroll = newScroll;
+        updateViewProj(width(), height());
+        emit sig_onCenter(newScroll);
+        m_frameManager.requestUpdate();
+    }
 }
 
 void MapCanvas::slot_dataLoaded()
@@ -1147,19 +1174,20 @@ void MapCanvas::slot_moveMarker(const RoomId id)
 void MapCanvas::infomarksChanged()
 {
     m_batches.infomarksMeshes.reset();
-    update();
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::layerChanged()
 {
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::forceUpdateMeshes()
 {
     m_batches.resetExistingMeshesAndIgnorePendingRemesh();
     m_diff.resetExistingMeshesAndIgnorePendingRemesh();
-    update();
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_mapChanged()
@@ -1169,12 +1197,12 @@ void MapCanvas::slot_mapChanged()
     if ((false)) {
         m_batches.mapBatches.reset();
     }
-    update();
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_requestUpdate()
 {
-    update();
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::screenChanged()
@@ -1187,7 +1215,7 @@ void MapCanvas::screenChanged()
     const auto newDpi = static_cast<float>(QPaintDevice::devicePixelRatioF());
     const auto oldDpi = gl.getDevicePixelRatio();
 
-    if (!utils::equals(newDpi, oldDpi)) {
+    if (!utils::isSameFloat(newDpi, oldDpi)) {
         log(QString("Display: %1 DPI").arg(static_cast<double>(newDpi)));
 
         // NOTE: The new in-flight mesh will get UI updates when it "finishes".
@@ -1200,20 +1228,21 @@ void MapCanvas::screenChanged()
         font.cleanup();
         font.init();
 
-        update();
+        m_frameManager.requestUpdate();
     }
 }
 
 void MapCanvas::selectionChanged()
 {
-    update();
+    m_frameManager.requestUpdate();
     emit sig_selectionChanged();
 }
 
 void MapCanvas::graphicsSettingsChanged()
 {
     m_opengl.resetNamedColorsBuffer();
-    update();
+    updateViewProj(width(), height());
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::userPressedEscape(bool /*pressed*/)

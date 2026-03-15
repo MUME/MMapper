@@ -11,6 +11,7 @@
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
+#include "FrameManager.h"
 #include "Infomarks.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
@@ -58,12 +59,6 @@ public:
     static constexpr const int SCROLL_SCALE = 64;
 
 private:
-    struct NODISCARD FrameRateController final
-    {
-        std::chrono::steady_clock::time_point lastFrameTime;
-        bool animating = false;
-    };
-
     struct NODISCARD Diff final
     {
         using DiffQuadVector = std::vector<RoomQuadTexVert>;
@@ -141,7 +136,7 @@ private:
     MapData &m_data;
     Mmapper2Group &m_groupManager;
     Diff m_diff;
-    FrameRateController m_frameRateController;
+    FrameManager m_frameManager;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
 
@@ -198,10 +193,6 @@ protected:
     bool event(QEvent *e) override;
 
 private:
-    void setAnimating(bool value);
-    void renderLoop();
-
-private:
     void initLogger();
 
     void resizeGL() { resizeGL(width(), height()); }
@@ -218,6 +209,7 @@ private:
                                            const glm::ivec2 &size,
                                            float zoomScale,
                                            int currentLayer);
+    void updateViewProj(int width, int height);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
