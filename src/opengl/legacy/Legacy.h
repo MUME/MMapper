@@ -363,10 +363,10 @@ public:
         Base::glVertexAttribIPointer(index, size, type, stride, pointer);
     }
 
-    template<typename T>
+    template<typename T, typename A>
     NODISCARD GLsizei setVbo(const GLenum target,
                              const GLuint buffer,
-                             const std::vector<T> &batch,
+                             const std::vector<T, A> &batch,
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -393,11 +393,11 @@ public:
         Base::glBindBuffer(target, 0);
     }
 
-    template<typename T>
+    template<typename T, typename A>
     NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
         const DrawModeEnum mode,
         const GLuint vbo,
-        const std::vector<T> &batch,
+        const std::vector<T, A> &batch,
         const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
