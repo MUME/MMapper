@@ -10,6 +10,7 @@
 #include "legacy/VBO.h"
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <optional>
 #include <type_traits>
@@ -51,6 +52,7 @@ public:
      */
     void registerRebuildFunction(Legacy::SharedVboEnum block, RebuildFunction func)
     {
+        assert(!m_rebuildFunctions[block] && "Rebuild function already registered for this UBO block");
         m_rebuildFunctions[block] = std::move(func);
     }
 
@@ -87,6 +89,7 @@ public:
         if constexpr (utils::is_vector_v<T>) {
             static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         } else {
+            static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
             gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         }
 
@@ -129,9 +132,22 @@ private:
 private:
     void bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
     {
+        const auto bindingIndex = static_cast<std::size_t>(block);
+        assert(bindingIndex < m_boundBuffers.size());
+
+#ifndef NDEBUG
+        static bool limitsChecked = false;
+        if (!limitsChecked) {
+            GLint maxBindings = 0;
+            gl.glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+            assert(m_boundBuffers.size() <= static_cast<std::size_t>(maxBindings));
+            limitsChecked = true;
+        }
+#endif
+
         auto &bound = m_boundBuffers[block];
         if (!bound.has_value() || bound.value() != buffer) {
-            gl.glBindBufferBase(GL_UNIFORM_BUFFER, static_cast<GLuint>(block), buffer);
+            gl.glBindBufferBase(GL_UNIFORM_BUFFER, static_cast<GLuint>(bindingIndex), buffer);
             bound = buffer;
         }
     }
