@@ -464,17 +464,6 @@ struct are_distinct<T> : std::true_type
 template<typename... Args>
 static inline constexpr bool are_distinct_v = are_distinct<Args...>::value;
 
-template<typename T>
-struct is_vector : std::false_type
-{};
-
-template<typename T, typename A>
-struct is_vector<std::vector<T, A>> : std::true_type
-{};
-
-template<typename T>
-static inline constexpr bool is_vector_v = is_vector<T>::value;
-
 template<typename T, typename = void>
 struct is_contiguous_container : std::false_type
 {};

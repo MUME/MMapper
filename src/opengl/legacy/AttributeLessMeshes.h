@@ -50,9 +50,9 @@ protected:
     {
         auto binder = m_program.bind();
         // Attribute-less meshes usually don't use MVP, or use identity.
-        // We pass identity as a default, but sub-classes can override.
-        const glm::mat4 identity = glm::mat4(1.0f);
-        m_program.setUniforms(identity, renderState.uniforms);
+        // If a valid MVP is provided in renderState, we use it; otherwise we fallback to identity.
+        const glm::mat4 &mvp = renderState.mvp;
+        m_program.setUniforms(mvp, renderState.uniforms);
 
         RenderStateBinder rsBinder(m_functions, m_functions.getTexLookup(), renderState);
 
