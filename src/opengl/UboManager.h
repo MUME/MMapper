@@ -88,7 +88,7 @@ public:
     void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
     {
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-        static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        static_cast<void>(gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         bind_internal(gl, block, vbo.get());
     }
 
@@ -104,7 +104,7 @@ public:
         static_assert(std::is_trivially_copyable_v<T>,
                       "T must be trivially copyable for UBO upload");
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-        gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
+        gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         bind_internal(gl, block, vbo.get());
     }
 

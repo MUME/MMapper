@@ -334,22 +334,6 @@ protected:
 protected:
     NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
 
-private:
-    template<typename T>
-    NODISCARD GLsizei setVbo_internal(const GLenum target,
-                                      const GLuint buffer,
-                                      const std::vector<T> &batch,
-                                      const BufferUsageEnum usage)
-    {
-        const auto numElements = static_cast<GLsizei>(batch.size());
-        const auto elementSize = static_cast<GLsizei>(sizeof(T));
-        const auto numBytes = numElements * elementSize;
-        Base::glBindBuffer(target, buffer);
-        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
-        Base::glBindBuffer(target, 0);
-        return numElements;
-    }
-
 public:
     /// platform-specific (ES vs GL)
     NODISCARD bool canRenderQuads() { return virt_canRenderQuads(); }
@@ -380,6 +364,36 @@ public:
     }
 
     template<typename T>
+    NODISCARD GLsizei setVbo(const GLenum target,
+                             const GLuint buffer,
+                             const std::vector<T> &batch,
+                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "T must be trivially copyable for buffer upload");
+        const auto numElements = static_cast<GLsizei>(batch.size());
+        const auto elementSize = static_cast<GLsizei>(sizeof(T));
+        const auto numBytes = numElements * elementSize;
+        Base::glBindBuffer(target, buffer);
+        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
+        Base::glBindBuffer(target, 0);
+        return numElements;
+    }
+
+    template<typename T>
+    void setVbo(const GLenum target,
+                const GLuint buffer,
+                const T &data,
+                const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "T must be trivially copyable for buffer upload");
+        Base::glBindBuffer(target, buffer);
+        Base::glBufferData(target, sizeof(T), &data, Legacy::toGLenum(usage));
+        Base::glBindBuffer(target, 0);
+    }
+
+    template<typename T>
     NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
         const DrawModeEnum mode,
         const GLuint vbo,
@@ -388,38 +402,9 @@ public:
     {
         if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
             return std::pair(DrawModeEnum::TRIANGLES,
-                             setVbo_internal(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
+                             setVbo(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
         }
-        return std::pair(mode, setVbo_internal(GL_ARRAY_BUFFER, vbo, batch, usage));
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setIbo(const GLuint ibo,
-                             const std::vector<T> &batch,
-                             const BufferUsageEnum usage = BufferUsageEnum::STATIC_DRAW)
-    {
-        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for IBO upload");
-        return setVbo_internal(GL_ELEMENT_ARRAY_BUFFER, ibo, batch, usage);
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setUbo(const GLuint ubo,
-                             const std::vector<T> &batch,
-                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
-        return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
-    }
-
-    template<typename T>
-    void setUboSingle(const GLuint ubo,
-                      const T &data,
-                      const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
-        Base::glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        Base::glBufferData(GL_UNIFORM_BUFFER, sizeof(T), &data, Legacy::toGLenum(usage));
-        Base::glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        return std::pair(mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage));
     }
 
     void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
