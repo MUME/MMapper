@@ -140,10 +140,10 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
             const auto delta = roomCenter - m_mapScreen.getCenter();
             const auto distance = std::sqrt((delta.y * delta.y) + (delta.x * delta.x));
             // If we're too far away just scale down to 50% at most
-            if (distance >= static_cast<float>(BASESIZE)) {
+            if (distance >= static_cast<float>(ProjectionUtils::BASESIZE)) {
                 return 0.5f;
             }
-            return 1.f - (distance / static_cast<float>(BASESIZE));
+            return 1.f - (distance / static_cast<float>(ProjectionUtils::BASESIZE));
         });
         gl.glScalef(scaleFactor, scaleFactor, 1.f);
 

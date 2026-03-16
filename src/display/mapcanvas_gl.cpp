@@ -340,8 +340,10 @@ void MapCanvas::initLogger()
 void MapCanvas::setMvp(const glm::mat4 &viewProj)
 {
     auto &gl = getOpenGL();
+    // Pushes the externally provided projection matrix into the viewport cache,
+    // which also ensures the dirty flag is cleared for the current state.
     setMvpExtern(viewProj);
-    gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
+    gl.setProjectionMatrix(viewProj);
 }
 
 void MapCanvas::setViewportAndMvp(int width, int height)
