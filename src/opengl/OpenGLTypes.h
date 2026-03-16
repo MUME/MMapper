@@ -226,7 +226,7 @@ struct NODISCARD GLRenderState final
     };
 
     Uniforms uniforms;
-    glm::mat4 mvp{1.f};
+    std::optional<glm::mat4> mvp;
 
     NODISCARD GLRenderState withBlend(const BlendModeEnum new_blend) const
     {
@@ -284,7 +284,7 @@ struct NODISCARD GLRenderState final
         return copy;
     }
 
-    NODISCARD GLRenderState withMvp(const glm::mat4 &new_mvp) const
+    NODISCARD GLRenderState withMvp(const std::optional<glm::mat4> &new_mvp) const
     {
         GLRenderState copy = *this;
         copy.mvp = new_mvp;

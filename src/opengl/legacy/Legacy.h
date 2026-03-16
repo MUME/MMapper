@@ -435,6 +435,7 @@ public:
                       const T &data,
                       const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
         Base::glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         Base::glBufferData(GL_UNIFORM_BUFFER, sizeof(T), &data, Legacy::toGLenum(usage));
         Base::glBindBuffer(GL_UNIFORM_BUFFER, 0);

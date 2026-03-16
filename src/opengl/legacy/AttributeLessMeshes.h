@@ -51,7 +51,7 @@ protected:
         auto binder = m_program.bind();
         // Attribute-less meshes usually don't use MVP, or use identity.
         // If a valid MVP is provided in renderState, we use it; otherwise we fallback to identity.
-        const glm::mat4 &mvp = renderState.mvp;
+        const glm::mat4 mvp = renderState.mvp.value_or(glm::mat4(1.0f));
         m_program.setUniforms(mvp, renderState.uniforms);
 
         RenderStateBinder rsBinder(m_functions, m_functions.getTexLookup(), renderState);
