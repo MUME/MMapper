@@ -52,8 +52,18 @@ enum class SharedVboEnum : uint8_t {
 };
 
 static_assert(NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
-static_assert(static_cast<uint8_t>(SharedVboEnum::NamedColorsBlock) == 0,
-              "SharedVboEnum must be 0-based for UBO binding indices");
+
+/**
+ * @brief Returns the UBO binding index for a shared VBO block.
+ *
+ * Note: SharedVboEnum values must be 0-based and contiguous.
+ */
+NODISCARD static inline GLuint getUboBindingIndex(const SharedVboEnum block)
+{
+    static_assert(static_cast<uint8_t>(SharedVboEnum::NamedColorsBlock) == 0,
+                  "SharedVboEnum must be 0-based for UBO binding indices");
+    return static_cast<GLuint>(block);
+}
 
 #define XFOREACH_SHARED_VAO(X) X(EmptyVao)
 
@@ -184,7 +194,7 @@ public:
     void glBindBufferBase(const GLenum target, const SharedVboEnum block, const GLuint buffer)
     {
         assert(target == GL_UNIFORM_BUFFER);
-        Base::glBindBufferBase(target, static_cast<GLuint>(block), buffer);
+        Base::glBindBufferBase(target, getUboBindingIndex(block), buffer);
     }
     using Base::glBindTexture;
     using Base::glBindVertexArray;

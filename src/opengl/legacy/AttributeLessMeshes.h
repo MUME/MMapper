@@ -44,7 +44,7 @@ public:
 protected:
     void virt_clear() final {}
     void virt_reset() final {}
-    NODISCARD bool virt_isEmpty() const final { return false; }
+    NODISCARD bool virt_isEmpty() const final { return m_numVerts == 0; }
 
     void virt_render(const GLRenderState &renderState) override
     {

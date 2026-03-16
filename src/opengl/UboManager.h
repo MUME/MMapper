@@ -53,7 +53,11 @@ public:
      */
     void registerRebuildFunction(Legacy::SharedVboEnum block, RebuildFunction func)
     {
-        assert(!m_rebuildFunctions[block] && "Rebuild function already registered for this UBO block");
+        if (m_rebuildFunctions[block]) {
+            MMLOG_WARNING() << "UboManager::registerRebuildFunction: overwriting existing "
+                               "rebuild function for UBO block "
+                            << static_cast<int>(block);
+        }
         m_rebuildFunctions[block] = std::move(func);
     }
 
@@ -149,10 +153,7 @@ private:
      */
     void bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
     {
-        static_assert(static_cast<int>(Legacy::SharedVboEnum::NamedColorsBlock) == 0,
-                      "Legacy::SharedVboEnum must be 0-based for UBO binding indexing");
-
-        const auto bindingIndex = static_cast<std::size_t>(block);
+        const auto bindingIndex = static_cast<std::size_t>(Legacy::getUboBindingIndex(block));
         assert(bindingIndex < m_boundBuffers.size());
 
 #ifndef NDEBUG
@@ -166,7 +167,7 @@ private:
 
         auto &bound = m_boundBuffers[block];
         if (!bound.has_value() || bound.value() != buffer) {
-            gl.glBindBufferBase(GL_UNIFORM_BUFFER, static_cast<GLuint>(bindingIndex), buffer);
+            gl.glBindBufferBase(GL_UNIFORM_BUFFER, block, buffer);
             bound = buffer;
         }
     }
