@@ -65,6 +65,7 @@ public:
     {
         if (isInvalid(block)) {
             const auto &func = m_rebuildFunctions[block];
+            assert(func && "UBO block is invalid and no rebuild function is registered");
             if (func) {
                 func(gl);
                 // The rebuild function is expected to call update() which marks it valid.
@@ -103,6 +104,10 @@ public:
     void bind(Legacy::Functions &gl, Legacy::SharedVboEnum block)
     {
         updateIfInvalid(gl, block);
+
+        if (isInvalid(block)) {
+            return;
+        }
 
         const auto sharedVbo = gl.getSharedVbos().get(block);
         Legacy::VBO &vbo = deref(sharedVbo);

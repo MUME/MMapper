@@ -313,7 +313,7 @@ public:
 
     NODISCARD FBO &getFBO();
 
-    void setUboManager(UboManager *manager);
+    void setUboManager(UboManager &manager);
     NODISCARD UboManager &getUboManager();
 
 private:

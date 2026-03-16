@@ -220,7 +220,7 @@ void OpenGL::resetNamedColorsBuffer()
 void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
     setDevicePixelRatio(devicePixelRatio);
-    getFunctions().setUboManager(&m_uboManager);
+    getFunctions().setUboManager(m_uboManager);
 
     // REVISIT: Move this somewhere else?
     GLint maxSamples = 0;

@@ -341,13 +341,14 @@ FBO &Functions::getFBO()
     return deref(m_fbo);
 }
 
-void Functions::setUboManager(UboManager *manager)
+void Functions::setUboManager(UboManager &manager)
 {
-    m_uboManager = manager;
+    m_uboManager = &manager;
 }
 
 UboManager &Functions::getUboManager()
 {
+    assert(m_uboManager != nullptr && "UboManager accessed before being set");
     return deref(m_uboManager);
 }
 
