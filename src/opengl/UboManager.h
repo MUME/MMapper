@@ -82,17 +82,12 @@ public:
     template<typename T>
     void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
     {
-        const auto sharedVbo = gl.getSharedVbos().get(block);
-        Legacy::VBO &vbo = deref(sharedVbo);
+        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
 
-        if (!vbo) {
-            vbo.emplace(gl.shared_from_this());
-        }
-
-        if constexpr (utils::is_contiguous_container_v<T>) {
-            static_cast<void>(gl.setUboGeneric(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        if constexpr (utils::is_vector_v<T>) {
+            static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         } else {
-            gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
+            gl.setUboSingle(data, vbo.get(), BufferUsageEnum::DYNAMIC_DRAW);
         }
 
         bind_internal(gl, block, vbo.get());
@@ -107,19 +102,28 @@ public:
         updateIfInvalid(gl, block);
 
         if (isInvalid(block)) {
-            MMLOG_ERROR() << "UboManager::bind: attempted to bind invalid UBO block " << static_cast<int>(block);
-            assert(false && "UboManager::bind: attempted to bind invalid UBO block after updateIfInvalid (missing or failing rebuild function?)");
+            MMLOG_ERROR() << "UboManager::bind: attempted to bind invalid UBO block "
+                          << static_cast<int>(block);
+            assert(false
+                   && "UboManager::bind: attempted to bind invalid UBO block after "
+                      "updateIfInvalid (missing or failing rebuild function?)");
             return;
         }
 
+        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
+        bind_internal(gl, block, vbo.get());
+    }
+
+private:
+    Legacy::VBO &getOrCreateVbo(Legacy::Functions &gl, Legacy::SharedVboEnum block)
+    {
         const auto sharedVbo = gl.getSharedVbos().get(block);
         Legacy::VBO &vbo = deref(sharedVbo);
 
         if (!vbo) {
             vbo.emplace(gl.shared_from_this());
         }
-
-        bind_internal(gl, block, vbo.get());
+        return vbo;
     }
 
 private:

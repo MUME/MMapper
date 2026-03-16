@@ -6,7 +6,6 @@
 #include "../../global/RuleOf5.h"
 #include "../../global/utils.h"
 #include "../OpenGLConfig.h"
-#include <cassert>
 #include "../OpenGLTypes.h"
 #include "FBO.h"
 
@@ -399,6 +398,7 @@ public:
                              const std::vector<T> &batch,
                              const BufferUsageEnum usage = BufferUsageEnum::STATIC_DRAW)
     {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for IBO upload");
         return setVbo_internal(GL_ELEMENT_ARRAY_BUFFER, ibo, batch, usage);
     }
 
@@ -407,26 +407,8 @@ public:
                              const std::vector<T> &batch,
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
         return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setUboGeneric(const GLuint ubo,
-                                    const T &container,
-                                    const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        static_assert(utils::is_contiguous_container_v<T>,
-                      "T must be a contiguous container (e.g. std::vector, std::array, std::span)");
-        const auto numElements = static_cast<GLsizei>(container.size());
-        using ValueType = utils::remove_cvref_t<decltype(*container.data())>;
-        static_assert(std::is_trivially_copyable_v<ValueType>,
-                      "ValueType must be trivially copyable for UBO upload");
-        const auto elementSize = static_cast<GLsizei>(sizeof(ValueType));
-        const auto numBytes = numElements * elementSize;
-        Base::glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        Base::glBufferData(GL_UNIFORM_BUFFER, numBytes, container.data(), Legacy::toGLenum(usage));
-        Base::glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        return numElements;
     }
 
     template<typename T>
