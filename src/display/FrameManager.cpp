@@ -32,6 +32,20 @@ void FrameManager::registerCallback(const Signal2Lifetime &lifetime, AnimationCa
 
 bool FrameManager::needsHeartbeat()
 {
+    // NOTE:
+    // needsHeartbeat() is called from multiple code paths (e.g. beginFrame(),
+    // onHeartbeat(), and the recordFramePainted()/requestFrame() paths), and each
+    // call walks and may invoke registered animation callbacks.
+    //
+    // As a result, callbacks can be evaluated multiple times within a single
+    // frame/heartbeat decision. Callbacks used with FrameManager *must* therefore:
+    //   - be cheap to execute,
+    //   - be idempotent, and
+    //   - avoid externally visible side effects beyond returning AnimationStatusEnum.
+    //
+    // Their sole responsibility here is to report whether they wish the heartbeat
+    // to continue or can safely stop.
+
     if (m_dirty) {
         return true;
     }

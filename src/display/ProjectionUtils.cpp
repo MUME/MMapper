@@ -110,10 +110,10 @@ glm::mat4 calculateViewProjOld(const glm::vec2 &scrollPos,
 {
     constexpr float FIXED_VIEW_DISTANCE = 60.f;
     constexpr float ROOM_Z_SCALE = 7.f;
-    constexpr float BASESIZE = 528.f;
+    constexpr auto baseSize = static_cast<float>(BASESIZE);
 
-    const float swp = zoomScale * BASESIZE / static_cast<float>(size.x);
-    const float shp = zoomScale * BASESIZE / static_cast<float>(size.y);
+    const float swp = zoomScale * baseSize / static_cast<float>(size.x);
+    const float shp = zoomScale * baseSize / static_cast<float>(size.y);
 
     QMatrix4x4 proj;
     proj.frustum(-0.5f, +0.5f, -0.5f, 0.5f, 5.f, 10000.f);

@@ -4,6 +4,8 @@
 
 #include <glm/glm.hpp>
 
+static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
+
 /**
  * @brief Configuration for viewport projection matrix calculation.
  * Encapsulates settings from the higher-level UI to keep projection utilities independent.

@@ -35,6 +35,15 @@ class FrameManager final : public QObject
 
 public:
     enum class AnimationStatusEnum { Continue, Stop };
+
+    /**
+     * @brief Callback function to determine if a background animation heartbeat should continue.
+     *
+     * @note Because heartbeat decisions are made from multiple code paths (e.g., frame start,
+     * timer timeouts, update requests), this callback may be invoked multiple times within
+     * a single frame. It must therefore be cheap to execute, idempotent, and free of
+     * externally visible side effects.
+     */
     using AnimationCallback = std::function<AnimationStatusEnum()>;
 
 private:

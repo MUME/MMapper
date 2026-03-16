@@ -90,6 +90,7 @@ set(mmapper_SRCS
     display/mapcanvas.h
     display/mapcanvas_gl.cpp
     display/ProjectionUtils.cpp
+    display/ProjectionUtils.h
     display/mapwindow.cpp
     display/mapwindow.h
     display/prespammedpath.cpp

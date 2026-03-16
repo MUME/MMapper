@@ -9,6 +9,7 @@
 #include "../opengl/OpenGLTypes.h"
 #include "Characters.h"
 #include "MapCanvasData.h"
+#include "ProjectionUtils.h"
 #include "Textures.h"
 #include "mapcanvas.h"
 
