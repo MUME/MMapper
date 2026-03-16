@@ -30,10 +30,34 @@ MapCanvasInputState::MapCanvasInputState(PrespammedPath &prespammedPath)
 
 MapCanvasInputState::~MapCanvasInputState() = default;
 
+const glm::mat4 &MapCanvasViewport::getViewProj() const
+{
+    if (m_viewProjDirty) {
+        const int w = width();
+        const int h = height();
+        if (w > 0 && h > 0) {
+            const float zoomScale = getTotalScaleFactor();
+            const auto size = glm::ivec2(w, h);
+            m_viewProj = (!m_viewportConfig.use3D)
+                             ? ProjectionUtils::calculateViewProjOld(getScroll(),
+                                                                     size,
+                                                                     zoomScale,
+                                                                     getCurrentLayer())
+                             : ProjectionUtils::calculateViewProj(m_viewportConfig,
+                                                                  getScroll(),
+                                                                  size,
+                                                                  zoomScale,
+                                                                  getCurrentLayer());
+            m_viewProjDirty = false;
+        }
+    }
+    return m_viewProj;
+}
+
 // world space to screen space (logical pixels)
 std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 &v) const
 {
-    const auto tmp = m_viewProj * glm::vec4(v, 1.f);
+    const auto tmp = getViewProj() * glm::vec4(v, 1.f);
 
     // This can happen if you set the layer height to the view distance
     // and then try to project a point on layer = 1, when the vertical
@@ -62,7 +86,7 @@ std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 &v) const
 // output: world coordinates.
 glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth) const
 {
-    return unproject_raw(mouse_depth, m_viewProj);
+    return unproject_raw(mouse_depth, getViewProj());
 }
 
 glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth,
@@ -90,7 +114,7 @@ glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth,
 // because it could be
 glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse) const
 {
-    return unproject_clamped(mouse, m_viewProj);
+    return unproject_clamped(mouse, getViewProj());
 }
 
 glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse,
@@ -160,7 +184,7 @@ std::optional<glm::vec3> MapCanvasViewport::unproject(const glm::vec2 &xy) const
 
     const auto a = unproject_raw(glm::vec3{xy, 0.f}); // near
     const auto b = unproject_raw(glm::vec3{xy, 1.f}); // far
-    const auto unclamped = (static_cast<float>(m_currentLayer) - a.z) / (b.z - a.z);
+    const auto unclamped = (static_cast<float>(getCurrentLayer()) - a.z) / (b.z - a.z);
 
     if (!::isClamped(unclamped, 0.f - mmgl::PROJECTION_EPSILON, 1.f + mmgl::PROJECTION_EPSILON)) {
         return std::nullopt;
@@ -187,7 +211,7 @@ std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const glm::vec
         return std::nullopt;
     }
     const glm::vec3 &v = opt_v.value();
-    return MouseSel{Coordinate2f{v.x, v.y}, m_currentLayer};
+    return MouseSel{Coordinate2f{v.x, v.y}, getCurrentLayer()};
 }
 
 MapScreen::MapScreen(const MapCanvasViewport &viewport)

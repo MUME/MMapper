@@ -152,12 +152,12 @@ private:
     ConnectionDrawerBuffers &m_buffers;
     RoomNameBatch &m_roomNameBatch;
     const OptBounds &m_bounds;
-    const int &m_currentLayer;
+    const int m_currentLayer;
 
 public:
     explicit ConnectionDrawer(ConnectionDrawerBuffers &buffers,
                               RoomNameBatch &roomNameBatch,
-                              const int &currentLayer,
+                              const int currentLayer,
                               const OptBounds &bounds)
         : m_fake{buffers}
         , m_buffers{buffers}

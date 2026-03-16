@@ -10,18 +10,26 @@
 
 #include <QGroupBox>
 
-class SliderSpinboxButton;
+class NODISCARD SliderSpinboxButton
+{
+public:
+    virtual ~SliderSpinboxButton();
+    virtual void setEnabled(bool enabled) = 0;
+    virtual void forcedUpdate() = 0;
+};
+
 class NODISCARD_QOBJECT AdvancedGraphicsGroupBox final : public QObject
 {
     Q_OBJECT
 
-private:
-    friend SliderSpinboxButton;
+    template<int D>
+    friend class SliderSpinboxButtonImpl;
 
 private:
     QGroupBox *const m_groupBox;
     using UniqueSsb = std::unique_ptr<SliderSpinboxButton>;
-    std::vector<UniqueSsb> m_ssbs;
+    std::vector<UniqueSsb> m_globalSsbs;
+    std::vector<UniqueSsb> m_3dSsbs;
     // purposely unused; this variable exists as an RAII for the change monitors.
     Signal2Lifetime m_lifetime;
 

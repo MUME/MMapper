@@ -11,6 +11,7 @@
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "CanvasMouseModeEnum.h"
+#include "ProjectionUtils.h"
 #include "RoadIndex.h"
 #include "connectionselection.h"
 #include "prespammedpath.h"
@@ -93,11 +94,13 @@ struct NODISCARD MapCanvasViewport
 private:
     QWindow &m_window;
 
-public:
-    glm::mat4 m_viewProj{1.f};
+private:
+    mutable glm::mat4 m_viewProj{1.f};
     glm::vec2 m_scroll{0.f};
     ScaleFactor m_scaleFactor;
     int m_currentLayer = 0;
+    ViewportConfig m_viewportConfig;
+    mutable bool m_viewProjDirty = true;
 
 public:
     explicit MapCanvasViewport(QWindow &window)
@@ -107,6 +110,46 @@ public:
 public:
     NODISCARD auto width() const { return m_window.width(); }
     NODISCARD auto height() const { return m_window.height(); }
+
+public:
+    NODISCARD const glm::vec2 &getScroll() const { return m_scroll; }
+    void setScroll(const glm::vec2 &scroll)
+    {
+        if (m_scroll != scroll) {
+            m_scroll = scroll;
+            m_viewProjDirty = true;
+        }
+    }
+
+    NODISCARD const ScaleFactor &getScaleFactor() const { return m_scaleFactor; }
+    void setScaleFactor(const ScaleFactor &scaleFactor)
+    {
+        m_scaleFactor = scaleFactor;
+        m_viewProjDirty = true;
+    }
+
+    NODISCARD int getCurrentLayer() const { return m_currentLayer; }
+    void setCurrentLayer(const int layer)
+    {
+        if (m_currentLayer != layer) {
+            m_currentLayer = layer;
+            m_viewProjDirty = true;
+        }
+    }
+
+    void markViewProjDirty() { m_viewProjDirty = true; }
+    void setViewportConfig(const ViewportConfig &config)
+    {
+        m_viewportConfig = config;
+        m_viewProjDirty = true;
+    }
+    void setMvpExtern(const glm::mat4 &mvp) const
+    {
+        m_viewProj = mvp;
+        m_viewProjDirty = false;
+    }
+
+    NODISCARD const glm::mat4 &getViewProj() const;
     NODISCARD Viewport getViewport() const
     {
         return Viewport{glm::ivec2{0, 0}, glm::ivec2{m_window.width(), m_window.height()}};

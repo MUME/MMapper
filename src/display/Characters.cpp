@@ -463,7 +463,7 @@ void MapCanvas::paintCharacters()
         return;
     }
 
-    CharacterBatch characterBatch{m_mapScreen, m_currentLayer, getTotalScaleFactor()};
+    CharacterBatch characterBatch{m_mapScreen, getCurrentLayer(), getTotalScaleFactor()};
 
     // IIFE to abuse return to avoid duplicate else branches
     std::invoke([this, &characterBatch]() -> void {
