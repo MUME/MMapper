@@ -4,6 +4,7 @@
 
 #include "../global/EnumIndexedArray.h"
 #include "../global/RuleOf5.h"
+#include "../global/logging.h"
 #include "../global/utils.h"
 #include "legacy/Legacy.h"
 #include "legacy/VBO.h"
@@ -88,8 +89,8 @@ public:
             vbo.emplace(gl.shared_from_this());
         }
 
-        if constexpr (utils::is_vector_v<T>) {
-            static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        if constexpr (utils::is_contiguous_container_v<T>) {
+            static_cast<void>(gl.setUboGeneric(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         } else {
             gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         }
@@ -106,6 +107,8 @@ public:
         updateIfInvalid(gl, block);
 
         if (isInvalid(block)) {
+            MMLOG_ERROR() << "UboManager::bind: attempted to bind invalid UBO block " << static_cast<int>(block);
+            assert(false && "UboManager::bind: attempted to bind invalid UBO block after updateIfInvalid (missing or failing rebuild function?)");
             return;
         }
 

@@ -6,6 +6,7 @@
 #include "../../global/RuleOf5.h"
 #include "../../global/utils.h"
 #include "../OpenGLConfig.h"
+#include <cassert>
 #include "../OpenGLTypes.h"
 #include "FBO.h"
 
@@ -408,6 +409,21 @@ public:
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
+    }
+
+    template<typename T>
+    NODISCARD GLsizei setUboGeneric(const GLuint ubo,
+                                    const T &container,
+                                    const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        const auto numElements = static_cast<GLsizei>(container.size());
+        using ValueType = utils::remove_cvref_t<decltype(*container.data())>;
+        const auto elementSize = static_cast<GLsizei>(sizeof(ValueType));
+        const auto numBytes = numElements * elementSize;
+        Base::glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        Base::glBufferData(GL_UNIFORM_BUFFER, numBytes, container.data(), Legacy::toGLenum(usage));
+        Base::glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        return numElements;
     }
 
     template<typename T>

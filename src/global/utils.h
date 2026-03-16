@@ -475,4 +475,18 @@ struct is_vector<std::vector<T, A>> : std::true_type
 template<typename T>
 static inline constexpr bool is_vector_v = is_vector<T>::value;
 
+template<typename T, typename = void>
+struct is_contiguous_container : std::false_type
+{};
+
+template<typename T>
+struct is_contiguous_container<
+    T,
+    std::void_t<decltype(std::declval<const T &>().data()), decltype(std::declval<const T &>().size())>>
+    : std::true_type
+{};
+
+template<typename T>
+static inline constexpr bool is_contiguous_container_v = is_contiguous_container<T>::value;
+
 } // namespace utils
