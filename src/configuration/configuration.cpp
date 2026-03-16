@@ -256,6 +256,7 @@ ConstString KEY_FOREGROUND_COLOR = "Foreground color";
 ConstString KEY_3D_CANVAS = "canvas.advanced.use3D";
 ConstString KEY_3D_AUTO_TILT = "canvas.advanced.autoTilt";
 ConstString KEY_3D_PERFSTATS = "canvas.advanced.printPerfStats";
+ConstString KEY_MAXIMUM_FPS = "canvas.advanced.maximumFps";
 ConstString KEY_3D_FOV = "canvas.advanced.fov";
 ConstString KEY_3D_VERTICAL_ANGLE = "canvas.advanced.verticalAngle";
 ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
@@ -656,6 +657,7 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     advanced.use3D.set(conf.value(KEY_3D_CANVAS, false).toBool());
     advanced.autoTilt.set(conf.value(KEY_3D_AUTO_TILT, true).toBool());
     advanced.printPerfStats.set(conf.value(KEY_3D_PERFSTATS, IS_DEBUG_BUILD).toBool());
+    advanced.maximumFps.set(conf.value(KEY_MAXIMUM_FPS, 60).toInt());
     advanced.fov.set(conf.value(KEY_3D_FOV, 765).toInt());
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
@@ -852,6 +854,7 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_3D_CANVAS, advanced.use3D.get());
     conf.setValue(KEY_3D_AUTO_TILT, advanced.autoTilt.get());
     conf.setValue(KEY_3D_PERFSTATS, advanced.printPerfStats.get());
+    conf.setValue(KEY_MAXIMUM_FPS, advanced.maximumFps.get());
     conf.setValue(KEY_3D_FOV, advanced.fov.get());
     conf.setValue(KEY_3D_VERTICAL_ANGLE, advanced.verticalAngle.get());
     conf.setValue(KEY_3D_HORIZONTAL_ANGLE, advanced.horizontalAngle.get());
@@ -1067,6 +1070,7 @@ void Configuration::CanvasSettings::Advanced::registerChangeCallback(
     use3D.registerChangeCallback(lifetime, callback);
     autoTilt.registerChangeCallback(lifetime, callback);
     printPerfStats.registerChangeCallback(lifetime, callback);
+    maximumFps.registerChangeCallback(lifetime, callback);
     fov.registerChangeCallback(lifetime, callback);
     verticalAngle.registerChangeCallback(lifetime, callback);
     horizontalAngle.registerChangeCallback(lifetime, callback);

@@ -82,6 +82,8 @@ set(mmapper_SRCS
     display/RoomSelections.cpp
     display/Textures.cpp
     display/Textures.h
+    display/FrameManager.cpp
+    display/FrameManager.h
     display/connectionselection.cpp
     display/connectionselection.h
     display/mapcanvas.cpp

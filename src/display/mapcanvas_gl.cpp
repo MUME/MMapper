@@ -272,12 +272,12 @@ void MapCanvas::initializeGL()
 
     setConfig().canvas.antialiasingSamples.registerChangeCallback(m_lifetime, [this]() {
         this->updateMultisampling();
-        this->update();
+        m_frameManager.requestUpdate();
     });
 
     setConfig().canvas.trilinearFiltering.registerChangeCallback(m_lifetime, [this]() {
         this->updateTextures();
-        this->update();
+        m_frameManager.requestUpdate();
     });
 }
 
@@ -453,25 +453,22 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
 void MapCanvas::setMvp(const glm::mat4 &viewProj)
 {
     auto &gl = getOpenGL();
-    m_viewProj = viewProj;
-    gl.setProjectionMatrix(m_viewProj);
+    setMvpExtern(viewProj);
+    gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
 }
 
 void MapCanvas::setViewportAndMvp(int width, int height)
 {
-    const bool want3D = getConfig().canvas.advanced.use3D.get();
+    markViewProjDirty();
 
     auto &gl = getOpenGL();
-
     gl.glViewport(0, 0, width, height);
+
     const auto size = getViewport().size;
     assert(size.x == width);
     assert(size.y == height);
 
-    const float zoomScale = getTotalScaleFactor();
-    const auto viewProj = (!want3D) ? getViewProj_old(m_scroll, size, zoomScale, m_currentLayer)
-                                    : getViewProj(m_scroll, size, zoomScale, m_currentLayer);
-    setMvp(viewProj);
+    gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
 }
 
 void MapCanvas::resizeGL(int width, int height)
@@ -485,44 +482,7 @@ void MapCanvas::resizeGL(int width, int height)
     updateMultisampling();
 
     // Render
-    update();
-}
-
-void MapCanvas::setAnimating(bool value)
-{
-    if (m_frameRateController.animating == value) {
-        return;
-    }
-
-    m_frameRateController.animating = value;
-
-    if (m_frameRateController.animating) {
-        QTimer::singleShot(0, this, &MapCanvas::renderLoop);
-    }
-}
-
-void MapCanvas::renderLoop()
-{
-    if (!m_frameRateController.animating) {
-        return;
-    }
-
-    // REVISIT: Make this configurable later when its not just used for the remesh flash
-    static constexpr int TARGET_FRAMES_PER_SECOND = 20;
-    auto targetFrameTime = std::chrono::milliseconds(1000 / TARGET_FRAMES_PER_SECOND);
-
-    auto now = std::chrono::steady_clock::now();
-    update();
-    auto afterPaint = std::chrono::steady_clock::now();
-
-    // Render the next frame at the appropriate time or now if we're behind
-    auto timeSinceLastFrame = std::chrono::duration_cast<std::chrono::milliseconds>(afterPaint
-                                                                                    - now);
-    auto delay = std::max(targetFrameTime - timeSinceLastFrame, std::chrono::milliseconds::zero());
-
-    QTimer::singleShot(delay.count(), this, &MapCanvas::renderLoop);
-
-    m_frameRateController.lastFrameTime = now;
+    m_frameManager.requestUpdate();
 }
 
 void MapCanvas::updateBatches()
@@ -574,12 +534,6 @@ void MapCanvas::finishPendingMapBatches()
 #define LOG() MMLOG() << prefix
     static const std::string_view prefix = "[finishPendingMapBatches] ";
 
-    MAYBE_UNUSED RAIICallback eventually{[this] {
-        if (!m_batches.isInProgress()) {
-            setAnimating(false);
-        }
-    }};
-
     if (m_batches.next_mapBatches.has_value()) {
         m_batches.mapBatches = std::exchange(m_batches.next_mapBatches, std::nullopt);
     }
@@ -611,6 +565,8 @@ void MapCanvas::finishPendingMapBatches()
         assert(opt_mapBatches.has_value());
         m_data.saveSnapshot();
 
+        // Swap immediately so this frame can use the new batches.
+        m_batches.mapBatches = std::exchange(m_batches.next_mapBatches, std::nullopt);
     } catch (...) {
         QString msg;
         try {
@@ -644,14 +600,13 @@ void MapCanvas::actuallyPaintGL()
 
     if (m_data.isEmpty()) {
         getGLFont().renderTextCentered("No map loaded");
-        return;
+    } else {
+        paintMap();
+        paintBatchedInfomarks();
+        paintSelections();
+        paintCharacters();
+        paintDifferences();
     }
-
-    paintMap();
-    paintBatchedInfomarks();
-    paintSelections();
-    paintCharacters();
-    paintDifferences();
 
     gl.releaseFbo();
     gl.blitFboToDefault();
@@ -782,17 +737,16 @@ void MapCanvas::paintDifferences()
 void MapCanvas::paintMap()
 {
     const bool pending = m_batches.remeshCookie.isPending();
-    if (pending) {
-        setAnimating(true);
-    }
 
     if (!m_batches.mapBatches.has_value()) {
-        const QString msg = pending ? "Please wait... the map isn't ready yet." : "Batch error";
-        getGLFont().renderTextCentered(msg);
+        if (!pending || m_batches.pendingUpdateFlashState.tick()) {
+            const QString msg = pending ? "Please wait... the map isn't ready yet." : "Batch error";
+            getGLFont().renderTextCentered(msg);
+        }
         if (!pending) {
             // REVISIT: does this need a better fix?
             // pending already scheduled an update, but now we realize we need an update.
-            update();
+            m_frameManager.requestUpdate();
         }
         return;
     }
@@ -818,6 +772,11 @@ void MapCanvas::paintSelections()
 
 void MapCanvas::paintGL()
 {
+    auto frame = m_frameManager.beginFrame();
+    if (!frame) {
+        return;
+    }
+
     static thread_local double longestBatchMs = 0.0;
 
     const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
@@ -960,7 +919,7 @@ void MapCanvas::paintSelectionArea()
 
     // Mouse selected area
     auto &gl = getOpenGL();
-    const auto layer = static_cast<float>(m_currentLayer);
+    const auto layer = static_cast<float>(getCurrentLayer());
 
     if (hasAreaSelection()) {
         const glm::vec3 A{pos1, layer};
@@ -1071,12 +1030,13 @@ void MapCanvas::renderMapBatches()
         gl.renderPlainFullScreenQuad(blendedWithBackground);
     };
 
+    const int currentLayer = getCurrentLayer();
     for (const auto &layer : batchedMeshes) {
         const int thisLayer = layer.first;
-        if (thisLayer == m_currentLayer) {
+        if (thisLayer == currentLayer) {
             gl.clearDepth();
             fadeBackground();
         }
-        drawLayer(thisLayer, m_currentLayer);
+        drawLayer(thisLayer, currentLayer);
     }
 }

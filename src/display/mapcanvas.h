@@ -11,6 +11,7 @@
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
+#include "FrameManager.h"
 #include "Infomarks.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
@@ -58,12 +59,6 @@ public:
     static constexpr const int SCROLL_SCALE = 64;
 
 private:
-    struct NODISCARD FrameRateController final
-    {
-        std::chrono::steady_clock::time_point lastFrameTime;
-        bool animating = false;
-    };
-
     struct NODISCARD Diff final
     {
         using DiffQuadVector = std::vector<RoomQuadTexVert>;
@@ -141,7 +136,7 @@ private:
     MapData &m_data;
     Mmapper2Group &m_groupManager;
     Diff m_diff;
-    FrameRateController m_frameRateController;
+    FrameManager m_frameManager;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
 
@@ -164,10 +159,12 @@ public:
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
     {
-        m_scaleFactor.set(zoom);
+        ScaleFactor sf = getScaleFactor();
+        sf.set(zoom);
+        setScaleFactor(sf);
         zoomChanged();
     }
-    NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
+    NODISCARD float getRawZoom() const { return getScaleFactor().getRaw(); }
 
 public:
     NODISCARD auto width() const { return QOpenGLWindow::width(); }
@@ -198,10 +195,6 @@ protected:
     bool event(QEvent *e) override;
 
 private:
-    void setAnimating(bool value);
-    void renderLoop();
-
-private:
     void initLogger();
 
     void resizeGL() { resizeGL(width(), height()); }
@@ -210,6 +203,8 @@ private:
     void updateMultisampling();
 
     NODISCARD std::shared_ptr<InfomarkSelection> getInfomarkSelection(const MouseSel &sel);
+
+public:
     NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                                const glm::ivec2 &size,
                                                float zoomScale,
