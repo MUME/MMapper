@@ -77,20 +77,20 @@ set(mmapper_SRCS
     display/MapCanvasData.h
     display/MapCanvasRoomDrawer.cpp
     display/MapCanvasRoomDrawer.h
+    display/FrameManager.cpp
+    display/FrameManager.h
+    display/ProjectionUtils.cpp
+    display/ProjectionUtils.h
     display/RoadIndex.cpp
     display/RoadIndex.h
     display/RoomSelections.cpp
     display/Textures.cpp
     display/Textures.h
-    display/FrameManager.cpp
-    display/FrameManager.h
     display/connectionselection.cpp
     display/connectionselection.h
     display/mapcanvas.cpp
     display/mapcanvas.h
     display/mapcanvas_gl.cpp
-    display/ProjectionUtils.cpp
-    display/ProjectionUtils.h
     display/mapwindow.cpp
     display/mapwindow.h
     display/prespammedpath.cpp

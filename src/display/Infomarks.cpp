@@ -346,26 +346,27 @@ void MapCanvas::paintSelectedInfomarks()
             };
 
             const int currentLayer = getCurrentLayer();
-            const auto drawSelectionPoints = [this, &drawPoint, currentLayer](const InfomarkHandle &marker) {
-                const auto &pos1 = marker.getPosition1();
-                if (pos1.z != currentLayer) {
-                    return;
-                }
+            const auto drawSelectionPoints =
+                [this, &drawPoint, currentLayer](const InfomarkHandle &marker) {
+                    const auto &pos1 = marker.getPosition1();
+                    if (pos1.z != currentLayer) {
+                        return;
+                    }
 
-                const auto color = (m_infoMarkSelection != nullptr
-                                    && m_infoMarkSelection->contains(marker.getId()))
-                                       ? Colors::yellow
-                                       : Colors::cyan;
+                    const auto color = (m_infoMarkSelection != nullptr
+                                        && m_infoMarkSelection->contains(marker.getId()))
+                                           ? Colors::yellow
+                                           : Colors::cyan;
 
-                drawPoint(pos1, color);
-                if (marker.getType() == InfomarkTypeEnum::TEXT) {
-                    return;
-                }
+                    drawPoint(pos1, color);
+                    if (marker.getType() == InfomarkTypeEnum::TEXT) {
+                        return;
+                    }
 
-                const Coordinate &pos2 = marker.getPosition2();
-                assert(pos2.z == currentLayer);
-                drawPoint(pos2, color);
-            };
+                    const Coordinate &pos2 = marker.getPosition2();
+                    assert(pos2.z == currentLayer);
+                    drawPoint(pos2, color);
+                };
 
             const auto &map = m_data.getCurrentMap();
             const InfomarkDb &db = map.getInfomarkDb();

@@ -134,9 +134,8 @@ std::chrono::nanoseconds FrameManager::getJitterTolerance() const
     // over-rendering at very high frame rates where the 8ms cap could effectively
     // disable the rate limit.
     const auto tolerance = m_minFrameTime / 4;
-    return std::min({tolerance,
-                     m_minFrameTime,
-                     std::chrono::nanoseconds(std::chrono::milliseconds(8))});
+    return std::min(
+        {tolerance, m_minFrameTime, std::chrono::nanoseconds(std::chrono::milliseconds(8))});
 }
 
 std::chrono::nanoseconds FrameManager::getTimeUntilNextFrame() const

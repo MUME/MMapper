@@ -39,10 +39,15 @@ const glm::mat4 &MapCanvasViewport::getViewProj() const
             const float zoomScale = getTotalScaleFactor();
             const auto size = glm::ivec2(w, h);
             m_viewProj = (!m_viewportConfig.use3D)
-                             ? ProjectionUtils::calculateViewProjOld(
-                                 getScroll(), size, zoomScale, getCurrentLayer())
-                             : ProjectionUtils::calculateViewProj(
-                                 m_viewportConfig, getScroll(), size, zoomScale, getCurrentLayer());
+                             ? ProjectionUtils::calculateViewProjOld(getScroll(),
+                                                                     size,
+                                                                     zoomScale,
+                                                                     getCurrentLayer())
+                             : ProjectionUtils::calculateViewProj(m_viewportConfig,
+                                                                  getScroll(),
+                                                                  size,
+                                                                  zoomScale,
+                                                                  getCurrentLayer());
             m_viewProjDirty = false;
         }
     }

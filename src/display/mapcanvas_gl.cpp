@@ -19,11 +19,11 @@
 #include "../opengl/OpenGLTypes.h"
 #include "../opengl/legacy/Meshes.h"
 #include "../src/global/SendToUser.h"
-#include "ProjectionUtils.h"
 #include "Connections.h"
 #include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
+#include "ProjectionUtils.h"
 #include "Textures.h"
 #include "connectionselection.h"
 #include "mapcanvas.h"
@@ -335,7 +335,6 @@ void MapCanvas::initLogger()
                               | QOpenGLDebugMessage::UndefinedBehaviorType),
                              QOpenGLDebugMessage::AnySeverity);
 }
-
 
 void MapCanvas::setMvp(const glm::mat4 &viewProj)
 {
@@ -778,7 +777,8 @@ void MapCanvas::paintGL()
                                     advanced.layerHeight.getFloat()};
         print(QString::asprintf("3d mode: %.1f fovy, %.1f pitch, %.1f yaw, %.1f zscale",
                                 advanced.fov.getDouble(),
-                                static_cast<double>(ProjectionUtils::calculatePitchDegrees(config, zoom)),
+                                static_cast<double>(
+                                    ProjectionUtils::calculatePitchDegrees(config, zoom)),
                                 advanced.horizontalAngle.getDouble(),
                                 advanced.layerHeight.getDouble()));
     } else {

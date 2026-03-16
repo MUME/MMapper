@@ -3,12 +3,13 @@
 
 #include "ProjectionUtils.h"
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <functional>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <QMatrix4x4>
 
 namespace ProjectionUtils {

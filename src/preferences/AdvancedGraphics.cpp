@@ -11,8 +11,8 @@
 #include "../global/utils.h"
 
 #include <cassert>
-#include <type_traits>
 #include <memory>
+#include <type_traits>
 
 #include <QCheckBox>
 #include <QHBoxLayout>
