@@ -81,19 +81,30 @@ public:
     /**
      * @brief Uploads data to the UBO and marks it as valid.
      * Also binds it to its assigned point.
+     *
+     * Overload for bulk vector data.
+     */
+    template<typename T, typename A>
+    void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
+    {
+        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
+        static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        bind_internal(gl, block, vbo.get());
+    }
+
+    /**
+     * @brief Uploads data to the UBO and marks it as valid.
+     * Also binds it to its assigned point.
+     *
+     * Overload for single trivially-copyable objects.
      */
     template<typename T>
     void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
     {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "T must be trivially copyable for UBO upload");
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-
-        if constexpr (utils::is_vector_v<T>) {
-            static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
-        } else {
-            static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for UBO upload");
-            gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
-        }
-
+        gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         bind_internal(gl, block, vbo.get());
     }
 
@@ -131,8 +142,18 @@ private:
     }
 
 private:
+    /**
+     * @brief Binds the UBO to its assigned point.
+     *
+     * Note: This implementation explicitly assumes that Legacy::SharedVboEnum values
+     * are 0-based, contiguous, and directly correspond to UBO binding indices in
+     * shader blocks.
+     */
     void bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
     {
+        static_assert(static_cast<int>(Legacy::SharedVboEnum::NamedColorsBlock) == 0,
+                      "Legacy::SharedVboEnum must be 0-based for UBO binding indexing");
+
         const auto bindingIndex = static_cast<std::size_t>(block);
         assert(bindingIndex < m_boundBuffers.size());
 
