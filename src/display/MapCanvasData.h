@@ -11,6 +11,7 @@
 #include "../mapdata/roomselection.h"
 #include "../opengl/OpenGL.h"
 #include "CanvasMouseModeEnum.h"
+#include "ProjectionUtils.h"
 #include "RoadIndex.h"
 #include "connectionselection.h"
 #include "prespammedpath.h"
@@ -98,6 +99,7 @@ private:
     glm::vec2 m_scroll{0.f};
     ScaleFactor m_scaleFactor;
     int m_currentLayer = 0;
+    ViewportConfig m_viewportConfig;
     mutable bool m_viewProjDirty = true;
 
 public:
@@ -136,6 +138,11 @@ public:
     }
 
     void markViewProjDirty() { m_viewProjDirty = true; }
+    void setViewportConfig(const ViewportConfig &config)
+    {
+        m_viewportConfig = config;
+        m_viewProjDirty = true;
+    }
     void setMvpExtern(const glm::mat4 &mvp) const
     {
         m_viewProj = mvp;

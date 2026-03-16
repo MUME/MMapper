@@ -19,6 +19,7 @@
 #include "../opengl/OpenGLTypes.h"
 #include "../opengl/legacy/Meshes.h"
 #include "../src/global/SendToUser.h"
+#include "ProjectionUtils.h"
 #include "Connections.h"
 #include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
@@ -335,120 +336,6 @@ void MapCanvas::initLogger()
                              QOpenGLDebugMessage::AnySeverity);
 }
 
-glm::mat4 MapCanvas::getViewProj_old(const glm::vec2 &scrollPos,
-                                     const glm::ivec2 &size,
-                                     const float zoomScale,
-                                     const int /*currentLayer*/)
-{
-    constexpr float FIXED_VIEW_DISTANCE = 60.f;
-    constexpr float ROOM_Z_SCALE = 7.f;
-    constexpr auto baseSize = static_cast<float>(BASESIZE);
-
-    const float swp = zoomScale * baseSize / static_cast<float>(size.x);
-    const float shp = zoomScale * baseSize / static_cast<float>(size.y);
-
-    QMatrix4x4 proj;
-    proj.frustum(-0.5f, +0.5f, -0.5f, 0.5f, 5.f, 10000.f);
-    proj.scale(swp, shp, 1.f);
-    proj.translate(-scrollPos.x, -scrollPos.y, -FIXED_VIEW_DISTANCE);
-    proj.scale(1.f, 1.f, ROOM_Z_SCALE);
-
-    return glm::make_mat4(proj.constData());
-}
-
-NODISCARD static float getPitchDegrees(const float zoomScale)
-{
-    const float degrees = getConfig().canvas.advanced.verticalAngle.getFloat();
-    if (!MapCanvasConfig::isAutoTilt()) {
-        return degrees;
-    }
-
-    static_assert(ScaleFactor::MAX_VALUE >= 2.f);
-    return glm::smoothstep(0.5f, 2.f, zoomScale) * degrees;
-}
-
-glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
-                                 const glm::ivec2 &size,
-                                 const float zoomScale,
-                                 const int currentLayer)
-{
-    static_assert(GLM_CONFIG_CLIP_CONTROL == GLM_CLIP_CONTROL_RH_NO);
-
-    const int width = size.x;
-    const int height = size.y;
-
-    const float aspect = static_cast<float>(width) / static_cast<float>(height);
-
-    const auto &advanced = getConfig().canvas.advanced;
-    const float fovDegrees = advanced.fov.getFloat();
-    const auto pitchRadians = glm::radians(getPitchDegrees(zoomScale));
-    const auto yawRadians = glm::radians(advanced.horizontalAngle.getFloat());
-    const auto layerHeight = advanced.layerHeight.getFloat();
-
-    const auto pixelScale = std::invoke([aspect, fovDegrees, width]() -> float {
-        constexpr float HARDCODED_LOGICAL_PIXELS = 44.f;
-        const auto dummyProj = glm::perspective(glm::radians(fovDegrees), aspect, 1.f, 10.f);
-
-        const auto centerRoomProj = glm::inverse(dummyProj) * glm::vec4(0.f, 0.f, 0.f, 1.f);
-        const auto centerRoom = glm::vec3(centerRoomProj) / centerRoomProj.w;
-
-        // Use east instead of north, so that tilted perspective matches horizontally.
-        const auto oneRoomEast = dummyProj * glm::vec4(centerRoom + glm::vec3(1.f, 0.f, 0.f), 1.f);
-        const float clipDist = std::abs(oneRoomEast.x / oneRoomEast.w);
-        const float ndcDist = clipDist * 0.5f;
-
-        // width is in logical pixels
-        const float screenDist = ndcDist * static_cast<float>(width);
-        const auto pixels = std::abs(centerRoom.z) * screenDist;
-        return pixels / HARDCODED_LOGICAL_PIXELS;
-    });
-
-    const float ZSCALE = layerHeight;
-    const float camDistance = pixelScale / zoomScale;
-    const auto center = glm::vec3(scrollPos, static_cast<float>(currentLayer) * ZSCALE);
-
-    // The view matrix will transform from world space to eye-space.
-    // Eye space has the camera at the origin, with +X right, +Y up, and -Z forward.
-    //
-    // Our camera's orientation is based on the world-space ENU coordinates.
-    // We'll define right-handed basis vectors forward, right, and up.
-
-    // The horizontal rotation in the XY plane will affect both forward and right vectors.
-    // Currently the convention is: -45 is northwest, and +45 is northeast.
-    //
-    // If you want to modify this, keep in mind that the angle is inverted since the
-    // camera is subtracted from the center, so the result is that positive angle
-    // appears clockwise (backwards) on screen.
-    const auto rotateHorizontal = glm::mat3(
-        glm::rotate(glm::mat4(1), -yawRadians, glm::vec3(0, 0, 1)));
-
-    // Our unrotated pitch is defined so that 0 is straight down, and 90 degrees is north,
-    // but the yaw rotation can cause it to point northeast or northwest.
-    //
-    // Here we use an ENU coordinate system, so we have:
-    //   forward(pitch= 0 degrees) = -Z (down), and
-    //   forward(pitch=90 degrees) = +Y (north).
-    const auto forward = rotateHorizontal
-                         * glm::vec3(0.f, std::sin(pitchRadians), -std::cos(pitchRadians));
-    // Unrotated right is east (+X).
-    const auto right = rotateHorizontal * glm::vec3(1, 0, 0);
-    // right x forward = up
-    const auto up = glm::cross(right, glm::normalize(forward));
-
-    // Subtract because camera looks at the center.
-    const auto eye = center - camDistance * forward;
-
-    // NOTE: may need to modify near and far planes by pixelScale and zoomScale.
-    // Be aware that a 24-bit depth buffer only gives about 12 bits of usable
-    // depth range; we may need to reduce this for people with 16-bit depth buffers.
-    // Keep in mind: Arda is about 600x300 rooms, so viewing the blue mountains
-    // from mordor requires approx 700 room units of view distance.
-    const auto proj = glm::perspective(glm::radians(fovDegrees), aspect, 0.25f, 1024.f);
-    const auto view = glm::lookAt(eye, center, up);
-    const auto scaleZ = glm::scale(glm::mat4(1), glm::vec3(1.f, 1.f, ZSCALE));
-
-    return proj * view * scaleZ;
-}
 
 void MapCanvas::setMvp(const glm::mat4 &viewProj)
 {
@@ -881,9 +768,15 @@ void MapCanvas::paintGL()
     const float zoom = getTotalScaleFactor();
     const bool is3d = advanced.use3D.get();
     if (is3d) {
+        const ViewportConfig config{advanced.use3D.get(),
+                                    advanced.autoTilt.get(),
+                                    advanced.fov.getFloat(),
+                                    advanced.verticalAngle.getFloat(),
+                                    advanced.horizontalAngle.getFloat(),
+                                    advanced.layerHeight.getFloat()};
         print(QString::asprintf("3d mode: %.1f fovy, %.1f pitch, %.1f yaw, %.1f zscale",
                                 advanced.fov.getDouble(),
-                                static_cast<double>(getPitchDegrees(zoom)),
+                                static_cast<double>(ProjectionUtils::calculatePitchDegrees(config, zoom)),
                                 advanced.horizontalAngle.getDouble(),
                                 advanced.layerHeight.getDouble()));
     } else {

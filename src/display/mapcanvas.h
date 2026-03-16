@@ -205,14 +205,6 @@ private:
     NODISCARD std::shared_ptr<InfomarkSelection> getInfomarkSelection(const MouseSel &sel);
 
 public:
-    NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
-                                               const glm::ivec2 &size,
-                                               float zoomScale,
-                                               int currentLayer);
-    NODISCARD static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
-                                           const glm::ivec2 &size,
-                                           float zoomScale,
-                                           int currentLayer);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
@@ -256,6 +248,7 @@ public:
     void selectionChanged();
     void graphicsSettingsChanged();
     void zoomChanged() { emit sig_zoomChanged(getRawZoom()); }
+    void syncViewportConfig();
 
 public:
     void userPressedEscape(bool);

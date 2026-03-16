@@ -70,6 +70,7 @@ MapCanvas::MapCanvas(MapData &mapData,
     , m_groupManager{groupManager}
     , m_frameManager{static_cast<QOpenGLWindow &>(*this)}
 {
+    syncViewportConfig();
     m_frameManager.registerCallback(m_lifetime, [this]() {
         return m_batches.remeshCookie.isPending() ? FrameManager::AnimationStatusEnum::Continue
                                                   : FrameManager::AnimationStatusEnum::Stop;
@@ -1236,10 +1237,22 @@ void MapCanvas::selectionChanged()
     emit sig_selectionChanged();
 }
 
+void MapCanvas::syncViewportConfig()
+{
+    const auto &advanced = getConfig().canvas.advanced;
+    const ViewportConfig config{advanced.use3D.get(),
+                                advanced.autoTilt.get(),
+                                advanced.fov.getFloat(),
+                                advanced.verticalAngle.getFloat(),
+                                advanced.horizontalAngle.getFloat(),
+                                advanced.layerHeight.getFloat()};
+    setViewportConfig(config);
+}
+
 void MapCanvas::graphicsSettingsChanged()
 {
     m_opengl.resetNamedColorsBuffer();
-    markViewProjDirty();
+    syncViewportConfig();
     m_frameManager.requestUpdate();
 }
 
