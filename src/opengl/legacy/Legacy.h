@@ -35,7 +35,15 @@ struct ShaderPrograms;
 struct PointSizeBinder;
 
 // X(EnumName, GL_String_Name)
+/**
+ * Note: SharedVboEnum values are implicitly used as UBO binding indices.
+ * They must be 0-based and contiguous.
+ */
 #define XFOREACH_SHARED_VBO(X) X(NamedColorsBlock, "NamedColorsBlock")
+
+#define X_COUNT_VBO(element, name) +1
+static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT_VBO);
+#undef X_COUNT_VBO
 
 enum class SharedVboEnum : uint8_t {
 #define X_ENUM(element, name) element,
@@ -43,21 +51,21 @@ enum class SharedVboEnum : uint8_t {
 #undef X_ENUM
 };
 
+static_assert(NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
+static_assert(static_cast<uint8_t>(SharedVboEnum::NamedColorsBlock) == 0,
+              "SharedVboEnum must be 0-based for UBO binding indices");
+
 #define XFOREACH_SHARED_VAO(X) X(EmptyVao)
+
+#define X_COUNT_VAO(element) +1
+static constexpr size_t NUM_SHARED_VAOS = 0 XFOREACH_SHARED_VAO(X_COUNT_VAO);
+#undef X_COUNT_VAO
 
 enum class SharedVaoEnum : uint8_t {
 #define X_ENUM(element) element,
     XFOREACH_SHARED_VAO(X_ENUM)
 #undef X_ENUM
 };
-
-#define X_COUNT_VAO(element) +1
-static constexpr size_t NUM_SHARED_VAOS = 0 XFOREACH_SHARED_VAO(X_COUNT_VAO);
-#undef X_COUNT_VAO
-
-#define X_COUNT_VBO(element, name) +1
-static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT_VBO);
-#undef X_COUNT_VBO
 
 NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
@@ -341,6 +349,14 @@ public:
     /// platform-specific (ES vs GL)
     NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
 
+private:
+    template<typename T>
+    static void enforceTriviallyCopyable()
+    {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "T must be trivially copyable for buffer upload");
+    }
+
 public:
     void enableAttrib(const GLuint index,
                       const GLint size,
@@ -369,8 +385,7 @@ public:
                              const std::vector<T, A> &batch,
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "T must be trivially copyable for buffer upload");
+        enforceTriviallyCopyable<T>();
         const auto numElements = static_cast<GLsizei>(batch.size());
         const auto elementSize = static_cast<GLsizei>(sizeof(T));
         const auto numBytes = numElements * elementSize;
@@ -386,8 +401,7 @@ public:
                 const T &data,
                 const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "T must be trivially copyable for buffer upload");
+        enforceTriviallyCopyable<T>();
         Base::glBindBuffer(target, buffer);
         Base::glBufferData(target, sizeof(T), &data, Legacy::toGLenum(usage));
         Base::glBindBuffer(target, 0);

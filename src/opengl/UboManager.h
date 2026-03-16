@@ -101,8 +101,6 @@ public:
     template<typename T>
     void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "T must be trivially copyable for UBO upload");
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
         gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         bind_internal(gl, block, vbo.get());
