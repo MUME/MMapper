@@ -50,8 +50,8 @@ protected:
     {
         auto binder = m_program.bind();
         // Attribute-less meshes usually don't use MVP, or use identity.
-        // If a valid MVP is provided in renderState, we use it; otherwise we fallback to identity.
-        const glm::mat4 mvp = renderState.mvp.value_or(glm::mat4(1.0f));
+        // If a valid MVP is provided in renderState, we use it; otherwise we fallback to the functions' projection matrix.
+        const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
         m_program.setUniforms(mvp, renderState.uniforms);
 
         RenderStateBinder rsBinder(m_functions, m_functions.getTexLookup(), renderState);

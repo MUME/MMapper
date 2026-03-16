@@ -2,8 +2,8 @@
 
 namespace Legacy {
 
-FunctionsES30::FunctionsES30(Badge<Functions> badge)
-    : Functions(badge)
+FunctionsES30::FunctionsES30(Badge<Functions> badge, UboManager &uboManager)
+    : Functions(badge, uboManager)
 {
     assert(!OpenGLConfig::getIsCompat());
 }

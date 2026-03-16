@@ -119,9 +119,9 @@ class NODISCARD Functions : protected QOpenGLExtraFunctions,
 
 public:
     template<typename T>
-    NODISCARD static std::shared_ptr<Functions> alloc()
+    NODISCARD static std::shared_ptr<Functions> alloc(UboManager &uboManager)
     {
-        return std::make_shared<T>(Badge<Functions>{});
+        return std::make_shared<T>(Badge<Functions>{}, uboManager);
     }
 
 private:
@@ -135,10 +135,10 @@ private:
     std::unique_ptr<SharedVaos> m_sharedVaos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
-    UboManager *m_uboManager = nullptr;
+    UboManager &m_uboManager;
 
 protected:
-    explicit Functions(Badge<Functions>);
+    explicit Functions(Badge<Functions>, UboManager &uboManager);
 
 public:
     virtual ~Functions();
@@ -314,7 +314,6 @@ public:
 
     NODISCARD FBO &getFBO();
 
-    void setUboManager(UboManager &manager);
     NODISCARD UboManager &getUboManager();
 
 private:

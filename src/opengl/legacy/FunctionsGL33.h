@@ -9,7 +9,7 @@ namespace Legacy {
 class FunctionsGL33 final : public Functions
 {
 public:
-    explicit FunctionsGL33(Badge<Functions>);
+    explicit FunctionsGL33(Badge<Functions>, UboManager &uboManager);
     ~FunctionsGL33() override = default;
 
     DELETE_CTORS_AND_ASSIGN_OPS(FunctionsGL33);

@@ -33,10 +33,10 @@ OpenGL::OpenGL()
 {
     switch (OpenGLConfig::getBackendType()) {
     case OpenGLProber::BackendType::GL:
-        m_opengl = Legacy::Functions::alloc<Legacy::FunctionsGL33>();
+        m_opengl = Legacy::Functions::alloc<Legacy::FunctionsGL33>(m_uboManager);
         break;
     case OpenGLProber::BackendType::GLES:
-        m_opengl = Legacy::Functions::alloc<Legacy::FunctionsES30>();
+        m_opengl = Legacy::Functions::alloc<Legacy::FunctionsES30>(m_uboManager);
         break;
     case OpenGLProber::BackendType::None:
     default:
@@ -220,7 +220,6 @@ void OpenGL::resetNamedColorsBuffer()
 void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
     setDevicePixelRatio(devicePixelRatio);
-    getFunctions().setUboManager(m_uboManager);
 
     // REVISIT: Move this somewhere else?
     GLint maxSamples = 0;

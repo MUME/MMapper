@@ -274,13 +274,14 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
         std::make_unique<Legacy::FontMesh3d>(shared_from_this(), prog, texture, mode, batch)};
 }
 
-Functions::Functions(Badge<Functions>)
+Functions::Functions(Badge<Functions>, UboManager &uboManager)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_sharedVbos{std::make_unique<SharedVbos>()}
     , m_sharedVaos{std::make_unique<SharedVaos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
     , m_fbo{std::make_unique<FBO>()}
+    , m_uboManager{uboManager}
 {}
 
 Functions::~Functions()
@@ -341,15 +342,9 @@ FBO &Functions::getFBO()
     return deref(m_fbo);
 }
 
-void Functions::setUboManager(UboManager &manager)
-{
-    m_uboManager = &manager;
-}
-
 UboManager &Functions::getUboManager()
 {
-    assert(m_uboManager != nullptr && "UboManager accessed before being set");
-    return deref(m_uboManager);
+    return m_uboManager;
 }
 
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().
