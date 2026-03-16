@@ -284,7 +284,7 @@ struct NODISCARD GLRenderState final
         return copy;
     }
 
-    NODISCARD GLRenderState withMvp(const std::optional<glm::mat4> &new_mvp) const
+    NODISCARD GLRenderState withMvp(std::optional<glm::mat4> new_mvp) const
     {
         GLRenderState copy = *this;
         copy.mvp = new_mvp;

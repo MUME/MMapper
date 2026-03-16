@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#include <mutex>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -136,13 +137,12 @@ private:
         assert(bindingIndex < m_boundBuffers.size());
 
 #ifndef NDEBUG
-        static bool limitsChecked = false;
-        if (!limitsChecked) {
+        static std::once_flag limitsOnce;
+        std::call_once(limitsOnce, [&gl, this]() {
             GLint maxBindings = 0;
             gl.glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
             assert(m_boundBuffers.size() <= static_cast<std::size_t>(maxBindings));
-            limitsChecked = true;
-        }
+        });
 #endif
 
         auto &bound = m_boundBuffers[block];
