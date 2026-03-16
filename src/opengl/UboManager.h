@@ -12,7 +12,9 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#ifndef NDEBUG
 #include <mutex>
+#endif
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -25,6 +27,8 @@ namespace Legacy {
  * Tracks which UBOs are currently valid on the GPU and coordinates their updates.
  * Follows a lazy rebuild pattern: UBOs are only updated when a bind() is requested
  * and the block is marked as dirty (represented by std::nullopt in the bound buffer tracker).
+ *
+ * Note: This class is not thread-safe.
  */
 class UboManager final
 {
@@ -153,8 +157,8 @@ private:
      */
     void bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
     {
-        const auto bindingIndex = static_cast<std::size_t>(Legacy::getUboBindingIndex(block));
-        assert(bindingIndex < m_boundBuffers.size());
+        const auto bindingIndex = Legacy::getUboBindingIndex(block);
+        assert(static_cast<std::size_t>(bindingIndex) < m_boundBuffers.size());
 
 #ifndef NDEBUG
         static std::once_flag limitsOnce;
@@ -167,7 +171,7 @@ private:
 
         auto &bound = m_boundBuffers[block];
         if (!bound.has_value() || bound.value() != buffer) {
-            gl.glBindBufferBase(GL_UNIFORM_BUFFER, block, buffer);
+            gl.glBindBufferBase(GL_UNIFORM_BUFFER, bindingIndex, buffer);
             bound = buffer;
         }
     }
