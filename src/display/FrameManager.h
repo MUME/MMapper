@@ -44,7 +44,7 @@ private:
         AnimationCallback callback;
     };
 
-    mutable std::vector<Entry> m_callbacks;
+    std::vector<Entry> m_callbacks;
     std::chrono::steady_clock::time_point m_lastUpdateTime;
     std::chrono::nanoseconds m_minFrameTime{0};
     Signal2Lifetime m_configLifetime;
@@ -108,11 +108,11 @@ private:
     /**
      * @brief Check if any registered animations or heartbeat are active.
      */
-    NODISCARD bool needsHeartbeat() const;
+    NODISCARD bool needsHeartbeat();
 
     void recordFramePainted();
     void updateMinFrameTime();
-    void cleanupExpiredCallbacks() const;
+    void cleanupExpiredCallbacks();
     NODISCARD std::chrono::nanoseconds getJitterTolerance() const;
     NODISCARD std::chrono::nanoseconds getTimeUntilNextFrame() const;
 

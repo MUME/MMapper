@@ -450,28 +450,16 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
     return proj * view * scaleZ;
 }
 
-void MapCanvas::updateViewProj(int width, int height)
-{
-    if (width <= 0 || height <= 0) {
-        return;
-    }
-    const bool want3D = getConfig().canvas.advanced.use3D.get();
-    const float zoomScale = getTotalScaleFactor();
-    const auto size = glm::ivec2(width, height);
-    m_viewProj = (!want3D) ? getViewProj_old(m_scroll, size, zoomScale, m_currentLayer)
-                           : getViewProj(m_scroll, size, zoomScale, m_currentLayer);
-}
-
 void MapCanvas::setMvp(const glm::mat4 &viewProj)
 {
     auto &gl = getOpenGL();
-    m_viewProj = viewProj;
-    gl.setProjectionMatrix(m_viewProj);
+    setMvpExtern(viewProj);
+    gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
 }
 
 void MapCanvas::setViewportAndMvp(int width, int height)
 {
-    updateViewProj(width, height);
+    markViewProjDirty();
 
     auto &gl = getOpenGL();
     gl.glViewport(0, 0, width, height);
@@ -480,7 +468,7 @@ void MapCanvas::setViewportAndMvp(int width, int height)
     assert(size.x == width);
     assert(size.y == height);
 
-    gl.setProjectionMatrix(m_viewProj);
+    gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
 }
 
 void MapCanvas::resizeGL(int width, int height)
@@ -931,7 +919,7 @@ void MapCanvas::paintSelectionArea()
 
     // Mouse selected area
     auto &gl = getOpenGL();
-    const auto layer = static_cast<float>(m_currentLayer);
+    const auto layer = static_cast<float>(getCurrentLayer());
 
     if (hasAreaSelection()) {
         const glm::vec3 A{pos1, layer};
@@ -1042,12 +1030,13 @@ void MapCanvas::renderMapBatches()
         gl.renderPlainFullScreenQuad(blendedWithBackground);
     };
 
+    const int currentLayer = getCurrentLayer();
     for (const auto &layer : batchedMeshes) {
         const int thisLayer = layer.first;
-        if (thisLayer == m_currentLayer) {
+        if (thisLayer == currentLayer) {
             gl.clearDepth();
             fadeBackground();
         }
-        drawLayer(thisLayer, m_currentLayer);
+        drawLayer(thisLayer, currentLayer);
     }
 }

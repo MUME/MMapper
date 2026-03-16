@@ -100,19 +100,19 @@ MapCanvas *MapCanvas::getPrimary()
 
 void MapCanvas::slot_layerUp()
 {
-    ++m_currentLayer;
+    setCurrentLayer(getCurrentLayer() + 1);
     layerChanged();
 }
 
 void MapCanvas::slot_layerDown()
 {
-    --m_currentLayer;
+    setCurrentLayer(getCurrentLayer() - 1);
     layerChanged();
 }
 
 void MapCanvas::slot_layerReset()
 {
-    m_currentLayer = 0;
+    setCurrentLayer(0);
     layerChanged();
 }
 
@@ -359,7 +359,7 @@ void MapCanvas::slot_createRoom()
         return;
     }
 
-    if (m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer})) {
+    if (m_data.createEmptyRoom(Coordinate{c.x, c.y, getCurrentLayer()})) {
         // success
     } else {
         // failed!
@@ -410,7 +410,7 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
 
     const auto getScaled = [this](const glm::vec3 &c) -> Coordinate {
         const auto pos = glm::ivec3(glm::vec2(c) * static_cast<float>(INFOMARK_SCALE),
-                                    m_currentLayer);
+                                    getCurrentLayer());
         return Coordinate{pos.x, pos.y, pos.z};
     };
 
@@ -422,7 +422,6 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
 
 void MapCanvas::mousePressEvent(QMouseEvent *const event)
 {
-    updateViewProj(width(), height());
     if (event->button() != Qt::RightButton) {
         emit sig_dismissContextMenu();
     }
@@ -446,7 +445,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     const auto xy = *optXy;
     if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE) {
         const auto worldPos = unproject_clamped(xy);
-        m_sel1 = m_sel2 = MouseSel{Coordinate2f{worldPos.x, worldPos.y}, m_currentLayer};
+        m_sel1 = m_sel2 = MouseSel{Coordinate2f{worldPos.x, worldPos.y}, getCurrentLayer()};
     } else {
         m_sel1 = m_sel2 = getUnprojectedMouseSel(xy);
     }
@@ -618,7 +617,6 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 {
-    updateViewProj(width(), height());
     const auto optXy = getMouseCoords(event);
     if (!optXy) {
         return;
@@ -733,9 +731,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
                 if (glm::length(delta) > GESTURE_EPSILON) {
                     const glm::vec2 newWorldCenter = dragState->startScroll - delta;
-                    m_scroll = newWorldCenter;
+                    setScroll(newWorldCenter);
                     emit sig_onCenter(newWorldCenter);
-                    updateViewProj(width(), height());
                     m_frameManager.requestUpdate();
                 }
             }
@@ -807,7 +804,6 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 {
-    updateViewProj(width(), height());
     const auto optXy = getMouseCoords(event);
     if (!optXy) {
         return;
@@ -1040,7 +1036,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
 void MapCanvas::startMoving(const MouseSel &startPos)
 {
-    beginDrag(startPos.to_vec3(), m_scroll, m_viewProj);
+    beginDrag(startPos.to_vec3(), getScroll(), MapCanvasViewport::getViewProj());
 }
 
 void MapCanvas::stopMoving()
@@ -1052,9 +1048,10 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
 {
     const auto optWorldPos = unproject(mousePos);
     if (!optWorldPos) {
-        m_scaleFactor *= factor;
+        ScaleFactor sf = getScaleFactor();
+        sf *= factor;
+        setScaleFactor(sf);
         zoomChanged();
-        updateViewProj(width(), height());
         m_frameManager.requestUpdate();
         return;
     }
@@ -1062,94 +1059,95 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
     const glm::vec2 worldPos = glm::vec2(*optWorldPos);
 
     // Save current state
-    const glm::vec2 oldScroll = m_scroll;
+    const glm::vec2 oldScroll = getScroll();
 
     // Apply zoom
-    m_scaleFactor *= factor;
+    ScaleFactor sf = getScaleFactor();
+    sf *= factor;
+    setScaleFactor(sf);
     zoomChanged();
 
     // Calculate new scroll position to keep worldPos under mousePos.
-    // We update the viewport and MVP to the new zoom level temporarily
-    // to perform the unprojection.
-    updateViewProj(width(), height());
-
+    // The unprojection uses the updated zoom level.
     const auto optNewWorldPos = unproject(mousePos);
     if (optNewWorldPos) {
         const glm::vec2 delta = worldPos - glm::vec2(*optNewWorldPos);
         const glm::vec2 newScroll = oldScroll + delta;
-        m_scroll = newScroll;
+        setScroll(newScroll);
         emit sig_onCenter(newScroll);
     } else {
         // Fallback: if we can't find the new world position, just stay where we were.
-        m_scroll = oldScroll;
+        setScroll(oldScroll);
         emit sig_onCenter(oldScroll);
     }
 
-    // Refresh the viewport matrix with the final scroll and zoom before painting.
-    updateViewProj(width(), height());
     m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)
 {
-    if (!utils::isSameFloat(m_scroll.x, worldPos.x) || !utils::isSameFloat(m_scroll.y, worldPos.y)) {
-        m_scroll = worldPos;
-        updateViewProj(width(), height());
+    if (!utils::isSameFloat(getScroll().x, worldPos.x)
+        || !utils::isSameFloat(getScroll().y, worldPos.y)) {
+        setScroll(worldPos);
         m_frameManager.requestUpdate();
     }
 }
 
 void MapCanvas::slot_setHorizontalScroll(const float worldX)
 {
-    if (!utils::isSameFloat(m_scroll.x, worldX)) {
-        m_scroll.x = worldX;
-        updateViewProj(width(), height());
+    if (!utils::isSameFloat(getScroll().x, worldX)) {
+        auto scroll = getScroll();
+        scroll.x = worldX;
+        setScroll(scroll);
         m_frameManager.requestUpdate();
     }
 }
 
 void MapCanvas::slot_setVerticalScroll(const float worldY)
 {
-    if (!utils::isSameFloat(m_scroll.y, worldY)) {
-        m_scroll.y = worldY;
-        updateViewProj(width(), height());
+    if (!utils::isSameFloat(getScroll().y, worldY)) {
+        auto scroll = getScroll();
+        scroll.y = worldY;
+        setScroll(scroll);
         m_frameManager.requestUpdate();
     }
 }
 
 void MapCanvas::slot_zoomIn()
 {
-    m_scaleFactor.logStep(1);
+    ScaleFactor sf = getScaleFactor();
+    sf.logStep(1);
+    setScaleFactor(sf);
     zoomChanged();
-    updateViewProj(width(), height());
     m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_zoomOut()
 {
-    m_scaleFactor.logStep(-1);
+    ScaleFactor sf = getScaleFactor();
+    sf.logStep(-1);
+    setScaleFactor(sf);
     zoomChanged();
-    updateViewProj(width(), height());
     m_frameManager.requestUpdate();
 }
 
 void MapCanvas::slot_zoomReset()
 {
-    m_scaleFactor.set(1.f);
+    ScaleFactor sf = getScaleFactor();
+    sf.set(1.f);
+    setScaleFactor(sf);
     zoomChanged();
-    updateViewProj(width(), height());
     m_frameManager.requestUpdate();
 }
 
 void MapCanvas::onMovement()
 {
     const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
-    m_currentLayer = pos.z;
+    setCurrentLayer(pos.z);
     const glm::vec2 newScroll = pos.to_vec2() + glm::vec2{0.5f, 0.5f};
-    if (!utils::isSameFloat(m_scroll.x, newScroll.x)
-        || !utils::isSameFloat(m_scroll.y, newScroll.y)) {
-        m_scroll = newScroll;
-        updateViewProj(width(), height());
+    if (!utils::isSameFloat(getScroll().x, newScroll.x)
+        || !utils::isSameFloat(getScroll().y, newScroll.y)) {
+        setScroll(newScroll);
         emit sig_onCenter(newScroll);
         m_frameManager.requestUpdate();
     }
@@ -1179,7 +1177,7 @@ void MapCanvas::infomarksChanged()
 
 void MapCanvas::layerChanged()
 {
-    updateViewProj(width(), height());
+    markViewProjDirty();
     m_frameManager.requestUpdate();
 }
 
@@ -1241,7 +1239,7 @@ void MapCanvas::selectionChanged()
 void MapCanvas::graphicsSettingsChanged()
 {
     m_opengl.resetNamedColorsBuffer();
-    updateViewProj(width(), height());
+    markViewProjDirty();
     m_frameManager.requestUpdate();
 }
 

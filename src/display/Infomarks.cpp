@@ -298,7 +298,7 @@ void MapCanvas::paintNewInfomarkSelection()
 
     // Mouse selected area
     auto &gl = getOpenGL();
-    const auto layer = static_cast<float>(m_currentLayer);
+    const auto layer = static_cast<float>(getCurrentLayer());
 
     // Draw yellow guide when creating an infomark line/arrow
     if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS && hasAreaSelection()) {
@@ -322,13 +322,14 @@ void MapCanvas::paintSelectedInfomarks()
         // draw selections
         if (m_infoMarkSelection != nullptr) {
             const InfomarkSelection &sel = deref(m_infoMarkSelection);
-            sel.for_each([this, &batch](const InfomarkHandle &marker) {
-                drawInfomark(batch, marker, m_currentLayer, {}, Colors::red);
+            const int currentLayer = getCurrentLayer();
+            sel.for_each([this, &batch, currentLayer](const InfomarkHandle &marker) {
+                drawInfomark(batch, marker, currentLayer, {}, Colors::red);
             });
             if (auto *const move = getInteraction<InfomarkSelectionMove>()) {
                 const glm::vec2 offset = move->pos.to_vec2();
-                sel.for_each([this, &batch, &offset](const InfomarkHandle &marker) {
-                    drawInfomark(batch, marker, m_currentLayer, offset, Colors::yellow);
+                sel.for_each([this, &batch, &offset, currentLayer](const InfomarkHandle &marker) {
+                    drawInfomark(batch, marker, currentLayer, offset, Colors::yellow);
                 });
             }
         }
@@ -344,9 +345,10 @@ void MapCanvas::paintSelectedInfomarks()
                 batch.drawPoint(point);
             };
 
-            const auto drawSelectionPoints = [this, &drawPoint](const InfomarkHandle &marker) {
+            const int currentLayer = getCurrentLayer();
+            const auto drawSelectionPoints = [this, &drawPoint, currentLayer](const InfomarkHandle &marker) {
                 const auto &pos1 = marker.getPosition1();
-                if (pos1.z != m_currentLayer) {
+                if (pos1.z != currentLayer) {
                     return;
                 }
 
@@ -361,7 +363,7 @@ void MapCanvas::paintSelectedInfomarks()
                 }
 
                 const Coordinate &pos2 = marker.getPosition2();
-                assert(pos2.z == m_currentLayer);
+                assert(pos2.z == currentLayer);
                 drawPoint(pos2, color);
             };
 
@@ -384,7 +386,7 @@ void MapCanvas::paintBatchedInfomarks()
     }
 
     BatchedInfomarksMeshes &map = m_batches.infomarksMeshes.value();
-    const auto it = map.find(static_cast<int>(m_currentLayer));
+    const auto it = map.find(static_cast<int>(getCurrentLayer()));
     if (it == map.end()) {
         return;
     }

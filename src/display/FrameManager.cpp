@@ -30,7 +30,7 @@ void FrameManager::registerCallback(const Signal2Lifetime &lifetime, AnimationCa
     m_callbacks.push_back({lifetime.getObj(), std::move(callback)});
 }
 
-bool FrameManager::needsHeartbeat() const
+bool FrameManager::needsHeartbeat()
 {
     if (m_dirty) {
         return true;
@@ -58,7 +58,7 @@ bool FrameManager::needsHeartbeat() const
     return anyActive;
 }
 
-void FrameManager::cleanupExpiredCallbacks() const
+void FrameManager::cleanupExpiredCallbacks()
 {
     auto it = std::remove_if(m_callbacks.begin(), m_callbacks.end(), [](const Entry &e) {
         return e.lifetime.expired();

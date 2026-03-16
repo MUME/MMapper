@@ -159,10 +159,12 @@ public:
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
     {
-        m_scaleFactor.set(zoom);
+        ScaleFactor sf = getScaleFactor();
+        sf.set(zoom);
+        setScaleFactor(sf);
         zoomChanged();
     }
-    NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
+    NODISCARD float getRawZoom() const { return getScaleFactor().getRaw(); }
 
 public:
     NODISCARD auto width() const { return QOpenGLWindow::width(); }
@@ -201,6 +203,8 @@ private:
     void updateMultisampling();
 
     NODISCARD std::shared_ptr<InfomarkSelection> getInfomarkSelection(const MouseSel &sel);
+
+public:
     NODISCARD static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                                const glm::ivec2 &size,
                                                float zoomScale,
@@ -209,7 +213,6 @@ private:
                                            const glm::ivec2 &size,
                                            float zoomScale,
                                            int currentLayer);
-    void updateViewProj(int width, int height);
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
