@@ -87,7 +87,7 @@ public:
         if constexpr (utils::is_vector_v<T>) {
             static_cast<void>(gl.setUbo(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         } else {
-            gl.setUboSingle(data, vbo.get(), BufferUsageEnum::DYNAMIC_DRAW);
+            gl.setUboSingle(vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         }
 
         bind_internal(gl, block, vbo.get());
