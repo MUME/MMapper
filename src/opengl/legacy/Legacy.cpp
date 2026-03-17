@@ -45,6 +45,8 @@ const char *Functions::getUniformBlockName(const SharedVboEnum block)
         return StringName;
         XFOREACH_SHARED_VBO(X_CASE)
 #undef X_CASE
+    case SharedVboEnum::NUM_BLOCKS:
+        break;
     }
     return nullptr;
 }

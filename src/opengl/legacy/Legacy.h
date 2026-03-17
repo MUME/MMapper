@@ -49,9 +49,12 @@ enum class SharedVboEnum : uint8_t {
 #define X_ENUM(element, name) element,
     XFOREACH_SHARED_VBO(X_ENUM)
 #undef X_ENUM
+        NUM_BLOCKS
 };
 
 static_assert(NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
+static_assert(static_cast<size_t>(SharedVboEnum::NUM_BLOCKS) == NUM_SHARED_VBOS,
+              "SharedVboEnum must be 0-based and contiguous");
 
 /**
  * @brief Returns the UBO binding index for a shared VBO block.
@@ -75,7 +78,11 @@ enum class SharedVaoEnum : uint8_t {
 #define X_ENUM(element) element,
     XFOREACH_SHARED_VAO(X_ENUM)
 #undef X_ENUM
+        NUM_VAOS
 };
+
+static_assert(static_cast<size_t>(SharedVaoEnum::NUM_VAOS) == NUM_SHARED_VAOS,
+              "SharedVaoEnum must be 0-based and contiguous");
 
 NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
