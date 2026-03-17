@@ -25,6 +25,7 @@ class OpenGL;
 
 namespace Legacy {
 
+class UboManager;
 class StaticVbos;
 class SharedVbos;
 class SharedVaos;
@@ -33,32 +34,55 @@ struct AbstractShaderProgram;
 struct ShaderPrograms;
 struct PointSizeBinder;
 
-// X(EnumName, GL_String_Name, IsUniform)
-#define XFOREACH_SHARED_VBO(X) \
-    X(NamedColorsBlock, "NamedColorsBlock", true) \
-    X(InstancedQuadIbo, nullptr, false)
+// X(EnumName, GL_String_Name)
+/**
+ * Note: SharedVboEnum values are implicitly used as UBO binding indices.
+ * They must be 0-based and contiguous.
+ */
+#define XFOREACH_SHARED_VBO(X) X(NamedColorsBlock, "NamedColorsBlock")
+
+#define X_COUNT_VBO(element, name) +1
+static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT_VBO);
+#undef X_COUNT_VBO
 
 enum class SharedVboEnum : uint8_t {
-#define X_ENUM(element, name, isUniform) element,
+#define X_ENUM(element, name) element,
     XFOREACH_SHARED_VBO(X_ENUM)
 #undef X_ENUM
+        NUM_BLOCKS
 };
+
+static_assert(NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
+static_assert(static_cast<size_t>(SharedVboEnum::NUM_BLOCKS) == NUM_SHARED_VBOS,
+              "SharedVboEnum must be 0-based and contiguous");
+
+/**
+ * @brief Returns the UBO binding index for a shared VBO block.
+ *
+ * Note: SharedVboEnum values must be 0-based and contiguous.
+ */
+NODISCARD static inline GLuint getUboBindingIndex(const SharedVboEnum block)
+{
+    static_assert(static_cast<uint8_t>(SharedVboEnum::NamedColorsBlock) == 0,
+                  "SharedVboEnum must be 0-based for UBO binding indices");
+    return static_cast<GLuint>(block);
+}
 
 #define XFOREACH_SHARED_VAO(X) X(EmptyVao)
-
-enum class SharedVaoEnum : uint8_t {
-#define X_ENUM(element) element,
-    XFOREACH_SHARED_VAO(X_ENUM)
-#undef X_ENUM
-};
 
 #define X_COUNT_VAO(element) +1
 static constexpr size_t NUM_SHARED_VAOS = 0 XFOREACH_SHARED_VAO(X_COUNT_VAO);
 #undef X_COUNT_VAO
 
-#define X_COUNT(element, name, isUniform) +1
-static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT);
-#undef X_COUNT
+enum class SharedVaoEnum : uint8_t {
+#define X_ENUM(element) element,
+    XFOREACH_SHARED_VAO(X_ENUM)
+#undef X_ENUM
+        NUM_VAOS
+};
+
+static_assert(static_cast<size_t>(SharedVaoEnum::NUM_VAOS) == NUM_SHARED_VAOS,
+              "SharedVaoEnum must be 0-based and contiguous");
 
 NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
@@ -119,9 +143,9 @@ class NODISCARD Functions : protected QOpenGLExtraFunctions,
 
 public:
     template<typename T>
-    NODISCARD static std::shared_ptr<Functions> alloc()
+    NODISCARD static std::shared_ptr<Functions> alloc(UboManager &uboManager)
     {
-        return std::make_shared<T>(Badge<Functions>{});
+        return std::make_shared<T>(Badge<Functions>{}, uboManager);
     }
 
 private:
@@ -135,9 +159,10 @@ private:
     std::unique_ptr<SharedVaos> m_sharedVaos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
+    UboManager &m_uboManager;
 
 protected:
-    explicit Functions(Badge<Functions>);
+    explicit Functions(Badge<Functions>, UboManager &uboManager);
 
 public:
     virtual ~Functions();
@@ -176,7 +201,7 @@ public:
     void glBindBufferBase(const GLenum target, const SharedVboEnum block, const GLuint buffer)
     {
         assert(target == GL_UNIFORM_BUFFER);
-        Base::glBindBufferBase(target, static_cast<GLuint>(block), buffer);
+        Base::glBindBufferBase(target, getUboBindingIndex(block), buffer);
     }
     using Base::glBindTexture;
     using Base::glBindVertexArray;
@@ -198,6 +223,7 @@ public:
     using Base::glDisable;
     using Base::glDisableVertexAttribArray;
     using Base::glDrawArrays;
+    using Base::glDrawArraysInstanced;
     using Base::glDrawElementsInstanced;
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
@@ -312,6 +338,8 @@ public:
 
     NODISCARD FBO &getFBO();
 
+    NODISCARD UboManager &getUboManager();
+
 private:
     friend PointSizeBinder;
     /// platform-specific (ES vs GL)
@@ -331,28 +359,20 @@ protected:
 protected:
     NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
 
-private:
-    template<typename T>
-    NODISCARD GLsizei setVbo_internal(const GLenum target,
-                                      const GLuint buffer,
-                                      const std::vector<T> &batch,
-                                      const BufferUsageEnum usage)
-    {
-        const auto numElements = static_cast<GLsizei>(batch.size());
-        const auto elementSize = static_cast<GLsizei>(sizeof(T));
-        const auto numBytes = numElements * elementSize;
-        Base::glBindBuffer(target, buffer);
-        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
-        Base::glBindBuffer(target, 0);
-        return numElements;
-    }
-
 public:
     /// platform-specific (ES vs GL)
     NODISCARD bool canRenderQuads() { return virt_canRenderQuads(); }
 
     /// platform-specific (ES vs GL)
     NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
+
+private:
+    template<typename T>
+    static void enforceTriviallyCopyable()
+    {
+        static_assert(std::is_trivially_copyable_v<T>,
+                      "T must be trivially copyable for buffer upload");
+    }
 
 public:
     void enableAttrib(const GLuint index,
@@ -376,34 +396,46 @@ public:
         Base::glVertexAttribIPointer(index, size, type, stride, pointer);
     }
 
+    template<typename T, typename A>
+    NODISCARD GLsizei setVbo(const GLenum target,
+                             const GLuint buffer,
+                             const std::vector<T, A> &batch,
+                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        enforceTriviallyCopyable<T>();
+        const auto numElements = static_cast<GLsizei>(batch.size());
+        const auto elementSize = static_cast<GLsizei>(sizeof(T));
+        const auto numBytes = numElements * elementSize;
+        Base::glBindBuffer(target, buffer);
+        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
+        Base::glBindBuffer(target, 0);
+        return numElements;
+    }
+
     template<typename T>
+    void setVbo(const GLenum target,
+                const GLuint buffer,
+                const T &data,
+                const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    {
+        enforceTriviallyCopyable<T>();
+        Base::glBindBuffer(target, buffer);
+        Base::glBufferData(target, sizeof(T), &data, Legacy::toGLenum(usage));
+        Base::glBindBuffer(target, 0);
+    }
+
+    template<typename T, typename A>
     NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
         const DrawModeEnum mode,
         const GLuint vbo,
-        const std::vector<T> &batch,
+        const std::vector<T, A> &batch,
         const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
             return std::pair(DrawModeEnum::TRIANGLES,
-                             setVbo_internal(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
+                             setVbo(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
         }
-        return std::pair(mode, setVbo_internal(GL_ARRAY_BUFFER, vbo, batch, usage));
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setIbo(const GLuint ibo,
-                             const std::vector<T> &batch,
-                             const BufferUsageEnum usage = BufferUsageEnum::STATIC_DRAW)
-    {
-        return setVbo_internal(GL_ELEMENT_ARRAY_BUFFER, ibo, batch, usage);
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setUbo(const GLuint ubo,
-                             const std::vector<T> &batch,
-                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        return setVbo_internal(GL_UNIFORM_BUFFER, ubo, batch, usage);
+        return std::pair(mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage));
     }
 
     void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
@@ -466,3 +498,5 @@ public:
     void blitFboToDefault();
 };
 } // namespace Legacy
+
+DEFINE_ENUM_COUNT(Legacy::SharedVboEnum, Legacy::NUM_SHARED_VBOS)

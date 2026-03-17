@@ -2,7 +2,8 @@
 // Copyright (C) 2026 The MMapper Authors
 
 uniform mat4 uMVP;
-uniform NamedColorsBlock {
+layout(std140) uniform NamedColorsBlock
+{
     vec4 uNamedColors[MAX_NAMED_COLORS];
 };
 

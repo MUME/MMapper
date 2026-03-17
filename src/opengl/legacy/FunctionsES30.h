@@ -9,7 +9,7 @@ namespace Legacy {
 class FunctionsES30 final : public Functions
 {
 public:
-    explicit FunctionsES30(Badge<Functions>);
+    explicit FunctionsES30(Badge<Functions>, UboManager &uboManager);
     ~FunctionsES30() override = default;
 
     DELETE_CTORS_AND_ASSIGN_OPS(FunctionsES30);

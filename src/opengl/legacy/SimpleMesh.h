@@ -174,7 +174,7 @@ private:
 
         m_functions.checkError();
 
-        const glm::mat4 mvp = m_functions.getProjectionMatrix();
+        const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
         auto programUnbinder = m_program.bind();
         m_program.setUniforms(mvp, renderState.uniforms);
         RenderStateBinder renderStateBinder(m_functions, m_functions.getTexLookup(), renderState);

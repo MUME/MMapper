@@ -236,6 +236,16 @@ void MapCanvas::initializeGL()
     initLogger();
 
     gl.initializeRenderer(static_cast<float>(QPaintDevice::devicePixelRatioF()));
+
+    gl.getUboManager()
+        .registerRebuildFunction(Legacy::SharedVboEnum::NamedColorsBlock,
+                                 [](Legacy::Functions &funcs) {
+                                     auto &uboManager = funcs.getUboManager();
+                                     uboManager.update(funcs,
+                                                       Legacy::SharedVboEnum::NamedColorsBlock,
+                                                       XNamedColor::getAllColorsAsVec4());
+                                 });
+
     updateMultisampling();
 
     // REVISIT: should the font texture have the lowest ID?
@@ -481,7 +491,9 @@ void MapCanvas::actuallyPaintGL()
     setViewportAndMvp(width(), height());
 
     auto &gl = getOpenGL();
-    gl.bindNamedColorsBuffer();
+    auto &funcs = deref(gl.getSharedFunctions(Badge<MapCanvas>{}));
+
+    gl.getUboManager().bind(funcs, Legacy::SharedVboEnum::NamedColorsBlock);
 
     gl.bindFbo();
     gl.clear(Color{getConfig().canvas.backgroundColor});

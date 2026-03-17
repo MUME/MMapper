@@ -6,6 +6,7 @@
 #include "../../display/Textures.h"
 #include "../../global/utils.h"
 #include "../OpenGLTypes.h"
+#include "../UboManager.h"
 #include "AbstractShaderProgram.h"
 #include "Binders.h"
 #include "FontMesh3d.h"
@@ -39,14 +40,13 @@ namespace Legacy {
 const char *Functions::getUniformBlockName(const SharedVboEnum block)
 {
     switch (block) {
-#define X_CASE(EnumName, StringName, isUniform) \
+#define X_CASE(EnumName, StringName) \
     case SharedVboEnum::EnumName: \
-        if constexpr (isUniform) { \
-            return StringName; \
-        } \
-        return nullptr;
+        return StringName;
         XFOREACH_SHARED_VBO(X_CASE)
 #undef X_CASE
+    case SharedVboEnum::NUM_BLOCKS:
+        break;
     }
     return nullptr;
 }
@@ -65,10 +65,7 @@ void Functions::virt_glUniformBlockBinding(const GLuint program, const SharedVbo
 
 void Functions::applyDefaultUniformBlockBindings(const GLuint program)
 {
-#define X_BIND(EnumName, StringName, isUniform) \
-    if constexpr (isUniform) { \
-        virt_glUniformBlockBinding(program, SharedVboEnum::EnumName); \
-    }
+#define X_BIND(EnumName, StringName) virt_glUniformBlockBinding(program, SharedVboEnum::EnumName);
     XFOREACH_SHARED_VBO(X_BIND)
 #undef X_BIND
 }
@@ -279,13 +276,14 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
         std::make_unique<Legacy::FontMesh3d>(shared_from_this(), prog, texture, mode, batch)};
 }
 
-Functions::Functions(Badge<Functions>)
+Functions::Functions(Badge<Functions>, UboManager &uboManager)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
     , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_sharedVbos{std::make_unique<SharedVbos>()}
     , m_sharedVaos{std::make_unique<SharedVaos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
     , m_fbo{std::make_unique<FBO>()}
+    , m_uboManager{uboManager}
 {}
 
 Functions::~Functions()
@@ -344,6 +342,11 @@ TexLookup &Functions::getTexLookup()
 FBO &Functions::getFBO()
 {
     return deref(m_fbo);
+}
+
+UboManager &Functions::getUboManager()
+{
+    return m_uboManager;
 }
 
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().
