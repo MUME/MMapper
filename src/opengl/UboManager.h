@@ -105,7 +105,8 @@ public:
     GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
     {
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-        static_cast<void>(gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        static_cast<void>(
+            gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
         return bind_internal(gl, block, vbo.get());
     }
 

@@ -237,13 +237,14 @@ void MapCanvas::initializeGL()
 
     gl.initializeRenderer(static_cast<float>(QPaintDevice::devicePixelRatioF()));
 
-    gl.getUboManager().registerRebuildFunction(
-        Legacy::SharedVboEnum::NamedColorsBlock, [](Legacy::Functions &funcs) {
-            auto &uboManager = funcs.getUboManager();
-            uboManager.update(funcs,
-                              Legacy::SharedVboEnum::NamedColorsBlock,
-                              XNamedColor::getAllColorsAsVec4());
-        });
+    gl.getUboManager()
+        .registerRebuildFunction(Legacy::SharedVboEnum::NamedColorsBlock,
+                                 [](Legacy::Functions &funcs) {
+                                     auto &uboManager = funcs.getUboManager();
+                                     uboManager.update(funcs,
+                                                       Legacy::SharedVboEnum::NamedColorsBlock,
+                                                       XNamedColor::getAllColorsAsVec4());
+                                 });
 
     updateMultisampling();
 
