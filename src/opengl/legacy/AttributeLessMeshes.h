@@ -37,7 +37,9 @@ public:
         , m_program{deref(m_shared_program)}
         , m_mode(mode)
         , m_numVerts(numVerts)
-    {}
+    {
+        assert(m_numVerts > 0);
+    }
 
     ~FullScreenMesh() override = default;
 

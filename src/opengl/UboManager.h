@@ -12,9 +12,6 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
-#ifndef NDEBUG
-#include <mutex>
-#endif
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -72,46 +69,59 @@ public:
 
     /**
      * @brief Rebuilds the UBO if it's invalid using the registered rebuild function.
+     * @return The bound buffer ID, or 0 if failed.
      */
-    void updateIfInvalid(Legacy::Functions &gl, Legacy::SharedVboEnum block)
+    GLuint updateIfInvalid(Legacy::Functions &gl, Legacy::SharedVboEnum block)
     {
-        if (isInvalid(block)) {
-            const auto &func = m_rebuildFunctions[block];
-            assert(func && "UBO block is invalid and no rebuild function is registered");
-            if (func) {
-                func(gl);
-                // The rebuild function is expected to call update() which marks it valid.
-                assert(!isInvalid(block));
-            }
+        if (const auto bound = m_boundBuffers[block]) {
+            return *bound;
         }
+
+        const auto &func = m_rebuildFunctions[block];
+        assert(func && "UBO block is invalid and no rebuild function is registered");
+        if (func) {
+            func(gl);
+
+            if (const auto bound = m_boundBuffers[block]) {
+                return *bound;
+            }
+
+            MMLOG_ERROR() << "UboManager::updateIfInvalid: rebuild function failed to call "
+                             "update() for block "
+                          << static_cast<int>(block);
+            assert(false && "Rebuild function must call update()");
+        }
+        return 0;
     }
 
     /**
      * @brief Uploads data to the UBO and marks it as valid.
      * Also binds it to its assigned point.
+     * @return The bound buffer ID.
      *
      * Overload for bulk vector data.
      */
     template<typename T, typename A>
-    void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
+    GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
     {
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
         static_cast<void>(gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
-        bind_internal(gl, block, vbo.get());
+        return bind_internal(gl, block, vbo.get());
     }
 
     /**
      * @brief Uploads data to the UBO and marks it as valid.
      * Also binds it to its assigned point.
+     * @return The bound buffer ID.
      *
      * Overload for single trivially-copyable objects.
      */
     template<typename T>
-    void update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
+    GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
     {
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
         gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
-        bind_internal(gl, block, vbo.get());
+        return bind_internal(gl, block, vbo.get());
     }
 
     /**
@@ -120,9 +130,9 @@ public:
      */
     void bind(Legacy::Functions &gl, Legacy::SharedVboEnum block)
     {
-        updateIfInvalid(gl, block);
+        const GLuint buffer = updateIfInvalid(gl, block);
 
-        if (isInvalid(block)) {
+        if (buffer == 0) {
             MMLOG_ERROR() << "UboManager::bind: attempted to bind invalid UBO block "
                           << static_cast<int>(block);
             assert(false
@@ -131,8 +141,8 @@ public:
             return;
         }
 
-        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-        bind_internal(gl, block, vbo.get());
+        // updateIfInvalid already ensured it is bound.
+        assert(m_boundBuffers[block] == buffer);
     }
 
 private:
@@ -150,30 +160,23 @@ private:
 private:
     /**
      * @brief Binds the UBO to its assigned point.
+     * @return The bound buffer ID.
      *
      * Note: This implementation explicitly assumes that Legacy::SharedVboEnum values
      * are 0-based, contiguous, and directly correspond to UBO binding indices in
      * shader blocks.
      */
-    void bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
+    GLuint bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
     {
         const auto bindingIndex = Legacy::getUboBindingIndex(block);
         assert(static_cast<std::size_t>(bindingIndex) < m_boundBuffers.size());
-
-#ifndef NDEBUG
-        static std::once_flag limitsOnce;
-        std::call_once(limitsOnce, [&gl, this]() {
-            GLint maxBindings = 0;
-            gl.glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
-            assert(m_boundBuffers.size() <= static_cast<std::size_t>(maxBindings));
-        });
-#endif
 
         auto &bound = m_boundBuffers[block];
         if (!bound.has_value() || bound.value() != buffer) {
             gl.glBindBufferBase(GL_UNIFORM_BUFFER, bindingIndex, buffer);
             bound = buffer;
         }
+        return buffer;
     }
 
 private:

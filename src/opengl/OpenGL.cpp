@@ -221,10 +221,16 @@ void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
     setDevicePixelRatio(devicePixelRatio);
 
+    auto &funcs = getFunctions();
+
     // REVISIT: Move this somewhere else?
     GLint maxSamples = 0;
-    getFunctions().glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+    funcs.glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
     OpenGLConfig::setMaxSamples(maxSamples);
+
+    GLint maxUboBindings = 0;
+    funcs.glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUboBindings);
+    assert(static_cast<GLint>(Legacy::NUM_SHARED_VBOS) <= maxUboBindings);
 
     m_rendererInitialized = true;
 }
