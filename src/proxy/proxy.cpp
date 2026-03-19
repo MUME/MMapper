@@ -899,12 +899,79 @@ void Proxy::gmcpToUser(const GmcpMessage &msg)
     getUserTelnet().onGmcpToUser(msg);
 }
 
+namespace {
+
+NODISCARD constexpr const char *toJsonString(const MumeClockPrecisionEnum precision)
+{
+    switch (precision) {
+    case MumeClockPrecisionEnum::UNSET: return "unset";
+    case MumeClockPrecisionEnum::DAY: return "day";
+    case MumeClockPrecisionEnum::HOUR: return "hour";
+    case MumeClockPrecisionEnum::MINUTE: return "minute";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeSeasonEnum season)
+{
+    switch (season) {
+    case MumeSeasonEnum::WINTER: return "winter";
+    case MumeSeasonEnum::SPRING: return "spring";
+    case MumeSeasonEnum::SUMMER: return "summer";
+    case MumeSeasonEnum::AUTUMN: return "autumn";
+    case MumeSeasonEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeTimeEnum time)
+{
+    switch (time) {
+    case MumeTimeEnum::DAWN: return "dawn";
+    case MumeTimeEnum::DAY: return "day";
+    case MumeTimeEnum::DUSK: return "dusk";
+    case MumeTimeEnum::NIGHT: return "night";
+    case MumeTimeEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeMoonPhaseEnum phase)
+{
+    switch (phase) {
+    case MumeMoonPhaseEnum::NEW_MOON: return "new_moon";
+    case MumeMoonPhaseEnum::WAXING_CRESCENT: return "waxing_crescent";
+    case MumeMoonPhaseEnum::FIRST_QUARTER: return "first_quarter";
+    case MumeMoonPhaseEnum::WAXING_GIBBOUS: return "waxing_gibbous";
+    case MumeMoonPhaseEnum::FULL_MOON: return "full_moon";
+    case MumeMoonPhaseEnum::WANING_GIBBOUS: return "waning_gibbous";
+    case MumeMoonPhaseEnum::THIRD_QUARTER: return "third_quarter";
+    case MumeMoonPhaseEnum::WANING_CRESCENT: return "waning_crescent";
+    case MumeMoonPhaseEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeMoonVisibilityEnum visibility)
+{
+    switch (visibility) {
+    case MumeMoonVisibilityEnum::BRIGHT: return "bright";
+    case MumeMoonVisibilityEnum::DIM: return "dim";
+    case MumeMoonVisibilityEnum::INVISIBLE: return "invisible";
+    case MumeMoonVisibilityEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+} // namespace
+
 void Proxy::startClockBroadcaster()
 {
     const auto &config = getConfig();
 
     if (!config.mumeClock.gmcpBroadcast
         || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        stopClockBroadcaster();
         return;
     }
 
@@ -913,7 +980,13 @@ void Proxy::startClockBroadcaster()
         QObject::connect(m_clockBroadcastTimer, &QTimer::timeout, this, &Proxy::broadcastClockInfo);
     }
 
-    m_clockBroadcastTimer->setInterval(config.mumeClock.gmcpBroadcastInterval);
+    // Clamp interval to a sane range to prevent tight timer loops
+    static constexpr int MIN_INTERVAL_MS = 500;
+    static constexpr int MAX_INTERVAL_MS = 60000;
+    const int interval = std::clamp(config.mumeClock.gmcpBroadcastInterval,
+                                    MIN_INTERVAL_MS,
+                                    MAX_INTERVAL_MS);
+    m_clockBroadcastTimer->setInterval(interval);
     m_clockBroadcastTimer->start();
 
     // Send initial update immediately
@@ -929,7 +1002,8 @@ void Proxy::stopClockBroadcaster()
 
 void Proxy::broadcastClockInfo()
 {
-    if (!isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+    if (!getConfig().mumeClock.gmcpBroadcast
+        || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
         return;
     }
 
@@ -944,101 +1018,11 @@ void Proxy::broadcastClockInfo()
     json["hour"] = moment.hour;
     json["minute"] = moment.minute;
 
-    switch (precision) {
-    case MumeClockPrecisionEnum::UNSET:
-        json["precision"] = "unset";
-        break;
-    case MumeClockPrecisionEnum::DAY:
-        json["precision"] = "day";
-        break;
-    case MumeClockPrecisionEnum::HOUR:
-        json["precision"] = "hour";
-        break;
-    case MumeClockPrecisionEnum::MINUTE:
-        json["precision"] = "minute";
-        break;
-    }
-
-    switch (moment.toSeason()) {
-    case MumeSeasonEnum::WINTER:
-        json["season"] = "winter";
-        break;
-    case MumeSeasonEnum::SPRING:
-        json["season"] = "spring";
-        break;
-    case MumeSeasonEnum::SUMMER:
-        json["season"] = "summer";
-        break;
-    case MumeSeasonEnum::AUTUMN:
-        json["season"] = "autumn";
-        break;
-    case MumeSeasonEnum::UNKNOWN:
-        json["season"] = "unknown";
-        break;
-    }
-
-    switch (moment.toTimeOfDay()) {
-    case MumeTimeEnum::DAWN:
-        json["timeOfDay"] = "dawn";
-        break;
-    case MumeTimeEnum::DAY:
-        json["timeOfDay"] = "day";
-        break;
-    case MumeTimeEnum::DUSK:
-        json["timeOfDay"] = "dusk";
-        break;
-    case MumeTimeEnum::NIGHT:
-        json["timeOfDay"] = "night";
-        break;
-    case MumeTimeEnum::UNKNOWN:
-        json["timeOfDay"] = "unknown";
-        break;
-    }
-
-    switch (moment.moonPhase()) {
-    case MumeMoonPhaseEnum::NEW_MOON:
-        json["moonPhase"] = "new_moon";
-        break;
-    case MumeMoonPhaseEnum::WAXING_CRESCENT:
-        json["moonPhase"] = "waxing_crescent";
-        break;
-    case MumeMoonPhaseEnum::FIRST_QUARTER:
-        json["moonPhase"] = "first_quarter";
-        break;
-    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
-        json["moonPhase"] = "waxing_gibbous";
-        break;
-    case MumeMoonPhaseEnum::FULL_MOON:
-        json["moonPhase"] = "full_moon";
-        break;
-    case MumeMoonPhaseEnum::WANING_GIBBOUS:
-        json["moonPhase"] = "waning_gibbous";
-        break;
-    case MumeMoonPhaseEnum::THIRD_QUARTER:
-        json["moonPhase"] = "third_quarter";
-        break;
-    case MumeMoonPhaseEnum::WANING_CRESCENT:
-        json["moonPhase"] = "waning_crescent";
-        break;
-    case MumeMoonPhaseEnum::UNKNOWN:
-        json["moonPhase"] = "unknown";
-        break;
-    }
-
-    switch (moment.moonVisibility()) {
-    case MumeMoonVisibilityEnum::BRIGHT:
-        json["moonVisibility"] = "bright";
-        break;
-    case MumeMoonVisibilityEnum::DIM:
-        json["moonVisibility"] = "dim";
-        break;
-    case MumeMoonVisibilityEnum::INVISIBLE:
-        json["moonVisibility"] = "invisible";
-        break;
-    case MumeMoonVisibilityEnum::UNKNOWN:
-        json["moonVisibility"] = "unknown";
-        break;
-    }
+    json["precision"] = toJsonString(precision);
+    json["season"] = toJsonString(moment.toSeason());
+    json["timeOfDay"] = toJsonString(moment.toTimeOfDay());
+    json["moonPhase"] = toJsonString(moment.moonPhase());
+    json["moonVisibility"] = toJsonString(moment.moonVisibility());
 
     json["moonLevel"] = moment.moonLevel();
     json["dawnHour"] = dawnHour;
