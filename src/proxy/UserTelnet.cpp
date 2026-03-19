@@ -261,12 +261,14 @@ void UserTelnet::receiveGmcpModule(const GmcpModule &mod, const bool enabled)
         m_gmcp.modules.insert(mod);
         if (mod.isSupported()) {
             m_gmcp.supported[mod.getType()] = mod.getVersion();
+            m_outputs.onGmcpModuleEnabled(mod.getType(), true);
         }
 
     } else {
         m_gmcp.modules.erase(mod);
         if (mod.isSupported()) {
             m_gmcp.supported[mod.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+            m_outputs.onGmcpModuleEnabled(mod.getType(), false);
         }
     }
 }

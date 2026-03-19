@@ -23,6 +23,7 @@
     X(MUME_CLIENT, MumeClient, "mume.client", "MUME.Client") \
     X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
     X(ROOM, Room, "room", "Room") \
+    X(MUME_TIME, MumeTime, "mume.time", "MUME.Time") \
     /* define gmcp module types above */
 
 enum class NODISCARD GmcpModuleTypeEnum {
@@ -35,7 +36,7 @@ enum class NODISCARD GmcpModuleTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MODULES = XFOREACH_GMCP_MODULE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MODULES == 7);
+static_assert(NUM_GMCP_MODULES == 8);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 namespace tags {

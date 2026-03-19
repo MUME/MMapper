@@ -41,11 +41,14 @@
 #include <tuple>
 
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QScopedPointer>
 #include <QSslSocket>
 #include <QTcpSocket>
+#include <QTimer>
 
 using mmqt::makeQPointer;
 
@@ -176,6 +179,8 @@ Proxy::~Proxy()
     // This can happen as a result of the user hitting Alt-F4 to close the MMapper window.
     sendNewlineToUser();
     sendStatusToUser("MMapper proxy is shutting down.");
+
+    stopClockBroadcaster();
 
     {
         qDebug() << "disconnecting mud socket...";
@@ -407,6 +412,16 @@ void Proxy::allocUserTelnet()
         {
             // forwarded (to mud)
             getMudTelnet().onRelayTermType(bytes);
+        }
+        void virt_onGmcpModuleEnabled(const GmcpModuleTypeEnum type, const bool enabled) final
+        {
+            if (type == GmcpModuleTypeEnum::MUME_TIME) {
+                if (enabled) {
+                    getProxy().startClockBroadcaster();
+                } else {
+                    getProxy().stopClockBroadcaster();
+                }
+            }
         }
     };
 
@@ -882,6 +897,159 @@ void Proxy::gmcpToMud(const GmcpMessage &msg)
 void Proxy::gmcpToUser(const GmcpMessage &msg)
 {
     getUserTelnet().onGmcpToUser(msg);
+}
+
+void Proxy::startClockBroadcaster()
+{
+    const auto &config = getConfig();
+
+    if (!config.mumeClock.gmcpBroadcast
+        || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        return;
+    }
+
+    if (m_clockBroadcastTimer == nullptr) {
+        m_clockBroadcastTimer = new QTimer(this);
+        QObject::connect(m_clockBroadcastTimer, &QTimer::timeout, this, &Proxy::broadcastClockInfo);
+    }
+
+    m_clockBroadcastTimer->setInterval(config.mumeClock.gmcpBroadcastInterval);
+    m_clockBroadcastTimer->start();
+
+    // Send initial update immediately
+    broadcastClockInfo();
+}
+
+void Proxy::stopClockBroadcaster()
+{
+    if (m_clockBroadcastTimer != nullptr && m_clockBroadcastTimer->isActive()) {
+        m_clockBroadcastTimer->stop();
+    }
+}
+
+void Proxy::broadcastClockInfo()
+{
+    if (!isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        return;
+    }
+
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    const auto precision = m_mumeClock.getPrecision();
+    const auto [dawnHour, duskHour] = MumeClock::getDawnDusk(moment.month);
+
+    QJsonObject json;
+    json["year"] = moment.year;
+    json["month"] = moment.month;
+    json["day"] = moment.day;
+    json["hour"] = moment.hour;
+    json["minute"] = moment.minute;
+
+    switch (precision) {
+    case MumeClockPrecisionEnum::UNSET:
+        json["precision"] = "unset";
+        break;
+    case MumeClockPrecisionEnum::DAY:
+        json["precision"] = "day";
+        break;
+    case MumeClockPrecisionEnum::HOUR:
+        json["precision"] = "hour";
+        break;
+    case MumeClockPrecisionEnum::MINUTE:
+        json["precision"] = "minute";
+        break;
+    }
+
+    switch (moment.toSeason()) {
+    case MumeSeasonEnum::WINTER:
+        json["season"] = "winter";
+        break;
+    case MumeSeasonEnum::SPRING:
+        json["season"] = "spring";
+        break;
+    case MumeSeasonEnum::SUMMER:
+        json["season"] = "summer";
+        break;
+    case MumeSeasonEnum::AUTUMN:
+        json["season"] = "autumn";
+        break;
+    case MumeSeasonEnum::UNKNOWN:
+        json["season"] = "unknown";
+        break;
+    }
+
+    switch (moment.toTimeOfDay()) {
+    case MumeTimeEnum::DAWN:
+        json["timeOfDay"] = "dawn";
+        break;
+    case MumeTimeEnum::DAY:
+        json["timeOfDay"] = "day";
+        break;
+    case MumeTimeEnum::DUSK:
+        json["timeOfDay"] = "dusk";
+        break;
+    case MumeTimeEnum::NIGHT:
+        json["timeOfDay"] = "night";
+        break;
+    case MumeTimeEnum::UNKNOWN:
+        json["timeOfDay"] = "unknown";
+        break;
+    }
+
+    switch (moment.moonPhase()) {
+    case MumeMoonPhaseEnum::NEW_MOON:
+        json["moonPhase"] = "new_moon";
+        break;
+    case MumeMoonPhaseEnum::WAXING_CRESCENT:
+        json["moonPhase"] = "waxing_crescent";
+        break;
+    case MumeMoonPhaseEnum::FIRST_QUARTER:
+        json["moonPhase"] = "first_quarter";
+        break;
+    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
+        json["moonPhase"] = "waxing_gibbous";
+        break;
+    case MumeMoonPhaseEnum::FULL_MOON:
+        json["moonPhase"] = "full_moon";
+        break;
+    case MumeMoonPhaseEnum::WANING_GIBBOUS:
+        json["moonPhase"] = "waning_gibbous";
+        break;
+    case MumeMoonPhaseEnum::THIRD_QUARTER:
+        json["moonPhase"] = "third_quarter";
+        break;
+    case MumeMoonPhaseEnum::WANING_CRESCENT:
+        json["moonPhase"] = "waning_crescent";
+        break;
+    case MumeMoonPhaseEnum::UNKNOWN:
+        json["moonPhase"] = "unknown";
+        break;
+    }
+
+    switch (moment.moonVisibility()) {
+    case MumeMoonVisibilityEnum::BRIGHT:
+        json["moonVisibility"] = "bright";
+        break;
+    case MumeMoonVisibilityEnum::DIM:
+        json["moonVisibility"] = "dim";
+        break;
+    case MumeMoonVisibilityEnum::INVISIBLE:
+        json["moonVisibility"] = "invisible";
+        break;
+    case MumeMoonVisibilityEnum::UNKNOWN:
+        json["moonVisibility"] = "unknown";
+        break;
+    }
+
+    json["moonLevel"] = moment.moonLevel();
+    json["dawnHour"] = dawnHour;
+    json["duskHour"] = duskHour;
+    json["syncEpoch"] = static_cast<qint64>(m_mumeClock.getLastSyncEpoch());
+
+    const QJsonDocument doc(json);
+    const QString jsonString = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+
+    const GmcpMessage msg(GmcpMessageTypeEnum::MUME_TIME_INFO, GmcpJson{jsonString.toStdString()});
+    gmcpToUser(msg);
 }
 
 void Proxy::sendToMud(const QString &s)

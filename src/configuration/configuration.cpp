@@ -273,6 +273,8 @@ ConstString KEY_AUDIO_OUTPUT_DEVICE = "Audio output device";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
+ConstString KEY_GMCP_BROADCAST_CLOCK = "GMCP broadcast clock";
+ConstString KEY_GMCP_BROADCAST_INTERVAL = "GMCP broadcast interval";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
@@ -752,6 +754,8 @@ void Configuration::MumeClockSettings::read(const QSettings &conf)
     // NOTE: old values might be stored as int32
     startEpoch = conf.value(KEY_MUME_START_EPOCH, 1517443173).toLongLong();
     display = conf.value(KEY_DISPLAY_CLOCK, true).toBool();
+    gmcpBroadcast = conf.value(KEY_GMCP_BROADCAST_CLOCK, true).toBool();
+    gmcpBroadcastInterval = conf.value(KEY_GMCP_BROADCAST_INTERVAL, 2500).toInt();
 }
 
 void Configuration::AdventurePanelSettings::read(const QSettings &conf)
@@ -933,6 +937,8 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
     // Note: There's no QVariant(int64_t) constructor.
     conf.setValue(KEY_MUME_START_EPOCH, static_cast<qlonglong>(startEpoch));
     conf.setValue(KEY_DISPLAY_CLOCK, display);
+    conf.setValue(KEY_GMCP_BROADCAST_CLOCK, gmcpBroadcast);
+    conf.setValue(KEY_GMCP_BROADCAST_INTERVAL, gmcpBroadcastInterval);
 }
 
 void Configuration::AdventurePanelSettings::write(QSettings &conf) const

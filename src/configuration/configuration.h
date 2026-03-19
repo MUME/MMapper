@@ -311,6 +311,8 @@ public:
     {
         int64_t startEpoch = 0;
         bool display = false;
+        bool gmcpBroadcast = true;
+        int gmcpBroadcastInterval = 2500;
 
     private:
         SUBGROUP();
