@@ -249,7 +249,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - uses: dorny/test-reporter@v2
+    - uses: dorny/test-reporter@v3
       with:
         artifact: /test-results (.*)/
         name: Test Report $1
