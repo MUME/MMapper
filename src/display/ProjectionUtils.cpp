@@ -110,7 +110,6 @@ glm::mat4 calculateViewProjOld(const glm::vec2 &scrollPos,
                                const int /*currentLayer*/)
 {
     constexpr float FIXED_VIEW_DISTANCE = 60.f;
-    constexpr float ROOM_Z_SCALE = 7.f;
     constexpr auto baseSize = static_cast<float>(ProjectionUtils::BASESIZE);
 
     const float swp = zoomScale * baseSize / static_cast<float>(size.x);

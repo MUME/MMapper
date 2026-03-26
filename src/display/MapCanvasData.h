@@ -94,18 +94,27 @@ struct NODISCARD MapCanvasViewport
 private:
     QWindow &m_window;
 
+protected:
+    mutable int m_lastWidth = 0;
+    mutable int m_lastHeight = 0;
+
 private:
     mutable glm::mat4 m_viewProj{1.f};
+    mutable bool m_viewProjDirty = true;
     glm::vec2 m_scroll{0.f};
     ScaleFactor m_scaleFactor;
     int m_currentLayer = 0;
     ViewportConfig m_viewportConfig;
-    mutable bool m_viewProjDirty = true;
 
 public:
     explicit MapCanvasViewport(QWindow &window)
         : m_window{window}
     {}
+
+    virtual ~MapCanvasViewport();
+
+protected:
+    virtual void onViewProjDirty() const {}
 
 public:
     NODISCARD auto width() const { return m_window.width(); }
@@ -117,7 +126,7 @@ public:
     {
         if (m_scroll != scroll) {
             m_scroll = scroll;
-            m_viewProjDirty = true;
+            markViewProjDirty();
         }
     }
 
@@ -125,7 +134,7 @@ public:
     void setScaleFactor(const ScaleFactor &scaleFactor)
     {
         m_scaleFactor = scaleFactor;
-        m_viewProjDirty = true;
+        markViewProjDirty();
     }
 
     NODISCARD int getCurrentLayer() const { return m_currentLayer; }
@@ -133,20 +142,25 @@ public:
     {
         if (m_currentLayer != layer) {
             m_currentLayer = layer;
-            m_viewProjDirty = true;
+            markViewProjDirty();
         }
     }
 
-    void markViewProjDirty() { m_viewProjDirty = true; }
+    void markViewProjDirty()
+    {
+        m_viewProjDirty = true;
+        onViewProjDirty();
+    }
     void setViewportConfig(const ViewportConfig &config)
     {
         m_viewportConfig = config;
-        m_viewProjDirty = true;
+        markViewProjDirty();
     }
     void setMvpExtern(const glm::mat4 &mvp) const
     {
         m_viewProj = mvp;
         m_viewProjDirty = false;
+        onViewProjDirty();
     }
 
     NODISCARD const glm::mat4 &getViewProj() const;

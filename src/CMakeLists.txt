@@ -416,6 +416,8 @@ set(mmapper_SRCS
     opengl/OpenGL.cpp
     opengl/OpenGL.h
     opengl/UboManager.h
+    opengl/Weather.cpp
+    opengl/Weather.h
     opengl/OpenGLConfig.cpp
     opengl/OpenGLConfig.h
     opengl/OpenGLTypes.cpp
@@ -444,10 +446,14 @@ set(mmapper_SRCS
     opengl/legacy/Shaders.h
     opengl/legacy/SimpleMesh.cpp
     opengl/legacy/SimpleMesh.h
+    opengl/legacy/TFO.cpp
+    opengl/legacy/TFO.h
     opengl/legacy/VAO.cpp
     opengl/legacy/VAO.h
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
+    opengl/legacy/WeatherMeshes.cpp
+    opengl/legacy/WeatherMeshes.h
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Actions.cpp

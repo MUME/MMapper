@@ -57,6 +57,16 @@ public:
         init(NamedColorEnum::DEFAULT, ".default");
         m_initialized[NamedColorEnum::DEFAULT] = true;
         m_initialized[NamedColorEnum::TRANSPARENT] = true;
+
+        // Sane defaults for weather colors
+        std::ignore = setColor(NamedColorEnum::WEATHER_DAWN,
+                               Color(102, 76, 51, 25)); // 0.4, 0.3, 0.2, 0.1
+        std::ignore = setColor(NamedColorEnum::WEATHER_DUSK,
+                               Color(76, 51, 102, 51)); // 0.3, 0.2, 0.4, 0.2
+        std::ignore = setColor(NamedColorEnum::WEATHER_NIGHT,
+                               Color(13, 13, 51, 89)); // 0.05, 0.05, 0.2, 0.35
+        std::ignore = setColor(NamedColorEnum::WEATHER_NIGHT_MOON,
+                               Color(13, 13, 64, 77)); // 0.05, 0.05, 0.25, 0.3
     }
 
 public:

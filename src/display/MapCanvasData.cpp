@@ -30,26 +30,26 @@ MapCanvasInputState::MapCanvasInputState(PrespammedPath &prespammedPath)
 
 MapCanvasInputState::~MapCanvasInputState() = default;
 
+MapCanvasViewport::~MapCanvasViewport() = default;
+
 const glm::mat4 &MapCanvasViewport::getViewProj() const
 {
-    if (m_viewProjDirty) {
-        const int w = width();
-        const int h = height();
-        if (w > 0 && h > 0) {
-            const float zoomScale = getTotalScaleFactor();
-            const auto size = glm::ivec2(w, h);
-            m_viewProj = (!m_viewportConfig.use3D)
-                             ? ProjectionUtils::calculateViewProjOld(getScroll(),
-                                                                     size,
-                                                                     zoomScale,
-                                                                     getCurrentLayer())
-                             : ProjectionUtils::calculateViewProj(m_viewportConfig,
-                                                                  getScroll(),
-                                                                  size,
-                                                                  zoomScale,
-                                                                  getCurrentLayer());
-            m_viewProjDirty = false;
-        }
+    const int w = width();
+    const int h = height();
+    if (m_viewProjDirty && w > 0 && h > 0) {
+        const float zoomScale = getTotalScaleFactor();
+        const auto size = glm::ivec2(w, h);
+        m_viewProj = (!m_viewportConfig.use3D)
+                         ? ProjectionUtils::calculateViewProjOld(getScroll(),
+                                                                 size,
+                                                                 zoomScale,
+                                                                 getCurrentLayer())
+                         : ProjectionUtils::calculateViewProj(m_viewportConfig,
+                                                              getScroll(),
+                                                              size,
+                                                              zoomScale,
+                                                              getCurrentLayer());
+        m_viewProjDirty = false;
     }
     return m_viewProj;
 }

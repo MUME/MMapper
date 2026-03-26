@@ -18,6 +18,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class GameObserver;
 class MapCanvas;
 class MapData;
 class Mmapper2Group;
@@ -59,7 +60,11 @@ private:
     } m_knownMapSize;
 
 public:
-    explicit MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *parent);
+    explicit MapWindow(MapData &mapData,
+                       GameObserver &observer,
+                       PrespammedPath &pp,
+                       Mmapper2Group &gm,
+                       QWidget *parent);
     ~MapWindow() final;
 
 public:

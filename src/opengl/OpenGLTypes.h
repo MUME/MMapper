@@ -25,6 +25,12 @@
 #include <QOpenGLTexture>
 #include <qopengl.h>
 
+struct NODISCARD Viewport final
+{
+    glm::ivec2 offset{};
+    glm::ivec2 size{};
+};
+
 struct NODISCARD TexVert final
 {
     glm::vec3 tex{};
@@ -84,6 +90,17 @@ struct NODISCARD ColorVert final
     explicit ColorVert(const Color color_, const glm::vec3 &vert_)
         : color{color_}
         , vert{vert_}
+    {}
+};
+
+struct NODISCARD WeatherParticleVert final
+{
+    glm::vec2 pos{};
+    float life = 0.0f;
+
+    explicit WeatherParticleVert(const glm::vec2 &pos_, const float life_)
+        : pos{pos_}
+        , life{life_}
     {}
 };
 
@@ -153,6 +170,9 @@ enum class NODISCARD BlendModeEnum {
     /* This mode allows you to multiply by the painted color, in the range [0,1].
      * glEnable(GL_BLEND); glBlendFuncSeparate(GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE); */
     MODULATE,
+    /* This mode uses MAX for alpha blending, useful for weather effects.
+     * glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX); */
+    MAX_ALPHA,
 };
 
 enum class NODISCARD CullingEnum {
@@ -402,12 +422,6 @@ public:
             mesh.render(rs);
         }
     }
-};
-
-struct NODISCARD Viewport final
-{
-    glm::ivec2 offset{};
-    glm::ivec2 size{};
 };
 
 static constexpr const size_t VERTS_PER_LINE = 2;

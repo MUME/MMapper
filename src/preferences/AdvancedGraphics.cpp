@@ -49,31 +49,32 @@ class NODISCARD FpSpinBox final : public QDoubleSpinBox
 private:
     using FP = FixedPoint<D>;
     FP &m_fp;
+    const double m_multiplier;
+    const double m_fraction;
 
 public:
     explicit FpSpinBox(FixedPoint<D> &fp)
         : QDoubleSpinBox()
         , m_fp{fp}
+        , m_multiplier{std::pow(10.0, static_cast<double>(FP::digits))}
+        , m_fraction{1.0 / m_multiplier}
     {
-        const double fraction = std::pow(10.0, -FP::digits);
-        setRange(static_cast<double>(m_fp.min) * fraction, static_cast<double>(m_fp.max) * fraction);
+        setRange(static_cast<double>(m_fp.min) * m_fraction,
+                 static_cast<double>(m_fp.max) * m_fraction);
         setValue(m_fp.getDouble());
         setDecimals(FP::digits);
-        setSingleStep(fraction);
+        setSingleStep(m_fraction);
     }
     ~FpSpinBox() final = default;
 
 public:
     NODISCARD int getIntValue() const
     {
-        return static_cast<int>(std::lround(std::clamp(value() * std::pow(10.0, FP::digits),
+        return static_cast<int>(std::lround(std::clamp(value() * m_multiplier,
                                                        static_cast<double>(m_fp.min),
                                                        static_cast<double>(m_fp.max))));
     }
-    void setIntValue(int value)
-    {
-        setValue(static_cast<double>(value) * std::pow(10.0, -FP::digits));
-    }
+    void setIntValue(int value) { setValue(static_cast<double>(value) * m_fraction); }
 };
 
 template<int D>

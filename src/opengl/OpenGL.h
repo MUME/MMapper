@@ -20,6 +20,7 @@
 
 class FBO;
 class MapCanvas;
+class GLWeather;
 namespace Legacy {
 class Functions;
 } // namespace Legacy
@@ -44,6 +45,7 @@ public:
 
 public:
     NODISCARD const auto &getSharedFunctions(Badge<MapCanvas>) { return getSharedFunctions(); }
+    NODISCARD const auto &getSharedFunctions(Badge<GLWeather>) { return getSharedFunctions(); }
 
 public:
     /* must be called before any other functions */

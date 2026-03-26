@@ -25,6 +25,11 @@ BlendBinder::BlendBinder(Functions &functions, const BlendModeEnum blend)
         m_functions.glEnable(GL_BLEND);
         m_functions.glBlendFuncSeparate(GL_ZERO, GL_SRC_COLOR, GL_ZERO, GL_ONE);
         break;
+    case BlendModeEnum::MAX_ALPHA:
+        m_functions.glEnable(GL_BLEND);
+        m_functions.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+        m_functions.glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+        break;
     }
 }
 
@@ -36,6 +41,10 @@ BlendBinder::~BlendBinder()
         break;
     case BlendModeEnum::MODULATE:
         m_functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    case BlendModeEnum::MAX_ALPHA:
+        m_functions.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        m_functions.glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
         break;
     }
     m_functions.glDisable(GL_BLEND);
