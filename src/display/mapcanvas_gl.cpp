@@ -18,6 +18,9 @@
 #include "../opengl/OpenGLConfig.h"
 #include "../opengl/OpenGLTypes.h"
 #include "../opengl/legacy/Meshes.h"
+#include "../opengl/legacy/TFO.h"
+#include "../opengl/legacy/VAO.h"
+#include "../opengl/legacy/VBO.h"
 #include "../src/global/SendToUser.h"
 #include "Connections.h"
 #include "MapCanvasConfig.h"
@@ -35,8 +38,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <future>
 #include <memory>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -245,6 +250,18 @@ void MapCanvas::initializeGL()
                                          funcs, XNamedColor::getAllColorsAsBlock());
                                  });
 
+    gl.getUboManager().registerRebuildFunction(
+        Legacy::SharedVboEnum::CameraBlock, [this](Legacy::Functions &funcs) {
+            auto &camera = funcs.getUboManager().get<Legacy::SharedVboEnum::CameraBlock>();
+            const auto playerPosCoord = m_data.tryGetPosition().value_or(Coordinate{0, 0, 0});
+            camera.viewProj = getViewProj();
+            camera.playerPos = glm::vec4(static_cast<float>(playerPosCoord.x),
+                                         static_cast<float>(playerPosCoord.y),
+                                         static_cast<float>(playerPosCoord.z),
+                                         ProjectionUtils::ROOM_Z_SCALE);
+            funcs.getUboManager().sync<Legacy::SharedVboEnum::CameraBlock>(funcs);
+        });
+
     updateMultisampling();
 
     // REVISIT: should the font texture have the lowest ID?
@@ -356,7 +373,11 @@ void MapCanvas::setMvp(const glm::mat4 &viewProj)
 
 void MapCanvas::setViewportAndMvp(int width, int height)
 {
-    markViewProjDirty();
+    if (width != m_lastWidth || height != m_lastHeight) {
+        m_lastWidth = width;
+        m_lastHeight = height;
+        markViewProjDirty();
+    }
 
     auto &gl = getOpenGL();
     gl.glViewport(0, 0, width, height);
@@ -366,6 +387,11 @@ void MapCanvas::setViewportAndMvp(int width, int height)
     assert(size.y == height);
 
     gl.setProjectionMatrix(MapCanvasViewport::getViewProj());
+}
+
+void MapCanvas::onViewProjDirty() const
+{
+    m_opengl.getUboManager().invalidate(Legacy::SharedVboEnum::CameraBlock);
 }
 
 void MapCanvas::resizeGL(int width, int height)
@@ -500,11 +526,19 @@ void MapCanvas::actuallyPaintGL()
     if (m_data.isEmpty()) {
         getGLFont().renderTextCentered("No map loaded");
     } else {
+        // Update animation state
+        m_weather.update();
+
         paintMap();
         paintBatchedInfomarks();
         paintSelections();
         paintCharacters();
         paintDifferences();
+
+        m_weather.prepare();
+        gl.getUboManager().bind(funcs, Legacy::SharedVboEnum::TimeBlock);
+
+        m_weather.render(m_opengl.getDefaultRenderState());
     }
 
     gl.releaseFbo();

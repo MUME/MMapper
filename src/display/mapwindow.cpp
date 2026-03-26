@@ -23,7 +23,11 @@
 
 class QResizeEvent;
 
-MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *const parent)
+MapWindow::MapWindow(MapData &mapData,
+                     GameObserver &observer,
+                     PrespammedPath &pp,
+                     Mmapper2Group &gm,
+                     QWidget *const parent)
     : QWidget(parent)
 {
     m_gridLayout = mmqt::makeQPointer<QGridLayout>(this);
@@ -46,7 +50,7 @@ MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QW
 
     m_gridLayout->addWidget(m_horizontalScrollBar, 1, 0, 1, 1);
 
-    m_canvas = new MapCanvas(mapData, pp, gm);
+    m_canvas = new MapCanvas(mapData, observer, pp, gm);
     m_canvas->setMinimumSize(QSize(1280 / 4, 720 / 4));
     m_canvas->resize(QSize(1280, 720));
 

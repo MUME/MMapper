@@ -5,6 +5,7 @@
 #include "../global/RAII.h"
 #include "../global/RuleOf5.h"
 #include "../global/Signal2.h"
+#include "../opengl/UboManager.h"
 
 #include <chrono>
 #include <functional>
@@ -60,8 +61,8 @@ private:
     QTimer m_heartbeatTimer;
     QOpenGLWindow &m_window;
     bool m_dirty = true;
-
-    friend class TestFrameManager;
+    float m_elapsedTime = 0.0f;
+    Legacy::UboManager &m_uboManager;
 
 public:
     /**
@@ -86,8 +87,14 @@ public:
     };
 
 public:
-    explicit FrameManager(QOpenGLWindow &window, QObject *parent = nullptr);
+    explicit FrameManager(QOpenGLWindow &window,
+                          Legacy::UboManager &uboManager,
+                          QObject *parent = nullptr);
+    ~FrameManager() override;
     DELETE_CTORS_AND_ASSIGN_OPS(FrameManager);
+
+public:
+    NODISCARD float getElapsedTime() const;
 
 public:
     /**
@@ -122,7 +129,6 @@ private:
     void recordFramePainted();
     void updateMinFrameTime();
     void cleanupExpiredCallbacks();
-    NODISCARD std::chrono::nanoseconds getJitterTolerance() const;
     NODISCARD std::chrono::nanoseconds getTimeUntilNextFrame() const;
 
 private slots:

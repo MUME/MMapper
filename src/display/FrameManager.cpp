@@ -9,10 +9,16 @@
 
 #include <QOpenGLWindow>
 
-FrameManager::FrameManager(QOpenGLWindow &window, QObject *parent)
+FrameManager::FrameManager(QOpenGLWindow &window, Legacy::UboManager &uboManager, QObject *parent)
     : QObject(parent)
     , m_window(window)
+    , m_uboManager(uboManager)
 {
+    m_uboManager.registerRebuildFunction(Legacy::SharedVboEnum::TimeBlock,
+                                         [this](Legacy::Functions &gl) {
+                                             m_uboManager.sync<Legacy::SharedVboEnum::TimeBlock>(gl);
+                                         });
+
     updateMinFrameTime();
     setConfig().canvas.advanced.maximumFps.registerChangeCallback(m_configLifetime, [this]() {
         updateMinFrameTime();
@@ -23,6 +29,11 @@ FrameManager::FrameManager(QOpenGLWindow &window, QObject *parent)
     connect(&m_heartbeatTimer, &QTimer::timeout, this, &FrameManager::onHeartbeat);
 
     requestFrame();
+}
+
+FrameManager::~FrameManager()
+{
+    m_uboManager.unregisterRebuildFunction(Legacy::SharedVboEnum::TimeBlock);
 }
 
 void FrameManager::registerCallback(const Signal2Lifetime &lifetime, AnimationCallback callback)
@@ -105,8 +116,33 @@ std::optional<FrameManager::Frame> FrameManager::beginFrame()
     }
     m_dirty = false;
 
+    // Calculate delta time
+    float deltaTime = 0.0f;
+    if (hasLastUpdate) {
+        const auto elapsed = now - m_lastUpdateTime;
+        deltaTime = std::chrono::duration<float>(elapsed).count();
+    }
     m_lastUpdateTime = now;
+
+    // Cap deltaTime for simulation to match map movement during dragging and avoid quantization jitter.
+    // Cap at 1.0s to avoid huge jumps after window focus loss or lag, while supporting low FPS.
+    auto lastFrameDeltaTime = std::min(deltaTime, 1.0f);
+
+    // Refresh internal struct for UBO
+    m_elapsedTime += lastFrameDeltaTime;
+    auto &timeBlock = m_uboManager.get<Legacy::SharedVboEnum::TimeBlock>();
+    timeBlock.time = glm::vec4(m_elapsedTime, lastFrameDeltaTime, 0.0f, 0.0f);
+
+    if (lastFrameDeltaTime > 0.0f) {
+        m_uboManager.invalidate(Legacy::SharedVboEnum::TimeBlock);
+    }
+
     return Frame(*this);
+}
+
+float FrameManager::getElapsedTime() const
+{
+    return m_elapsedTime;
 }
 
 void FrameManager::onHeartbeat()

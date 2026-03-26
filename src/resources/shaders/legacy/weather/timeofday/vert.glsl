@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2026 The MMapper Authors
+
+void main()
+{
+    // Full screen triangle
+    gl_Position = vec4(vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) * 2.0 - 1.0, 0.0, 1.0);
+}

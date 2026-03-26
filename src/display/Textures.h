@@ -50,9 +50,10 @@ public:
     {
         return std::make_shared<MMTexture>(Badge<MMTexture>{}, name);
     }
-    NODISCARD static std::shared_ptr<MMTexture> alloc(std::vector<QImage> images)
+    NODISCARD static std::shared_ptr<MMTexture> alloc(std::vector<QImage> images,
+                                                      bool forbidUpdates = false)
     {
-        return std::make_shared<MMTexture>(Badge<MMTexture>{}, std::move(images));
+        return std::make_shared<MMTexture>(Badge<MMTexture>{}, std::move(images), forbidUpdates);
     }
     NODISCARD static std::shared_ptr<MMTexture> alloc(
         const QOpenGLTexture::Target target,
@@ -65,7 +66,7 @@ public:
 public:
     MMTexture() = delete;
     MMTexture(Badge<MMTexture>, const QString &name);
-    MMTexture(Badge<MMTexture>, std::vector<QImage> images);
+    MMTexture(Badge<MMTexture>, std::vector<QImage> images, bool forbidUpdates = false);
     MMTexture(Badge<MMTexture>,
               const QOpenGLTexture::Target target,
               const std::function<void(QOpenGLTexture &)> &init,
@@ -180,7 +181,8 @@ using TextureArrayNESWUD = EnumIndexedArray<SharedMMTexture, ExitDirEnum, NUM_EX
     X(SharedMMTexture, room_sel_move_bad) \
     X(SharedMMTexture, room_sel_move_good) \
     X(SharedMMTexture, room_highlight) \
-    X(SharedMMTexture, white_pixel)
+    X(SharedMMTexture, white_pixel) \
+    X(SharedMMTexture, noise)
 
 struct NODISCARD MapCanvasTextures final
 {

@@ -131,13 +131,18 @@ MainWindow::MainWindow()
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
 
-    m_mapWindow = new MapWindow(mapData, deref(m_prespammedPath), deref(m_groupManager), this);
+    m_gameObserver = std::make_unique<GameObserver>();
+
+    m_mapWindow = new MapWindow(mapData,
+                                deref(m_gameObserver),
+                                deref(m_prespammedPath),
+                                deref(m_groupManager),
+                                this);
     setCentralWidget(m_mapWindow);
 
     m_pathMachine = new Mmapper2PathMachine(mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
-    m_gameObserver = std::make_unique<GameObserver>();
     m_mediaLibrary = new MediaLibrary(this);
     m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
     m_audioManager = new AudioManager(deref(m_mediaLibrary), deref(m_gameObserver), this);

@@ -8,6 +8,7 @@
 #include "../../global/NamedColors.h"
 #include "../../global/PrintUtils.h"
 #include "../../global/TextUtils.h"
+#include "../Weather.h"
 
 #include <array>
 #include <cassert>
@@ -214,8 +215,25 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     // that's the reason the `ptrs` array below is not `const`.
     std::string defineNamedColors = "#define MAX_NAMED_COLORS " + std::to_string(MAX_NAMED_COLORS)
                                     + "\n";
-    std::array<const char *, 4> ptrs = {gl.getShaderVersion(),
+    std::string defineWeatherRadius = "#define WEATHER_RADIUS "
+                                      + std::to_string(WeatherConstants::WEATHER_RADIUS) + "\n";
+    std::string defineWeatherExtent = "#define WEATHER_EXTENT "
+                                      + std::to_string(WeatherConstants::WEATHER_EXTENT) + "\n";
+    std::string defineWeatherMaskOuter = "#define WEATHER_MASK_RADIUS_OUTER "
+                                         + std::to_string(
+                                             WeatherConstants::WEATHER_MASK_RADIUS_OUTER)
+                                         + "\n";
+    std::string defineWeatherMaskInner = "#define WEATHER_MASK_RADIUS_INNER "
+                                         + std::to_string(
+                                             WeatherConstants::WEATHER_MASK_RADIUS_INNER)
+                                         + "\n";
+
+    std::array<const char *, 8> ptrs = {gl.getShaderVersion(),
                                         defineNamedColors.c_str(),
+                                        defineWeatherRadius.c_str(),
+                                        defineWeatherExtent.c_str(),
+                                        defineWeatherMaskOuter.c_str(),
+                                        defineWeatherMaskInner.c_str(),
                                         "#line 1\n",
                                         source.source.c_str()};
     gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
@@ -261,6 +279,42 @@ Program loadShaders(Functions &gl, const Source &vert, const Source &frag)
             gl.glDetachShader(prog, s);
             gl.glDeleteShader(s);
         }
+    }
+
+    return result_prog;
+}
+
+Program loadTransformFeedbackShaders(Functions &gl,
+                                     const Source &vert,
+                                     const Source &frag,
+                                     const std::vector<const char *> &varyings)
+{
+    GLuint vshader = compileShader(gl, GL_VERTEX_SHADER, vert);
+    GLuint fshader = compileShader(gl, GL_FRAGMENT_SHADER, frag);
+
+    Program result_prog;
+    result_prog.emplace(gl.shared_from_this());
+    const GLuint prog = result_prog.get();
+
+    gl.glAttachShader(prog, vshader);
+    if (fshader != 0) {
+        gl.glAttachShader(prog, fshader);
+    }
+
+    gl.glTransformFeedbackVaryings(prog,
+                                   static_cast<GLsizei>(varyings.size()),
+                                   varyings.data(),
+                                   GL_INTERLEAVED_ATTRIBS);
+
+    gl.glLinkProgram(prog);
+    checkProgramInfo(gl, prog);
+    gl.applyDefaultUniformBlockBindings(prog);
+
+    gl.glDetachShader(prog, vshader);
+    gl.glDeleteShader(vshader);
+    if (fshader != 0) {
+        gl.glDetachShader(prog, fshader);
+        gl.glDeleteShader(fshader);
     }
 
     return result_prog;

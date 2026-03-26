@@ -4,6 +4,9 @@
 
 #include "../../global/utils.h"
 #include "Legacy.h"
+#include "TFO.h"
+#include "VAO.h"
+#include "VBO.h"
 
 #include <optional>
 

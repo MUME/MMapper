@@ -298,6 +298,9 @@ ConstString KEY_THEME = "Theme";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
+ConstString KEY_WEATHER_ATMOSPHERE_INTENSITY = "weather.atmosphereIntensity";
+ConstString KEY_WEATHER_PRECIPITATION_INTENSITY = "weather.precipitationIntensity";
+ConstString KEY_WEATHER_TIME_OF_DAY_INTENSITY = "weather.todIntensity";
 ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
 ConstString KEY_BELL_AUDIBLE = "Bell audible";
@@ -662,6 +665,14 @@ void Configuration::CanvasSettings::read(const QSettings &conf)
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
+
+    weatherAtmosphereIntensity.set(conf.value(KEY_WEATHER_ATMOSPHERE_INTENSITY, 50).toInt());
+    weatherPrecipitationIntensity.set(conf.value(KEY_WEATHER_PRECIPITATION_INTENSITY, 50).toInt());
+    weatherTimeOfDayIntensity.set(conf.value(KEY_WEATHER_TIME_OF_DAY_INTENSITY, 50).toInt());
+
+    weatherAtmosphereIntensity.clamp(0, 100);
+    weatherPrecipitationIntensity.clamp(0, 100);
+    weatherTimeOfDayIntensity.clamp(0, 100);
 }
 
 void Configuration::AccountSettings::read(const QSettings &conf)
@@ -859,6 +870,10 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_3D_VERTICAL_ANGLE, advanced.verticalAngle.get());
     conf.setValue(KEY_3D_HORIZONTAL_ANGLE, advanced.horizontalAngle.get());
     conf.setValue(KEY_3D_LAYER_HEIGHT, advanced.layerHeight.get());
+
+    conf.setValue(KEY_WEATHER_ATMOSPHERE_INTENSITY, weatherAtmosphereIntensity.get());
+    conf.setValue(KEY_WEATHER_PRECIPITATION_INTENSITY, weatherPrecipitationIntensity.get());
+    conf.setValue(KEY_WEATHER_TIME_OF_DAY_INTENSITY, weatherTimeOfDayIntensity.get());
 }
 
 void Configuration::AccountSettings::write(QSettings &conf) const

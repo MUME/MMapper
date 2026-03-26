@@ -298,6 +298,66 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_Weather">
+     <property name="title">
+      <string>Weather and Atmosphere</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_Weather">
+      <item row="0" column="0">
+       <widget class="QLabel" name="weatherAtmosphereLabel">
+        <property name="text">
+         <string>Atmosphere Intensity:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="weatherAtmosphereSlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="weatherPrecipitationLabel">
+        <property name="text">
+         <string>Precipitation Intensity:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="weatherPrecipitationSlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="weatherTimeOfDayLabel">
+        <property name="text">
+         <string>Time of Day Intensity:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="weatherTimeOfDaySlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox_Advanced">
      <property name="title">
       <string>Advanced Settings</string>

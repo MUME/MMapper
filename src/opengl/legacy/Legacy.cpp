@@ -14,6 +14,8 @@
 #include "ShaderUtils.h"
 #include "Shaders.h"
 #include "SimpleMesh.h"
+#include "TFO.h"
+#include "VAO.h"
 #include "VBO.h"
 
 #include <cassert>

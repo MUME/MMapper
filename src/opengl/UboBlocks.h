@@ -20,7 +20,11 @@ namespace Legacy {
  * Note: SharedVboEnum values are implicitly used as UBO binding indices.
  * They must be 0-based and contiguous.
  */
-#define XFOREACH_SHARED_VBO(X) X(NamedColorsBlock, "NamedColorsBlock")
+#define XFOREACH_SHARED_VBO(X) \
+    X(NamedColorsBlock, "NamedColorsBlock") \
+    X(CameraBlock, "CameraBlock") \
+    X(TimeBlock, "TimeBlock") \
+    X(WeatherBlock, "WeatherBlock")
 
 #define X_ENUM(element, name) element,
 enum class NODISCARD SharedVboEnum : uint8_t { XFOREACH_SHARED_VBO(X_ENUM) NUM_BLOCKS };
@@ -32,6 +36,37 @@ inline constexpr const char *const SharedVboNames[] = {
 #define X_NAME(EnumName, StringName) StringName,
     XFOREACH_SHARED_VBO(X_NAME)
 #undef X_NAME
+};
+
+/**
+ * @brief Memory layout for the Camera uniform block.
+ * Must match CameraBlock in shaders (std140 layout).
+ */
+struct NODISCARD CameraBlock final
+{
+    glm::mat4 viewProj{1.0f};  // 0-63
+    glm::vec4 playerPos{0.0f}; // 64-79 (xyz, w=zScale)
+};
+
+/**
+ * @brief Memory layout for the Time uniform block.
+ * Must match TimeBlock in shaders (std140 layout).
+ */
+struct NODISCARD TimeBlock final
+{
+    glm::vec4 time{0.0f}; // 0-15 (x=time, y=delta, zw=unused)
+};
+
+/**
+ * @brief Memory layout for the Weather uniform block.
+ * Must match WeatherBlock in shaders (std140 layout).
+ */
+struct NODISCARD WeatherBlock final
+{
+    glm::vec4 intensities{0.0f}; // 0-15: rain, snow, clouds, fog (starts)
+    glm::vec4 targets{0.0f};     // 16-31: rain, snow, clouds, fog (targets)
+    glm::vec4 timeOfDay{0.0f};   // 32-47: startIdx, targetIdx, todStart, todTarget
+    glm::vec4 config{0.0f};      // 48-63: weatherStartTime, todStartTime, duration, unused
 };
 
 /**

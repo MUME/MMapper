@@ -21,6 +21,7 @@ struct ViewportConfig
 namespace ProjectionUtils {
 
 static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
+constexpr float ROOM_Z_SCALE = 7.f;
 
 /**
  * @brief Calculate the pitch (vertical angle) in degrees, accounting for auto-tilt if enabled.

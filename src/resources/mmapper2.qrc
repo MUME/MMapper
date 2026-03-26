@@ -229,5 +229,13 @@
         <file>shaders/legacy/blit/vert.glsl</file>
         <file>shaders/legacy/fullscreen/frag.glsl</file>
         <file>shaders/legacy/fullscreen/vert.glsl</file>
+        <file>shaders/legacy/weather/atmosphere/frag.glsl</file>
+        <file>shaders/legacy/weather/atmosphere/vert.glsl</file>
+        <file>shaders/legacy/weather/particle/frag.glsl</file>
+        <file>shaders/legacy/weather/particle/vert.glsl</file>
+        <file>shaders/legacy/weather/simulation/frag.glsl</file>
+        <file>shaders/legacy/weather/simulation/vert.glsl</file>
+        <file>shaders/legacy/weather/timeofday/frag.glsl</file>
+        <file>shaders/legacy/weather/timeofday/vert.glsl</file>
     </qresource>
 </RCC>
