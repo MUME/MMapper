@@ -94,7 +94,7 @@ std::optional<FrameManager::Frame> FrameManager::beginFrame()
     // Throttle: check if enough time has passed since the start of the last successful frame.
     if (hasLastUpdate) {
         const auto elapsed = now - m_lastUpdateTime;
-        if (elapsed + getJitterTolerance() < m_minFrameTime) {
+        if (elapsed < m_minFrameTime) {
             return std::nullopt;
         }
     }
@@ -119,23 +119,8 @@ void FrameManager::onHeartbeat()
     m_window.update();
 
     if (needsHeartbeat()) {
-        // We always schedule a fallback heartbeat in case window update is ignored.
-        // recordFramePainted will later refine this with a more accurate delay if a paint occurs.
-        const auto delayMs = std::chrono::duration_cast<std::chrono::milliseconds>(m_minFrameTime)
-                                 .count();
-        m_heartbeatTimer.start(static_cast<int>(delayMs));
+        requestFrame();
     }
-}
-
-std::chrono::nanoseconds FrameManager::getJitterTolerance() const
-{
-    // Use 25% of the frame time as jitter tolerance, but cap it at 8ms and also m_minFrameTime.
-    // This ensures we are "ready early" for VSync at 60Hz (4ms) while avoiding
-    // over-rendering at very high frame rates where the 8ms cap could effectively
-    // disable the rate limit.
-    const auto tolerance = m_minFrameTime / 4;
-    return std::min(
-        {tolerance, m_minFrameTime, std::chrono::nanoseconds(std::chrono::milliseconds(8))});
 }
 
 std::chrono::nanoseconds FrameManager::getTimeUntilNextFrame() const
@@ -146,11 +131,10 @@ std::chrono::nanoseconds FrameManager::getTimeUntilNextFrame() const
 
     const auto now = std::chrono::steady_clock::now();
     const auto elapsed = now - m_lastUpdateTime;
-    const auto tolerance = getJitterTolerance();
-    if (elapsed + tolerance >= m_minFrameTime) {
+    if (elapsed >= m_minFrameTime) {
         return std::chrono::nanoseconds::zero();
     }
-    return m_minFrameTime - (elapsed + tolerance);
+    return m_minFrameTime - elapsed;
 }
 
 void FrameManager::recordFramePainted()
@@ -172,20 +156,20 @@ void FrameManager::requestFrame()
         m_window.update();
         // Start a fallback timer in case window update is ignored.
         if (needsHeartbeat()) {
-            const auto delayMs
-                = std::chrono::duration_cast<std::chrono::milliseconds>(m_minFrameTime).count();
-            m_heartbeatTimer.start(static_cast<int>(delayMs));
+            const int delayMs = static_cast<int>(
+                std::chrono::ceil<std::chrono::milliseconds>(m_minFrameTime).count());
+            m_heartbeatTimer.start(delayMs);
         }
     } else {
         // Start or restart the timer with the accurate delay.
         const int finalDelay = static_cast<int>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(delay).count());
+            std::chrono::ceil<std::chrono::milliseconds>(delay).count());
 
         // Only restart the timer if it's not active or if the new delay is significantly different.
         // This avoids hammering the timer during high-frequency input like mouse moves.
         if (!m_heartbeatTimer.isActive()
             || std::abs(m_heartbeatTimer.remainingTime() - finalDelay) > 1) {
-            m_heartbeatTimer.start(std::max(1, finalDelay));
+            m_heartbeatTimer.start(finalDelay);
         }
     }
 }
