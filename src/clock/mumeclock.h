@@ -107,6 +107,7 @@ public:
 
     // REVISIT: This can't be const because it logs.
     NODISCARD MumeClockPrecisionEnum getPrecision();
+    NODISCARD MumeClockPrecisionEnum getPrecision(int64_t secsSinceEpoch);
 
     NODISCARD QString toMumeTime(const MumeMoment &moment) const;
     NODISCARD QString toCountdown(const MumeMoment &moment) const;
@@ -158,7 +159,7 @@ protected:
 
 private:
     void onUserGmcp(const GmcpMessage &msg);
-    void updateObserver(const MumeMoment &moment);
+    void updateObserver(const MumeMoment &moment, int64_t now);
 
 signals:
     void sig_log(const QString &, const QString &);

@@ -41,11 +41,12 @@ MumeClockWidget::MumeClockWidget(GameObserver &observer, MumeClock &clock, QWidg
     observer.sig2_tick.connect(m_lifetime,
                                [this](const MumeMoment &moment) { updateCountdown(moment); });
 
-    updateTime(observer.getTimeOfDay());
-    updateMoonPhase(observer.getMoonPhase());
-    updateMoonVisibility(observer.getMoonVisibility());
-    updateSeason(observer.getSeason());
-    updateCountdown(clock.getMumeMoment());
+    auto moment = m_clock.getMumeMoment();
+    updateTime(moment.toTimeOfDay());
+    updateMoonPhase(moment.moonPhase());
+    updateMoonVisibility(moment.moonVisibility());
+    updateSeason(moment.toSeason());
+    updateCountdown(moment);
 }
 
 MumeClockWidget::~MumeClockWidget() = default;

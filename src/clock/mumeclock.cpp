@@ -322,7 +322,7 @@ void MumeClock::parseWeather(const MumeTimeEnum time, int64_t secsSinceEpoch)
         }
     }
 
-    updateObserver(moment);
+    updateObserver(moment, secsSinceEpoch);
 }
 
 void MumeClock::parseClockTime(const QString &clockTime)
@@ -401,7 +401,11 @@ void MumeClock::setLastSyncEpoch(int64_t epoch)
 
 MumeClockPrecisionEnum MumeClock::getPrecision()
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentSecsSinceEpoch();
+    return getPrecision(QDateTime::currentSecsSinceEpoch());
+}
+
+MumeClockPrecisionEnum MumeClock::getPrecision(const int64_t secsSinceEpoch)
+{
     if (m_precision >= MumeClockPrecisionEnum::HOUR
         && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
         m_precision = MumeClockPrecisionEnum::DAY;
@@ -501,13 +505,18 @@ int MumeClock::getMumeWeekday(const QString &weekdayName)
 
 void MumeClock::slot_tick()
 {
-    const MumeMoment moment = getMumeMoment();
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+    const MumeMoment moment = MumeMoment::sinceMumeEpoch(now - m_mumeStartEpoch);
     m_observer.observeTick(moment);
-    updateObserver(moment);
+    updateObserver(moment, now);
 }
 
-void MumeClock::updateObserver(const MumeMoment &moment)
+void MumeClock::updateObserver(const MumeMoment &moment, const int64_t now)
 {
+    if (getPrecision(now) < MumeClockPrecisionEnum::HOUR) {
+        return;
+    }
+
     const auto timeOfDay = moment.toTimeOfDay();
     if (timeOfDay != m_timeOfDay) {
         m_timeOfDay = timeOfDay;
