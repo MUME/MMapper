@@ -5,6 +5,8 @@
 
 #include "../../global/ConfigConsts.h"
 
+#include <cassert>
+
 namespace Legacy {
 
 AbstractShaderProgram::AbstractShaderProgram(std::string dirName,

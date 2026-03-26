@@ -241,9 +241,8 @@ void MapCanvas::initializeGL()
         .registerRebuildFunction(Legacy::SharedVboEnum::NamedColorsBlock,
                                  [](Legacy::Functions &funcs) {
                                      auto &uboManager = funcs.getUboManager();
-                                     uboManager.update(funcs,
-                                                       Legacy::SharedVboEnum::NamedColorsBlock,
-                                                       XNamedColor::getAllColorsAsVec4());
+                                     uboManager.update<Legacy::SharedVboEnum::NamedColorsBlock>(
+                                         funcs, XNamedColor::getAllColorsAsBlock());
                                  });
 
     updateMultisampling();

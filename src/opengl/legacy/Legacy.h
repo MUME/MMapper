@@ -7,6 +7,7 @@
 #include "../../global/utils.h"
 #include "../OpenGLConfig.h"
 #include "../OpenGLTypes.h"
+#include "../UboBlocks.h"
 #include "FBO.h"
 
 #include <cmath>
@@ -25,35 +26,18 @@ class OpenGL;
 
 namespace Legacy {
 
-class UboManager;
 class StaticVbos;
 class SharedVbos;
 class SharedVaos;
+class UboManager;
+class VBO;
 class VAO;
 struct AbstractShaderProgram;
 struct ShaderPrograms;
 struct PointSizeBinder;
 
-// X(EnumName, GL_String_Name)
-/**
- * Note: SharedVboEnum values are implicitly used as UBO binding indices.
- * They must be 0-based and contiguous.
- */
-#define XFOREACH_SHARED_VBO(X) X(NamedColorsBlock, "NamedColorsBlock")
-
-#define X_COUNT_VBO(element, name) +1
-static constexpr size_t NUM_SHARED_VBOS = 0 XFOREACH_SHARED_VBO(X_COUNT_VBO);
-#undef X_COUNT_VBO
-
-enum class SharedVboEnum : uint8_t {
-#define X_ENUM(element, name) element,
-    XFOREACH_SHARED_VBO(X_ENUM)
-#undef X_ENUM
-        NUM_BLOCKS
-};
-
-static_assert(NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
-static_assert(static_cast<size_t>(SharedVboEnum::NUM_BLOCKS) == NUM_SHARED_VBOS,
+static_assert(Legacy::NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
+static_assert(static_cast<size_t>(Legacy::SharedVboEnum::NUM_BLOCKS) == Legacy::NUM_SHARED_VBOS,
               "SharedVboEnum must be 0-based and contiguous");
 
 /**
@@ -189,25 +173,12 @@ public:
     using Base::glAttachShader;
     using Base::glBindBuffer;
     using Base::glBindBufferBase;
-
-    /**
-     * @brief Binds a buffer to a uniform block binding point.
-     * @param target Must be GL_UNIFORM_BUFFER.
-     * @param block The uniform block to bind to.
-     * @param buffer The buffer ID.
-     *
-     * Note: This uses the enum value as the fixed binding point.
-     */
-    void glBindBufferBase(const GLenum target, const SharedVboEnum block, const GLuint buffer)
-    {
-        assert(target == GL_UNIFORM_BUFFER);
-        Base::glBindBufferBase(target, getUboBindingIndex(block), buffer);
-    }
     using Base::glBindTexture;
     using Base::glBindVertexArray;
     using Base::glBlendFunc;
     using Base::glBlendFuncSeparate;
     using Base::glBufferData;
+    using Base::glBufferSubData;
     using Base::glClear;
     using Base::glClearColor;
     using Base::glCompileShader;
@@ -263,10 +234,7 @@ public:
      *
      * Note: This uses the enum value as the fixed binding point.
      */
-    void glUniformBlockBinding(const GLuint program, const SharedVboEnum block)
-    {
-        virt_glUniformBlockBinding(program, block);
-    }
+    void glUniformBlockBinding(const GLuint program, const SharedVboEnum block);
 
     /**
      * @brief Automatically assigns fixed binding points to all known uniform blocks.
@@ -356,16 +324,16 @@ protected:
     NODISCARD virtual const char *virt_getShaderVersion() const = 0;
     virtual void virt_glUniformBlockBinding(GLuint program, SharedVboEnum block);
 
-protected:
+public:
     NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
 
-public:
     /// platform-specific (ES vs GL)
     NODISCARD bool canRenderQuads() { return virt_canRenderQuads(); }
 
     /// platform-specific (ES vs GL)
     NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
 
+protected:
 private:
     template<typename T>
     static void enforceTriviallyCopyable()
