@@ -19,7 +19,7 @@ permissions:
   packages: write
 
 jobs:
-  build-and-push:
+  build-wasm:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
