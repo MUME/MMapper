@@ -298,7 +298,7 @@ void MapCanvas::initializeGL()
     });
 
     setConfig().canvas.antialiasingSamples.registerChangeCallback(m_lifetime, [this]() {
-        this->updateMultisampling();
+        markMultisamplingDirty();
         m_frameManager.requestUpdate();
     });
 
@@ -402,9 +402,7 @@ void MapCanvas::resizeGL(int width, int height)
     }
 
     setViewportAndMvp(width, height);
-    updateMultisampling();
-
-    // Render
+    markMultisamplingDirty();
     m_frameManager.requestUpdate();
 }
 
@@ -514,6 +512,9 @@ void MapCanvas::actuallyPaintGL()
 {
     // DECL_TIMER(t, __FUNCTION__);
     setViewportAndMvp(width(), height());
+    if (takeMultisamplingDirty()) {
+        updateMultisampling();
+    }
 
     auto &gl = getOpenGL();
     auto &funcs = deref(gl.getSharedFunctions(Badge<MapCanvas>{}));
@@ -707,6 +708,8 @@ void MapCanvas::paintGL()
 {
     auto frame = m_frameManager.beginFrame();
     if (!frame) {
+        // Blit the existing FBO on resize or expose
+        getOpenGL().blitFboToDefault();
         return;
     }
 

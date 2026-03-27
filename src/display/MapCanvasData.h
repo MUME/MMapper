@@ -97,6 +97,16 @@ private:
 protected:
     mutable int m_lastWidth = 0;
     mutable int m_lastHeight = 0;
+    bool m_multisamplingDirty = true;
+
+public:
+    void markMultisamplingDirty() { m_multisamplingDirty = true; }
+    NODISCARD bool takeMultisamplingDirty()
+    {
+        const bool dirty = m_multisamplingDirty;
+        m_multisamplingDirty = false;
+        return dirty;
+    }
 
 private:
     mutable glm::mat4 m_viewProj{1.f};
