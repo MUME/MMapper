@@ -1,6 +1,8 @@
 # --- Stage 1: The Builder Stage ---
 FROM --platform=linux/amd64 ubuntu:24.04 AS builder
 
+ARG JOBS
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV QTSDK_DIR=/opt/Qt
 ENV EMSDK_DIR=/opt/emsdk
@@ -41,7 +43,8 @@ RUN ./emsdk activate 4.0.7 && \
         -DQT_HOST_PATH=$QTSDK_DIR/6.10.3/gcc_64 \
         -DCMAKE_BUILD_TYPE=Release \
         -DWITH_OPENSSL=OFF -DWITH_TESTS=OFF -DWITH_WEBSOCKET=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=Wasm && \
-    cmake --build /build --parallel && \
+    ACTUAL_JOBS=${JOBS:-$(nproc)} && \
+    cmake --build /build --parallel ${ACTUAL_JOBS} && \
     ls /build/src && \
     mkdir /dist && \
     cd /build/src && \
