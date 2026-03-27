@@ -1,5 +1,4 @@
 # --- Stage 1: The Builder Stage ---
-ARG BUILDPLATFORM=linux/amd64
 ARG JOBS
 
 FROM --platform=${BUILDPLATFORM} ubuntu:24.04 AS builder
