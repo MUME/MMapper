@@ -54,7 +54,7 @@ RUN ./emsdk activate 4.0.7 && \
     cp /app/src/resources/icons/m-release.png /dist/logo.png && \
     cd /dist && \
     sed -i 's|<head>|<head>\n    <link rel="icon" type="image/x-icon" href="favicon.ico">|' index.html && \
-    sed -i 's|<img src="qtlogo.svg" width="320" height="200" style="display:block"></img>|<img src="logo.png" style="display:block"></img>|' index.html && \
+    sed -i 's|src="qtlogo.svg" width="320" height="200"|src="logo.png"|g' index.html && \
     wget https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/refs/heads/master/coi-serviceworker.js && \
     sed -i 's|<head>|<head>\n    <script src="./coi-serviceworker.js"></script>|' index.html
 

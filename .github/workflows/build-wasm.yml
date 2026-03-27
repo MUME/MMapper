@@ -32,19 +32,26 @@ jobs:
         id: info
         run: |
           RAW_TAG="${{ github.ref_name }}"
+          # Explicitly initialize outputs to avoid brittle logic
+          PUSH_LATEST="false"
+          IS_TAG="false"
+
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            IS_TAG="true"
             VERSION=$RAW_TAG
             VERSION_CLEAN=$(echo $VERSION | sed 's/^v//')
-            # Check if this is NOT a beta tag to decide on 'latest'
             if [[ "$RAW_TAG" != "beta" ]]; then
-               echo "PUSH_LATEST=true" >> $GITHUB_OUTPUT
+               PUSH_LATEST="true"
             fi
           else
             VERSION=${{ github.sha }}
             VERSION_CLEAN=${VERSION:0:7}
           fi
+
           echo "VERSION=${VERSION_CLEAN}" >> $GITHUB_OUTPUT
           echo "RAW_TAG=${VERSION}" >> $GITHUB_OUTPUT
+          echo "IS_TAG=${IS_TAG}" >> $GITHUB_OUTPUT
+          echo "PUSH_LATEST=${PUSH_LATEST}" >> $GITHUB_OUTPUT
           echo "FILE=mmapper-${VERSION_CLEAN}-wasm.zip" >> $GITHUB_OUTPUT
           echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
 
@@ -52,23 +59,25 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        if: github.event_name == 'push' && github.ref_type == 'tag'
+        if: steps.info.outputs.IS_TAG == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Local Image
+      - name: Build and Load Image
         uses: docker/build-push-action@v6
         with:
           context: .
           load: true
-          tags: ghcr.io/${{ steps.info.outputs.REPO_LC }}:temp-build
+          tags: local-wasm-build:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Extract Artifacts from Image
         run: |
-          docker create --name extract ghcr.io/${{ steps.info.outputs.REPO_LC }}:temp-build
+          docker create --name extract local-wasm-build:latest
           mkdir -p demo
           docker cp extract:/usr/share/nginx/html/. ./demo/
           docker rm extract
@@ -81,11 +90,16 @@ jobs:
           path: ${{ steps.info.outputs.FILE }}
 
       - name: Finalize Image Push to GHCR
-        if: github.event_name == 'push' && github.ref_type == 'tag'
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ steps.info.outputs.REPO_LC }}:${{ steps.info.outputs.RAW_TAG }}
-            ${{ steps.info.outputs.PUSH_LATEST == 'true' && format('ghcr.io/{0}:latest', steps.info.outputs.REPO_LC) || '' }}
+        if: steps.info.outputs.IS_TAG == 'true'
+        run: |
+          # Instead of rebuilding, we just tag the local image and push it
+          IMAGE_BASE="ghcr.io/${{ steps.info.outputs.REPO_LC }}"
+          TAG_VERSION="$IMAGE_BASE:${{ steps.info.outputs.RAW_TAG }}"
+
+          docker tag local-wasm-build:latest "$TAG_VERSION"
+          docker push "$TAG_VERSION"
+
+          if [[ "${{ steps.info.outputs.PUSH_LATEST }}" == "true" ]]; then
+            docker tag local-wasm-build:latest "$IMAGE_BASE:latest"
+            docker push "$IMAGE_BASE:latest"
+          fi
