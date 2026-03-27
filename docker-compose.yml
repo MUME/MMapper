@@ -1,0 +1,8 @@
+name: mmapper
+services:
+  app:
+    platform: linux/amd64
+    restart: unless-stopped
+    build: .
+    ports:
+      - "8080:80"
