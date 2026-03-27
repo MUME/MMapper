@@ -59,7 +59,8 @@ RUN ./emsdk activate 4.0.7 && \
     sed -i 's|<head>|<head>\n    <link rel="icon" type="image/x-icon" href="favicon.ico">|' index.html && \
     sed -i 's|src="qtlogo.svg" width="320" height="200"|src="logo.png"|g' index.html && \
     wget https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/refs/heads/master/coi-serviceworker.js && \
-    sed -i 's|<head>|<head>\n    <script src="./coi-serviceworker.js"></script>|' index.html
+    sed -i 's|<head>|<head>\n    <script src="./coi-serviceworker.js"></script>|' index.html && \
+    rm -rf /build /app
 
 # --- Stage 2: The Final Runtime Stage (Nginx) ---
 FROM nginx:alpine
