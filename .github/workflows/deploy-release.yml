@@ -143,11 +143,18 @@ jobs:
                     archive_format: 'zip',
                   });
 
+                  const buf = Buffer.from(download.data);
+                  const isZip = buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4B && buf[2] === 0x03 && buf[3] === 0x04;
+                  if (!isZip) {
+                    console.log(`  Skipping non-zip artifact: ${artifact.name}`);
+                    continue;
+                  }
+
                   // Organize extracted artifacts into subdirectories by workflow name and artifact name
                   const outputDir = `${artifactsPath}/${workflowName}/${artifact.name}`;
                   fs.mkdirSync(outputDir, { recursive: true });
 
-                  const zip = new AdmZip(Buffer.from(download.data));
+                  const zip = new AdmZip(buf);
                   zip.extractAllTo(outputDir, true);
                   downloadedArtifactPaths.push(outputDir); // Collect the directories where artifacts were extracted
                   console.log(`  Extracted artifact to: ${outputDir}`);
