@@ -11,7 +11,7 @@ Ensure the following tools are installed:
 - A C++17-compatible compiler (e.g., GCC, Clang, MSVC)
 - [CMake 3.20+](https://cmake.org/)
 - [Ninja](https://ninja-build.org/)
-- [Qt 6.4+](https://www.qt.io/) (6.5 recommended) with `QtWebSockets`
+- [Qt 6.4+](https://www.qt.io/) (6.5 recommended) with `QtWebSockets` and `QtMultimedia`
 
 ---
 
@@ -26,13 +26,23 @@ cd MMapper
 
 ## 2. Platform-Specific Setup
 
+### WebAssembly
+
+If you have Docker installed, you can build and run the Web client locally without installing a full development environment:
+
+```bash
+docker compose up --build -d
+```
+
+Once the build completes, open your browser to: `http://localhost:8080`
+
 ### Linux (Debian/Ubuntu)
 
 Install the required packages with:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential zlib1g-dev libssl-dev libglm-dev cmake ninja-build qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev qtkeychain-qt6-dev
+sudo apt-get install -y build-essential zlib1g-dev libssl-dev libglm-dev cmake ninja-build qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev qtkeychain-qt6-dev qt6-multimedia-dev
 ```
 
 After installing dependencies, build as usual:
@@ -52,7 +62,7 @@ Install dependencies with Homebrew and aqtinstall:
 
 ```bash
 brew install cmake ninja aqtinstall
-aqt install-qt mac desktop 6.5.3 clang_64 -m qtwebsockets
+aqt install-qt mac desktop 6.5.3 clang_64 -m qtwebsockets qtmultimedia
 ```
 
 Make sure Xcode Command Line Tools are installed:
@@ -91,7 +101,7 @@ Install:
 #### MSVC (Recommended)
 
 ```bash
-aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 -m qtwebsockets
+aqt install-qt windows desktop 6.5.3 win64_msvc2019_64 -m qtwebsockets qtmultimedia
 ```
 
 Add `Qt\6.5.3\msvc2019_64\bin` to PATH.
@@ -99,7 +109,7 @@ Add `Qt\6.5.3\msvc2019_64\bin` to PATH.
 #### MinGW (Alternative)
 
 ```bash
-aqt install-qt windows desktop 6.5.3 win64_mingw -m qtwebsockets
+aqt install-qt windows desktop 6.5.3 win64_mingw -m qtwebsockets qtmultimedia
 aqt install-tool windows desktop tools_mingw1310
 ```
 
