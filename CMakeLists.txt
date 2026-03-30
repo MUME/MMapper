@@ -79,8 +79,8 @@ if(Qt6Core_FOUND)
 endif()
 
 if(EMSCRIPTEN)
-    set_property(GLOBAL PROPERTY JOBS_POOLS CMAKE_JOB_POOL_LINK=1)
-    set(CMAKE_JOB_POOL_LINK CMAKE_JOB_POOL_LINK)
+    set_property(GLOBAL PROPERTY JOB_POOLS link=1)
+    set(CMAKE_JOB_POOL_LINK link)
 endif()
 
 if(Qt6OpenGL_FOUND)
