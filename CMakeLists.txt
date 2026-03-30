@@ -78,6 +78,11 @@ if(Qt6Core_FOUND)
     add_definitions(/DQT_DISABLE_DEPRECATED_UP_TO=0x060400)
 endif()
 
+if(EMSCRIPTEN)
+    set_property(GLOBAL PROPERTY JOBS_POOLS CMAKE_JOB_POOL_LINK=1)
+    set(CMAKE_JOB_POOL_LINK CMAKE_JOB_POOL_LINK)
+endif()
+
 if(Qt6OpenGL_FOUND)
     if(EMSCRIPTEN)
         set(QT_HAS_GLES TRUE)

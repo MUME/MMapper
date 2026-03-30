@@ -71,8 +71,6 @@ jobs:
         with:
           context: .
           load: true
-          build-args: |
-            JOBS=1
           tags: local-wasm-build:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

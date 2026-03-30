@@ -1,7 +1,5 @@
 # --- Stage 1: The Builder Stage ---
-ARG JOBS
-
-FROM --platform=${BUILDPLATFORM} ubuntu:24.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV QTSDK_DIR=/opt/Qt
@@ -43,8 +41,7 @@ RUN ./emsdk activate 4.0.7 && \
         -DQT_HOST_PATH=$QTSDK_DIR/6.10.3/gcc_64 \
         -DCMAKE_BUILD_TYPE=Release \
         -DWITH_OPENSSL=OFF -DWITH_TESTS=OFF -DWITH_WEBSOCKET=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=Wasm && \
-    ACTUAL_JOBS=${JOBS:-$(nproc)} && \
-    cmake --build /build --parallel ${ACTUAL_JOBS} && \
+    cmake --build /build --parallel && \
     ls /build/src && \
     mkdir /dist && \
     cd /build/src && \
@@ -66,7 +63,7 @@ FROM nginx:alpine
 
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
-COPY --from=builder /dist/* .
+COPY --from=builder /dist/ .
 
 EXPOSE 80
 
