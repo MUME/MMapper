@@ -173,7 +173,7 @@ jobs:
         lcov --list build/coverage.info --ignore-errors inconsistent
         lcov --remove build/coverage.info '/usr/*' '*/tests/*' '*/external/*' '*/build/*' --output-file build/filtered.info --ignore-errors unused --ignore-errors inconsistent
     - if: env.COVERAGE == 'true' && !cancelled()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         slug: ${{ github.repository }}
         files: ./build/filtered.info
