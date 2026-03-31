@@ -6,6 +6,7 @@
 
 #include "./configuration/configuration.h"
 #include "./display/Filenames.h"
+#include "./global/ConfigConsts-Computed.h"
 #include "./global/ConfigConsts.h"
 #include "./global/WinSock.h"
 #include "./global/emojis.h"
@@ -17,7 +18,12 @@
 #include <memory>
 #include <optional>
 
+#include <QFile>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QPixmap>
+#include <QUrl>
 #include <QtCore>
 #include <QtWidgets>
 
@@ -81,13 +87,41 @@ NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &in
 static void tryAutoLoadMap(MainWindow &mw)
 {
     const auto &settings = getConfig().autoLoad;
-    if (settings.autoLoadMap) {
-        if (!settings.fileName.isEmpty()
-            && tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName)) {
+    if (!settings.autoLoadMap) {
+        return;
+    }
+
+    if (!settings.fileName.isEmpty()
+        && tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName)) {
+        return;
+    }
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        if constexpr (NO_MAP_RESOURCE) {
             return;
         }
-        if (!NO_MAP_RESOURCE && tryLoad(mw, QDir(":/"), "arda")) {
-            return;
+        // On WASM the map is sideloaded from the network; fetch it asynchronously.
+        auto *nam = new QNetworkAccessManager(&mw);
+        auto *reply = nam->get(QNetworkRequest(QUrl(getAssetsPath() + "map/arda")));
+        QObject::connect(reply, &QNetworkReply::finished, &mw, [&mw, reply, nam]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                try {
+                    mw.loadFile(MapSource::alloc(QStringLiteral("arda"), reply->readAll()));
+                } catch (const std::exception &e) {
+                    qCritical() << "[main] Failed to load sideloaded map:" << e.what();
+                }
+            } else {
+                qWarning() << "[main] Failed to fetch sideloaded map:" << reply->errorString();
+            }
+            reply->deleteLater();
+            nam->deleteLater();
+        });
+    } else {
+        if (!NO_MAP_RESOURCE) {
+            // Check the system assets directory
+            if (tryLoad(mw, QDir(getAssetsPath() + "map/"), "arda")) {
+                return;
+            }
         }
         qInfo() << "[main] Unable to autoload map";
     }

@@ -4,7 +4,6 @@ if(WITH_IMAGES_UPPER STREQUAL "OFF" OR WITH_IMAGES_UPPER STREQUAL "FALSE")
     message(STATUS "Image resources disabled.")
 else()
     set(IMAGES_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/images")
-    set(MMAPPER_QRC_FILE "${IMAGES_DOWNLOAD_DIR}/images.qrc")
     set(IMAGES_TARGET_DEPENDENCY "")
 
     file(MAKE_DIRECTORY "${IMAGES_DOWNLOAD_DIR}")
@@ -47,16 +46,18 @@ else()
         set(IMAGES_TARGET_DEPENDENCY images_repo)
     endif()
 
-    # Generate QRC from images
+    # For all platforms: copy assets to the sideloaded assets directory
+    set(IMAGES_ASSETS_STAMP "${IMAGES_DOWNLOAD_DIR}/CMakeLists.txt.assets_stamp")
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${ASSETS_NAME}")
     add_custom_command(
-        OUTPUT "${MMAPPER_QRC_FILE}"
-        COMMAND ${CMAKE_COMMAND} -DINPUT_DIR=${IMAGES_DOWNLOAD_DIR} -DOUTPUT_FILE=${MMAPPER_QRC_FILE} -P "${CMAKE_SOURCE_DIR}/cmake/GenerateQRC.cmake"
+        OUTPUT "${IMAGES_ASSETS_STAMP}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${IMAGES_DOWNLOAD_DIR}" "${CMAKE_BINARY_DIR}/${ASSETS_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E touch "${IMAGES_ASSETS_STAMP}"
         DEPENDS "${IMAGES_TARGET_DEPENDENCY}"
-        COMMENT "Generating images.qrc"
-        WORKING_DIRECTORY "${IMAGES_DOWNLOAD_DIR}"
+        COMMENT "Copying image assets to ${ASSETS_NAME} directory"
         VERBATIM
     )
-    add_custom_target(images_qrc ALL DEPENDS "${MMAPPER_QRC_FILE}")
-    add_dependencies(images_qrc ${IMAGES_TARGET_DEPENDENCY})
-    message(STATUS "Images QRC file will be included: ${MMAPPER_QRC_FILE}")
+    add_custom_target(images_assets ALL DEPENDS "${IMAGES_ASSETS_STAMP}")
+    add_dependencies(images_assets ${IMAGES_TARGET_DEPENDENCY})
+    message(STATUS "Image assets will be sideloaded: ${CMAKE_BINARY_DIR}/${ASSETS_NAME}")
 endif()

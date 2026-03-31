@@ -611,16 +611,40 @@ configure_file(resources/build.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/build.qrc)
 qt_add_resources(mmapper_QRC ${CMAKE_CURRENT_BINARY_DIR}/build.qrc)
 list(APPEND mmapper_RCS "resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns")
 
-if(WITH_MAP)
-    qt_add_resources(mmapper_QRC "${CMAKE_BINARY_DIR}/map/map.qrc")
-endif()
+if(EMSCRIPTEN)
+    # The manifest is served alongside the application and fetched at runtime.
+    get_filename_component(ASSETS_DIR "${CMAKE_BINARY_DIR}/${ASSETS_NAME}" ABSOLUTE)
+    set(ASSETS_MANIFEST "${ASSETS_DIR}/manifest.json")
 
-if(WITH_IMAGES)
-    qt_add_resources(mmapper_QRC "${CMAKE_BINARY_DIR}/images/images.qrc")
-endif()
+    # Collect which asset targets to depend on
+    set(ASSETS_DEPS)
+    if(WITH_AUDIO)
+        list(APPEND ASSETS_DEPS audio_assets)
+    endif()
+    if(WITH_IMAGES)
+        list(APPEND ASSETS_DEPS images_assets)
+    endif()
+    if(WITH_MAP)
+        list(APPEND ASSETS_DEPS map_assets)
+    endif()
 
-if(WITH_AUDIO)
-    qt_add_resources(mmapper_QRC "${CMAKE_BINARY_DIR}/audio/audio.qrc")
+    # Generate the asset manifest JSON after all assets have been copied
+    add_custom_command(
+        OUTPUT "${ASSETS_MANIFEST}"
+        COMMAND ${CMAKE_COMMAND}
+            -DASSETS_DIR=${ASSETS_DIR}
+            -DOUTPUT_FILE=${ASSETS_MANIFEST}
+            -P "${CMAKE_SOURCE_DIR}/cmake/WasmManifest.cmake"
+        DEPENDS ${ASSETS_DEPS}
+        COMMENT "Generating asset manifest"
+        VERBATIM
+    )
+    add_custom_target(assets_manifest ALL DEPENDS "${ASSETS_MANIFEST}")
+    if(ASSETS_DEPS)
+        add_dependencies(assets_manifest ${ASSETS_DEPS})
+    else()
+        message(WARNING "No assets enabled for manifest generation")
+    endif()
 endif()
 
 set(mmapper_UIS
@@ -716,7 +740,7 @@ if(EMSCRIPTEN)
         -sFULL_ES3=1
         -sMAX_WEBGL_VERSION=2
         -sMIN_WEBGL_VERSION=2
-        -sASSERTIONS
+	#-sASSERTIONS
         -sASYNCIFY
         -Os
     )
@@ -817,16 +841,17 @@ if(WIN32)
     target_link_libraries(mmapper PRIVATE ws2_32)
 endif()
 
-if(WITH_MAP)
-    add_dependencies(mmapper map_qrc)
-endif()
-
-if(WITH_IMAGES)
-    add_dependencies(mmapper images_qrc)
-endif()
-
-if(WITH_AUDIO)
-    add_dependencies(mmapper audio_qrc)
+if(EMSCRIPTEN)
+    add_dependencies(mmapper assets_manifest)
+    add_custom_command(TARGET mmapper POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            "-DHTML_FILE=$<TARGET_FILE_DIR:mmapper>/mmapper.html"
+            "-DFAVICON_SRC=${CMAKE_SOURCE_DIR}/src/resources/win32/m-${MMAPPER_BRAND_SUFFIX}.ico"
+            "-DLOGO_SRC=${CMAKE_SOURCE_DIR}/src/resources/pixmaps/splash-${MMAPPER_BRAND_SUFFIX}.png"
+            -P "${CMAKE_SOURCE_DIR}/cmake/WasmHtml.cmake"
+        COMMENT "Patching Wasm HTML"
+        VERBATIM
+    )
 endif()
 
 if(WITH_ZLIB AND NOT EMSCRIPTEN)
@@ -937,8 +962,38 @@ else()
     set(CPACK_STRIP_FILES TRUE)
 endif()
 
+# Wasm Install Settings
+if(EMSCRIPTEN)
+    install(
+        FILES
+            "$<TARGET_FILE_DIR:mmapper>/mmapper.js"
+            "$<TARGET_FILE_DIR:mmapper>/mmapper.wasm"
+            "$<TARGET_FILE_DIR:mmapper>/qtloader.js"
+            "$<TARGET_FILE_DIR:mmapper>/favicon.ico"
+            "$<TARGET_FILE_DIR:mmapper>/logo.png"
+            "$<TARGET_FILE_DIR:mmapper>/coi-serviceworker.js"
+        DESTINATION "."
+        COMPONENT applications
+    )
+    install(
+        FILES "$<TARGET_FILE_DIR:mmapper>/mmapper.html"
+        DESTINATION "."
+        RENAME "index.html"
+        COMPONENT applications
+    )
+    install(
+        DIRECTORY "${CMAKE_BINARY_DIR}/${ASSETS_NAME}/"
+        DESTINATION "${ASSETS_NAME}"
+        COMPONENT applications
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        PATTERN ".git" EXCLUDE
+        PATTERN "README.md" EXCLUDE
+    )
+endif()
+
 # Linux Install Settings
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     set(SHARE_INSTALL_PREFIX
         "${CMAKE_INSTALL_PREFIX}/share"
         CACHE PATH "Base directory for files which go to share/"
@@ -974,6 +1029,17 @@ if(UNIX AND NOT APPLE)
         RENAME org.mume.MMapper.png
     )
 
+    # Assets
+    install(
+        DIRECTORY "${CMAKE_BINARY_DIR}/${ASSETS_NAME}/"
+        DESTINATION share/mmapper/${ASSETS_NAME}
+        COMPONENT applications
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        PATTERN ".git" EXCLUDE
+        PATTERN "README.md" EXCLUDE
+    )
+
     set(CPACK_GENERATOR "DEB") # Others: RPM, STGZ
     set(CPACK_SOURCE_GENERATOR "TGZ")
 
@@ -997,7 +1063,7 @@ if(UNIX AND NOT APPLE)
     if(WITH_AUDIO)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6multimedia6 (>= 6.4.0)")
     endif()
-endif(UNIX AND NOT APPLE)
+endif(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
 
 # Windows Install Settings
 if(WIN32)
@@ -1051,6 +1117,15 @@ if(WIN32)
         PATTERN "*.exe" EXCLUDE
     )
 
+    # Assets
+    install(
+        DIRECTORY "${CMAKE_BINARY_DIR}/${ASSETS_NAME}/"
+        DESTINATION ${ASSETS_NAME}
+        COMPONENT applications
+        PATTERN ".git" EXCLUDE
+        PATTERN "README.md" EXCLUDE
+    )
+
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
     if(PACKAGE_TYPE_NORMALIZED STREQUAL "Nsis")
@@ -1067,6 +1142,11 @@ if(WIN32)
                 Delete '\\$INSTDIR\\\\vc_redist.x64.exe'
                 ")
         endif()
+
+        # Mark default assets as read-only on Windows
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
+            SetFileAttributes '\\$INSTDIR\\\\${ASSETS_NAME}\\\\map\\\\arda' READONLY
+            ")
 
         # Windows (NSIS) Settings
         set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
@@ -1202,6 +1282,17 @@ if(APPLE)
         COMMENT "Code signing the bundle"
         VERBATIM
         )
+
+    # Assets
+    install(
+        DIRECTORY "${CMAKE_BINARY_DIR}/${ASSETS_NAME}/"
+        DESTINATION "mmapper.app/Contents/Resources/${ASSETS_NAME}"
+        COMPONENT applications
+        DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
+        PATTERN ".git" EXCLUDE
+        PATTERN "README.md" EXCLUDE
+    )
 
     # Install Executables
     install(
