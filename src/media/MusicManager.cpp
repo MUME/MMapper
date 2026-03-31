@@ -25,6 +25,7 @@ MusicManager::MusicManager(MediaLibrary &library, QObject *const parent)
 {
 #ifndef MMAPPER_NO_AUDIO
     m_cachedPositions.setMaxCost(10);
+    m_wasmFiles.setMaxCost(3);
     for (int i = 0; i < 2; ++i) {
         m_channels[i].player = new QMediaPlayer(this);
         m_channels[i].audioOutput = new QAudioOutput(this);
@@ -112,69 +113,61 @@ MusicManager::~MusicManager()
 
 void MusicManager::playMusic(const QString &musicFile)
 {
-    if (musicFile.isEmpty()) {
+    if (musicFile.isEmpty() || NO_AUDIO) {
         stopMusic();
         return;
     }
 
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
-        m_library.fetchAsync(musicFile, [this, musicFile](const QByteArray &data) {
-            playFromData(data, musicFile);
-        });
-    } else {
+    auto playMusic2 = [this, musicFile](const QUrl &url) {
 #ifndef MMAPPER_NO_AUDIO
         const int ch = prepareChannel(musicFile);
         if (ch < 0) {
             return;
         }
-        const QUrl url = musicFile.startsWith(":/") ? QUrl(QStringLiteral("qrc") + musicFile)
-                                                    : QUrl::fromLocalFile(musicFile);
         activateChannel(ch, musicFile, url);
 #endif
-    }
-}
+    };
 
-void MusicManager::playFromData(const QByteArray &data, const QString &musicFile)
-{
-#ifndef MMAPPER_NO_AUDIO
-    if (musicFile.isEmpty() || data.isEmpty()) {
-        stopMusic();
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        if (QTemporaryFile *tempFile = m_wasmFiles.object(musicFile)) {
+            playMusic2(QUrl::fromLocalFile(tempFile->fileName()));
+            return;
+        }
+        m_library.fetchAsync(musicFile, [this, musicFile, playMusic2](const QByteArray &data) {
+            QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/mmapper_XXXXXX."
+                                                          + QFileInfo(musicFile).suffix());
+            if (!tempFile->open()) {
+                qWarning() << "MusicManager: failed to create temp file for" << musicFile;
+                return;
+            }
+            const qint64 bytesWritten = tempFile->write(data);
+            if (bytesWritten != static_cast<qint64>(data.size())) {
+                qWarning() << "MusicManager: failed to write temp file for" << musicFile
+                           << "- expected" << data.size() << "bytes, wrote" << bytesWritten;
+            }
+            tempFile->close();
+            m_wasmFiles.insert(musicFile, tempFile);
+            playMusic2(QUrl::fromLocalFile(tempFile->fileName()));
+        });
         return;
     }
 
-    const int ch = prepareChannel(musicFile);
-    if (ch < 0) {
-        return;
-    }
-
-    // Write to a temp file; keep it alive via tempFile unique_ptr until this channel is reused
-    auto &channel = m_channels[ch];
-    channel.tempFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/mmapper_XXXXXX."
-                                                        + QFileInfo(musicFile).suffix());
-    if (!channel.tempFile->open()) {
-        qWarning() << "MusicManager: failed to create temp file for" << musicFile;
-        return;
-    }
-    const qint64 bytesWritten = channel.tempFile->write(data);
-    if (bytesWritten != static_cast<qint64>(data.size())) {
-        qWarning() << "MusicManager: failed to write temp file for" << musicFile << "- expected"
-                   << data.size() << "bytes, wrote" << bytesWritten;
-        channel.tempFile.reset();
-        return;
-    }
-    channel.tempFile->close();
-
-    activateChannel(ch, musicFile, QUrl::fromLocalFile(channel.tempFile->fileName()));
-#else
-    std::ignore = data;
-    std::ignore = musicFile;
-#endif
+    playMusic2(musicFile.startsWith(":/") ? QUrl(QStringLiteral("qrc") + musicFile)
+                                          : QUrl::fromLocalFile(musicFile));
 }
 
 #ifndef MMAPPER_NO_AUDIO
 int MusicManager::prepareChannel(const QString &musicFile)
 {
     if (musicFile == m_channels[m_activeChannel].file) {
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+            // Browser does not let music loop on Wasm, so we have to restart it manually with user input
+            if (m_channels[m_activeChannel].player->playbackState() != QMediaPlayer::PlayingState) {
+                m_channels[m_activeChannel].player->setPosition(0);
+                m_channels[m_activeChannel].player->play();
+                return -1;
+            }
+        }
         startFade(false);
         return -1;
     }
