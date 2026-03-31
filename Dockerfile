@@ -1,7 +1,7 @@
 # --- Stage 1: The Builder Stage ---
 ARG JOBS
 
-FROM --platform=${BUILDPLATFORM} ubuntu:24.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV QTSDK_DIR=/opt/Qt
@@ -45,20 +45,7 @@ RUN ./emsdk activate 4.0.7 && \
         -DWITH_OPENSSL=OFF -DWITH_TESTS=OFF -DWITH_WEBSOCKET=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=Wasm && \
     ACTUAL_JOBS=${JOBS:-$(nproc)} && \
     cmake --build /build --parallel ${ACTUAL_JOBS} && \
-    ls /build/src && \
-    mkdir /dist && \
-    cd /build/src && \
-    cp mmapper.js /dist/ && \
-    cp mmapper.wasm /dist/ && \
-    cp qtloader.js /dist/ && \
-    cp mmapper.html /dist/index.html && \
-    cp /app/src/resources/win32/m-release.ico /dist/favicon.ico && \
-    cp /app/src/resources/icons/m-release.png /dist/logo.png && \
-    cd /dist && \
-    sed -i 's|<head>|<head>\n    <link rel="icon" type="image/x-icon" href="favicon.ico">|' index.html && \
-    sed -i 's|src="qtlogo.svg" width="320" height="200"|src="logo.png"|g' index.html && \
-    wget https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/refs/heads/master/coi-serviceworker.js && \
-    sed -i 's|<head>|<head>\n    <script src="./coi-serviceworker.js"></script>|' index.html && \
+    cmake --install /build --prefix /dist && \
     rm -rf /build /app
 
 # --- Stage 2: The Final Runtime Stage (Nginx) ---
@@ -66,7 +53,7 @@ FROM nginx:alpine
 
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
-COPY --from=builder /dist/* .
+COPY --from=builder /dist/ .
 
 EXPOSE 80
 

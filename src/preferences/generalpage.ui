@@ -258,7 +258,7 @@
             </sizepolicy>
            </property>
            <property name="placeholderText">
-            <string>:/arda</string>
+            <string>Default Map</string>
            </property>
           </widget>
          </item>

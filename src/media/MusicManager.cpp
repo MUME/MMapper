@@ -4,6 +4,7 @@
 #include "MusicManager.h"
 
 #include "../configuration/configuration.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "MediaLibrary.h"
 
 #ifndef MMAPPER_NO_AUDIO
@@ -13,9 +14,12 @@
 #include <QUrl>
 #endif
 
+#include <QDir>
+#include <QFileInfo>
+#include <QTemporaryFile>
 #include <QTimer>
 
-MusicManager::MusicManager(const MediaLibrary &library, QObject *const parent)
+MusicManager::MusicManager(MediaLibrary &library, QObject *const parent)
     : QObject(parent)
     , m_library(library)
 {
@@ -108,60 +112,114 @@ MusicManager::~MusicManager()
 
 void MusicManager::playMusic(const QString &musicFile)
 {
-#ifndef MMAPPER_NO_AUDIO
     if (musicFile.isEmpty()) {
         stopMusic();
         return;
     }
 
-    if (musicFile == m_channels[m_activeChannel].file) {
-        startFade(false);
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        m_library.fetchAsync(musicFile, [this, musicFile](const QByteArray &data) {
+            playFromData(data, musicFile);
+        });
+    } else {
+#ifndef MMAPPER_NO_AUDIO
+        const int ch = prepareChannel(musicFile);
+        if (ch < 0) {
+            return;
+        }
+        const QUrl url = musicFile.startsWith(":/") ? QUrl(QStringLiteral("qrc") + musicFile)
+                                                    : QUrl::fromLocalFile(musicFile);
+        activateChannel(ch, musicFile, url);
+#endif
+    }
+}
+
+void MusicManager::playFromData(const QByteArray &data, const QString &musicFile)
+{
+#ifndef MMAPPER_NO_AUDIO
+    if (musicFile.isEmpty() || data.isEmpty()) {
+        stopMusic();
         return;
     }
 
-    int inactiveChannel = (m_activeChannel + 1) % 2;
+    const int ch = prepareChannel(musicFile);
+    if (ch < 0) {
+        return;
+    }
+
+    // Write to a temp file; keep it alive via tempFile unique_ptr until this channel is reused
+    auto &channel = m_channels[ch];
+    channel.tempFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/mmapper_XXXXXX."
+                                                        + QFileInfo(musicFile).suffix());
+    if (!channel.tempFile->open()) {
+        qWarning() << "MusicManager: failed to create temp file for" << musicFile;
+        return;
+    }
+    const qint64 bytesWritten = channel.tempFile->write(data);
+    if (bytesWritten != static_cast<qint64>(data.size())) {
+        qWarning() << "MusicManager: failed to write temp file for" << musicFile << "- expected"
+                   << data.size() << "bytes, wrote" << bytesWritten;
+        channel.tempFile.reset();
+        return;
+    }
+    channel.tempFile->close();
+
+    activateChannel(ch, musicFile, QUrl::fromLocalFile(channel.tempFile->fileName()));
+#else
+    std::ignore = data;
+    std::ignore = musicFile;
+#endif
+}
+
+#ifndef MMAPPER_NO_AUDIO
+int MusicManager::prepareChannel(const QString &musicFile)
+{
+    if (musicFile == m_channels[m_activeChannel].file) {
+        startFade(false);
+        return -1;
+    }
+
+    const int inactiveChannel = (m_activeChannel + 1) % 2;
     if (musicFile == m_channels[inactiveChannel].file) {
         m_activeChannel = inactiveChannel;
         startFade(false);
-        return;
+        return -1;
     }
 
-    // New file: start crossfade
+    // Save position of the current track before crossfading away from it
     if (!m_channels[m_activeChannel].file.isEmpty()
         && m_channels[m_activeChannel].player->playbackState() == QMediaPlayer::PlayingState) {
         m_cachedPositions.insert(m_channels[m_activeChannel].file,
                                  new qint64(m_channels[m_activeChannel].player->position()));
     }
 
-    m_activeChannel = inactiveChannel;
-    auto &newActive = m_channels[m_activeChannel];
-    newActive.file = musicFile;
-    newActive.fadeVolume = 0.0f;
+    return inactiveChannel;
+}
 
-    if (qint64 *pos = m_cachedPositions.object(newActive.file)) {
-        newActive.pendingPosition = *pos;
+void MusicManager::activateChannel(const int channelIndex,
+                                   const QString &musicFile,
+                                   const QUrl &source)
+{
+    m_activeChannel = channelIndex;
+    auto &ch = m_channels[m_activeChannel];
+    ch.file = musicFile;
+    ch.fadeVolume = 0.0f;
+    if (qint64 *pos = m_cachedPositions.object(musicFile)) {
+        ch.pendingPosition = *pos;
     } else {
-        newActive.pendingPosition = -1;
+        ch.pendingPosition = -1;
     }
+    ch.player->setSource(source);
 
-    if (newActive.file.startsWith(":")) {
-        newActive.player->setSource(QUrl("qrc" + newActive.file));
-    } else {
-        newActive.player->setSource(QUrl::fromLocalFile(newActive.file));
-    }
-
-    auto &cfg = getConfig().audio;
-    bool canPlay = cfg.isUnlocked() && cfg.getMusicVolume() > 0;
-    if (canPlay) {
-        newActive.player->play();
+    const auto &cfg = getConfig().audio;
+    if (cfg.isUnlocked() && cfg.getMusicVolume() > 0) {
+        ch.player->play();
         applyPendingPosition(m_activeChannel);
     }
 
     startFade(false);
-#else
-    std::ignore = musicFile;
-#endif
 }
+#endif
 
 void MusicManager::stopMusic()
 {

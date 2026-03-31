@@ -6,6 +6,7 @@
 #include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../global/Charset.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../global/RAII.h"
 #include "../map/mmapper2room.h"
 #include "../preferences/ansicombo.h"
@@ -96,14 +97,28 @@ void DescriptionWidget::updateBackground()
             return cachedImage;
         }
 
-        std::unique_ptr<QImage> temp = std::make_unique<QImage>();
-        if (!temp->load(imagePath) || temp->isNull()) {
-            qWarning() << "Failed to load image:" << imagePath;
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+            m_library.fetchAsync(imagePath, [this, imagePath](const QByteArray &data) {
+                QImage img;
+                if (img.loadFromData(data)) {
+                    if (!img.isNull()) {
+                        m_imageCache.insert(imagePath, new QImage(img));
+                    }
+                    if (imagePath == m_fileName) {
+                        updateBackground();
+                    }
+                }
+            });
             return nullptr;
+        } else {
+            std::unique_ptr<QImage> temp = std::make_unique<QImage>();
+            if (!temp->load(imagePath) || temp->isNull()) {
+                qWarning() << "Failed to load image:" << imagePath;
+                return nullptr;
+            }
+            m_imageCache.insert(imagePath, temp.release());
+            return m_imageCache.object(imagePath);
         }
-
-        m_imageCache.insert(imagePath, temp.release());
-        return m_imageCache.object(imagePath);
     };
 
     QImage *const baseImage = loadAndCacheImage(m_fileName);

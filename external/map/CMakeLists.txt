@@ -4,7 +4,6 @@ if(WITH_MAP_UPPER STREQUAL "OFF" OR WITH_MAP_UPPER STREQUAL "FALSE")
     message(STATUS "Map integration disabled.")
 else()
     set(MAP_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/map")
-    set(MAP_QRC_FILE "${MAP_DOWNLOAD_DIR}/map.qrc")
     set(MAP_FILE "${MAP_DOWNLOAD_DIR}/arda")
     set(MAP_TARGET_DEPENDENCY "")
 
@@ -46,16 +45,20 @@ else()
         set(MAP_TARGET_DEPENDENCY map_repo)
     endif()
 
-    # Generate QRC
+    # For all platforms: copy map to the sideloaded assets directory
+    set(MAP_ASSETS_DIR "${CMAKE_BINARY_DIR}/${ASSETS_NAME}/map")
+    set(MAP_ASSETS_FILE "${MAP_ASSETS_DIR}/arda")
+    set(MAP_ASSETS_STAMP "${MAP_DOWNLOAD_DIR}/CMakeLists.txt.assets_stamp")
+    file(MAKE_DIRECTORY "${MAP_ASSETS_DIR}")
     add_custom_command(
-        OUTPUT "${MAP_QRC_FILE}"
-        COMMAND ${CMAKE_COMMAND} -DINPUT_DIR=${MAP_DOWNLOAD_DIR} -DOUTPUT_FILE=${MAP_QRC_FILE} -P "${CMAKE_SOURCE_DIR}/cmake/GenerateQRC.cmake"
+        OUTPUT "${MAP_ASSETS_STAMP}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MAP_FILE}" "${MAP_ASSETS_FILE}"
+        COMMAND ${CMAKE_COMMAND} -E touch "${MAP_ASSETS_STAMP}"
         DEPENDS "${MAP_FILE}"
-        COMMENT "Generating map.qrc"
-        WORKING_DIRECTORY "${MAP_DOWNLOAD_DIR}"
+        COMMENT "Copying map to ${ASSETS_NAME} directory"
         VERBATIM
     )
-    add_custom_target(map_qrc ALL DEPENDS "${MAP_QRC_FILE}")
-    add_dependencies(map_qrc ${MAP_TARGET_DEPENDENCY})
-    message(STATUS "Map QRC file will be included: ${MAP_QRC_FILE}")
+    add_custom_target(map_assets ALL DEPENDS "${MAP_ASSETS_STAMP}")
+    add_dependencies(map_assets ${MAP_TARGET_DEPENDENCY})
+    message(STATUS "Map will be sideloaded: ${MAP_ASSETS_FILE}")
 endif()

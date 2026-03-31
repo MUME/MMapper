@@ -25,21 +25,21 @@ AudioManager::AudioManager(MediaLibrary &library, GameObserver &observer, QObjec
     m_music = new MusicManager(m_library, this);
     m_sfx = new SfxManager(m_library, this);
 
-    m_observer.sig2_gainedLevel.connect(m_lifetime, [this]() { m_sfx->playSound("level-up"); });
+    m_observer.sig2_gainedLevel.connect(m_lifetime, [this]() { playSound("level-up"); });
 
     setConfig().audio.registerChangeCallback(m_lifetime, [this]() {
+        updateOutputDevices();
+        m_sfx->updateVolume();
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
             if (getConfig().audio.isUnlocked()) {
                 static std::once_flag flag;
                 std::call_once(flag, [this]() {
                     // Browser sandbox needs a user interaction to unlock audio
                     playSound("level-up");
-                    m_music->updateVolumes();
                 });
             }
         }
-        updateVolumes();
-        updateOutputDevices();
+        m_music->updateVolumes();
     });
 
 #ifndef MMAPPER_NO_AUDIO
@@ -67,8 +67,7 @@ void AudioManager::onAreaChanged(const RoomArea &area)
     QString name = area.toQString().toLower().remove(regex).replace(' ', '-');
     mmqt::toAsciiInPlace(name);
 
-    QString musicFile = m_library.findAudio("areas", name);
-    m_music->playMusic(musicFile);
+    m_music->playMusic(m_library.findAudio("areas", name));
 }
 
 void AudioManager::playSound(const QString &soundName)

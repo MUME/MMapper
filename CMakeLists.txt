@@ -37,6 +37,7 @@ if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
 set(PACKAGE_TYPE "Source" CACHE STRING "Set the package type for update dialog")
+set(ASSETS_NAME "assets" CACHE STRING "Name of the sideloaded assets directory")
 
 set(VALID_PACKAGE_TYPES Source Deb Dmg Nsis AppImage AppX Flatpak Snap Wasm)
 set(PACKAGE_TYPE_NORMALIZED "")

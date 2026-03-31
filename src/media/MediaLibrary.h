@@ -4,9 +4,14 @@
 
 #include "../global/macros.h"
 
+#include <functional>
+
 #include <QFileSystemWatcher>
+#include <QImage>
 #include <QMap>
+#include <QNetworkAccessManager>
 #include <QObject>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
@@ -22,15 +27,23 @@ private:
     QStringList m_audioExtensions;
     QStringList m_imageExtensions;
 
+    QNetworkAccessManager *m_network = nullptr;
+    QSet<QString> m_pendingFetches;
+
 public:
     explicit MediaLibrary(QObject *parent = nullptr);
 
     QString findAudio(const QString &subDir, const QString &name) const;
     QString findImage(const QString &subDir, const QString &name) const;
 
+    void fetchAsync(const QString &path, std::function<void(const QByteArray &)> callback);
+
 signals:
     void sig_mediaChanged();
 
 private:
     void scanDirectories();
+    void scanPath(const QString &path, const QString &rootPath);
+    void loadManifest();
+    void processManifest(const QByteArray &data, const QString &dir);
 };

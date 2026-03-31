@@ -4,6 +4,8 @@
 
 #include "../global/macros.h"
 
+#include <memory>
+
 #include <QCache>
 #include <QObject>
 #include <QString>
@@ -12,23 +14,26 @@
 #include <QAudioDevice>
 #endif
 
-class QMediaPlayer;
-class QAudioOutput;
-class QTimer;
 class MediaLibrary;
+class QAudioOutput;
+class QTemporaryFile;
+class QTimer;
+class QMediaPlayer;
+class QUrl;
 
 class NODISCARD_QOBJECT MusicManager final : public QObject
 {
     Q_OBJECT
 
 private:
-    const MediaLibrary &m_library;
+    MediaLibrary &m_library;
 
 #ifndef MMAPPER_NO_AUDIO
     struct MusicChannel
     {
         QMediaPlayer *player = nullptr;
         QAudioOutput *audioOutput = nullptr;
+        std::unique_ptr<QTemporaryFile> tempFile;
         QString file;
         qint64 pendingPosition = -1;
         float fadeVolume = 0.0f;
@@ -47,11 +52,16 @@ private:
 #endif
 
 public:
-    explicit MusicManager(const MediaLibrary &library, QObject *parent = nullptr);
+    explicit MusicManager(MediaLibrary &library, QObject *parent = nullptr);
     ~MusicManager() override;
 
     void playMusic(const QString &musicFile);
     void stopMusic();
+
+private:
+    void playFromData(const QByteArray &data, const QString &musicFile);
+
+public:
     void updateVolumes();
 #ifndef MMAPPER_NO_AUDIO
     void updateOutputDevice(const QAudioDevice &device);
@@ -62,6 +72,8 @@ public slots:
 
 private:
 #ifndef MMAPPER_NO_AUDIO
+    NODISCARD int prepareChannel(const QString &musicFile);
+    void activateChannel(int channelIndex, const QString &musicFile, const QUrl &source);
     void applyPendingPosition(int channelIndex);
     void updateChannelVolume(int channelIndex);
     void startFade(bool toSilence);

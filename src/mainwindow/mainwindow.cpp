@@ -2154,8 +2154,6 @@ void MainWindow::onSuccessfulLoad(const MapLoadData &mapLoadData)
 
     setCurrentFile(mapData.getFileName());
     showStatusShort(tr("File loaded"));
-
-    global::sendToUser("Map loaded.\n");
 }
 
 void MainWindow::onSuccessfulMerge(const Map &map)

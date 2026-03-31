@@ -5,6 +5,8 @@
 #include "Filenames.h"
 
 #include "../configuration/configuration.h"
+#include "../global/ConfigConsts-Computed.h"
+#include "../global/ConfigConsts.h"
 #include "../global/Consts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
@@ -13,7 +15,9 @@
 #include <memory>
 #include <mutex>
 
+#include <QtCore/QCoreApplication>
 #include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QFile>
 
 // NOTE: This isn't used by the parser (currently only used for filenames).
@@ -76,6 +80,64 @@ NODISCARD static const char *getFilenameSuffix(const E x)
     return getParserCommandName(x).getCommand();
 }
 
+/**
+ * @brief Returns the base path to the sideloaded assets directory.
+ *
+ * This function returns an absolute path on desktop platforms and a relative path
+ * on WebAssembly (as assets are served from the web root).
+ *
+ * @return The assets path with a trailing slash.
+ */
+QString getAssetsPath()
+{
+    static const QString assetsDirName = QStringLiteral("assets");
+    ;
+
+    // Note: CURRENT_PLATFORM is derived from Qt's Q_OS_* macros in ConfigConsts-Computed.h.
+    // We use if constexpr with CURRENT_PLATFORM here for cleaner cross-platform logic.
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        return assetsDirName + "/";
+    }
+
+    static const QString assetsPath = []() {
+        const QDir appDir(QCoreApplication::applicationDirPath());
+
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+            // Check for assets in the bundle's Resources directory
+            QDir bundleAssets(appDir);
+            bundleAssets.cdUp();
+            bundleAssets.cd("Resources");
+            bundleAssets.cd(assetsDirName);
+            if (bundleAssets.exists()) {
+                return bundleAssets.absolutePath() + "/";
+            }
+        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+            if (appDir.exists(assetsDirName)) {
+                return appDir.absoluteFilePath(assetsDirName) + "/";
+            }
+        } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+            // Check for assets in share/mmapper/assets (standard Linux install)
+            QDir linuxAssets(appDir);
+            linuxAssets.cdUp();
+            linuxAssets.cd("share/mmapper");
+            linuxAssets.cd(assetsDirName);
+            if (linuxAssets.exists()) {
+                return linuxAssets.absolutePath() + "/";
+            }
+        }
+
+        // Fallback: check next to the binary
+        if (appDir.exists(assetsDirName)) {
+            return appDir.absoluteFilePath(assetsDirName) + "/";
+        }
+
+        // Final fallback: return an absolute path even if it doesn't exist
+        return appDir.absoluteFilePath(assetsDirName) + "/";
+    }();
+
+    return assetsPath;
+}
+
 QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
     const auto filename = QString("/%1/%2").arg(dir, name);
@@ -84,6 +146,12 @@ QString getResourceFilenameRaw(const QString &dir, const QString &name)
     auto custom = getConfig().canvas.resourcesDirectory + filename;
     if (QFile{custom}.exists()) {
         return custom;
+    }
+
+    // Check the system assets directory
+    auto assetPath = getAssetsPath() + dir + "/" + name;
+    if (QFile{assetPath}.exists()) {
+        return assetPath;
     }
 
     // Fallback to the qrc resource

@@ -14,6 +14,7 @@
 
 class MediaLibrary;
 class QAudioOutput;
+class QUrl;
 
 class NODISCARD_QOBJECT SfxManager final : public QObject
 {
@@ -23,14 +24,20 @@ private:
 #ifndef MMAPPER_NO_AUDIO
     QAudioOutput *m_output;
 #endif
-    const MediaLibrary &m_library;
+    MediaLibrary &m_library;
 
 public:
-    explicit SfxManager(const MediaLibrary &library, QObject *parent = nullptr);
+    explicit SfxManager(MediaLibrary &library, QObject *parent = nullptr);
 
     void playSound(const QString &soundName);
+
     void updateVolume();
+
 #ifndef MMAPPER_NO_AUDIO
     void updateOutputDevice(const QAudioDevice &device);
 #endif
+
+private:
+    void playFromData(const QByteArray &data, const QString &soundName);
+    void startEffect(const QUrl &url, const QString &tmpToDelete = {});
 };

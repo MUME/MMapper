@@ -9,6 +9,7 @@
 
 #include <QString>
 
+NODISCARD extern QString getAssetsPath();
 NODISCARD extern QString getResourceFilenameRaw(const QString &dir, const QString &name);
 NODISCARD extern QString getPixmapFilenameRaw(const QString &name);
 NODISCARD extern QString getPixmapFilename(RoomTerrainEnum);
