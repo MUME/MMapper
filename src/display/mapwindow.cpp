@@ -6,14 +6,14 @@
 
 #include "mapwindow.h"
 
+#include "../configuration/configuration.h"
 #include "../display/Filenames.h"
 #include "../global/MakeQPointer.h"
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
 #include "../global/utils.h"
+#include "AudioHintWidget.h"
 #include "mapcanvas.h"
-
-#include <memory>
 
 #include <QGridLayout>
 #include <QLabel>
@@ -33,6 +33,8 @@ MapWindow::MapWindow(MapData &mapData,
     m_gridLayout = mmqt::makeQPointer<QGridLayout>(this);
     m_gridLayout->setSpacing(0);
     m_gridLayout->setContentsMargins(0, 0, 0, 0);
+    m_gridLayout->setRowStretch(0, 1);
+    m_gridLayout->setColumnStretch(0, 1);
 
     m_verticalScrollBar = mmqt::makeQPointer<QScrollBar>(this);
     m_verticalScrollBar->setOrientation(Qt::Vertical);
@@ -59,6 +61,10 @@ MapWindow::MapWindow(MapData &mapData,
     assert(m_canvasContainer->parent() == this);
 
     m_gridLayout->addWidget(m_canvasContainer, 0, 0, 1, 1);
+
+    m_audioHint = new AudioHintWidget(this);
+    m_gridLayout->addWidget(m_audioHint, 2, 0, 1, 2);
+
     setMinimumSize(m_canvas->minimumSize());
 
     // Splash setup
