@@ -94,9 +94,8 @@ jobs:
     - if: runner.os == 'macOS'
       name: Install Packages for Mac
       run: |
-        brew install lcov
+        brew install
         echo "MMAPPER_CMAKE_EXTRA=-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR -DUSE_CODE_COVERAGE=true -DPACKAGE_TYPE=Dmg" >> $GITHUB_ENV
-        echo "COVERAGE=true" >> $GITHUB_ENV
 
       #
       # Install Packages (Windows)
