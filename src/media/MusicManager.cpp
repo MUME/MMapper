@@ -14,6 +14,8 @@
 #include <QUrl>
 #endif
 
+#include <memory>
+
 #include <QDir>
 #include <QFileInfo>
 #include <QTemporaryFile>
@@ -134,8 +136,13 @@ void MusicManager::playMusic(const QString &musicFile)
             return;
         }
         m_library.fetchAsync(musicFile, [this, musicFile, playMusic2](const QByteArray &data) {
-            QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/mmapper_XXXXXX."
-                                                          + QFileInfo(musicFile).suffix());
+            if (data.isEmpty()) {
+                qWarning() << "MusicManager: received empty data for" << musicFile
+                           << "- skipping playback";
+                return;
+            }
+            auto tempFile = std::make_unique<QTemporaryFile>(QDir::tempPath() + "/mmapper_XXXXXX."
+                                                             + QFileInfo(musicFile).suffix());
             if (!tempFile->open()) {
                 qWarning() << "MusicManager: failed to create temp file for" << musicFile;
                 return;
@@ -144,10 +151,12 @@ void MusicManager::playMusic(const QString &musicFile)
             if (bytesWritten != static_cast<qint64>(data.size())) {
                 qWarning() << "MusicManager: failed to write temp file for" << musicFile
                            << "- expected" << data.size() << "bytes, wrote" << bytesWritten;
+                return;
             }
             tempFile->close();
-            m_wasmFiles.insert(musicFile, tempFile);
-            playMusic2(QUrl::fromLocalFile(tempFile->fileName()));
+            const QString fileName = tempFile->fileName();
+            m_wasmFiles.insert(musicFile, tempFile.release());
+            playMusic2(QUrl::fromLocalFile(fileName));
         });
         return;
     }
