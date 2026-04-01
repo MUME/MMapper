@@ -4,8 +4,6 @@
 
 #include "../global/macros.h"
 
-#include <memory>
-
 #include <QCache>
 #include <QObject>
 #include <QString>
@@ -33,7 +31,6 @@ private:
     {
         QMediaPlayer *player = nullptr;
         QAudioOutput *audioOutput = nullptr;
-        std::unique_ptr<QTemporaryFile> tempFile;
         QString file;
         qint64 pendingPosition = -1;
         float fadeVolume = 0.0f;
@@ -42,6 +39,7 @@ private:
     MusicChannel m_channels[2];
     int m_activeChannel = 0;
     QCache<QString, qint64> m_cachedPositions;
+    QCache<QString, QTemporaryFile> m_wasmFiles;
 
     QTimer *m_fadeTimer = nullptr;
     float m_fadeStep = 0.05f;
@@ -57,9 +55,6 @@ public:
 
     void playMusic(const QString &musicFile);
     void stopMusic();
-
-private:
-    void playFromData(const QByteArray &data, const QString &musicFile);
 
 public:
     void updateVolumes();
