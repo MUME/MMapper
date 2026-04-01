@@ -15,22 +15,22 @@
 AudioHintWidget::AudioHintWidget(QWidget *const parent)
     : QWidget(parent)
 {
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(10, 0, 10, 0);
+    layout->setContentsMargins(10, 4, 10, 4);
     layout->setSpacing(8);
 
     m_iconLabel = new QLabel(this);
     m_iconLabel->setPixmap(QIcon(":/icons/audiocfg.png").pixmap(16, 16));
     layout->addWidget(m_iconLabel);
 
-    m_textLabel = new QLabel(tr("Play with music and sound effects?"), this);
+    m_textLabel = new QLabel(tr("Enable game audio?"), this);
     layout->addWidget(m_textLabel);
 
     m_yesButton = new QPushButton(tr("Yes"), this);
-    //m_yesButton->setFixedWidth(60);
 
     m_noButton = new QPushButton(tr("No"), this);
-    //m_noButton->setFixedWidth(60);
 
     layout->addWidget(m_yesButton);
     layout->addWidget(m_noButton);
@@ -48,6 +48,15 @@ AudioHintWidget::AudioHintWidget(QWidget *const parent)
         settings.setSoundVolume(0);
         hide();
     });
+
+    auto updateAudioHint = [this]() {
+        auto &cfg = getConfig().audio;
+        setVisible(!NO_AUDIO && !cfg.isUnlocked()
+                   && (cfg.getMusicVolume() > 0 || cfg.getSoundVolume() > 0));
+    };
+
+    updateAudioHint();
+    setConfig().audio.registerChangeCallback(m_lifetime, updateAudioHint);
 }
 
 AudioHintWidget::~AudioHintWidget() = default;

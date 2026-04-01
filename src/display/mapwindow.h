@@ -18,6 +18,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class AudioHintWidget;
 class GameObserver;
 class MapCanvas;
 class MapData;
@@ -42,6 +43,7 @@ protected:
     QPointer<MapCanvas> m_canvas;
     QPointer<QWidget> m_canvasContainer;
     QPointer<QLabel> m_splashLabel;
+    QPointer<AudioHintWidget> m_audioHint;
     QPointer<QTimer> m_scrollTimer;
     int m_verticalScrollStep = 0;
     int m_horizontalScrollStep = 0;

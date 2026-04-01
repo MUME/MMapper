@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 The MMapper Authors
 
+#include "../global/Signal2.h"
 #include "../global/macros.h"
 
 #include <QObject>
@@ -23,4 +24,5 @@ private:
     QLabel *m_textLabel;
     QPushButton *m_yesButton;
     QPushButton *m_noButton;
+    Signal2Lifetime m_lifetime;
 };

@@ -6,7 +6,6 @@
 
 #include "../configuration/configuration.h"
 #include "../global/ConfigConsts-Computed.h"
-#include "../global/ConfigConsts.h"
 #include "../global/Consts.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
@@ -91,10 +90,7 @@ NODISCARD static const char *getFilenameSuffix(const E x)
 QString getAssetsPath()
 {
     static const QString assetsDirName = QStringLiteral("assets");
-    ;
 
-    // Note: CURRENT_PLATFORM is derived from Qt's Q_OS_* macros in ConfigConsts-Computed.h.
-    // We use if constexpr with CURRENT_PLATFORM here for cleaner cross-platform logic.
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         return assetsDirName + "/";
     }
