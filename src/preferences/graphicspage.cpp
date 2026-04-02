@@ -85,17 +85,17 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             this,
             &GraphicsPage::slot_drawUpperLayersTexturedStateChanged);
 
-    connect(ui->weatherAtmosphereSlider, &QSlider::valueChanged, this, [this](int value) {
+    connect(ui->weatherAtmosphereSlider, &QSlider::valueChanged, this, [this](const int value) {
         setConfig().canvas.weatherAtmosphereIntensity.set(value);
         graphicsSettingsChanged();
     });
 
-    connect(ui->weatherPrecipitationSlider, &QSlider::valueChanged, this, [this](int value) {
+    connect(ui->weatherPrecipitationSlider, &QSlider::valueChanged, this, [this](const int value) {
         setConfig().canvas.weatherPrecipitationIntensity.set(value);
         graphicsSettingsChanged();
     });
 
-    connect(ui->weatherTimeOfDaySlider, &QSlider::valueChanged, this, [this](int value) {
+    connect(ui->weatherTimeOfDaySlider, &QSlider::valueChanged, this, [this](const int value) {
         setConfig().canvas.weatherTimeOfDayIntensity.set(value);
         graphicsSettingsChanged();
     });

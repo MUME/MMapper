@@ -55,10 +55,10 @@ public:
     void observeGainedLevel() { sig2_gainedLevel.invoke(); }
 
 public:
-    MumeTimeEnum getTimeOfDay() const { return m_timeOfDay; }
-    MumeMoonPhaseEnum getMoonPhase() const { return m_moonPhase; }
-    MumeMoonVisibilityEnum getMoonVisibility() const { return m_moonVisibility; }
-    MumeSeasonEnum getSeason() const { return m_season; }
-    PromptWeatherEnum getWeather() const { return m_weather; }
-    PromptFogEnum getFog() const { return m_fog; }
+    NODISCARD MumeTimeEnum getTimeOfDay() const { return m_timeOfDay; }
+    NODISCARD MumeMoonPhaseEnum getMoonPhase() const { return m_moonPhase; }
+    NODISCARD MumeMoonVisibilityEnum getMoonVisibility() const { return m_moonVisibility; }
+    NODISCARD MumeSeasonEnum getSeason() const { return m_season; }
+    NODISCARD PromptWeatherEnum getWeather() const { return m_weather; }
+    NODISCARD PromptFogEnum getFog() const { return m_fog; }
 };

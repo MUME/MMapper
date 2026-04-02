@@ -172,12 +172,10 @@ NODISCARD std::optional<GLContextCheckResult> probeCompat(
                                                                version,
                                                                QSurfaceFormat::CompatibilityProfile);
         if (contextCheckResult.valid) {
-            if (contextCheckResult.valid) {
-                compatResult = contextCheckResult;
-                MMLOG_DEBUG() << "[GL Probe] Found highest supported Compat version: "
-                              << compatResult->version;
-                break;
-            }
+            compatResult = contextCheckResult;
+            MMLOG_DEBUG() << "[GL Probe] Found highest supported Compat version: "
+                          << compatResult->version;
+            break;
         }
     }
     return compatResult;
