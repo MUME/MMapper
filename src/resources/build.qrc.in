@@ -2,7 +2,7 @@
     <qresource>
         <file alias="AUTHORS.txt">${CMAKE_SOURCE_DIR}/AUTHORS.txt</file>
         <file alias="LICENSE.GPL2">${CMAKE_SOURCE_DIR}/COPYING.txt</file>
-        <file alias="icons/m.png">${CMAKE_SOURCE_DIR}/src/resources/icons/m-${MMAPPER_BRAND_SUFFIX}.png</file>
-        <file alias="pixmaps/splash.png">${CMAKE_SOURCE_DIR}/src/resources/pixmaps/splash-${MMAPPER_BRAND_SUFFIX}.png</file>
+        <file alias="icons/mmapper-lo.svg">${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-lo-${MMAPPER_BRAND_SUFFIX}.svg</file>
+        <file alias="icons/mmapper-hi.svg">${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg</file>
     </qresource>
 </RCC>

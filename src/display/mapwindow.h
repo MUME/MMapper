@@ -42,7 +42,7 @@ protected:
     QPointer<QScrollBar> m_verticalScrollBar;
     QPointer<MapCanvas> m_canvas;
     QPointer<QWidget> m_canvasContainer;
-    QPointer<QLabel> m_splashLabel;
+    QPointer<QWidget> m_splashWidget;
     QPointer<AudioHintWidget> m_audioHint;
     QPointer<QTimer> m_scrollTimer;
     int m_verticalScrollStep = 0;
