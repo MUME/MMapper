@@ -117,7 +117,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/MUME/audio.git",
-                    "commit": "7d9c33fcbde7f5bf2906e4460f1a0e1aed8b5ad9"
+                    "tag": "v26.04.0"
                 }
             ],
             "build-commands": [
@@ -132,7 +132,7 @@
                 {
                     "type": "git",
                     "url": "https://github.com/MUME/images.git",
-                    "commit": "235b9d6c4d66304f52af16bae982b3e0ae7f4738"
+                    "tag": "v26.04.0"
                 }
             ],
             "build-commands": [

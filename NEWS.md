@@ -1,3 +1,48 @@
+## MMapper 26.04.0 (April 2, 2026)
+
+### New Features:
+* **Play in your Browser:**
+    * **WebAssembly Support:** You can now run MMapper directly in your web browser! This includes a new [Demo tab](https://mume.github.io/MMapper/demo/) on the website for instant access without an installation.
+    * **Instant Asset Streaming:** Maps, audio, and images now load asynchronously in the background, ensuring the web client stays responsive while fetching game data.
+    * **Broad Browser Compatibility:** Significant engine refactoring ensures a smooth experience across Firefox, Chrome, and Safari by utilizing WebGL2 and GLES3.
+* **Immersive Weather System:**
+    * **Dynamic Atmosphere:** A new high-performance weather engine adds **rain and snow** particle simulations, **cloud and fog** atmospheric overlays, and **time-of-day transitions** that sync directly with MUME’s game state.
+    * **Full Control:** New sliders in the Graphics Preferences allow you to tune the intensity of weather effects or **disable them entirely** to suit your performance needs or visual preference.
+* **Enhanced Audio Engine:**
+    * **Custom Soundtrack:** Full audio support features an [original score](https://github.com/MUME/audio) by **Bladorfat**. It utilizes AI for raw orchestral textures, manually remixed and deconstructed into stems to ensure precise thematic alignment and seamless looping.
+    * **Audio Controls:** You can now choose the volume and preferred audio output device directly within the audio preferences menu.
+* **Smoother, Faster Gameplay:**
+    * **Major Graphics Optimization:** By using "instanced rendering," the map now uses up to **83% less video memory (VRAM)** for rooms, making the client much lighter on your hardware.
+    * **Modern Anti-Aliasing:** We’ve replaced legacy smoothing with a dual-buffer **Multi-Sample Anti-Aliasing (MSAA)** system. This provides crystal-clear room edges and sharper text, while ensuring the map redraws instantly and without flickering as you resize the window.
+    * **Consistent Frame Rates:** A new Frame Manager ensures perfectly paced animations and a smooth visual experience, including a new **Maximum FPS** setting for power users.
+    * **Snappier Map Loading:** Texture processing is now significantly faster, cutting roughly 140ms off map refresh times.
+* **Better Controls & Visuals:**
+    * **Advanced Hotkeys:** Fully configurable hotkey support is here for the built-in client, along with a new `_hotkey` command for advanced automation. (Gamor)
+    * **Modern Navigation:** Navigate the map more naturally with **Alt+Click dragging** and improved, smooth zooming logic.
+    * **Dark & Light Modes:** You can now manually override your system theme to select a dedicated **Dark or Light mode** for the client.
+    * **Group Visibility:** Your allies' names are now drawn in the rooms they occupy, making it easier to track your group across the map.
+    * **Less Pixelation:*** Migrated branding assets to SVG with high-DPI support.
+
+### Bug Fixes:
+* **Platform & Visuals:**
+    * Fixed High-DPI scaling issues for Linux users on **Wayland**.
+    * Restored missing window buttons and fixed the Windows installer to ensure all necessary system files (Visual C++ Redistributables) are included.
+* **Logic & Stability:**
+    * Resolved several text encoding issues to ensure special characters display correctly across all platforms.
+    * Fixed a bug where fog and weather data from the game were sometimes parsed incorrectly.
+    * Improved the "send" logic to ensure newlines are handled correctly when communicating with the game.
+    * Fixed versioning errors that affected contributors building from their own forks.
+    * Improved Windows Firefox support by transitioning `MapCanvas` to `QOpenGLWindow`. (Gamor)
+
+### Changes:
+* **System Requirements:** The minimum supported **macOS version is now Ventura**. The client has been updated to **Qt 6.4** for improved stability and security.
+* **Better Performance for Devs:** Integrated **ccache** and **sccache** into our build pipeline, leading to much faster development cycles and updates.
+* **Internal Cleanup:**
+    * Modding settings have been consolidated into the General Preferences page.
+    * Refactored the file system to support the unique requirements of web browsers.
+    * Updated core technical libraries (`glm`, `qtkeychain`) to their latest versions for better overall stability.
+
+---
 ## MMapper 25.07.0 (July 11, 2025)
 
 ### New Features:

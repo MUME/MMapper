@@ -30,7 +30,7 @@ else()
 
     # Download audio from Git repository
     else()
-        set(AUDIO_TAG "main") # Git tag for the audio resources.
+        set(AUDIO_TAG "v26.04.0") # Git tag for the audio resources.
 
         include(ExternalProject)
         ExternalProject_Add(audio_repo
