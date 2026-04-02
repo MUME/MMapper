@@ -172,8 +172,11 @@ int MusicManager::prepareChannel(const QString &musicFile)
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
             // Browser does not let music loop on Wasm, so we have to restart it manually with user input
             if (m_channels[m_activeChannel].player->playbackState() != QMediaPlayer::PlayingState) {
-                m_channels[m_activeChannel].player->setPosition(0);
-                m_channels[m_activeChannel].player->play();
+                const auto &cfg = getConfig().audio;
+                if (cfg.isUnlocked() && cfg.getMusicVolume() > 0) {
+                    m_channels[m_activeChannel].player->setPosition(0);
+                    m_channels[m_activeChannel].player->play();
+                }
                 return -1;
             }
         }
