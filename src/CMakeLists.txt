@@ -757,6 +757,8 @@ target_link_libraries(mmapper PUBLIC
     Qt6::Network
     Qt6::OpenGL
     Qt6::OpenGLWidgets
+    Qt6::Svg
+    Qt6::SvgWidgets
     # note: link order matters on some platforms. include ${mm_libs} twice if you have a link failure.
     ${mm_libs}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -846,8 +848,8 @@ if(EMSCRIPTEN)
     add_custom_command(TARGET mmapper POST_BUILD
         COMMAND ${CMAKE_COMMAND}
             "-DHTML_FILE=$<TARGET_FILE_DIR:mmapper>/mmapper.html"
-            "-DFAVICON_SRC=${CMAKE_SOURCE_DIR}/src/resources/win32/m-${MMAPPER_BRAND_SUFFIX}.ico"
-            "-DLOGO_SRC=${CMAKE_SOURCE_DIR}/src/resources/pixmaps/splash-${MMAPPER_BRAND_SUFFIX}.png"
+            "-DLOGO_SRC=${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg"
+            "-DFAVICON_SRC=${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-lo-${MMAPPER_BRAND_SUFFIX}.svg"
             -P "${CMAKE_SOURCE_DIR}/cmake/WasmHtml.cmake"
         COMMENT "Patching Wasm HTML"
         VERBATIM
@@ -969,8 +971,8 @@ if(EMSCRIPTEN)
             "$<TARGET_FILE_DIR:mmapper>/mmapper.js"
             "$<TARGET_FILE_DIR:mmapper>/mmapper.wasm"
             "$<TARGET_FILE_DIR:mmapper>/qtloader.js"
-            "$<TARGET_FILE_DIR:mmapper>/favicon.ico"
-            "$<TARGET_FILE_DIR:mmapper>/logo.png"
+            "$<TARGET_FILE_DIR:mmapper>/logo.svg"
+            "$<TARGET_FILE_DIR:mmapper>/favicon.svg"
             "$<TARGET_FILE_DIR:mmapper>/coi-serviceworker.js"
         DESTINATION "."
         COMPONENT applications
@@ -1013,20 +1015,11 @@ if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     )
 
     # Install icons
-    foreach(RES 16 32 48 96 128 256)
-        install(
-            FILES resources/icons/hi${RES}-app-mmapper-${MMAPPER_BRAND_SUFFIX}.png
-            DESTINATION share/icons/hicolor/${RES}x${RES}/apps/
-            COMPONENT desktopintegration
-            RENAME org.mume.MMapper.png
-        )
-    endforeach(RES)
-
     install(
-        FILES resources/icons/m-${MMAPPER_BRAND_SUFFIX}.png
-        DESTINATION share/icons/hicolor/512x512/apps/
+        FILES resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg
+        DESTINATION share/icons/hicolor/scalable/apps/
         COMPONENT desktopintegration
-        RENAME org.mume.MMapper.png
+        RENAME org.mume.MMapper.svg
     )
 
     # Assets
@@ -1063,6 +1056,7 @@ if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     if(WITH_AUDIO)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6multimedia6 (>= 6.4.0)")
     endif()
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libqt6svg6 (>= 6.4.0), libqt6svgwidgets6 (>= 6.4.0)")
 endif(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
 
 # Windows Install Settings
@@ -1155,7 +1149,6 @@ if(WIN32)
         set(CPACK_NSIS_HELP_LINK "http://github.com/mume/mmapper")
         set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
         set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
-        set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m-${MMAPPER_BRAND_SUFFIX}.png")
         set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
         set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
         set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
@@ -1210,6 +1203,7 @@ if(WIN32)
             DESTINATION .
             COMPONENT applications
         )
+
         install(
             FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi150-app-mmapper-release.png"
             DESTINATION "Assets"

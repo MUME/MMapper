@@ -44,7 +44,7 @@ jobs:
         sudo apt update -qq
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
-          qt6-multimedia-dev libqt6multimedia6 \
+          qt6-multimedia-dev libqt6multimedia6 qt6-svg-dev \
           libgl1-mesa-dev qtkeychain-qt6-dev build-essential cmake ninja-build mold git \
           zlib1g-dev libssl-dev
         echo "QMAKESPEC=linux-g++" >> $GITHUB_ENV

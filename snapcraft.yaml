@@ -1,6 +1,6 @@
 name: mmapper
 adopt-info: mmapper
-icon: src/resources/icons/m-release.png
+icon: src/resources/icons/mmapper-hi-release.svg
 summary: MUME Mapper
 license: GPL-2.0-or-later
 description: |
@@ -94,7 +94,7 @@ parts:
       craftctl set version=$(git describe --tags --always --long --exclude beta | sed 's/^v//')
     override-build: |
       craftctl default
-      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $CRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
+      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/scalable/apps/org.mume.MMapper.svg|g' $CRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
     prime:
       - -usr/lib/*/cmake/*
       - -usr/include/*

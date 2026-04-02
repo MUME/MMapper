@@ -42,7 +42,7 @@ Install the required packages with:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential zlib1g-dev libssl-dev libglm-dev cmake ninja-build qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev qtkeychain-qt6-dev qt6-multimedia-dev
+sudo apt-get install -y build-essential zlib1g-dev libssl-dev libglm-dev cmake ninja-build qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev qtkeychain-qt6-dev qt6-multimedia-dev libqt6svg6-dev
 ```
 
 After installing dependencies, build as usual:

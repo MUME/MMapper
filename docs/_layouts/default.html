@@ -13,7 +13,7 @@
     <!-- Link Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <link rel="icon" href="{{ site.logo }}">
+    <link rel="icon" href="{{ '/assets/img/favicon.svg' | relative_url }}" type="image/svg+xml">
 
     <script src="{{ '/assets/js/download-highlight.js' | relative_url }}"></script>
 </head>
@@ -22,7 +22,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <header style="display: flex; flex-direction: column; align-items: center;">
                 <div style="display: flex; align-items: center;">
-                    <img src="{{ site.logo }}" alt="MMapper" style="height: 50px; margin-right: 10px;">
+			<img src="{{ '/assets/img/logo.svg' | relative_url }}" alt="MMapper" style="height: 50px; margin-right: 10px;">
                     <h1><a href="{{ '/' | relative_url }}">{{ page.title | default: site.title }}</a></h1>
                 </div>
             </header>

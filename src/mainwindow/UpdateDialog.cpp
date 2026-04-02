@@ -94,7 +94,7 @@ UpdateDialog::UpdateDialog(QWidget *const parent)
     : QDialog(parent)
 {
     setWindowTitle("MMapper Updater");
-    setWindowIcon(QIcon(":/icons/m.png"));
+    setWindowIcon(QIcon(":/icons/mmapper-lo.svg"));
 
     m_text = new QLabel(this);
     m_buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);

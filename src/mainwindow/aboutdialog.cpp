@@ -11,6 +11,7 @@
 #include <QString>
 #include <QtConfig>
 #include <QtGui>
+#include <QtSvgWidgets/QSvgWidget>
 #include <QtWidgets>
 
 namespace {
@@ -47,12 +48,16 @@ NODISCARD QString getBuildInformation()
 AboutDialog::AboutDialog(QWidget *const parent)
     : QDialog(parent)
 {
-    setWindowIcon(QIcon(":/icons/m.png"));
+    setWindowIcon(QIcon(":/icons/mmapper-lo.svg"));
     setupUi(this);
+
+    auto *svgWidget = new QSvgWidget(QStringLiteral(":/icons/mmapper-hi.svg"), this);
+    svgWidget->setFixedSize(320, 320);
+    verticalLayout->insertWidget(0, svgWidget, 0, Qt::AlignCenter);
+
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     /* About tab */
-    pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash.png"));
     const auto about_text = []() -> QString {
         return "<p align=\"center\">"
                "<h3>"

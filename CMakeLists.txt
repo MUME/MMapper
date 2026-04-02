@@ -55,7 +55,7 @@ else()
     add_compile_definitions(MMAPPER_PACKAGE_TYPE="${PACKAGE_TYPE_NORMALIZED}")
 endif()
 
-set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL OpenGLWidgets Test)
+set(MMAPPER_QT_COMPONENTS Core Widgets Network OpenGL OpenGLWidgets Svg SvgWidgets Test)
 if(WITH_WEBSOCKET)
     list(APPEND MMAPPER_QT_COMPONENTS WebSockets)
 endif()

@@ -38,7 +38,7 @@ jobs:
       run: |
         sudo apt install -y \
           qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
-          qt6-multimedia-dev libqt6multimedia6 \
+          qt6-multimedia-dev libqt6multimedia6 qt6-svg-dev \
           libgl1-mesa-dev qt6-wayland qtkeychain-qt6-dev build-essential mold git \
           zlib1g-dev libssl-dev wget zsync fuse file cmake libxcb-cursor-dev
 
@@ -89,7 +89,7 @@ jobs:
         ../linuxdeploy-x86_64.AppImage --appdir appdir --output appimage \
           --executable appdir/usr/bin/mmapper \
           --desktop-file appdir/usr/share/applications/org.mume.MMapper.desktop \
-          --icon-file appdir/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png \
+          --icon-file appdir/usr/share/icons/hicolor/scalable/apps/org.mume.MMapper.svg \
           --library "$LIBSECRET_PATH" \
           --plugin qt
 
