@@ -1149,17 +1149,6 @@ if(WIN32)
         set(CPACK_NSIS_HELP_LINK "http://github.com/mume/mmapper")
         set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
         set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
-
-        # NSIS installer icon in the left panel must be a BMP
-        add_custom_command(
-            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/nsis_icon.bmp"
-            COMMAND powershell.exe -Command "Add-Type -AssemblyName System.Drawing; [System.Drawing.Image]::FromFile(\\\"${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/hi150-app-mmapper-release.png\\\").Save(\\\"${CMAKE_CURRENT_BINARY_DIR}/nsis_icon.bmp\\\", [System.Drawing.Imaging.ImageFormat]::Bmp)"
-            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/hi150-app-mmapper-release.png"
-            COMMENT "Converting PNG to BMP for NSIS installer icon using PowerShell"
-        )
-        add_custom_target(ConvertNsisIcon ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/nsis_icon.bmp")
-
-        set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_BINARY_DIR}\\\\nsis_icon.bmp")
         set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
         set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
         set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
