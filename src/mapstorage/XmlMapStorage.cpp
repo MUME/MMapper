@@ -39,7 +39,6 @@
 
 // clang-format off
 
-
 // ---------------------------- XmlMapStorage::TypeEnum ------------------------
 // list know enum types
 //
@@ -101,6 +100,11 @@ enum class NODISCARD TypeEnum : uint32_t {
 constexpr const size_t NUM_XMLMAPSTORAGE_TYPE = (XFOREACH_TYPE_ENUM(X_ADD));
 #undef X_ADD
 
+NODISCARD bool isValid(const TypeEnum type)
+{
+    return static_cast<uint32_t>(type) < NUM_XMLMAPSTORAGE_TYPE;
+}
+
 #define X_SEP() ,
 #define X_DECL(_x, _xfor, _xdecl) _x
 enum class NODISCARD SanityCheckEnum : uint32_t { XFOREACH_CONVERTER(X_DECL, X_SEP) };
@@ -114,6 +118,14 @@ enum class NODISCARD SanityCheckEnum : uint32_t { XFOREACH_CONVERTER(X_DECL, X_S
 XFOREACH_CONVERTER(X_CHECK, X_SEP);
 #undef X_CHECK
 #undef X_SEP
+
+#define X_SEP()
+#define X_ADD(_x, _xfor, _xdecl) +1 // NOLINT
+constexpr const size_t NUM_SANITYCHECK = (XFOREACH_CONVERTER(X_ADD, X_SEP));
+#undef X_ADD
+#undef X_SEP
+
+static_assert(NUM_SANITYCHECK == NUM_XMLMAPSTORAGE_TYPE);
 
 // define a bunch of methods
 //   static constexpr TypeEnum enumToType(RoomAlignEnum) { return TypeEnum::RoomAlign; }
@@ -153,15 +165,20 @@ static_assert(to_c_string(TypeEnum::RoomAlign) == std::string_view{"RoomAlignEnu
 static_assert(to_c_string(TypeEnum::RoomTerrain) == std::string_view{"RoomTerrainEnum"});
 static_assert(to_c_string(TypeEnum::Type) == std::string_view{"TypeEnum"});
 
-NODISCARD std::vector<std::vector<QString>> make_enum_to_strings_table()
+template<typename T>
+using TypeEnumArray = EnumIndexedArray<T, TypeEnum, NUM_XMLMAPSTORAGE_TYPE>;
+
+using EnumToStrings = TypeEnumArray<std::vector<QString>>;
+
+NODISCARD EnumToStrings initEnumToStrings()
 {
 #define X_SEP() ,
 #define X_DECL_SINGLE(_x) /*QString*/ {#_x},
 #define X_DECL_MULTI(_x, ...) /*QString*/ {#_x},
 #define X_DECL_TYPE_ENUM(_x) /*QString*/ {TYPE_NAME_C_STRING(_x)},
-#define X_CONVERT(_x, _xfor, _xdecl) /*std::vector<QString>*/ {_xfor(_xdecl)}
+#define X_CONVERT(_x, _xfor, _xdecl) (std::vector<QString>{_xfor(_xdecl)})
 
-    return {XFOREACH_CONVERTER(X_CONVERT, X_SEP)};
+    return EnumToStrings{XFOREACH_CONVERTER(X_CONVERT, X_SEP)};
 
 #undef X_DECL_SINGLE
 #undef X_DECL_MULTI
@@ -174,12 +191,13 @@ NODISCARD std::vector<std::vector<QString>> make_enum_to_strings_table()
 class NODISCARD Converter final
 {
 private:
-    std::vector<std::vector<QString>> m_enumToStrings = make_enum_to_strings_table();
-    std::vector<QHash<QStringView, uint32_t>> m_stringToEnums;
+    EnumToStrings m_enumToStrings = initEnumToStrings();
+    TypeEnumArray<QHash<QStringView, uint32_t>> m_stringToEnums;
 
 public:
-    Converter();
+    explicit Converter();
     ~Converter() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(Converter);
 
     // parse string containing a signed or unsigned number.
     template<typename T>
@@ -222,8 +240,8 @@ Converter::Converter()
     }
 
     // create the maps string -> enum value for each enum type listed above
-    for (auto &vec : m_enumToStrings) {
-        auto &map = m_stringToEnums.emplace_back();
+    m_enumToStrings.for_each2([this](const TypeEnum e, auto &vec) {
+        auto &map = m_stringToEnums[e];
         uint32_t val = 0;
         for (auto &str : vec) {
             if (str == "UNDEFINED") {
@@ -237,22 +255,20 @@ Converter::Converter()
             }
             ++val;
         }
-    }
+    });
 }
 
 const QString &Converter::enumToString(const TypeEnum type, const uint32_t val) const
 {
-    const auto index = static_cast<uint32_t>(type);
-    if (index < m_enumToStrings.size()) {
-        const auto &tmp = m_enumToStrings[index];
-        if (val < tmp.size()) {
+    if (isValid(type)) {
+        if (const auto &tmp = m_enumToStrings[type]; val < tmp.size()) {
             return tmp[val];
         }
     }
 
     qWarning().noquote().nospace()
-        << "Attempt to save an invalid enum type = " << toString(type) << ", value = " << val
-        << ". Either the current map is damaged, or there is a bug";
+        << "WARNING: Attempt to save an invalid enum type = " << toString(type)
+        << ", value = " << val << ". Either the current map is damaged, or there is a bug.";
 
     static const QString g_empty{};
     assert(g_empty.isEmpty());
@@ -261,11 +277,9 @@ const QString &Converter::enumToString(const TypeEnum type, const uint32_t val) 
 
 std::optional<uint32_t> Converter::stringToEnum(const TypeEnum type, const QStringView str) const
 {
-    const auto index = static_cast<uint32_t>(type);
-    if (index < m_stringToEnums.size()) {
-        const auto &tmp = m_stringToEnums[index];
-        const auto iter = tmp.find(str);
-        if (iter != tmp.end()) {
+    if (isValid(type)) {
+        const auto &tmp = m_stringToEnums[type];
+        if (const auto iter = tmp.find(str); iter != tmp.end()) {
             return iter.value();
         }
     }

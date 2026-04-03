@@ -82,6 +82,29 @@ public:
             callback(x);
         }
     }
+    template<typename Callback>
+    void for_each(Callback &&callback) const
+    {
+        for (const auto &x : *this) {
+            callback(x);
+        }
+    }
+    template<typename Callback>
+    void for_each2(Callback &&callback)
+    {
+        for (size_t i = 0u; i < SIZE; ++i) {
+            const auto e = static_cast<E>(i);
+            callback(e, at(e));
+        }
+    }
+    template<typename Callback>
+    void for_each2(Callback &&callback) const
+    {
+        for (size_t i = 0u; i < SIZE; ++i) {
+            const auto e = static_cast<E>(i);
+            callback(e, at(e));
+        }
+    }
 
 public:
     NODISCARD bool operator==(const EnumIndexedArray &other) const
