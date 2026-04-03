@@ -8,7 +8,7 @@ This guide describes how to build **MMapper** from source on Linux, macOS, and W
 
 Ensure the following tools are installed:
 
-- A C++17-compatible compiler (e.g., GCC, Clang, MSVC)
+- A C++20-compatible compiler (e.g., GCC 11+, Clang 16+, MSVC 19.29+)
 - [CMake 3.20+](https://cmake.org/)
 - [Ninja](https://ninja-build.org/)
 - [Qt 6.4+](https://www.qt.io/) (6.8.3 recommended) with `QtWebSockets` and `QtMultimedia`

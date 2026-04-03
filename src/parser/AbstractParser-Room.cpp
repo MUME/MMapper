@@ -139,10 +139,11 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
     static const auto map = std::invoke([]() -> ParserRoomFieldMap {
         ParserRoomFieldMap result;
 
-        auto add_all = [&result](const auto &flags, auto &&convert) {
+        auto add_all = [&result]<concepts::IsEnumFlags_container Flags, typename Converter>
+            requires(concepts::ConverterConvertsToRoomFieldVariant<Converter, Flags>)
+        (const Flags &flags, Converter &&convert) {
             // assumes it's an array or vector of enum flags.
-            using Flag = std::decay_t<decltype(*flags.begin())>;
-            static_assert(std::is_enum_v<Flag>);
+            using Flag = std::decay_t<decltype(flags.front())>;
             for (const Flag flag : flags) {
                 const auto abb = getParserCommandName(flag);
                 if (!abb) {
@@ -158,7 +159,9 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
                 }
             }
         };
-        auto identity = [](auto flag) { return flag; };
+        auto identity = []<concepts::IsEnum Flag>
+            requires(concepts::ConvertsToRoomFieldVariant<Flag>)
+        (Flag flag) { return flag; };
 
         // REVISIT: separate these into their own args, and don't try to group them.
         // (Hint: That would allow you set each category as "UNDEFINED.")

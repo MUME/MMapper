@@ -56,10 +56,9 @@ private:
     }
 
 private:
-    template<typename E>
+    template<concepts::IsEnum E>
     NODISCARD bool matchesParserCommand(const E type) const
     {
-        static_assert(std::is_enum_v<E>);
         const auto s = getParserCommandName(type).getCommand();
         assert(s != nullptr);
         return s != nullptr && this->matches(s);
@@ -75,7 +74,7 @@ private:
 
 private:
     /// Note: Assumes enum E has value E::UNDEFINED.
-    template<typename E>
+    template<concepts::IsEnum_with_UNDEFINED E>
     NODISCARD bool matchesDefined(const E type) const
     {
         return (type != E::UNDEFINED) && this->matchesParserCommand(type);

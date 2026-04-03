@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#if 1
+// https://qt-project.atlassian.net/browse/QTBUG-31496
+#include <QtCore/qglobal.h>
+#endif
+
 #include "../src/map/RoomHandle.h"
 #include "../src/map/parseevent.h"
 #include "../src/map/room.h"

@@ -173,11 +173,9 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
 {
     auto *vertical = new QVBoxLayout(m_groupBox);
 
-    auto makeSsb = [this, vertical](const QString &name, auto &fp, bool is3DOnly = true) {
-        using FP = std::decay_t<decltype(fp)>;
-        static_assert(std::is_same_v<FP, FixedPoint<FP::digits>>,
-                      "makeSsb expects a FixedPoint<digits> argument");
-
+    auto makeSsb = [this, vertical]<typename FP>
+        requires(std::is_same_v<FP, FixedPoint<FP::digits>>)
+    (const QString &name, FP &fp, bool is3DOnly = true) {
         addLine(*vertical);
         auto ssb = std::make_unique<SliderSpinboxButtonImpl<FP::digits>>(*this, *vertical, name, fp);
         if (is3DOnly) {

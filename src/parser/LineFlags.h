@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Flags.h"
+#include "../global/enums.h"
 
 #include <cstdint>
 
@@ -44,20 +45,3 @@ public:
     XFOREACH_LINE_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
-
-NODISCARD constexpr inline auto toUint(const LineFlagEnum val) noexcept
-{
-    using U = uint32_t;
-    static_assert(std::is_same_v<U, std::underlying_type_t<LineFlagEnum>>);
-    return static_cast<U>(val);
-}
-
-NODISCARD inline constexpr LineFlagEnum operator|(const LineFlagEnum lhs, const LineFlagEnum rhs)
-{
-    return static_cast<LineFlagEnum>(toUint(lhs) | toUint(rhs));
-}
-
-NODISCARD inline constexpr LineFlagEnum operator&(const LineFlagEnum lhs, const LineFlagEnum rhs)
-{
-    return static_cast<LineFlagEnum>(toUint(lhs) & toUint(rhs));
-}

@@ -11,14 +11,12 @@
 #include <sstream>
 
 namespace {
-NODISCARD constexpr bool isUppercase(const char *s)
+// actually "isNotLowercase()"
+NODISCARD constexpr bool isUppercase(const std::string_view sv)
 {
-    while (*s) {
-        if (*s >= 'a' && *s <= 'z')
-            return false;
-        s++;
-    }
-    return true;
+    return !std::any_of(sv.begin(), sv.end(), [](const char c) -> bool {
+        return c >= 'a' && c <= 'z';
+    });
 }
 #define X_CHECK_UPPER(id, name, qkey, policy) \
     static_assert(isUppercase(name), "Hotkey name must be uppercase: " name);

@@ -152,6 +152,12 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 in_a,
                                                 const glm::vec2 in_d,
                                                 const QuadOptsEnum options)
 {
+    {
+        using enum QuadOptsEnum;
+        constexpr auto ALL = OUTLINE | FILL | BEACON;
+        static_assert(~ALL == NONE);
+        static_assert(~NONE == ALL);
+    }
     const auto &m = m_stack.top().modelView;
     const auto transform = [&m](const glm::vec2 vin) -> glm::vec3 {
         const auto vtmp = m * glm::vec4(vin, 0.f, 1.f);

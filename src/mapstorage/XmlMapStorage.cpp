@@ -85,20 +85,18 @@ public:
     }
 
     // parse string containing the name of an enum.
-    template<typename ENUM>
+    template<concepts::IsEnum ENUM>
     NODISCARD std::optional<ENUM> toEnum(const QStringView str) const
     {
-        static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
         if (const auto opt = stringToEnum(enumToType(static_cast<ENUM>(0)), str); opt.has_value()) {
             return static_cast<ENUM>(opt.value());
         }
         return std::nullopt;
     }
 
-    template<typename ENUM>
+    template<concepts::IsEnum ENUM>
     NODISCARD QString toString(const ENUM val) const
     {
-        static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
         if constexpr (std::is_same_v<ENUM, TypeEnum>) {
 #define X_CASE(x) \
     case TypeEnum::x: \
@@ -630,11 +628,9 @@ void XmlMapStorage::loadMarker(QXmlStreamReader &stream) const
 }
 
 // load current element, which is expected to contain ONLY the name of an enum value
-template<typename ENUM>
+template<concepts::IsEnum ENUM>
 ENUM XmlMapStorage::loadEnum(QXmlStreamReader &stream)
 {
-    static_assert(std::is_enum_v<ENUM>, "template type ENUM must be an enumeration");
-
     // copy name in case it's somehow modified by loadStringView()
     const auto name = stream.name();
     const QStringView text = loadStringView(stream);

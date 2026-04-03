@@ -19,8 +19,8 @@ private:
     WeakFunctions m_weakFunctions;
     GLuint m_vbo = INVALID_VBOID;
     GLenum m_boundTarget = GL_ARRAY_BUFFER;
-    bool m_bound = false;
-    bool m_bound_buffer_base = false;
+    bool m_bound : 1 = false;
+    bool m_bound_buffer_base : 1 = false;
 
 public:
     VBO() = default;
@@ -124,12 +124,11 @@ public:
         }
     }
 
-    template<typename T>
+    template<concepts::IsTriviallyCopyable T>
     NODISCARD GLsizei setVbo(const GLenum target,
                              const View<T> batch,
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
-        static_assert(std::is_trivially_copyable_v<T>);
         const auto numElements = static_cast<GLsizei>(batch.size());
         const auto elementSize = static_cast<GLsizei>(sizeof(T));
         const auto numBytes = numElements * elementSize;
@@ -143,12 +142,11 @@ public:
         }
     }
 
-    template<typename T>
+    template<concepts::IsTriviallyCopyable T>
     void setVbo(const GLenum target,
                 const T &data,
                 const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
-        static_assert(std::is_trivially_copyable_v<T>);
         MAYBE_UNUSED auto vbo_binder = bind(target);
         if (const auto shared = m_weakFunctions.lock(); shared == nullptr) {
             MMLOG_WARNING() << "Failed to set VBO " << m_vbo;
@@ -157,12 +155,11 @@ public:
         }
     }
 
-    template<typename T>
+    template<concepts::IsTriviallyCopyable T>
     NODISCARD auto setVbo(const DrawModeEnum mode,
                           const View<T> batch,
                           const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
-        static_assert(std::is_trivially_copyable_v<T>);
         using Pair = std::pair<DrawModeEnum, GLsizei>;
         if (const auto shared = m_weakFunctions.lock(); shared == nullptr) {
             MMLOG_WARNING() << "Failed to set VBO " << m_vbo;

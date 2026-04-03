@@ -12,20 +12,26 @@
 #include "coordinate.h"
 
 namespace enums {
-const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()
+View<ExitDirEnum> getAllExitsNESW()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESW>();
-    return g_all_exits;
+    static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESW>();
+    static constexpr auto view = View{g_all_exits};
+    static_assert(view.size() == NUM_EXITS_NESW);
+    return view;
 }
-const MMapper::Array<ExitDirEnum, NUM_EXITS_NESWUD> &getAllExitsNESWUD()
+View<ExitDirEnum> getAllExitsNESWUD()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESWUD>();
-    return g_all_exits;
+    static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESWUD>();
+    static constexpr auto view = View{g_all_exits};
+    static_assert(view.size() == NUM_EXITS_NESWUD);
+    return view;
 }
-const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7()
+View<ExitDirEnum> getAllExits7()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS>();
-    return g_all_exits;
+    static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS>();
+    static constexpr auto view = View{g_all_exits};
+    static_assert(view.size() == NUM_EXITS);
+    return view;
 }
 
 } // namespace enums

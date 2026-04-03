@@ -74,7 +74,7 @@ struct NODISCARD AnsiStyleFlags final : enums::Flags<AnsiStyleFlags, AnsiStyleFl
 
 #define X_DECL_LO(n, lower, UPPER) lower,
 #define X_DECL_HI(n, lower, UPPER) UPPER,
-enum class NODISCARD AnsiColor16Enum {
+enum class NODISCARD AnsiColor16Enum : uint8_t {
     XFOREACH_ANSI_COLOR_0_7(X_DECL_LO) //
     XFOREACH_ANSI_COLOR_0_7(X_DECL_HI) //
 };
@@ -813,6 +813,9 @@ NODISCARD bool isAnsiColor(std::string_view input);
 NODISCARD std::optional<RawAnsi> ansi_parse(RawAnsi ansi, std::string_view input);
 
 template<typename ValidAnsiColorCallback, typename InvalidEscapeCallback, typename NonAnsiCallback>
+    requires(std::is_invocable_r_v<void, ValidAnsiColorCallback, std::string_view>
+             and std::is_invocable_r_v<void, InvalidEscapeCallback, std::string_view>
+             and std::is_invocable_r_v<void, NonAnsiCallback, std::string_view>)
 void foreachAnsi(const std::string_view input,
                  ValidAnsiColorCallback &&validAnsiColor,
                  InvalidEscapeCallback &&invalidEscape,

@@ -4,10 +4,11 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Array.h"
+#include "../global/enums.h"
 
 #include <cstddef>
 
-enum class NODISCARD DoorActionEnum {
+enum class NODISCARD DoorActionEnum : uint8_t {
     OPEN,
     CLOSE,
     LOCK,
@@ -24,8 +25,9 @@ enum class NODISCARD DoorActionEnum {
 /* does not include NONE */
 static constexpr const size_t NUM_DOOR_ACTION_TYPES = 10;
 
+DEFINE_ENUM_COUNT(DoorActionEnum, NUM_DOOR_ACTION_TYPES)
+
 namespace enums {
 #define ALL_DOOR_ACTION_TYPES ::enums::getAllDoorActionTypes()
-NODISCARD const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
-
+DECL_ENUM_GETTER2(DoorActionEnum, NUM_DOOR_ACTION_TYPES, getAllDoorActionTypes)
 } // namespace enums

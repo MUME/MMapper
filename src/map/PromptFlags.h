@@ -20,8 +20,8 @@
     X(HEAVY_FOG)
 
 #define X_DECL(X) X,
-enum class NODISCARD PromptWeatherEnum { XFOREACH_PROMPT_WEATHER_ENUM(X_DECL) };
-enum class NODISCARD PromptFogEnum { XFOREACH_PROMPT_FOG_ENUM(X_DECL) };
+enum class NODISCARD PromptWeatherEnum : uint8_t { XFOREACH_PROMPT_WEATHER_ENUM(X_DECL) };
+enum class NODISCARD PromptFogEnum : uint8_t { XFOREACH_PROMPT_FOG_ENUM(X_DECL) };
 #undef X_DECL
 
 #define X_ADD(X) +1

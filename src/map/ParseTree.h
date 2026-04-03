@@ -51,14 +51,15 @@ struct std::hash<NameDesc>
     }
 };
 
-enum class NODISCARD ParseKeyEnum { Name, Desc };
+enum class NODISCARD ParseKeyEnum : uint8_t { Name, Desc };
 struct NODISCARD ParseKeyFlags final : public enums::Flags<ParseKeyFlags, ParseKeyEnum, uint8_t, 2>
 {
     using Flags::Flags;
 };
+DEFINE_FLAGS_BITOP_OR(ParseKeyFlags)
 
 static constexpr const ParseKeyFlags ALL_PARSE_KEY_FLAGS = ~ParseKeyFlags{};
-static_assert(ALL_PARSE_KEY_FLAGS == (ParseKeyFlags{ParseKeyEnum::Name} | ParseKeyEnum::Desc));
+static_assert(ALL_PARSE_KEY_FLAGS == (ParseKeyEnum::Name | ParseKeyEnum::Desc));
 
 struct NODISCARD ParseTreeInitializer final
 {

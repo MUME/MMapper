@@ -6,11 +6,47 @@
 #include "../src/clock/mumeclock.h"
 #include "../src/configuration/configuration.h"
 #include "../src/global/HideQDebug.h"
+#include "../src/global/enums.h"
 #include "../src/observer/gameobserver.h"
 #include "../src/proxy/GmcpMessage.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
+
+namespace test_concepts {
+template<typename E>
+concept IsEnum_Int8 = concepts::IsEnum<E> and std::is_same_v<int8_t, std::underlying_type_t<E>>;
+
+template<typename E>
+concept IsEnum_Int8_with_Invalid = IsEnum_Int8<E> and enums::to_underlying(E::Invalid) == -1;
+
+template<typename E>
+concept IsMonthEnum = IsEnum_Int8_with_Invalid<E>
+                      and (std::is_same_v<E, MumeClock::WestronMonthNamesEnum>
+                           or std::is_same_v<E, MumeClock::SindarinMonthNamesEnum>);
+
+template<typename E>
+concept IsWeekdayEnum = IsEnum_Int8_with_Invalid<E>
+                        and (std::is_same_v<E, MumeClock::WestronWeekDayNamesEnum>
+                             or std::is_same_v<E, MumeClock::SindarinWeekDayNamesEnum>);
+} // namespace test_concepts
+
+namespace {
+template<test_concepts::IsMonthEnum E>
+void test_month(const QString &name, const E e)
+{
+    const auto x = enums::to_underlying(e);
+    Q_ASSERT(x >= 0);
+    QCOMPARE(MumeClock::getMumeMonth(name), x);
+}
+template<test_concepts::IsWeekdayEnum E>
+void test_weekday(const QString &name, const E e)
+{
+    const auto x = enums::to_underlying(e);
+    Q_ASSERT(x >= 0);
+    QCOMPARE(MumeClock::getMumeWeekday(name), x);
+}
+} // namespace
 
 TestClock::TestClock()
 {
@@ -120,42 +156,29 @@ void TestClock::parseMumeTimeTest()
 void TestClock::getMumeMonthTest()
 {
     {
-        using E = MumeClock::WestronMonthNamesEnum;
-        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
-
-#define X_CASE(x) \
-    static_assert(static_cast<int8_t>(E::x) >= 0); \
-    QCOMPARE(MumeClock::getMumeMonth(#x), static_cast<int8_t>(E::x));
+        using enum MumeClock::WestronMonthNamesEnum;
+#define X_CASE(x) test_month(#x, (x));
         XFOREACH_WestronMonthNamesEnum(X_CASE)
 #undef X_CASE
     }
 
     {
-        using E = MumeClock::SindarinMonthNamesEnum;
-        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
-#define X_CASE(x) \
-    static_assert(static_cast<int8_t>(E::x) >= 0); \
-    QCOMPARE(MumeClock::getMumeMonth(#x), static_cast<int8_t>(E::x));
+        using enum MumeClock::SindarinMonthNamesEnum;
+#define X_CASE(x) test_month(#x, (x));
         XFOREACH_SindarinMonthNamesEnum(X_CASE)
 #undef X_CASE
     }
 
     {
-        using E = MumeClock::WestronWeekDayNamesEnum;
-        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
-#define X_CASE(x) \
-    static_assert(static_cast<int8_t>(E::x) >= 0); \
-    QCOMPARE(MumeClock::getMumeWeekday(#x), static_cast<int8_t>(E::x));
+        using enum MumeClock::WestronWeekDayNamesEnum;
+#define X_CASE(x) test_weekday(#x, (x));
         XFOREACH_WestronWeekDayNamesEnum(X_CASE)
 #undef X_CASE
     }
 
     {
-        using E = MumeClock::SindarinWeekDayNamesEnum;
-        static_assert(std::is_same_v<int8_t, std::underlying_type_t<E>>);
-#define X_CASE(x) \
-    static_assert(static_cast<int8_t>(E::x) >= 0); \
-    QCOMPARE(MumeClock::getMumeWeekday(#x), static_cast<int8_t>(E::x));
+        using enum MumeClock::SindarinWeekDayNamesEnum;
+#define X_CASE(x) test_weekday(#x, (x));
         XFOREACH_SindarinWeekDayNamesEnum(X_CASE)
 #undef X_CASE
     }

@@ -1255,7 +1255,7 @@ NODISCARD static AnsiColor16Enum getClosestMatchInColorSpace(const AnsiColorRGB 
         Arr arr;
 
     public:
-        Table() { init(); }
+        explicit Table() { init(); }
 
     private:
         void init()

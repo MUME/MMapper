@@ -9,10 +9,9 @@
 #include <array>
 #include <set>
 
-template<typename T,
-         typename U,
-         typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, std::decay_t<U>>>>
-static T convertTo(const U &input)
+template<typename T, typename U>
+    requires(not std::is_same_v<std::decay_t<T>, std::decay_t<U>>)
+NODISCARD static T convertTo(const U &input)
 {
     T copy;
     for (const auto &x : input) {

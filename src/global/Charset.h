@@ -14,6 +14,20 @@
 
 #include <QString>
 
+namespace concepts {
+template<typename T>
+concept IsChar8Callback = std::is_invocable_r_v<void, T, uint8_t>;
+template<typename T>
+concept IsChar16Callback = std::is_invocable_r_v<void, T, char16_t>;
+template<typename T>
+concept IsChar32Callback = std::is_invocable_r_v<void, T, char32_t>;
+
+// both 8 and 32
+template<typename T>
+concept IsChar832Callback = IsChar8Callback<T> and IsChar32Callback<T>;
+
+} // namespace concepts
+
 namespace charset::ascii {
 
 // ASCII 00 to 1F, and 7F only; Latin1 control codes 80 to 9F don't count.
@@ -437,7 +451,7 @@ struct NODISCARD Utf16Iterable final
 
 } // namespace conversion
 
-template<typename Callback>
+template<concepts::IsChar8Callback Callback>
 void foreach_codepoint_ascii(const std::string_view sv, Callback &&callback)
 {
     assert(isAscii(sv));
@@ -446,7 +460,7 @@ void foreach_codepoint_ascii(const std::string_view sv, Callback &&callback)
     }
 }
 
-template<typename Callback>
+template<concepts::IsChar8Callback Callback>
 void foreach_codepoint_latin1(std::string_view sv, Callback &&callback)
 {
     for (const char c : sv) {
@@ -454,7 +468,7 @@ void foreach_codepoint_latin1(std::string_view sv, Callback &&callback)
     }
 }
 
-template<typename Callback>
+template<concepts::IsChar832Callback Callback>
 void foreach_codepoint_utf8(std::string_view sv,
                             Callback &&callback,
                             const char32_t invalid = charset_detail::DEFAULT_UNMAPPED_CHARACTER)
@@ -469,7 +483,7 @@ void foreach_codepoint_utf8(std::string_view sv,
     }
 }
 
-template<typename Callback>
+template<concepts::IsChar832Callback Callback>
 void foreach_codepoint_utf8_unfriendly(
     std::string_view sv,
     Callback &&callback,

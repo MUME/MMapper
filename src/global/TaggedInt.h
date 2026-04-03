@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "concepts.h"
 #include "macros.h"
 
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
 
-template<typename Crtp_, typename Tag_, typename Wrapped_, Wrapped_ DefaultValue_ = Wrapped_{}>
+template<typename Crtp_,
+         typename Tag_,
+         concepts::IsIntegralNumeric Wrapped_,
+         Wrapped_ DefaultValue_ = Wrapped_{}>
 struct NODISCARD TaggedInt
 {
 public:
     using TagType = Tag_;
     using WrappedType = Wrapped_;
-    static_assert(std::is_integral_v<WrappedType>);
 
 public:
     static constexpr const WrappedType DEFAULT_VALUE = DefaultValue_;
@@ -79,15 +82,17 @@ template<typename...>
 struct NODISCARD underlying_helper;
 
 template<typename T>
+    requires(not concepts::IsEnum<T>)
 struct NODISCARD underlying_helper<T>
 {
     using type = T;
 };
 
 template<typename T>
-struct NODISCARD underlying_helper<T, std::enable_if_t<std::is_enum_v<T>>>
+    requires(concepts::IsEnum<T>)
+struct NODISCARD underlying_helper<T>
 {
-    using type = typename std::underlying_type_t<T>;
+    using type = std::underlying_type_t<T>;
 };
 
 template<typename Crtp_, typename Tag_, typename Type_>

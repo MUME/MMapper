@@ -5,38 +5,19 @@
 #include "enums.h"
 
 #include "../global/enums.h"
-#include "mmapper2character.h"
+#include "../global/tests.h"
 
-#include <array>
-#include <vector>
-
-#define DEFINE_GETTER(E, N, name) \
-    const MMapper::Array<E, N> &name() \
-    { \
-        static const auto things = ::enums::genEnumValues<E, N>(); \
-        return things; \
+namespace test {
+void test_group_enums()
+{
+    for (auto x : DEFINED_CHARACTER_POSITIONS) {
+        assert(x != CharacterPositionEnum::UNDEFINED);
     }
-#define DEFINE_GETTER_DEFINED(E, N, name) \
-    const std::vector<E> &name() \
-    { \
-        static const auto things = std::invoke([]() { \
-            static_assert(std::is_enum_v<E>); \
-            std::vector<E> result; \
-            for (const E x : ::enums::genEnumValues<E, N>()) { \
-                if (x != E::UNDEFINED) { \
-                    result.emplace_back(x); \
-                } \
-            } \
-            return result; \
-        }); \
-        return things; \
+    for (auto x : DEFINED_CHARACTER_TYPES) {
+        assert(x != CharacterTypeEnum::UNDEFINED);
     }
-
-namespace enums {
-DEFINE_GETTER_DEFINED(CharacterPositionEnum, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
-DEFINE_GETTER_DEFINED(CharacterTypeEnum, NUM_CHARACTER_TYPES, getAllCharacterTypes)
-DEFINE_GETTER(CharacterAffectEnum, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
-} // namespace enums
-
-#undef DEFINE_GETTER
-#undef DEFINE_GETTER_DEFINED
+    TEST_ASSERT(DEFINED_CHARACTER_POSITIONS.size() == NUM_CHARACTER_POSITIONS - 1);
+    TEST_ASSERT(DEFINED_CHARACTER_TYPES.size() == NUM_CHARACTER_TYPES - 1);
+    TEST_ASSERT(ALL_CHARACTER_AFFECTS.size() == NUM_CHARACTER_AFFECTS);
+}
+} // namespace test

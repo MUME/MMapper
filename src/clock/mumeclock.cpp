@@ -7,6 +7,7 @@
 #include "../configuration/configuration.h"
 #include "../global/Array.h"
 #include "../global/JsonObj.h"
+#include "../global/enums.h"
 #include "../proxy/GmcpMessage.h"
 #include "../proxy/MudTelnet.h" // FIXME: move MsspTime somewhere more appropriate, or just use MumeMoment.
 #include "mumemoment.h"
@@ -66,14 +67,11 @@ NODISCARD const char *getOrdinalSuffix(const int day)
 } // namespace
 
 namespace mmqt {
-template<typename T>
+template<concepts::IsSignedEnum T>
+    requires(enums::to_underlying(T::Invalid) == -1)
 class NODISCARD QME final
 {
 private:
-    static_assert(std::is_enum_v<T>);
-    using U = std::underlying_type_t<T>;
-    static_assert(std::is_signed_v<U>);
-    static_assert(static_cast<U>(T::Invalid) == -1);
     static inline const QMetaEnum g_qme = QMetaEnum::fromType<T>();
 
 public:

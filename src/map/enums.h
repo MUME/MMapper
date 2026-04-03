@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Array.h"
+#include "../global/enums.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
 #include "infomark.h"
@@ -11,26 +12,20 @@
 
 #include <vector>
 
-#define X_DECL_GETTER(E, N, name) NODISCARD const MMapper::Array<E, N> &name();
-#define X_DECL_GETTER_DEFINED(E, N, name) NODISCARD const std::vector<E> &name();
-
 namespace enums {
-X_DECL_GETTER_DEFINED(RoomLightEnum, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
-X_DECL_GETTER_DEFINED(RoomSundeathEnum, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
-X_DECL_GETTER_DEFINED(RoomPortableEnum, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
-X_DECL_GETTER_DEFINED(RoomRidableEnum, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
-X_DECL_GETTER_DEFINED(RoomAlignEnum, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
-X_DECL_GETTER(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
-X_DECL_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
-X_DECL_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
-X_DECL_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
-X_DECL_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
-X_DECL_GETTER(InfomarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfomarkClasses)
-X_DECL_GETTER(InfomarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfomarkTypes)
+DECL_ENUM_GETTER2(RoomLightEnum, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
+DECL_ENUM_GETTER2(RoomSundeathEnum, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
+DECL_ENUM_GETTER2(RoomPortableEnum, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
+DECL_ENUM_GETTER2(RoomRidableEnum, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
+DECL_ENUM_GETTER2(RoomAlignEnum, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
+DECL_ENUM_GETTER2(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
+DECL_ENUM_GETTER2(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
+DECL_ENUM_GETTER2(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
+DECL_ENUM_GETTER2(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
+DECL_ENUM_GETTER2(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
+DECL_ENUM_GETTER2(InfomarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfomarkClasses)
+DECL_ENUM_GETTER2(InfomarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfomarkTypes)
 } // namespace enums
-
-#undef X_DECL_GETTER
-#undef X_DECL_GETTER_DEFINED
 
 #define ALL_TERRAIN_TYPES ::enums::getAllTerrainTypes()
 #define ALL_DOOR_FLAGS ::enums::getAllDoorFlags()
@@ -176,45 +171,25 @@ constexpr bool isValidEnumValue(const RoomTerrainEnum value)
 #undef X_CASE
 }
 
-template<typename E>
-NODISCARD constexpr E getInvalidValue();
-template<>
-constexpr RoomAlignEnum getInvalidValue()
+template<concepts::IsEnum E>
+NODISCARD constexpr E getInvalidValue()
 {
-    return RoomAlignEnum::UNDEFINED;
-}
-template<>
-constexpr RoomLightEnum getInvalidValue()
-{
-    return RoomLightEnum::UNDEFINED;
-}
-template<>
-constexpr RoomPortableEnum getInvalidValue()
-{
-    return RoomPortableEnum::UNDEFINED;
-}
-template<>
-constexpr RoomRidableEnum getInvalidValue()
-{
-    return RoomRidableEnum::UNDEFINED;
-}
-template<>
-constexpr RoomSundeathEnum getInvalidValue()
-{
-    return RoomSundeathEnum::UNDEFINED;
-}
-template<>
-constexpr RoomTerrainEnum getInvalidValue()
-{
-    return RoomTerrainEnum::UNDEFINED;
+    if constexpr (concepts::IsEnum_with_UNDEFINED<E>) {
+        return E::UNDEFINED;
+    } else {
+        // Note: You have to specialise getInvalidValue<E>() to use it with an enum
+        // that doesn't have E::UNDEFINED.
+        static_assert(std::is_void_v<E>);
+        return E{};
+    }
 }
 
-template<typename Flags>
-constexpr auto getValidMask() -> typename Flags::underlying_type
+template<concepts::IsEnumFlags Flags>
+constexpr auto getValidMask() -> typename Flags::bitmask_type
 {
     static_assert(Flags::NUM_FLAGS <= 32);
     using Enum = typename Flags::Flag;
-    using U = typename Flags::underlying_type;
+    using U = typename Flags::bitmask_type;
     Flags tmp;
     for (U n = 0; n < Flags::NUM_FLAGS; ++n) {
         const auto e = static_cast<Enum>(n);
@@ -225,11 +200,10 @@ constexpr auto getValidMask() -> typename Flags::underlying_type
     return static_cast<U>(tmp);
 }
 
-template<typename Enum, typename Value>
+template<concepts::IsEnum Enum, typename Value>
+    requires(std::is_same_v<Value, std::underlying_type_t<Enum>>)
 NODISCARD constexpr Enum toEnum(const Value value)
 {
-    static_assert(std::is_enum_v<Enum>);
-    static_assert(std::is_same_v<Value, std::underlying_type_t<Enum>>);
     const auto result = static_cast<Enum>(value);
     if (!isValidEnumValue(result)) {
         return getInvalidValue<Enum>();
@@ -237,16 +211,12 @@ NODISCARD constexpr Enum toEnum(const Value value)
     return result;
 }
 
-template<typename Flags, typename Value>
+template<concepts::IsEnumFlags Flags, typename Value>
+    requires(std::is_same_v<Value, typename Flags::bitmask_type>)
 NODISCARD constexpr Flags bitmaskToFlags(const Value value)
 {
     // we assume this is an enums::Flags
-    using U = typename Flags::underlying_type;
-    static_assert(std::is_same_v<Value, U>);
-
-    using Enum = typename Flags::Flag;
-    static_assert(std::is_enum_v<Enum>);
-
+    using U = typename Flags::bitmask_type;
     static_assert(std::is_unsigned_v<Value> && sizeof(value) <= sizeof(uint32_t));
     static_assert(Flags::NUM_FLAGS > 0 && Flags::NUM_FLAGS <= 32);
 
@@ -259,19 +229,17 @@ NODISCARD constexpr Flags bitmaskToFlags(const Value value)
     return Flags{static_cast<U>(value & valid_mask)};
 }
 
-template<typename Enum>
+template<concepts::IsUnsignedEnum Enum>
 NODISCARD constexpr Enum sanitizeEnum(const Enum value)
 {
-    using U = std::underlying_type_t<Enum>;
-    static_assert(std::is_unsigned_v<U>);
-    return toEnum<Enum>(static_cast<U>(value));
+    return toEnum<Enum>(enums::to_underlying(value));
 }
 
-template<typename Flags>
+template<concepts::IsEnumFlags Flags>
 NODISCARD constexpr Flags sanitizeFlags(const Flags flags)
 {
-    using U = typename Flags::underlying_type;
-    static_assert(std::is_unsigned_v<U>);
+    // note: Flags::underlying_type is distinct from the underlying type of the enum.
+    using U = typename Flags::bitmask_type;
     return bitmaskToFlags<Flags>(static_cast<U>(flags));
 }
 

@@ -3,17 +3,3 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "DoorAction.h"
-
-#include "../global/enums.h"
-
-#include <array>
-
-namespace enums {
-
-const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes()
-{
-    static const auto g_door_actions = genEnumValues<DoorActionEnum, NUM_DOOR_ACTION_TYPES>();
-    return g_door_actions;
-}
-
-} // namespace enums

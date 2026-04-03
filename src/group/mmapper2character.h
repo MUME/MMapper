@@ -91,7 +91,7 @@ Q_DECLARE_METATYPE(CharacterTypeEnum)
     /* define character affects above in display priority order */
 
 // TODO: States for CASTING DISEASED
-enum class NODISCARD CharacterAffectEnum {
+enum class NODISCARD CharacterAffectEnum : uint8_t {
 #define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     XFOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
 #undef X_DECL_CHARACTER_AFFECT
@@ -114,9 +114,4 @@ public:
     XFOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
-
-NODISCARD inline constexpr const CharacterAffectFlags operator|(CharacterAffectEnum lhs,
-                                                                CharacterAffectEnum rhs) noexcept
-{
-    return CharacterAffectFlags{lhs} | CharacterAffectFlags{rhs};
-}
+DEFINE_FLAGS_BITOP_OR(CharacterAffectFlags)
