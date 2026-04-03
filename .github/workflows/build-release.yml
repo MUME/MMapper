@@ -73,7 +73,7 @@ jobs:
       with:
         version: 6.8.3
         dir: 'C:\'
-        arch: win64_msvc2019_64
+        arch: win64_msvc2022_64
         cache: true
         modules: 'qtwebsockets qtmultimedia'
 

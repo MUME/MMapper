@@ -101,10 +101,10 @@ Install:
 #### MSVC (Recommended)
 
 ```bash
-aqt install-qt windows desktop 6.8.3 win64_msvc2019_64 -m qtwebsockets qtmultimedia
+aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -m qtwebsockets qtmultimedia
 ```
 
-Add `Qt\6.8.3\msvc2019_64\bin` to PATH.
+Add `Qt\6.8.3\win64_msvc2022_64\bin` to PATH.
 
 #### MinGW (Alternative)
 
