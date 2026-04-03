@@ -41,11 +41,14 @@
 #include <tuple>
 
 #include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QScopedPointer>
 #include <QSslSocket>
 #include <QTcpSocket>
+#include <QTimer>
 
 using mmqt::makeQPointer;
 
@@ -176,6 +179,8 @@ Proxy::~Proxy()
     // This can happen as a result of the user hitting Alt-F4 to close the MMapper window.
     sendNewlineToUser();
     sendStatusToUser("MMapper proxy is shutting down.");
+
+    stopClockBroadcaster();
 
     {
         qDebug() << "disconnecting mud socket...";
@@ -407,6 +412,16 @@ void Proxy::allocUserTelnet()
         {
             // forwarded (to mud)
             getMudTelnet().onRelayTermType(bytes);
+        }
+        void virt_onGmcpModuleEnabled(const GmcpModuleTypeEnum type, const bool enabled) final
+        {
+            if (type == GmcpModuleTypeEnum::MUME_TIME) {
+                if (enabled) {
+                    getProxy().startClockBroadcaster();
+                } else {
+                    getProxy().stopClockBroadcaster();
+                }
+            }
         }
     };
 
@@ -882,6 +897,143 @@ void Proxy::gmcpToMud(const GmcpMessage &msg)
 void Proxy::gmcpToUser(const GmcpMessage &msg)
 {
     getUserTelnet().onGmcpToUser(msg);
+}
+
+namespace {
+
+NODISCARD constexpr const char *toJsonString(const MumeClockPrecisionEnum precision)
+{
+    switch (precision) {
+    case MumeClockPrecisionEnum::UNSET: return "unset";
+    case MumeClockPrecisionEnum::DAY: return "day";
+    case MumeClockPrecisionEnum::HOUR: return "hour";
+    case MumeClockPrecisionEnum::MINUTE: return "minute";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeSeasonEnum season)
+{
+    switch (season) {
+    case MumeSeasonEnum::WINTER: return "winter";
+    case MumeSeasonEnum::SPRING: return "spring";
+    case MumeSeasonEnum::SUMMER: return "summer";
+    case MumeSeasonEnum::AUTUMN: return "autumn";
+    case MumeSeasonEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeTimeEnum time)
+{
+    switch (time) {
+    case MumeTimeEnum::DAWN: return "dawn";
+    case MumeTimeEnum::DAY: return "day";
+    case MumeTimeEnum::DUSK: return "dusk";
+    case MumeTimeEnum::NIGHT: return "night";
+    case MumeTimeEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeMoonPhaseEnum phase)
+{
+    switch (phase) {
+    case MumeMoonPhaseEnum::NEW_MOON: return "new_moon";
+    case MumeMoonPhaseEnum::WAXING_CRESCENT: return "waxing_crescent";
+    case MumeMoonPhaseEnum::FIRST_QUARTER: return "first_quarter";
+    case MumeMoonPhaseEnum::WAXING_GIBBOUS: return "waxing_gibbous";
+    case MumeMoonPhaseEnum::FULL_MOON: return "full_moon";
+    case MumeMoonPhaseEnum::WANING_GIBBOUS: return "waning_gibbous";
+    case MumeMoonPhaseEnum::THIRD_QUARTER: return "third_quarter";
+    case MumeMoonPhaseEnum::WANING_CRESCENT: return "waning_crescent";
+    case MumeMoonPhaseEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+NODISCARD constexpr const char *toJsonString(const MumeMoonVisibilityEnum visibility)
+{
+    switch (visibility) {
+    case MumeMoonVisibilityEnum::BRIGHT: return "bright";
+    case MumeMoonVisibilityEnum::DIM: return "dim";
+    case MumeMoonVisibilityEnum::INVISIBLE: return "invisible";
+    case MumeMoonVisibilityEnum::UNKNOWN: return "unknown";
+    }
+    return "unknown";
+}
+
+} // namespace
+
+void Proxy::startClockBroadcaster()
+{
+    const auto &config = getConfig();
+
+    if (!config.mumeClock.gmcpBroadcast
+        || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        stopClockBroadcaster();
+        return;
+    }
+
+    if (m_clockBroadcastTimer == nullptr) {
+        m_clockBroadcastTimer = new QTimer(this);
+        QObject::connect(m_clockBroadcastTimer, &QTimer::timeout, this, &Proxy::broadcastClockInfo);
+    }
+
+    // Clamp interval to a sane range to prevent tight timer loops
+    static constexpr int MIN_INTERVAL_MS = 500;
+    static constexpr int MAX_INTERVAL_MS = 60000;
+    const int interval = std::clamp(config.mumeClock.gmcpBroadcastInterval,
+                                    MIN_INTERVAL_MS,
+                                    MAX_INTERVAL_MS);
+    m_clockBroadcastTimer->setInterval(interval);
+    m_clockBroadcastTimer->start();
+
+    // Send initial update immediately
+    broadcastClockInfo();
+}
+
+void Proxy::stopClockBroadcaster()
+{
+    if (m_clockBroadcastTimer != nullptr && m_clockBroadcastTimer->isActive()) {
+        m_clockBroadcastTimer->stop();
+    }
+}
+
+void Proxy::broadcastClockInfo()
+{
+    if (!getConfig().mumeClock.gmcpBroadcast
+        || !isUserGmcpModuleEnabled(GmcpModuleTypeEnum::MUME_TIME)) {
+        return;
+    }
+
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    const auto precision = m_mumeClock.getPrecision();
+    const auto [dawnHour, duskHour] = MumeClock::getDawnDusk(moment.month);
+
+    QJsonObject json;
+    json["year"] = moment.year;
+    json["month"] = moment.month;
+    json["day"] = moment.day;
+    json["hour"] = moment.hour;
+    json["minute"] = moment.minute;
+
+    json["precision"] = toJsonString(precision);
+    json["season"] = toJsonString(moment.toSeason());
+    json["timeOfDay"] = toJsonString(moment.toTimeOfDay());
+    json["moonPhase"] = toJsonString(moment.moonPhase());
+    json["moonVisibility"] = toJsonString(moment.moonVisibility());
+
+    json["moonLevel"] = moment.moonLevel();
+    json["dawnHour"] = dawnHour;
+    json["duskHour"] = duskHour;
+    json["syncEpoch"] = static_cast<qint64>(m_mumeClock.getLastSyncEpoch());
+
+    const QJsonDocument doc(json);
+    const QString jsonString = QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+
+    const GmcpMessage msg(GmcpMessageTypeEnum::MUME_TIME_INFO, GmcpJson{jsonString.toStdString()});
+    gmcpToUser(msg);
 }
 
 void Proxy::sendToMud(const QString &s)

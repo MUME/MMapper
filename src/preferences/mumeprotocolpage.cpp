@@ -30,6 +30,14 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
             &QAbstractButton::clicked,
             this,
             &MumeProtocolPage::slot_externalEditorBrowseButtonClicked);
+    connect(ui->gmcpBroadcastCheckBox,
+            &QCheckBox::stateChanged,
+            this,
+            &MumeProtocolPage::slot_gmcpBroadcastCheckBoxChanged);
+    connect(ui->gmcpIntervalSpinBox,
+            QOverload<int>::of(&QSpinBox::valueChanged),
+            this,
+            &MumeProtocolPage::slot_gmcpIntervalSpinBoxChanged);
 }
 
 MumeProtocolPage::~MumeProtocolPage()
@@ -49,6 +57,11 @@ void MumeProtocolPage::slot_loadConfig()
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         ui->externalEditorRadioButton->setDisabled(true);
     }
+
+    const auto &clockSettings = getConfig().mumeClock;
+    ui->gmcpBroadcastCheckBox->setChecked(clockSettings.gmcpBroadcast);
+    ui->gmcpIntervalSpinBox->setValue(clockSettings.gmcpBroadcastInterval);
+    ui->gmcpIntervalSpinBox->setEnabled(clockSettings.gmcpBroadcast);
 }
 
 void MumeProtocolPage::slot_internalEditorRadioButtonChanged(bool /*unused*/)
@@ -77,4 +90,16 @@ void MumeProtocolPage::slot_externalEditorBrowseButtonClicked(bool /*unused*/)
         ui->externalEditorCommand->setText(quotedFileName);
         command = quotedFileName;
     }
+}
+
+void MumeProtocolPage::slot_gmcpBroadcastCheckBoxChanged(int /*unused*/)
+{
+    const bool enabled = ui->gmcpBroadcastCheckBox->isChecked();
+    setConfig().mumeClock.gmcpBroadcast = enabled;
+    ui->gmcpIntervalSpinBox->setEnabled(enabled);
+}
+
+void MumeProtocolPage::slot_gmcpIntervalSpinBoxChanged(int value)
+{
+    setConfig().mumeClock.gmcpBroadcastInterval = value;
 }
