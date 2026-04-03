@@ -29,37 +29,46 @@ namespace Legacy {
  *
  * Note: This class is not thread-safe.
  */
-class UboManager final
+class NODISCARD UboManager final
 {
 public:
-    using RebuildFunction = std::function<void(Legacy::Functions &gl)>;
+    using RebuildFunction = std::function<void(Functions &gl)>;
 
+private:
+    EnumIndexedArray<RebuildFunction, SharedVboEnum> m_rebuildFunctions;
+    EnumIndexedArray<std::optional<GLuint>, SharedVboEnum> m_boundBuffers;
+
+    // Tuple of all block types for shadow storage.
+    SharedVboBlocks m_shadowBlocks;
+
+public:
     UboManager() { invalidateAll(); }
+    ~UboManager() = default;
     DELETE_CTORS_AND_ASSIGN_OPS(UboManager);
 
 public:
     /**
      * @brief Accesses the CPU-side shadow copy of a UBO block by its enum.
      */
-    template<Legacy::SharedVboEnum Block>
-    typename Legacy::BlockType<Block>::type &get()
+    template<SharedVboEnum Block>
+    NODISCARD BlockType_t<Block> &get()
     {
-        return std::get<typename Legacy::BlockType<Block>::type>(m_shadowBlocks);
+        return std::get<BlockType_t<Block>>(m_shadowBlocks);
     }
 
     /**
      * @brief Accesses the CPU-side shadow copy of a UBO block by its enum (const).
      */
-    template<Legacy::SharedVboEnum Block>
-    const typename Legacy::BlockType<Block>::type &get() const
+    template<SharedVboEnum Block>
+    NODISCARD const BlockType_t<Block> &get() const
     {
-        return std::get<typename Legacy::BlockType<Block>::type>(m_shadowBlocks);
+        return std::get<BlockType_t<Block>>(m_shadowBlocks);
     }
 
     /**
      * @brief Marks a UBO block as dirty by resetting its bound state.
      */
-    void invalidate(Legacy::SharedVboEnum block) { m_boundBuffers[block] = std::nullopt; }
+    void invalidate(const SharedVboEnum block) { m_boundBuffers[block] = std::nullopt; }
 
     /**
      * @brief Marks all UBO blocks as dirty.
@@ -78,7 +87,7 @@ public:
      *                        will trigger a debug assertion. Set to true only when an
      *                        overwrite is intentional.
      */
-    void registerRebuildFunction(Legacy::SharedVboEnum block,
+    void registerRebuildFunction(const SharedVboEnum block,
                                  RebuildFunction func,
                                  bool allowOverwrite = false)
     {
@@ -93,7 +102,7 @@ public:
     /**
      * @brief Unregisters a rebuild function for a UBO block.
      */
-    void unregisterRebuildFunction(Legacy::SharedVboEnum block)
+    void unregisterRebuildFunction(const SharedVboEnum block)
     {
         m_rebuildFunctions[block] = nullptr;
     }
@@ -101,13 +110,16 @@ public:
     /**
      * @brief Checks if a UBO block is currently dirty/invalid.
      */
-    bool isInvalid(Legacy::SharedVboEnum block) const { return !m_boundBuffers[block].has_value(); }
+    NODISCARD bool isInvalid(const SharedVboEnum block) const
+    {
+        return !m_boundBuffers[block].has_value();
+    }
 
     /**
      * @brief Rebuilds the UBO if it's invalid using the registered rebuild function.
      * @return The bound buffer ID, or 0 if failed.
      */
-    GLuint updateIfInvalid(Legacy::Functions &gl, Legacy::SharedVboEnum block)
+    ALLOW_DISCARD GLuint updateIfInvalid(Functions &gl, const SharedVboEnum block)
     {
         if (const auto bound = m_boundBuffers[block]) {
             return *bound;
@@ -115,7 +127,7 @@ public:
 
         const auto &func = m_rebuildFunctions[block];
         if (!func) {
-            const char *name = Legacy::Functions::getUniformBlockName(block);
+            const char *name = Functions::getUniformBlockName(block);
             MMLOG_ERROR() << "UboManager::updateIfInvalid: UBO block '" << name
                           << "' is invalid and no rebuild function is registered";
             throw std::runtime_error("UBO block '" + std::string(name)
@@ -128,7 +140,7 @@ public:
             return *bound;
         }
 
-        const char *name = Legacy::Functions::getUniformBlockName(block);
+        const char *name = Functions::getUniformBlockName(block);
         MMLOG_ERROR() << "UboManager::updateIfInvalid: rebuild function failed to call "
                          "update() for block '"
                       << name << "'";
@@ -144,11 +156,12 @@ public:
      * Overload for bulk vector data.
      */
     template<typename T, typename A>
-    GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
+    ALLOW_DISCARD GLuint update(Functions &gl,
+                                const SharedVboEnum block,
+                                const std::vector<T, A> &data)
     {
-        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
-        static_cast<void>(
-            gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW));
+        VBO &vbo = getOrCreateVbo(gl, block);
+        gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         return bind_internal(gl, block, vbo.get());
     }
 
@@ -160,9 +173,9 @@ public:
      * Overload for single trivially-copyable objects.
      */
     template<typename T>
-    GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const T &data)
+    ALLOW_DISCARD GLuint update(Functions &gl, const SharedVboEnum block, const T &data)
     {
-        Legacy::VBO &vbo = getOrCreateVbo(gl, block);
+        VBO &vbo = getOrCreateVbo(gl, block);
         gl.setVbo(GL_UNIFORM_BUFFER, vbo.get(), data, BufferUsageEnum::DYNAMIC_DRAW);
         return bind_internal(gl, block, vbo.get());
     }
@@ -172,8 +185,8 @@ public:
      * Enforces the correct data structure for the given block identifier.
      * Also updates the shadow copy.
      */
-    template<Legacy::SharedVboEnum Block>
-    GLuint update(Legacy::Functions &gl, const typename Legacy::BlockType<Block>::type &data)
+    template<SharedVboEnum Block>
+    ALLOW_DISCARD GLuint update(Functions &gl, const BlockType_t<Block> &data)
     {
         get<Block>() = data;
         return update(gl, Block, data);
@@ -182,8 +195,8 @@ public:
     /**
      * @brief Syncs the entire shadow copy of a block to the GPU.
      */
-    template<Legacy::SharedVboEnum Block>
-    GLuint sync(Legacy::Functions &gl)
+    template<SharedVboEnum Block>
+    ALLOW_DISCARD GLuint sync(Functions &gl)
     {
         return update(gl, Block, get<Block>());
     }
@@ -193,10 +206,10 @@ public:
      * @param gl       Legacy functions.
      * @param members  Pointers to the members in the block struct.
      */
-    template<Legacy::SharedVboEnum Block, typename T, typename... Us>
-    void syncFields(Legacy::Functions &gl, Us T::*...members)
+    template<SharedVboEnum Block, typename T, typename... Us>
+    void syncFields(Functions &gl, Us T::*...members)
     {
-        using BlockType = typename Legacy::BlockType<Block>::type;
+        using BlockType = BlockType_t<Block>;
         static_assert(std::is_same_v<T, BlockType>, "Members must belong to the correct block type");
         static_assert(std::is_standard_layout_v<BlockType>,
                       "Block type must have standard layout for offset calculation");
@@ -209,7 +222,7 @@ public:
         }
 
         const auto &blockData = get<Block>();
-        Legacy::VBO &vbo = getOrCreateVbo(gl, Block);
+        VBO &vbo = getOrCreateVbo(gl, Block);
         gl.glBindBuffer(GL_UNIFORM_BUFFER, vbo.get());
 
         (gl.glBufferSubData(GL_UNIFORM_BUFFER,
@@ -223,7 +236,7 @@ public:
         gl.glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         // Ensure it's bound to the correct point.
-        bind_internal(gl, Block, vbo.get());
+        std::ignore = bind_internal(gl, Block, vbo.get());
     }
 
     /**
@@ -231,8 +244,8 @@ public:
      * @param gl      Legacy functions.
      * @param member  Pointer to the member in the block struct.
      */
-    template<Legacy::SharedVboEnum Block, typename T, typename U>
-    void syncField(Legacy::Functions &gl, U T::*member)
+    template<SharedVboEnum Block, typename T, typename U>
+    void syncField(Functions &gl, U T::*member)
     {
         syncFields<Block>(gl, member);
     }
@@ -241,7 +254,7 @@ public:
      * @brief Binds the UBO to its assigned point.
      * If invalid and a rebuild function is registered, it will be updated first.
      */
-    void bind(Legacy::Functions &gl, Legacy::SharedVboEnum block)
+    void bind(Functions &gl, const SharedVboEnum block)
     {
         const GLuint buffer = updateIfInvalid(gl, block);
 
@@ -259,10 +272,10 @@ public:
     }
 
 private:
-    Legacy::VBO &getOrCreateVbo(Legacy::Functions &gl, Legacy::SharedVboEnum block)
+    NODISCARD VBO &getOrCreateVbo(Functions &gl, const SharedVboEnum block)
     {
         const auto sharedVbo = gl.getSharedVbos().get(block);
-        Legacy::VBO &vbo = deref(sharedVbo);
+        VBO &vbo = deref(sharedVbo);
 
         if (!vbo) {
             vbo.emplace(gl.shared_from_this());
@@ -275,13 +288,13 @@ private:
      * @brief Binds the UBO to its assigned point.
      * @return The bound buffer ID.
      *
-     * Note: This implementation explicitly assumes that Legacy::SharedVboEnum values
+     * Note: This implementation explicitly assumes that SharedVboEnum values
      * are 0-based, contiguous, and directly correspond to UBO binding indices in
      * shader blocks.
      */
-    GLuint bind_internal(Legacy::Functions &gl, Legacy::SharedVboEnum block, GLuint buffer)
+    NODISCARD GLuint bind_internal(Functions &gl, const SharedVboEnum block, const GLuint buffer)
     {
-        const auto bindingIndex = Legacy::getUboBindingIndex(block);
+        const auto bindingIndex = getUboBindingIndex(block);
         assert(static_cast<std::size_t>(bindingIndex) < m_boundBuffers.size());
 
         auto &bound = m_boundBuffers[block];
@@ -291,13 +304,6 @@ private:
         }
         return buffer;
     }
-
-private:
-    EnumIndexedArray<RebuildFunction, Legacy::SharedVboEnum> m_rebuildFunctions;
-    EnumIndexedArray<std::optional<GLuint>, Legacy::SharedVboEnum> m_boundBuffers;
-
-    // Tuple of all block types for shadow storage.
-    Legacy::SharedVboBlocks m_shadowBlocks;
 };
 
 } // namespace Legacy

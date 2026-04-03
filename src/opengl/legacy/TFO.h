@@ -8,6 +8,7 @@
 
 namespace Legacy {
 
+// TFO = Transform Feedback Object
 class NODISCARD TFO final
 {
 private:
