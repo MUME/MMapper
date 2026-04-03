@@ -30,7 +30,7 @@ Mmapper2Group::Mmapper2Group(QObject *const parent)
     , m_groupManagerApi{std::make_unique<GroupManagerApi>(*this)}
 {}
 
-Mmapper2Group::~Mmapper2Group() {}
+Mmapper2Group::~Mmapper2Group() = default;
 
 SharedGroupChar Mmapper2Group::getSelf()
 {

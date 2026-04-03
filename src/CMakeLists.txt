@@ -242,6 +242,8 @@ set(mmapper_SRCS
     group/mmapper2group.h
     logger/autologger.cpp
     logger/autologger.h
+    mainwindow/AudioVolumeSlider.cpp
+    mainwindow/AudioVolumeSlider.h
     mainwindow/MapZoomSlider.cpp
     mainwindow/MapZoomSlider.h
     mainwindow/UpdateDialog.cpp

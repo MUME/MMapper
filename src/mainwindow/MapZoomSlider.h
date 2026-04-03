@@ -31,6 +31,9 @@ public:
 
     void setFromActual();
 
+protected:
+    void wheelEvent(QWheelEvent *event) override;
+
 private:
     static int clamp(int val) { return std::clamp(val, min, max); }
 };

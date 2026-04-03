@@ -5,6 +5,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/SignalBlocker.h"
+#include "../mainwindow/AudioVolumeSlider.h"
 #include "ui_audiopage.h"
 
 #ifndef MMAPPER_NO_AUDIO
@@ -21,14 +22,6 @@ AudioPage::AudioPage(QWidget *const parent)
     slot_updateDevices();
     slot_loadConfig();
 
-    connect(ui->musicVolumeSlider,
-            &QSlider::valueChanged,
-            this,
-            &AudioPage::slot_musicVolumeChanged);
-    connect(ui->soundsVolumeSlider,
-            &QSlider::valueChanged,
-            this,
-            &AudioPage::slot_soundsVolumeChanged);
     connect(ui->outputDeviceComboBox,
             &QComboBox::currentIndexChanged,
             this,
@@ -41,8 +34,6 @@ AudioPage::AudioPage(QWidget *const parent)
 
     if constexpr (NO_AUDIO) {
         ui->outputDeviceComboBox->setEnabled(false);
-        ui->musicVolumeSlider->setEnabled(false);
-        ui->soundsVolumeSlider->setEnabled(false);
     }
 }
 
@@ -58,8 +49,8 @@ void AudioPage::slot_loadConfig()
     SignalBlocker outputBlocker(*ui->outputDeviceComboBox);
 
     const auto &settings = getConfig().audio;
-    ui->musicVolumeSlider->setValue(settings.getMusicVolume());
-    ui->soundsVolumeSlider->setValue(settings.getSoundVolume());
+    ui->musicVolumeSlider->updateFromConfig();
+    ui->soundsVolumeSlider->updateFromConfig();
 
     int index = ui->outputDeviceComboBox->findData(settings.getOutputDeviceId());
     if (index != -1) {
@@ -67,20 +58,6 @@ void AudioPage::slot_loadConfig()
     } else {
         ui->outputDeviceComboBox->setCurrentIndex(0);
     }
-}
-
-void AudioPage::slot_musicVolumeChanged(int value)
-{
-    auto &settings = setConfig().audio;
-    settings.setMusicVolume(value);
-    settings.setUnlocked();
-}
-
-void AudioPage::slot_soundsVolumeChanged(int value)
-{
-    auto &settings = setConfig().audio;
-    settings.setSoundVolume(value);
-    settings.setUnlocked();
 }
 
 void AudioPage::slot_outputDeviceChanged(int index)
