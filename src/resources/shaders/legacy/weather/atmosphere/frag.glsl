@@ -67,14 +67,12 @@ void main()
     float uCloudsIntensity = mix(uIntensities[2], uTargets[2], weatherLerp);
     float uFogIntensity = mix(uIntensities[3], uTargets[3], weatherLerp);
 
-    float timeOfDayLerp = clamp((uCurrentTime - uTimeOfDayStartTime) / uTransitionDuration,
-                                0.0,
-                                1.0);
+    float tTod = clamp((uCurrentTime - uTimeOfDayStartTime) / uTransitionDuration, 0.0, 1.0);
+    float timeOfDayLerp = smoothstep(0.0, 1.0, tTod);
     float currentTimeOfDayIntensity = mix(uTimeOfDay.z, uTimeOfDay.w, timeOfDayLerp);
-    vec4 timeOfDayStart = uNamedColors[int(uTimeOfDay.x)];
-    vec4 timeOfDayTarget = uNamedColors[int(uTimeOfDay.y)];
-    vec4 uTimeOfDayColor = mix(timeOfDayStart, timeOfDayTarget, timeOfDayLerp);
-    uTimeOfDayColor.a *= currentTimeOfDayIntensity;
+    float alphaStart = uNamedColors[int(uTimeOfDay.x)].a;
+    float alphaTarget = uNamedColors[int(uTimeOfDay.y)].a;
+    float uTimeOfDayAlpha = mix(alphaStart, alphaTarget, timeOfDayLerp) * currentTimeOfDayIntensity;
 
     // Atmosphere overlay is now transparent by default (TimeOfDay is drawn separately)
     vec4 result = vec4(0.0);
@@ -86,7 +84,7 @@ void main()
         float density = 0.4 + uFogIntensity * 0.4;
         vec4 fog = vec4(0.8, 0.8, 0.85, uFogIntensity * n * localMask * density);
         // Emissive boost at night
-        fog.rgb += uTimeOfDayColor.a * 0.15;
+        fog.rgb += uTimeOfDayAlpha * 0.15;
 
         // Blend fog over result
         float combinedAlpha = 1.0 - (1.0 - result.a) * (1.0 - fog.a);
@@ -106,7 +104,7 @@ void main()
                            1.0 * storminess,
                            uCloudsIntensity * puffy * localMask * 0.5);
         // Emissive boost at night
-        clouds.rgb += uTimeOfDayColor.a * 0.1;
+        clouds.rgb += uTimeOfDayAlpha * 0.1;
 
         // Blend clouds over result
         float combinedAlpha = 1.0 - (1.0 - result.a) * (1.0 - clouds.a);

@@ -40,14 +40,12 @@ void main()
     float pIntensity = max(pRain, pSnow);
     float pType = pSnow / max(pIntensity, 0.001);
 
-    float timeOfDayLerp = clamp((uCurrentTime - uTimeOfDayStartTime) / uTransitionDuration,
-                                0.0,
-                                1.0);
+    float tTod = clamp((uCurrentTime - uTimeOfDayStartTime) / uTransitionDuration, 0.0, 1.0);
+    float timeOfDayLerp = smoothstep(0.0, 1.0, tTod);
     float currentTimeOfDayIntensity = mix(uTimeOfDay.z, uTimeOfDay.w, timeOfDayLerp);
-    vec4 timeOfDayStart = uNamedColors[int(uTimeOfDay.x)];
-    vec4 timeOfDayTarget = uNamedColors[int(uTimeOfDay.y)];
-    vec4 uTimeOfDayColor = mix(timeOfDayStart, timeOfDayTarget, timeOfDayLerp);
-    uTimeOfDayColor.a *= currentTimeOfDayIntensity;
+    float alphaStart = uNamedColors[int(uTimeOfDay.x)].a;
+    float alphaTarget = uNamedColors[int(uTimeOfDay.y)].a;
+    float uTimeOfDayAlpha = mix(alphaStart, alphaTarget, timeOfDayLerp) * currentTimeOfDayIntensity;
 
     float lifeFade = smoothstep(0.0, 0.15, vLife) * smoothstep(1.0, 0.85, vLife);
 
@@ -55,14 +53,14 @@ void main()
     float streak = 1.0 - smoothstep(0.0, 0.15, abs(vLocalCoord.x - 0.5));
     float rainAlpha = mix(0.4, 0.7, clamp(pIntensity, 0.0, 1.0));
     vec4 rainColor = vec4(0.6, 0.6, 1.0, pIntensity * streak * vLocalMask * rainAlpha * lifeFade);
-    rainColor.rgb += uTimeOfDayColor.a * 0.2;
+    rainColor.rgb += uTimeOfDayAlpha * 0.2;
 
     // Snow visuals
     float dist = distance(vLocalCoord, vec2(0.5));
     float flake = 1.0 - smoothstep(0.1, 0.2, dist);
     float snowAlpha = mix(0.6, 0.9, clamp(pIntensity, 0.0, 1.0));
     vec4 snowColor = vec4(1.0, 1.0, 1.1, pIntensity * flake * vLocalMask * snowAlpha * lifeFade);
-    snowColor.rgb += uTimeOfDayColor.a * 0.3;
+    snowColor.rgb += uTimeOfDayAlpha * 0.3;
 
     // Interpolate visuals based on pType
     vec4 pColor = mix(rainColor, snowColor, pType);
