@@ -24,8 +24,7 @@
 #include <vector>
 
 #include <glm/glm.hpp>
-
-#include <QMessageLogContext>
+#include <glm/gtx/compatibility.hpp>
 
 MMTextureId allocateTextureId()
 {
@@ -368,61 +367,62 @@ NODISCARD static std::vector<QImage> createDottedWallImages(const ExitDirEnum di
     return images;
 }
 
-NODISCARD static QImage createTileableValueNoiseImage(int size)
+NODISCARD static QImage createTileableValueNoiseImage(const int size)
 {
     QImage img(size, size, QImage::Format_RGBA8888);
 
     // Constants 127.1/311.7 provide high-frequency distribution to prevent Moire patterns
-    auto hash = [](float x, float y) -> float {
-        float dot = x * 127.1f + y * 311.7f;
-        float fract = std::sin(dot) * 43758.5453123f;
+    static auto hash = [](const float x, const float y) -> float {
+        const float dot = x * 127.1f + y * 311.7f;
+        const float fract = std::sin(dot) * 43758.5453123f;
         return fract - std::floor(fract);
     };
 
-    auto lerp = [](float a, float b, float t) -> float { return a + t * (b - a); };
-
+    // https://en.wikipedia.org/wiki/Smoothstep#Variations
     // Perlin's quintic curve ($6t^5-15t^4+10t^3$) ensures smooth C2 continuity at grid boundaries
-    auto smooth = [](float t) -> float { return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f); };
+    static auto smootherstep = [](const float t) -> float {
+        return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+    };
+
+    // Double modulo ensures positive wrapping for seamless tiling
+    auto get_wrapped_hash = [size](const int i, const int j) -> float {
+        const auto wi = static_cast<float>((i % size + size) % size);
+        const auto wj = static_cast<float>((j % size + size) % size);
+        return hash(wi, wj);
+    };
 
     for (int y = 0; y < size; ++y) {
         // scanLine avoids QImage's internal per-pixel coordinate-to-pointer overhead
         uchar *line = img.scanLine(y);
 
         for (int x = 0; x < size; ++x) {
-            float xx = static_cast<float>(x);
-            float yy = static_cast<float>(y);
+            const auto xx = static_cast<float>(x);
+            const auto yy = static_cast<float>(y);
 
-            float ix = std::floor(xx);
-            float iy = std::floor(yy);
-            float fx = xx - ix;
-            float fy = yy - iy;
+            const float ix = std::floor(xx);
+            const float iy = std::floor(yy);
+            const float fx = xx - ix;
+            const float fy = yy - iy;
 
-            float sx = smooth(fx);
-            float sy = smooth(fy);
+            const float sx = smootherstep(fx);
+            const float sy = smootherstep(fy);
 
-            // Double modulo ensures positive wrapping for seamless tiling
-            auto get_wrapped_hash = [&](int i, int j) {
-                float wi = static_cast<float>((i % size + size) % size);
-                float wj = static_cast<float>((j % size + size) % size);
-                return hash(wi, wj);
-            };
-
-            int iix = static_cast<int>(ix);
-            int iiy = static_cast<int>(iy);
+            const int iix = static_cast<int>(ix);
+            const int iiy = static_cast<int>(iy);
 
             // Fetch corners for bilinear interpolation
-            float a = get_wrapped_hash(iix, iiy);
-            float b = get_wrapped_hash(iix + 1, iiy);
-            float c = get_wrapped_hash(iix, iiy + 1);
-            float d = get_wrapped_hash(iix + 1, iiy + 1);
+            const float a = get_wrapped_hash(iix, iiy);
+            const float b = get_wrapped_hash(iix + 1, iiy);
+            const float c = get_wrapped_hash(iix, iiy + 1);
+            const float d = get_wrapped_hash(iix + 1, iiy + 1);
 
-            float v = lerp(lerp(a, b, sx), lerp(c, d, sx), sy);
+            const float v = glm::lerp(glm::lerp(a, b, sx), glm::lerp(c, d, sx), sy);
 
             // Casting to uchar provides implicit floor and branchless clamping
-            uchar val = static_cast<uchar>(std::clamp(v * 255.0f, 0.0f, 255.0f));
+            const auto val = static_cast<uchar>(std::clamp(v * 255.0f, 0.0f, 255.0f));
 
             // Direct pointer offset for RGBA8888 interleaved memory
-            int offset = x * 4;
+            const int offset = x * 4;
             line[offset] = val;     // R
             line[offset + 1] = val; // G
             line[offset + 2] = val; // B

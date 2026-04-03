@@ -17,15 +17,7 @@
 #include <cstdlib>
 
 #include <glm/glm.hpp>
-
-namespace {
-template<typename T>
-T lerp(T a, T b, float t)
-{
-    return a + t * (b - a);
-}
-
-} // namespace
+#include <glm/gtx/compatibility.hpp>
 
 /**
  * Weather transition authority documentation:
@@ -360,7 +352,7 @@ float GLWeather::applyTransition(const float startTime,
     const float t = (m_animationManager.getElapsedTime() - startTime)
                     / WeatherConstants::TRANSITION_DURATION;
     const float factor = std::clamp(t, 0.0f, 1.0f);
-    return lerp(startVal, targetVal, factor);
+    return glm::lerp(startVal, targetVal, factor);
 }
 
 template<typename T>
