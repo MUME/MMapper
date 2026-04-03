@@ -62,6 +62,9 @@ public:
     void updateOutputDevice(const QAudioDevice &device);
 #endif
 
+public:
+    void shutdown();
+
 public slots:
     void slot_onMediaChanged();
 
