@@ -107,27 +107,31 @@ MusicManager::MusicManager(MediaLibrary &library, QObject *const parent)
 MusicManager::~MusicManager()
 {
 #ifndef MMAPPER_NO_AUDIO
+    if (m_fadeTimer) {
+        m_fadeTimer->stop();
+    }
     for (int i = 0; i < 2; ++i) {
-        m_channels[i].player->stop();
+        auto &player = deref(m_channels[i].player);
+        player.stop();
+        player.setSource(QUrl());
     }
 #endif
 }
 
 void MusicManager::playMusic(const QString &musicFile)
 {
+#ifndef MMAPPER_NO_AUDIO
     if (musicFile.isEmpty() || NO_AUDIO) {
         stopMusic();
         return;
     }
 
     auto playMusic2 = [this, musicFile](const QUrl &url) {
-#ifndef MMAPPER_NO_AUDIO
         const int ch = prepareChannel(musicFile);
         if (ch < 0) {
             return;
         }
         activateChannel(ch, musicFile, url);
-#endif
     };
 
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
@@ -163,6 +167,7 @@ void MusicManager::playMusic(const QString &musicFile)
 
     playMusic2(musicFile.startsWith(":/") ? QUrl(QStringLiteral("qrc") + musicFile)
                                           : QUrl::fromLocalFile(musicFile));
+#endif
 }
 
 #ifndef MMAPPER_NO_AUDIO

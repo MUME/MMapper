@@ -28,6 +28,7 @@ private:
 
 public:
     explicit SfxManager(MediaLibrary &library, QObject *parent = nullptr);
+    ~SfxManager() override;
 
     void playSound(const QString &soundName);
 

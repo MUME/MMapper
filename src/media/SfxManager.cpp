@@ -29,6 +29,17 @@ SfxManager::SfxManager(MediaLibrary &library, QObject *const parent)
     updateVolume();
 }
 
+SfxManager::~SfxManager()
+{
+#ifndef MMAPPER_NO_AUDIO
+    const auto players = findChildren<QMediaPlayer *>();
+    for (auto *player : players) {
+        player->stop();
+        player->setSource(QUrl());
+    }
+#endif
+}
+
 void SfxManager::playSound(MAYBE_UNUSED const QString &soundName)
 {
     auto &cfg = getConfig().audio;
