@@ -739,7 +739,7 @@ void World::checkConsistency(ProgressCounter &counter) const
         if (!getRoomSet().empty()) {
             std::optional<Bounds> computedBounds;
             counter.setNewTask(ProgressMsg{"checking map coordinates"}, getRoomSet().size());
-            getRoomSet().for_each([&](const RoomId id) {
+            getRoomSet().for_each([this, &computedBounds, &counter](const RoomId id) {
                 const Coordinate &coord = getPosition(id);
                 if (!computedBounds) {
                     computedBounds.emplace(coord, coord);
@@ -1461,8 +1461,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::RemoveAllDoorNa
 {
     pc.increaseTotalStepsBy(getRoomSet().size());
     size_t numRemoved = 0;
-    const DoorName none;
-    getRoomSet().for_each([&](const RoomId id) {
+    getRoomSet().for_each([this, &numRemoved, &pc](const RoomId id) {
         for (const ExitDirEnum dir : ALL_EXITS7) {
             const ExitFlags exitFlags = m_rooms.getExitExitFlags(id, dir);
             if (!exitFlags.isExit() || !exitFlags.isDoor()
@@ -1475,6 +1474,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::RemoveAllDoorNa
                 continue;
             }
 
+            static const DoorName none;
             m_rooms.setExitDoorName(id, dir, none);
             numRemoved += 1;
         }
@@ -2031,7 +2031,7 @@ void World::zapRooms_unsafe(ProgressCounter &pc, const RoomIdSet &rooms)
     {
         DECL_TIMER(t2, "finding inbound exits");
         pc.increaseTotalStepsBy(getRoomSet().size());
-        getRoomSet().for_each([&](const RoomId id) {
+        getRoomSet().for_each([this, &rooms, &pc, &sched_removal](const RoomId id) {
             for (const ExitDirEnum dir : ALL_EXITS7) {
                 const ExitDirEnum rev = opposite(dir);
                 for (const RoomId to : m_rooms.getExitOutgoing(id, dir)) {
@@ -2105,33 +2105,89 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
     m_serverIds.printStats(pc, os);
 
     {
-        size_t numMissingName = 0;
-        size_t numMissingDesc = 0;
-        size_t numMissingBoth = 0;
-        size_t numMissingArea = 0;
-        size_t numMissingServerId = 0;
-        size_t numWithNoConnections = 0;
-        size_t numWithNoExits = 0;
-        size_t numWithNoEntrances = 0;
-        size_t numExits = 0;
-        size_t numDoors = 0;
-        size_t numHidden = 0;
-        size_t numDoorNames = 0;
-        size_t numHiddenDoorNames = 0;
-        size_t numLoopExits = 0;
-        size_t numConnections = 0;
-        size_t numMultipleOut = 0;
-        size_t numMultipleIn = 0;
+        static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
 
-        size_t adj1 = 0;
-        size_t adj2 = 0;
-        size_t non1 = 0;
-        size_t non2 = 0;
-        size_t loop1 = 0;
-        size_t loop2 = 0;
+        static auto C = [](auto x) {
+            static_assert(std::is_integral_v<decltype(x)>);
+            return ColoredValue{green, x};
+        };
+
+        struct NODISCARD Stats final
+        {
+            size_t numMissingName = 0;
+            size_t numMissingDesc = 0;
+            size_t numMissingBoth = 0;
+            size_t numMissingArea = 0;
+            size_t numMissingServerId = 0;
+            size_t numWithNoConnections = 0;
+            size_t numWithNoExits = 0;
+            size_t numWithNoEntrances = 0;
+            size_t numExits = 0;
+            size_t numDoors = 0;
+            size_t numHidden = 0;
+            size_t numDoorNames = 0;
+            size_t numHiddenDoorNames = 0;
+            size_t numLoopExits = 0;
+            size_t numConnections = 0;
+            size_t numMultipleOut = 0;
+            size_t numMultipleIn = 0;
+
+            size_t adj1 = 0;
+            size_t adj2 = 0;
+            size_t non1 = 0;
+            size_t non2 = 0;
+            size_t loop1 = 0;
+            size_t loop2 = 0;
+
+            void print(AnsiOstream &aos) const
+            {
+                aos << "  missing server id: " << C(numMissingServerId) << ".\n";
+                aos << "  missing area:      " << C(numMissingArea) << ".\n";
+                aos << "\n";
+
+                // REVISIT: provide a way to identify and fix rooms with missing name and desc?
+                aos << "  with no name and no desc: " << C(numMissingBoth) << ".\n";
+                aos << "  with name but no desc:    " << C(numMissingDesc - numMissingBoth)
+                    << ".\n";
+                aos << "  with desc but no name:    " << C(numMissingName - numMissingBoth)
+                    << ".\n";
+                aos << "\n";
+                aos << "  with no connections:         " << C(numWithNoConnections) << ".\n";
+                aos << "  with entrances but no exits: " << C(numWithNoExits - numWithNoConnections)
+                    << ".\n";
+                aos << "  with exits but no entrances: "
+                    << C(numWithNoEntrances - numWithNoConnections) << ".\n";
+                aos << "\n";
+                aos << "Total exits: " << C(numExits) << ".\n";
+                aos << "\n";
+                aos << "  doors:  " << C(numDoors) << " (with names: " << C(numDoorNames) << ").\n";
+                aos << "  hidden: " << C(numHidden) << " (with names: " << C(numHiddenDoorNames)
+                    << ").\n";
+                aos << "  loops:  " << C(numLoopExits) << ".\n";
+                aos << "\n";
+                aos << "  with multiple outputs: " << C(numMultipleOut) << ".\n";
+                aos << "  with multiple inputs:  " << C(numMultipleIn) << ".\n";
+                aos << "\n";
+                aos << "Total connections: " << C(numConnections) << ".\n";
+                aos << "\n";
+                aos << "  adjacent 1-way:     " << C(adj1) << ".\n";
+                aos << "  adjacent 2-way:     " << C(adj2) << ".\n";
+                aos << "  looping 1-way:      " << C(loop1) << ".\n";
+                aos << "  looping 2-way:      " << C(loop2) << ".\n";
+                aos << "  non-adjacent 1-way: " << C(non1) << ".\n";
+                aos << "  non-adjacent 2-way: " << C(non2) << ".\n";
+                aos << "\n";
+                aos << "  total 1-way:        " << C(non1 + adj1 + loop1) << ".\n";
+                aos << "  total 2-way:        " << C(non2 + adj2 + loop2) << ".\n";
+                aos << "  total adjacent:     " << C(adj1 + adj2) << ".\n";
+                aos << "  total looping:      " << C(loop1 + loop2) << ".\n";
+                aos << "  total non-adjacent: " << C(non1 + non2 + loop1 + loop2) << ".\n";
+            }
+        };
+        Stats stats;
 
         std::optional<Bounds> optBounds;
-        getRoomSet().for_each([&](const RoomId id) {
+        getRoomSet().for_each([this, &stats, &optBounds](const RoomId id) {
             const RawRoom *const pRoom = getRoom(id);
             if (pRoom == nullptr) {
                 std::abort();
@@ -2147,27 +2203,27 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
 
             const bool isMissingServerId = room.getServerId() == INVALID_SERVER_ROOMID;
             if (isMissingServerId) {
-                ++numMissingServerId;
+                ++stats.numMissingServerId;
             }
 
             const bool isMissingArea = room.getArea().empty();
             if (isMissingArea) {
-                ++numMissingArea;
+                ++stats.numMissingArea;
             }
 
             const bool isMissingName = getRoomName(id).empty();
             const bool isMissingDesc = getRoomDescription(id).empty();
 
             if (isMissingName) {
-                ++numMissingName;
+                ++stats.numMissingName;
             }
 
             if (isMissingDesc) {
-                ++numMissingDesc;
+                ++stats.numMissingDesc;
             }
 
             if (isMissingName && isMissingDesc) {
-                ++numMissingBoth;
+                ++stats.numMissingBoth;
             }
 
             bool hasExits = false;
@@ -2177,20 +2233,20 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
                 const auto &e = getExitExitFlags(id, dir);
 
                 if (e.isExit()) {
-                    ++numExits;
+                    ++stats.numExits;
                 }
 
                 if (e.isDoor()) {
-                    ++numDoors;
+                    ++stats.numDoors;
                     if (!getExitDoorName(id, dir).empty()) {
-                        ++numDoorNames;
+                        ++stats.numDoorNames;
                     }
                 }
 
                 if (getExitDoorFlags(id, dir).isHidden()) {
-                    numHidden += 1;
+                    stats.numHidden += 1;
                     if (!getExitDoorName(id, dir).empty()) {
-                        ++numHiddenDoorNames;
+                        ++stats.numHiddenDoorNames;
                     }
                 }
 
@@ -2206,18 +2262,18 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
                 }
 
                 const auto outSize = outset.size();
-                numConnections += outSize;
+                stats.numConnections += outSize;
 
                 if (outSize > 1) {
-                    ++numMultipleOut;
+                    ++stats.numMultipleOut;
                 }
 
                 if (inset.size() > 1) {
-                    ++numMultipleIn;
+                    ++stats.numMultipleIn;
                 }
 
                 if (outset.contains(id)) {
-                    ++numLoopExits;
+                    ++stats.numLoopExits;
                 }
 
                 const ExitDirEnum rev = opposite(dir);
@@ -2228,79 +2284,35 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
                         const bool twoWay = getOutgoing(to, rev).contains(id);
 
                         if (looping) {
-                            (twoWay ? loop2 : loop1) += 1;
+                            (twoWay ? stats.loop2 : stats.loop1) += 1;
                         } else if (adjacent) {
-                            (twoWay ? adj2 : adj1) += 1;
+                            (twoWay ? stats.adj2 : stats.adj1) += 1;
                         } else {
-                            (twoWay ? non2 : non1) += 1;
+                            (twoWay ? stats.non2 : stats.non1) += 1;
                         }
                     }
                 }
             }
 
             if (!hasEntrances && !hasExits) {
-                ++numWithNoConnections;
+                ++stats.numWithNoConnections;
             }
 
             if (!hasEntrances) {
-                ++numWithNoEntrances;
+                ++stats.numWithNoEntrances;
             }
 
             if (!hasExits) {
-                ++numWithNoExits;
+                ++stats.numWithNoExits;
             }
         });
-
-        static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
-
-        auto C = [](auto x) {
-            static_assert(std::is_integral_v<decltype(x)>);
-            return ColoredValue{green, x};
-        };
 
         os << "\n";
         os << "Total areas: " << C(m_areaInfos.numAreas()) << ".\n";
         os << "\n";
         os << "Total rooms: " << C(getRoomSet().size()) << ".\n";
         os << "\n";
-        os << "  missing server id: " << C(numMissingServerId) << ".\n";
-        os << "  missing area:      " << C(numMissingArea) << ".\n";
-        os << "\n";
-
-        // REVISIT: provide a way to identify and fix rooms with missing name and desc?
-        os << "  with no name and no desc: " << C(numMissingBoth) << ".\n";
-        os << "  with name but no desc:    " << C(numMissingDesc - numMissingBoth) << ".\n";
-        os << "  with desc but no name:    " << C(numMissingName - numMissingBoth) << ".\n";
-        os << "\n";
-        os << "  with no connections:         " << C(numWithNoConnections) << ".\n";
-        os << "  with entrances but no exits: " << C(numWithNoExits - numWithNoConnections)
-           << ".\n";
-        os << "  with exits but no entrances: " << C(numWithNoEntrances - numWithNoConnections)
-           << ".\n";
-        os << "\n";
-        os << "Total exits: " << C(numExits) << ".\n";
-        os << "\n";
-        os << "  doors:  " << C(numDoors) << " (with names: " << C(numDoorNames) << ").\n";
-        os << "  hidden: " << C(numHidden) << " (with names: " << C(numHiddenDoorNames) << ").\n";
-        os << "  loops:  " << C(numLoopExits) << ".\n";
-        os << "\n";
-        os << "  with multiple outputs: " << C(numMultipleOut) << ".\n";
-        os << "  with multiple inputs:  " << C(numMultipleIn) << ".\n";
-        os << "\n";
-        os << "Total connections: " << C(numConnections) << ".\n";
-        os << "\n";
-        os << "  adjacent 1-way:     " << C(adj1) << ".\n";
-        os << "  adjacent 2-way:     " << C(adj2) << ".\n";
-        os << "  looping 1-way:      " << C(loop1) << ".\n";
-        os << "  looping 2-way:      " << C(loop2) << ".\n";
-        os << "  non-adjacent 1-way: " << C(non1) << ".\n";
-        os << "  non-adjacent 2-way: " << C(non2) << ".\n";
-        os << "\n";
-        os << "  total 1-way:        " << C(non1 + adj1 + loop1) << ".\n";
-        os << "  total 2-way:        " << C(non2 + adj2 + loop2) << ".\n";
-        os << "  total adjacent:     " << C(adj1 + adj2) << ".\n";
-        os << "  total looping:      " << C(loop1 + loop2) << ".\n";
-        os << "  total non-adjacent: " << C(non1 + non2 + loop1 + loop2) << ".\n";
+        stats.print(os);
     }
 
     m_spatialDb.printStats(pc, os);

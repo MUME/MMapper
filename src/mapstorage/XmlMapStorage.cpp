@@ -761,7 +761,7 @@ void XmlMapStorage::saveRooms(QXmlStreamWriter &stream, const ImmRoomIdSet &room
     const Map &map = m_saving->map.mapPair.modified;
     ProgressCounter &progressCounter = getProgressCounter();
 
-    roomList.for_each([&](const RoomId id) {
+    roomList.for_each([&map, &progressCounter, &stream](const RoomId id) {
         if (auto handle = map.getRoomHandle(id)) {
             saveRoom(stream, handle.getRawCopyExternal());
         }
@@ -846,7 +846,7 @@ void XmlMapStorage::saveMarkers(QXmlStreamWriter &stream, const InfomarkDb &db)
     }
 
     ProgressCounter &progressCounter = getProgressCounter();
-    db.getIdSet().for_each([&](const InfomarkId id) {
+    db.getIdSet().for_each([&db, &progressCounter, &stream](const InfomarkId id) {
         saveMarker(stream, db.getRawCopy(id));
         progressCounter.step();
     });

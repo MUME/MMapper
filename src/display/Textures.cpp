@@ -610,7 +610,8 @@ void MapCanvas::initTextures()
             }
         };
 
-        auto initGroup = [&](const std::string_view groupName, auto &&...sources) {
+        auto initGroup = [&maybeCreateArray2](const std::string_view groupName,
+                                              auto &&...sources) -> SharedMMTexture {
             SharedMMTexture pArrayTex;
             auto thing = combine(std::forward<decltype(sources)>(sources)...);
             maybeCreateArray2(groupName, thing, pArrayTex);
@@ -633,12 +634,14 @@ void MapCanvas::initTextures()
                                                  textures.exit_down,
                                                  textures.exit_up);
 
-        auto maybeCreateArray =
-            [&](const std::string_view groupName, auto &thing, SharedMMTexture &pArrayTex) {
-                if (pArrayTex)
-                    return;
-                pArrayTex = initGroup(groupName, thing);
-            };
+        auto maybeCreateArray = [&initGroup](const std::string_view groupName,
+                                             auto &thing,
+                                             SharedMMTexture &pArrayTex) {
+            if (pArrayTex) {
+                return;
+            }
+            pArrayTex = initGroup(groupName, thing);
+        };
 
 #define XTEX(_TYPE, _NAME) maybeCreateArray(#_NAME, textures._NAME, textures._NAME##_Array);
         XFOREACH_MAPCANVAS_TEXTURES(XTEX)

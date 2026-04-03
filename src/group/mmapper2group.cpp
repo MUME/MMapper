@@ -312,7 +312,7 @@ bool Mmapper2Group::updateChar(SharedGroupChar sharedCh, const JsonObj &obj)
     }
 
     if (!ch.getColor().isValid()) {
-        auto getColor = [&]() -> QColor {
+        auto getColor = [this, &ch]() -> QColor {
             const auto &settings = getConfig().groupManager;
             if (ch.isNpc() && settings.npcColorOverride) {
                 return settings.npcColor;

@@ -4,6 +4,7 @@
 #include "Remapping.h"
 
 #include "../global/AnsiOstream.h"
+#include "../global/ConfigConsts.h"
 #include "../global/Timer.h"
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
@@ -166,12 +167,15 @@ Remapping Remapping::computeFrom(const std::vector<ExternalRawRoom> &input)
 
     remapping.m_intToExt.init(intToExt.data(), intToExt.size());
 
-    assert(next.asUint32() == seen.size());
-    assert(next.asUint32() == remapping.m_intToExt.size());
-    assert(next.asUint32() == remapping.m_extToInt.size());
+    if constexpr (IS_DEBUG_BUILD) {
+        assert(next.asUint32() == seen.size());
+        assert(next.asUint32() == remapping.m_intToExt.size());
+        assert(next.asUint32() == remapping.m_extToInt.size());
 
-    remapping.m_extToInt.for_each(
-        [&](const auto &kv) { assert(remapping.m_intToExt.at(kv.second) == kv.first); });
+        remapping.m_extToInt.for_each([&remapping](const auto &kv) {
+            assert(remapping.m_intToExt.at(kv.second) == kv.first);
+        });
+    }
 
     return remapping;
 }
@@ -185,7 +189,7 @@ ExternalRoomId Remapping::getNextExternal() const
     const auto any = m_extToInt.begin()->first;
     ExternalRoomId highest = any;
 
-    m_intToExt.for_each([&](auto x) {
+    m_intToExt.for_each([&highest](const ExternalRoomId x) {
         if (x != INVALID_EXTERNAL_ROOMID) {
             if (x > highest) {
                 highest = x;
@@ -276,7 +280,7 @@ void Remapping::compact(ProgressCounter &pc, const ExternalRoomId firstId)
     ImmUnorderedMap<ExternalRoomId, RoomId> newExtToInt;
 
     pc.increaseTotalStepsBy(m_extToInt.size());
-    m_extToInt.for_each([&](const auto &kv) {
+    m_extToInt.for_each([this, &newExtToInt, &next, &pc](const auto &kv) {
         m_intToExt.set(kv.second, next);
         newExtToInt.set(next, kv.second);
         next = next.next();

@@ -532,7 +532,9 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         break;
 
     case Qt::ToolTipRole: {
-        const auto getRatioTooltip = [&](int numerator, int denomenator) -> QVariant {
+        const auto getRatioTooltip =
+            [&character, &column, &formatStat](const int numerator,
+                                               const int denomenator) -> QVariant {
             if (character.getType() == CharacterTypeEnum::NPC) {
                 return QVariant();
             } else {

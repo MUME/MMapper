@@ -28,16 +28,18 @@ namespace { // anonymous
 NODISCARD const char *getArchitectureRegexPattern()
 {
     // See Qt documentation for expected keys
-    const std::array<std::pair<const char *, const char *>, 4> archPatterns = {
+    static const std::array<std::pair<const char *, const char *>, 4> archPatterns = {
         {{"arm64", "(arm64|aarch64)"},
          {"x86_64", "(x86_64|amd64|x64)"},
          {"i386", "(i386|x86(?!_64))"},
          {"arm", "(arm(?!64)|armhf)"}}};
 
-    auto findPattern = [&](const QString &arch) -> const char * {
-        auto it = std::find_if(archPatterns.begin(), archPatterns.end(), [&arch](const auto &pair) {
-            return mmqt::toStdStringUtf8(arch) == pair.first;
-        });
+    static auto findPattern = [](const QString &arch) -> const char * {
+        const auto it = std::find_if(archPatterns.begin(),
+                                     archPatterns.end(),
+                                     [&arch](const auto &pair) {
+                                         return mmqt::toStdStringUtf8(arch) == pair.first;
+                                     });
         return (it != archPatterns.end()) ? it->second : nullptr;
     };
 
