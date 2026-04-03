@@ -74,7 +74,7 @@ xcode-select --install
 Add Qt to your PATH:
 
 ```bash
-echo 'export PATH="~/6.5.3/macos/bin:$PATH"' >> ~/.zshrc
+echo 'export PATH="~/6.8.3/macos/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
@@ -86,7 +86,7 @@ cd build
 cmake -G Ninja -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -S ..
 cmake --build . --parallel
 ```
-**macOS 15+ users**: If you encounter a linker error `ld: framework 'AGL' not found`, edit the file `~/6.5.3/macos/lib/cmake/Qt6/FindWrapOpenGL.cmake` and comment out lines 40-51 (the AGL framework references). The AGL framework was removed from macOS 15.
+**macOS 15+ users**: If you encounter a linker error `ld: framework 'AGL' not found`, edit the file `~/6.8.3/macos/lib/cmake/Qt6/FindWrapOpenGL.cmake` and comment out lines 40-51 (the AGL framework references). The AGL framework was removed from macOS 15.
 
 ---
 
@@ -104,7 +104,7 @@ Install:
 aqt install-qt windows desktop 6.8.3 win64_msvc2019_64 -m qtwebsockets qtmultimedia
 ```
 
-Add `Qt\6.5.3\msvc2019_64\bin` to PATH.
+Add `Qt\6.8.3\msvc2019_64\bin` to PATH.
 
 #### MinGW (Alternative)
 
