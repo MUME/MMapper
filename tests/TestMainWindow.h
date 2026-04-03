@@ -17,4 +17,5 @@ public:
 private:
 private Q_SLOTS:
     void updaterTest();
+    void audioToolbarTest();
 };

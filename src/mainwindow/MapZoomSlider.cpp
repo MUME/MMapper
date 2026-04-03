@@ -6,6 +6,8 @@
 #include "../display/mapwindow.h"
 #include "../global/SignalBlocker.h"
 
+#include <QWheelEvent>
+
 MapZoomSlider::~MapZoomSlider() = default;
 
 int MapZoomSlider::calcPos(const float zoom) noexcept
@@ -48,4 +50,9 @@ void MapZoomSlider::setFromActual()
         const SignalBlocker block{*this};
         setValue(clamp(rounded));
     }
+}
+
+void MapZoomSlider::wheelEvent(QWheelEvent *event)
+{
+    event->ignore();
 }

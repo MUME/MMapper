@@ -44,12 +44,9 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QSlider" name="musicVolumeSlider">
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+       <widget class="AudioVolumeSlider" name="musicVolumeSlider">
+        <property name="audioType">
+         <enum>AudioVolumeSlider::AudioType::Music</enum>
         </property>
        </widget>
       </item>
@@ -70,12 +67,9 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QSlider" name="soundsVolumeSlider">
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+       <widget class="AudioVolumeSlider" name="soundsVolumeSlider">
+        <property name="audioType">
+         <enum>AudioVolumeSlider::AudioType::Sound</enum>
         </property>
        </widget>
       </item>
@@ -97,6 +91,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AudioVolumeSlider</class>
+   <extends>QSlider</extends>
+   <header>mainwindow/AudioVolumeSlider.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

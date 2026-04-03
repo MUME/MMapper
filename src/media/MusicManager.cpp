@@ -124,7 +124,7 @@ void MusicManager::shutdown()
 #endif
 }
 
-void MusicManager::playMusic(const QString &musicFile)
+void MusicManager::playMusic(MAYBE_UNUSED const QString &musicFile)
 {
 #ifndef MMAPPER_NO_AUDIO
     if (musicFile.isEmpty() || NO_AUDIO) {

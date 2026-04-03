@@ -33,6 +33,7 @@
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
 #include "../viewers/TopLevelWindows.h"
+#include "AudioVolumeSlider.h"
 #include "MapZoomSlider.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
@@ -1185,6 +1186,7 @@ void MainWindow::setupMenuBar()
     toolbars->addAction(roomToolBar->toggleViewAction());
     toolbars->addAction(connectionToolBar->toggleViewAction());
     toolbars->addAction(settingsToolBar->toggleViewAction());
+    toolbars->addAction(audioToolBar->toggleViewAction());
     QMenu *sidepanels = viewMenu->addMenu(tr("&Side Panels"));
     sidepanels->addAction(m_dockDialogLog->toggleViewAction());
     sidepanels->addAction(m_dockDialogClient->toggleViewAction());
@@ -1428,6 +1430,15 @@ void MainWindow::setupToolBars()
     settingsToolBar->setObjectName("PreferencesToolBar");
     settingsToolBar->addAction(preferencesAct);
     settingsToolBar->hide();
+
+    audioToolBar = addToolBar(tr("Audio"));
+    audioToolBar->setObjectName("AudioToolBar");
+    audioToolBar->addWidget(
+        new AudioVolumeSlider(AudioVolumeSlider::AudioType::Music, audioToolBar));
+    audioToolBar->addSeparator();
+    audioToolBar->addWidget(
+        new AudioVolumeSlider(AudioVolumeSlider::AudioType::Sound, audioToolBar));
+    audioToolBar->hide();
 }
 
 void MainWindow::setupStatusBar()

@@ -23,8 +23,6 @@ public:
 
 public slots:
     void slot_loadConfig();
-    void slot_musicVolumeChanged(int);
-    void slot_soundsVolumeChanged(int);
     void slot_outputDeviceChanged(int);
     void slot_updateDevices();
 };
