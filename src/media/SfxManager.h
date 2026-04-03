@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 The MMapper Authors
 
+#include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
 #include <QObject>
@@ -22,13 +23,14 @@ class NODISCARD_QOBJECT SfxManager final : public QObject
 
 private:
 #ifndef MMAPPER_NO_AUDIO
-    QAudioOutput *m_output;
+    QAudioOutput *m_output = nullptr;
 #endif
     MediaLibrary &m_library;
 
 public:
     explicit SfxManager(MediaLibrary &library, QObject *parent = nullptr);
     ~SfxManager() override;
+    DELETE_CTORS_AND_ASSIGN_OPS(SfxManager);
 
     void shutdown();
     void playSound(const QString &soundName);

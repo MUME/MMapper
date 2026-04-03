@@ -98,7 +98,7 @@ void SfxManager::playFromData(const QByteArray &data, const QString &soundName)
 #endif
 }
 
-void SfxManager::startEffect(const QUrl &url, const QString &tmpToDelete)
+void SfxManager::startEffect(MAYBE_UNUSED const QUrl &url, MAYBE_UNUSED const QString &tmpToDelete)
 {
 #ifndef MMAPPER_NO_AUDIO
     auto *effect = new QMediaPlayer(this);

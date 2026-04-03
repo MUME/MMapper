@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 The MMapper Authors
 
+#include "../global/RuleOf5.h"
 #include "../global/macros.h"
 
 #include <QCache>
@@ -36,7 +37,7 @@ private:
         float fadeVolume = 0.0f;
     };
 
-    MusicChannel m_channels[2];
+    MusicChannel m_channels[2]; // TODO: use std::array or MMapper::Array
     int m_activeChannel = 0;
     QCache<QString, qint64> m_cachedPositions;
     QCache<QString, QTemporaryFile> m_wasmFiles;
@@ -52,6 +53,7 @@ private:
 public:
     explicit MusicManager(MediaLibrary &library, QObject *parent = nullptr);
     ~MusicManager() override;
+    DELETE_CTORS_AND_ASSIGN_OPS(MusicManager);
 
     void playMusic(const QString &musicFile);
     void stopMusic();

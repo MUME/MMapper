@@ -135,6 +135,7 @@ private:
     QToolBar *roomToolBar = nullptr;
     QToolBar *connectionToolBar = nullptr;
     QToolBar *settingsToolBar = nullptr;
+    QToolBar *audioToolBar = nullptr;
 
     QMenu *fileMenu = nullptr;
     QMenu *editMenu = nullptr;

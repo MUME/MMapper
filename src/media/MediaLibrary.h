@@ -33,8 +33,8 @@ private:
 public:
     explicit MediaLibrary(QObject *parent = nullptr);
 
-    QString findAudio(const QString &subDir, const QString &name) const;
-    QString findImage(const QString &subDir, const QString &name) const;
+    NODISCARD QString findAudio(const QString &subDir, const QString &name) const;
+    NODISCARD QString findImage(const QString &subDir, const QString &name) const;
 
     void fetchAsync(const QString &path, std::function<void(const QByteArray &)> callback);
 

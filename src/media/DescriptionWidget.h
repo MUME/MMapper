@@ -19,8 +19,8 @@ class NODISCARD_QOBJECT DescriptionWidget final : public QWidget
 private:
     MediaLibrary &m_library;
 
-    QLabel *m_label;
-    QTextEdit *m_textEdit;
+    QLabel *m_label = nullptr;
+    QTextEdit *m_textEdit = nullptr;
 
 private:
     QCache<QString, QImage> m_imageCache;
