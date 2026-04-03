@@ -184,7 +184,7 @@ RoomIdSet MapFrontend::findAllRooms(const Coordinate &input_min, const Coordinat
     Bounds bounds{input_min, input_max};
     RoomIdSet result;
     const auto &map = getCurrentMap();
-    map.getRooms().for_each([&](const RoomId id) {
+    map.getRooms().for_each([&bounds, &map, &result](const RoomId id) {
         const auto &r = map.getRoomHandle(id);
         if (bounds.contains(r.getPosition())) {
             result.insert(r.getId());
@@ -268,7 +268,7 @@ bool MapFrontend::applySingleChange(ProgressCounter &pc, const Change &change)
         log << "[MapFrontend::applySingleChange] ";
         getCurrentMap().printChange(log, change);
     }
-    return applyChangesInternal(pc, [&](Map &map, ProgressCounter &counter) {
+    return applyChangesInternal(pc, [&change](Map &map, ProgressCounter &counter) {
         return map.applySingleChange(counter, change);
     });
 }
@@ -286,7 +286,7 @@ bool MapFrontend::applyChanges(ProgressCounter &pc, const ChangeList &changes)
         log << "[MapFrontend::applyChanges] ";
         getCurrentMap().printChanges(log, changes.getChanges(), "\n");
     }
-    return applyChangesInternal(pc, [&](Map &map, ProgressCounter &counter) {
+    return applyChangesInternal(pc, [&changes](Map &map, ProgressCounter &counter) {
         return map.apply(counter, changes);
     });
 }

@@ -351,7 +351,7 @@ void Map::printMulti(ProgressCounter &pc, AnsiOstream &os) const
 
     std::set<ExternalRoomId> rooms;
     pc.setNewTask(ProgressMsg{"phase 1: scanning rooms"}, getRoomsCount());
-    getRooms().for_each([&](const RoomId here) {
+    getRooms().for_each([&pc, &rooms, &w](const RoomId here) {
         const auto &room = deref(w.getRoom(here));
         const auto hereExternal = w.convertToExternal(here);
         for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
@@ -443,7 +443,7 @@ void Map::printUnknown(ProgressCounter &pc, AnsiOstream &os) const
 {
     std::set<ExternalRoomId> set;
     pc.setNewTask(ProgressMsg{"scanning rooms"}, getRoomsCount());
-    getRooms().for_each([&](const RoomId id) {
+    getRooms().for_each([this, &pc, &set](const RoomId id) {
         const auto &room = getRoomHandle(id);
         if (!room.getExit(ExitDirEnum::UNKNOWN).outIsEmpty()
             || !room.getExit(ExitDirEnum::UNKNOWN).inIsEmpty()) {
@@ -1184,7 +1184,7 @@ Map Map::merge(ProgressCounter &pc,
         marks.reserve(currentMap.getMarksCount() + newMarks.size());
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old rooms"});
-        currentMap.getRooms().for_each([&](const RoomId id) {
+        currentMap.getRooms().for_each([&currentMap, &pc, &rooms](const RoomId id) {
             const RoomHandle &room = currentMap.getRoomHandle(id);
             rooms.emplace_back(room.getRawCopyExternal());
             pc.step();
@@ -1198,7 +1198,7 @@ Map Map::merge(ProgressCounter &pc,
 
         pc.setCurrentTask(ProgressMsg{"creating combined map: old marks"});
         const auto &db = currentMap.getInfomarkDb();
-        db.getIdSet().for_each([&](const auto id) {
+        db.getIdSet().for_each([&db, &marks, &pc](const auto id) {
             marks.emplace_back(db.getRawCopy(id));
             pc.step();
         });
@@ -1233,7 +1233,7 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
                              const std::function<void(const RawRoom &room)> &callback)
 {
     pc.increaseTotalStepsBy(current.getRoomsCount());
-    current.getRooms().for_each([&](const RoomId id) {
+    current.getRooms().for_each([&callback, &current, &pc, &saved](const RoomId id) {
         const auto r = current.findRoomHandle(id);
         if (!r) {
             assert(false);

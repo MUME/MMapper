@@ -157,8 +157,9 @@ NODISCARD std::optional<GLContextCheckResult> probeCompat(
         // Filter compatVersions to only include versions <= coreResult
         compatVersionsToTest.erase(std::remove_if(compatVersionsToTest.begin(),
                                                   compatVersionsToTest.end(),
-                                                  [&](const GLVersion &ver) {
-                                                      return ver > coreResult->version;
+                                                  [resultVer = coreResult->version](
+                                                      const GLVersion &ver) {
+                                                      return ver > resultVer;
                                                   }),
                                    compatVersionsToTest.end());
     }

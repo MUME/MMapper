@@ -799,7 +799,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     const float extension = CONNECTION_LINE_WIDTH * 0.5f;
 
     // Helper lambda to generate a quad between two points with a specific color.
-    auto generateQuad = [&](const glm::vec3 &p1, const glm::vec3 &p2, const Color quad_color) {
+    auto generateQuad = [this](const glm::vec3 &p1, const glm::vec3 &p2, const Color quad_color) {
         auto &verts = deref(m_currentBuffer).quadVerts;
 
         const glm::vec3 segment = p2 - p1;

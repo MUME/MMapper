@@ -116,16 +116,18 @@ void ConfigDialog::createIcons()
 {
     const QSize iconTargetSize = ui->contentsWidget->iconSize();
 
-    auto addItem = [&](const QString &iconPath, const QString &label) {
+    auto addItem = [this, iconTargetSize](const QString &iconPath,
+                                          const QString &label) /*-> QListWidgetItem * */ {
         QPixmap pixmap(iconPath);
         QPixmap scaled = pixmap.scaled(iconTargetSize,
                                        Qt::KeepAspectRatio,
                                        Qt::SmoothTransformation);
 
+        // does this leak, or is ownership given to ui->contentsWidget?
         auto *item = new QListWidgetItem(QIcon(scaled), label, ui->contentsWidget);
         item->setTextAlignment(Qt::AlignHCenter);
         item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-        return item;
+        // return item;
     };
 
     addItem(":/icons/generalcfg.png", tr("General"));

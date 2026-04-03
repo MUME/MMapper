@@ -180,7 +180,7 @@ private:
         RenderStateBinder renderStateBinder(m_functions, m_functions.getTexLookup(), renderState);
 
         m_functions.glBindVertexArray(m_vao.get());
-        RAIICallback vaoUnbinder([&]() {
+        RAIICallback vaoUnbinder([this]() {
             m_functions.glBindVertexArray(0);
             m_functions.checkError();
         });

@@ -98,7 +98,7 @@ RoomIdSet getRooms(const Map &map, const ParseTree &tree, const ParseEvent &even
 
         RoomIdSet results;
         size_t numReported = 0;
-        set.for_each([&](const RoomId id) {
+        set.for_each([&map, &numReported, &results, &tryReport](const RoomId id) {
             if (const auto optRoom = map.findRoomHandle(id)) {
                 if (tryReport(optRoom)) {
                     results.insert(id);

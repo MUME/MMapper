@@ -606,7 +606,7 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
     roomList.reserve(map.getRoomsCount());
 
     progressCounter.setNewTask(ProgressMsg{"scanning rooms"}, map.getRooms().size());
-    map.getRooms().for_each([&](const RoomId id) {
+    map.getRooms().for_each([&map, &roomList](const RoomId id) {
         const auto &room = map.getRoomHandle(id);
         if (!room.isTemporary()) {
             roomList.push_back(room);
@@ -643,7 +643,7 @@ bool MapStorage::virt_saveData(const MapLoadData &mapData)
     // save items
     progressCounter.setNewTask(ProgressMsg{"saving markers"}, marksCount);
     auto &db = map.getInfomarkDb();
-    db.getIdSet().for_each([&](const InfomarkId id) {
+    db.getIdSet().for_each([&db, &progressCounter, &stream](const InfomarkId id) {
         saveMark(db.getRawCopy(id), stream);
         progressCounter.step();
     });

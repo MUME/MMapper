@@ -147,7 +147,7 @@ void FindRoomsDlg::slot_findClicked()
     try {
         RoomFilter filter(text, cs, regex, kind);
         const Map &map = m_mapData.getCurrentMap();
-        map.getRooms().for_each([&](const auto roomId) {
+        map.getRooms().for_each([this, &filter, &map](const auto roomId) {
             const auto &room = map.getRoomHandle(roomId);
             if (!filter.filter(room.getRaw())) {
                 return;

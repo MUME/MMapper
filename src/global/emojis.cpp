@@ -643,7 +643,7 @@ static void importEmojis(const QByteArray &bytes, const QString &filename)
     auto &emojis = getEmojis();
     emojis.reset();
     size_t num_output_emojis = 0;
-    auto report = [&](const QString &shortCode, const QString &hex) {
+    auto report = [&emojis](const QString &shortCode, const QString &hex) {
         if (auto opt_emoji = getUnicode(hex)) {
             for (const char32_t c : *opt_emoji) {
                 if (isAsciiOrLatin1ControlCode(c)) {

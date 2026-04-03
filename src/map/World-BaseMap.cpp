@@ -30,7 +30,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
     pc.setNewTask(ProgressMsg{"seeding rooms"}, getRoomSet().size());
 
     // Seed rooms
-    const std::unordered_set<ServerRoomId> seeds = {
+    static const std::unordered_set<ServerRoomId> seeds = {
         ServerRoomId{12681340}, // Fountain Square (Harlond)
         ServerRoomId{4831075},  // Cosy Room (Gandalf Intro)
         ServerRoomId{15197529}, // The High Chamber of the Lamp (Valinor)
@@ -41,7 +41,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
         ServerRoomId{7854852},  // Frozen North
         ServerRoomId{14623711}, // Hidden Island
     };
-    getRoomSet().for_each([&](auto id) {
+    getRoomSet().for_each([this, &baseRooms, &roomsTodo, &pc](const RoomId id) {
         const RawRoom &room = deref(getRoom(id));
         if (room.isPermanent()) {
             const auto serverId = room.getServerId();
@@ -89,7 +89,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
     {
         pc.setNewTask(ProgressMsg{"removing hidden exits"}, copy.size());
         size_t removedExits = 0;
-        copy.for_each([&](auto id) {
+        copy.for_each([this, &baseRooms, &removedExits, &pc](const RoomId id) {
             if (baseRooms.contains(id)) {
                 // Use a copy instead of a reference, to avoid crashing when trying out different
                 // immer-like backend implementations that use copy-on-write.
@@ -112,7 +112,7 @@ void World::apply(ProgressCounter &pc, const world_change_types::GenerateBaseMap
     {
         pc.setNewTask(ProgressMsg{"removing inaccessible rooms"}, copy.size());
         size_t removedRooms = 0;
-        copy.for_each([&](auto id) {
+        copy.for_each([this, &baseRooms, &pc, &removedRooms](const RoomId id) {
             if (!baseRooms.contains(id)) {
                 removeFromWorld(id, true);
                 ++removedRooms;

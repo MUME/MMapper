@@ -620,7 +620,7 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
 
                 // Handle rooms needing a server ID or that are temporary
                 if (showNeedsServerId) {
-                    current.getRooms().for_each([&](auto id) {
+                    current.getRooms().for_each([&current, &drawQuad](auto id) {
                         if (auto h = current.getRoomHandle(id)) {
                             if (h.isTemporary()) {
                                 drawQuad(h.getRaw(), NamedColorEnum::HIGHLIGHT_TEMPORARY);
@@ -634,9 +634,12 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                 // Handle changed rooms
                 if (showChanged) {
                     ProgressCounter dummyPc;
-                    Map::foreachChangedRoom(dummyPc, saved, current, [&](const RawRoom &room) {
-                        drawQuad(room, NamedColorEnum::HIGHLIGHT_UNSAVED);
-                    });
+                    Map::foreachChangedRoom(dummyPc,
+                                            saved,
+                                            current,
+                                            [&drawQuad](const RawRoom &room) {
+                                                drawQuad(room, NamedColorEnum::HIGHLIGHT_UNSAVED);
+                                            });
                 }
 
                 if (highlights.empty()) {

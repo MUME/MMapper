@@ -57,7 +57,7 @@ void SpatialDb::updateBounds(ProgressCounter &pc)
     const auto &c = m_unique.begin()->first;
     m_bounds.emplace(c, c);
     pc.increaseTotalStepsBy(m_unique.size());
-    m_unique.for_each([&](const auto &kv) {
+    m_unique.for_each([this, &pc](const auto &kv) {
         m_bounds->insert(kv.first);
         pc.step();
     });
