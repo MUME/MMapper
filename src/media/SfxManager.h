@@ -30,6 +30,7 @@ public:
     explicit SfxManager(MediaLibrary &library, QObject *parent = nullptr);
     ~SfxManager() override;
 
+    void shutdown();
     void playSound(const QString &soundName);
 
     void updateVolume();

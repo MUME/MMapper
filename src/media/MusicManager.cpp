@@ -106,6 +106,11 @@ MusicManager::MusicManager(MediaLibrary &library, QObject *const parent)
 
 MusicManager::~MusicManager()
 {
+    shutdown();
+}
+
+void MusicManager::shutdown()
+{
 #ifndef MMAPPER_NO_AUDIO
     if (m_fadeTimer) {
         m_fadeTimer->stop();
@@ -114,6 +119,7 @@ MusicManager::~MusicManager()
         auto &player = deref(m_channels[i].player);
         player.stop();
         player.setSource(QUrl());
+        m_channels[i].file.clear();
     }
 #endif
 }

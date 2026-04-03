@@ -15,6 +15,7 @@
 #include <QMediaDevices>
 #endif
 
+#include <QCoreApplication>
 #include <QRegularExpression>
 
 AudioManager::AudioManager(MediaLibrary &library, GameObserver &observer, QObject *const parent)
@@ -24,6 +25,13 @@ AudioManager::AudioManager(MediaLibrary &library, GameObserver &observer, QObjec
 {
     m_music = new MusicManager(m_library, this);
     m_sfx = new SfxManager(m_library, this);
+    connect(QCoreApplication::instance(),
+            &QCoreApplication::aboutToQuit,
+            this,
+            [music = m_music, sfx = m_sfx]() {
+                music->shutdown();
+                sfx->shutdown();
+            });
 
     m_observer.sig2_gainedLevel.connect(m_lifetime, [this]() { playSound("level-up"); });
 
