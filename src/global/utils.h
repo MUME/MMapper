@@ -411,16 +411,7 @@ ALLOW_DISCARD static inline size_t erase_if(Container &container, Callback &&cal
 template<typename T, typename Predicate>
 NODISCARD bool listRemoveIf(std::list<T> &list, Predicate &&should_remove)
 {
-    // c++20 version of remove_if() returns # of elements removed, but c++17 doesn't.
-    bool removed = false;
-    list.remove_if([&removed, &should_remove](const T &element) -> bool {
-        if (should_remove(element)) {
-            removed = true;
-            return true;
-        }
-        return false;
-    });
-    return removed;
+    return std::erase_if(list, std::forward<Predicate>(should_remove)) > 0;
 }
 
 template<typename Container, typename Callback>
@@ -449,9 +440,8 @@ NODISCARD static inline auto find_min_computed(const Container &container, Callb
     }
 }
 
-// This can be removed and replaced with std::remove_cvref_t<T> in c++20.
 template<typename T>
-using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+using remove_cvref_t = std::remove_cvref_t<T>;
 
 template<typename T, typename... Ts>
 struct are_distinct : std::conjunction<std::negation<std::is_same<T, Ts>>..., are_distinct<Ts...>>

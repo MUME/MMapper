@@ -184,7 +184,8 @@ private:
     }
 
     template<typename E>
-    auto printEnum(const E x) -> std::enable_if_t<std::is_enum_v<E>>
+        requires(std::is_enum_v<E>)
+    void printEnum(const E x)
     {
         m_os << to_string_view(x);
     }

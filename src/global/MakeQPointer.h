@@ -12,8 +12,8 @@
 
 namespace mmqt {
 template<typename T, typename... Args>
-NODISCARD auto makeQPointer(Args &&...args)
-    -> std::enable_if_t<std::is_base_of_v<QObject, T>, QPointer<T>>
+    requires(std::is_base_of_v<QObject, T>)
+NODISCARD QPointer<T> makeQPointer(Args &&...args)
 {
     auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
     if (ptr->QObject::parent() == nullptr) {

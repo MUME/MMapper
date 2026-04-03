@@ -7,12 +7,6 @@
 
 namespace detail {
 
-/*
-template<typename T>
-struct is_const_ref : std::bool_constant<!std::is_const_v<std::remove_reference_t<T>>>
-{};
-*/
-
 template<typename Exit_>
 struct NODISCARD InvariantsHelper final
 {
@@ -53,8 +47,10 @@ struct NODISCARD InvariantsHelper final
     }
 
     // Note: This function will cause a ton of compiler errors if you try to call it
-    // with a const ref Exit type, but we can't use std::enable_if_t here.
+    // with a const ref Exit type. The requires() clause should help give a reasonable
+    // error message.
     void enforce()
+        requires(not std::is_const_v<std::remove_reference_t<Exit_>>)
     {
         if (hasActualExitFlag != shouldHaveExitFlag) {
             if (shouldHaveExitFlag) {

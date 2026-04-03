@@ -232,9 +232,8 @@ namespace mctp {
 namespace detail {
 // converts from EnumIndexedArray<SharedMMTexture, ...> to EnumIndexedArray<MMTexArrayPosition, ...>
 template<typename T>
-auto typeHack(const T &)
-    -> std::enable_if_t<std::is_same_v<typename T::value_type, SharedMMTexture>,
-                        EnumIndexedArray<MMTexArrayPosition, typename T::index_type, T::SIZE>>;
+    requires(std::is_same_v<typename T::value_type, SharedMMTexture>)
+auto typeHack(const T &) -> EnumIndexedArray<MMTexArrayPosition, typename T::index_type, T::SIZE>;
 
 template<typename T>
 struct NODISCARD Proxy

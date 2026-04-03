@@ -28,33 +28,29 @@ NODISCARD constexpr bool isSameIntValue(const A a, const B b) noexcept
     return a == b;
 }
 
-// This only exists because c++17 std::isnan() is not constexpr;
-// using "f != f" feels like a hack.
 template<typename FloatType>
 NODISCARD constexpr bool isNan(const FloatType f) noexcept
 {
-#if __cplusplus >= 202000L
+#if defined(__cpp_lib_constexpr_cmath) && __cpp_lib_constexpr_cmath >= 202202L
     return std::isnan(f);
+#elif defined(__clang__) || defined(__GNUC__)
+    return __builtin_isnan(f);
 #else
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#endif
-    return f != f; // NOLINT (this is only true for NaNs)
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+    // std::isnan() is not constexpr in all C++20 implementations (e.g. MSVC 2022)
+    return f != f;
 #endif
 }
 
-// this only exists because c++17 std::isfinite() is not constexpr
 template<typename FloatType>
 NODISCARD constexpr bool isFinite(const FloatType f) noexcept
 {
-#if __cplusplus >= 202000L
+#if defined(__cpp_lib_constexpr_cmath) && __cpp_lib_constexpr_cmath >= 202202L
     return std::isfinite(f);
+#elif defined(__clang__) || defined(__GNUC__)
+    return __builtin_isfinite(f);
 #else
-    constexpr auto inf = std::numeric_limits<FloatType>::infinity();
+    // std::isfinite() is not constexpr in all C++20 implementations (e.g. MSVC 2022)
+    const auto inf = std::numeric_limits<FloatType>::infinity();
     return !isNan(f) && -inf < f && f < inf;
 #endif
 }

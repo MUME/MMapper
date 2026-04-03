@@ -3,7 +3,7 @@ project(mmapper CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -419,6 +419,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         endif()
 
         add_compile_options(-Weverything)
+        add_compile_options(-Wno-c++20-compat)
         add_compile_options(-Wno-c++98-c++11-compat-binary-literal) # never useful.
         add_compile_options(-Wno-c++98-compat) # never useful.
         add_compile_options(-Wno-c++98-compat-pedantic) # sometimes useful.
@@ -461,7 +462,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=shorten-64-to-32)
         add_compile_options(-Werror=sign-conversion) # can warn about hard-to-spot bugs.
         add_compile_options(-Werror=switch)
-        add_compile_options(-Werror=unused-result) # required for c++17 [[nodiscard]]
+        add_compile_options(-Werror=unused-result) # required for [[nodiscard]]
         add_compile_options(-Werror=weak-vtables) # can result in crashes for ODR violations.
 
         # remove noise (most of these cannot be fixed)
@@ -472,6 +473,7 @@ if(MSVC)
     add_definitions(-DNOMINMAX)
     # modernize the __cplusplus value
     add_compile_options(/Zc:__cplusplus)
+    add_compile_options(/Zc:preprocessor)
     add_compile_options(/utf-8)
     add_compile_options(/permissive-)
     if(CMAKE_BUILD_TYPE_UPPER MATCHES "^RELWITHDEBINFO$")
