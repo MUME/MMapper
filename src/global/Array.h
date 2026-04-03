@@ -35,6 +35,7 @@ public:
 
 public:
     template<typename First, typename... Types>
+        requires(std::is_same_v<First, Types> && ...)
     explicit constexpr Array(First &&first, Types &&...args)
         : std::array<T, N>{std::forward<First>(first), std::forward<Types>(args)...}
     {
@@ -42,9 +43,7 @@ public:
     }
 };
 
-#if __cpp_deduction_guides >= 201606
-// deducation guide copied from std::array
 template<typename T, typename... U>
-Array(T, U...) -> Array<std::enable_if_t<(std::is_same_v<T, U> && ...), T>, 1 + sizeof...(U)>;
-#endif
+    requires(std::is_same_v<T, U> && ...)
+Array(T, U...) -> Array<T, 1 + sizeof...(U)>;
 } // namespace MMapper

@@ -552,13 +552,7 @@ NODISCARD static constexpr bool is7bit(const char c) noexcept
 }
 NODISCARD static constexpr bool is7bit(const std::string_view sv) noexcept
 {
-    // NOLINTNEXTLINE (can't use std::all_of() in constexpr in c++17)
-    for (const char c : sv) {
-        if (!is7bit(c)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(sv.begin(), sv.end(), [](char c) { return is7bit(c); });
 }
 
 NODISCARD static constexpr Utf8ValidationEnum validateUtf8(std::string_view sv) noexcept

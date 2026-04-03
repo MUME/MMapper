@@ -35,7 +35,7 @@ add_library(mm_test STATIC
     ../src/proxy/GmcpMessage.h
 )
 set_target_properties(mm_test PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
     COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -67,7 +67,7 @@ target_link_libraries(TestClock
         coverage_config)
 set_target_properties(
   TestClock PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -92,7 +92,7 @@ target_link_libraries(TestExpandoraCommon
         coverage_config)
 set_target_properties(
   TestExpandoraCommon PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -114,7 +114,7 @@ target_link_libraries(TestParser
         coverage_config)
 set_target_properties(
   TestParser PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -136,7 +136,7 @@ add_dependencies(TestProxy mm_test mm_global)
 target_link_libraries(TestProxy mm_test mm_global Qt6::Test coverage_config)
 set_target_properties(
   TestProxy PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -161,7 +161,7 @@ target_link_libraries(TestMainWindow
         coverage_config)
 set_target_properties(
   TestMainWindow PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -180,7 +180,7 @@ target_link_libraries(TestGlobal
         coverage_config)
 set_target_properties(
   TestGlobal PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -204,7 +204,7 @@ target_link_libraries(TestMap
         coverage_config)
 set_target_properties(
         TestMap PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -226,7 +226,7 @@ add_dependencies(TestAdventure mm_test mm_global)
 target_link_libraries(TestAdventure mm_test mm_global Qt6::Widgets Qt6::Network Qt6::Test coverage_config)
 set_target_properties(
         TestAdventure PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -244,7 +244,7 @@ add_dependencies(TestTimer mm_global)
 target_link_libraries(TestTimer mm_global Qt6::Test coverage_config)
 set_target_properties(
         TestTimer PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -262,7 +262,7 @@ add_dependencies(TestRoomMob mm_global)
 target_link_libraries(TestRoomMob mm_global Qt6::Test Qt6::Gui Qt6::Widgets coverage_config)
 set_target_properties(
         TestRoomMob PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -283,7 +283,7 @@ add_dependencies(TestRoomMobs mm_global)
 target_link_libraries(TestRoomMobs mm_global Qt6::Test Qt6::Gui Qt6::Widgets coverage_config)
 set_target_properties(
         TestRoomMobs PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -305,7 +305,7 @@ add_dependencies(TestRoomManager mm_test mm_global)
 target_link_libraries(TestRoomManager mm_test mm_global Qt6::Test Qt6::Gui Qt6::Widgets coverage_config)
 set_target_properties(
         TestRoomManager PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -325,7 +325,7 @@ add_dependencies(TestHotkeyManager mm_test mm_global mm_map)
 target_link_libraries(TestHotkeyManager mm_map mm_test mm_global Qt6::Test Qt6::Network coverage_config)
 set_target_properties(
         TestHotkeyManager PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         COMPILE_FLAGS "${WARNING_FLAGS}"

@@ -79,15 +79,17 @@ template<typename...>
 struct NODISCARD underlying_helper;
 
 template<typename T>
+    requires(not std::is_enum_v<T>)
 struct NODISCARD underlying_helper<T>
 {
     using type = T;
 };
 
 template<typename T>
-struct NODISCARD underlying_helper<T, std::enable_if_t<std::is_enum_v<T>>>
+    requires(std::is_enum_v<T>)
+struct NODISCARD underlying_helper<T>
 {
-    using type = typename std::underlying_type_t<T>;
+    using type = std::underlying_type_t<T>;
 };
 
 template<typename Crtp_, typename Tag_, typename Type_>

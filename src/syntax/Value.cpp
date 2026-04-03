@@ -137,6 +137,26 @@ Vector::Base::const_iterator Vector::end() const
     return m_vector->end();
 }
 
+bool Vector::empty() const
+{
+    return m_vector->empty();
+}
+
+size_t Vector::size() const
+{
+    return m_vector->size();
+}
+
+const Value &Vector::at(const size_t pos) const
+{
+    return m_vector->at(pos);
+}
+
+const Value &Vector::operator[](const size_t pos) const
+{
+    return at(pos);
+}
+
 Vector getAnyVectorReversed(const Pair *const matched)
 {
     size_t len = 0;

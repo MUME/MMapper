@@ -190,17 +190,17 @@ void TestGlobal::flagsTest()
 
 void TestGlobal::hideQDebugTest()
 {
-    static constexpr auto onlyDebug = []() {
+    static constexpr auto onlyDebug = std::invoke([]() constexpr -> mmqt::HideQDebugOptions {
         mmqt::HideQDebugOptions tmp;
         tmp.hideInfo = false;
         return tmp;
-    }();
+    });
 
-    static constexpr auto onlyInfo = []() {
+    static constexpr auto onlyInfo = std::invoke([]() constexpr -> mmqt::HideQDebugOptions {
         mmqt::HideQDebugOptions tmp;
         tmp.hideDebug = false;
         return tmp;
-    }();
+    });
 
     const QString expected = "1{DIW}\n2{DW}\n3{DIW}\n4{IW}\n5{DIW}\n"
                              "---\n"

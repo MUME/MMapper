@@ -135,13 +135,17 @@ public:
     void write(char16_t codepoint);
     void write(char32_t codepoint);
     void write(std::string_view sv);
+    void write(std::u8string_view sv)
+    {
+        write(std::string_view{reinterpret_cast<const char *>(sv.data()), sv.size()});
+    }
 
     template<typename T>
-    auto write(const T n)
-        -> std::enable_if_t<(std::is_integral_v<T> && !std::is_same_v<char32_t, std::decay_t<T>>
-                             && sizeof(char) < sizeof(T))
-                                || std::is_floating_point_v<T>,
-                            void>
+        requires((std::is_integral_v<T> and sizeof(T) > sizeof(char)
+                  and not(std::is_same_v<char16_t, std::decay_t<T>>
+                          or std::is_same_v<char32_t, std::decay_t<T>>))
+                 or std::is_floating_point_v<T>)
+    void write(const T n)
     {
         auto s = std::to_string(n);
         write(std::string_view{s});

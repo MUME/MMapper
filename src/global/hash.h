@@ -7,13 +7,10 @@
 #include <cstdint>
 #include <cstring>
 #include <string_view>
-#include <type_traits>
 
-template<typename T>
-MAYBE_UNUSED NODISCARD static auto numeric_hash(const T val) noexcept
-    -> std::enable_if_t<std::is_arithmetic_v<T>, size_t>
+MAYBE_UNUSED NODISCARD static size_t numeric_hash(const std::integral auto val) noexcept
 {
-    static constexpr const size_t size = sizeof(val);
+    static constexpr size_t size = sizeof(val);
     char buf[size];
     std::memcpy(buf, &val, size);
     return std::hash<std::string_view>()({buf, size});
