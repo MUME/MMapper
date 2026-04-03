@@ -98,9 +98,12 @@ XFOREACH_SHARED_VBO(X_TYPE)
 XFOREACH_SHARED_VBO(X_ASSERT)
 #undef X_ASSERT
 
+template<SharedVboEnum T>
+using BlockType_t = typename BlockType<T>::type;
+
 template<std::size_t... Is>
 auto MakeSharedVboBlocksHelper(std::index_sequence<Is...>)
-    -> std::tuple<typename BlockType<static_cast<SharedVboEnum>(Is)>::type...>;
+    -> std::tuple<BlockType_t<static_cast<SharedVboEnum>(Is)>...>;
 
 using SharedVboBlocks = decltype(MakeSharedVboBlocksHelper(
     std::make_index_sequence<NUM_SHARED_VBOS>{}));
