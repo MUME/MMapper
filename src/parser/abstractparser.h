@@ -44,13 +44,14 @@
 #include <QTimer>
 #include <QVariant>
 
+class CTimers;
 class Coordinate;
+class GameObserver;
 class HotkeyManager;
 class MapData;
 class MumeClock;
 class RoomFieldVariant;
 class RoomFilter;
-class CTimers;
 
 namespace syntax {
 class Sublist;
@@ -344,6 +345,7 @@ private:
 
 private:
     QTimer m_offlineCommandTimer;
+    GameObserver &m_gameObserver;
 
 public:
     explicit AbstractParser(MapData &,
@@ -354,7 +356,8 @@ public:
                             HotkeyManager &,
                             QObject *parent,
                             AbstractParserOutputs &outputs,
-                            ParserCommonData &commonData);
+                            ParserCommonData &commonData,
+                            GameObserver &gameObserver);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);

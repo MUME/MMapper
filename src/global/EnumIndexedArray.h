@@ -34,6 +34,7 @@ public:
 
 public:
     using base::data;
+    using base::empty;
     using base::size;
 
 public:
