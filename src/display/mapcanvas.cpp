@@ -94,8 +94,6 @@ MapCanvas::~MapCanvas()
     if (pmc == this) {
         pmc = nullptr;
     }
-
-    cleanupOpenGL();
 }
 
 MapCanvas *MapCanvas::getPrimary()
