@@ -28,9 +28,19 @@ jobs:
         create-symlink: true
         key: ${{ github.job }}
 
+    - name: Cache KDE Neon GPG key
+      id: cache-kde-neon-key
+      uses: actions/cache@v4
+      with:
+        path: kde-neon.gpg
+        key: kde-neon-key-v1
+
     - name: Add KDE Neon repository
       run: |
-        curl -sSfL --retry 5 --retry-delay 5 https://archive.neon.kde.org/public.key | sudo gpg --dearmor --yes -o /usr/share/keyrings/kde-neon.gpg
+        if [ ! -f kde-neon.gpg ]; then
+          curl -sSfL --retry 5 --retry-delay 5 https://archive.neon.kde.org/public.key | gpg --dearmor --yes -o kde-neon.gpg
+        fi
+        sudo cp kde-neon.gpg /usr/share/keyrings/kde-neon.gpg
         echo "deb [signed-by=/usr/share/keyrings/kde-neon.gpg] http://archive.neon.kde.org/user jammy main" | sudo tee /etc/apt/sources.list.d/kde-neon.list
         sudo apt update -qq
 
