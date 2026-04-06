@@ -30,7 +30,7 @@ jobs:
 
     - name: Cache KDE Neon GPG key
       id: cache-kde-neon-key
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: kde-neon.gpg
         key: kde-neon-key-v1
