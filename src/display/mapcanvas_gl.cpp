@@ -125,6 +125,7 @@ void MapCanvas::cleanupOpenGL()
     // note: m_batchedMeshes co-owns textures created by MapCanvasData,
     // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
     m_batches.resetExistingMeshesAndIgnorePendingRemesh();
+    m_weather.cleanup();
     m_textures.destroyAll();
     getGLFont().cleanup();
     getOpenGL().cleanup();
@@ -306,6 +307,14 @@ void MapCanvas::initializeGL()
         this->updateTextures();
         m_frameManager.requestUpdate();
     });
+
+    // Clean up GL resources while the context is still current.
+    // The destructor is too late — Qt destroys the context before ~MapCanvas() runs.
+    connect(context(),
+            &QOpenGLContext::aboutToBeDestroyed,
+            this,
+            &MapCanvas::cleanupOpenGL,
+            Qt::DirectConnection);
 }
 
 /* Direct means it is always called from the emitter's thread */

@@ -34,6 +34,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QMessageLogContext>
+#include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLTexture>
 
@@ -354,6 +355,12 @@ UboManager &Functions::getUboManager()
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().
 void Functions::checkError()
 {
+    // glGetError() returns GL_INVALID_OPERATION indefinitely when called without a current context
+    // (e.g. on NVIDIA drivers), causing an infinite loop. Skip the check if no context is current.
+    if (QOpenGLContext::currentContext() == nullptr) {
+        return;
+    }
+
 #define CASE(x) \
     case (x): \
         qCritical() << "OpenGL error" << #x; \
