@@ -202,6 +202,14 @@ GLWeather::~GLWeather()
     m_gl.getUboManager().unregisterRebuildFunction(Legacy::SharedVboEnum::WeatherBlock);
 }
 
+void GLWeather::cleanup()
+{
+    m_simulation.reset();
+    m_particles.reset();
+    m_atmosphere.reset();
+    m_timeOfDay.reset();
+}
+
 void GLWeather::updateFromGame()
 {
     switch (m_observer.getWeather()) {

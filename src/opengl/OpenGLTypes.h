@@ -401,6 +401,7 @@ public:
     ~UniqueMesh() = default;
     DEFAULT_MOVES_DELETE_COPIES(UniqueMesh);
 
+    void reset() { m_mesh.reset(); }
     void render(const GLRenderState &rs) const { deref(m_mesh).render(rs); }
     NODISCARD explicit operator bool() const { return m_mesh != nullptr; }
 };

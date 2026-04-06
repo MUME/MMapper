@@ -86,7 +86,7 @@ public:
                        GameObserver &observer,
                        FrameManager &frameManager);
     ~GLWeather();
-
+    void cleanup();
     DELETE_CTORS_AND_ASSIGN_OPS(GLWeather);
 
 public:

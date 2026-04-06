@@ -3,6 +3,8 @@
 
 #include "VBO.h"
 
+#include <QDebug>
+
 namespace Legacy {
 bool LOG_VBO_ALLOCATIONS = false;
 bool LOG_VBO_STATIC_UPLOADS = false;
@@ -25,8 +27,11 @@ void VBO::reset()
         if (LOG_VBO_ALLOCATIONS) {
             qInfo() << this << "Freeing VBO" << vbo;
         }
-        auto sharedFunctions = std::exchange(m_weakFunctions, {}).lock();
-        deref(sharedFunctions).glDeleteBuffers(1, &vbo);
+        if (auto sharedFunctions = std::exchange(m_weakFunctions, {}).lock()) {
+            sharedFunctions->glDeleteBuffers(1, &vbo);
+        } else {
+            qCritical() << "Legacy::Functions is no longer valid, leaking VBO" << vbo;
+        }
     }
     assert(m_weakFunctions.lock() == nullptr);
 }
@@ -77,8 +82,12 @@ void Program::reset()
         if (LOG_VBO_ALLOCATIONS) {
             qInfo() << this << "Freeing Shader Program" << program;
         }
-        auto sharedFunctions = std::exchange(m_weakFunctions, {}).lock();
-        deref(sharedFunctions).glDeleteProgram(program);
+        if (auto sharedFunctions = std::exchange(m_weakFunctions, {}).lock()) {
+            sharedFunctions->glDeleteProgram(program);
+        } else {
+            qCritical() << "Legacy::Functions is no longer valid, leaking shader program"
+                        << program;
+        }
     }
     assert(m_weakFunctions.lock() == nullptr);
 }
