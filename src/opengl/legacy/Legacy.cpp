@@ -318,6 +318,7 @@ void Functions::cleanup()
     getSharedVbos().resetAll();
     getSharedVaos().resetAll();
     getTexLookup().clear();
+    m_fbo.reset();
 }
 
 ShaderPrograms &Functions::getShaderPrograms()
