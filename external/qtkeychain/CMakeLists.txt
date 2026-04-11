@@ -10,61 +10,76 @@ else()
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(QTKEYCHAIN_LIBRARY_NAME "${QTKEYCHAIN_LIBRARY_NAME}d")
     endif()
-    include(ExternalProject)
-    ExternalProject_Add(qtkeychain_repo
-        GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
-        GIT_TAG "7668a63a3669400223c5a563928ae042f499dbf4"
 
-        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
-        BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"
-
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/qtkeychain/keychain.h <BINARY_DIR>/qtkeychain
-        CMAKE_ARGS -DBUILD_WITH_QT6:BOOL=ON
-                   -DBUILD_TRANSLATIONS:BOOL=OFF
-                   -DBUILD_TEST_APPLICATION:BOOL=OFF
-                   -DBUILD_SHARED_LIBS:BOOL=ON
-                   -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-                   -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
-        CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:PATH=${Qt6_DIR}
-
-        UPDATE_COMMAND ""
-        ALWAYS 0
-
-        BUILD_BYPRODUCTS "<BINARY_DIR>/bin/${CMAKE_SHARED_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}"
-                         "<BINARY_DIR>/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib"
-        )
-    ExternalProject_Get_Property(qtkeychain_repo SOURCE_DIR)
-    ExternalProject_Get_Property(qtkeychain_repo BINARY_DIR)
-    set(QTKEYCHAIN_SHARED_LIBRARY ${BINARY_DIR}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(QTKEYCHAIN_SHARED_LIBRARY
+        "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/bin/${CMAKE_SHARED_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
     if (MSVC)
-        set(QTKEYCHAIN_LIBRARY ${BINARY_DIR}/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib)
+        set(QTKEYCHAIN_LIBRARY
+            "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib")
     else()
-        set(QTKEYCHAIN_LIBRARY ${QTKEYCHAIN_SHARED_LIBRARY})
+        set(QTKEYCHAIN_LIBRARY "${QTKEYCHAIN_SHARED_LIBRARY}")
     endif()
     set(QTKEYCHAIN_LIBRARIES ${QTKEYCHAIN_LIBRARY})
-    add_custom_target(qtkeychain)
-    if(WIN32)
-        if(MSVC)
-            get_target_property(QT6_CORE_LOCATION Qt6::Core LOCATION)
-            get_filename_component(QTKEYCHAIN_WIN_DEPLOY_DEST "${QT6_CORE_LOCATION}" DIRECTORY)
-        else()
-            set(QTKEYCHAIN_WIN_DEPLOY_DEST "${CMAKE_BINARY_DIR}/src/bin/")
+    set(QTKEYCHAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/qtkeychain/" PARENT_SCOPE)
+    set(QTKEYCHAIN_LIBRARY_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/bin/" PARENT_SCOPE)
+
+    if(EXISTS "${QTKEYCHAIN_SHARED_LIBRARY}")
+        message(STATUS "QtKeychain already built: ${QTKEYCHAIN_SHARED_LIBRARY}")
+        add_custom_target(qtkeychain_repo)
+        add_custom_target(qtkeychain)
+        add_dependencies(qtkeychain qtkeychain_repo)
+    else()
+        include(ExternalProject)
+        ExternalProject_Add(qtkeychain_repo
+            GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
+            GIT_TAG "7668a63a3669400223c5a563928ae042f499dbf4"
+
+            SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
+            BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"
+
+            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different <SOURCE_DIR>/qtkeychain/keychain.h <BINARY_DIR>/qtkeychain
+            CMAKE_ARGS -DBUILD_WITH_QT6:BOOL=ON
+                       -DBUILD_TRANSLATIONS:BOOL=OFF
+                       -DBUILD_TEST_APPLICATION:BOOL=OFF
+                       -DBUILD_SHARED_LIBS:BOOL=ON
+                       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+                       -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
+            CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:PATH=${Qt6_DIR}
+
+            UPDATE_COMMAND ""
+            BUILD_ALWAYS 0
+
+            BUILD_BYPRODUCTS "${QTKEYCHAIN_SHARED_LIBRARY}"
+                             "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib"
+            )
+        add_custom_target(qtkeychain)
+        if(WIN32)
+            if(MSVC)
+                get_target_property(QT6_CORE_LOCATION Qt6::Core LOCATION)
+                get_filename_component(QTKEYCHAIN_WIN_DEPLOY_DEST "${QT6_CORE_LOCATION}" DIRECTORY)
+            else()
+                set(QTKEYCHAIN_WIN_DEPLOY_DEST "${CMAKE_BINARY_DIR}/src/bin/")
+            endif()
+            add_custom_command(
+                OUTPUT "${QTKEYCHAIN_WIN_DEPLOY_DEST}"
+                COMMAND ${CMAKE_COMMAND} -E echo "Copying QtKeychain DLL to runtime output directory"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${QTKEYCHAIN_SHARED_LIBRARY}" "${QTKEYCHAIN_WIN_DEPLOY_DEST}"
+                DEPENDS qtkeychain_repo
+                COMMENT "Windows-only: copying ${QTKEYCHAIN_LIBRARY_NAME} DLL"
+            )
+            add_custom_target(qtkeychain_copy DEPENDS "${QTKEYCHAIN_WIN_DEPLOY_DEST}")
+            add_dependencies(qtkeychain qtkeychain_copy)
         endif()
-        add_custom_command(
-            OUTPUT "${QTKEYCHAIN_WIN_DEPLOY_DEST}"
-            COMMAND ${CMAKE_COMMAND} -E echo "Copying QtKeychain DLL to runtime output directory"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${QTKEYCHAIN_SHARED_LIBRARY}" "${QTKEYCHAIN_WIN_DEPLOY_DEST}"
-            DEPENDS qtkeychain_repo
-            COMMENT "Windows-only: copying ${QTKEYCHAIN_LIBRARY_NAME} DLL"
-        )
-        add_custom_target(qtkeychain_copy DEPENDS "${QTKEYCHAIN_WIN_DEPLOY_DEST}")
-        add_dependencies(qtkeychain qtkeychain_copy)
+        add_dependencies(qtkeychain qtkeychain_repo)
     endif()
-    add_dependencies(qtkeychain qtkeychain_repo)
 
     message(STATUS "QtKeychain library: ${QTKEYCHAIN_LIBRARY}")
     set(QTKEYCHAIN_LIBRARIES ${QTKEYCHAIN_LIBRARIES} PARENT_SCOPE)
     set(QTKEYCHAIN_LIBRARY ${QTKEYCHAIN_LIBRARY} PARENT_SCOPE)
-    set(QTKEYCHAIN_INCLUDE_DIR ${BINARY_DIR}/qtkeychain/ PARENT_SCOPE)
-    set(QTKEYCHAIN_LIBRARY_DIR ${BINARY_DIR}/bin/ PARENT_SCOPE)
+    set(QTKEYCHAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/qtkeychain/" PARENT_SCOPE)
+    set(QTKEYCHAIN_LIBRARY_DIR
+        "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/bin/" PARENT_SCOPE)
 endif()
