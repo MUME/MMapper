@@ -14,11 +14,14 @@
 #include "enums.h"
 #include "mmapper2group.h"
 
+#include <algorithm>
+#include <cmath>
 #include <map>
 #include <vector>
 
 #include <QAction>
 #include <QColorDialog>
+#include <QDateTime>
 #include <QDebug>
 #include <QHeaderView>
 #include <QMenu>
@@ -28,6 +31,7 @@
 #include <QStringList>
 #include <QStyledItemDelegate>
 #include <QTableView>
+#include <QTimer>
 #include <QVBoxLayout>
 
 static constexpr const char *GROUP_MIME_TYPE = "application/vnd.mm_groupchar.row";
@@ -130,7 +134,7 @@ bool GroupProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
                                const CharacterAffectFlags affects)
-    : m_color(std::move(color))
+    : m_color(color)
     , m_position(position)
     , m_affects(affects)
 {
@@ -152,18 +156,18 @@ GroupStateData::GroupStateData(const QColor &color,
 void GroupStateData::paint(QPainter *const pPainter, const QRect &rect)
 {
     auto &painter = deref(pPainter);
-    painter.fillRect(rect, m_color);
 
     painter.save();
     painter.translate(rect.x(), rect.y());
     m_height = rect.height();
-    painter.scale(m_height, m_height); // Images are squares
+    painter.scale(static_cast<double>(m_height),
+                  static_cast<double>(m_height)); // Images are squares
 
     const bool invert = mmqt::textColor(m_color) == Qt::white;
 
     const auto drawOne = [&painter, invert](QString filename) -> void {
         painter.drawImage(QRect{0, 0, 1, 1}, getImage(filename, invert));
-        painter.translate(1, 0);
+        painter.translate(1.0, 0.0);
     };
 
     if (m_position != CharacterPositionEnum::UNDEFINED) {
@@ -183,20 +187,170 @@ GroupDelegate::GroupDelegate(QObject *const parent)
 
 GroupDelegate::~GroupDelegate() = default;
 
-void GroupDelegate::paint(QPainter *const painter,
+void GroupDelegate::paint(QPainter *const pPainter,
                           const QStyleOptionViewItem &option,
                           const QModelIndex &index) const
 {
+    auto &painter = deref(pPainter);
+
+    const auto column = static_cast<ColumnTypeEnum>(index.column());
+    const GroupModel *model = qobject_cast<const GroupModel *>(index.model());
+    if (!model) {
+        // Handle proxy model
+        const auto *proxy = qobject_cast<const QSortFilterProxyModel *>(index.model());
+        if (proxy) {
+            model = qobject_cast<const GroupModel *>(proxy->sourceModel());
+        }
+    }
+
+    SharedGroupChar character = nullptr;
+    if (model) {
+        const auto sourceIndex = (index.model() == model)
+                                     ? index
+                                     : qobject_cast<const QSortFilterProxyModel *>(index.model())
+                                           ->mapToSource(index);
+        character = model->getCharacter(sourceIndex.row());
+    }
+
+    if (!character) {
+        QStyledItemDelegate::paint(pPainter, option, index);
+        return;
+    }
+
+    const QRect rect = option.rect;
+    const QColor charColor = character->getColor();
+
+    // Layer 0: Background
+    painter.fillRect(rect, charColor);
+
+    // Selection highlight (subtle overlay)
+    if (option.state & QStyle::State_Selected) {
+        QColor selectColor = option.palette.color(QPalette::Highlight);
+        selectColor.setAlpha(60);
+        painter.fillRect(rect, selectColor);
+    }
+
     if (index.data().canConvert<GroupStateData>()) {
         GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
-        stateData.paint(painter, option.rect);
+        stateData.paint(pPainter, option.rect);
+        return;
+    }
 
+    const QColor textColor = mmqt::textColor(charColor);
+
+    if (column == ColumnTypeEnum::NAME || column == ColumnTypeEnum::ROOM_NAME) {
+        painter.save();
+        painter.setPen(textColor);
+        painter.drawText(rect.adjusted(4, 0, 0, 0),
+                         static_cast<int>(Qt::AlignVCenter | Qt::AlignLeft),
+                         index.data(Qt::DisplayRole).toString());
+        painter.restore();
+
+    } else if (column == ColumnTypeEnum::HP || column == ColumnTypeEnum::MANA
+               || column == ColumnTypeEnum::MOVES) {
+        int cur = 0;
+        int max = 0;
+        QColor barColor;
+        bool pulse = false;
+        int pulseMin = 100;
+        int pulseMax = 180;
+
+        if (column == ColumnTypeEnum::HP) {
+            cur = character->getHits();
+            max = character->getMaxHits();
+            const double pct = max > 0 ? static_cast<double>(cur) / max : 1.0;
+            if (pct < 0.3) {
+                barColor = QColor(0xFF, 0x55, 0x55); // Red
+                pulse = true;
+                pulseMax = 255;
+            } else {
+                barColor = QColor(0x50, 0xFA, 0x7B); // Green
+            }
+        } else if (column == ColumnTypeEnum::MANA) {
+            cur = character->getMana();
+            max = character->getMaxMana();
+            if (max <= 0) {
+                // Hidden State
+                painter.save();
+                painter.setPen(option.palette.color(QPalette::Text));
+                painter.drawText(rect, Qt::AlignCenter, "--");
+                painter.restore();
+                return;
+            }
+            barColor = QColor(0x8B, 0xE9, 0xFD); // Cyan
+        } else if (column == ColumnTypeEnum::MOVES) {
+            cur = character->getMoves();
+            max = character->getMaxMoves();
+            barColor = QColor(0xFF, 0xB8, 0x6C); // Amber
+            const double pct = max > 0 ? static_cast<double>(cur) / max : 1.0;
+            if (pct < 0.15) {
+                pulse = true;
+            }
+        }
+
+        // Layer 2: The Bar (80% height, rounded 4px)
+        const int barHeight = static_cast<int>(static_cast<double>(rect.height()) * 0.8);
+        const int barY = rect.y() + (rect.height() - barHeight) / 2;
+        const double pct = std::clamp(max > 0 ? static_cast<double>(cur) / max : 0.0, 0.0, 1.0);
+        const int barWidth = static_cast<int>(static_cast<double>(std::max(0, rect.width() - 2))
+                                              * pct);
+        const QRect barRect(rect.x() + 1, barY, std::max(0, rect.width() - 2), barHeight);
+
+        painter.save();
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        // Bar background and thin black border
+        painter.setBrush(option.palette.color(QPalette::Window));
+        painter.setPen(QPen(Qt::black, 1));
+        painter.drawRoundedRect(barRect, 4.0, 4.0);
+
+        // Bar foreground (the actual progress)
+        if (barWidth > 0) {
+            int alpha = 180;
+            if (pulse) {
+                // 1.5s cycle (1500ms)
+                static constexpr const double PI = 3.14159265358979323846;
+                const qint64 ms = QDateTime::currentMSecsSinceEpoch() % 1500;
+                const double phase = (std::sin((static_cast<double>(ms) / 1500.0) * 2.0 * PI
+                                               - PI / 2.0)
+                                      + 1.0)
+                                     / 2.0;
+                alpha = pulseMin
+                        + static_cast<int>(
+                            std::round(static_cast<double>(pulseMax - pulseMin) * phase));
+            }
+            barColor.setAlpha(alpha);
+
+            painter.setBrush(barColor);
+            painter.setPen(Qt::NoPen);
+            // Clip to progress width to keep the rounded corners of the container
+            painter.setClipRect(rect.x() + 1, barY, barWidth, barHeight, Qt::IntersectClip);
+            painter.drawRoundedRect(barRect, 4.0, 4.0);
+        }
+        painter.restore();
+
+        // Layer 3: Text (Monospace, Centered)
+        painter.save();
+        QFont monoFont = option.font;
+        monoFont.setFamily("DejaVu Sans Mono");
+        monoFont.setStyleHint(QFont::Monospace);
+        painter.setFont(monoFont);
+
+        // Use text color appropriate for QPalette::Window (the bar container background)
+        painter.setPen(mmqt::textColor(option.palette.color(QPalette::Window)));
+
+        painter.drawText(rect,
+                         static_cast<int>(Qt::AlignCenter),
+                         index.data(Qt::DisplayRole).toString());
+        painter.restore();
     } else {
-        QStyleOptionViewItem opt = option;
-        opt.state &= ~QStyle::State_HasFocus;
-        opt.state &= ~QStyle::State_Selected;
-
-        QStyledItemDelegate::paint(painter, opt, index);
+        // Other columns
+        painter.save();
+        painter.setPen(textColor);
+        painter.drawText(rect,
+                         static_cast<int>(Qt::AlignCenter),
+                         index.data(Qt::DisplayRole).toString());
+        painter.restore();
     }
 }
 
@@ -210,6 +364,19 @@ QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIn
         size.setWidth(padding + content);
         return size;
     }
+
+    const auto column = static_cast<ColumnTypeEnum>(index.column());
+    if (column == ColumnTypeEnum::HP || column == ColumnTypeEnum::MANA
+        || column == ColumnTypeEnum::MOVES) {
+        QFont monoFont = option.font;
+        monoFont.setFamily("DejaVu Sans Mono");
+        monoFont.setStyleHint(QFont::Monospace);
+        const QFontMetrics fm(monoFont);
+
+        const int textWidth = fm.horizontalAdvance(QStringLiteral("999 / 999"));
+        return QSize(textWidth + 20, QStyledItemDelegate::sizeHint(option, index).height());
+    }
+
     return QStyledItemDelegate::sizeHint(option, index);
 }
 
@@ -430,39 +597,17 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
 {
     const CGroupChar &character = deref(pCharacter);
 
-    const auto formatStat =
-        [](int numerator, int denomenator, ColumnTypeEnum statColumn) -> QString {
-        if (denomenator == 0
-            && (statColumn == ColumnTypeEnum::HP_PERCENT
-                || statColumn == ColumnTypeEnum::MANA_PERCENT
-                || statColumn == ColumnTypeEnum::MOVES_PERCENT)) {
-            return QLatin1String("");
-        }
-        // The NPC check for ratio is handled below in the switch statement
-        if ((numerator == 0 && denomenator == 0)
-            && (statColumn == ColumnTypeEnum::HP || statColumn == ColumnTypeEnum::MANA
-                || statColumn == ColumnTypeEnum::MOVES)) {
+    const auto formatStat = [&character](int numerator, int denomenator) -> QString {
+        if (numerator == 0 && denomenator == 0) {
             return QLatin1String("");
         }
 
-        switch (statColumn) {
-        case ColumnTypeEnum::HP_PERCENT:
-        case ColumnTypeEnum::MANA_PERCENT:
-        case ColumnTypeEnum::MOVES_PERCENT: {
-            int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
-                                              / static_cast<double>(denomenator));
-            return QString("%1%").arg(percentage);
+        if (character.getType() == CharacterTypeEnum::NPC) {
+            const double pct = denomenator > 0 ? static_cast<double>(numerator) / denomenator : 0.0;
+            return QString("%1%").arg(static_cast<int>(std::round(pct * 100.0)));
         }
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
-            return QString("%1/%2").arg(numerator).arg(denomenator);
-        default:
-        case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::STATE:
-        case ColumnTypeEnum::ROOM_NAME:
-            return QLatin1String("");
-        }
+
+        return QString("%1 / %2").arg(numerator).arg(denomenator);
     };
 
     // Map column to data
@@ -478,30 +623,12 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
                 return QString("%1 (%2)").arg(character.getName().toQString(),
                                               character.getLabel().toQString());
             }
-        case ColumnTypeEnum::HP_PERCENT:
-            return formatStat(character.getHits(), character.getMaxHits(), column);
-        case ColumnTypeEnum::MANA_PERCENT:
-            return formatStat(character.getMana(), character.getMaxMana(), column);
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return formatStat(character.getMoves(), character.getMaxMoves(), column);
         case ColumnTypeEnum::HP:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getHits(), character.getMaxHits(), column);
-            }
+            return formatStat(character.getHits(), character.getMaxHits());
         case ColumnTypeEnum::MANA:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMana(), character.getMaxMana(), column);
-            }
+            return formatStat(character.getMana(), character.getMaxMana());
         case ColumnTypeEnum::MOVES:
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QLatin1String("");
-            } else {
-                return formatStat(character.getMoves(), character.getMaxMoves(), column);
-            }
+            return formatStat(character.getMoves(), character.getMaxMoves());
         case ColumnTypeEnum::STATE:
             return QVariant::fromValue(GroupStateData(character.getColor(),
                                                       character.getPosition(),
@@ -519,10 +646,10 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         break;
 
     case Qt::BackgroundRole:
-        return character.getColor();
+        return QVariant();
 
     case Qt::ForegroundRole:
-        return mmqt::textColor(character.getColor());
+        return QVariant();
 
     case Qt::TextAlignmentRole:
         if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
@@ -532,23 +659,22 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
         break;
 
     case Qt::ToolTipRole: {
-        const auto getRatioTooltip =
-            [&character, &column, &formatStat](const int numerator,
-                                               const int denomenator) -> QVariant {
-            if (character.getType() == CharacterTypeEnum::NPC) {
-                return QVariant();
-            } else {
-                return formatStat(numerator, denomenator, column);
-            }
-        };
-
         switch (column) {
-        case ColumnTypeEnum::HP_PERCENT:
-            return getRatioTooltip(character.getHits(), character.getMaxHits());
-        case ColumnTypeEnum::MANA_PERCENT:
-            return getRatioTooltip(character.getMana(), character.getMaxMana());
-        case ColumnTypeEnum::MOVES_PERCENT:
-            return getRatioTooltip(character.getMoves(), character.getMaxMoves());
+        case ColumnTypeEnum::HP:
+        case ColumnTypeEnum::MANA:
+        case ColumnTypeEnum::MOVES: {
+            const int cur = (column == ColumnTypeEnum::HP)     ? character.getHits()
+                            : (column == ColumnTypeEnum::MANA) ? character.getMana()
+                                                               : character.getMoves();
+            const int max = (column == ColumnTypeEnum::HP)     ? character.getMaxHits()
+                            : (column == ColumnTypeEnum::MANA) ? character.getMaxMana()
+                                                               : character.getMaxMoves();
+            if (max > 0) {
+                const double pct = static_cast<double>(cur) / max;
+                return QString("%1%").arg(static_cast<int>(std::round(pct * 100.0)));
+            }
+            return QVariant();
+        }
         case ColumnTypeEnum::STATE: {
             QString prettyName;
             prettyName += getPrettyName(character.getPosition());
@@ -560,9 +686,6 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
             return prettyName;
         }
         case ColumnTypeEnum::NAME:
-        case ColumnTypeEnum::HP:
-        case ColumnTypeEnum::MANA:
-        case ColumnTypeEnum::MOVES:
             break;
         case ColumnTypeEnum::ROOM_NAME:
             if (character.getServerId() != INVALID_SERVER_ROOMID) {
@@ -739,6 +862,9 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setItemDelegate(new GroupDelegate(this));
     layout->addWidget(m_table);
 
+    m_pulseTimer = new QTimer(this);
+    connect(m_pulseTimer, &QTimer::timeout, m_table->viewport(), QOverload<>::of(&QWidget::update));
+
     // Minimize row height
     m_table->verticalHeader()->setDefaultSectionSize(
         m_table->verticalHeader()->minimumSectionSize());
@@ -813,10 +939,14 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             this,
             &GroupWidget::slot_onCharacterUpdated);
     connect(m_group, &Mmapper2Group::sig_groupReset, this, &GroupWidget::slot_onGroupReset);
+
+    updateColumnVisibility();
+    updatePulseTimer();
 }
 
 GroupWidget::~GroupWidget()
 {
+    m_pulseTimer->stop();
     delete m_table;
     delete m_recolor;
 }
@@ -835,7 +965,7 @@ void GroupWidget::updateColumnVisibility()
     // Hide unnecessary columns like mana if everyone is a zorc/troll
     const auto one_character_had_mana = [this]() -> bool {
         for (const auto &character : m_model.getCharacters()) {
-            if (character && character->getMana() > 0) {
+            if (character && (character->getMana() > 0 || character->getMaxMana() > 0)) {
                 return true;
             }
         }
@@ -843,7 +973,40 @@ void GroupWidget::updateColumnVisibility()
     };
     const bool hide_mana = !one_character_had_mana();
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA), hide_mana);
-    m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA_PERCENT), hide_mana);
+}
+
+void GroupWidget::updatePulseTimer()
+{
+    const auto needs_pulse = [this]() -> bool {
+        for (const auto &character : m_model.getCharacters()) {
+            if (!character) {
+                continue;
+            }
+            // HP pulse < 30%
+            const int hp = character->getHits();
+            const int maxHp = character->getMaxHits();
+            if (maxHp > 0 && (static_cast<double>(hp) / maxHp) < 0.3) {
+                return true;
+            }
+            // Moves pulse < 15%
+            const int moves = character->getMoves();
+            const int maxMoves = character->getMaxMoves();
+            if (maxMoves > 0 && (static_cast<double>(moves) / maxMoves) < 0.15) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if (needs_pulse()) {
+        if (!m_pulseTimer->isActive()) {
+            m_pulseTimer->start(50);
+        }
+    } else {
+        if (m_pulseTimer->isActive()) {
+            m_pulseTimer->stop();
+        }
+    }
 }
 
 void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
@@ -851,6 +1014,7 @@ void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
     assert(character);
     m_model.insertCharacter(character);
     updateColumnVisibility();
+    updatePulseTimer();
 }
 
 void GroupWidget::slot_onCharacterRemoved(const GroupId characterId)
@@ -858,16 +1022,19 @@ void GroupWidget::slot_onCharacterRemoved(const GroupId characterId)
     assert(characterId != INVALID_GROUPID);
     m_model.removeCharacterById(characterId);
     updateColumnVisibility();
+    updatePulseTimer();
 }
 
 void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
 {
     assert(character);
     m_model.updateCharacter(character);
+    updatePulseTimer();
 }
 
 void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
 {
     m_model.setCharacters(newCharacterList);
     updateColumnVisibility();
+    updatePulseTimer();
 }
