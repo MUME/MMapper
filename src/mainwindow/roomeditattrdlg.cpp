@@ -1089,7 +1089,7 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(const bool val)
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
-    const auto optFlag = m_mobListItems.findIndexOf(
+    const auto optFlag = m_mobListItems.findIndexOfPointer(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops" << __FILE__ << ":" << __LINE__;
@@ -1113,7 +1113,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = m_loadListItems.findIndexOf(
+    const auto optFlag = m_loadListItems.findIndexOfPointer(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
@@ -1138,7 +1138,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = m_exitListItems.findIndexOf(
+    const auto optFlag = m_exitListItems.findIndexOfPointer(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
@@ -1181,7 +1181,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
     std::ignore = deref(item);
 
-    const auto optFlag = m_doorListItems.findIndexOf(
+    const auto optFlag = m_doorListItems.findIndexOfPointer(
         checked_dynamic_downcast<RoomListWidgetItem *>(item));
     if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
