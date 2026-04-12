@@ -42,36 +42,36 @@ public:
     using base::cend;
     using base::end;
 
-private:
-    template<typename U>
-    NODISCARD static bool my_equals(const U &a, const U &b)
-    {
-        return a == b;
-    }
-    template<typename U>
-    NODISCARD static bool my_equals(U *const a, const std::unique_ptr<U> &b)
-    {
-        return a == b.get();
-    }
-    template<typename U>
-    NODISCARD static bool my_equals(const std::unique_ptr<U> &a, U *const b)
-    {
-        return a.get() == b;
-    }
-
 public:
     template<typename U>
     NODISCARD std::optional<E> findIndexOf(const U element) const
     {
         const auto beg = this->begin();
         const auto end = this->end();
-        const auto it = std::find_if(beg, end, [element](auto &x) -> bool {
-            return my_equals(x, element);
+        const auto it = std::find_if(beg, end, [element](auto &x) -> bool { return x == element; });
+        if (it == end) {
+            return std::nullopt;
+        }
+        return static_cast<E>(it - beg);
+    }
+    // This is a custom variation of findIndexOf() that allows searching pointer
+    // values when the pointer lives in a smart pointer, an optional, etc.
+    //
+    // Note: findIndexOf() would write "x == ptr" but this uses "std::addressof(deref(x)) == ptr" instead.
+    // Also: "deref(x)" can throw, and std::addressof() ignores overloaded "operator&".
+    template<typename U>
+    NODISCARD std::optional<E> findIndexOfPointer(U *const pointer) const
+    {
+        static_assert(
+            std::is_same_v<U *, decltype(std::addressof(deref(std::declval<const T &>())))>);
+        const auto beg = this->begin();
+        const auto end = this->end();
+        const auto it = std::find_if(beg, end, [pointer](auto &x) -> bool {
+            return std::addressof(deref(x)) == pointer;
         });
         if (it == end) {
             return std::nullopt;
         }
-
         return static_cast<E>(it - beg);
     }
 
