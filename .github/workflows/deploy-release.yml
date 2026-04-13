@@ -184,7 +184,7 @@ jobs:
           echo "--- End of artifact listing ---"
 
       - name: Create Tagged Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.check-tag.outputs.matched_tag }}
           name: MMapper ${{ steps.determine_version.outputs.VERSION_NUMBER }}
