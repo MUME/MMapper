@@ -106,22 +106,9 @@ DepthBinder::~DepthBinder()
     }
 }
 
-LineParamsBinder::LineParamsBinder(Functions &functions, const LineParams &lineParams)
-    : m_functions{functions}
-    , m_lineParams{lineParams}
-{
-    m_functions.glLineWidth(m_lineParams.width);
-}
+LineParamsBinder::LineParamsBinder(Functions & /*functions*/, const LineParams & /*lineParams*/) {}
 
-LineParamsBinder::~LineParamsBinder()
-{
-    const auto &width = m_lineParams.width;
-    const float ONE = 1.f;
-    static_assert(sizeof(ONE) == sizeof(width));
-    if (!utils::equals(&width, &ONE)) {
-        m_functions.glLineWidth(ONE);
-    }
-}
+LineParamsBinder::~LineParamsBinder() {}
 
 PointSizeBinder::PointSizeBinder(Functions &functions, const std::optional<GLfloat> &pointSize)
     : m_functions{functions}

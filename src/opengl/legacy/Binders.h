@@ -56,10 +56,6 @@ public:
 
 struct NODISCARD LineParamsBinder
 {
-private:
-    Functions &m_functions;
-    const LineParams &m_lineParams;
-
 public:
     explicit LineParamsBinder(Functions &functions, const LineParams &lineParams);
     ~LineParamsBinder();

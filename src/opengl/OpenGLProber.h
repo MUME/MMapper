@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include <QByteArray>
 #include <QSurfaceFormat>
 
 class NODISCARD OpenGLProber final
@@ -19,7 +20,7 @@ public:
         BackendType backendType = BackendType::None;
         QSurfaceFormat format;
         std::string highestVersionString = "Unknown";
-        bool isCompat = false;
+        bool debugSupported = false;
     };
 
 public:
@@ -28,4 +29,11 @@ public:
     DTOR(OpenGLProber) = default;
 
     NODISCARD ProbeResult probe();
+
+    NODISCARD ProbeResult parseSurveyResult(const QByteArray &stdoutData,
+                                            const QByteArray &stderrData = {});
+
+#ifndef Q_OS_WASM
+    NODISCARD static int runSurveyMode(int argc, char **argv);
+#endif
 };

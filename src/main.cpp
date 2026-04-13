@@ -15,6 +15,7 @@
 #include "./opengl/OpenGLConfig.h"
 #include "./opengl/OpenGLProber.h"
 
+#include <cstring>
 #include <memory>
 #include <optional>
 
@@ -151,13 +152,20 @@ static bool setSurfaceFormat()
         return false;
     }
     OpenGLConfig::setBackendType(probeResult.backendType);
-    OpenGLConfig::setIsCompat(probeResult.isCompat);
     QSurfaceFormat::setDefaultFormat(probeResult.format);
     return true;
 }
 
 int main(int argc, char **argv)
 {
+#ifndef Q_OS_WASM
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--probe") == 0) {
+            return OpenGLProber::runSurveyMode(argc, argv);
+        }
+    }
+#endif
+
     setHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {

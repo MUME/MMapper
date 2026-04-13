@@ -260,15 +260,6 @@ public:
     using Base::glVertexAttribPointer;
 
 public:
-    void glLineWidth(const GLfloat lineWidth)
-    {
-        // REVISIT: Only width 1 is guaranteed to be supported for core profiles
-        if (OpenGLConfig::getIsCompat()) {
-            Base::glLineWidth(lineWidth);
-        }
-    }
-
-public:
     void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height)
     {
         m_viewport = Viewport{{x, y}, {width, height}};
@@ -331,7 +322,6 @@ public:
     NODISCARD const char *getShaderVersion() const { return virt_getShaderVersion(); }
 
 protected:
-    NODISCARD virtual bool virt_canRenderQuads() = 0;
     NODISCARD virtual std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) = 0;
     virtual void virt_enableProgramPointSize(bool enable) = 0;
     NODISCARD virtual const char *virt_getShaderVersion() const = 0;
@@ -339,9 +329,6 @@ protected:
 
 public:
     NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
-
-    /// platform-specific (ES vs GL)
-    NODISCARD bool canRenderQuads() { return virt_canRenderQuads(); }
 
     /// platform-specific (ES vs GL)
     NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
@@ -412,9 +399,9 @@ public:
                           const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         using Pair = std::pair<DrawModeEnum, GLsizei>;
-        if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
+        if (mode == DrawModeEnum::QUADS) {
             const auto tris = convertQuadsToTris(batch);
-            return Pair{DrawModeEnum::TRIANGLES, setVbo(GL_ARRAY_BUFFER, vbo, View<T>{tris}, usage)};
+            return Pair{DrawModeEnum::TRIANGLES, setVbo(GL_ARRAY_BUFFER, vbo, View{tris}, usage)};
         }
         return Pair{mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage)};
     }
@@ -428,6 +415,8 @@ public:
 
 public:
     NODISCARD UniqueMesh createPointBatch(View<ColorVert> batch);
+    NODISCARD UniqueMesh createPlainLineBatch(View<glm::vec3> batch);
+    NODISCARD UniqueMesh createColoredLineBatch(View<ColorVert> batch);
 
 public:
     NODISCARD UniqueMesh createPlainBatch(DrawModeEnum mode, View<glm::vec3> batch);
@@ -449,6 +438,8 @@ public:
 
 public:
     void renderPoints(View<ColorVert> verts, const GLRenderState &state);
+    void renderPlainLines(View<glm::vec3> verts, const GLRenderState &state);
+    void renderColoredLines(View<ColorVert> verts, const GLRenderState &state);
 
     void renderPlain(DrawModeEnum mode, View<glm::vec3> verts, const GLRenderState &state);
     void renderColored(DrawModeEnum mode, View<ColorVert> verts, const GLRenderState &state);

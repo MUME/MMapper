@@ -30,6 +30,8 @@ namespace Legacy {
 
 AColorPlainShader::~AColorPlainShader() = default;
 UColorPlainShader::~UColorPlainShader() = default;
+AColorLineShader::~AColorLineShader() = default;
+UColorLineShader::~UColorLineShader() = default;
 AColorTexturedShader::~AColorTexturedShader() = default;
 UColorTexturedShader::~UColorTexturedShader() = default;
 
@@ -48,6 +50,8 @@ void ShaderPrograms::early_init()
 {
     std::ignore = getPlainAColorShader();
     std::ignore = getPlainUColorShader();
+    std::ignore = getLineAColorShader();
+    std::ignore = getLineUColorShader();
     std::ignore = getTexturedAColorShader();
     std::ignore = getTexturedUColorShader();
 
@@ -67,6 +71,8 @@ void ShaderPrograms::resetAll()
 {
     m_aColorShader.reset();
     m_uColorShader.reset();
+    m_aLineShader.reset();
+    m_uLineShader.reset();
     m_aTexturedShader.reset();
     m_uTexturedShader.reset();
 
@@ -119,6 +125,16 @@ const std::shared_ptr<AColorPlainShader> &ShaderPrograms::getPlainAColorShader()
 const std::shared_ptr<UColorPlainShader> &ShaderPrograms::getPlainUColorShader()
 {
     return getInitialized<UColorPlainShader>(m_uColorShader, getFunctions(), "plain/ucolor");
+}
+
+const std::shared_ptr<AColorLineShader> &ShaderPrograms::getLineAColorShader()
+{
+    return getInitialized<AColorLineShader>(m_aLineShader, getFunctions(), "line/acolor");
+}
+
+const std::shared_ptr<UColorLineShader> &ShaderPrograms::getLineUColorShader()
+{
+    return getInitialized<UColorLineShader>(m_uLineShader, getFunctions(), "line/ucolor");
 }
 
 const std::shared_ptr<AColorTexturedShader> &ShaderPrograms::getTexturedAColorShader()

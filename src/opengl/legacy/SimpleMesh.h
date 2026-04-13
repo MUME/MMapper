@@ -166,7 +166,7 @@ private:
     }
 
 private:
-    void virt_render(const GLRenderState &renderState) final
+    void virt_render(const GLRenderState &renderState) override
     {
         if (isEmpty()) {
             return;
