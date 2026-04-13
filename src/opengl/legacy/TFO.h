@@ -2,18 +2,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 The MMapper Authors
 
+#include "../../global/logging.h"
 #include "Legacy.h"
+#include "ScopedBinder.h"
 
 #include <memory>
 
 namespace Legacy {
 
+// TFO = Transform Feedback Object
 class NODISCARD TFO final
 {
 private:
-    static inline constexpr GLuint INVALID_TFO = 0;
+    static constexpr GLuint INVALID_TFO = 0;
     WeakFunctions m_weakFunctions;
     GLuint m_tfo = INVALID_TFO;
+    bool is_bound = false;
 
 public:
     TFO() = default;
@@ -27,7 +31,39 @@ public:
     NODISCARD GLuint get() const;
 
 public:
-    NODISCARD explicit operator bool() const { return m_tfo != INVALID_TFO; }
+    NODISCARD bool isValid() const { return m_tfo != INVALID_TFO; }
+    DEPRECATED_MSG("use isValid()")
+    NODISCARD explicit operator bool() const { return isValid(); }
+
+public:
+    using Unbinder = ScopedBinder<TFO>;
+
+    void unbind_impl(Badge<Unbinder>)
+    {
+        assert(isValid());
+        assert(is_bound);
+        is_bound = false;
+        if (const auto shared_funcs = m_weakFunctions.lock(); shared_funcs == nullptr) {
+            MMLOG_WARNING() << "Failed to unbind transform feedback buffer " << m_tfo;
+        } else {
+            deref(shared_funcs).glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+        }
+    }
+
+    NODISCARD Unbinder bind()
+    {
+        assert(isValid());
+        assert(!is_bound);
+
+        if (const auto shared_funcs = m_weakFunctions.lock(); shared_funcs == nullptr) {
+            MMLOG_WARNING() << "Failed to bind transform feedback buffer " << m_tfo;
+            return Unbinder{};
+        } else {
+            deref(shared_funcs).glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_tfo);
+            is_bound = true;
+            return Unbinder{*this};
+        }
+    }
 };
 
 using SharedTfo = std::shared_ptr<TFO>;

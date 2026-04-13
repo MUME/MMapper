@@ -15,7 +15,11 @@ AbstractShaderProgram::AbstractShaderProgram(std::string dirName,
     : m_dirName{std::move(dirName)}
     , m_functions{functions} // conversion to weak ptr
     , m_program{std::move(program)}
-{}
+{
+    if (functions == nullptr) {
+        MMLOG_WARNING() << "AbstractShaderProgram constructed with null functions";
+    }
+}
 
 AbstractShaderProgram::~AbstractShaderProgram()
 {
@@ -25,8 +29,10 @@ AbstractShaderProgram::~AbstractShaderProgram()
 AbstractShaderProgram::ProgramUnbinder AbstractShaderProgram::bind()
 {
     assert(!m_isBound);
-    if (auto f = m_functions.lock()) {
-        f->glUseProgram(getProgram());
+    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
+        MMLOG_WARNING() << "Failed to use program " << getProgram();
+    } else {
+        shared_funcs->glUseProgram(getProgram());
     }
     m_isBound = true;
     return ProgramUnbinder{*this};
@@ -35,10 +41,12 @@ AbstractShaderProgram::ProgramUnbinder AbstractShaderProgram::bind()
 void AbstractShaderProgram::unbind()
 {
     assert(m_isBound);
-    if (auto f = m_functions.lock()) {
-        f->glUseProgram(0);
-    }
     m_isBound = false;
+    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
+        MMLOG_WARNING() << "Failed to stop using program " << getProgram();
+    } else {
+        shared_funcs->glUseProgram(0);
+    }
 }
 
 void AbstractShaderProgram::setUniforms(const glm::mat4 &mvp,
@@ -54,32 +62,47 @@ void AbstractShaderProgram::setUniforms(const glm::mat4 &mvp,
 
 GLuint AbstractShaderProgram::getAttribLocation(const char *const name) const
 {
-    assert(name != nullptr);
+    if (name == nullptr) {
+        throw std::invalid_argument("name");
+    }
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    const auto tmp = deref(functions).glGetAttribLocation(getProgram(), name);
-    // Reason for making the cast here: glGetAttribLocation uses signed GLint,
-    // but glVertexAttribXXX() uses unsigned GLuint.
-    const auto result = static_cast<GLuint>(tmp);
-    assert(result != INVALID_ATTRIB_LOCATION);
-    return result;
+
+    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
+        // REVISIT: should this throw?
+        assert(false);
+        return INVALID_ATTRIB_LOCATION;
+    } else {
+        const auto tmp = deref(shared_funcs).glGetAttribLocation(getProgram(), name);
+        // Reason for making the cast here: glGetAttribLocation uses signed GLint,
+        // but glVertexAttribXXX() uses unsigned GLuint.
+        const auto result = static_cast<GLuint>(tmp);
+        assert(result != INVALID_ATTRIB_LOCATION);
+        return result;
+    }
 }
 
 GLint AbstractShaderProgram::getUniformLocation(const char *const name) const
 {
-    assert(name != nullptr);
+    if (name == nullptr) {
+        throw std::invalid_argument("name");
+    }
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    const auto result = deref(functions).glGetUniformLocation(getProgram(), name);
-    assert(result != INVALID_UNIFORM_LOCATION);
-    return result;
+    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
+        // REVISIT: should this throw?
+        assert(false);
+        return INVALID_UNIFORM_LOCATION;
+    } else {
+        const auto result = deref(shared_funcs).glGetUniformLocation(getProgram(), name);
+        assert(result != INVALID_UNIFORM_LOCATION);
+        return result;
+    }
 }
 
 bool AbstractShaderProgram::hasUniform(const char *const name) const
 {
     assert(name != nullptr);
-    auto functions = m_functions.lock();
-    const auto result = deref(functions).glGetUniformLocation(getProgram(), name);
+    const auto shared_funcs = m_functions.lock();
+    const auto result = deref(shared_funcs).glGetUniformLocation(getProgram(), name);
     return result != INVALID_UNIFORM_LOCATION;
 }
 
@@ -88,8 +111,8 @@ void AbstractShaderProgram::setUniform1iv(const GLint location,
                                           const GLint *const value)
 {
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    deref(functions).glUniform1iv(location, count, value);
+    const auto shared_funcs = m_functions.lock();
+    deref(shared_funcs).glUniform1iv(location, count, value);
 }
 
 void AbstractShaderProgram::setUniform1fv(const GLint location,
@@ -97,8 +120,8 @@ void AbstractShaderProgram::setUniform1fv(const GLint location,
                                           const GLfloat *const value)
 {
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    deref(functions).glUniform1fv(location, count, value);
+    const auto shared_funcs = m_functions.lock();
+    deref(shared_funcs).glUniform1fv(location, count, value);
 }
 
 void AbstractShaderProgram::setUniform4fv(const GLint location,
@@ -106,8 +129,8 @@ void AbstractShaderProgram::setUniform4fv(const GLint location,
                                           const GLfloat *const value)
 {
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    deref(functions).glUniform4fv(location, count, value);
+    const auto shared_funcs = m_functions.lock();
+    deref(shared_funcs).glUniform4fv(location, count, value);
 }
 
 void AbstractShaderProgram::setUniform4iv(const GLint location,
@@ -115,8 +138,8 @@ void AbstractShaderProgram::setUniform4iv(const GLint location,
                                           const GLint *const value)
 {
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    deref(functions).glUniform4iv(location, count, value);
+    const auto shared_funcs = m_functions.lock();
+    deref(shared_funcs).glUniform4iv(location, count, value);
 }
 
 void AbstractShaderProgram::setUniformMatrix4fv(const GLint location,
@@ -125,20 +148,22 @@ void AbstractShaderProgram::setUniformMatrix4fv(const GLint location,
                                                 const GLfloat *const value)
 {
     assert(m_isBound);
-    auto functions = m_functions.lock();
-    deref(functions).glUniformMatrix4fv(location, count, transpose, value);
+    const auto shared_funcs = m_functions.lock();
+    deref(shared_funcs).glUniformMatrix4fv(location, count, transpose, value);
 }
 
 float AbstractShaderProgram::getDevicePixelRatio() const
 {
-    auto functions = m_functions.lock();
-    return deref(functions).getDevicePixelRatio();
+    const auto shared_funcs = m_functions.lock();
+    return deref(shared_funcs).getDevicePixelRatio();
 }
 
 void AbstractShaderProgram::setPointSize(const float in_pointSize)
 {
-    const auto location = getUniformLocation("uPointSize");
-    if (location != INVALID_UNIFORM_LOCATION) {
+    if (const auto location = getUniformLocation("uPointSize");
+        location == INVALID_UNIFORM_LOCATION) {
+        MMLOG_WARNING() << "Failed to set point size due to invalid location for uPointSize";
+    } else {
         const float pointSize = in_pointSize * getDevicePixelRatio();
         setUniform1fv(location, 1, &pointSize);
     }

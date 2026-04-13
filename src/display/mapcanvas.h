@@ -147,6 +147,7 @@ private:
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
     GLWeather m_weather;
+    bool m_cleanedUp = false;
 
 public:
     explicit MapCanvas(MapData &mapData,
@@ -163,6 +164,9 @@ private:
     NODISCARD inline auto &getOpenGL() { return m_opengl; }
     NODISCARD inline auto &getGLFont() { return m_glFont; }
     void cleanupOpenGL();
+
+public:
+    void shuttingDown();
 
 public:
     using MapCanvasViewport::getTotalScaleFactor;

@@ -12,17 +12,17 @@
 
 namespace Legacy {
 
-extern bool LOG_FBO_ALLOCATIONS;
-
-class FBO final
+class NODISCARD FBO final
 {
 private:
     std::unique_ptr<QOpenGLFramebufferObject> m_multisamplingFbo;
-    std::unique_ptr<QOpenGLFramebufferObject> m_resolvedFbo;
+    std::unique_ptr<QOpenGLFramebufferObject> m_defaultFbo;
+    enum class NODISCARD BindStateEnum : uint8_t { Unbound, DefaultIsBound, MultisampleIsBound };
+    BindStateEnum m_bindState = BindStateEnum::Unbound;
 
 public:
-    FBO() = default;
-    ~FBO() = default;
+    explicit FBO() = default;
+    ~FBO();
     DELETE_CTORS_AND_ASSIGN_OPS(FBO);
 
 public:
@@ -32,6 +32,9 @@ public:
     void resolve();
 
     NODISCARD GLuint resolvedTextureId() const;
+
+private:
+    NODISCARD QOpenGLFramebufferObject *getDrawable();
 };
 
 } // namespace Legacy

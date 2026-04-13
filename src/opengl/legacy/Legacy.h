@@ -16,6 +16,7 @@
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -27,17 +28,18 @@ class OpenGL;
 
 namespace Legacy {
 
-class StaticVbos;
-class SharedVbos;
-class SharedVaos;
-class SharedTfos;
-class UboManager;
-class VBO;
-class VAO;
 class Program;
+class SharedTfos;
+class SharedVaos;
+class SharedVbos;
+class StaticVaos;
+class StaticVbos;
+class UboManager;
+class VAO;
+class VBO;
 struct AbstractShaderProgram;
-struct ShaderPrograms;
 struct PointSizeBinder;
+struct ShaderPrograms;
 
 static_assert(Legacy::NUM_SHARED_VBOS > 0, "At least one shared VBO must be defined");
 static_assert(static_cast<size_t>(Legacy::SharedVboEnum::NUM_BLOCKS) == Legacy::NUM_SHARED_VBOS,
@@ -78,6 +80,8 @@ NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
         return GL_DYNAMIC_DRAW;
     case BufferUsageEnum::STATIC_DRAW:
         return GL_STATIC_DRAW;
+    case BufferUsageEnum::STREAM_DRAW:
+        return GL_STREAM_DRAW;
     }
     std::abort();
 }
@@ -140,9 +144,10 @@ private:
     Viewport m_viewport;
     float m_devicePixelRatio = 1.f;
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
-    std::unique_ptr<StaticVbos> m_staticVbos;
-    std::unique_ptr<SharedVbos> m_sharedVbos;
     std::unique_ptr<SharedVaos> m_sharedVaos;
+    std::unique_ptr<SharedVbos> m_sharedVbos;
+    std::unique_ptr<StaticVaos> m_staticVaos;
+    std::unique_ptr<StaticVbos> m_staticVbos;
     std::unique_ptr<TexLookup> m_texLookup;
     std::unique_ptr<FBO> m_fbo;
     UboManager &m_uboManager;
@@ -176,8 +181,6 @@ public:
     using Base::glBindBuffer;
     using Base::glBindBufferBase;
     using Base::glBindBufferRange;
-    using Base::glBindTexture;
-    using Base::glBindVertexArray;
     using Base::glBlendEquationSeparate;
     using Base::glBlendFunc;
     using Base::glBlendFuncSeparate;
@@ -246,8 +249,8 @@ public:
      *
      * Note: This uses the enum value as the fixed binding point.
      */
-    void glUniformBlockBinding(const GLuint program, const SharedVboEnum block);
-    void glUniformBlockBinding(const Program &program, const SharedVboEnum block);
+    void glUniformBlockBinding(GLuint program, SharedVboEnum block);
+    void glUniformBlockBinding(const Program &program, SharedVboEnum block);
 
     /**
      * @brief Automatically assigns fixed binding points to all known uniform blocks.
@@ -300,16 +303,13 @@ public:
 
     NODISCARD ShaderPrograms &getShaderPrograms();
 
+    NODISCARD SharedVaos &getSharedVaos();
+    NODISCARD SharedVbos &getSharedVbos();
+    NODISCARD StaticVaos &getStaticVaos();
     NODISCARD StaticVbos &getStaticVbos();
 
-    NODISCARD SharedVbos &getSharedVbos();
-
-    NODISCARD SharedVaos &getSharedVaos();
-
     NODISCARD TexLookup &getTexLookup();
-
     NODISCARD FBO &getFBO();
-
     NODISCARD UboManager &getUboManager();
 
 private:
@@ -321,7 +321,6 @@ public:
     /// platform-specific (ES vs GL)
     NODISCARD const char *getShaderVersion() const { return virt_getShaderVersion(); }
 
-protected:
     NODISCARD virtual std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) = 0;
     virtual void virt_enableProgramPointSize(bool enable) = 0;
     NODISCARD virtual const char *virt_getShaderVersion() const = 0;
@@ -331,87 +330,15 @@ public:
     NODISCARD static const char *getUniformBlockName(SharedVboEnum block);
 
     /// platform-specific (ES vs GL)
-    NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
-
-protected:
-private:
-    template<typename T>
-    static void enforceTriviallyCopyable()
+    NODISCARD std::optional<GLenum> toGLenum(const DrawModeEnum mode)
     {
-        static_assert(std::is_trivially_copyable_v<T>,
-                      "T must be trivially copyable for buffer upload");
+        return virt_toGLenum(mode);
     }
 
 public:
-    void enableAttrib(const GLuint index,
-                      const GLint size,
-                      const GLenum type,
-                      const GLboolean normalized,
-                      const GLsizei stride,
-                      const GLvoid *const pointer)
-    {
-        Base::glEnableVertexAttribArray(index);
-        Base::glVertexAttribPointer(index, size, type, normalized, stride, pointer);
-    }
-
-    void enableAttribI(const GLuint index,
-                       const GLint size,
-                       const GLenum type,
-                       const GLsizei stride,
-                       const GLvoid *const pointer)
-    {
-        Base::glEnableVertexAttribArray(index);
-        Base::glVertexAttribIPointer(index, size, type, stride, pointer);
-    }
-
-    template<typename T>
-    NODISCARD GLsizei setVbo(const GLenum target,
-                             const GLuint buffer,
-                             const View<T> batch,
-                             const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        enforceTriviallyCopyable<T>();
-        const auto numElements = static_cast<GLsizei>(batch.size());
-        const auto elementSize = static_cast<GLsizei>(sizeof(T));
-        const auto numBytes = numElements * elementSize;
-        Base::glBindBuffer(target, buffer);
-        Base::glBufferData(target, numBytes, batch.data(), Legacy::toGLenum(usage));
-        Base::glBindBuffer(target, 0);
-        return numElements;
-    }
-
-    template<typename T>
-    void setVbo(const GLenum target,
-                const GLuint buffer,
-                const T &data,
-                const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        enforceTriviallyCopyable<T>();
-        Base::glBindBuffer(target, buffer);
-        Base::glBufferData(target, sizeof(T), &data, Legacy::toGLenum(usage));
-        Base::glBindBuffer(target, 0);
-    }
-
-    template<typename T>
-    NODISCARD auto setVbo(const DrawModeEnum mode,
-                          const GLuint vbo,
-                          View<T> batch,
-                          const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        using Pair = std::pair<DrawModeEnum, GLsizei>;
-        if (mode == DrawModeEnum::QUADS) {
-            const auto tris = convertQuadsToTris(batch);
-            return Pair{DrawModeEnum::TRIANGLES, setVbo(GL_ARRAY_BUFFER, vbo, View{tris}, usage)};
-        }
-        return Pair{mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage)};
-    }
-
-    void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
-    {
-        Base::glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        Base::glBufferData(GL_ARRAY_BUFFER, 0, nullptr, Legacy::toGLenum(usage));
-        Base::glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
+    void enableAttrib(
+        GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, size_t offset);
+    void enableAttribI(GLuint index, GLint size, GLenum type, GLsizei stride, size_t offset);
 
 public:
     NODISCARD UniqueMesh createPointBatch(View<ColorVert> batch);
@@ -450,7 +377,7 @@ public:
     void renderFont3d(const SharedMMTexture &texture, View<FontVert3d> verts);
 
 public:
-    void renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog,
+    void renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog_ptr,
                                   const GLRenderState &state);
 
 public:
@@ -461,6 +388,48 @@ public:
     void bindFbo();
     void releaseFbo();
     void blitFboToDefault();
+
+private:
+    void bindActiveTexture_internal(const GLenum activeTexture,
+                                    const GLenum target,
+                                    const GLuint texture)
+    {
+        Base &base = *this;
+        base.glActiveTexture(activeTexture);
+        base.glBindTexture(target, texture);
+    }
+
+public:
+    NODISCARD auto bindTexture(const GLenum activeTexture, const GLenum target, const GLuint texture)
+    {
+        struct NODISCARD Unbinder final
+        {
+        private:
+            Functions &m_self;
+            const GLenum m_activeTexture;
+            const GLenum m_target;
+
+        public:
+            explicit Unbinder(Functions &self, const GLenum activeTexture_, const GLenum target_)
+                : m_self{self}
+                , m_activeTexture{activeTexture_}
+                , m_target{target_}
+            {}
+            ~Unbinder() { m_self.bindActiveTexture_internal(m_activeTexture, m_target, 0); }
+            Unbinder(const Unbinder &) = delete;
+            Unbinder &operator=(const Unbinder &) = delete;
+        };
+        bindActiveTexture_internal(activeTexture, target, texture);
+        return Unbinder{*this, activeTexture, target};
+    }
+
+    NODISCARD auto bindTexture0(const GLenum target, const GLuint texture)
+    {
+        return bindTexture(GL_TEXTURE0, target, texture);
+    }
+
+public:
+    void glBindVertexArray(Badge<VAO>, const GLuint array) { Base::glBindVertexArray(array); }
 };
 } // namespace Legacy
 

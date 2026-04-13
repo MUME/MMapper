@@ -197,12 +197,13 @@ void MapCanvasTextures::destroyAll()
 {
     for_each([](SharedMMTexture &tex) -> void { tex.reset(); });
 
-    static constexpr bool verbose_logging = IS_DEBUG_BUILD;
+    // volatile to avoid warning about unused capture.
+    static volatile bool verbose_logging = false;
 
-    // REVISIT: what happens to this MMLOG() in non-debug build, since it doesn't print anything?
-    auto &&os = MMLOG();
+    auto &&os = MMLOG_DEBUG();
+    os << "Restting textures...\n";
     const auto reset_one_array = [&os](const std::string_view name, SharedMMTexture &tex) {
-        if constexpr (verbose_logging) {
+        if (verbose_logging) {
             const QOpenGLTexture &qtex = deref(deref(tex).get());
             const auto layers = qtex.layers();
             os << "... " << name;
@@ -212,14 +213,7 @@ void MapCanvasTextures::destroyAll()
         }
         tex.reset();
     };
-
-    if constexpr (verbose_logging) {
-        os << "destroying...\n";
-    }
     for_each_array(reset_one_array);
-    if constexpr (verbose_logging) {
-        os << "Done\n";
-    }
 }
 
 NODISCARD static SharedMMTexture loadTexture(const QString &name)

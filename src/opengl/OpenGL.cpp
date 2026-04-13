@@ -252,9 +252,19 @@ void OpenGL::initializeOpenGLFunctions()
     getFunctions().initializeOpenGLFunctions();
 }
 
-const char *OpenGL::glGetString(GLenum name)
+const char *OpenGL::glGetString(const GLenum name)
 {
     return as_cstring(getFunctions().glGetString(name));
+}
+
+int OpenGL::glGetInteger(const GLenum name)
+{
+    // note: glGetIntegerv() can sometimes return 2 or 4 values,
+    // so we'll avoid UB by passing a buffer with 4 integers,
+    // and then just ignore the other values (if any).
+    std::array<int, 4> vals{};
+    getFunctions().glGetIntegerv(name, vals.data());
+    return vals[0];
 }
 
 float OpenGL::getDevicePixelRatio() const
@@ -285,8 +295,7 @@ void OpenGL::uploadArrayLayer(const SharedMMTexture &array, int layer, const Vie
     MMTexture &tex = deref(array);
     QOpenGLTexture &qtex = deref(tex.get());
 
-    gl.glActiveTexture(GL_TEXTURE0);
-    gl.glBindTexture(GL_TEXTURE_2D_ARRAY, qtex.textureId());
+    MAYBE_UNUSED auto texture_binder = gl.bindTexture0(GL_TEXTURE_2D_ARRAY, qtex.textureId());
 
     assert(images.size() <= static_cast<size_t>(qtex.mipLevels()));
     for (size_t level_num = 0; level_num < images.size(); ++level_num) {
@@ -306,8 +315,6 @@ void OpenGL::uploadArrayLayer(const SharedMMTexture &array, int layer, const Vie
                            GL_UNSIGNED_BYTE,
                            image.constBits());
     }
-
-    gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 void OpenGL::generateMipmaps(const SharedMMTexture &array)
@@ -316,8 +323,7 @@ void OpenGL::generateMipmaps(const SharedMMTexture &array)
     MMTexture &tex = deref(array);
     QOpenGLTexture &qtex = deref(tex.get());
 
-    gl.glActiveTexture(GL_TEXTURE0);
-    gl.glBindTexture(GL_TEXTURE_2D_ARRAY, qtex.textureId());
+    MAYBE_UNUSED auto texture_binder = gl.bindTexture0(GL_TEXTURE_2D_ARRAY, qtex.textureId());
+
     gl.glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-    gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }

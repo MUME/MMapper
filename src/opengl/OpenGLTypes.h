@@ -236,7 +236,8 @@ struct NODISCARD GLRenderState final
     // glLineWidth() + { glEnable(LINE_STIPPLE) + glLineStipple() }
     LineParams lineParams;
 
-    using Textures = MMapper::Array<MMTextureId, 2>;
+    static inline constexpr size_t NUM_TEXTURES = 2;
+    using Textures = MMapper::Array<MMTextureId, NUM_TEXTURES>;
     struct NODISCARD Uniforms final
     {
         Color color;
@@ -374,7 +375,7 @@ private:
     void virt_reset() final;
     NODISCARD bool virt_isEmpty() const final;
 
-public:
+private:
     void virt_render(const GLRenderState &renderState) final;
 
 public:
@@ -384,7 +385,7 @@ public:
     }
 };
 
-enum class NODISCARD BufferUsageEnum { STATIC_DRAW, DYNAMIC_DRAW };
+enum class NODISCARD BufferUsageEnum { STATIC_DRAW, DYNAMIC_DRAW, STREAM_DRAW };
 
 class NODISCARD UniqueMesh final
 {

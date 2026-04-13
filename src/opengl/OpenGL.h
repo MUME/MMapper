@@ -18,7 +18,6 @@
 #include <QSurfaceFormat>
 #include <qopengl.h>
 
-class FBO;
 class MapCanvas;
 class GLWeather;
 namespace Legacy {
@@ -52,6 +51,7 @@ public:
     void initializeOpenGLFunctions();
     void initializeRenderer(float devicePixelRatio);
     NODISCARD const char *glGetString(GLenum name);
+    NODISCARD int glGetInteger(GLenum name);
     void setDevicePixelRatio(float devicePixelRatio);
     NODISCARD float getDevicePixelRatio() const;
     NODISCARD bool isRendererInitialized() const { return m_rendererInitialized; }

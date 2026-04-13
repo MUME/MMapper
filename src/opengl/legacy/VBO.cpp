@@ -6,8 +6,7 @@
 #include <QDebug>
 
 namespace Legacy {
-bool LOG_VBO_ALLOCATIONS = false;
-bool LOG_VBO_STATIC_UPLOADS = false;
+static constexpr bool LOG_VBO_ALLOCATIONS = false;
 
 void VBO::emplace(const SharedFunctions &sharedFunctions)
 {
@@ -23,6 +22,8 @@ void VBO::emplace(const SharedFunctions &sharedFunctions)
 
 void VBO::reset()
 {
+    assert(!m_bound);
+
     if (auto vbo = std::exchange(m_vbo, INVALID_VBOID); vbo != INVALID_VBOID) {
         if (LOG_VBO_ALLOCATIONS) {
             qInfo() << this << "Freeing VBO" << vbo;
@@ -38,7 +39,7 @@ void VBO::reset()
 
 GLuint VBO::get() const
 {
-    if (m_vbo == INVALID_VBOID) {
+    if (!isValid()) {
         throw std::runtime_error("VBO not allocated");
     }
     return m_vbo;

@@ -1661,6 +1661,10 @@ void MainWindow::closeEvent(QCloseEvent *const event)
 
     writeSettings();
 
+    if (auto canvas = getCanvas()) {
+        canvas->shuttingDown();
+    }
+
     event->accept();
 }
 

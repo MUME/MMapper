@@ -109,7 +109,7 @@ private:
     NODISCARD T applyTransition(float startTime, T startVal, T targetVal) const;
 
     template<typename T>
-    struct TransitionPair
+    struct NODISCARD TransitionPair final
     {
         T &start;
         T target;

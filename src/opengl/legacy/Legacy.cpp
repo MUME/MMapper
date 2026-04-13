@@ -163,6 +163,57 @@ UniqueMesh Functions::createRoomQuadTexBatch(const View<RoomQuadTexVert> batch,
     return createTexturedMesh<RoomQuadTexMesh>(shared_from_this(), mode, batch, prog, texture);
 }
 
+namespace {
+
+template<typename T>
+NODISCARD std::shared_ptr<T> alloc(Functions &) = delete;
+template<>
+NODISCARD std::shared_ptr<VAO> alloc(Functions &f)
+{
+    return f.getStaticVaos().alloc();
+}
+template<>
+NODISCARD std::shared_ptr<VBO> alloc(Functions &f)
+{
+    return f.getStaticVbos().alloc();
+}
+
+#define XFOREACH_VXO(X) X(VAO) X(VBO)
+
+template<typename T>
+NODISCARD std::string getTypeName() = delete;
+
+#define X_DECL_WHAT(_x) \
+    template<> \
+    NODISCARD std::string getTypeName<_x>() \
+    { \
+        return #_x; \
+    }
+XFOREACH_VXO(X_DECL_WHAT)
+#undef X_DECL_WHAT
+#undef XFOREACH_VXO
+
+template<typename T>
+NODISCARD T &get(const SharedFunctions &sharedFunctions, std::weak_ptr<T> &weak)
+{
+    auto shared = weak.lock();
+    if (shared == nullptr) {
+        weak = shared = alloc<T>(deref(sharedFunctions));
+        if (shared == nullptr) {
+            throw std::runtime_error("OpenGL error: failed to alloc " + getTypeName<T>());
+        }
+    }
+
+    T &x = *shared;
+    if (!x.isValid()) {
+        x.emplace(sharedFunctions);
+    }
+
+    return x;
+}
+
+} // namespace
+
 template<typename VertexType_, template<typename> typename Mesh_, typename ShaderType_>
 static void renderImmediate(const SharedFunctions &sharedFunctions,
                             const DrawModeEnum mode,
@@ -174,41 +225,41 @@ static void renderImmediate(const SharedFunctions &sharedFunctions,
         return;
     }
 
-    static WeakVbo weak;
-    auto shared = weak.lock();
-    if (shared == nullptr) {
-        weak = shared = sharedFunctions->getStaticVbos().alloc();
-        if (shared == nullptr) {
-            throw std::runtime_error("OpenGL error: failed to alloc VBO");
-        }
-    }
+    static WeakVao weakVao;
+    VAO &vao = get(sharedFunctions, weakVao);
 
-    VBO &vbo = *shared;
-    if (!vbo) {
-        vbo.emplace(sharedFunctions);
-    }
+    static WeakVbo weakVbo;
+    VBO &vbo = get(sharedFunctions, weakVbo);
 
     using Mesh = Mesh_<VertexType_>;
     static_assert(std::is_same_v<typename Mesh::ProgramType, ShaderType_>);
 
-    const auto before = vbo.get();
+    const auto vaoBefore = vao.get();
+    const auto vboBefore = vbo.get();
     {
-        Mesh mesh{sharedFunctions, sharedShader};
+        Mesh mesh{sharedFunctions, sharedShader, DoNotAllocateVao{}};
         {
             // temporarily loan our VBO to the mesh.
+            mesh.unsafe_swapVaoId(vao);
             mesh.unsafe_swapVboId(vbo);
-            assert(!vbo);
+            assert(!vao.isValid());
+            assert(!vbo.isValid());
             {
                 mesh.setDynamic(mode, verts);
                 mesh.render(renderState);
             }
+            mesh.unsafe_swapVaoId(vao);
             mesh.unsafe_swapVboId(vbo);
-            assert(vbo);
+            assert(vao.isValid());
+            assert(vbo.isValid());
         }
     }
-    const auto after = vbo.get();
-    assert(before == after);
-    sharedFunctions->clearVbo(vbo.get());
+    const auto vaoAfter = vao.get();
+    const auto vboAfter = vbo.get();
+    assert(vaoBefore == vaoAfter);
+    assert(vboBefore == vboAfter);
+
+    vbo.clearVbo();
 }
 
 void Functions::renderPlainLines(const View<glm::vec3> verts, const GLRenderState &state)
@@ -309,9 +360,10 @@ UniqueMesh Functions::createFontMesh(const SharedMMTexture &texture,
 
 Functions::Functions(Badge<Functions>, UboManager &uboManager)
     : m_shaderPrograms{std::make_unique<ShaderPrograms>(*this)}
-    , m_staticVbos{std::make_unique<StaticVbos>()}
-    , m_sharedVbos{std::make_unique<SharedVbos>()}
     , m_sharedVaos{std::make_unique<SharedVaos>()}
+    , m_sharedVbos{std::make_unique<SharedVbos>()}
+    , m_staticVaos{std::make_unique<StaticVaos>()}
+    , m_staticVbos{std::make_unique<StaticVbos>()}
     , m_texLookup{std::make_unique<TexLookup>()}
     , m_fbo{std::make_unique<FBO>()}
     , m_uboManager{uboManager}
@@ -339,14 +391,15 @@ Functions::~Functions()
 /// </ul>
 void Functions::cleanup()
 {
-    if (LOG_VBO_ALLOCATIONS) {
+    if (IS_DEBUG_BUILD) {
         qInfo() << "Cleanup";
     }
 
     getShaderPrograms().resetAll();
-    getStaticVbos().resetAll();
-    getSharedVbos().resetAll();
     getSharedVaos().resetAll();
+    getSharedVbos().resetAll();
+    getStaticVaos().resetAll();
+    getStaticVbos().resetAll();
     getTexLookup().clear();
     m_fbo.reset();
 }
@@ -355,17 +408,21 @@ ShaderPrograms &Functions::getShaderPrograms()
 {
     return deref(m_shaderPrograms);
 }
-StaticVbos &Functions::getStaticVbos()
+SharedVaos &Functions::getSharedVaos()
 {
-    return deref(m_staticVbos);
+    return deref(m_sharedVaos);
 }
 SharedVbos &Functions::getSharedVbos()
 {
     return deref(m_sharedVbos);
 }
-SharedVaos &Functions::getSharedVaos()
+StaticVaos &Functions::getStaticVaos()
 {
-    return deref(m_sharedVaos);
+    return deref(m_staticVaos);
+}
+StaticVbos &Functions::getStaticVbos()
+{
+    return deref(m_staticVbos);
 }
 TexLookup &Functions::getTexLookup()
 {
@@ -381,6 +438,31 @@ UboManager &Functions::getUboManager()
     return m_uboManager;
 }
 
+void Functions::enableAttrib(const GLuint index,
+                             const GLint size,
+                             const GLenum type,
+                             const GLboolean normalized,
+                             const GLsizei stride,
+                             const size_t offset)
+{
+    const auto pointer = reinterpret_cast<const GLvoid *>(offset);
+    Base::glEnableVertexAttribArray(index);
+    Base::glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+    checkError();
+}
+
+void Functions::enableAttribI(const GLuint index,
+                              const GLint size,
+                              const GLenum type,
+                              const GLsizei stride,
+                              const size_t offset)
+{
+    const auto pointer = reinterpret_cast<const GLvoid *>(offset);
+    Base::glEnableVertexAttribArray(index);
+    Base::glVertexAttribIPointer(index, size, type, stride, pointer);
+    checkError();
+}
+
 /// This only exists so we can detect errors in contexts that don't support \c glDebugMessageCallback().
 void Functions::checkError()
 {
@@ -390,36 +472,53 @@ void Functions::checkError()
         return;
     }
 
-#define CASE(x) \
-    case (x): \
-        qCritical() << "OpenGL error" << #x; \
-        break;
+    static auto reportError = [](const auto what) { //
+        qCritical() << "OpenGL error" << what;
+    };
 
-    bool fail = false;
-    while (true) {
-        const auto err = Base::glGetError();
-        if (err == GL_NO_ERROR) {
-            break;
-        }
-
-        fail = true;
-
+    static auto tryReportError = [](const auto err) {
+#define X_CASE(_x) \
+    case (_x): \
+        return reportError(#_x)
         switch (err) {
-            CASE(GL_INVALID_ENUM)
-            CASE(GL_INVALID_VALUE)
-            CASE(GL_INVALID_OPERATION)
-            CASE(GL_OUT_OF_MEMORY)
+            // these report the user-readable names
+            X_CASE(GL_INVALID_ENUM);
+            X_CASE(GL_INVALID_VALUE);
+            X_CASE(GL_INVALID_OPERATION);
+            X_CASE(GL_OUT_OF_MEMORY);
         default:
-            qCritical() << "OpenGL error" << err;
+            // this just reports the integer error number
+            return reportError(err);
+        }
+#undef X_CASE
+    };
+
+    // We don't expect opengl to ever report more than a handful of errors at a time, so this
+    // arbitrary_limit is just to avoid an infinite loop in the rare case where opengl starts
+    // returning the same value forever (e.g. if the context is null, which we check above).
+    //
+    // Note: fail will be set to true unless the first value is GL_NO_ERROR, so we'll abort
+    // anyway once the arbitrary limit is reached. The only reason to increase the number
+    // would be some odd case where opengl somehow legitimately reports that many errors
+    // -AND- we need to also see the last error message.
+    //
+    // Better solution: use an opengl 4.3+ synchronous glDebugMessageCallback() to get
+    // immediate feedback at the call site instead of using the legacy glGetError() function.
+    //
+    constexpr size_t arbitrary_limit = 20;
+    bool fail = false;
+    for (size_t i = 0; i < arbitrary_limit; ++i) {
+        if (const auto err = Base::glGetError(); err == GL_NO_ERROR) {
             break;
+        } else {
+            fail = true;
+            tryReportError(err);
         }
     }
 
     if (fail) {
         std::abort();
     }
-
-#undef CASE
 }
 
 void Functions::configureFbo(int samples)
@@ -441,42 +540,38 @@ void Functions::blitFboToDefault()
 {
     getFBO().resolve();
 
-    const GLuint textureId = getFBO().resolvedTextureId();
-    if (textureId != 0) {
+    if (const GLuint textureId = getFBO().resolvedTextureId(); textureId != 0) {
         const auto state = GLRenderState()
                                .withBlend(BlendModeEnum::NONE)
                                .withDepthFunction(std::nullopt)
                                .withCulling(CullingEnum::DISABLED);
 
-        Base::glActiveTexture(GL_TEXTURE0);
-        Base::glBindTexture(GL_TEXTURE_2D, textureId);
-
+        MAYBE_UNUSED auto texture_binder = bindTexture0(GL_TEXTURE_2D, textureId);
         renderFullScreenTriangle(getShaderPrograms().getBlitShader(), state);
-
-        Base::glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
 
-void Functions::renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog,
+void Functions::renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog_ptr,
                                          const GLRenderState &state)
 {
     checkError();
+    auto &prog = deref(prog_ptr);
+    MAYBE_UNUSED auto program_binder = prog.bind();
+    prog.setUniforms(glm::mat4(1.0f), state.uniforms);
 
-    auto programUnbinder = prog->bind();
-    prog->setUniforms(glm::mat4(1.0f), state.uniforms);
-    RenderStateBinder renderStateBinder(*this, getTexLookup(), state);
+    MAYBE_UNUSED auto renderStateBinder = RenderStateBinder{*this, getTexLookup(), state};
 
     SharedVao shared = getSharedVaos().get(SharedVaoEnum::EmptyVao);
     VAO &vao = deref(shared);
-    if (!vao) {
+    if (!vao.isValid()) {
         if (IS_DEBUG_BUILD) {
             qDebug() << "allocating shared empty VAO for renderFullScreenTriangle";
         }
         vao.emplace(shared_from_this());
     }
-    glBindVertexArray(vao.get());
+
+    MAYBE_UNUSED auto vao_binder = vao.bind();
     glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
     checkError();
 }
 

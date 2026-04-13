@@ -15,6 +15,10 @@
 #include <QString>
 #include <QtGui/qopengl.h>
 
+namespace Legacy {
+struct TexturesBinder;
+}
+
 NODISCARD MMTextureId allocateTextureId();
 
 struct NODISCARD MMTexArrayPosition final
@@ -92,13 +96,12 @@ public:
 
     NODISCARD QOpenGLTexture *get() { return &m_qt_texture; }
     NODISCARD const QOpenGLTexture *get() const { return &m_qt_texture; }
-    NODISCARD QOpenGLTexture *operator->() { return get(); }
+    NODISCARD QOpenGLTexture *operator->() { return &m_qt_texture; }
 
-    void bind() { get()->bind(); }
-    void bind(GLuint x) { get()->bind(x); }
-    void release(GLuint x) { get()->release(x); }
+    void bind(Badge<Legacy::TexturesBinder>, const GLuint unit) { m_qt_texture.bind(unit); }
+    void release(Badge<Legacy::TexturesBinder>, const GLuint unit) { m_qt_texture.release(unit); }
 
-    NODISCARD QOpenGLTexture::Target target() const { return get()->target(); }
+    NODISCARD QOpenGLTexture::Target target() const { return m_qt_texture.target(); }
     NODISCARD bool canBeUpdated() const { return !m_forbidUpdates; }
 
     NODISCARD bool hasArrayPosition() const { return m_arrayPos.has_value(); }

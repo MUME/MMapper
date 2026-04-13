@@ -9,8 +9,8 @@
 
 #include <optional>
 
-#define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
-#define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
+#define VPO(x) offsetof(VertexType_, x)
+#define CHECK_ATTR_LOC(_expect, _name) assert(Base::m_program.getAttribLocation(_name) == (_expect))
 
 namespace Legacy {
 
@@ -23,136 +23,54 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &shader)
-        {
-            Attribs result;
-            result.vertPos = shader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         static_assert(sizeof(std::declval<VertexType_>()) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        CHECK_ATTR_LOC(0, "aVert");
+        gl.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     }
 };
 
 template<typename VertexType_>
-class NODISCARD LineMesh final : public SimpleMesh<VertexType_, UColorLineShader>
+class NODISCARD LineMesh final : public SimpleMeshBase<VertexType_, UColorLineShader>
 {
 public:
-    using Base = SimpleMesh<VertexType_, UColorLineShader>;
+    using Base = SimpleMeshBase<VertexType_, UColorLineShader>;
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint vert1Pos = INVALID_ATTRIB_LOCATION;
-        GLuint vert2Pos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &shader)
-        {
-            Attribs result;
-            result.vert1Pos = shader.getAttribLocation("aVert1");
-            result.vert2Pos = shader.getAttribLocation("aVert2");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        // aVert1
-        gl.enableAttrib(attribs.vert1Pos, 3, GL_FLOAT, GL_FALSE, 2 * vertSize, nullptr);
-        // aVert2
-        gl.enableAttrib(attribs.vert2Pos, 3, GL_FLOAT, GL_FALSE, 2 * vertSize, VPO_PTR(vertSize));
+
+        CHECK_ATTR_LOC(0, "aVert1");
+        CHECK_ATTR_LOC(1, "aVert2");
+
+        const auto stride = 2 * vertSize;
+        gl.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, stride, 0);
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, stride, vertSize);
 
         // instancing: one line per 4 vertices (quad)
-        gl.glVertexAttribDivisor(attribs.vert1Pos, 1);
-        gl.glVertexAttribDivisor(attribs.vert2Pos, 1);
-
-        m_boundAttribs = attribs;
+        gl.glVertexAttribDivisor(0, 1);
+        gl.glVertexAttribDivisor(1, 1);
     }
 
-    void virt_render(const GLRenderState &renderState) override
+private:
+    void virt_setCustomUniforms(Functions &gl, const GLRenderState &renderState) final
     {
-        if (Base::isEmpty()) {
-            return;
-        }
+        auto &prog = Base::m_program;
+        prog.setViewport("uViewport", gl.getPhysicalViewport());
+        prog.setFloat("uLineWidth", renderState.lineParams.width * gl.getDevicePixelRatio());
+    }
 
-        Functions &gl = Base::m_functions;
-        gl.checkError();
-
-        const glm::mat4 mvp = renderState.mvp.value_or(gl.getProjectionMatrix());
-        auto programUnbinder = Base::m_program.bind();
-        Base::m_program.setUniforms(mvp, renderState.uniforms);
-        Base::m_program.setViewport("uViewport", gl.getPhysicalViewport());
-        Base::m_program.setFloat("uLineWidth",
-                                 renderState.lineParams.width * gl.getDevicePixelRatio());
-
-        RenderStateBinder renderStateBinder(gl, gl.getTexLookup(), renderState);
-
-        gl.glBindVertexArray(Base::m_vao.get());
-        RAIICallback vaoUnbinder([&gl]() {
-            gl.glBindVertexArray(0);
-            gl.checkError();
-        });
-
-        auto attribUnbinder = Base::bindAttribs();
-
+private:
+    void virt_draw(Functions &gl) final
+    {
         const GLsizei numInstances = Base::m_numVerts / 2;
         gl.glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, numInstances);
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            return;
-        }
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.vert1Pos);
-        gl.glDisableVertexAttribArray(attribs.vert2Pos);
-        gl.glVertexAttribDivisor(attribs.vert1Pos, 0);
-        gl.glVertexAttribDivisor(attribs.vert2Pos, 0);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
-    }
-
-    NODISCARD static const void *VPO_PTR(size_t offset)
-    {
-        return reinterpret_cast<const void *>(offset);
     }
 };
 
@@ -166,156 +84,62 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint colorPos = INVALID_ATTRIB_LOCATION;
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
-        {
-            Attribs result;
-            result.colorPos = fontShader.getAttribLocation("aColor");
-            result.vertPos = fontShader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
-        gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.colorPos);
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        CHECK_ATTR_LOC(0, "aColor");
+        CHECK_ATTR_LOC(1, "aVert");
+        gl.enableAttrib(0, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
     }
 };
 
 template<typename VertexType_>
-class NODISCARD ColoredLineMesh final : public SimpleMesh<VertexType_, AColorLineShader>
+class NODISCARD ColoredLineMesh final : public SimpleMeshBase<VertexType_, AColorLineShader>
 {
 public:
-    using Base = SimpleMesh<VertexType_, AColorLineShader>;
+    using Base = SimpleMeshBase<VertexType_, AColorLineShader>;
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint colorPos = INVALID_ATTRIB_LOCATION;
-        GLuint vert1Pos = INVALID_ATTRIB_LOCATION;
-        GLuint vert2Pos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &shader)
-        {
-            Attribs result;
-            result.colorPos = shader.getAttribLocation("aColor");
-            result.vert1Pos = shader.getAttribLocation("aVert1");
-            result.vert2Pos = shader.getAttribLocation("aVert2");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
 
+        CHECK_ATTR_LOC(0, "aColor");
+        CHECK_ATTR_LOC(1, "aVert1");
+        CHECK_ATTR_LOC(2, "aVert2");
+
+        const auto stride = 2 * vertSize;
         // We assume the color comes from the first vertex of the segment
-        // aColor
-        gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, 2 * vertSize, VPO(color));
-        // aVert1
-        gl.enableAttrib(attribs.vert1Pos, 3, GL_FLOAT, GL_FALSE, 2 * vertSize, VPO(vert));
-        // aVert2
-        gl.enableAttrib(attribs.vert2Pos,
-                        3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        2 * vertSize,
-                        VPO_PTR(VPO(vert), vertSize));
+        gl.enableAttrib(0, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, VPO(color));
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, stride, VPO(vert));
+        gl.enableAttrib(2, 3, GL_FLOAT, GL_FALSE, stride, VPO(vert) + vertSize);
 
         // instancing
-        gl.glVertexAttribDivisor(attribs.colorPos, 1);
-        gl.glVertexAttribDivisor(attribs.vert1Pos, 1);
-        gl.glVertexAttribDivisor(attribs.vert2Pos, 1);
-
-        m_boundAttribs = attribs;
+        gl.glVertexAttribDivisor(0, 1);
+        gl.glVertexAttribDivisor(1, 1);
+        gl.glVertexAttribDivisor(2, 1);
     }
 
-    void virt_render(const GLRenderState &renderState) override
+private:
+    void virt_setCustomUniforms(Functions &gl, const GLRenderState &renderState) final
     {
-        if (Base::isEmpty()) {
-            return;
-        }
+        auto &prog = Base::m_program;
+        prog.setViewport("uViewport", gl.getPhysicalViewport());
+        prog.setFloat("uLineWidth", renderState.lineParams.width * gl.getDevicePixelRatio());
+    }
 
-        Functions &gl = Base::m_functions;
-        gl.checkError();
-
-        const glm::mat4 mvp = renderState.mvp.value_or(gl.getProjectionMatrix());
-        auto programUnbinder = Base::m_program.bind();
-        Base::m_program.setUniforms(mvp, renderState.uniforms);
-        Base::m_program.setViewport("uViewport", gl.getPhysicalViewport());
-        Base::m_program.setFloat("uLineWidth",
-                                 renderState.lineParams.width * gl.getDevicePixelRatio());
-
-        RenderStateBinder renderStateBinder(gl, gl.getTexLookup(), renderState);
-
-        gl.glBindVertexArray(Base::m_vao.get());
-        RAIICallback vaoUnbinder([&gl]() {
-            gl.glBindVertexArray(0);
-            gl.checkError();
-        });
-
-        auto attribUnbinder = Base::bindAttribs();
-
+private:
+    void virt_draw(Functions &gl) final
+    {
         const GLsizei numInstances = Base::m_numVerts / 2;
         gl.glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, numInstances);
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            return;
-        }
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.colorPos);
-        gl.glDisableVertexAttribArray(attribs.vert1Pos);
-        gl.glDisableVertexAttribArray(attribs.vert2Pos);
-        gl.glVertexAttribDivisor(attribs.colorPos, 0);
-        gl.glVertexAttribDivisor(attribs.vert1Pos, 0);
-        gl.glVertexAttribDivisor(attribs.vert2Pos, 0);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
-    }
-
-    NODISCARD static const void *VPO_PTR(const void *base, size_t offset)
-    {
-        return static_cast<const char *>(base) + offset;
     }
 };
 
@@ -328,49 +152,17 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint texPos = INVALID_ATTRIB_LOCATION;
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
-        {
-            Attribs result;
-            result.texPos = fontShader.getAttribLocation("aTexCoord");
-            result.vertPos = fontShader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().tex) == 3 * sizeof(GLfloat));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        gl.enableAttrib(attribs.texPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
-        gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.texPos);
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        CHECK_ATTR_LOC(0, "aTexCoord");
+        CHECK_ATTR_LOC(1, "aVert");
+        gl.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
     }
 };
 
@@ -383,25 +175,7 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint colorPos = INVALID_ATTRIB_LOCATION;
-        GLuint texPos = INVALID_ATTRIB_LOCATION;
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AColorTexturedShader &fontShader)
-        {
-            Attribs result;
-            result.colorPos = fontShader.getAttribLocation("aColor");
-            result.texPos = fontShader.getAttribLocation("aTexCoord");
-            result.vertPos = fontShader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
@@ -409,28 +183,12 @@ private:
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
-        gl.enableAttrib(attribs.texPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
-        gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.colorPos);
-        gl.glDisableVertexAttribArray(attribs.texPos);
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        CHECK_ATTR_LOC(0, "aColor");
+        CHECK_ATTR_LOC(1, "aTexCoord");
+        CHECK_ATTR_LOC(2, "aVert");
+        gl.enableAttrib(0, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
+        gl.enableAttrib(2, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
     }
 };
 
@@ -443,49 +201,17 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint vertTexColPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(RoomQuadTexShader &fontShader)
-        {
-            Attribs result;
-            result.vertTexColPos = fontShader.getAttribLocation("aVertTexCol");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().vertTexCol) == 4 * sizeof(int32_t));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
+        CHECK_ATTR_LOC(0, "aVertTexCol");
         // ivec4
-        gl.enableAttribI(attribs.vertTexColPos, 4, GL_INT, vertSize, VPO(vertTexCol));
-
+        gl.enableAttribI(0, 4, GL_INT, vertSize, VPO(vertTexCol));
         // instancing
-        gl.glVertexAttribDivisor(attribs.vertTexColPos, 1);
-
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.vertTexColPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        gl.glVertexAttribDivisor(0, 1);
     }
 };
 
@@ -499,53 +225,21 @@ public:
     using Base::Base;
 
 private:
-    struct NODISCARD Attribs final
-    {
-        GLuint colorPos = INVALID_ATTRIB_LOCATION;
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
-        {
-            Attribs result;
-            result.colorPos = fontShader.getAttribLocation("aColor");
-            result.vertPos = fontShader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-    std::optional<Attribs> m_boundAttribs;
-
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 3 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
-        gl.enableAttrib(attribs.vertPos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-
-        auto &attribs = m_boundAttribs.value();
-        Functions &gl = Base::m_functions;
-        gl.glDisableVertexAttribArray(attribs.colorPos);
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        CHECK_ATTR_LOC(0, "aColor");
+        CHECK_ATTR_LOC(1, "aVert");
+        gl.enableAttrib(0, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
+        gl.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
     }
 };
 
 } // namespace Legacy
 
-#undef VOIDPTR_OFFSETOF
 #undef VPO
+#undef CHECK_ATTR_LOC

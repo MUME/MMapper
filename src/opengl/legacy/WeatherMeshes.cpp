@@ -26,9 +26,9 @@ ParticleSimulationMesh::ParticleSimulationMesh(SharedFunctions shared_functions,
     , m_program(std::move(program))
 {
     m_tfo.emplace(m_shared_functions);
-    for (int i = 0; i < 2; ++i) {
-        m_vbos[i].emplace(m_shared_functions);
-        m_vaos[i].emplace(m_shared_functions);
+    for (auto &bufs : m_buffers) {
+        bufs.vao.emplace(m_shared_functions);
+        bufs.vbo.emplace(m_shared_functions);
     }
 }
 
@@ -52,35 +52,25 @@ void ParticleSimulationMesh::init()
                                  get_random_float());
     }
 
-    for (int i = 0; i < 2; ++i) {
-        if (!m_vbos[i]) {
-            m_vbos[i].emplace(m_shared_functions);
-        }
-        m_functions.glBindBuffer(GL_ARRAY_BUFFER, m_vbos[i].get());
-        m_functions.glBufferData(GL_ARRAY_BUFFER,
-                                 static_cast<GLsizeiptr>(initialData.size()
-                                                         * sizeof(WeatherParticleVert)),
-                                 initialData.data(),
-                                 GL_STREAM_DRAW);
+    if constexpr (IS_DEBUG_BUILD) {
+        auto &prog = deref(m_program);
+        MAYBE_UNUSED auto prog_binder = prog.bind();
+        assert(prog.getAttribLocation("aPos") == 0);
+        assert(prog.getAttribLocation("aLife") == 1);
+    }
 
-        if (!m_vaos[i]) {
-            m_vaos[i].emplace(m_shared_functions);
-        }
-        m_functions.glBindVertexArray(m_vaos[i].get());
-        m_functions.enableAttrib(0,
-                                 2,
-                                 GL_FLOAT,
-                                 GL_FALSE,
-                                 sizeof(WeatherParticleVert),
-                                 reinterpret_cast<void *>(offsetof(WeatherParticleVert, pos)));
-        m_functions.enableAttrib(1,
-                                 1,
-                                 GL_FLOAT,
-                                 GL_FALSE,
-                                 sizeof(WeatherParticleVert),
-                                 reinterpret_cast<void *>(offsetof(WeatherParticleVert, life)));
-        m_functions.glBindVertexArray(0);
-        m_functions.glBindBuffer(GL_ARRAY_BUFFER, 0);
+    for (auto &bufs : m_buffers) {
+        auto &vao = bufs.vao;
+        auto &vbo = bufs.vbo;
+        using Vert = WeatherParticleVert;
+        std::ignore = vbo.setVbo(GL_ARRAY_BUFFER,
+                                 View<Vert>{initialData},
+                                 BufferUsageEnum::STREAM_DRAW);
+
+        MAYBE_UNUSED auto vbo_binder = vbo.bind(GL_ARRAY_BUFFER);
+        MAYBE_UNUSED auto vao_binder = vao.bind();
+        m_functions.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
+        m_functions.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
     }
 
     m_initialized = true;
@@ -90,101 +80,124 @@ void ParticleSimulationMesh::virt_reset()
 {
     // Note: TFO is not reset here as it's only created in the constructor
     // and can be reused.
-    for (int i = 0; i < 2; ++i) {
-        m_vbos[i].reset();
-        m_vaos[i].reset();
+    for (auto &bufs : m_buffers) {
+        bufs.vao.reset();
+        bufs.vbo.reset();
     }
     m_initialized = false;
 }
 
+// low priority: if this code gets duplicated elsewhere, then we'd want to consider moving
+// this function into the Functions class.
+static void invokeTransformFeedback(Functions &gl, TFO &tfo, VAO &vao, VBO &vbo, const size_t count)
+{
+    GLuint index = 0;
+    GLint first = 0;
+    MAYBE_UNUSED auto vao_binder = vao.bind();
+    MAYBE_UNUSED auto tfo_binder = tfo.bind();
+    MAYBE_UNUSED auto vbo_binder = vbo.bindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, index);
+    {
+        // low priority: should we consider using RAII enable/diable?
+        gl.glEnable(GL_RASTERIZER_DISCARD);
+        {
+            // low priority: should we consider separate transform feedback draw function?
+            gl.glBeginTransformFeedback(GL_POINTS);
+            gl.glDrawArrays(GL_POINTS, first, static_cast<GLsizei>(count));
+            gl.glEndTransformFeedback();
+        }
+        gl.glDisable(GL_RASTERIZER_DISCARD);
+    }
+}
+
 void ParticleSimulationMesh::virt_render(const GLRenderState &renderState)
 {
-    init();
-
-    auto binder = m_program->bind();
-    const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
-    m_program->setUniforms(mvp, renderState.uniforms);
-
-    const uint32_t bufferOut = 1 - m_currentBuffer;
-
-    m_functions.glBindVertexArray(m_vaos[m_currentBuffer].get());
-    m_functions.glEnable(GL_RASTERIZER_DISCARD);
-    m_functions.glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_tfo.get());
-    m_functions.glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_vbos[bufferOut].get());
-
-    {
-        m_functions.glBeginTransformFeedback(GL_POINTS);
-        m_functions.glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_numParticles));
-        m_functions.glEndTransformFeedback();
+    if (!m_initialized) {
+        // REVISIT: Why is this function allowed to be called before it's initialized?
+        // Initializing and rendering in the same frame is usually really bad for performance.
+        init();
+        assert(m_initialized);
     }
-    m_functions.glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, 0);
-    m_functions.glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-    m_functions.glDisable(GL_RASTERIZER_DISCARD);
-    m_functions.glBindVertexArray(0);
 
-    m_currentBuffer = bufferOut;
+    // REVISIT: please explain why this uses value_or().
+    const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
+    auto &prog = deref(m_program);
+
+    MAYBE_UNUSED auto binder = prog.bind();
+    prog.setUniforms(mvp, renderState.uniforms);
+
+    // REVISIT: Why are the VAO and VBO out of sync? Arrrrrrrrgh.
+    auto &vao = m_buffers[getCurrentBuffer()].vao;
+    auto &vbo = m_buffers[getNextBuffer()].vbo;
+    invokeTransformFeedback(m_functions, m_tfo, vao, vbo, m_numParticles);
+    advanceCurrentBuffer();
 }
 
 ParticleRenderMesh::ParticleRenderMesh(SharedFunctions shared_functions,
                                        std::shared_ptr<ParticleRenderShader> program,
-                                       const ParticleSimulationMesh &simulation)
+                                       ParticleSimulationMesh &simulation)
     : m_shared_functions(std::move(shared_functions))
     , m_functions(deref(m_shared_functions))
     , m_program(std::move(program))
     , m_simulation(simulation)
 {
-    for (int i = 0; i < 2; ++i) {
-        m_vaos[i].emplace(m_shared_functions);
+    for (auto &vao : m_vaos) {
+        vao.emplace(m_shared_functions);
     }
 }
 
 ParticleRenderMesh::~ParticleRenderMesh() = default;
 
-void ParticleRenderMesh::init()
+void ParticleRenderMesh::setIntensity(const float intensity)
 {
-    if (m_initialized || m_simulation.virt_isEmpty()) {
+    if (!std::isfinite(intensity)) {
+        assert(std::isfinite(intensity));
+        m_intensity = 0.f;
         return;
     }
 
-    for (uint32_t i = 0; i < 2; ++i) {
-        if (!m_vaos[i]) {
-            m_vaos[i].emplace(m_shared_functions);
-        }
-        m_functions.glBindVertexArray(m_vaos[i].get());
+    assert(isClamped(intensity, 0.f, 1.f));
+    m_intensity = std::clamp(intensity, 0.f, 1.f);
+}
 
-        m_functions.glBindBuffer(GL_ARRAY_BUFFER, m_simulation.getParticleVbo(i).get());
-        m_functions.enableAttrib(0,
-                                 2,
-                                 GL_FLOAT,
-                                 GL_FALSE,
-                                 sizeof(WeatherParticleVert),
-                                 reinterpret_cast<void *>(offsetof(WeatherParticleVert, pos)));
-        m_functions.glVertexAttribDivisor(0, 1);
-        m_functions.enableAttrib(1,
-                                 1,
-                                 GL_FLOAT,
-                                 GL_FALSE,
-                                 sizeof(WeatherParticleVert),
-                                 reinterpret_cast<void *>(offsetof(WeatherParticleVert, life)));
-        m_functions.glVertexAttribDivisor(1, 1);
+void ParticleRenderMesh::init()
+{
+    if (m_initialized || m_simulation.isEmpty()) {
+        return;
     }
 
-    m_functions.glBindVertexArray(0);
-    m_functions.glBindBuffer(GL_ARRAY_BUFFER, 0);
+    if constexpr (IS_DEBUG_BUILD) {
+        auto &prog = deref(m_program);
+        MAYBE_UNUSED auto prog_binder = prog.bind();
+        assert(prog.getAttribLocation("aParticlePos") == 0);
+        assert(prog.getAttribLocation("aLife") == 1);
+    }
+
+    auto &gl = m_functions;
+    for (size_t i = 0; i < NUM_BUFFERS; ++i) {
+        using Vert = WeatherParticleVert;
+        auto &vao = m_vaos[i];
+        MAYBE_UNUSED auto vao_binder = vao.bind();
+        MAYBE_UNUSED auto vbo_binder = m_simulation.getParticleVbo(i).bind(GL_ARRAY_BUFFER);
+        gl.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
+        gl.glVertexAttribDivisor(0, 1);
+        gl.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
+        gl.glVertexAttribDivisor(1, 1);
+    }
+
     m_initialized = true;
 }
 
 void ParticleRenderMesh::virt_reset()
 {
-    for (int i = 0; i < 2; ++i) {
-        m_vaos[i].reset();
+    for (auto &vao : m_vaos) {
+        vao.reset();
     }
     m_initialized = false;
 }
 
 bool ParticleRenderMesh::virt_isEmpty() const
 {
-    return m_simulation.virt_isEmpty();
+    return m_simulation.isEmpty();
 }
 
 void ParticleRenderMesh::virt_render(const GLRenderState &renderState)
@@ -198,21 +211,25 @@ void ParticleRenderMesh::virt_render(const GLRenderState &renderState)
     if (m_intensity <= 0.0f) {
         return;
     }
-    const GLsizei maxCount = static_cast<GLsizei>(m_simulation.getNumParticles());
-    const GLsizei count = std::max<GLsizei>(1,
-                                            static_cast<GLsizei>(m_intensity
-                                                                 * static_cast<float>(maxCount)));
+    const auto maxCount = static_cast<GLsizei>(m_simulation.getNumParticles());
+    const auto count = std::max<GLsizei>(1,
+                                         static_cast<GLsizei>(m_intensity
+                                                              * static_cast<float>(maxCount)));
 
-    auto binder = m_program->bind();
+    // REVISIT: please explain why this uses value_or().
     const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
-    m_program->setUniforms(mvp, renderState.uniforms);
 
-    RenderStateBinder rsBinder(m_functions, m_functions.getTexLookup(), renderState);
+    auto &prog = deref(m_program);
+    MAYBE_UNUSED auto binder = prog.bind();
+    prog.setUniforms(mvp, renderState.uniforms);
+
+    MAYBE_UNUSED auto rsBinder = RenderStateBinder{m_functions,
+                                                   m_functions.getTexLookup(),
+                                                   renderState};
 
     const uint32_t bufferIdx = m_simulation.getCurrentBuffer();
-    m_functions.glBindVertexArray(m_vaos[bufferIdx].get());
+    MAYBE_UNUSED auto vao_binder = m_vaos[bufferIdx].bind();
     m_functions.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, count);
-    m_functions.glBindVertexArray(0);
 }
 
 } // namespace Legacy

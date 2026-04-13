@@ -106,10 +106,6 @@ DepthBinder::~DepthBinder()
     }
 }
 
-LineParamsBinder::LineParamsBinder(Functions & /*functions*/, const LineParams & /*lineParams*/) {}
-
-LineParamsBinder::~LineParamsBinder() {}
-
 PointSizeBinder::PointSizeBinder(Functions &functions, const std::optional<GLfloat> &pointSize)
     : m_functions{functions}
     , m_optPointSize{pointSize}
@@ -139,7 +135,7 @@ TexturesBinder::TexturesBinder(const TexLookup &lookup, const TexturesBinder::Te
         // note: pointer to shared pointer
         if (const SharedMMTexture *const pShared = m_lookup.find(id)) {
             if (const SharedMMTexture &tex = *pShared) {
-                tex->bind(static_cast<uint32_t>(i));
+                tex->bind(Badge<TexturesBinder>(), static_cast<uint32_t>(i));
             }
         }
     }
@@ -156,7 +152,7 @@ TexturesBinder::~TexturesBinder()
         // note: pointer to shared pointer
         if (const SharedMMTexture *const pShared = m_lookup.find(id)) {
             if (const SharedMMTexture &tex = *pShared) {
-                tex->release(static_cast<uint32_t>(i));
+                tex->release(Badge<TexturesBinder>(), static_cast<uint32_t>(i));
             }
         }
     }
@@ -168,7 +164,6 @@ RenderStateBinder::RenderStateBinder(Functions &functions,
     : m_blendBinder{functions, renderState.blend}
     , m_cullingBinder{functions, renderState.culling}
     , m_depthBinder{functions, renderState.depth}
-    , m_lineParamsBinder{functions, renderState.lineParams}
     , m_pointSizeBinder{functions, renderState.uniforms.pointSize}
     , m_texturesBinder{texLookup, renderState.uniforms.textures}
 {}

@@ -43,30 +43,31 @@ public:
 
     ~FullScreenMesh() override = default;
 
-protected:
+private:
     void virt_clear() final {}
     void virt_reset() final {}
     NODISCARD bool virt_isEmpty() const final { return m_numVerts == 0; }
 
-    void virt_render(const GLRenderState &renderState) override
+    void virt_render(const GLRenderState &renderState) final
     {
-        auto binder = m_program.bind();
+        MAYBE_UNUSED auto binder = m_program.bind();
         // Attribute-less meshes usually don't use MVP, or use identity.
         // If a custom MVP is provided in renderState, we use it; otherwise we default to the functions' projection matrix.
         const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
         m_program.setUniforms(mvp, renderState.uniforms);
 
-        RenderStateBinder rsBinder(m_functions, m_functions.getTexLookup(), renderState);
+        MAYBE_UNUSED auto rsBinder = RenderStateBinder{m_functions,
+                                                       m_functions.getTexLookup(),
+                                                       renderState};
 
         SharedVao shared = m_functions.getSharedVaos().get(SharedVaoEnum::EmptyVao);
         VAO &vao = deref(shared);
-        if (!vao) {
+        if (!vao.isValid()) {
             vao.emplace(m_shared_functions);
         }
 
-        m_functions.glBindVertexArray(vao.get());
+        MAYBE_UNUSED auto vao_binder = vao.bind();
         m_functions.glDrawArrays(m_mode, 0, m_numVerts);
-        m_functions.glBindVertexArray(0);
     }
 };
 

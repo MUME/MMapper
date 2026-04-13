@@ -8,11 +8,11 @@
 
 namespace Legacy {
 
-bool LOG_VAO_ALLOCATIONS = false;
+static constexpr bool LOG_VAO_ALLOCATIONS = false;
 
 void VAO::emplace(const SharedFunctions &sharedFunctions)
 {
-    assert(!*this);
+    assert(!isValid());
     m_weakFunctions = sharedFunctions;
     const auto shared = m_weakFunctions.lock();
     if (shared == nullptr) {
@@ -29,7 +29,9 @@ void VAO::emplace(const SharedFunctions &sharedFunctions)
 
 void VAO::reset()
 {
-    if (!*this) {
+    assert(!m_bound);
+
+    if (!isValid()) {
         return;
     }
 
@@ -50,6 +52,9 @@ void VAO::reset()
 
 GLuint VAO::get() const
 {
+    if (!isValid()) {
+        throw std::runtime_error("VAO not allocated");
+    }
     return m_vao;
 }
 

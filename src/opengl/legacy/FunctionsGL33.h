@@ -15,9 +15,9 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(FunctionsGL33);
 
 private:
-    void virt_enableProgramPointSize(bool enable) override;
-    NODISCARD const char *virt_getShaderVersion() const override;
-    NODISCARD std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) override;
+    void virt_enableProgramPointSize(bool enable) final;
+    NODISCARD const char *virt_getShaderVersion() const final;
+    NODISCARD std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) final;
 };
 
 } // namespace Legacy

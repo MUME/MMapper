@@ -4,6 +4,7 @@
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../global/Array.h"
+#include "../global/CaseUtils.h"
 #include "../global/ChangeMonitor.h"
 #include "../global/ConfigConsts.h"
 #include "../global/RuleOf5.h"
@@ -59,6 +60,16 @@
 #include <QtCore>
 #include <QtGui/qopengl.h>
 #include <QtGui>
+
+#ifndef GL_CONTEXT_FLAG_DEBUG_BIT // added in OpenGL 4.3
+#define GL_CONTEXT_FLAG_DEBUG_BIT 0x2
+#endif
+#ifndef GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT // added in OpenGL 4.3
+#define GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT 0x4
+#endif
+#ifndef GL_CONTEXT_FLAG_NO_ERROR_BIT // added in OpenGL 4.6
+#define GL_CONTEXT_FLAG_NO_ERROR_BIT 0x8
+#endif
 
 namespace MapCanvasConfig {
 
@@ -116,20 +127,40 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(MakeCurrentRaii);
 };
 
+void MapCanvas::shuttingDown()
+{
+    qInfo() << MM_SOURCE_LOCATION().function_name();
+    if (!m_cleanedUp) {
+        cleanupOpenGL();
+    }
+}
+
 void MapCanvas::cleanupOpenGL()
 {
-    // Make sure the context is current and then explicitly
-    // destroy all underlying OpenGL resources.
-    MakeCurrentRaii makeCurrentRaii{*this};
+    const auto fname = MM_SOURCE_LOCATION().function_name();
+    qInfo() << fname << "Entered.";
 
-    // note: m_batchedMeshes co-owns textures created by MapCanvasData,
-    // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
-    m_batches.resetExistingMeshesAndIgnorePendingRemesh();
-    m_weather.cleanup();
-    m_textures.destroyAll();
-    getGLFont().cleanup();
-    getOpenGL().cleanup();
-    m_logger.reset();
+    if (std::exchange(m_cleanedUp, true)) {
+        qInfo() << fname << "Skipping duplicate cleanup!";
+        return;
+    }
+
+    qInfo() << fname << "Cleaning up...";
+    {
+        // Make sure the context is current and then explicitly
+        // destroy all underlying OpenGL resources.
+        MakeCurrentRaii makeCurrentRaii{*this};
+
+        // note: m_batchedMeshes co-owns textures created by MapCanvasData,
+        // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
+        m_batches.resetExistingMeshesAndIgnorePendingRemesh();
+        m_weather.cleanup();
+        m_textures.destroyAll();
+        getGLFont().cleanup();
+        getOpenGL().cleanup();
+        m_logger.reset();
+    }
+    qInfo() << fname << "Done.";
 }
 
 void MapCanvas::reportGLVersion()
@@ -149,10 +180,63 @@ void MapCanvas::reportGLVersion()
         logMsg(prefix, getString(name));
     };
 
+    static auto checkBit =
+        [](std::vector<std::string> &v, GLint &flags, const GLint bit, const std::string_view what) {
+            static_assert(sizeof(bit) == sizeof(uint32_t));
+            assert(utils::isPowerOfTwo(static_cast<uint32_t>(bit)));
+            if (flags & bit) {
+                flags &= ~bit;
+                v.emplace_back(toLowerUtf8(what));
+            }
+        };
+
+    auto logVector =
+        [&logMsg](const QByteArray &thing, std::vector<std::string> &v, const GLint flags) {
+            if (flags != 0) {
+                v.emplace_back(std::to_string(flags));
+            }
+
+            std::ostringstream oss;
+            oss << "[";
+            auto prefix = "";
+            for (const std::string_view what : v) {
+                oss << prefix << what;
+                prefix = " | ";
+            }
+            oss << "]";
+            const auto str = std::move(oss).str();
+            logMsg(thing, mmqt::toQByteArrayUtf8(str));
+        };
+
     logString("OpenGL Version:", GL_VERSION);
     logString("OpenGL Renderer:", GL_RENDERER);
     logString("OpenGL Vendor:", GL_VENDOR);
     logString("OpenGL GLSL:", GL_SHADING_LANGUAGE_VERSION);
+
+    {
+        GLint profileMask = gl.glGetInteger(GL_CONTEXT_PROFILE_MASK);
+        std::vector<std::string> v;
+
+#define X_CHECK(_x) checkBit(v, profileMask, (GL_CONTEXT_##_x##_PROFILE_BIT), (#_x))
+        X_CHECK(COMPATIBILITY);
+        X_CHECK(CORE);
+#undef X_CHECK
+
+        logVector("OpenGL context profile mask: ", v, profileMask);
+    }
+    {
+        GLint flags = gl.glGetInteger(GL_CONTEXT_FLAGS);
+        std::vector<std::string> v;
+
+#define X_CHECK(_x) checkBit(v, flags, (GL_CONTEXT_FLAG_##_x##_BIT), (#_x))
+        X_CHECK(DEBUG);
+        X_CHECK(FORWARD_COMPATIBLE);
+        X_CHECK(NO_ERROR);
+        X_CHECK(ROBUST_ACCESS);
+#undef X_CHECK
+
+        logVector("OpenGL context flags: ", v, flags);
+    }
 
     const auto version = std::invoke([this]() -> std::string {
         const QSurfaceFormat &format = context()->format();

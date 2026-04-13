@@ -3,14 +3,15 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../../global/View.h"
+#include "Meshes.h"
 #include "Shaders.h"
 #include "SimpleMesh.h"
 
 #include <memory>
 #include <optional>
 
-#define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
-#define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
+#define VPO(_x) offsetof(VertexType_, _x)
+#define CHECK_ATTR_LOC(_expect, _name) assert(Base::m_program.getAttribLocation(_name) == (_expect))
 
 namespace Legacy {
 
@@ -22,34 +23,12 @@ class NODISCARD SimpleFont3dMesh : public SimpleMesh<VertexType_, FontShader>
 public:
     using Base = SimpleMesh<VertexType_, FontShader>;
 
-private:
-    struct NODISCARD Attribs final
-    {
-        GLuint basePos = INVALID_ATTRIB_LOCATION;
-        GLuint colorPos = INVALID_ATTRIB_LOCATION;
-        GLuint texPos = INVALID_ATTRIB_LOCATION;
-        GLuint vertPos = INVALID_ATTRIB_LOCATION;
-
-        static Attribs getLocations(AbstractShaderProgram &fontShader)
-        {
-            Attribs result;
-            result.basePos = fontShader.getAttribLocation("aBase");
-            result.colorPos = fontShader.getAttribLocation("aColor");
-            result.texPos = fontShader.getAttribLocation("aTexCoord");
-            result.vertPos = fontShader.getAttribLocation("aVert");
-            return result;
-        }
-    };
-
-private:
-    std::optional<Attribs> m_boundAttribs;
-
 public:
     explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
-                              const std::shared_ptr<FontShader> &sharedProgram)
-        : Base(sharedFunctions, sharedProgram)
+                              const std::shared_ptr<FontShader> &sharedProgram,
+                              DoNotAllocateVao)
+        : Base(sharedFunctions, sharedProgram, DoNotAllocateVao{})
     {}
-
     explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
                               const std::shared_ptr<FontShader> &sharedProgram,
                               const DrawModeEnum mode,
@@ -58,7 +37,7 @@ public:
     {}
 
 private:
-    void virt_bind() override
+    void virt_setupAttribs() final
     {
         const auto vertSize = static_cast<GLsizei>(sizeof(VertexType_));
         static_assert(sizeof(std::declval<VertexType_>().base) == 3 * sizeof(GLfloat));
@@ -67,30 +46,15 @@ private:
         static_assert(sizeof(std::declval<VertexType_>().vert) == 2 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
+        CHECK_ATTR_LOC(0, "aBase");
+        CHECK_ATTR_LOC(1, "aColor");
+        CHECK_ATTR_LOC(2, "aTexCoord");
+        CHECK_ATTR_LOC(3, "aVert");
 
-        gl.glBindBuffer(GL_ARRAY_BUFFER, Base::m_vbo.get());
-        const auto attribs = Attribs::getLocations(Base::m_program);
-        gl.enableAttrib(attribs.basePos, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(base));
-        gl.enableAttrib(attribs.colorPos, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
-        gl.enableAttrib(attribs.texPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
-        gl.enableAttrib(attribs.vertPos, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
-        m_boundAttribs = attribs;
-    }
-
-    void virt_unbind() override
-    {
-        if (!m_boundAttribs) {
-            assert(false);
-            return;
-        }
-        Functions &gl = Base::m_functions;
-        const auto attribs = m_boundAttribs.value();
-        gl.glDisableVertexAttribArray(attribs.basePos);
-        gl.glDisableVertexAttribArray(attribs.colorPos);
-        gl.glDisableVertexAttribArray(attribs.texPos);
-        gl.glDisableVertexAttribArray(attribs.vertPos);
-        gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
-        m_boundAttribs.reset();
+        gl.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(base));
+        gl.enableAttrib(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
+        gl.enableAttrib(2, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
+        gl.enableAttrib(3, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
     }
 };
 
@@ -117,5 +81,5 @@ private:
 
 } // namespace Legacy
 
-#undef VOIDPTR_OFFSETOF
 #undef VPO
+#undef CHECK_ATTR_LOC
