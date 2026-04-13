@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>459</width>
-    <height>792</height>
+    <width>508</width>
+    <height>944</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,12 +16,6 @@
   <layout class="QVBoxLayout">
    <item>
     <widget class="QGroupBox" name="groupBox_connections">
-     <property name="minimumSize">
-      <size>
-       <width>435</width>
-       <height>179</height>
-      </size>
-     </property>
      <property name="title">
       <string>Connection</string>
      </property>
@@ -111,7 +105,7 @@
       <item row="1" column="3">
        <spacer name="horizontalSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -158,53 +152,39 @@
      <property name="title">
       <string>Account</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_7">
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Account:</string>
-        </property>
-        <property name="buddy">
-         <cstring>accountName</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Password:</string>
-        </property>
-        <property name="buddy">
-         <cstring>accountPassword</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QLineEdit" name="accountName"/>
-      </item>
-      <item row="2" column="1" colspan="2">
-       <widget class="QLineEdit" name="accountPassword">
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
-        </property>
-        <property name="placeholderText">
-         <string>***********</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QPushButton" name="showPassword">
-        <property name="text">
-         <string>Show Password</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="3">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
        <widget class="QCheckBox" name="autoLogin">
         <property name="text">
-         <string>Remember my login</string>
+         <string>Automatic login</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="setPassword">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Manage Account</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -215,13 +195,13 @@
       <string>Startup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="4" column="0" colspan="2">
+      <item row="1" column="0" colspan="2">
        <widget class="QFrame" name="autoLoadFileFrame">
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Plain</enum>
+         <enum>QFrame::Shadow::Plain</enum>
         </property>
         <property name="lineWidth">
          <number>0</number>
@@ -278,7 +258,7 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="0" colspan="2">
+      <item row="0" column="0" colspan="2">
        <widget class="QCheckBox" name="checkForUpdateCheckBox">
         <property name="text">
          <string>Check for update</string>
@@ -290,12 +270,6 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_statusbar">
-     <property name="minimumSize">
-      <size>
-       <width>435</width>
-       <height>73</height>
-      </size>
-     </property>
      <property name="title">
       <string>Apperance</string>
      </property>
@@ -303,22 +277,14 @@
       <property name="bottomMargin">
        <number>9</number>
       </property>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="displayMumeClockCheckBox">
-        <property name="text">
-         <string>Show Mume clock</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="displayXPStatusCheckBox">
-        <property name="text">
-         <string>Show Session XP</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QComboBox" name="themeComboBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <item>
          <property name="text">
           <string>System</string>
@@ -338,11 +304,31 @@
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_4">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Theme:</string>
         </property>
         <property name="buddy">
          <cstring>themeComboBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="displayMumeClockCheckBox">
+        <property name="text">
+         <string>Show Mume clock</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QCheckBox" name="displayXPStatusCheckBox">
+        <property name="text">
+         <string>Show Session XP</string>
         </property>
        </widget>
       </item>
@@ -374,34 +360,28 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_exits">
-     <property name="minimumSize">
-      <size>
-       <width>435</width>
-       <height>105</height>
-      </size>
-     </property>
      <property name="title">
       <string>Emulated Exits</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="1" column="0">
+      <item row="0" column="0">
        <widget class="QCheckBox" name="emulatedExitsCheckBox">
         <property name="text">
          <string>Show emulated exits</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="showNotesCheckBox">
-        <property name="text">
-         <string>Show notes</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
+      <item row="0" column="1">
        <widget class="QCheckBox" name="showHiddenExitFlagsCheckBox">
         <property name="text">
          <string>Show hidden exit flags</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="showNotesCheckBox">
+        <property name="text">
+         <string>Show notes</string>
         </property>
        </widget>
       </item>
@@ -410,20 +390,14 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox_2">
-     <property name="minimumSize">
-      <size>
-       <width>435</width>
-       <height>107</height>
-      </size>
-     </property>
      <property name="title">
       <string>Advanced</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="1">
-       <widget class="QPushButton" name="configurationImportButton">
+      <item row="2" column="0">
+       <widget class="QPushButton" name="configurationResetButton">
         <property name="text">
-         <string>Import Settings...</string>
+         <string>Reset to Default Settings</string>
         </property>
        </widget>
       </item>
@@ -437,10 +411,10 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="configurationExportButton">
+      <item row="1" column="1">
+       <widget class="QPushButton" name="configurationImportButton">
         <property name="text">
-         <string>Export Settings...</string>
+         <string>Import Settings...</string>
         </property>
        </widget>
       </item>
@@ -454,17 +428,30 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QPushButton" name="configurationResetButton">
+      <item row="1" column="0">
+       <widget class="QPushButton" name="configurationExportButton">
         <property name="text">
-         <string>Reset to Default Settings</string>
+         <string>Export Settings...</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="1" column="2">
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="1" colspan="2">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -480,7 +467,7 @@
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -499,9 +486,7 @@
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
   <tabstop>autoLogin</tabstop>
-  <tabstop>accountName</tabstop>
-  <tabstop>accountPassword</tabstop>
-  <tabstop>showPassword</tabstop>
+  <tabstop>setPassword</tabstop>
   <tabstop>checkForUpdateCheckBox</tabstop>
   <tabstop>autoLoadCheck</tabstop>
   <tabstop>autoLoadFileName</tabstop>
@@ -516,6 +501,9 @@
   <tabstop>showNotesCheckBox</tabstop>
   <tabstop>proxyListensOnAnyInterfaceCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
+  <tabstop>configurationExportButton</tabstop>
+  <tabstop>configurationImportButton</tabstop>
+  <tabstop>configurationResetButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

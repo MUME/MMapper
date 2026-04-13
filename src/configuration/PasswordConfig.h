@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
 
 #include <QObject>
 #include <QString>
@@ -11,7 +12,7 @@
 #include <keychain.h>
 #endif
 
-class PasswordConfig final : public QObject
+class NODISCARD_QOBJECT PasswordConfig final : public QObject
 {
     Q_OBJECT
 
@@ -19,6 +20,7 @@ private:
 #ifndef MMAPPER_NO_QTKEYCHAIN
     QKeychain::ReadPasswordJob m_readJob;
     QKeychain::WritePasswordJob m_writeJob;
+    QKeychain::DeletePasswordJob m_deleteJob;
 #endif
 
 public:
@@ -28,8 +30,11 @@ public:
 
     void setPassword(const QString &password);
     void getPassword();
+    void deletePassword();
 
 signals:
     void sig_error(const QString &msg);
     void sig_incomingPassword(const QString &password);
+    void sig_passwordSaved();
+    void sig_passwordDeleted();
 };

@@ -1,11 +1,12 @@
 if(QTKEYCHAIN_FOUND)
     message(STATUS "QtKeychain found: ${QTKEYCHAIN_LIBRARIES} ${QTKEYCHAIN_INCLUDE_DIRS}")
 else()
-    if(WIN32 OR APPLE)
+    if(WIN32 OR APPLE OR EMSCRIPTEN)
         message(STATUS "Could not find system QtKeychain; building from local source tree")
     else()
         message(FATAL_ERROR "QtKeychain NOT found: use `-DWITH_QTKEYCHAIN=OFF` to build without account autologin")
     endif()
+
     set(QTKEYCHAIN_LIBRARY_NAME qt6keychain)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
       set(QTKEYCHAIN_LIBRARY_NAME "${QTKEYCHAIN_LIBRARY_NAME}d")
@@ -13,12 +14,14 @@ else()
 
     set(QTKEYCHAIN_SHARED_LIBRARY
         "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/bin/${CMAKE_SHARED_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    if (MSVC)
+
+    if (MSVC OR EMSCRIPTEN)
         set(QTKEYCHAIN_LIBRARY
-            "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib")
+            "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
     else()
         set(QTKEYCHAIN_LIBRARY "${QTKEYCHAIN_SHARED_LIBRARY}")
     endif()
+
     set(QTKEYCHAIN_LIBRARIES ${QTKEYCHAIN_LIBRARY})
     set(QTKEYCHAIN_INCLUDE_DIR
         "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/qtkeychain/" PARENT_SCOPE)
@@ -32,9 +35,19 @@ else()
         add_dependencies(qtkeychain qtkeychain_repo)
     else()
         include(ExternalProject)
+
+        set(QTKEYCHAIN_EXTRA_ARGS -DBUILD_SHARED_LIBS:BOOL=ON)
+        if(EMSCRIPTEN)
+            set(QTKEYCHAIN_EXTRA_ARGS
+                -DBUILD_SHARED_LIBS:BOOL=OFF
+                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                -DQT_HOST_PATH=${QT_HOST_PATH}
+            )
+        endif()
+
         ExternalProject_Add(qtkeychain_repo
-            GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
-            GIT_TAG "7668a63a3669400223c5a563928ae042f499dbf4"
+            GIT_REPOSITORY "https://github.com/nschimme/qtkeychain.git"
+            GIT_TAG "wasm"
 
             SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
             BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"
@@ -43,17 +56,18 @@ else()
             CMAKE_ARGS -DBUILD_WITH_QT6:BOOL=ON
                        -DBUILD_TRANSLATIONS:BOOL=OFF
                        -DBUILD_TEST_APPLICATION:BOOL=OFF
-                       -DBUILD_SHARED_LIBS:BOOL=ON
                        -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
                        -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                       ${QTKEYCHAIN_EXTRA_ARGS}
             CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:PATH=${Qt6_DIR}
 
             UPDATE_COMMAND ""
             BUILD_ALWAYS 0
 
             BUILD_BYPRODUCTS "${QTKEYCHAIN_SHARED_LIBRARY}"
-                             "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${QTKEYCHAIN_LIBRARY_NAME}.lib"
+                             "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${QTKEYCHAIN_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
             )
+
         add_custom_target(qtkeychain)
         if(WIN32)
             if(MSVC)

@@ -17,6 +17,7 @@ RUN apt-get update && \
     libglib2.0-0 \
     libxkbcommon-dev \
     ninja-build \
+    pkg-config \
     python3 \
     python3-pip \
     unzip \
@@ -42,7 +43,7 @@ RUN ./emsdk activate 4.0.7 && \
     qt-cmake -S /app -B /build \
         -DQT_HOST_PATH=$QTSDK_DIR/6.10.3/gcc_64 \
         -DCMAKE_BUILD_TYPE=Release \
-        -DWITH_OPENSSL=OFF -DWITH_TESTS=OFF -DWITH_WEBSOCKET=ON -DWITH_UPDATER=OFF -DPACKAGE_TYPE=Wasm && \
+        -DWITH_OPENSSL=OFF -DWITH_TESTS=OFF -DWITH_WEBSOCKET=ON -DWITH_UPDATER=OFF -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Wasm && \
     ACTUAL_JOBS=${JOBS:-$(nproc)} && \
     cmake --build /build --parallel ${ACTUAL_JOBS} && \
     cmake --install /build --prefix /dist && \
