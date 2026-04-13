@@ -1960,7 +1960,7 @@ public:
                aos}
     {}
     void print(const Change &change) { m_cp.print(change); }
-    void print(const std::vector<Change> &changes, const std::string_view sep)
+    void print(const View<Change> changes, const std::string_view sep)
     {
         size_t num_printed = 0;
         std::string_view prefix = "";
@@ -1985,7 +1985,7 @@ void World::printChange(AnsiOstream &aos, const Change &change) const
 }
 
 void World::printChanges(AnsiOstream &aos,
-                         const std::vector<Change> &changes,
+                         const View<Change> changes,
                          const std::string_view sep) const
 {
     WorldChangePrinter{*this, aos}.print(changes, sep);
@@ -2010,7 +2010,7 @@ void World::applyOne(ProgressCounter &pc, const Change &change)
     post_change_updates(pc);
 }
 
-void World::applyAll(ProgressCounter &pc, const std::vector<Change> &changes)
+void World::applyAll(ProgressCounter &pc, const View<Change> changes)
 {
     applyAll_internal(pc, changes);
     post_change_updates(pc);
@@ -2068,7 +2068,7 @@ void World::zapRooms_unsafe(ProgressCounter &pc, const RoomIdSet &rooms)
     }
 }
 
-void World::applyAll_internal(ProgressCounter &pc, const std::vector<Change> &changes)
+void World::applyAll_internal(ProgressCounter &pc, const View<Change> changes)
 {
     DECL_TIMER(t, __FUNCTION__);
 

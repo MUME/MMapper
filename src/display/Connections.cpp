@@ -482,7 +482,7 @@ void ConnectionDrawer::drawConnectionLine(const ExitDirEnum startDir,
     drawLineStrip(points);
 }
 
-void ConnectionDrawer::drawLineStrip(const std::vector<glm::vec3> &points)
+void ConnectionDrawer::drawLineStrip(const View<glm::vec3> points)
 {
     getFakeGL().drawLineStrip(points);
 }
@@ -793,7 +793,7 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
     verts.emplace_back(color, c + m_offset);
 }
 
-void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
+void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const View<glm::vec3> points)
 {
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     const float extension = CONNECTION_LINE_WIDTH * 0.5f;

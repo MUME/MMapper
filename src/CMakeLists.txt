@@ -182,6 +182,7 @@ set(mmapper_SRCS
     global/Timer.cpp
     global/Timer.h
     global/Version.h
+    global/View.h
     global/WeakHandle.cpp
     global/WeakHandle.h
     global/WinSock.cpp

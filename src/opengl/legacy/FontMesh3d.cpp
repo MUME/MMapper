@@ -14,7 +14,7 @@ FontMesh3d::FontMesh3d(const SharedFunctions &functions,
                        const std::shared_ptr<FontShader> &sharedShader,
                        SharedMMTexture texture,
                        const DrawModeEnum mode,
-                       const std::vector<FontVert3d> &verts)
+                       const View<FontVert3d> verts)
     : Base{functions, sharedShader, mode, verts}
     , m_texture{std::move(texture)}
 {}

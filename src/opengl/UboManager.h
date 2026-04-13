@@ -4,6 +4,7 @@
 
 #include "../global/EnumIndexedArray.h"
 #include "../global/RuleOf5.h"
+#include "../global/View.h"
 #include "../global/logging.h"
 #include "../global/utils.h"
 #include "UboBlocks.h"
@@ -143,8 +144,8 @@ public:
      *
      * Overload for bulk vector data.
      */
-    template<typename T, typename A>
-    GLuint update(Legacy::Functions &gl, Legacy::SharedVboEnum block, const std::vector<T, A> &data)
+    template<typename T>
+    ALLOW_DISCARD GLuint update(Functions &gl, const SharedVboEnum block, const View<T> data)
     {
         Legacy::VBO &vbo = getOrCreateVbo(gl, block);
         static_cast<void>(

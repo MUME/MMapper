@@ -308,7 +308,7 @@ Map Map::filterBaseMap(ProgressCounter &pc) const
     return mar.map;
 }
 
-MapApplyResult Map::apply(ProgressCounter &pc, const std::vector<Change> &changes) const
+MapApplyResult Map::apply(ProgressCounter &pc, const View<Change> changes) const
 {
     if (changes.empty()) {
         throw InvalidMapOperation("Changes are empty");
@@ -318,7 +318,7 @@ MapApplyResult Map::apply(ProgressCounter &pc, const std::vector<Change> &change
         const auto count = changes.size();
         MMLOG() << "[map] Applying " << count << " change" << ((count == 1) ? "" : "s") << "...\n";
     }
-    return update(m_world, pc, [&changes](ProgressCounter &pc2, World &w) {
+    return update(m_world, pc, [changes](ProgressCounter &pc2, World &w) {
         w.applyAll(pc2, changes);
     });
 }
@@ -1258,7 +1258,7 @@ void Map::printChange(AnsiOstream &aos, const Change &change) const
     getWorld().printChange(aos, change);
 }
 void Map::printChanges(AnsiOstream &aos,
-                       const std::vector<Change> &changes,
+                       const View<Change> changes,
                        const std::string_view sep) const
 {
     getWorld().printChanges(aos, changes, sep);
@@ -1270,7 +1270,7 @@ void Map::printChange(std::ostream &os, const Change &change) const
     printChange(aos, change);
 }
 void Map::printChanges(std::ostream &os,
-                       const std::vector<Change> &changes,
+                       const View<Change> changes,
                        const std::string_view sep) const
 {
     AnsiOstream aos{os};
@@ -1284,7 +1284,7 @@ void Map::printChange(mm::AbstractDebugOStream &os, const Change &change) const
     os.writeUtf8(oss.str());
 }
 void Map::printChanges(mm::AbstractDebugOStream &os,
-                       const std::vector<Change> &changes,
+                       const View<Change> changes,
                        std::string_view sep) const
 {
     std::ostringstream oss;
