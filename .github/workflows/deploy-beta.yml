@@ -168,7 +168,7 @@ jobs:
           fi
 
       - name: Update Beta Pre-release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: beta
           name: MMapper Beta
