@@ -4,6 +4,7 @@
 
 #include "../global/Color.h"
 #include "../global/RuleOf5.h"
+#include "../global/View.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 #include "OpenGL.h"
@@ -90,13 +91,13 @@ public:
     void renderTextCentered(const QString &text,
                             Color color = {},
                             std::optional<Color> bgcolor = {});
-    void render2dTextImmediate(const std::vector<GLText> &text);
-    void render3dTextImmediate(const std::vector<GLText> &text);
-    void render3dTextImmediate(const std::vector<FontVert3d> &rawVerts);
+    void render2dTextImmediate(View<GLText> text);
+    void render3dTextImmediate(View<GLText> text);
+    void render3dTextImmediate(View<FontVert3d> rawVerts);
 
 public:
-    NODISCARD std::vector<FontVert3d> getFontMeshIntermediate(const std::vector<GLText> &text);
-    NODISCARD UniqueMesh getFontMesh(const std::vector<FontVert3d> &text);
+    NODISCARD std::vector<FontVert3d> getFontMeshIntermediate(View<GLText> text);
+    NODISCARD UniqueMesh getFontMesh(View<FontVert3d> text);
 };
 
 extern void getFontBatchRawData(const FontMetrics &fm,

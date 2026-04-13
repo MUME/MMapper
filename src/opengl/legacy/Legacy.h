@@ -4,6 +4,7 @@
 
 #include "../../global/Badge.h"
 #include "../../global/RuleOf5.h"
+#include "../../global/View.h"
 #include "../../global/utils.h"
 #include "../OpenGLConfig.h"
 #include "../OpenGLTypes.h"
@@ -85,8 +86,7 @@ NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 // Note: This version is only suitable for drawArrays(). You'll need another function
 // to transform indices if you want to use it with drawElements().
 template<typename VertexType_>
-NODISCARD static inline std::vector<VertexType_> convertQuadsToTris(
-    const std::vector<VertexType_> &quads)
+NODISCARD static inline std::vector<VertexType_> convertQuadsToTris(const View<VertexType_> quads)
 {
     // d-c
     // |/|
@@ -377,10 +377,10 @@ public:
         Base::glVertexAttribIPointer(index, size, type, stride, pointer);
     }
 
-    template<typename T, typename A>
+    template<typename T>
     NODISCARD GLsizei setVbo(const GLenum target,
                              const GLuint buffer,
-                             const std::vector<T, A> &batch,
+                             const View<T> batch,
                              const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
         enforceTriviallyCopyable<T>();
@@ -405,18 +405,18 @@ public:
         Base::glBindBuffer(target, 0);
     }
 
-    template<typename T, typename A>
-    NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
-        const DrawModeEnum mode,
-        const GLuint vbo,
-        const std::vector<T, A> &batch,
-        const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
+    template<typename T>
+    NODISCARD auto setVbo(const DrawModeEnum mode,
+                          const GLuint vbo,
+                          View<T> batch,
+                          const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
     {
+        using Pair = std::pair<DrawModeEnum, GLsizei>;
         if (mode == DrawModeEnum::QUADS && !canRenderQuads()) {
-            return std::pair(DrawModeEnum::TRIANGLES,
-                             setVbo(GL_ARRAY_BUFFER, vbo, convertQuadsToTris(batch), usage));
+            const auto tris = convertQuadsToTris(batch);
+            return Pair{DrawModeEnum::TRIANGLES, setVbo(GL_ARRAY_BUFFER, vbo, View<T>{tris}, usage)};
         }
-        return std::pair(mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage));
+        return Pair{mode, setVbo(GL_ARRAY_BUFFER, vbo, batch, usage)};
     }
 
     void clearVbo(const GLuint vbo, const BufferUsageEnum usage = BufferUsageEnum::DYNAMIC_DRAW)
@@ -427,43 +427,36 @@ public:
     }
 
 public:
-    NODISCARD UniqueMesh createPointBatch(const std::vector<ColorVert> &batch);
+    NODISCARD UniqueMesh createPointBatch(View<ColorVert> batch);
 
 public:
-    NODISCARD UniqueMesh createPlainBatch(DrawModeEnum mode, const std::vector<glm::vec3> &batch);
-    NODISCARD UniqueMesh createColoredBatch(DrawModeEnum mode, const std::vector<ColorVert> &batch);
+    NODISCARD UniqueMesh createPlainBatch(DrawModeEnum mode, View<glm::vec3> batch);
+    NODISCARD UniqueMesh createColoredBatch(DrawModeEnum mode, View<ColorVert> batch);
     NODISCARD UniqueMesh createTexturedBatch(DrawModeEnum mode,
-                                             const std::vector<TexVert> &batch,
+                                             View<TexVert> batch,
                                              MMTextureId texture);
     NODISCARD UniqueMesh createColoredTexturedBatch(DrawModeEnum mode,
-                                                    const std::vector<ColoredTexVert> &batch,
+                                                    View<ColoredTexVert> batch,
                                                     MMTextureId texture);
 
 public:
-    NODISCARD UniqueMesh createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &batch,
-                                                MMTextureId texture);
+    NODISCARD UniqueMesh createRoomQuadTexBatch(View<RoomQuadTexVert> batch, MMTextureId texture);
 
 public:
     NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,
                                         DrawModeEnum mode,
-                                        const std::vector<FontVert3d> &batch);
+                                        View<FontVert3d> batch);
 
 public:
-    void renderPoints(const std::vector<ColorVert> &verts, const GLRenderState &state);
+    void renderPoints(View<ColorVert> verts, const GLRenderState &state);
 
-    void renderPlain(DrawModeEnum mode,
-                     const std::vector<glm::vec3> &verts,
-                     const GLRenderState &state);
-    void renderColored(DrawModeEnum mode,
-                       const std::vector<ColorVert> &verts,
-                       const GLRenderState &state);
-    void renderTextured(DrawModeEnum mode,
-                        const std::vector<TexVert> &verts,
-                        const GLRenderState &state);
+    void renderPlain(DrawModeEnum mode, View<glm::vec3> verts, const GLRenderState &state);
+    void renderColored(DrawModeEnum mode, View<ColorVert> verts, const GLRenderState &state);
+    void renderTextured(DrawModeEnum mode, View<TexVert> verts, const GLRenderState &state);
     void renderColoredTextured(DrawModeEnum mode,
-                               const std::vector<ColoredTexVert> &verts,
+                               View<ColoredTexVert> verts,
                                const GLRenderState &state);
-    void renderFont3d(const SharedMMTexture &texture, const std::vector<FontVert3d> &verts);
+    void renderFont3d(const SharedMMTexture &texture, View<FontVert3d> verts);
 
 public:
     void renderFullScreenTriangle(const std::shared_ptr<AbstractShaderProgram> &prog,

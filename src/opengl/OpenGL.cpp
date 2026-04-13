@@ -87,54 +87,53 @@ void OpenGL::blitFboToDefault()
     getFunctions().blitFboToDefault();
 }
 
-UniqueMesh OpenGL::createPointBatch(const std::vector<ColorVert> &batch)
+UniqueMesh OpenGL::createPointBatch(const View<ColorVert> batch)
 {
     return getFunctions().createPointBatch(batch);
 }
 
-UniqueMesh OpenGL::createPlainLineBatch(const std::vector<glm::vec3> &batch)
+UniqueMesh OpenGL::createPlainLineBatch(const View<glm::vec3> batch)
 {
     return getFunctions().createPlainBatch(DrawModeEnum::LINES, batch);
 }
 
-UniqueMesh OpenGL::createColoredLineBatch(const std::vector<ColorVert> &batch)
+UniqueMesh OpenGL::createColoredLineBatch(const View<ColorVert> batch)
 {
     return getFunctions().createColoredBatch(DrawModeEnum::LINES, batch);
 }
 
-UniqueMesh OpenGL::createPlainTriBatch(const std::vector<glm::vec3> &batch)
+UniqueMesh OpenGL::createPlainTriBatch(const View<glm::vec3> batch)
 {
     return getFunctions().createPlainBatch(DrawModeEnum::TRIANGLES, batch);
 }
 
-UniqueMesh OpenGL::createColoredTriBatch(const std::vector<ColorVert> &batch)
+UniqueMesh OpenGL::createColoredTriBatch(const View<ColorVert> batch)
 {
     return getFunctions().createColoredBatch(DrawModeEnum::TRIANGLES, batch);
 }
 
-UniqueMesh OpenGL::createPlainQuadBatch(const std::vector<glm::vec3> &batch)
+UniqueMesh OpenGL::createPlainQuadBatch(const View<glm::vec3> batch)
 {
     return getFunctions().createPlainBatch(DrawModeEnum::QUADS, batch);
 }
 
-UniqueMesh OpenGL::createColoredQuadBatch(const std::vector<ColorVert> &batch)
+UniqueMesh OpenGL::createColoredQuadBatch(const View<ColorVert> batch)
 {
     return getFunctions().createColoredBatch(DrawModeEnum::QUADS, batch);
 }
 
-UniqueMesh OpenGL::createTexturedQuadBatch(const std::vector<TexVert> &batch,
-                                           const MMTextureId texture)
+UniqueMesh OpenGL::createTexturedQuadBatch(const View<TexVert> batch, const MMTextureId texture)
 {
     return getFunctions().createTexturedBatch(DrawModeEnum::QUADS, batch, texture);
 }
 
-UniqueMesh OpenGL::createColoredTexturedQuadBatch(const std::vector<ColoredTexVert> &batch,
+UniqueMesh OpenGL::createColoredTexturedQuadBatch(const View<ColoredTexVert> batch,
                                                   const MMTextureId texture)
 {
     return getFunctions().createColoredTexturedBatch(DrawModeEnum::QUADS, batch, texture);
 }
 
-UniqueMesh OpenGL::createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &batch,
+UniqueMesh OpenGL::createRoomQuadTexBatch(const View<RoomQuadTexVert> batch,
                                           const MMTextureId texture)
 {
     return getFunctions().createRoomQuadTexBatch(batch, texture);
@@ -142,7 +141,7 @@ UniqueMesh OpenGL::createRoomQuadTexBatch(const std::vector<RoomQuadTexVert> &ba
 
 UniqueMesh OpenGL::createFontMesh(const SharedMMTexture &texture,
                                   const DrawModeEnum mode,
-                                  const std::vector<FontVert3d> &batch)
+                                  const View<FontVert3d> batch)
 {
     return getFunctions().createFontMesh(texture, mode, batch);
 }
@@ -162,33 +161,33 @@ void OpenGL::clearDepth()
 }
 
 void OpenGL::renderPlain(const DrawModeEnum type,
-                         const std::vector<glm::vec3> &verts,
+                         const View<glm::vec3> verts,
                          const GLRenderState &state)
 {
     getFunctions().renderPlain(type, verts, state);
 }
 
 void OpenGL::renderColored(const DrawModeEnum type,
-                           const std::vector<ColorVert> &verts,
+                           const View<ColorVert> verts,
                            const GLRenderState &state)
 {
     getFunctions().renderColored(type, verts, state);
 }
 
-void OpenGL::renderPoints(const std::vector<ColorVert> &verts, const GLRenderState &state)
+void OpenGL::renderPoints(const View<ColorVert> verts, const GLRenderState &state)
 {
     getFunctions().renderPoints(verts, state);
 }
 
 void OpenGL::renderTextured(const DrawModeEnum type,
-                            const std::vector<TexVert> &verts,
+                            const View<TexVert> verts,
                             const GLRenderState &state)
 {
     getFunctions().renderTextured(type, verts, state);
 }
 
 void OpenGL::renderColoredTextured(const DrawModeEnum type,
-                                   const std::vector<ColoredTexVert> &verts,
+                                   const View<ColoredTexVert> verts,
                                    const GLRenderState &state)
 {
     getFunctions().renderColoredTextured(type, verts, state);
@@ -235,7 +234,7 @@ void OpenGL::initializeRenderer(const float devicePixelRatio)
     m_rendererInitialized = true;
 }
 
-void OpenGL::renderFont3d(const SharedMMTexture &texture, const std::vector<FontVert3d> &verts)
+void OpenGL::renderFont3d(const SharedMMTexture &texture, const View<FontVert3d> verts)
 {
     getFunctions().renderFont3d(texture, verts);
 }
@@ -272,9 +271,7 @@ void OpenGL::setTextureLookup(const MMTextureId id, SharedMMTexture tex)
     getFunctions().getTexLookup().set(id, std::move(tex));
 }
 
-void OpenGL::uploadArrayLayer(const SharedMMTexture &array,
-                              int layer,
-                              const std::vector<QImage> &images)
+void OpenGL::uploadArrayLayer(const SharedMMTexture &array, int layer, const View<QImage> images)
 {
     auto &gl = getFunctions();
     MMTexture &tex = deref(array);

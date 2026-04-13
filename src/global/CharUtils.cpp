@@ -4,6 +4,7 @@
 #include "CharUtils.h"
 
 #include "Consts.h"
+#include "View.h"
 #include "tests.h"
 
 #include <deque>
@@ -18,7 +19,7 @@ void test_foreachCharSingle()
     using namespace char_consts;
     using namespace string_consts;
 
-    auto testcase = [](std::string_view input, std::vector<std::string_view> expect) {
+    auto testcase = [](const std::string_view input, const View<std::string_view> expect) {
         size_t arg = 0;
         foreachAsciiCharSingle(
             input,
@@ -37,17 +38,17 @@ void test_foreachCharSingle()
         TEST_ASSERT(arg == expect.size());
     };
 
-    testcase("", {""});
-    testcase("a", {"a"});
-    testcase("ab", {"ab"});
-    testcase(";", {"", ";", ""});
-    testcase(";;", {"", ";", "", ";", ""});
-    testcase("a;", {"a", ";", ""});
-    testcase("a;;", {"a", ";", "", ";", ""});
-    testcase(";a", {"", ";", "a"});
-    testcase(";;a", {"", ";", "", ";", "a"});
-    testcase(";;a;", {"", ";", "", ";", "a", ";", ""});
-    testcase("ab;;c;", {"ab", ";", "", ";", "c", ";", ""});
+    testcase("", {{""}});
+    testcase("a", {{"a"}});
+    testcase("ab", {{"ab"}});
+    testcase(";", {{"", ";", ""}});
+    testcase(";;", {{"", ";", "", ";", ""}});
+    testcase("a;", {{"a", ";", ""}});
+    testcase("a;;", {{"a", ";", "", ";", ""}});
+    testcase(";a", {{"", ";", "a"}});
+    testcase(";;a", {{"", ";", "", ";", "a"}});
+    testcase(";;a;", {{"", ";", "", ";", "a", ";", ""}});
+    testcase("ab;;c;", {{"ab", ";", "", ";", "c", ";", ""}});
 }
 
 void test_foreachCharMulti2()

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2021 The MMapper Authors
 
+#include "../global/View.h"
 #include "../global/macros.h"
 #include "DoorFlags.h"
 #include "ExitDirection.h"
@@ -89,7 +90,7 @@ public:
     NODISCARD bool operator!=(const Map &other) const { return !operator==(other); }
 
 public:
-    NODISCARD MapApplyResult apply(ProgressCounter &pc, const std::vector<Change> &changes) const;
+    NODISCARD MapApplyResult apply(ProgressCounter &pc, View<Change> changes) const;
     NODISCARD MapApplyResult apply(ProgressCounter &pc, const ChangeList &changes) const;
     NODISCARD MapApplyResult applySingleChange(ProgressCounter &pc, const Change &change) const;
 
@@ -153,20 +154,16 @@ public:
 
 public:
     void printChange(AnsiOstream &aos, const Change &change) const;
-    void printChanges(AnsiOstream &aos,
-                      const std::vector<Change> &changes,
-                      std::string_view sep) const;
+    void printChanges(AnsiOstream &aos, View<Change> changes, std::string_view sep) const;
 
 public:
     void printChange(std::ostream &os, const Change &change) const;
-    void printChanges(std::ostream &os,
-                      const std::vector<Change> &changes,
-                      std::string_view sep) const;
+    void printChanges(std::ostream &os, View<Change> changes, std::string_view sep) const;
 
 public:
     void printChange(mm::AbstractDebugOStream &os, const Change &change) const;
     void printChanges(mm::AbstractDebugOStream &os,
-                      const std::vector<Change> &changes,
+                      View<Change> changes,
                       std::string_view sep) const;
 
 public:

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include "../../global/View.h"
 #include "Shaders.h"
 #include "SimpleMesh.h"
 
 #include <memory>
 #include <optional>
-#include <vector>
 
 #define VOIDPTR_OFFSETOF(x, y) reinterpret_cast<void *>(offsetof(x, y))
 #define VPO(x) VOIDPTR_OFFSETOF(VertexType_, x)
@@ -53,7 +53,7 @@ public:
     explicit SimpleFont3dMesh(const SharedFunctions &sharedFunctions,
                               const std::shared_ptr<FontShader> &sharedProgram,
                               const DrawModeEnum mode,
-                              const std::vector<VertexType_> &verts)
+                              const View<VertexType_> verts)
         : Base(sharedFunctions, sharedProgram, mode, verts)
     {}
 
@@ -105,7 +105,7 @@ public:
                         const std::shared_ptr<FontShader> &sharedShader,
                         SharedMMTexture texture,
                         DrawModeEnum mode,
-                        const std::vector<FontVert3d> &verts);
+                        View<FontVert3d> verts);
 
 public:
     ~FontMesh3d() final;

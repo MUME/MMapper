@@ -306,7 +306,7 @@ void MapCanvas::paintNewInfomarkSelection()
         const auto infomarksLineStyle = GLRenderState()
                                             .withColor(Color{Qt::yellow})
                                             .withLineParams(LineParams{INFOMARK_GUIDE_LINE_WIDTH});
-        const std::vector<glm::vec3> verts{glm::vec3{pos1, layer}, glm::vec3{pos2, layer}};
+        const std::array verts{glm::vec3{pos1, layer}, glm::vec3{pos2, layer}};
         gl.renderPlainLines(verts, infomarksLineStyle);
     }
 }

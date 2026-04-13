@@ -165,7 +165,7 @@ public:
 
 public:
     void applyOne(ProgressCounter &pc, const Change &change);
-    void applyAll(ProgressCounter &pc, const std::vector<Change> &changes);
+    void applyAll(ProgressCounter &pc, View<Change> changes);
 
 public:
     NODISCARD bool isTemporary(RoomId id) const;
@@ -291,7 +291,7 @@ private:
 
 private:
     void post_change_updates(ProgressCounter &pc);
-    void applyAll_internal(ProgressCounter &pc, const std::vector<Change> &changes);
+    void applyAll_internal(ProgressCounter &pc, View<Change> changes);
 
 private:
     NODISCARD bool containsRoomsNotIn(const World &other) const;
@@ -301,9 +301,7 @@ public:
 
 public:
     void printChange(AnsiOstream &aos, const Change &change) const;
-    void printChanges(AnsiOstream &aos,
-                      const std::vector<Change> &changes,
-                      std::string_view sep) const;
+    void printChanges(AnsiOstream &aos, View<Change> changes, std::string_view sep) const;
 
 public:
     friend bool hasMeshDifference(const World &a, const World &b);
