@@ -149,11 +149,11 @@ public:
 
 public:
     // accessed by initActionMap
-    CTimers timers;
+    CTimers &timers;
 
 public:
-    explicit ParserCommonData(QObject *parent)
-        : timers{parent}
+    explicit ParserCommonData(CTimers &t)
+        : timers{t}
     {}
 };
 

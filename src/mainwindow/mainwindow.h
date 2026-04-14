@@ -52,6 +52,7 @@ class Mmapper2Group;
 class Mmapper2PathMachine;
 class MumeClock;
 class PrespammedPath;
+class CTimers;
 class QAction;
 class QActionGroup;
 class QCloseEvent;
@@ -71,6 +72,7 @@ class RoomWidget;
 class UpdateDialog;
 class DescriptionWidget;
 class MediaLibrary;
+class TimerWidget;
 struct MapLoadData;
 class MapDestination;
 
@@ -90,6 +92,7 @@ private:
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogAdventure = nullptr;
     QDockWidget *m_dockDialogDescription = nullptr;
+    QDockWidget *m_dockDialogTimers = nullptr;
 
     std::unique_ptr<GameObserver> m_gameObserver;
     AutoLogger *m_logger = nullptr;
@@ -98,6 +101,7 @@ private:
     MapData *m_mapData = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;
     MumeClock *m_mumeClock = nullptr;
+    CTimers *m_timers = nullptr;
 
     // Pandora Ported
     FindRoomsDlg *m_findRoomsDlg = nullptr;
@@ -116,6 +120,7 @@ private:
     AudioManager *m_audioManager = nullptr;
 
     DescriptionWidget *m_descriptionWidget = nullptr;
+    TimerWidget *m_timerWidget = nullptr;
     std::unique_ptr<HotkeyManager> m_hotkeyManager;
 
     QPointer<QMenu> m_contextMenu;
@@ -279,6 +284,7 @@ public:
     ~MainWindow() final;
 
     NODISCARD HotkeyManager &getHotkeyManager() const { return deref(m_hotkeyManager); }
+    NODISCARD CTimers &getTimers() const { return deref(m_timers); }
 
     NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(std::shared_ptr<MapSource> source);

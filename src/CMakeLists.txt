@@ -591,6 +591,12 @@ set(mmapper_SRCS
     syntax/Value.h
     timers/CTimers.cpp
     timers/CTimers.h
+    timers/TimerModel.cpp
+    timers/TimerModel.h
+    timers/TimerDelegate.cpp
+    timers/TimerDelegate.h
+    timers/TimerWidget.cpp
+    timers/TimerWidget.h
     viewers/AnsiViewWindow.cpp
     viewers/AnsiViewWindow.h
     viewers/LaunchAsyncViewer.h
