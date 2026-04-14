@@ -74,6 +74,7 @@ private:
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
     MumeClock &m_mumeClock;
+    CTimers &m_timers;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
     MainWindow &m_mainWindow;
@@ -171,6 +172,7 @@ public:
                                                PrespammedPath &,
                                                Mmapper2Group &,
                                                MumeClock &,
+                                               CTimers &,
                                                MapCanvas &,
                                                GameObserver &,
                                                std::unique_ptr<AbstractSocket>,
@@ -183,6 +185,7 @@ public:
                    PrespammedPath &,
                    Mmapper2Group &,
                    MumeClock &,
+                   CTimers &,
                    MapCanvas &,
                    GameObserver &,
                    std::unique_ptr<AbstractSocket>,

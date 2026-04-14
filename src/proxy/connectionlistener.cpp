@@ -36,6 +36,7 @@ ConnectionListener::ConnectionListener(MapData &md,
                                        PrespammedPath &pp,
                                        Mmapper2Group &gm,
                                        MumeClock &mc,
+                                       CTimers &ct,
                                        MapCanvas &mca,
                                        GameObserver &go,
                                        QObject *const parent)
@@ -45,6 +46,7 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_prespammedPath{pp}
     , m_groupManager{gm}
     , m_mumeClock{mc}
+    , m_timers{ct}
     , m_mapCanvas{mca}
     , m_gameOberver{go}
 {}
@@ -107,6 +109,7 @@ void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
                                    m_prespammedPath,
                                    m_groupManager,
                                    m_mumeClock,
+                                   m_timers,
                                    m_mapCanvas,
                                    m_gameOberver,
                                    std::move(socket),

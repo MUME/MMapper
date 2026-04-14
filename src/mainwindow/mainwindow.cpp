@@ -32,6 +32,8 @@
 #include "../proxy/connectionlistener.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
+#include "../timers/CTimers.h"
+#include "../timers/TimerWidget.h"
 #include "../viewers/TopLevelWindows.h"
 #include "AudioVolumeSlider.h"
 #include "MapZoomSlider.h"
@@ -218,6 +220,16 @@ MainWindow::MainWindow()
     addDockWidget(Qt::RightDockWidgetArea, m_dockDialogDescription);
     m_dockDialogDescription->setWidget(m_descriptionWidget);
 
+    m_timers = new CTimers(this);
+    m_timerWidget = new TimerWidget(deref(m_timers), this);
+    m_dockDialogTimers = new QDockWidget(tr("Timers Panel"), this);
+    m_dockDialogTimers->setObjectName("DockWidgetTimers");
+    m_dockDialogTimers->setFeatures(QDockWidget::DockWidgetMovable
+                                    | QDockWidget::DockWidgetFloatable
+                                    | QDockWidget::DockWidgetClosable);
+    m_dockDialogTimers->setWidget(m_timerWidget);
+    m_dockDialogTimers->hide();
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
@@ -246,6 +258,7 @@ MainWindow::MainWindow()
                                         deref(m_prespammedPath),
                                         deref(m_groupManager),
                                         deref(m_mumeClock),
+                                        deref(m_timers),
                                         deref(getCanvas()),
                                         deref(m_gameObserver),
                                         this);
@@ -259,6 +272,7 @@ MainWindow::MainWindow()
     m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
                                     | QDockWidget::DockWidgetFloatable
                                     | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::RightDockWidgetArea, m_dockDialogTimers);
     addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
     m_dockDialogClient->setWidget(m_clientWidget);
 
@@ -1194,6 +1208,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogRoom->toggleViewAction());
     sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
     sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
+    sidepanels->addAction(m_dockDialogTimers->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);

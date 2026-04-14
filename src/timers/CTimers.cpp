@@ -6,12 +6,14 @@
 #include "../global/thread_utils.h"
 #include "../global/utils.h"
 
+#include <algorithm>
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace { // anonymous
@@ -53,7 +55,18 @@ TTimer::TTimer(std::string name, std::string desc)
 
 int64_t TTimer::elapsedMs() const
 {
+    if (m_expired) {
+        return m_duration;
+    }
     return nowMs() - m_start;
+}
+
+int64_t TTimer::remainingMs() const
+{
+    if (m_expired) {
+        return 0;
+    }
+    return std::max<int64_t>(0, m_duration - elapsedMs());
 }
 
 CTimers::CTimers(QObject *const parent)
@@ -67,86 +80,202 @@ CTimers::CTimers(QObject *const parent)
 void CTimers::addTimer(std::string name, std::string desc)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
-    m_timers.emplace_back(std::move(name), std::move(desc));
+    std::ignore = removeTimer(name);
+
+    // Insert before first expired timer
+    auto it = std::find_if(m_allTimers.begin(), m_allTimers.end(), [](const TTimer &t) {
+        return t.isExpired();
+    });
+    m_allTimers.emplace(it, std::move(name), std::move(desc));
+
+    emit sig_timerAdded();
 }
 
 bool CTimers::removeCountdown(const std::string &name)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
-    return utils::listRemoveIf(m_countdowns, [&name](const TTimer &timer) -> bool {
-        return timer.getName() == name;
+    const bool removed = utils::listRemoveIf(m_allTimers, [&name](const TTimer &timer) -> bool {
+        return timer.isCountdown() && timer.getName() == name;
     });
+    if (removed) {
+        restartCountdownTimer();
+        emit sig_timerRemoved();
+    }
+    return removed;
 }
 
 bool CTimers::removeTimer(const std::string &name)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
-    return utils::listRemoveIf(m_timers, [&name](const TTimer &timer) -> bool {
-        return timer.getName() == name;
+    const bool removed = utils::listRemoveIf(m_allTimers, [&name](const TTimer &timer) -> bool {
+        return !timer.isCountdown() && timer.getName() == name;
     });
+    if (removed) {
+        emit sig_timerRemoved();
+    }
+    return removed;
 }
 
 void CTimers::addCountdown(std::string name, std::string desc, int64_t timeMs)
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
-    m_countdowns.emplace_back(std::move(name), std::move(desc), timeMs);
+    std::ignore = removeCountdown(name);
 
-    // See if we need to restart the timer
-    if (m_timer.isActive()) {
-        std::chrono::milliseconds left = m_timer.remainingTimeAsDuration();
-        if (timeMs < left.count()) {
-            m_timer.stop();
-            m_timer.start(static_cast<int>(timeMs));
+    // Insert before first expired timer
+    auto it = std::find_if(m_allTimers.begin(), m_allTimers.end(), [](const TTimer &t) {
+        return t.isExpired();
+    });
+    m_allTimers.emplace(it, std::move(name), std::move(desc), timeMs);
+
+    restartCountdownTimer();
+    emit sig_timerAdded();
+}
+
+void CTimers::stopTimer(const std::string &name)
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    for (auto it = m_allTimers.begin(); it != m_allTimers.end(); ++it) {
+        if (!it->isCountdown() && it->getName() == name) {
+            it->setExpired(true);
+            // Move to end
+            m_allTimers.splice(m_allTimers.end(), m_allTimers, it);
+            emit sig_timersUpdated();
+            break;
         }
-        return;
     }
+}
 
-    // Start the timer
-    m_timer.start(static_cast<int>(timeMs));
+void CTimers::stopCountdown(const std::string &name)
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    for (auto it = m_allTimers.begin(); it != m_allTimers.end(); ++it) {
+        if (it->isCountdown() && it->getName() == name) {
+            it->setExpired(true);
+            // Move to end
+            m_allTimers.splice(m_allTimers.end(), m_allTimers, it);
+            restartCountdownTimer();
+            emit sig_timersUpdated();
+            break;
+        }
+    }
+}
+
+void CTimers::resetTimer(const std::string &name)
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    for (auto it = m_allTimers.begin(); it != m_allTimers.end(); ++it) {
+        if (!it->isCountdown() && it->getName() == name) {
+            *it = TTimer(it->getName(), it->getDescription());
+            // Move before first expired timer
+            auto itExp = std::find_if(m_allTimers.begin(), m_allTimers.end(), [](const TTimer &t) {
+                return t.isExpired();
+            });
+            m_allTimers.splice(itExp, m_allTimers, it);
+            emit sig_timersUpdated();
+            break;
+        }
+    }
+}
+
+void CTimers::resetCountdown(const std::string &name)
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    for (auto it = m_allTimers.begin(); it != m_allTimers.end(); ++it) {
+        if (it->isCountdown() && it->getName() == name) {
+            *it = TTimer(it->getName(), it->getDescription(), it->durationMs());
+            // Move before first expired timer
+            auto itExp = std::find_if(m_allTimers.begin(), m_allTimers.end(), [](const TTimer &t) {
+                return t.isExpired();
+            });
+            m_allTimers.splice(itExp, m_allTimers, it);
+            restartCountdownTimer();
+            emit sig_timersUpdated();
+            break;
+        }
+    }
+}
+
+void CTimers::clearExpired()
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    const bool removed = utils::erase_if(m_allTimers, [](const TTimer &t) { return t.isExpired(); })
+                         > 0;
+    if (removed) {
+        emit sig_timerRemoved();
+    }
 }
 
 void CTimers::slot_finishCountdownTimer()
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
-    static auto get_diff = [](const TTimer &t) -> int64_t { return t.durationMs() - t.elapsedMs(); };
-
     // See if we need to restart the timer
     {
         std::vector<std::string> updates;
-        utils::erase_if(m_countdowns, [&updates](TTimer &t) -> bool {
-            if (get_diff(t) > 0) {
-                return false;
+        bool anyFinished = false;
+
+        auto it = m_allTimers.begin();
+        while (it != m_allTimers.end()) {
+            if (!it->isCountdown() || it->isExpired() || it->remainingMs() > 0) {
+                ++it;
+                continue;
             }
+
+            it->setExpired(true);
+            anyFinished = true;
+
             std::ostringstream ostr;
-            ostr << "Countdown timer " << t.getName();
-            if (!t.getDescription().empty()) {
-                ostr << " <" << t.getDescription() << ">";
+            ostr << "Countdown timer " << it->getName();
+            if (!it->getDescription().empty()) {
+                ostr << " <" << it->getDescription() << ">";
             }
-            // why does this include a newline?
             ostr << " finished.\n";
             updates.emplace_back(std::move(ostr).str());
-            return true;
-        });
+
+            // Move to end
+            auto toMove = it;
+            ++it;
+            m_allTimers.splice(m_allTimers.end(), m_allTimers, toMove);
+        }
+
         for (const std::string &s : updates) {
             emit sig_sendTimersUpdateToUser(s);
         }
+        if (anyFinished) {
+            emit sig_timersUpdated();
+        }
     }
 
-    // Why do we return before stopping the timer?
-    if (m_countdowns.empty()) {
+    restartCountdownTimer();
+}
+
+void CTimers::restartCountdownTimer()
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+
+    m_timer.stop();
+
+    static auto get_diff = [](const TTimer &t) -> int64_t { return t.remainingMs(); };
+
+    std::vector<TTimer> activeCountdowns;
+    for (const auto &t : m_allTimers) {
+        if (t.isCountdown() && !t.isExpired()) {
+            activeCountdowns.push_back(t);
+        }
+    }
+
+    if (activeCountdowns.empty()) {
         return;
     }
 
-    // Why do we stop unconditionally and then restart?
-    if (m_timer.isActive()) {
-        m_timer.stop();
-    }
-
-    const int64_t next = *utils::find_min_computed(m_countdowns, get_diff);
+    const int64_t next = *utils::find_min_computed(activeCountdowns, get_diff);
     // Restart the timer
     if (next > 0) {
         m_timer.start(static_cast<int>(next));
+    } else {
+        // Should not really happen as we just set expired ones to true,
+        // but let's be safe and trigger finish again if there's an immediate one.
+        QTimer::singleShot(0, this, &CTimers::slot_finishCountdownTimer);
     }
 }
 
@@ -154,13 +283,23 @@ std::string CTimers::getTimers() const
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
-    if (m_timers.empty()) {
+    bool any = false;
+    for (const auto &t : m_allTimers) {
+        if (!t.isCountdown()) {
+            any = true;
+            break;
+        }
+    }
+
+    if (!any) {
         return "";
     }
 
     std::ostringstream ostr;
     ostr << "Timers:" << std::endl;
-    for (const auto &timer : m_timers) {
+    for (const auto &timer : m_allTimers) {
+        if (timer.isCountdown())
+            continue;
         const auto elapsed = msToMinSec(timer.elapsedMs());
         ostr << "- " << timer.getName();
         if (!timer.getDescription().empty()) {
@@ -175,13 +314,23 @@ std::string CTimers::getCountdowns() const
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
-    if (m_countdowns.empty()) {
+    bool any = false;
+    for (const auto &t : m_allTimers) {
+        if (t.isCountdown()) {
+            any = true;
+            break;
+        }
+    }
+
+    if (!any) {
         return "";
     }
 
     std::ostringstream ostr;
     ostr << "Countdowns:" << std::endl;
-    for (const auto &countdown : m_countdowns) {
+    for (const auto &countdown : m_allTimers) {
+        if (!countdown.isCountdown())
+            continue;
         const auto elapsed = msToMinSec(countdown.elapsedMs());
         const auto left = msToMinSec(countdown.durationMs() - countdown.elapsedMs());
         ostr << "- " << countdown.getName();
@@ -202,6 +351,27 @@ void CTimers::clear()
 {
     ABORT_IF_NOT_ON_MAIN_THREAD();
 
-    m_countdowns.clear();
-    m_timers.clear();
+    m_allTimers.clear();
+    m_timer.stop();
+    emit sig_timerRemoved();
+}
+
+void CTimers::moveTimer(int from, int to)
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+
+    if (from < 0 || from >= static_cast<int>(m_allTimers.size()))
+        return;
+    if (to < 0 || to > static_cast<int>(m_allTimers.size()))
+        return;
+
+    auto itFrom = m_allTimers.begin();
+    std::advance(itFrom, from);
+
+    auto itTo = m_allTimers.begin();
+    std::advance(itTo, to);
+
+    m_allTimers.splice(itTo, m_allTimers, itFrom);
+
+    emit sig_timersUpdated();
 }

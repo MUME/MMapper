@@ -23,6 +23,7 @@ class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
 class MumeClock;
+class CTimers;
 class PrespammedPath;
 class Proxy;
 class QObject;
@@ -58,6 +59,7 @@ private:
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
     MumeClock &m_mumeClock;
+    CTimers &m_timers;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameOberver;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
@@ -70,6 +72,7 @@ public:
                                 PrespammedPath &,
                                 Mmapper2Group &,
                                 MumeClock &,
+                                CTimers &,
                                 MapCanvas &,
                                 GameObserver &,
                                 QObject *parent);

@@ -135,13 +135,14 @@ QPointer<Proxy> Proxy::allocInit(MapData &md,
                                  PrespammedPath &pp,
                                  Mmapper2Group &gm,
                                  MumeClock &mc,
+                                 CTimers &ct,
                                  MapCanvas &mca,
                                  GameObserver &go,
                                  std::unique_ptr<AbstractSocket> userSocket,
                                  ConnectionListener &listener)
 {
     auto proxy = makeQPointer<Proxy>(
-        Badge<Proxy>{}, md, pm, pp, gm, mc, mca, go, std::move(userSocket), listener);
+        Badge<Proxy>{}, md, pm, pp, gm, mc, ct, mca, go, std::move(userSocket), listener);
     deref(proxy).init();
     return proxy;
 }
@@ -152,6 +153,7 @@ Proxy::Proxy(Badge<Proxy>,
              PrespammedPath &pp,
              Mmapper2Group &gm,
              MumeClock &mc,
+             CTimers &ct,
              MapCanvas &mca,
              GameObserver &go,
              std::unique_ptr<AbstractSocket> userSocket,
@@ -162,6 +164,7 @@ Proxy::Proxy(Badge<Proxy>,
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)
+    , m_timers(ct)
     , m_mapCanvas(mca)
     , m_gameObserver(go)
     // REVISIT: It would be better to just pass in the MainWindow directly.
@@ -709,12 +712,8 @@ void Proxy::allocParser()
     auto &gmcp = pipe.apis.proxyGmcp = std::make_unique<ProxyUserGmcpApi>(*this);
     auto &out = pipe.outputs.parserXmlOutputs = std::make_unique<LocalParserOutputs>(*this);
 
-    // REVISIIT: does CTimers actually need a parent?
-    // if so, figure out what and allocate it into the pipeline if necessary?
-    QObject *fakeCTimersParent = nullptr;
-
     auto &parserCommon = pipe.common.parserCommonData;
-    parserCommon = std::make_unique<ParserCommonData>(fakeCTimersParent);
+    parserCommon = std::make_unique<ParserCommonData>(m_timers);
 
     /* this duplication is ridiculous, but it's painful to tease these two apart
      * because compiling takes so long. */

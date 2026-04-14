@@ -239,6 +239,8 @@ add_test(NAME TestAdventure COMMAND TestAdventure)
 set(timer_test
         ../src/timers/CTimers.cpp
         ../src/timers/CTimers.h
+        ../src/timers/TimerModel.cpp
+        ../src/timers/TimerModel.h
 )
 set(TestTimer TestCTimers.cpp)
 add_executable(TestTimer ${timer_test} ${TestTimer})
