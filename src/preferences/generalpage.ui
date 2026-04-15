@@ -6,148 +6,45 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>508</width>
-    <height>944</height>
+    <width>399</width>
+    <height>1093</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form1</string>
   </property>
-  <layout class="QVBoxLayout">
-   <item>
-    <widget class="QGroupBox" name="groupBox_connections">
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="7" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Connection</string>
+      <string>Settings Management</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_5">
-      <item row="2" column="0">
-       <widget class="QLabel" name="textLabel4_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QPushButton" name="configurationExportButton">
         <property name="text">
-         <string>Local port number:</string>
-        </property>
-        <property name="buddy">
-         <cstring>localPort</cstring>
+         <string>Export...</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="remotePort">
-        <property name="maximum">
-         <number>65535</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="3">
-       <widget class="QLineEdit" name="remoteName">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="textLabel3_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item>
+       <widget class="QPushButton" name="configurationImportButton">
         <property name="text">
-         <string>Remote port number:</string>
-        </property>
-        <property name="buddy">
-         <cstring>remotePort</cstring>
+         <string>Import...</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QSpinBox" name="localPort">
-        <property name="maximum">
-         <number>65535</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="encryptionCheckBox">
-        <property name="toolTip">
-         <string>Require that your connection to MUME is always secure</string>
-        </property>
+      <item>
+       <widget class="QPushButton" name="configurationResetButton">
         <property name="text">
-         <string>Require encryption</string>
+         <string>Reset to Defaults</string>
         </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="textLabel2_2">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Remote server:</string>
-        </property>
-        <property name="buddy">
-         <cstring>remoteName</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Character encoding:</string>
-        </property>
-        <property name="buddy">
-         <cstring>charsetComboBox</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QComboBox" name="charsetComboBox">
-        <item>
-         <property name="text">
-          <string extracomment="Default encoding">Latin-1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string extracomment="Modern clients only">UTF-8</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string extracomment="No special characters">US-ASCII</string>
-         </property>
-        </item>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
-   <item>
+   <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>Account</string>
@@ -173,23 +70,310 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QGroupBox" name="groupBox_modding">
+     <property name="title">
+      <string>Modding</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_modding">
       <item>
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
+       <widget class="QLineEdit" name="resourceLineEdit">
+        <property name="placeholderText">
+         <string>Path to resources</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="resourcePushButton">
+        <property name="text">
+         <string>Select</string>
         </property>
-       </spacer>
+       </widget>
       </item>
      </layout>
     </widget>
    </item>
-   <item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="groupBox_statusbar">
+     <property name="title">
+      <string>Apperance</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="displayMumeClockCheckBox">
+        <property name="text">
+         <string>Show Mume clock</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Theme:</string>
+        </property>
+        <property name="buddy">
+         <cstring>themeComboBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="themeComboBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
+        </property>
+        <item>
+         <property name="text">
+          <string>System</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Dark</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Light</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QCheckBox" name="displayXPStatusCheckBox">
+        <property name="text">
+         <string>Show Session XP</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox_4">
+     <property name="title">
+      <string>Proxy</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <widget class="QLabel" name="textLabel4_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Port:</string>
+        </property>
+        <property name="buddy">
+         <cstring>localPort</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Character encoding:</string>
+        </property>
+        <property name="buddy">
+         <cstring>charsetComboBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QCheckBox" name="proxyListensOnAnyInterfaceCheckBox">
+        <property name="toolTip">
+         <string>Allow external traffic to connect to MMapper</string>
+        </property>
+        <property name="text">
+         <string>Expose to local network</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QCheckBox" name="proxyConnectionStatusCheckBox">
+        <property name="toolTip">
+         <string>Disconnect from the mud client when MUME disconnects</string>
+        </property>
+        <property name="text">
+         <string>Mirror connection status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QSpinBox" name="localPort">
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
+        </property>
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QComboBox" name="charsetComboBox">
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
+        </property>
+        <item>
+         <property name="text">
+          <string extracomment="Default encoding">Latin-1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string extracomment="Modern clients only">UTF-8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string extracomment="No special characters">US-ASCII</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupBox_connections">
+     <property name="title">
+      <string>Remote Server</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="1" colspan="2">
+       <widget class="QLineEdit" name="remoteName">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="textLabel3_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Port:</string>
+        </property>
+        <property name="buddy">
+         <cstring>remotePort</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="encryptionCheckBox">
+        <property name="toolTip">
+         <string>Require that your connection to MUME is always secure</string>
+        </property>
+        <property name="text">
+         <string>Require encryption</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="remotePort">
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
+        </property>
+        <property name="maximum">
+         <number>65535</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="textLabel2_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Host:</string>
+        </property>
+        <property name="buddy">
+         <cstring>remoteName</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QGroupBox" name="groupBox_exits">
+     <property name="title">
+      <string>Emulated Exits</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="showHiddenExitFlagsCheckBox">
+        <property name="text">
+         <string>Show hidden exit flags</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="emulatedExitsCheckBox">
+        <property name="text">
+         <string>Show emulated exits</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="showNotesCheckBox">
+        <property name="text">
+         <string>Show notes</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Startup</string>
@@ -222,13 +406,6 @@
          <property name="spacing">
           <number>0</number>
          </property>
-         <item row="2" column="0">
-          <widget class="QCheckBox" name="autoLoadCheck">
-           <property name="text">
-            <string>Load world:</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QLineEdit" name="autoLoadFileName">
            <property name="sizePolicy">
@@ -255,6 +432,13 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="autoLoadCheck">
+           <property name="text">
+            <string>Load world:</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -268,215 +452,6 @@
      </layout>
     </widget>
    </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_statusbar">
-     <property name="title">
-      <string>Apperance</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_4">
-      <property name="bottomMargin">
-       <number>9</number>
-      </property>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="themeComboBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <item>
-         <property name="text">
-          <string>System</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Dark</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Light</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Theme:</string>
-        </property>
-        <property name="buddy">
-         <cstring>themeComboBox</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="displayMumeClockCheckBox">
-        <property name="text">
-         <string>Show Mume clock</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <widget class="QCheckBox" name="displayXPStatusCheckBox">
-        <property name="text">
-         <string>Show Session XP</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_modding">
-     <property name="title">
-      <string>Modding</string>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_modding">
-      <item>
-       <widget class="QLineEdit" name="resourceLineEdit">
-        <property name="placeholderText">
-         <string>Path to resources</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="resourcePushButton">
-        <property name="text">
-         <string>Select</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_exits">
-     <property name="title">
-      <string>Emulated Exits</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_6">
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="emulatedExitsCheckBox">
-        <property name="text">
-         <string>Show emulated exits</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="showHiddenExitFlagsCheckBox">
-        <property name="text">
-         <string>Show hidden exit flags</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="showNotesCheckBox">
-        <property name="text">
-         <string>Show notes</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Advanced</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0">
-       <widget class="QPushButton" name="configurationResetButton">
-        <property name="text">
-         <string>Reset to Default Settings</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="proxyConnectionStatusCheckBox">
-        <property name="toolTip">
-         <string>Disconnect from the mud client when MUME disconnects</string>
-        </property>
-        <property name="text">
-         <string>Proxy connection status</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="configurationImportButton">
-        <property name="text">
-         <string>Import Settings...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="proxyListensOnAnyInterfaceCheckBox">
-        <property name="toolTip">
-         <string>Allow external traffic to connect to MMapper</string>
-        </property>
-        <property name="text">
-         <string>Proxy listens on any interface</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="configurationExportButton">
-        <property name="text">
-         <string>Export Settings...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="2" column="1" colspan="2">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
   </layout>
  </widget>
  <tabstops>
@@ -485,6 +460,8 @@
   <tabstop>encryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
+  <tabstop>proxyListensOnAnyInterfaceCheckBox</tabstop>
+  <tabstop>proxyConnectionStatusCheckBox</tabstop>
   <tabstop>autoLogin</tabstop>
   <tabstop>setPassword</tabstop>
   <tabstop>checkForUpdateCheckBox</tabstop>
@@ -496,11 +473,9 @@
   <tabstop>displayXPStatusCheckBox</tabstop>
   <tabstop>resourceLineEdit</tabstop>
   <tabstop>resourcePushButton</tabstop>
-  <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
+  <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
-  <tabstop>proxyListensOnAnyInterfaceCheckBox</tabstop>
-  <tabstop>proxyConnectionStatusCheckBox</tabstop>
   <tabstop>configurationExportButton</tabstop>
   <tabstop>configurationImportButton</tabstop>
   <tabstop>configurationResetButton</tabstop>

@@ -188,15 +188,18 @@ AdvancedGraphicsGroupBox::AdvancedGraphicsGroupBox(QGroupBox &groupBox)
     };
 
     auto *const checkboxDiag = new QCheckBox("Show Performance Stats");
+    checkboxDiag->setObjectName("checkboxDiag");
     checkboxDiag->setChecked(MapCanvasConfig::getShowPerfStats());
     vertical->addWidget(checkboxDiag);
 
     auto *const checkbox3d = new QCheckBox("3d Mode");
+    checkbox3d->setObjectName("checkbox3d");
     const bool is3dAtInit = MapCanvasConfig::isIn3dMode();
     checkbox3d->setChecked(is3dAtInit);
     vertical->addWidget(checkbox3d);
 
     auto *const autoTilt = new QCheckBox("Auto tilt with zoom");
+    autoTilt->setObjectName("autoTilt");
     autoTilt->setChecked(MapCanvasConfig::isAutoTilt());
     vertical->addWidget(autoTilt);
 

@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>AudioPage</class>
  <widget class="QWidget" name="AudioPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>300</height>
-   </rect>
-  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="outputGroupBox">
@@ -19,13 +11,26 @@
      <layout class="QGridLayout" name="gridLayoutOutput">
       <item row="0" column="0">
        <widget class="QLabel" name="outputDeviceLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Device:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="outputDeviceComboBox"/>
+       <widget class="QComboBox" name="outputDeviceComboBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -38,15 +43,42 @@
      <layout class="QGridLayout" name="gridLayoutMusic">
       <item row="1" column="0">
        <widget class="QLabel" name="musicVolumeLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Volume:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="AudioVolumeSlider" name="musicVolumeSlider">
+      <widget class="AudioVolumeSlider" name="musicVolumeSlider">
         <property name="audioType">
-         <enum>AudioVolumeSlider::AudioType::Music</enum>
+          <enum>AudioVolumeSlider::AudioType::Music</enum>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
+        <property name="tracking">
+         <bool>false</bool>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::TickPosition::TicksBelow</enum>
+        </property>
+        <property name="tickInterval">
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -61,15 +93,42 @@
      <layout class="QGridLayout" name="gridLayoutSounds">
       <item row="1" column="0">
        <widget class="QLabel" name="soundsVolumeLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Volume:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="AudioVolumeSlider" name="soundsVolumeSlider">
+      <widget class="AudioVolumeSlider" name="soundsVolumeSlider">
         <property name="audioType">
-         <enum>AudioVolumeSlider::AudioType::Sound</enum>
+          <enum>AudioVolumeSlider::AudioType::Sound</enum>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
+        <property name="tracking">
+         <bool>false</bool>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::TickPosition::TicksBelow</enum>
+        </property>
+        <property name="tickInterval">
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -79,7 +138,7 @@
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
