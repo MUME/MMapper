@@ -1,3 +1,28 @@
+## MMapper 26.04.1 (April 15, 2026)
+
+### New Features:
+* **Secure Password Saving in MMapper Web:**
+    * **Password Manager Support:** You can now securely save your MUME account credentials when playing in the browser! We’ve built a custom bridge that lets MMapper talk to your browser’s native password manager (Chrome, Firefox, or Safari).
+    * **How it works:** When you save your password, a temporary window will appear to satisfy the browser's security checks. Once saved, the browser will treat MMapper just like any other website—allowing for **Automatic Logins** and biometric (TouchID/FaceID) unlocks where available.
+* **Overhauled Preferences Dialog:**
+    * Transitioned the configuration settings to a unified, scrollable view.
+    * Added a fast, **debounced search** feature that highlights specific results and seamlessly syncs your scroll position with the sidebar navigation.
+* **Revamped Group Widget:**
+    * HP, Mana, and Moves are now displayed as **colored bars** with centered text.
+    * Added an animated **pulsing effect** to alert you when your health or movement values are critically low.
+* **Dockable Timers Panel:** Introduced a brand new, dockable panel for managing in-game timers. Features include live updates, drag-and-drop reordering, and easy context menu actions (stop, reset, clear).
+* **Audio Quick Controls:** Added a new audio toolbar featuring a dedicated volume slider for faster access to sound settings.
+
+### Bug Fixes:
+* **Background Audio Hang (Windows):** Fixed a critical issue where the MMapper process would often stay running in the background after the window was closed. This was caused by a combination of lingering audio resources on Windows and a graphics "infinite loop" affecting NVIDIA users during teardown.
+* **Room Panel Fixes:** Fixed a bug where certain room entries wouldn't display correctly due to strict type errors.
+
+### Changes & Under the Hood:
+* **Framework Updates:** Updated macOS and Windows builds to **Qt 6.8.3** and bumped the Linux Flatpak to the **KDE 6.10** runtime.
+* **Better Visual Smoothing:** Lighting and time-of-day transitions now use the **Oklab color space**, making sunset and sunrise gradients look much more natural and "smooth" to the human eye.
+* **Build Efficiency:** Optimized the "QtKeychain" logic to prevent unnecessary re-downloads during updates, making the build process faster for contributors.
+* **Maintenance:** Standard GitHub Actions and CI/CD pipelines have been updated to the latest major versions for better security and reliability.
+
 ## MMapper 26.04.0 (April 2, 2026)
 
 ### New Features:
