@@ -856,15 +856,52 @@ endif()
 
 if(EMSCRIPTEN)
     add_dependencies(mmapper assets_manifest)
+    if(MMAPPER_BETA)
+        set(MMAPPER_THEME_COLOR "#5281c4")
+    else()
+        set(MMAPPER_THEME_COLOR "#32a6de")
+    endif()
+
+    configure_file(resources/wasm/manifest.json.in ${CMAKE_CURRENT_BINARY_DIR}/manifest.json @ONLY)
+
+    set(ICON_SVG "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+    set(ICON_192 "${CMAKE_CURRENT_BINARY_DIR}/icon-192.png")
+    set(ICON_512 "${CMAKE_CURRENT_BINARY_DIR}/icon-512.png")
+
+    find_program(RSVG_CONVERT rsvg-convert)
+    if(RSVG_CONVERT)
+        add_custom_command(
+            OUTPUT "${ICON_192}" "${ICON_512}"
+            COMMAND "${RSVG_CONVERT}" -w 192 -h 192 "${ICON_SVG}" -o "${ICON_192}"
+            COMMAND "${RSVG_CONVERT}" -w 512 -h 512 "${ICON_SVG}" -o "${ICON_512}"
+            DEPENDS "${ICON_SVG}"
+            COMMENT "Generating PNG icons from SVG"
+            VERBATIM
+        )
+        add_custom_target(mmapper_icons DEPENDS "${ICON_192}" "${ICON_512}")
+        add_dependencies(mmapper mmapper_icons)
+    else()
+        message(WARNING "rsvg-convert not found. PWA icons will not be generated.")
+    endif()
+
     add_custom_command(TARGET mmapper POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/manifest.json" "$<TARGET_FILE_DIR:mmapper>/manifest.json"
         COMMAND ${CMAKE_COMMAND}
             "-DHTML_FILE=$<TARGET_FILE_DIR:mmapper>/mmapper.html"
             "-DLOGO_SRC=${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg"
             "-DFAVICON_SRC=${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-lo-${MMAPPER_BRAND_SUFFIX}.svg"
+            "-DTHEME_COLOR=${MMAPPER_THEME_COLOR}"
             -P "${CMAKE_SOURCE_DIR}/cmake/WasmHtml.cmake"
-        COMMENT "Patching Wasm HTML"
+        COMMENT "Patching Wasm HTML and deploying PWA assets"
         VERBATIM
     )
+    if(RSVG_CONVERT)
+        add_custom_command(TARGET mmapper POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ICON_192}" "$<TARGET_FILE_DIR:mmapper>/icon-192.png"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ICON_512}" "$<TARGET_FILE_DIR:mmapper>/icon-512.png"
+            VERBATIM
+        )
+    endif()
 endif()
 
 if(WITH_ZLIB AND NOT EMSCRIPTEN)
@@ -984,10 +1021,20 @@ if(EMSCRIPTEN)
             "$<TARGET_FILE_DIR:mmapper>/qtloader.js"
             "$<TARGET_FILE_DIR:mmapper>/logo.svg"
             "$<TARGET_FILE_DIR:mmapper>/favicon.svg"
+            "$<TARGET_FILE_DIR:mmapper>/manifest.json"
             "$<TARGET_FILE_DIR:mmapper>/coi-serviceworker.js"
         DESTINATION "."
         COMPONENT applications
     )
+    if(RSVG_CONVERT)
+        install(
+            FILES
+                "$<TARGET_FILE_DIR:mmapper>/icon-192.png"
+                "$<TARGET_FILE_DIR:mmapper>/icon-512.png"
+            DESTINATION "."
+            COMPONENT applications
+        )
+    endif()
     install(
         FILES "$<TARGET_FILE_DIR:mmapper>/mmapper.html"
         DESTINATION "."

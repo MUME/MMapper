@@ -16,6 +16,7 @@ RUN apt-get update && \
     libgl1-mesa-dev \
     libglib2.0-0 \
     libxkbcommon-dev \
+    librsvg2-bin \
     ninja-build \
     pkg-config \
     python3 \
