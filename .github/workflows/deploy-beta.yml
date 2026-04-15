@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+concurrency:
+  group: deploy-beta
+  cancel-in-progress: true
+
 jobs:
   check-builds:
     runs-on: ubuntu-latest
