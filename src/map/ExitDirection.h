@@ -21,10 +21,10 @@ enum class NODISCARD ExitDirEnum : uint8_t {
     NONE
 };
 
-static constexpr const uint32_t NUM_EXITS_NESW = 4u;
-static constexpr const uint32_t NUM_EXITS_NESWUD = 6u;
-static constexpr const uint32_t NUM_EXITS = 7u;
-static constexpr const uint32_t NUM_EXITS_INCLUDING_NONE = 8u;
+static constexpr uint32_t NUM_EXITS_NESW = 4u;
+static constexpr uint32_t NUM_EXITS_NESWUD = 6u;
+static constexpr uint32_t NUM_EXITS = 7u;
+static constexpr uint32_t NUM_EXITS_INCLUDING_NONE = 8u;
 
 namespace enums {
 NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW();

@@ -19,52 +19,52 @@
 #include <QtCore>
 
 // telnet command codes (prefixed with TN_ to prevent duplicit #defines
-static constexpr const uint8_t TN_EOR = 239;
-static constexpr const uint8_t TN_SE = 240;
-static constexpr const uint8_t TN_NOP = 241;
-static constexpr const uint8_t TN_DM = 242;
-static constexpr const uint8_t TN_B = 243;
-static constexpr const uint8_t TN_IP = 244;
-static constexpr const uint8_t TN_AO = 245;
-static constexpr const uint8_t TN_AYT = 246;
-static constexpr const uint8_t TN_EC = 247;
-static constexpr const uint8_t TN_EL = 248;
-static constexpr const uint8_t TN_GA = 249;
-static constexpr const uint8_t TN_SB = 250;
-static constexpr const uint8_t TN_WILL = 251;
-static constexpr const uint8_t TN_WONT = 252;
-static constexpr const uint8_t TN_DO = 253;
-static constexpr const uint8_t TN_DONT = 254;
-static constexpr const uint8_t TN_IAC = 255;
+static constexpr uint8_t TN_EOR = 239;
+static constexpr uint8_t TN_SE = 240;
+static constexpr uint8_t TN_NOP = 241;
+static constexpr uint8_t TN_DM = 242;
+static constexpr uint8_t TN_B = 243;
+static constexpr uint8_t TN_IP = 244;
+static constexpr uint8_t TN_AO = 245;
+static constexpr uint8_t TN_AYT = 246;
+static constexpr uint8_t TN_EC = 247;
+static constexpr uint8_t TN_EL = 248;
+static constexpr uint8_t TN_GA = 249;
+static constexpr uint8_t TN_SB = 250;
+static constexpr uint8_t TN_WILL = 251;
+static constexpr uint8_t TN_WONT = 252;
+static constexpr uint8_t TN_DO = 253;
+static constexpr uint8_t TN_DONT = 254;
+static constexpr uint8_t TN_IAC = 255;
 
 // telnet option codes (supported options only)
-static constexpr const uint8_t OPT_ECHO = 1;
-static constexpr const uint8_t OPT_SUPPRESS_GA = 3;
-static constexpr const uint8_t OPT_STATUS = 5;
-static constexpr const uint8_t OPT_TIMING_MARK = 6;
-static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
-static constexpr const uint8_t OPT_EOR = 25;
-static constexpr const uint8_t OPT_NAWS = 31;
-static constexpr const uint8_t OPT_LINEMODE = 34;
-static constexpr const uint8_t OPT_CHARSET = 42;
-static constexpr const uint8_t OPT_MSSP = 70;
-static constexpr const uint8_t OPT_COMPRESS2 = 86;
-static constexpr const uint8_t OPT_GMCP = 201;
+static constexpr uint8_t OPT_ECHO = 1;
+static constexpr uint8_t OPT_SUPPRESS_GA = 3;
+static constexpr uint8_t OPT_STATUS = 5;
+static constexpr uint8_t OPT_TIMING_MARK = 6;
+static constexpr uint8_t OPT_TERMINAL_TYPE = 24;
+static constexpr uint8_t OPT_EOR = 25;
+static constexpr uint8_t OPT_NAWS = 31;
+static constexpr uint8_t OPT_LINEMODE = 34;
+static constexpr uint8_t OPT_CHARSET = 42;
+static constexpr uint8_t OPT_MSSP = 70;
+static constexpr uint8_t OPT_COMPRESS2 = 86;
+static constexpr uint8_t OPT_GMCP = 201;
 
 // telnet SB suboption types
-static constexpr const uint8_t TNSB_IS = 0;
-static constexpr const uint8_t TNSB_SEND = 1;
-static constexpr const uint8_t TNSB_REQUEST = 1;
-static constexpr const uint8_t TNSB_MODE = 1;
-static constexpr const uint8_t TNSB_EDIT = 1;
-static constexpr const uint8_t TNSB_MSSP_VAR = 1;
-static constexpr const uint8_t TNSB_MSSP_VAL = 2;
-static constexpr const uint8_t TNSB_ACCEPTED = 2;
-static constexpr const uint8_t TNSB_REJECTED = 3;
-static constexpr const uint8_t TNSB_TTABLE_IS = 4;
-static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
-static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
-static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
+static constexpr uint8_t TNSB_IS = 0;
+static constexpr uint8_t TNSB_SEND = 1;
+static constexpr uint8_t TNSB_REQUEST = 1;
+static constexpr uint8_t TNSB_MODE = 1;
+static constexpr uint8_t TNSB_EDIT = 1;
+static constexpr uint8_t TNSB_MSSP_VAR = 1;
+static constexpr uint8_t TNSB_MSSP_VAL = 2;
+static constexpr uint8_t TNSB_ACCEPTED = 2;
+static constexpr uint8_t TNSB_REJECTED = 3;
+static constexpr uint8_t TNSB_TTABLE_IS = 4;
+static constexpr uint8_t TNSB_TTABLE_REJECTED = 5;
+static constexpr uint8_t TNSB_TTABLE_ACK = 6;
+static constexpr uint8_t TNSB_TTABLE_NAK = 7;
 
 struct NODISCARD AppendBuffer : public RawBytes
 {
@@ -102,7 +102,7 @@ private:
     friend TelnetFormatter;
 
 protected:
-    static constexpr const size_t NUM_OPTS = 256;
+    static constexpr size_t NUM_OPTS = 256;
     using OptionArray = MMapper::Array<bool, NUM_OPTS>;
 
     struct NODISCARD Options final
