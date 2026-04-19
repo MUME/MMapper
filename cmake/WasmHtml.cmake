@@ -12,7 +12,7 @@
 #         -DFAVICON_SRC=<path/mmapper-lo-release.svg>
 #         -P WasmHtml.cmake
 
-foreach(var HTML_FILE LOGO_SRC FAVICON_SRC)
+foreach(var HTML_FILE LOGO_SRC FAVICON_SRC THEME_COLOR)
     if(NOT ${var})
         message(FATAL_ERROR "${var} not specified for WasmHtml.cmake")
     endif()
@@ -20,10 +20,10 @@ endforeach()
 
 file(READ "${HTML_FILE}" HTML_CONTENT)
 
-# Inject favicon link and COI service worker script after <head>
+# Inject favicon link, PWA manifest, and COI service worker script after <head>
 string(REPLACE
     "<head>"
-    "<head>\n    <link rel=\"icon\" href=\"favicon.svg\" type=\"image/svg+xml\">\n    <script src=\"./coi-serviceworker.js\"></script>"
+    "<head>\n    <link rel=\"icon\" href=\"favicon.svg\" type=\"image/svg+xml\">\n    <link rel=\"manifest\" href=\"manifest.json\">\n    <meta name=\"theme-color\" content=\"${THEME_COLOR}\">\n    <script src=\"./coi-serviceworker.js\"></script>"
     HTML_CONTENT "${HTML_CONTENT}"
 )
 
