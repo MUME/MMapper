@@ -610,8 +610,6 @@ endif()
 
 qt_add_resources(mmapper_QRC resources/mmapper2.qrc)
 
-find_program(RSVG_CONVERT rsvg-convert)
-
 if(MMAPPER_BETA)
     list(APPEND mmapper_RCS "resources/win32/beta.rc")
     set(MMAPPER_BRAND_SUFFIX "beta")
@@ -1217,6 +1215,7 @@ if(WIN32)
             COMPONENT applications
         )
 
+        find_program(RSVG_CONVERT rsvg-convert)
         if(RSVG_CONVERT)
             if(MMAPPER_BRAND_SUFFIX)
                 set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
@@ -1231,37 +1230,25 @@ if(WIN32)
             set(APPX_ICON_DIR "${CMAKE_CURRENT_BINARY_DIR}/appx_icons")
             file(MAKE_DIRECTORY "${APPX_ICON_DIR}")
 
-            add_custom_command(
-                OUTPUT "${APPX_ICON_DIR}/Square150x150Logo.png"
-                COMMAND ${RSVG_CONVERT} -w 150 -h 150 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/Square150x150Logo.png"
-                DEPENDS "${APPX_ICON_SRC}"
-                COMMENT "Generating Square150x150Logo.png"
-                VERBATIM
-            )
-            add_custom_command(
-                OUTPUT "${APPX_ICON_DIR}/Square44x44Logo.png"
-                COMMAND ${RSVG_CONVERT} -w 44 -h 44 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/Square44x44Logo.png"
-                DEPENDS "${APPX_ICON_SRC}"
-                COMMENT "Generating Square44x44Logo.png"
-                VERBATIM
-            )
-            add_custom_command(
-                OUTPUT "${APPX_ICON_DIR}/StoreLogo.png"
-                COMMAND ${RSVG_CONVERT} -w 50 -h 50 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/StoreLogo.png"
-                DEPENDS "${APPX_ICON_SRC}"
-                COMMENT "Generating StoreLogo.png"
-                VERBATIM
-            )
-            add_custom_target(appx_icons ALL DEPENDS
-                "${APPX_ICON_DIR}/Square150x150Logo.png"
-                "${APPX_ICON_DIR}/Square44x44Logo.png"
-                "${APPX_ICON_DIR}/StoreLogo.png"
-            )
+            set(APPX_ICON_LIST)
+            set(APPX_ICON_SIZES 150 44 50)
+            set(APPX_ICON_NAMES "Square150x150Logo.png" "Square44x44Logo.png" "StoreLogo.png")
+            foreach(icon_size icon_name IN ZIP_LISTS APPX_ICON_SIZES APPX_ICON_NAMES)
+                set(icon_path "${APPX_ICON_DIR}/${icon_name}")
+
+                add_custom_command(
+                    OUTPUT "${icon_path}"
+                    COMMAND ${RSVG_CONVERT} -w ${icon_size} -h ${icon_size} "${APPX_ICON_SRC}" -o "${icon_path}"
+                    DEPENDS "${APPX_ICON_SRC}"
+                    COMMENT "Generating ${icon_name}"
+                    VERBATIM
+                )
+                list(APPEND APPX_ICON_LIST "${icon_path}")
+            endforeach()
+
+            add_custom_target(appx_icons ALL DEPENDS ${APPX_ICON_LIST})
             install(
-                FILES
-                    "${APPX_ICON_DIR}/Square150x150Logo.png"
-                    "${APPX_ICON_DIR}/Square44x44Logo.png"
-                    "${APPX_ICON_DIR}/StoreLogo.png"
+                FILES ${APPX_ICON_LIST}
                 DESTINATION "Assets"
                 COMPONENT applications
             )
