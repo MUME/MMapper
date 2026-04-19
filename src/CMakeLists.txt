@@ -858,36 +858,6 @@ endif()
 
 if(EMSCRIPTEN)
     add_dependencies(mmapper assets_manifest)
-    if(MMAPPER_BETA)
-        set(PWA_THEME_COLOR "#5281c4")
-    else()
-        set(PWA_THEME_COLOR "#32a6de")
-    endif()
-    configure_file(resources/manifest.json.in ${CMAKE_BINARY_DIR}/manifest.json @ONLY)
-
-    if(RSVG_CONVERT)
-        set(PWA_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
-        add_custom_command(
-            OUTPUT "${CMAKE_BINARY_DIR}/icon192.png"
-            COMMAND ${RSVG_CONVERT} -w 192 -h 192 "${PWA_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/icon192.png"
-            DEPENDS "${PWA_ICON_SRC}"
-            COMMENT "Generating icon192.png"
-            VERBATIM
-        )
-        add_custom_command(
-            OUTPUT "${CMAKE_BINARY_DIR}/icon512.png"
-            COMMAND ${RSVG_CONVERT} -w 512 -h 512 "${PWA_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/icon512.png"
-            DEPENDS "${PWA_ICON_SRC}"
-            COMMENT "Generating icon512.png"
-            VERBATIM
-        )
-        add_custom_target(pwa_icons ALL DEPENDS
-            "${CMAKE_BINARY_DIR}/icon192.png"
-            "${CMAKE_BINARY_DIR}/icon512.png"
-        )
-        add_dependencies(mmapper pwa_icons)
-    endif()
-
     add_custom_command(TARGET mmapper POST_BUILD
         COMMAND ${CMAKE_COMMAND}
             "-DHTML_FILE=$<TARGET_FILE_DIR:mmapper>/mmapper.html"
@@ -1017,9 +987,6 @@ if(EMSCRIPTEN)
             "$<TARGET_FILE_DIR:mmapper>/logo.svg"
             "$<TARGET_FILE_DIR:mmapper>/favicon.svg"
             "$<TARGET_FILE_DIR:mmapper>/coi-serviceworker.js"
-            "${CMAKE_BINARY_DIR}/manifest.json"
-            "${CMAKE_BINARY_DIR}/icon192.png"
-            "${CMAKE_BINARY_DIR}/icon512.png"
         DESTINATION "."
         COMPONENT applications
     )

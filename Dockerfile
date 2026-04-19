@@ -12,7 +12,6 @@ RUN apt-get update && \
     build-essential \
     cmake \
     git \
-    librsvg2-bin \
     libgl-dev \
     libgl1-mesa-dev \
     libglib2.0-0 \
