@@ -150,10 +150,6 @@ void FindRoomsDlg::slot_findClicked()
         auto found = m_mapData.genericFind(filter);
         for (const auto roomId : found) {
             const auto &room = map.getRoomHandle(roomId);
-            if (!filter.filter(room.getRaw())) {
-                return;
-            }
-
             QString id = QString("%1").arg(room.getIdExternal().asUint32());
             QString roomName = room.getName().toQString();
             QString toolTip = constructToolTip(room);
