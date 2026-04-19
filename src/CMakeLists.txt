@@ -1215,24 +1215,46 @@ if(WIN32)
             COMPONENT applications
         )
 
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi150-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "Square150x150Logo.png"
-            COMPONENT applications
-        )
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi44-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "Square44x44Logo.png"
-            COMPONENT applications
-        )
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi50-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "StoreLogo.png"
-            COMPONENT applications
-        )
+        find_program(RSVG_CONVERT rsvg-convert)
+        if(RSVG_CONVERT)
+            if(MMAPPER_BRAND_SUFFIX)
+                set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+            else()
+                set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-release.svg")
+            endif()
+
+            if(NOT EXISTS "${APPX_ICON_SRC}")
+                message(FATAL_ERROR "AppX icon source SVG not found: ${APPX_ICON_SRC}")
+            endif()
+
+            set(APPX_ICON_DIR "${CMAKE_CURRENT_BINARY_DIR}/appx_icons")
+            file(MAKE_DIRECTORY "${APPX_ICON_DIR}")
+
+            set(APPX_ICON_LIST)
+            set(APPX_ICON_SIZES 150 44 50)
+            set(APPX_ICON_NAMES "Square150x150Logo.png" "Square44x44Logo.png" "StoreLogo.png")
+            foreach(icon_size icon_name IN ZIP_LISTS APPX_ICON_SIZES APPX_ICON_NAMES)
+                set(icon_path "${APPX_ICON_DIR}/${icon_name}")
+
+                add_custom_command(
+                    OUTPUT "${icon_path}"
+                    COMMAND ${RSVG_CONVERT} -w ${icon_size} -h ${icon_size} "${APPX_ICON_SRC}" -o "${icon_path}"
+                    DEPENDS "${APPX_ICON_SRC}"
+                    COMMENT "Generating ${icon_name}"
+                    VERBATIM
+                )
+                list(APPEND APPX_ICON_LIST "${icon_path}")
+            endforeach()
+
+            add_custom_target(appx_icons ALL DEPENDS ${APPX_ICON_LIST})
+            install(
+                FILES ${APPX_ICON_LIST}
+                DESTINATION "Assets"
+                COMPONENT applications
+            )
+        else()
+            message(WARNING "rsvg-convert not found. AppX icons will not be generated.")
+        endif()
 
         # Set the AppX external script
         set(CPACK_EXTERNAL_ENABLE_STAGING TRUE)
