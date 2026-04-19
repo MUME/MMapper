@@ -1,0 +1,29 @@
+{
+  "name": "MUME Mapper",
+  "short_name": "MMapper",
+  "description": "MMapper is a graphical mapping tool that enhances the MUME (Multi-Users in Middle Earth) game experience.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "@PWA_THEME_COLOR@",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

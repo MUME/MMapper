@@ -32,6 +32,9 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
 
     # Install Dependencies (Windows)
+    - name: Install rsvg-convert
+      run: choco install rsvg-convert -y
+
     - name: Install Qt for Windows
       uses: jurplel/install-qt-action@v4
       with:

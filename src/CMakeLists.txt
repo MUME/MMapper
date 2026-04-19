@@ -610,6 +610,8 @@ endif()
 
 qt_add_resources(mmapper_QRC resources/mmapper2.qrc)
 
+find_program(RSVG_CONVERT rsvg-convert)
+
 if(MMAPPER_BETA)
     list(APPEND mmapper_RCS "resources/win32/beta.rc")
     set(MMAPPER_BRAND_SUFFIX "beta")
@@ -856,6 +858,36 @@ endif()
 
 if(EMSCRIPTEN)
     add_dependencies(mmapper assets_manifest)
+    if(MMAPPER_BETA)
+        set(PWA_THEME_COLOR "#5281c4")
+    else()
+        set(PWA_THEME_COLOR "#32a6de")
+    endif()
+    configure_file(resources/manifest.json.in ${CMAKE_BINARY_DIR}/manifest.json @ONLY)
+
+    if(RSVG_CONVERT)
+        set(PWA_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+        add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/icon192.png"
+            COMMAND ${RSVG_CONVERT} -w 192 -h 192 "${PWA_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/icon192.png"
+            DEPENDS "${PWA_ICON_SRC}"
+            COMMENT "Generating icon192.png"
+            VERBATIM
+        )
+        add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/icon512.png"
+            COMMAND ${RSVG_CONVERT} -w 512 -h 512 "${PWA_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/icon512.png"
+            DEPENDS "${PWA_ICON_SRC}"
+            COMMENT "Generating icon512.png"
+            VERBATIM
+        )
+        add_custom_target(pwa_icons ALL DEPENDS
+            "${CMAKE_BINARY_DIR}/icon192.png"
+            "${CMAKE_BINARY_DIR}/icon512.png"
+        )
+        add_dependencies(mmapper pwa_icons)
+    endif()
+
     add_custom_command(TARGET mmapper POST_BUILD
         COMMAND ${CMAKE_COMMAND}
             "-DHTML_FILE=$<TARGET_FILE_DIR:mmapper>/mmapper.html"
@@ -985,6 +1017,9 @@ if(EMSCRIPTEN)
             "$<TARGET_FILE_DIR:mmapper>/logo.svg"
             "$<TARGET_FILE_DIR:mmapper>/favicon.svg"
             "$<TARGET_FILE_DIR:mmapper>/coi-serviceworker.js"
+            "${CMAKE_BINARY_DIR}/manifest.json"
+            "${CMAKE_BINARY_DIR}/icon192.png"
+            "${CMAKE_BINARY_DIR}/icon512.png"
         DESTINATION "."
         COMPONENT applications
     )
@@ -1215,24 +1250,45 @@ if(WIN32)
             COMPONENT applications
         )
 
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi150-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "Square150x150Logo.png"
-            COMPONENT applications
-        )
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi44-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "Square44x44Logo.png"
-            COMPONENT applications
-        )
-        install(
-            FILES "${CMAKE_SOURCE_DIR}/src/resources/icons/hi50-app-mmapper-release.png"
-            DESTINATION "Assets"
-            RENAME "StoreLogo.png"
-            COMPONENT applications
-        )
+        if(RSVG_CONVERT)
+            set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
+                COMMAND ${RSVG_CONVERT} -w 150 -h 150 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
+                DEPENDS "${APPX_ICON_SRC}"
+                COMMENT "Generating Square150x150Logo.png"
+                VERBATIM
+            )
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
+                COMMAND ${RSVG_CONVERT} -w 44 -h 44 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
+                DEPENDS "${APPX_ICON_SRC}"
+                COMMENT "Generating Square44x44Logo.png"
+                VERBATIM
+            )
+            add_custom_command(
+                OUTPUT "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                COMMAND ${RSVG_CONVERT} -w 50 -h 50 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                DEPENDS "${APPX_ICON_SRC}"
+                COMMENT "Generating StoreLogo.png"
+                VERBATIM
+            )
+            add_custom_target(appx_icons ALL DEPENDS
+                "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
+                "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
+                "${CMAKE_BINARY_DIR}/StoreLogo.png"
+            )
+            install(
+                FILES
+                    "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
+                    "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
+                    "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                DESTINATION "Assets"
+                COMPONENT applications
+            )
+        else()
+            message(WARNING "rsvg-convert not found. AppX icons will not be generated.")
+        endif()
 
         # Set the AppX external script
         set(CPACK_EXTERNAL_ENABLE_STAGING TRUE)
