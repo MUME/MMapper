@@ -1218,38 +1218,50 @@ if(WIN32)
         )
 
         if(RSVG_CONVERT)
-            set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+            if(MMAPPER_BRAND_SUFFIX)
+                set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-${MMAPPER_BRAND_SUFFIX}.svg")
+            else()
+                set(APPX_ICON_SRC "${CMAKE_SOURCE_DIR}/src/resources/icons/mmapper-hi-release.svg")
+            endif()
+
+            if(NOT EXISTS "${APPX_ICON_SRC}")
+                message(FATAL_ERROR "AppX icon source SVG not found: ${APPX_ICON_SRC}")
+            endif()
+
+            set(APPX_ICON_DIR "${CMAKE_CURRENT_BINARY_DIR}/appx_icons")
+            file(MAKE_DIRECTORY "${APPX_ICON_DIR}")
+
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
-                COMMAND ${RSVG_CONVERT} -w 150 -h 150 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
+                OUTPUT "${APPX_ICON_DIR}/Square150x150Logo.png"
+                COMMAND ${RSVG_CONVERT} -w 150 -h 150 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/Square150x150Logo.png"
                 DEPENDS "${APPX_ICON_SRC}"
                 COMMENT "Generating Square150x150Logo.png"
                 VERBATIM
             )
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
-                COMMAND ${RSVG_CONVERT} -w 44 -h 44 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
+                OUTPUT "${APPX_ICON_DIR}/Square44x44Logo.png"
+                COMMAND ${RSVG_CONVERT} -w 44 -h 44 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/Square44x44Logo.png"
                 DEPENDS "${APPX_ICON_SRC}"
                 COMMENT "Generating Square44x44Logo.png"
                 VERBATIM
             )
             add_custom_command(
-                OUTPUT "${CMAKE_BINARY_DIR}/StoreLogo.png"
-                COMMAND ${RSVG_CONVERT} -w 50 -h 50 "${APPX_ICON_SRC}" -o "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                OUTPUT "${APPX_ICON_DIR}/StoreLogo.png"
+                COMMAND ${RSVG_CONVERT} -w 50 -h 50 "${APPX_ICON_SRC}" -o "${APPX_ICON_DIR}/StoreLogo.png"
                 DEPENDS "${APPX_ICON_SRC}"
                 COMMENT "Generating StoreLogo.png"
                 VERBATIM
             )
             add_custom_target(appx_icons ALL DEPENDS
-                "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
-                "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
-                "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                "${APPX_ICON_DIR}/Square150x150Logo.png"
+                "${APPX_ICON_DIR}/Square44x44Logo.png"
+                "${APPX_ICON_DIR}/StoreLogo.png"
             )
             install(
                 FILES
-                    "${CMAKE_BINARY_DIR}/Square150x150Logo.png"
-                    "${CMAKE_BINARY_DIR}/Square44x44Logo.png"
-                    "${CMAKE_BINARY_DIR}/StoreLogo.png"
+                    "${APPX_ICON_DIR}/Square150x150Logo.png"
+                    "${APPX_ICON_DIR}/Square44x44Logo.png"
+                    "${APPX_ICON_DIR}/StoreLogo.png"
                 DESTINATION "Assets"
                 COMPONENT applications
             )
