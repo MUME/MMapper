@@ -159,7 +159,7 @@ void FindRoomsDlg::slot_findClicked()
             item->setText(1, roomName);
             item->setToolTip(0, toolTip);
             item->setToolTip(1, toolTip);
-        };
+        }
     } catch (const std::exception &ex) {
         qWarning() << "Exception: " << ex.what();
         QMessageBox::critical(this,
