@@ -263,10 +263,13 @@ struct NODISCARD MainWindow::AsyncBase
 {
 public:
     const std::shared_ptr<ProgressCounter> progressCounter;
+    const CancelDispositionEnum cancelDisposition = CancelDispositionEnum::Allow;
 
 public:
-    explicit AsyncBase(std::shared_ptr<ProgressCounter> pc)
+    explicit AsyncBase(std::shared_ptr<ProgressCounter> pc,
+                       const CancelDispositionEnum cancelDisposition_)
         : progressCounter{std::move(pc)}
+        , cancelDisposition{cancelDisposition_}
     {
         if (!progressCounter) {
             throw std::invalid_argument("pc");
@@ -285,12 +288,16 @@ public:
     NODISCARD PollResultEnum poll() { return poll(std::chrono::milliseconds{0}); }
     void request_cancel();
     NODISCARD bool requested_cancel() const;
+    NODISCARD bool is_allowed_to_cancel() const;
 };
 
 MainWindow::AsyncBase::~AsyncBase() = default;
 
 void MainWindow::AsyncBase::request_cancel()
 {
+    if (!is_allowed_to_cancel()) {
+        return;
+    }
     progressCounter->requestCancel();
     virt_request_cancel();
 }
@@ -298,6 +305,11 @@ void MainWindow::AsyncBase::request_cancel()
 bool MainWindow::AsyncBase::requested_cancel() const
 {
     return progressCounter->requestedCancel();
+}
+
+bool MainWindow::AsyncBase::is_allowed_to_cancel() const
+{
+    return cancelDisposition == CancelDispositionEnum::Allow;
 }
 
 MainWindow::AsyncTask::AsyncTask(QObject *parent)
@@ -337,7 +349,7 @@ void MainWindow::AsyncTask::tick()
         return;
     }
 
-    if (m_task->poll() != PollResultEnum::Finished) {
+    if (deref(m_task).poll() != PollResultEnum::Finished) {
         return;
     }
 
@@ -347,7 +359,12 @@ void MainWindow::AsyncTask::tick()
 
 void MainWindow::AsyncTask::request_cancel()
 {
-    m_task->request_cancel();
+    deref(m_task).request_cancel();
+}
+
+bool MainWindow::AsyncTask::is_allowed_to_cancel() const
+{
+    return deref(m_task).is_allowed_to_cancel();
 }
 
 void MainWindow::AsyncTask::reset()
@@ -403,7 +420,7 @@ public:
                          UniqueStorage ps,
                          const QString &dialogText,
                          const CancelDispositionEnum allow_cancel)
-        : AsyncBase{std::move(pc)}
+        : AsyncBase{std::move(pc), allow_cancel}
         , mainWindow{mw}
         , fileName{name}
         , pDevice(std::move(pd))

@@ -271,6 +271,7 @@ private:
         void begin(std::unique_ptr<AsyncBase> task);
         void tick();
         void request_cancel();
+        NODISCARD bool is_allowed_to_cancel() const;
 
     private:
         void reset();
