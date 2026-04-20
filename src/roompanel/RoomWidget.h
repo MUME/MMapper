@@ -16,9 +16,10 @@
 #include <QWidget>
 #include <QtCore>
 
+class RoomManager;
 class RoomMobs;
 class QObject;
-class RoomManager;
+class QTableView;
 
 class NODISCARD_QOBJECT RoomModel final : public QAbstractTableModel
 {
@@ -67,7 +68,8 @@ class NODISCARD_QOBJECT RoomWidget final : public QWidget
     Q_OBJECT
 
 private:
-    RoomModel m_model;
+    RoomModel *m_model = nullptr;
+    QTableView *m_table = nullptr;
     RoomManager &m_roomManager;
 
 public:

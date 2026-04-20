@@ -209,7 +209,6 @@ void RoomModel::update()
 // ------------------------------- RoomWidget ----------------------------------
 RoomWidget::RoomWidget(RoomManager &rm, QWidget *const parent)
     : QWidget{parent}
-    , m_model{this, rm.getRoom()}
     , m_roomManager{rm}
 {
     auto *layout = new QVBoxLayout(this);
@@ -217,16 +216,18 @@ RoomWidget::RoomWidget(RoomManager &rm, QWidget *const parent)
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    auto *table = new QTableView(this);
-    table->setSelectionMode(QAbstractItemView::ContiguousSelection);
-    table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    table->horizontalHeader()->setStretchLastSection(false);
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-    table->setModel(&m_model);
-    layout->addWidget(table);
+    m_table = new QTableView(this);
+    m_model = new RoomModel(m_table, rm.getRoom());
+    m_table->setSelectionMode(QAbstractItemView::ContiguousSelection);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_table->horizontalHeader()->setStretchLastSection(false);
+    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    m_table->setModel(m_model);
+    layout->addWidget(m_table);
 
     // Minimize row height
-    table->verticalHeader()->setDefaultSectionSize(table->verticalHeader()->minimumSectionSize());
+    m_table->verticalHeader()->setDefaultSectionSize(
+        m_table->verticalHeader()->minimumSectionSize());
 
     connect(&m_roomManager, &RoomManager::sig_updateWidget, this, &RoomWidget::slot_update);
 
@@ -240,7 +241,7 @@ RoomWidget::~RoomWidget()
 
 void RoomWidget::slot_update()
 {
-    m_model.update();
+    deref(m_model).update();
 }
 
 void RoomWidget::readSettings()
