@@ -1556,8 +1556,16 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
 
 void MainWindow::closeEvent(QCloseEvent *const event)
 {
-    // REVISIT: wait and see if we're actually exiting first?
-    writeSettings();
+    qInfo() << MM_SOURCE_LOCATION().function_name();
+
+    if (m_asyncTask) {
+        // first check avoids prompting to save while saving.
+        if (!m_asyncTask.is_allowed_to_cancel()) {
+            qInfo() << "Note: Ignoring close request because the current async task cannot be canceled.";
+            event->ignore();
+            return;
+        }
+    }
 
     if (!maybeSave()) {
         event->ignore();
@@ -1565,9 +1573,24 @@ void MainWindow::closeEvent(QCloseEvent *const event)
     }
 
     if (m_asyncTask) {
-        qInfo() << "Attempting to async task for faster shutdown";
-        m_progressDlg->reject();
+        // second check is in case we just scheduled a save.
+        if (!m_asyncTask.is_allowed_to_cancel()) {
+            qInfo() << "Note: Ignoring close request because the scheduled async task cannot be canceled.";
+            event->ignore();
+            return;
+        }
+        if (m_asyncTask.isWorking()) {
+            qInfo() << "Attempting to cancel async task for faster shutdown";
+            m_asyncTask.request_cancel();
+        }
+        if (auto dlg = m_progressDlg.get()) {
+            qInfo() << "Attempting to reject the progress dialog for faster shutdown";
+            dlg->reject();
+        }
     }
+
+    writeSettings();
+
     event->accept();
 }
 
