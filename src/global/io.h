@@ -135,6 +135,8 @@ static_assert(sizeof(ErrorNumberMessage) == 1024);
 
 NODISCARD extern bool fsync(QFile &) CAN_THROW;
 
+extern void rename(const QString &from, const QString &to) CAN_THROW;
+
 NODISCARD extern IOResultEnum fsyncNoexcept(QFile &) noexcept;
 
 NODISCARD extern bool tuneKeepAlive(qintptr socketDescriptor,
