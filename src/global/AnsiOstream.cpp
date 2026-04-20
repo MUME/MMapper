@@ -12,6 +12,12 @@
 
 #include <sstream>
 
+namespace {
+constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+constexpr auto red = getRawAnsi(AnsiColor16Enum::red);
+constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
+} // namespace
+
 void AnsiOstream::writeQuotedWithColor(const RawAnsi &normalAnsi,
                                        const RawAnsi &escapeAnsi,
                                        const std::string_view sv,
@@ -189,6 +195,37 @@ void AnsiOstream::writeWithEmbeddedAnsi(const std::string_view sv)
             write(invalidAnsi);
         },
         [this](std::string_view nonAnsi) { write(nonAnsi); });
+}
+
+void formatPercent(AnsiOstream &aos,
+                   const RawAnsi numberColor,
+                   const RawAnsi pctColor,
+                   const size_t value)
+{
+    auto raii = aos.getStateRestorer();
+    const auto pct = std::to_string(std::clamp<size_t>(value, 0, 100));
+    aos << numberColor << pct << pctColor << "%";
+}
+
+void formatException(AnsiOstream &aos, const std::exception_ptr &ex_ptr, const std::string_view when)
+{
+    if (!ex_ptr) {
+        throw std::invalid_argument("ex_ptr");
+    }
+
+    aos << ColoredValue{red, "Exception"};
+    if (!when.empty()) {
+        aos << " (" << when << ")";
+    }
+    aos << ": ";
+    try {
+        std::rethrow_exception(ex_ptr);
+    } catch (const std::exception &ex) {
+        aos << ColoredQuotedStringView{green, yellow, ex.what()};
+    } catch (...) {
+        aos << "(unknown exception).";
+    }
+    aos << AnsiOstream::endl;
 }
 
 namespace { // anonymous

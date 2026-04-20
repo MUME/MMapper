@@ -17,7 +17,7 @@ void ProgressCounter::setNewTask(const ProgressMsg &currentTask, const size_t ne
 
     std::lock_guard<std::mutex> lock{m_mutex};
     m_status.msg = currentTask;
-    m_status.reset(newTotalSteps);
+    m_status.reset(Badge<ProgressCounter>{}, newTotalSteps);
 }
 
 void ProgressCounter::setCurrentTask(const ProgressMsg &currentTask)
@@ -65,7 +65,7 @@ ProgressCounter::Status ProgressCounter::getStatus() const
 void ProgressCounter::reset()
 {
     std::lock_guard<std::mutex> lock{m_mutex};
-    m_status.reset();
+    m_status.reset(Badge<ProgressCounter>{});
 }
 
 bool tags::TagProgressMsg::isValid(std::string_view /*sv*/)

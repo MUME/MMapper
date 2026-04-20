@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiOstream.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
 #include "../group/GroupManagerApi.h"
@@ -207,24 +208,33 @@ public:
         m_outputs.onSendToUser(source, s, goAhead);
     }
 
-    inline void sendToUser(const SendToUserSourceEnum source, const QByteArray &arr)
+    void sendToUser(const SendToUserSourceEnum source, const QByteArray &arr)
     {
         sendToUser(source, QString::fromUtf8(arr), false);
     }
-    inline void sendToUser(const SendToUserSourceEnum source, const std::string_view s)
+    void sendToUser(const SendToUserSourceEnum source, const std::string_view s)
     {
         sendToUser(source, mmqt::toQStringUtf8(s));
     }
-    inline void sendToUser(const SendToUserSourceEnum source, const char *const s)
+    void sendToUser(SendToUserSourceEnum source, std::nullptr_t) = delete;
+    void sendToUser(const SendToUserSourceEnum source, const char *const s)
     {
-        assert(s != nullptr);
-        if (s != nullptr) {
-            sendToUser(source, std::string_view{s});
+        if (s == nullptr) {
+            throw std::invalid_argument("s");
         }
+        sendToUser(source, std::string_view{s});
     }
-    inline void sendToUser(const SendToUserSourceEnum source, const QString &s)
+    void sendToUser(const SendToUserSourceEnum source, const QString &s)
     {
         sendToUser(source, s, false);
+    }
+
+    // nearly all AnsiOstream formatted sends will be "FromMMapper".
+    void sendToUser(const std::function<void(AnsiOstream &)> &callback,
+                    SendToUserSourceEnum source = SendToUserSourceEnum::FromMMapper);
+    void sendToUser(SendToUserSourceEnum source, const std::function<void(AnsiOstream &)> &callback)
+    {
+        sendToUser(callback, source);
     }
 
 protected:
@@ -255,6 +265,7 @@ protected:
 protected:
     NODISCARD RoomId getNextPosition() const;
     NODISCARD RoomId getTailPosition() const;
+    NODISCARD RoomHandle getTailHandle() const;
 
 protected:
     void pathChanged() { m_outputs.onShowPath(m_commonData.queue); }
@@ -402,6 +413,7 @@ private:
     void openVoteURL();
     void doBackCommand();
     void doConfig(StringView view);
+    void doTasksCommand(StringView args);
 
     NODISCARD bool isConnected();
     void doConnectToHost();

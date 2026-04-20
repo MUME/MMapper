@@ -13,6 +13,7 @@
 #include "../global/View.h"
 #include "../global/concepts.h"
 #include "../global/progresscounter.h"
+#include "../global/unquote.h"
 #include "../map/CommandId.h"
 #include "../map/DoorFlags.h"
 #include "../map/ExitFlags.h"
@@ -20,8 +21,10 @@
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../observer/gameobserver.h"
+#include "../syntax/Sublist.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
+#include "../syntax/syntax-helpers.h"
 #include "../viewers/AnsiViewWindow.h"
 #include "../viewers/LaunchAsyncViewer.h"
 #include "Abbrev.h"
@@ -196,16 +199,19 @@ const Abbrev cmdConfig{"config", 4};
 const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
+// TODO: move this to a sub-command of _map
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroup{"group", 2};
 const Abbrev cmdHelp{"help", 2};
 const Abbrev cmdHotkey{"hotkey", 3};
 const Abbrev cmdMap{"map"};
 const Abbrev cmdMark{"mark", 3};
+// TODO: move this to a sub-command of _map
 const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
+const Abbrev cmdTasks{"tasks", 3};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdTimer{"timer", 5};
 const Abbrev cmdVote{"vote", 2};
@@ -957,7 +963,24 @@ void AbstractParser::doMapCommand(StringView input)
 
     auto checkConsistency = [this]() {
         sendToUser(SendToUserSourceEnum::FromMMapper, "Attempting to check map consistency...\n");
-        emit m_mapData.sig_checkMapConsistency();
+        launchAsyncAnsiViewerWorker<Map>(
+            "map check-consistency",
+            "Map Consistency Report",
+            m_mapData.getCurrentMap(),
+            [](ProgressCounter &pc, AnsiOstream &aos, Map &map) {
+                try {
+                    map.checkConsistency(pc);
+                } catch (...) {
+                    formatException(aos, std::current_exception(), "during map consistency check");
+                    return;
+                }
+
+                // NOTE: Ideally it might be nice to see if the map we just checked
+                // is the same map that's currently loaded, but there's not a safe
+                // way to do that from the background thread.
+                aos << ColoredValue{green, "Success"} << ": Map is consistent.\n";
+            },
+            AsyncWorkerSendResultEnum::ToUser);
     };
 
     auto revert = [this]() {
@@ -965,8 +988,8 @@ void AbstractParser::doMapCommand(StringView input)
 
         try {
             map.revert();
-        } catch (const std::exception &ex) {
-            sendToUser(SendToUserSourceEnum::FromMMapper, std::string{"Exception: "} + ex.what());
+        } catch (...) {
+            global::sendExceptionToUser(std::current_exception(), "during map revert");
             return;
         }
 
@@ -1139,6 +1162,14 @@ void AbstractParser::initSpecialCommandMap()
     }
 
     // misc commands
+
+    add(
+        cmdTasks,
+        [this](const View<StringView> /*s*/, StringView rest) -> bool {
+            this->doTasksCommand(rest);
+            return true;
+        },
+        makeSimpleHelp("List or manage background tasks."));
 
     add(
         cmdBack,
@@ -1364,4 +1395,79 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     const auto &s = rec.fullCommand;
     const auto matched = std::vector<StringView>{StringView{s}};
     return rec.callback(matched, args);
+}
+
+void AbstractParser::doTasksCommand(StringView rest)
+{
+    const auto argInt = syntax::TokenMatcher::alloc<syntax::ArgInt>();
+
+    /////
+
+    const auto doTaskList = syntax::Accept(
+        [](User &user, const Pair * /*args*/) {
+            AnsiOstream &aos = user.getOstream();
+            async_tasks::report_status(aos);
+        },
+        "list background tasks");
+
+    // _async task cancel all
+    const auto doTaskCancelAll = syntax::Accept(
+        [](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[0].getString() == "cancel" && argv[1].getString() == "all");
+
+            aos << "Attempting to cancel all Async Tasks...\n";
+            async_tasks::cancel_all();
+        },
+        "cancel all async tasks");
+
+    // _async task <int> status
+    const auto doTaskStatus = syntax::Accept(
+        [](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[1].getString() == "status");
+
+            const auto id = argv[0].getInt();
+            if (id < 0) {
+                aos << "Error: cannot show status for invalid async task id: "
+                    << ColoredValue{red, id} << ".\n";
+                return;
+            }
+            async_tasks::report_status(aos, static_cast<uint32_t>(id));
+        },
+        "show status for async tasks");
+
+    // _async task <int> cancel
+    const auto doTaskCancel = syntax::Accept(
+        [](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[1].getString() == "cancel");
+
+            const auto id = argv[0].getInt();
+            if (id < 0) {
+                aos << "Error: cannot cancel invalid async task id: " << ColoredValue{red, id}
+                    << ".\n";
+                return;
+            }
+            std::ignore = async_tasks::cancel(aos, static_cast<uint32_t>(id));
+        },
+        "cancel async task");
+
+    /////
+
+    const auto taskSyntax = syn(syn("list", doTaskList),
+                                syn("cancel", "all", doTaskCancelAll),
+                                syn(argInt, //
+                                    syn("status", doTaskStatus),
+                                    // revisit: add option to change the output target
+                                    // "task 1234 output <terminal|window|both>" ?
+                                    syn("cancel", doTaskCancel)));
+
+    eval("async", taskSyntax, rest);
 }

@@ -12,6 +12,7 @@
 #include "../global/RAII.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
+#include "../global/Timer.h"
 #include "../global/logging.h"
 #include "../global/parserutils.h"
 #include "../global/progresscounter.h"
@@ -27,6 +28,7 @@
 #include "../syntax/Accept.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
+#include "../viewers/LaunchAsyncViewer.h"
 #include "Abbrev.h"
 #include "AbstractParser-Commands.h"
 #include "AbstractParser-Utils.h"
@@ -47,13 +49,22 @@
 #include <utility>
 #include <vector>
 
+#ifdef __cpp_lib_format // c++20
+#include <format>
+#endif
+
+#include "../mainwindow/mainwindow.h"
+
 #include <QDesktopServices>
-#include <QMessageLogContext>
 #include <QObject>
-#include <QVariant>
-#include <QtCore>
 
 using namespace char_consts;
+
+namespace { // anonymous
+constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+constexpr auto red = getRawAnsi(AnsiColor16Enum::red);
+constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
+} // namespace
 
 NODISCARD static char getTerrainSymbol(const RoomTerrainEnum type)
 {
@@ -256,6 +267,11 @@ RoomId ParserCommon::getTailPosition() const
     return last.value_or(id);
 }
 
+RoomHandle ParserCommon::getTailHandle() const
+{
+    return m_mapData.getRoomHandle(getTailPosition());
+}
+
 void ParserCommon::emulateExits(AnsiOstream &os, const CommandEnum move)
 {
     const auto nextRoom = std::invoke([this, &move]() -> RoomId {
@@ -322,25 +338,28 @@ void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
     }
 }
 
-NODISCARD static QString compressDirections(const QString &original)
+static void compressDirections(AnsiOstream &aos,
+                               const std::string_view original,
+                               const bool wantDelta)
 {
-    QString ans;
     int curnum = 0;
-    QChar curval = char_consts::C_NUL;
+    char curval = C_NUL;
     Coordinate delta;
-    const auto addDirs = [&ans, &curnum, &curval, &delta]() {
+    const auto addDirs = [&aos, &curnum, &curval, &delta]() {
         assert(curnum >= 1);
-        assert(curval != char_consts::C_NUL);
+        assert(curval != C_NUL);
         if (curnum > 1) {
-            ans.append(QString::number(curnum));
+            // should the number and letter be different colors?
+            // or perhaps should the coloring alternate? as if (2e)(5n)
+            aos << ColoredValue{green, curnum};
         }
-        ans.append(curval);
+        aos << ColoredValue{green, curval};
 
         const auto dir = Mmapper2Exit::dirForChar(curval);
         delta += ::exitDir(dir) * curnum;
     };
 
-    for (const QChar c : original) {
+    for (const char c : original) {
         if (curnum != 0 && curval == c) {
             ++curnum;
         } else {
@@ -355,72 +374,132 @@ NODISCARD static QString compressDirections(const QString &original)
         addDirs();
     }
 
-    bool wantDelta = true;
     if (wantDelta) {
         auto addNumber =
-            [&curnum, &curval, &addDirs, &ans](const int n, const char pos, const char neg) {
+            [&curnum, &curval, &addDirs, &aos](const int n, const char pos, const char neg) {
                 if (n == 0) {
                     return;
                 }
                 curnum = std::abs(n);
                 curval = (n < 0) ? neg : pos;
-                ans += char_consts::C_SPACE;
+                aos << C_SPACE;
                 addDirs();
             };
 
         if (delta.isNull()) {
-            ans += " (here)";
+            aos << " (here)";
         } else {
-            ans += " (total:";
+            aos << " (total:";
             addNumber(delta.x, 'e', 'w');
             addNumber(delta.y, 'n', 's');
             addNumber(delta.z, 'u', 'd');
-            ans += ")";
+            aos << ")";
         }
     }
-
-    return ans;
 }
 
 class NODISCARD ShortestPathEmitter final : public ShortestPathRecipient
 {
 private:
-    AbstractParser &parser;
+    AnsiOstream &m_aos;
+    RoomHandle m_from;
+    size_t m_num_reported = 0;
 
 public:
-    explicit ShortestPathEmitter(AbstractParser &_parser)
-        : parser(_parser)
+    explicit ShortestPathEmitter(AnsiOstream &aos, const RoomHandle from)
+        : m_aos{aos}
+        , m_from{from}
     {}
     ~ShortestPathEmitter() final;
+
+private:
+    NODISCARD static auto N(const auto n) { return ColoredValue{green, n}; }
+    NODISCARD static auto QSV(const std::string_view sv)
+    {
+        return ColoredQuotedStringView{green, yellow, sv};
+    }
+
+    // This is the taxi-cab distance in map space, which can be vastly different from "moves space"
+    // (e.g. redhorn and moria are very far away in map space, but very close in moves space).
+    static void format_map_delta(AnsiOstream &aos, const Coordinate from, const Coordinate to)
+    {
+        // should we consider expressing this as 5n 3e, or is it better to avoid that confusion?
+        const auto d = to - from;
+        aos << "[" << N(d.x) << ", " << N(d.y) << ", " << N(d.z) << "]";
+    }
+
+    static void format_name_id(AnsiOstream &aos, const RoomHandle &r)
+    {
+        aos << QSV(r.getName().getStdStringViewUtf8())
+            << " (Room Id: " << N(r.getIdExternal().asUint32()) << ")";
+    }
 
 private:
     void virt_receiveShortestPath(QVector<SPNode> spnodes, const int endpoint) final
     {
         assert(0 < endpoint && endpoint < spnodes.size());
 
+        DECL_TIMER(t, "receiveShortestPath");
+
+        if (m_num_reported == 0) {
+            m_aos << "Searching from ";
+            format_name_id(m_aos, m_from);
+            m_aos << "...\n\n";
+        }
+
+        ++m_num_reported;
+
         // Caution: spnode is modified here.
         const SPNode *spnode = &spnodes[endpoint];
 
-        auto name = deref(spnode).r.getName();
-        parser.sendToUser(SendToUserSourceEnum::FromMMapper,
-                          "Distance " + std::to_string(spnode->dist) + ": " + name.toStdStringUtf8()
-                              + "\n");
-        QString dirs;
+        const auto &r = deref(spnode).r;
+        const auto pos = r.getPosition();
+        const auto dist = std::invoke([d = spnode->dist]() -> std::string {
+#ifdef __cpp_lib_format // c++20
+            return std::format("{:.2f}", d);
+#else
+            return std::to_string(d); // prints a ton of extra trailing zeros
+#endif
+        });
+
+        // revisit (low priority): is there any way to make this clickable in the mmapper native client?
+
+        m_aos << "Distance " << N(std::string_view{dist}) << ": ";
+        format_name_id(m_aos, r);
+        m_aos << ", Delta: ";
+        format_map_delta(m_aos, m_from.getPosition(), pos); // map space
+        m_aos << AnsiOstream::endl;
+
+        std::string dirs;
         while (deref(spnode).parent >= 0) {
             if (&spnodes[spnode->parent] == spnode) {
-                parser.sendToUser(SendToUserSourceEnum::FromMMapper, "ERROR: loop\n");
+                m_aos << ColoredValue{red, "ERROR"} << ": loop" << AnsiOstream::endl;
                 break;
             }
-            dirs.append(Mmapper2Exit::charForDir(spnode->lastdir));
+            dirs += Mmapper2Exit::charForDir(spnode->lastdir);
             spnode = &spnodes[spnode->parent]; // spnode now points to a new node.
         }
         std::reverse(dirs.begin(), dirs.end());
-        parser.sendToUser(SendToUserSourceEnum::FromMMapper,
-                          "dirs: " + compressDirections(dirs) + "\n");
+
+        // REVISIT: it might look nicer to indent the arrow, but some users' clients may trigger on
+        // /^-> dirs: /, so we probably can't change this?
+        m_aos << ColoredValue{yellow, "->"} << " dirs: ";
+        const bool wantMovesDelta = true;
+        compressDirections(m_aos, dirs, wantMovesDelta); // result is in moves space
+
+        m_aos << AnsiOstream::endl;
     }
 };
 
-ShortestPathEmitter::~ShortestPathEmitter() = default;
+ShortestPathEmitter::~ShortestPathEmitter()
+{
+    if (m_num_reported == 0) {
+        m_aos << "No results. Sorry.\n";
+    } else {
+        const auto plural = (m_num_reported == 1) ? "" : "s";
+        m_aos << "\nTotal: " << N(m_num_reported) << " result" << plural << ".\n";
+    }
+}
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
@@ -438,12 +517,26 @@ void AbstractParser::searchCommand(const RoomFilter &f)
     onNewRoomSelection(SigRoomSelection{tmpSel});
 }
 
+// REVISIT: is it actually safe to access f by reference?
 void AbstractParser::dirsCommand(const RoomFilter &f)
 {
-    ShortestPathEmitter sp_emitter(*this);
-    if (const auto r = m_mapData.findRoomHandle(getTailPosition())) {
-        MapData::shortestPathSearch(r, sp_emitter, f, 10, 0);
+    // revisit: we actually need "here" to be the current room, not invalid.
+    const auto here = getTailHandle();
+    if (!here.exists()) {
+        sendToUser(SendToUserSourceEnum::FromMMapper, "No current room.\n");
+        return;
     }
+
+    launchAsyncAnsiViewerWorker<int>(
+        getPrefixChar() + std::string("dirs command"),
+        "Directions",
+        42, // unused
+        /* note: f is purposely copied. We cannot pass a reference to the async process */
+        [f, here](ProgressCounter &pc, AnsiOstream &aos, int /* unused */) {
+            ShortestPathEmitter sp_emitter{aos, here};
+            MapData::shortestPathSearch(pc, here, sp_emitter, f, 10, 0);
+        },
+        AsyncWorkerSendResultEnum::ToUser);
 }
 
 ExitDirEnum AbstractParser::tryGetDir(StringView &view)
@@ -978,6 +1071,31 @@ void ParserCommon::sendRoomExitsInfoToUser(AnsiOstream &os, const RoomHandle &r)
     }
 }
 
+void ParserCommon::sendToUser(const std::function<void(AnsiOstream &)> &callback,
+                              const SendToUserSourceEnum source)
+{
+    std::ostringstream oss;
+    {
+        AnsiOstream aos{oss};
+        try {
+            callback(aos);
+            // There's no simple way to tell if it's empty.
+        } catch (...) {
+            aos << "Exception while formatting message:\n";
+            formatException(aos, std::current_exception());
+        }
+        if (!aos.hasNewline()) {
+            aos.writeNewline();
+        }
+    }
+    const auto str = std::move(oss).str();
+    if (str.empty() || str == "\n") {
+        MMLOG() << "Warning: formatting sendToUser() generated no output.";
+    }
+
+    sendToUser(source, std::string_view{str});
+}
+
 void ParserCommon::sendPromptToUser()
 {
     auto &overrideSendPrompt = m_commonData.overrideSendPrompt;
@@ -1043,8 +1161,8 @@ void AbstractParser::executeMudCommand(const QString &command)
 // TODO: remove conversions to Qt types in this function
 void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorActionEnum action)
 {
-    const auto id = getTailPosition();
-    auto room = m_mapData.getRoomHandle(id);
+    // REVISIT: why is room unused?
+    const auto room = getTailHandle();
 
     QString command = getCommandName(action) + " exit";
     if (isNESWUD(direction)) {

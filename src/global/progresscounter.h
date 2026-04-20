@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
+#include "Badge.h"
 #include "TaggedString.h"
 #include "macros.h"
 
@@ -17,6 +18,7 @@ struct NODISCARD TagProgressMsg final
 } // namespace tags
 
 using ProgressMsg = TaggedBoxedStringUtf8<tags::TagProgressMsg>;
+enum class NODISCARD AllowCancelEnum : uint8_t { Forbid, Allow };
 
 struct NODISCARD ProgressCanceledException final : public std::runtime_error
 {
@@ -39,7 +41,7 @@ public:
             }
             return std::clamp<size_t>((100 * seen) / expected, 0, 100);
         }
-        void reset(size_t expected_ = 0)
+        void reset(Badge<ProgressCounter>, size_t expected_ = 0)
         {
             seen = 0;
             expected = expected_;
@@ -51,10 +53,13 @@ private:
     // but it allows us to keep the distinction between read-only and read-write member functions.
     mutable std::mutex m_mutex;
     Status m_status;
+    const AllowCancelEnum m_allowCancel = AllowCancelEnum::Allow;
     std::atomic_bool m_requested_cancel{false};
 
 public:
-    ProgressCounter() = default;
+    explicit ProgressCounter(const AllowCancelEnum allowCancel = AllowCancelEnum::Allow)
+        : m_allowCancel{allowCancel}
+    {}
     ~ProgressCounter() = default;
     ProgressCounter(const ProgressCounter &) = delete;
     ProgressCounter &operator=(const ProgressCounter &) = delete;
@@ -62,7 +67,7 @@ public:
 private:
     void checkCancel() const
     {
-        if (requestedCancel()) {
+        if (hasRequestedCancel()) {
             throw ProgressCanceledException();
         }
     }
@@ -73,11 +78,17 @@ public:
     void step(size_t steps = 1u);
     void increaseTotalStepsBy(size_t steps);
     void reset();
-    void requestCancel() { m_requested_cancel = true; }
+    void requestCancel()
+    {
+        if (allowCancel() == AllowCancelEnum::Allow) {
+            m_requested_cancel = true;
+        }
+    }
 
 public:
     NODISCARD ProgressMsg getCurrentTask() const;
     NODISCARD size_t getPercentage() const;
     NODISCARD Status getStatus() const;
-    NODISCARD bool requestedCancel() const { return m_requested_cancel; }
+    NODISCARD AllowCancelEnum allowCancel() const { return m_allowCancel; }
+    NODISCARD bool hasRequestedCancel() const { return m_requested_cancel; }
 };

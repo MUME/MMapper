@@ -18,8 +18,8 @@
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
 #include "../global/AsyncTasks.h"
+#include "../global/PrintUtils.h"
 #include "../global/SendToUser.h"
-#include "../global/SignalBlocker.h"
 #include "../global/Version.h"
 #include "../global/window_utils.h"
 #include "../group/groupwidget.h"
@@ -37,10 +37,12 @@
 #include "../viewers/TopLevelWindows.h"
 #include "AudioVolumeSlider.h"
 #include "MapZoomSlider.h"
+#include "TasksPanel.h"
 #include "UpdateDialog.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
+#include "mainwindow-async.h"
 #include "metatypes.h"
 #include "roomeditattrdlg.h"
 #include "utils.h"
@@ -60,14 +62,15 @@
 #include <QUrl>
 #include <QtWidgets>
 
-NODISCARD static const char *get_type_name(const AsyncTypeEnum mode)
+NODISCARD static const char *get_type_name(const AsyncIOTypeEnum mode)
 {
     switch (mode) {
-    case AsyncTypeEnum::Load:
+        using enum AsyncIOTypeEnum;
+    case Load:
         return "load";
-    case AsyncTypeEnum::Merge:
+    case Merge:
         return "merge";
-    case AsyncTypeEnum::Save:
+    case Save:
         return "save";
     default:
         assert(false);
@@ -90,13 +93,12 @@ static void addApplicationFont()
         // Use the application font here because we can guarantee that resources have been loaded.
         // REVISIT: Move this to the configuration?
         if (getConfig().integratedClient.font.isEmpty()) {
+            // TODO: Explain why mac is 20% larger.
+            static constinit int defaultFontSize = (CURRENT_PLATFORM == PlatformEnum::Mac) ? 12
+                                                                                           : 10;
             QFont defaultClientFont;
             defaultClientFont.setFamily(family.front());
-            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-                defaultClientFont.setPointSize(12);
-            } else {
-                defaultClientFont.setPointSize(10);
-            }
+            defaultClientFont.setPointSize(defaultFontSize);
             defaultClientFont.setStyleStrategy(QFont::PreferAntialias);
             setConfig().integratedClient.font = defaultClientFont.toString();
         }
@@ -105,6 +107,7 @@ static void addApplicationFont()
 
 MainWindow::~MainWindow()
 {
+    g_mainWindow = nullptr;
     mmqt::rdisconnect(this);
     async_tasks::cleanup();
     delete m_listener;
@@ -113,7 +116,7 @@ MainWindow::~MainWindow()
 
 MainWindow::MainWindow()
     : QMainWindow(nullptr, Qt::WindowFlags{})
-    , m_asyncTask(this)
+    , m_asyncIO{std::make_unique<AsyncIO>(this)}
 {
     initTopLevelWindows();
     async_tasks::init();
@@ -277,6 +280,22 @@ MainWindow::MainWindow()
         m_dockDialogTimers = dock;
     });
 
+    // Async commands
+    std::invoke([this] {
+        auto *const w = new TasksPanel{*this};
+        auto *const dock = new QDockWidget(tr("Tasks Panel"), this);
+        dock->setObjectName("DockWidgetTasks");
+        dock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+        dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetMovable);
+        addDockWidget(Qt::BottomDockWidgetArea, dock);
+        dock->setWidget(w);
+        dock->hide();
+
+        w->show();
+        m_dockDialogAsync = dock;
+    });
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
@@ -378,13 +397,10 @@ MainWindow::MainWindow()
         slot_setShowMenuBar();
     }
 
-    connect(m_mapData,
-            &MapData::sig_checkMapConsistency,
-            this,
-            &MainWindow::slot_checkMapConsistency);
     connect(m_mapData, &MapData::sig_generateBaseMap, this, &MainWindow::slot_generateBaseMap);
 
     readSettings();
+    g_mainWindow = this;
 }
 
 void MainWindow::startServices()
@@ -1153,6 +1169,10 @@ void MainWindow::slot_setMode(MapModeEnum mode)
 
 void MainWindow::disableActions(bool value)
 {
+    if constexpr (IS_DEBUG_BUILD) {
+        qDebug() << "disableActions" << value;
+    }
+
     // REVISIT: Which of these should be allowed during async actions?
     // Note: Some of the ones that would launch async actions (e.g. loading/saving)
     // would probably be blocked because we only allow one async action at a time,
@@ -1269,6 +1289,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogAdventure->toggleViewAction());
     sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
     sidepanels->addAction(m_dockDialogTimers->toggleViewAction());
+    sidepanels->addAction(m_dockDialogAsync->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1628,37 +1649,55 @@ void MainWindow::closeEvent(QCloseEvent *const event)
 {
     qInfo() << MM_SOURCE_LOCATION().function_name();
 
-    if (m_asyncTask) {
+    auto &asyncIO = getAsyncIO();
+
+    if (asyncIO.isRunningOnBackgroundThread()) {
         // first check avoids prompting to save while saving.
-        if (!m_asyncTask.is_allowed_to_cancel()) {
-            qInfo() << "Note: Ignoring close request because the current async task cannot be canceled.";
+        if (!asyncIO.is_allowed_to_cancel()) {
+            qInfo() << "Note: Ignoring close request because the current async task"
+                    << asyncIO.getTaskNameAsQString() << "cannot be canceled.";
             event->ignore();
             return;
         }
     }
 
-    if (!maybeSave()) {
+    if (!asyncIO.isClosedForBusiness() && !asyncIO.isWaitingForSaveAtShutdown() && !maybeSave()) {
         event->ignore();
         return;
     }
 
-    if (m_asyncTask) {
+    asyncIO.setClosedForBusiness();
+    async_tasks::cancel_all(); /* note: this can only cancel tasks that allow it */
+
+    if (asyncIO.isRunningOnBackgroundThread()) {
         // second check is in case we just scheduled a save.
-        if (!m_asyncTask.is_allowed_to_cancel()) {
-            qInfo() << "Note: Ignoring close request because the scheduled async task cannot be canceled.";
+        if (!asyncIO.is_allowed_to_cancel()) {
+            asyncIO.setWaitingForSaveAtShutdown();
+            qInfo() << "Note: Ignoring close request because the scheduled async task" << asyncIO
+                    << "cannot be canceled.";
             event->ignore();
+            hide();
+            setEnabled(false);
             return;
         }
-        if (m_asyncTask.isWorking()) {
-            qInfo() << "Attempting to cancel async task for faster shutdown";
-            m_asyncTask.request_cancel();
+
+        // otherwise...
+
+        {
+            qInfo() << "Attempting to cancel async task" << asyncIO << "for faster shutdown";
+            asyncIO.request_cancel();
         }
-        if (auto dlg = m_progressDlg.get()) {
+
+        if (auto dlg = asyncIO.getProgressDlg()) {
             qInfo() << "Attempting to reject the progress dialog for faster shutdown";
             dlg->reject();
         }
     }
 
+    // calling hide() here prevents any decendents of mainwindow from triggering UI updates,
+    // which means AsyncTaskListWidget won't query async_tasks after async_tasks::cleanup().
+    hide();
+    async_tasks::cleanup(); /* note: this waits */
     writeSettings();
 
     if (auto canvas = getCanvas()) {
@@ -1775,50 +1814,6 @@ void MainWindow::slot_about()
     about->open();
 }
 
-MainWindow::ProgressDialogLifetime MainWindow::createNewProgressDialog(const QString &text,
-                                                                       const bool allow_cancel)
-{
-    m_progressDlg = std::make_unique<QProgressDialog>(this);
-    QProgressDialog *const progress = m_progressDlg.get();
-    if (allow_cancel) {
-        progress->setCancelButtonText("Cancel");
-    } else {
-        QPushButton *const cb = new QPushButton("Cancel", progress);
-        cb->setEnabled(false);
-        progress->setCancelButton(cb);
-    }
-
-    progress->setWindowTitle(text);
-    progress->setMinimum(0);
-    progress->setMaximum(100);
-    progress->setValue(0);
-    progress->setMinimumWidth(this->width() / 4);
-    progress->showNormal();
-    progress->raise();
-    progress->activateWindow();
-    progress->focusWidget();
-
-    connect(progress, &QProgressDialog::canceled, this, [this, allow_cancel]() {
-        if (allow_cancel) {
-            qInfo() << "QProgressDialog::canceled()";
-            this->m_asyncTask.request_cancel();
-        }
-    });
-    connect(progress, &QProgressDialog::rejected, this, [this, allow_cancel]() {
-        if (allow_cancel) {
-            qInfo() << "QProgressDialog::rejected()";
-            this->m_asyncTask.request_cancel();
-        }
-    });
-
-    return ProgressDialogLifetime{*this};
-}
-
-void MainWindow::endProgressDialog()
-{
-    m_progressDlg.reset();
-}
-
 void MainWindow::setMapModified(bool modified)
 {
     setWindowModified(modified);
@@ -1834,16 +1829,6 @@ void MainWindow::updateMapModified()
     getCanvas()->update();
 }
 
-void MainWindow::percentageChanged(const uint32_t p)
-{
-    if (m_progressDlg == nullptr) {
-        return;
-    }
-
-    m_progressDlg->setValue(static_cast<int>(p));
-    qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-}
-
 void MainWindow::showWarning(const QString &s)
 {
     // REVISIT: shouldn't the warning have "this" as parent?
@@ -1852,7 +1837,7 @@ void MainWindow::showWarning(const QString &s)
 }
 
 void MainWindow::showAsyncFailure(const QString &fileName,
-                                  const AsyncTypeEnum mode,
+                                  const AsyncIOTypeEnum mode,
                                   const bool wasCanceled)
 {
     const char *const modeName = get_type_name(mode);

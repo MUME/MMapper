@@ -455,6 +455,9 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
             // REVISIT: check return value?
             std::ignore = parser.parse(input);
         }
+        if (!aos.hasNewline()) {
+            aos.writeNewline();
+        }
     }
     return ss.str();
 }

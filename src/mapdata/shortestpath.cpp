@@ -5,6 +5,7 @@
 #include "shortestpath.h"
 
 #include "../global/enums.h"
+#include "../global/progresscounter.h"
 #include "../global/utils.h"
 #include "../map/ExitDirection.h"
 #include "../map/ExitFlags.h"
@@ -98,7 +99,8 @@ NODISCARD static double getLength(const RawExit &e, const RoomHandle &curr, cons
     return cost;
 }
 
-void MapData::shortestPathSearch(const RoomHandle &origin,
+void MapData::shortestPathSearch(ProgressCounter &pc,
+                                 const RoomHandle &origin,
                                  ShortestPathRecipient &recipient,
                                  const RoomFilter &f,
                                  int max_hits,
@@ -115,6 +117,7 @@ void MapData::shortestPathSearch(const RoomHandle &origin,
     }
 
     const Map &map = origin.getMap();
+    pc.setNewTask(ProgressMsg("Finding shortest path"), map.getRoomsCount());
 
     QVector<SPNode> sp_nodes;
     RoomIdSet visited;
@@ -160,5 +163,6 @@ void MapData::shortestPathSearch(const RoomHandle &origin,
             sp_nodes.push_back(SPNode{nextr, spindex, thisdist + length, dir});
             future_paths.emplace(-(thisdist + length), sp_nodes.size() - 1);
         }
+        pc.step();
     }
 }
