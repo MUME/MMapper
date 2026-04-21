@@ -54,11 +54,11 @@ public:
 public:
     AbstractDebugOStream &operator<<(const char *const s)
     {
-        assert(s != nullptr);
-        auto &self = *this;
-        if (s != nullptr) {
-            self.writeUtf8(s);
+        if (s == nullptr) {
+            throw NullPointerException();
         }
+        auto &self = *this;
+        self.writeUtf8(s);
         return self;
     }
 
