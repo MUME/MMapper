@@ -1,3 +1,16 @@
+## MMapper 26.04.2 (April 21, 2026)
+
+### New Features:
+* **Desktop Web App Installation:** You can now "install" the web version of MMapper directly to your computer as a Progressive Web App (PWA). This is supported on desktop versions of **Google Chrome**, **Microsoft Edge**, and **Brave**.
+* **Faster Room Search:** We have sped up the Find Rooms dialog to search through your map significantly faster by using all your CPU cores.
+
+### Bug Fixes:
+* **Safe Saving on Exit:** The application will now wait for background saving tasks to finish before closing, ensuring the map is properly saved and fixing a critical Windows bug.
+* **Improved Exit Stability:** Fixed a critical macOS crash that occurred when closing the program by reorganizing how the internal panel components are cleaned up.
+
+### Changes & Under the Hood:
+* **Store Branding:** The build system now automatically generates all required Windows Store icons from the high-DPI SVG.
+
 ## MMapper 26.04.1 (April 15, 2026)
 
 ### New Features:
