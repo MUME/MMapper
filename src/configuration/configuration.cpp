@@ -501,12 +501,18 @@ NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t default
 
 void Configuration::read()
 {
+    if (IS_DEBUG_BUILD) {
+        qDebug() << "Reading configuration.";
+    }
     SETTINGS(conf);
     readFrom(conf);
 }
 
 void Configuration::write() const
 {
+    if (IS_DEBUG_BUILD) {
+        qDebug() << "Writing configuration.";
+    }
     SETTINGS(conf);
     writeTo(conf);
 }

@@ -87,7 +87,7 @@ static void addApplicationFont()
     if (family.isEmpty()) {
         qWarning() << "Unable to load bundled DejaVuSansMono font";
     } else {
-        // Utilize the application font here because we can gaurantee that resources have been loaded
+        // Use the application font here because we can guarantee that resources have been loaded.
         // REVISIT: Move this to the configuration?
         if (getConfig().integratedClient.font.isEmpty()) {
             QFont defaultClientFont;

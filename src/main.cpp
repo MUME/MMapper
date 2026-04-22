@@ -179,7 +179,9 @@ int main(int argc, char **argv)
     auto mw = std::make_unique<MainWindow>();
     tryAutoLoadMap(*mw);
     const int ret = QApplication::exec();
+    qDebug() << "QApplication::exec() returned" << ret;
     mw.reset();
     getConfig().write();
+    qInfo() << "Exiting main.";
     return ret;
 }
