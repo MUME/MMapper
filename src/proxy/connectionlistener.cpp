@@ -51,7 +51,21 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_gameOberver{go}
 {}
 
-ConnectionListener::~ConnectionListener() = default;
+ConnectionListener::~ConnectionListener()
+{
+    // Note: We're the owner of the proxy, so we're allowed to delete it.
+    // Deleting the proxy here somehow prevents the proxy's destructor from triggering
+    // use-after-free undefined behavior when the proxy tries to send a goodbye message
+    // to the user.
+    //
+    // Another option would be to make m_proxy an owning pointer (e.g. unique_ptr or QScopedPointer),
+    // and then make sure it's declared last so it'll be deleted first, and then make this dtor
+    // a default dtor again.
+    if (Proxy *const pProxy = m_proxy) {
+        MMLOG() << "ConnectionListener is deleting the proxy...";
+        delete pProxy;
+    }
+}
 
 void ConnectionListener::listen()
 {
