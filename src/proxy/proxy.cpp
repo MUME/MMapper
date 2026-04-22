@@ -112,11 +112,19 @@ public:
 public:
     void disconnectFromHost()
     {
+        if (m_socket == nullptr) {
+            qWarning() << "tried to disconnect from a non-existent user socket";
+            return;
+        }
         m_socket->flush();
         m_socket->disconnectFromHost();
     }
     void sendToSocket(const TelnetIacBytes &bytes)
     {
+        if (m_socket == nullptr) {
+            qWarning() << "tried to send bytes to non-existent user socket";
+            return;
+        }
         if (!m_socket->isConnected()) {
             qWarning() << "tried to send bytes to closed user socket";
             return;
