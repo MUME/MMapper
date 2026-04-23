@@ -127,14 +127,14 @@ bool MumeXmlParserBase::evalActionMap(StringView line)
 
     auto range = map.equal_range(line.firstChar());
     for (auto it = range.first; it != range.second; ++it) {
-        const std::unique_ptr<IAction> &action = it->second;
-        action->match(line);
+        const ActionHolder &action = it->second;
+        action.match(line);
     }
 
     range = map.equal_range(0);
     for (auto it = range.first; it != range.second; ++it) {
-        const std::unique_ptr<IAction> &action = it->second;
-        action->match(line);
+        const ActionHolder &action = it->second;
+        action.match(line);
     }
 
     return false;

@@ -86,50 +86,58 @@ private:
 
 Proxy::UserSocketOutputs::~UserSocketOutputs() = default;
 
+using AbstractSocketGetter = std::function<AbstractSocket *()>;
+
 class NODISCARD Proxy::UserSocket final : public QObject
 {
 private:
-    std::unique_ptr<AbstractSocket> &m_socket;
+    // This reference allows us to see
+    AbstractSocketGetter m_get_socket;
     Proxy::UserSocketOutputs &m_outputs;
 
 public:
-    explicit UserSocket(std::unique_ptr<AbstractSocket> &socket,
-                        QObject *parent,
-                        UserSocketOutputs &outputs)
+    explicit UserSocket(AbstractSocketGetter get_socket, QObject *parent, UserSocketOutputs &outputs)
         : QObject(parent)
-        , m_socket{socket}
+        , m_get_socket{std::move(get_socket)}
         , m_outputs{outputs}
     {
-        QObject::connect(socket.get(), &AbstractSocket::sig_disconnected, this, [this]() {
+        QObject::connect(getSocket(), &AbstractSocket::sig_disconnected, this, [this]() {
             m_outputs.onDisconnected();
         });
-        QObject::connect(socket.get(), &QIODevice::readyRead, this, [this]() {
+        QObject::connect(getSocket(), &QIODevice::readyRead, this, [this]() {
             m_outputs.onReadyRead();
         });
     }
     ~UserSocket() final;
 
+private:
+    NODISCARD AbstractSocket *getSocket() { return m_get_socket(); }
+
 public:
     void disconnectFromHost()
     {
-        if (m_socket == nullptr) {
+        auto *const pSocket = getSocket();
+        if (pSocket == nullptr) {
             qWarning() << "tried to disconnect from a non-existent user socket";
             return;
         }
-        m_socket->flush();
-        m_socket->disconnectFromHost();
+        auto &socket = deref(pSocket);
+        socket.flush();
+        socket.disconnectFromHost();
     }
     void sendToSocket(const TelnetIacBytes &bytes)
     {
-        if (m_socket == nullptr) {
+        auto *const pSocket = getSocket();
+        if (pSocket == nullptr) {
             qWarning() << "tried to send bytes to non-existent user socket";
             return;
         }
-        if (!m_socket->isConnected()) {
+        auto &socket = deref(pSocket);
+        if (!socket.isConnected()) {
             qWarning() << "tried to send bytes to closed user socket";
             return;
         }
-        m_socket->write(bytes.getQByteArray());
+        socket.write(bytes.getQByteArray());
     }
 };
 
@@ -285,7 +293,10 @@ void Proxy::allocUserSocket()
     auto &pipe = getPipeline();
     auto &out = pipe.outputs.user.userSocketOutputs = std::make_unique<LocalUserSocketOutputs>(
         *this);
-    pipe.user.userSocket = std::make_unique<UserSocket>(m_userSocket, this, deref(out));
+    pipe.user.userSocket
+        = std::make_unique<UserSocket>([this]() -> AbstractSocket * { return m_userSocket.get(); },
+                                       this,
+                                       deref(out));
 }
 
 void Proxy::allocMudSocket()
