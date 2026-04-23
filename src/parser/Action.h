@@ -36,9 +36,9 @@ private:
     const ActionCallback m_callback;
 
 public:
-    explicit StartsWithAction(std::string moved_str, const ActionCallback &callback)
+    explicit StartsWithAction(std::string moved_str, ActionCallback moved_callback)
         : m_match{std::move(moved_str)}
-        , m_callback{callback}
+        , m_callback{std::move(moved_callback)}
     {}
 
 private:
@@ -52,9 +52,9 @@ private:
     const ActionCallback m_callback;
 
 public:
-    explicit EndsWithAction(std::string moved_str, const ActionCallback &callback)
+    explicit EndsWithAction(std::string moved_str, ActionCallback moved_callback)
         : m_match{std::move(moved_str)}
-        , m_callback{callback}
+        , m_callback{std::move(moved_callback)}
     {}
 
 private:
@@ -75,4 +75,21 @@ private:
 };
 
 using ActionHint = char;
-using ActionRecordMap = std::unordered_multimap<ActionHint, std::unique_ptr<IAction>>;
+struct NODISCARD ActionHolder final
+{
+private:
+    std::unique_ptr<IAction> m_ptr;
+
+public:
+    ActionHolder() noexcept = default;
+    ~ActionHolder() = default;
+    DEFAULT_MOVES_DELETE_COPIES(ActionHolder);
+    explicit ActionHolder(std::unique_ptr<IAction> ptr) CAN_THROW : m_ptr{std::move(ptr)}
+    {
+        std::ignore = deref(m_ptr); // called for side effect
+    }
+
+public:
+    void match(const StringView line) const { deref(m_ptr).match(line); }
+};
+using ActionRecordMap = std::unordered_multimap<ActionHint, ActionHolder>;
