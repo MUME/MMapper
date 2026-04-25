@@ -84,7 +84,7 @@ class NODISCARD_QOBJECT MainWindow final : public QMainWindow
 
 private:
     MapWindow *m_mapWindow = nullptr;
-    QTextBrowser *logWindow = nullptr;
+    QTextBrowser *m_logWindow = nullptr;
 
     QDockWidget *m_dockDialogRoom = nullptr;
     QDockWidget *m_dockDialogLog = nullptr;

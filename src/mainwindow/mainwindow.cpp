@@ -122,10 +122,13 @@ MainWindow::MainWindow()
     addApplicationFont();
     registerMetatypes();
 
-    m_mapData = new MapData(this);
-    MapData &mapData = deref(m_mapData);
+    std::invoke([this] {
+        auto *const mapData = new MapData(this);
+        mapData->setObjectName("MapData");
 
-    m_mapData->setObjectName("MapData");
+        m_mapData = mapData;
+    });
+
     setCurrentFile("");
 
     m_prespammedPath = new PrespammedPath(this);
@@ -135,100 +138,144 @@ MainWindow::MainWindow()
 
     m_gameObserver = std::make_unique<GameObserver>();
 
-    m_mapWindow = new MapWindow(mapData,
+    m_mapWindow = new MapWindow(deref(m_mapData),
                                 deref(m_gameObserver),
                                 deref(m_prespammedPath),
                                 deref(m_groupManager),
                                 this);
     setCentralWidget(m_mapWindow);
 
-    m_pathMachine = new Mmapper2PathMachine(mapData, this);
-    m_pathMachine->setObjectName("Mmapper2PathMachine");
+    std::invoke([this] {
+        auto *const pathMachine = new Mmapper2PathMachine(deref(m_mapData), this);
+        pathMachine->setObjectName("Mmapper2PathMachine");
+
+        m_pathMachine = pathMachine;
+    });
 
     m_mediaLibrary = new MediaLibrary(this);
-    m_adventureTracker = new AdventureTracker(deref(m_gameObserver), this);
     m_audioManager = new AudioManager(deref(m_mediaLibrary), deref(m_gameObserver), this);
 
     // View -> Side Panels -> Log Panel
-    m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
-    m_dockDialogLog->setObjectName("DockWidgetLog");
-    m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                 | QDockWidget::DockWidgetClosable);
-    m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
+    std::invoke([this] {
+        auto *const dock = new QDockWidget(tr("Log Panel"), this);
+        dock->setObjectName("DockWidgetLog");
+        dock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        dock->toggleViewAction()->setShortcut(tr("Ctrl+L"));
+        addDockWidget(Qt::BottomDockWidgetArea, dock);
 
-    logWindow = new QTextBrowser(m_dockDialogLog);
-    logWindow->setReadOnly(true);
-    logWindow->setObjectName("LogWindow");
-    m_dockDialogLog->setWidget(logWindow);
-    m_dockDialogLog->hide();
+        auto *const logWindow = new QTextBrowser(m_dockDialogLog);
+        logWindow->setReadOnly(true);
+        logWindow->setObjectName("LogWindow");
+        dock->setWidget(logWindow);
+        dock->hide();
+
+        m_dockDialogLog = dock;
+        m_logWindow = logWindow;
+    });
 
     // View -> Side Panels -> Group Panel and Tools -> Group Manager
-    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
-    m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
-    m_dockDialogGroup->setObjectName("DockWidgetGroup");
-    m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                   | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
-    m_dockDialogGroup->setWidget(m_groupWidget);
-    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
+    std::invoke([this] {
+        auto *const w = new GroupWidget(m_groupManager, m_mapData, this);
+        auto *const dock = new QDockWidget(tr("Group Panel"), this);
+        dock->setObjectName("DockWidgetGroup");
+        dock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::TopDockWidgetArea, dock);
+        dock->setWidget(w);
+        connect(w, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
+
+        m_groupWidget = w;
+        m_dockDialogGroup = dock;
+    });
 
     // View -> Side Panels -> Room Panel (Mobs)
-    m_roomManager = new RoomManager(this);
-    m_roomManager->setObjectName("RoomManager");
-    deref(m_gameObserver).sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
-        deref(m_roomManager).slot_parseGmcpInput(gmcp);
+    std::invoke([this] {
+        auto *const roomManager = new RoomManager(this);
+        roomManager->setObjectName("RoomManager");
+
+        deref(m_gameObserver)
+            .sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &gmcp) {
+                deref(m_roomManager).slot_parseGmcpInput(gmcp);
+            });
+
+        m_roomManager = roomManager;
     });
-    m_roomWidget = new RoomWidget(deref(m_roomManager), this);
-    m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
-    m_dockDialogRoom->setObjectName("DockWidgetRoom");
-    m_dockDialogRoom->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogRoom->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
-                                  | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogRoom);
-    m_dockDialogRoom->setWidget(m_roomWidget);
-    m_dockDialogRoom->hide();
+
+    std::invoke([this] {
+        auto *const w = new RoomWidget(deref(m_roomManager), this);
+        auto *const dock = m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
+        dock->setObjectName("DockWidgetRoom");
+        dock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::BottomDockWidgetArea, dock);
+        dock->setWidget(w);
+        dock->hide();
+
+        m_roomWidget = w;
+        m_dockDialogRoom = dock;
+    });
 
     // Find Room Dialog
-    m_findRoomsDlg = new FindRoomsDlg(*m_mapData, this);
-    m_findRoomsDlg->setObjectName("FindRoomsDlg");
+    std::invoke([this] {
+        auto *const findRoomsDlg = new FindRoomsDlg(deref(m_mapData), this);
+        findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    // View -> Side Panels -> Adventure Panel (Trophy XP, Achievements, Hints, etc)
-    m_dockDialogAdventure = new QDockWidget(tr("Adventure Panel"), this);
-    m_dockDialogAdventure->setObjectName("DockWidgetGameConsole");
-    m_dockDialogAdventure->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
-    m_dockDialogAdventure->setFeatures(QDockWidget::DockWidgetClosable
-                                       | QDockWidget::DockWidgetFloatable
-                                       | QDockWidget::DockWidgetMovable);
-    addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogAdventure);
-    m_adventureWidget = new AdventureWidget(deref(m_adventureTracker), this);
-    m_dockDialogAdventure->setWidget(m_adventureWidget);
-    m_dockDialogAdventure->hide();
+        m_findRoomsDlg = findRoomsDlg;
+    });
+
+    std::invoke([this] {
+        auto *const adv = new AdventureTracker(deref(m_gameObserver), this);
+        auto *const w = new AdventureWidget(deref(adv), this);
+        // View -> Side Panels -> Adventure Panel (Trophy XP, Achievements, Hints, etc)
+        auto *const dock = new QDockWidget(tr("Adventure Panel"), this);
+        dock->setObjectName("DockWidgetGameConsole");
+        dock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+        dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetMovable);
+        addDockWidget(Qt::BottomDockWidgetArea, dock);
+        dock->setWidget(w);
+        dock->hide();
+
+        m_adventureTracker = adv;
+        m_adventureWidget = w;
+        m_dockDialogAdventure = dock;
+    });
 
     // View -> Side Panels -> Description / Area Panel
-    m_descriptionWidget = new DescriptionWidget(deref(m_mediaLibrary), this);
-    m_dockDialogDescription = new QDockWidget(tr("Description Panel"), this);
+    std::invoke([this] {
+        auto *const w = new DescriptionWidget(deref(m_mediaLibrary), this);
+        auto *const dock = new QDockWidget(tr("Description Panel"), this);
+        dock->setObjectName("DockWidgetDescription");
+        dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::RightDockWidgetArea, dock);
+        dock->setWidget(w);
+
+        m_descriptionWidget = w;
+        m_dockDialogDescription = dock;
+    });
 
     m_hotkeyManager = std::make_unique<HotkeyManager>();
-    m_dockDialogDescription->setObjectName("DockWidgetDescription");
-    m_dockDialogDescription->setAllowedAreas(Qt::AllDockWidgetAreas);
-    m_dockDialogDescription->setFeatures(QDockWidget::DockWidgetMovable
-                                         | QDockWidget::DockWidgetFloatable
-                                         | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::RightDockWidgetArea, m_dockDialogDescription);
-    m_dockDialogDescription->setWidget(m_descriptionWidget);
 
-    m_timers = new CTimers(this);
-    m_timerWidget = new TimerWidget(deref(m_timers), this);
-    m_dockDialogTimers = new QDockWidget(tr("Timers Panel"), this);
-    m_dockDialogTimers->setObjectName("DockWidgetTimers");
-    m_dockDialogTimers->setFeatures(QDockWidget::DockWidgetMovable
-                                    | QDockWidget::DockWidgetFloatable
-                                    | QDockWidget::DockWidgetClosable);
-    m_dockDialogTimers->setWidget(m_timerWidget);
-    m_dockDialogTimers->hide();
+    std::invoke([this] {
+        auto *const timers = new CTimers(this);
+        auto *const w = new TimerWidget(deref(timers), this);
+        auto *const dock = new QDockWidget(tr("Timers Panel"), this);
+        dock->setObjectName("DockWidgetTimers");
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        dock->setWidget(w);
+        dock->hide();
+
+        m_timers = timers;
+        m_timerWidget = w;
+        m_dockDialogTimers = dock;
+    });
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
@@ -238,43 +285,54 @@ MainWindow::MainWindow()
     m_logger = new AutoLogger(this);
 
     // TODO move this connect() wiring into AutoLogger::ctor ?
-    GameObserver &observer = deref(m_gameObserver);
-    observer.sig2_connected.connect(m_lifetime, [this]() {
-        //
-        deref(m_logger).slot_onConnected();
+    std::invoke([this] {
+        GameObserver &observer = deref(m_gameObserver);
+        observer.sig2_connected.connect(m_lifetime, [this]() {
+            //
+            deref(m_logger).slot_onConnected();
+        });
+        observer.sig2_toggledEchoMode.connect(m_lifetime, [this](bool echo) {
+            deref(m_logger).slot_shouldLog(echo);
+        });
+        observer.sig2_sentToMudString.connect(m_lifetime, [this](const QString &msg) {
+            deref(m_logger).slot_writeToLog(msg);
+        });
+        observer.sig2_sentToUserString.connect(m_lifetime, [this](const QString &msg) {
+            deref(m_logger).slot_writeToLog(msg);
+        });
     });
-    observer.sig2_toggledEchoMode.connect(m_lifetime, [this](bool echo) {
-        deref(m_logger).slot_shouldLog(echo);
-    });
-    observer.sig2_sentToMudString.connect(m_lifetime, [this](const QString &msg) {
-        deref(m_logger).slot_writeToLog(msg);
-    });
-    observer.sig2_sentToUserString.connect(m_lifetime, [this](const QString &msg) {
-        deref(m_logger).slot_writeToLog(msg);
-    });
-
-    m_listener = new ConnectionListener(deref(m_mapData),
-                                        deref(m_pathMachine),
-                                        deref(m_prespammedPath),
-                                        deref(m_groupManager),
-                                        deref(m_mumeClock),
-                                        deref(m_timers),
-                                        deref(getCanvas()),
-                                        deref(m_gameObserver),
-                                        this);
 
     // View -> Side Panels -> Client Panel
-    m_clientWidget = new ClientWidget(deref(m_listener), deref(m_hotkeyManager), this);
-    m_clientWidget->setObjectName("InternalMudClientWidget");
-    m_dockDialogClient = new QDockWidget("Client Panel", this);
-    m_dockDialogClient->setObjectName("DockWidgetClient");
-    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
-    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
-                                    | QDockWidget::DockWidgetFloatable
-                                    | QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::RightDockWidgetArea, m_dockDialogTimers);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
-    m_dockDialogClient->setWidget(m_clientWidget);
+    std::invoke([this] {
+        auto *const timers = m_dockDialogTimers;
+        std::ignore = deref(timers);
+
+        auto *const listener = new ConnectionListener(deref(m_mapData),
+                                                      deref(m_pathMachine),
+                                                      deref(m_prespammedPath),
+                                                      deref(m_groupManager),
+                                                      deref(m_mumeClock),
+                                                      deref(m_timers),
+                                                      deref(getCanvas()),
+                                                      deref(m_gameObserver),
+                                                      this);
+
+        auto *const w = new ClientWidget(deref(listener), deref(m_hotkeyManager), this);
+        w->setObjectName("InternalMudClientWidget");
+
+        auto *const dock = new QDockWidget("Client Panel", this);
+        dock->setObjectName("DockWidgetClient");
+        dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetClosable);
+        addDockWidget(Qt::RightDockWidgetArea, timers); // caution: this is different
+        addDockWidget(Qt::LeftDockWidgetArea, dock);
+        dock->setWidget(w);
+
+        m_listener = listener;
+        m_clientWidget = w;
+        m_dockDialogClient = dock;
+    });
 
     createActions();
     setupToolBars();
@@ -539,6 +597,7 @@ void MainWindow::wireConnections()
 
 void MainWindow::slot_log(const QString &mod, const QString &message)
 {
+    QTextBrowser *const logWindow = m_logWindow;
     logWindow->append(QString("[%1] %2").arg(mod, message));
     logWindow->moveCursor(QTextCursor::MoveOperation::End);
     logWindow->ensureCursorVisible();
@@ -1465,15 +1524,16 @@ void MainWindow::setupStatusBar()
                                                            deref(m_mumeClock),
                                                            this));
 
-    XPStatusWidget *xpStatus = new XPStatusWidget(*m_adventureTracker, statusBar(), this);
+    auto *const xpStatus = new XPStatusWidget(deref(m_adventureTracker), statusBar(), this);
     xpStatus->setToolTip("Click to toggle the Adventure Panel.");
 
     connect(xpStatus, &QPushButton::clicked, [this]() {
-        m_dockDialogAdventure->setVisible(!m_dockDialogAdventure->isVisible());
+        auto &dock = deref(m_dockDialogAdventure);
+        dock.setVisible(!dock.isVisible());
     });
     statusBar()->insertPermanentWidget(0, xpStatus);
 
-    QLabel *pathmachineStatus = new QLabel(statusBar());
+    auto *const pathmachineStatus = new QLabel(statusBar());
     connect(m_pathMachine, &Mmapper2PathMachine::sig_state, pathmachineStatus, &QLabel::setText);
     statusBar()->insertPermanentWidget(0, pathmachineStatus);
 }
@@ -1481,24 +1541,32 @@ void MainWindow::setupStatusBar()
 void MainWindow::slot_onPreferences()
 {
     if (m_configDialog == nullptr) {
-        m_configDialog = std::make_unique<ConfigDialog>(this);
+        auto unique_configDialog = std::make_unique<ConfigDialog>(this);
+        auto *const configDialog = unique_configDialog.get();
 
-        connect(m_configDialog.get(),
+        std::ignore = deref(configDialog);
+        std::ignore = deref(m_mapWindow);
+        std::ignore = deref(m_groupManager);
+
+        connect(configDialog,
                 &ConfigDialog::sig_graphicsSettingsChanged,
                 m_mapWindow,
                 &MapWindow::slot_graphicsSettingsChanged);
-        connect(m_configDialog.get(),
+        connect(configDialog,
                 &ConfigDialog::sig_groupSettingsChanged,
                 m_groupManager,
                 &Mmapper2Group::slot_groupSettingsChanged);
-        connect(m_configDialog.get(), &QDialog::finished, this, [this](MAYBE_UNUSED int result) {
+        connect(configDialog, &QDialog::finished, this, [this](MAYBE_UNUSED int result) {
             m_configDialog.reset();
         });
+
+        m_configDialog = std::move(unique_configDialog);
     }
 
-    m_configDialog->show();
-    m_configDialog->raise();
-    m_configDialog->activateWindow();
+    auto &configDialog = deref(m_configDialog);
+    configDialog.show();
+    configDialog.raise();
+    configDialog.activateWindow();
 }
 
 void MainWindow::slot_newRoomSelection(const SigRoomSelection &rs)
@@ -1525,14 +1593,15 @@ void MainWindow::slot_newConnectionSelection(ConnectionSelection *const cs)
 
 void MainWindow::slot_newInfomarkSelection(InfomarkSelection *const is)
 {
-    m_infoMarkSelection = (is != nullptr) ? is->shared_from_this() : nullptr;
-    infomarkActions.infomarkGroup->setEnabled(m_infoMarkSelection != nullptr);
+    const bool isNonNull = (is != nullptr);
+    m_infoMarkSelection = isNonNull ? is->shared_from_this() : nullptr;
+    deref(infomarkActions.infomarkGroup).setEnabled(isNonNull);
 
-    if (m_infoMarkSelection != nullptr) {
-        showStatusLong(QString("Selection: %1 mark%2")
-                           .arg(m_infoMarkSelection->size())
-                           .arg((m_infoMarkSelection->size() != 1) ? "s" : ""));
-        if (m_infoMarkSelection->empty()) {
+    if (isNonNull) {
+        auto &ref = *is;
+        showStatusLong(
+            QString("Selection: %1 mark%2").arg(ref.size()).arg((ref.size() != 1) ? "s" : ""));
+        if (ref.empty()) {
             // Create a new infomark if its an empty selection
             slot_onEditInfomarkSelection();
         }
