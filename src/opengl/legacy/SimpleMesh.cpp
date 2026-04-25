@@ -8,5 +8,5 @@
 void Legacy::drawRoomQuad(Functions &gl, const GLsizei numInstances)
 {
     // The shader uses gl_VertexID to generate quad vertices [0..3]
-    gl.glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, numInstances);
+    gl.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
 }
