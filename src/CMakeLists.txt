@@ -247,10 +247,10 @@ set(mmapper_SRCS
     mainwindow/AudioVolumeSlider.h
     mainwindow/MapZoomSlider.cpp
     mainwindow/MapZoomSlider.h
-    mainwindow/UpdateDialog.cpp
-    mainwindow/UpdateDialog.h
     mainwindow/ThemeManager.cpp
     mainwindow/ThemeManager.h
+    mainwindow/UpdateDialog.cpp
+    mainwindow/UpdateDialog.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
@@ -592,9 +592,9 @@ set(mmapper_SRCS
     syntax/Value.h
     timers/CTimers.cpp
     timers/CTimers.h
+    timers/TimerDelegate.cpp
     timers/TimerModel.cpp
     timers/TimerModel.h
-    timers/TimerDelegate.cpp
     timers/TimerDelegate.h
     timers/TimerWidget.cpp
     timers/TimerWidget.h
