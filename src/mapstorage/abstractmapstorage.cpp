@@ -63,7 +63,7 @@ const QString &AbstractMapStorage::getFilename() const
 QIODevice &AbstractMapStorage::getDevice() const
 {
     if (m_data.saveDestination) {
-        if (m_data.destinationType == Data::Type::Directory) {
+        if (m_data.destinationType == Data::TypeEnum::Directory) {
             throw std::runtime_error("QIODevice not available for directory-based saves");
         }
         auto device = m_data.saveDestination->getIODevice();
