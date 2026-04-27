@@ -36,9 +36,9 @@ class NODISCARD_QOBJECT AbstractMapStorage : public QObject
 public:
     struct NODISCARD Data final
     {
-        enum class Type { File, Directory };
+        enum class NODISCARD TypeEnum : uint8_t { File, Directory };
 
-        Type destinationType = Type::File;
+        TypeEnum destinationType = TypeEnum::File;
         const std::shared_ptr<ProgressCounter> progressCounter;
         std::shared_ptr<MapSource> loadSource;
         std::shared_ptr<MapDestination> saveDestination;
@@ -67,7 +67,7 @@ public:
             if (!saveDestination) {
                 throw std::invalid_argument("dest");
             }
-            destinationType = saveDestination->isDirectory() ? Type::Directory : Type::File;
+            destinationType = saveDestination->isDirectory() ? TypeEnum::Directory : TypeEnum::File;
         }
     };
 
