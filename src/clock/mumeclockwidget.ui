@@ -67,6 +67,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="weatherLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="fogLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="timeLabel">
        <property name="text">
         <string>Clock not set</string>

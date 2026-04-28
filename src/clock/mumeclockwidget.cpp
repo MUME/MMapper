@@ -38,6 +38,10 @@ MumeClockWidget::MumeClockWidget(GameObserver &observer, MumeClock &clock, QWidg
                                                 });
     observer.sig2_seasonChanged.connect(m_lifetime,
                                         [this](MumeSeasonEnum season) { updateSeason(season); });
+    observer.sig2_weatherChanged.connect(m_lifetime, [this](PromptWeatherEnum weather) {
+        updateWeather(weather);
+    });
+    observer.sig2_fogChanged.connect(m_lifetime, [this](PromptFogEnum fog) { updateFog(fog); });
     observer.sig2_tick.connect(m_lifetime,
                                [this](const MumeMoment &moment) { updateCountdown(moment); });
 
@@ -47,6 +51,8 @@ MumeClockWidget::MumeClockWidget(GameObserver &observer, MumeClock &clock, QWidg
     updateMoonVisibility(moment.moonVisibility());
     updateSeason(moment.toSeason());
     updateCountdown(moment);
+    updateWeather(PromptWeatherEnum::NICE);
+    updateFog(PromptFogEnum::NO_FOG);
 }
 
 MumeClockWidget::~MumeClockWidget() = default;
@@ -158,6 +164,60 @@ void MumeClockWidget::updateSeason(MumeSeasonEnum season)
     }
     seasonLabel->setStyleSheet(styleSheet);
     seasonLabel->setText(text);
+}
+
+void MumeClockWidget::updateWeather(PromptWeatherEnum weather)
+{
+    switch (weather) {
+    case PromptWeatherEnum::CLOUDS:
+        weatherLabel->setText(QString::fromUtf8("\xE2\x98\x81"));
+        weatherLabel->setStatusTip("Cloudy");
+        weatherLabel->setVisible(true);
+        break;
+    case PromptWeatherEnum::RAIN:
+        weatherLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xA7"));
+        weatherLabel->setStatusTip("Rainy");
+        weatherLabel->setVisible(true);
+        break;
+    case PromptWeatherEnum::HEAVY_RAIN:
+        weatherLabel->setText(QString::fromUtf8("\xE2\x9B\x88"));
+        weatherLabel->setStatusTip("Heavy Rain");
+        weatherLabel->setVisible(true);
+        break;
+    case PromptWeatherEnum::SNOW:
+        weatherLabel->setText(QString::fromUtf8("\xE2\x9D\x84"));
+        weatherLabel->setStatusTip("Snowy");
+        weatherLabel->setVisible(true);
+        break;
+    case PromptWeatherEnum::NICE:
+    default:
+        weatherLabel->setText("");
+        weatherLabel->setStatusTip("");
+        weatherLabel->setVisible(false);
+        break;
+    }
+}
+
+void MumeClockWidget::updateFog(PromptFogEnum fog)
+{
+    switch (fog) {
+    case PromptFogEnum::LIGHT_FOG:
+        fogLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xAB"));
+        fogLabel->setStatusTip("Light Fog");
+        fogLabel->setVisible(true);
+        break;
+    case PromptFogEnum::HEAVY_FOG:
+        fogLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xAB\xF0\x9F\x8C\xAB"));
+        fogLabel->setStatusTip("Heavy Fog");
+        fogLabel->setVisible(true);
+        break;
+    case PromptFogEnum::NO_FOG:
+    default:
+        fogLabel->setText("");
+        fogLabel->setStatusTip("");
+        fogLabel->setVisible(false);
+        break;
+    }
 }
 
 void MumeClockWidget::updateCountdown(const MumeMoment &moment)
