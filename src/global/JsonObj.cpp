@@ -50,7 +50,7 @@ NODISCARD OptJsonNull JsonObj::getNull(const QString &name) const
 {
     if (m_obj.contains(name)) {
         if (auto &&tmp = m_obj.value(name); tmp.isNull()) {
-            return OptJsonNull{};
+            return JsonNull{};
         }
     }
     return std::nullopt;
