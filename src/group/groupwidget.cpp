@@ -1027,6 +1027,13 @@ void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
 {
     assert(character);
     deref(m_model).updateCharacter(character);
+
+    const int manaCol = static_cast<int>(ColumnTypeEnum::MANA);
+    const bool hasMana = character->getMana() > 0 || character->getMaxMana() > 0;
+    if (m_table->isColumnHidden(manaCol) == hasMana) {
+        updateColumnVisibility();
+    }
+
     updatePulseTimer();
 }
 
