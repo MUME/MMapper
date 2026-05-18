@@ -15,17 +15,16 @@ title: Download MMapper for macOS
 
 <div class="notice-box" id="mac-notice">
   <strong style="color: #d9534f;">Important Notice for macOS Users:</strong><br>
-  This application is not notarized by Apple, so macOS might prevent it from opening directly.<br>
+  This application is not notarized by Apple, so macOS will prevent it from opening directly.<br>
   <strong>To run the application the first time:</strong>
   <ol>
-    <li>Locate the downloaded <code>.dmg</code> file and open it.</li>
-    <li>Drag the MMapper application to your Applications folder (or another location).</li>
-    <li>Right-click (or Control-click) the MMapper application icon.</li>
-    <li>Select "Open" from the context menu.</li>
-    <li>A dialog box will appear warning you about the developer. Click "Open" again.</li>
+    <li>Drag the MMapper application to your <strong>Applications</strong> folder.</li>
+    <li>Try to open MMapper from your Applications folder. When a warning appears, click <strong>Done</strong> or <strong>Cancel</strong> (this registers the app with macOS).</li>
+    <li>Go to <strong>System Settings > Privacy & Security</strong> and scroll down to the <strong>Security</strong> section.</li>
+    <li>Look for the message "MMapper was blocked..." and click the <strong>Open Anyway</strong> button.</li>
+    <li>Enter your password if prompted, then click <strong>Open</strong> on the final dialog box.</li>
   </ol>
-  <small>Alternatively, you can go to System Settings > Privacy & Security, scroll down to the "Security" section, and look for an "Open Anyway" button related to MMapper after trying to open it the first time.</small><br>
-  <small>You only need to do this the first time you run this version.</small>
+  <small>You only need to do this the first time you run a new version of MMapper.</small>
 </div>
 
 {% include download.md %}

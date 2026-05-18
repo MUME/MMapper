@@ -19,17 +19,15 @@ title: Download MMapper for Windows
 {% endfor %}
 
 <div class="notice-box" id="windows-notice">
-  <strong style="color: #d9534f;">Important Notice for .exe Downloaders:</strong><br>
-  This application is not digitally signed, so Windows might prevent it from running initially.<br>
-  <strong>To run the application:</strong>
+  <strong style="color: #d9534f;">Important Notice for Windows Users:</strong><br>
+  This application is not digitally signed, which may cause Microsoft Edge or Windows SmartScreen to block it initially.<br>
+  <strong>To download and run the application:</strong>
   <ol>
-    <li>Right-click the downloaded <code>.exe</code> file and select "Properties".</li>
-    <li>In the Properties window, look for a section near the bottom that says "Security".</li>
-    <li>If you see a checkbox or button labeled "Unblock", check it or click it.</li>
-    <li>Click "Apply" and then "OK".</li>
-    <li>You should now be able to run the MMapper installer.</li>
+    <li><strong>If Edge blocks the download:</strong> Open your download list, click the <strong>...</strong> (three dots) next to the file, and select <strong>Keep</strong>. Then click <strong>Show more</strong> and select <strong>Keep anyway</strong>.</li>
+    <li><strong>If SmartScreen blocks the installer:</strong> Click <strong>More info</strong> in the "Windows protected your PC" window, then click <strong>Run anyway</strong>.</li>
+    <li><strong>If the installer still won't run:</strong> Right-click the downloaded <code>.exe</code> file and select <strong>Properties</strong>. In the <strong>General</strong> tab, check the <strong>Unblock</strong> checkbox at the bottom and click <strong>OK</strong>.</li>
   </ol>
-  <small>You only need to do this the first time you run this version.</small>
+  <small>You only need to do this the first time you run a new version.</small>
 </div>
 
 {% include download.md %}
