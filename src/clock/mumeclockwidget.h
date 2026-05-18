@@ -38,5 +38,7 @@ private:
     void updateMoonPhase(MumeMoonPhaseEnum phase);
     void updateMoonVisibility(MumeMoonVisibilityEnum visibility);
     void updateSeason(MumeSeasonEnum season);
+    void updateWeather(PromptWeatherEnum weather);
+    void updateFog(PromptFogEnum fog);
     void updateStatusTips(const MumeMoment &moment);
 };

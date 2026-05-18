@@ -46,8 +46,8 @@ else()
         endif()
 
         ExternalProject_Add(qtkeychain_repo
-            GIT_REPOSITORY "https://github.com/nschimme/qtkeychain.git"
-            GIT_TAG "wasm"
+            GIT_REPOSITORY "https://github.com/frankosterfeld/qtkeychain.git"
+            GIT_TAG "708d09927d52743c801c1a974d432f19266f2fb1"
 
             SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-src"
             BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/qtkeychain-build"

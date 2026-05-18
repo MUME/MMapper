@@ -313,13 +313,14 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         } else {
             qWarning().noquote() << "prompt has unknown fog flag:" << *fog;
         }
-    } else if (!obj.getNull("fog")) {
+        m_observer.observeFog(promptFlags.getFogType());
+    } else if (obj.getNull("fog")) {
         if (verbose_debugging) {
             qInfo().noquote() << "fog null";
         }
         promptFlags.setFogType(PromptFogEnum::NO_FOG);
+        m_observer.observeFog(promptFlags.getFogType());
     }
-    m_observer.observeFog(promptFlags.getFogType());
 
     if (auto light = obj.getString("light")) {
         if (verbose_debugging) {
@@ -354,13 +355,14 @@ void MumeXmlParser::parseGmcpCharVitals(const JsonObj &obj)
         } else {
             qWarning().noquote() << "prompt has unknown weather flag:" << *weather;
         }
-    } else if (!obj.getNull("weather")) {
+        m_observer.observeWeather(promptFlags.getWeatherType());
+    } else if (obj.getNull("weather")) {
         if (verbose_debugging) {
             qInfo().noquote() << "weather null";
         }
         promptFlags.setWeatherType(PromptWeatherEnum::NICE);
+        m_observer.observeWeather(promptFlags.getWeatherType());
     }
-    m_observer.observeWeather(promptFlags.getWeatherType());
 }
 
 void MumeXmlParser::parseGmcpEventMoved(const JsonObj &obj)
