@@ -30,8 +30,6 @@ jobs:
           compiler: 'gcc'
         - os: macos-latest
           compiler: 'msvc'
-        - os: windows-2022
-          compiler: 'clang'
     steps:
     - uses: actions/checkout@v6
       with:
@@ -119,6 +117,16 @@ jobs:
         cache: true
         modules: 'qtwebsockets qtmultimedia'
         tools: 'tools_mingw1310'
+    - if: runner.os == 'Windows' && matrix.compiler == 'clang'
+      name: Install Qt for Windows (LLVM-MinGW)
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.8.3'
+        dir: 'C:\'
+        arch: win64_llvm_mingw
+        cache: true
+        modules: 'qtwebsockets qtmultimedia'
+        tools: 'tools_llvm_mingw1706'
 
       #
       # Build
@@ -135,9 +143,22 @@ jobs:
           echo "C:/Qt/Tools/mingw1310_64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           $env:PATH = "C:\Qt\Tools\mingw1310_64\bin;$env:PATH"
         }
+        if ('${{ matrix.compiler }}' -eq 'clang') {
+          $llvmDir = Get-ChildItem -Path "C:\Qt\Tools" -Filter "llvm-mingw*" -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if ($null -ne $llvmDir) {
+            $llvmBin = Join-Path $llvmDir.FullName "bin"
+            echo "$($llvmBin.Replace('\', '/'))" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            $env:PATH = "$llvmBin;$env:PATH"
+            $env:CC = Join-Path $llvmBin "clang.exe"
+            $env:CXX = Join-Path $llvmBin "clang++.exe"
+          } else {
+            Write-Error "LLVM-MinGW toolchain not found"
+            exit 1
+          }
+        }
         $packageDir = ($env:GITHUB_WORKSPACE -replace '\\', '/') + "/artifact"
         $launcher = ${{ matrix.compiler == 'msvc' && 'sccache' || 'ccache' }}
-        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Nsis -DCMAKE_C_COMPILER_LAUNCHER="$launcher" -DCMAKE_CXX_COMPILER_LAUNCHER="$launcher" -S .. || exit -1
+        cmake -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' -DWITH_MAP=OFF -DCPACK_PACKAGE_DIRECTORY="$packageDir" -DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR -DWITH_WEBSOCKET=ON -DWITH_QTKEYCHAIN=ON -DPACKAGE_TYPE=Nsis -DCMAKE_C_COMPILER_LAUNCHER="$launcher" -DCMAKE_CXX_COMPILER_LAUNCHER="$launcher" -S .. || exit 1
         cmake --build . --parallel
     - if: runner.os == 'Linux' || runner.os == 'macOS'
       name: Build MMapper for Linux and Mac

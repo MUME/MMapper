@@ -1147,7 +1147,10 @@ if(WIN32)
     endif()
 
     # Bundle Library Files
-    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --compiler-runtime --no-translations --no-system-d3d-compiler --no-opengl-sw --verbose 1)
+    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --no-translations --no-system-d3d-compiler --no-opengl-sw --verbose 1)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --compiler-runtime)
+    endif()
     find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES .)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
     message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")
