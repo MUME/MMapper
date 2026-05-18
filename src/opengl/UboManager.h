@@ -7,9 +7,9 @@
 #include "../global/View.h"
 #include "../global/logging.h"
 #include "../global/utils.h"
+#include "./legacy/Legacy.h"
+#include "./legacy/VBO.h"
 #include "UboBlocks.h"
-#include "legacy/Legacy.h"
-#include "legacy/VBO.h"
 
 #include <cassert>
 #include <cstddef>
