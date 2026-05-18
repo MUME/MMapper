@@ -9,18 +9,17 @@
 #include "../map/PromptFlags.h"
 #include "../map/coordinate.h"
 #include "../observer/gameobserver.h"
+#include "./legacy/Legacy.h"
+#include "./legacy/WeatherMeshes.h"
 #include "OpenGL.h"
-
-class FrameManager;
 #include "OpenGLTypes.h"
-#include "legacy/Legacy.h"
-#include "legacy/WeatherMeshes.h"
 
 #include <chrono>
-
-#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 #include <memory>
 
+#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
+
+class FrameManager;
 class MapData;
 struct MapCanvasTextures;
 

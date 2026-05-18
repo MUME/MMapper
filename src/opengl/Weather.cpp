@@ -9,9 +9,9 @@
 #include "../global/Badge.h"
 #include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
+#include "./legacy/Legacy.h"
 #include "OpenGL.h"
 #include "OpenGLTypes.h"
-#include "legacy/Legacy.h"
 
 #include <algorithm>
 #include <cstdlib>
