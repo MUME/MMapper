@@ -3,7 +3,7 @@ layout: default
 title: Get MMapper for Linux
 ---
 
-## Download MMapper for Linux
+Choose your preferred distribution method below. We recommend using Flathub for a sandboxed environment and easy updates across most Linux distributions.
 
 <a href='https://flathub.org/apps/org.mume.MMapper'>
     <img width='200' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en' style="vertical-align: middle;"/>
