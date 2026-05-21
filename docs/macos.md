@@ -1,9 +1,10 @@
 ---
 layout: default
-title: Download MMapper for macOS
+title: Get MMapper for macOS
 ---
 
-## Download MMapper for macOS
+To install MMapper on macOS, download the Disk Image (DMG) file provided below. MMapper is compatible with both Intel and Apple Silicon processors.
+
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name contains 'sha256' %}
 {% elsif asset.name contains 'dmg' %}

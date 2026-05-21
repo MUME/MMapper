@@ -1,6 +1,22 @@
 /* Minimal MMapper Website Styles */
 
 /* Basic Reset & Body */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #cc9933;
+    color: #1a1a1a;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.3s;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+}
+
 body {
     margin: 0;
     padding: 0;
