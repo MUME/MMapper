@@ -37,7 +37,7 @@ public:
             if (expected == 0) {
                 return 0;
             }
-            return std::clamp<size_t>((100 * seen) / expected, 0, 99);
+            return std::clamp<size_t>((100 * seen) / expected, 0, 100);
         }
         void reset(size_t expected_ = 0)
         {
