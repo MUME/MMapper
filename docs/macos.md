@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Download MMapper for macOS
+title: Get MMapper for macOS
 ---
 
 ## Download MMapper for macOS

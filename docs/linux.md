@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Download MMapper for Linux
+title: Get MMapper for Linux
 ---
 
 ## Download MMapper for Linux
