@@ -22,4 +22,12 @@ NODISCARD auto makeQPointer(Args &&...args)
     // transfer ownership, now that we've confirmed that the parent object owns it
     return QPointer<T>{ptr.release()};
 }
+
+template<typename T, typename... Args>
+NODISCARD QScopedPointer<T> makeQScopedPointer(Args &&...args)
+{
+    static_assert(std::is_base_of_v<QObject, T>);
+    auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+    return QScopedPointer<T>{ptr.release()};
+}
 } // namespace mmqt
