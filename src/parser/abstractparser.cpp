@@ -452,8 +452,8 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 
     auto word = view.takeFirstWord();
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
-        auto lower = lowercaseDirection(dir);
-        if (lower != nullptr && Abbrev{lower, 1}.matches(word)) {
+        if (const char *const lower = lowercaseDirection(dir);
+            lower != nullptr && Abbrev{lower, 1}.matches(word)) {
             return dir;
         }
     }
@@ -486,11 +486,13 @@ bool AbstractParser::setCommandPrefix(const char prefix)
 }
 
 // TODO: use something safer than a raw C string
-void AbstractParser::showSyntax(const char *rest)
+void AbstractParser::showSyntax(const char *const rest)
 {
-    assert(rest != nullptr);
+    if (rest == nullptr) {
+        throw std::invalid_argument("rest");
+    }
     sendToUser(SendToUserSourceEnum::FromMMapper,
-               QString::asprintf("Usage: %c%s\n", getPrefixChar(), (rest != nullptr) ? rest : ""));
+               QString::asprintf("Usage: %c%s\n", getPrefixChar(), rest));
 }
 
 void AbstractParser::doSearchCommand(const StringView view)
