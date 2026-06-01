@@ -9,6 +9,11 @@
 
 #include <stdexcept>
 
+static_assert(CommandEnum::FLEE > CommandEnum::UNKNOWN, "Code expects FLEE to be above UNKNOWN");
+static_assert(CommandEnum::FLEE > CommandEnum::LOOK, "Code expects FLEE to be above LOOK");
+static_assert(CommandEnum::FLEE < CommandEnum::SCOUT, "Code expects FLEE to be below SCOUT");
+static_assert(CommandEnum::FLEE < CommandEnum::NONE, "Code expects FLEE to be below NONE");
+
 namespace enums {
 const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands()
 {

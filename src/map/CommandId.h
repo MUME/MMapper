@@ -20,13 +20,9 @@ enum class NODISCARD CommandEnum : uint8_t {
     /*SYNC, RESET, */
     NONE
 };
-static_assert(CommandEnum::FLEE > CommandEnum::UNKNOWN, "Code expects FLEE to be above UNKNOWN");
-static_assert(CommandEnum::FLEE > CommandEnum::LOOK, "Code expects FLEE to be above LOOK");
-static_assert(CommandEnum::FLEE < CommandEnum::SCOUT, "Code expects FLEE to be below SCOUT");
-static_assert(CommandEnum::FLEE < CommandEnum::NONE, "Code expects FLEE to be below NONE");
 
 /* does not include NONE */
-static constexpr const int NUM_COMMANDS = 10;
+static constexpr int NUM_COMMANDS = 10;
 
 namespace enums {
 
