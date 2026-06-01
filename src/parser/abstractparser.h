@@ -133,7 +133,7 @@ public:
     ServerExitIds exitIds;
     PromptFlagsType promptFlags;
     ConnectedRoomFlagsType connectedRoomFlags;
-    RoomTerrainEnum terrain;
+    RoomTerrainEnum terrain = RoomTerrainEnum::UNDEFINED;
 
     // REVISIT: Is there any point to having a distinction between null and empty?
     std::optional<RoomArea> roomArea;

@@ -218,7 +218,7 @@ NODISCARD std::optional<MM2FileVersion> getMM2FileVersion(LoadRoomHelper &helper
     }
 
     const auto version = helper.read_u32();
-    using R = MM2FileVersion::Relative;
+    using R = MM2FileVersion::RelativeEnum;
     const R relative = (version == schema::CURRENT)
                            ? R::Current
                            : ((version < schema::CURRENT) ? R::Older : R::Newer);
