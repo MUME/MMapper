@@ -211,7 +211,7 @@ public:
     // Parses and interprets ansi codes embedded in the input string, and combines them with
     // stream's current state, as if by writing alternating RawAnsi and string_view writes.
     //
-    // Just as with regular RawAnsi writes, this function will ignores the REMOVAL of Ansi flags
+    // Just as with regular RawAnsi writes, this function ignores the REMOVAL of Ansi flags
     // that are NOT currently in use, and it ignores ADDITION of states that ARE currently in use.
     //
     // For example, if the current state is bold+italic+underline, then writing
