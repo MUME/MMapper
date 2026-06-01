@@ -66,7 +66,7 @@ struct NODISCARD AddRoom2 final
 {
     Coordinate position;
     ParseEvent event;
-    explicit AddRoom2(const Coordinate &pos, ParseEvent ev)
+    explicit AddRoom2(const Coordinate pos, ParseEvent ev)
         : position{pos}
         , event{std::move(ev)}
     {}

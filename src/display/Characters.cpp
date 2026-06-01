@@ -31,7 +31,7 @@ static constexpr float CHAR_ARROW_LINE_WIDTH = 2.f;
 static constexpr float PATH_LINE_WIDTH = 0.1f;
 static constexpr float PATH_POINT_SIZE = 8.f;
 
-DistantObjectTransform DistantObjectTransform::construct(const glm::vec3 &pos,
+DistantObjectTransform DistantObjectTransform::construct(const glm::vec3 pos,
                                                          const MapScreen &mapScreen,
                                                          const float marginPixels)
 {
@@ -44,12 +44,12 @@ DistantObjectTransform DistantObjectTransform::construct(const glm::vec3 &pos,
     return DistantObjectTransform{hint, degrees};
 }
 
-bool CharacterBatch::isVisible(const Coordinate &c, float margin) const
+bool CharacterBatch::isVisible(const Coordinate c, float margin) const
 {
     return m_mapScreen.isRoomVisible(c, margin);
 }
 
-void CharacterBatch::drawCharacter(const Coordinate &c, const Color color, bool fill)
+void CharacterBatch::drawCharacter(const Coordinate c, const Color color, bool fill)
 {
     const Configuration::CanvasSettings &settings = getConfig().canvas;
 
@@ -103,14 +103,14 @@ void CharacterBatch::drawCharacter(const Coordinate &c, const Color color, bool 
     gl.drawBox(c, fill, beacon, isFar);
 }
 
-void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 &p1,
-                                                 const glm::vec3 &p2,
+void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 p1,
+                                                 const glm::vec3 p2,
                                                  const Color color)
 {
     mmgl::generateLineQuadsSafe(m_pathLineQuads, p1, p2, PATH_LINE_WIDTH, color);
 }
 
-void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
+void CharacterBatch::drawPreSpammedPath(const Coordinate c1,
                                         const std::vector<Coordinate> &path,
                                         const Color color)
 {
@@ -123,13 +123,13 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
         TranslatedVerts translated;
         translated.reserve(path.size() + 1);
 
-        const auto add = [&translated](const Coordinate &c) -> void {
+        const auto add = [&translated](const Coordinate c) -> void {
             static const glm::vec3 PATH_OFFSET{0.5f, 0.5f, 0.f};
             translated.push_back(c.to_vec3() + PATH_OFFSET);
         };
 
         add(c1);
-        for (const Coordinate &c2 : path) {
+        for (const Coordinate c2 : path) {
             add(c2);
         }
         return translated;
@@ -146,14 +146,14 @@ void CharacterBatch::drawPreSpammedPath(const Coordinate &c1,
     gl.drawPathPoint(color, verts.back());
 }
 
-void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
-                                                const glm::vec2 &in_b,
-                                                const glm::vec2 &in_c,
-                                                const glm::vec2 &in_d,
+void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 in_a,
+                                                const glm::vec2 in_b,
+                                                const glm::vec2 in_c,
+                                                const glm::vec2 in_d,
                                                 const QuadOptsEnum options)
 {
     const auto &m = m_stack.top().modelView;
-    const auto transform = [&m](const glm::vec2 &vin) -> glm::vec3 {
+    const auto transform = [&m](const glm::vec2 vin) -> glm::vec3 {
         const auto vtmp = m * glm::vec4(vin, 0.f, 1.f);
         return glm::vec3{vtmp / vtmp.w};
     };
@@ -226,7 +226,7 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
     }
 }
 
-void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
+void CharacterBatch::CharFakeGL::drawBox(const Coordinate coord,
                                          bool fill,
                                          bool beacon,
                                          const bool isFar)
@@ -280,7 +280,7 @@ void CharacterBatch::CharFakeGL::drawBox(const Coordinate &coord,
 
         const auto &color = m_color;
         const auto &m = m_stack.top().modelView;
-        const auto addTransformed = [this, &color, &m](const glm::vec2 &in_vert) -> void {
+        const auto addTransformed = [this, &color, &m](const glm::vec2 in_vert) -> void {
             const auto tmp = m * glm::vec4(in_vert, 0.f, 1.f);
             m_charRoomQuads.emplace_back(color, glm::vec3{in_vert, 0}, glm::vec3{tmp / tmp.w});
         };
@@ -364,7 +364,7 @@ void CharacterBatch::CharFakeGL::reallyDrawPaths(OpenGL &gl)
     }
 }
 
-void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 &pos,
+void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 pos,
                                                      const float degrees,
                                                      const Color color,
                                                      const bool fill)
@@ -381,7 +381,7 @@ void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 &pos,
     const glm::vec3 z{0, 0, 1};
     const glm::mat4 rotation = glm::rotate(glm::mat4(1), radians, z);
     for (size_t i = 0; i < 4; ++i) {
-        const glm::vec2 &tc = texCoords[i];
+        const glm::vec2 tc = texCoords[i];
         const auto tmp = rotation * glm::vec4(tc * 2.f - 1.f, 0, 1);
         const glm::vec2 screenSpaceOffset = scale * glm::vec2(tmp) / tmp.w;
         // solid   |filled
@@ -393,7 +393,7 @@ void CharacterBatch::CharFakeGL::addScreenSpaceArrow(const glm::vec3 &pos,
     }
 }
 
-void CharacterBatch::CharFakeGL::addName(const Coordinate &c,
+void CharacterBatch::CharFakeGL::addName(const Coordinate c,
                                          const std::string &name,
                                          const Color color,
                                          const MapScreen &mapScreen)

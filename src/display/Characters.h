@@ -33,14 +33,14 @@ public:
     const float rotationDegrees = 0.f;
 
 public:
-    explicit DistantObjectTransform(const glm::vec3 &offset_, const float rotationDegrees_)
+    explicit DistantObjectTransform(const glm::vec3 offset_, const float rotationDegrees_)
         : offset{offset_}
         , rotationDegrees{rotationDegrees_}
     {}
 
 public:
     // Caller must apply the correct translation and rotation.
-    NODISCARD static DistantObjectTransform construct(const glm::vec3 &pos,
+    NODISCARD static DistantObjectTransform construct(glm::vec3 pos,
                                                       const MapScreen &mapScreen,
                                                       float marginPixels);
 };
@@ -79,7 +79,7 @@ private:
         {
             // REVISIT: just make this the global operator<(),
             // so it can be picked up by std::less<Coordinate>.
-            bool operator()(const Coordinate &lhs, const Coordinate &rhs) const
+            NODISCARD bool operator()(const Coordinate lhs, const Coordinate rhs) const
             {
                 if (lhs.x < rhs.x) {
                     return true;
@@ -146,22 +146,19 @@ private:
             auto &m = m_stack.top().modelView;
             m = glm::scale(m, glm::vec3{x, y, z});
         }
-        void glTranslatef(const glm::vec3 &v)
+        void glTranslatef(const glm::vec3 v)
         {
             auto &m = m_stack.top().modelView;
             m = glm::translate(m, v);
         }
         void drawArrow(bool fill, bool beacon);
-        void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
-        void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color color, bool fill);
-        void addName(const Coordinate &c,
-                     const std::string &name,
-                     const Color color,
-                     const MapScreen &mapScreen);
-        void drawPathSegment(const glm::vec3 &p1, const glm::vec3 &p2, const Color color);
+        void drawBox(Coordinate coord, bool fill, bool beacon, bool isFar);
+        void addScreenSpaceArrow(glm::vec3 pos, float degrees, Color color, bool fill);
+        void addName(Coordinate c, const std::string &name, Color color, const MapScreen &mapScreen);
+        void drawPathSegment(glm::vec3 p1, glm::vec3 p2, Color color);
 
         // with blending, without depth; always size 8
-        void drawPathPoint(const Color color, const glm::vec3 &pos)
+        void drawPathPoint(const Color color, const glm::vec3 pos)
         {
             m_pathPoints.emplace_back(color, pos);
         }
@@ -183,11 +180,8 @@ private:
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              & static_cast<uint32_t>(rhs));
         }
-        void drawQuadCommon(const glm::vec2 &a,
-                            const glm::vec2 &b,
-                            const glm::vec2 &c,
-                            const glm::vec2 &d,
-                            QuadOptsEnum options);
+
+        void drawQuadCommon(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d, QuadOptsEnum options);
     };
 
 private:
@@ -207,23 +201,21 @@ protected:
     NODISCARD CharFakeGL &getOpenGL() { return m_fakeGL; }
 
 public:
-    void incrementCount(const Coordinate &c) { getOpenGL().reserve(c); }
+    void incrementCount(const Coordinate c) { getOpenGL().reserve(c); }
 
-    void resetCount(const Coordinate &c) { getOpenGL().clear(c); }
+    void resetCount(const Coordinate c) { getOpenGL().clear(c); }
 
-    NODISCARD bool isVisible(const Coordinate &c, float margin) const;
+    NODISCARD bool isVisible(Coordinate c, float margin) const;
 
 public:
-    void drawCharacter(const Coordinate &coordinate, const Color color, bool fill = true);
+    void drawCharacter(Coordinate coordinate, Color color, bool fill = true);
 
-    void drawName(const Coordinate &c, const std::string &name, const Color color)
+    void drawName(const Coordinate c, const std::string &name, const Color color)
     {
         getOpenGL().addName(c, name, color, m_mapScreen);
     }
 
-    void drawPreSpammedPath(const Coordinate &coordinate,
-                            const std::vector<Coordinate> &path,
-                            const Color color);
+    void drawPreSpammedPath(Coordinate coordinate, const std::vector<Coordinate> &path, Color color);
 
 public:
     void reallyDraw(OpenGL &gl, const MapCanvasTextures &textures, GLFont &font)

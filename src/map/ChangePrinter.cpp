@@ -151,7 +151,7 @@ void ChangePrinter::print(const bool val)
     m_os.writeWithColor(const_color, val ? "true" : "false");
 }
 
-void ChangePrinter::print(const Coordinate &coord)
+void ChangePrinter::print(const Coordinate coord)
 {
     auto &os = m_os;
     os.writeWithColor(type_name_color, "Coordinate");

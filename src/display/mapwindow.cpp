@@ -277,7 +277,7 @@ void MapWindow::slot_graphicsSettingsChanged()
     deref(m_canvas).graphicsSettingsChanged();
 }
 
-void MapWindow::slot_centerOnWorldPos(const glm::vec2 &worldPos)
+void MapWindow::slot_centerOnWorldPos(const glm::vec2 worldPos)
 {
     auto &horz = deref(m_horizontalScrollBar);
     auto &vert = deref(m_verticalScrollBar);
@@ -291,7 +291,7 @@ void MapWindow::slot_centerOnWorldPos(const glm::vec2 &worldPos)
     emit sig_setScroll(worldPos);
 }
 
-void MapWindow::centerOnScrollPos(const glm::ivec2 &scrollPos)
+void MapWindow::centerOnScrollPos(const glm::ivec2 scrollPos)
 {
     deref(m_horizontalScrollBar).setValue(scrollPos.x);
     deref(m_verticalScrollBar).setValue(scrollPos.y);
@@ -305,7 +305,7 @@ void MapWindow::resizeEvent(QResizeEvent * /*event*/)
     updateScrollBars();
 }
 
-void MapWindow::slot_setScrollBars(const Coordinate &min, const Coordinate &max)
+void MapWindow::slot_setScrollBars(const Coordinate min, const Coordinate max)
 {
     m_knownMapSize.min = min.to_ivec3();
     m_knownMapSize.max = max.to_ivec3();
@@ -360,7 +360,7 @@ void MapWindow::setCanvasEnabled(bool enabled)
     deref(m_canvasContainer).setEnabled(enabled);
 }
 
-glm::vec2 MapWindow::KnownMapSize::scrollToWorld(const glm::ivec2 &scrollPos) const
+glm::vec2 MapWindow::KnownMapSize::scrollToWorld(const glm::ivec2 scrollPos) const
 {
     auto worldPos = glm::vec2{scrollPos} / static_cast<float>(MapCanvas::SCROLL_SCALE);
     worldPos.y = static_cast<float>(size().y) - worldPos.y; // negate Y
@@ -368,7 +368,7 @@ glm::vec2 MapWindow::KnownMapSize::scrollToWorld(const glm::ivec2 &scrollPos) co
     return worldPos;
 }
 
-glm::ivec2 MapWindow::KnownMapSize::worldToScroll(const glm::vec2 &worldPos_in) const
+glm::ivec2 MapWindow::KnownMapSize::worldToScroll(const glm::vec2 worldPos_in) const
 {
     auto worldPos = worldPos_in;
     worldPos -= glm::vec2{min};

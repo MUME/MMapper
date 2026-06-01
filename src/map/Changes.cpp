@@ -19,14 +19,14 @@ void connectToNeighbors(ChangeList &changes,
     };
 
     const Map map = room.getMap();
-    auto connect = [&add, &map](const RoomId from, const Coordinate &pos, const ExitDirEnum dir) {
+    auto connect = [&add, &map](const RoomId from, const Coordinate pos, const ExitDirEnum dir) {
         if (const auto optRoom = map.findRoomHandle(pos)) {
             add(from, dir, optRoom.getId());
         }
     };
 
     const RoomId from = room.getId();
-    const Coordinate &center = room.getPosition();
+    const Coordinate center = room.getPosition();
     for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Coordinate pos = center + ::exitDir(dir);
         connect(from, pos, dir);

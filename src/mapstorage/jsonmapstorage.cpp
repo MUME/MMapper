@@ -96,7 +96,7 @@ public:
     NODISCARD const Index &index() const { return m_index; }
 };
 
-NODISCARD static std::string getZoneKey(const Coordinate &c)
+NODISCARD static std::string getZoneKey(const Coordinate c)
 {
     static constexpr const auto calcZoneCoord = [](const int n) -> int {
         auto f = [](const int x) -> int { return (x / ZONE_WIDTH) * ZONE_WIDTH; };
@@ -303,8 +303,8 @@ NODISCARD static constexpr const char *getNameUpper(const ExitDirEnum dir)
 void JsonWorld::writeMetadata(const QFileInfo &path, const Bounds &bounds) const
 {
     // This can give bogus data if the bounds aren't set.
-    const Coordinate &min = bounds.min;
-    const Coordinate &max = bounds.max;
+    const Coordinate min = bounds.min;
+    const Coordinate max = bounds.max;
 
     QJsonObject meta;
     meta["roomsCount"] = static_cast<qint64>(m_jRoomIds.size());
@@ -354,7 +354,7 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const ExternalRawRoom &room) const
           "A largely ceremonial hall, it was the first mineshaft that led down to what is\n"
     */
 
-    const Coordinate &pos = room.getPosition();
+    const Coordinate pos = room.getPosition();
     QJsonObject jr;
     jr["x"] = pos.x;
     jr["y"] = -pos.y;

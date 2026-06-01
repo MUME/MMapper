@@ -19,14 +19,14 @@ private:
 
 public:
     NODISCARD static std::shared_ptr<InfomarkSelection> allocEmpty(MapData &mapData,
-                                                                   const Coordinate &c1,
-                                                                   const Coordinate &c2)
+                                                                   const Coordinate c1,
+                                                                   const Coordinate c2)
     {
         return std::make_shared<InfomarkSelection>(Badge<InfomarkSelection>{}, mapData, c1, c2);
     }
     NODISCARD static std::shared_ptr<InfomarkSelection> alloc(MapData &mapData,
-                                                              const Coordinate &c1,
-                                                              const Coordinate &c2)
+                                                              const Coordinate c1,
+                                                              const Coordinate c2)
     {
         auto result = allocEmpty(mapData, c1, c2);
         result->init();
@@ -34,18 +34,15 @@ public:
     }
 
 public:
-    InfomarkSelection(Badge<InfomarkSelection>,
-                      MapData &,
-                      const Coordinate &c1,
-                      const Coordinate &c2);
+    InfomarkSelection(Badge<InfomarkSelection>, MapData &, Coordinate c1, Coordinate c2);
     DELETE_CTORS_AND_ASSIGN_OPS(InfomarkSelection);
 
 private:
     void init();
 
 public:
-    NODISCARD const Coordinate &getPosition1() const { return m_sel1; }
-    NODISCARD const Coordinate &getPosition2() const { return m_sel2; }
+    NODISCARD Coordinate getPosition1() const { return m_sel1; }
+    NODISCARD Coordinate getPosition2() const { return m_sel2; }
 
 public:
     NODISCARD size_t size() const { return m_markerList.size(); }
@@ -70,7 +67,7 @@ public:
     }
 
 public:
-    NODISCARD bool contains(InfomarkId im) const
+    NODISCARD bool contains(const InfomarkId im) const
     {
         const auto endIt = this->m_markerList.end();
         return std::find(m_markerList.begin(), endIt, im) != endIt;
@@ -91,5 +88,5 @@ public:
     }
 
 public:
-    void applyOffset(const Coordinate &offset) const;
+    void applyOffset(Coordinate offset) const;
 };

@@ -117,7 +117,7 @@ public:
 
 void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const RawRoom &room)
 {
-    const Coordinate &roomPos = room.getPosition();
+    const Coordinate roomPos = room.getPosition();
     const int x = roomPos.x;
     const int y = roomPos.y;
     const int z = roomPos.z;

@@ -64,7 +64,7 @@ DoorName MapData::getDoorName(const RoomId id, const ExitDirEnum dir)
     return tmp;
 }
 
-ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
+ExitDirFlags MapData::getExitDirections(const Coordinate pos)
 {
     if (const auto room = findRoomHandle(pos)) {
         return computeExitDirections(room.getRaw());

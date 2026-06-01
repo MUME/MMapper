@@ -30,21 +30,21 @@ public:
     NODISCARD const std::optional<Bounds> &getBounds() const { return m_bounds; }
 
 public:
-    NODISCARD const RoomId *findUnique(const Coordinate &key) const;
+    NODISCARD const RoomId *findUnique(Coordinate key) const;
 
 public:
-    void remove(RoomId id, const Coordinate &coord);
-    void add(RoomId id, const Coordinate &coord);
-    void move(RoomId id, const Coordinate &from, const Coordinate &to);
+    void remove(RoomId id, Coordinate coord);
+    void add(RoomId id, Coordinate coord);
+    void move(RoomId id, Coordinate from, Coordinate to);
     void updateBounds(ProgressCounter &pc);
     void printStats(ProgressCounter &pc, AnsiOstream &os) const;
 
 public:
-    // Callback = void(const Coordinate&, RoomId);
+    // Callback = void(const Coordinate , RoomId);
     template<typename Callback>
     void for_each(Callback &&callback) const
     {
-        static_assert(std::is_invocable_r_v<void, Callback, const Coordinate &, RoomId>);
+        static_assert(std::is_invocable_r_v<void, Callback, const Coordinate, RoomId>);
         m_unique.for_each([&callback](const auto &p) { callback(p.first, p.second); });
     }
     NODISCARD auto size() const { return m_unique.size(); }

@@ -73,7 +73,7 @@ public:
     void reset() { *this = ScaleFactor(); }
 
 public:
-    ScaleFactor &operator*=(const float ratio)
+    ALLOW_DISCARD ScaleFactor &operator*=(const float ratio)
     {
         assert(std::isfinite(ratio) && ratio > 0.f);
         set(m_scaleFactor * ratio);
@@ -131,8 +131,8 @@ public:
     NODISCARD auto height() const { return m_window.height(); }
 
 public:
-    NODISCARD const glm::vec2 &getScroll() const { return m_scroll; }
-    void setScroll(const glm::vec2 &scroll)
+    NODISCARD glm::vec2 getScroll() const { return m_scroll; }
+    void setScroll(const glm::vec2 scroll)
     {
         if (m_scroll != scroll) {
             m_scroll = scroll;
@@ -181,15 +181,15 @@ public:
     NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
 
 public:
-    NODISCARD std::optional<glm::vec3> project(const glm::vec3 &) const;
-    NODISCARD glm::vec3 unproject_raw(const glm::vec3 &) const;
-    NODISCARD glm::vec3 unproject_raw(const glm::vec3 &, const glm::mat4 &) const;
-    NODISCARD glm::vec3 unproject_clamped(const glm::vec2 &) const;
-    NODISCARD glm::vec3 unproject_clamped(const glm::vec2 &, const glm::mat4 &) const;
+    NODISCARD std::optional<glm::vec3> project(glm::vec3) const;
+    NODISCARD glm::vec3 unproject_raw(glm::vec3) const;
+    NODISCARD glm::vec3 unproject_raw(glm::vec3, const glm::mat4 &) const;
+    NODISCARD glm::vec3 unproject_clamped(glm::vec2) const;
+    NODISCARD glm::vec3 unproject_clamped(glm::vec2, const glm::mat4 &) const;
     NODISCARD std::optional<glm::vec3> unproject(const QInputEvent *event) const;
-    NODISCARD std::optional<glm::vec3> unproject(const glm::vec2 &xy) const;
+    NODISCARD std::optional<glm::vec3> unproject(glm::vec2 xy) const;
     NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(const QInputEvent *event) const;
-    NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(const glm::vec2 &xy) const;
+    NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(glm::vec2 xy) const;
     NODISCARD std::optional<glm::vec2> getMouseCoords(const QInputEvent *event) const;
 };
 
@@ -214,12 +214,12 @@ public:
 
 public:
     NODISCARD glm::vec3 getCenter() const;
-    NODISCARD bool isRoomVisible(const Coordinate &c, float margin) const;
-    NODISCARD glm::vec3 getProxyLocation(const glm::vec3 &pos, float margin) const;
+    NODISCARD bool isRoomVisible(Coordinate c, float margin) const;
+    NODISCARD glm::vec3 getProxyLocation(glm::vec3 pos, float margin) const;
     NODISCARD const MapCanvasViewport &getViewport() const { return m_viewport; }
 
 private:
-    NODISCARD VisiblityResultEnum testVisibility(const glm::vec3 &input_pos, float margin) const;
+    NODISCARD VisiblityResultEnum testVisibility(glm::vec3 input_pos, float margin) const;
 };
 
 struct NODISCARD AltDragState
@@ -344,7 +344,7 @@ public:
     {
         beginInteraction(AltDragState{pos, cursor});
     }
-    void beginDrag(const glm::vec3 &worldPos, const glm::vec2 &scroll, const glm::mat4 &viewProj)
+    void beginDrag(const glm::vec3 worldPos, const glm::vec2 scroll, const glm::mat4 &viewProj)
     {
         beginInteraction(DragState{worldPos, scroll, viewProj});
     }

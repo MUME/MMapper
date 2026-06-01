@@ -57,7 +57,7 @@ private:
     NODISCARD QString constructToolTip(const RoomHandle &);
 
 signals:
-    void sig_center(const glm::vec2 &worldPos);
+    void sig_center(glm::vec2 worldPos);
     void sig_newRoomSelection(const SigRoomSelection &);
     void sig_editSelection();
     void sig_log(const QString &, const QString &);

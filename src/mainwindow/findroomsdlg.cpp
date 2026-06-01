@@ -194,7 +194,7 @@ void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
         // REVISIT: should this block be a stand-alone function?
         {
             assert(r.getIdExternal() == extId);
-            const Coordinate &c = r.getPosition();
+            const Coordinate c = r.getPosition();
             const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
             emit sig_center(worldPos); // connects to MapWindow
         }

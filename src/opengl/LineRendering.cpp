@@ -11,11 +11,11 @@
 namespace mmgl {
 
 void generateLineQuad(std::vector<ColorVert> &verts,
-                      const glm::vec3 &p1,
-                      const glm::vec3 &p2,
+                      const glm::vec3 p1,
+                      const glm::vec3 p2,
                       const float width,
                       const Color color,
-                      const glm::vec3 &perpendicular_normal)
+                      const glm::vec3 perpendicular_normal)
 {
     // Assert that perpendicular_normal is unit length
     assert(
@@ -36,17 +36,17 @@ void generateLineQuad(std::vector<ColorVert> &verts,
     verts.emplace_back(color, v4);
 }
 
-bool isDegenerate(const glm::vec3 &vec)
+bool isDegenerate(const glm::vec3 vec)
 {
     return glm::length2(vec) < mmgl::GEOMETRIC_EPSILON * 10.f;
 }
 
-bool isNearZero(const glm::vec3 &segment)
+bool isNearZero(const glm::vec3 segment)
 {
     return glm::length2(segment) < mmgl::ZERO_LENGTH_THRESHOLD_SQ;
 }
 
-glm::vec3 getPerpendicularNormal(const glm::vec3 &direction)
+glm::vec3 getPerpendicularNormal(const glm::vec3 direction)
 {
     glm::vec3 perp_normal_candidate = glm::vec3(-direction.y, direction.x, 0.0f);
     if (isDegenerate(perp_normal_candidate)) {
@@ -55,7 +55,7 @@ glm::vec3 getPerpendicularNormal(const glm::vec3 &direction)
     return glm::normalize(perp_normal_candidate);
 }
 
-glm::vec3 getOrthogonalNormal(const glm::vec3 &direction, const glm::vec3 &perp_normal_1)
+glm::vec3 getOrthogonalNormal(const glm::vec3 direction, const glm::vec3 perp_normal_1)
 {
     glm::vec3 perp_normal_2_candidate = glm::cross(direction, perp_normal_1);
     if (isDegenerate(perp_normal_2_candidate)) {
@@ -65,8 +65,8 @@ glm::vec3 getOrthogonalNormal(const glm::vec3 &direction, const glm::vec3 &perp_
 }
 
 void generateLineQuadsSafe(std::vector<ColorVert> &verts,
-                           const glm::vec3 &p1,
-                           const glm::vec3 &p2,
+                           const glm::vec3 p1,
+                           const glm::vec3 p2,
                            const float width,
                            const Color color)
 {
@@ -82,7 +82,7 @@ void generateLineQuadsSafe(std::vector<ColorVert> &verts,
 }
 
 void drawZeroLengthSquare(std::vector<ColorVert> &verts,
-                          const glm::vec3 &center,
+                          const glm::vec3 center,
                           float width,
                           const Color color)
 {

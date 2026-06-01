@@ -69,7 +69,6 @@ public:
     NODISCARD bool operator!=(const World &rhs) const { return !(rhs == *this); }
 
 public:
-    NODISCARD const AreaInfo *findArea(const RoomArea &area) const;
     NODISCARD const AreaInfo &getArea(const RoomArea &area) const;
 
 public:
@@ -100,8 +99,8 @@ public:
     void requireValidRoom(RoomId id) const;
 
 public:
-    NODISCARD std::optional<RoomId> findRoom(const Coordinate &coord) const;
-    NODISCARD const Coordinate &getPosition(RoomId id) const;
+    NODISCARD std::optional<RoomId> findRoom(Coordinate coord) const;
+    NODISCARD const Coordinate getPosition(RoomId id) const;
 
 public:
     NODISCARD ServerRoomId getServerId(RoomId id) const;
@@ -229,9 +228,9 @@ private:
     void nukeAllExits(RoomId id, WaysEnum ways);
 
 private:
-    void moveRelative(RoomId id, const Coordinate &offset);
-    void moveRelative(const RoomIdSet &rooms, const Coordinate &offset);
-    void setPosition(RoomId id, const Coordinate &coord);
+    void moveRelative(RoomId id, Coordinate offset);
+    void moveRelative(const RoomIdSet &rooms, Coordinate offset);
+    void setPosition(RoomId id, Coordinate coord);
     void setServerId(RoomId id, ServerRoomId serverId);
 
 private:
@@ -266,7 +265,7 @@ private:
     void copy_exits(RoomId targetId, const RawRoom &source);
 
 private:
-    void mergeRelative(RoomId id, const Coordinate &offset);
+    void mergeRelative(RoomId id, Coordinate offset);
 
 private:
     void setRemapAndAllocateRooms(Remapping new_remap);
@@ -275,8 +274,8 @@ private:
     void initRoom(const RawRoom &input);
 
 private:
-    NODISCARD RoomId addRoom(const Coordinate &position);
-    void addRoom2(const Coordinate &desiredPosition, const ParseEvent &event);
+    NODISCARD RoomId addRoom(Coordinate position);
+    void addRoom2(Coordinate desiredPosition, const ParseEvent &event);
     void undeleteRoom(ExternalRoomId id, const RawRoom &raw);
 
 private:
@@ -297,7 +296,7 @@ private:
     NODISCARD bool containsRoomsNotIn(const World &other) const;
 
 public:
-    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
+    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, Coordinate offset) const;
 
 public:
     void printChange(AnsiOstream &aos, const Change &change) const;

@@ -134,12 +134,12 @@ BatchedInfomarksMeshes MapCanvas::getInfomarksMeshes()
     return result;
 }
 
-void InfomarksBatch::drawPoint(const glm::vec3 &a)
+void InfomarksBatch::drawPoint(const glm::vec3 a)
 {
     m_points.emplace_back(m_color, a + m_offset);
 }
 
-void InfomarksBatch::drawLine(const glm::vec3 &a, const glm::vec3 &b)
+void InfomarksBatch::drawLine(const glm::vec3 a, const glm::vec3 b)
 {
     const glm::vec3 start_v = a + m_offset;
     const glm::vec3 end_v = b + m_offset;
@@ -147,22 +147,23 @@ void InfomarksBatch::drawLine(const glm::vec3 &a, const glm::vec3 &b)
     mmgl::generateLineQuadsSafe(m_quads, start_v, end_v, INFOMARK_ARROW_LINE_WIDTH, m_color);
 }
 
-void InfomarksBatch::drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
+void InfomarksBatch::drawTriangle(const glm::vec3 a, const glm::vec3 b, const glm::vec3 c)
 {
     m_tris.emplace_back(m_color, a + m_offset);
     m_tris.emplace_back(m_color, b + m_offset);
     m_tris.emplace_back(m_color, c + m_offset);
 }
 
-void InfomarksBatch::renderText(const glm::vec3 &pos,
-                                const std::string &text,
+void InfomarksBatch::renderText(const glm::vec3 pos,
+                                std::string moved_text,
                                 const Color color,
                                 const std::optional<Color> bgcolor,
                                 const FontFormatFlags fontFormatFlag,
                                 const int rotationAngle)
 {
     assert(!m_text.locked);
-    m_text.text.emplace_back(pos, text, color, bgcolor, fontFormatFlag, rotationAngle);
+    m_text.text
+        .emplace_back(pos, std::move(moved_text), color, bgcolor, fontFormatFlag, rotationAngle);
 }
 
 InfomarksMeshes InfomarksBatch::getMeshes()
@@ -222,7 +223,7 @@ void InfomarksMeshes::render()
 void MapCanvas::drawInfomark(InfomarksBatch &batch,
                              const InfomarkHandle &marker,
                              const int currentLayer,
-                             const glm::vec2 &offset,
+                             const glm::vec2 offset,
                              const std::optional<Color> &overrideColor)
 {
     if (!marker.exists()) {
@@ -230,7 +231,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
         return;
     }
 
-    const Coordinate &pos1 = marker.getPosition1();
+    const Coordinate pos1 = marker.getPosition1();
     const int layer = pos1.z;
     if (layer != currentLayer) {
         // REVISIT: consider storing infomarks by level
@@ -238,7 +239,7 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
         return;
     }
 
-    const Coordinate &pos2 = marker.getPosition2();
+    const Coordinate pos2 = marker.getPosition2();
     const float x1 = static_cast<float>(pos1.x) / INFOMARK_SCALE + offset.x;
     const float y1 = static_cast<float>(pos1.y) / INFOMARK_SCALE + offset.y;
     const float x2 = static_cast<float>(pos2.x) / INFOMARK_SCALE + offset.x;
@@ -337,7 +338,7 @@ void MapCanvas::paintSelectedInfomarks()
 
         // draw selection points
         if (m_canvasMouseMode == CanvasMouseModeEnum::SELECT_INFOMARKS) {
-            const auto drawPoint = [&batch](const Coordinate &c, const Color color) {
+            const auto drawPoint = [&batch](const Coordinate c, const Color color) {
                 batch.setColor(color);
                 batch.setOffset(glm::vec3{0});
                 const glm::vec3 point{static_cast<glm::vec2>(c.to_vec3())
@@ -364,7 +365,7 @@ void MapCanvas::paintSelectedInfomarks()
                         return;
                     }
 
-                    const Coordinate &pos2 = marker.getPosition2();
+                    const Coordinate pos2 = marker.getPosition2();
                     assert(pos2.z == currentLayer);
                     drawPoint(pos2, color);
                 };

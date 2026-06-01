@@ -262,9 +262,9 @@ void testColor()
     TEST_ASSERT(green == greeni);
     TEST_ASSERT(blue == bluei);
 
-    const glm::vec4 &redVec = red.getVec4();
-    const glm::vec4 &greenVec = green.getVec4();
-    const glm::vec4 &blueVec = blue.getVec4();
+    const glm::vec4 redVec = red.getVec4();
+    const glm::vec4 greenVec = green.getVec4();
+    const glm::vec4 blueVec = blue.getVec4();
 
     TEST_ASSERT(utils::equals(redVec.r, 1.f));
     TEST_ASSERT(utils::equals(greenVec.g, 1.f));

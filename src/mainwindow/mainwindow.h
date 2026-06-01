@@ -430,10 +430,10 @@ public slots:
     void slot_onDeleteInfomarkSelection();
     void slot_onDeleteRoomSelection();
     void slot_onDeleteConnectionSelection();
-    NODISCARD bool slot_moveRoomSelection(const Coordinate &offset);
+    NODISCARD bool slot_moveRoomSelection(Coordinate offset);
     void slot_onMoveUpRoomSelection();
     void slot_onMoveDownRoomSelection();
-    NODISCARD bool slot_mergeRoomSelection(const Coordinate &offset);
+    NODISCARD bool slot_mergeRoomSelection(Coordinate offset);
     void slot_onMergeUpRoomSelection();
     void slot_onMergeDownRoomSelection();
     void slot_onConnectToNeighboursRoomSelection();

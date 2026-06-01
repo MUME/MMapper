@@ -56,8 +56,8 @@ private:
 
         NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
 
-        NODISCARD glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
-        NODISCARD glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
+        NODISCARD glm::vec2 scrollToWorld(glm::ivec2 scrollPos) const;
+        NODISCARD glm::ivec2 worldToScroll(glm::vec2 worldPos) const;
 
     } m_knownMapSize;
 
@@ -83,15 +83,15 @@ public:
     void hideSplashImage();
 
 private:
-    void centerOnScrollPos(const glm::ivec2 &scrollPos);
+    void centerOnScrollPos(glm::ivec2 scrollPos);
 
 signals:
-    void sig_setScroll(const glm::vec2 &worldPos);
+    void sig_setScroll(glm::vec2 worldPos);
     void sig_zoomChanged(float zoom);
 
 public slots:
-    void slot_setScrollBars(const Coordinate &, const Coordinate &);
-    void slot_centerOnWorldPos(const glm::vec2 &worldPos);
+    void slot_setScrollBars(Coordinate, Coordinate);
+    void slot_centerOnWorldPos(glm::vec2 worldPos);
     void slot_mapMove(int dx, int dy);
     void slot_continuousScroll(int dx, int dy);
     void slot_scrollTimerTimeout();

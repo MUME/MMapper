@@ -138,13 +138,16 @@ private:
         DELETE_CTORS_AND_ASSIGN_OPS(ConnectionFakeGL);
 
     public:
-        void setOffset(float x, float y, float z) { m_offset = glm::vec3{x, y, z}; }
+        void setOffset(const float x, const float y, const float z)
+        {
+            m_offset = glm::vec3{x, y, z};
+        }
         void setRed() { m_currentBuffer = &m_buffers.red; }
         void setNormal() { m_currentBuffer = &m_buffers.normal; }
         NODISCARD bool isNormal() const { return m_currentBuffer == &m_buffers.normal; }
 
     public:
-        void drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c);
+        void drawTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c);
         void drawLineStrip(View<glm::vec3> points);
     };
 

@@ -80,7 +80,7 @@ void MapFrontend::clear()
     virt_clear();
 }
 
-bool MapFrontend::createEmptyRoom(const Coordinate &c)
+bool MapFrontend::createEmptyRoom(const Coordinate c)
 {
     const auto &map = getCurrentMap();
     if (map.findRoomHandle(c)) {
@@ -117,7 +117,7 @@ bool MapFrontend::tryMakePermanent(const RoomId id)
 }
 
 void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
-                                  const Coordinate &expectedPosition)
+                                  const Coordinate expectedPosition)
 {
     const ParseEvent &event = sigParseEvent.deref();
 
@@ -138,7 +138,7 @@ RoomHandle MapFrontend::findRoomHandle(RoomId id) const
     return getCurrentMap().findRoomHandle(id);
 }
 
-RoomHandle MapFrontend::findRoomHandle(const Coordinate &coord) const
+RoomHandle MapFrontend::findRoomHandle(const Coordinate coord) const
 {
     return getCurrentMap().findRoomHandle(coord);
 }
@@ -163,7 +163,7 @@ const RawRoom &MapFrontend::getRawRoom(const RoomId id) const
     return getCurrentMap().getRawRoom(id);
 }
 
-RoomIdSet MapFrontend::findAllRooms(const Coordinate &coord) const
+RoomIdSet MapFrontend::findAllRooms(const Coordinate coord) const
 {
     if (const auto room = findRoomHandle(coord)) {
         return RoomIdSet{room.getId()};
@@ -179,7 +179,7 @@ RoomIdSet MapFrontend::findAllRooms(const SigParseEvent &event) const
     return getCurrentMap().findAllRooms(event.deref());
 }
 
-RoomIdSet MapFrontend::findAllRooms(const Coordinate &input_min, const Coordinate &input_max) const
+RoomIdSet MapFrontend::findAllRooms(const Coordinate input_min, const Coordinate input_max) const
 {
     Bounds bounds{input_min, input_max};
     RoomIdSet result;

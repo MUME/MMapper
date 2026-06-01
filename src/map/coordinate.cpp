@@ -28,17 +28,17 @@ Coordinate2f Coordinate2f::operator/(const float f) const
     return operator*(1.f / f);
 }
 
-bool Coordinate::operator==(const Coordinate &other) const
+bool Coordinate::operator==(const Coordinate other) const
 {
     return (other.x == x && other.y == y && other.z == z);
 }
 
-bool Coordinate::operator!=(const Coordinate &other) const
+bool Coordinate::operator!=(const Coordinate other) const
 {
     return (other.x != x || other.y != y || other.z != z);
 }
 
-int Coordinate::distance(const Coordinate &other) const
+int Coordinate::distance(const Coordinate other) const
 {
     return std::abs(x - other.x) + std::abs(y - other.y) + std::abs(z - other.z);
 }
@@ -50,28 +50,28 @@ void Coordinate::clear()
     z = 0;
 }
 
-void Coordinate::operator+=(const Coordinate &other)
+void Coordinate::operator+=(const Coordinate other)
 {
     x += other.x;
     y += other.y;
     z += other.z;
 }
 
-void Coordinate::operator-=(const Coordinate &other)
+void Coordinate::operator-=(const Coordinate other)
 {
     x -= other.x;
     y -= other.y;
     z -= other.z;
 }
 
-Coordinate Coordinate::operator+(const Coordinate &other) const
+Coordinate Coordinate::operator+(const Coordinate other) const
 {
     Coordinate ret = *this;
     ret += other;
     return ret;
 }
 
-Coordinate Coordinate::operator-(const Coordinate &other) const
+Coordinate Coordinate::operator-(const Coordinate other) const
 {
     Coordinate ret = *this;
     ret -= other;
@@ -99,7 +99,7 @@ Coordinate Coordinate::operator/(const int scalar) const
     return ret;
 }
 
-bool Coordinate::operator<(const Coordinate &rhs) const
+bool Coordinate::operator<(const Coordinate rhs) const
 {
     if (z < rhs.z) {
         return true;
@@ -117,26 +117,26 @@ bool Coordinate::operator<(const Coordinate &rhs) const
     }
     return x < rhs.x;
 }
-bool Coordinate::operator>(const Coordinate &rhs) const
+bool Coordinate::operator>(const Coordinate rhs) const
 {
     return rhs < *this;
 }
-bool Coordinate::operator<=(const Coordinate &rhs) const
+bool Coordinate::operator<=(const Coordinate rhs) const
 {
     return !(rhs < *this);
 }
-bool Coordinate::operator>=(const Coordinate &rhs) const
+bool Coordinate::operator>=(const Coordinate rhs) const
 {
     return !(*this < rhs);
 }
 
 // Technically we could init a, and then insert b.
-Bounds::Bounds(const Coordinate &a, const Coordinate &b)
+Bounds::Bounds(const Coordinate a, const Coordinate b)
     : min{Coordinate::min(a, b)}
     , max{Coordinate::max(a, b)}
 {}
 
-void Bounds::insert(const Coordinate &c)
+void Bounds::insert(const Coordinate c)
 {
 #define ONE(_type, _xyz) ((_type)._xyz) = std::_type(((_type)._xyz), (c._xyz))
 #define THREE(_type) \

@@ -32,16 +32,16 @@ float calculatePitchDegrees(const ViewportConfig &config, float zoomScale);
  * @brief Modern 3D projection matrix calculation.
  */
 glm::mat4 calculateViewProj(const ViewportConfig &config,
-                            const glm::vec2 &scrollPos,
-                            const glm::ivec2 &size,
+                            glm::vec2 scrollPos,
+                            glm::ivec2 size,
                             float zoomScale,
                             int currentLayer);
 
 /**
  * @brief Legacy 2D-style projection matrix calculation.
  */
-glm::mat4 calculateViewProjOld(const glm::vec2 &scrollPos,
-                               const glm::ivec2 &size,
+glm::mat4 calculateViewProjOld(glm::vec2 scrollPos,
+                               glm::ivec2 size,
                                float zoomScale,
                                int currentLayer);
 

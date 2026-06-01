@@ -29,37 +29,31 @@ static constexpr const float ZERO_LENGTH_THRESHOLD_SQ = GEOMETRIC_EPSILON * GEOM
 
 // NOTE: perpendicular_normal is assumed to be unit length.
 void generateLineQuad(std::vector<ColorVert> &verts,
-                      const glm::vec3 &p1,
-                      const glm::vec3 &p2,
+                      glm::vec3 p1,
+                      glm::vec3 p2,
                       float width,
                       Color color,
-                      const glm::vec3 &perpendicular_normal);
+                      glm::vec3 perpendicular_normal);
 
-void drawZeroLengthSquare(std::vector<ColorVert> &verts,
-                          const glm::vec3 &center,
-                          float width,
-                          Color color);
+void drawZeroLengthSquare(std::vector<ColorVert> &verts, glm::vec3 center, float width, Color color);
 
 // Returns a normalized vector perpendicular to the input direction, primarily in the XY plane.
 // Handles near-zero direction vectors by returning a default perpendicular (1,0,0).
-NODISCARD glm::vec3 getPerpendicularNormal(const glm::vec3 &direction);
+NODISCARD glm::vec3 getPerpendicularNormal(glm::vec3 direction);
 
 // Returns a normalized vector orthogonal to both the segment direction and the first perpendicular normal.
 // This is suitable for generating a second quad to form a "cross" shape.
-NODISCARD glm::vec3 getOrthogonalNormal(const glm::vec3 &direction, const glm::vec3 &perp_normal_1);
+NODISCARD glm::vec3 getOrthogonalNormal(glm::vec3 direction, glm::vec3 perp_normal_1);
 
 // Generates a line quad, handling zero-length segments by drawing a square instead.
 // Uses getPerpendicularNormal for the quad generation.
-void generateLineQuadsSafe(std::vector<ColorVert> &verts,
-                           const glm::vec3 &p1,
-                           const glm::vec3 &p2,
-                           float width,
-                           Color color);
+void generateLineQuadsSafe(
+    std::vector<ColorVert> &verts, glm::vec3 p1, glm::vec3 p2, float width, Color color);
 
 // Checks if the squared length of a vector is below the degeneration threshold.
-NODISCARD bool isDegenerate(const glm::vec3 &vec);
+NODISCARD bool isDegenerate(glm::vec3 vec);
 
 // Checks if the squared length of a segment vector is below the zero-length threshold.
-NODISCARD bool isNearZero(const glm::vec3 &segment);
+NODISCARD bool isNearZero(glm::vec3 segment);
 
 } // namespace mmgl

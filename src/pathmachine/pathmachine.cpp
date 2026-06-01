@@ -269,7 +269,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent, ChangeList &chang
                     const auto cmd = event.getMoveType();
                     // NOTE: This allows ExitDirEnum::UNKNOWN,
                     // which means the coordinate can be Coordinate(0,0,0).
-                    const Coordinate &eDir = ::exitDir(getDirection(cmd));
+                    const Coordinate eDir = ::exitDir(getDirection(cmd));
 
                     // CAUTION: This test seems to mean it wants only NESW,
                     // but it would also accept ExitDirEnum::UNKNOWN,
@@ -570,7 +570,7 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent, ChangeList &
     // only create rooms if it has a serverId or no properties are skipped and the direction is NESWUD.
     if (event.canCreateNewRoom() && isDirectionNESWUD(moveCode) && hasMostLikelyRoom()) {
         const auto dir = getDirection(moveCode);
-        const Coordinate &move = ::exitDir(dir);
+        const Coordinate move = ::exitDir(dir);
         Crossover exp{m_map, m_paths, dir, params};
         RoomIdSet pathEnds;
         for (const auto &path : deref(m_paths)) {

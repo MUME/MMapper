@@ -294,8 +294,8 @@ public:
 
     NODISCARD Viewport getPhysicalViewport() const
     {
-        const glm::ivec2 &offset = m_viewport.offset;
-        const glm::ivec2 &size = m_viewport.size;
+        const auto &offset = m_viewport.offset;
+        const auto &size = m_viewport.size;
         return Viewport{{scalei(offset.x), scalei(offset.y)}, {scalei(size.x), scalei(size.y)}};
     }
 
