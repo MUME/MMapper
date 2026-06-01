@@ -24,7 +24,7 @@ public:
 #undef X_NOP
 
 public:
-    const std::vector<Change> &getChanges() const { return m_changes; }
+    NODISCARD const std::vector<Change> &getChanges() const { return m_changes; }
     NODISCARD bool empty() const { return m_changes.empty(); }
 };
 

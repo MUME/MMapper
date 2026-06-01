@@ -11,7 +11,7 @@
 #include <sstream>
 
 namespace {
-constexpr bool isUppercase(const char *s)
+NODISCARD constexpr bool isUppercase(const char *s)
 {
     while (*s) {
         if (*s >= 'a' && *s <= 'z')
