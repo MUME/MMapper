@@ -10,6 +10,26 @@
 
 #include <sstream>
 
+namespace {
+constexpr bool isUppercase(const char *s)
+{
+    while (*s) {
+        if (*s >= 'a' && *s <= 'z')
+            return false;
+        s++;
+    }
+    return true;
+}
+#define X_CHECK_UPPER(id, name, qkey, policy) \
+    static_assert(isUppercase(name), "Hotkey name must be uppercase: " name);
+XFOREACH_HOTKEY_BASE_KEYS(X_CHECK_UPPER)
+#undef X_CHECK_UPPER
+#define X_CHECK_UPPER(name, camel, qtenum) \
+    static_assert(isUppercase(#name), "Hotkey modifier must be uppercase: " #name);
+XFOREACH_HOTKEY_MODIFIER(X_CHECK_UPPER)
+#undef X_CHECK_UPPER
+} // namespace
+
 bool Hotkey::isPolicySatisfied() const
 {
     const auto mods = modifiers();
