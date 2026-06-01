@@ -38,7 +38,7 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(Color);
 
 public:
-    explicit Color(const glm::vec4 &color)
+    explicit Color(const glm::vec4 color)
         : m_color{glm::packUnorm4x8(color)}
     {}
 
@@ -91,7 +91,7 @@ public:
 
 public:
     // note: this is not done in linear color space.
-    NODISCARD static Color multiplyAsVec4(const Color a, const Color b);
+    NODISCARD static Color multiplyAsVec4(Color a, Color b);
 };
 
 static_assert(sizeof(Color) == sizeof(uint32_t));

@@ -60,18 +60,18 @@ public:
     {}
 
     void setColor(const Color color) { m_color = color; }
-    void setOffset(const glm::vec3 &offset) { m_offset = offset; }
-    void drawPoint(const glm::vec3 &a);
-    void drawLine(const glm::vec3 &a, const glm::vec3 &b);
-    void drawLineStrip(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
+    void setOffset(const glm::vec3 offset) { m_offset = offset; }
+    void drawPoint(glm::vec3 a);
+    void drawLine(glm::vec3 a, glm::vec3 b);
+    void drawLineStrip(const glm::vec3 a, const glm::vec3 b, const glm::vec3 c)
     {
         drawLine(a, b);
         drawLine(b, c);
     }
-    void drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c);
-    void renderText(const glm::vec3 &pos,
-                    const std::string &text,
-                    const Color color,
+    void drawTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c);
+    void renderText(glm::vec3 pos,
+                    std::string moved_text,
+                    Color color,
                     std::optional<Color> bgcolor,
                     FontFormatFlags fontFormatFlag,
                     int rotationAngle);

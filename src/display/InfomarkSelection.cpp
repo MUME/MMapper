@@ -17,8 +17,8 @@
 // from "world scale" Coordinate to "infomark scale" Coordinate.
 InfomarkSelection::InfomarkSelection(Badge<InfomarkSelection>,
                                      MapData &mapData,
-                                     const Coordinate &c1,
-                                     const Coordinate &c2)
+                                     const Coordinate c1,
+                                     const Coordinate c2)
     : m_mapData{mapData}
     , m_sel1{c1}
     , m_sel2{c2}
@@ -41,12 +41,12 @@ void InfomarkSelection::init()
     const auto bx2 = std::max(c1.x, c2.x);
     const auto by2 = std::max(c1.y, c2.y);
 
-    const auto isCoordInSelection = [bx1, by1, bx2, by2](const Coordinate &c) -> bool {
+    const auto isCoordInSelection = [bx1, by1, bx2, by2](const Coordinate c) -> bool {
         return isClamped(c.x, bx1, bx2) && isClamped(c.y, by1, by2);
     };
 
     const auto isMarkerInSelection = [z, &isCoordInSelection](const InfomarkHandle &marker) -> bool {
-        const Coordinate &pos1 = marker.getPosition1();
+        const Coordinate pos1 = marker.getPosition1();
         if (z != pos1.z) {
             return false;
         }
@@ -59,7 +59,7 @@ void InfomarkSelection::init()
             return false;
         }
 
-        const Coordinate &pos2 = marker.getPosition2();
+        const Coordinate pos2 = marker.getPosition2();
         if (z != pos2.z) {
             return false;
         }
@@ -76,7 +76,7 @@ void InfomarkSelection::init()
     }
 }
 
-void InfomarkSelection::applyOffset(const Coordinate &offset) const
+void InfomarkSelection::applyOffset(const Coordinate offset) const
 {
     if (m_markerList.empty()) {
         qWarning() << "No markers selected.";

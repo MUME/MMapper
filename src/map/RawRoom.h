@@ -19,7 +19,7 @@ public:
     using ExitType = TaggedRawExit<Tag_>;
     using IdType = typename ExitType::IdType;
     using Exits = EnumIndexedArray<ExitType, ExitDirEnum, NUM_EXITS>;
-    static constexpr const IdType INVALID_ID{INVALID_ROOMID.value()};
+    static constexpr IdType INVALID_ID{INVALID_ROOMID.value()};
 
 public:
     RoomFields fields;
@@ -38,8 +38,8 @@ public:
     void setServerId(const ServerRoomId newId) { this->server_id = newId; }
 
 public:
-    NODISCARD const Coordinate &getPosition() const { return position; }
-    void setPosition(const Coordinate &c) { this->position = c; }
+    NODISCARD Coordinate getPosition() const { return position; }
+    void setPosition(const Coordinate c) { this->position = c; }
 
 public:
     NODISCARD RoomFields &getRoomFields() { return fields; }

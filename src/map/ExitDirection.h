@@ -60,5 +60,5 @@ NODISCARD ExitDirEnum dirForChar(QChar dir);
 NODISCARD char charForDir(ExitDirEnum dir);
 } // namespace Mmapper2Exit
 
-NODISCARD extern const Coordinate &exitDir(ExitDirEnum dir);
-NODISCARD extern const std::string_view to_string_view(ExitDirEnum dir);
+NODISCARD extern Coordinate exitDir(ExitDirEnum dir);
+NODISCARD extern std::string_view to_string_view(ExitDirEnum dir);

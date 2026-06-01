@@ -262,7 +262,7 @@ std::optional<RawMapLoadData> PandoraMapStorage::virt_loadData()
         };
 
         auto newDeathTrapRoom = [](const ExternalRoomId id,
-                                   const Coordinate &pos) -> ExternalRawRoom {
+                                   const Coordinate pos) -> ExternalRawRoom {
             ExternalRawRoom result_room;
             result_room.setId(id);
             result_room.setPosition(pos);

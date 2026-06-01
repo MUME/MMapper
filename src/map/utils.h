@@ -13,5 +13,5 @@
 class Coordinate;
 
 enum class NODISCARD FindCoordEnum : uint8_t { InUse, Available };
-NODISCARD extern Coordinate getNearestFree(
-    const Coordinate &c, const std::function<FindCoordEnum(const Coordinate &)> &check);
+NODISCARD extern Coordinate getNearestFree(Coordinate c,
+                                           const std::function<FindCoordEnum(Coordinate)> &check);

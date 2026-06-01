@@ -116,7 +116,7 @@ SanitizerChanges WorldBuilder::sanitize(ProgressCounter &counter,
 
     struct NODISCARD CoordSet final : public std::unordered_set<Coordinate>
     {
-        NODISCARD bool contains(const Coordinate &c) const { return find(c) != end(); }
+        NODISCARD bool contains(const Coordinate c) const { return find(c) != end(); }
     };
 
     auto hasUniqueCoords = [&input]() -> bool {

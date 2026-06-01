@@ -92,7 +92,7 @@ public:
 
     // new Path is created, distance between rooms is calculated and probability is set accordingly.
     NODISCARD std::shared_ptr<Path> fork(const RoomHandle &room,
-                                         const Coordinate &expectedCoordinate,
+                                         Coordinate expectedCoordinate,
                                          const PathParameters &params,
                                          ExitDirEnum dir);
     NODISCARD double getProb() const

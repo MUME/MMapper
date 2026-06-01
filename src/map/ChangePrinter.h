@@ -44,7 +44,7 @@ private:
 
 private:
     void print(ServerRoomId serverId);
-    void print(const Coordinate &coord);
+    void print(Coordinate coord);
 
 private:
     void print(const DoorName &name);
@@ -89,7 +89,7 @@ private:
     void print(const RoomFieldVariant &var);
 
 private:
-    void print(const InfomarkId id);
+    void print(InfomarkId id);
     void print(InfomarkClassEnum type);
     void print(InfomarkTypeEnum type);
     void print(const InfomarkText &text);

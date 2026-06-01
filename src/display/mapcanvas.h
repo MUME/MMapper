@@ -220,14 +220,14 @@ public:
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
-    void zoomAt(float factor, const glm::vec2 &mousePos);
+    void zoomAt(float factor, glm::vec2 mousePos);
     void handleZoomAtEvent(const QInputEvent *event, float deltaFactor);
 
     NODISCARD BatchedInfomarksMeshes getInfomarksMeshes();
     void drawInfomark(InfomarksBatch &batch,
                       const InfomarkHandle &marker,
                       int currentLayer,
-                      const glm::vec2 &offset = {},
+                      glm::vec2 offset = {},
                       const std::optional<Color> &overrideColor = std::nullopt);
     void updateBatches();
     void finishPendingMapBatches();
@@ -269,9 +269,9 @@ private:
     void log(const QString &msg) { emit sig_log("MapCanvas", msg); }
 
 signals:
-    void sig_onCenter(const glm::vec2 &worldCoord);
+    void sig_onCenter(glm::vec2 worldCoord);
     void sig_mapMove(int dx, int dy);
-    void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
+    void sig_setScrollBars(Coordinate min, Coordinate max);
     void sig_continuousScroll(int, int);
 
     void sig_log(const QString &, const QString &);
@@ -294,8 +294,8 @@ public slots:
 
     void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
 
-    void slot_setScroll(const glm::vec2 &worldPos);
-    // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
+    void slot_setScroll(const glm::vec2 worldPos);
+    // void setScroll(const glm::ivec2 ) = delete; // moc tries to call the wrong one if you define this
     void slot_setHorizontalScroll(float worldX);
     void slot_setVerticalScroll(float worldY);
 

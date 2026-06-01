@@ -394,7 +394,7 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
     glm::vec3 maxCoord = center;
     glm::vec3 minCoord = center;
 
-    const auto probe = [this, &clickPoint, &maxCoord, &minCoord](const glm::vec2 &offset) -> void {
+    const auto probe = [this, &clickPoint, &maxCoord, &minCoord](const glm::vec2 offset) -> void {
         const auto coord = unproject_clamped(clickPoint + offset);
         maxCoord = glm::max(maxCoord, coord);
         minCoord = glm::min(minCoord, coord);
@@ -411,7 +411,7 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
         }
     }
 
-    const auto getScaled = [this](const glm::vec3 &c) -> Coordinate {
+    const auto getScaled = [this](const glm::vec3 c) -> Coordinate {
         const auto pos = glm::ivec3(glm::vec2(c) * static_cast<float>(INFOMARK_SCALE),
                                     getCurrentLayer());
         return Coordinate{pos.x, pos.y, pos.z};
@@ -749,7 +749,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         if (hasLeftButton) {
             if (auto *const move = getInteraction<RoomSelMove>(); move && hasSel1() && hasSel2()) {
                 auto &map = this->m_data;
-                auto isMovable = [&map](RoomSelection &sel, const Coordinate &offset) -> bool {
+                auto isMovable = [&map](RoomSelection &sel, const Coordinate offset) -> bool {
                     sel.removeMissing(map);
                     return map.getCurrentMap().wouldAllowRelativeMove(sel.getRoomIds(), offset);
                 };
@@ -849,7 +849,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 auto tmpSel = InfomarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
                     const InfomarkHandle &firstMark = tmpSel->front();
-                    const Coordinate &pos = firstMark.getPosition1();
+                    const Coordinate pos = firstMark.getPosition1();
                     QString ctemp = QString("Selected Info Mark: [%1] (at %2,%3,%4)")
                                         .arg(firstMark.getText().toQString())
                                         .arg(pos.x)
@@ -925,8 +925,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 }
 
             } else if (hasSel1() && hasSel2()) {
-                const Coordinate &c1 = getSel1().getCoordinate();
-                const Coordinate &c2 = getSel2().getCoordinate();
+                const Coordinate c1 = getSel1().getCoordinate();
+                const Coordinate c2 = getSel2().getCoordinate();
                 if (m_roomSelection == nullptr) {
                     // add rooms to default selections
                     m_roomSelection = RoomSelection::createSelection(m_data.findAllRooms(c1, c2));
@@ -1047,7 +1047,7 @@ void MapCanvas::stopMoving()
     endInteraction();
 }
 
-void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
+void MapCanvas::zoomAt(const float factor, const glm::vec2 mousePos)
 {
     const auto optWorldPos = unproject(mousePos);
     if (!optWorldPos) {
@@ -1087,7 +1087,7 @@ void MapCanvas::zoomAt(const float factor, const glm::vec2 &mousePos)
     m_frameManager.requestUpdate();
 }
 
-void MapCanvas::slot_setScroll(const glm::vec2 &worldPos)
+void MapCanvas::slot_setScroll(const glm::vec2 worldPos)
 {
     if (!utils::isSameFloat(getScroll().x, worldPos.x)
         || !utils::isSameFloat(getScroll().y, worldPos.y)) {
@@ -1145,7 +1145,7 @@ void MapCanvas::slot_zoomReset()
 
 void MapCanvas::onMovement()
 {
-    const Coordinate &pos = m_data.tryGetPosition().value_or(Coordinate{});
+    const Coordinate pos = m_data.tryGetPosition().value_or(Coordinate{});
     setCurrentLayer(pos.z);
     getOpenGL().getUboManager().invalidate(Legacy::SharedVboEnum::CameraBlock);
     const glm::vec2 newScroll = pos.to_vec2() + glm::vec2{0.5f, 0.5f};

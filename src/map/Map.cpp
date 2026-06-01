@@ -123,7 +123,7 @@ RoomHandle Map::findRoomHandle(const ServerRoomId serverId) const
     return RoomHandle{};
 }
 
-RoomHandle Map::findRoomHandle(const Coordinate &coord) const
+RoomHandle Map::findRoomHandle(const Coordinate coord) const
 {
     if (auto optRoom = getWorld().findRoom(coord)) {
         return getRoomHandle(*optRoom);
@@ -508,7 +508,7 @@ void Map::diff(ProgressCounter &pc, AnsiOstream &os, const Map &a, const Map &b)
             to.insert(from.begin(), from.end());
         }
 
-        Sets &operator+=(const Sets &other)
+        ALLOW_DISCARD Sets &operator+=(const Sets &other)
         {
             add_all(removedSet, other.removedSet);
             add_all(addedSet, other.addedSet);
@@ -686,7 +686,7 @@ void Map::diff(ProgressCounter &pc, AnsiOstream &os, const Map &a, const Map &b)
     }
 }
 
-static void print_coordinate(AnsiOstream &os, const RawAnsi &ansi, const Coordinate &where)
+static void print_coordinate(AnsiOstream &os, const RawAnsi &ansi, const Coordinate where)
 {
     os << "(";
     os.writeWithColor(ansi, where.x);
@@ -1099,7 +1099,7 @@ Map Map::merge(ProgressCounter &pc,
                const Map &currentMap,
                std::vector<ExternalRawRoom> newRooms,
                std::vector<RawInfomark> newMarks,
-               const Coordinate &mapOffset)
+               const Coordinate mapOffset)
 {
     if (newRooms.empty()) {
         throw std::runtime_error("no rooms to merge");
@@ -1248,7 +1248,7 @@ void Map::foreachChangedRoom(ProgressCounter &pc,
     });
 }
 
-NODISCARD bool Map::wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const
+NODISCARD bool Map::wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate offset) const
 {
     return getWorld().wouldAllowRelativeMove(set, offset);
 }

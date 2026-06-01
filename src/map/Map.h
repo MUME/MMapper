@@ -70,7 +70,7 @@ public:
     NODISCARD RoomHandle findRoomHandle(RoomId id) const;
     NODISCARD RoomHandle findRoomHandle(ExternalRoomId id) const;
     NODISCARD RoomHandle findRoomHandle(ServerRoomId id) const;
-    NODISCARD RoomHandle findRoomHandle(const Coordinate &coord) const;
+    NODISCARD RoomHandle findRoomHandle(Coordinate coord) const;
 
 public:
     // Semantics: "getRoomHandle()" functions throw if the handle is invalid;
@@ -142,7 +142,7 @@ public:
                                const Map &currentMap,
                                std::vector<ExternalRawRoom> newRooms,
                                std::vector<RawInfomark> newMarks,
-                               const Coordinate &mapOffset);
+                               Coordinate mapOffset);
 
     static void foreachChangedRoom(ProgressCounter &pc,
                                    const Map &saved,
@@ -150,7 +150,7 @@ public:
                                    const std::function<void(const RawRoom &room)> &callback);
 
 public:
-    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, const Coordinate &offset) const;
+    NODISCARD bool wouldAllowRelativeMove(const RoomIdSet &set, Coordinate offset) const;
 
 public:
     void printChange(AnsiOstream &aos, const Change &change) const;
@@ -189,7 +189,7 @@ struct NODISCARD BasicDiffStats final
     size_t numRoomsAdded = 0;
     size_t numRoomsChanged = 0;
 
-    BasicDiffStats &operator+=(const BasicDiffStats &other)
+    ALLOW_DISCARD BasicDiffStats &operator+=(const BasicDiffStats &other)
     {
         numRoomsRemoved += other.numRoomsRemoved;
         numRoomsAdded += other.numRoomsAdded;

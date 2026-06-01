@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <deque>
 
-class MapHistory
+class NODISCARD MapHistory final
 {
 private:
     std::deque<Map> m_history;
@@ -15,13 +15,16 @@ private:
     bool m_capped;
 
 public:
-    MapHistory(bool capped = false, size_t max_size = 0);
+    explicit MapHistory(bool capped = false, size_t max_size = 0);
+    ~MapHistory() = default;
+    MapHistory(const MapHistory &) = delete;
+    MapHistory &operator=(const MapHistory &) = delete;
 
 public:
     void push(Map map);
-    Map pop();
+    NODISCARD Map pop();
     void clear();
 
 public:
-    bool isEmpty() const;
+    NODISCARD bool isEmpty() const;
 };

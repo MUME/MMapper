@@ -24,7 +24,7 @@ public:
         : x{x_}
         , y{y_}
     {}
-    explicit Coordinate2i(const glm::ivec2 &rhs)
+    explicit Coordinate2i(const glm::ivec2 rhs)
         : x{rhs.x}
         , y{rhs.y}
     {}
@@ -37,13 +37,13 @@ public:
     {
         return Coordinate2i{x - rhs.x, y - rhs.y};
     }
-    Coordinate2i &operator+=(const glm::ivec2 &rhs)
+    ALLOW_DISCARD Coordinate2i &operator+=(const glm::ivec2 rhs)
     {
         auto &self = *this;
         self = self + Coordinate2i{rhs};
         return *this;
     }
-    Coordinate2i &operator-=(const glm::ivec2 &rhs)
+    ALLOW_DISCARD Coordinate2i &operator-=(const glm::ivec2 rhs)
     {
         auto &self = *this;
         self = self - Coordinate2i{rhs};
@@ -111,45 +111,45 @@ public:
     NODISCARD glm::vec3 to_vec3() const { return glm::vec3{x, y, z}; }
 
 public:
-    NODISCARD bool operator==(const Coordinate &other) const;
-    NODISCARD bool operator!=(const Coordinate &other) const;
-    void operator+=(const Coordinate &other);
-    void operator-=(const Coordinate &other);
-    NODISCARD Coordinate operator+(const Coordinate &other) const;
-    NODISCARD Coordinate operator-(const Coordinate &other) const;
+    NODISCARD bool operator==(Coordinate other) const;
+    NODISCARD bool operator!=(Coordinate other) const;
+    void operator+=(Coordinate other);
+    void operator-=(Coordinate other);
+    NODISCARD Coordinate operator+(Coordinate other) const;
+    NODISCARD Coordinate operator-(Coordinate other) const;
     NODISCARD Coordinate operator*(int scalar) const;
     NODISCARD Coordinate operator/(int scalar) const;
 
-    NODISCARD int distance(const Coordinate &other) const;
+    NODISCARD int distance(Coordinate other) const;
     void clear();
 
 public:
-    NODISCARD static Coordinate toCoordinate(const glm::ivec3 &c)
+    NODISCARD static Coordinate toCoordinate(const glm::ivec3 c)
     {
         return Coordinate(c.x, c.y, c.z);
     }
 
-    NODISCARD static Coordinate min(const Coordinate &a, const Coordinate &b)
+    NODISCARD static Coordinate min(const Coordinate a, const Coordinate b)
     {
         return toCoordinate(glm::min(a.to_ivec3(), b.to_ivec3()));
     }
 
-    NODISCARD static Coordinate max(const Coordinate &a, const Coordinate &b)
+    NODISCARD static Coordinate max(const Coordinate a, const Coordinate b)
     {
         return toCoordinate(glm::max(a.to_ivec3(), b.to_ivec3()));
     }
 
 public:
-    bool operator<(const Coordinate &rhs) const;
-    bool operator>(const Coordinate &rhs) const;
-    bool operator<=(const Coordinate &rhs) const;
-    bool operator>=(const Coordinate &rhs) const;
+    NODISCARD bool operator<(Coordinate rhs) const;
+    NODISCARD bool operator>(Coordinate rhs) const;
+    NODISCARD bool operator<=(Coordinate rhs) const;
+    NODISCARD bool operator>=(Coordinate rhs) const;
 };
 
 template<>
 struct std::hash<Coordinate>
 {
-    std::size_t operator()(const Coordinate &id) const noexcept
+    std::size_t operator()(const Coordinate id) const noexcept
     {
         const auto hx = numeric_hash(id.x);
         const auto hy = numeric_hash(id.y);
@@ -167,7 +167,7 @@ struct NODISCARD Bounds final
 
     // NOTE: These are supposed to be min and max,
     // but we'll accept a strange mixture.
-    Bounds(const Coordinate &a, const Coordinate &b);
+    Bounds(const Coordinate a, const Coordinate b);
 
 private:
     NODISCARD static inline bool isBounded(const int x, const int lo, const int hi)
@@ -176,14 +176,14 @@ private:
     }
 
 public:
-    NODISCARD bool contains(const Coordinate &coord) const
+    NODISCARD bool contains(const Coordinate coord) const
     {
         return isBounded(coord.x, min.x, max.x)     //
                && isBounded(coord.y, min.y, max.y)  //
                && isBounded(coord.z, min.z, max.z); //
     }
 
-    void insert(const Coordinate &c);
+    void insert(const Coordinate c);
     NODISCARD bool operator==(const Bounds &rhs) const { return min == rhs.min && max == rhs.max; }
     NODISCARD bool operator!=(const Bounds &rhs) const { return !(rhs == *this); }
 };
@@ -205,7 +205,7 @@ private:
 
 public:
     OptBounds() = default;
-    OptBounds(const Coordinate &min, const Coordinate &max)
+    OptBounds(const Coordinate min, const Coordinate max)
         : m_bounds{Bounds{min, max}}
     {
         assert(min.x <= max.x);
@@ -214,7 +214,7 @@ public:
     }
 
 public:
-    NODISCARD static OptBounds fromCenterRadius(const Coordinate &center, const Coordinate &radius)
+    NODISCARD static OptBounds fromCenterRadius(const Coordinate center, const Coordinate radius)
     {
         assert(radius.x >= 0);
         assert(radius.y >= 0);
@@ -228,7 +228,7 @@ public:
     void reset() { m_bounds.reset(); }
 
 public:
-    NODISCARD bool contains(const Coordinate &coord) const
+    NODISCARD bool contains(const Coordinate coord) const
     {
         return !isRestricted() || getBounds().contains(coord);
     }

@@ -107,7 +107,7 @@ void AbstractParser::parseMark(StringView input)
         return c;
     };
 
-    auto getInfomarkSelection = [this](const Coordinate &c) -> std::shared_ptr<InfomarkSelection> {
+    auto getInfomarkSelection = [this](const Coordinate c) -> std::shared_ptr<InfomarkSelection> {
         // the scaling + offset operation looks like `A*x + b` where A is a 3x3
         // transformation matrix and b,x are 3-vectors
 

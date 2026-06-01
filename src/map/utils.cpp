@@ -76,8 +76,7 @@ Coordinate &CoordinateIterator::next()
     return c;
 }
 
-Coordinate getNearestFree(const Coordinate &p,
-                          const std::function<FindCoordEnum(const Coordinate &)> &check)
+Coordinate getNearestFree(const Coordinate p, const std::function<FindCoordEnum(Coordinate)> &check)
 {
     if (check(p) == FindCoordEnum::Available) {
         return p;

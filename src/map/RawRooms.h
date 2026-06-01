@@ -167,18 +167,15 @@ public:
     }
 
 public:
-    void setPosition(const RoomId id, const Coordinate &coord)
+    void setPosition(const RoomId id, const Coordinate coord)
     {
         updateRawRoomRef(id, [&coord](auto &r) { r.position = coord; });
     }
-    NODISCARD const Coordinate &getPosition(const RoomId id) const
-    {
-        return getRawRoomRef(id).position;
-    }
+    NODISCARD Coordinate getPosition(const RoomId id) const { return getRawRoomRef(id).position; }
 
 public:
     NODISCARD RoomStatusEnum getStatus(const RoomId id) const { return getRawRoomRef(id).status; }
-    void setStatus(const RoomId id, RoomStatusEnum status)
+    void setStatus(const RoomId id, const RoomStatusEnum status)
     {
         if (status != getStatus(id)) {
             updateRawRoomRef(id, [status](auto &r) { r.status = status; });

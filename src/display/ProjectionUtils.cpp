@@ -14,7 +14,7 @@
 
 namespace ProjectionUtils {
 
-float calculatePitchDegrees(const ViewportConfig &config, float zoomScale)
+float calculatePitchDegrees(const ViewportConfig &config, const float zoomScale)
 {
     if (!config.autoTilt) {
         return config.verticalAngleDegrees;
@@ -24,8 +24,8 @@ float calculatePitchDegrees(const ViewportConfig &config, float zoomScale)
 }
 
 glm::mat4 calculateViewProj(const ViewportConfig &config,
-                            const glm::vec2 &scrollPos,
-                            const glm::ivec2 &size,
+                            const glm::vec2 scrollPos,
+                            const glm::ivec2 size,
                             const float zoomScale,
                             const int currentLayer)
 {
@@ -104,8 +104,8 @@ glm::mat4 calculateViewProj(const ViewportConfig &config,
     return proj * view * scaleZ;
 }
 
-glm::mat4 calculateViewProjOld(const glm::vec2 &scrollPos,
-                               const glm::ivec2 &size,
+glm::mat4 calculateViewProjOld(const glm::vec2 scrollPos,
+                               const glm::ivec2 size,
                                const float zoomScale,
                                const int /*currentLayer*/)
 {

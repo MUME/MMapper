@@ -55,7 +55,7 @@ const glm::mat4 &MapCanvasViewport::getViewProj() const
 }
 
 // world space to screen space (logical pixels)
-std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 &v) const
+std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 v) const
 {
     const auto tmp = getViewProj() * glm::vec4(v, 1.f);
 
@@ -84,12 +84,12 @@ std::optional<glm::vec3> MapCanvasViewport::project(const glm::vec3 &v) const
 // and a depth value in the range 0..1.
 //
 // output: world coordinates.
-glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth) const
+glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 mouse_depth) const
 {
     return unproject_raw(mouse_depth, getViewProj());
 }
 
-glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth,
+glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 mouse_depth,
                                            const glm::mat4 &viewProj) const
 {
     const float depth = mouse_depth.z;
@@ -112,12 +112,12 @@ glm::vec3 MapCanvasViewport::unproject_raw(const glm::vec3 &mouse_depth,
 // Returns a value on the current layer;
 // note: the returned coordinate may not be visible,
 // because it could be
-glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse) const
+glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 mouse) const
 {
     return unproject_clamped(mouse, getViewProj());
 }
 
-glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 &mouse,
+glm::vec3 MapCanvasViewport::unproject_clamped(const glm::vec2 mouse,
                                                const glm::mat4 &viewProj) const
 {
     const auto flayer = static_cast<float>(m_currentLayer);
@@ -175,7 +175,7 @@ std::optional<glm::vec3> MapCanvasViewport::unproject(const QInputEvent *const e
     return unproject(*xy);
 }
 
-std::optional<glm::vec3> MapCanvasViewport::unproject(const glm::vec2 &xy) const
+std::optional<glm::vec3> MapCanvasViewport::unproject(const glm::vec2 xy) const
 {
     // We don't actually know the depth we're trying to unproject;
     // technically we're solving for a ray, so we should unproject
@@ -204,13 +204,13 @@ std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const QInputEv
     return getUnprojectedMouseSel(*xy);
 }
 
-std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const glm::vec2 &xy) const
+std::optional<MouseSel> MapCanvasViewport::getUnprojectedMouseSel(const glm::vec2 xy) const
 {
     const auto opt_v = unproject(xy);
     if (!opt_v.has_value()) {
         return std::nullopt;
     }
-    const glm::vec3 &v = opt_v.value();
+    const glm::vec3 v = opt_v.value();
     return MouseSel{Coordinate2f{v.x, v.y}, getCurrentLayer()};
 }
 
@@ -226,7 +226,7 @@ glm::vec3 MapScreen::getCenter() const
     return m_viewport.unproject_clamped(glm::vec2{vp.offset} + glm::vec2{vp.size} * 0.5f);
 }
 
-bool MapScreen::isRoomVisible(const Coordinate &c, const float marginPixels) const
+bool MapScreen::isRoomVisible(const Coordinate c, const float marginPixels) const
 {
     const auto pos = c.to_vec3();
     for (int i = 0; i < 4; ++i) {
@@ -247,7 +247,7 @@ bool MapScreen::isRoomVisible(const Coordinate &c, const float marginPixels) con
 }
 
 // Purposely ignores the possibility of glClipPlane() and glDepthRange().
-MapScreen::VisiblityResultEnum MapScreen::testVisibility(const glm::vec3 &input_pos,
+MapScreen::VisiblityResultEnum MapScreen::testVisibility(const glm::vec3 input_pos,
                                                          const float marginPixels) const
 {
     assert(marginPixels >= 1.f);
@@ -292,7 +292,7 @@ MapScreen::VisiblityResultEnum MapScreen::testVisibility(const glm::vec3 &input_
     }
 }
 
-glm::vec3 MapScreen::getProxyLocation(const glm::vec3 &input_pos, const float marginPixels) const
+glm::vec3 MapScreen::getProxyLocation(const glm::vec3 input_pos, const float marginPixels) const
 {
     const auto center = this->getCenter();
 

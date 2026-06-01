@@ -802,7 +802,7 @@ void XmlMapStorage::saveRoom(QXmlStreamWriter &stream, const ExternalRawRoom &ro
 
 void XmlMapStorage::saveCoordinate(QXmlStreamWriter &stream,
                                    const QString &name,
-                                   const Coordinate &pos)
+                                   const Coordinate pos)
 {
     stream.writeStartElement(name);
     saveXmlAttribute(stream, "x", QString("%1").arg(pos.x));

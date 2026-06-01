@@ -36,7 +36,7 @@ static constexpr const float NEW_CONNECTION_POINT_SIZE = 8.f;
 
 static constexpr const float FAINT_CONNECTION_ALPHA = 0.1f;
 
-NODISCARD static bool isCrossingZAxis(const glm::vec3 &p1, const glm::vec3 &p2)
+NODISCARD static bool isCrossingZAxis(const glm::vec3 p1, const glm::vec3 p2)
 {
     return std::abs(p1.z - p2.z) > mmgl::GEOMETRIC_EPSILON;
 }
@@ -141,12 +141,12 @@ void ConnectionDrawer::drawRoomDoorName(const RoomHandle &sourceRoom,
                                         const RoomHandle &targetRoom,
                                         const ExitDirEnum targetDir)
 {
-    static const auto isShortDistance = [](const Coordinate &a, const Coordinate &b) -> bool {
+    static const auto isShortDistance = [](const Coordinate a, const Coordinate b) -> bool {
         return glm::all(glm::lessThanEqual(glm::abs(b.to_ivec2() - a.to_ivec2()), glm::ivec2(1)));
     };
 
-    const Coordinate &sourcePos = sourceRoom.getPosition();
-    const Coordinate &targetPos = targetRoom.getPosition();
+    const Coordinate sourcePos = sourceRoom.getPosition();
+    const Coordinate targetPos = targetRoom.getPosition();
 
     if (sourcePos.z != m_currentLayer && targetPos.z != m_currentLayer) {
         return;
@@ -315,7 +315,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
             }
 
             // Only draw the connection if the target room is within the bounds
-            const Coordinate &target_coord = targetRoom.getPosition();
+            const Coordinate target_coord = targetRoom.getPosition();
             if (!m_bounds.contains(target_coord)) {
                 continue;
             }
@@ -359,8 +359,8 @@ void ConnectionDrawer::drawConnection(const RoomHandle &leftRoom,
                                       const bool inExitFlags)
 {
     /* WARNING: attempts to write to a different layer may result in weird graphical bugs. */
-    const Coordinate &leftPos = leftRoom.getPosition();
-    const Coordinate &rightPos = rightRoom.getPosition();
+    const Coordinate leftPos = leftRoom.getPosition();
+    const Coordinate rightPos = rightRoom.getPosition();
     const int leftX = leftPos.x;
     const int leftY = leftPos.y;
     const int leftZ = leftPos.z;
@@ -661,7 +661,7 @@ void MapCanvas::paintNearbyConnectionPoints()
     });
 
     std::vector<ColorVert> points;
-    const auto addPoint = [isSelection, &points](const Coordinate &roomCoord,
+    const auto addPoint = [isSelection, &points](const Coordinate roomCoord,
                                                  const RoomHandle &room,
                                                  const ExitDirEnum dir,
                                                  const std::optional<CD> &optFirst) -> void {
@@ -712,8 +712,8 @@ void MapCanvas::paintNearbyConnectionPoints()
         && (m_connectionSelection->isFirstValid() || m_connectionSelection->isSecondValid())) {
         const CD valid = m_connectionSelection->isFirstValid() ? m_connectionSelection->getFirst()
                                                                : m_connectionSelection->getSecond();
-        const Coordinate &c = valid.room.getPosition();
-        const glm::vec3 &pos = c.to_vec3();
+        const Coordinate c = valid.room.getPosition();
+        const glm::vec3 pos = c.to_vec3();
         points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.direction));
 
         addPoints(MouseSel{Coordinate2f{pos.x, pos.y}, c.z}, valid);
@@ -757,7 +757,7 @@ void MapCanvas::paintSelectedConnection()
         return;
     }
 
-    const glm::vec3 &pos2 = optPos2.value();
+    const glm::vec3 pos2 = optPos2.value();
 
     auto &gl = getOpenGL();
     const auto rs = GLRenderState().withColor(Colors::red);
@@ -776,14 +776,14 @@ void MapCanvas::paintSelectedConnection()
 
 static constexpr float LONG_LINE_HALFLEN = 1.5f;
 static constexpr float LONG_LINE_LEN = 2.f * LONG_LINE_HALFLEN;
-NODISCARD static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
+NODISCARD static bool isLongLine(const glm::vec3 a, const glm::vec3 b)
 {
     return glm::length(a - b) >= LONG_LINE_LEN;
 }
 
-void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
-                                                      const glm::vec3 &b,
-                                                      const glm::vec3 &c)
+void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 a,
+                                                      const glm::vec3 b,
+                                                      const glm::vec3 c)
 {
     const auto &color = isNormal() ? getCanvasNamedColorOptions().connectionNormalColor
                                    : Colors::red;
@@ -795,11 +795,11 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
 
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const View<glm::vec3> points)
 {
-    const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
+    const auto transform = [this](const glm::vec3 vert) { return vert + m_offset; };
     const float extension = CONNECTION_LINE_WIDTH * 0.5f;
 
     // Helper lambda to generate a quad between two points with a specific color.
-    auto generateQuad = [this](const glm::vec3 &p1, const glm::vec3 &p2, const Color quad_color) {
+    auto generateQuad = [this](const glm::vec3 p1, const glm::vec3 p2, const Color quad_color) {
         auto &verts = deref(m_currentBuffer).quadVerts;
 
         const glm::vec3 segment = p2 - p1;

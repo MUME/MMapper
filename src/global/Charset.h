@@ -604,12 +604,12 @@ public:
             m_units.push_back(m_unknown);
         }
     }
-    StringBuilder &operator+=(const char32_t codepoint)
+    ALLOW_DISCARD StringBuilder &operator+=(const char32_t codepoint)
     {
         append(codepoint);
         return *this;
     }
-    StringBuilder &operator+=(const std::u32string_view codepoints)
+    ALLOW_DISCARD StringBuilder &operator+=(const std::u32string_view codepoints)
     {
         for (const char32_t codepoint : codepoints) {
             append(codepoint);

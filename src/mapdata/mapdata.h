@@ -138,7 +138,7 @@ public:
     NODISCARD bool isFileReadOnly() const { return m_fileReadOnly; }
 
 public:
-    NODISCARD ExitDirFlags getExitDirections(const Coordinate &pos);
+    NODISCARD ExitDirFlags getExitDirections(Coordinate pos);
 
 private:
     void virt_onNotifyModified(const RoomUpdateFlags /*updateFlags*/) final { setDataChanged(); }
@@ -162,7 +162,7 @@ public:
         }
     }
 
-    void setPosition(const Coordinate &pos)
+    void setPosition(const Coordinate pos)
     {
         if (const auto &room = findRoomHandle(pos)) {
             setRoom(room.getId());
@@ -185,7 +185,7 @@ public:
         }
     }
 
-    void forcePosition(const Coordinate &pos)
+    void forcePosition(const Coordinate pos)
     {
         if (const auto &room = findRoomHandle(pos)) {
             forceToRoom(room.getId());

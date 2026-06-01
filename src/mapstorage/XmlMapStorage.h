@@ -112,7 +112,7 @@ private:
     static void saveRoomLoadFlags(QXmlStreamWriter &stream, RoomLoadFlags fl);
     static void saveRoomMobFlags(QXmlStreamWriter &stream, RoomMobFlags fl);
 
-    static void saveCoordinate(QXmlStreamWriter &stream, const QString &name, const Coordinate &pos);
+    static void saveCoordinate(QXmlStreamWriter &stream, const QString &name, Coordinate pos);
     static void saveExit(QXmlStreamWriter &stream, const ExternalRawExit &e, ExitDirEnum dir);
     static void saveExitTo(QXmlStreamWriter &stream, const ExternalRawExit &e);
     static void saveExitFlags(QXmlStreamWriter &stream, ExitFlags fl);

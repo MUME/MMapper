@@ -216,7 +216,7 @@ void World::requireValidRoom(const RoomId id) const
     }
 }
 
-std::optional<RoomId> World::findRoom(const Coordinate &coord) const
+std::optional<RoomId> World::findRoom(const Coordinate coord) const
 {
     if (const RoomId *const id = m_spatialDb.findUnique(coord)) {
         return *id;
@@ -235,7 +235,7 @@ std::optional<RoomId> World::lookup(const ServerRoomId id) const
     return m_serverIds.lookup(id);
 }
 
-const Coordinate &World::getPosition(const RoomId id) const
+const Coordinate World::getPosition(const RoomId id) const
 {
     requireValidRoom(id);
     return m_rooms.getPosition(id);
@@ -592,7 +592,7 @@ void World::checkConsistency(ProgressCounter &counter) const
     DECL_TIMER(t, __FUNCTION__);
 
     auto checkPosition = [this](const RoomId id) {
-        const Coordinate &coord = getPosition(id);
+        const Coordinate coord = getPosition(id);
         // Is there a unique owner of the coord?
         if (const RoomId *const maybe = m_spatialDb.findUnique(coord);
             maybe == nullptr || *maybe != id) {
@@ -713,7 +713,7 @@ void World::checkConsistency(ProgressCounter &counter) const
         }
 
         counter.setNewTask(ProgressMsg{"checking map coordinates"}, m_spatialDb.size());
-        m_spatialDb.for_each([this, &counter](const Coordinate &coord, const RoomId id) {
+        m_spatialDb.for_each([this, &counter](const Coordinate coord, const RoomId id) {
             if (this->getPosition(id) != coord) {
                 throw MapConsistencyError("room position was not the expected coord");
             }
@@ -740,7 +740,7 @@ void World::checkConsistency(ProgressCounter &counter) const
             std::optional<Bounds> computedBounds;
             counter.setNewTask(ProgressMsg{"checking map coordinates"}, getRoomSet().size());
             getRoomSet().for_each([this, &computedBounds, &counter](const RoomId id) {
-                const Coordinate &coord = getPosition(id);
+                const Coordinate coord = getPosition(id);
                 if (!computedBounds) {
                     computedBounds.emplace(coord, coord);
                 } else {
@@ -838,7 +838,7 @@ void World::setServerId(const RoomId id, const ServerRoomId serverId)
     m_serverIds.set(serverId, id);
 }
 
-void World::setPosition(const RoomId id, const Coordinate &coord)
+void World::setPosition(const RoomId id, const Coordinate coord)
 {
     requireValidRoom(id);
 
@@ -846,12 +846,12 @@ void World::setPosition(const RoomId id, const Coordinate &coord)
         return;
     }
 
-    const Coordinate &ref = m_rooms.getPosition(id);
+    const Coordinate ref = m_rooms.getPosition(id);
     m_spatialDb.move(id, ref, coord);
     m_rooms.setPosition(id, coord);
 }
 
-bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate &offset) const
+bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate offset) const
 {
     if (rooms.empty()) {
         return false;
@@ -871,12 +871,12 @@ bool World::wouldAllowRelativeMove(const RoomIdSet &rooms, const Coordinate &off
     return true;
 }
 
-void World::moveRelative(const RoomId id, const Coordinate &offset)
+void World::moveRelative(const RoomId id, const Coordinate offset)
 {
     setPosition(id, getPosition(id) + offset);
 }
 
-void World::moveRelative(const RoomIdSet &rooms, const Coordinate &offset)
+void World::moveRelative(const RoomIdSet &rooms, const Coordinate offset)
 {
     if (rooms.empty()) {
         throw std::runtime_error("no rooms specified");
@@ -1064,7 +1064,7 @@ void World::copy_exits(const RoomId targetId, const RawRoom &source)
     }
 }
 
-void World::mergeRelative(const RoomId id, const Coordinate &offset)
+void World::mergeRelative(const RoomId id, const Coordinate offset)
 {
     if (offset.isNull()) {
         return;
@@ -1323,7 +1323,7 @@ const ImmUnorderedRoomIdSet *World::findAreaRoomSet(const RoomArea &area) const
     return nullptr;
 }
 
-RoomId World::addRoom(const Coordinate &position)
+RoomId World::addRoom(const Coordinate position)
 {
     if (findRoom(position)) {
         throw InvalidMapOperation("Position in use");
@@ -1406,10 +1406,10 @@ void World::undeleteRoom(const ExternalRoomId extid, const RawRoom &raw)
     MMLOG() << "Added new room " << ext.value() << ".";
 }
 
-void World::addRoom2(const Coordinate &desiredPosition, const ParseEvent &event)
+void World::addRoom2(const Coordinate desiredPosition, const ParseEvent &event)
 {
     const auto position = std::invoke([this, desiredPosition]() -> Coordinate {
-        return ::getNearestFree(desiredPosition, [this](const Coordinate &check) -> FindCoordEnum {
+        return ::getNearestFree(desiredPosition, [this](const Coordinate check) -> FindCoordEnum {
             return findRoom(check).has_value() ? FindCoordEnum::InUse : FindCoordEnum::Available;
         });
     });
@@ -1889,13 +1889,13 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::ModifyRoomF
 void World::apply(ProgressCounter & /*pc*/, const room_change_types::TryMoveCloseTo &change)
 {
     const RoomId id = change.room;
-    const Coordinate &current = m_rooms.getPosition(id);
-    const Coordinate &desired = change.desiredPosition;
+    const Coordinate current = m_rooms.getPosition(id);
+    const Coordinate desired = change.desiredPosition;
     if (current == desired) {
         return;
     }
 
-    auto check = [this, z = desired.z](const Coordinate &suggested) -> FindCoordEnum {
+    auto check = [this, z = desired.z](const Coordinate suggested) -> FindCoordEnum {
         if (suggested.z == z && !findRoom(suggested)) {
             return FindCoordEnum::Available;
         } else {

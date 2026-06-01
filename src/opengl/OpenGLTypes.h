@@ -36,7 +36,7 @@ struct NODISCARD TexVert final
     glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit TexVert(const glm::vec3 &tex_, const glm::vec3 &vert_)
+    explicit TexVert(const glm::vec3 tex_, const glm::vec3 vert_)
         : tex{tex_}
         , vert{vert_}
     {}
@@ -50,7 +50,7 @@ struct NODISCARD ColoredTexVert final
     glm::vec3 tex{};
     glm::vec3 vert{};
 
-    explicit ColoredTexVert(const Color color_, const glm::vec3 &tex_, const glm::vec3 &vert_)
+    explicit ColoredTexVert(const Color color_, const glm::vec3 tex_, const glm::vec3 vert_)
         : color{color_}
         , tex{tex_}
         , vert{vert_}
@@ -64,11 +64,11 @@ struct NODISCARD RoomQuadTexVert final
     // - tex_z:   packed into bits 0-7  (must be < 256)
     glm::ivec4 vertTexCol{};
 
-    explicit RoomQuadTexVert(const glm::ivec3 &vert, const int tex_z)
+    explicit RoomQuadTexVert(const glm::ivec3 vert, const int tex_z)
         : RoomQuadTexVert{vert, tex_z, NamedColorEnum::DEFAULT}
     {}
 
-    explicit RoomQuadTexVert(const glm::ivec3 &vert, const int tex_z, const NamedColorEnum color)
+    explicit RoomQuadTexVert(const glm::ivec3 vert, const int tex_z, const NamedColorEnum color)
         : vertTexCol{vert, (static_cast<uint8_t>(color) << 8) | tex_z}
     {
         if (IS_DEBUG_BUILD) {
@@ -87,7 +87,7 @@ struct NODISCARD ColorVert final
     Color color;
     glm::vec3 vert{};
 
-    explicit ColorVert(const Color color_, const glm::vec3 &vert_)
+    explicit ColorVert(const Color color_, const glm::vec3 vert_)
         : color{color_}
         , vert{vert_}
     {}
@@ -98,7 +98,7 @@ struct NODISCARD WeatherParticleVert final
     glm::vec2 pos{};
     float life = 0.0f;
 
-    explicit WeatherParticleVert(const glm::vec2 &pos_, const float life_)
+    explicit WeatherParticleVert(const glm::vec2 pos_, const float life_)
         : pos{pos_}
         , life{life_}
     {}
@@ -117,10 +117,10 @@ struct NODISCARD FontVert3d final
     glm::vec2 tex{};
     glm::vec2 vert{}; // screen space
 
-    explicit FontVert3d(const glm::vec3 &base_,
+    explicit FontVert3d(const glm::vec3 base_,
                         const Color color_,
-                        const glm::vec2 &tex_,
-                        const glm::vec2 &vert_)
+                        const glm::vec2 tex_,
+                        const glm::vec2 vert_)
         : base{base_}
         , color{color_}
         , tex{tex_}
@@ -425,6 +425,6 @@ public:
     }
 };
 
-static constexpr const size_t VERTS_PER_LINE = 2;
-static constexpr const size_t VERTS_PER_TRI = 3;
-static constexpr const size_t VERTS_PER_QUAD = 4;
+static inline constexpr size_t VERTS_PER_LINE = 2;
+static inline constexpr size_t VERTS_PER_TRI = 3;
+static inline constexpr size_t VERTS_PER_QUAD = 4;

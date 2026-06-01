@@ -44,7 +44,7 @@ Path::Path(Badge<Path>,
  * and probability is updated accordingly
  */
 std::shared_ptr<Path> Path::fork(const RoomHandle &in_room,
-                                 const Coordinate &expectedCoordinate,
+                                 const Coordinate expectedCoordinate,
                                  const PathParameters &p,
                                  const ExitDirEnum direction)
 {

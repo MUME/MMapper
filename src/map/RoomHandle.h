@@ -61,7 +61,7 @@ public:
 
 public:
     NODISCARD ServerRoomId getServerId() const;
-    NODISCARD const Coordinate &getPosition() const;
+    NODISCARD Coordinate getPosition() const;
     NODISCARD bool isTemporary() const;
 
 public:

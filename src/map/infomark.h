@@ -78,13 +78,13 @@ public:
     XFOREACH_INFOMARK_PROPERTY(X_DECL_GETTERS_AND_SETTERS)
 #undef X_DECL_GETTERS_AND_SETTERS
 
-    void offsetBy(const Coordinate &offset)
+    void offsetBy(const Coordinate offset)
     {
         setPosition1(getPosition1() + offset);
         setPosition2(getPosition2() + offset);
     }
 
-    NODISCARD RawInfomark getOffsetCopy(const Coordinate &offset) const
+    NODISCARD RawInfomark getOffsetCopy(const Coordinate offset) const
     {
         auto copy = *this;
         copy.offsetBy(offset);
@@ -93,7 +93,7 @@ public:
 
     // Document the scaling system, even if nobody uses this function.
     // REVISIT: use a tag to differentiate the two coordinate types?
-    NODISCARD static Coordinate worldToIM(const Coordinate &c)
+    NODISCARD static Coordinate worldToIM(const Coordinate c)
     {
         return Coordinate{c.x * INFOMARK_SCALE, c.y * INFOMARK_SCALE, c.z};
     }
