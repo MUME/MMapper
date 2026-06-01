@@ -77,7 +77,7 @@ private:
     void syncFromConfig();
 
 public:
-    NODISCARD bool setHotkey(const Hotkey &hk, std::string command);
+    NODISCARD bool setHotkey(const Hotkey &hk, std::string_view command);
     NODISCARD bool removeHotkey(const Hotkey &hk);
 
 public:
