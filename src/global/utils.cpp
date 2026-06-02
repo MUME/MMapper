@@ -14,6 +14,45 @@
 #include <QByteArray>
 #include <qglobal.h>
 
+namespace utils::details {
+
+static_assert(!cpp17::IsValidCircularSize_v<0, bool>);
+static_assert(!cpp17::IsValidCircularSize_v<1, bool>);
+static_assert(cpp17::IsValidCircularSize_v<2, bool>);
+static_assert(!cpp17::IsValidCircularSize_v<3, bool>);
+
+static_assert(!cpp17::IsValidCircularSize_v<0, uint8_t>);
+static_assert(!cpp17::IsValidCircularSize_v<1, uint8_t>);
+static_assert(cpp17::IsValidCircularSize_v<2, uint8_t>);
+static_assert(cpp17::IsValidCircularSize_v<3, uint8_t>);
+static_assert(cpp17::IsValidCircularSize_v<255, uint8_t>);
+static_assert(cpp17::IsValidCircularSize_v<256, uint8_t>);
+static_assert(!cpp17::IsValidCircularSize_v<257, uint8_t>);
+
+static_assert(cpp17::IsValidCircularSize_v<65536, uint16_t>);
+static_assert(!cpp17::IsValidCircularSize_v<65537, uint16_t>);
+
+static_assert(circular_increment<2, bool>(false) == true);
+static_assert(circular_increment<2, bool>(true) == false);
+static_assert(circular_decrement<2, bool>(false) == true);
+static_assert(circular_decrement<2, bool>(true) == false);
+
+static_assert(circular_increment<255, uint8_t>(254) == 0);
+static_assert(circular_increment<256, uint8_t>(255) == 0);
+
+static_assert(circular_increment<3, uint32_t>(0) == 1);
+static_assert(circular_increment<3, uint32_t>(1) == 2);
+static_assert(circular_increment<3, uint32_t>(2) == 0);
+static_assert(circular_increment<3, uint32_t>(3) == 1); // doesn't throw; just wraps.
+
+static_assert(circular_decrement<3, uint32_t>(0) == 2);
+static_assert(circular_decrement<3, uint32_t>(1) == 0);
+static_assert(circular_decrement<3, uint32_t>(2) == 1);
+static_assert(circular_decrement<3, uint32_t>(3) == 2); // doesn't throw; just wraps.
+static_assert(circular_decrement<3, uint32_t>(4) == 0); // doesn't throw; just wraps.
+
+} // namespace utils::details
+
 namespace utils::details::tests {
 
 static_assert(!isBitMask<int32_t>());
