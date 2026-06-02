@@ -167,6 +167,55 @@ NODISCARD bool isSet(const T src, const T bit)
     return (src & bit) != T{};
 }
 
+namespace details {
+namespace cpp11 {
+template<size_t N, typename T>
+struct IsValidCircularSize
+    : std::bool_constant<(N > 1 and std::is_unsigned_v<T>
+                          and (N <= std::numeric_limits<T>::max()
+                               or (sizeof(T) < sizeof(size_t)
+                                   and N == static_cast<size_t>(std::numeric_limits<T>::max()) + 1)))>
+      //
+      {};
+
+template<>
+struct IsValidCircularSize<2, bool> : std::true_type
+{};
+
+} // namespace cpp11
+
+namespace cpp17 {
+template<size_t N, typename T>
+inline constexpr bool IsValidCircularSize_v = cpp11::IsValidCircularSize<N, T>::value;
+
+} // namespace cpp17
+} // namespace details
+
+template<size_t N, typename T>
+NODISCARD constexpr T circular_increment(const T x)
+{
+    if constexpr (std::is_unsigned_v<T> && details::cpp17::IsValidCircularSize_v<N, T>) {
+        return static_cast<T>((x + 1) % N);
+    } else if constexpr (std::is_same_v<T, bool> && N == 2) {
+        return !x;
+    } else {
+        static_assert(std::is_same_v<T, void>);
+        std::abort();
+    }
+}
+template<size_t N, typename T>
+NODISCARD constexpr T circular_decrement(const T x)
+{
+    if constexpr (std::is_unsigned_v<T> && details::cpp17::IsValidCircularSize_v<N, T>) {
+        return static_cast<T>((x + N - 1) % N);
+    } else if constexpr (std::is_same_v<T, bool> && N == 2) {
+        return !x;
+    } else {
+        static_assert(std::is_same_v<T, void>);
+        std::abort();
+    }
+}
+
 } // namespace utils
 
 template<typename T>
