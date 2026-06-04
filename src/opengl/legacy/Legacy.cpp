@@ -4,6 +4,7 @@
 #include "Legacy.h"
 
 #include "../../display/Textures.h"
+#include "../../global/ConfigConsts-Computed.h"
 #include "../../global/utils.h"
 #include "../OpenGLTypes.h"
 #include "../UboManager.h"
@@ -394,6 +395,17 @@ void Functions::checkError()
 void Functions::configureFbo(int samples)
 {
     getFBO().configure(getPhysicalViewport(), samples);
+
+    // WebGL2 lacks native support for texture swizzling
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        const GLuint textureId = getFBO().resolvedTextureId();
+        if (textureId != 0) {
+            // Fix Wayland ghosting by forcing the alpha channel of the blit target to 1.0.
+            Base::glBindTexture(GL_TEXTURE_2D, textureId);
+            Base::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+            Base::glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
 }
 
 void Functions::bindFbo()
