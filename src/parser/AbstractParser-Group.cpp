@@ -129,6 +129,7 @@ void AbstractParser::parseGroup(StringView input)
             member->setColor(newColor.getQColor());
             if (member->isYou()) {
                 setConfig().groupManager.color = member->getColor();
+                getConfig().write();
             }
             os << "Member " << name << " (" << id << ") has been changed from " << oldColor
                << " to " << newColor << ".\n";

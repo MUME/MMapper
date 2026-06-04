@@ -1046,6 +1046,7 @@ void MainWindow::createActions()
 static void setConfigMapMode(const MapModeEnum mode)
 {
     setConfig().general.mapMode = mode;
+    getConfig().write();
 }
 
 void MainWindow::slot_onPlayMode()
