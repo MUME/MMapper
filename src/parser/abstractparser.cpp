@@ -480,6 +480,7 @@ bool AbstractParser::setCommandPrefix(const char prefix)
         return false;
     }
     setConfig().parser.prefixChar = prefix;
+    getConfig().write();
     showCommandPrefix();
     return true;
 }

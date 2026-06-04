@@ -198,6 +198,7 @@ void AbstractParser::doConfig(const StringView cmd)
 
                 clone.set(oldValue);
                 fp.setFloat(value);
+                getConfig().write();
                 os << "Changed " << help << " from " << clone.getFloat() << " to " << fp.getFloat()
                    << AnsiOstream::endl;
                 this->graphicsSettingsChanged();
@@ -294,6 +295,7 @@ void AbstractParser::doConfig(const StringView cmd)
                            }
 
                            conf.set(value);
+                           getConfig().write();
                            os << "Set " << conf.getName() << " = " << BoolAlpha(value)
                               << AnsiOstream::endl;
                            graphicsSettingsChanged();
