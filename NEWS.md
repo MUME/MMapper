@@ -1,3 +1,19 @@
+## MMapper 26.06.0 (June 5, 2026)
+
+### New Features:
+* **Weather in the Clock:** The clock widget now includes real-time weather and fog indicators with clear icons, allowing players to view weather without distractions on the map.
+
+### Bug Fixes:
+* **Weather Parsing:** Fixed a data parsing bug that caused weather information to drop silently.
+* **Solo Player Mana:** Fixed a bug where the interface layout incorrectly hid the mana tracking column for solo players who use mana.
+* **Linux Support:**
+    * Fixed a visual "ghosting" bug that left faint window artifacts behind on certain **Wayland** setups due to an alpha bug in the FBO blitting.
+    * Resolved a map rendering bug affecting users running the client inside **VmWare** virtual environments by using a more common methodology to draw triangles.
+* **Preferences:** Fixed an issue where new hotkeys and other typed commands could be accidentally undone if you opened and canceled the main Preferences window afterward.
+
+### Changes:
+* **Website Accessibility:** Updated the setup instructions for Windows and Mac users, and redesigned the website to be much easier to navigate using keyboards and screen readers.
+
 ## MMapper 26.04.2 (April 21, 2026)
 
 ### New Features:
