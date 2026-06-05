@@ -30,7 +30,7 @@ void FBO::configure(const Viewport &physicalViewport, int requestedSamples)
     resolvedFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
     resolvedFormat.setSamples(0);
     resolvedFormat.setTextureTarget(GL_TEXTURE_2D);
-    resolvedFormat.setInternalTextureFormat(GL_RGBA8);
+    resolvedFormat.setInternalTextureFormat(GL_RGB8);
 
     m_resolvedFbo = std::make_unique<QOpenGLFramebufferObject>(physicalSize, resolvedFormat);
     if (!m_resolvedFbo->isValid()) {
@@ -47,7 +47,7 @@ void FBO::configure(const Viewport &physicalViewport, int requestedSamples)
             msFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
             msFormat.setSamples(actualSamples);
             msFormat.setTextureTarget(GL_TEXTURE_2D_MULTISAMPLE);
-            msFormat.setInternalTextureFormat(GL_RGBA8);
+            msFormat.setInternalTextureFormat(GL_RGB8);
 
             m_multisamplingFbo = std::make_unique<QOpenGLFramebufferObject>(physicalSize, msFormat);
             if (!m_multisamplingFbo->isValid()) {
