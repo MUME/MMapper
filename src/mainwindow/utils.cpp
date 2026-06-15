@@ -6,25 +6,25 @@
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
 
-CanvasDisabler::CanvasDisabler(MapWindow &in_window)
-    : window{in_window}
+CanvasDisabler::CanvasDisabler(MapWindow &window)
+    : m_window{window}
 {
-    window.setCanvasEnabled(false);
+    m_window.setCanvasEnabled(false);
 }
 
 CanvasDisabler::~CanvasDisabler()
 {
-    window.setCanvasEnabled(true);
-    window.hideSplashImage();
+    m_window.setCanvasEnabled(true);
+    m_window.hideSplashImage();
 }
 
-MapFrontendBlocker::MapFrontendBlocker(MapFrontend &in_data)
-    : data(in_data)
+MapFrontendBlocker::MapFrontendBlocker(MapFrontend &data)
+    : m_data(data)
 {
-    data.block();
+    m_data.block();
 }
 
 MapFrontendBlocker::~MapFrontendBlocker()
 {
-    data.unblock();
+    m_data.unblock();
 }

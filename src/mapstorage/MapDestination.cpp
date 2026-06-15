@@ -4,6 +4,7 @@
 #include "MapDestination.h"
 
 #include "../global/ConfigConsts-Computed.h"
+#include "../global/utils.h"
 #include "filesaver.h"
 
 #include <stdexcept>
@@ -13,7 +14,7 @@
 #include <QFileInfo>
 #include <QIODevice>
 
-std::shared_ptr<MapDestination> MapDestination::alloc(const QString fileName, SaveFormatEnum format)
+std::shared_ptr<MapDestination> MapDestination::alloc(QString fileName, SaveFormatEnum format)
 {
     std::shared_ptr<FileSaver> fileSaver = nullptr;
     std::shared_ptr<QBuffer> buffer = nullptr;
@@ -51,19 +52,32 @@ std::shared_ptr<MapDestination> MapDestination::alloc(const QString fileName, Sa
 }
 
 MapDestination::MapDestination(Badge<MapDestination>,
-                               const QString fileName,
+                               QString fileName,
                                std::shared_ptr<FileSaver> fileSaver,
                                std::shared_ptr<QBuffer> buffer)
     : m_fileName(std::move(fileName))
     , m_fileSaver(std::move(fileSaver))
     , m_buffer(std::move(buffer))
-{}
+{
+    if (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        assert(isFileWasm());
+        std::ignore = deref(m_buffer);
+    } else if (isFileNative()) {
+        std::ignore = deref(m_fileSaver);
+    } else {
+        assert(isDirectory());
+    }
+}
+
+MapDestination::~MapDestination()
+{
+    finalize();
+}
 
 std::shared_ptr<QIODevice> MapDestination::getIODevice() const
 {
     if (isFileNative()) {
-        assert(m_fileSaver);
-        return m_fileSaver->getSharedFile();
+        return deref(m_fileSaver).getSharedFile();
     }
     if (isFileWasm()) {
         return m_buffer;
@@ -71,23 +85,21 @@ std::shared_ptr<QIODevice> MapDestination::getIODevice() const
     return nullptr;
 }
 
-const QByteArray MapDestination::getWasmBufferData() const
+QByteArray MapDestination::getWasmBufferData() const
 {
     if (isFileWasm()) {
-        assert(m_buffer);
-        return m_buffer->data();
+        return deref(m_buffer).data();
     }
     return {};
 }
 
 void MapDestination::finalize()
 {
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+    if (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         assert(isFileWasm());
-        assert(m_buffer);
+        std::ignore = deref(m_buffer);
     } else if (isFileNative()) {
-        assert(m_fileSaver);
-        m_fileSaver->close();
+        deref(m_fileSaver).close();
     } else {
         assert(isDirectory());
     }
