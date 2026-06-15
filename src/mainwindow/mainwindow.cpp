@@ -206,7 +206,7 @@ MainWindow::MainWindow()
 
     std::invoke([this] {
         auto *const w = new RoomWidget(deref(m_roomManager), this);
-        auto *const dock = m_dockDialogRoom = new QDockWidget(tr("Room Panel"), this);
+        auto *const dock = new QDockWidget(tr("Room Panel"), this);
         dock->setObjectName("DockWidgetRoom");
         dock->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
         dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
