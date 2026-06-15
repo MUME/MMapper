@@ -326,7 +326,4 @@ private:
     {
         return deref(getPipeline().user.userTelnet);
     }
-
-private:
-    NODISCARD bool hasConnectedUserSocket() const;
 };

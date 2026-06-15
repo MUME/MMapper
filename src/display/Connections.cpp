@@ -246,19 +246,6 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
         if (sourceWithinBounds) {
             for (const RoomId outTargetId : sourceExit.getOutgoingSet()) {
                 const auto &targetRoom = map.getRoomHandle(outTargetId);
-                if (!targetRoom) {
-                    /* DEAD CODE */
-                    qWarning() << "Source room" << sourceId.asUint32() << "("
-                               << room.getName().toQString()
-                               << ") dir=" << mmqt::toQStringUtf8(to_string_view(sourceDir))
-                               << "has target room with internal identifier"
-                               << outTargetId.asUint32() << "which does not exist!";
-                    // This would cause a segfault in the old map scheme, but maps are now rigorously
-                    // validated, so it should be impossible to have an exit to a room that does
-                    // not exist.
-                    assert(false);
-                    continue;
-                }
                 const auto &target_coord = targetRoom.getPosition();
                 const bool targetOutsideBounds = !m_bounds.contains(target_coord);
 
@@ -300,19 +287,6 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const RoomHandle &room)
         // incoming connections
         for (const RoomId inTargetId : sourceExit.getIncomingSet()) {
             const auto &targetRoom = map.getRoomHandle(inTargetId);
-            if (!targetRoom) {
-                /* DEAD CODE */
-                qWarning() << "Source room" << sourceId.asUint32() << "("
-                           << room.getName().toQString() << ") fromdir="
-                           << mmqt::toQStringUtf8(to_string_view(opposite(sourceDir)))
-                           << " has target room with internal identifier" << inTargetId.asUint32()
-                           << "which does not exist!";
-                // This would cause a segfault in the old map scheme, but maps are now rigorously
-                // validated, so it should be impossible to have an exit to a room that does
-                // not exist.
-                assert(false);
-                continue;
-            }
 
             // Only draw the connection if the target room is within the bounds
             const Coordinate target_coord = targetRoom.getPosition();

@@ -152,21 +152,6 @@ void MapData::shortestPathSearch(const RoomHandle &origin,
 
             const RoomId nextrId = e.getOutgoingSet().first();
             const auto &nextr = map.getRoomHandle(nextrId);
-
-            if (!nextr) {
-                /* DEAD CODE */
-                qWarning() << "Source room" << thisr.getIdExternal().asUint32() << "("
-                           << thisr.getName().toQString()
-                           << ") dir=" << mmqt::toQStringLatin1(to_string_view(dir))
-                           << "has target room with internal identifier" << nextrId.asUint32()
-                           << "which does not exist!";
-                qWarning() << mmqt::toQStringUtf8(thisr.toStdStringUtf8());
-                // This would cause a segfault in the old map scheme, but maps are now rigorously
-                // validated, so it should be impossible to have an exit to a room that does
-                // not exist.
-                assert(false);
-                continue;
-            }
             if (visited.contains(nextr.getId())) {
                 continue;
             }
