@@ -1,7 +1,7 @@
 Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
 Kevin Wilson <kpwilson@pm.me> (Cuantar)
 'Elval' <ethorondil@gmail.com> (Elval)
-'Freya' <spetsk@gmail.com> (Freya)
+'Freyja/Fayth' <spetsk@gmail.com> (Freyja)
 Kaspar Metsa <kasparmetsa@gmail.com> (Gamor)
 Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 Jean-Yves Perrier <jypenator@gmail.com> (Teoli)
