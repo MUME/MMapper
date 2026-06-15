@@ -91,7 +91,8 @@ using AbstractSocketGetter = std::function<AbstractSocket *()>;
 class NODISCARD Proxy::UserSocket final : public QObject
 {
 private:
-    // This reference allows us to see
+    // Indirect getter so getSocket() re-evaluates m_userSocket on every call, allowing
+    // disconnectFromHost/sendToSocket to handle a null socket gracefully after teardown.
     AbstractSocketGetter m_get_socket;
     Proxy::UserSocketOutputs &m_outputs;
 
