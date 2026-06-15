@@ -10,6 +10,7 @@
 #include <stdexcept>
 
 #include <QBuffer>
+#include <QDebug>
 #include <QDir>
 #include <QFileInfo>
 #include <QIODevice>
@@ -71,7 +72,16 @@ MapDestination::MapDestination(Badge<MapDestination>,
 
 MapDestination::~MapDestination()
 {
-    finalize();
+    // finalize() calls FileSaver::close() which can throw on rename failure;
+    // catch here to avoid std::terminate() if this destructor runs during
+    // stack unwinding from a prior finalize() error.
+    try {
+        finalize();
+    } catch (const std::exception &ex) {
+        qWarning() << "MapDestination::~MapDestination() caught exception:" << ex.what();
+    } catch (...) {
+        qWarning() << "MapDestination::~MapDestination() caught unknown exception";
+    }
 }
 
 std::shared_ptr<QIODevice> MapDestination::getIODevice() const
