@@ -28,20 +28,22 @@ MumeClockWidget::MumeClockWidget(GameObserver &observer, MumeClock &clock, QWidg
     assert(testAttribute(Qt::WA_Hover));
 
     observer.sig2_timeOfDayChanged.connect(m_lifetime,
-                                           [this](MumeTimeEnum time) { updateTime(time); });
+                                           [this](const MumeTimeEnum time) { updateTime(time); });
     observer.sig2_moonPhaseChanged.connect(m_lifetime, [this](MumeMoonPhaseEnum phase) {
         updateMoonPhase(phase);
     });
     observer.sig2_moonVisibilityChanged.connect(m_lifetime,
-                                                [this](MumeMoonVisibilityEnum visibility) {
+                                                [this](const MumeMoonVisibilityEnum visibility) {
                                                     updateMoonVisibility(visibility);
                                                 });
-    observer.sig2_seasonChanged.connect(m_lifetime,
-                                        [this](MumeSeasonEnum season) { updateSeason(season); });
-    observer.sig2_weatherChanged.connect(m_lifetime, [this](PromptWeatherEnum weather) {
+    observer.sig2_seasonChanged.connect(m_lifetime, [this](const MumeSeasonEnum season) {
+        updateSeason(season);
+    });
+    observer.sig2_weatherChanged.connect(m_lifetime, [this](const PromptWeatherEnum weather) {
         updateWeather(weather);
     });
-    observer.sig2_fogChanged.connect(m_lifetime, [this](PromptFogEnum fog) { updateFog(fog); });
+    observer.sig2_fogChanged.connect(m_lifetime,
+                                     [this](const PromptFogEnum fog) { updateFog(fog); });
     observer.sig2_tick.connect(m_lifetime,
                                [this](const MumeMoment &moment) { updateCountdown(moment); });
 

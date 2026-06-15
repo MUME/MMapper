@@ -71,8 +71,8 @@ private:
     friend class RemoteEditInternalSession;
 
 public:
-    explicit RemoteEditSession(const RemoteInternalId internalId,
-                               const RemoteSessionId sessionId,
+    explicit RemoteEditSession(RemoteInternalId internalId,
+                               RemoteSessionId sessionId,
                                RemoteEdit *remoteEdit);
 
 public:
@@ -105,8 +105,8 @@ private:
     QPointer<RemoteEditWidget> m_widget;
 
 public:
-    explicit RemoteEditInternalSession(const RemoteInternalId internalId,
-                                       const RemoteSessionId sessionId,
+    explicit RemoteEditInternalSession(RemoteInternalId internalId,
+                                       RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
@@ -122,8 +122,8 @@ private:
     QPointer<RemoteEditProcess> m_process;
 
 public:
-    explicit RemoteEditExternalSession(const RemoteInternalId internalId,
-                                       const RemoteSessionId sessionId,
+    explicit RemoteEditExternalSession(RemoteInternalId internalId,
+                                       RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
