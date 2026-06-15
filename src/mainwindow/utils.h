@@ -12,24 +12,22 @@ class MapWindow;
 class NODISCARD CanvasDisabler final
 {
 private:
-    MapWindow &window;
+    MapWindow &m_window;
 
 public:
-    explicit CanvasDisabler(MapWindow &in_window);
+    explicit CanvasDisabler(MapWindow &window);
     ~CanvasDisabler();
     DELETE_CTORS_AND_ASSIGN_OPS(CanvasDisabler);
 };
 
 class NODISCARD MapFrontendBlocker final
 {
-public:
-    explicit MapFrontendBlocker(MapFrontend &in_data);
-    ~MapFrontendBlocker();
+private:
+    MapFrontend &m_data;
 
 public:
     MapFrontendBlocker() = delete;
+    explicit MapFrontendBlocker(MapFrontend &data);
+    ~MapFrontendBlocker();
     DELETE_CTORS_AND_ASSIGN_OPS(MapFrontendBlocker);
-
-private:
-    MapFrontend &data;
 };

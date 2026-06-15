@@ -23,14 +23,15 @@ private:
     std::shared_ptr<QBuffer> m_buffer;
 
 public:
-    NODISCARD static std::shared_ptr<MapDestination> alloc(const QString fileName,
+    NODISCARD static std::shared_ptr<MapDestination> alloc(QString fileName,
                                                            SaveFormatEnum format) CAN_THROW;
 
 public:
     explicit MapDestination(Badge<MapDestination>,
-                            const QString fileName,
+                            QString fileName,
                             std::shared_ptr<FileSaver> fileSaver,
                             std::shared_ptr<QBuffer> buffer);
+    ~MapDestination();
     DELETE_CTORS(MapDestination);
     DELETE_COPY_ASSIGN_OP(MapDestination);
 
@@ -45,7 +46,7 @@ public:
     NODISCARD const QString &getFileName() const { return m_fileName; }
 
     NODISCARD std::shared_ptr<QIODevice> getIODevice() const;
-    NODISCARD const QByteArray getWasmBufferData() const;
+    NODISCARD QByteArray getWasmBufferData() const;
 
     void finalize();
 };
