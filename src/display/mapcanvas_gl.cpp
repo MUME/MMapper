@@ -615,28 +615,56 @@ void MapCanvas::actuallyPaintGL()
     gl.getUboManager().bind(funcs, Legacy::SharedVboEnum::NamedColorsBlock);
 
     gl.bindFbo();
-    gl.clear(Color{getConfig().canvas.backgroundColor});
+    bool paintSucceeded = true;
+    {
+        // Scoped tightly around the paint calls so releaseFbo() always runs
+        // here, before blitFboToDefault() (which requires the FBO to be
+        // unbound), regardless of whether painting threw.
+        struct FboReleaseGuard final
+        {
+            OpenGL &gl;
+            ~FboReleaseGuard() { gl.releaseFbo(); }
+        } releaseGuard{gl};
 
-    if (m_data.isEmpty()) {
-        getGLFont().renderTextCentered("No map loaded");
-    } else {
-        // Update animation state
-        m_weather.update();
+        try {
+            gl.clear(Color{getConfig().canvas.backgroundColor});
 
-        paintMap();
-        paintBatchedInfomarks();
-        paintSelections();
-        paintCharacters();
-        paintDifferences();
+            if (m_data.isEmpty()) {
+                getGLFont().renderTextCentered("No map loaded");
+            } else {
+                // Update animation state
+                m_weather.update();
 
-        m_weather.prepare();
-        gl.getUboManager().bind(funcs, Legacy::SharedVboEnum::TimeBlock);
+                paintMap();
+                paintBatchedInfomarks();
+                paintSelections();
+                paintCharacters();
+                paintDifferences();
 
-        m_weather.render(m_opengl.getDefaultRenderState());
+                m_weather.prepare();
+                gl.getUboManager().bind(funcs, Legacy::SharedVboEnum::TimeBlock);
+
+                m_weather.render(m_opengl.getDefaultRenderState());
+            }
+        } catch (...) {
+            paintSucceeded = false;
+            QString msg;
+            try {
+                std::rethrow_exception(std::current_exception());
+            } catch (const std::exception &ex) {
+                msg = ex.what();
+            } catch (...) {
+                msg = QStringLiteral("unknown");
+            }
+            const auto s = QString("ERROR during paint: %1\n").arg(msg);
+            qWarning().noquote() << s;
+            global::sendToUser(s);
+        }
     }
 
-    gl.releaseFbo();
-    gl.blitFboToDefault();
+    if (paintSucceeded) {
+        gl.blitFboToDefault();
+    }
 }
 
 NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const

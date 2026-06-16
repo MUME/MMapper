@@ -67,18 +67,13 @@ GLuint AbstractShaderProgram::getAttribLocation(const char *const name) const
     }
     assert(m_isBound);
 
-    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
-        // REVISIT: should this throw?
-        assert(false);
-        return INVALID_ATTRIB_LOCATION;
-    } else {
-        const auto tmp = deref(shared_funcs).glGetAttribLocation(getProgram(), name);
-        // Reason for making the cast here: glGetAttribLocation uses signed GLint,
-        // but glVertexAttribXXX() uses unsigned GLuint.
-        const auto result = static_cast<GLuint>(tmp);
-        assert(result != INVALID_ATTRIB_LOCATION);
-        return result;
-    }
+    const auto shared_funcs = m_functions.lock();
+    const auto tmp = deref(shared_funcs).glGetAttribLocation(getProgram(), name);
+    // Reason for making the cast here: glGetAttribLocation uses signed GLint,
+    // but glVertexAttribXXX() uses unsigned GLuint.
+    const auto result = static_cast<GLuint>(tmp);
+    assert(result != INVALID_ATTRIB_LOCATION);
+    return result;
 }
 
 GLint AbstractShaderProgram::getUniformLocation(const char *const name) const
@@ -87,15 +82,10 @@ GLint AbstractShaderProgram::getUniformLocation(const char *const name) const
         throw std::invalid_argument("name");
     }
     assert(m_isBound);
-    if (const auto shared_funcs = m_functions.lock(); shared_funcs == nullptr) {
-        // REVISIT: should this throw?
-        assert(false);
-        return INVALID_UNIFORM_LOCATION;
-    } else {
-        const auto result = deref(shared_funcs).glGetUniformLocation(getProgram(), name);
-        assert(result != INVALID_UNIFORM_LOCATION);
-        return result;
-    }
+    const auto shared_funcs = m_functions.lock();
+    const auto result = deref(shared_funcs).glGetUniformLocation(getProgram(), name);
+    assert(result != INVALID_UNIFORM_LOCATION);
+    return result;
 }
 
 bool AbstractShaderProgram::hasUniform(const char *const name) const

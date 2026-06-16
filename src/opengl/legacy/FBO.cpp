@@ -104,6 +104,9 @@ void FBO::bind()
 void FBO::release()
 {
     assert(m_bindState != BindStateEnum::Unbound);
+    if (m_bindState == BindStateEnum::Unbound) {
+        return;
+    }
     if (const auto fboToRelease = getDrawable()) {
         switch (m_bindState) {
         case BindStateEnum::Unbound:
