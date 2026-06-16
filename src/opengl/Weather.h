@@ -73,8 +73,7 @@ private:
     MumeMoonVisibilityEnum m_moonVisibility = MumeMoonVisibilityEnum::UNKNOWN;
 
     // Meshes
-    std::unique_ptr<Legacy::ParticleSimulationMesh> m_simulation;
-    std::unique_ptr<Legacy::ParticleRenderMesh> m_particles;
+    std::unique_ptr<Legacy::WeatherParticleMesh> m_particles;
     UniqueMesh m_atmosphere;
     UniqueMesh m_timeOfDay;
 

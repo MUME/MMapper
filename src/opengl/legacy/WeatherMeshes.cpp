@@ -19,22 +19,42 @@ AtmosphereMesh::~AtmosphereMesh() = default;
 
 TimeOfDayMesh::~TimeOfDayMesh() = default;
 
-ParticleSimulationMesh::ParticleSimulationMesh(SharedFunctions shared_functions,
-                                               std::shared_ptr<ParticleSimulationShader> program)
-    : m_shared_functions(std::move(shared_functions))
+WeatherParticleMesh::WeatherParticleMesh(SharedFunctions sharedFunctions,
+                                         std::shared_ptr<ParticleSimulationShader> simProgram,
+                                         std::shared_ptr<ParticleRenderShader> renderProgram)
+    : m_shared_functions(std::move(sharedFunctions))
     , m_functions(deref(m_shared_functions))
-    , m_program(std::move(program))
+    , m_simProgram(std::move(simProgram))
+    , m_renderProgram(std::move(renderProgram))
 {
     m_tfo.emplace(m_shared_functions);
-    for (auto &bufs : m_buffers) {
-        bufs.vao.emplace(m_shared_functions);
-        bufs.vbo.emplace(m_shared_functions);
+    for (auto &slot : m_slots) {
+        slot.vbo.emplace(m_shared_functions);
+        slot.simVao.emplace(m_shared_functions);
+        slot.renderVao.emplace(m_shared_functions);
     }
+
+    // Both shader programs are already valid here, so there's no reason to defer setup to the
+    // first render call (the old code did, and that lazy-init-during-render was itself one of
+    // the things flagged as a problem).
+    init();
 }
 
-ParticleSimulationMesh::~ParticleSimulationMesh() = default;
+WeatherParticleMesh::~WeatherParticleMesh() = default;
 
-void ParticleSimulationMesh::init()
+void WeatherParticleMesh::setIntensity(const float intensity)
+{
+    if (!std::isfinite(intensity)) {
+        assert(std::isfinite(intensity));
+        m_intensity = 0.f;
+        return;
+    }
+
+    assert(isClamped(intensity, 0.f, 1.f));
+    m_intensity = std::clamp(intensity, 0.f, 1.f);
+}
+
+void WeatherParticleMesh::init()
 {
     if (m_initialized) {
         return;
@@ -53,36 +73,54 @@ void ParticleSimulationMesh::init()
     }
 
     if constexpr (IS_DEBUG_BUILD) {
-        auto &prog = deref(m_program);
-        MAYBE_UNUSED auto prog_binder = prog.bind();
-        assert(prog.getAttribLocation("aPos") == 0);
-        assert(prog.getAttribLocation("aLife") == 1);
+        auto &simProg = deref(m_simProgram);
+        MAYBE_UNUSED auto simProg_binder = simProg.bind();
+        assert(simProg.getAttribLocation("aPos") == 0);
+        assert(simProg.getAttribLocation("aLife") == 1);
+
+        auto &renderProg = deref(m_renderProgram);
+        MAYBE_UNUSED auto renderProg_binder = renderProg.bind();
+        assert(renderProg.getAttribLocation("aParticlePos") == 0);
+        assert(renderProg.getAttribLocation("aLife") == 1);
     }
 
-    for (auto &bufs : m_buffers) {
-        auto &vao = bufs.vao;
-        auto &vbo = bufs.vbo;
-        using Vert = WeatherParticleVert;
-        std::ignore = vbo.setVbo(GL_ARRAY_BUFFER,
-                                 View<Vert>{initialData},
-                                 BufferUsageEnum::STREAM_DRAW);
+    using Vert = WeatherParticleVert;
+    auto &gl = m_functions;
+    for (auto &slot : m_slots) {
+        std::ignore = slot.vbo.setVbo(GL_ARRAY_BUFFER,
+                                      View<Vert>{initialData},
+                                      BufferUsageEnum::STREAM_DRAW);
 
-        MAYBE_UNUSED auto vbo_binder = vbo.bind(GL_ARRAY_BUFFER);
-        MAYBE_UNUSED auto vao_binder = vao.bind();
-        m_functions.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
-        m_functions.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
+        MAYBE_UNUSED auto vbo_binder = slot.vbo.bind(GL_ARRAY_BUFFER);
+
+        // Transform-feedback input: per-vertex-rate attributes.
+        {
+            MAYBE_UNUSED auto vao_binder = slot.simVao.bind();
+            gl.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
+            gl.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
+        }
+
+        // Instanced-draw input: same buffer, but per-instance-rate attributes.
+        {
+            MAYBE_UNUSED auto vao_binder = slot.renderVao.bind();
+            gl.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
+            gl.glVertexAttribDivisor(0, 1);
+            gl.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
+            gl.glVertexAttribDivisor(1, 1);
+        }
     }
 
     m_initialized = true;
 }
 
-void ParticleSimulationMesh::virt_reset()
+void WeatherParticleMesh::virt_reset()
 {
     // Note: TFO is not reset here as it's only created in the constructor
     // and can be reused.
-    for (auto &bufs : m_buffers) {
-        bufs.vao.reset();
-        bufs.vbo.reset();
+    for (auto &slot : m_slots) {
+        slot.vbo.reset();
+        slot.simVao.reset();
+        slot.renderVao.reset();
     }
     m_initialized = false;
 }
@@ -109,127 +147,52 @@ static void invokeTransformFeedback(Functions &gl, TFO &tfo, VAO &vao, VBO &vbo,
     }
 }
 
-void ParticleSimulationMesh::virt_render(const GLRenderState &renderState)
+void WeatherParticleMesh::virt_render(const GLRenderState &renderState)
 {
-    if (!m_initialized) {
-        // REVISIT: Why is this function allowed to be called before it's initialized?
-        // Initializing and rendering in the same frame is usually really bad for performance.
-        init();
-        assert(m_initialized);
+    assert(m_initialized && "init() must be called by GLWeather::initMeshes() before rendering");
+
+    // 1. Simulate: read this frame's settled data from m_currentInput, write the newly
+    // simulated particles into the other slot via transform feedback.
+    {
+        // ParticleSimulationShader::virt_setUniforms() ignores mvp entirely; the transform
+        // feedback pass needs no projection (gl_Position is written but never rasterized,
+        // since GL_RASTERIZER_DISCARD is enabled inside invokeTransformFeedback()). The
+        // fallback value below is computed only to satisfy setUniforms()'s signature.
+        const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
+        auto &prog = deref(m_simProgram);
+        MAYBE_UNUSED auto binder = prog.bind();
+        prog.setUniforms(mvp, renderState.uniforms);
+
+        auto &vao = m_slots[m_currentInput].simVao;
+        auto &outputVbo = m_slots[getOutputIndex()].vbo;
+        invokeTransformFeedback(m_functions, m_tfo, vao, outputVbo, m_numParticles);
     }
 
-    // REVISIT: please explain why this uses value_or().
-    const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
-    auto &prog = deref(m_program);
+    // 2. Draw: render from m_currentInput, the slot simulated *last* frame. This is the
+    // already-settled data, never the buffer transform feedback just wrote this frame, so the
+    // draw never has to wait on a same-frame write-then-read GPU hazard.
+    if (m_intensity > 0.0f) {
+        // Thinning: use precipitation intensity to drive instance count.
+        const auto maxCount = static_cast<GLsizei>(m_numParticles);
+        const auto count = std::max<GLsizei>(1,
+                                             static_cast<GLsizei>(m_intensity
+                                                                  * static_cast<float>(maxCount)));
 
-    MAYBE_UNUSED auto binder = prog.bind();
-    prog.setUniforms(mvp, renderState.uniforms);
+        const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
+        auto &prog = deref(m_renderProgram);
+        MAYBE_UNUSED auto binder = prog.bind();
+        prog.setUniforms(mvp, renderState.uniforms);
 
-    // REVISIT: Why are the VAO and VBO out of sync? Arrrrrrrrgh.
-    auto &vao = m_buffers[getCurrentBuffer()].vao;
-    auto &vbo = m_buffers[getNextBuffer()].vbo;
-    invokeTransformFeedback(m_functions, m_tfo, vao, vbo, m_numParticles);
-    advanceCurrentBuffer();
-}
+        MAYBE_UNUSED auto rsBinder = RenderStateBinder{m_functions,
+                                                       m_functions.getTexLookup(),
+                                                       renderState};
 
-ParticleRenderMesh::ParticleRenderMesh(SharedFunctions shared_functions,
-                                       std::shared_ptr<ParticleRenderShader> program,
-                                       ParticleSimulationMesh &simulation)
-    : m_shared_functions(std::move(shared_functions))
-    , m_functions(deref(m_shared_functions))
-    , m_program(std::move(program))
-    , m_simulation(simulation)
-{
-    for (auto &vao : m_vaos) {
-        vao.emplace(m_shared_functions);
-    }
-}
-
-ParticleRenderMesh::~ParticleRenderMesh() = default;
-
-void ParticleRenderMesh::setIntensity(const float intensity)
-{
-    if (!std::isfinite(intensity)) {
-        assert(std::isfinite(intensity));
-        m_intensity = 0.f;
-        return;
+        MAYBE_UNUSED auto vao_binder = m_slots[m_currentInput].renderVao.bind();
+        m_functions.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, count);
     }
 
-    assert(isClamped(intensity, 0.f, 1.f));
-    m_intensity = std::clamp(intensity, 0.f, 1.f);
-}
-
-void ParticleRenderMesh::init()
-{
-    if (m_initialized || m_simulation.isEmpty()) {
-        return;
-    }
-
-    if constexpr (IS_DEBUG_BUILD) {
-        auto &prog = deref(m_program);
-        MAYBE_UNUSED auto prog_binder = prog.bind();
-        assert(prog.getAttribLocation("aParticlePos") == 0);
-        assert(prog.getAttribLocation("aLife") == 1);
-    }
-
-    auto &gl = m_functions;
-    for (size_t i = 0; i < NUM_BUFFERS; ++i) {
-        using Vert = WeatherParticleVert;
-        auto &vao = m_vaos[i];
-        MAYBE_UNUSED auto vao_binder = vao.bind();
-        MAYBE_UNUSED auto vbo_binder = m_simulation.getParticleVbo(i).bind(GL_ARRAY_BUFFER);
-        gl.enableAttrib(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, pos));
-        gl.glVertexAttribDivisor(0, 1);
-        gl.enableAttrib(1, 1, GL_FLOAT, GL_FALSE, sizeof(Vert), offsetof(Vert, life));
-        gl.glVertexAttribDivisor(1, 1);
-    }
-
-    m_initialized = true;
-}
-
-void ParticleRenderMesh::virt_reset()
-{
-    for (auto &vao : m_vaos) {
-        vao.reset();
-    }
-    m_initialized = false;
-}
-
-bool ParticleRenderMesh::virt_isEmpty() const
-{
-    return m_simulation.isEmpty();
-}
-
-void ParticleRenderMesh::virt_render(const GLRenderState &renderState)
-{
-    init();
-    if (!m_initialized) {
-        return;
-    }
-
-    // Thinning: use precipitation intensity to drive instance count
-    if (m_intensity <= 0.0f) {
-        return;
-    }
-    const auto maxCount = static_cast<GLsizei>(m_simulation.getNumParticles());
-    const auto count = std::max<GLsizei>(1,
-                                         static_cast<GLsizei>(m_intensity
-                                                              * static_cast<float>(maxCount)));
-
-    // REVISIT: please explain why this uses value_or().
-    const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
-
-    auto &prog = deref(m_program);
-    MAYBE_UNUSED auto binder = prog.bind();
-    prog.setUniforms(mvp, renderState.uniforms);
-
-    MAYBE_UNUSED auto rsBinder = RenderStateBinder{m_functions,
-                                                   m_functions.getTexLookup(),
-                                                   renderState};
-
-    const uint32_t bufferIdx = m_simulation.getCurrentBuffer();
-    MAYBE_UNUSED auto vao_binder = m_vaos[bufferIdx].bind();
-    m_functions.glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, count);
+    // 3. Advance: the slot we just finished simulating into becomes next frame's input.
+    m_currentInput = static_cast<uint8_t>(getOutputIndex());
 }
 
 } // namespace Legacy

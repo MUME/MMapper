@@ -204,7 +204,6 @@ GLWeather::~GLWeather()
 
 void GLWeather::cleanup()
 {
-    m_simulation.reset();
     m_particles.reset();
     m_atmosphere.reset();
     m_timeOfDay.reset();
@@ -394,16 +393,14 @@ template void GLWeather::startTransitions(float &startTime,
 
 void GLWeather::initMeshes()
 {
-    if (!m_simulation) {
+    if (!m_particles) {
         auto funcs = m_gl.getSharedFunctions(Badge<GLWeather>{});
         auto &shaderPrograms = funcs->getShaderPrograms();
 
-        m_simulation = std::make_unique<Legacy::ParticleSimulationMesh>(
-            funcs, shaderPrograms.getParticleSimulationShader());
-        m_particles
-            = std::make_unique<Legacy::ParticleRenderMesh>(funcs,
-                                                           shaderPrograms.getParticleRenderShader(),
-                                                           *m_simulation);
+        m_particles = std::make_unique<Legacy::WeatherParticleMesh>(
+            funcs,
+            shaderPrograms.getParticleSimulationShader(),
+            shaderPrograms.getParticleRenderShader());
         m_atmosphere = UniqueMesh(
             std::make_unique<Legacy::AtmosphereMesh>(funcs, shaderPrograms.getAtmosphereShader()));
         m_timeOfDay = UniqueMesh(
@@ -428,9 +425,6 @@ void GLWeather::render(const GLRenderState &rs)
     if (rainMax > 0.0f || snowMax > 0.0f) {
         auto particleRs = rs.withBlend(BlendModeEnum::MAX_ALPHA);
 
-        if (m_simulation) {
-            m_simulation->render(particleRs);
-        }
         if (m_particles) {
             m_particles->setIntensity(std::max(rainMax, snowMax));
             m_particles->render(particleRs);
