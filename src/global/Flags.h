@@ -22,7 +22,7 @@ struct NODISCARD CountOf
 {};
 #define DEFINE_ENUM_COUNT(_E, _N) \
     template<> \
-    struct NODISCARD ::enums::CountOf<_E> \
+    struct NODISCARD enums::CountOf<_E> \
     { \
         static inline constexpr size_t value = (_N); \
     };
