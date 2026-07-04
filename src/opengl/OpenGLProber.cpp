@@ -49,7 +49,7 @@ OpenGLProber::ProbeResult OpenGLProber::probe()
 #ifdef Q_OS_WASM
     MMLOG_DEBUG() << "Probing for OpenGL support (Wasm/WebGL 2.0)...";
     ProbeResult result;
-    result.backendType = BackendType::ES;
+    result.backendType = BackendType::GLES;
     result.format.setRenderableType(QSurfaceFormat::OpenGLES);
     result.format.setVersion(3, 0);
     result.format.setDepthBufferSize(24);
