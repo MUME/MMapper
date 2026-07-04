@@ -163,9 +163,11 @@ AbstractParser::AbstractParser(MapData &md,
                                HotkeyManager &hm,
                                QObject *const parent,
                                AbstractParserOutputs &outputs,
-                               ParserCommonData &commonData)
+                               ParserCommonData &commonData,
+                               GameObserver &gameObserver)
     : ParserCommon{parent, mc, md, group, hm, proxyUserGmcp, outputs, commonData}
     , m_proxyMudConnection{proxyMudConnection}
+    , m_gameObserver{gameObserver}
 {
     QObject::connect(&m_offlineCommandTimer, &QTimer::timeout, this, [this]() {
         doOfflineCharacterMove();

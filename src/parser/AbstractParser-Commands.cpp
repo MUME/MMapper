@@ -4,7 +4,6 @@
 
 #include "AbstractParser-Commands.h"
 
-#include "../global/AsyncTasks.h"
 #include "../global/CaseUtils.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
@@ -18,11 +17,11 @@
 #include "../map/enums.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
+#include "../observer/gameobserver.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
 #include "../viewers/AnsiViewWindow.h"
 #include "../viewers/LaunchAsyncViewer.h"
-#include "../viewers/TopLevelWindows.h"
 #include "Abbrev.h"
 #include "AbstractParser-Utils.h"
 #include "DoorAction.h"
@@ -38,8 +37,157 @@
 #include <utility>
 #include <vector>
 
-#include <QMessageLogContext>
 #include <QtCore>
+
+namespace { // anonymous
+
+struct NODISCARD SendToUserHelper final
+{
+private:
+    std::ostringstream m_oss;
+    AnsiOstream m_aos{m_oss};
+    AbstractParser &m_self;
+    SendToUserSourceEnum m_source = SendToUserSourceEnum::FromMMapper;
+
+public:
+    explicit SendToUserHelper(AbstractParser &self,
+                              SendToUserSourceEnum src = SendToUserSourceEnum::FromMMapper)
+        : m_self{self}
+        , m_source{src}
+    {}
+    DELETE_CTORS_AND_ASSIGN_OPS(SendToUserHelper);
+    ~SendToUserHelper()
+    {
+        if (!m_aos.hasNewline()) {
+            m_aos.writeNewline();
+        }
+        m_self.sendToUser(m_source, m_oss.str());
+    }
+    NODISCARD AnsiOstream &getAnsiOstream() { return m_aos; }
+};
+
+template<typename Container>
+NODISCARD auto find_abbrev(const Container &container,
+                           const StringView input,
+                           const size_t required_len)
+    -> std::optional<typename Container::index_type>
+{
+    using E = typename Container::index_type;
+    for (const std::string_view w : container) {
+        if (required_len <= w.size() && isAbbrev(input, w, static_cast<int>(required_len))) {
+            if (std::optional<E> opt = container.findIndexOf(w)) {
+                return opt;
+            }
+        }
+    }
+    return std::nullopt;
+};
+
+template<typename Container>
+void concat_comma_and_or(AnsiOstream &aos,
+                         const Container &container,
+                         // color each word int he container
+                         const RawAnsi &ansi,
+                         // e.g. "and" or "or"
+                         const std::string_view and_or)
+{
+    using E = typename Container::index_type;
+    if (container.empty()) {
+        return; // This is probably an error, so maybe it should throw or print "(none)" ?
+    }
+    const size_t size = container.size();
+    for (size_t i = 0; i < size; ++i) {
+        if (i != 0) {
+            aos << ", ";
+            if (i + 1 == size && !and_or.empty()) {
+                aos << and_or << " ";
+            }
+        }
+        const auto e = static_cast<E>(i);
+        aos << ColoredValue{ansi, container[e]};
+    }
+}
+
+// one or more question marks
+template<typename T>
+NODISCARD bool is_question_marks(const T word)
+{
+    if constexpr (std::is_same_v<T, std::string_view>) {
+        return !word.empty() && std::all_of(word.begin(), word.end(), [](char c) -> bool {
+            return c == char_consts::C_QUESTION_MARK;
+        });
+    } else if constexpr (std::is_same_v<T, StringView>) {
+        return is_question_marks<std::string_view>(word.getStdStringView());
+    } else {
+        static_assert(std::is_same_v<T, void>, "unsupported word type");
+        std::abort();
+    }
+}
+
+constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+constexpr auto red = getRawAnsi(AnsiColor16Enum::red);
+constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
+
+constexpr EnumIndexedArray<std::string_view, PromptFogEnum, NUM_PROMPT_FOG_TYPES> all_fog_names{
+#define X_CASE(_x) std::string_view{#_x},
+    XFOREACH_PROMPT_FOG_ENUM(X_CASE)
+#undef X_CASE
+};
+constexpr EnumIndexedArray<std::string_view, PromptWeatherEnum, NUM_PROMPT_WEATHER_TYPES>
+    all_weather_names{
+#define X_CASE(_x) std::string_view{#_x},
+        XFOREACH_PROMPT_WEATHER_ENUM(X_CASE)
+#undef X_CASE
+    };
+
+template<typename Container, typename Getter, typename Setter>
+void trySetEnumValue(AbstractParser &parser,
+                     StringView view,
+                     const std::string_view what,
+                     const Container &enum_names,
+                     const size_t required_len,
+                     Getter &&get,
+                     Setter &&set)
+{
+    using E = typename Container::index_type;
+
+    if (view.isEmpty()) {
+        SendToUserHelper helper{parser};
+        AnsiOstream &aos = helper.getAnsiOstream();
+        aos << "The current " << what << " is: " << ColoredValue{green, get()} << ".";
+        return;
+    }
+
+    const auto next = view.takeFirstWord();
+    const auto input_sv = next.getStdStringView();
+
+    if (const std::optional<E> opt = find_abbrev(enum_names, next, required_len)) {
+        // success
+        const E e = *opt;
+        {
+            SendToUserHelper helper{parser};
+            AnsiOstream &aos = helper.getAnsiOstream();
+            aos << "Setting " << what << " to " << ColoredValue{green, enum_names[e]} << "...";
+        }
+        set(e);
+    } else {
+        // failure
+        SendToUserHelper helper{parser};
+        AnsiOstream &aos = helper.getAnsiOstream();
+
+        if (!is_question_marks(input_sv)) {
+            aos << "Error: Unrecognized " << what
+                << " option: " << ColoredQuotedStringView{red, yellow, input_sv} << "."
+                << AnsiOstream::endl;
+        }
+
+        aos << "Valid " << what << " options: ";
+        concat_comma_and_or(aos, enum_names, green, "or");
+        aos << "." << AnsiOstream::endl;
+    }
+}
+
+} // namespace
 
 const Abbrev cmdBack{"back"};
 const Abbrev cmdConfig{"config", 4};
@@ -515,13 +663,36 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 
 void AbstractParser::parseSetCommand(StringView view)
 {
+    auto show_set_syntax = [this] {
+        SendToUserHelper helper{*this};
+        AnsiOstream &aos = helper.getAnsiOstream();
+
+        aos << "Syntax:" << AnsiOstream::endl;
+        aos << "  " << getPrefixChar() << "set ..." << AnsiOstream::endl;
+        {
+            aos << "    ... fog [";
+            concat_comma_and_or(aos, all_fog_names, green, "or");
+            aos << "]" << AnsiOstream::endl;
+        }
+        aos << "    ... prefix [punct-char]" << AnsiOstream::endl;
+        {
+            aos << "    ... weather [";
+            concat_comma_and_or(aos, all_weather_names, green, "or");
+            aos << "]" << AnsiOstream::endl;
+        }
+    };
+
     if (view.isEmpty()) {
-        sendToUser(SendToUserSourceEnum::FromMMapper,
-                   QString("Syntax: %1set prefix [punct-char]\n").arg(getPrefixChar()));
+        show_set_syntax();
         return;
     }
 
     auto first = view.takeFirstWord();
+    if (is_question_marks(first)) {
+        show_set_syntax();
+        return;
+    }
+
     if (Abbrev{"prefix", 3}.matches(first)) {
         if (view.isEmpty()) {
             showCommandPrefix();
@@ -550,7 +721,37 @@ void AbstractParser::parseSetCommand(StringView view)
         return;
     }
 
-    sendToUser(SendToUserSourceEnum::FromMMapper, "That variable is not supported.");
+    if (Abbrev{"fog", 3}.matches(first)) {
+        trySetEnumValue(
+            *this,
+            view,
+            "fog",
+            all_fog_names,
+            2, // "no" should match "no_fog"
+            [this]() -> std::string_view { return to_string_view(m_gameObserver.getFog()); },
+            [this](const PromptFogEnum e) { m_gameObserver.observeFog(e); });
+        return;
+    }
+
+    if (Abbrev{"weather", 3}.matches(first)) {
+        trySetEnumValue(
+            *this,
+            view,
+            "weather",
+            all_weather_names,
+            3,
+            [this]() -> std::string_view { return to_string_view(m_gameObserver.getWeather()); },
+            [this](const PromptWeatherEnum e) { m_gameObserver.observeWeather(e); });
+        return;
+    }
+
+    {
+        SendToUserHelper helper{*this};
+        AnsiOstream &aos = helper.getAnsiOstream();
+        aos << "Error: " << ColoredQuotedStringView{red, yellow, first.getStdStringView()}
+            << " is not a valid variable name." << AnsiOstream::endl;
+    }
+    show_set_syntax();
 }
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)

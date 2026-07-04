@@ -755,7 +755,8 @@ void Proxy::allocParser()
                                                             m_mainWindow.getHotkeyManager(),
                                                             this,
                                                             deref(out),
-                                                            deref(parserCommon));
+                                                            deref(parserCommon),
+                                                            m_gameObserver);
 
     /* The login credentials are fetched asynchronously because the OS will prompt the user for permission */
     pipe.mud.passwordConfig = std::make_unique<PasswordConfig>(this);
