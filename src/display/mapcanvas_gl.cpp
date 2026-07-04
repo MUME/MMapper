@@ -213,6 +213,7 @@ void MapCanvas::reportGLVersion()
     logString("OpenGL Vendor:", GL_VENDOR);
     logString("OpenGL GLSL:", GL_SHADING_LANGUAGE_VERSION);
 
+#ifndef Q_OS_WASM
     {
         GLint profileMask = gl.glGetInteger(GL_CONTEXT_PROFILE_MASK);
         std::vector<std::string> v;
@@ -237,6 +238,7 @@ void MapCanvas::reportGLVersion()
 
         logVector("OpenGL context flags: ", v, flags);
     }
+#endif
 
     const auto version = std::invoke([this]() -> std::string {
         const QSurfaceFormat &format = context()->format();
