@@ -15,22 +15,19 @@ namespace enums {
 View<ExitDirEnum> getAllExitsNESW()
 {
     static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESW>();
-    static constexpr auto view = View{g_all_exits};
-    static_assert(view.size() == NUM_EXITS_NESW);
+    static const auto view = View{g_all_exits};
     return view;
 }
 View<ExitDirEnum> getAllExitsNESWUD()
 {
     static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESWUD>();
-    static constexpr auto view = View{g_all_exits};
-    static_assert(view.size() == NUM_EXITS_NESWUD);
+    static const auto view = View{g_all_exits};
     return view;
 }
 View<ExitDirEnum> getAllExits7()
 {
     static constexpr auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS>();
-    static constexpr auto view = View{g_all_exits};
-    static_assert(view.size() == NUM_EXITS);
+    static const auto view = View{g_all_exits};
     return view;
 }
 
