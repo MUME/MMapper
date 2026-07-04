@@ -23,6 +23,36 @@ private:
     }
 };
 
+struct NODISCARD AColorLineShader final : public AbstractShaderProgram
+{
+public:
+    using AbstractShaderProgram::AbstractShaderProgram;
+
+    ~AColorLineShader() final;
+
+private:
+    void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
+    {
+        setColor("uColor", uniforms.color);
+        setMatrix("uMVP", mvp);
+    }
+};
+
+struct NODISCARD UColorLineShader final : public AbstractShaderProgram
+{
+public:
+    using AbstractShaderProgram::AbstractShaderProgram;
+
+    ~UColorLineShader() final;
+
+private:
+    void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
+    {
+        setColor("uColor", uniforms.color);
+        setMatrix("uMVP", mvp);
+    }
+};
+
 struct NODISCARD UColorPlainShader final : public AbstractShaderProgram
 {
 public:
@@ -219,6 +249,8 @@ private:
 private:
     std::shared_ptr<AColorPlainShader> m_aColorShader;
     std::shared_ptr<UColorPlainShader> m_uColorShader;
+    std::shared_ptr<AColorLineShader> m_aLineShader;
+    std::shared_ptr<UColorLineShader> m_uLineShader;
     std::shared_ptr<AColorTexturedShader> m_aTexturedShader;
     std::shared_ptr<UColorTexturedShader> m_uTexturedShader;
 
@@ -253,6 +285,8 @@ public:
     NODISCARD const std::shared_ptr<AColorPlainShader> &getPlainAColorShader();
     // uniform color (aka "Plain")
     NODISCARD const std::shared_ptr<UColorPlainShader> &getPlainUColorShader();
+    NODISCARD const std::shared_ptr<AColorLineShader> &getLineAColorShader();
+    NODISCARD const std::shared_ptr<UColorLineShader> &getLineUColorShader();
     // attribute color + textured (aka "ColoredTextured")
     NODISCARD const std::shared_ptr<AColorTexturedShader> &getTexturedAColorShader();
     // uniform color + textured (aka "Textured")

@@ -94,12 +94,12 @@ UniqueMesh OpenGL::createPointBatch(const View<ColorVert> batch)
 
 UniqueMesh OpenGL::createPlainLineBatch(const View<glm::vec3> batch)
 {
-    return getFunctions().createPlainBatch(DrawModeEnum::LINES, batch);
+    return getFunctions().createPlainLineBatch(batch);
 }
 
 UniqueMesh OpenGL::createColoredLineBatch(const View<ColorVert> batch)
 {
-    return getFunctions().createColoredBatch(DrawModeEnum::LINES, batch);
+    return getFunctions().createColoredLineBatch(batch);
 }
 
 UniqueMesh OpenGL::createPlainTriBatch(const View<glm::vec3> batch)
@@ -164,14 +164,22 @@ void OpenGL::renderPlain(const DrawModeEnum type,
                          const View<glm::vec3> verts,
                          const GLRenderState &state)
 {
-    getFunctions().renderPlain(type, verts, state);
+    if (type == DrawModeEnum::LINES) {
+        getFunctions().renderPlainLines(verts, state);
+    } else {
+        getFunctions().renderPlain(type, verts, state);
+    }
 }
 
 void OpenGL::renderColored(const DrawModeEnum type,
                            const View<ColorVert> verts,
                            const GLRenderState &state)
 {
-    getFunctions().renderColored(type, verts, state);
+    if (type == DrawModeEnum::LINES) {
+        getFunctions().renderColoredLines(verts, state);
+    } else {
+        getFunctions().renderColored(type, verts, state);
+    }
 }
 
 void OpenGL::renderPoints(const View<ColorVert> verts, const GLRenderState &state)

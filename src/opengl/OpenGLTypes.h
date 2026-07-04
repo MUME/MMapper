@@ -139,9 +139,9 @@ enum class NODISCARD DrawModeEnum {
 
 struct NODISCARD LineParams final
 {
-    float width = 1.f;
-    LineParams() = default;
+    float width = 1.0f;
 
+    LineParams() = default;
     explicit LineParams(const float width_)
         : width{width_}
     {}

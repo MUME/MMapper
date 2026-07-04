@@ -213,6 +213,10 @@
         <file>pixmaps/wall-west.png</file>
         <file>shaders/legacy/font/frag.glsl</file>
         <file>shaders/legacy/font/vert.glsl</file>
+        <file>shaders/legacy/line/acolor/frag.glsl</file>
+        <file>shaders/legacy/line/acolor/vert.glsl</file>
+        <file>shaders/legacy/line/ucolor/frag.glsl</file>
+        <file>shaders/legacy/line/ucolor/vert.glsl</file>
         <file>shaders/legacy/room/tex/acolor/frag.glsl</file>
         <file>shaders/legacy/room/tex/acolor/vert.glsl</file>
         <file>shaders/legacy/plain/acolor/frag.glsl</file>

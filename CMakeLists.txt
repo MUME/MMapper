@@ -100,7 +100,7 @@ if(Qt6OpenGL_FOUND)
                         OUTPUT_VARIABLE OUTPUT)
         file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
             "#include <QOpenGLFunctions_3_3_Core>
-            #ifndef GL_QUADS
+            #ifndef GL_TRIANGLES
             # error
             #endif
             int main(int argc, char** argv) { return 0; }")

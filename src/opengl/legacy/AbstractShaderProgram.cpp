@@ -171,4 +171,10 @@ void AbstractShaderProgram::setViewport(const char *const name, const Viewport &
     setUniform4iv(location, 1, glm::value_ptr(viewport));
 }
 
+void AbstractShaderProgram::setFloat(const char *const name, const float value)
+{
+    const GLint location = getUniformLocation(name);
+    setUniform1fv(location, 1, &value);
+}
+
 } // namespace Legacy

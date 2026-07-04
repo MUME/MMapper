@@ -4,317 +4,219 @@
 #include "OpenGLProber.h"
 
 #include "../global/ConfigConsts.h"
+#include "../global/TextUtils.h"
 #include "../global/logging.h"
 #include "OpenGLConfig.h"
 
-#include <optional>
-#include <sstream>
-
+#include <QCoreApplication>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#ifndef Q_OS_WASM
+#include <QGuiApplication>
 #include <QOpenGLContext>
+#include <QProcess>
+#include <QSurfaceFormat>
+#endif
+#include <QString>
 
 #ifdef WIN32
 #include <windows.h>
 
-extern "C" {
 // Prefer discrete nVidia and AMD GPUs by default on Windows
-__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
-}
+extern "C" __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+extern "C" __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
-namespace { // anonymous
+namespace {
 
-struct GLVersion
+OpenGLProber::ProbeResult getFallbackResult()
 {
-    int major = 0;
-    int minor = 0;
-
-    NODISCARD bool operator>(const GLVersion &other) const
-    {
-        return (major > other.major) || (major == other.major && minor > other.minor);
-    }
-
-    NODISCARD bool operator<(const GLVersion &other) const
-    {
-        return (major < other.major) || (major == other.major && minor < other.minor);
-    }
-};
-
-inline std::ostream &operator<<(std::ostream &os, const GLVersion &version)
-{
-    os << version.major << "." << version.minor;
-    return os;
-}
-
-struct GLContextCheckResult
-{
-    bool valid = false;
-    GLVersion version = {0, 0};
-    bool isCore = false;
-    bool isCompat = false;
-    bool isDeprecated = false;
-    bool isDebug = false;
-};
-
-NODISCARD GLContextCheckResult checkContext(QSurfaceFormat format,
-                                            GLVersion version,
-                                            QSurfaceFormat::OpenGLContextProfile profile)
-{
-    GLContextCheckResult result;
-    QOpenGLContext context;
-    context.setFormat(format);
-    if (!context.create()) {
-        MMLOG_DEBUG() << "[GL Check] context.create() failed for requested " << version
-                      << (profile == QSurfaceFormat::CoreProfile ? " Core" : " Compat");
-        return result;
-    }
-
-    QSurfaceFormat actualFormat = context.format();
-
-    result.isCore = (actualFormat.profile() & QSurfaceFormat::CoreProfile);
-    result.isCompat = (actualFormat.profile() & QSurfaceFormat::CompatibilityProfile);
-    result.isDeprecated = (actualFormat.options() & QSurfaceFormat::DeprecatedFunctions);
-    result.isDebug = (actualFormat.options() & QSurfaceFormat::DebugContext);
-    result.version = GLVersion{actualFormat.majorVersion(), actualFormat.minorVersion()};
-
-    context.doneCurrent();
-
-    // Check if the actual OpenGL context meets the minimum requirements
-    bool profileOk = false;
-
-    if (version < GLVersion{3, 2}) {
-        if (profile == QSurfaceFormat::CoreProfile) {
-            // Core profile did not exist before GL 3.2
-            profileOk = false;
-        } else {
-            // Must be compatibility-like
-            profileOk = result.isCompat || result.isDeprecated;
-        }
-    } else {
-        // For GL 3.2+
-        if (profile == QSurfaceFormat::CoreProfile) {
-            profileOk = result.isCore;
-        } else if (profile == QSurfaceFormat::CompatibilityProfile) {
-            profileOk = result.isCompat && result.isDeprecated;
-        }
-    }
-
-    // If the profile is ok, we consider the context valid even if the version is lower than requested.
-    if (profileOk) {
-        result.valid = true;
-        MMLOG_DEBUG() << "[GL Probe] GL " << result.version << (result.isCore ? " Core" : " Compat")
-                      << " is valid";
-    }
-    return result;
-}
-
-NODISCARD std::string formatGLVersionString(const GLContextCheckResult &result)
-{
-    std::ostringstream oss;
-    oss << "GL" << result.version;
-    if (!result.isDeprecated && result.version > GLVersion{3, 1}) {
-        oss << "core";
-    }
-    return oss.str();
-}
-
-NODISCARD std::optional<GLContextCheckResult> probeCore(QSurfaceFormat &testFormat,
-                                                        std::vector<GLVersion> &coreVersions,
-                                                        QSurfaceFormat::FormatOptions optionsCoreOnly)
-{
-    std::optional<GLContextCheckResult> coreResult = std::nullopt;
-    for (auto it = coreVersions.begin(); it != coreVersions.end();) {
-        const auto &version = *it;
-        testFormat.setVersion(version.major, version.minor);
-        testFormat.setProfile(QSurfaceFormat::CoreProfile);
-        testFormat.setOptions(optionsCoreOnly);
-
-        GLContextCheckResult contextCheckResult = checkContext(testFormat,
-                                                               version,
-                                                               QSurfaceFormat::CoreProfile);
-        if (contextCheckResult.valid) {
-            coreResult = contextCheckResult;
-            MMLOG_DEBUG() << "[GL Probe] Found highest supported Core version: "
-                          << contextCheckResult.version;
-            break;
-        } else {
-            it = coreVersions.erase(it);
-        }
-    }
-    return coreResult;
-}
-
-NODISCARD std::optional<GLContextCheckResult> probeCompat(
-    QSurfaceFormat &format,
-    std::vector<GLVersion> versions,
-    QSurfaceFormat::FormatOptions options,
-    std::optional<GLContextCheckResult> coreResult)
-{
-    std::optional<GLContextCheckResult> compatResult = std::nullopt;
-
-    std::vector<GLVersion> compatVersionsToTest = versions;
-    if (coreResult) {
-        // Filter compatVersions to only include versions <= coreResult
-        compatVersionsToTest.erase(std::remove_if(compatVersionsToTest.begin(),
-                                                  compatVersionsToTest.end(),
-                                                  [resultVer = coreResult->version](
-                                                      const GLVersion &ver) {
-                                                      return ver > resultVer;
-                                                  }),
-                                   compatVersionsToTest.end());
-    }
-
-    for (const auto &version : compatVersionsToTest) {
-        format.setVersion(version.major, version.minor);
-        format.setProfile(QSurfaceFormat::CompatibilityProfile);
-        format.setOptions(options);
-        GLContextCheckResult contextCheckResult = checkContext(format,
-                                                               version,
-                                                               QSurfaceFormat::CompatibilityProfile);
-        if (contextCheckResult.valid) {
-            compatResult = contextCheckResult;
-            MMLOG_DEBUG() << "[GL Probe] Found highest supported Compat version: "
-                          << compatResult->version;
-            break;
-        }
-    }
-    return compatResult;
-}
-
-NODISCARD std::string getHighestGLVersion(std::optional<GLContextCheckResult> coreResult,
-                                          std::optional<GLContextCheckResult> compatResult)
-{
-    std::string highestGLVersion;
-    if (coreResult && compatResult) {
-        if (coreResult->version > compatResult->version) {
-            highestGLVersion = formatGLVersionString(*coreResult);
-        } else {
-            highestGLVersion = formatGLVersionString(*compatResult);
-        }
-    } else if (coreResult) {
-        highestGLVersion = formatGLVersionString(*coreResult);
-    } else if (compatResult) {
-        highestGLVersion = formatGLVersionString(*compatResult);
-    } else {
-        highestGLVersion = "Fallback";
-    }
-    return highestGLVersion;
-}
-
-NODISCARD QSurfaceFormat getOptimalFormat(std::optional<GLContextCheckResult> result)
-{
-    QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGL);
-    format.setDepthBufferSize(24);
-    if (result) {
-        format.setVersion(result->version.major, result->version.minor);
-        format.setProfile(result->isCore ? QSurfaceFormat::CoreProfile
-                                         : QSurfaceFormat::CompatibilityProfile);
-        QSurfaceFormat::FormatOptions options;
-        if (result->isDebug) {
-            options |= QSurfaceFormat::DebugContext;
-        }
-        if (result->isCompat) {
-            options |= QSurfaceFormat::DeprecatedFunctions;
-        }
-        format.setOptions(options);
-        MMLOG_INFO() << "[GL Probe] Optimal running format determined: GL " << format.majorVersion()
-                     << "." << format.minorVersion()
-                     << " Profile: " << (result->isCore ? "Core" : "Compat")
-                     << (result->isDebug ? " (Debug)" : " (NO Debug)");
-    } else {
-        // Fallback for optimal running format if no context was found at all
-        format.setVersion(3, 3);
-        format.setProfile(QSurfaceFormat::CoreProfile);
-        format.setOptions(QSurfaceFormat::DebugContext);
-        MMLOG_ERROR() << "[GL Probe] No suitable GL context found for running format.";
-    }
-    return format;
-}
-
-OpenGLProber::ProbeResult probeOpenGL()
-{
-    if constexpr (NO_OPENGL) {
-        return {};
-    }
-
-    MMLOG_DEBUG() << "Probing for OpenGL support...";
-
-    QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGL);
-    format.setDepthBufferSize(24);
-
-    QSurfaceFormat::FormatOptions optionsCompat = QSurfaceFormat::DebugContext
-                                                  | QSurfaceFormat::DeprecatedFunctions;
-    QSurfaceFormat::FormatOptions optionsCore = QSurfaceFormat::DebugContext;
-
-    // Define lists of versions to try.
-    std::vector<GLVersion> versions
-        = {{4, 6}, {4, 5}, {4, 4}, {4, 3}, {4, 2}, {4, 1}, {4, 0}, {3, 3}, {3, 2}};
-
-    std::optional<GLContextCheckResult> coreResult = probeCore(format, versions, optionsCore);
-    std::optional<GLContextCheckResult> compatResult = probeCompat(format,
-                                                                   versions,
-                                                                   optionsCompat,
-                                                                   coreResult);
-
     OpenGLProber::ProbeResult result;
-    if (compatResult || coreResult) {
-        result.backendType = OpenGLProber::BackendType::GL;
-        result.highestVersionString = getHighestGLVersion(coreResult, compatResult);
-        OpenGLConfig::setGLVersionString(result.highestVersionString);
-        result.format = getOptimalFormat(compatResult ? compatResult : coreResult);
-        result.isCompat = (compatResult && compatResult->isCompat);
-    }
+    result.backendType = OpenGLProber::BackendType::GL;
+    result.format.setRenderableType(QSurfaceFormat::OpenGL);
+    result.format.setVersion(3, 3);
+    result.format.setProfile(QSurfaceFormat::CoreProfile);
+    result.format.setDepthBufferSize(24);
+    result.highestVersionString = "Fallback";
     return result;
-}
-
-OpenGLProber::ProbeResult probeOpenGLES()
-{
-    if constexpr (NO_GLES) {
-        return {};
-    }
-
-    MMLOG_DEBUG() << "Probing for OpenGL ES support...";
-
-    std::vector<GLVersion> glesVersions = {{3, 2}, {3, 1}, {3, 0}};
-
-    for (const auto &version : glesVersions) {
-        QSurfaceFormat format;
-        format.setRenderableType(QSurfaceFormat::OpenGLES);
-        format.setVersion(version.major, version.minor);
-
-        QOpenGLContext context;
-        context.setFormat(format);
-        if (context.create()) {
-            MMLOG_DEBUG() << "[GL Probe] Found highest supported GLES version: " << version;
-            OpenGLProber::ProbeResult result;
-            result.backendType = OpenGLProber::BackendType::GLES;
-            result.format = format;
-            std::ostringstream oss;
-            oss << "ES" << version;
-            result.highestVersionString = oss.str();
-            OpenGLConfig::setESVersionString(result.highestVersionString);
-            return result;
-        }
-    }
-
-    MMLOG_DEBUG() << "No suitable GLES context found.";
-    return {};
 }
 
 } // namespace
 
 OpenGLProber::ProbeResult OpenGLProber::probe()
 {
-    auto glResult = probeOpenGL();
-    auto glesResult = probeOpenGLES();
-    if (glResult.backendType != BackendType::None) {
-        return glResult;
+#ifdef Q_OS_WASM
+    MMLOG_DEBUG() << "Probing for OpenGL support (Wasm/WebGL 2.0)...";
+    ProbeResult result;
+    result.backendType = BackendType::GLES;
+    result.format.setRenderableType(QSurfaceFormat::OpenGLES);
+    result.format.setVersion(3, 0);
+    result.format.setDepthBufferSize(24);
+    result.highestVersionString = "WebGL 2.0";
+    OpenGLConfig::setESVersionString(result.highestVersionString);
+    return result;
+#else
+    if constexpr (NO_OPENGL && NO_GLES) {
+        return {};
     }
-    if (glesResult.backendType != BackendType::None) {
-        return glesResult;
+
+    MMLOG_DEBUG() << "Probing for OpenGL support via --probe subprocess...";
+
+    const QString selfPath = QCoreApplication::applicationFilePath();
+    QProcess process;
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("ASAN_OPTIONS", "detect_leaks=0");
+    process.setProcessEnvironment(env);
+
+    QStringList args = {"--probe"};
+    const QString platform = QGuiApplication::platformName();
+    if (!platform.isEmpty()) {
+        args << "-platform" << platform;
     }
-    MMLOG_DEBUG() << "No suitable backend found.";
-    return {};
+    process.start(selfPath, args);
+    if (!process.waitForFinished(5000)) {
+        MMLOG_ERROR() << "OpenGL probe subprocess timed out or failed to start. Using fallback.";
+        process.kill();
+        return getFallbackResult();
+    }
+
+    const QByteArray stdoutData = process.readAllStandardOutput();
+    const QByteArray stderrData = process.readAllStandardError();
+    return parseSurveyResult(stdoutData, stderrData);
+#endif
 }
+
+OpenGLProber::ProbeResult OpenGLProber::parseSurveyResult(const QByteArray &stdoutData,
+                                                          const QByteArray &stderrData)
+{
+    const qsizetype start = stdoutData.indexOf('{');
+    const qsizetype end = stdoutData.lastIndexOf('}');
+
+    QJsonDocument doc;
+    if (start != -1 && end != -1 && end > start) {
+        doc = QJsonDocument::fromJson(stdoutData.mid(start, end - start + 1));
+    }
+
+    if (doc.isNull() || !doc.isObject()) {
+        MMLOG_WARNING() << "OpenGL survey returned invalid JSON. Using fallback."
+                        << "\n  stdout:" << stdoutData.toStdString()
+                        << "\n  stderr:" << stderrData.toStdString();
+        return getFallbackResult();
+    }
+
+    QJsonObject obj = doc.object();
+    QString backend = obj["backend"].toString();
+    const bool debugSupported = obj["debug"].toBool();
+
+    ProbeResult result;
+    result.debugSupported = debugSupported;
+    if (debugSupported) {
+        result.format.setOption(QSurfaceFormat::DebugContext);
+    }
+
+    if (backend == "GL") {
+        result.backendType = BackendType::GL;
+        int major = obj["major"].toInt();
+        int minor = obj["minor"].toInt();
+        result.format.setRenderableType(QSurfaceFormat::OpenGL);
+        result.format.setVersion(major, minor);
+        result.format.setProfile(QSurfaceFormat::CoreProfile);
+        result.format.setDepthBufferSize(24);
+        result.highestVersionString = mmqt::toStdStringUtf8(
+            QString("GL%1.%2").arg(major).arg(minor));
+        OpenGLConfig::setGLVersionString(result.highestVersionString);
+    } else if (backend == "ES") {
+        result.backendType = BackendType::GLES;
+        int major = obj["major"].toInt();
+        int minor = obj["minor"].toInt();
+        result.format.setRenderableType(QSurfaceFormat::OpenGLES);
+        result.format.setVersion(major, minor);
+        result.format.setDepthBufferSize(24);
+        result.highestVersionString = mmqt::toStdStringUtf8(
+            QString("ES%1.%2").arg(major).arg(minor));
+        OpenGLConfig::setESVersionString(result.highestVersionString);
+    } else {
+        MMLOG_DEBUG() << "No suitable backend found by survey.";
+        return {};
+    }
+
+    MMLOG_INFO() << "[GL Probe] Survey determined: " << result.highestVersionString.c_str();
+    return result;
+}
+
+#ifndef Q_OS_WASM
+int OpenGLProber::runSurveyMode(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+
+    QJsonObject result;
+
+    struct GLVersion
+    {
+        int major;
+        int minor;
+    };
+
+    // Try OpenGL Core versions from highest to lowest
+    const std::vector<GLVersion> coreVersions
+        = {{4, 6}, {4, 5}, {4, 4}, {4, 3}, {4, 2}, {4, 1}, {4, 0}, {3, 3}};
+
+    bool foundBackend = false;
+    for (const auto &v : coreVersions) {
+        QSurfaceFormat format;
+        format.setRenderableType(QSurfaceFormat::OpenGL);
+        format.setVersion(v.major, v.minor);
+        format.setProfile(QSurfaceFormat::CoreProfile);
+        format.setOption(QSurfaceFormat::DebugContext);
+
+        QOpenGLContext context;
+        context.setFormat(format);
+        if (context.create()) {
+            const QSurfaceFormat actual = context.format();
+            if (actual.profile() == QSurfaceFormat::CoreProfile
+                && (actual.majorVersion() > v.major
+                    || (actual.majorVersion() == v.major && actual.minorVersion() >= v.minor))) {
+                result["backend"] = "GL";
+                result["major"] = actual.majorVersion();
+                result["minor"] = actual.minorVersion();
+                result["debug"] = actual.testOption(QSurfaceFormat::DebugContext);
+                foundBackend = true;
+                break;
+            }
+        }
+    }
+
+    if (!foundBackend) {
+        const std::vector<GLVersion> glesVersions = {{3, 2}, {3, 1}, {3, 0}};
+        for (const auto &v : glesVersions) {
+            QSurfaceFormat format;
+            format.setRenderableType(QSurfaceFormat::OpenGLES);
+            format.setVersion(v.major, v.minor);
+            format.setOption(QSurfaceFormat::DebugContext);
+
+            QOpenGLContext context;
+            context.setFormat(format);
+            if (context.create()) {
+                const QSurfaceFormat actual = context.format();
+                result["backend"] = "ES";
+                result["major"] = actual.majorVersion();
+                result["minor"] = actual.minorVersion();
+                result["debug"] = actual.testOption(QSurfaceFormat::DebugContext);
+                foundBackend = true;
+                break;
+            }
+        }
+    }
+
+    if (result.isEmpty()) {
+        result["backend"] = "None";
+    }
+
+    const QByteArray output = QJsonDocument(result).toJson(QJsonDocument::Compact);
+    fprintf(stdout, "\n%s\n", output.constData());
+    fflush(stdout);
+    return 0;
+}
+#endif

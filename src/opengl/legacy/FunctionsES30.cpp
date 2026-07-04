@@ -4,14 +4,7 @@ namespace Legacy {
 
 FunctionsES30::FunctionsES30(Badge<Functions> badge, UboManager &uboManager)
     : Functions(badge, uboManager)
-{
-    assert(!OpenGLConfig::getIsCompat());
-}
-
-bool FunctionsES30::virt_canRenderQuads()
-{
-    return false;
-}
+{}
 
 std::optional<GLenum> FunctionsES30::virt_toGLenum(const DrawModeEnum mode)
 {
