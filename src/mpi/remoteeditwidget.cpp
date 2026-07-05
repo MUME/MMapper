@@ -601,6 +601,11 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
             this,
             &RemoteEditWidget::slot_updateStatusBar);
     connect(pTextEdit, &QPlainTextEdit::textChanged, this, &RemoteEditWidget::slot_updateStatusBar);
+    connect(pTextEdit, &QPlainTextEdit::textChanged, this, [this, pTextEdit]() {
+        if (m_editSession) {
+            emit sig_textModified(pTextEdit->toPlainText());
+        }
+    });
 }
 
 void RemoteEditWidget::slot_updateStatus(const QString &message_param)

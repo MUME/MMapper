@@ -30,6 +30,7 @@
 #include "../media/MediaLibrary.h"
 #include "../pathmachine/mmapper2pathmachine.h"
 #include "../preferences/configdialog.h"
+#include "../mpi/remoteedit.h"
 #include "../proxy/connectionlistener.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
@@ -138,6 +139,8 @@ MainWindow::MainWindow()
     setCurrentFile("");
 
     m_prespammedPath = new PrespammedPath(this);
+
+    m_remoteEdit = new RemoteEdit(this);
 
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
@@ -413,6 +416,10 @@ MainWindow::MainWindow()
     m_defaultExpandedState = saveState();
     readSettings();
     g_mainWindow = this;
+
+    QTimer::singleShot(0, this, [this]() {
+        m_remoteEdit->recoverDrafts();
+    });
 }
 
 void MainWindow::startServices()
@@ -637,6 +644,32 @@ void MainWindow::wireConnections()
             &FindRoomsDlg::sig_editSelection,
             this,
             &MainWindow::slot_onEditRoomSelection);
+
+    connect(m_listener, &ConnectionListener::sig_proxyCreated, this, [this](QPointer<Proxy> proxy) {
+        if (!proxy) return;
+
+        connect(proxy.data(),
+                &Proxy::sig_remoteEditRequested,
+                m_remoteEdit,
+                &RemoteEdit::slot_remoteEdit);
+        connect(proxy.data(),
+                &Proxy::sig_remoteViewRequested,
+                m_remoteEdit,
+                &RemoteEdit::slot_remoteView);
+
+        connect(m_remoteEdit,
+                &RemoteEdit::sig_remoteEditSave,
+                proxy.data(),
+                &Proxy::slot_remoteEditSave);
+        connect(m_remoteEdit,
+                &RemoteEdit::sig_remoteEditCancel,
+                proxy.data(),
+                &Proxy::slot_remoteEditCancel);
+    });
+
+    deref(m_gameObserver).sig2_disconnected.connect(m_lifetime, [this]() {
+        m_remoteEdit->onDisconnected();
+    });
 }
 
 void MainWindow::slot_log(const QString &mod, const QString &message)

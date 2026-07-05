@@ -125,6 +125,7 @@ public:
     {
         bool internalRemoteEditor = false;
         QString externalRemoteEditorCommand;
+        QString editorDirectory;
 
     private:
         SUBGROUP();

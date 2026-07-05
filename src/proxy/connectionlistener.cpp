@@ -12,6 +12,7 @@
 #include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
 #include "TcpSocket.h"
+#include "../mpi/remoteedit.h"
 #include "proxy.h"
 
 #include <memory>
@@ -128,6 +129,7 @@ void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
                                    m_gameOberver,
                                    std::move(socket),
                                    *this);
+        emit sig_proxyCreated(m_proxy);
     } else {
         log("New connection: rejected.");
         const auto msg = std::invoke([]() -> QByteArray {

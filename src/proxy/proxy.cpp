@@ -206,10 +206,6 @@ Proxy::~Proxy()
     }
 
     {
-        auto &remoteEdit = deref(m_remoteEdit);
-        remoteEdit.onDisconnected();
-        remoteEdit.disconnect(); // disconnect all signals
-        remoteEdit.deleteLater();
     }
 
     destroyPipelineObjects();
@@ -314,7 +310,6 @@ void Proxy::allocMudSocket()
         NODISCARD Proxy &getProxy() { return m_proxy; }
         NODISCARD MudTelnet &getMudTelnet() { return getProxy().getMudTelnet(); }
         NODISCARD MumeXmlParser &getMudParser() { return getProxy().getMudParser(); }
-        NODISCARD RemoteEdit &getRemoteEdit() { return getProxy().getRemoteEdit(); }
         NODISCARD UserTelnet &getUserTelnet() { return getProxy().getUserTelnet(); }
         NODISCARD Mmapper2Group &getGroupManager() { return getProxy().getGroupManager(); }
         NODISCARD ProxyHost &getHost() { return getProxy().getHost(); }
@@ -354,7 +349,6 @@ void Proxy::allocMudSocket()
             getMudParser().onReset();
             getGroupManager().onReset();
             getProxy().mudTerminatedConnection();
-            getRemoteEdit().onDisconnected();
         }
 
         void virt_onProcessMudStream(const TelnetIacBytes &bytes) final
@@ -784,7 +778,6 @@ void Proxy::allocMpiFilter()
     private:
         NODISCARD Proxy &getProxy() { return m_proxy; }
         NODISCARD MumeXmlParser &getMudParser() { return getProxy().getMudParser(); }
-        NODISCARD RemoteEdit &getRemoteEdit() { return getProxy().getRemoteEdit(); }
 
     private:
         void notifyUser(const std::string_view article,
@@ -813,12 +806,12 @@ void Proxy::allocMpiFilter()
                                 const QString &body) final
         {
             notifyUser("an", "Editor", title);
-            getRemoteEdit().slot_remoteEdit(id, title, body);
+            emit getProxy().sig_remoteEditRequested(id, title, body);
         }
         void virt_onViewMessage(const QString &title, const QString &body) final
         {
             notifyUser("a", "Viewer", title);
-            getRemoteEdit().slot_remoteView(title, body);
+            emit getProxy().sig_remoteViewRequested(title, body);
         }
         void virt_onParseNewMudInput(const TelnetData &data) final
         {
@@ -833,9 +826,6 @@ void Proxy::allocMpiFilter()
 
 void Proxy::allocRemoteEdit()
 {
-    // Caution: RemoteEdit outlives the proxy, since it manages windows.
-    m_remoteEdit = mmqt::makeQPointer<RemoteEdit>(&m_host.asQObject());
-
     struct NODISCARD LocalMpiFilterToMud final : public MpiFilterToMud
     {
     private:
@@ -855,19 +845,6 @@ void Proxy::allocRemoteEdit()
 
     auto &pipe = getPipeline();
     pipe.mud.mpiFilterToMud = std::make_unique<LocalMpiFilterToMud>(*this);
-
-    auto &remoteEdit = deref(m_remoteEdit);
-    QObject::connect(&remoteEdit,
-                     &RemoteEdit::sig_remoteEditCancel,
-                     this,
-                     [this](const RemoteSessionId id) { getMpiFilterToMud().cancelRemoteEdit(id); });
-
-    QObject::connect(&remoteEdit,
-                     &RemoteEdit::sig_remoteEditSave,
-                     this,
-                     [this](const RemoteSessionId id, const Latin1Bytes &content) {
-                         getMpiFilterToMud().saveRemoteEdit(id, content);
-                     });
 }
 
 void Proxy::init()
@@ -965,6 +942,7 @@ void Proxy::mudTerminatedConnection()
     getUserTelnet().onRelayEchoMode(true);
 
     log("Mud terminated connection ...");
+    getGameObserver().observeDisconnected();
 
     sendNewlineToUser();
     sendStatusToUser("MUME closed the connection.");
@@ -1197,7 +1175,17 @@ void Proxy::log(const QString &msg)
     getHost().log("Proxy", msg);
 }
 
-RemoteEdit &Proxy::getRemoteEdit()
+void Proxy::slot_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content)
 {
-    return deref(m_remoteEdit);
+    getMpiFilterToMud().saveRemoteEdit(sessionId, content);
+}
+
+void Proxy::slot_remoteEditCancel(const RemoteSessionId sessionId)
+{
+    getMpiFilterToMud().cancelRemoteEdit(sessionId);
+}
+
+void Proxy::slot_sendGmcp(const GmcpMessage &msg)
+{
+    getMudTelnet().onSubmitGmcpMumeClient(msg);
 }

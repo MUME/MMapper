@@ -12,6 +12,7 @@
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
 #include "../proxy/TaggedBytes.h"
+#include "../global/AsyncTasks.h"
 
 #include <QObject>
 #include <QPointer>
@@ -62,12 +63,16 @@ class NODISCARD_QOBJECT RemoteEditSession : public QObject
 {
     Q_OBJECT
 
-private:
+protected:
     RemoteEdit *m_manager = nullptr;
     QString m_content;
+    QString m_title;
     const RemoteInternalId m_internalId{};
     const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
     bool m_connected = true;
+    bool m_stopTask = false;
+    QString m_draftFileName;
+    std::optional<async_tasks::AsyncTaskHandle> m_taskHandle;
 
 private:
 #ifndef Q_OS_WASM
@@ -78,6 +83,7 @@ private:
 public:
     explicit RemoteEditSession(RemoteInternalId internalId,
                                RemoteSessionId sessionId,
+                               QString title,
                                RemoteEdit *remoteEdit);
 
 public:
@@ -85,6 +91,7 @@ public:
     NODISCARD auto getSessionId() const { return m_sessionId; }
     NODISCARD bool isEditSession() const { return m_sessionId != REMOTE_VIEW_SESSION_ID; }
     NODISCARD const QString &getContent() const { return m_content; }
+    NODISCARD const QString &getTitle() const { return m_title; }
     void setContent(QString content) { m_content = std::move(content); }
     void cancel();
     void save();
@@ -92,6 +99,17 @@ public:
 public:
     NODISCARD bool isConnected() const { return m_connected; }
     void setDisconnected() { m_connected = false; }
+    void setDraftFileName(const QString &fileName) { m_draftFileName = fileName; }
+    NODISCARD const QString &getDraftFileName() const { return m_draftFileName; }
+    NODISCARD QString getFullDraftPath() const;
+    void setAsyncTask(async_tasks::AsyncTaskHandle handle) { m_taskHandle = std::move(handle); }
+    NODISCARD std::optional<async_tasks::AsyncTaskHandle> getAsyncTask() const
+    {
+        return m_taskHandle;
+    }
+    void stopTask() { m_stopTask = true; }
+    NODISCARD bool shouldStopTask() const { return m_stopTask; }
+    virtual void raise();
 
 protected slots:
     void slot_onCancel() { cancel(); }
@@ -108,6 +126,9 @@ class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSessi
 
 private:
     QPointer<RemoteEditWidget> m_widget;
+    QTimer *m_debounceTimer = nullptr;
+    QTimer *m_throttleTimer = nullptr;
+    QElapsedTimer m_lastWriteTimer;
 
 public:
     explicit RemoteEditInternalSession(RemoteInternalId internalId,
@@ -116,6 +137,11 @@ public:
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
+    void raise() override;
+
+private slots:
+    void slot_onTextModified(const QString &content);
+    void slot_performAutoSave();
 };
 
 #ifndef Q_OS_WASM

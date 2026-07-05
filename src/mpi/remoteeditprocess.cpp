@@ -37,11 +37,13 @@ NODISCARD static std::string randomString(int length)
 RemoteEditProcess::RemoteEditProcess(const bool editSession,
                                      const QString &title,
                                      const QString &body,
+                                     const QString &fullPath,
                                      QObject *const parent)
     : QObject(parent)
     , m_title(title)
     , m_body(body)
     , m_editSession(editSession)
+    , m_fullPath(fullPath)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
 
@@ -52,30 +54,25 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
             &RemoteEditProcess::slot_onFinished);
     connect(&m_process, &QProcess::errorOccurred, this, &RemoteEditProcess::slot_onError);
 
-    // Set the file template
-    QString fileTemplate = QString("%1MMapper.%2.pid%3.%4")
-                               .arg(QDir::tempPath() + QDir::separator())    // %1
-                               .arg(m_editSession ? "edit" : "view")         // %2
-                               .arg(QCoreApplication::applicationPid())      // %3
-                               .arg(mmqt::toQStringLatin1(randomString(6))); // %4 // ASCII
-    QFile file(fileTemplate);
-
-    // Try opening up the temporary file
-    if (!file.open(QFile::WriteOnly | QFile::Text)) {
-        qCritical() << "View session was unable to create a temporary file";
-        throw std::runtime_error("failed to start");
+    if (m_fullPath.isEmpty()) {
+        // Fallback for view mode if no draft was provisioned (though normally it is now)
+        m_fullPath = QDir::tempPath() + QDir::separator() + QString("MMapper.view.%1.%2").arg(QCoreApplication::applicationPid()).arg(mmqt::toQStringLatin1(randomString(6)));
     }
 
-    m_fileName = file.fileName();
-    qDebug() << "View session file template" << m_fileName;
-    file.write(mmqt::toQByteArrayLatin1(m_body)); // MPI is always Latin1
-    file.flush();
+    QFile file(m_fullPath);
+    if (!file.exists()) {
+        if (!file.open(QFile::WriteOnly | QFile::Text)) {
+            qCritical() << "View session was unable to create a temporary file" << m_fullPath;
+            throw std::runtime_error("failed to start");
+        }
+        file.write(mmqt::toQByteArrayLatin1(m_body)); // MPI is always Latin1
+        file.flush();
+        std::ignore = io::fsyncNoexcept(file);
+        file.close();
+    }
 
-    // REVISIT: check return value?
-    std::ignore = io::fsyncNoexcept(file);
-    file.close();
-    m_previousTime = QFileInfo{m_fileName}.lastModified();
-    qDebug() << "File written with last modified timestamp" << m_previousTime;
+    m_previousTime = QFileInfo{m_fullPath}.lastModified();
+    qDebug() << "External editor using file" << m_fullPath << "with timestamp" << m_previousTime;
 
     // Set the TITLE environmental variable
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -87,7 +84,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     // Start the process!
     QStringList args = splitCommandLine(getConfig().mumeClientProtocol.externalRemoteEditorCommand);
-    args << m_fileName;
+    args << m_fullPath;
     const QString &program = args.takeFirst();
     qDebug() << program << args;
     m_process.start(program, args);
@@ -98,8 +95,13 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 RemoteEditProcess::~RemoteEditProcess()
 {
     qInfo() << "Destroyed RemoteEditProcess";
-    QFile file(m_fileName);
-    file.remove();
+    // We don't remove the file here anymore for edit sessions,
+    // as it is managed by the session/manager and must persist
+    // until success confirmation.
+    if (!m_editSession) {
+        QFile file(m_fullPath);
+        file.remove();
+    }
 }
 
 void RemoteEditProcess::virt_onFinished(int exitCode, QProcess::ExitStatus status)
@@ -117,9 +119,9 @@ void RemoteEditProcess::virt_onFinished(int exitCode, QProcess::ExitStatus statu
         return;
     }
 
-    QFile file(m_fileName);
+    QFile file(m_fullPath);
     if (!file.open(QFile::ReadOnly)) {
-        qWarning() << "Edit session unable to read file!";
+        qWarning() << "Edit session unable to read file!" << m_fullPath;
         emit sig_cancel();
         return;
     }

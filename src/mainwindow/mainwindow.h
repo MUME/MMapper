@@ -69,6 +69,7 @@ class DescriptionWidget;
 class MediaLibrary;
 class TimerWidget;
 class MapDestination;
+class RemoteEdit;
 
 struct MapLoadData;
 
@@ -122,6 +123,7 @@ private:
     DescriptionWidget *m_descriptionWidget = nullptr;
     TimerWidget *m_timerWidget = nullptr;
     std::unique_ptr<HotkeyManager> m_hotkeyManager;
+    RemoteEdit *m_remoteEdit = nullptr;
 
     QPointer<QMenu> m_contextMenu;
 
@@ -297,6 +299,7 @@ public:
 
     NODISCARD HotkeyManager &getHotkeyManager() const { return deref(m_hotkeyManager); }
     NODISCARD CTimers &getTimers() const { return deref(m_timers); }
+    NODISCARD RemoteEdit &getRemoteEdit() const { return deref(m_remoteEdit); }
 
 private:
     // ProxyHost

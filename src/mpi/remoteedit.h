@@ -26,8 +26,17 @@ class NODISCARD_QOBJECT RemoteEdit final : public QObject
 private:
     friend class RemoteEditSession;
 
+public:
+    struct DraftInfo
+    {
+        QString fileName;
+        QString title;
+        RemoteSessionId sessionId;
+        QDateTime lastModified;
+    };
+
 private:
-    std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> m_sessions;
+    std::map<RemoteInternalId, std::shared_ptr<RemoteEditSession>> m_sessions;
     uint32_t m_greatestUsedId = 0;
 
 public:
@@ -36,6 +45,15 @@ public:
 
 public:
     void onDisconnected();
+    void recoverDrafts();
+    void raiseSession(size_t taskId);
+
+    static QString getDraftDirectory();
+    static QString
+    provisionDraftFile(RemoteSessionId sessionId, const QString &title, const QString &content);
+    static bool saveDraftAtomic(const QString &fileName, const QString &content);
+    static void deleteDraft(const QString &fileName);
+    static QList<DraftInfo> discoverDrafts();
 
 protected:
     void cancel(const RemoteEditSession *);
@@ -54,9 +72,15 @@ private:
     void sendToMume(const RemoteEditSession &session);
     void trySaveLocally(const RemoteEditSession &session);
 
+    static QString encodeMetadata(RemoteSessionId sessionId, const QString &title);
+    static bool decodeMetadata(const QString &fileName, RemoteSessionId &sessionId, QString &title);
+
 signals:
     void sig_remoteEditCancel(const RemoteSessionId sessionId);
     void sig_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
+
+public:
+    NODISCARD RemoteEditSession *getSessionByTaskId(size_t taskId) const;
 
 public slots:
     void slot_remoteView(const QString &, const QString &);

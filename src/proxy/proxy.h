@@ -12,6 +12,7 @@
 #include "../group/GroupManagerApi.h"
 #include "../observer/gameobserver.h"
 #include "../parser/SendToUserSourceEnum.h"
+#include "../mpi/remoteeditsession.h"
 #include "GmcpMessage.h"
 #include "ProxyHost.h"
 #include "ProxyParserApi.h"
@@ -149,10 +150,6 @@ private:
     // REVISIT: This might be in the wrong spot; it's not part of the pipeline
     // because it's intended for sendXXX within the lifetime of this object.
     Signal2Lifetime m_lifetime;
-
-    // Technically we create this, but we don't "own" it;
-    // it outlives this object when the connection closes.
-    QPointer<RemoteEdit> m_remoteEdit;
 
     enum class NODISCARD ServerStateEnum {
         Initialized,
@@ -311,7 +308,6 @@ private:
     {
         return deref(getPipeline().user.userTelnetFilter);
     }
-    NODISCARD RemoteEdit &getRemoteEdit();
     NODISCARD MumeXmlParser &getMudParser() { return deref(getPipeline().mud.mudParser); }
     NODISCARD AbstractParser &getUserParser() { return deref(getPipeline().user.userParser); }
     NODISCARD PasswordConfig &getPasswordConfig()
@@ -326,4 +322,15 @@ private:
     {
         return deref(getPipeline().user.userTelnet);
     }
+
+signals:
+    void sig_remoteEditRequested(const RemoteSessionId sessionId,
+                                 const QString &title,
+                                 const QString &body);
+    void sig_remoteViewRequested(const QString &title, const QString &body);
+
+public slots:
+    void slot_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
+    void slot_remoteEditCancel(const RemoteSessionId sessionId);
+    void slot_sendGmcp(const GmcpMessage &msg);
 };
