@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "NullPointerException.h"
+#include "concepts.h"
 #include "macros.h"
 
 #include <algorithm>
@@ -25,12 +26,9 @@ namespace utils {
 
 // This mainly exists to avoid float-equal warnings,
 // but it also checks that the floating point types are the same.
-template<typename A, typename B>
-NODISCARD constexpr bool isSameFloat(const A a, const B b) noexcept
+template<concepts::IsFloatingPoint A>
+NODISCARD constexpr bool isSameFloat(const A a, const std::same_as<A> auto b) noexcept
 {
-    static_assert(std::is_floating_point_v<A>);
-    static_assert(std::is_floating_point_v<B>);
-    static_assert(std::is_same_v<std::decay_t<A>, std::decay_t<B>>);
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wfloat-equal"
@@ -45,9 +43,9 @@ namespace details {
 template<typename T>
 NODISCARD constexpr bool isBitMask()
 {
-    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+    if constexpr (concepts::IsUnsignedIntegralNumeric<T>) {
         return true;
-    } else if constexpr (std::is_enum_v<T>) {
+    } else if constexpr (concepts::IsEnum<T>) {
         return isBitMask<std::underlying_type_t<T>>();
     } else {
         return false;
@@ -59,10 +57,10 @@ template<typename T>
 NODISCARD constexpr bool isPowerOfTwo(const T x) noexcept
 {
     static_assert(details::isBitMask<T>());
-    if constexpr (std::is_enum_v<T>) {
+    if constexpr (concepts::IsEnum<T>) {
         using U = std::underlying_type_t<T>;
         return isPowerOfTwo<U>(static_cast<U>(x));
-    } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+    } else if constexpr (concepts::IsUnsignedIntegralNumeric<T>) {
         return x != 0u && (x & (x - 1u)) == 0u;
     } else {
         throw std::invalid_argument("x");
@@ -75,10 +73,9 @@ NODISCARD constexpr bool isPowerOfTwo(const T x) noexcept
  * If the next power of two would overflow T, it is clamped to the largest
  * representable power of two.
  */
-template<typename T>
+template<concepts::IsUnsignedIntegralNumeric T>
 NODISCARD constexpr T nextPowerOfTwo(T x) noexcept
 {
-    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
     if (x <= 1) {
         return 1;
     }
@@ -109,10 +106,9 @@ NODISCARD constexpr T nextPowerOfTwo(T x) noexcept
  * For x=0 or 1, returns 1.
  * If x is beyond the largest representable power of two, that value is returned.
  */
-template<typename T>
+template<concepts::IsUnsignedIntegralNumeric T>
 NODISCARD constexpr T nearestPowerOfTwo(T x) noexcept
 {
-    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
     if (x <= 1) {
         return 1;
     }
@@ -129,15 +125,17 @@ NODISCARD constexpr T nearestPowerOfTwo(T x) noexcept
 }
 
 template<typename T>
+    requires(concepts::IsUnsignedEnum<T> or concepts::IsUnsignedIntegralNumeric<T>)
 NODISCARD constexpr bool isAtLeastTwoBits(const T x) noexcept
 {
     static_assert(details::isBitMask<T>());
-    if constexpr (std::is_enum_v<T>) {
+    if constexpr (concepts::IsUnsignedEnum<T>) {
         using U = std::underlying_type_t<T>;
         return isAtLeastTwoBits<U>(static_cast<U>(x));
-    } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+    } else if constexpr (concepts::IsUnsignedIntegralNumeric<T>) {
         return x != 0u && (x & (x - 1u)) != 0u;
     } else {
+        static_assert(std::is_void_v<T>);
         throw std::invalid_argument("x");
     }
 }
@@ -170,18 +168,21 @@ NODISCARD bool isSet(const T src, const T bit)
 namespace details {
 namespace cpp11 {
 template<size_t N, typename T>
-struct IsValidCircularSize
-    : std::bool_constant<(N > 1 and std::is_unsigned_v<T>
-                          and (N <= std::numeric_limits<T>::max()
-                               or (sizeof(T) < sizeof(size_t)
-                                   and N == static_cast<size_t>(std::numeric_limits<T>::max()) + 1)))>
-      //
-      {};
+struct IsValidCircularSize : std::false_type
+{};
 
 template<>
 struct IsValidCircularSize<2, bool> : std::true_type
 {};
 
+template<size_t N, concepts::IsUnsignedIntegralNumeric T>
+struct IsValidCircularSize<N, T>
+    : std::bool_constant<(N > 1
+                          and (N <= std::numeric_limits<T>::max()
+                               or (sizeof(T) < sizeof(size_t)
+                                   and N == static_cast<size_t>(std::numeric_limits<T>::max()) + 1)))>
+      //
+      {};
 } // namespace cpp11
 
 namespace cpp17 {
@@ -191,35 +192,37 @@ inline constexpr bool IsValidCircularSize_v = cpp11::IsValidCircularSize<N, T>::
 } // namespace cpp17
 } // namespace details
 
-template<size_t N, typename T>
+template<size_t N, concepts::IsUnsignedIntegralNumeric T>
+    requires(details::cpp17::IsValidCircularSize_v<N, T>)
 NODISCARD constexpr T circular_increment(const T x)
 {
-    if constexpr (std::is_unsigned_v<T> && details::cpp17::IsValidCircularSize_v<N, T>) {
-        return static_cast<T>((x + 1) % N);
-    } else if constexpr (std::is_same_v<T, bool> && N == 2) {
-        return !x;
-    } else {
-        static_assert(std::is_same_v<T, void>);
-        std::abort();
-    }
+    return static_cast<T>((x + 1) % N);
 }
-template<size_t N, typename T>
+template<size_t N, concepts::IsUnsignedIntegralNumeric T>
+    requires(details::cpp17::IsValidCircularSize_v<N, T>)
 NODISCARD constexpr T circular_decrement(const T x)
 {
-    if constexpr (std::is_unsigned_v<T> && details::cpp17::IsValidCircularSize_v<N, T>) {
-        return static_cast<T>((x + N - 1) % N);
-    } else if constexpr (std::is_same_v<T, bool> && N == 2) {
-        return !x;
-    } else {
-        static_assert(std::is_same_v<T, void>);
-        std::abort();
-    }
+    return static_cast<T>((x + N - 1) % N);
+}
+
+template<size_t N, concepts::IsBoolean T>
+    requires(N == 2)
+NODISCARD constexpr T circular_increment(const T x)
+{
+    return !x;
+}
+template<size_t N, concepts::IsBoolean T>
+    requires(N == 2)
+NODISCARD constexpr T circular_decrement(const T x)
+{
+    return !x;
 }
 
 } // namespace utils
 
 template<typename T>
-NODISCARD constexpr bool isClamped(T x, T lo, T hi)
+    requires(concepts::IsNumeric<T> or concepts::IsCharacter<T>)
+NODISCARD constexpr bool isClamped(const T x, const T lo, const T hi)
 {
     return x >= lo && x <= hi;
 }
@@ -229,20 +232,35 @@ NODISCARD int round_ftoi(float f);
 } // namespace utils
 
 template<typename Base, typename Derived>
+    requires(std::is_base_of_v<Base, Derived>)
 NODISCARD std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 {
-    static_assert(std::is_base_of_v<Base, Derived>);
     return std::unique_ptr<Base>(ptr.release());
 }
 
 template<typename T>
-NODISCARD inline T &deref(T *const ptr)
+NODISCARD inline auto &deref(T *const ptr)
 {
     if (ptr == nullptr) {
         throw NullPointerException();
     }
     return *ptr;
 }
+
+template<typename T>
+    requires(not std::is_reference_v<T>)
+NODISCARD inline auto &deref(T &ptr)
+{
+    if (ptr == nullptr) {
+        throw NullPointerException();
+    }
+    return *ptr;
+}
+
+template<typename T>
+    requires(not std::is_reference_v<T>)
+NODISCARD inline T deref(T &&ptr) = delete;
+
 template<typename T>
 NODISCARD inline T deref(std::optional<T> &&ptr)
 {
@@ -260,39 +278,6 @@ NODISCARD inline const T &deref(const std::optional<T> &ptr)
 {
     // note: this can throw bad_optional_access
     return ptr.value();
-}
-
-// Technically we could make this return move or copy of the pointed-to value,
-// but that's probably not what the caller expects.
-template<typename T>
-inline T deref(std::shared_ptr<T> &&ptr) = delete;
-template<typename T>
-NODISCARD inline T &deref(const std::shared_ptr<T> &ptr)
-{
-    if (ptr == nullptr) {
-        throw NullPointerException();
-    }
-    return *ptr;
-}
-// Technically we could make this return move or copy of the pointed-to value,
-// but that's probably not what the caller expects.
-template<typename T>
-inline T deref(std::unique_ptr<T> &&ptr) = delete;
-template<typename T>
-NODISCARD inline T &deref(const std::unique_ptr<T> &ptr)
-{
-    if (ptr == nullptr) {
-        throw NullPointerException();
-    }
-    return *ptr;
-}
-template<typename T>
-NODISCARD inline T &deref(const QPointer<T> &ptr)
-{
-    if (ptr == nullptr) {
-        throw NullPointerException();
-    }
-    return *ptr;
 }
 
 ///  Can throw NullPointerException or std::bad_cast
@@ -460,16 +445,7 @@ ALLOW_DISCARD static inline size_t erase_if(Container &container, Callback &&cal
 template<typename T, typename Predicate>
 NODISCARD bool listRemoveIf(std::list<T> &list, Predicate &&should_remove)
 {
-    // c++20 version of remove_if() returns # of elements removed, but c++17 doesn't.
-    bool removed = false;
-    list.remove_if([&removed, &should_remove](const T &element) -> bool {
-        if (should_remove(element)) {
-            removed = true;
-            return true;
-        }
-        return false;
-    });
-    return removed;
+    return std::erase_if(list, std::forward<Predicate>(should_remove)) > 0;
 }
 
 template<typename Container, typename Callback>
@@ -498,9 +474,8 @@ NODISCARD static inline auto find_min_computed(const Container &container, Callb
     }
 }
 
-// This can be removed and replaced with std::remove_cvref_t<T> in c++20.
 template<typename T>
-using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+using remove_cvref_t = std::remove_cvref_t<T>;
 
 template<typename T, typename... Ts>
 struct are_distinct : std::conjunction<std::negation<std::is_same<T, Ts>>..., are_distinct<Ts...>>

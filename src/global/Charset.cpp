@@ -348,7 +348,6 @@ ALLOW_DISCARD QString &toAsciiInPlace(QString &str)
 
     // NOTE: 128 (0x80) was not converted to 'z' before.
     for (QChar &qc : str) {
-        // c++17 if statement with initializer
         if (const char ch = mmqt::toLatin1(qc); !isAscii(ch)) {
             qc = QLatin1Char{charset::conversion::latin1ToAscii(ch)};
         }

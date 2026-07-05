@@ -183,19 +183,17 @@ private:
         printQuoted(s.getStdStringViewUtf8());
     }
 
-    template<typename E>
-    auto printEnum(const E x) -> std::enable_if_t<std::is_enum_v<E>>
+    template<concepts::IsEnum E>
+    void printEnum(const E x)
     {
         m_os << to_string_view(x);
     }
 
-    template<typename Flags>
+    template<concepts::IsEnumFlags Flags>
     void printFlags(const Flags flags)
     {
         // assumes it's templated based on Flags in Flags.h
         using Flag = typename decltype(flags)::Flag;
-        static_assert(std::is_enum_v<Flag>);
-
         bool first = true;
         // m_os << "[";
         for (const Flag flag : flags) {

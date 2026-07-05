@@ -467,11 +467,9 @@ enum class NODISCARD CallbackResultEnum { KEEP_GOING, STOP };
 /// -or-
 /// CallbackResultEnum callback(const QTextCursor&);
 template<typename Callback>
+    requires(std::is_invocable_r_v<CallbackResultEnum, Callback, const QTextCursor &>)
 static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&callback)
 {
-    static_assert(
-        std::is_same_v<CallbackResultEnum, decltype(callback(std::declval<const QTextCursor &>()))>);
-
     auto beg = LineRange::beg(cur);
     auto end = LineRange::end(cur);
     for (auto it = beg; !it.isNull() && it < end;) {
@@ -487,10 +485,9 @@ static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&call
 }
 
 template<typename Callback>
+    requires(std::is_invocable_r_v<bool, Callback, const QTextCursor &>)
 bool exists_partly_selected_block(QTextCursor cur, Callback &&callback)
 {
-    static_assert(std::is_same_v<bool, decltype(callback(std::declval<const QTextCursor &>()))>);
-
     bool result = false;
     foreach_partly_selected_block_until(cur,
                                         [&result, &callback](QTextCursor it) -> CallbackResultEnum {

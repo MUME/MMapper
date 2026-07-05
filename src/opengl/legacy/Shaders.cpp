@@ -90,11 +90,10 @@ void ShaderPrograms::resetAll()
 
 // essentially a private member of ShaderPrograms
 template<typename T>
+    requires(std::is_base_of_v<AbstractShaderProgram, T>)
 NODISCARD static std::shared_ptr<T> loadSimpleShaderProgram(Functions &functions,
                                                             const std::string &dir)
 {
-    static_assert(std::is_base_of_v<AbstractShaderProgram, T>);
-
     const auto getSource = [&dir](const std::string &name) -> ShaderUtils::Source {
         return ::readWholeShader(dir, name);
     };

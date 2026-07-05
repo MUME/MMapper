@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/enums.h"
 #include "../global/utils.h"
 #include "ExitDirection.h"
 
@@ -13,19 +14,6 @@ enum class NODISCARD DirectSunlightEnum : uint32_t {
     SAW_DIRECT_SUN = 1,
     SAW_NO_DIRECT_SUN = 2,
 };
-
-NODISCARD constexpr inline auto toUint(const DirectSunlightEnum val) noexcept
-{
-    using U = uint32_t;
-    static_assert(std::is_same_v<U, std::underlying_type_t<DirectSunlightEnum>>);
-    return static_cast<U>(val);
-}
-
-NODISCARD inline constexpr DirectSunlightEnum operator&(const DirectSunlightEnum lhs,
-                                                        const DirectSunlightEnum rhs)
-{
-    return static_cast<DirectSunlightEnum>(toUint(lhs) & toUint(rhs));
-}
 
 static constexpr const auto SAW_ANY_DIRECT_SUNLIGHT = 0b10101010101u;
 static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = 1u << 14;
@@ -39,6 +27,7 @@ static_assert(CONNECTED_ROOM_FLAGS_VALID > SAW_ANY_DIRECT_SUNLIGHT);
 class NODISCARD ConnectedRoomFlagsType final
 {
 private:
+    static_assert(std::is_same_v<uint32_t, std::underlying_type_t<DirectSunlightEnum>>);
     uint32_t m_flags = 0;
 
 public:
@@ -72,8 +61,9 @@ public:
     void reset() { *this = ConnectedRoomFlagsType(); }
 
 private:
-    static constexpr const auto MASK = static_cast<std::underlying_type_t<DirectSunlightEnum>>(
-        toUint(DirectSunlightEnum::SAW_DIRECT_SUN) | toUint(DirectSunlightEnum::SAW_NO_DIRECT_SUN));
+    static constexpr const auto MASK = enums::to_underlying(DirectSunlightEnum::SAW_DIRECT_SUN)
+                                       | enums::to_underlying(DirectSunlightEnum::SAW_NO_DIRECT_SUN);
+    static_assert(MASK == 3u);
 
     NODISCARD static int getShift(const ExitDirEnum dir) { return static_cast<int>(dir) * 2; }
 
@@ -89,7 +79,7 @@ public:
     {
         const auto shift = getShift(dir);
         m_flags &= ~(MASK << shift);
-        m_flags |= (toUint(light) & MASK) << shift;
+        m_flags |= (enums::to_underlying(light) & MASK) << shift;
     }
 
     NODISCARD bool hasNoDirectSunlight(const ExitDirEnum dir) const

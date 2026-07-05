@@ -94,10 +94,9 @@ namespace conversion {
 namespace conversion_detail {
 static constexpr size_t UTF8_BITS_PER_BYTE = 6;
 
-template<typename T>
+template<concepts::IsUnsignedIntegralNumeric T>
 struct NODISCARD wrapped final
 {
-    static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>);
     T value{};
     NODISCARD explicit constexpr wrapped(const T x)
         : value{x}
@@ -552,13 +551,7 @@ NODISCARD static constexpr bool is7bit(const char c) noexcept
 }
 NODISCARD static constexpr bool is7bit(const std::string_view sv) noexcept
 {
-    // NOLINTNEXTLINE (can't use std::all_of() in constexpr in c++17)
-    for (const char c : sv) {
-        if (!is7bit(c)) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(sv.begin(), sv.end(), [](char c) { return is7bit(c); });
 }
 
 NODISCARD static constexpr Utf8ValidationEnum validateUtf8(std::string_view sv) noexcept

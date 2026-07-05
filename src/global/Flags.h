@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "bits.h"
+#include "concepts.h"
 #include "utils.h"
 
 #include <cassert>
@@ -16,59 +17,63 @@
 
 namespace enums {
 
-// REVISIT: add CountOf_v ?
-template<typename E>
+template<concepts::IsEnum E>
 struct NODISCARD CountOf
 {};
-#define DEFINE_ENUM_COUNT(E, N) \
-    namespace enums { \
+#define DEFINE_ENUM_COUNT(_E, _N) \
     template<> \
-    struct NODISCARD CountOf<E> \
+    struct NODISCARD enums::CountOf<_E> \
     { \
-        static_assert(std::is_enum_v<E>); \
-        static constexpr const size_t value = N; \
-    }; \
-    }
+        static inline constexpr size_t value = (_N); \
+    };
+
+// This concept can be satisfied by using the DEFINE_ENUM_COUNT() macro in the global namespace.
+template<typename E>
+concept HasCountOf = concepts::IsEnum<E> and
+    requires()
+{
+    CountOf<E>::value;
+};
+
+template<HasCountOf E>
+inline constexpr size_t CountOf_v = CountOf<E>::value;
 
 template<typename CRTP,
-         typename Flag_,
-         typename UnderlyingType_,
-         size_t NUM_FLAGS_ = CountOf<Flag_>::value>
+         concepts::IsEnum Flag_,
+         concepts::IsIntegralNumeric BitmaskType_,
+         size_t NUM_FLAGS_ = CountOf_v<Flag_>>
+    requires(std::is_unsigned_v<BitmaskType_> and NUM_FLAGS_ != 0
+             and NUM_FLAGS_ <= std::numeric_limits<BitmaskType_>::digits)
 class NODISCARD Flags
 {
 public:
     using Flag = Flag_;
-    using underlying_type = UnderlyingType_;
-    static_assert(std::is_enum_v<Flag>);
-    static_assert(std::is_integral_v<underlying_type>);
-    static_assert(!std::numeric_limits<underlying_type>::is_signed);
-    static constexpr const size_t NUM_FLAGS = NUM_FLAGS_;
-    static_assert(NUM_FLAGS != 0u);
-    static_assert(NUM_FLAGS <= std::numeric_limits<underlying_type>::digits);
+    using bitmask_type = BitmaskType_;
+    static constexpr size_t NUM_FLAGS = NUM_FLAGS_;
 
 private:
-    static constexpr const underlying_type MASK = static_cast<underlying_type>(
-        static_cast<underlying_type>(static_cast<underlying_type>(~underlying_type{0u})
-                                     >> (std::numeric_limits<underlying_type>::digits - NUM_FLAGS)));
-    underlying_type m_flags = 0u;
+    static constexpr bitmask_type MASK = static_cast<bitmask_type>(
+        static_cast<bitmask_type>(static_cast<bitmask_type>(~bitmask_type{0u})
+                                  >> (std::numeric_limits<bitmask_type>::digits - NUM_FLAGS)));
+    bitmask_type m_flags = 0u;
 
     template<typename T>
-    NODISCARD static inline constexpr underlying_type narrow(const T x) noexcept
+    NODISCARD static inline constexpr bitmask_type narrow(const T x) noexcept
     {
-        return static_cast<underlying_type>(x & MASK);
+        return static_cast<bitmask_type>(x & MASK);
     }
 
 public:
     /* implicit */ constexpr Flags() noexcept = default;
 
-    explicit constexpr Flags(const underlying_type flags) noexcept
+    explicit constexpr Flags(const bitmask_type flags) noexcept
         : m_flags{narrow(flags & MASK)}
     {}
 
     // This might be tempting to make implcit, but it's not worth it because it doesn't enable the
     // `Flags binop(Flag, Flag)` helper operators (see below).
     explicit constexpr Flags(const Flag flag) noexcept
-        : Flags{narrow(underlying_type{1u} << static_cast<int>(flag))}
+        : Flags{narrow(bitmask_type{1u} << static_cast<int>(flag))}
     {}
 
 private:
@@ -79,12 +84,10 @@ private:
     }
 
 public:
-    NODISCARD explicit constexpr operator underlying_type() const noexcept { return m_flags; }
+    NODISCARD explicit constexpr operator bitmask_type() const noexcept { return m_flags; }
     NODISCARD constexpr uint32_t asUint32() const noexcept
+        requires(sizeof(bitmask_type) <= sizeof(uint32_t))
     {
-        // Note: static_assert here isn't checked unless you call this function.
-        static_assert(sizeof(underlying_type) <= sizeof(uint32_t),
-                      "asUint32() is disabled because the underlying type is larger than 32-bits");
         return m_flags;
     }
 
@@ -203,10 +206,9 @@ public:
     NODISCARD inline size_t size() const { return count(); }
 
 private:
-    static void remove_lowest_bit(underlying_type &flags)
+    static void remove_lowest_bit(bitmask_type &flags)
     {
-        using U = underlying_type;
-        static_assert(std::is_unsigned_v<U>);
+        using U = bitmask_type;
         assert(flags != 0u);
         flags = static_cast<U>(flags & static_cast<U>(flags - U{1}));
     }
@@ -276,7 +278,7 @@ public:
     struct ALLOW_DISCARD Iterator final
     {
     private:
-        underlying_type m_bits = 0;
+        bitmask_type m_bits = 0;
         uint8_t m_pos = 0;
 
     public:
@@ -307,9 +309,39 @@ public:
 public:
     NODISCARD Iterator begin() const { return Iterator{*this, 0}; }
     NODISCARD Iterator end() const { return Iterator{*this, size()}; }
+
+    NODISCARD auto front() const
+    {
+        if (empty()) {
+            throw std::runtime_error("empty");
+        }
+        return *begin();
+    }
 };
 
 } // namespace enums
+
+namespace concepts {
+// Doesn't have to be based on enums::Flags<>
+template<typename T>
+concept IsEnumFlags_container
+    = IsUnsignedEnum<std::remove_cvref_t<decltype(std::declval<const T &>().front())>>;
+// Expects enums::Flags<>
+template<typename T>
+concept IsEnumFlags = IsEnumFlags_container<T> and IsUnsignedEnum<typename T::Flag>
+                      and IsUnsignedIntegralNumeric<typename T::bitmask_type>;
+
+} // namespace concepts
+
+#define DEFINE_FLAGS_BITOP_OR(_Flags) \
+    NODISCARD inline constexpr MM_TYPE_IDENTITY( \
+        _Flags) operator|(const typename MM_TYPE_IDENTITY(_Flags)::Flag lhs, \
+                          const typename MM_TYPE_IDENTITY(_Flags)::Flag rhs) noexcept \
+    { \
+        static_assert(concepts::IsEnumFlags<_Flags>); \
+        using F = MM_TYPE_IDENTITY(_Flags); \
+        return F{lhs} | rhs; \
+    }
 
 namespace test {
 extern void testFlags();

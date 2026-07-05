@@ -125,6 +125,7 @@ set(mmapper_SRCS
     global/ConversionResult.h
     global/Diff.cpp
     global/Diff.h
+    global/EnumIndexedArray.cpp
     global/EnumIndexedArray.h
     global/Flags.cpp
     global/Flags.h
@@ -182,6 +183,7 @@ set(mmapper_SRCS
     global/Timer.cpp
     global/Timer.h
     global/Version.h
+    global/View.cpp
     global/View.h
     global/WeakHandle.cpp
     global/WeakHandle.h
@@ -190,6 +192,8 @@ set(mmapper_SRCS
     global/bits.h
     global/cast_error.cpp
     global/cast_error.h
+    global/concepts.cpp
+    global/concepts.h
     global/emojis.cpp
     global/emojis.h
     global/entities-xforeach.txt
@@ -783,7 +787,7 @@ endif()
 
 set_target_properties(
   mmapper PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -793,7 +797,7 @@ set_target_properties(
 
 set_target_properties(
   mm_global PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
@@ -801,7 +805,7 @@ set_target_properties(
 
 set_target_properties(
   mm_map PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"

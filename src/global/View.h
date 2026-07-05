@@ -2,65 +2,74 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 The MMapper Authors
 
+#include "Array.h"
+#include "concepts.h"
 #include "macros.h"
 
-#include <array>
+#include <span>
 #include <stdexcept>
-#include <vector>
+#include <type_traits>
+
+#include <immer/detail/type_traits.hpp>
 
 template<typename T>
-struct NODISCARD View
+    requires(not std::is_array_v<T> and not std::is_reference_v<T>)
+struct NODISCARD View : public std::span<const T>
 {
-private:
-    const T *m_ptr = nullptr;
-    size_t m_size = 0;
-
 public:
-    using reference = const T &;
-    using pointer = const T *;
-    using size_type = size_t;
+    using base = std::span<const T>;
+    using base::base;
 
-public:
-    View() = default;
+    using typename base::const_pointer;
+    using typename base::element_type;
+    using typename base::pointer;
+    using typename base::reference;
+    using typename base::size_type;
+    using typename base::value_type;
 
-    explicit View(const T *const ptr, const size_t size)
-        : m_ptr{ptr}
-        , m_size{size}
+    using iterator = decltype(std::declval<base &>().begin());
+    using const_iterator = decltype(std::declval<const base &>().begin());
+
+#if !defined(__cpp_lib_span) or __cpp_lib_span < 202311L
+    NODISCARD constexpr reference at(const size_type pos) const
     {
-        if (ptr == nullptr && size != 0) {
-            throw std::invalid_argument("ptr");
-        }
-    }
-
-    IMPLICIT View(const std::vector<T> &v)
-        : View{v.data(), v.size()}
-    {}
-
-    template<size_t N>
-    IMPLICIT View(const std::array<T, N> &v)
-        : View{v.data(), v.size()}
-    {}
-
-public:
-    NODISCARD auto begin() const { return data(); }
-    NODISCARD auto end() const { return begin() + size(); }
-    NODISCARD bool empty() const { return size() == 0; }
-    NODISCARD pointer data() const { return m_ptr; }
-    NODISCARD size_type size() const { return m_size; }
-
-public:
-    NODISCARD reference at(const size_type pos) const
-    {
-        if (!(pos < size())) {
+        const base &self = *this;
+        if (!(pos < self.size())) {
             throw std::out_of_range("pos");
         }
-        return m_ptr[pos];
+        return self[pos];
     }
-    NODISCARD reference operator[](const size_type pos) const { return at(pos); }
+#endif
+    // This purposely hides the base class operator[] in order to require bounds checking.
+    NODISCARD constexpr reference operator[](const size_type pos) const { return at(pos); }
 };
 
-template<typename T>
-View(const std::vector<T> &) -> View<T>;
+template<concepts::IsMmapperArray A>
+View(A) -> View<typename A::value_type>;
 
-template<typename T, size_t N>
-View(const std::array<T, N> &) -> View<T>;
+namespace concepts {
+
+namespace detail {
+namespace cpp11 {
+template<typename T>
+struct IsView : std::false_type
+{};
+template<typename T>
+struct IsView<View<T>> : std::true_type
+{};
+} // namespace cpp11
+namespace cpp17 {
+template<typename T>
+constexpr bool IsView_v = cpp11::IsView<T>::value;
+}
+} // namespace detail
+
+template<typename T>
+concept IsView = detail::cpp17::IsView_v<T>;
+
+template<typename T>
+concept IsStringViewGetter = requires(const T &x) {
+    { x() } -> std::same_as<std::string_view>;
+};
+
+} // namespace concepts

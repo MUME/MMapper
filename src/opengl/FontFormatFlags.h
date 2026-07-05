@@ -21,7 +21,7 @@ enum class NODISCARD FontFormatFlagEnum {
     //
 };
 
-DEFINE_ENUM_COUNT(FontFormatFlagEnum, 5);
+DEFINE_ENUM_COUNT(FontFormatFlagEnum, 5)
 
 struct NODISCARD FontFormatFlags final
     : public enums::Flags<FontFormatFlags, FontFormatFlagEnum, uint8_t>

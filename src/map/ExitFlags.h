@@ -47,10 +47,7 @@ public:
 #undef X_DEFINE_ACCESSORS
 };
 
-NODISCARD inline constexpr const ExitFlags operator|(ExitFlagEnum lhs, ExitFlagEnum rhs) noexcept
-{
-    return ExitFlags{lhs} | ExitFlags{rhs};
-}
+DEFINE_FLAGS_BITOP_OR(ExitFlags)
 
 NODISCARD extern std::string_view to_string_view(ExitFlagEnum flag);
 NODISCARD extern std::string_view getName(ExitFlagEnum flag);

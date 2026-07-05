@@ -4,6 +4,7 @@
 
 #include "ConfigEnums.h"
 
+#include <functional>
 #include <stdexcept>
 #include <string_view>
 
@@ -44,7 +45,7 @@ static inline constexpr PackageEnum CURRENT_PACKAGE = [] {
     throw std::runtime_error("unsupported package type");
 }();
 
-static inline constexpr const PlatformEnum CURRENT_PLATFORM = [] {
+static inline constexpr PlatformEnum CURRENT_PLATFORM = std::invoke([]() constexpr -> PlatformEnum {
 #if defined(Q_OS_WIN)
     return PlatformEnum::Windows;
 #elif defined(Q_OS_MAC)
@@ -56,14 +57,15 @@ static inline constexpr const PlatformEnum CURRENT_PLATFORM = [] {
 #else
     throw std::runtime_error("unsupported platform");
 #endif
-}();
+});
 
-static inline constexpr const EnvironmentEnum CURRENT_ENVIRONMENT = [] {
+static inline constexpr EnvironmentEnum CURRENT_ENVIRONMENT = std::invoke(
+    []() constexpr -> EnvironmentEnum {
 #if Q_PROCESSOR_WORDSIZE == 4
-    return EnvironmentEnum::Env32Bit;
+        return EnvironmentEnum::Env32Bit;
 #elif Q_PROCESSOR_WORDSIZE == 8
-    return EnvironmentEnum::Env64Bit;
+        return EnvironmentEnum::Env64Bit;
 #else
-    throw std::runtime_error("unsupported environment");
+        throw std::runtime_error("unsupported environment");
 #endif
-}();
+    });

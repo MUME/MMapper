@@ -6,10 +6,12 @@
 
 #include "../global/CaseUtils.h"
 #include "../global/Consts.h"
+#include "../global/EnumIndexedArray.h"
 #include "../global/LineUtils.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
 #include "../global/View.h"
+#include "../global/concepts.h"
 #include "../global/progresscounter.h"
 #include "../map/CommandId.h"
 #include "../map/DoorFlags.h"
@@ -35,11 +37,8 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <vector>
 
-#include <QtCore>
-
-namespace { // anonymous
+namespace {
 
 struct NODISCARD SendToUserHelper final
 {
@@ -66,7 +65,7 @@ public:
     NODISCARD AnsiOstream &getAnsiOstream() { return m_aos; }
 };
 
-template<typename Container>
+template<concepts::IsEnumIndexedArrayOfStrings Container>
 NODISCARD auto find_abbrev(const Container &container,
                            const StringView input,
                            const size_t required_len)
@@ -83,7 +82,7 @@ NODISCARD auto find_abbrev(const Container &container,
     return std::nullopt;
 };
 
-template<typename Container>
+template<concepts::IsEnumIndexedArrayOfStrings Container>
 void concat_comma_and_or(AnsiOstream &aos,
                          const Container &container,
                          // color each word int he container
@@ -140,7 +139,10 @@ constexpr EnumIndexedArray<std::string_view, PromptWeatherEnum, NUM_PROMPT_WEATH
 #undef X_CASE
     };
 
-template<typename Container, typename Getter, typename Setter>
+template<concepts::IsEnumIndexedArrayOfStrings Container,
+         concepts::IsStringViewGetter Getter,
+         typename Setter>
+    requires(std::is_invocable_r_v<void, Setter, typename Container::index_type>)
 void trySetEnumValue(AbstractParser &parser,
                      StringView view,
                      const std::string_view what,

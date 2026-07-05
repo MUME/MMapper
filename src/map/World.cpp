@@ -1669,40 +1669,21 @@ void World::apply(ProgressCounter & /*pc*/, const room_change_types::MergeRelati
 }
 
 namespace detail {
-template<typename T, typename... /*Args*/>
-class can_insert
-{
-    template<typename C, typename = decltype(std::declval<C &>() |= std::declval<const C &>())>
-    static std::true_type test(int);
-    template<typename C>
-    static std::false_type test(...);
-
-public:
-    static constexpr bool value = decltype(test<T>(0))::value;
-};
-template<typename T, typename... /*Args*/>
-class can_remove
-{
-    template<typename C, typename = decltype(std::declval<C &>() &= ~std::declval<const C &>())>
-    static std::true_type test(int);
-    template<typename C>
-    static std::false_type test(...);
-
-public:
-    static constexpr bool value = decltype(test<T>(0))::value;
-};
+template<typename T>
+concept can_insert = requires(T &x, const T &y) { x |= y; };
 
 template<typename T>
-struct NODISCARD IsEnum final : std::bool_constant<std::is_enum_v<T>>
-{};
-static_assert(!IsEnum<RoomName>::value);
-static_assert(IsEnum<RoomTerrainEnum>::value);
-static_assert(!IsEnum<RoomMobFlags>::value);
+concept can_remove = requires(T &x, const T &y) { x &= ~y; };
+
+static_assert(!concepts::IsEnum<RoomName>);
+static_assert(concepts::IsEnum<RoomTerrainEnum>);
+static_assert(!concepts::IsEnum<RoomMobFlags>);
+static_assert(concepts::IsEnumFlags<RoomMobFlags>);
 
 template<typename T, typename...>
 struct NODISCARD BasicSetUnsetHelper
 {
-    static inline constexpr bool isEnum = IsEnum<T>::value;
+    static inline constexpr bool isEnum = concepts::IsEnum<T>;
     static void sanitize(T &x)
     {
         if constexpr (isEnum) {
@@ -1721,7 +1702,7 @@ struct NODISCARD BasicSetUnsetHelper
     {
         // insert() is really only supported for flags
         assert(false);
-        if constexpr (can_insert<T>::value) {
+        if constexpr (can_insert<T>) {
             x |= change;
             sanitize(x);
         } else {
@@ -1732,7 +1713,7 @@ struct NODISCARD BasicSetUnsetHelper
     {
         // remove() is really only supported for flags
         assert(false);
-        if constexpr (can_remove<T>::value) {
+        if constexpr (can_remove<T>) {
             x &= ~change;
             sanitize(x);
         } else {
@@ -1794,13 +1775,13 @@ static_assert(!IsTaggedString<RoomMobFlags>::value);
 
 template<typename T>
 struct NODISCARD SetUnsetHelper final
-    : std::conditional_t<IsTaggedString<T>::value || IsEnum<T>::value,
+    : std::conditional_t<IsTaggedString<T>::value || concepts::IsEnum<T>,
                          BasicSetUnsetHelper<T>,
                          FlagSetUnsetHelper<T>>
 {
-    static constexpr const bool isTagged = IsTaggedString<T>::value;
-    static constexpr const bool isEnum = IsEnum<T>::value;
-    static constexpr const bool isBasic = isTagged || isEnum;
+    static inline constexpr bool isTagged = IsTaggedString<T>::value;
+    static inline constexpr bool isEnum = concepts::IsEnum<T>;
+    static inline constexpr bool isBasic = isTagged || isEnum;
 };
 
 static_assert(SetUnsetHelper<RoomName>::isBasic);
@@ -2107,9 +2088,8 @@ void World::printStats(ProgressCounter &pc, AnsiOstream &os) const
     {
         static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
 
-        static auto C = [](auto x) {
-            static_assert(std::is_integral_v<decltype(x)>);
-            return ColoredValue{green, x};
+        static auto C = []<std::integral T>(const T x) -> ColoredValue<T> {
+            return ColoredValue<T>{green, x};
         };
 
         struct NODISCARD Stats final

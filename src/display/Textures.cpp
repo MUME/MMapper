@@ -605,10 +605,11 @@ void MapCanvas::initTextures()
             }
         };
 
-        auto initGroup = [&maybeCreateArray2](const std::string_view groupName,
-                                              auto &&...sources) -> SharedMMTexture {
+        auto initGroup = [&maybeCreateArray2]<typename... Sources>
+            requires(sizeof...(Sources) > 0)
+        (const std::string_view groupName, Sources &&...sources) -> SharedMMTexture {
             SharedMMTexture pArrayTex;
-            auto thing = combine(std::forward<decltype(sources)>(sources)...);
+            auto thing = combine(std::forward<Sources>(sources)...);
             maybeCreateArray2(groupName, thing, pArrayTex);
             return pArrayTex;
         };

@@ -118,7 +118,7 @@ void TextBuffer::appendJustified(const QStringView input_line, const int maxLen)
     }
 
     // note: Generic lambda is actually a template function.
-    const auto appender = [this](auto &&arg) { this->append(std::forward<decltype(arg)>(arg)); };
+    const auto appender = [this]<typename Arg>(Arg &&arg) { this->append(std::forward<Arg>(arg)); };
 
     Prefix prefix;
     line = prefix.init(line, maxLen, appender);

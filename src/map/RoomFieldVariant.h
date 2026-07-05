@@ -110,3 +110,19 @@ public:
     }
     NODISCARD bool operator!=(const RoomFieldVariant &other) const { return !operator==(other); }
 };
+
+namespace concepts {
+template<typename Flags>
+concept ConvertsToRoomFieldVariant = (IsEnum<Flags> or IsEnumFlags_container<Flags>)
+                                     and requires(Flags flags) {
+                                             static_cast<RoomFieldVariant>(flags);
+                                         };
+
+template<typename Converter, typename Flags>
+concept ConverterConvertsToRoomFieldVariant = IsEnumFlags_container<Flags>
+                                              and requires(Flags flags, Converter &&convert) {
+                                                      {
+                                                          convert(flags.front())
+                                                      } -> ConvertsToRoomFieldVariant;
+                                                  };
+} // namespace concepts

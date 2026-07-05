@@ -83,7 +83,7 @@ private:
         TERRAIN /* */ = 1 << 10,
     };
 
-    template<typename ENUM>
+    template<concepts::IsEnum ENUM>
     NODISCARD static ENUM loadEnum(QXmlStreamReader &stream);
     NODISCARD static QString loadString(QXmlStreamReader &stream);
     NODISCARD static QStringView loadStringView(QXmlStreamReader &stream);

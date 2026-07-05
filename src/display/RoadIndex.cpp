@@ -10,6 +10,9 @@
 
 #include <stdexcept>
 
+static_assert(~RoadIndexMaskEnum::ALL == RoadIndexMaskEnum::NONE);
+static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
+
 RoadIndexMaskEnum getRoadIndex(const ExitDirEnum dir)
 {
     if (!isNESW(dir)) {

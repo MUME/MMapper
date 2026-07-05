@@ -109,14 +109,14 @@ void TestExpandoraCommon::roomCompareTest_data()
         builder.setTerrainType(terrain);
         builder.setLightType(lit);
         auto &eList = builder.exits;
-        eList[ExitDirEnum::NORTH].setExitFlags(
-            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT | ExitFlagEnum::ROAD});
+        eList[ExitDirEnum::NORTH].setExitFlags(ExitFlagEnum::DOOR | ExitFlagEnum::EXIT
+                                               | ExitFlagEnum::ROAD);
         eList[ExitDirEnum::SOUTH].setExitFlags(ExitFlags{ExitFlagEnum::EXIT});
-        eList[ExitDirEnum::EAST].setExitFlags(ExitFlags{ExitFlagEnum::CLIMB | ExitFlagEnum::EXIT});
-        eList[ExitDirEnum::WEST].setExitFlags(ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT});
+        eList[ExitDirEnum::EAST].setExitFlags(ExitFlagEnum::CLIMB | ExitFlagEnum::EXIT);
+        eList[ExitDirEnum::WEST].setExitFlags(ExitFlagEnum::DOOR | ExitFlagEnum::EXIT);
         eList[ExitDirEnum::WEST].setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
-        eList[ExitDirEnum::DOWN].setExitFlags(
-            ExitFlags{ExitFlagEnum::CLIMB | ExitFlagEnum::DOOR | ExitFlagEnum::EXIT});
+        eList[ExitDirEnum::DOWN].setExitFlags(ExitFlagEnum::CLIMB | ExitFlagEnum::DOOR
+                                              | ExitFlagEnum::EXIT);
 
         // NOTE: We have to add an outgoing exit here because the map now automatically
         // sets or clears the EXIT flag based on the presence of outgoing exits.
@@ -220,8 +220,8 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         const auto &room = perfect_room;
         auto exits = perfect_exits;
-        exits[ExitDirEnum::DOWN].setExitFlags(
-            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
+        exits[ExitDirEnum::DOWN].setExitFlags(ExitFlagEnum::DOOR
+                                              | ExitFlagEnum::EXIT); // Remove climb down
         const auto event = createParseEvent(CommandEnum::NORTH,
                                             name,
                                             desc,
@@ -236,8 +236,8 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         const auto &room = perfect_room;
         auto exits = perfect_exits;
-        exits[ExitDirEnum::NORTH].setExitFlags(
-            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
+        exits[ExitDirEnum::NORTH].setExitFlags(ExitFlagEnum::DOOR
+                                               | ExitFlagEnum::EXIT); // Remove road north
         ConnectedRoomFlagsType connectedFlags;
         connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setDirectSunlight(ExitDirEnum::EAST, DirectSunlightEnum::SAW_DIRECT_SUN);
@@ -319,8 +319,8 @@ void TestExpandoraCommon::roomCompareTest_data()
             r.setExitFlags(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::EXIT});
         });
         auto exits = perfect_exits;
-        exits[ExitDirEnum::EAST].setExitFlags(
-            ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
+        exits[ExitDirEnum::EAST].setExitFlags(ExitFlagEnum::ROAD
+                                              | ExitFlagEnum::EXIT); // Event has road e
         const auto &east = room.getExit(ExitDirEnum::EAST);
         QVERIFY(east.exitIsExit());
         QVERIFY(!east.exitIsRoad()); // Room has no road e

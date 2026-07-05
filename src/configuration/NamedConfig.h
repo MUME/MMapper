@@ -3,12 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include "../global/ChangeMonitor.h"
+#include "../global/concepts.h"
 
 #include <cmath>
 #include <string>
 #include <string_view>
-#include <type_traits>
-#include <vector>
 
 template<typename T>
 class NODISCARD NamedConfig final
@@ -66,10 +65,9 @@ public:
     }
 
     void clamp(const T lo, const T hi)
+        requires(concepts::IsNumeric<T>)
     {
-        // don't try to call this for boolean or string.
-        static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
-        if constexpr (std::is_floating_point_v<T>) {
+        if constexpr (concepts::IsFloatingPoint<T>) {
             assert(std::isfinite(lo));
             assert(std::isfinite(hi));
         }

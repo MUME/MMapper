@@ -46,6 +46,8 @@ static constexpr const size_t NUM_INFOMARK_TYPES = XFOREACH_INFOMARK_TYPE(X_COUN
 #undef X_COUNT
 static_assert(NUM_INFOMARK_TYPES == 3);
 
+DEFINE_ENUM_COUNT(InfomarkTypeEnum, NUM_INFOMARK_TYPES)
+
 #define XFOREACH_INFOMARK_CLASS(X) \
     X(GENERIC) \
     X(HERB) \
@@ -64,6 +66,8 @@ enum class NODISCARD InfomarkClassEnum : uint8_t { XFOREACH_INFOMARK_CLASS(X_DEC
 static constexpr const size_t NUM_INFOMARK_CLASSES = XFOREACH_INFOMARK_CLASS(X_COUNT);
 #undef X_COUNT
 static_assert(NUM_INFOMARK_CLASSES == 10);
+
+DEFINE_ENUM_COUNT(InfomarkClassEnum, NUM_INFOMARK_CLASSES);
 
 struct NODISCARD RawInfomark final
 {

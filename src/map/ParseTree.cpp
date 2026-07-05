@@ -142,9 +142,8 @@ void ParseTree::printStats(ProgressCounter & /*pc*/, AnsiOstream &os) const
     static constexpr RawAnsi green = getRawAnsi(AnsiColor16Enum::green);
     static constexpr RawAnsi yellow = getRawAnsi(AnsiColor16Enum::yellow);
 
-    auto C = [](auto x) {
-        static_assert(std::is_integral_v<decltype(x)>);
-        return ColoredValue{green, x};
+    auto C = []<concepts::IsIntegralNumeric T>(const T x) -> ColoredValue<T> {
+        return ColoredValue<T>{green, x};
     };
 
     {

@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../global/Array.h"
+#include "../global/View.h"
 #include "ExitFlags.h"
 
 #include <cstdint>
@@ -27,13 +27,13 @@ static constexpr uint32_t NUM_EXITS = 7u;
 static constexpr uint32_t NUM_EXITS_INCLUDING_NONE = 8u;
 
 namespace enums {
-NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW();
-NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS_NESWUD> &getAllExitsNESWUD();
-NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7();
+NODISCARD View<ExitDirEnum> getAllExitsNESW();
+NODISCARD View<ExitDirEnum> getAllExitsNESWUD();
+NODISCARD View<ExitDirEnum> getAllExits7();
 
-#define ALL_EXITS_NESW enums::getAllExitsNESW()
-#define ALL_EXITS_NESWUD enums::getAllExitsNESWUD()
-#define ALL_EXITS7 enums::getAllExits7()
+#define ALL_EXITS_NESW ::enums::getAllExitsNESW()
+#define ALL_EXITS_NESWUD ::enums::getAllExitsNESWUD()
+#define ALL_EXITS7 ::enums::getAllExits7()
 
 } // namespace enums
 

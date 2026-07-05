@@ -36,7 +36,7 @@ class MapData;
 class PrespammedPath;
 class InfomarkSelection;
 
-enum class NODISCARD RoomTintEnum { DARK, NO_SUNDEATH };
+enum class NODISCARD RoomTintEnum : uint8_t { DARK, NO_SUNDEATH };
 static const size_t NUM_ROOM_TINTS = 2;
 NODISCARD extern const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints();
 #define ALL_ROOM_TINTS getAllRoomTints()
@@ -367,7 +367,7 @@ public:
     }
     void endPinch() { m_pinchState.reset(); }
 
-    void beginMagnification() { m_magnificationState.emplace(MagnificationState{1.f}); }
+    void beginMagnification() { m_magnificationState.emplace(1.f); }
     void updateMagnification(const float lastValue)
     {
         if (!m_magnificationState) {

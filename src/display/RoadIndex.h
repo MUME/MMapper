@@ -25,28 +25,7 @@ enum class NODISCARD RoadIndexMaskEnum : uint32_t {
 static_assert(static_cast<int>(RoadIndexMaskEnum::ALL) == 15);
 DEFINE_ENUM_COUNT(RoadIndexMaskEnum, NUM_ROAD_INDICES)
 
-NODISCARD inline constexpr RoadIndexMaskEnum operator|(const RoadIndexMaskEnum lhs,
-                                                       const RoadIndexMaskEnum rhs) noexcept
-{
-    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
-}
-inline constexpr RoadIndexMaskEnum &operator|=(RoadIndexMaskEnum &lhs,
-                                               const RoadIndexMaskEnum rhs) noexcept
-{
-    return lhs = (lhs | rhs);
-}
-NODISCARD inline constexpr RoadIndexMaskEnum operator&(const RoadIndexMaskEnum lhs,
-                                                       const RoadIndexMaskEnum rhs)
-{
-    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
-}
-NODISCARD inline constexpr RoadIndexMaskEnum operator~(const RoadIndexMaskEnum x)
-{
-    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(x)
-                                          ^ static_cast<uint32_t>(RoadIndexMaskEnum::ALL));
-}
-static_assert(~RoadIndexMaskEnum::ALL == RoadIndexMaskEnum::NONE);
-static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
+ENUM_ALLOWS_BIT_OPS_WITH_WIDTH(RoadIndexMaskEnum, 4)
 
 NODISCARD RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
 NODISCARD RoadIndexMaskEnum getRoadIndex(const RawRoom &room);

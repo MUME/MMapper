@@ -17,6 +17,31 @@
 #include <tuple>
 #include <vector>
 
+namespace {
+auto ignore_sv(std::string_view) {}
+// TODO: Each code point's "width" can be 1 or 2 spaces on the terminal.
+// This should eventually work like  wcswidth() and wcwidth(),
+// but for now it'll just report the number of codepoints.
+// (This "mostly works" as long as the input is from the ASCII or Latin-1 subset of UTF-8.)
+auto utf8_width(const std::string_view sv) -> size_t
+{
+    if (isAscii(sv)) {
+        return sv.length();
+    }
+    size_t len = 0;
+    charset::foreach_codepoint_utf8(sv, [&len](char32_t) { ++len; });
+    return len;
+}
+auto utf8_width_ansiAware(const std::string_view sv) -> size_t
+{
+    size_t len = 0;
+    foreachAnsi(sv, &ignore_sv, &ignore_sv, [&len](const std::string_view nonAnsi) {
+        len += utf8_width(nonAnsi);
+    });
+    return len;
+}
+} // namespace
+
 namespace syntax {
 
 TreeParser::TreeParser(SharedConstSublist syntaxRoot, User &user)
@@ -202,31 +227,9 @@ void HelpFrame::flush()
             }
         }
 
-        auto str = ss.str();
+        const auto str = ss.str();
         os.writeWithEmbeddedAnsi(str);
-
-        // TODO: convert QString ansi stuff to std::string_view instead of QStringView
-        static const auto getLengthAnsiAware = [](const std::string_view sv) -> size_t {
-            size_t len = 0;
-            bool inEsc = false;
-            for (char c : sv) {
-                if (c == C_ESC) {
-                    inEsc = true;
-                } else if (inEsc) {
-                    if (c == 'm') {
-                        inEsc = false;
-                    } else {
-                        assert(std::isdigit(c) || c == C_OPEN_BRACKET || c == C_SEMICOLON
-                               || c == C_COLON);
-                    }
-                } else {
-                    ++len;
-                }
-            }
-            return len;
-        };
-
-        size_t pos = getLengthAnsiAware(str);
+        size_t pos = utf8_width_ansiAware(str);
 
         if (m_accept) {
             if (!m_helps.empty()) {
@@ -271,8 +274,7 @@ void HelpFrame::flush()
 HelpFrame HelpFrame::makeChild()
 {
     flush();
-    HelpFrame child = *this; // copy ctor
-    return child; // c++17 spec says NRVO elides the move constructor here, but g++ 7.4 uses move ctor.
+    return HelpFrame{*this}; // note: copy-ctor
 }
 
 class NODISCARD TreeParser::HelpCommon final

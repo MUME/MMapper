@@ -228,7 +228,7 @@ enum class ModifyTypeEnum { AssignClear, InsertRemove };
     X(RESERVED, InsertRemove)
 
 #define X_DECL(_name, _type) _name,
-enum class NODISCARD RoomFieldEnum { XFOREACH_ROOM_FIELD_ENUM(X_DECL) };
+enum class NODISCARD RoomFieldEnum : uint8_t { XFOREACH_ROOM_FIELD_ENUM(X_DECL) };
 #undef X_DECL
 
 #define X_ADD(_name, _type) +1
@@ -244,11 +244,7 @@ class NODISCARD RoomFieldFlags final : public enums::Flags<RoomFieldFlags, RoomF
     using Flags::Flags;
 };
 
-NODISCARD inline constexpr RoomFieldFlags operator|(const RoomFieldEnum lhs,
-                                                    const RoomFieldEnum rhs) noexcept
-{
-    return RoomFieldFlags{lhs} | RoomFieldFlags{rhs};
-}
+DEFINE_FLAGS_BITOP_OR(RoomFieldFlags)
 
 template<>
 struct std::hash<RoomName>

@@ -35,7 +35,7 @@ struct NODISCARD UnquoteException final : public std::runtime_error
 };
 UnquoteException::~UnquoteException() = default;
 
-enum class NODISCARD TokenEnum { BeginString, EndString };
+enum class NODISCARD TokenEnum : uint8_t { BeginString, EndString };
 
 NODISCARD static std::optional<uint32_t> try_decode_oct(char c) noexcept
 {
@@ -266,32 +266,38 @@ NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view 
     std::optional<size_t> current_pos;
     std::optional<size_t> stringNumber;
 
-    foreach_char([&result, &stringNumber, &current_pos](auto &&x) {
-        using T = std::decay_t<decltype(x)>;
-        if constexpr (std::is_same_v<T, char>) {
-            const size_t pos = current_pos.value()++;
-            std::string &s = result[stringNumber.value()];
-            assert(pos < s.length());
-            s[pos] = static_cast<char>(x);
-        } else if constexpr (std::is_same_v<T, TokenEnum>) {
-            switch (x) {
-            case TokenEnum::BeginString:
-                assert(!current_pos.has_value());
-                current_pos.emplace(0);
-                if (!stringNumber.has_value()) {
-                    stringNumber = 0;
-                }
-                break;
-            case TokenEnum::EndString:
-                assert(result[stringNumber.value()].size() == current_pos.value());
-                current_pos.reset();
-                ++stringNumber.value();
-                break;
-            }
-        } else {
-            throw std::runtime_error("internal error");
-        }
-    });
+    foreach_char([&result, &stringNumber, &current_pos]<typename T>
+                     requires(std::same_as<char, std::remove_cvref_t<T>>
+                              or std::same_as<TokenEnum, std::remove_cvref_t<T>>)
+                 (T &&x) -> void {
+                     if constexpr (std::is_same_v<char, std::remove_cvref_t<T>>) {
+                         const size_t pos = current_pos.value()++;
+                         std::string &s = result[stringNumber.value()];
+                         assert(pos < s.length());
+                         s[pos] = static_cast<char>(x);
+                     } else if constexpr (std::is_same_v<TokenEnum, std::remove_cvref_t<T>>) {
+                         switch (x) {
+                         case TokenEnum::BeginString:
+                             assert(!current_pos.has_value());
+                             current_pos.emplace(0);
+                             if (!stringNumber.has_value()) {
+                                 stringNumber = 0;
+                             }
+                             break;
+                         case TokenEnum::EndString:
+                             assert(result[stringNumber.value()].size() == current_pos.value());
+                             current_pos.reset();
+                             ++stringNumber.value();
+                             break;
+                         default:
+                             std::abort();
+                         }
+                     } else {
+                         // this cannot happen
+                         static_assert(std::is_void_v<T>);
+                         throw std::runtime_error("internal error");
+                     }
+                 });
 
     assert(stringNumber.value_or(0) == result.size());
     return result;

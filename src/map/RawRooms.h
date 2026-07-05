@@ -63,11 +63,11 @@ public:
 
 public:
 #define X_DECL_ACCESSORS(_Type, _Name, _Init) \
-    NODISCARD const _Type &getRoom##_Name(const RoomId id) const \
+    NODISCARD const MM_TYPE_IDENTITY(_Type) & getRoom##_Name(const RoomId id) const \
     { \
         return getRawRoomRef(id).fields._Name; \
     } \
-    void setRoom##_Name(const RoomId id, _Type x) \
+    void setRoom##_Name(const RoomId id, MM_TYPE_IDENTITY(_Type) x) \
     { \
         if (getRoom##_Name(id) != x) { \
             updateRawRoomRef(id, [&x](auto &tmp) { tmp.fields._Name = std::move(x); }); \
@@ -81,14 +81,15 @@ public:
 
 public:
 #define X_DEFINE_ACCESSOR(_Type, _Name, _Init) \
-    void setExit##_Type(const RoomId id, const ExitDirEnum dir, _Type x) \
+    void setExit##_Type(const RoomId id, const ExitDirEnum dir, MM_TYPE_IDENTITY(_Type) x) \
     { \
         if (getExit##_Type(id, dir) != x) { \
             updateRawRoomRef(id, \
                              [dir, &x](auto &r) { r.getExit(dir).fields._Name = std::move(x); }); \
         } \
     } \
-    NODISCARD const _Type &getExit##_Type(const RoomId id, const ExitDirEnum dir) const \
+    NODISCARD const MM_TYPE_IDENTITY(_Type) \
+        & getExit##_Type(const RoomId id, const ExitDirEnum dir) const \
     { \
         return getRawRoomRef(id).getExit(dir).fields._Name; \
     }

@@ -48,11 +48,7 @@ public:
     // REVISIT: this name is different from the rest
     NODISCARD bool needsKey() const { return isNeedKey(); }
 };
-
-NODISCARD inline constexpr const DoorFlags operator|(DoorFlagEnum lhs, DoorFlagEnum rhs) noexcept
-{
-    return DoorFlags{lhs} | DoorFlags{rhs};
-}
+DEFINE_FLAGS_BITOP_OR(DoorFlags)
 
 NODISCARD extern std::string_view to_string_view(DoorFlagEnum flag);
 NODISCARD extern std::string_view getName(DoorFlagEnum flag);

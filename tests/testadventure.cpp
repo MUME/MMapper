@@ -178,6 +178,8 @@ void testParser(T &parser, const std::vector<TestLine> &testLines)
 }
 
 template<auto parseFn>
+    requires(
+        std::is_invocable_r_v<LineParserResult, decltype(parseFn), const QString &, const QString &>)
 struct NODISCARD OneLineMemoryParser final
 {
 private:
@@ -186,11 +188,7 @@ private:
 public:
     NODISCARD LineParserResult parse(const QString &line)
     {
-        using Callback = decltype(parseFn);
-        static_assert(
-            std::is_invocable_r_v<LineParserResult, Callback, const QString &, const QString &>);
         auto result = parseFn(m_prev, line);
-        static_assert(std::is_same_v<decltype(result), LineParserResult>);
         m_prev = line;
         return result;
     }

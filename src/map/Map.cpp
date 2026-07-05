@@ -697,7 +697,7 @@ static void print_coordinate(AnsiOstream &os, const RawAnsi &ansi, const Coordin
     os << ")";
 }
 
-void Map::statRoom(AnsiOstream &os, RoomId id) const
+void Map::statRoom(AnsiOstream &os, const RoomId id) const
 {
     const auto &room = getRoomHandle(id);
     const auto &pos = room.getPosition();
@@ -707,18 +707,17 @@ void Map::statRoom(AnsiOstream &os, RoomId id) const
     const auto ansi_yellow = getRawAnsi(AnsiColor16Enum::yellow);
     const auto ansi_red = getRawAnsi(AnsiColor16Enum::red);
 
-    auto kv = [&ansi_green, &os](std::string_view k, std::string_view v) {
+    auto kv = [&ansi_green, &os](const std::string_view k, const std::string_view v) {
         os << k << ": ";
         os.writeWithColor(ansi_green, v);
     };
 
-    auto print_flags = [&ansi_green, &os](const auto flags) {
+    auto print_flags = [&ansi_green, &os]<concepts::IsEnumFlags Flags>(const Flags flags) {
         if (flags.empty()) {
             os << " (none)";
         } else {
             // assumes it's templated based on Flags in Flags.h
-            using Flag = typename decltype(flags)::Flag;
-            static_assert(std::is_enum_v<Flag>);
+            using Flag = typename Flags::Flag;
             for (const Flag flag : flags) {
                 os << " ";
                 os.writeWithColor(ansi_green, to_string_view(flag));

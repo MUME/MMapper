@@ -25,17 +25,18 @@
     X(ROOM, Room, "room", "Room") \
     /* define gmcp module types above */
 
-enum class NODISCARD GmcpModuleTypeEnum {
-    UNKNOWN = -1,
+enum class NODISCARD GmcpModuleTypeEnum : uint8_t {
 #define X_DECL_GMCP_MODULE_TYPE(UPPER_CASE, CamelCase, normalized, friendly) UPPER_CASE,
     XFOREACH_GMCP_MODULE_TYPE(X_DECL_GMCP_MODULE_TYPE)
 #undef X_DECL_GMCP_MODULE_TYPE
+        UNKNOWN
 };
 
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MODULES = XFOREACH_GMCP_MODULE_TYPE(X_COUNT);
 #undef X_COUNT
 static_assert(NUM_GMCP_MODULES == 7);
+static_assert(NUM_GMCP_MODULES == enums::to_underlying(GmcpModuleTypeEnum::UNKNOWN));
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 namespace tags {

@@ -3,6 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#if 1
+// https://qt-project.atlassian.net/browse/QTBUG-31496
+#include <QtCore/qglobal.h>
+#endif
+
 #include "../global/macros.h"
 #include "remoteeditsession.h"
 

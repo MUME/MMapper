@@ -164,22 +164,8 @@ private:
         }
 
     private:
-        enum class NODISCARD QuadOptsEnum : uint32_t {
-            NONE = 0,
-            OUTLINE = 1,
-            FILL = 2,
-            BEACON = 4
-        };
-        NODISCARD friend QuadOptsEnum operator|(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
-        {
-            return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
-                                             | static_cast<uint32_t>(rhs));
-        }
-        NODISCARD friend QuadOptsEnum operator&(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
-        {
-            return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
-                                             & static_cast<uint32_t>(rhs));
-        }
+        enum class NODISCARD QuadOptsEnum : uint8_t { NONE = 0, OUTLINE = 1, FILL = 2, BEACON = 4 };
+        FRIEND_ENUM_ALLOWS_BIT_OPS_WITH_WIDTH(QuadOptsEnum, 3)
 
         void drawQuadCommon(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d, QuadOptsEnum options);
     };
