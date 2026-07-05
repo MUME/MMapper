@@ -68,7 +68,7 @@ NODISCARD auto genEnumValues_without_UNDEFINED() -> View<E>
             return tmp;
         }
     });
-    static constinit auto view = View<E>{values};
+    static const auto view = View<E>{values};
     return view;
 }
 } // namespace enums
