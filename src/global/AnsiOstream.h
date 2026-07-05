@@ -239,6 +239,18 @@ inline void print_string_quoted(AnsiOstream &aos, std::string_view sv)
     aos.writeQuoted(sv);
 }
 
+// Displays one of:
+//
+//      Exception: "what"
+//      Exception (when): "what"
+//      Exception: (unknown exception)
+//      Exception (when): (unknown exception)
+//
+// The " (when)" part is optional, depending on whether the when paremeter is empty,
+// and the "what" part is only shown if the current exception is a subclass of std::exception.
+void formatException(AnsiOstream &aos, const std::exception_ptr &ex_ptr, std::string_view when = {});
+void formatPercent(AnsiOstream &aos, RawAnsi numberColor, RawAnsi pctColor, size_t value);
+
 namespace test {
 extern void testAnsiOstream();
 } // namespace test

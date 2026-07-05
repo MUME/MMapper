@@ -247,10 +247,13 @@ set(mmapper_SRCS
     group/mmapper2group.h
     logger/autologger.cpp
     logger/autologger.h
+    mainwindow/AsyncTypes.h
     mainwindow/AudioVolumeSlider.cpp
     mainwindow/AudioVolumeSlider.h
     mainwindow/MapZoomSlider.cpp
     mainwindow/MapZoomSlider.h
+    mainwindow/TasksPanel.cpp
+    mainwindow/TasksPanel.h
     mainwindow/ThemeManager.cpp
     mainwindow/ThemeManager.h
     mainwindow/UpdateDialog.cpp
@@ -262,6 +265,7 @@ set(mmapper_SRCS
     mainwindow/infomarkseditdlg.cpp
     mainwindow/infomarkseditdlg.h
     mainwindow/mainwindow-async.cpp
+    mainwindow/mainwindow-async.h
     mainwindow/mainwindow-saveslots.cpp
     mainwindow/mainwindow.cpp
     mainwindow/mainwindow.h
@@ -594,6 +598,7 @@ set(mmapper_SRCS
     syntax/User.h
     syntax/Value.cpp
     syntax/Value.h
+    syntax/syntax-helpers.h
     timers/CTimers.cpp
     timers/CTimers.h
     timers/TimerDelegate.cpp

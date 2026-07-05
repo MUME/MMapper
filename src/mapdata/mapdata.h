@@ -111,7 +111,8 @@ public:
     // search for matches
     NODISCARD RoomIdSet genericFind(const RoomFilter &f) const;
 
-    static void shortestPathSearch(const RoomHandle &origin,
+    static void shortestPathSearch(ProgressCounter &pc,
+                                   const RoomHandle &origin,
                                    ShortestPathRecipient &recipient,
                                    const RoomFilter &f,
                                    int max_hits = -1,
@@ -206,7 +207,6 @@ signals:
     void sig_onDataChanged();
     void sig_onPositionChange();
     void sig_onForcedPositionChange();
-    void sig_checkMapConsistency();
     void sig_generateBaseMap();
 
 public slots:

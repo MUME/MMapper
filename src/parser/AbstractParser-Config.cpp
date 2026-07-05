@@ -3,7 +3,6 @@
 
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
-#include "../display/MapCanvasConfig.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
 #include "../global/AnsiOstream.h"
@@ -14,6 +13,7 @@
 #include "../proxy/proxy.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
+#include "../syntax/syntax-helpers.h"
 #include "AbstractParser-Utils.h"
 #include "abstractparser.h"
 
@@ -78,27 +78,6 @@ public:
         return os << (x.m_value ? "true" : "false");
     }
 };
-
-template<typename T>
-inline decltype(auto) remap(T &&x)
-{
-    static_assert(!std::is_same_v<std::decay_t<T>, std::string_view>);
-    if constexpr (std::is_same_v<std::decay_t<T>, std::string>
-                  || std::is_same_v<std::decay_t<T>, const char *>) {
-        return syntax::abbrevToken(std::forward<T>(x));
-    } else if constexpr (true) {
-        return std::forward<T>(x);
-    }
-
-    std::abort();
-}
-
-// REVISIT: Can we (ab)use tuple to remap std::string to syntax::abbrevToken?
-template<typename... Args>
-NODISCARD static auto syn(Args &&...args)
-{
-    return syntax::buildSyntax(remap(std::forward<Args>(args))...);
-}
 
 void AbstractParser::doConfig(const StringView cmd)
 {

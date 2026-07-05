@@ -39,36 +39,36 @@ public:
         enum class NODISCARD TypeEnum : uint8_t { File, Directory };
 
         TypeEnum destinationType = TypeEnum::File;
-        const std::shared_ptr<ProgressCounter> progressCounter;
+        std::shared_ptr<ProgressCounter> progressCounter;
         std::shared_ptr<MapSource> loadSource;
         std::shared_ptr<MapDestination> saveDestination;
 
-        explicit Data(std::shared_ptr<ProgressCounter> moved_pc,
-                      std::shared_ptr<MapSource> moved_src)
-            : progressCounter(std::move(moved_pc))
-            , loadSource(std::move(moved_src))
+        explicit Data(std::shared_ptr<MapSource> moved_src)
+            : loadSource(std::move(moved_src))
         {
-            if (!progressCounter) {
-                throw std::invalid_argument("pc");
-            }
             if (!loadSource) {
                 throw std::invalid_argument("src");
             }
         }
 
-        explicit Data(std::shared_ptr<ProgressCounter> moved_pc,
-                      std::shared_ptr<MapDestination> moved_dest)
-            : progressCounter(std::move(moved_pc))
-            , saveDestination(std::move(moved_dest))
+        explicit Data(std::shared_ptr<MapDestination> moved_dest)
+            : saveDestination(std::move(moved_dest))
         {
-            if (!progressCounter) {
-                throw std::invalid_argument("pc");
-            }
             if (!saveDestination) {
                 throw std::invalid_argument("dest");
             }
             destinationType = saveDestination->isDirectory() ? TypeEnum::Directory : TypeEnum::File;
         }
+
+        void setProgressCounter(std::shared_ptr<ProgressCounter> pc)
+        {
+            if (pc == nullptr) {
+                throw std::invalid_argument("pc");
+            }
+            progressCounter = std::move(pc);
+        }
+
+        NODISCARD ProgressCounter &getProgressCounter() const { return deref(progressCounter); }
     };
 
 private:
@@ -78,9 +78,15 @@ public:
     explicit AbstractMapStorage(const Data &data, QObject *parent);
     ~AbstractMapStorage() override;
 
+public:
+    void setProgressCounter(std::shared_ptr<ProgressCounter> pc)
+    {
+        m_data.setProgressCounter(std::move(pc));
+    }
+    NODISCARD ProgressCounter &getProgressCounter() const { return m_data.getProgressCounter(); }
+
 protected:
     NODISCARD const QString &getFilename() const;
-    NODISCARD ProgressCounter &getProgressCounter() const { return *m_data.progressCounter; }
     NODISCARD QIODevice &getDevice() const;
 
 public:

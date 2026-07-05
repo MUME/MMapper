@@ -12,28 +12,20 @@
 #include "../mapdata/roomselection.h"
 #include "../mapstorage/MapDestination.h"
 #include "../mapstorage/MapSource.h"
+#include "AsyncTypes.h"
 
+#include <functional>
 #include <memory>
-#include <optional>
 
-#include <QActionGroup>
-#include <QByteArray>
-#include <QDockWidget>
-#include <QFileDialog>
-#include <QMainWindow>
-#include <QMenu>
 #include <QPointer>
-#include <QProgressDialog>
-#include <QSize>
 #include <QString>
-#include <QTextBrowser>
 #include <QtCore>
-#include <QtGlobal>
 #include <QtWidgets>
 
 class AbstractMapStorage;
 class AdventureTracker;
 class AdventureWidget;
+class AnsiOstream;
 class AudioManager;
 class AutoLogger;
 class ClientWidget;
@@ -73,14 +65,16 @@ class UpdateDialog;
 class DescriptionWidget;
 class MediaLibrary;
 class TimerWidget;
-struct MapLoadData;
 class MapDestination;
 
-enum class NODISCARD AsyncTypeEnum : uint8_t { Load, Merge, Save };
+struct MapLoadData;
 
 class NODISCARD_QOBJECT MainWindow final : public QMainWindow
 {
     Q_OBJECT
+
+private:
+    static inline MainWindow *g_mainWindow = nullptr;
 
 private:
     MapWindow *m_mapWindow = nullptr;
@@ -93,6 +87,7 @@ private:
     QDockWidget *m_dockDialogAdventure = nullptr;
     QDockWidget *m_dockDialogDescription = nullptr;
     QDockWidget *m_dockDialogTimers = nullptr;
+    QDockWidget *m_dockDialogAsync = nullptr;
 
     std::unique_ptr<GameObserver> m_gameObserver;
     AutoLogger *m_logger = nullptr;
@@ -129,7 +124,6 @@ private:
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
     std::shared_ptr<InfomarkSelection> m_infoMarkSelection;
 
-    std::unique_ptr<QProgressDialog> m_progressDlg;
     std::unique_ptr<RoomEditAttrDlg> m_roomEditAttrDlg;
 
     QToolBar *fileToolBar = nullptr;
@@ -248,36 +242,14 @@ private:
     std::unique_ptr<ConfigDialog> m_configDialog;
 
     struct AsyncBase;
-    struct AsyncHelper;
+    struct AsyncIO;
     struct AsyncLoader;
     struct AsyncMerge;
     struct AsyncSaver;
+    std::unique_ptr<AsyncIO> m_asyncIO;
+    NODISCARD AsyncIO &getAsyncIO() { return deref(m_asyncIO); }
+    friend QDebug &operator<<(QDebug &debug, const AsyncIO &task);
 
-    struct NODISCARD AsyncTask final : public QObject
-    {
-    private:
-        std::unique_ptr<AsyncBase> m_task;
-        std::optional<QTimer> m_timer;
-
-    public:
-        explicit AsyncTask(QObject *parent);
-        ~AsyncTask() final;
-
-    public:
-        NODISCARD bool isWorking() const { return m_task != nullptr; }
-        NODISCARD explicit operator bool() const { return isWorking(); }
-
-    public:
-        void begin(std::unique_ptr<AsyncBase> task);
-        void tick();
-        void request_cancel();
-        NODISCARD bool is_allowed_to_cancel() const;
-
-    private:
-        void reset();
-    };
-
-    AsyncTask m_asyncTask;
     Signal2Lifetime m_lifetime;
 
 public:
@@ -290,12 +262,12 @@ public:
     NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(std::shared_ptr<MapSource> source);
     void setCurrentFile(const QString &fileName);
-    void percentageChanged(uint32_t);
 
 private:
-    void showAsyncFailure(const QString &fileName, AsyncTypeEnum mode, bool wasCanceled);
+    void asyncTaskEnded(const QString &taskName);
+    void showAsyncFailure(const QString &fileName, AsyncIOTypeEnum mode, bool wasCanceled);
     NODISCARD std::unique_ptr<AbstractMapStorage> getLoadOrMergeMapStorage(
-        const std::shared_ptr<ProgressCounter> &pc, std::shared_ptr<MapSource> &source);
+        std::shared_ptr<MapSource> &source);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -327,22 +299,7 @@ private:
 
     NODISCARD bool maybeSave();
 
-    struct NODISCARD ActionDisabler final
-    {
-    private:
-        MainWindow &m_self;
-
-    public:
-        explicit ActionDisabler(MainWindow &self)
-            : m_self(self)
-        {
-            self.disableActions(true);
-        }
-        ~ActionDisabler() { m_self.disableActions(false); }
-
-    public:
-        DELETE_CTORS_AND_ASSIGN_OPS(ActionDisabler);
-    };
+    struct ActionDisabler;
     void disableActions(bool value);
 
     struct NODISCARD CanvasHider final
@@ -363,25 +320,6 @@ private:
     };
     void hideCanvas(bool hide);
 
-    struct NODISCARD ProgressDialogLifetime final
-    {
-    private:
-        MainWindow &m_self;
-
-    public:
-        explicit ProgressDialogLifetime(MainWindow &self)
-            : m_self(self)
-        {}
-        ~ProgressDialogLifetime() { reset(); }
-
-    public:
-        DELETE_CTORS_AND_ASSIGN_OPS(ProgressDialogLifetime);
-
-    public:
-        void reset() { m_self.endProgressDialog(); }
-    };
-    NODISCARD ProgressDialogLifetime createNewProgressDialog(const QString &text, bool allow_cancel);
-    void endProgressDialog();
     NODISCARD MapCanvas *getCanvas() const;
     void mapChanged() const;
     void setCanvasMouseMode(CanvasMouseModeEnum mode);
@@ -407,7 +345,6 @@ public slots:
     NODISCARD bool slot_exportMmpMap();
     void slot_about();
 
-    NODISCARD bool slot_checkMapConsistency();
     NODISCARD bool slot_generateBaseMap();
 
     void slot_log(const QString &, const QString &);

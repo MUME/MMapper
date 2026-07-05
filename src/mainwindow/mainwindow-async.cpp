@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019-2024 The MMapper Authors
 
+#include "mainwindow-async.h"
+
 #include "../client/ClientWidget.h"
 #include "../display/MapCanvasData.h"
 #include "../display/mapcanvas.h"
 #include "../display/mapwindow.h"
 #include "../global/AnsiOstream.h"
 #include "../global/AnsiTextUtils.h"
+#include "../global/AsyncTasks.h"
 #include "../global/macros.h"
+#include "../global/thread_utils.h"
 #include "../global/utils.h"
-#include "../group/groupwidget.h"
 #include "../mapstorage/MapDestination.h"
 #include "../mapstorage/MmpMapStorage.h"
 #include "../mapstorage/PandoraMapStorage.h"
@@ -17,9 +20,6 @@
 #include "../mapstorage/jsonmapstorage.h"
 #include "../mapstorage/mapstorage.h"
 #include "../pathmachine/mmapper2pathmachine.h"
-#include "../preferences/configdialog.h"
-#include "../proxy/connectionlistener.h"
-#include "../roompanel/RoomWidget.h"
 #include "findroomsdlg.h"
 #include "mainwindow.h"
 #include "utils.h"
@@ -27,21 +27,21 @@
 #include <cstdint>
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <vector>
 
-#include <QBuffer>
-#include <QSize>
 #include <QString>
 #include <QXmlStreamReader>
 #include <QtWidgets>
 
-enum class NODISCARD CancelDispositionEnum : uint8_t { Forbid, Allow };
+namespace { // anonymous
+
 enum class NODISCARD PollResultEnum : uint8_t { Timeout, Finished };
 
-namespace { // anonymous
+constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
+constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
 
 namespace mwa_detail {
 
@@ -185,6 +185,10 @@ NODISCARD std::optional<T> extract(std::future<std::optional<T>> &future, MainWi
         QMessageBox::critical(&mainWindow,
                               MainWindow::tr("MapStorage Error"),
                               mmqt::toQStringUtf8(ex.what()));
+    } catch (const ProgressCanceledException &) {
+        const auto msg = "IO operation canceled.";
+        mainWindow.slot_log("AbstractMapStorage", msg);
+        qInfo().noquote() << msg;
     } catch (const std::exception &ex) {
         const auto msg = QString::asprintf("Exception: %s", ex.what());
         mainWindow.slot_log("AbstractMapStorage", msg);
@@ -197,12 +201,13 @@ NODISCARD std::optional<T> extract(std::future<std::optional<T>> &future, MainWi
 
 namespace background {
 
-NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, AbstractMapStorage &storage)
+NODISCARD std::optional<MapLoadData> load_map_data(AbstractMapStorage &storage)
 {
     if (!storage.canLoad()) {
         return std::nullopt;
     }
 
+    ProgressCounter &pc = storage.getProgressCounter();
     pc.setCurrentTask(ProgressMsg{/*"phase 1: "*/ "load from disk"});
     std::optional<RawMapLoadData> opt_data = storage.loadData();
     if (!opt_data) {
@@ -228,14 +233,13 @@ NODISCARD std::optional<MapLoadData> load_map_data(ProgressCounter &pc, Abstract
     return result;
 }
 
-NODISCARD std::optional<Map> merge_map_data(ProgressCounter &pc,
-                                            AbstractMapStorage &storage,
-                                            const MapData &mapData)
+NODISCARD std::optional<Map> merge_map_data(AbstractMapStorage &storage, const MapData &mapData)
 {
     if (!storage.canLoad()) {
         return std::nullopt;
     }
 
+    ProgressCounter &pc = storage.getProgressCounter();
     pc.setCurrentTask(ProgressMsg{"phase 1: load from disk"});
     std::optional<RawMapLoadData> opt_data = storage.loadData();
 
@@ -261,402 +265,413 @@ NODISCARD bool save(AbstractMapStorage &storage, const MapData &mapData, const S
 
 struct NODISCARD MainWindow::AsyncBase
 {
-public:
-    const std::shared_ptr<ProgressCounter> progressCounter;
-    const CancelDispositionEnum cancelDisposition = CancelDispositionEnum::Allow;
-
-public:
-    explicit AsyncBase(std::shared_ptr<ProgressCounter> pc,
-                       const CancelDispositionEnum cancelDisposition_)
-        : progressCounter{std::move(pc)}
-        , cancelDisposition{cancelDisposition_}
-    {
-        if (!progressCounter) {
-            throw std::invalid_argument("pc");
-        }
-    }
-
-public:
-    virtual ~AsyncBase();
-
-private:
-    NODISCARD virtual PollResultEnum virt_poll(std::chrono::milliseconds ms) = 0;
-    virtual void virt_request_cancel() = 0;
-
-public:
-    NODISCARD PollResultEnum poll(std::chrono::milliseconds ms) { return virt_poll(ms); }
-    NODISCARD PollResultEnum poll() { return poll(std::chrono::milliseconds{0}); }
-    void request_cancel();
-    NODISCARD bool requested_cancel() const;
-    NODISCARD bool is_allowed_to_cancel() const;
-};
-
-MainWindow::AsyncBase::~AsyncBase() = default;
-
-void MainWindow::AsyncBase::request_cancel()
-{
-    if (!is_allowed_to_cancel()) {
-        return;
-    }
-    progressCounter->requestCancel();
-    virt_request_cancel();
-}
-
-bool MainWindow::AsyncBase::requested_cancel() const
-{
-    return progressCounter->requestedCancel();
-}
-
-bool MainWindow::AsyncBase::is_allowed_to_cancel() const
-{
-    return cancelDisposition == CancelDispositionEnum::Allow;
-}
-
-MainWindow::AsyncTask::AsyncTask(QObject *parent)
-    : QObject(parent)
-{}
-
-MainWindow::AsyncTask::~AsyncTask()
-{
-    if (isWorking()) {
-        qWarning() << "Abandoning task in progress.";
-        reset();
-    }
-}
-
-void MainWindow::AsyncTask::begin(std::unique_ptr<AsyncBase> task)
-{
-    if (m_task) {
-        throw std::runtime_error("already have an async task");
-    }
-
-    reset();
-
-    m_task = std::move(task);
-    QTimer &timer = m_timer.emplace(this);
-
-    timer.setInterval(25);
-    connect(&timer, &QTimer::timeout, this, &AsyncTask::tick);
-    timer.start();
-
-    qInfo() << "Async task started.";
-}
-
-void MainWindow::AsyncTask::tick()
-{
-    if (!isWorking()) {
-        qWarning() << "tick called while not working";
-        return;
-    }
-
-    if (deref(m_task).poll() != PollResultEnum::Finished) {
-        return;
-    }
-
-    reset();
-    qInfo() << "Async task finished.";
-}
-
-void MainWindow::AsyncTask::request_cancel()
-{
-    deref(m_task).request_cancel();
-}
-
-bool MainWindow::AsyncTask::is_allowed_to_cancel() const
-{
-    return deref(m_task).is_allowed_to_cancel();
-}
-
-void MainWindow::AsyncTask::reset()
-{
-    m_task.reset();
-    if (m_timer) {
-        m_timer->stop();
-        m_timer.reset();
-    }
-}
-
-struct NODISCARD MainWindow::AsyncHelper : public AsyncBase
-{
     using SharedDevice = std::shared_ptr<QIODevice>;
     using UniqueStorage = std::unique_ptr<AbstractMapStorage>;
-
-    struct NODISCARD ExtraBlockers final
-    {
-        ActionDisabler actionDisabler;
-        // REVISIT: make this optional, so it's not done during map saving.
-        CanvasHider canvasHider;
-        MapFrontendBlocker blocker;
-
-        explicit ExtraBlockers(MainWindow &mw, MapData &md)
-            : actionDisabler{mw}
-            , canvasHider{mw}
-            , blocker{md}
-        {}
-    };
-
-protected:
-    MainWindow &mainWindow;
-
-    const QString fileName;
-    const SharedDevice pDevice;
-
-    CanvasDisabler canvasDisabler;
-    ProgressDialogLifetime progressDlg;
-    UniqueStorage pStorage;
-
-    std::unique_ptr<ExtraBlockers> extraBlockers;
-
-private:
-    ProgressMsg m_lastMsg;
-    size_t m_lastPoll = 0;
-    bool m_calledFinish = false;
+    using SharedPc = std::shared_ptr<ProgressCounter>;
 
 public:
-    explicit AsyncHelper(std::shared_ptr<ProgressCounter> pc,
-                         MainWindow &mw,
-                         const QString &name,
-                         SharedDevice pd,
-                         UniqueStorage ps,
-                         const QString &dialogText,
-                         const CancelDispositionEnum allow_cancel)
-        : AsyncBase{std::move(pc), allow_cancel}
-        , mainWindow{mw}
-        , fileName{name}
-        , pDevice(std::move(pd))
-        , canvasDisabler{deref(mw.m_mapWindow)}
-        , progressDlg{mw.createNewProgressDialog(dialogText,
-                                                 allow_cancel == CancelDispositionEnum::Allow)}
-        , pStorage{std::move(ps)}
-        , extraBlockers{std::make_unique<ExtraBlockers>(mw, deref(mw.m_mapData))}
+    const QString taskName;
+
+protected:
+    MainWindow &m_mainWindow;
+    const QString m_fileName;
+    const SharedDevice m_pDevice;
+    UniqueStorage m_pStorage;
+    bool m_isFinished = false;
+
+public:
+    explicit AsyncBase(QString moved_taskName,
+                       MainWindow &mw,
+                       const QString &name,
+                       SharedDevice pd,
+                       UniqueStorage ps)
+        : taskName{std::move(moved_taskName)}
+        , m_mainWindow{mw}
+        , m_fileName{name}
+        , m_pDevice(std::move(pd))
+        , m_pStorage{std::move(ps)}
     {
-        if (!name.isEmpty() && !pStorage) {
+        if (!name.isEmpty() && !m_pStorage) {
             throw std::invalid_argument("ps");
         }
     }
 
-    ~AsyncHelper() override;
+    virtual ~AsyncBase();
 
-private:
-    NODISCARD virtual PollResultEnum virt_wait(std::chrono::milliseconds ms) = 0;
-    virtual void virt_finish() = 0;
-
-    void virt_request_cancel() final { this->progressCounter->requestCancel(); }
-
-private:
-    void updateStatus()
+public:
+    void background_worker(const SharedPc &sharedPc) { virt_background_worker(sharedPc); }
+    void on_success(const SharedPc &sharedPc)
     {
-        auto &pc = *progressCounter;
-        const ProgressCounter::Status status = pc.getStatus();
-        const ProgressMsg &msg = status.msg;
-
-        if (msg != m_lastMsg) {
-            m_lastMsg = msg;
-            mainWindow.slot_log("Async task", mmqt::toQStringUtf8(msg.getStdStringViewUtf8()));
-            if (auto dlg = mainWindow.m_progressDlg.get()) {
-                dlg->setLabelText(mmqt::toQStringUtf8(msg.getStdStringViewUtf8()) + "...");
-            }
-        }
-
-        const size_t pct = status.percent();
-        if (pct != m_lastPoll) {
-            m_lastPoll = pct;
-            mainWindow.percentageChanged(std::min(uint32_t(pct), 99u));
-        }
+        virt_finish(sharedPc);
+        m_isFinished = true;
     }
 
 private:
-    NODISCARD PollResultEnum virt_poll(std::chrono::milliseconds ms) final
+    virtual void virt_background_worker(const SharedPc &sharedPc) = 0;
+    virtual void virt_finish(const SharedPc &sharedPc) = 0;
+    NODISCARD virtual PollResultEnum virt_wait(std::chrono::milliseconds ms) = 0;
+
+public:
+    NODISCARD PollResultEnum poll() const
     {
-        if (m_calledFinish) {
-            return PollResultEnum::Finished;
-        }
-
-        // update status before waiting
-        updateStatus();
-
-        const auto status = virt_wait(ms);
-
-        // also update status again after waiting
-        updateStatus();
-
-        if (status == PollResultEnum::Timeout) {
-            return PollResultEnum::Timeout;
-        }
-
-        progressDlg.reset();
-        m_calledFinish = true;
-        virt_finish();
-        return PollResultEnum::Finished;
+        return m_isFinished ? PollResultEnum::Finished : PollResultEnum::Timeout;
     }
 };
 
-MainWindow::AsyncHelper::~AsyncHelper()
+MainWindow::AsyncBase::~AsyncBase()
 {
-    if (!m_calledFinish) {
-        qWarning() << "Failed to call finish";
+    if (!m_isFinished) {
+        qWarning() << "Failed to call finish for task " << taskName;
+    }
+    // FIXME: how can mainWindow be expired here?
+    m_mainWindow.asyncTaskEnded(taskName);
+}
+
+MainWindow::AsyncIO::AsyncIO(MainWindow *mainWindow)
+    : QObject(mainWindow)
+    , m_mainWindow(deref(mainWindow))
+{}
+
+MainWindow::AsyncIO::~AsyncIO()
+{
+    if (isRunningOnBackgroundThread()) {
+        qWarning() << "Abandoning task" << *this << " in progress.";
+        reset();
     }
 }
 
-struct NODISCARD MainWindow::AsyncLoader final : public MainWindow::AsyncHelper
+bool MainWindow::AsyncIO::isRunningOnBackgroundThread() const
+{
+    if (hasCurrentTask()) {
+        auto &task = getTask();
+        return task.isRunningOnBackgroundThread();
+    }
+
+    return false;
+}
+
+void MainWindow::AsyncIO::beginAsyncIO(std::unique_ptr<AsyncBase> unique_task,
+                                       const QString &progressDialogText,
+                                       const AsyncIOTypeEnum type)
+{
+    if (!unique_task) {
+        throw std::invalid_argument("task");
+    }
+
+    if (hasCurrentTask()) {
+        throw std::runtime_error("already have an async task");
+    }
+
+    if (m_closedForBusiness) {
+        throw std::runtime_error("mmapper is shutting down");
+    }
+
+    const bool isSave = type == AsyncIOTypeEnum::Save;
+    const AllowCancelEnum allowCancel = !isSave ? AllowCancelEnum::Allow : AllowCancelEnum::Forbid;
+    const bool preventMapChanges = !isSave;
+
+    reset();
+    {
+        const auto shared_io_task = std::shared_ptr(std::move(unique_task));
+        const auto weak_io_task = std::weak_ptr(shared_io_task);
+        auto &io_task = deref(shared_io_task);
+        m_asyncData.emplace(shared_io_task,
+                            async_tasks::startAsyncTask2(
+                                AsyncTaskTypeEnum::IO,
+                                allowCancel,
+                                mmqt::toStdStringUtf8(io_task.taskName),
+                                [weak_io_task](const std::shared_ptr<ProgressCounter> &pc) {
+                                    // background thread
+                                    assert(!thread_utils::isOnMainThread());
+                                    const auto shared = weak_io_task.lock();
+                                    AsyncBase &task = deref(shared);
+                                    task.background_worker(pc);
+                                },
+                                [weak_io_task](const std::shared_ptr<ProgressCounter> &pc) {
+                                    ABORT_IF_NOT_ON_MAIN_THREAD();
+                                    const auto shared = weak_io_task.lock();
+                                    AsyncBase &task = deref(shared);
+                                    task.on_success(pc);
+                                }));
+    }
+
+    // FIXME: This assumes "Save" is the only thing that forbids cancel.
+    if (preventMapChanges) {
+        m_canvasDisabler.emplace(deref(m_mainWindow.m_mapWindow));
+    }
+    createNewProgressDialog(progressDialogText, allowCancel == AllowCancelEnum::Allow);
+    if (preventMapChanges) {
+        m_extraBlockers.emplace(m_mainWindow, deref(m_mainWindow.m_mapData));
+    }
+
+    {
+        ProgressData &progress_data = m_progressData.emplace();
+        QTimer &timer = progress_data.timer;
+        timer.setInterval(25);
+        connect(&timer, &QTimer::timeout, this, &AsyncIO::tick);
+        timer.start();
+    }
+
+    qInfo() << "Async task" << *this << "started.";
+}
+
+void MainWindow::AsyncIO::updateStatus()
+{
+    auto &pc = getProgressCounter();
+    const ProgressCounter::Status status = pc.getStatus();
+    auto &progresssData = deref(m_progressData);
+    auto &lastMsg = progresssData.lastMsg;
+    auto &lastPoll = progresssData.lastPoll;
+
+    if (const ProgressMsg &msg = status.msg; msg != lastMsg) {
+        lastMsg = msg;
+        m_mainWindow.slot_log("Async task", mmqt::toQStringUtf8(msg.getStdStringViewUtf8()));
+        if (auto dlg = m_mainWindow.getAsyncIO().getProgressDlg()) {
+            dlg->setLabelText(mmqt::toQStringUtf8(msg.getStdStringViewUtf8()) + "...");
+        }
+    }
+
+    if (const size_t pct = status.percent(); pct != lastPoll) {
+        lastPoll = pct;
+        m_mainWindow.getAsyncIO().percentageChanged(std::min(uint32_t(pct), 99u));
+    }
+}
+
+void MainWindow::AsyncIO::tick()
+{
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+
+    if (!hasCurrentTask()) {
+        qWarning() << "tick called with no current task";
+        return;
+    }
+
+    auto &data = deref(m_asyncData);
+    auto &io = deref(data.asyncIo);
+    if (io.poll() != PollResultEnum::Finished) {
+        updateStatus();
+    } else {
+        reset();
+        qInfo() << "Async task finished.";
+    }
+}
+
+void MainWindow::AsyncIO::request_cancel()
+{
+    getProgressCounter().requestCancel();
+}
+
+bool MainWindow::AsyncIO::is_allowed_to_cancel() const
+{
+    return getProgressCounter().allowCancel() == AllowCancelEnum::Allow;
+}
+
+QDebug &operator<<(QDebug &debug, const MainWindow::AsyncIO &task)
+{
+    const auto str = task.getTask().getStatusAsPlaintext();
+    return debug << mmqt::toQStringUtf8(str);
+}
+
+NODISCARD size_t MainWindow::AsyncIO::getTaskId() const
+{
+    return getTask().getId();
+}
+NODISCARD const std::string &MainWindow::AsyncIO::getTaskName() const
+{
+    return getTask().getName();
+}
+NODISCARD QString MainWindow::AsyncIO::getTaskNameAsQString() const
+{
+    return mmqt::toQStringUtf8(getTaskName());
+}
+NODISCARD std::shared_ptr<ProgressCounter> MainWindow::AsyncIO::getSharedProgressCounter() const
+{
+    return getTask().getSharedProgressCounter();
+}
+NODISCARD ProgressCounter &MainWindow::AsyncIO::getProgressCounter() const
+{
+    const auto shared = getSharedProgressCounter();
+    return deref(shared);
+}
+
+void MainWindow::AsyncIO::resetExtraBlockers()
+{
+    // NOTE: ~ExtraBlockers() calls ~CanvasHider(), which calls MapCanvas::show(),
+    // which calls MapCanvas::paintGL(), which kicks off an async job to create the map
+    // batches, so this should not be called before mapCanvas.slot_dataLoaded(),
+    // since that function flags async map batches to be ignored. When that happens,
+    // we have to build the meshes twice before they're displayed.
+    m_extraBlockers.reset();
+}
+
+void MainWindow::AsyncIO::reset()
+{
+    m_progressDlg.reset();
+    m_progressData.reset();
+    m_asyncData.reset();
+    resetExtraBlockers();
+    assert(!hasCurrentTask());
+}
+
+void MainWindow::asyncTaskEnded(const QString &taskName)
+{
+    if (getAsyncIO().isWaitingForSaveAtShutdown()) {
+        qInfo() << "async task" << taskName << "ended; closing mmapper.";
+        show();
+        close();
+    }
+}
+
+struct NODISCARD MainWindow::AsyncLoader final : public AsyncBase
 {
 private:
     using Result = std::optional<MapLoadData>;
+    using Promise = std::promise<Result>;
     using Future = std::future<Result>;
 
 private:
-    Future future;
+    Promise m_promise;
+    Future m_future = m_promise.get_future();
 
 public:
-    explicit AsyncLoader(std::shared_ptr<ProgressCounter> moved_pc,
-                         MainWindow &mw,
-                         const QString &name,
-                         SharedDevice pd,
-                         UniqueStorage ps)
-        : AsyncHelper{std::move(moved_pc),
-                      mw,
-                      name,
-                      std::move(pd),
-                      std::move(ps),
-                      "Loading map...",
-                      CancelDispositionEnum::Allow}
-        , future{std::async(std::launch::async, &AsyncLoader::background_load, this)}
+    explicit AsyncLoader(MainWindow &mw, const QString &name, SharedDevice pd, UniqueStorage ps)
+        : AsyncBase{"Map Loader", mw, name, std::move(pd), std::move(ps)}
     {}
     ~AsyncLoader() final;
 
 private:
-    NODISCARD Result background_load() const
+    void virt_background_worker(const std::shared_ptr<ProgressCounter> &sharedPc) final
     {
-        ProgressCounter &pc = deref(progressCounter);
-        AbstractMapStorage &storage = deref(pStorage);
-        return background::load_map_data(pc, storage);
+        try {
+            m_promise.set_value(background_load(sharedPc));
+        } catch (...) {
+            m_promise.set_exception(std::current_exception());
+        }
+    }
+
+private:
+    NODISCARD Result background_load(const std::shared_ptr<ProgressCounter> &sharedPc) const
+    {
+        AbstractMapStorage &storage = deref(m_pStorage);
+        storage.setProgressCounter(sharedPc);
+        return background::load_map_data(storage);
     }
 
 private:
     NODISCARD PollResultEnum virt_wait(const std::chrono::milliseconds ms) final
     {
-        return mwa_detail::wait_for(future, ms);
+        return mwa_detail::wait_for(m_future, ms);
     }
 
-    void virt_finish() final
+    void virt_finish(const std::shared_ptr<ProgressCounter> &sharedPc) final
     {
-        const Result result = mwa_detail::extract(future, mainWindow);
+        const bool wasCanceled = deref(sharedPc).hasRequestedCancel();
+        const Result result = mwa_detail::extract(m_future, m_mainWindow);
 
         // REVISIT: what if you just wanted to load markers?
-        if (!result || result->mapPair.modified.getRoomsCount() == 0) {
-            mainWindow.showAsyncFailure(fileName,
-                                        AsyncTypeEnum::Load,
-                                        progressCounter->requestedCancel());
+        if (wasCanceled || !result || result->mapPair.modified.getRoomsCount() == 0) {
+            m_mainWindow.showAsyncFailure(m_fileName, AsyncIOTypeEnum::Load, wasCanceled);
             return;
         }
 
         // REVISIT: why are the extraBlockers reset after this?
-        mainWindow.onSuccessfulLoad(*result);
+        m_mainWindow.onSuccessfulLoad(*result);
 
-        // NOTE: ~ExtraBlockers() calls ~CanvasHider(), which calls MapCanvas::show(),
-        // which calls MapCanvas::paintGL(), which kicks off an async job to create the map
-        // batches, so this should not be called before mapCanvas.slot_dataLoaded(),
-        // since that function flags async map batches to be ignored. When that happens,
-        // we have to build the meshes twice before they're displayed.
-        extraBlockers.reset();
+        m_mainWindow.getAsyncIO().resetExtraBlockers();
     }
 };
 
 MainWindow::AsyncLoader::~AsyncLoader() = default;
 
-struct NODISCARD MainWindow::AsyncMerge final : public AsyncHelper
+struct NODISCARD MainWindow::AsyncMerge final : public AsyncBase
 {
 private:
     using Result = std::optional<Map>;
+
+    using Promise = std::promise<Result>;
     using Future = std::future<Result>;
 
 private:
-    Future future;
+    MapData &m_mapdata;
+    Promise m_promise;
+    Future m_future = m_promise.get_future();
 
 public:
-    explicit AsyncMerge(std::shared_ptr<ProgressCounter> pc,
-                        MainWindow &mw,
-                        const QString &name,
-                        SharedDevice pd,
-                        UniqueStorage ps)
-        : AsyncHelper{std::move(pc),
-                      mw,
-                      name,
-                      std::move(pd),
-                      std::move(ps),
-                      "Merging map...",
-                      CancelDispositionEnum::Allow}
-        , future{std::async(std::launch::async,
-                            &AsyncMerge::background_merge,
-                            this,
-                            std::ref(deref(mw.m_mapData)))}
+    explicit AsyncMerge(MainWindow &mw, const QString &name, SharedDevice pd, UniqueStorage ps)
+        : AsyncBase{"Map Merge", mw, name, std::move(pd), std::move(ps)}
+        , m_mapdata{deref(mw.m_mapData)}
     {}
     ~AsyncMerge() final;
 
 private:
-    NODISCARD Result background_merge(const MapData &mapData) const
+    void virt_background_worker(const std::shared_ptr<ProgressCounter> &sharedPc) override
     {
-        ProgressCounter &pc = deref(progressCounter);
-        AbstractMapStorage &storage = deref(pStorage);
-        return background::merge_map_data(pc, storage, mapData);
+        try {
+            m_promise.set_value(background_merge(sharedPc, m_mapdata));
+        } catch (...) {
+            m_promise.set_exception(std::current_exception());
+        }
+    }
+
+private:
+    NODISCARD Result background_merge(const std::shared_ptr<ProgressCounter> &sharedPc,
+                                      const MapData &mapData) const
+    {
+        AbstractMapStorage &storage = deref(m_pStorage);
+        storage.setProgressCounter(sharedPc);
+        return background::merge_map_data(storage, mapData);
     }
 
 private:
     NODISCARD PollResultEnum virt_wait(const std::chrono::milliseconds ms) final
     {
-        return mwa_detail::wait_for(future, ms);
+        return mwa_detail::wait_for(m_future, ms);
     }
 
-    void virt_finish() final
+    void virt_finish(const std::shared_ptr<ProgressCounter> &sharedPc) final
     {
-        const Result result = mwa_detail::extract(future, mainWindow);
-        if (!result) {
-            mainWindow.showAsyncFailure(fileName,
-                                        AsyncTypeEnum::Merge,
-                                        progressCounter->requestedCancel());
+        const bool wasCanceled = deref(sharedPc).hasRequestedCancel();
+        const Result result = mwa_detail::extract(m_future, m_mainWindow);
+        if (wasCanceled || !result) {
+            m_mainWindow.showAsyncFailure(m_fileName, AsyncIOTypeEnum::Merge, wasCanceled);
             return;
         }
 
-        extraBlockers.reset();
-        mainWindow.onSuccessfulMerge(*result);
+        m_mainWindow.getAsyncIO().resetExtraBlockers();
+        m_mainWindow.onSuccessfulMerge(*result);
     }
 };
 
 MainWindow::AsyncMerge::~AsyncMerge() = default;
 
-struct NODISCARD MainWindow::AsyncSaver final : public AsyncHelper
+struct NODISCARD MainWindow::AsyncSaver final : public AsyncBase
 {
 public:
     using SharedMapDestination = std::shared_ptr<MapDestination>;
 
 private:
     using Result = std::optional<bool>;
+    using Promise = std::promise<Result>;
     using Future = std::future<Result>;
 
 private:
     const SaveModeEnum mode;
     const SaveFormatEnum format;
     const SharedMapDestination pMapDestination;
-    Future future;
+
+    Promise m_promise;
+    Future m_future = m_promise.get_future();
 
 public:
-    explicit AsyncSaver(std::shared_ptr<ProgressCounter> pc,
-                        MainWindow &mw,
+    explicit AsyncSaver(MainWindow &mw,
                         SharedMapDestination pDest,
                         UniqueStorage ps,
                         const SaveModeEnum _mode,
                         const SaveFormatEnum _format)
-        : AsyncHelper{std::move(pc),
-                      mw,
-                      pDest->getFileName(),
-                      pDest->getIODevice(),
-                      std::move(ps),
-                      "Saving map...",
-                      CancelDispositionEnum::Forbid}
+        : AsyncBase{"Map Saver", mw, pDest->getFileName(), pDest->getIODevice(), std::move(ps)}
         , mode{_mode}
         , format{_format}
         , pMapDestination(std::move(pDest))
-        , future{std::async(std::launch::async, &AsyncSaver::background_save, this)}
     {
         if (!pMapDestination) {
             throw std::invalid_argument("pDest cannot be null");
@@ -665,22 +680,36 @@ public:
     ~AsyncSaver() final;
 
 private:
-    NODISCARD Result background_save() const
+    void virt_background_worker(const std::shared_ptr<ProgressCounter> &sharedPc) final
     {
-        AbstractMapStorage &storage = deref(pStorage);
-        const MapData &mapData = deref(mainWindow.m_mapData);
+        try {
+            m_promise.set_value(background_save(sharedPc));
+        } catch (...) {
+            m_promise.set_exception(std::current_exception());
+        }
+    }
+
+private:
+    NODISCARD Result background_save(const std::shared_ptr<ProgressCounter> &sharedPc) const
+    {
+        AbstractMapStorage &storage = deref(m_pStorage);
+        storage.setProgressCounter(sharedPc);
+        const MapData &mapData = deref(m_mainWindow.m_mapData);
         return background::save(storage, mapData, mode);
     }
 
 private:
     NODISCARD PollResultEnum virt_wait(const std::chrono::milliseconds ms) final
     {
-        return mwa_detail::wait_for(future, ms);
+        return mwa_detail::wait_for(m_future, ms);
     }
 
-    void virt_finish() final
+    void virt_finish(const std::shared_ptr<ProgressCounter> &sharedPc) final
     {
-        const Result result = mwa_detail::extract(future, mainWindow);
+        assert(deref(sharedPc).allowCancel() == AllowCancelEnum::Forbid);
+        assert(deref(sharedPc).hasRequestedCancel() == false);
+
+        const Result result = mwa_detail::extract(m_future, m_mainWindow);
         const bool success = result.has_value() && result.value();
         finish_saving(success);
     }
@@ -695,32 +724,33 @@ private:
                                              pMapDestination->getFileName());
             }
         }
-        extraBlockers.reset();
+
+        m_mainWindow.getAsyncIO().resetExtraBlockers();
 
         if (!success) {
-            mainWindow.showAsyncFailure(fileName,
-                                        AsyncTypeEnum::Save,
-                                        progressCounter->requestedCancel());
+            m_mainWindow.showAsyncFailure(m_fileName, AsyncIOTypeEnum::Save, false);
             return;
         }
 
-        mainWindow.onSuccessfulSave(mode, format, fileName);
+        m_mainWindow.onSuccessfulSave(mode, format, m_fileName);
     }
 };
 
 MainWindow::AsyncSaver::~AsyncSaver() = default;
 
 std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
-    const std::shared_ptr<ProgressCounter> &pc, std::shared_ptr<MapSource> &source)
+    std::shared_ptr<MapSource> &pSource)
 {
-    auto tmp = std::invoke([this, pc, &source]() -> std::unique_ptr<AbstractMapStorage> {
-        const AbstractMapStorage::Data data{pc, source};
-        auto pDevice = source->getIODevice();
+    auto tmp = std::invoke([this, &pSource]() -> std::unique_ptr<AbstractMapStorage> {
+        const AbstractMapStorage::Data data{pSource};
+        auto &source = deref(pSource);
+        auto pDevice = source.getIODevice();
+        auto &device = deref(pDevice);
         for (const auto &fmt : mwa_detail::formats) {
-            if (!pDevice->seek(0)) {
+            if (!device.seek(0)) {
                 throw std::runtime_error("Failed to seek to beginning.");
             }
-            if (fmt.detect(*pDevice)) {
+            if (fmt.detect(device)) {
                 return fmt.make(data, this);
             }
         }
@@ -734,21 +764,23 @@ std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
 
 bool MainWindow::tryStartNewAsync()
 {
-    if (m_asyncTask) {
-        showStatusShort(tr("Async operation already in progress"));
+    ABORT_IF_NOT_ON_MAIN_THREAD();
+    if (getAsyncIO().isRunningOnBackgroundThread()) {
+        showStatusShort(tr("IO Task already in progress"));
         return false;
     }
     return true;
 }
 
-void MainWindow::loadFile(std::shared_ptr<MapSource> source)
+void MainWindow::loadFile(std::shared_ptr<MapSource> pSource)
 {
+    auto &source = deref(pSource);
     try {
         if (!tryStartNewAsync()) {
             return;
         }
 
-        if (source->getFileName().isEmpty()) {
+        if (source.getFileName().isEmpty()) {
             showStatusShort(tr("No filename provided"));
             return;
         }
@@ -756,19 +788,19 @@ void MainWindow::loadFile(std::shared_ptr<MapSource> source)
         // Immediately discard the old map.
         forceNewFile();
 
-        auto pc = std::make_shared<ProgressCounter>();
-        auto pStorage = getLoadOrMergeMapStorage(pc, source);
+        auto pStorage = getLoadOrMergeMapStorage(pSource);
 
-        m_asyncTask.begin(std::make_unique<AsyncLoader>(std::move(pc),
-                                                        *this,
-                                                        source->getFileName(),
-                                                        source->getIODevice(),
-                                                        std::move(pStorage)));
+        getAsyncIO().beginAsyncIO(std::make_unique<AsyncLoader>(*this,
+                                                                source.getFileName(),
+                                                                source.getIODevice(),
+                                                                std::move(pStorage)),
+                                  "Loading map...",
+                                  AsyncIOTypeEnum::Load);
     } catch (const std::exception &ex) {
-        showWarning(tr("Cannot open file %1:\n%2.").arg(source->getFileName(), ex.what()));
+        showWarning(tr("Cannot open file %1:\n%2.").arg(source.getFileName(), ex.what()));
         return;
     } catch (...) {
-        showWarning(tr("Cannot open file %1:\n%2.").arg(source->getFileName(), "Unknown exception"));
+        showWarning(tr("Cannot open file %1:\n%2.").arg(source.getFileName(), "Unknown exception"));
         return;
     }
 }
@@ -779,24 +811,25 @@ void MainWindow::slot_merge()
         return;
     }
 
-    auto mergeFile = [this](const QString &fileName, std::optional<QByteArray> fileContent) {
+    auto mergeFile = [this](const QString &fileName, const std::optional<QByteArray> &fileContent) {
         if (fileName.isEmpty()) {
             showStatusShort(tr("No filename provided"));
             return;
         }
 
         try {
-            auto pc = std::make_shared<ProgressCounter>();
-            auto source = MapSource::alloc(fileName, fileContent);
-            auto pStorage = getLoadOrMergeMapStorage(pc, source);
+            auto pSource = MapSource::alloc(fileName, fileContent);
+            auto &source = deref(pSource);
+            auto pStorage = getLoadOrMergeMapStorage(pSource);
             connect(pStorage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
 
             getCanvas()->slot_clearAllSelections();
-            m_asyncTask.begin(std::make_unique<AsyncMerge>(std::move(pc),
-                                                           *this,
-                                                           source->getFileName(),
-                                                           source->getIODevice(),
-                                                           std::move(pStorage)));
+            getAsyncIO().beginAsyncIO(std::make_unique<AsyncMerge>(*this,
+                                                                   source.getFileName(),
+                                                                   source.getIODevice(),
+                                                                   std::move(pStorage)),
+                                      "Merging map...",
+                                      AsyncIOTypeEnum::Merge);
         } catch (const std::runtime_error &ex) {
             showWarning(tr("Cannot open file %1:\n%2.").arg(fileName, ex.what()));
             return;
@@ -837,25 +870,22 @@ bool MainWindow::saveFile(const QString &fileName,
         return false;
     }
 
-    auto pc = std::make_shared<ProgressCounter>();
-
-    auto pStorage = std::invoke([this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
-        auto storage = std::invoke(
-            [this, pc, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
-                AbstractMapStorage::Data data{pc, pDest};
-                switch (format) {
-                case SaveFormatEnum::MM2:
-                    return std::make_unique<MapStorage>(data, this);
-                case SaveFormatEnum::MM2XML:
-                    return std::make_unique<XmlMapStorage>(data, this);
-                case SaveFormatEnum::MMP:
-                    return std::make_unique<MmpMapStorage>(data, this);
-                case SaveFormatEnum::WEB:
-                    return std::make_unique<JsonMapStorage>(data, this);
-                }
-                assert(false);
-                return {};
-            });
+    auto pStorage = std::invoke([this, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
+        auto storage = std::invoke([this, format, pDest]() -> std::unique_ptr<AbstractMapStorage> {
+            AbstractMapStorage::Data data{pDest};
+            switch (format) {
+            case SaveFormatEnum::MM2:
+                return std::make_unique<MapStorage>(data, this);
+            case SaveFormatEnum::MM2XML:
+                return std::make_unique<XmlMapStorage>(data, this);
+            case SaveFormatEnum::MMP:
+                return std::make_unique<MmpMapStorage>(data, this);
+            case SaveFormatEnum::WEB:
+                return std::make_unique<JsonMapStorage>(data, this);
+            }
+            assert(false);
+            return {};
+        });
         connect(storage.get(), &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);
         return storage;
     });
@@ -865,66 +895,10 @@ bool MainWindow::saveFile(const QString &fileName,
         return false;
     }
 
-    m_asyncTask.begin(
-        std::make_unique<AsyncSaver>(std::move(pc), *this, pDest, std::move(pStorage), mode, format));
-    return true;
-}
-
-bool MainWindow::slot_checkMapConsistency()
-{
-    if (!tryStartNewAsync()) {
-        return false;
-    }
-
-    class NODISCARD AsyncCheckConsistency final : public AsyncHelper
-    {
-    public:
-        using Result = std::optional<bool>;
-
-    private:
-        std::future<Result> future;
-
-    public:
-        explicit AsyncCheckConsistency(std::shared_ptr<ProgressCounter> pc, MainWindow &mw)
-            : AsyncHelper{std::move(pc),
-                          mw,
-                          QString{},
-                          SharedDevice{},
-                          UniqueStorage{},
-                          "Checking map consistency...",
-                          CancelDispositionEnum::Allow}
-            , future{std::async(std::launch::async, &AsyncCheckConsistency::background_check, this)}
-        {}
-        ~AsyncCheckConsistency() final = default;
-
-    private:
-        NODISCARD Result background_check()
-        {
-            const MapData &mapData = deref(mainWindow.m_mapData);
-            auto &pc = deref(progressCounter);
-            mapData.getCurrentMap().checkConsistency(pc);
-            return true;
-        }
-
-    private:
-        PollResultEnum virt_wait(std::chrono::milliseconds ms) override
-        {
-            return mwa_detail::wait_for(future, ms);
-        }
-        void virt_finish() override
-        {
-            const Result result = mwa_detail::extract(future, mainWindow);
-            const bool success = result.has_value() && result.value();
-            if (success) {
-                mainWindow.showWarning("Map is consistent.");
-            } else {
-                mainWindow.showWarning("ERROR: Failed map consistency check.");
-            }
-        }
-    };
-
-    auto pc = std::make_shared<ProgressCounter>();
-    m_asyncTask.begin(std::make_unique<AsyncCheckConsistency>(std::move(pc), *this));
+    getAsyncIO()
+        .beginAsyncIO(std::make_unique<AsyncSaver>(*this, pDest, std::move(pStorage), mode, format),
+                      "Saving map...",
+                      AsyncIOTypeEnum::Save);
     return true;
 }
 
@@ -934,10 +908,7 @@ bool MainWindow::slot_generateBaseMap()
         return false;
     }
 
-    static constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
-    static constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
-
-    class NODISCARD AsyncGenerateBaseMap final : public AsyncHelper
+    class NODISCARD AsyncGenerateBaseMap final : public AsyncBase
     {
     public:
         struct NODISCARD BaseMapData final
@@ -946,103 +917,116 @@ bool MainWindow::slot_generateBaseMap()
             std::optional<RoomId> pNewRoom;
         };
         using Result = std::optional<BaseMapData>;
+        using Promise = std::promise<Result>;
+        using Future = std::future<Result>;
 
     private:
-        std::future<Result> future;
+        std::optional<RoomId> m_currentRoom;
+        Promise m_promise;
+        Future m_future = m_promise.get_future();
 
     public:
-        explicit AsyncGenerateBaseMap(std::shared_ptr<ProgressCounter> pc, MainWindow &mw)
-            : AsyncHelper{std::move(pc),
-                          mw,
-                          QString{},
-                          SharedDevice{},
-                          UniqueStorage{},
-                          "Generating base map...",
-                          CancelDispositionEnum::Allow}
-            , future{std::async(std::launch::async,
-                                &AsyncGenerateBaseMap::background_generate_base_map,
-                                this,
-                                mainWindow.m_mapData->getCurrentRoomId())}
+        explicit AsyncGenerateBaseMap(MainWindow &mw)
+            : AsyncBase{"Generate Base Map", mw, QString{}, SharedDevice{}, UniqueStorage{}}
+            , m_currentRoom{mw.m_mapData->getCurrentRoomId()}
         {}
         ~AsyncGenerateBaseMap() final = default;
 
     private:
-        NODISCARD Result background_generate_base_map(std::optional<RoomId> pOldRoom)
+        void virt_background_worker(const std::shared_ptr<ProgressCounter> &sharedPc) final
         {
-            using OptRoomId = std::optional<RoomId>;
-            auto &pc = deref(progressCounter);
-            MapData &mapData = deref(mainWindow.m_mapData);
+            try {
+                m_promise.set_value(background_generate_base_map(sharedPc, m_currentRoom));
+            } catch (...) {
+                m_promise.set_exception(std::current_exception());
+            }
+        }
+
+    private:
+        // Walks the old map looking for the nearest room that's also in the new map.
+        // Assumes that newMap is a filtered version of oldMap.
+        NODISCARD static auto findNearestCommonRoom(ProgressCounter &pc,
+                                                    const Map &oldMap,
+                                                    const std::optional<RoomId> pOldRoom,
+                                                    const Map &newMap) -> std::optional<RoomId>
+        {
+            if (!pOldRoom) {
+                return std::nullopt;
+            }
+
+            const RoomId oldStart = *pOldRoom;
+            if (newMap.findRoomHandle(oldStart)) {
+                return pOldRoom;
+            }
+
+            // revisit: does this mean new start room?
+            pc.setNewTask(ProgressMsg{"Finding a new room"}, oldMap.getRoomsCount());
+            RoomIdSet seen;
+            std::deque<RoomId> todo;
+            todo.push_back(oldStart);
+            while (!todo.empty()) {
+                const RoomId maybe = utils::pop_front(todo);
+                if (seen.contains(maybe)) {
+                    continue;
+                }
+                if (newMap.findRoomHandle(maybe)) {
+                    return maybe;
+                }
+                seen.insert(maybe);
+                const auto oldr = oldMap.findRoomHandle(maybe);
+                for (const auto &ex : oldr.getExits()) {
+                    for (const RoomId to : ex.outgoing) {
+                        if (!seen.contains(to)) {
+                            todo.push_back(to);
+                        }
+                    }
+                }
+                pc.step();
+            }
+            return std::nullopt;
+        }
+
+        NODISCARD Result background_generate_base_map(
+            const std::shared_ptr<ProgressCounter> &sharedPc, const std::optional<RoomId> pOldRoom)
+        {
+            auto &pc = deref(sharedPc);
+            MapData &mapData = deref(m_mainWindow.m_mapData);
             const auto oldMap = mapData.getCurrentMap();
 
             BaseMapData result;
             result.map = oldMap.filterBaseMap(pc);
-
-            const auto &newMap = result.map;
-            result.pNewRoom = std::invoke([&pOldRoom, &oldMap, &newMap, &pc]() -> OptRoomId {
-                if (!pOldRoom) {
-                    return std::nullopt;
-                }
-
-                const RoomId oldStart = *pOldRoom;
-                if (newMap.findRoomHandle(oldStart)) {
-                    return pOldRoom;
-                }
-
-                pc.setNewTask(ProgressMsg{"Finding a new room"}, oldMap.getRoomsCount());
-                RoomIdSet seen;
-                std::deque<RoomId> todo;
-                todo.push_back(oldStart);
-                while (!todo.empty()) {
-                    const RoomId maybe = utils::pop_front(todo);
-                    if (seen.contains(maybe)) {
-                        continue;
-                    }
-                    if (newMap.findRoomHandle(maybe)) {
-                        return maybe;
-                    }
-                    seen.insert(maybe);
-                    const auto oldr = oldMap.findRoomHandle(maybe);
-                    for (const auto &ex : oldr.getExits()) {
-                        for (const RoomId to : ex.outgoing) {
-                            if (!seen.contains(to)) {
-                                todo.push_back(to);
-                            }
-                        }
-                    }
-                    pc.step();
-                }
-                return std::nullopt;
-            });
+            result.pNewRoom = findNearestCommonRoom(pc, oldMap, pOldRoom, result.map);
             return result;
         }
 
     private:
-        PollResultEnum virt_wait(std::chrono::milliseconds ms) override
+        PollResultEnum virt_wait(const std::chrono::milliseconds ms) override
         {
-            return mwa_detail::wait_for(future, ms);
+            return mwa_detail::wait_for(m_future, ms);
         }
-        void virt_finish() override
+        void virt_finish(const std::shared_ptr<ProgressCounter> &sharedPc) override
         {
-            Result result = mwa_detail::extract(future, mainWindow);
-            if (!result) {
-                const bool wasCanceled = progressCounter->requestedCancel();
+            const bool wasCanceled = deref(sharedPc).hasRequestedCancel();
+            Result result = mwa_detail::extract(m_future, m_mainWindow);
+            if (wasCanceled || !result) {
                 const char *const msg = wasCanceled ? "User canceled generation of the base map"
                                                     : "Failed to generate the base map";
-                mainWindow.showWarning(tr(msg));
+                m_mainWindow.showWarning(tr(msg));
                 return;
             }
-            onSuccess(std::move(result.value()));
+            onSuccess(result.value());
         }
-        void onSuccess(BaseMapData result)
+        void onSuccess(const BaseMapData &result)
         {
-            auto &mapData = deref(mainWindow.m_mapData);
+            auto &mapData = deref(m_mainWindow.m_mapData);
 
             const auto oldMap = mapData.getCurrentMap();
             const auto pOldRoom = mapData.getCurrentRoomId();
-            const auto &newMap = result.map;
+            auto &newMap = result.map;
             const auto &pNewRoom = result.pNewRoom;
 
             std::ostringstream oss;
+
             AnsiOstream aos{oss};
             aos << "Base map generated (see below for details).\n";
             aos << "Old map: ";
@@ -1079,7 +1063,54 @@ bool MainWindow::slot_generateBaseMap()
         }
     };
 
-    auto pc = std::make_shared<ProgressCounter>();
-    m_asyncTask.begin(std::make_unique<AsyncGenerateBaseMap>(std::move(pc), *this));
+    getAsyncIO().beginAsyncIO(std::make_unique<AsyncGenerateBaseMap>(*this),
+                              "Generating base map...",
+                              // REVISIT: This is like a load, but it's not loading from disk.
+                              // Consider making this a regular non-IO async "change" command?
+                              AsyncIOTypeEnum::Load);
     return true;
+}
+
+void MainWindow::AsyncIO::createNewProgressDialog(const QString &text, const bool allow_cancel)
+{
+    auto &mainWindow = getMainWindow();
+    auto progressDlg = std::make_unique<QProgressDialog>(&mainWindow);
+    QProgressDialog &progress = deref(progressDlg);
+
+    if (allow_cancel) {
+        progress.setCancelButtonText("Cancel");
+    } else {
+        auto *const cb = new QPushButton("Cancel", &progress);
+        deref(cb).setEnabled(false);
+        progress.setCancelButton(cb);
+    }
+
+    progress.setWindowTitle(text);
+    progress.setMinimum(0);
+    progress.setMaximum(100);
+    progress.setValue(0);
+    progress.setMinimumWidth(mainWindow.width() / 4);
+    progress.showNormal();
+    progress.raise();
+    progress.activateWindow();
+#if 0
+    // REVISIT: This was probably supposed to be progress.setFocus(),
+    // since focusWidget() does not "do" anything. It just returns a value.
+    focusWidget();
+#endif
+
+    connect(&progress, &QProgressDialog::canceled, this, [this, allow_cancel]() {
+        if (allow_cancel) {
+            qInfo() << "QProgressDialog::canceled()";
+            this->request_cancel();
+        }
+    });
+    connect(&progress, &QProgressDialog::rejected, this, [this, allow_cancel]() {
+        if (allow_cancel) {
+            qInfo() << "QProgressDialog::rejected()";
+            this->request_cancel();
+        }
+    });
+
+    m_progressDlg = std::move(progressDlg);
 }
