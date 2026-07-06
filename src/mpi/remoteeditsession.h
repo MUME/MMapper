@@ -110,6 +110,7 @@ public:
     void stopTask() { m_stopTask = true; }
     NODISCARD bool shouldStopTask() const { return m_stopTask; }
     virtual void raise();
+    NODISCARD virtual bool isRunning() const { return false; }
 
 protected slots:
     void slot_onCancel() { cancel(); }
@@ -159,5 +160,7 @@ public:
                                        const QString &body,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
+
+    NODISCARD bool isRunning() const override;
 };
 #endif

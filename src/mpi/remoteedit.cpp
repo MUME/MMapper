@@ -271,15 +271,13 @@ void RemoteEdit::raiseSession(size_t taskId)
 {
     if (auto *session = getSessionByTaskId(taskId)) {
         // If it's an external session that is still running, inform the user.
-        if (auto *ext = dynamic_cast<RemoteEditExternalSession *>(session)) {
-            if (ext->isRunning()) {
-                QMessageBox::information(nullptr,
-                                         "External Editor Active",
-                                         QString("An external editor is already open for \"%1\". "
-                                                 "Please switch to it to continue editing.")
-                                             .arg(ext->getTitle()));
-                return;
-            }
+        if (session->isRunning()) {
+            QMessageBox::information(nullptr,
+                                     "External Editor Active",
+                                     QString("An external editor is already open for \"%1\". "
+                                             "Please switch to it to continue editing.")
+                                         .arg(session->getTitle()));
+            return;
         }
         session->raise();
     }
@@ -348,9 +346,9 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
                         deleteDraft(it->second->getDraftFileName());
                         removeSession(*(it->second));
                     } else if (auto handle = it->second->getAsyncTask()) {
-                        const QString msg = optResultMsg.value_or("unknown error");
+                        const QString errorMsg = optResultMsg.value_or("unknown error");
                         handle->getProgressCounter().setCurrentTask(
-                            ProgressMsg{QString("Submission failed: %1").arg(msg)});
+                            ProgressMsg{QString("Submission failed: %1").arg(errorMsg)});
                     }
                     break;
                 }

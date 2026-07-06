@@ -181,4 +181,9 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
         p->deleteLater();
     }
 }
+
+bool RemoteEditExternalSession::isRunning() const
+{
+    return m_process && m_process->isRunning();
+}
 #endif
