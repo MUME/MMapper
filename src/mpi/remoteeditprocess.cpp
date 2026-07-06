@@ -56,7 +56,10 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     if (m_fullPath.isEmpty()) {
         // Fallback for view mode if no draft was provisioned (though normally it is now)
-        m_fullPath = QDir::tempPath() + QDir::separator() + QString("MMapper.view.%1.%2").arg(QCoreApplication::applicationPid()).arg(mmqt::toQStringLatin1(randomString(6)));
+        m_fullPath = QDir::tempPath() + QDir::separator()
+                     + QString("MMapper.view.%1.%2")
+                           .arg(QCoreApplication::applicationPid())
+                           .arg(mmqt::toQStringLatin1(randomString(6)));
     }
 
     QFile file(m_fullPath);

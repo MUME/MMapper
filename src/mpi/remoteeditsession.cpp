@@ -44,7 +44,8 @@ void RemoteEditSession::cancel()
 
 void RemoteEditSession::raise()
 {
-    if (!isEditSession()) return;
+    if (!isEditSession())
+        return;
 
     // For recovered tasks, opening it means showing the recovered text in a read-only widget.
     if (!m_connected) {

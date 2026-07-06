@@ -8,11 +8,11 @@
 #include <QtCore/qglobal.h>
 #endif
 
+#include "../global/AsyncTasks.h"
 #include "../global/TaggedInt.h"
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
 #include "../proxy/TaggedBytes.h"
-#include "../global/AsyncTasks.h"
 
 #include <QObject>
 #include <QPointer>

@@ -20,10 +20,10 @@
 #include <QGuiApplication>
 #include <QMessageBox>
 #include <QMessageLogContext>
-#include <QString>
-#include <QSaveFile>
-#include <QUrl>
 #include <QRegularExpression>
+#include <QSaveFile>
+#include <QString>
+#include <QUrl>
 
 using char_consts::C_NEWLINE;
 
@@ -80,15 +80,13 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
         auto handle = async_tasks::startAsyncTask(
             AsyncTaskTypeEnum::RemoteEdit,
             AllowCancelEnum::Allow,
-            QString("RemoteEdit: %1").arg(title).toStdString(),
+            mmqt::toStdStringUtf8(QString("RemoteEdit: %1").arg(title)),
             [pSession, title](ProgressCounter &pc) {
                 pc.setNewTask(ProgressMsg{QString("Editing %1").arg(title)}, 100);
                 while (!pSession->shouldStopTask()) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if (pc.hasRequestedCancel()) {
-                        QMetaObject::invokeMethod(pSession,
-                                                  "slot_onCancel",
-                                                  Qt::QueuedConnection);
+                        QMetaObject::invokeMethod(pSession, "slot_onCancel", Qt::QueuedConnection);
                         break;
                     }
                 }
@@ -111,6 +109,8 @@ void RemoteEdit::removeSession(const RemoteEditSession &session)
         qDebug() << "Destroying RemoteEditSession" << internalId.asUint32();
         m_sessions.erase(search);
 
+        // Ensure drafts from closed disconnected sessions appear as recovered tasks immediately.
+        QTimer::singleShot(0, this, [this]() { recoverDrafts(); });
     } else {
         qWarning() << "Unable to find" << internalId.asUint32() << "session to erase";
     }
@@ -120,14 +120,24 @@ void RemoteEdit::cancel(const RemoteEditSession *const pSession)
 {
     auto &session = deref(pSession);
 
-    if (session.isEditSession()) {
-        // FR-6.4: Upon user executing explicit deletion command for recovered task, purge file.
-        deleteDraft(session.getDraftFileName());
-    }
-
     if (session.isEditSession() && session.isConnected()) {
         qDebug() << "Cancelling session" << session.getSessionId().asInt32();
-        emit sig_remoteEditCancel(session.getSessionId());
+
+        QJsonObject obj;
+        obj["id"] = session.getSessionId().asInt32();
+        QJsonDocument doc;
+        doc.setObject(obj);
+        GmcpJson json{QString::fromUtf8(doc.toJson())};
+        GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_CANCEL_EDIT, json};
+
+        if (auto handle = session.getAsyncTask()) {
+            handle->getProgressCounter().setCurrentTask(ProgressMsg{"Canceling edit..."});
+        }
+
+        emit sig_sendGmcp(msg);
+    } else if (session.isEditSession()) {
+        // FR-6.4: Upon user executing explicit deletion command for recovered task, purge file.
+        deleteDraft(session.getDraftFileName());
     }
 
     removeSession(session);
@@ -168,11 +178,23 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
     // (e.g. unicode transliteration, etc).
     auto latin1 = Latin1Bytes{
         mmqt::toQByteArrayLatin1(session.getContent())}; // MPI is always Latin1
-    emit sig_remoteEditSave(session.getSessionId(), latin1);
+
+    QJsonObject obj;
+    obj["text"] = QString::fromLatin1(latin1.getQByteArray());
+    obj["id"] = session.getSessionId().asInt32();
+    QJsonDocument doc;
+    doc.setObject(obj);
+    GmcpJson json{QString::fromUtf8(doc.toJson())};
+    GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_WRITE, json};
+
+    if (auto handle = session.getAsyncTask()) {
+        handle->getProgressCounter().setCurrentTask(ProgressMsg{"Submitting changes..."});
+    }
+
+    emit sig_sendGmcp(msg);
 
     // FR-4.4: Upon confirmed delivery success, delete local temporary file and unregister task.
-    // In this implementation, sent message is considered done.
-    deleteDraft(session.getDraftFileName());
+    // Deletion is now handled in slot_parseGmcpInput for MUME_CLIENT_WRITE.
 }
 
 void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
@@ -182,23 +204,19 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
     }
 
     auto *dlg = new QMessageBox(
-        QMessageBox::Critical,
+        QMessageBox::Information,
         "MUME Disconnected",
-        "The connection to MUME was lost. Your unsaved changes will be lost unless you save the file locally now.",
-        QMessageBox::StandardButtons{QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel},
+        "The connection to MUME was lost. Your changes have been preserved as a draft in the "
+        "MMapper/Editor directory and are available in the Tasks panel for recovery. "
+        "The content has also been copied to your clipboard.",
+        QMessageBox::StandardButtons{QMessageBox::Ok},
         nullptr);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     const auto id = session.getInternalId().asUint32();
     const auto body = session.getContent().toUtf8();
-    connect(dlg, &QMessageBox::finished, this, [id, body](int result) {
-        if (result == QMessageBox::Save) {
-            qDebug() << "Session" << id << "was saved";
-            QFileDialog::saveFileContent(body, QString("MMapper-Edit-%1.txt").arg(id));
-        }
-    });
     dlg->open();
     QGuiApplication::clipboard()->setText(body);
-    qWarning() << "Session" << id << "was copied to the clipboard";
+    qWarning() << "Session" << id << "content was copied to the clipboard";
 }
 
 void RemoteEdit::onDisconnected()
@@ -209,6 +227,10 @@ void RemoteEdit::onDisconnected()
         if (session->isEditSession()) {
             qWarning() << "Session" << id.asUint32() << "marked as disconnected";
             session->setDisconnected();
+            if (auto handle = session->getAsyncTask()) {
+                handle->getProgressCounter().setCurrentTask(
+                    ProgressMsg{"Disconnected - Draft preserved"});
+            }
         }
     }
 }
@@ -232,6 +254,82 @@ RemoteEditSession *RemoteEdit::getSessionByTaskId(size_t taskId) const
         }
     }
     return nullptr;
+}
+
+void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
+{
+    if (msg.isMumeClientEdit()) {
+        auto doc = msg.getJsonDocument();
+        if (!doc)
+            return;
+        auto optObj = doc->getObject();
+        if (!optObj)
+            return;
+        auto &obj = *optObj;
+        auto optId = obj.getInt("id");
+        auto optTitle = obj.getString("title");
+        auto optBody = obj.getString("text");
+        if (optId && optTitle && optBody) {
+            slot_remoteEdit(RemoteSessionId(*optId), *optTitle, *optBody);
+        }
+    } else if (msg.isMumeClientView()) {
+        auto doc = msg.getJsonDocument();
+        if (!doc)
+            return;
+        auto optObj = doc->getObject();
+        if (!optObj)
+            return;
+        auto &obj = *optObj;
+        auto optTitle = obj.getString("title");
+        auto optBody = obj.getString("text");
+        if (optTitle && optBody) {
+            slot_remoteView(*optTitle, *optBody);
+        }
+    } else if (msg.isMumeClientWrite()) {
+        auto doc = msg.getJsonDocument();
+        if (!doc)
+            return;
+        auto optObj = doc->getObject();
+        if (!optObj)
+            return;
+        auto &obj = *optObj;
+        auto optId = obj.getInt("id");
+        auto optResult = obj.getBool("result");
+        if (optId && optResult && *optResult) {
+            const auto sessionId = RemoteSessionId(*optId);
+            for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
+                if (it->second->getSessionId() == sessionId) {
+                    qDebug() << "MUME.Client.Write success for session" << optId.value();
+                    deleteDraft(it->second->getDraftFileName());
+                    removeSession(*(it->second));
+                    break;
+                }
+            }
+        }
+    } else if (msg.isMumeClientCancelEdit()) {
+        auto doc = msg.getJsonDocument();
+        if (!doc)
+            return;
+        auto optObj = doc->getObject();
+        if (!optObj)
+            return;
+        auto &obj = *optObj;
+        auto optId = obj.getInt("id");
+        auto optResult = obj.getBool("result");
+        if (optId && optResult && *optResult) {
+            const auto sessionId = RemoteSessionId(*optId);
+            for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
+                if (it->second->getSessionId() == sessionId) {
+                    qDebug() << "MUME.Client.CancelEdit success for session" << optId.value();
+                    deleteDraft(it->second->getDraftFileName());
+                    removeSession(*(it->second));
+                    break;
+                }
+            }
+        }
+    } else if (msg.isCoreGoodbye()) {
+        onDisconnected();
+    }
 }
 
 void RemoteEdit::recoverDrafts()
@@ -258,13 +356,16 @@ void RemoteEdit::recoverDrafts()
             // FR-5.3: Recovered tasks must be strictly flagged as non-sendable from raw state.
             // Register this as a "recovered" session in our local map.
             const auto internalId = RemoteInternalId{getInternalIdCount()};
-            auto session = std::make_shared<RemoteEditSession>(internalId, draft.sessionId, draft.title, this);
+            auto session = std::make_shared<RemoteEditSession>(internalId,
+                                                               draft.sessionId,
+                                                               draft.title,
+                                                               this);
             auto pSession = session;
 
             auto handle = async_tasks::startAsyncTask(
                 AsyncTaskTypeEnum::RemoteEdit,
                 AllowCancelEnum::Allow,
-                QString("Recovered: %1").arg(draft.title).toStdString(),
+                mmqt::toStdStringUtf8(QString("Recovered: %1").arg(draft.title)),
                 [pSession, draft](ProgressCounter &pc) {
                     pc.setNewTask(ProgressMsg{QString("Recovered draft from %1")
                                                   .arg(draft.lastModified.toString())},
@@ -316,7 +417,9 @@ bool RemoteEdit::decodeMetadata(const QString &fileName, RemoteSessionId &sessio
     return false;
 }
 
-QString RemoteEdit::provisionDraftFile(RemoteSessionId sessionId, const QString &title, const QString &content)
+QString RemoteEdit::provisionDraftFile(RemoteSessionId sessionId,
+                                       const QString &title,
+                                       const QString &content)
 {
     QString dir = getDraftDirectory();
     QString fileName = encodeMetadata(sessionId, title);
@@ -346,7 +449,8 @@ bool RemoteEdit::saveDraftAtomic(const QString &fileName, const QString &content
 
 void RemoteEdit::deleteDraft(const QString &fileName)
 {
-    if (fileName.isEmpty()) return;
+    if (fileName.isEmpty())
+        return;
     QFile::remove(QDir(getDraftDirectory()).absoluteFilePath(fileName));
 }
 

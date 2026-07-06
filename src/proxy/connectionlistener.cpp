@@ -11,8 +11,8 @@
 #include "../global/Charset.h"
 #include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
-#include "TcpSocket.h"
 #include "../mpi/remoteedit.h"
+#include "TcpSocket.h"
 #include "proxy.h"
 
 #include <memory>

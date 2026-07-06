@@ -205,8 +205,7 @@ Proxy::~Proxy()
         getUserSocket().disconnectFromHost();
     }
 
-    {
-    }
+    {}
 
     destroyPipelineObjects();
 }
@@ -339,7 +338,7 @@ void Proxy::allocMudSocket()
 
         void virt_onSocketStatus(const QString &msg) final
         {
-            getProxy().sendStatusToUser(msg.toUtf8().toStdString());
+            getProxy().sendStatusToUser(mmqt::toStdStringUtf8(msg));
         }
 
         void virt_onDisconnected() final
@@ -487,15 +486,14 @@ void Proxy::allocMudTelnet()
 
         void virt_onRelayGmcpFromMudToUser(const GmcpMessage &msg) final
         {
-            if (msg.isMumeClientView() || msg.isMumeClientEdit() || msg.isMumeClientCancelEdit()
-                || msg.isMumeClientError() || msg.isMumeClientWrite() || msg.isMumeClientXml()) {
-                // this is a private message between MUME and mmapper.
-                qWarning() << "MUME.Client message was almost sent to the user.";
-                return;
-            }
+            const bool isMumeClient = msg.isMumeClientView() || msg.isMumeClientEdit()
+                                      || msg.isMumeClientCancelEdit() || msg.isMumeClientError()
+                                      || msg.isMumeClientWrite() || msg.isMumeClientXml();
 
-            // forwarded (to user)
-            getUserTelnet().onGmcpToUser(msg);
+            if (!isMumeClient) {
+                // forwarded (to user)
+                getUserTelnet().onGmcpToUser(msg);
+            }
 
             // REVISIT: should parser be first?
             getGroupManager().slot_parseGmcpInput(msg);

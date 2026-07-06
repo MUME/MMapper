@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "../proxy/GmcpMessage.h"
 #include "../proxy/TaggedBytes.h"
 #include "remoteeditsession.h"
 
@@ -46,11 +47,13 @@ public:
 public:
     void onDisconnected();
     void recoverDrafts();
+    void slot_parseGmcpInput(const GmcpMessage &msg);
     void raiseSession(size_t taskId);
 
     static QString getDraftDirectory();
-    static QString
-    provisionDraftFile(RemoteSessionId sessionId, const QString &title, const QString &content);
+    static QString provisionDraftFile(RemoteSessionId sessionId,
+                                      const QString &title,
+                                      const QString &content);
     static bool saveDraftAtomic(const QString &fileName, const QString &content);
     static void deleteDraft(const QString &fileName);
     static QList<DraftInfo> discoverDrafts();
@@ -76,8 +79,7 @@ private:
     static bool decodeMetadata(const QString &fileName, RemoteSessionId &sessionId, QString &title);
 
 signals:
-    void sig_remoteEditCancel(const RemoteSessionId sessionId);
-    void sig_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
+    void sig_sendGmcp(const GmcpMessage &msg);
 
 public:
     NODISCARD RemoteEditSession *getSessionByTaskId(size_t taskId) const;

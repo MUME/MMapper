@@ -28,9 +28,9 @@
 #include "../media/AudioManager.h"
 #include "../media/DescriptionWidget.h"
 #include "../media/MediaLibrary.h"
+#include "../mpi/remoteedit.h"
 #include "../pathmachine/mmapper2pathmachine.h"
 #include "../preferences/configdialog.h"
-#include "../mpi/remoteedit.h"
 #include "../proxy/connectionlistener.h"
 #include "../roompanel/RoomManager.h"
 #include "../roompanel/RoomWidget.h"
@@ -417,9 +417,7 @@ MainWindow::MainWindow()
     readSettings();
     g_mainWindow = this;
 
-    QTimer::singleShot(0, this, [this]() {
-        m_remoteEdit->recoverDrafts();
-    });
+    QTimer::singleShot(0, this, [this]() { m_remoteEdit->recoverDrafts(); });
 }
 
 void MainWindow::startServices()
@@ -646,25 +644,14 @@ void MainWindow::wireConnections()
             &MainWindow::slot_onEditRoomSelection);
 
     connect(m_listener, &ConnectionListener::sig_proxyCreated, this, [this](QPointer<Proxy> proxy) {
-        if (!proxy) return;
+        if (!proxy)
+            return;
 
-        connect(proxy.data(),
-                &Proxy::sig_remoteEditRequested,
-                m_remoteEdit,
-                &RemoteEdit::slot_remoteEdit);
-        connect(proxy.data(),
-                &Proxy::sig_remoteViewRequested,
-                m_remoteEdit,
-                &RemoteEdit::slot_remoteView);
+        connect(m_remoteEdit, &RemoteEdit::sig_sendGmcp, proxy.data(), &Proxy::slot_sendGmcp);
+    });
 
-        connect(m_remoteEdit,
-                &RemoteEdit::sig_remoteEditSave,
-                proxy.data(),
-                &Proxy::slot_remoteEditSave);
-        connect(m_remoteEdit,
-                &RemoteEdit::sig_remoteEditCancel,
-                proxy.data(),
-                &Proxy::slot_remoteEditCancel);
+    deref(m_gameObserver).sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &msg) {
+        m_remoteEdit->slot_parseGmcpInput(msg);
     });
 
     deref(m_gameObserver).sig2_disconnected.connect(m_lifetime, [this]() {
