@@ -234,20 +234,16 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
         QMessageBox::Information,
         "MUME Disconnected",
         "The connection to MUME was lost. Your changes have been preserved as a draft in the "
-        "MMapper/Editor directory and are available in the Tasks panel for recovery. "
-        "The content has also been copied to your clipboard.",
+        "MMapper/Editor directory and are available in the Tasks panel for recovery.",
         QMessageBox::StandardButtons{QMessageBox::Ok},
         nullptr);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     const auto id = session.getInternalId().asUint32();
-    const auto body = session.getContent();
     dlg->open();
-    QGuiApplication::clipboard()->setText(body);
-    qWarning() << "Session" << id << "content was copied to the clipboard";
+    qWarning() << "Session" << id << "marked as disconnected - draft preserved";
 
     if (auto handle = session.getAsyncTask()) {
-        handle->getProgressCounter().setCurrentTask(
-            ProgressMsg{"Disconnected - Changes copied to clipboard"});
+        handle->getProgressCounter().setCurrentTask(ProgressMsg{"Disconnected - Draft preserved"});
     }
 }
 
@@ -264,22 +260,6 @@ void RemoteEdit::onDisconnected()
                     ProgressMsg{"Disconnected - Draft preserved"});
             }
         }
-    }
-}
-
-void RemoteEdit::raiseSession(size_t taskId)
-{
-    if (auto *session = getSessionByTaskId(taskId)) {
-        // If it's an external session that is still running, inform the user.
-        if (session->isRunning()) {
-            QMessageBox::information(nullptr,
-                                     "External Editor Active",
-                                     QString("An external editor is already open for \"%1\". "
-                                             "Please switch to it to continue editing.")
-                                         .arg(session->getTitle()));
-            return;
-        }
-        session->raise();
     }
 }
 

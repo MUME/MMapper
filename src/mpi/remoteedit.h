@@ -48,7 +48,6 @@ public:
     void onDisconnected();
     void recoverDrafts();
     void slot_parseGmcpInput(const GmcpMessage &msg);
-    void raiseSession(size_t taskId);
 
     static QString getDraftDirectory();
     static QString provisionDraftFile(RemoteSessionId sessionId,

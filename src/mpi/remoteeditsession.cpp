@@ -42,26 +42,6 @@ void RemoteEditSession::cancel()
     m_manager->cancel(this);
 }
 
-void RemoteEditSession::raise()
-{
-    if (!isEditSession())
-        return;
-
-    // For recovered tasks or sessions whose editor window was closed,
-    // opening it means showing the current draft content in a read-only widget.
-    QFile file(getFullDraftPath());
-    if (file.open(QFile::ReadOnly)) {
-        QString content = QString::fromLatin1(file.readAll());
-        file.close();
-
-        auto *widget = new RemoteEditWidget(false, m_title, content, nullptr);
-        widget->setAttribute(Qt::WA_DeleteOnClose);
-        widget->show();
-        widget->raise();
-        widget->activateWindow();
-    }
-}
-
 QString RemoteEditSession::getFullDraftPath() const
 {
     if (m_draftFileName.isEmpty()) {
@@ -132,17 +112,6 @@ void RemoteEditInternalSession::slot_onTextModified(const QString &content)
     }
 }
 
-void RemoteEditInternalSession::raise()
-{
-    if (m_widget) {
-        m_widget->show();
-        m_widget->raise();
-        m_widget->activateWindow();
-    } else {
-        RemoteEditSession::raise();
-    }
-}
-
 void RemoteEditInternalSession::slot_performAutoSave()
 {
     if (m_draftFileName.isEmpty()) {
@@ -180,10 +149,5 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
     if (auto *const p = m_process.get()) {
         p->deleteLater();
     }
-}
-
-bool RemoteEditExternalSession::isRunning() const
-{
-    return m_process && m_process->isRunning();
 }
 #endif

@@ -88,16 +88,6 @@ public:
         layout->addWidget(m_label.get());
         layout->addWidget(m_progress.get());
 
-        if (m_task.getType() == AsyncTaskTypeEnum::RemoteEdit) {
-            m_actionButton->setText("Show Editor");
-            layout->addWidget(m_actionButton.get());
-            connect(m_actionButton.get(), &QPushButton::clicked, this, [this, &mainWindow]() {
-                const auto taskId = m_task.getId();
-                // Find and raise the editor window
-                mainWindow.getRemoteEdit().raiseSession(taskId);
-            });
-        }
-
         layout->addWidget(m_cancelButton.get());
         layout->insertStretch(-1); // must be after all the addWidget() calls
         updateProgress();
