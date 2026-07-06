@@ -76,17 +76,23 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
         QString fileName = provisionDraftFile(sessionId, title, body);
         session->setDraftFileName(fileName);
 
-        auto *pSession = session.get();
+        std::weak_ptr<RemoteEditSession> weakSession = session;
         auto handle = async_tasks::startAsyncTask(
             AsyncTaskTypeEnum::RemoteEdit,
             AllowCancelEnum::Allow,
             mmqt::toStdStringUtf8(QString("RemoteEdit: %1").arg(title)),
-            [pSession, title](ProgressCounter &pc) {
+            [weakSession, title](ProgressCounter &pc) {
                 pc.setNewTask(ProgressMsg{QString("Editing %1").arg(title)}, 100);
-                while (!pSession->shouldStopTask()) {
+                while (true) {
+                    auto pSession = weakSession.lock();
+                    if (!pSession || pSession->shouldStopTask()) {
+                        break;
+                    }
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     if (pc.hasRequestedCancel()) {
-                        QMetaObject::invokeMethod(pSession, "slot_onCancel", Qt::QueuedConnection);
+                        QMetaObject::invokeMethod(pSession.get(),
+                                                  "slot_onCancel",
+                                                  Qt::QueuedConnection);
                         break;
                     }
                 }
@@ -120,6 +126,13 @@ void RemoteEdit::cancel(const RemoteEditSession *const pSession)
 {
     auto &session = deref(pSession);
 
+    bool explicitDiscard = false;
+    if (auto handle = session.getAsyncTask()) {
+        if (handle->getProgressCounter().hasRequestedCancel()) {
+            explicitDiscard = true;
+        }
+    }
+
     if (session.isEditSession() && session.isConnected()) {
         qDebug() << "Cancelling session" << session.getSessionId().asInt32();
 
@@ -135,19 +148,33 @@ void RemoteEdit::cancel(const RemoteEditSession *const pSession)
         }
 
         emit sig_sendGmcp(msg);
-    } else if (session.isEditSession()) {
-        // FR-6.4: Upon user executing explicit deletion command for recovered task, purge file.
-        deleteDraft(session.getDraftFileName());
-    }
 
-    removeSession(session);
+        if (explicitDiscard) {
+            // Explicitly requested task deletion: be aggressive and remove now.
+            deleteDraft(session.getDraftFileName());
+            removeSession(session);
+        }
+    } else if (session.isEditSession()) {
+        if (explicitDiscard) {
+            // FR-6.4: Explicit deletion command for recovered/disconnected task
+            deleteDraft(session.getDraftFileName());
+        }
+        // Transition to recovered state by removing active session; recoverDrafts() trigger will pick it up.
+        removeSession(session);
+    } else {
+        // Not an edit session: just remove.
+        removeSession(session);
+    }
 }
 
 void RemoteEdit::save(const RemoteEditSession *const pSession)
 {
     auto &session = deref(pSession);
     trySave(session);
-    removeSession(session);
+    // We do not call removeSession here if connected; we wait for the server's confirmation.
+    if (!session.isConnected()) {
+        removeSession(session);
+    }
 }
 
 void RemoteEdit::trySave(const RemoteEditSession &session)
@@ -213,10 +240,15 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
         nullptr);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     const auto id = session.getInternalId().asUint32();
-    const auto body = session.getContent().toUtf8();
+    const auto body = session.getContent();
     dlg->open();
     QGuiApplication::clipboard()->setText(body);
     qWarning() << "Session" << id << "content was copied to the clipboard";
+
+    if (auto handle = session.getAsyncTask()) {
+        handle->getProgressCounter().setCurrentTask(
+            ProgressMsg{"Disconnected - Changes copied to clipboard"});
+    }
 }
 
 void RemoteEdit::onDisconnected()
@@ -238,6 +270,17 @@ void RemoteEdit::onDisconnected()
 void RemoteEdit::raiseSession(size_t taskId)
 {
     if (auto *session = getSessionByTaskId(taskId)) {
+        // If it's an external session that is still running, inform the user.
+        if (auto *ext = dynamic_cast<RemoteEditExternalSession *>(session)) {
+            if (ext->isRunning()) {
+                QMessageBox::information(nullptr,
+                                         "External Editor Active",
+                                         QString("An external editor is already open for \"%1\". "
+                                                 "Please switch to it to continue editing.")
+                                             .arg(ext->getTitle()));
+                return;
+            }
+        }
         session->raise();
     }
 }
@@ -295,13 +338,20 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
         auto &obj = *optObj;
         auto optId = obj.getInt("id");
         auto optResult = obj.getBool("result");
-        if (optId && optResult && *optResult) {
+        auto optResultMsg = obj.getString("result");
+        if (optId) {
             const auto sessionId = RemoteSessionId(*optId);
             for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
                 if (it->second->getSessionId() == sessionId) {
-                    qDebug() << "MUME.Client.Write success for session" << optId.value();
-                    deleteDraft(it->second->getDraftFileName());
-                    removeSession(*(it->second));
+                    if (optResult && *optResult) {
+                        qDebug() << "MUME.Client.Write success for session" << optId.value();
+                        deleteDraft(it->second->getDraftFileName());
+                        removeSession(*(it->second));
+                    } else if (auto handle = it->second->getAsyncTask()) {
+                        const QString msg = optResultMsg.value_or("unknown error");
+                        handle->getProgressCounter().setCurrentTask(
+                            ProgressMsg{QString("Submission failed: %1").arg(msg)});
+                    }
                     break;
                 }
             }
@@ -316,13 +366,17 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
         auto &obj = *optObj;
         auto optId = obj.getInt("id");
         auto optResult = obj.getBool("result");
-        if (optId && optResult && *optResult) {
+        if (optId) {
             const auto sessionId = RemoteSessionId(*optId);
             for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
                 if (it->second->getSessionId() == sessionId) {
-                    qDebug() << "MUME.Client.CancelEdit success for session" << optId.value();
-                    deleteDraft(it->second->getDraftFileName());
-                    removeSession(*(it->second));
+                    if (optResult && *optResult) {
+                        qDebug() << "MUME.Client.CancelEdit success for session" << optId.value();
+                        deleteDraft(it->second->getDraftFileName());
+                        removeSession(*(it->second));
+                    } else if (auto handle = it->second->getAsyncTask()) {
+                        handle->getProgressCounter().setCurrentTask(ProgressMsg{"Cancel failed"});
+                    }
                     break;
                 }
             }
@@ -360,17 +414,21 @@ void RemoteEdit::recoverDrafts()
                                                                draft.sessionId,
                                                                draft.title,
                                                                this);
-            auto pSession = session;
+            std::weak_ptr<RemoteEditSession> weakSession = session;
 
             auto handle = async_tasks::startAsyncTask(
                 AsyncTaskTypeEnum::RemoteEdit,
                 AllowCancelEnum::Allow,
                 mmqt::toStdStringUtf8(QString("Recovered: %1").arg(draft.title)),
-                [pSession, draft](ProgressCounter &pc) {
+                [weakSession, draft](ProgressCounter &pc) {
                     pc.setNewTask(ProgressMsg{QString("Recovered draft from %1")
                                                   .arg(draft.lastModified.toString())},
                                   100);
-                    while (!pSession->shouldStopTask()) {
+                    while (true) {
+                        auto pSession = weakSession.lock();
+                        if (!pSession || pSession->shouldStopTask()) {
+                            break;
+                        }
                         std::this_thread::sleep_for(std::chrono::milliseconds(100));
                         if (pc.hasRequestedCancel()) {
                             QMetaObject::invokeMethod(pSession.get(),

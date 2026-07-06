@@ -47,19 +47,18 @@ void RemoteEditSession::raise()
     if (!isEditSession())
         return;
 
-    // For recovered tasks, opening it means showing the recovered text in a read-only widget.
-    if (!m_connected) {
-        QFile file(getFullDraftPath());
-        if (file.open(QFile::ReadOnly)) {
-            QString content = QString::fromLatin1(file.readAll());
-            file.close();
+    // For recovered tasks or sessions whose editor window was closed,
+    // opening it means showing the current draft content in a read-only widget.
+    QFile file(getFullDraftPath());
+    if (file.open(QFile::ReadOnly)) {
+        QString content = QString::fromLatin1(file.readAll());
+        file.close();
 
-            auto *widget = new RemoteEditWidget(false, m_title, content, nullptr);
-            widget->setAttribute(Qt::WA_DeleteOnClose);
-            widget->show();
-            widget->raise();
-            widget->activateWindow();
-        }
+        auto *widget = new RemoteEditWidget(false, m_title, content, nullptr);
+        widget->setAttribute(Qt::WA_DeleteOnClose);
+        widget->show();
+        widget->raise();
+        widget->activateWindow();
     }
 }
 
@@ -139,6 +138,8 @@ void RemoteEditInternalSession::raise()
         m_widget->show();
         m_widget->raise();
         m_widget->activateWindow();
+    } else {
+        RemoteEditSession::raise();
     }
 }
 

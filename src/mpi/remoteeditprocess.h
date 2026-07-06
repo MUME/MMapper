@@ -39,6 +39,8 @@ public:
                                QObject *parent);
     ~RemoteEditProcess() final;
 
+    NODISCARD bool isRunning() const { return m_process.state() == QProcess::Running; }
+
 private:
     virtual void virt_onError(QProcess::ProcessError);
     virtual void virt_onFinished(int, QProcess::ExitStatus);
