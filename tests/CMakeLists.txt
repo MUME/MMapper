@@ -281,6 +281,24 @@ set_target_properties(
 )
 add_test(NAME TestAdventure COMMAND TestAdventure)
 
+# AutoLogger
+set(autologger_test
+        ../src/logger/LogCleanup.cpp
+        ../src/logger/LogCleanup.h
+)
+set(TestAutoLogger TestAutoLogger.cpp TestAutoLogger.h)
+add_executable(TestAutoLogger ${autologger_test} ${TestAutoLogger})
+add_dependencies(TestAutoLogger mm_global)
+target_link_libraries(TestAutoLogger mm_global Qt6::Test coverage_config)
+set_target_properties(
+        TestAutoLogger PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestAutoLogger COMMAND TestAutoLogger)
+
 # Timer
 set(timer_test
         ../src/timers/CTimers.cpp
