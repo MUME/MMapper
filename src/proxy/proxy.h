@@ -10,7 +10,6 @@
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
 #include "../group/GroupManagerApi.h"
-#include "../mpi/remoteeditsession.h"
 #include "../observer/gameobserver.h"
 #include "../parser/SendToUserSourceEnum.h"
 #include "GmcpMessage.h"
@@ -36,8 +35,6 @@ class MapCanvas;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
-class MpiFilter;
-class MpiFilterToMud;
 class MudTelnet;
 class MumeClock;
 class MumeFallbackSocket;
@@ -56,7 +53,6 @@ class AbstractSocket;
 struct AbstractParserOutputs;
 struct AnsiWarningMessage;
 struct GameTime;
-struct MpiFilterOutputs;
 struct MudTelnetOutputs;
 struct MumeSocketOutputs;
 struct ParserCommonData;
@@ -98,7 +94,6 @@ private:
             {
                 std::unique_ptr<MumeSocketOutputs> mudSocketOutputs;
                 std::unique_ptr<MudTelnetOutputs> mudTelnetOutputs;
-                std::unique_ptr<MpiFilterOutputs> mpiFilterOutputs;
             };
             std::unique_ptr<AbstractParserOutputs> parserXmlOutputs;
             User user;
@@ -135,8 +130,6 @@ private:
             std::unique_ptr<MumeFallbackSocket> mudSocket;
             std::unique_ptr<MudTelnet> mudTelnet;
             std::unique_ptr<TelnetLineFilter> mudTelnetFilter;
-            std::unique_ptr<MpiFilter> mpiFilterFromMud;
-            std::unique_ptr<MpiFilterToMud> mpiFilterToMud;
             std::unique_ptr<MumeXmlParser> mudParser;
             std::unique_ptr<PasswordConfig> passwordConfig;
         };
@@ -201,8 +194,6 @@ private:
     void allocUserTelnet();
     void allocMudTelnet();
     void allocParser();
-    void allocMpiFilter();
-    void allocRemoteEdit();
 
 private:
     void processUserStream();
@@ -296,12 +287,6 @@ private:
     {
         return deref(getPipeline().mud.mudTelnetFilter);
     }
-    NODISCARD MpiFilter &getMpiFilterFromMud() { return deref(getPipeline().mud.mpiFilterFromMud); }
-    NODISCARD MpiFilterToMud &getMpiFilterToMud()
-    {
-        return deref(getPipeline().mud.mpiFilterToMud);
-    }
-
     NODISCARD UserSocket &getUserSocket() { return deref(getPipeline().user.userSocket); }
     NODISCARD UserTelnet &getUserTelnet() { return deref(getPipeline().user.userTelnet); }
     NODISCARD TelnetLineFilter &getUserTelnetFilter()
@@ -323,14 +308,6 @@ private:
         return deref(getPipeline().user.userTelnet);
     }
 
-signals:
-    void sig_remoteEditRequested(const RemoteSessionId sessionId,
-                                 const QString &title,
-                                 const QString &body);
-    void sig_remoteViewRequested(const QString &title, const QString &body);
-
 public slots:
-    void slot_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
-    void slot_remoteEditCancel(const RemoteSessionId sessionId);
     void slot_sendGmcp(const GmcpMessage &msg);
 };

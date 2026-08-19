@@ -4,7 +4,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Signal2.h"
-#include "../mpi/remoteeditsession.h"
 #include "AbstractTelnet.h"
 
 #include <QByteArray>
@@ -33,14 +32,6 @@ public:
     void onSendMSSPToUser(const TelnetMsspBytes &bytes) { virt_onSendMSSPToUser(bytes); }
     void onSendGameTimeToClock(const MsspTime &time) { virt_onSendGameTimeToClock(time); }
     void onTryCharLogin() { virt_onTryCharLogin(); }
-    void onMumeClientView(const QString &title, const QString &body)
-    {
-        virt_onMumeClientView(title, body);
-    }
-    void onMumeClientEdit(const RemoteSessionId id, const QString &title, const QString &body)
-    {
-        virt_onMumeClientEdit(id, title, body);
-    }
     void onMumeClientError(const QString &errmsg) { virt_onMumeClientError(errmsg); }
 
 private:
@@ -51,11 +42,6 @@ private:
     virtual void virt_onSendMSSPToUser(const TelnetMsspBytes &) = 0;
     virtual void virt_onSendGameTimeToClock(const MsspTime &) = 0;
     virtual void virt_onTryCharLogin() = 0;
-    virtual void virt_onMumeClientView(const QString &title, const QString &body) = 0;
-    virtual void virt_onMumeClientEdit(const RemoteSessionId id,
-                                       const QString &title,
-                                       const QString &body)
-        = 0;
     virtual void virt_onMumeClientError(const QString &errmsg) = 0;
 };
 

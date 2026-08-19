@@ -424,8 +424,6 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mpi/mpifilter.cpp
-    mpi/mpifilter.h
     mpi/remoteedit.cpp
     mpi/remoteedit.h
     mpi/remoteeditsession.cpp

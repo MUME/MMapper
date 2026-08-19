@@ -5,8 +5,10 @@
 #include "remoteedit.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AnsiTextUtils.h"
 #include "../global/AsyncTasks.h"
 #include "../global/Consts.h"
+#include "../global/SendToUser.h"
 #include "../global/io.h"
 #include "../global/window_utils.h"
 #include "remoteeditsession.h"
@@ -26,6 +28,34 @@
 #include <QUrl>
 
 using char_consts::C_NEWLINE;
+
+namespace { // anonymous
+
+const volatile bool g_prefixMessagesToUser = true;
+constexpr const auto whiteOnCyan = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::cyan);
+
+void notifyUserOfNewSession(const std::string_view article,
+                            const std::string_view what,
+                            const QString &title)
+{
+    global::sendToUser([&article, &what, &title](AnsiOstream &aos) {
+        const auto color = whiteOnCyan;
+        if (g_prefixMessagesToUser) {
+            aos.writeWithColor(color.withBold(), "Info");
+            aos.writeWithColor(color, ": ");
+        }
+        aos.writeWithColor(color, "MMapper is opening ");
+        aos.writeWithColor(color, article);
+        aos.writeWithColor(color, " ");
+        aos.writeWithColor(color.withBold(), what);
+        aos.writeWithColor(color, " window with title \"");
+        aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(title));
+        aos.writeWithColor(color, "\"");
+        aos.write("\n");
+    });
+}
+
+} // namespace
 
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)
@@ -50,6 +80,12 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
     const auto internalId = RemoteInternalId{getInternalIdCount()};
     const bool isEdit = (sessionId != REMOTE_VIEW_SESSION_ID);
     std::shared_ptr<RemoteEditSession> session;
+
+    if (isEdit) {
+        notifyUserOfNewSession("an", "Editor", title);
+    } else {
+        notifyUserOfNewSession("a", "Viewer", title);
+    }
 
     if (getConfig().mumeClientProtocol.internalRemoteEditor) {
         session = std::make_shared<RemoteEditInternalSession>(internalId,

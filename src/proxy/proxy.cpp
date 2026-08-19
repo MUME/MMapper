@@ -19,9 +19,6 @@
 #include "../global/io.h"
 #include "../group/mmapper2group.h"
 #include "../map/parseevent.h"
-#include "../mpi/mpifilter.h"
-#include "../mpi/remoteedit.h"
-#include "../mpi/remoteeditwidget.h"
 #include "../observer/gameobserver.h"
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
@@ -229,11 +226,7 @@ void Proxy::allocPipelineObjects()
 
     // Two main paths:
     // UserSocket -> UserTelnet -> UserTelnetFilter -> (User)Parser
-    // MudSocket -> MudTelnet -> MudTelnetFilter -> MpiFilter -> { RemoteEdit or (Mud)Parser }
-    //
-    // Technically MudTelnetFilter 100% required for MpiFilter, because its protocol
-    // is based on newlines, and it's sensitive to the difference between "\n" and "\r\n",
-    // but UserTelnetFilter is just a buffer for Parser.
+    // MudSocket -> MudTelnet -> MudTelnetFilter -> (Mud)Parser
     //
     // TODO: refactor the Parser into UserParser and MudParser.
     // The distinction is already partly in place for AbstractParser (User)
@@ -244,9 +237,6 @@ void Proxy::allocPipelineObjects()
 
     allocUserTelnet();
     allocMudTelnet();
-
-    allocMpiFilter();
-    allocRemoteEdit();
 
     allocParser();
 
@@ -522,16 +512,6 @@ void Proxy::allocMudTelnet()
             }
         }
 
-        void virt_onMumeClientView(const QString &title, const QString &body) final
-        {
-            getProxy().getMpiFilterFromMud().receiveMpiView(title, body);
-        }
-        void virt_onMumeClientEdit(const RemoteSessionId id,
-                                   const QString &title,
-                                   const QString &body) final
-        {
-            getProxy().getMpiFilterFromMud().receiveMpiEdit(id, title, body);
-        }
         void virt_onMumeClientError(const QString &errmsg) final
         {
             qInfo() << errmsg;
@@ -759,90 +739,6 @@ void Proxy::allocParser()
                          getMudTelnet().onLoginCredentials(getConfig().account.accountName,
                                                            password);
                      });
-}
-
-void Proxy::allocMpiFilter()
-{
-    struct NODISCARD LocalMpiFilterOutputs final : public MpiFilterOutputs
-    {
-    private:
-        Proxy &m_proxy;
-
-    public:
-        explicit LocalMpiFilterOutputs(Proxy &proxy)
-            : m_proxy{proxy}
-        {}
-
-    private:
-        NODISCARD Proxy &getProxy() { return m_proxy; }
-        NODISCARD MumeXmlParser &getMudParser() { return getProxy().getMudParser(); }
-
-    private:
-        void notifyUser(const std::string_view article,
-                        const std::string_view what,
-                        const QString &title)
-        {
-            const auto color = whiteOnCyan;
-            auto aos = getProxy().getSendToUserAnsiOstream();
-            if (g_prefixMessagesToUser) {
-                aos.writeWithColor(color.withBold(), "Info");
-                aos.writeWithColor(color, ": ");
-            }
-            aos.writeWithColor(color, "MMapper is opening ");
-            aos.writeWithColor(color, article);
-            aos.writeWithColor(color, " ");
-            aos.writeWithColor(color.withBold(), what);
-            aos.writeWithColor(color, " window with title \"");
-            aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(title));
-            aos.writeWithColor(color, "\"");
-            aos.write("\n");
-        }
-
-    private:
-        void virt_onEditMessage(const RemoteSessionId id,
-                                const QString &title,
-                                const QString &body) final
-        {
-            notifyUser("an", "Editor", title);
-            emit getProxy().sig_remoteEditRequested(id, title, body);
-        }
-        void virt_onViewMessage(const QString &title, const QString &body) final
-        {
-            notifyUser("a", "Viewer", title);
-            emit getProxy().sig_remoteViewRequested(title, body);
-        }
-        void virt_onParseNewMudInput(const TelnetData &data) final
-        {
-            getMudParser().slot_parseNewMudInput(data);
-        }
-    };
-
-    auto &pipe = getPipeline();
-    auto &out = pipe.outputs.mud.mpiFilterOutputs = std::make_unique<LocalMpiFilterOutputs>(*this);
-    pipe.mud.mpiFilterFromMud = std::make_unique<MpiFilter>(deref(out));
-}
-
-void Proxy::allocRemoteEdit()
-{
-    struct NODISCARD LocalMpiFilterToMud final : public MpiFilterToMud
-    {
-    private:
-        Proxy &m_proxy;
-
-    public:
-        explicit LocalMpiFilterToMud(Proxy &proxy)
-            : m_proxy{proxy}
-        {}
-
-    private:
-        void virt_submitGmcp(const GmcpMessage &gmcpMessage) final
-        {
-            m_proxy.getMudTelnet().onSubmitGmcpMumeClient(gmcpMessage);
-        }
-    };
-
-    auto &pipe = getPipeline();
-    pipe.mud.mpiFilterToMud = std::make_unique<LocalMpiFilterToMud>(*this);
 }
 
 void Proxy::init()
@@ -1171,16 +1067,6 @@ void Proxy::sendPromptToUser()
 void Proxy::log(const QString &msg)
 {
     getHost().log("Proxy", msg);
-}
-
-void Proxy::slot_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content)
-{
-    getMpiFilterToMud().saveRemoteEdit(sessionId, content);
-}
-
-void Proxy::slot_remoteEditCancel(const RemoteSessionId sessionId)
-{
-    getMpiFilterToMud().cancelRemoteEdit(sessionId);
 }
 
 void Proxy::slot_sendGmcp(const GmcpMessage &msg)
