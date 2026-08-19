@@ -22,12 +22,14 @@
 RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
                                      QString title,
+                                     QString draftFileName,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
     , m_manager(remoteEdit)
     , m_title(std::move(title))
     , m_internalId(internalId)
     , m_sessionId(sessionId)
+    , m_draftFileName(std::move(draftFileName))
 {
     assert(m_manager != nullptr);
 }
@@ -54,8 +56,9 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const QString &draftFileName,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftFileName, parent)
     , m_widget(
           new RemoteEditWidget(isEditSession(),
                                title,
@@ -133,8 +136,9 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const QString &draftFileName,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftFileName, parent)
 {
     m_process = new RemoteEditProcess(isEditSession(), title, body, getFullDraftPath(), this);
     const auto proc = m_process.data();

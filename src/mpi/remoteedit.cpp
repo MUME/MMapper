@@ -87,11 +87,14 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
         notifyUserOfNewSession("a", "Viewer", title);
     }
 
+    const QString draftFileName = isEdit ? provisionDraftFile(sessionId, title, body) : QString();
+
     if (getConfig().mumeClientProtocol.internalRemoteEditor) {
         session = std::make_shared<RemoteEditInternalSession>(internalId,
                                                               sessionId,
                                                               title,
                                                               body,
+                                                              draftFileName,
                                                               this);
     } else {
 #ifndef Q_OS_WASM
@@ -99,6 +102,7 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               sessionId,
                                                               title,
                                                               body,
+                                                              draftFileName,
                                                               this);
 #else
         mmqt::showInformation(nullptr,
@@ -109,9 +113,6 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
     }
 
     if (isEdit) {
-        QString fileName = provisionDraftFile(sessionId, title, body);
-        session->setDraftFileName(fileName);
-
         std::weak_ptr<RemoteEditSession> weakSession = session;
         auto handle = async_tasks::startAsyncTask(
             AsyncTaskTypeEnum::RemoteEdit,
@@ -180,7 +181,11 @@ void RemoteEdit::cancel(const RemoteEditSession *const pSession)
         GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_CANCEL_EDIT, json};
 
         if (auto handle = session.getAsyncTask()) {
-            handle->getProgressCounter().setCurrentTask(ProgressMsg{"Canceling edit..."});
+            try {
+                handle->getProgressCounter().setCurrentTask(ProgressMsg{"Canceling edit..."});
+            } catch (const ProgressCanceledException &) {
+                // Cancellation was already requested on this task; nothing to update.
+            }
         }
 
         emit sig_sendGmcp(msg);
@@ -251,7 +256,11 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
     GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_WRITE, json};
 
     if (auto handle = session.getAsyncTask()) {
-        handle->getProgressCounter().setCurrentTask(ProgressMsg{"Submitting changes..."});
+        try {
+            handle->getProgressCounter().setCurrentTask(ProgressMsg{"Submitting changes..."});
+        } catch (const ProgressCanceledException &) {
+            // Cancellation was already requested on this task; nothing to update.
+        }
     }
 
     emit sig_sendGmcp(msg);
@@ -279,7 +288,12 @@ void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
     qWarning() << "Session" << id << "marked as disconnected - draft preserved";
 
     if (auto handle = session.getAsyncTask()) {
-        handle->getProgressCounter().setCurrentTask(ProgressMsg{"Disconnected - Draft preserved"});
+        try {
+            handle->getProgressCounter().setCurrentTask(
+                ProgressMsg{"Disconnected - Draft preserved"});
+        } catch (const ProgressCanceledException &) {
+            // Cancellation was already requested on this task; nothing to update.
+        }
     }
 }
 
@@ -292,8 +306,12 @@ void RemoteEdit::onDisconnected()
             qWarning() << "Session" << id.asUint32() << "marked as disconnected";
             session->setDisconnected();
             if (auto handle = session->getAsyncTask()) {
-                handle->getProgressCounter().setCurrentTask(
-                    ProgressMsg{"Disconnected - Draft preserved"});
+                try {
+                    handle->getProgressCounter().setCurrentTask(
+                        ProgressMsg{"Disconnected - Draft preserved"});
+                } catch (const ProgressCanceledException &) {
+                    // Cancellation was already requested on this task; nothing to update.
+                }
             }
         }
     }
@@ -427,6 +445,7 @@ void RemoteEdit::recoverDrafts()
             auto session = std::make_shared<RemoteEditSession>(internalId,
                                                                draft.sessionId,
                                                                draft.title,
+                                                               draft.fileName,
                                                                this);
             std::weak_ptr<RemoteEditSession> weakSession = session;
 
@@ -454,7 +473,6 @@ void RemoteEdit::recoverDrafts()
                 },
                 []() {});
 
-            session->setDraftFileName(draft.fileName);
             session->setAsyncTask(handle);
             session->setDisconnected(); // Recovered drafts are naturally disconnected
 

@@ -84,6 +84,7 @@ public:
     explicit RemoteEditSession(RemoteInternalId internalId,
                                RemoteSessionId sessionId,
                                QString title,
+                               QString draftFileName,
                                RemoteEdit *remoteEdit);
 
 public:
@@ -99,7 +100,6 @@ public:
 public:
     NODISCARD bool isConnected() const { return m_connected; }
     void setDisconnected() { m_connected = false; }
-    void setDraftFileName(const QString &fileName) { m_draftFileName = fileName; }
     NODISCARD const QString &getDraftFileName() const { return m_draftFileName; }
     NODISCARD QString getFullDraftPath() const;
     void setAsyncTask(async_tasks::AsyncTaskHandle handle) { m_taskHandle = std::move(handle); }
@@ -134,6 +134,7 @@ public:
                                        RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
+                                       const QString &draftFileName,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
 
@@ -155,6 +156,7 @@ public:
                                        RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
+                                       const QString &draftFileName,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
 };
