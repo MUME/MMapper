@@ -126,8 +126,8 @@ QSize RemoteEditPanel::sizeHint() const
 void RemoteEditPanel::syncTabs()
 {
     for (const auto &[id, session] : m_remoteEdit.getSessions()) {
-        if (auto *const widget = session->getWidget(); widget != nullptr
-                                                        && m_tabs->indexOf(widget) < 0) {
+        if (auto *const widget = session->getWidget();
+            widget != nullptr && m_tabs->indexOf(widget) < 0) {
             addPage(widget);
         }
     }

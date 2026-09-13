@@ -28,10 +28,10 @@ using namespace char_consts;
 #include <QFrame>
 #include <QLabel>
 #include <QMenu>
-#include <QPushButton>
 #include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
+#include <QPushButton>
 #include <QScopedPointer>
 #include <QSize>
 #include <QString>
@@ -300,7 +300,8 @@ bool RemoteEditWidget::eventFilter(QObject *const obj, QEvent *const event)
         }
         break;
     case QEvent::KeyPress:
-        if (QAction *const action = findActionForKey(*checked_dynamic_downcast<QKeyEvent *>(event))) {
+        if (QAction *const action = findActionForKey(
+                *checked_dynamic_downcast<QKeyEvent *>(event))) {
             action->trigger();
             return true;
         }
@@ -892,8 +893,8 @@ void RemoteEditWidget::requestClose()
     slot_cancelEdit();
 }
 
-void RemoteEditWidget::showBanner(const QString &text,
-                                  const std::vector<std::pair<QString, std::function<void()>>> &buttons)
+void RemoteEditWidget::showBanner(
+    const QString &text, const std::vector<std::pair<QString, std::function<void()>>> &buttons)
 {
     for (QPushButton *const old : m_banner->findChildren<QPushButton *>()) {
         delete old;
@@ -918,8 +919,7 @@ void RemoteEditWidget::offerRecoveredDraft(const QDateTime &lastModified,
                                            std::function<void()> restore,
                                            std::function<void()> discard)
 {
-    showBanner(tr("An unsent draft of this text from %1 was recovered.")
-                   .arg(lastModified.toString()),
+    showBanner(tr("An unsent draft of this text from %1 was recovered.").arg(lastModified.toString()),
                {{tr("Restore draft"),
                  [this, doRestore = std::move(restore)]() {
                      doRestore();

@@ -440,7 +440,6 @@ MainWindow::MainWindow()
     m_defaultExpandedState = saveState();
     readSettings();
     g_mainWindow = this;
-
 }
 
 void MainWindow::startServices()

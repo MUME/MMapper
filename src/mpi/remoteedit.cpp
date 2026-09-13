@@ -18,8 +18,8 @@
 #include <QDateTime>
 #include <QGuiApplication>
 #include <QMessageBox>
-#include <QPushButton>
 #include <QMessageLogContext>
+#include <QPushButton>
 #include <QString>
 
 namespace { // anonymous
@@ -59,7 +59,8 @@ void notifyUserOfSubmissionFailure(const QString &title, const QString &errorMsg
         aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(title));
         aos.writeWithColor(color, "\" to MUME failed: ");
         aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(errorMsg));
-        aos.writeWithColor(color, ". It was kept as an unsent draft (Sidepanels > Remote Edits Panel).");
+        aos.writeWithColor(color,
+                           ". It was kept as an unsent draft (Sidepanels > Remote Edits Panel).");
         aos.write("\n");
     });
 }
@@ -115,14 +116,17 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
         dlg->addButton(tr("Text from MUME"), QMessageBox::RejectRole);
         dlg->setDefaultButton(useDraft);
         const DraftInfo draft = *offeredDraft;
-        connect(dlg, &QMessageBox::finished, this, [this, dlg, useDraft, sessionId, title, body, draft]() {
-            if (dlg->clickedButton() == static_cast<QAbstractButton *>(useDraft)) {
-                createSession(sessionId, title, readDraft(draft.key), std::nullopt);
-                deleteDraft(draft.key);
-            } else {
-                createSession(sessionId, title, body, std::nullopt);
-            }
-        });
+        connect(dlg,
+                &QMessageBox::finished,
+                this,
+                [this, dlg, useDraft, sessionId, title, body, draft]() {
+                    if (dlg->clickedButton() == static_cast<QAbstractButton *>(useDraft)) {
+                        createSession(sessionId, title, readDraft(draft.key), std::nullopt);
+                        deleteDraft(draft.key);
+                    } else {
+                        createSession(sessionId, title, body, std::nullopt);
+                    }
+                });
         dlg->open();
         return;
     }
@@ -445,8 +449,7 @@ void RemoteEdit::announcePendingDrafts() const
         }
         aos.writeWithColor(color, "MMapper has ");
         aos.writeWithColor(color.withBold(), std::to_string(drafts.size()));
-        aos.writeWithColor(color,
-                           drafts.size() == 1 ? " unsent draft" : " unsent drafts");
+        aos.writeWithColor(color, drafts.size() == 1 ? " unsent draft" : " unsent drafts");
         aos.writeWithColor(color,
                            " from a previous session (Sidepanels > Remote Edits Panel, or _edits).");
         aos.write("\n");

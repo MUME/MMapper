@@ -12,8 +12,8 @@
 
 #include <climits>
 #include <map>
-#include <optional>
 #include <memory>
+#include <optional>
 
 #include <QByteArray>
 #include <QObject>
@@ -83,8 +83,7 @@ public:
     NODISCARD QList<DraftInfo> pendingDrafts() const;
     /// Most recently modified pending draft with this title, if any.
     NODISCARD std::optional<DraftInfo> findPendingDraft(const QString &title) const;
-    NODISCARD const std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> &getSessions()
-        const
+    NODISCARD const std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> &getSessions() const
     {
         return m_sessions;
     }
