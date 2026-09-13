@@ -143,6 +143,7 @@ public:
 
 private:
     const bool m_editSession;
+    const bool m_draftRecovery;
     const QString m_title;
     const QString m_body;
 
@@ -155,13 +156,18 @@ private:
     std::unique_ptr<QDialog> m_preview;
 
 public:
-    explicit RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent);
+    explicit RemoteEditWidget(
+        bool editSession, bool draftRecovery, QString title, QString body, QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:
     NODISCARD QSize minimumSizeHint() const override;
     NODISCARD QSize sizeHint() const override;
     void closeEvent(QCloseEvent *event) override;
+    /// Closes the window without re-triggering the "discard changes?" prompt;
+    /// used when the manager is tearing down the session for reasons other
+    /// than the user choosing Submit/Exit/Discard in this widget.
+    void closeSilently();
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -178,6 +184,7 @@ private:
     void addEditAndViewMenus(const Editor *pTextEdit);
     void addSave(QMenu *fileMenu);
     void addExit(QMenu *fileMenu);
+    void addDiscard(QMenu *fileMenu);
     void addStatusBar(const Editor *pTextEdit);
     void promptDiscardChanges();
 
@@ -185,10 +192,12 @@ signals:
     void sig_cancel();
     void sig_save(const QString &);
     void sig_textModified(const QString &);
+    void sig_discard();
 
 protected slots:
     void slot_cancelEdit();
     void slot_finishEdit();
+    void slot_discardDraft();
     NODISCARD bool slot_contentsChanged() const;
     void slot_updateStatusBar();
     void slot_updateStatus(const QString &message);

@@ -112,6 +112,7 @@ static void addApplicationFont()
 MainWindow::~MainWindow()
 {
     g_mainWindow = nullptr;
+    remote_edit::setInstance(nullptr);
     mmqt::rdisconnect(this);
     async_tasks::cleanup();
     delete m_listener;
@@ -141,6 +142,7 @@ MainWindow::MainWindow()
     m_prespammedPath = new PrespammedPath(this);
 
     m_remoteEdit = new RemoteEdit(this);
+    remote_edit::setInstance(m_remoteEdit);
 
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
@@ -1416,6 +1418,10 @@ void MainWindow::setupMenuBar()
     settingsMenu->addSeparator();
     settingsMenu->addAction(preferencesAct);
 
+    remoteEditsMenu = settingsMenu->addMenu(QIcon::fromTheme("accessories-text-editor"),
+                                            tr("Remote &Edits"));
+    connect(remoteEditsMenu, &QMenu::aboutToShow, this, &MainWindow::rebuildRemoteEditsMenu);
+
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(newcomerGuideAct);
     helpMenu->addAction(settingUpMmapperAct);
@@ -1786,6 +1792,85 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
     return QObject::eventFilter(obj, event);
 }
 
+void MainWindow::rebuildRemoteEditsMenu()
+{
+    // QMenu::clear() does not delete the submenus it owned, so any lambda below
+    // that captured a session must not outlive them -- capture only the id and
+    // look the session back up when the action actually fires instead.
+    for (QMenu *const m : remoteEditsMenu->findChildren<QMenu *>(Qt::FindDirectChildrenOnly)) {
+        m->deleteLater();
+    }
+    remoteEditsMenu->clear();
+
+    const auto &sessions = m_remoteEdit->getSessions();
+    const auto pending = m_remoteEdit->pendingDrafts();
+
+    if (sessions.empty() && pending.isEmpty()) {
+        QAction *const none = remoteEditsMenu->addAction(tr("(no open edits)"));
+        none->setEnabled(false);
+        return;
+    }
+
+    for (const auto &[id, session] : sessions) {
+        const QString label = session->isDraftRecovery()
+                                  ? tr("%1 (recovered draft)").arg(session->getTitle())
+                                  : tr("%1 [%2%3]")
+                                        .arg(session->getTitle())
+                                        .arg(session->getEditorTypeName())
+                                        .arg(session->isConnected() ? "" : ", disconnected");
+        QMenu *const entryMenu = remoteEditsMenu->addMenu(label);
+        const RemoteInternalId internalId = id;
+        const bool isDraftRecovery = session->isDraftRecovery();
+
+        QAction *const focusAct = entryMenu->addAction(tr("Focus"));
+        connect(focusAct, &QAction::triggered, this, [this, internalId]() {
+            const auto &sess = m_remoteEdit->getSessions();
+            if (const auto it = sess.find(internalId); it != sess.end()) {
+                it->second->focus();
+            }
+        });
+
+        QAction *const cancelAct = entryMenu->addAction(isDraftRecovery ? tr("Close")
+                                                                        : tr("Cancel"));
+        connect(cancelAct, &QAction::triggered, this, [this, internalId]() {
+            const auto &sess = m_remoteEdit->getSessions();
+            if (const auto it = sess.find(internalId); it != sess.end()) {
+                m_remoteEdit->cancelEdit(it->second.get());
+            }
+        });
+
+        if (isDraftRecovery) {
+            QAction *const discardAct = entryMenu->addAction(tr("Discard"));
+            connect(discardAct, &QAction::triggered, this, [this, internalId]() {
+                const auto &sess = m_remoteEdit->getSessions();
+                if (const auto it = sess.find(internalId); it != sess.end()) {
+                    m_remoteEdit->discardDraft(it->second.get());
+                }
+            });
+        }
+    }
+
+    if (!pending.isEmpty()) {
+        if (!sessions.empty()) {
+            remoteEditsMenu->addSeparator();
+        }
+        for (const auto &draft : pending) {
+            QMenu *const entryMenu = remoteEditsMenu->addMenu(
+                tr("%1 (recovered draft)").arg(draft.title));
+
+            QAction *const recoverAct = entryMenu->addAction(tr("Recover"));
+            connect(recoverAct, &QAction::triggered, this, [this, draft]() {
+                m_remoteEdit->recoverDraft(draft);
+            });
+
+            QAction *const discardAct = entryMenu->addAction(tr("Discard"));
+            connect(discardAct, &QAction::triggered, this, [this, draft]() {
+                m_remoteEdit->discardDraft(draft);
+            });
+        }
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *const event)
 {
     qInfo() << MM_SOURCE_LOCATION().function_name();
@@ -1813,6 +1898,10 @@ void MainWindow::closeEvent(QCloseEvent *const event)
     }
 
     asyncIO.setClosedForBusiness();
+    // RemoteEdit sessions aren't registered with async_tasks (see RemoteEdit::shutdown()
+    // for why); tear them down here, synchronously, so no GMCP cancel is sent and every
+    // open edit/draft survives on disk for recovery on next launch.
+    m_remoteEdit->shutdown();
     async_tasks::cancel_all(); /* note: this can only cancel tasks that allow it */
 
     if (asyncIO.isRunningOnBackgroundThread()) {

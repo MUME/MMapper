@@ -41,6 +41,11 @@ public:
 
     NODISCARD bool isRunning() const { return m_process.state() == QProcess::Running; }
 
+    /// Synchronously stops the child process (terminate(), then kill() if it
+    /// doesn't exit promptly) and disconnects its signals first, so tearing
+    /// down mid-edit never emits a stray sig_cancel()/sig_save().
+    void terminateSynchronously();
+
 private:
     virtual void virt_onError(QProcess::ProcessError);
     virtual void virt_onFinished(int, QProcess::ExitStatus);

@@ -159,6 +159,7 @@ private:
     QMenu *viewMenu = nullptr;
     QMenu *windowMenu = nullptr;
     QMenu *settingsMenu = nullptr;
+    QMenu *remoteEditsMenu = nullptr;
     QMenu *helpMenu = nullptr;
     // The top-level menus above as submenus of one menu: the "\u2630" button
     // while compact, and an entry of the map's context menu whenever neither
@@ -404,6 +405,7 @@ private:
     void onSuccessfulLoad(const MapLoadData &mapLoadData);
     void onSuccessfulMerge(const Map &map);
     void onSuccessfulSave(SaveModeEnum mode, SaveFormatEnum format, const QString &fileName);
+    void rebuildRemoteEditsMenu();
 
 public slots:
     void slot_newFile();

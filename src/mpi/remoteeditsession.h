@@ -8,7 +8,6 @@
 #include <QtCore/qglobal.h>
 #endif
 
-#include "../global/AsyncTasks.h"
 #include "../global/TaggedInt.h"
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
@@ -69,10 +68,9 @@ protected:
     QString m_title;
     const RemoteInternalId m_internalId{};
     const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
+    const bool m_draftRecovery = false;
     bool m_connected = true;
-    bool m_stopTask = false;
     QString m_draftFileName;
-    std::optional<async_tasks::AsyncTaskHandle> m_taskHandle;
 
 private:
 #ifndef Q_OS_WASM
@@ -85,33 +83,38 @@ public:
                                RemoteSessionId sessionId,
                                QString title,
                                QString draftFileName,
+                               bool draftRecovery,
                                RemoteEdit *remoteEdit);
 
 public:
     NODISCARD auto getInternalId() const { return m_internalId; }
     NODISCARD auto getSessionId() const { return m_sessionId; }
     NODISCARD bool isEditSession() const { return m_sessionId != REMOTE_VIEW_SESSION_ID; }
+    /// True for a window reopened from a persisted draft (recovery), as opposed
+    /// to a live session originating from a MUME GMCP edit/view request.
+    NODISCARD bool isDraftRecovery() const { return m_draftRecovery; }
     NODISCARD const QString &getContent() const { return m_content; }
     NODISCARD const QString &getTitle() const { return m_title; }
     void setContent(QString content) { m_content = std::move(content); }
     void cancel();
     void save();
+    void discard();
+    /// Raises/activates this session's window, if it has one (no-op otherwise).
+    virtual void focus() {}
+    /// Flushes any pending debounced auto-save immediately (no-op unless overridden).
+    virtual void flushDraft() {}
+    /// Short label for UI, e.g. "Internal" / "External".
+    NODISCARD virtual const char *getEditorTypeName() const { return "Internal"; }
 
 public:
     NODISCARD bool isConnected() const { return m_connected; }
     void setDisconnected() { m_connected = false; }
     NODISCARD const QString &getDraftFileName() const { return m_draftFileName; }
     NODISCARD QString getFullDraftPath() const;
-    void setAsyncTask(async_tasks::AsyncTaskHandle handle) { m_taskHandle = std::move(handle); }
-    NODISCARD std::optional<async_tasks::AsyncTaskHandle> getAsyncTask() const
-    {
-        return m_taskHandle;
-    }
-    void stopTask() { m_stopTask = true; }
-    NODISCARD bool shouldStopTask() const { return m_stopTask; }
 
 protected slots:
     void slot_onCancel() { cancel(); }
+    void slot_onDiscard() { discard(); }
     void slot_onSave(const QString &content)
     {
         setContent(content);
@@ -127,7 +130,6 @@ private:
     QPointer<RemoteEditWidget> m_widget;
     QTimer *m_debounceTimer = nullptr;
     QTimer *m_throttleTimer = nullptr;
-    QElapsedTimer m_lastWriteTimer;
 
 public:
     explicit RemoteEditInternalSession(RemoteInternalId internalId,
@@ -135,8 +137,13 @@ public:
                                        const QString &title,
                                        const QString &body,
                                        const QString &draftFileName,
+                                       bool draftRecovery,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
+
+public:
+    void focus() override;
+    void flushDraft() override;
 
 private slots:
     void slot_onTextModified(const QString &content);
@@ -159,5 +166,8 @@ public:
                                        const QString &draftFileName,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
+
+public:
+    NODISCARD const char *getEditorTypeName() const override { return "External"; }
 };
 #endif

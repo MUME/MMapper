@@ -204,11 +204,13 @@ void RemoteTextEdit::toggleWhitespace()
 }
 
 RemoteEditWidget::RemoteEditWidget(const bool editSession,
+                                   const bool draftRecovery,
                                    QString title,
                                    QString body,
                                    QWidget *const parent)
     : QDialog(parent)
     , m_editSession(editSession)
+    , m_draftRecovery(draftRecovery)
     , m_title(std::move(title))
     , m_body(std::move(body))
 {
@@ -333,10 +335,13 @@ auto RemoteEditWidget::createFindReplaceWidget() -> FindReplaceWidget *
 void RemoteEditWidget::addFileMenu(const Editor *const pTextEdit)
 {
     QMenu *const fileMenu = m_menuBar->addMenu(tr("&File"));
-    if (m_editSession) {
+    if (m_editSession && !m_draftRecovery) {
         addSave(fileMenu);
     }
     addExit(fileMenu);
+    if (m_draftRecovery) {
+        addDiscard(fileMenu);
+    }
     addEditAndViewMenus(pTextEdit);
 }
 
@@ -546,9 +551,21 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
                                             tr("E&xit"),
                                             this);
     quitAction->setShortcut(tr("Ctrl+Q"));
-    quitAction->setStatusTip(tr("Cancel and do not submit changes to MUME"));
+    quitAction->setStatusTip(m_draftRecovery
+                                 ? tr("Close and keep the draft for later")
+                                 : tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
     connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::slot_cancelEdit);
+}
+
+void RemoteEditWidget::addDiscard(QMenu *const fileMenu)
+{
+    QAction *const discardAction = new QAction(QIcon::fromTheme("edit-delete"),
+                                               tr("&Discard Draft"),
+                                               this);
+    discardAction->setStatusTip(tr("Permanently delete this recovered draft"));
+    fileMenu->addAction(discardAction);
+    connect(discardAction, &QAction::triggered, this, &RemoteEditWidget::slot_discardDraft);
 }
 
 void RemoteEditWidget::addToMenu(QMenu *const menu, const EditViewCommand &cmd)
@@ -881,5 +898,18 @@ void RemoteEditWidget::slot_finishEdit()
 {
     m_submitted = true;
     emit sig_save(m_textEdit->toPlainText());
+    close();
+}
+
+void RemoteEditWidget::slot_discardDraft()
+{
+    m_submitted = true;
+    emit sig_discard();
+    close();
+}
+
+void RemoteEditWidget::closeSilently()
+{
+    m_submitted = true;
     close();
 }

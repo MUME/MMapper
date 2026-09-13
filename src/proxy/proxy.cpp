@@ -202,7 +202,7 @@ Proxy::~Proxy()
         getUserSocket().disconnectFromHost();
     }
 
-    {}
+    getGameObserver().observeDisconnected();
 
     destroyPipelineObjects();
 }

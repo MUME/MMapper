@@ -23,12 +23,14 @@ RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
                                      QString title,
                                      QString draftFileName,
+                                     const bool draftRecovery,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
     , m_manager(remoteEdit)
     , m_title(std::move(title))
     , m_internalId(internalId)
     , m_sessionId(sessionId)
+    , m_draftRecovery(draftRecovery)
     , m_draftFileName(std::move(draftFileName))
 {
     assert(m_manager != nullptr);
@@ -41,7 +43,12 @@ void RemoteEditSession::save()
 
 void RemoteEditSession::cancel()
 {
-    m_manager->cancel(this);
+    m_manager->cancelEdit(this);
+}
+
+void RemoteEditSession::discard()
+{
+    m_manager->discardDraft(this);
 }
 
 QString RemoteEditSession::getFullDraftPath() const
@@ -57,10 +64,12 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
                                                      const QString &title,
                                                      const QString &body,
                                                      const QString &draftFileName,
+                                                     const bool draftRecovery,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftFileName, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftFileName, draftRecovery, parent)
     , m_widget(
           new RemoteEditWidget(isEditSession(),
+                               draftRecovery,
                                title,
                                body,
                                checked_dynamic_downcast<QWidget *>(parent->parent()) // MainWindow
@@ -69,6 +78,7 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
     connect(widget, &RemoteEditWidget::sig_cancel, this, &RemoteEditSession::slot_onCancel);
+    connect(widget, &RemoteEditWidget::sig_discard, this, &RemoteEditSession::slot_onDiscard);
     connect(widget,
             &RemoteEditWidget::sig_textModified,
             this,
@@ -88,8 +98,6 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
                 &QTimer::timeout,
                 this,
                 &RemoteEditInternalSession::slot_performAutoSave);
-
-        m_lastWriteTimer.start();
     }
 }
 
@@ -98,7 +106,26 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
     qDebug() << "Destructed RemoteEditInternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
     if (auto *const p = m_widget.get()) {
-        p->close();
+        // closeSilently() (rather than close()) avoids re-entering closeEvent()'s
+        // "discard changes?" prompt: the manager is already tearing this session
+        // down for a reason unrelated to what the user clicked in this widget.
+        p->closeSilently();
+    }
+}
+
+void RemoteEditInternalSession::focus()
+{
+    if (auto *const p = m_widget.get()) {
+        p->raise();
+        p->activateWindow();
+    }
+}
+
+void RemoteEditInternalSession::flushDraft()
+{
+    if ((m_debounceTimer != nullptr && m_debounceTimer->isActive())
+        || (m_throttleTimer != nullptr && m_throttleTimer->isActive())) {
+        slot_performAutoSave();
     }
 }
 
@@ -123,7 +150,6 @@ void RemoteEditInternalSession::slot_performAutoSave()
 
     if (RemoteEdit::saveDraftAtomic(m_draftFileName, m_content)) {
         qDebug() << "Auto-save successful for" << m_draftFileName;
-        m_lastWriteTimer.restart();
         m_debounceTimer->stop();
         m_throttleTimer->stop();
     } else {
@@ -138,7 +164,7 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const QString &body,
                                                      const QString &draftFileName,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftFileName, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftFileName, /*draftRecovery=*/false, parent)
 {
     m_process = new RemoteEditProcess(isEditSession(), title, body, getFullDraftPath(), this);
     const auto proc = m_process.data();
@@ -150,8 +176,12 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
 {
     qDebug() << "Destructed RemoteEditExternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto *const p = m_process.get()) {
-        p->deleteLater();
-    }
+    // m_process is a QObject child of `this`, so QObject's own destructor
+    // deletes it synchronously right after this body runs -- which in turn
+    // synchronously terminates the child process (RemoteEditProcess::~RemoteEditProcess()
+    // calls terminateSynchronously()). Deliberately not deleteLater(): that
+    // defers to the event loop, which never runs again if this destructor
+    // fires after QApplication::exec() has already returned (see
+    // RemoteEdit::shutdown()).
 }
 #endif

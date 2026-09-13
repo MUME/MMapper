@@ -98,12 +98,25 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 RemoteEditProcess::~RemoteEditProcess()
 {
     qInfo() << "Destroyed RemoteEditProcess";
+    terminateSynchronously();
     // We don't remove the file here anymore for edit sessions,
     // as it is managed by the session/manager and must persist
     // until success confirmation.
     if (!m_editSession) {
         QFile file(m_fullPath);
         file.remove();
+    }
+}
+
+void RemoteEditProcess::terminateSynchronously()
+{
+    disconnect(&m_process, nullptr, this, nullptr);
+    if (m_process.state() != QProcess::NotRunning) {
+        m_process.terminate();
+        if (!m_process.waitForFinished(200)) {
+            m_process.kill();
+            m_process.waitForFinished(200);
+        }
     }
 }
 
