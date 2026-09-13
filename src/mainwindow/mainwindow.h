@@ -291,6 +291,7 @@ private:
 
     void createActions();
     void setupMenuBar();
+    NODISCARD static QList<QAction *> collectActions(const QMenu &menu);
     void setupToolBars();
     void setupStatusBar();
 
