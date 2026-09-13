@@ -34,15 +34,20 @@ std::vector<LogFile> selectLogsToDelete(std::vector<LogFile> files,
     });
 
     qint64 totalFileSize = 0;
-    for (auto &file : files) {
+    for (size_t i = 0; i < files.size(); ++i) {
+        auto &file = files[i];
         totalFileSize += file.size;
         bool deleteFile = false;
         switch (policy.strategy) {
         case AutoLoggerEnum::DeleteDays:
+            // "Delete logs after N days": gone once N days have elapsed.
             deleteFile = file.time.date().daysTo(today) >= policy.deleteWhenLogsReachDays;
             break;
         case AutoLoggerEnum::DeleteSize:
-            deleteFile = totalFileSize >= policy.deleteWhenLogsReachBytes;
+            // "Delete logs after N MBs": prune the oldest logs once the total
+            // exceeds N. The newest log is always kept, even if it alone is
+            // over the limit, so the budget never wipes out every log.
+            deleteFile = i > 0 && totalFileSize > policy.deleteWhenLogsReachBytes;
             break;
         case AutoLoggerEnum::KeepForever:
             break;

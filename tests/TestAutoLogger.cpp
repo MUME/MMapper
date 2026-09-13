@@ -113,9 +113,13 @@ void TestAutoLogger::deleteSizeKeepsNewest()
                                                    today)),
              QStringList({"oldest"}));
 
-    // Limit exactly equal to the total: the file that reaches it is deleted (>=).
+    // Limit exactly equal to the total: "after 140" is not reached, nothing deleted.
+    QVERIFY(
+        log_cleanup::selectLogsToDelete(files, {AutoLoggerEnum::DeleteSize, 0, 140}, today).empty());
+
+    // One byte less than the total: the oldest crosses the line.
     QCOMPARE(names(log_cleanup::selectLogsToDelete(files,
-                                                   {AutoLoggerEnum::DeleteSize, 0, 140},
+                                                   {AutoLoggerEnum::DeleteSize, 0, 139},
                                                    today)),
              QStringList({"oldest"}));
 
@@ -131,8 +135,8 @@ void TestAutoLogger::deleteSizeKeepsNewest()
 
 void TestAutoLogger::deleteSizeSingleOversizedFile()
 {
-    // Documents the current behavior: a single file over the limit is deleted
-    // along with everything older than it.
+    // The newest log is never deleted, even when it alone exceeds the limit;
+    // only the older logs are pruned.
     const std::vector<LogFile> files = {
         {"newest_huge", utc(2025, 5, 10), 500},
         {"older_small", utc(2024, 5, 10), 10},
@@ -140,7 +144,14 @@ void TestAutoLogger::deleteSizeSingleOversizedFile()
     QCOMPARE(names(log_cleanup::selectLogsToDelete(files,
                                                    {AutoLoggerEnum::DeleteSize, 0, 100},
                                                    QDate(2025, 6, 1))),
-             QStringList({"newest_huge", "older_small"}));
+             QStringList({"older_small"}));
+
+    // A lone log is never deleted by the size strategy.
+    const std::vector<LogFile> single = {{"only", utc(2025, 5, 10), 500}};
+    QVERIFY(log_cleanup::selectLogsToDelete(single,
+                                            {AutoLoggerEnum::DeleteSize, 0, 100},
+                                            QDate(2025, 6, 1))
+                .empty());
 }
 
 QTEST_MAIN(TestAutoLogger)

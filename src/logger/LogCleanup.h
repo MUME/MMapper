@@ -36,7 +36,8 @@ NODISCARD QDateTime getFileTime(const QFileInfo &fileInfo);
 
 // Returns the subset of `files` that the policy says should be deleted,
 // ordered newest to oldest. DeleteSize keeps the newest logs whose cumulative
-// size stays under the limit and deletes everything older.
+// size does not exceed the limit (always at least the newest one) and deletes
+// everything older.
 NODISCARD std::vector<LogFile> selectLogsToDelete(std::vector<LogFile> files,
                                                   const Policy &policy,
                                                   const QDate &today);
