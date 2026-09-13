@@ -3,9 +3,14 @@
 
 #include "RemoteEditPanel.h"
 
+#include "../global/utils.h"
 #include "remoteedit.h"
 #include "remoteeditsession.h"
 #include "remoteeditwidget.h"
+
+#include <functional>
+#include <utility>
+#include <vector>
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -51,9 +56,7 @@ RemoteEditPanel::RemoteEditPanel(RemoteEdit &remoteEdit, QWidget *const parent)
     m_stack->addWidget(m_tabs);
 
     connect(m_tabs, &QTabWidget::tabCloseRequested, this, [this](const int index) {
-        if (auto *const page = dynamic_cast<RemoteEditWidget *>(m_tabs->widget(index))) {
-            page->requestClose();
-        }
+        checked_dynamic_downcast<RemoteEditWidget *>(m_tabs->widget(index))->requestClose();
     });
     // QTabWidget drops a tab on its own when the page widget is destroyed;
     // this keeps the placeholder in sync with that.
@@ -72,21 +75,20 @@ void RemoteEditPanel::rebuildList()
         delete item;
     }
 
-    const auto addRow = [this](const QString &text, auto &&...buttons) {
+    using Button = std::pair<QString, std::function<void()>>;
+    const auto addRow = [this](const QString &text, const std::vector<Button> &buttons) {
         auto *const row = new QWidget(m_list);
         auto *const layout = new QHBoxLayout(row);
         layout->setContentsMargins(0, 0, 0, 0);
         auto *const label = new QLabel(text, row);
         label->setTextFormat(Qt::PlainText);
         layout->addWidget(label, 1);
-        (
-            [&](const auto &button) {
-                auto *const b = new QPushButton(button.first, row);
-                b->setAutoDefault(false);
-                connect(b, &QPushButton::clicked, this, button.second);
-                layout->addWidget(b, 0);
-            }(buttons),
-            ...);
+        for (const auto &[caption, onClick] : buttons) {
+            auto *const button = new QPushButton(caption, row);
+            button->setAutoDefault(false);
+            connect(button, &QPushButton::clicked, this, onClick);
+            layout->addWidget(button, 0);
+        }
         m_listLayout->addWidget(row);
     };
 
@@ -99,18 +101,18 @@ void RemoteEditPanel::rebuildList()
                    .arg(session->getTitle(),
                         QString::fromLatin1(session->getEditorTypeName()).toLower(),
                         session->isConnected() ? QString() : tr(" (disconnected)")),
-               std::make_pair(tr("Cancel"), [this, internalId]() {
-                   const auto &sessions = m_remoteEdit.getSessions();
-                   if (const auto it = sessions.find(internalId); it != sessions.end()) {
-                       m_remoteEdit.cancelEdit(it->second.get());
-                   }
-               }));
+               {{tr("Cancel"), [this, internalId]() {
+                     const auto &sessions = m_remoteEdit.getSessions();
+                     if (const auto it = sessions.find(internalId); it != sessions.end()) {
+                         m_remoteEdit.cancelEdit(it->second.get());
+                     }
+                 }}});
     }
 
     for (const auto &draft : m_remoteEdit.pendingDrafts()) {
         addRow(tr("Unsent draft: %1 (%2)").arg(draft.title, draft.lastModified.toString()),
-               std::make_pair(tr("View"), [this, draft]() { m_remoteEdit.viewDraft(draft); }),
-               std::make_pair(tr("Discard"), [this, draft]() { m_remoteEdit.discardDraft(draft); }));
+               {{tr("View"), [this, draft]() { m_remoteEdit.viewDraft(draft); }},
+                {tr("Discard"), [this, draft]() { m_remoteEdit.discardDraft(draft); }}});
     }
 
     m_list->setVisible(m_listLayout->count() > 0);
@@ -139,7 +141,7 @@ void RemoteEditPanel::addPage(RemoteEditWidget *const widget)
 {
     const int index = m_tabs->addTab(widget, widget->getTitle());
     m_tabs->setTabToolTip(index,
-                          widget->isDraftRecovery() ? tr("Recovered draft")
+                          widget->isDraftView()     ? tr("Recovered draft")
                           : widget->isEditSession() ? tr("Editing")
                                                     : tr("Viewing"));
     updateTabLabel(widget);
@@ -165,7 +167,7 @@ void RemoteEditPanel::updateTabLabel(RemoteEditWidget *const widget)
         return;
     }
     QString label = widget->getTitle();
-    if (widget->isDraftRecovery()) {
+    if (widget->isDraftView()) {
         label = tr("[draft] %1").arg(label);
     } else if (!widget->isEditSession()) {
         label = tr("[view] %1").arg(label);

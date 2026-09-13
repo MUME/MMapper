@@ -9,6 +9,7 @@
 #include "../global/AnsiTextUtils.h"
 #include "../global/SendToUser.h"
 #include "../global/window_utils.h"
+#include "../proxy/TaggedBytes.h"
 #include "remoteeditsession.h"
 
 #include <cassert>
@@ -65,11 +66,21 @@ void notifyUserOfSubmissionFailure(const QString &title, const QString &errorMsg
     });
 }
 
+NODISCARD std::unique_ptr<RemoteEditDraftStore> makeDraftStore()
+{
+#ifdef Q_OS_WASM
+    return std::make_unique<RemoteEditSettingsDraftStore>(&makeAppSettings);
+#else
+    return std::make_unique<RemoteEditFileDraftStore>(
+        getConfig().mumeClientProtocol.editorDirectory);
+#endif
+}
+
 } // namespace
 
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)
-    , m_store(RemoteEditDraftStore::makeDefault())
+    , m_store(makeDraftStore())
 {}
 
 RemoteEdit::~RemoteEdit() = default;
@@ -152,7 +163,7 @@ void RemoteEdit::createSession(const RemoteSessionId sessionId,
                                                               title,
                                                               body,
                                                               draftKey,
-                                                              /*draftRecovery=*/false,
+                                                              /*draftView=*/false,
                                                               this);
     } else {
 #ifndef Q_OS_WASM
@@ -203,7 +214,7 @@ void RemoteEdit::cancelEdit(RemoteEditSession *const pSession)
     // Only a connected live edit is truly abandoned here (MUME is told to
     // cancel, so the draft is deleted). A disconnected edit or a recovery
     // window closed the same way keeps its draft on disk for later recovery.
-    if (session.isEditSession() && session.isConnected() && !session.isDraftRecovery()) {
+    if (session.isEditSession() && session.isConnected() && !session.isDraftView()) {
         qDebug() << "Cancelling session" << session.getSessionId().asInt32();
 
         QJsonObject obj;
@@ -364,7 +375,7 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
             for (auto it = m_sessions.begin(); it != m_sessions.end(); ++it) {
                 // A recovered draft's session id belongs to a dead MUME session and
                 // can never legitimately receive this ack.
-                if (it->second->isDraftRecovery() || it->second->getSessionId() != sessionId) {
+                if (it->second->isDraftView() || it->second->getSessionId() != sessionId) {
                     continue;
                 }
                 if (optResult && *optResult) {
@@ -401,8 +412,6 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
                 qWarning() << "MUME.Client.CancelEdit failed for session" << optId.value();
             }
         }
-    } else if (msg.isCoreGoodbye()) {
-        onDisconnected();
     }
 }
 
@@ -471,7 +480,7 @@ void RemoteEdit::viewDraft(const DraftInfo &draft)
                                                                draft.title,
                                                                readDraft(draft.key),
                                                                draft.key,
-                                                               /*draftRecovery=*/true,
+                                                               /*draftView=*/true,
                                                                this);
     session->setDisconnected();
 
@@ -523,7 +532,7 @@ bool RemoteEdit::reportStatus(AnsiOstream &aos, const RemoteInternalId id) const
     aos.write(" \"");
     aos.write(mmqt::toStdStringUtf8(session.getTitle()));
     aos.write("\" -- ");
-    if (session.isDraftRecovery()) {
+    if (session.isDraftView()) {
         aos.write("viewing unsent draft (read-only)");
     } else if (!session.isEditSession()) {
         aos.write("viewing");
@@ -605,7 +614,7 @@ bool discard(const uint32_t id)
     }
     // A live edit has no draft-only state to discard; route it through cancelEdit()
     // (which also sends the GMCP cancel and deletes the draft) instead.
-    if (it->second->isDraftRecovery()) {
+    if (it->second->isDraftView()) {
         g_instance->discardDraft(it->second.get());
     } else {
         g_instance->cancelEdit(it->second.get());

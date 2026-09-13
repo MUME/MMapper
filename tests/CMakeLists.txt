@@ -301,6 +301,24 @@ set_target_properties(
 )
 add_test(NAME TestTimer COMMAND TestTimer)
 
+# Remote edit draft store
+set(remote_edit_draft_store
+        ../src/mpi/RemoteEditDraftStore.cpp
+        ../src/mpi/RemoteEditDraftStore.h
+)
+set(TestRemoteEditDraftStore TestRemoteEditDraftStore.cpp)
+add_executable(TestRemoteEditDraftStore ${remote_edit_draft_store} ${TestRemoteEditDraftStore})
+add_dependencies(TestRemoteEditDraftStore mm_global)
+target_link_libraries(TestRemoteEditDraftStore mm_global Qt6::Test coverage_config)
+set_target_properties(
+        TestRemoteEditDraftStore PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestRemoteEditDraftStore COMMAND TestRemoteEditDraftStore)
+
 # Room panel mob
 set(room_mob
         ../src/roompanel/RoomMob.h

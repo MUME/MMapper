@@ -155,7 +155,7 @@ public:
 
 private:
     const bool m_editSession;
-    const bool m_draftRecovery;
+    const bool m_draftView;
     const QString m_title;
     const QString m_body;
     QString m_lastNotifiedText;
@@ -171,7 +171,7 @@ private:
 
 public:
     explicit RemoteEditWidget(
-        bool editSession, bool draftRecovery, QString title, QString body, QWidget *parent);
+        bool editSession, bool draftView, QString title, QString body, QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:
@@ -179,7 +179,7 @@ public:
     NODISCARD QSize sizeHint() const override;
     NODISCARD const QString &getTitle() const { return m_title; }
     NODISCARD bool isEditSession() const { return m_editSession; }
-    NODISCARD bool isDraftRecovery() const { return m_draftRecovery; }
+    NODISCARD bool isDraftView() const { return m_draftView; }
     NODISCARD bool isModified() const;
     /// What the tab's close button does: prompts if there are unsaved edits,
     /// otherwise cancels the session.

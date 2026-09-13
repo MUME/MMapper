@@ -206,13 +206,13 @@ void RemoteTextEdit::toggleWhitespace()
 }
 
 RemoteEditWidget::RemoteEditWidget(const bool editSession,
-                                   const bool draftRecovery,
+                                   const bool draftView,
                                    QString title,
                                    QString body,
                                    QWidget *const parent)
     : QWidget(parent)
     , m_editSession(editSession)
-    , m_draftRecovery(draftRecovery)
+    , m_draftView(draftView)
     , m_title(std::move(title))
     , m_body(std::move(body))
     , m_lastNotifiedText(m_body)
@@ -256,7 +256,7 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     addStatusBar(m_textEdit.get());
     addFileMenu(m_textEdit.get());
 
-    if (m_draftRecovery) {
+    if (m_draftView) {
         showBanner(tr("Unsent draft (read-only). MUME no longer has this edit open: re-run the "
                       "edit command in MUME and choose \"Restore\" to continue it, or copy the "
                       "text out."),
@@ -386,7 +386,7 @@ auto RemoteEditWidget::createFindReplaceWidget() -> FindReplaceWidget *
 void RemoteEditWidget::addFileMenu(const Editor *const pTextEdit)
 {
     QMenu *const fileMenu = m_menuBar->addMenu(tr("&File"));
-    if (m_editSession && !m_draftRecovery) {
+    if (m_editSession && !m_draftView) {
         addSave(fileMenu);
     }
     addExit(fileMenu);
@@ -600,8 +600,8 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
                                             tr("E&xit"),
                                             this);
     quitAction->setShortcut(tr("Ctrl+Q"));
-    quitAction->setStatusTip(m_draftRecovery ? tr("Close this page (the draft is kept)")
-                                             : tr("Cancel and do not submit changes to MUME"));
+    quitAction->setStatusTip(m_draftView ? tr("Close this page (the draft is kept)")
+                                         : tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
     connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::slot_cancelEdit);
 }

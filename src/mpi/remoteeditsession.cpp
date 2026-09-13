@@ -23,14 +23,14 @@ RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
                                      QString title,
                                      QString draftKey,
-                                     const bool draftRecovery,
+                                     const bool draftView,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
     , m_manager(remoteEdit)
     , m_title(std::move(title))
     , m_internalId(internalId)
     , m_sessionId(sessionId)
-    , m_draftRecovery(draftRecovery)
+    , m_draftView(draftView)
     , m_draftKey(std::move(draftKey))
 {
     assert(m_manager != nullptr);
@@ -61,10 +61,10 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
                                                      const QString &title,
                                                      const QString &body,
                                                      const QString &draftKey,
-                                                     const bool draftRecovery,
+                                                     const bool draftView,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftKey, draftRecovery, parent)
-    , m_widget(new RemoteEditWidget(isEditSession(), draftRecovery, title, body, nullptr))
+    : RemoteEditSession(internalId, sessionId, title, draftKey, draftView, parent)
+    , m_widget(new RemoteEditWidget(isEditSession(), draftView, title, body, nullptr))
 {
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
@@ -101,19 +101,19 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
     }
 }
 
-RemoteEditWidget *RemoteEditInternalSession::getWidget() const
+RemoteEditWidget *RemoteEditInternalSession::virt_getWidget() const
 {
     return m_widget.data();
 }
 
-void RemoteEditInternalSession::focus()
+void RemoteEditInternalSession::virt_focus()
 {
     if (auto *const p = m_widget.get()) {
         p->focus();
     }
 }
 
-void RemoteEditInternalSession::offerDraft(const RemoteEditDraftInfo &draft)
+void RemoteEditInternalSession::virt_offerDraft(const RemoteEditDraftInfo &draft)
 {
     auto *const p = m_widget.get();
     if (p == nullptr) {
@@ -138,7 +138,7 @@ void RemoteEditInternalSession::virt_onDisconnected()
     }
 }
 
-void RemoteEditInternalSession::flushDraft()
+void RemoteEditInternalSession::virt_flushDraft()
 {
     if ((m_debounceTimer != nullptr && m_debounceTimer->isActive())
         || (m_throttleTimer != nullptr && m_throttleTimer->isActive())) {
@@ -181,7 +181,7 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const QString &body,
                                                      const QString &draftKey,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftKey, /*draftRecovery=*/false, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftKey, /*draftView=*/false, parent)
 {
     m_process = new RemoteEditProcess(isEditSession(), title, body, getFullDraftPath(), this);
     const auto proc = m_process.data();

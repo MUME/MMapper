@@ -21,19 +21,6 @@
 #include <QString>
 #include <QStringList>
 
-static constexpr const std::string_view VALID
-    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-static constexpr const auto VALID_LEN = VALID.length();
-
-NODISCARD static std::string randomString(int length)
-{
-    std::ostringstream os;
-    for (int i = 0; i < length; ++i) {
-        os << VALID[getRandom(VALID_LEN)];
-    }
-    return os.str();
-}
-
 RemoteEditProcess::RemoteEditProcess(const bool editSession,
                                      const QString &title,
                                      const QString &body,
@@ -59,7 +46,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
         m_fullPath = QDir::tempPath() + QDir::separator()
                      + QString("MMapper.view.%1.%2")
                            .arg(QCoreApplication::applicationPid())
-                           .arg(mmqt::toQStringLatin1(randomString(6)));
+                           .arg(mmqt::toQStringLatin1(getRandomString(6)));
     }
 
     QFile file(m_fullPath);

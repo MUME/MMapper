@@ -6,7 +6,6 @@
 #include "../global/macros.h"
 #include "../global/utils.h"
 #include "../proxy/GmcpMessage.h"
-#include "../proxy/TaggedBytes.h"
 #include "RemoteEditDraftStore.h"
 #include "remoteeditsession.h"
 

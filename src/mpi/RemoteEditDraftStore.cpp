@@ -3,11 +3,11 @@
 
 #include "RemoteEditDraftStore.h"
 
-#include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/io.h"
 #include "../global/random.h"
 
-#include <sstream>
+#include <utility>
 
 #include <QDateTime>
 #include <QDir>
@@ -21,18 +21,6 @@
 
 namespace {
 
-constexpr const std::string_view VALID_RANDOM_CHARS
-    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-NODISCARD QString randomSuffix(const int length)
-{
-    std::ostringstream os;
-    for (int i = 0; i < length; ++i) {
-        os << VALID_RANDOM_CHARS[getRandom(VALID_RANDOM_CHARS.length())];
-    }
-    return mmqt::toQStringUtf8(os.str());
-}
-
 // MUME reuses small session ids, so the timestamp -- not just the id --
 // keeps concurrent/successive drafts from colliding.
 NODISCARD QString makeKeyStem(const RemoteSessionId sessionId)
@@ -42,16 +30,19 @@ NODISCARD QString makeKeyStem(const RemoteSessionId sessionId)
 
 NODISCARD QString encodeFileName(const RemoteSessionId sessionId, const QString &title)
 {
-    const QByteArray encoded = QUrl::toPercentEncoding(title);
-    QByteArray safeTitle = encoded.left(50);
-    if (safeTitle.size() < encoded.size()) {
-        // Don't split a "%XX" escape at the truncation boundary.
-        const qsizetype lastPercent = safeTitle.lastIndexOf('%');
-        if (lastPercent >= 0 && safeTitle.size() - lastPercent < 3) {
-            safeTitle.truncate(lastPercent);
+    // Keep file names bounded by shortening the title itself, so neither a
+    // %XX escape nor a multi-byte character is ever cut in half.
+    constexpr qsizetype MAX_ENCODED_TITLE = 50;
+    QString shortened = title;
+    QByteArray encoded = QUrl::toPercentEncoding(shortened);
+    while (encoded.size() > MAX_ENCODED_TITLE && !shortened.isEmpty()) {
+        shortened.chop(1);
+        if (!shortened.isEmpty() && shortened.back().isHighSurrogate()) {
+            shortened.chop(1);
         }
+        encoded = QUrl::toPercentEncoding(shortened);
     }
-    return QString("draft_%1_%2.txt").arg(makeKeyStem(sessionId), QString::fromLatin1(safeTitle));
+    return QString("draft_%1_%2.txt").arg(makeKeyStem(sessionId), QString::fromLatin1(encoded));
 }
 
 NODISCARD bool decodeFileName(const QString &fileName, RemoteSessionId &sessionId, QString &title)
@@ -72,22 +63,12 @@ constexpr const char *const SETTINGS_GROUP = "RemoteEditDrafts";
 
 RemoteEditDraftStore::~RemoteEditDraftStore() = default;
 
-std::unique_ptr<RemoteEditDraftStore> RemoteEditDraftStore::makeDefault()
-{
-#ifdef Q_OS_WASM
-    return std::make_unique<RemoteEditSettingsDraftStore>();
-#else
-    return std::make_unique<RemoteEditFileDraftStore>();
-#endif
-}
-
 // ---------------------------------------------------------------------------
 
-QString RemoteEditFileDraftStore::getDirectory()
+RemoteEditFileDraftStore::RemoteEditFileDraftStore(QString directory)
+    : m_directory(std::move(directory))
 {
-    const QString dir = getConfig().mumeClientProtocol.editorDirectory;
-    QDir().mkpath(dir);
-    return dir;
+    QDir().mkpath(m_directory);
 }
 
 QString RemoteEditFileDraftStore::filePath(const QString &key) const
@@ -95,7 +76,7 @@ QString RemoteEditFileDraftStore::filePath(const QString &key) const
     if (key.isEmpty()) {
         return QString();
     }
-    return QDir(getDirectory()).absoluteFilePath(key);
+    return QDir(m_directory).absoluteFilePath(key);
 }
 
 QString RemoteEditFileDraftStore::create(const RemoteSessionId sessionId,
@@ -104,7 +85,7 @@ QString RemoteEditFileDraftStore::create(const RemoteSessionId sessionId,
 {
     QString fileName = encodeFileName(sessionId, title);
     if (QFile::exists(filePath(fileName))) {
-        fileName = fileName.chopped(4) + "_" + randomSuffix(5) + ".txt";
+        fileName = fileName.chopped(4) + "_" + mmqt::toQStringLatin1(getRandomString(5)) + ".txt";
     }
 
     QFile file(filePath(fileName));
@@ -120,6 +101,9 @@ QString RemoteEditFileDraftStore::create(const RemoteSessionId sessionId,
 
 bool RemoteEditFileDraftStore::save(const QString &key, const QString &content)
 {
+    if (key.isEmpty() || !QFile::exists(filePath(key))) {
+        return false;
+    }
     QSaveFile file(filePath(key));
     if (!file.open(QFile::WriteOnly | QFile::Text)) {
         return false;
@@ -150,7 +134,7 @@ void RemoteEditFileDraftStore::remove(const QString &key)
 QList<RemoteEditDraftInfo> RemoteEditFileDraftStore::list() const
 {
     QList<RemoteEditDraftInfo> drafts;
-    const QDir dir(getDirectory());
+    const QDir dir(m_directory);
     for (const QString &fileName : dir.entryList({"draft_*.txt"}, QDir::Files)) {
         RemoteSessionId sessionId;
         QString title;
@@ -163,12 +147,16 @@ QList<RemoteEditDraftInfo> RemoteEditFileDraftStore::list() const
 
 // ---------------------------------------------------------------------------
 
+RemoteEditSettingsDraftStore::RemoteEditSettingsDraftStore(SettingsFactory makeSettings)
+    : m_makeSettings(std::move(makeSettings))
+{}
+
 QString RemoteEditSettingsDraftStore::create(const RemoteSessionId sessionId,
                                              const QString &title,
                                              const QString &content)
 {
-    const QString key = makeKeyStem(sessionId) + "_" + randomSuffix(5);
-    auto settings = makeAppSettings();
+    const QString key = makeKeyStem(sessionId) + "_" + mmqt::toQStringLatin1(getRandomString(5));
+    auto settings = m_makeSettings();
     settings->beginGroup(SETTINGS_GROUP);
     settings->beginGroup(key);
     settings->setValue("sessionId", sessionId.asInt32());
@@ -183,7 +171,7 @@ QString RemoteEditSettingsDraftStore::create(const RemoteSessionId sessionId,
 
 bool RemoteEditSettingsDraftStore::save(const QString &key, const QString &content)
 {
-    auto settings = makeAppSettings();
+    auto settings = m_makeSettings();
     settings->beginGroup(SETTINGS_GROUP);
     settings->beginGroup(key);
     if (!settings->contains("title")) {
@@ -199,7 +187,7 @@ bool RemoteEditSettingsDraftStore::save(const QString &key, const QString &conte
 
 QString RemoteEditSettingsDraftStore::read(const QString &key) const
 {
-    auto settings = makeAppSettings();
+    auto settings = m_makeSettings();
     return settings->value(QString("%1/%2/content").arg(SETTINGS_GROUP, key)).toString();
 }
 
@@ -208,7 +196,7 @@ void RemoteEditSettingsDraftStore::remove(const QString &key)
     if (key.isEmpty()) {
         return;
     }
-    auto settings = makeAppSettings();
+    auto settings = m_makeSettings();
     settings->beginGroup(SETTINGS_GROUP);
     settings->remove(key);
     settings->endGroup();
@@ -218,7 +206,7 @@ void RemoteEditSettingsDraftStore::remove(const QString &key)
 QList<RemoteEditDraftInfo> RemoteEditSettingsDraftStore::list() const
 {
     QList<RemoteEditDraftInfo> drafts;
-    auto settings = makeAppSettings();
+    auto settings = m_makeSettings();
     settings->beginGroup(SETTINGS_GROUP);
     for (const QString &key : settings->childGroups()) {
         settings->beginGroup(key);

@@ -9,9 +9,7 @@
 #endif
 
 #include "../global/TaggedInt.h"
-#include "../global/TaggedString.h"
 #include "../global/macros.h"
-#include "../proxy/TaggedBytes.h"
 
 #include <QDateTime>
 #include <QObject>
@@ -77,7 +75,7 @@ protected:
     QString m_title;
     const RemoteInternalId m_internalId{};
     const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
-    const bool m_draftRecovery = false;
+    const bool m_draftView = false;
     bool m_connected = true;
     QString m_draftKey;
 
@@ -92,16 +90,16 @@ public:
                                RemoteSessionId sessionId,
                                QString title,
                                QString draftKey,
-                               bool draftRecovery,
+                               bool draftView,
                                RemoteEdit *remoteEdit);
 
 public:
     NODISCARD auto getInternalId() const { return m_internalId; }
     NODISCARD auto getSessionId() const { return m_sessionId; }
     NODISCARD bool isEditSession() const { return m_sessionId != REMOTE_VIEW_SESSION_ID; }
-    /// True for a read-only page showing an unsent draft from disk, as opposed
-    /// to a live session originating from a MUME GMCP edit/view request.
-    NODISCARD bool isDraftRecovery() const { return m_draftRecovery; }
+    /// True for a read-only page showing an unsent draft, as opposed to a
+    /// live session originating from a MUME GMCP edit/view request.
+    NODISCARD bool isDraftView() const { return m_draftView; }
     NODISCARD const QString &getContent() const { return m_content; }
     NODISCARD const QString &getTitle() const { return m_title; }
     void setContent(QString content) { m_content = std::move(content); }
@@ -109,15 +107,15 @@ public:
     void save();
     void discard();
     /// Brings this session's editor page to the front, if it has one (no-op otherwise).
-    virtual void focus() {}
+    void focus() { virt_focus(); }
     /// A pending draft with this session's title exists; let the user restore it.
-    virtual void offerDraft(const RemoteEditDraftInfo & /*draft*/) {}
+    void offerDraft(const RemoteEditDraftInfo &draft) { virt_offerDraft(draft); }
     /// The editor page hosted by RemoteEditPanel, or nullptr for sessions without one.
-    NODISCARD virtual RemoteEditWidget *getWidget() const { return nullptr; }
-    /// Flushes any pending debounced auto-save immediately (no-op unless overridden).
-    virtual void flushDraft() {}
+    NODISCARD RemoteEditWidget *getWidget() const { return virt_getWidget(); }
+    /// Flushes any pending debounced auto-save immediately.
+    void flushDraft() { virt_flushDraft(); }
     /// Short label for UI, e.g. "Internal" / "External".
-    NODISCARD virtual const char *getEditorTypeName() const { return "Internal"; }
+    NODISCARD const char *getEditorTypeName() const { return virt_getEditorTypeName(); }
 
 public:
     NODISCARD bool isConnected() const { return m_connected; }
@@ -129,7 +127,12 @@ public:
     NODISCARD const QString &getDraftKey() const { return m_draftKey; }
     NODISCARD QString getFullDraftPath() const;
 
-protected:
+private:
+    virtual void virt_focus() {}
+    virtual void virt_offerDraft(const RemoteEditDraftInfo & /*draft*/) {}
+    virtual void virt_flushDraft() {}
+    NODISCARD virtual const char *virt_getEditorTypeName() const { return "Internal"; }
+    NODISCARD virtual RemoteEditWidget *virt_getWidget() const { return nullptr; }
     virtual void virt_onDisconnected() {}
 
 protected slots:
@@ -157,18 +160,16 @@ public:
                                        const QString &title,
                                        const QString &body,
                                        const QString &draftKey,
-                                       bool draftRecovery,
+                                       bool draftView,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
 
-public:
-    void focus() override;
-    void offerDraft(const RemoteEditDraftInfo &draft) override;
-    NODISCARD RemoteEditWidget *getWidget() const override;
-
 private:
+    void virt_focus() override;
+    void virt_offerDraft(const RemoteEditDraftInfo &draft) override;
+    void virt_flushDraft() override;
+    NODISCARD RemoteEditWidget *virt_getWidget() const override;
     void virt_onDisconnected() override;
-    void flushDraft() override;
 
 private slots:
     void slot_onTextModified(const QString &content);
@@ -192,7 +193,7 @@ public:
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
 
-public:
-    NODISCARD const char *getEditorTypeName() const override { return "External"; }
+private:
+    NODISCARD const char *virt_getEditorTypeName() const override { return "External"; }
 };
 #endif
