@@ -28,29 +28,20 @@ jobs:
         create-symlink: true
         key: ${{ github.job }}
 
-    - name: Cache KDE Neon GPG key
-      id: cache-kde-neon-key
-      uses: actions/cache@v6
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
       with:
-        path: kde-neon.gpg
-        key: kde-neon-key-v1
-
-    - name: Add KDE Neon repository
-      run: |
-        if [ ! -f kde-neon.gpg ]; then
-          curl -sSfL --retry 5 --retry-delay 5 https://archive.neon.kde.org/public.key | gpg --dearmor --yes -o kde-neon.gpg
-        fi
-        sudo cp kde-neon.gpg /usr/share/keyrings/kde-neon.gpg
-        echo "deb [signed-by=/usr/share/keyrings/kde-neon.gpg] http://archive.neon.kde.org/user jammy main" | sudo tee /etc/apt/sources.list.d/kde-neon.list
-        sudo apt update -qq
+        version: 6.8.3
+        arch: linux_gcc_64
+        cache: true
+        modules: 'qtwebsockets qtmultimedia'
 
     - name: Install Build Dependencies
       run: |
+        sudo apt update -qq
         sudo apt install -y \
-          qt6-base-dev qt6-base-dev-tools libqt6opengl6-dev libqt6websockets6-dev \
-          qt6-multimedia-dev libqt6multimedia6 qt6-svg-dev \
-          libgl1-mesa-dev qt6-wayland qtkeychain-qt6-dev build-essential mold git \
-          zlib1g-dev libssl-dev wget zsync fuse file cmake libxcb-cursor-dev
+          libgl1-mesa-dev libsecret-1-dev libxcb-cursor-dev libxkbcommon-dev \
+          build-essential mold git zlib1g-dev libssl-dev wget zsync fuse file cmake
 
     - name: Download linuxdeploy
       run: |
@@ -68,6 +59,7 @@ jobs:
 
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
           -DCMAKE_INSTALL_PREFIX=/usr \
           -DUSE_MOLD=true \
           -DWITH_WEBSOCKET=ON \
@@ -85,7 +77,7 @@ jobs:
         # Configure linuxdeploy and make sure the plugin can be found
         export PATH=$PATH:$(pwd)/..
         export UPDATE_INFORMATION="gh-releases-zsync|MUME|MMapper|latest|MMapper-*-x86_64.AppImage.zsync"
-        export QMAKE=/usr/bin/qmake6
+        export QMAKE="$QT_ROOT_DIR/bin/qmake"
         export EXTRA_PLATFORM_PLUGINS="libqoffscreen.so;libqwayland-egl.so;libqwayland-generic.so"
         export EXTRA_QT_PLUGINS="wayland-decoration-client;wayland-graphics-integration-client;wayland-shell-integration;waylandcompositor"
         export LIBSECRET_PATH=$(find /usr/lib -name "libsecret-1.so.0" 2>/dev/null | head -n 1)

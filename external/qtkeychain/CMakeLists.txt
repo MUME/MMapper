@@ -1,11 +1,7 @@
 if(QTKEYCHAIN_FOUND)
     message(STATUS "QtKeychain found: ${QTKEYCHAIN_LIBRARIES} ${QTKEYCHAIN_INCLUDE_DIRS}")
 else()
-    if(WIN32 OR APPLE OR EMSCRIPTEN)
-        message(STATUS "Could not find system QtKeychain; building from local source tree")
-    else()
-        message(FATAL_ERROR "QtKeychain NOT found: use `-DWITH_QTKEYCHAIN=OFF` to build without account autologin")
-    endif()
+    message(STATUS "Could not find system QtKeychain; building from local source tree")
 
     set(QTKEYCHAIN_LIBRARY_NAME qt6keychain)
     if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
