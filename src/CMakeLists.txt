@@ -260,6 +260,8 @@ set(mmapper_SRCS
     group/mmapper2character.h
     group/mmapper2group.cpp
     group/mmapper2group.h
+    logger/LogCleanup.cpp
+    logger/LogCleanup.h
     logger/autologger.cpp
     logger/autologger.h
     mainwindow/aboutdialog.cpp

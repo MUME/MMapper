@@ -8,12 +8,14 @@
 #include "../global/TextUtils.h"
 #include "../global/random.h"
 #include "../global/window_utils.h"
+#include "LogCleanup.h"
 
-#include <algorithm>
 #include <sstream>
 #include <tuple>
+#include <vector>
 
 #include <QDebug>
+#include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QStringList>
@@ -111,43 +113,31 @@ void AutoLogger::deleteOldLogs()
         return;
     }
 
-    auto fileInfoList = QDir(conf.autoLogDirectory)
-                            .entryInfoList(QStringList("MMapper_Log_*.txt"), QDir::Files);
+    const auto fileInfoList = QDir(conf.autoLogDirectory)
+                                  .entryInfoList(QStringList("MMapper_Log_*.txt"), QDir::Files);
     if (fileInfoList.empty()) {
         return;
     }
 
-    // Sort files so we can delete the oldest
-    std::sort(fileInfoList.begin(), fileInfoList.end(), [](const auto &a, const auto &b) {
-        return a.birthTime() < b.birthTime();
-    });
-
-    qint64 totalFileSize = 0, deleteFileSize = 0;
-    QList<QFileInfo> filesToDelete;
-    const QDate &today = QDate::currentDate();
+    std::vector<log_cleanup::LogFile> files;
+    files.reserve(static_cast<size_t>(fileInfoList.size()));
     for (const auto &fileInfo : fileInfoList) {
-        totalFileSize += fileInfo.size();
-        bool deleteFile = false;
-        switch (conf.cleanupStrategy) {
-        case AutoLoggerEnum::DeleteDays:
-            if (fileInfo.birthTime().date().daysTo(today) >= conf.deleteWhenLogsReachDays) {
-                deleteFile = true;
-            }
-            break;
-        case AutoLoggerEnum::DeleteSize:
-            if (totalFileSize >= conf.deleteWhenLogsReachBytes) {
-                deleteFile = true;
-            }
-            break;
-        case AutoLoggerEnum::KeepForever:
-            break;
-        default:
-            abort();
-        }
-        if (deleteFile) {
-            deleteFileSize += fileInfo.size();
-            filesToDelete.append(fileInfo);
-        }
+        files.push_back(
+            {fileInfo.absoluteFilePath(), log_cleanup::getFileTime(fileInfo), fileInfo.size()});
+    }
+
+    const log_cleanup::Policy policy{conf.cleanupStrategy,
+                                     conf.deleteWhenLogsReachDays,
+                                     conf.deleteWhenLogsReachBytes};
+    const auto selected = log_cleanup::selectLogsToDelete(std::move(files),
+                                                          policy,
+                                                          QDate::currentDate());
+
+    qint64 deleteFileSize = 0;
+    QFileInfoList filesToDelete;
+    for (const auto &file : selected) {
+        deleteFileSize += file.size;
+        filesToDelete.append(QFileInfo(file.path));
     }
 
     if (filesToDelete.empty()) {
