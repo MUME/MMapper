@@ -139,8 +139,11 @@ QString RemoteEditFileDraftStore::read(const QString &key) const
 
 void RemoteEditFileDraftStore::remove(const QString &key)
 {
-    if (!key.isEmpty()) {
-        QFile::remove(filePath(key));
+    if (key.isEmpty()) {
+        return;
+    }
+    if (!QFile::remove(filePath(key))) {
+        qWarning() << "Unable to remove draft" << filePath(key);
     }
 }
 

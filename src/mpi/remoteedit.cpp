@@ -541,6 +541,7 @@ void RemoteEdit::deleteDraft(const QString &key)
     if (key.isEmpty()) {
         return;
     }
+    qInfo() << "Deleting draft" << key;
     deref(m_store).remove(key);
     emit sig_draftsChanged();
 }
@@ -621,7 +622,8 @@ void simulate_edit(const QString &title)
     static int32_t nextFakeId = 1000000;
     g_instance->slot_remoteEdit(RemoteSessionId{nextFakeId++},
                                 title,
-                                QString("Simulated edit \"%1\".\nType here; nothing is sent to MUME.\n")
+                                QString(
+                                    "Simulated edit \"%1\".\nType here; nothing is sent to MUME.\n")
                                     .arg(title));
 }
 
