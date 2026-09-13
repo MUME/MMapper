@@ -7,7 +7,9 @@
 #include "../src/global/tests.h"
 #include "../src/proxy/GmcpMessage.h"
 #include "../src/roompanel/RoomManager.h"
+#include "../src/roompanel/RoomModel.h"
 
+#include <QColor>
 #include <QtTest>
 namespace { // anonymous
 const auto mysterieuse = std::invoke([]() -> QString {
@@ -133,6 +135,66 @@ void TestRoomManager::testParseGmcpUpdateValidMessage()
     // Ensure the mob exists, using the fact that shared_ptr evaluates to true if
     // it points to something
     QVERIFY(updatedMob);
+}
+
+void TestRoomManager::testRoomModelEnemyColors()
+{
+    auto &manager = m_manager;
+    manager.slot_reset();
+
+    RoomModel model(nullptr, manager.getRoom());
+    model.update();
+
+    // Row 0 is the placeholder empty row when there are no mobs.
+    const QModelIndex normalName = model.index(0, static_cast<int>(RoomModel::ColumnTypeEnum::NAME));
+    QVERIFY(!model.data(normalName, RoomModel::RowBackgroundRole).isValid());
+    QVERIFY(!model.data(normalName, RoomModel::RowForegroundRole).isValid());
+
+    // A name wrapped in asterisks (e.g. "*an Orc*") marks an enemy player.
+    QJsonObject enemyObj = {{"id", 3}, {"name", "*an Orc*"}, {"position", "standing"}};
+    auto jsonStr = makeCompactJson(enemyObj);
+    GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
+    manager.slot_parseGmcpInput(addMessage);
+    model.update();
+
+    const QModelIndex enemyName = model.index(0, static_cast<int>(RoomModel::ColumnTypeEnum::NAME));
+    const QVariant background = model.data(enemyName, RoomModel::RowBackgroundRole);
+    QVERIFY(background.isValid());
+    QCOMPARE(background.value<QColor>(), QColor(Qt::yellow));
+
+    const QVariant foreground = model.data(enemyName, RoomModel::RowForegroundRole);
+    QVERIFY(foreground.isValid());
+
+    // The LABEL column is explicitly excluded from enemy highlighting.
+    const QModelIndex enemyLabel = model.index(0,
+                                               static_cast<int>(RoomModel::ColumnTypeEnum::LABEL));
+    QVERIFY(!model.data(enemyLabel, RoomModel::RowBackgroundRole).isValid());
+}
+
+void TestRoomManager::testRoomModelFightingYouColors()
+{
+    auto &manager = m_manager;
+    manager.slot_reset();
+
+    QJsonObject fightingObj = {{"id", 4},
+                               {"name", "an angry troll"},
+                               {"position", "standing"},
+                               {"fighting", "you"}};
+    auto jsonStr = makeCompactJson(fightingObj);
+    GmcpMessage addMessage(GmcpMessageTypeEnum::ROOM_CHARS_ADD, jsonStr);
+    manager.slot_parseGmcpInput(addMessage);
+
+    RoomModel model(nullptr, manager.getRoom());
+    model.update();
+
+    const QModelIndex fightingIndex = model.index(0,
+                                                  static_cast<int>(
+                                                      RoomModel::ColumnTypeEnum::FIGHTING));
+    QCOMPARE(model.data(fightingIndex, Qt::DisplayRole).toString(), QStringLiteral("YOU"));
+
+    const QVariant foreground = model.data(fightingIndex, RoomModel::RowForegroundRole);
+    QVERIFY(foreground.isValid());
+    QCOMPARE(foreground.value<QColor>(), QColor(Qt::red));
 }
 
 int main(int argc, char **argv)

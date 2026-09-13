@@ -20,6 +20,7 @@
 #include <optional>
 
 #include <QFile>
+#include <QFont>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -100,23 +101,25 @@ static void tryAutoLoadMap(MainWindow &mw)
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         if constexpr (NO_MAP_RESOURCE) {
             return;
-        }
-        // On WASM the map is sideloaded from the network; fetch it asynchronously.
-        auto *nam = new QNetworkAccessManager(&mw);
-        auto *reply = nam->get(QNetworkRequest(QUrl(getAssetsPath() + "map/arda")));
-        QObject::connect(reply, &QNetworkReply::finished, &mw, [&mw, reply, nam]() {
-            if (reply->error() == QNetworkReply::NoError) {
-                try {
-                    mw.loadFile(MapSource::alloc(QStringLiteral("arda"), reply->readAll()));
-                } catch (const std::exception &e) {
-                    qCritical() << "[main] Failed to load sideloaded map:" << e.what();
+        } else {
+            // On WASM the map is sideloaded from the network; fetch it
+            // asynchronously.
+            auto *nam = new QNetworkAccessManager(&mw);
+            auto *reply = nam->get(QNetworkRequest(QUrl(getAssetsPath() + "map/arda")));
+            QObject::connect(reply, &QNetworkReply::finished, &mw, [&mw, reply, nam]() {
+                if (reply->error() == QNetworkReply::NoError) {
+                    try {
+                        mw.loadFile(MapSource::alloc(QStringLiteral("arda"), reply->readAll()));
+                    } catch (const std::exception &e) {
+                        qCritical() << "[main] Failed to load sideloaded map:" << e.what();
+                    }
+                } else {
+                    qWarning() << "[main] Failed to fetch sideloaded map:" << reply->errorString();
                 }
-            } else {
-                qWarning() << "[main] Failed to fetch sideloaded map:" << reply->errorString();
-            }
-            reply->deleteLater();
-            nam->deleteLater();
-        });
+                reply->deleteLater();
+                nam->deleteLater();
+            });
+        }
     } else {
         if (!NO_MAP_RESOURCE) {
             // Check the system assets directory
@@ -176,6 +179,14 @@ int main(int argc, char **argv)
     }
 
     QApplication app(argc, argv);
+
+    const double uiScale = getConfig().general.uiFontScale;
+    if (uiScale > 0.0 && !qFuzzyCompare(uiScale, 1.0)) {
+        QFont f = QApplication::font();
+        f.setPointSizeF(f.pointSizeF() * uiScale);
+        QApplication::setFont(f);
+    }
+
     tryInitDrMingw();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
     auto themeManager = std::make_unique<ThemeManager>(&app);
@@ -184,8 +195,10 @@ int main(int argc, char **argv)
     }
 
     tryLoadEmojis(getResourceFilenameRaw("emojis", "short-codes.json"));
-    auto mw = std::make_unique<MainWindow>();
+
+    std::unique_ptr<MainWindow> mw = std::make_unique<MainWindow>();
     tryAutoLoadMap(*mw);
+
     const int ret = QApplication::exec();
     qDebug() << "QApplication::exec() returned" << ret;
     mw.reset();

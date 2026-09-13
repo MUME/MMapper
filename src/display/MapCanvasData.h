@@ -25,7 +25,6 @@
 #include <variant>
 
 #include <QOpenGLTexture>
-#include <QWindow>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
 #include <QtGui/qopengl.h>
@@ -92,7 +91,12 @@ public:
 struct NODISCARD MapCanvasViewport
 {
 private:
-    QWindow &m_window;
+    // Cached geometry pushed in by the host (e.g. QOpenGLWindow). Never
+    // queried from a live window, so this type has no dependency on any
+    // particular host widget/window type.
+    int m_viewportWidth = 0;
+    int m_viewportHeight = 0;
+    qreal m_dpr = 1.0;
 
 protected:
     mutable int m_lastWidth = 0;
@@ -117,9 +121,7 @@ private:
     ViewportConfig m_viewportConfig;
 
 public:
-    explicit MapCanvasViewport(QWindow &window)
-        : m_window{window}
-    {}
+    explicit MapCanvasViewport() = default;
 
     virtual ~MapCanvasViewport();
 
@@ -127,8 +129,20 @@ protected:
     virtual void onViewProjDirty() const {}
 
 public:
-    NODISCARD auto width() const { return m_window.width(); }
-    NODISCARD auto height() const { return m_window.height(); }
+    // Called by the host whenever its size and/or device pixel ratio changes
+    // (e.g. resizeGL()/screenChanged() on a QOpenGLWindow host), and also
+    // refreshed once per paint so the cached values never go stale.
+    void setViewportSize(const int width, const int height, const qreal dpr)
+    {
+        m_viewportWidth = width;
+        m_viewportHeight = height;
+        m_dpr = dpr;
+    }
+
+public:
+    NODISCARD int width() const { return m_viewportWidth; }
+    NODISCARD int height() const { return m_viewportHeight; }
+    NODISCARD qreal getDevicePixelRatio() const { return m_dpr; }
 
 public:
     NODISCARD glm::vec2 getScroll() const { return m_scroll; }
@@ -176,7 +190,7 @@ public:
     NODISCARD const glm::mat4 &getViewProj() const;
     NODISCARD Viewport getViewport() const
     {
-        return Viewport{glm::ivec2{0, 0}, glm::ivec2{m_window.width(), m_window.height()}};
+        return Viewport{glm::ivec2{0, 0}, glm::ivec2{m_viewportWidth, m_viewportHeight}};
     }
     NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
 
@@ -239,6 +253,9 @@ struct NODISCARD PinchState
 {
     float initialDistance = 0.f;
     float lastFactor = 1.f;
+    // Midpoint of the two touch points at the previous update, in the
+    // {x, height()-y} space getMouseCoords() uses; drives two-finger panning.
+    std::optional<glm::vec2> lastCentroid;
 };
 
 struct NODISCARD MagnificationState

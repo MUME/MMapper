@@ -1,5 +1,7 @@
 set(mmapper_SRCS
     main.cpp
+    adventure/AdventureLogModel.cpp
+    adventure/AdventureLogModel.h
     adventure/adventuresession.cpp
     adventure/adventuresession.h
     adventure/adventuretracker.cpp
@@ -10,8 +12,6 @@ set(mmapper_SRCS
     adventure/lineparsers.h
     adventure/xpstatuswidget.cpp
     adventure/xpstatuswidget.h
-    display/AudioHintWidget.cpp
-    display/AudioHintWidget.h
     media/AudioManager.cpp
     media/AudioManager.h
     media/DescriptionWidget.cpp
@@ -22,26 +22,32 @@ set(mmapper_SRCS
     media/MusicManager.h
     media/SfxManager.cpp
     media/SfxManager.h
+    media/StackBlur.cpp
+    media/StackBlur.h
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/ClientWidget.cpp
     client/ClientWidget.h
-    client/PaletteManager.cpp
-    client/PaletteManager.h
-    client/displaywidget.cpp
-    client/displaywidget.h
-    client/inputwidget.cpp
-    client/inputwidget.h
-    client/stackedinputwidget.cpp
-    client/stackedinputwidget.h
+    client/InputHistory.cpp
+    client/InputHistory.h
     client/Hotkey.cpp
     client/Hotkey.h
     client/HotkeyManager.cpp
     client/HotkeyManager.h
+    client/displaywidget.cpp
+    client/displaywidget.h
+    client/PaletteManager.cpp
+    client/PaletteManager.h
     client/PasswordDialog.cpp
     client/PasswordDialog.h
     client/PreviewWidget.cpp
     client/PreviewWidget.h
+    client/inputwidget.cpp
+    client/inputwidget.h
+    client/stackedinputwidget.cpp
+    client/stackedinputwidget.h
+    clock/ClockStrings.cpp
+    clock/ClockStrings.h
     clock/mumeclock.cpp
     clock/mumeclock.h
     clock/mumeclockwidget.cpp
@@ -77,6 +83,9 @@ set(mmapper_SRCS
     display/MapCanvasData.h
     display/MapCanvasRoomDrawer.cpp
     display/MapCanvasRoomDrawer.h
+    display/MapCanvasWindow.cpp
+    display/MapCanvasWindow.h
+    display/MapCanvasWindow_gl.cpp
     display/FrameManager.cpp
     display/FrameManager.h
     display/ProjectionUtils.cpp
@@ -91,10 +100,14 @@ set(mmapper_SRCS
     display/mapcanvas.cpp
     display/mapcanvas.h
     display/mapcanvas_gl.cpp
+    display/MapScroller.cpp
+    display/MapScroller.h
     display/mapwindow.cpp
     display/mapwindow.h
     display/prespammedpath.cpp
     display/prespammedpath.h
+    global/AnsiHtml.cpp
+    global/AnsiHtml.h
     global/AnsiOstream.cpp
     global/AnsiOstream.h
     global/AnsiTextUtils.cpp
@@ -237,42 +250,48 @@ set(mmapper_SRCS
     group/ColorGenerator.h
     group/GroupManagerApi.cpp
     group/GroupManagerApi.h
-    group/enums.cpp
-    group/enums.h
+    group/GroupModel.cpp
+    group/GroupModel.h
     group/groupwidget.cpp
     group/groupwidget.h
+    group/enums.cpp
+    group/enums.h
     group/mmapper2character.cpp
     group/mmapper2character.h
     group/mmapper2group.cpp
     group/mmapper2group.h
     logger/autologger.cpp
     logger/autologger.h
+    mainwindow/aboutdialog.cpp
+    mainwindow/aboutdialog.h
     mainwindow/AsyncTypes.h
     mainwindow/AudioVolumeSlider.cpp
     mainwindow/AudioVolumeSlider.h
+    mainwindow/CompactLayout.h
     mainwindow/MapZoomSlider.cpp
     mainwindow/MapZoomSlider.h
     mainwindow/TasksPanel.cpp
     mainwindow/TasksPanel.h
     mainwindow/ThemeManager.cpp
     mainwindow/ThemeManager.h
+    mainwindow/UpdateChecker.cpp
+    mainwindow/UpdateChecker.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
-    mainwindow/aboutdialog.cpp
-    mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
     mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.cpp
     mainwindow/infomarkseditdlg.h
+    mainwindow/roomeditattrdlg.cpp
+    mainwindow/roomeditattrdlg.h
     mainwindow/mainwindow-async.cpp
     mainwindow/mainwindow-async.h
+    mainwindow/mainwindow-compact.cpp
     mainwindow/mainwindow-saveslots.cpp
     mainwindow/mainwindow.cpp
     mainwindow/mainwindow.h
     mainwindow/metatypes.cpp
     mainwindow/metatypes.h
-    mainwindow/roomeditattrdlg.cpp
-    mainwindow/roomeditattrdlg.h
     mainwindow/utils.cpp
     mainwindow/utils.h
     map/AbstractChangeVisitor.cpp
@@ -385,6 +404,8 @@ set(mmapper_SRCS
     mapfrontend/mapfrontend.h
     mapstorage/MapDestination.cpp
     mapstorage/MapDestination.h
+    mapstorage/MapLoadHelper.cpp
+    mapstorage/MapLoadHelper.h
     mapstorage/MapSource.cpp
     mapstorage/MapSource.h
     mapstorage/MmpMapStorage.cpp
@@ -409,6 +430,10 @@ set(mmapper_SRCS
     mpi/remoteedit.h
     mpi/remoteeditsession.cpp
     mpi/remoteeditsession.h
+    mpi/RemoteEditDocumentOps.cpp
+    mpi/RemoteEditDocumentOps.h
+    mpi/RemoteEditHighlighter.cpp
+    mpi/RemoteEditHighlighter.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
     mpi/gotowidget.cpp
@@ -516,6 +541,8 @@ set(mmapper_SRCS
     preferences/AdvancedGraphics.h
     preferences/audiopage.cpp
     preferences/audiopage.h
+    preferences/AnsiColorTables.cpp
+    preferences/AnsiColorTables.h
     preferences/AnsiColorDialog.cpp
     preferences/AnsiColorDialog.h
     preferences/ansicombo.cpp
@@ -524,22 +551,22 @@ set(mmapper_SRCS
     preferences/autologpage.h
     preferences/clientpage.cpp
     preferences/clientpage.h
-    preferences/configdialog.cpp
-    preferences/configdialog.h
     preferences/generalpage.cpp
     preferences/generalpage.h
     preferences/graphicspage.cpp
     preferences/graphicspage.h
     preferences/grouppage.cpp
     preferences/grouppage.h
-    preferences/mumeprotocolpage.cpp
-    preferences/mumeprotocolpage.h
     preferences/ManagePasswordDialog.cpp
     preferences/ManagePasswordDialog.h
+    preferences/mumeprotocolpage.cpp
+    preferences/mumeprotocolpage.h
     preferences/parserpage.cpp
     preferences/parserpage.h
     preferences/pathmachinepage.cpp
     preferences/pathmachinepage.h
+    preferences/configdialog.cpp
+    preferences/configdialog.h
     proxy/AbstractSocket.h
     proxy/AbstractTelnet.cpp
     proxy/AbstractTelnet.h
@@ -565,6 +592,8 @@ set(mmapper_SRCS
     proxy/connectionlistener.h
     proxy/mumesocket.cpp
     proxy/mumesocket.h
+    proxy/ProxyHost.cpp
+    proxy/ProxyHost.h
     proxy/proxy.cpp
     proxy/proxy.h
     proxy/telnetfilter.cpp
@@ -575,6 +604,8 @@ set(mmapper_SRCS
     roompanel/RoomMob.h
     roompanel/RoomMobs.cpp
     roompanel/RoomMobs.h
+    roompanel/RoomModel.cpp
+    roompanel/RoomModel.h
     roompanel/RoomWidget.cpp
     roompanel/RoomWidget.h
     syntax/Accept.cpp
@@ -602,9 +633,9 @@ set(mmapper_SRCS
     timers/CTimers.cpp
     timers/CTimers.h
     timers/TimerDelegate.cpp
+    timers/TimerDelegate.h
     timers/TimerModel.cpp
     timers/TimerModel.h
-    timers/TimerDelegate.h
     timers/TimerWidget.cpp
     timers/TimerWidget.h
     viewers/AnsiViewWindow.cpp

@@ -1130,6 +1130,18 @@ NODISCARD TextBuffer normalizeAnsi(AnsiSupportFlags supportFlags, const QString 
 NODISCARD QColor toQColor(AnsiColor16Enum ansi);
 NODISCARD QColor ansi256toRgb(int ansi);
 NODISCARD QString rgbToAnsi256String(const QColor &rgb, AnsiColor16LocationEnum type);
+
+// Decode a single ANSI RGB triple to a QColor.
+NODISCARD QColor decodeColor(AnsiColorRGB var);
+// Decode an ANSI 256-color index to a QColor; if intense and the index is one of the
+// low 8 colors (0..7), it's promoted to the corresponding high-intensity color (8..15).
+NODISCARD QColor decodeColor(AnsiColor256 var, bool intense);
+// Decode an AnsiColorVariant (default/256/RGB) to a QColor, falling back to defaultColor
+// when the variant has no explicit color.
+NODISCARD QColor decodeColor(AnsiColorVariant var, QColor defaultColor, bool intense);
+
+// Invert a color in-place (used to implement ANSI "reverse video").
+void reverseInPlace(QColor &color);
 } // namespace mmqt
 
 NODISCARD bool containsAnsi(std::string_view sv);

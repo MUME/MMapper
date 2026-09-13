@@ -16,6 +16,7 @@
 #endif
 
 #include <QCoreApplication>
+#include <QEvent>
 #include <QRegularExpression>
 
 AudioManager::AudioManager(MediaLibrary &library, GameObserver &observer, QObject *const parent)
@@ -34,6 +35,10 @@ AudioManager::AudioManager(MediaLibrary &library, GameObserver &observer, QObjec
             });
 
     m_observer.sig2_gainedLevel.connect(m_lifetime, [this]() { playSound("level-up"); });
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        QCoreApplication::instance()->installEventFilter(this);
+    }
 
     setConfig().audio.registerChangeCallback(m_lifetime, [this]() {
         updateOutputDevices();
@@ -76,6 +81,23 @@ void AudioManager::onAreaChanged(const RoomArea &area)
     mmqt::toAsciiInPlace(name);
 
     m_music->playMusic(m_library.findAudio("areas", name));
+}
+
+bool AudioManager::eventFilter(QObject *const obj, QEvent *const event)
+{
+    switch (event->type()) {
+    case QEvent::KeyPress:
+    case QEvent::MouseButtonPress:
+    case QEvent::TouchBegin:
+        if (!getConfig().audio.isUnlocked()) {
+            setConfig().audio.setUnlocked();
+        }
+        QCoreApplication::instance()->removeEventFilter(this);
+        break;
+    default:
+        break;
+    }
+    return QObject::eventFilter(obj, event);
 }
 
 void AudioManager::playSound(const QString &soundName)

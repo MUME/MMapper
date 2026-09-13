@@ -16,4 +16,7 @@ public:
 
 private Q_SLOTS:
     static void enumsTest();
+    static void roleNamesTest();
+    static void characterRoleDataTest();
+    static void moveRowTest();
 };

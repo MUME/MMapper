@@ -17,7 +17,7 @@
 
 class Coordinate;
 class InfomarkSelection;
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 class QCloseEvent;
 class QObject;
@@ -33,7 +33,7 @@ private:
     std::shared_ptr<InfomarkSelection> m_selection;
     std::vector<InfomarkId> m_markers;
     MapData *m_mapData = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
+    MapCanvasWindow *m_mapCanvas = nullptr;
 
 public:
     explicit InfomarksEditDlg(QWidget *parent);
@@ -41,7 +41,7 @@ public:
 
     void setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &is,
                               MapData *md,
-                              MapCanvas *mc);
+                              MapCanvasWindow *mc);
 
 private:
     void connectAll();

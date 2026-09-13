@@ -45,9 +45,17 @@ TimerModel::TimerModel(CTimers &timers, QObject *parent)
     connect(&m_refreshTimer, &QTimer::timeout, this, [this]() {
         if (m_allTimers.empty())
             return;
+        // An empty roles vector means "all roles changed". This must stay
+        // empty rather than {Qt::DisplayRole, ProgressRole}: consumers that
+        // bind to the custom TimeRole/NameRole/ExpiredRole (see roleNames()
+        // below) rather than Qt::DisplayRole would otherwise see those
+        // bindings never re-evaluate, freezing the on-screen time. The
+        // widget-based TimerWidget/TimerDelegate repaint on every
+        // dataChanged() regardless of the roles list, so that path is
+        // unaffected either way.
         emit dataChanged(index(0, ColName),
                          index(static_cast<int>(m_allTimers.size()) - 1, ColCount - 1),
-                         {Qt::DisplayRole, ProgressRole});
+                         {});
         startRefreshTimer();
     });
 
@@ -76,6 +84,17 @@ QVariant TimerModel::data(const QModelIndex &index, int role) const
     }
 
     const TTimer *timer = m_allTimers[static_cast<size_t>(index.row())];
+
+    // Custom roles are read from column 0, so they are handled independently
+    // of index.column() by delegating to the same per-column formatting
+    // logic used by Qt::DisplayRole.
+    if (role == NameRole) {
+        return data(this->index(index.row(), ColName), Qt::DisplayRole);
+    } else if (role == TimeRole) {
+        return data(this->index(index.row(), ColTime), Qt::DisplayRole);
+    } else if (role == ExpiredRole) {
+        return timer->isExpired();
+    }
 
     if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
         switch (index.column()) {
@@ -110,6 +129,16 @@ QVariant TimerModel::data(const QModelIndex &index, int role) const
     }
 
     return QVariant();
+}
+
+QHash<int, QByteArray> TimerModel::roleNames() const
+{
+    QHash<int, QByteArray> roles = QAbstractTableModel::roleNames();
+    roles[NameRole] = "name";
+    roles[TimeRole] = "time";
+    roles[ProgressRole] = "progress";
+    roles[ExpiredRole] = "expired";
+    return roles;
 }
 
 QVariant TimerModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -181,6 +210,24 @@ bool TimerModel::dropMimeData(
 
     m_timers.moveTimer(from, to);
     return true;
+}
+
+void TimerModel::moveRow(int from, int to)
+{
+    // Mirrors dropMimeData()'s validation and reorder call exactly, since
+    // this is the same "move row `from` so it lands at position `to`"
+    // operation, reached programmatically instead of through a
+    // QAbstractItemView's drag-and-drop. CTimers::moveTimer() emits
+    // sig_timersUpdated(), which updateTimerList() is already connected to,
+    // so the model resets and views pick up the new order.
+    if (from < 0 || static_cast<size_t>(from) >= m_allTimers.size())
+        return;
+    if (to < 0 || to > static_cast<int>(m_allTimers.size()))
+        return;
+    if (from == to || from == to - 1)
+        return;
+
+    m_timers.moveTimer(from, to);
 }
 
 const TTimer *TimerModel::timerAt(int row) const

@@ -1076,6 +1076,40 @@ QColor mmqt::ansi256toRgb(const int ansi)
     return QColor{c.r, c.g, c.b};
 }
 
+QColor mmqt::decodeColor(const AnsiColorRGB var)
+{
+    return QColor::fromRgb(var.r, var.g, var.b);
+}
+
+QColor mmqt::decodeColor(AnsiColor256 var, const bool intense)
+{
+    if (var.color < 8 && intense) {
+        var.color += 8;
+    }
+
+    return mmqt::ansi256toRgb(var.color);
+}
+
+QColor mmqt::decodeColor(const AnsiColorVariant var, const QColor defaultColor, const bool intense)
+{
+    if (var.hasRGB()) {
+        return mmqt::decodeColor(var.getRGB());
+    }
+
+    if (var.has256()) {
+        return mmqt::decodeColor(var.get256(), intense);
+    }
+
+    return defaultColor;
+}
+
+void mmqt::reverseInPlace(QColor &color)
+{
+    color.setRed(255 - color.red());
+    color.setGreen(255 - color.green());
+    color.setBlue(255 - color.blue());
+}
+
 int rgbToAnsi256(int r, int g, int b)
 {
     // REVISIT: check for exact match to color table?

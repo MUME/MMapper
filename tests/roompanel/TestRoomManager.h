@@ -26,4 +26,6 @@ private Q_SLOTS:
     void testParseGmcpAddValidMessage();
     void testParseGmcpInvalidMessage();
     void testParseGmcpUpdateValidMessage();
+    void testRoomModelEnemyColors();
+    void testRoomModelFightingYouColors();
 };

@@ -20,6 +20,7 @@
 
 #include <QIcon>
 #include <QListWidget>
+#include <QScroller>
 #include <QTimer>
 #include <QtWidgets>
 
@@ -99,7 +100,7 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
     addPage(generalPage, tr("General"), ":/icons/generalcfg.png");
     addPage(graphicsPage, tr("Graphics"), ":/icons/graphicscfg.png");
     addPage(parserPage, tr("Parser"), ":/icons/parsercfg.png");
-    addPage(clientPage, tr("Integrated Client"), ":/icons/terminal.png");
+    addPage(clientPage, tr("Game Client"), ":/icons/terminal.png");
     addPage(groupPage, tr("Group Panel"), ":/icons/group-recolor.png");
     addPage(autoLogPage, tr("Auto Logger"), ":/icons/autologgercfg.png");
     addPage(audioPage, tr("Audio"), ":/icons/audiocfg.png");
@@ -181,6 +182,22 @@ void ConfigDialog::showEvent(QShowEvent *const event)
     // Populate the preference pages from config each time the widget is shown
     emit sig_loadConfig();
     event->accept();
+}
+
+void ConfigDialog::setCompactLayout(const bool compact)
+{
+    ui->mainSplitter->setOrientation(compact ? Qt::Vertical : Qt::Horizontal);
+
+    // On a phone the dialog must be able to shrink below the pages' natural
+    // width (MinimumExpanding makes that width the dialog's minimum), and a
+    // finger must scroll the pages and the page list (see
+    // MainWindow::applyPanelScrollGesture() for the gesture choice).
+    ui->pagesScrollArea->setSizePolicy(compact ? QSizePolicy::Expanding
+                                               : QSizePolicy::MinimumExpanding,
+                                       QSizePolicy::Expanding);
+    const auto gesture = compact ? QScroller::LeftMouseButtonGesture : QScroller::TouchGesture;
+    QScroller::grabGesture(ui->pagesScrollArea->viewport(), gesture);
+    QScroller::grabGesture(ui->contentsWidget->viewport(), gesture);
 }
 
 void ConfigDialog::scrollToWidget(QWidget *target, bool focus)

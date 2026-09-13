@@ -12,6 +12,7 @@
 #include "../mapdata/roomselection.h"
 #include "../mapstorage/MapDestination.h"
 #include "../mapstorage/MapSource.h"
+#include "../proxy/ProxyHost.h"
 #include "AsyncTypes.h"
 
 #include <functional>
@@ -37,7 +38,7 @@ class GameObserver;
 class GroupWidget;
 class HotkeyManager;
 class InfomarkSelection;
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 class MapWindow;
 class Mmapper2Group;
@@ -49,6 +50,7 @@ class QAction;
 class QActionGroup;
 class QCloseEvent;
 class QFileDialog;
+class QLabel;
 class QMenu;
 class QObject;
 class QPoint;
@@ -56,6 +58,7 @@ class QProgressDialog;
 class QShowEvent;
 class QTextBrowser;
 class QToolBar;
+class QToolButton;
 class QWidget;
 class RoomEditAttrDlg;
 class RoomManager;
@@ -69,7 +72,7 @@ class MapDestination;
 
 struct MapLoadData;
 
-class NODISCARD_QOBJECT MainWindow final : public QMainWindow
+class NODISCARD_QOBJECT MainWindow final : public QMainWindow, public ProxyHost
 {
     Q_OBJECT
 
@@ -109,6 +112,8 @@ private:
     ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;
 
+    std::unique_ptr<ConfigDialog> m_configDialog;
+
     AdventureTracker *m_adventureTracker = nullptr;
     AdventureWidget *m_adventureWidget = nullptr;
     MediaLibrary *m_mediaLibrary = nullptr;
@@ -135,6 +140,14 @@ private:
     QToolBar *connectionToolBar = nullptr;
     QToolBar *settingsToolBar = nullptr;
     QToolBar *audioToolBar = nullptr;
+    // Compact-layout only (see setCompactLayout()): a row of buttons in the
+    // status bar for the map operations touch has no wheel or keyboard
+    // for (layers, centering). Not a QToolBar, so it stays out of
+    // saveState() and does not cost a row of its own.
+    QWidget *m_compactActionBar = nullptr;
+    // "\u2630" in the status bar while compact: m_appMenu.
+    QToolButton *m_menuButton = nullptr;
+    QLabel *m_pathMachineStatus = nullptr;
 
     QMenu *fileMenu = nullptr;
     QMenu *editMenu = nullptr;
@@ -142,10 +155,34 @@ private:
     QMenu *roomMenu = nullptr;
     QMenu *connectionMenu = nullptr;
     QMenu *viewMenu = nullptr;
+    QMenu *windowMenu = nullptr;
     QMenu *settingsMenu = nullptr;
     QMenu *helpMenu = nullptr;
+    // The top-level menus above as submenus of one menu: the "\u2630" button
+    // while compact, and an entry of the map's context menu whenever neither
+    // the menu bar nor that button is on screen, so that a touch user (no
+    // hover to "peek" a hidden menu bar with) can always reach them by a
+    // long-press on the map. A QAction can sit in several widgets at once,
+    // so the menus stay in the menu bar as well.
+    QMenu *m_appMenu = nullptr;
     QMenu *mumeMenu = nullptr;
     QMenu *onlineTutorialsMenu = nullptr;
+    // Compact layout for small windows; see setCompactLayout(). While
+    // compact, the menu bar is hidden and the top-level menus above are
+    // reached through m_menuButton, every dock
+    // is tabified into one group, and the toolbars are hidden.
+    // The two layouts each keep their own saveState(): m_expandedState /
+    // m_compactState hold the one not currently applied, and both are
+    // persisted (Configuration::general.windowState / windowStateCompact).
+    // m_layoutRestored gates the switch until the first show has realized
+    // the layout readSettings() restored, so nothing earlier can capture
+    // or clobber a layout.
+    QByteArray m_expandedState;
+    QByteArray m_compactState;
+    // The constructor's arrangement, for "Reset Window Layout".
+    QByteArray m_defaultExpandedState;
+    bool m_compact = false;
+    bool m_layoutRestored = false;
 
     QAction *newAct = nullptr;
     QAction *openAct = nullptr;
@@ -168,6 +205,7 @@ private:
     QAction *mumeForumAct = nullptr;
     QAction *mumeWikiAct = nullptr;
     QAction *settingUpMmapperAct = nullptr;
+    QAction *newcomerGuideAct = nullptr;
     QAction *newbieAct = nullptr;
     QAction *actionReportIssue = nullptr;
     QAction *aboutAct = nullptr;
@@ -177,6 +215,8 @@ private:
     QAction *zoomResetAct = nullptr;
     QAction *alwaysOnTopAct = nullptr;
     QAction *showStatusBarAct = nullptr;
+    QAction *compactLayoutAct = nullptr;
+    QAction *resetWindowLayoutAct = nullptr;
     QAction *showScrollBarsAct = nullptr;
     QAction *showMenuBarAct = nullptr;
     QAction *preferencesAct = nullptr;
@@ -184,6 +224,7 @@ private:
     QAction *layerUpAct = nullptr;
     QAction *layerDownAct = nullptr;
     QAction *layerResetAct = nullptr;
+    QAction *centerOnPlayerAct = nullptr;
 
     struct NODISCARD MouseModeActions final
     {
@@ -239,8 +280,6 @@ private:
     QAction *releaseAllPathsAct = nullptr;
     QAction *rebuildMeshesAct = nullptr;
 
-    std::unique_ptr<ConfigDialog> m_configDialog;
-
     struct AsyncBase;
     struct AsyncIO;
     struct AsyncLoader;
@@ -259,6 +298,14 @@ public:
     NODISCARD HotkeyManager &getHotkeyManager() const { return deref(m_hotkeyManager); }
     NODISCARD CTimers &getTimers() const { return deref(m_timers); }
 
+private:
+    // ProxyHost
+    void virt_log(const QString &mod, const QString &msg) final { slot_log(mod, msg); }
+    void virt_setMode(const MapModeEnum mode) final { slot_setMode(mode); }
+    NODISCARD HotkeyManager &virt_getHotkeyManager() const final { return getHotkeyManager(); }
+    NODISCARD QObject &virt_asQObject() final { return *this; }
+
+public:
     NODISCARD bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(std::shared_ptr<MapSource> source);
     void setCurrentFile(const QString &fileName);
@@ -277,8 +324,22 @@ protected:
     NODISCARD bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
+    void setCompactLayout(bool compact);
+    void buildDefaultCompactLayout();
+    void fitClientDockToTerminal();
+    void slot_resetWindowLayout();
+    void applyCompactMenuBar(bool compact);
+    NODISCARD QWidget *createCompactActionBar();
+    NODISCARD QToolButton *createMenuButton();
+    void applyCompactChrome(bool compact);
+    void applyPanelScrollGesture(bool compact);
+    NODISCARD QSize compactLayoutProbeSize() const;
+    void fitCompactWindowToScreen();
+
+private:
     void startServices();
     void forceNewFile();
+    void promptOpenFile();
     void showWarning(const QString &s);
     void showStatusInternal(const QString &txt, int duration);
     void showStatusShort(const QString &txt) { showStatusInternal(txt, 2000); }
@@ -305,7 +366,6 @@ private:
     // Blocking variant for closeEvent(), which cannot be deferred. Desktop only.
     NODISCARD bool maybeSaveBlocking();
     NODISCARD bool handleMaybeSaveResult(int result);
-    void promptOpenFile();
 
     struct ActionDisabler;
     void disableActions(bool value);
@@ -328,13 +388,15 @@ private:
     };
     void hideCanvas(bool hide);
 
-    NODISCARD MapCanvas *getCanvas() const;
+    NODISCARD MapCanvasWindow *getCanvas() const;
     void mapChanged() const;
     void setCanvasMouseMode(CanvasMouseModeEnum mode);
     void setMapModified(bool);
     void updateMapModified();
 
 private:
+    // Pushes the given room's description into m_descriptionWidget.
+    void updateDescriptionRoom(const RoomHandle &room);
     void applyGroupAction(const std::function<Change(const RawRoom &)> &getChange);
     void onSuccessfulLoad(const MapLoadData &mapLoadData);
     void onSuccessfulMerge(const Map &map);
@@ -352,6 +414,7 @@ public slots:
     NODISCARD bool slot_exportWebMap();
     NODISCARD bool slot_exportMmpMap();
     void slot_about();
+    void slot_aboutQt();
 
     NODISCARD bool slot_generateBaseMap();
 

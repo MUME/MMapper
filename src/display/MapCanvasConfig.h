@@ -6,6 +6,9 @@
 
 namespace MapCanvasConfig {
 
+// Scroll-bar units per world unit; shared by MapCanvas and MapScroller.
+static constexpr const int SCROLL_SCALE = 64;
+
 void registerChangeCallback(const ChangeMonitor::Lifetime &lifetime,
                             ChangeMonitor::Function callback);
 

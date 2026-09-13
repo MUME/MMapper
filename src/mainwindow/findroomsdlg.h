@@ -24,7 +24,7 @@
 #pragma clang diagnostic pop
 #endif
 
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 class QCloseEvent;
 class QObject;

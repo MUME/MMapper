@@ -25,7 +25,7 @@ private:
 
 public:
     enum Column { ColName = 0, ColTime, ColCount };
-    enum Role { ProgressRole = Qt::UserRole + 1 };
+    enum Role { ProgressRole = Qt::UserRole + 1, NameRole, TimeRole, ExpiredRole };
 
 public:
     explicit TimerModel(CTimers &timers, QObject *parent = nullptr);
@@ -36,6 +36,7 @@ public:
     NODISCARD QVariant headerData(int section,
                                   Qt::Orientation orientation,
                                   int role = Qt::DisplayRole) const override;
+    NODISCARD QHash<int, QByteArray> roleNames() const override;
 
     NODISCARD Qt::ItemFlags flags(const QModelIndex &index) const override;
     NODISCARD Qt::DropActions supportedDropActions() const override;
@@ -48,6 +49,12 @@ public:
                       const QModelIndex &parent) override;
 
     NODISCARD const TTimer *timerAt(int row) const;
+
+    // Reorders the underlying CTimers storage and emits the matching
+    // beginMoveRows()/endMoveRows() pair so a view can animate the move
+    // instead of resetting the whole list. Mirrors the sequence
+    // dropMimeData() uses for drag-and-drop from a QAbstractItemView.
+    void moveRow(int from, int to);
 
 private slots:
     void updateTimerList();

@@ -5,8 +5,8 @@
 #include "adventurewidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Consts.h"
 #include "../global/window_utils.h"
-#include "adventuresession.h"
 
 #include <memory>
 
@@ -15,13 +15,11 @@
 
 AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
     : QWidget{parent}
-    , m_adventureTracker{at}
 {
-    m_textEdit = new QTextEdit(this);
-    m_textCursor = std::make_unique<QTextCursor>(m_textEdit->document());
+    m_model = new AdventureLogModel(at, this);
 
+    m_textEdit = new QTextEdit(this);
     m_textEdit->setReadOnly(true);
-    m_textEdit->setOverwriteMode(true);
     m_textEdit->setUndoRedoEnabled(false);
     m_textEdit->setDocumentTitle("Adventure Panel Text");
     m_textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -29,32 +27,28 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
 
     const auto &settings = getConfig().integratedClient;
 
-    QTextFrameFormat frameFormat = m_textEdit->document()->rootFrame()->frameFormat();
+    auto *const document = m_textEdit->document();
+    QTextFrameFormat frameFormat = document->rootFrame()->frameFormat();
     frameFormat.setBackground(settings.backgroundColor);
-    m_textEdit->document()->rootFrame()->setFrameFormat(frameFormat);
+    document->rootFrame()->setFrameFormat(frameFormat);
 
-    QTextCharFormat blockCharFormat = m_textCursor->blockCharFormat();
+    QTextCharFormat blockCharFormat = QTextCursor(document).blockCharFormat();
     blockCharFormat.setForeground(settings.foregroundColor);
     {
         QFont font;
         font.fromString(settings.font); // need fromString() to extract PointSize
         blockCharFormat.setFont(font);
     }
-    m_textCursor->setBlockCharFormat(blockCharFormat);
+    QTextCursor(document).setBlockCharFormat(blockCharFormat);
 
-    auto layout = new QVBoxLayout(this);
+    auto *const layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(m_textEdit);
 
-    addDefaultContent();
-
     m_clearContentAction = new QAction("Clear Content", this);
-    connect(m_clearContentAction,
-            &QAction::triggered,
-            this,
-            &AdventureWidget::slot_actionClearContent);
+    connect(m_clearContentAction, &QAction::triggered, m_model, &AdventureLogModel::clear);
 
     m_textEdit->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_textEdit,
@@ -62,91 +56,58 @@ AdventureWidget::AdventureWidget(AdventureTracker &at, QWidget *const parent)
             this,
             &AdventureWidget::slot_contextMenuRequested);
 
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_accomplishedTask,
-            this,
-            &AdventureWidget::slot_onAccomplishedTask);
+    connect(m_model, &QAbstractItemModel::rowsInserted, this, &AdventureWidget::slot_rowsInserted);
+    connect(m_model, &QAbstractItemModel::rowsRemoved, this, &AdventureWidget::slot_rowsRemoved);
 
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_achievedSomething,
-            this,
-            &AdventureWidget::slot_onAchievedSomething);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_diedInGame,
-            this,
-            &AdventureWidget::slot_onDied);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_gainedLevel,
-            this,
-            &AdventureWidget::slot_onGainedLevel);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_killedMob,
-            this,
-            &AdventureWidget::slot_onKilledMob);
-
-    connect(&m_adventureTracker,
-            &AdventureTracker::sig_receivedHint,
-            this,
-            &AdventureWidget::slot_onReceivedHint);
-}
-
-void AdventureWidget::slot_onAccomplishedTask(double xpGained)
-{
-    // Only record accomplishedTask if it actually has associated xp to avoid
-    // spam, since sometimes it co-triggers with achievement and can be redundant.
-    if (xpGained > 0.0) {
-        auto msg = QString(ACCOMPLISH_MSG).arg(AdventureSession::formatPoints(xpGained));
-        addAdventureUpdate(msg);
+    // The model already holds its default welcome line.
+    if (const int rows = m_model->rowCount(); rows > 0) {
+        appendRows(0, rows - 1);
     }
 }
 
-void AdventureWidget::slot_onAchievedSomething(const QString &achievement, double xpGained)
+void AdventureWidget::slot_rowsInserted(const QModelIndex &parent, const int first, const int last)
 {
-    QString msg;
+    if (parent.isValid()) {
+        return;
+    }
+    appendRows(first, last);
+}
 
-    if (xpGained > 0.0) {
-        msg = QString(ACHIEVE_MSG_XP).arg(achievement, AdventureSession::formatPoints(xpGained));
-    } else {
-        msg = QString(ACHIEVE_MSG).arg(achievement);
+void AdventureWidget::slot_rowsRemoved(const QModelIndex &parent, const int first, const int last)
+{
+    if (parent.isValid()) {
+        return;
+    }
+    removeRows(first, last);
+}
+
+void AdventureWidget::appendRows(const int first, const int last)
+{
+    // Rows are only ever appended (see AdventureLogModel::addAdventureUpdate()),
+    // so the new blocks go at the end of the document.
+    assert(first == m_textEdit->document()->blockCount() - 1);
+
+    QTextCursor cursor(m_textEdit->document());
+    cursor.movePosition(QTextCursor::End);
+    for (int row = first; row <= last; ++row) {
+        cursor.insertText(m_model->data(m_model->index(row)).toString());
+        cursor.insertText(QString(char_consts::C_NEWLINE));
     }
 
-    addAdventureUpdate(msg);
+    auto *const scrollBar = m_textEdit->verticalScrollBar();
+    scrollBar->setValue(scrollBar->maximum());
 }
 
-void AdventureWidget::slot_onDied(double xpLost)
+void AdventureWidget::removeRows(const int first, const int last)
 {
-    // Ignore Died messages that don't have an accompanying XP loss (to avoid whois spam, etc.)
-    if (xpLost < 0.0) {
-        auto msg = QString(DIED_MSG).arg(AdventureSession::formatPoints(xpLost));
-        addAdventureUpdate(msg);
-    }
-}
-
-void AdventureWidget::slot_onGainedLevel()
-{
-    addAdventureUpdate(QString(GAINED_LEVEL_MSG));
-}
-
-void AdventureWidget::slot_onKilledMob(const QString &mobName, double xpGained)
-{
-    // When player gets XP from multiple kills on the same heartbeat, as
-    // frequently happens with quake xp, then the first mob gets all the XP
-    // attributed and the others are zero. No way to solve this given
-    // current MUME "protocol".
-    auto xpf = (xpGained > 0.0) ? AdventureSession::formatPoints(xpGained) : "?";
-    auto msg = QString(KILL_TROPHY_MSG).arg(mobName, xpf);
-
-    addAdventureUpdate(msg);
-}
-
-void AdventureWidget::slot_onReceivedHint(const QString &hint)
-{
-    auto msg = QString(HINT_MSG).arg(hint);
-
-    addAdventureUpdate(msg);
+    // One document block per model row (plus the trailing empty block after
+    // the final newline), so removing rows [first, last] is removing the
+    // same range of blocks.
+    QTextCursor cursor(m_textEdit->document());
+    cursor.movePosition(QTextCursor::Start);
+    cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor, first);
+    cursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor, last - first + 1);
+    cursor.removeSelectedText();
 }
 
 void AdventureWidget::slot_contextMenuRequested(const QPoint &pos)
@@ -155,37 +116,4 @@ void AdventureWidget::slot_contextMenuRequested(const QPoint &pos)
     contextMenu->addSeparator();
     contextMenu->addAction(m_clearContentAction);
     mmqt::popupMenu(std::move(contextMenu), m_textEdit->mapToGlobal(pos));
-}
-
-void AdventureWidget::slot_actionClearContent([[maybe_unused]] bool checked)
-{
-    // REVISIT should use m_textCursor->document()->clear() instead?
-    m_textCursor->movePosition(QTextCursor::Start);
-    m_textCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, QTextCursor::End);
-    m_textCursor->removeSelectedText();
-    addDefaultContent();
-}
-
-void AdventureWidget::addDefaultContent()
-{
-    addAdventureUpdate(DEFAULT_MSG);
-}
-
-void AdventureWidget::addAdventureUpdate(const QString &msg)
-{
-    m_textCursor->movePosition(QTextCursor::End);
-    m_textCursor->insertText(msg);
-
-    // If more than MAX_LINES, preserve by deleting from the start
-    auto lines_over = m_textEdit->document()->lineCount() - AdventureWidget::MAX_LINES;
-    if (lines_over > 0) {
-        m_textCursor->movePosition(QTextCursor::Start);
-        m_textCursor->movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, lines_over);
-        m_textCursor->removeSelectedText();
-        m_textCursor->movePosition(QTextCursor::End);
-    }
-
-    // force scroll to bottom upon new message
-    auto scrollBar = m_textEdit->verticalScrollBar();
-    scrollBar->setValue(scrollBar->maximum());
 }

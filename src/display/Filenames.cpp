@@ -122,6 +122,26 @@ QString getAssetsPath()
             }
         }
 
+        // Dev-tree fallback: in developer builds the binary lives under
+        // <build>/src/ (or, on macOS, inside a .app bundle within <build>/src/)
+        // while the sideloaded assets directory sits at the build root
+        // (<build>/assets). None of the packaged-layout checks above find it,
+        // so walk up a few parent directories looking for a real assets
+        // layout (not just an empty "assets" folder, which could false-positive).
+        {
+            QDir devDir(appDir);
+            for (int i = 0; i < 5; ++i) {
+                if (devDir.exists(assetsDirName + "/areas")
+                    || devDir.exists(assetsDirName + "/rooms")
+                    || devDir.exists(assetsDirName + "/sounds")) {
+                    return devDir.absoluteFilePath(assetsDirName) + "/";
+                }
+                if (!devDir.cdUp()) {
+                    break;
+                }
+            }
+        }
+
         // Fallback: check next to the binary
         if (appDir.exists(assetsDirName)) {
             return appDir.absoluteFilePath(assetsDirName) + "/";

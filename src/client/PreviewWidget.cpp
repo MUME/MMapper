@@ -29,7 +29,7 @@ PreviewWidget::PreviewWidget(QWidget *parent)
 
     // Set maximum height based on configured lines and font metrics
     int lineCount = qMax(1, settings.linesOfPeekPreview);
-    QFontMetrics fontMetrics(helper.format.font());
+    QFontMetrics fontMetrics(helper.core.format.font());
     int lineHeight = fontMetrics.height();
     setMaximumHeight(lineHeight * lineCount);
 }

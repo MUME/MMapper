@@ -6,12 +6,13 @@
 #include "../configuration/configuration.h"
 
 #include <algorithm>
+#include <utility>
 
-#include <QOpenGLWindow>
-
-FrameManager::FrameManager(QOpenGLWindow &window, Legacy::UboManager &uboManager, QObject *parent)
+FrameManager::FrameManager(RequestUpdateCallback requestUpdate,
+                           Legacy::UboManager &uboManager,
+                           QObject *parent)
     : QObject(parent)
-    , m_window(window)
+    , m_requestUpdate(std::move(requestUpdate))
     , m_uboManager(uboManager)
 {
     m_uboManager.registerRebuildFunction(Legacy::SharedVboEnum::TimeBlock,
@@ -152,7 +153,7 @@ void FrameManager::onHeartbeat()
         return;
     }
 
-    m_window.update();
+    m_requestUpdate();
 
     if (needsHeartbeat()) {
         requestFrame();
@@ -189,7 +190,7 @@ void FrameManager::requestFrame()
         if (m_heartbeatTimer.isActive()) {
             m_heartbeatTimer.stop();
         }
-        m_window.update();
+        m_requestUpdate();
         // Start a fallback timer in case window update is ignored.
         if (needsHeartbeat()) {
             const int delayMs = static_cast<int>(

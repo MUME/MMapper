@@ -15,6 +15,9 @@ namespace mmqt {
 // recursively disconnect all children
 extern void rdisconnect(QObject *obj);
 extern void setWindowTitle2(QWidget &widget, const QString &program, const QString &title);
+// Shows a window maximized when its preferred size would not fit the
+// screen it is on (phone-sized screens), and normally otherwise.
+extern void showFittedToScreen(QWidget &widget);
 // Non-blocking replacements for the QMessageBox::information/warning/critical
 // statics: the box is window-modal, deletes itself when closed, and never
 // runs a nested event loop (which is unavailable on wasm without Asyncify).

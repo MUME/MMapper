@@ -24,4 +24,5 @@ private Q_SLOTS:
     void parseClockTimeTest();
     void precsionTimeoutTest();
     void moonClockTest();
+    void clockStringsTest();
 };

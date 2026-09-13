@@ -5,6 +5,7 @@
 #include "mumeclockwidget.h"
 
 #include "../configuration/configuration.h"
+#include "ClockStrings.h"
 #include "mumeclock.h"
 #include "mumemoment.h"
 
@@ -97,35 +98,7 @@ void MumeClockWidget::updateTime(MumeTimeEnum time)
 
 void MumeClockWidget::updateMoonPhase(MumeMoonPhaseEnum phase)
 {
-    switch (phase) {
-    case MumeMoonPhaseEnum::WAXING_CRESCENT:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x92"));
-        break;
-    case MumeMoonPhaseEnum::FIRST_QUARTER:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x93"));
-        break;
-    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x94"));
-        break;
-    case MumeMoonPhaseEnum::FULL_MOON:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x95"));
-        break;
-    case MumeMoonPhaseEnum::WANING_GIBBOUS:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x96"));
-        break;
-    case MumeMoonPhaseEnum::THIRD_QUARTER:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x97"));
-        break;
-    case MumeMoonPhaseEnum::WANING_CRESCENT:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x98"));
-        break;
-    case MumeMoonPhaseEnum::NEW_MOON:
-        moonPhaseLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\x91"));
-        break;
-    case MumeMoonPhaseEnum::UNKNOWN:
-        moonPhaseLabel->setText("");
-        break;
-    }
+    moonPhaseLabel->setText(clockstrings::moonPhaseEmoji(phase));
 }
 
 void MumeClockWidget::updateMoonVisibility(MumeMoonVisibilityEnum visibility)
@@ -142,84 +115,41 @@ void MumeClockWidget::updateMoonVisibility(MumeMoonVisibilityEnum visibility)
 void MumeClockWidget::updateSeason(MumeSeasonEnum season)
 {
     QString styleSheet = "color:black";
-    QString text = "";
     switch (season) {
     case MumeSeasonEnum::WINTER:
         styleSheet = "color:black;background:white";
-        text = "Winter";
         break;
     case MumeSeasonEnum::SPRING:
         styleSheet = "color:white;background:teal";
-        text = "Spring";
         break;
     case MumeSeasonEnum::SUMMER:
         styleSheet = "color:white;background:green";
-        text = "Summer";
         break;
     case MumeSeasonEnum::AUTUMN:
         styleSheet = "color:black;background:orange";
-        text = "Autumn";
         break;
     case MumeSeasonEnum::UNKNOWN:
     default:
         break;
     }
     seasonLabel->setStyleSheet(styleSheet);
-    seasonLabel->setText(text);
+    seasonLabel->setText(clockstrings::seasonText(season));
 }
 
 void MumeClockWidget::updateWeather(PromptWeatherEnum weather)
 {
-    switch (weather) {
-    case PromptWeatherEnum::CLOUDS:
-        weatherLabel->setText(QString::fromUtf8("\xE2\x98\x81"));
-        weatherLabel->setStatusTip("Cloudy");
-        weatherLabel->setVisible(true);
-        break;
-    case PromptWeatherEnum::RAIN:
-        weatherLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xA7"));
-        weatherLabel->setStatusTip("Rainy");
-        weatherLabel->setVisible(true);
-        break;
-    case PromptWeatherEnum::HEAVY_RAIN:
-        weatherLabel->setText(QString::fromUtf8("\xE2\x9B\x88"));
-        weatherLabel->setStatusTip("Heavy Rain");
-        weatherLabel->setVisible(true);
-        break;
-    case PromptWeatherEnum::SNOW:
-        weatherLabel->setText(QString::fromUtf8("\xE2\x9D\x84"));
-        weatherLabel->setStatusTip("Snowy");
-        weatherLabel->setVisible(true);
-        break;
-    case PromptWeatherEnum::NICE:
-    default:
-        weatherLabel->setText("");
-        weatherLabel->setStatusTip("");
-        weatherLabel->setVisible(false);
-        break;
-    }
+    const QString text = clockstrings::weatherEmoji(weather);
+    weatherLabel->setText(text);
+    weatherLabel->setStatusTip(clockstrings::weatherTooltip(weather));
+    weatherLabel->setVisible(!text.isEmpty());
 }
 
 void MumeClockWidget::updateFog(PromptFogEnum fog)
 {
-    switch (fog) {
-    case PromptFogEnum::LIGHT_FOG:
-        fogLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xAB"));
-        fogLabel->setStatusTip("Light Fog");
-        fogLabel->setVisible(true);
-        break;
-    case PromptFogEnum::HEAVY_FOG:
-        fogLabel->setText(QString::fromUtf8("\xF0\x9F\x8C\xAB\xF0\x9F\x8C\xAB"));
-        fogLabel->setStatusTip("Heavy Fog");
-        fogLabel->setVisible(true);
-        break;
-    case PromptFogEnum::NO_FOG:
-    default:
-        fogLabel->setText("");
-        fogLabel->setStatusTip("");
-        fogLabel->setVisible(false);
-        break;
-    }
+    const QString text = clockstrings::fogEmoji(fog);
+    fogLabel->setText(text);
+    fogLabel->setStatusTip(clockstrings::fogTooltip(fog));
+    fogLabel->setVisible(!text.isEmpty());
 }
 
 void MumeClockWidget::updateCountdown(const MumeMoment &moment)

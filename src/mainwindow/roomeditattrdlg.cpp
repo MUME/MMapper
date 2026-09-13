@@ -9,7 +9,7 @@
 #include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../display/Filenames.h"
-#include "../display/mapcanvas.h"
+#include "../display/MapCanvasWindow.h"
 #include "../global/AnsiOstream.h"
 #include "../global/Consts.h"
 #include "../global/PrintUtils.h"
@@ -559,7 +559,7 @@ void RoomEditAttrDlg::roomListCurrentIndexChanged(int /*unused*/)
 
 void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
                                        MapData *const md,
-                                       MapCanvas *const mc)
+                                       MapCanvasWindow *const mc)
 {
     m_roomSelection = rs;
     m_mapData = md;
@@ -601,7 +601,10 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
         updateDialog(RoomHandle{});
     }
 
-    connect(this, &RoomEditAttrDlg::sig_requestUpdate, m_mapCanvas, &MapCanvas::slot_requestUpdate);
+    connect(this,
+            &RoomEditAttrDlg::sig_requestUpdate,
+            m_mapCanvas,
+            &MapCanvasWindow::slot_requestUpdate);
 }
 
 void RoomEditAttrDlg::updateDialog(const RoomHandle &r)

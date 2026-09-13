@@ -3,6 +3,7 @@
 
 #include "testclock.h"
 
+#include "../src/clock/ClockStrings.h"
 #include "../src/clock/mumeclock.h"
 #include "../src/configuration/configuration.h"
 #include "../src/global/HideQDebug.h"
@@ -527,6 +528,29 @@ void TestClock::moonClockTest()
              static_cast<int>(MumeMoonPhaseEnum::FIRST_QUARTER));
     QCOMPARE(static_cast<int>(moment.moonVisibility()),
              static_cast<int>(MumeMoonVisibilityEnum::BRIGHT));
+}
+
+void TestClock::clockStringsTest()
+{
+    // Spot-check a couple of enum -> string mappings used by
+    // MumeClockWidget (see ClockStrings.h/.cpp).
+    QCOMPARE(clockstrings::moonPhaseEmoji(MumeMoonPhaseEnum::FULL_MOON),
+             QString::fromUtf8("\xF0\x9F\x8C\x95"));
+    QCOMPARE(clockstrings::moonPhaseEmoji(MumeMoonPhaseEnum::UNKNOWN), QString());
+
+    QCOMPARE(clockstrings::seasonText(MumeSeasonEnum::WINTER), QStringLiteral("Winter"));
+    QCOMPARE(clockstrings::seasonText(MumeSeasonEnum::UNKNOWN), QString());
+
+    QCOMPARE(clockstrings::weatherEmoji(PromptWeatherEnum::RAIN),
+             QString::fromUtf8("\xF0\x9F\x8C\xA7"));
+    QCOMPARE(clockstrings::weatherTooltip(PromptWeatherEnum::RAIN), QStringLiteral("Rainy"));
+    QCOMPARE(clockstrings::weatherEmoji(PromptWeatherEnum::NICE), QString());
+    QCOMPARE(clockstrings::weatherTooltip(PromptWeatherEnum::NICE), QString());
+
+    QCOMPARE(clockstrings::fogEmoji(PromptFogEnum::HEAVY_FOG),
+             QString::fromUtf8("\xF0\x9F\x8C\xAB\xF0\x9F\x8C\xAB"));
+    QCOMPARE(clockstrings::fogTooltip(PromptFogEnum::HEAVY_FOG), QStringLiteral("Heavy Fog"));
+    QCOMPARE(clockstrings::fogEmoji(PromptFogEnum::NO_FOG), QString());
 }
 
 QTEST_MAIN(TestClock)

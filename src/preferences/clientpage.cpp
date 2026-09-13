@@ -5,12 +5,14 @@
 #include "clientpage.h"
 
 #include "../configuration/configuration.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../global/macros.h"
 #include "ui_clientpage.h"
 
 #include <QFont>
 #include <QFontInfo>
 #include <QPalette>
+#include <QRadioButton>
 #include <QSpinBox>
 #include <QString>
 #include <QValidator>
@@ -51,6 +53,26 @@ ClientPage::ClientPage(QWidget *parent)
     , ui(new Ui::ClientPage)
 {
     ui->setupUi(this);
+
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        ui->howToPlayGroupBox->hide(); // only the built-in client exists
+    }
+    const auto setGameClient = [](const GameClientEnum client) {
+        return [client](const bool checked) {
+            if (checked) {
+                setConfig().general.gameClient = client;
+            }
+        };
+    };
+    connect(ui->askRadioButton, &QRadioButton::toggled, this, setGameClient(GameClientEnum::ASK));
+    connect(ui->builtInRadioButton,
+            &QRadioButton::toggled,
+            this,
+            setGameClient(GameClientEnum::BUILT_IN));
+    connect(ui->externalRadioButton,
+            &QRadioButton::toggled,
+            this,
+            setGameClient(GameClientEnum::EXTERNAL));
 
     connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::slot_onChangeFont);
     connect(ui->bgColorPushButton,
@@ -128,6 +150,20 @@ ClientPage::~ClientPage()
 void ClientPage::slot_loadConfig()
 {
     updateFontAndColors();
+
+    switch (getConfig().general.gameClient) {
+    case GameClientEnum::ASK:
+        ui->askRadioButton->setChecked(true);
+        break;
+    case GameClientEnum::BUILT_IN:
+        ui->builtInRadioButton->setChecked(true);
+        break;
+    case GameClientEnum::EXTERNAL:
+        ui->externalRadioButton->setChecked(true);
+        break;
+    }
+    ui->externalRadioButton->setText(tr("Use my own MUD client (connect it to localhost, port %1)")
+                                         .arg(getConfig().connection.localPort));
 
     const auto &settings = getConfig().integratedClient;
     ui->columnsSpinBox->setValue(settings.columns);

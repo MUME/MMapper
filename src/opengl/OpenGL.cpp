@@ -272,14 +272,34 @@ float OpenGL::getDevicePixelRatio() const
     return getFunctions().getDevicePixelRatio();
 }
 
+float OpenGL::getHostDevicePixelRatio() const
+{
+    return getFunctions().getHostDevicePixelRatio();
+}
+
 void OpenGL::glViewport(GLint x, GLint y, GLsizei w, GLsizei h)
 {
     getFunctions().glViewport(x, y, w, h);
 }
 
+void OpenGL::glFinish()
+{
+    getFunctions().glFinish();
+}
+
 void OpenGL::setDevicePixelRatio(const float devicePixelRatio)
 {
     getFunctions().setDevicePixelRatio(devicePixelRatio);
+}
+
+void OpenGL::setRenderScale(const float renderScale)
+{
+    getFunctions().setRenderScale(renderScale);
+}
+
+float OpenGL::getRenderScale() const
+{
+    return getFunctions().getRenderScale();
 }
 
 // NOTE: Technically we could assert that the SharedMMTexture::getId() == id,

@@ -16,6 +16,12 @@ ManagePasswordDialog::ManagePasswordDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // On-screen keyboards: no auto-capitalization or prediction for account
+    // names, and additionally no learning/history for the password.
+    ui->accountName->setInputMethodHints(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
+    ui->accountPassword->setInputMethodHints(Qt::ImhSensitiveData | Qt::ImhNoAutoUppercase
+                                             | Qt::ImhNoPredictiveText);
+
     if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
         setWindowTitle("Manage Account");
         ui->label_2->hide();

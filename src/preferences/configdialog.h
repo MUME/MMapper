@@ -42,6 +42,10 @@ public:
     explicit ConfigDialog(QWidget *parent = nullptr);
     ~ConfigDialog() override;
 
+    // Stacks the page list above the pages (instead of beside them) so the
+    // dialog fits a narrow screen.
+    void setCompactLayout(bool compact);
+
 private:
     void scrollToWidget(QWidget *target, bool focus = false);
 

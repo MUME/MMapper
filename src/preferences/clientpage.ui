@@ -7,6 +7,36 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QGroupBox" name="howToPlayGroupBox">
+     <property name="title">
+      <string>How do you play?</string>
+     </property>
+     <layout class="QVBoxLayout" name="howToPlayLayout">
+      <item>
+       <widget class="QRadioButton" name="askRadioButton">
+        <property name="text">
+         <string>Ask each time MMapper starts</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="builtInRadioButton">
+        <property name="text">
+         <string>Play in MMapper</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="externalRadioButton">
+        <property name="text">
+         <string>Use my own MUD client (connect it to localhost, port 4242)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Appearance</string>

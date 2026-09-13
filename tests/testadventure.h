@@ -17,4 +17,8 @@ private slots:
     static void testHintParser();
     static void testKillAndXPParser();
     static void testE2E();
+    static void testLogModelInitialContent();
+    static void testLogModelSignals();
+    static void testLogModelMaxLinesCap();
+    static void testLogModelClear();
 };

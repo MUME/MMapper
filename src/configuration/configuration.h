@@ -76,12 +76,20 @@ public:
         bool firstRun = false;
         QByteArray windowGeometry;
         QByteArray windowState;
+        // Dock/toolbar state used while the window is in the compact layout
+        // (see MainWindow::setCompactLayout()); kept apart from
+        // windowState so the two layouts never overwrite each other.
+        QByteArray windowStateCompact;
         bool alwaysOnTop = false;
         bool showStatusBar = true;
         bool showScrollBars = true;
         bool showMenuBar = true;
         MapModeEnum mapMode = MapModeEnum::PLAY;
+        GameClientEnum gameClient = GameClientEnum::ASK;
         bool checkForUpdate = true;
+        // Global multiplier applied to the application's default font point
+        // size at startup; 1.0 = unchanged (byte-for-byte no-op).
+        double uiFontScale = 1.0;
         CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::LATIN1;
 
     private:
@@ -166,6 +174,10 @@ public:
     struct NODISCARD CanvasSettings final : public CanvasNamedColorOptions
     {
         NamedConfig<int> antialiasingSamples{"ANTIALIASING_SAMPLES", 0};
+        // Percentage of the display resolution the map is rendered at; below
+        // 100 the offscreen framebuffer shrinks accordingly (see
+        // Legacy::Functions::setRenderScale()).
+        NamedConfig<int> renderScale{"RENDER_SCALE", 100};
         NamedConfig<bool> trilinearFiltering{"TRILINEAR_FILTERING", true};
         NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
         NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
@@ -351,10 +363,14 @@ public:
 
     struct NODISCARD AudioSettings final
     {
+    public:
+        // The level a channel gets when it is turned on from 0.
+        static constexpr int DEFAULT_VOLUME = 50;
+
     private:
         ChangeMonitor m_changeMonitor;
-        int m_musicVolume = 50;
-        int m_soundVolume = 50;
+        int m_musicVolume = 0;
+        int m_soundVolume = 0;
         QByteArray m_outputDeviceId;
         bool m_unlocked = false;
 

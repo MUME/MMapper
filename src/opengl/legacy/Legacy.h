@@ -143,6 +143,10 @@ private:
     glm::mat4 m_viewProj = glm::mat4(1);
     Viewport m_viewport;
     float m_devicePixelRatio = 1.f;
+    // Offscreen rendering happens at devicePixelRatio * renderScale; the
+    // result is presented at the host's full devicePixelRatio (see
+    // blitFboToDefault()). Below 1 trades sharpness for FBO memory.
+    float m_renderScale = 1.f;
     std::unique_ptr<ShaderPrograms> m_shaderPrograms;
     std::unique_ptr<SharedVaos> m_sharedVaos;
     std::unique_ptr<SharedVbos> m_sharedVbos;
@@ -160,7 +164,11 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(Functions);
 
 public:
-    NODISCARD float getDevicePixelRatio() const { return m_devicePixelRatio; }
+    // Render-target (FBO) pixels per logical unit: what glyph atlases, line
+    // widths and point sizes are sized in.
+    NODISCARD float getDevicePixelRatio() const { return m_devicePixelRatio * m_renderScale; }
+    // The host's own ratio, i.e. default-framebuffer pixels per logical unit.
+    NODISCARD float getHostDevicePixelRatio() const { return m_devicePixelRatio; }
 
     void setDevicePixelRatio(const float devicePixelRatio)
     {
@@ -170,6 +178,15 @@ public:
             throw std::invalid_argument("devicePixelRatio");
         }
         m_devicePixelRatio = devicePixelRatio;
+    }
+
+    NODISCARD float getRenderScale() const { return m_renderScale; }
+    void setRenderScale(const float renderScale)
+    {
+        if (!std::isfinite(renderScale) || !isClamped(renderScale, 0.25f, 1.f)) {
+            throw std::invalid_argument("renderScale");
+        }
+        m_renderScale = renderScale;
     }
 
 public:
@@ -206,6 +223,7 @@ public:
     using Base::glDrawElementsInstanced;
     using Base::glEnable;
     using Base::glEnableVertexAttribArray;
+    using Base::glFinish;
     using Base::glGenBuffers;
     using Base::glGenerateMipmap;
     using Base::glGenTransformFeedbacks;
@@ -270,10 +288,11 @@ public:
     }
 
 private:
+    // Logical -> offscreen (FBO) pixels.
     NODISCARD float scalef(const float f) const
     {
         static_assert(std::is_same_v<float, GLfloat>);
-        return f * m_devicePixelRatio;
+        return f * getDevicePixelRatio();
     }
 
     NODISCARD int scalei(const int n) const
@@ -286,11 +305,23 @@ private:
 public:
     NODISCARD Viewport getViewport() const { return m_viewport; }
 
+    // The viewport in offscreen (FBO) pixels.
     NODISCARD Viewport getPhysicalViewport() const
     {
         const auto &offset = m_viewport.offset;
         const auto &size = m_viewport.size;
         return Viewport{{scalei(offset.x), scalei(offset.y)}, {scalei(size.x), scalei(size.y)}};
+    }
+
+    // The viewport in the host's (default framebuffer) pixels.
+    NODISCARD Viewport getPresentViewport() const
+    {
+        const auto scale = [this](const int n) {
+            return static_cast<int>(std::lround(static_cast<float>(n) * getHostDevicePixelRatio()));
+        };
+        const auto &offset = m_viewport.offset;
+        const auto &size = m_viewport.size;
+        return Viewport{{scale(offset.x), scale(offset.y)}, {scale(size.x), scale(size.y)}};
     }
 
 public:

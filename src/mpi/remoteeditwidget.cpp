@@ -7,31 +7,29 @@
 #include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
-#include "../global/CharUtils.h"
 #include "../global/Consts.h"
-#include "../global/LineUtils.h"
 #include "../global/TabUtils.h"
 #include "../global/TextUtils.h"
-#include "../global/entities.h"
-#include "../global/utils.h"
 #include "../global/window_utils.h"
 #include "../viewers/AnsiViewWindow.h"
+#include "RemoteEditDocumentOps.h"
+#include "RemoteEditHighlighter.h"
 #include "findreplacewidget.h"
 #include "gotowidget.h"
 
 #include <cassert>
-#include <cctype>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
+
+using namespace char_consts;
 
 #include <QAction>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
-#include <QRegularExpression>
 #include <QScopedPointer>
 #include <QSize>
 #include <QString>
@@ -39,259 +37,9 @@
 #include <QtGui>
 #include <QtWidgets>
 
-using namespace char_consts;
-
-static constexpr QColor darkOrangeQColor{0xFF, 0x8C, 0x00};
 static constexpr const bool USE_TOOLTIPS = false;
-// REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
-static constexpr const int MAX_LENGTH = 79;
-namespace mmqt {
-NODISCARD static int measureTabAndAnsiAware(const QString &s)
-{
-    int col = 0;
-    for (const AnsiStringToken token : mmqt::AnsiTokenizer{s}) {
-        using Type = decltype(token.type);
-        switch (token.type) {
-        case Type::Ansi:
-            break;
-        case Type::Newline:
-            /* unexpected */
-            col = 0;
-            break;
-        case Type::Space:
-        case Type::Control:
-        case Type::Word:
-            col = mmqt::measureExpandedTabsOneLine(token.getQStringView(), col);
-            break;
-        }
-    }
-    return col;
-}
-} // namespace mmqt
 
 class QWidget;
-
-/// Groups everything in the scope as a single undo action.
-class NODISCARD RaiiGroupUndoActions final
-{
-private:
-    QTextCursor m_cursor;
-
-public:
-    explicit RaiiGroupUndoActions(const QTextCursor &cursor)
-        : m_cursor{cursor}
-    {
-        m_cursor.beginEditBlock();
-    }
-    ~RaiiGroupUndoActions() { m_cursor.endEditBlock(); }
-};
-
-class NODISCARD LineHighlighter final : public QSyntaxHighlighter
-{
-private:
-    const int m_maxLength;
-
-public:
-    explicit LineHighlighter(int maxLength, QTextDocument *parent);
-    ~LineHighlighter() final;
-
-    void highlightBlock(const QString &line) override
-    {
-        highlightTabs(line);
-        highlightOverflow(line);
-        highlightTrailingSpace(line);
-        highlightAnsi(line);
-        highlightEntities(line);
-        highlightEncodingErrors(line);
-    }
-
-    NODISCARD static QTextCharFormat getBackgroundFormat(const Qt::GlobalColor color)
-    {
-        QTextCharFormat fmt;
-        fmt.setBackground(QBrush{color});
-        return fmt;
-    }
-    NODISCARD static QTextCharFormat getBackgroundFormat(const QColor &color)
-    {
-        QTextCharFormat fmt;
-        fmt.setBackground(QBrush{color});
-        return fmt;
-    }
-
-    void highlightTabs(const QString &line)
-    {
-        if (line.indexOf(C_TAB) < 0) {
-            return;
-        }
-
-        const QTextCharFormat fmt = getBackgroundFormat(Qt::yellow);
-        // REVISIT: Should this be in TabUtils?
-        mmqt::foreachCharPos(line, C_TAB, [this, &fmt](const auto at) {
-            setFormat(static_cast<int>(at), 1, fmt);
-        });
-    }
-
-    void highlightOverflow(const QString &line)
-    {
-        const int breakPos = (mmqt::measureTabAndAnsiAware(line) <= m_maxLength) ? -1 : m_maxLength;
-        if (breakPos < 0) {
-            return;
-        }
-
-        const auto getFmt = []() -> QTextCharFormat {
-            QTextCharFormat fmt;
-            fmt.setFontUnderline(true);
-            fmt.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
-            fmt.setUnderlineColor(Qt::red);
-            return fmt;
-        };
-
-        const int length = static_cast<int>(line.length()) - breakPos;
-        setFormat(breakPos, length, getFmt());
-    }
-
-    void highlightTrailingSpace(const QString &line)
-    {
-        const int breakPos = mmqt::findTrailingWhitespace(line);
-        if (breakPos < 0) {
-            return;
-        }
-
-        const int length = static_cast<int>(line.length()) - breakPos;
-        setFormat(breakPos, length, getBackgroundFormat(Qt::red));
-    }
-
-    void highlightAnsi(const QString &line)
-    {
-        const auto red = getBackgroundFormat(Qt::red);
-        const auto cyan = getBackgroundFormat(Qt::cyan);
-
-        mmqt::foreachAnsi(line, [this, &red, &cyan](const auto start, const QStringView sv) {
-            setFormat(static_cast<int>(start),
-                      static_cast<int>(sv.length()),
-                      mmqt::isValidAnsiColor(sv) ? cyan : red);
-        });
-    }
-
-    void highlightEntities(const QString &line)
-    {
-        const auto red = getBackgroundFormat(Qt::red);
-        const auto darkOrange = getBackgroundFormat(darkOrangeQColor);
-        const auto yellow = getBackgroundFormat(Qt::yellow);
-
-        struct NODISCARD MyEntityCallback final : entities::EntityCallback
-        {
-        private:
-            LineHighlighter &m_self;
-            const QTextCharFormat &m_red;
-            const QTextCharFormat &m_darkOrange;
-            const QTextCharFormat &m_yellow;
-
-        public:
-            explicit MyEntityCallback(LineHighlighter &self,
-                                      const QTextCharFormat &red,
-                                      const QTextCharFormat &darkOrange,
-                                      const QTextCharFormat &yellow)
-                : m_self{self}
-                , m_red{red}
-                , m_darkOrange{darkOrange}
-                , m_yellow{yellow}
-            {}
-
-        private:
-            void virt_decodedEntity(int start, int len, OptQChar decoded) final
-            {
-                const auto get_fmt = [this, &decoded]() -> const QTextCharFormat & {
-                    if (!decoded) {
-                        return m_red;
-                    }
-                    const auto val = decoded->unicode();
-                    return (val < 256) ? m_yellow : m_darkOrange;
-                };
-
-                m_self.setFormat(start, len, get_fmt());
-            }
-        } callback{*this, red, darkOrange, yellow};
-        entities::foreachEntity(QStringView{line}, callback);
-    }
-
-    void highlightEncodingErrors(const QString &line)
-    {
-        const auto red = getBackgroundFormat(Qt::red);
-        const auto darkOrange = getBackgroundFormat(darkOrangeQColor);
-        const auto yellow = getBackgroundFormat(Qt::yellow);
-        const auto cyan = getBackgroundFormat(Qt::cyan);
-
-        using OptFmt = std::optional<QTextCharFormat>;
-#define DECL_FMT(name, color, tooltip) \
-    OptFmt opt_##name{}; \
-    const auto get_##name##_fmt = [&opt_##name, &color]() -> const QTextCharFormat & { \
-        auto &opt = opt_##name; \
-        if (!opt) { \
-            opt = color; \
-            if (USE_TOOLTIPS) { \
-                opt.value().setToolTip(tooltip); \
-            } \
-        } \
-        return opt.value(); \
-    }
-        DECL_FMT(unicode, red, "Unicode");
-        DECL_FMT(nbsp, cyan, "NBSP");
-        DECL_FMT(utf8, yellow, "UTF-8");
-        DECL_FMT(unprintable, darkOrange, "(unprintable)");
-
-#undef DECL_FMT
-
-        int pos = 0;
-        QChar last;
-        bool hasLast = false;
-        for (const auto &qc : line) {
-            if (qc.unicode() > 0xFF) {
-                // no valid representation
-                // TODO: add a means of transliterating things like special quotes
-                // Does Qt offer this feature somewhere?
-                // If not, consider iconv -t LATIN1//TRANSLIT
-
-                setFormat(pos, 1, get_unicode_fmt());
-            } else {
-                const char c = mmqt::toLatin1(qc);
-                switch (c) {
-                case C_NBSP:
-                    setFormat(pos, 1, get_nbsp_fmt());
-                    break;
-                case C_ESC:
-                case C_TAB: // REVISIT: move tab handler to here?
-                    /* handled elsewhere */
-                    break;
-                default: {
-                    const auto uc = static_cast<uint8_t>(c);
-                    if (hasLast
-                        && (isClamped<int>(uc, 0x80, 0xBF)
-                            && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
-                        // Sometimes these are UTF-8 encoded Latin1 values,
-                        // but they could also be intended, so they're not errors.
-                        // TODO: add a feature to fix these on a case-by-case basis?
-                        setFormat(pos - 1, 2, get_utf8_fmt());
-                    } else if (ascii::isCntrl(c) || !::isPrintLatin1(c)) {
-                        setFormat(pos, 1, get_unprintable_fmt());
-                    }
-                }
-                }
-            }
-
-            last = qc;
-            hasLast = true;
-            ++pos;
-        }
-    }
-};
-
-LineHighlighter::LineHighlighter(const int maxLength, QTextDocument *const parent)
-    : QSyntaxHighlighter(parent)
-    , m_maxLength{maxLength}
-{}
-
-LineHighlighter::~LineHighlighter() = default;
 
 RemoteTextEdit::RemoteTextEdit(const QString &initialText, QWidget *const parent)
     : base(parent)
@@ -363,160 +111,10 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
     QToolTip::showText(helpEvent->globalPos(), QString("%1 (%2)").arg(tooltip).arg(unicode_buf));
 }
 
-NODISCARD static bool lineHasTabs(const QTextCursor &line)
-{
-    if (line.isNull()) {
-        return false;
-    }
-    const auto &block = line.block();
-    if (!block.isValid()) {
-        return false;
-    }
-    return block.text().indexOf(C_TAB) >= 0;
-}
-
-static void expandTabs(QTextCursor line)
-{
-    const QTextBlock &block = line.block();
-    const QString &s = block.text();
-
-    mmqt::TextBuffer prefix;
-    prefix.appendExpandedTabs(QStringView{s}, 0);
-
-    line.setPosition(block.position());
-    line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    line.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-    line.insertText(prefix.getQString());
-}
-
-static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
-{
-    const auto &block = line.block();
-    if (!block.isValid()) {
-        return;
-    }
-
-    const auto &text = block.text();
-    if (text.isEmpty()) {
-        return;
-    }
-
-    const int to_remove = std::invoke([&text, max_spaces]() -> int {
-        const int len = std::min(max_spaces, static_cast<int>(text.length()));
-        int n = 0;
-        while (n < len && text.at(n) == C_SPACE) {
-            ++n;
-        }
-        return n;
-    });
-
-    if (to_remove == 0) {
-        return;
-    }
-
-    line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    line.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, to_remove);
-    line.removeSelectedText();
-}
-
-struct NODISCARD LineRange final
-{
-    NODISCARD static auto beg(QTextCursor cur)
-    {
-        auto from = cur.document()->findBlock(cur.selectionStart());
-        auto begCursor = QTextCursor(from);
-        return begCursor;
-    }
-
-    NODISCARD static auto end(QTextCursor cur)
-    {
-        const auto &to = cur.document()->findBlock(cur.selectionEnd());
-        auto endCursor = QTextCursor(to);
-        if (!endCursor.isNull()) {
-            endCursor.movePosition(QTextCursor::NextBlock);
-        }
-        return endCursor;
-    }
-};
-
-/// Caller is responsible for not invalidating the end cursor.
-///
-/// callback(QTextCursor);
-/// -or-
-/// callback(const QTextCursor&);
-template<typename Callback>
-static void foreach_partly_selected_block(QTextCursor cur, Callback &&callback)
-{
-    auto beg = LineRange::beg(cur);
-    auto end = LineRange::end(cur);
-    for (auto it = beg; !it.isNull() && it <= end;) {
-        if (it.block().isValid()) {
-            callback(static_cast<const QTextCursor &>(it));
-        }
-        if (!it.movePosition(QTextCursor::NextBlock)) {
-            break;
-        }
-    }
-}
-
-enum class NODISCARD CallbackResultEnum { KEEP_GOING, STOP };
-
-// Caller is responsible for not invalidating the end cursor.
-///
-/// CallbackResultEnum callback(QTextCursor);
-/// -or-
-/// CallbackResultEnum callback(const QTextCursor&);
-template<typename Callback>
-    requires(std::is_invocable_r_v<CallbackResultEnum, Callback, const QTextCursor &>)
-static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&callback)
-{
-    auto beg = LineRange::beg(cur);
-    auto end = LineRange::end(cur);
-    for (auto it = beg; !it.isNull() && it < end;) {
-        if (it.block().isValid()) {
-            if (callback(static_cast<const QTextCursor &>(it)) == CallbackResultEnum::STOP) {
-                return;
-            }
-        }
-        if (!it.movePosition(QTextCursor::NextBlock)) {
-            break;
-        }
-    }
-}
-
-template<typename Callback>
-    requires(std::is_invocable_r_v<bool, Callback, const QTextCursor &>)
-bool exists_partly_selected_block(QTextCursor cur, Callback &&callback)
-{
-    bool result = false;
-    foreach_partly_selected_block_until(cur,
-                                        [&result, &callback](QTextCursor it) -> CallbackResultEnum {
-                                            if (callback(it)) {
-                                                result = true;
-                                                return CallbackResultEnum::STOP;
-                                            }
-                                            return CallbackResultEnum::KEEP_GOING;
-                                        });
-    return result;
-}
-
-static void insertPrefix(QTextCursor line, const QString &prefix)
-{
-    line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-    line.insertText(prefix);
-}
-
 /* perform a 2-space block indentation of all partly-selected lines */
 void RemoteTextEdit::prefixPartialSelection(const QString &prefix)
 {
-    auto cur = textCursor();
-    RaiiGroupUndoActions raii(cur);
-    foreach_partly_selected_block(cur, [&prefix](const QTextCursor &line) -> void {
-        if (lineHasTabs(line)) {
-            expandTabs(line);
-        }
-        insertPrefix(line, prefix);
-    });
+    mmqt::remoteEditPrefixPartialSelection(textCursor(), prefix);
 }
 
 void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
@@ -528,7 +126,7 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
     }
 
     /* otherwise, insert a real tab, expand it, and restore the cursor */
-    RaiiGroupUndoActions raii(cur);
+    mmqt::RemoteEditUndoGroup raii(cur);
 
     cur.insertText(string_consts::S_TAB);
 
@@ -536,7 +134,7 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
     const auto &block = cur.block();
     const QString &s = block.text().left(col_before);
     const int col_after = mmqt::measureExpandedTabsOneLine(s, 0);
-    expandTabs(cur);
+    mmqt::remoteEditExpandTabsOnLine(cur);
 
     cur.setPosition(block.position() + col_after);
     setTextCursor(cur);
@@ -546,52 +144,12 @@ void RemoteTextEdit::handleEventTab(QKeyEvent *const event)
 void RemoteTextEdit::handleEventBacktab(QKeyEvent *const event)
 {
     event->accept();
-    auto cur = textCursor();
-    RaiiGroupUndoActions raii(cur);
-    foreach_partly_selected_block(cur, [](const QTextCursor &line) -> void {
-        if (lineHasTabs(line)) {
-            expandTabs(line);
-        }
-        tryRemoveLeadingSpaces(line, 2);
-    });
+    mmqt::remoteEditUnindentPartialSelection(textCursor());
 }
 
 void RemoteTextEdit::joinLines()
 {
-    auto cur = textCursor();
-    RaiiGroupUndoActions raii(cur);
-
-    auto doc = document();
-    const auto from = doc->findBlock(cur.selectionStart());
-    auto to = doc->findBlock(cur.selectionEnd());
-
-    /* Feature: join the next line if only one line is selected */
-    if (from == to) {
-        if (cur.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor)) {
-            to = doc->findBlock(cur.selectionEnd());
-        }
-    }
-
-    mmqt::TextBuffer buffer;
-    foreach_partly_selected_block(cur, [&buffer](const QTextCursor line) -> void {
-        const QTextBlock block = line.block();
-        const QString text = block.text();
-        if (text.isEmpty()) {
-            return;
-        }
-
-        if (!buffer.isEmpty()) {
-            buffer.append(C_SPACE);
-        }
-        buffer.appendExpandedTabs(QStringView{text});
-    });
-
-    /* adjust the selection to cover select everything in the blocks */
-    const int a = from.position();
-    const int b = to.position() + to.length() - 1;
-    cur.setPosition(a);
-    cur.setPosition(b, QTextCursor::KeepAnchor);
-    cur.insertText(buffer.getQString());
+    mmqt::remoteEditJoinLines(textCursor());
 }
 
 void RemoteTextEdit::quoteLines()
@@ -601,36 +159,7 @@ void RemoteTextEdit::quoteLines()
 
 void RemoteTextEdit::justifyLines(const int maxLen)
 {
-    auto cur = textCursor();
-    RaiiGroupUndoActions raii(cur);
-
-    auto doc = document();
-    const auto from = doc->findBlock(cur.selectionStart());
-    const auto to = doc->findBlock(cur.selectionEnd());
-    const auto toBlockNumber = to.blockNumber();
-    if (!from.isValid()) {
-        return;
-    }
-
-    const int a = from.position();
-    const int b = to.position() + to.length() - 1;
-
-    mmqt::TextBuffer buffer;
-    for (auto it = from; it.isValid() && it.blockNumber() <= toBlockNumber; it = it.next()) {
-        const auto &text = it.text();
-        if (text.isEmpty()) {
-            continue;
-        }
-
-        if (!buffer.isEmpty()) {
-            buffer.append(C_SPACE);
-        }
-        buffer.appendJustified(QStringView{text}, maxLen);
-    }
-
-    cur.setPosition(a);
-    cur.setPosition(b, QTextCursor::KeepAnchor);
-    cur.insertText(buffer.getQString());
+    mmqt::remoteEditJustifyLines(textCursor(), maxLen);
 }
 
 void RemoteTextEdit::replaceAll(const QString &str)
@@ -745,7 +274,7 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
     pTextEdit->showWhitespace(false);
 
     auto *const doc = pTextEdit->document();
-    new LineHighlighter(MAX_LENGTH, doc);
+    new RemoteEditHighlighter(doc, mmqt::REMOTE_EDIT_MAX_LENGTH);
     return pTextEdit;
 }
 
@@ -755,10 +284,8 @@ auto RemoteEditWidget::createGotoWidget() -> GotoWidget *
     pGotoWidget->hide();
 
     connect(pGotoWidget, &GotoWidget::sig_gotoLineRequested, this, [this](int lineNum) {
-        QTextCursor cursor = m_textEdit->textCursor();
-        cursor.movePosition(QTextCursor::Start);
-        if (cursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor, lineNum - 1)) {
-            m_textEdit->setTextCursor(cursor);
+        if (auto cursor = mmqt::remoteEditGotoLine(*m_textEdit->document(), lineNum)) {
+            m_textEdit->setTextCursor(*cursor);
             m_textEdit->ensureCursorVisible();
             slot_updateStatus(QString("Moved to line %1").arg(lineNum));
             m_gotoWidget->hide();
@@ -1091,26 +618,26 @@ void RemoteEditWidget::slot_handleFindRequested(const QString &term, QTextDocume
         return;
     }
 
-    QTextCursor originalCursor = m_textEdit->textCursor();
-
-    if (m_textEdit->find(term, flags)) {
+    const auto outcome = mmqt::remoteEditFind(*m_textEdit->document(),
+                                              m_textEdit->textCursor(),
+                                              term,
+                                              flags);
+    switch (outcome.result) {
+    case mmqt::RemoteEditFindResultEnum::FOUND:
+        m_textEdit->setTextCursor(outcome.cursor);
         slot_updateStatus(QString("Found: '%1'").arg(term));
-        return;
-    }
-
-    // Wrap around
-    m_textEdit->moveCursor(flags.testFlag(QTextDocument::FindBackward) ? QTextCursor::End
-                                                                       : QTextCursor::Start);
-    if (m_textEdit->find(term, flags)) {
+        break;
+    case mmqt::RemoteEditFindResultEnum::FOUND_AFTER_WRAP:
+        m_textEdit->setTextCursor(outcome.cursor);
         slot_updateStatus(QString("Found (from %1): '%2'")
                               .arg(flags.testFlag(QTextDocument::FindBackward) ? "end" : "top")
                               .arg(term));
-        return;
+        break;
+    case mmqt::RemoteEditFindResultEnum::NOT_FOUND:
+        // Cursor was never moved, so there's nothing to restore.
+        slot_updateStatus(QString("Not found: '%1'").arg(term));
+        break;
     }
-
-    // Restore original cursor if not found
-    m_textEdit->setTextCursor(originalCursor);
-    slot_updateStatus(QString("Not found: '%1'").arg(term));
 }
 
 void RemoteEditWidget::slot_handleReplaceCurrentRequested(const QString &findTerm,
@@ -1122,15 +649,9 @@ void RemoteEditWidget::slot_handleReplaceCurrentRequested(const QString &findTer
     }
 
     QTextCursor cursor = m_textEdit->textCursor();
-    if (cursor.hasSelection()) {
-        QString selectedText = cursor.selectedText();
-        Qt::CaseSensitivity cs = flags.testFlag(QTextDocument::FindCaseSensitively)
-                                     ? Qt::CaseSensitive
-                                     : Qt::CaseInsensitive;
-        if (QString::compare(selectedText, findTerm, cs) == 0) {
-            cursor.insertText(replaceTerm);
-            slot_updateStatus(QString("Replaced: '%1'").arg(findTerm));
-        }
+    if (mmqt::remoteEditReplaceCurrentIfMatches(cursor, findTerm, replaceTerm, flags)) {
+        m_textEdit->setTextCursor(cursor);
+        slot_updateStatus(QString("Replaced: '%1'").arg(findTerm));
     }
 
     // Always find the next occurrence after attempting replacement
@@ -1145,23 +666,11 @@ void RemoteEditWidget::slot_handleReplaceAllRequested(const QString &findTerm,
         return;
     }
 
-    int replacements = 0;
     QTextCursor originalCursor = m_textEdit->textCursor();
-    m_textEdit->moveCursor(QTextCursor::Start);
-    m_textEdit->textCursor().beginEditBlock();
-
-    while (m_textEdit->find(findTerm, flags)) {
-        QTextCursor matchCursor = m_textEdit->textCursor();
-        if (matchCursor.hasSelection()) {
-            matchCursor.insertText(replaceTerm);
-            replacements++;
-        } else {
-            // Should not happen with QTextEdit::find, but as a safeguard
-            break;
-        }
-    }
-
-    m_textEdit->textCursor().endEditBlock();
+    const int replacements = mmqt::remoteEditReplaceAll(*m_textEdit->document(),
+                                                        findTerm,
+                                                        replaceTerm,
+                                                        flags);
     m_textEdit->setTextCursor(originalCursor);
 
     if (replacements > 0) {
@@ -1172,240 +681,86 @@ void RemoteEditWidget::slot_handleReplaceAllRequested(const QString &findTerm,
     }
 }
 
-struct NODISCARD CursorColumnInfo final
-{
-    int actual = 0;
-    int tab_aware = 0;
-    int tab_and_ansi_aware = 0;
-};
-
-NODISCARD static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
-{
-    const int pos = cursor.positionInBlock();
-    const auto &block = cursor.block();
-    const auto &text = block.text().left(pos);
-
-    CursorColumnInfo cci;
-    cci.actual = pos;
-    cci.tab_aware = mmqt::measureExpandedTabsOneLine(text, 0);
-    cci.tab_and_ansi_aware = mmqt::measureTabAndAnsiAware(text);
-    return cci;
-}
-
-struct NODISCARD CursorAnsiInfo final
-{
-    mmqt::TextBuffer buffer;
-    // RawAnsi ansi;
-
-    explicit operator bool() const { return !buffer.isEmpty(); }
-};
-
-NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
-{
-    const int pos = cursor.positionInBlock();
-
-    CursorAnsiInfo result;
-    const auto &line = cursor.block().text();
-    mmqt::foreachAnsi(line, [pos, &result](auto start, const QStringView sv) {
-        if (result || pos < start || pos >= start + sv.length()) {
-            return;
-        }
-
-        if (!mmqt::isValidAnsiColor(sv)) {
-            result.buffer.append("*invalid*");
-            // result.ansi = {};
-            return;
-        }
-
-        auto &buffer = result.buffer;
-
-        if (const auto optAnsi = mmqt::parseAnsiColor(RawAnsi{}, sv)) {
-            const auto &ansi = *optAnsi;
-            // result.ansi = ansi;
-            if (ansi == RawAnsi{}) {
-                buffer.append("reset");
-            } else {
-                std::ostringstream oss;
-                to_stream(oss, ansi);
-                buffer.append(mmqt::toQStringUtf8(oss.str()));
-            }
-        } else {
-            result.buffer.append("*error");
-            // result.ansi = {};
-        }
-    });
-    return result;
-}
-
-NODISCARD static bool linesHaveTabs(const QTextCursor &cur)
-{
-    return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
-        return lineHasTabs(it);
-    });
-}
-
-NODISCARD static bool linesHaveTrailingSpace(const QTextCursor &cur)
-{
-    return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
-        const auto &block = it.block();
-        const auto &line = block.text();
-        return mmqt::findTrailingWhitespace(line) >= 0;
-    });
-}
-
-NODISCARD static bool hasLongLines(const QTextCursor &cur)
-{
-    return exists_partly_selected_block(cur, [](const QTextCursor &line) -> bool {
-        const auto &block = line.block();
-        const auto &s = block.text();
-        return mmqt::measureTabAndAnsiAware(s) > 80;
-    });
-}
-
 void RemoteEditWidget::slot_updateStatusBar()
 {
-    auto cur = m_textEdit->textCursor();
+    const auto info = mmqt::computeRemoteEditStatus(m_textEdit->textCursor());
 
-    const auto cci = getCursorColumn(cur);
-    const int row = cur.blockNumber() + 1;
-    QString status = QString("Line %1, Column %2").arg(row).arg(cci.tab_and_ansi_aware + 1);
-    if (cci.tab_aware != cci.tab_and_ansi_aware) {
-        status.append(QString(" (non-ansi-aware: %1)").arg(cci.tab_aware + 1));
+    QString status = QString("Line %1, Column %2").arg(info.line).arg(info.col);
+    if (info.nonAnsiAwareCol) {
+        status.append(QString(" (non-ansi-aware: %1)").arg(*info.nonAnsiAwareCol));
     }
 
-    if (cur.hasSelection()) {
+    if (info.selection) {
         const auto plural = [](auto n) { return (n == 1) ? "" : "s"; };
 
-        const QString selection = cur.selection().toPlainText();
-        const auto selectionLength = selection.length();
-        const auto selectionLines = selection.count(C_NEWLINE)
-                                    + (selection.endsWith(C_NEWLINE) ? 0 : 1);
-
         status.append(QString(", Selection: %1 char%2 on %3 line%4")
-                          .arg(selectionLength)
-                          .arg(plural(selectionLength))
-                          .arg(selectionLines)
-                          .arg(plural(selectionLines)));
-    } else if (auto ansi = getCursorAnsi(cur)) {
-        status.append(QString(", AnsiCode: {%1}").arg(ansi.buffer.getQString()));
+                          .arg(info.selection->chars)
+                          .arg(plural(info.selection->chars))
+                          .arg(info.selection->lines)
+                          .arg(plural(info.selection->lines)));
+    } else if (!info.ansiCode.isEmpty()) {
+        status.append(QString(", AnsiCode: {%1}").arg(info.ansiCode));
     }
 
-    const auto report_errors = [&cur, &status]() {
-        const bool hasSelection = cur.hasSelection();
-        if (!hasSelection) {
-            cur.select(QTextCursor::Document);
-        }
-
-        bool first = true;
-        const auto err = [&first, &hasSelection, &status](auto &&x) {
-            if (first) {
-                status.append(hasSelection ? ", Selected-Lines-Err: " : ", Document-Err: ");
-                first = false;
-            } else {
-                status.append(", ");
-            }
-            status.append(std::forward<decltype(x)>(x));
-        };
-
-        if (linesHaveTabs(cur)) {
-            err("Tabs");
-        }
-
-        if (linesHaveTrailingSpace(cur)) {
-            err("Trailing-Spaces");
-        }
-
-        if (hasLongLines(cur)) {
-            err("Long-lines");
-        }
-
+    const bool hasSelection = info.selection.has_value();
+    bool first = true;
+    const auto err = [&first, &hasSelection, &status](auto &&x) {
         if (first) {
-            status.append(hasSelection ? ", Selected-Lines: Ok" : ", Document: Ok");
+            status.append(hasSelection ? ", Selected-Lines-Err: " : ", Document-Err: ");
+            first = false;
+        } else {
+            status.append(", ");
         }
+        status.append(std::forward<decltype(x)>(x));
     };
-    report_errors();
+
+    if (info.hasTabs) {
+        err("Tabs");
+    }
+
+    if (info.hasTrailingSpace) {
+        err("Trailing-Spaces");
+    }
+
+    if (info.hasLongLines) {
+        err("Long-lines");
+    }
+
+    if (first) {
+        status.append(hasSelection ? ", Selected-Lines: Ok" : ", Document: Ok");
+    }
+
     m_statusBar->showMessage(status);
 }
 
 void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
-    mmqt::TextBuffer text;
-    text.reserve(static_cast<int>(old.length()));
-    mmqt::foreachLine(old,
-                      [&text, maxLen = MAX_LENGTH](const QStringView line, bool /*hasNewline*/) {
-                          text.appendJustified(line, maxLen);
-                          text.append(C_NEWLINE);
-                      });
-    m_textEdit->replaceAll(text.getQString());
+    m_textEdit->replaceAll(mmqt::remoteEditJustifyText(old, mmqt::REMOTE_EDIT_MAX_LENGTH));
 }
 
 // TODO: Set the tabstops for the edit control to 8 spaces, so the text won't jump when you expand tabs.
 void RemoteEditWidget::slot_expandTabs()
 {
-    const QTextCursor &cur = m_textEdit->textCursor();
-    RaiiGroupUndoActions raii{cur};
-
-    foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        if (lineHasTabs(line)) {
-            ::expandTabs(line);
-        }
-    });
+    mmqt::remoteEditExpandTabs(m_textEdit->textCursor());
 }
 
 void RemoteEditWidget::slot_removeTrailingWhitespace()
 {
-    const QTextCursor &cur = m_textEdit->textCursor();
-    RaiiGroupUndoActions raii{cur};
-
-    foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static const QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
-        assert(trailingWhitespace.isValid());
-        QString text = line.block().text();
-        if (!text.contains(trailingWhitespace)) {
-            return;
-        }
-
-        text.remove(trailingWhitespace);
-        line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-        line.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-        line.insertText(text);
-    });
+    mmqt::remoteEditRemoveTrailingWhitespace(m_textEdit->textCursor());
 }
 
 void RemoteEditWidget::slot_removeDuplicateSpaces()
 {
-    const QTextCursor &cur = m_textEdit->textCursor();
-    RaiiGroupUndoActions raii{cur};
-
-    foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static const QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
-        assert(spaces.isValid());
-        QString text = line.block().text();
-        if (!text.contains(spaces)) {
-            return;
-        }
-
-        text.replace(spaces, string_consts::S_SPACE);
-        line.movePosition(QTextCursor::StartOfBlock, QTextCursor::MoveAnchor);
-        line.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-        line.insertText(text);
-    });
+    mmqt::remoteEditRemoveDuplicateSpaces(m_textEdit->textCursor());
 }
 
 void RemoteEditWidget::slot_normalizeAnsi()
 {
     const QString &old = m_textEdit->toPlainText();
-    if (!mmqt::containsAnsi(old)) {
-        return;
+    if (auto output = mmqt::remoteEditNormalizeAnsi(old)) {
+        m_textEdit->replaceAll(*output);
     }
-
-    mmqt::TextBuffer output = mmqt::normalizeAnsi(ANSI_COLOR_SUPPORT_HI, old);
-    if (!output.hasTrailingNewline()) {
-        output.append(C_NEWLINE);
-    }
-
-    m_textEdit->replaceAll(output.getQString());
 }
 
 void RemoteEditWidget::slot_previewAnsi()
@@ -1441,7 +796,7 @@ void RemoteEditWidget::slot_toggleWhitespace()
 
 void RemoteEditWidget::slot_justifyLines()
 {
-    m_textEdit->justifyLines(MAX_LENGTH);
+    m_textEdit->justifyLines(mmqt::REMOTE_EDIT_MAX_LENGTH);
 }
 
 RemoteEditWidget::~RemoteEditWidget()

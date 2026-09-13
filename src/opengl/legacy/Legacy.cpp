@@ -541,6 +541,11 @@ void Functions::blitFboToDefault()
     getFBO().resolve();
 
     if (const GLuint textureId = getFBO().resolvedTextureId(); textureId != 0) {
+        // Present at the host's full resolution regardless of the render
+        // scale the FBO was drawn at; the next paint sets the viewport again.
+        const Viewport present = getPresentViewport();
+        Base::glViewport(present.offset.x, present.offset.y, present.size.x, present.size.y);
+
         const auto state = GLRenderState()
                                .withBlend(BlendModeEnum::NONE)
                                .withDepthFunction(std::nullopt)
