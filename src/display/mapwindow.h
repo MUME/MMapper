@@ -6,7 +6,8 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../map/coordinate.h"
-#include "mapcanvas.h"
+#include "MapCanvasWindow.h"
+#include "MapScroller.h"
 
 #include <QLabel>
 #include <QPixmap>
@@ -18,9 +19,8 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class AudioHintWidget;
 class GameObserver;
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 class Mmapper2Group;
 class PrespammedPath;
@@ -30,7 +30,6 @@ class QMouseEvent;
 class QObject;
 class QResizeEvent;
 class QScrollBar;
-class QTimer;
 
 class NODISCARD_QOBJECT MapWindow final : public QWidget
 {
@@ -40,26 +39,18 @@ protected:
     QPointer<QGridLayout> m_gridLayout;
     QPointer<QScrollBar> m_horizontalScrollBar;
     QPointer<QScrollBar> m_verticalScrollBar;
-    QPointer<MapCanvas> m_canvas;
+    QPointer<MapCanvasWindow> m_canvas;
     QPointer<QWidget> m_canvasContainer;
     QPointer<QWidget> m_splashWidget;
-    QPointer<AudioHintWidget> m_audioHint;
-    QPointer<QTimer> m_scrollTimer;
-    int m_verticalScrollStep = 0;
-    int m_horizontalScrollStep = 0;
 
 private:
-    struct NODISCARD KnownMapSize final
-    {
-        glm::ivec3 min{0};
-        glm::ivec3 max{0};
-
-        NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
-
-        NODISCARD glm::vec2 scrollToWorld(glm::ivec2 scrollPos) const;
-        NODISCARD glm::ivec2 worldToScroll(glm::vec2 worldPos) const;
-
-    } m_knownMapSize;
+    // Scroll math (world<->scroll-unit conversion) and the continuous-scroll
+    // timer live in MapScroller (see MapScroller.h/.cpp). MapWindow owns
+    // the QScrollBar widgets themselves and the glue that reads/writes their
+    // values.
+    MapScroller *m_scroller = nullptr;
+    // Compact layout: drag-to-pan makes the bars dead weight on a phone.
+    bool m_scrollBarsSuppressed = false;
 
 public:
     explicit MapWindow(MapData &mapData,
@@ -74,10 +65,11 @@ public:
     void keyReleaseEvent(QKeyEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
-    NODISCARD MapCanvas *getCanvas() const;
+    NODISCARD MapCanvasWindow *getCanvas() const;
 
 public:
     void updateScrollBars();
+    void setScrollBarsSuppressed(bool suppressed);
     void setZoom(float zoom);
     NODISCARD float getZoom() const;
     void hideSplashImage();
@@ -94,10 +86,14 @@ public slots:
     void slot_centerOnWorldPos(glm::vec2 worldPos);
     void slot_mapMove(int dx, int dy);
     void slot_continuousScroll(int dx, int dy);
-    void slot_scrollTimerTimeout();
     void slot_graphicsSettingsChanged();
     void slot_zoomChanged(const float zoom) { emit sig_zoomChanged(zoom); }
     void slot_showTooltip(const QString &text, const QPoint &pos);
 
     void setCanvasEnabled(bool enabled);
+
+private slots:
+    // Connected to MapScroller::sig_continuousScrollStep(); applies one
+    // 100ms continuous-scroll tick to the scrollbars.
+    void slot_applyScrollStep(int hStep, int vStep);
 };

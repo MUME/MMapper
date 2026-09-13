@@ -10,7 +10,7 @@
 #include <QString>
 #include <QtCore>
 
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 
 class NODISCARD_QOBJECT PrespammedPath final : public QObject

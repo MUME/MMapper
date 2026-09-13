@@ -59,6 +59,21 @@ GraphicsPage::GraphicsPage(QWidget *parent)
                     graphicsSettingsChanged();
                 }
             });
+    connect(ui->renderScaleComboBox,
+            &QComboBox::currentTextChanged,
+            this,
+            [this](const QString & /*text*/) {
+                if (ui->renderScaleComboBox->isEnabled()) {
+                    const int scale = ui->renderScaleComboBox
+                                          ->itemData(ui->renderScaleComboBox->currentIndex())
+                                          .toInt();
+                    if (scale > 0) {
+                        setConfig().canvas.renderScale.set(scale);
+                        syncAntialiasingSamplesComboBox();
+                        graphicsSettingsChanged();
+                    }
+                }
+            });
     connect(ui->trilinearFilteringCheckBox, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
         setConfig().canvas.trilinearFiltering.set(ui->trilinearFilteringCheckBox->isChecked());
         graphicsSettingsChanged();
@@ -120,6 +135,24 @@ void GraphicsPage::slot_loadConfig()
     setIconColor(ui->connectionNormalPushButton, settings.connectionNormalColor);
 
     {
+        ui->renderScaleComboBox->setEnabled(false);
+        ui->renderScaleComboBox->clear();
+        static constexpr std::array<int, 3> scales{50, 75, 100};
+        for (const int s : scales) {
+            QString label = QString("%1%").arg(s);
+            if (s == 100) {
+                label += " (Native)";
+            }
+            ui->renderScaleComboBox->addItem(label, s);
+        }
+        const int currentScale = settings.renderScale.get();
+        const int index = utils::clampNonNegative(
+            ui->renderScaleComboBox->findData(QVariant(currentScale), Qt::UserRole));
+        ui->renderScaleComboBox->setCurrentIndex(index);
+        ui->renderScaleComboBox->setEnabled(true);
+    }
+
+    {
         ui->antialiasingSamplesComboBox->setEnabled(false);
         ui->antialiasingSamplesComboBox->clear();
         const int maxSamples = OpenGLConfig::getMaxSamples();
@@ -129,12 +162,9 @@ void GraphicsPage::slot_loadConfig()
                 i = 1;
             }
         }
-        const auto samples = std::min(settings.antialiasingSamples.get(), maxSamples);
-        const int index = utils::clampNonNegative(
-            ui->antialiasingSamplesComboBox->findData(QVariant(samples), Qt::UserRole));
-        ui->antialiasingSamplesComboBox->setCurrentIndex(index);
-        ui->antialiasingSamplesComboBox->setEnabled(true);
+        syncAntialiasingSamplesComboBox();
     }
+
     ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering.get());
 
     ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
@@ -145,6 +175,24 @@ void GraphicsPage::slot_loadConfig()
     ui->weatherAtmosphereSlider->setValue(settings.weatherAtmosphereIntensity.get());
     ui->weatherPrecipitationSlider->setValue(settings.weatherPrecipitationIntensity.get());
     ui->weatherTimeOfDaySlider->setValue(settings.weatherTimeOfDayIntensity.get());
+}
+
+void GraphicsPage::syncAntialiasingSamplesComboBox()
+{
+    // Shows "Off" while the render scale is below 100% (MapCanvas ignores
+    // MSAA there) without touching the stored setting: the combo's handler
+    // only writes to the config while the combo is enabled, so it is
+    // disabled before its index changes.
+    const auto &settings = getConfig().canvas;
+    const bool scaled = settings.renderScale.get() < 100;
+    auto &combo = deref(ui->antialiasingSamplesComboBox);
+    combo.setEnabled(false);
+    const int effectiveSamples = scaled ? 0 : settings.antialiasingSamples.get();
+    const auto samples = std::min(effectiveSamples, OpenGLConfig::getMaxSamples());
+    combo.setCurrentIndex(utils::clampNonNegative(combo.findData(QVariant(samples), Qt::UserRole)));
+    combo.setEnabled(!scaled);
+    combo.setToolTip(scaled ? "Anti-aliasing (MSAA) is disabled when Render Scale is below 100%."
+                            : "");
 }
 
 void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *const pushButton)

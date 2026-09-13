@@ -4,7 +4,7 @@
 #include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../display/MapCanvasData.h"
-#include "../display/mapcanvas.h"
+#include "../display/MapCanvasWindow.h"
 #include "../global/AnsiOstream.h"
 #include "../global/Consts.h"
 #include "../global/NamedColors.h"
@@ -18,6 +18,7 @@
 #include "abstractparser.h"
 
 #include <ostream>
+#include <utility>
 
 #include <QColor>
 #include <QDir>
@@ -206,14 +207,14 @@ void AbstractParser::doConfig(const StringView cmd)
 
     // static because it has no captures
     static const auto getZoom = []() -> float {
-        if (auto primary = MapCanvas::getPrimary()) {
+        if (auto primary = MapCanvasWindow::getPrimary()) {
             return primary->getRawZoom();
         }
         return 1.f;
     };
 
     const auto setZoom = [this](float f) -> bool {
-        if (auto primary = MapCanvas::getPrimary()) {
+        if (auto primary = MapCanvasWindow::getPrimary()) {
             primary->setZoom(f);
             this->graphicsSettingsChanged();
             return true;
@@ -373,39 +374,37 @@ void AbstractParser::doConfig(const StringView cmd)
                         }
 
                         // REVISIT: Ideally we support external editor as well
+                        auto onSave = [weakParser = QPointer<AbstractParser>(this)](
+                                          const QString &edited) {
+                            if (weakParser.isNull()) {
+                                return;
+                            }
+
+                            QTemporaryFile tempRead(QDir::tempPath() + "/mmapper_XXXXXX.ini");
+                            tempRead.setAutoRemove(true);
+                            if (tempRead.open()) {
+                                QString name = tempRead.fileName();
+                                tempRead.write(edited.toUtf8());
+                                tempRead.close();
+
+                                {
+                                    auto &cfg = setConfig();
+                                    QSettings settings(name, QSettings::IniFormat);
+                                    cfg.readFrom(settings);
+                                    cfg.write();
+                                }
+
+                                weakParser->sendToUser(SendToUserSourceEnum::FromMMapper,
+                                                       "\nConfiguration imported and persisted.\n");
+                                weakParser->sendOkToUser();
+                            }
+                        };
+
                         auto *editor = new RemoteEditWidget(true,
                                                             "MMapper Client Configuration",
                                                             content,
                                                             nullptr);
-                        QObject::connect(editor,
-                                         &RemoteEditWidget::sig_save,
-                                         [weakParser = QPointer<AbstractParser>(this)](
-                                             const QString &edited) {
-                                             if (weakParser.isNull()) {
-                                                 return;
-                                             }
-
-                                             QTemporaryFile tempRead(QDir::tempPath()
-                                                                     + "/mmapper_XXXXXX.ini");
-                                             tempRead.setAutoRemove(true);
-                                             if (tempRead.open()) {
-                                                 QString name = tempRead.fileName();
-                                                 tempRead.write(edited.toUtf8());
-                                                 tempRead.close();
-
-                                                 {
-                                                     auto &cfg = setConfig();
-                                                     QSettings settings(name, QSettings::IniFormat);
-                                                     cfg.readFrom(settings);
-                                                     cfg.write();
-                                                 }
-
-                                                 weakParser->sendToUser(
-                                                     SendToUserSourceEnum::FromMMapper,
-                                                     "\nConfiguration imported and persisted.\n");
-                                                 weakParser->sendOkToUser();
-                                             }
-                                         });
+                        QObject::connect(editor, &RemoteEditWidget::sig_save, std::move(onSave));
 
                         editor->setAttribute(Qt::WA_DeleteOnClose);
                         editor->show();

@@ -6,10 +6,8 @@
 #include "../global/RuleOf5.h"
 #include "../global/macros.h"
 #include "Hotkey.h"
+#include "InputHistory.h"
 #include "PaletteManager.h"
-
-#include <iterator>
-#include <list>
 
 #include <QEvent>
 #include <QObject>
@@ -22,54 +20,6 @@
 class QKeyEvent;
 class QObject;
 class QWidget;
-
-class NODISCARD InputHistory final : private std::list<QString>
-{
-private:
-    std::list<QString>::iterator m_iterator;
-
-public:
-    InputHistory() { m_iterator = begin(); }
-
-public:
-    void addInputLine(const QString &);
-
-public:
-    void forward() { std::advance(m_iterator, 1); }
-    void backward() { std::advance(m_iterator, -1); }
-
-public:
-    NODISCARD const QString &value() const { return *m_iterator; }
-
-public:
-    NODISCARD bool atFront() const { return m_iterator == begin(); }
-    NODISCARD bool atEnd() const { return m_iterator == end(); }
-};
-
-class NODISCARD TabHistory final : private std::list<QString>
-{
-    using base = std::list<QString>;
-
-private:
-    std::list<QString>::iterator m_iterator;
-
-public:
-    TabHistory() { m_iterator = begin(); }
-
-public:
-    void addInputLine(const QString &);
-
-public:
-    void forward() { std::advance(m_iterator, 1); }
-    void reset() { m_iterator = begin(); }
-
-public:
-    NODISCARD const QString &value() const { return *m_iterator; }
-
-public:
-    NODISCARD bool empty() { return base::empty(); }
-    NODISCARD bool atEnd() const { return m_iterator == end(); }
-};
 
 struct NODISCARD InputWidgetOutputs
 {
@@ -128,10 +78,10 @@ private:
     NODISCARD bool handleTerminalShortcut(int key);
     NODISCARD bool handleBasicKey(int key);
 
-private:
+public:
+    // The Tab / Up / Down key actions; also driven by the touch input strip
+    // (see ClientWidget::initTouchInputStrip()).
     void tabComplete();
-
-private:
     void forwardHistory();
     void backwardHistory();
 

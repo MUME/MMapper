@@ -17,10 +17,6 @@
 #include <QtGui>
 #include <QtWidgets>
 
-static constexpr const int MIN_WORD_LENGTH = 3;
-
-static const QRegularExpression g_whitespaceRx(R"(\s+)");
-
 InputWidgetOutputs::~InputWidgetOutputs() = default;
 
 InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
@@ -46,6 +42,9 @@ InputWidget::InputWidget(QWidget *const parent, InputWidgetOutputs &outputs)
 
     // Line Wrapping
     setLineWrapMode(QPlainTextEdit::NoWrap);
+
+    // On-screen keyboards: MUD commands are lowercase and not prose.
+    setInputMethodHints(Qt::ImhNoAutoUppercase | Qt::ImhNoPredictiveText);
 
     // Remember native palletes
     m_paletteManager.init(*this, std::nullopt, Qt::lightGray);
@@ -258,42 +257,6 @@ void InputWidget::gotInput()
     m_tabHistory.addInputLine(input);
 }
 
-void InputHistory::addInputLine(const QString &string)
-{
-    if (!string.isEmpty() && (empty() || back() != string)) {
-        // Add to line history if it is a new entry
-        push_front(string);
-    }
-
-    // Trim line history
-    if (static_cast<int>(size()) > getConfig().integratedClient.linesOfInputHistory) {
-        pop_back();
-    }
-
-    // Reset the iterator
-    m_iterator = begin();
-}
-
-void TabHistory::addInputLine(const QString &string)
-{
-    QStringList list = string.split(g_whitespaceRx, Qt::SplitBehaviorFlags::SkipEmptyParts);
-    for (const QString &word : list) {
-        if (word.length() > MIN_WORD_LENGTH) {
-            // Adding this word to the dictionary
-            push_front(word);
-
-            // Trim dictionary
-            if (static_cast<int>(size())
-                > getConfig().integratedClient.tabCompletionDictionarySize) {
-                pop_back();
-            }
-        }
-    }
-
-    // Reset the iterator
-    m_iterator = begin();
-}
-
 void InputWidget::forwardHistory()
 {
     clear();
@@ -346,32 +309,19 @@ void InputWidget::tabComplete()
         m_tabbing = true;
     }
 
-    // Iterate through all previous words
-    while (!m_tabHistory.atEnd()) {
-        const auto &word = m_tabHistory.value();
-        if (!word.startsWith(m_tabFragment)) {
-            // Try the next word
-            m_tabHistory.forward();
-            continue;
-        }
-
-        // Found a previous word to complete to
+    // Find the next previous word that completes the fragment, cycling back
+    // to reverting the completion (see TabHistory::nextMatch()) once the
+    // dictionary is exhausted.
+    if (const std::optional<QString> word = m_tabHistory.nextMatch(m_tabFragment)) {
         current.removeSelectedText();
         current.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
-        current.insertText(word);
-        auto length = static_cast<int>(word.length() - m_tabFragment.length());
+        current.insertText(*word);
+        auto length = static_cast<int>(word->length() - m_tabFragment.length());
         current.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, length);
         current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
         setTextCursor(current);
-
-        m_tabHistory.forward();
-        break;
-    }
-
-    // If we reach the end then loop back to the beginning and clear the selected text again
-    if (m_tabHistory.atEnd()) {
+    } else {
         textCursor().removeSelectedText();
-        m_tabHistory.reset();
     }
 }
 

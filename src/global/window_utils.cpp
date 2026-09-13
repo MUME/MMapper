@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPoint>
+#include <QScreen>
 #include <QString>
 #include <QWidget>
 
@@ -43,6 +44,20 @@ void mmqt::setWindowTitle2(QWidget &widget, const QString &program, const QStrin
         // "View text... - MMapper Viewer"
         widget.setWindowTitle(QString("%1 - %2").arg(title, program));
     }
+}
+
+void mmqt::showFittedToScreen(QWidget &widget)
+{
+    const QScreen *const screen = widget.screen();
+    if (screen != nullptr) {
+        const QSize available = screen->availableGeometry().size();
+        const QSize wanted = widget.sizeHint();
+        if (wanted.width() > available.width() || wanted.height() > available.height()) {
+            widget.showMaximized();
+            return;
+        }
+    }
+    widget.show();
 }
 
 namespace {

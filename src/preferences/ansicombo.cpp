@@ -45,17 +45,17 @@ void AnsiCombo::setAnsiCode(const AnsiColor16 ansiCode)
     assert(getAnsiCode() == ansiCode);
 }
 
-NODISCARD static AnsiCombo::AnsiItem initAnsiItem(const AnsiColor16 ansiCode,
+NODISCARD static AnsiCombo::AnsiItem initAnsiItem(const AnsiColorTables::Entry &tableEntry,
                                                   const AnsiColor16LocationEnum mode)
 {
-    auto defColor = mode == AnsiColor16LocationEnum::Foreground ? AnsiColor16Enum::black
-                                                                : AnsiColor16Enum::white;
-
-    const AnsiColor16Enum color = ansiCode.color.value_or(defColor);
-
-    auto make_pix = [color]() {
+    // The "no color" swatch's fill has no genuine ANSI color to draw, so it
+    // falls back to black for foreground and white for background, just to
+    // visually distinguish the two combos' "none" rows.
+    const auto defColor = mode == AnsiColor16LocationEnum::Foreground ? AnsiColor16Enum::black
+                                                                      : AnsiColor16Enum::white;
+    auto make_pix = [&tableEntry, defColor]() {
         QPixmap pix(20, 20);
-        pix.fill(mmqt::toQColor(color));
+        pix.fill(mmqt::toQColor(tableEntry.color.color.value_or(defColor)));
         // Draw border
         {
             QPainter paint(&pix);
@@ -66,11 +66,10 @@ NODISCARD static AnsiCombo::AnsiItem initAnsiItem(const AnsiColor16 ansiCode,
     };
 
     AnsiCombo::AnsiItem retVal;
-    retVal.color = ansiCode;
+    retVal.color = tableEntry.color;
     retVal.loc = mode;
     retVal.picture = make_pix();
-    retVal.description = mmqt::toQStringUtf8(ansiCode.isDefault() ? "none"
-                                                                  : ansiCode.to_string_view());
+    retVal.description = tableEntry.description;
     return retVal;
 }
 
@@ -87,64 +86,16 @@ void AnsiCombo::initColours(const AnsiColor16LocationEnum change)
         addItem(item.picture, item.description, userData);
     };
 
-    add(initAnsiItem(AnsiColor16{}, m_mode));
-
-#define X_INIT(N, lower, UPPER) \
-    add(initAnsiItem(AnsiColor16{AnsiColor16Enum::lower}, m_mode)); \
-    add(initAnsiItem(AnsiColor16{AnsiColor16Enum::UPPER}, m_mode));
-
-    XFOREACH_ANSI_COLOR_0_7(X_INIT)
-
-#undef X_INIT
+    for (const AnsiColorTables::Entry &entry : AnsiColorTables::colorTable()) {
+        add(initAnsiItem(entry, m_mode));
+    }
 
     this->setAnsiCode(AnsiColor16{});
 }
 
 AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 {
-    auto stdString = colString.toUtf8().toStdString();
-
-    // No need to proceed if the color is empty
-    if (colString.isEmpty()) {
-        return AnsiColor{};
-    }
-
-    // TODO: use existing test (prepend an ESC if necessary)
-    static const QRegularExpression re(R"(^\[((?:\d+[;:])*\d+)m$)");
-    if (!re.match(colString).hasMatch()) {
-        qWarning() << "String did not contain valid ANSI: " << colString;
-        return AnsiColor{};
-    }
-
-    // TODO: use existing interface to split the string
-    const AnsiColorState state = std::invoke([&colString]() -> AnsiColorState {
-        AnsiColorState result_state;
-        QString tmpStr = colString;
-        tmpStr.chop(1);
-        tmpStr.remove(0, 1);
-        for (const auto &s : tmpStr.split(";", Qt::SplitBehaviorFlags::SkipEmptyParts)) {
-            const auto n = s.toInt();
-            result_state.receive(n);
-        }
-        return result_state;
-    });
-
-    if (!state.hasCompleteState()) {
-        qWarning() << "String did not contain valid ANSI: " << colString;
-    }
-
-    auto toAnsiColor = [](const RawAnsi &raw) {
-        AnsiColor color;
-        color.fg = toAnsiColor16(raw.fg);
-        color.bg = toAnsiColor16(raw.bg);
-        color.bold = raw.hasBold();
-        color.italic = raw.hasItalic();
-        color.underline = raw.hasUnderline();
-        return color;
-    };
-
-    const RawAnsi raw = state.getRawAnsi();
-    return toAnsiColor(raw);
+    return AnsiColorTables::colorFromString(colString);
 }
 
 // TODO: move this some place more appropriate.

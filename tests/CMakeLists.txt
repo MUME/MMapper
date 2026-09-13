@@ -49,6 +49,8 @@ target_link_libraries(mm_test
 
 # Clock
 set(clock_SRCS
+    ../src/clock/ClockStrings.cpp
+    ../src/clock/ClockStrings.h
     ../src/clock/mumeclock.cpp
     ../src/clock/mumeclock.h
     ../src/clock/mumemoment.cpp
@@ -143,23 +145,33 @@ set_target_properties(
 )
 add_test(NAME TestProxy COMMAND TestProxy)
 
+# MapScroller is a plain, rendering-independent QObject (see
+# ../src/display/MapScroller.h's file comment: deliberately has no
+# dependency on MapCanvas/OpenGL), so it's linked directly into
+# TestMainWindow below for mapScrollerScrollMath().
+set(map_scroller_SRCS
+    ../src/display/MapScroller.cpp
+    ../src/display/MapScroller.h
+)
 # MainWindow
 set(mainwindow_SRCS
     ../src/global/Version.h
     ../src/mainwindow/AudioVolumeSlider.cpp
     ../src/mainwindow/AudioVolumeSlider.h
-    ../src/mainwindow/UpdateDialog.cpp
-    ../src/mainwindow/UpdateDialog.h
+    ../src/mainwindow/UpdateChecker.cpp
+    ../src/mainwindow/UpdateChecker.h
     )
 set(TestMainWindow_SRCS TestMainWindow.cpp)
-add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
-add_dependencies(TestMainWindow mm_test mm_global)
+add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS} ${map_scroller_SRCS})
+add_dependencies(TestMainWindow mm_test mm_global mm_map)
 target_link_libraries(TestMainWindow
+        mm_map
         mm_test
         mm_global
         Qt6::Network
         Qt6::Test
         Qt6::Widgets
+        Qt6::OpenGL
         coverage_config)
 set_target_properties(
   TestMainWindow PROPERTIES
@@ -190,11 +202,17 @@ set_target_properties(
 add_test(NAME TestGlobal COMMAND TestGlobal)
 
 # Group
-set(TestGroup_SRCS
+set(group_SRCS
+        ../src/group/CGroupChar.cpp
+        ../src/group/CGroupChar.h
+        ../src/group/GroupModel.cpp
+        ../src/group/GroupModel.h
         ../src/group/enums.cpp
         ../src/group/enums.h
-        TestGroup.cpp
+        ../src/group/mmapper2character.cpp
+        ../src/group/mmapper2character.h
 )
+set(TestGroup_SRCS ${group_SRCS} TestGroup.cpp)
 add_executable(TestGroup ${TestGroup_SRCS})
 add_dependencies(TestGroup mm_test mm_global mm_map)
 target_link_libraries(TestGroup
@@ -241,6 +259,8 @@ add_test(NAME TestMap COMMAND TestMap)
 
 # Adventure
 set(adventure_SRCS
+        ../src/adventure/AdventureLogModel.cpp
+        ../src/adventure/AdventureLogModel.h
         ../src/adventure/adventuresession.cpp
         ../src/adventure/adventuresession.h
         ../src/adventure/adventuretracker.cpp
@@ -328,6 +348,8 @@ set(room_manager
         ../src/roompanel/RoomMob.cpp
         ../src/roompanel/RoomManager.cpp
         ../src/roompanel/RoomManager.h
+        ../src/roompanel/RoomModel.cpp
+        ../src/roompanel/RoomModel.h
 )
 set(RoomManager roompanel/TestRoomManager.cpp)
 add_executable(TestRoomManager ${room_manager} ${RoomManager})
@@ -361,3 +383,42 @@ set_target_properties(
         COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 add_test(NAME TestHotkeyManager COMMAND TestHotkeyManager)
+
+# Media
+set(description_panel_SRCS
+        ../src/media/StackBlur.cpp
+        ../src/media/StackBlur.h
+)
+set(TestMedia_SRCS TestMedia.cpp TestMedia.h)
+add_executable(TestMedia ${TestMedia_SRCS} ${description_panel_SRCS})
+add_dependencies(TestMedia mm_test mm_global)
+target_link_libraries(TestMedia mm_test mm_global Qt6::Gui Qt6::Test coverage_config)
+set_target_properties(
+        TestMedia PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestMedia COMMAND TestMedia)
+
+# Client
+set(TestClient_SRCS
+    TestClient.cpp
+    TestClient.h
+    ../src/client/InputHistory.cpp
+    ../src/client/InputHistory.h
+    ../src/mpi/RemoteEditDocumentOps.cpp
+    ../src/mpi/RemoteEditDocumentOps.h
+)
+add_executable(TestClient ${TestClient_SRCS})
+add_dependencies(TestClient mm_test mm_global)
+target_link_libraries(TestClient mm_test mm_global Qt6::Gui Qt6::Test coverage_config)
+set_target_properties(
+        TestClient PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestClient COMMAND TestClient)

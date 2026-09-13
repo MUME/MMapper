@@ -6,6 +6,7 @@
 
 #include "../global/AnsiTextUtils.h"
 #include "../global/macros.h"
+#include "AnsiColorTables.h"
 
 #include <vector>
 
@@ -100,29 +101,10 @@ public:
     NODISCARD AnsiColor16 getAnsiCode() const;
     void setAnsiCode(AnsiColor16);
 
-    struct NODISCARD AnsiColor final
-    {
-        AnsiColor16 bg;
-        AnsiColor16 fg;
-        bool bold = false;
-        bool italic = false;
-        bool underline = false;
-
-    public:
-        NODISCARD AnsiColor16Enum getBg() const
-        {
-            return bg.color.value_or(AnsiColor16Enum::white);
-        }
-        NODISCARD AnsiColor16Enum getFg() const
-        {
-            return fg.color.value_or(AnsiColor16Enum::black);
-        }
-        NODISCARD QColor getBgColor() const { return mmqt::toQColor(getBg()); }
-        NODISCARD QColor getFgColor() const { return mmqt::toQColor(getFg()); }
-
-        NODISCARD QString getBgName() const { return mmqt::toQStringUtf8(bg.to_string_view()); }
-        NODISCARD QString getFgName() const { return mmqt::toQStringUtf8(fg.to_string_view()); }
-    };
+    // Alias (rather than a separate struct with the same fields) so callers
+    // can keep using AnsiCombo::AnsiColor's members directly; the definition
+    // and colorFromString() logic live in the widget-free AnsiColorTables.h.
+    using AnsiColor = AnsiColorTables::ParsedColor;
 
     /// \return true if string is valid ANSI color code
     NODISCARD static AnsiColor colorFromString(const QString &ansiString);

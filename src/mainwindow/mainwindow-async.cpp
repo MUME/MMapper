@@ -3,9 +3,8 @@
 
 #include "mainwindow-async.h"
 
-#include "../client/ClientWidget.h"
 #include "../display/MapCanvasData.h"
-#include "../display/mapcanvas.h"
+#include "../display/MapCanvasWindow.h"
 #include "../display/mapwindow.h"
 #include "../global/AnsiOstream.h"
 #include "../global/AnsiTextUtils.h"
@@ -15,13 +14,13 @@
 #include "../global/utils.h"
 #include "../global/window_utils.h"
 #include "../mapstorage/MapDestination.h"
+#include "../mapstorage/MapLoadHelper.h"
 #include "../mapstorage/MmpMapStorage.h"
 #include "../mapstorage/PandoraMapStorage.h"
 #include "../mapstorage/XmlMapStorage.h"
 #include "../mapstorage/jsonmapstorage.h"
 #include "../mapstorage/mapstorage.h"
 #include "../pathmachine/mmapper2pathmachine.h"
-#include "findroomsdlg.h"
 #include "mainwindow.h"
 #include "utils.h"
 
@@ -45,130 +44,6 @@ constexpr auto green = getRawAnsi(AnsiColor16Enum::green);
 constexpr auto yellow = getRawAnsi(AnsiColor16Enum::yellow);
 
 namespace mwa_detail {
-
-NODISCARD bool detectMm2Binary(QIODevice &device)
-{
-    auto result = getMM2FileVersion(device);
-    device.seek(0);
-    return result.has_value();
-}
-
-// MMapper2 XML map (as opposed to Pandora XML map)
-NODISCARD bool detectMm2Xml(QIODevice &device)
-{
-    const QByteArray line = device.readLine(64);
-    const QByteArray line2 = device.readLine(64);
-    device.seek(0);
-    return line.contains("xml version") && line2.contains("mmapper2xml");
-}
-
-// Pandora XML map
-NODISCARD bool detectPandora(QIODevice &device)
-{
-    QXmlStreamReader xml(&device);
-    xml.readNextStartElement();
-    if (xml.error() != QXmlStreamReader::NoError) {
-        device.seek(0);
-        return false;
-    }
-    if (xml.name() != QStringLiteral("map")) {
-        device.seek(0);
-        return false;
-    }
-    if (xml.attributes().isEmpty() || !xml.attributes().hasAttribute("rooms")) {
-        device.seek(0);
-        return false;
-    }
-    device.seek(0);
-    return true;
-}
-
-template<typename T>
-NODISCARD std::unique_ptr<AbstractMapStorage> make(const AbstractMapStorage::Data &data,
-                                                   MainWindow *const mw)
-{
-    return std::make_unique<T>(data, mw);
-}
-
-class NODISCARD FileFormatHelper final
-{
-public:
-    using DetectFn = bool (*)(QIODevice &);
-    using MakeFn = std::unique_ptr<AbstractMapStorage> (*)(const AbstractMapStorage::Data &data,
-                                                           MainWindow *mw);
-
-private:
-    DetectFn m_detect = nullptr;
-    MakeFn m_make = nullptr;
-
-public:
-    explicit FileFormatHelper(const DetectFn d, const MakeFn m)
-        : m_detect{d}
-        , m_make{m}
-    {
-        assert(m_detect != nullptr);
-        assert(m_make != nullptr);
-        if (m_detect == nullptr || m_make == nullptr) {
-            std::abort();
-        }
-    }
-
-private:
-    static void logException(const mm::source_location loc)
-    {
-        try {
-            std::rethrow_exception(std::current_exception());
-        } catch (const std::exception &ex) {
-            mm::WarningOstream{loc} << ex.what();
-        } catch (...) {
-            mm::WarningOstream{loc} << "Unknown exception.";
-        }
-    }
-
-public:
-    NODISCARD bool detect(QIODevice &device) const
-    {
-        try {
-            return m_detect(device);
-        } catch (...) {
-            logException(MM_SOURCE_LOCATION());
-            return false;
-        }
-    }
-    NODISCARD std::unique_ptr<AbstractMapStorage> make(const AbstractMapStorage::Data &data,
-                                                       MainWindow *mw) const
-    {
-        try {
-            return m_make(data, mw);
-        } catch (...) {
-            logException(MM_SOURCE_LOCATION());
-            throw;
-        }
-    }
-};
-
-const std::array<FileFormatHelper, 3> formats{
-    FileFormatHelper{&detectMm2Binary, &make<MapStorage>},
-    FileFormatHelper{&detectMm2Xml, &make<XmlMapStorage>},
-    FileFormatHelper{&detectPandora, &make<PandoraMapStorage>},
-};
-
-NODISCARD bool hasRooms(const RawMapLoadData &data)
-{
-    return !data.rooms.empty();
-}
-
-NODISCARD bool hasMarkers(const RawMapLoadData &data)
-{
-    return !data.markers.empty();
-}
-
-// true if the map contains either rooms or markers;
-// e.g. the map might ONLY contain markers.
-NODISCARD bool hasValidData(const RawMapLoadData &data)
-{
-    return hasRooms(data) || hasMarkers(data);
-}
 
 template<typename T>
 NODISCARD PollResultEnum wait_for(std::future<T> &future, const std::chrono::milliseconds ms)
@@ -202,55 +77,13 @@ NODISCARD std::optional<T> extract(std::future<std::optional<T>> &future, MainWi
 
 namespace background {
 
-NODISCARD std::optional<MapLoadData> load_map_data(AbstractMapStorage &storage)
-{
-    if (!storage.canLoad()) {
-        return std::nullopt;
-    }
-
-    ProgressCounter &pc = storage.getProgressCounter();
-    pc.setCurrentTask(ProgressMsg{/*"phase 1: "*/ "load from disk"});
-    std::optional<RawMapLoadData> opt_data = storage.loadData();
-    if (!opt_data) {
-        return std::nullopt;
-    }
-
-    auto &data = opt_data.value();
-    pc.reset();
-
-    pc.setCurrentTask(ProgressMsg{/*"phase 2: "*/ "construct map from raw rooms and infomarks"});
-    auto mapPair = Map::fromRooms(pc,
-                                  std::exchange(data.rooms, {}),
-                                  std::exchange(data.markers, {}));
-
-    pc.setCurrentTask(ProgressMsg{"finished building map"});
-
-    MapLoadData result;
-    result.mapPair = std::exchange(mapPair, {});
-    result.position = data.position;
-    result.filename = data.filename;
-    result.readonly = data.readonly;
-
-    return result;
-}
+// The map-loading/merging logic lives in maploadhelper::loadMapData()/
+// maploadhelper::mergeMapData() (see mapstorage/MapLoadHelper.h) so other
+// hosts can share it without depending on MainWindow.
 
 NODISCARD std::optional<Map> merge_map_data(AbstractMapStorage &storage, const MapData &mapData)
 {
-    if (!storage.canLoad()) {
-        return std::nullopt;
-    }
-
-    ProgressCounter &pc = storage.getProgressCounter();
-    pc.setCurrentTask(ProgressMsg{"phase 1: load from disk"});
-    std::optional<RawMapLoadData> opt_data = storage.loadData();
-
-    if (!opt_data || !mwa_detail::hasValidData(*opt_data)) {
-        return std::nullopt;
-    }
-
-    pc.setCurrentTask(ProgressMsg{"phase 2: merge the new map data"});
-    // TODO: move ownership of the counter out of the storage object
-    return MapData::mergeMapData(pc, mapData.getCurrentMap(), opt_data.value());
+    return maploadhelper::mergeMapData(storage, mapData.getCurrentMap());
 }
 
 NODISCARD bool save(AbstractMapStorage &storage, const MapData &mapData, const SaveModeEnum mode)
@@ -497,8 +330,8 @@ NODISCARD ProgressCounter &MainWindow::AsyncIO::getProgressCounter() const
 
 void MainWindow::AsyncIO::resetExtraBlockers()
 {
-    // NOTE: ~ExtraBlockers() calls ~CanvasHider(), which calls MapCanvas::show(),
-    // which calls MapCanvas::paintGL(), which kicks off an async job to create the map
+    // NOTE: ~ExtraBlockers() calls ~CanvasHider(), which calls MapCanvasWindow::show(),
+    // which calls MapCanvasWindow::paintGL(), which kicks off an async job to create the map
     // batches, so this should not be called before mapCanvas.slot_dataLoaded(),
     // since that function flags async map batches to be ignored. When that happens,
     // we have to build the meshes twice before they're displayed.
@@ -555,7 +388,7 @@ private:
     {
         AbstractMapStorage &storage = deref(m_pStorage);
         storage.setProgressCounter(sharedPc);
-        return background::load_map_data(storage);
+        return maploadhelper::loadMapData(storage);
     }
 
 private:
@@ -742,21 +575,7 @@ MainWindow::AsyncSaver::~AsyncSaver() = default;
 std::unique_ptr<AbstractMapStorage> MainWindow::getLoadOrMergeMapStorage(
     std::shared_ptr<MapSource> &pSource)
 {
-    auto tmp = std::invoke([this, &pSource]() -> std::unique_ptr<AbstractMapStorage> {
-        const AbstractMapStorage::Data data{pSource};
-        auto &source = deref(pSource);
-        auto pDevice = source.getIODevice();
-        auto &device = deref(pDevice);
-        for (const auto &fmt : mwa_detail::formats) {
-            if (!device.seek(0)) {
-                throw std::runtime_error("Failed to seek to beginning.");
-            }
-            if (fmt.detect(device)) {
-                return fmt.make(data, this);
-            }
-        }
-        throw std::runtime_error("Unrecognized file format");
-    });
+    auto tmp = maploadhelper::detectAndCreateStorage(pSource, this);
 
     AbstractMapStorage *const pStorage = tmp.get();
     connect(pStorage, &AbstractMapStorage::sig_log, this, &MainWindow::slot_log);

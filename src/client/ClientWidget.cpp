@@ -12,16 +12,21 @@
 #include "HotkeyManager.h"
 #include "PreviewWidget.h"
 #include "displaywidget.h"
+#include "inputwidget.h"
 #include "stackedinputwidget.h"
 #include "ui_ClientWidget.h"
 
+#include <algorithm>
 #include <memory>
 
 #include <QDateTime>
 #include <QFileDialog>
+#include <QHBoxLayout>
 #include <QScrollBar>
+#include <QSplitter>
 #include <QString>
 #include <QTimer>
+#include <QToolButton>
 
 ClientWidget::ClientWidget(ConnectionListener &listener,
                            HotkeyManager &hotkeyManager,
@@ -35,22 +40,77 @@ ClientWidget::ClientWidget(ConnectionListener &listener,
     initPipeline();
 
     auto &ui = getUi();
-
-    // Port
-    ui.port->setText(QString("%1").arg(getConfig().connection.localPort));
-
-    ui.playButton->setFocus();
-    QObject::connect(ui.playButton, &QAbstractButton::clicked, this, [this]() {
-        getUi().parent->setCurrentIndex(1);
-        getTelnet().connectToHost(m_listener);
-    });
+    initWelcomePage();
 
     ui.input->installEventFilter(this);
     ui.display->setFocusPolicy(Qt::TabFocus);
 
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
-        ui.playButton->click();
+    // The card asks how to play; the preference can answer instead, and
+    // the web build has only the built-in client.
+    switch (getConfig().general.gameClient) {
+    case GameClientEnum::BUILT_IN:
+        play();
+        break;
+    case GameClientEnum::EXTERNAL:
+        ui.parent->setCurrentWidget(ui.externalPage);
+        break;
+    case GameClientEnum::ASK:
+        ui.parent->setCurrentWidget(ui.welcomePage);
+        ui.playButton->setFocus();
+        break;
     }
+}
+
+void ClientWidget::initWelcomePage()
+{
+    auto &ui = getUi();
+    const auto &audio = getConfig().audio;
+    const QString port = QString::number(getConfig().connection.localPort);
+    ui.portLabel->setText(tr("Point it at localhost, port %1").arg(port));
+    ui.waitingLabel->setText(tr("Waiting for your MUD client on localhost, port %1").arg(port));
+    ui.soundCheckBox->setChecked(audio.getMusicVolume() > 0 || audio.getSoundVolume() > 0);
+
+    // What the card decided: sound, and (if asked not to ask again) how to
+    // play from now on. Either remembered choice is undone in Preferences.
+    const auto applyChoices = [this](const GameClientEnum client) {
+        auto &ui2 = getUi();
+        // The box is a coarse switch over both channels (the sliders in
+        // Preferences > Audio set levels): on brings a channel at 0 up to
+        // the default level and unlocks; off is both at 0.
+        auto &settings = setConfig().audio;
+        using AudioSettings = Configuration::AudioSettings;
+        if (ui2.soundCheckBox->isChecked()) {
+            if (settings.getMusicVolume() == 0) {
+                settings.setMusicVolume(AudioSettings::DEFAULT_VOLUME);
+            }
+            if (settings.getSoundVolume() == 0) {
+                settings.setSoundVolume(AudioSettings::DEFAULT_VOLUME);
+            }
+            settings.setUnlocked();
+        } else {
+            settings.setMusicVolume(0);
+            settings.setSoundVolume(0);
+        }
+        if (ui2.dontAskCheckBox->isChecked()) {
+            setConfig().general.gameClient = client;
+        }
+    };
+    connect(ui.playButton, &QAbstractButton::clicked, this, [this, applyChoices]() {
+        applyChoices(GameClientEnum::BUILT_IN);
+        play();
+    });
+    connect(ui.externalButton, &QAbstractButton::clicked, this, [this, applyChoices]() {
+        applyChoices(GameClientEnum::EXTERNAL);
+        getUi().parent->setCurrentWidget(getUi().externalPage);
+    });
+    connect(ui.playInsteadButton, &QAbstractButton::clicked, this, [this]() { play(); });
+}
+
+void ClientWidget::play()
+{
+    auto &ui = getUi();
+    ui.parent->setCurrentWidget(ui.clientPage);
+    getTelnet().connectToHost(m_listener);
 }
 
 ClientWidget::~ClientWidget() = default;
@@ -61,8 +121,10 @@ ClientWidget::Pipeline::~Pipeline()
     objs.ui.reset();
 }
 
-QSize ClientWidget::minimumSizeHint() const
+QSize ClientWidget::sizeHint() const
 {
+    // Preferred size is the configured terminal columns/rows; the minimum is
+    // left to the layout so the dock can shrink on small screens.
     return m_pipeline.objs.ui->display->sizeHint();
 }
 
@@ -72,6 +134,7 @@ void ClientWidget::initPipeline()
     getUi().setupUi(this); // creates stacked input and display
 
     initStackedInputWidget();
+    initTouchInputStrip();
     initDisplayWidget();
 
     initClientTelnet();
@@ -140,6 +203,64 @@ void ClientWidget::initStackedInputWidget()
     getInput().init(deref(out));
 }
 
+void ClientWidget::initTouchInputStrip()
+{
+    // On-screen keyboards have no Up/Down/Tab, so the compact layout shows a
+    // row of buttons beside the input that drives command history and
+    // completion (see setCompactLayout()). The input keeps its
+    // place in the client page's splitter; this wraps it in a row.
+    auto &ui = getUi();
+    QSplitter &splitter = deref(ui.clientPage);
+    const int inputIndex = splitter.indexOf(ui.input);
+
+    auto *const row = new QWidget(this);
+    auto *const layout = new QHBoxLayout(row);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    layout->addWidget(ui.input, 1);
+
+    auto *const strip = new QWidget(row);
+    auto *const stripLayout = new QHBoxLayout(strip);
+    stripLayout->setContentsMargins(0, 0, 0, 0);
+    stripLayout->setSpacing(0);
+
+    InputWidget &inputWidget = getInput().getInputWidget();
+    static constexpr int TOUCH_BUTTON_SIZE = 44; // logical px; the usual finger target
+    const auto addButton = [&](const QString &text, const QString &toolTip, auto &&onClicked) {
+        auto *const button = new QToolButton(strip);
+        button->setText(text);
+        button->setToolTip(toolTip);
+        button->setAutoRaise(true);
+        button->setFocusPolicy(Qt::NoFocus); // never take focus from the input
+        button->setFixedSize(TOUCH_BUTTON_SIZE, TOUCH_BUTTON_SIZE);
+        connect(button,
+                &QToolButton::clicked,
+                &inputWidget,
+                std::forward<decltype(onClicked)>(onClicked));
+        stripLayout->addWidget(button);
+    };
+    addButton(QStringLiteral("\u2191"), tr("Previous command"), &InputWidget::backwardHistory);
+    addButton(QStringLiteral("\u2193"), tr("Next command"), &InputWidget::forwardHistory);
+    addButton(QStringLiteral("\u21e5"), tr("Complete word"), &InputWidget::tabComplete);
+    strip->hide();
+    layout->addWidget(strip, 0, Qt::AlignBottom);
+
+    splitter.insertWidget(inputIndex, row);
+    splitter.setCollapsible(splitter.indexOf(row), false);
+    m_touchInputStrip = strip;
+}
+
+void ClientWidget::setCompactLayout(const bool compact)
+{
+    if (m_touchInputStrip != nullptr) {
+        m_touchInputStrip->setVisible(compact);
+    }
+    m_previewEnabled = !compact;
+    if (!m_previewEnabled) {
+        getPreview().hide();
+    }
+}
+
 void ClientWidget::initDisplayWidget()
 {
     class NODISCARD LocalDisplayWidgetOutputs final : public DisplayWidgetOutputs
@@ -166,7 +287,10 @@ void ClientWidget::initDisplayWidget()
             getTelnet().onWindowSizeChanged(width, height);
         }
         void virt_returnFocusToInput() final { getSelf().getInput().setFocus(); }
-        void virt_showPreview(bool visible) final { getSelf().getPreview().setVisible(visible); }
+        void virt_showPreview(bool visible) final
+        {
+            getSelf().getPreview().setVisible(visible && getSelf().m_previewEnabled);
+        }
     };
     auto &out = m_pipeline.outputs.displayWidgetOutputs;
     out = std::make_unique<LocalDisplayWidgetOutputs>(*this);
@@ -272,7 +396,8 @@ void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 
 bool ClientWidget::isUsingClient() const
 {
-    return getUi().parent->currentIndex() != 0;
+    const auto &ui = getUi();
+    return ui.parent->currentWidget() == ui.clientPage;
 }
 
 void ClientWidget::displayReconnectHint()

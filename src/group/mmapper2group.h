@@ -81,7 +81,7 @@ public:
 signals:
     // MainWindow::log (via MainWindow)
     void sig_log(const QString &, const QString &);
-    // MapCanvas::requestUpdate (via MainWindow)
+    // MapCanvasWindow::requestUpdate (via MainWindow)
     void sig_updateMapCanvas(); // redraw the opengl screen
     // GroupWidget::updateLabels (via GroupWidget)
     void sig_characterAdded(SharedGroupChar character);

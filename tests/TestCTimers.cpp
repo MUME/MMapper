@@ -263,4 +263,75 @@ void TestCTimers::testMoveTimer()
     QCOMPARE(QString::fromStdString(it->getName()), QString("T3"));
 }
 
+void TestCTimers::testModelRoleNames()
+{
+    CTimers timers(nullptr);
+    TimerModel model(timers, nullptr);
+
+    QHash<int, QByteArray> roles = model.roleNames();
+    QVERIFY(roles.values().contains("name"));
+    QVERIFY(roles.values().contains("time"));
+    QVERIFY(roles.values().contains("progress"));
+    QVERIFY(roles.values().contains("expired"));
+
+    QCOMPARE(roles[TimerModel::NameRole], QByteArray("name"));
+    QCOMPARE(roles[TimerModel::TimeRole], QByteArray("time"));
+    QCOMPARE(roles[TimerModel::ProgressRole], QByteArray("progress"));
+    QCOMPARE(roles[TimerModel::ExpiredRole], QByteArray("expired"));
+}
+
+void TestCTimers::testModelCustomRoleData()
+{
+    CTimers timers(nullptr);
+    TimerModel model(timers, nullptr);
+
+    timers.addTimer("T1", "D1");
+
+    QModelIndex idx = model.index(0, 0);
+
+    QVariant nameVal = model.data(idx, TimerModel::NameRole);
+    QVERIFY(nameVal.isValid());
+    QCOMPARE(nameVal.toString(), QString("T1 <D1>"));
+
+    QVariant timeVal = model.data(idx, TimerModel::TimeRole);
+    QVERIFY(timeVal.isValid());
+    QVERIFY(!timeVal.toString().isEmpty());
+
+    QVariant expiredVal = model.data(idx, TimerModel::ExpiredRole);
+    QVERIFY(expiredVal.isValid());
+    QCOMPARE(expiredVal.toBool(), false);
+}
+
+void TestCTimers::timerModelTickUpdatesAllRoles()
+{
+    // Regression test: consumers bind to the custom TimeRole/NameRole/ExpiredRole
+    // (see TimerModel::roleNames()), not Qt::DisplayRole, so TimerModel's periodic
+    // refresh lambda must emit dataChanged() with an *empty* roles vector (meaning
+    // "all roles changed"); a non-empty {Qt::DisplayRole, ProgressRole} list would
+    // leave those bindings stale, making a running count-up timer's on-screen time
+    // look frozen even though the underlying data keeps updating.
+    CTimers timers(nullptr);
+    timers.addTimer("count-up", "");
+
+    TimerModel model(timers, nullptr);
+    const QModelIndex idx = model.index(0, TimerModel::ColTime);
+
+    QSignalSpy spy(&model, &TimerModel::dataChanged);
+    const QVariant before = model.data(idx, TimerModel::TimeRole);
+
+    // The refresh timer fires every 50ms; wait for at least one tick.
+    QTRY_VERIFY_WITH_TIMEOUT(!spy.isEmpty(), 2000);
+
+    const QList<QVariant> lastSignal = spy.constLast();
+    const auto roles = lastSignal.at(2).value<QList<int>>();
+    QVERIFY2(roles.isEmpty(),
+             "dataChanged() must report an empty roles list (\"all roles changed\") so "
+             "custom-role bindings (time/name/expired) re-evaluate");
+
+    // formatMs() only has second granularity, so give it long enough for
+    // the displayed elapsed time to actually roll over and confirm the
+    // underlying data really is live, not just the signal shape.
+    QTRY_VERIFY_WITH_TIMEOUT(model.data(idx, TimerModel::TimeRole) != before, 2000);
+}
+
 QTEST_MAIN(TestCTimers)

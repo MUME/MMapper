@@ -13,6 +13,7 @@
 #include "../observer/gameobserver.h"
 #include "../parser/SendToUserSourceEnum.h"
 #include "GmcpMessage.h"
+#include "ProxyHost.h"
 #include "ProxyParserApi.h"
 #include "TaggedBytes.h"
 
@@ -30,7 +31,6 @@
 class AbstractParser;
 class CTimers;
 class ConnectionListener;
-class MainWindow;
 class MapCanvas;
 class MapData;
 class Mmapper2Group;
@@ -77,7 +77,7 @@ private:
     CTimers &m_timers;
     MapCanvas &m_mapCanvas;
     GameObserver &m_gameObserver;
-    MainWindow &m_mainWindow;
+    ProxyHost &m_host;
     std::unique_ptr<AbstractSocket> m_userSocket;
 
 private:
@@ -286,7 +286,7 @@ private:
     NODISCARD Pipeline &getPipeline() { return deref(m_pipeline); }
 
     NODISCARD GameObserver &getGameObserver() { return m_gameObserver; }
-    NODISCARD MainWindow &getMainWindow() { return m_mainWindow; }
+    NODISCARD ProxyHost &getHost() { return m_host; }
     NODISCARD MapCanvas &getMapCanvas() { return m_mapCanvas; }
     NODISCARD Mmapper2Group &getGroupManager() { return m_groupManager; }
     NODISCARD MumeClock &getMumeClock() { return m_mumeClock; }

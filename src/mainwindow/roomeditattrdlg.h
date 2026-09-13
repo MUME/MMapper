@@ -27,7 +27,7 @@
 #include <QtWidgets/QListWidgetItem>
 
 class Change;
-class MapCanvas;
+class MapCanvasWindow;
 class MapData;
 class QListWidgetItem;
 class QObject;
@@ -59,7 +59,7 @@ private:
 
     SharedRoomSelection m_roomSelection;
     MapData *m_mapData = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
+    MapCanvasWindow *m_mapCanvas = nullptr;
     std::unique_ptr<QShortcut> m_hiddenShortcut;
     bool m_noteSelected = false;
     bool m_noteDirty = false;
@@ -121,7 +121,7 @@ signals:
     void sig_requestUpdate();
 
 public slots:
-    void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvas *);
+    void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvasWindow *);
 
     // selection page
     void roomListCurrentIndexChanged(int);

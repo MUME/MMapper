@@ -35,6 +35,9 @@ public:
 
     NODISCARD QString findAudio(const QString &subDir, const QString &name) const;
     NODISCARD QString findImage(const QString &subDir, const QString &name) const;
+    // Lets callers report "0 images found" hints without duplicating
+    // scanDirectories()'s bookkeeping.
+    NODISCARD int numImages() const { return static_cast<int>(m_imageFiles.size()); }
 
     void fetchAsync(const QString &path, std::function<void(const QByteArray &)> callback);
 

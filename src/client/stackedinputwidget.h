@@ -109,8 +109,10 @@ private:
     // if this fails, it means you forgot to call init
     NODISCARD StackedInputWidgetOutputs &getOutput() { return deref(m_output); }
 
-private:
+public:
     NODISCARD InputWidget &getInputWidget();
+
+private:
     NODISCARD PasswordDialog &getPasswordDialog();
 
 public:

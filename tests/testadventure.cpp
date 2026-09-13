@@ -3,6 +3,7 @@
 
 #include "testadventure.h"
 
+#include "../src/adventure/AdventureLogModel.h"
 #include "../src/adventure/adventuresession.h"
 #include "../src/adventure/adventuretracker.h"
 #include "../src/global/Charset.h"
@@ -303,6 +304,119 @@ void TestAdventure::testE2E()
                                                    QString{"*a Half-Elf*"},
                                                    QString{"*Gaer the " + dunadan + " Man*"}};
     QCOMPARE(killedMobs, expectedMobs);
+}
+
+void TestAdventure::testLogModelInitialContent()
+{
+    GameObserver observer;
+    AdventureTracker tracker{observer, nullptr};
+    AdventureLogModel model{tracker, nullptr};
+
+    QCOMPARE(model.rowCount(), 1);
+    QString expectedDefault = AdventureLogModel::DEFAULT_MSG;
+    while (expectedDefault.endsWith('\n')) {
+        expectedDefault.chop(1);
+    }
+    QCOMPARE(model.data(model.index(0), Qt::DisplayRole).toString(), expectedDefault);
+
+    QHash<int, QByteArray> roles = model.roleNames();
+    QCOMPARE(roles.value(Qt::DisplayRole), QByteArray("display"));
+}
+
+void TestAdventure::testLogModelSignals()
+{
+    GameObserver observer;
+    AdventureTracker tracker{observer, nullptr};
+    AdventureLogModel model{tracker, nullptr};
+
+    // sig_accomplishedTask with no xp is ignored (spam avoidance).
+    tracker.sig_accomplishedTask(0.0);
+    QCOMPARE(model.rowCount(), 1);
+
+    tracker.sig_accomplishedTask(500.0);
+    QCOMPARE(model.rowCount(), 2);
+    QCOMPARE(model.data(model.index(1)).toString(),
+             QString(AdventureLogModel::ACCOMPLISH_MSG)
+                 .arg(AdventureSession::formatPoints(500.0))
+                 .chopped(1));
+
+    tracker.sig_achievedSomething("Did a thing", 0.0);
+    QCOMPARE(model.rowCount(), 3);
+    QCOMPARE(model.data(model.index(2)).toString(),
+             QString(AdventureLogModel::ACHIEVE_MSG).arg("Did a thing").chopped(1));
+
+    tracker.sig_achievedSomething("Did a bigger thing", 100.0);
+    QCOMPARE(model.rowCount(), 4);
+    QCOMPARE(model.data(model.index(3)).toString(),
+             QString(AdventureLogModel::ACHIEVE_MSG_XP)
+                 .arg("Did a bigger thing", AdventureSession::formatPoints(100.0))
+                 .chopped(1));
+
+    // sig_diedInGame with no xp lost is ignored.
+    tracker.sig_diedInGame(0.0);
+    QCOMPARE(model.rowCount(), 4);
+
+    tracker.sig_diedInGame(-42.0);
+    QCOMPARE(model.rowCount(), 5);
+    QCOMPARE(model.data(model.index(4)).toString(),
+             QString(AdventureLogModel::DIED_MSG)
+                 .arg(AdventureSession::formatPoints(-42.0))
+                 .chopped(1));
+
+    tracker.sig_gainedLevel();
+    QCOMPARE(model.rowCount(), 6);
+    QCOMPARE(model.data(model.index(5)).toString(),
+             QString(AdventureLogModel::GAINED_LEVEL_MSG).chopped(1));
+
+    tracker.sig_killedMob("A goblin", 25.0);
+    QCOMPARE(model.rowCount(), 7);
+    QCOMPARE(model.data(model.index(6)).toString(),
+             QString(AdventureLogModel::KILL_TROPHY_MSG)
+                 .arg("A goblin", AdventureSession::formatPoints(25.0))
+                 .chopped(1));
+
+    tracker.sig_receivedHint("Try harder");
+    QCOMPARE(model.rowCount(), 8);
+    QCOMPARE(model.data(model.index(7)).toString(),
+             QString(AdventureLogModel::HINT_MSG).arg("Try harder").chopped(1));
+}
+
+void TestAdventure::testLogModelMaxLinesCap()
+{
+    GameObserver observer;
+    AdventureTracker tracker{observer, nullptr};
+    AdventureLogModel model{tracker, nullptr};
+
+    for (int i = 0; i < AdventureLogModel::MAX_LINES + 10; ++i) {
+        tracker.sig_gainedLevel();
+    }
+
+    QCOMPARE(model.rowCount(), AdventureLogModel::MAX_LINES);
+    // The oldest entries (including the default welcome message) should
+    // have been dropped, leaving only "gained level" lines behind.
+    const QString expectedLine = QString(AdventureLogModel::GAINED_LEVEL_MSG).chopped(1);
+    QCOMPARE(model.data(model.index(0)).toString(), expectedLine);
+    QCOMPARE(model.data(model.index(AdventureLogModel::MAX_LINES - 1)).toString(), expectedLine);
+}
+
+void TestAdventure::testLogModelClear()
+{
+    GameObserver observer;
+    AdventureTracker tracker{observer, nullptr};
+    AdventureLogModel model{tracker, nullptr};
+
+    tracker.sig_gainedLevel();
+    tracker.sig_gainedLevel();
+    QCOMPARE(model.rowCount(), 3);
+
+    model.clear();
+
+    QCOMPARE(model.rowCount(), 1);
+    QString expectedDefault = AdventureLogModel::DEFAULT_MSG;
+    while (expectedDefault.endsWith('\n')) {
+        expectedDefault.chop(1);
+    }
+    QCOMPARE(model.data(model.index(0)).toString(), expectedDefault);
 }
 
 QTEST_MAIN(TestAdventure)

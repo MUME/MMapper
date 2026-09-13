@@ -50,20 +50,28 @@ constexpr float GESTURE_EPSILON = 1e-6f;
 constexpr float PINCH_DISTANCE_THRESHOLD = 1e-3f;
 } // namespace
 
-using NonOwningPointer = MapCanvas *;
-NODISCARD static NonOwningPointer &primaryMapCanvas()
-{
-    static NonOwningPointer primary = nullptr;
-    return primary;
-}
+MapCanvasHost::~MapCanvasHost() = default;
+
+// Touch long-press duration; see handleMousePress().
+static constexpr int LONG_PRESS_MS = 600;
+
+// Touch flick (see handleMouseRelease()/onFlickTick()): samples older than
+// this are ignored when measuring the release velocity; the view keeps
+// moving at that velocity, scaled by FLICK_DECAY every tick, until it drops
+// below FLICK_MIN_SPEED (world units per second).
+static constexpr qint64 FLICK_SAMPLE_WINDOW_MS = 100;
+static constexpr int FLICK_TICK_MS = 16;
+static constexpr float FLICK_DECAY = 0.92f;
+static constexpr float FLICK_MIN_SPEED = 0.5f;
+static constexpr size_t FLICK_MAX_SAMPLES = 5;
 
 MapCanvas::MapCanvas(MapData &mapData,
                      GameObserver &observer,
                      PrespammedPath &prespammedPath,
                      Mmapper2Group &groupManager,
-                     QWindow *const parent)
-    : QOpenGLWindow{NoPartialUpdate, parent}
-    , MapCanvasViewport{static_cast<QWindow &>(*this)}
+                     MapCanvasHost &host)
+    : QObject{nullptr}
+    , MapCanvasViewport{}
     , MapCanvasInputState{prespammedPath}
     , m_mapScreen{static_cast<MapCanvasViewport &>(*this)}
     , m_observer{observer}
@@ -71,35 +79,28 @@ MapCanvas::MapCanvas(MapData &mapData,
     , m_glFont{m_opengl}
     , m_data{mapData}
     , m_groupManager{groupManager}
-    , m_frameManager{static_cast<QOpenGLWindow &>(*this), m_opengl.getUboManager()}
+    , m_host{host}
+    , m_frameManager{[this]() { m_host.requestCanvasUpdate(); }, m_opengl.getUboManager()}
     , m_weather{m_opengl, m_data, m_textures, observer, m_frameManager}
 {
     syncViewportConfig();
+
+    m_longPressTimer.setSingleShot(true);
+    m_longPressTimer.setInterval(LONG_PRESS_MS);
+    connect(&m_longPressTimer, &QTimer::timeout, this, &MapCanvas::onLongPress);
+
+    m_flickTimer.setInterval(FLICK_TICK_MS);
+    connect(&m_flickTimer, &QTimer::timeout, this, &MapCanvas::onFlickTick);
 
     m_frameManager.registerCallback(m_lifetime, [this]() {
         return m_batches.remeshCookie.isPending() ? FrameManager::AnimationStatusEnum::Continue
                                                   : FrameManager::AnimationStatusEnum::Stop;
     });
-    NonOwningPointer &pmc = primaryMapCanvas();
-    if (pmc == nullptr) {
-        pmc = this;
-    }
 
-    setCursor(Qt::OpenHandCursor);
+    applyCursor(Qt::OpenHandCursor);
 }
 
-MapCanvas::~MapCanvas()
-{
-    NonOwningPointer &pmc = primaryMapCanvas();
-    if (pmc == this) {
-        pmc = nullptr;
-    }
-}
-
-MapCanvas *MapCanvas::getPrimary()
-{
-    return primaryMapCanvas();
-}
+MapCanvas::~MapCanvas() = default;
 
 void MapCanvas::slot_layerUp()
 {
@@ -133,7 +134,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
 
     switch (mode) {
     case CanvasMouseModeEnum::MOVE:
-        setCursor(Qt::OpenHandCursor);
+        applyCursor(Qt::OpenHandCursor);
         break;
 
     default:
@@ -141,7 +142,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::RAYPICK_ROOMS:
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_INFOMARKS:
-        setCursor(Qt::CrossCursor);
+        applyCursor(Qt::CrossCursor);
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
@@ -149,7 +150,7 @@ void MapCanvas::slot_setCanvasMouseMode(const CanvasMouseModeEnum mode)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-        setCursor(Qt::ArrowCursor);
+        applyCursor(Qt::ArrowCursor);
         break;
     }
 
@@ -213,8 +214,9 @@ NODISCARD static uint32_t operator&(const Qt::KeyboardModifiers left, const Qt::
     return static_cast<uint32_t>(left) & static_cast<uint32_t>(right);
 }
 
-void MapCanvas::wheelEvent(QWheelEvent *const event)
+void MapCanvas::handleWheel(QWheelEvent *const event)
 {
+    stopFlick();
     const bool hasCtrl = (event->modifiers() & Qt::CTRL) != 0u;
 
     switch (m_canvasMouseMode) {
@@ -259,9 +261,10 @@ void MapCanvas::slot_onForcedPositionChange()
     slot_requestUpdate();
 }
 
-void MapCanvas::touchEvent(QTouchEvent *const event)
+void MapCanvas::handleTouch(QTouchEvent *const event)
 {
     if (event->type() == QEvent::TouchBegin) {
+        stopFlick();
         emit sig_dismissContextMenu();
     }
 
@@ -291,6 +294,28 @@ void MapCanvas::touchEvent(QTouchEvent *const event)
             updatePinch(currentPinchFactor);
         }
 
+        // Two-finger pan: move the view by however far the fingers' midpoint
+        // travelled since the last update (after the zoom above, so the map
+        // stays under the fingers). Same {x, height()-y} space as
+        // getMouseCoords().
+        if (m_pinchState) {
+            const QPointF mid = (p1.position() + p2.position()) / 2.0;
+            const glm::vec2 centroid{static_cast<float>(mid.x()),
+                                     static_cast<float>(height() - mid.y())};
+            if (m_pinchState->lastCentroid) {
+                const glm::vec2 prevWorld{unproject_clamped(*m_pinchState->lastCentroid)};
+                const glm::vec2 currWorld{unproject_clamped(centroid)};
+                const glm::vec2 delta = currWorld - prevWorld;
+                if (glm::length(delta) > GESTURE_EPSILON) {
+                    const glm::vec2 newScroll = getScroll() - delta;
+                    setScroll(newScroll);
+                    emit sig_onCenter(newScroll);
+                    m_frameManager.requestUpdate();
+                }
+            }
+            m_pinchState->lastCentroid = centroid;
+        }
+
         if (event->type() == QEvent::TouchEnd || p1.state() == QEventPoint::Released
             || p2.state() == QEventPoint::Released) {
             endPinch();
@@ -299,11 +324,13 @@ void MapCanvas::touchEvent(QTouchEvent *const event)
     } else {
         if (points.size() > 2) {
             // Explicitly ignore more than 2 touch points for pinch zoom.
-            qDebug() << "MapCanvas::touchEvent: ignoring" << points.size() << "touch points";
+            qDebug() << "MapCanvas::handleTouch: ignoring" << points.size() << "touch points";
         }
 
         endPinch();
-        QOpenGLWindow::touchEvent(event);
+        // Mirrors QWindow::touchEvent()'s default behavior of leaving the
+        // event unhandled/ignored.
+        event->ignore();
     }
 }
 
@@ -316,39 +343,44 @@ void MapCanvas::handleZoomAtEvent(const QInputEvent *const event, const float de
     }
 }
 
-bool MapCanvas::event(QEvent *const event)
+bool MapCanvas::handleGenericEvent(QEvent *const event)
 {
     if (event->type() == QEvent::NativeGesture) {
         auto *const nativeEvent = static_cast<QNativeGestureEvent *>(event);
         if (nativeEvent->gestureType() == Qt::ZoomNativeGesture) {
-            const auto value = static_cast<float>(nativeEvent->value());
-            float deltaFactor = 1.f;
-            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
-                // On macOS, event->value() for ZoomNativeGesture is the magnification delta
-                // since the last event.
-                deltaFactor += value;
-            } else {
-                // On other platforms, it's typically the cumulative scale factor (1.0 at start).
-                if (nativeEvent->isBeginEvent() || !m_magnificationState) {
-                    beginMagnification();
-                }
-
-                if (std::abs(m_magnificationState->lastValue) > GESTURE_EPSILON) {
-                    deltaFactor = value / m_magnificationState->lastValue;
-                }
-                updateMagnification(value);
-
-                if (nativeEvent->isEndEvent()) {
-                    endMagnification();
-                }
-            }
-            handleZoomAtEvent(nativeEvent, deltaFactor);
-            event->accept();
+            handleNativeGesture(nativeEvent);
             return true;
         }
     }
 
-    return QOpenGLWindow::event(event);
+    return false;
+}
+
+void MapCanvas::handleNativeGesture(QNativeGestureEvent *const nativeEvent)
+{
+    const auto value = static_cast<float>(nativeEvent->value());
+    float deltaFactor = 1.f;
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+        // On macOS, event->value() for ZoomNativeGesture is the magnification delta
+        // since the last event.
+        deltaFactor += value;
+    } else {
+        // On other platforms, it's typically the cumulative scale factor (1.0 at start).
+        if (nativeEvent->isBeginEvent() || !m_magnificationState) {
+            beginMagnification();
+        }
+
+        if (std::abs(m_magnificationState->lastValue) > GESTURE_EPSILON) {
+            deltaFactor = value / m_magnificationState->lastValue;
+        }
+        updateMagnification(value);
+
+        if (nativeEvent->isEndEvent()) {
+            endMagnification();
+        }
+    }
+    handleZoomAtEvent(nativeEvent, deltaFactor);
+    nativeEvent->accept();
 }
 
 void MapCanvas::slot_createRoom()
@@ -423,10 +455,133 @@ std::shared_ptr<InfomarkSelection> MapCanvas::getInfomarkSelection(const MouseSe
     return InfomarkSelection::alloc(m_data, lo, hi);
 }
 
-void MapCanvas::mousePressEvent(QMouseEvent *const event)
+void MapCanvas::requestContextMenuAt(const QPointF &pos)
+{
+    // getMouseCoords() derives its glm coordinate from a QMouseEvent as
+    // {x, height()-y} (see MapCanvasData.cpp); a touch long-press reaches
+    // here with no QMouseEvent, so reproduce that transform directly. This is
+    // the same selection + emit that the right-mouse-button branch of
+    // handleMousePress() performs.
+    const glm::vec2 xy{static_cast<float>(pos.x()), static_cast<float>(height() - pos.y())};
+    if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE) {
+        const auto worldPos = unproject_clamped(xy);
+        m_sel1 = m_sel2 = MouseSel{Coordinate2f{worldPos.x, worldPos.y}, getCurrentLayer()};
+    } else {
+        m_sel1 = m_sel2 = getUnprojectedMouseSel(xy);
+    }
+
+    if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE && hasSel1()) {
+        // Select the room under the cursor
+        m_roomSelection = RoomSelection::createSelection(
+            m_data.findAllRooms(getSel1().getCoordinate()));
+        slot_setRoomSelection(SigRoomSelection{m_roomSelection});
+
+        // Select infomarks under the cursor.
+        slot_setInfomarkSelection(getInfomarkSelection(getSel1()));
+
+        selectionChanged();
+    }
+    emit sig_customContextMenuRequested(pos.toPoint());
+}
+
+void MapCanvas::cancelLongPress()
+{
+    m_longPressTimer.stop();
+    m_longPressPos.reset();
+}
+
+void MapCanvas::onLongPress()
+{
+    if (!m_longPressPos) {
+        return;
+    }
+    const QPointF pos = *m_longPressPos;
+    m_longPressPos.reset();
+    m_longPressFired = true;
+
+    // Abandon whatever the synthesized left press started (a map drag, a
+    // rubber-band selection, ...): the menu takes the eventual release.
+    m_mouseLeftPressed = false;
+    endInteraction();
+    emit sig_continuousScroll(0, 0);
+    if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE) {
+        applyCursor(Qt::OpenHandCursor);
+    }
+
+    requestContextMenuAt(pos);
+}
+
+void MapCanvas::recordScrollSample(const qint64 msecs)
+{
+    m_scrollSamples.push_back(ScrollSample{msecs, getScroll()});
+    while (m_scrollSamples.size() > FLICK_MAX_SAMPLES) {
+        m_scrollSamples.pop_front();
+    }
+}
+
+void MapCanvas::startFlick()
+{
+    if (m_scrollSamples.size() < 2) {
+        return;
+    }
+    const ScrollSample &last = m_scrollSamples.back();
+    // Oldest sample still inside the window; the velocity is measured
+    // across it so a pause before lifting the finger yields no flick.
+    const ScrollSample *first = nullptr;
+    for (const ScrollSample &sample : m_scrollSamples) {
+        if (last.msecs - sample.msecs <= FLICK_SAMPLE_WINDOW_MS) {
+            first = &sample;
+            break;
+        }
+    }
+    if (first == nullptr || first == &last || last.msecs <= first->msecs) {
+        return;
+    }
+    const float seconds = static_cast<float>(last.msecs - first->msecs) / 1000.f;
+    m_flickVelocity = (last.scroll - first->scroll) / seconds;
+    if (glm::length(m_flickVelocity) < FLICK_MIN_SPEED) {
+        m_flickVelocity = glm::vec2{0.f};
+        return;
+    }
+    m_flickTimer.start();
+}
+
+void MapCanvas::stopFlick()
+{
+    m_flickTimer.stop();
+    m_flickVelocity = glm::vec2{0.f};
+}
+
+void MapCanvas::onFlickTick()
+{
+    const float seconds = static_cast<float>(FLICK_TICK_MS) / 1000.f;
+    const glm::vec2 newScroll = getScroll() + m_flickVelocity * seconds;
+    setScroll(newScroll);
+    emit sig_onCenter(newScroll);
+    m_frameManager.requestUpdate();
+
+    m_flickVelocity *= FLICK_DECAY;
+    if (glm::length(m_flickVelocity) < FLICK_MIN_SPEED) {
+        stopFlick();
+    }
+}
+
+void MapCanvas::handleMousePress(QMouseEvent *const event)
 {
     if (event->button() != Qt::RightButton) {
         emit sig_dismissContextMenu();
+    }
+
+    // Touch never synthesizes a right-click, so a held single-finger press
+    // (which Qt delivers here as a synthesized left press) opens the context
+    // menu instead; see onLongPress().
+    cancelLongPress();
+    m_longPressFired = false;
+    stopFlick();
+    m_scrollSamples.clear();
+    if (event->button() == Qt::LeftButton && event->source() != Qt::MouseEventNotSynthesized) {
+        m_longPressPos = event->position();
+        m_longPressTimer.start();
     }
 
     const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
@@ -435,8 +590,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     MAYBE_UNUSED const bool hasAlt = (event->modifiers() & Qt::ALT) != 0u;
 
     if (hasLeftButton && hasAlt) {
-        beginAltDrag(event->position().toPoint(), cursor());
-        setCursor(Qt::ClosedHandCursor);
+        beginAltDrag(event->position().toPoint(), currentCursor());
+        applyCursor(Qt::ClosedHandCursor);
         event->accept();
         return;
     }
@@ -463,18 +618,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         slot_layerDown();
         return event->accept();
     } else if (!m_mouseLeftPressed && m_mouseRightPressed) {
-        if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE && hasSel1()) {
-            // Select the room under the cursor
-            m_roomSelection = RoomSelection::createSelection(
-                m_data.findAllRooms(getSel1().getCoordinate()));
-            slot_setRoomSelection(SigRoomSelection{m_roomSelection});
-
-            // Select infomarks under the cursor.
-            slot_setInfomarkSelection(getInfomarkSelection(getSel1()));
-
-            selectionChanged();
-        }
-        emit sig_customContextMenuRequested(event->position().toPoint());
+        requestContextMenuAt(event->position());
         m_mouseRightPressed = false;
         event->accept();
         return;
@@ -499,7 +643,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         break;
     case CanvasMouseModeEnum::MOVE:
         if (hasLeftButton && hasSel1()) {
-            setCursor(Qt::ClosedHandCursor);
+            applyCursor(Qt::ClosedHandCursor);
             startMoving(m_sel1.value());
         }
         break;
@@ -553,10 +697,17 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         }
         // Select rooms
         if (hasLeftButton && hasSel1()) {
-            if (!hasCtrl) {
-                const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
-                if (pRoom.exists() && m_roomSelection != nullptr
-                    && m_roomSelection->contains(pRoom.getId())) {
+            const auto pRoom = m_data.findRoomHandle(getSel1().getCoordinate());
+            const bool onSelectedRoom = pRoom.exists() && m_roomSelection != nullptr
+                                        && m_roomSelection->contains(pRoom.getId());
+            // Touch has no Ctrl, so a tap on a room that is not yet selected
+            // adds it (and a drag from there rubber-bands additively), like
+            // Ctrl+click; a selected room still moves, and empty space still
+            // clears. Mouse input is unchanged.
+            const bool touch = event->source() != Qt::MouseEventNotSynthesized;
+            const bool additive = hasCtrl || (touch && pRoom.exists() && !onSelectedRoom);
+            if (!additive) {
+                if (onSelectedRoom) {
                     beginRoomMove();
                 } else {
                     endInteraction();
@@ -618,18 +769,18 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     }
 }
 
-void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
+void MapCanvas::handleMouseMove(QMouseEvent *const event)
 {
-    const auto optXy = getMouseCoords(event);
-    if (!optXy) {
-        return;
+    if (m_longPressPos
+        && (event->position() - *m_longPressPos).manhattanLength()
+               > QGuiApplication::styleHints()->startDragDistance()) {
+        cancelLongPress();
     }
-    const auto xy = *optXy;
 
     if (auto *const altDragState = getInteraction<AltDragState>()) {
         // The user released the Alt key mid-drag.
         if (!((event->modifiers() & Qt::ALT) != 0u)) {
-            setCursor(altDragState->originalCursor);
+            applyCursor(altDragState->originalCursor.shape());
             endInteraction();
             // Don't accept the event; let the underlying widgets handle it.
             return;
@@ -672,7 +823,24 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         return;
     }
 
-    const bool hasLeftButton = (event->buttons() & Qt::LeftButton) != 0u;
+    const auto optXy = getMouseCoords(event);
+    if (!optXy) {
+        return;
+    }
+    handlePointerMove(*optXy, event->modifiers(), event->buttons());
+
+    // Touch drag in MOVE mode: remember where the view is over time so the
+    // release can turn the finger's speed into a flick.
+    if (event->source() != Qt::MouseEventNotSynthesized && getInteraction<DragState>() != nullptr) {
+        recordScrollSample(static_cast<qint64>(event->timestamp()));
+    }
+}
+
+void MapCanvas::handlePointerMove(const glm::vec2 xy,
+                                  MAYBE_UNUSED const Qt::KeyboardModifiers modifiers,
+                                  const Qt::MouseButtons buttons)
+{
+    const bool hasLeftButton = (buttons & Qt::LeftButton) != 0u;
 
     if (m_canvasMouseMode != CanvasMouseModeEnum::MOVE) {
         // NOTE: Y is opposite of what you might expect here.
@@ -711,7 +879,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         if (hasLeftButton && hasSel1() && hasSel2()) {
             if (auto *const move = getInteraction<InfomarkSelectionMove>()) {
                 move->pos = getSel2().pos - getSel1().pos;
-                setCursor(Qt::ClosedHandCursor);
+                applyCursor(Qt::ClosedHandCursor);
 
             } else {
                 beginAreaSelection();
@@ -759,7 +927,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                 move->pos = diff;
                 move->wrongPlace = wrongPlace;
 
-                setCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
+                applyCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
             } else {
                 beginAreaSelection();
             }
@@ -805,8 +973,24 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     }
 }
 
-void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
+void MapCanvas::handleMouseRelease(QMouseEvent *const event)
 {
+    cancelLongPress();
+    if (std::exchange(m_longPressFired, false) && event->button() == Qt::LeftButton) {
+        // onLongPress() already abandoned the press and opened the context
+        // menu; treating this release as a tap would also raise the room
+        // tooltip over the open menu.
+        m_scrollSamples.clear();
+        event->accept();
+        return;
+    }
+    if (event->button() == Qt::LeftButton && event->source() != Qt::MouseEventNotSynthesized
+        && m_canvasMouseMode == CanvasMouseModeEnum::MOVE
+        && getInteraction<DragState>() != nullptr) {
+        recordScrollSample(static_cast<qint64>(event->timestamp()));
+        startFlick();
+    }
+    m_scrollSamples.clear();
     const auto optXy = getMouseCoords(event);
     if (!optXy) {
         return;
@@ -814,7 +998,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
     const auto xy = *optXy;
 
     if (auto *const altDragState = getInteraction<AltDragState>()) {
-        setCursor(altDragState->originalCursor);
+        applyCursor(altDragState->originalCursor.shape());
         endInteraction();
         event->accept();
         return;
@@ -829,7 +1013,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     switch (m_canvasMouseMode) {
     case CanvasMouseModeEnum::SELECT_INFOMARKS:
-        setCursor(Qt::ArrowCursor);
+        applyCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
             if (auto *const move = getInteraction<InfomarkSelectionMove>()) {
@@ -881,13 +1065,15 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
     case CanvasMouseModeEnum::MOVE:
         stopMoving();
-        setCursor(Qt::OpenHandCursor);
+        applyCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
         }
-        // Display a room info tooltip if there was no mouse movement
-        if (event->button() == Qt::LeftButton && hasSel1() && hasSel2()
-            && getSel1().to_vec3() == getSel2().to_vec3()) {
+        // Display a room info tooltip if there was no mouse movement.
+        // Not for touch: a tooltip is a hover affordance, and a tapped one
+        // would sit over the map until the next tap.
+        if (event->button() == Qt::LeftButton && event->source() == Qt::MouseEventNotSynthesized
+            && hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
             if (const auto room = m_data.findRoomHandle(getSel1().getCoordinate())) {
                 // Tooltip doesn't support ANSI, and there's no way to add formatted text.
                 auto message = mmqt::previewRoom(room,
@@ -904,7 +1090,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         break;
 
     case CanvasMouseModeEnum::SELECT_ROOMS:
-        setCursor(Qt::ArrowCursor);
+        applyCursor(Qt::ArrowCursor);
 
         // This seems very unusual.
         if (m_ctrlPressed && m_altPressed) {
@@ -1145,6 +1331,7 @@ void MapCanvas::slot_zoomReset()
 
 void MapCanvas::onMovement()
 {
+    stopFlick();
     const Coordinate pos = m_data.tryGetPosition().value_or(Coordinate{});
     setCurrentLayer(pos.z);
     getOpenGL().getUboManager().invalidate(Legacy::SharedVboEnum::CameraBlock);
@@ -1160,10 +1347,7 @@ void MapCanvas::onMovement()
 void MapCanvas::slot_dataLoaded()
 {
     onMovement();
-
-    // REVISIT: is the makeCurrent necessary for calling update()?
-    // MakeCurrentRaii makeCurrentRaii{*this};
-    forceUpdateMeshes();
+    requestForceUpdateMeshes();
 }
 
 void MapCanvas::slot_moveMarker(const RoomId id)
@@ -1192,6 +1376,25 @@ void MapCanvas::forceUpdateMeshes()
     m_frameManager.requestUpdate();
 }
 
+void MapCanvas::requestForceUpdateMeshes()
+{
+    // Deferred: dropping the cached meshes destroys GL objects (VBOs/VAOs),
+    // which requires a current GL context. Callers of this function (UI
+    // actions, config-change callbacks, data-loaded notifications) may run
+    // with no GL context current, so we just flag the work and let the next
+    // hostPaintGL() perform it, mirroring finishPendingMapBatches()'s pattern.
+    m_pendingForceUpdateMeshes = true;
+    m_frameManager.requestUpdate();
+}
+
+void MapCanvas::requestUpdateTextures()
+{
+    // Deferred for the same reason as requestForceUpdateMeshes(): updateTextures()
+    // touches real GL texture objects and may be requested from outside paint.
+    m_pendingUpdateTextures = true;
+    m_frameManager.requestUpdate();
+}
+
 void MapCanvas::slot_mapChanged()
 {
     // REVISIT: Ideally we'd want to only update the layers/chunks
@@ -1214,8 +1417,8 @@ void MapCanvas::screenChanged()
         return;
     }
 
-    const auto newDpi = static_cast<float>(QPaintDevice::devicePixelRatioF());
-    const auto oldDpi = gl.getDevicePixelRatio();
+    const auto newDpi = static_cast<float>(currentDpr());
+    const auto oldDpi = gl.getHostDevicePixelRatio();
 
     if (!utils::isSameFloat(newDpi, oldDpi)) {
         log(QString("Display: %1 DPI").arg(static_cast<double>(newDpi)));
@@ -1225,10 +1428,11 @@ void MapCanvas::screenChanged()
         // without having to compute it again, right?
         m_batches.resetExistingMeshesButKeepPendingRemesh();
 
-        gl.setDevicePixelRatio(newDpi);
-        auto &font = getGLFont();
-        font.cleanup();
-        font.init();
+        // Deferred: applying the new DPR touches the GL font (cleanup+init,
+        // real GL texture calls), so it's applied at the top of the next
+        // hostPaintGL() instead of immediately (screenChanged() can be called
+        // outside of paint, e.g. from QWindow::screenChanged()).
+        m_pendingDpr = newDpi;
 
         m_frameManager.requestUpdate();
     }

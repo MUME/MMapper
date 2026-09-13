@@ -16,6 +16,7 @@
 #include "../opengl/Weather.h"
 #include "FrameManager.h"
 #include "Infomarks.h"
+#include "MapCanvasConfig.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "Textures.h"
@@ -24,6 +25,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <future>
 #include <map>
 #include <memory>
@@ -37,7 +39,7 @@
 #include <QColor>
 #include <QMatrix4x4>
 #include <QOpenGLDebugMessage>
-#include <QOpenGLWindow>
+#include <QSize>
 #include <QtCore>
 
 class CharacterBatch;
@@ -49,20 +51,60 @@ class MapData;
 class Mmapper2Group;
 class PrespammedPath;
 class QMouseEvent;
+class QNativeGestureEvent;
 class QOpenGLDebugLogger;
 class QOpenGLDebugMessage;
+class QTouchEvent;
 class QWheelEvent;
-class QWidget;
 class RoomSelFakeGL;
 
-class NODISCARD_QOBJECT MapCanvas final : public QOpenGLWindow,
+// Minimal interface a MapCanvas uses to talk back to whatever widget/item
+// is actually hosting it on screen. MapCanvas talks only to this
+// interface, so it doesn't know or care which concrete host implements it.
+class NODISCARD MapCanvasHost
+{
+public:
+    virtual ~MapCanvasHost();
+
+public:
+    // Schedule a repaint (e.g. QOpenGLWindow::update()).
+    void requestCanvasUpdate() { virt_requestCanvasUpdate(); }
+
+    // The host's current device pixel ratio.
+    NODISCARD qreal hostDevicePixelRatio() const { return virt_hostDevicePixelRatio(); }
+
+    // The host's current size in logical pixels.
+    NODISCARD QSize hostSize() const { return virt_hostSize(); }
+
+    // Set the shape of the cursor shown while hovering the host.
+    void setHostCursor(const Qt::CursorShape shape) { virt_setHostCursor(shape); }
+
+    // Called with the GL context current, immediately before the core
+    // composites its internal FBO into the currently bound framebuffer
+    // (blitFboToDefault()). By this point the paint has left the viewport
+    // at (0, 0, w, h) -- the right presentation rect for a host that owns
+    // its whole framebuffer (e.g. QOpenGLWindow), hence the no-op default.
+    // A host that presents into a SUB-RECT of a framebuffer it shares with
+    // other content must re-apply its own viewport here, or the blit lands
+    // at the framebuffer's bottom-left corner instead of the host's rect.
+    void applyPresentViewport() { virt_applyPresentViewport(); }
+
+private:
+    virtual void virt_requestCanvasUpdate() = 0;
+    NODISCARD virtual qreal virt_hostDevicePixelRatio() const = 0;
+    NODISCARD virtual QSize virt_hostSize() const = 0;
+    virtual void virt_setHostCursor(Qt::CursorShape shape) = 0;
+    virtual void virt_applyPresentViewport() {}
+};
+
+class NODISCARD_QOBJECT MapCanvas final : public QObject,
                                           private MapCanvasViewport,
                                           private MapCanvasInputState
 {
     Q_OBJECT
 
 public:
-    static constexpr const int SCROLL_SCALE = 64;
+    static constexpr const int SCROLL_SCALE = MapCanvasConfig::SCROLL_SCALE;
 
 private:
     struct NODISCARD Diff final
@@ -143,33 +185,86 @@ private:
     MapData &m_data;
     Mmapper2Group &m_groupManager;
     Diff m_diff;
+
+    // Declared before m_frameManager, whose constructor already invokes the
+    // repaint callback that uses it.
+    MapCanvasHost &m_host;
+    Qt::CursorShape m_currentCursor = Qt::ArrowCursor;
+
     FrameManager m_frameManager;
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
     Signal2Lifetime m_lifetime;
     GLWeather m_weather;
     bool m_cleanedUp = false;
 
+    // Deferred (defer-to-next-render) state for GL work that historically ran
+    // outside of paintGL(), relying on the implicit assumption that the host's
+    // GL context happened to still be current. See hostPaintGL()/actuallyPaintGL().
+    bool m_pendingForceUpdateMeshes = false;
+    bool m_pendingUpdateTextures = false;
+    std::optional<float> m_pendingDpr;
+    std::optional<float> m_pendingRenderScale;
+
+    // Touch long-press -> context menu. A left press synthesized from touch
+    // arms the timer; moving past the drag threshold or releasing disarms it
+    // (see handleMousePress()/handleMouseMove()/handleMouseRelease()).
+    QTimer m_longPressTimer;
+    std::optional<QPointF> m_longPressPos;
+    // Set when the timer fired: the finger's eventual release is then
+    // swallowed, since the context menu was the response to that gesture.
+    bool m_longPressFired = false;
+
+    // Touch flick: recent scroll samples of a touch drag in MOVE mode, and
+    // the velocity (world units per second) the view keeps after release
+    // until it decays (see handleMouseRelease()/onFlickTick()).
+    struct NODISCARD ScrollSample final
+    {
+        qint64 msecs = 0;
+        glm::vec2 scroll{0.f};
+    };
+    std::deque<ScrollSample> m_scrollSamples;
+    QTimer m_flickTimer;
+    glm::vec2 m_flickVelocity{0.f};
+
 public:
     explicit MapCanvas(MapData &mapData,
                        GameObserver &observer,
                        PrespammedPath &prespammedPath,
                        Mmapper2Group &groupManager,
-                       QWindow *parent = nullptr);
-    ~MapCanvas() final;
+                       MapCanvasHost &host);
+    ~MapCanvas() override;
 
-public:
-    NODISCARD static MapCanvas *getPrimary();
+private:
+    NODISCARD qreal currentDpr() const { return m_host.hostDevicePixelRatio(); }
+    // Configuration::canvas.renderScale (a percentage) as the factor the
+    // offscreen FBO is rendered at; see Legacy::Functions::setRenderScale().
+    NODISCARD static float configuredRenderScale();
+    NODISCARD QSize currentHostSize() const { return m_host.hostSize(); }
+    void applyCursor(Qt::CursorShape shape)
+    {
+        m_currentCursor = shape;
+        m_host.setHostCursor(shape);
+    }
+    NODISCARD QCursor currentCursor() const { return QCursor(m_currentCursor); }
 
 private:
     NODISCARD inline auto &getOpenGL() { return m_opengl; }
     NODISCARD inline auto &getGLFont() { return m_glFont; }
-    void cleanupOpenGL();
 
 public:
-    void shuttingDown();
+    // Called by the host with a current GL context. Idempotent: cleanup state
+    // is reset the next time a host attaches and re-initializes.
+    NODISCARD bool hostInitializeGL();
+    void hostPaintGL();
+    void hostResize(int width, int height, qreal dpr);
+    // Must be called with a current GL context (the host is responsible for that).
+    void hostCleanupGL();
+    NODISCARD bool isCleanedUp() const { return m_cleanedUp; }
 
 public:
     using MapCanvasViewport::getTotalScaleFactor;
+    using MapCanvasViewport::height;
+    using MapCanvasViewport::width;
     void setZoom(float zoom)
     {
         ScaleFactor sf = getScaleFactor();
@@ -178,11 +273,6 @@ public:
         zoomChanged();
     }
     NODISCARD float getRawZoom() const { return getScaleFactor().getRaw(); }
-
-public:
-    NODISCARD auto width() const { return QOpenGLWindow::width(); }
-    NODISCARD auto height() const { return QOpenGLWindow::height(); }
-    NODISCARD QRect rect() const { return QRect(0, 0, width(), height()); }
 
 private:
     void onMovement();
@@ -196,24 +286,28 @@ private:
 protected:
     void onViewProjDirty() const override;
 
-protected:
-    void initializeGL() override;
-    void paintGL() override;
-
-    void drawGroupCharacters(CharacterBatch &characterBatch, ServerRoomId yourServerId);
-
-    void resizeGL(int width, int height) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;
-    void touchEvent(QTouchEvent *event) override;
-    bool event(QEvent *e) override;
+public:
+    // Bodies of the QOpenGLWindow event overrides on the facade, exposed as
+    // plain QEvent-taking entry points so any host can forward into the same
+    // logic. handleMouseMove() further delegates the position+modifiers core
+    // to handlePointerMove(), which a hover-event path with no button/press
+    // semantics can call directly.
+    void handleMousePress(QMouseEvent *event);
+    void handleMouseRelease(QMouseEvent *event);
+    void handleMouseMove(QMouseEvent *event);
+    void handlePointerMove(glm::vec2 pos, Qt::KeyboardModifiers modifiers, Qt::MouseButtons buttons);
+    void handleWheel(QWheelEvent *event);
+    void handleTouch(QTouchEvent *event);
+    void handleNativeGesture(QNativeGestureEvent *event);
+    // Returns true if the event was handled (i.e. it was a recognized native
+    // zoom gesture); mirrors the facade's bool event(QEvent*) override.
+    NODISCARD bool handleGenericEvent(QEvent *event);
 
 private:
+    void drawGroupCharacters(CharacterBatch &characterBatch, ServerRoomId yourServerId);
+
     void initLogger();
 
-    void resizeGL() { resizeGL(width(), height()); }
     void initTextures();
     void updateTextures();
     void updateMultisampling();
@@ -222,7 +316,7 @@ private:
 
 public:
     void setMvp(const glm::mat4 &viewProj);
-    void setViewportAndMvp(int width, int height);
+    void setViewportAndMvp(int width, int height, qreal dpr);
 
     void zoomAt(float factor, glm::vec2 mousePos);
     void handleZoomAtEvent(const QInputEvent *event, float deltaFactor);
@@ -238,6 +332,7 @@ public:
     void updateMapBatches();
     void updateInfomarkBatches();
 
+    void applyPendingGLWork();
     void actuallyPaintGL();
     void paintMap();
     void renderMapBatches();
@@ -252,10 +347,16 @@ public:
     void paintSelectedInfomarks();
     void paintCharacters();
     void paintDifferences();
+
+    // Immediately drops all cached meshes (must run with a current GL context).
     void forceUpdateMeshes();
+    // Defers forceUpdateMeshes() to the start of the next hostPaintGL().
+    void requestForceUpdateMeshes();
+    // Defers updateTextures() to the start of the next hostPaintGL().
+    void requestUpdateTextures();
 
 public:
-    void slot_rebuildMeshes() { forceUpdateMeshes(); }
+    void slot_rebuildMeshes() { requestForceUpdateMeshes(); }
     void infomarksChanged();
     void layerChanged();
     void slot_mapChanged();
@@ -267,8 +368,24 @@ public:
     void syncViewportConfig();
 
 public:
+    // Forwarded by MapWindow::keyPressEvent()/keyReleaseEvent(); the bool
+    // parameter is otherwise unused (see the .cpp).
     void userPressedEscape(bool);
 
+private:
+    // Selects the room and infomarks under a canvas-local, top-left-origin
+    // point and emits sig_customContextMenuRequested; shared by the
+    // right-mouse-button press and the touch long-press (see
+    // handleMousePress()).
+    void requestContextMenuAt(const QPointF &pos);
+    void cancelLongPress();
+    void onLongPress();
+    void recordScrollSample(qint64 msecs);
+    void startFlick();
+    void stopFlick();
+    void onFlickTick();
+
+public:
 private:
     void log(const QString &msg) { emit sig_log("MapCanvas", msg); }
 
@@ -292,6 +409,17 @@ signals:
     void sig_customContextMenuRequested(const QPoint &pos);
     void sig_dismissContextMenu();
 
+    // Emitted from hostInitializeGL() when OpenGL initialization fails (e.g.
+    // an unsupported/blacklisted driver). The core stays QtWidgets-free, so
+    // it's up to whoever connects to this signal (the widget facade) to show
+    // a QMessageBox and/or hide the host window.
+    void sig_glInitFailed(const QString &reason);
+
+    // Emitted from the (direct) GL debug message handler for fatal errors.
+    // The core stays QtWidgets-free, so the widget facade is responsible for
+    // showing a blocking dialog and aborting.
+    void sig_glFatalError(const QString &message);
+
 public slots:
     void slot_onForcedPositionChange();
     void slot_createRoom();
@@ -306,6 +434,7 @@ public slots:
     void slot_zoomIn();
     void slot_zoomOut();
     void slot_zoomReset();
+    void slot_centerOnPlayer() { onMovement(); }
 
     void slot_layerUp();
     void slot_layerDown();
@@ -329,5 +458,6 @@ public slots:
     void slot_dataLoaded();
     void slot_moveMarker(RoomId id);
 
+private slots:
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
 };

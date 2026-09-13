@@ -52,8 +52,12 @@ public:
     void initializeRenderer(float devicePixelRatio);
     NODISCARD const char *glGetString(GLenum name);
     NODISCARD int glGetInteger(GLenum name);
+    void glFinish();
     void setDevicePixelRatio(float devicePixelRatio);
     NODISCARD float getDevicePixelRatio() const;
+    NODISCARD float getHostDevicePixelRatio() const;
+    void setRenderScale(float renderScale);
+    NODISCARD float getRenderScale() const;
     NODISCARD bool isRendererInitialized() const { return m_rendererInitialized; }
 
 public:

@@ -53,9 +53,9 @@ AnsiViewWindow::AnsiViewWindow(const QString &program,
 
 AnsiViewWindow::~AnsiViewWindow() = default;
 
-std::unique_ptr<AnsiViewWindow> makeAnsiViewWindow(const QString &program,
-                                                   const QString &title,
-                                                   std::string_view body)
+std::unique_ptr<QDialog> makeAnsiViewWindow(const QString &program,
+                                            const QString &title,
+                                            std::string_view body)
 {
     return std::make_unique<AnsiViewWindow>(program, title, body);
 }

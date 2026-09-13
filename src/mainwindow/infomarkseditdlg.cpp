@@ -7,7 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../display/InfomarkSelection.h"
-#include "../display/mapcanvas.h"
+#include "../display/MapCanvasWindow.h"
 #include "../global/window_utils.h"
 #include "../map/coordinate.h"
 #include "../map/infomark.h"
@@ -30,7 +30,7 @@ InfomarksEditDlg::InfomarksEditDlg(QWidget *const parent)
 
 void InfomarksEditDlg::setInfomarkSelection(const std::shared_ptr<InfomarkSelection> &is,
                                             MapData *const md,
-                                            MapCanvas *const mc)
+                                            MapCanvasWindow *const mc)
 {
     // NOTE: the selection is allowed to be null.
     assert(md != nullptr);

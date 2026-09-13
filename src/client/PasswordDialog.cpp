@@ -17,6 +17,8 @@ PasswordDialog::PasswordDialog(InputWidgetOutputs &outputs, QWidget *const paren
 
     m_passwordLineEdit = new QLineEdit(this);
     m_passwordLineEdit->setEchoMode(QLineEdit::Password);
+    m_passwordLineEdit->setInputMethodHints(Qt::ImhSensitiveData | Qt::ImhNoAutoUppercase
+                                            | Qt::ImhNoPredictiveText);
     m_passwordLineEdit->setPlaceholderText("Password");
     m_passwordLineEdit->setObjectName("passwordLineEdit");
 

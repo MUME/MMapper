@@ -11,7 +11,6 @@
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
 #include "../global/utils.h"
-#include "../global/window_utils.h"
 #include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
@@ -54,10 +53,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <QApplication>
-#include <QMessageBox>
+#ifdef Q_OS_WASM
+#include <emscripten/heap.h>
+#endif
+
 #include <QMessageLogContext>
-#include <QOpenGLWindow>
+#include <QOpenGLContext>
 #include <QtCore>
 #include <QtGui/qopengl.h>
 #include <QtGui>
@@ -112,32 +113,10 @@ void setShowPerfStats(const bool show)
 
 } // namespace MapCanvasConfig
 
-class NODISCARD MakeCurrentRaii final
+void MapCanvas::hostCleanupGL()
 {
-private:
-    QOpenGLWindow &m_glWindow;
-
-public:
-    explicit MakeCurrentRaii(QOpenGLWindow &window)
-        : m_glWindow{window}
-    {
-        m_glWindow.makeCurrent();
-    }
-    ~MakeCurrentRaii() { m_glWindow.doneCurrent(); }
-
-    DELETE_CTORS_AND_ASSIGN_OPS(MakeCurrentRaii);
-};
-
-void MapCanvas::shuttingDown()
-{
-    qInfo() << MM_SOURCE_LOCATION().function_name();
-    if (!m_cleanedUp) {
-        cleanupOpenGL();
-    }
-}
-
-void MapCanvas::cleanupOpenGL()
-{
+    // NOTE: The caller (the host facade) is responsible for making sure a GL
+    // context is current before calling this function.
     const auto fname = MM_SOURCE_LOCATION().function_name();
     qInfo() << fname << "Entered.";
 
@@ -147,20 +126,16 @@ void MapCanvas::cleanupOpenGL()
     }
 
     qInfo() << fname << "Cleaning up...";
-    {
-        // Make sure the context is current and then explicitly
-        // destroy all underlying OpenGL resources.
-        MakeCurrentRaii makeCurrentRaii{*this};
 
-        // note: m_batchedMeshes co-owns textures created by MapCanvasData,
-        // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
-        m_batches.resetExistingMeshesAndIgnorePendingRemesh();
-        m_weather.cleanup();
-        m_textures.destroyAll();
-        getGLFont().cleanup();
-        getOpenGL().cleanup();
-        m_logger.reset();
-    }
+    // note: m_batchedMeshes co-owns textures created by MapCanvasData,
+    // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
+    m_batches.resetExistingMeshesAndIgnorePendingRemesh();
+    m_weather.cleanup();
+    m_textures.destroyAll();
+    getGLFont().cleanup();
+    getOpenGL().cleanup();
+    m_logger.reset();
+
     qInfo() << fname << "Done.";
 }
 
@@ -241,25 +216,33 @@ void MapCanvas::reportGLVersion()
     }
 #endif
 
-    const auto version = std::invoke([this]() -> std::string {
-        const QSurfaceFormat &format = context()->format();
+    // NOTE: hostInitializeGL() runs with a current GL context (the host
+    // guarantees this, same as the old QOpenGLWindow::initializeGL()), so
+    // querying the thread's current context here is equivalent to the old
+    // QOpenGLWindow::context() call, without depending on any particular host.
+    const auto version = std::invoke([]() -> std::string {
         std::ostringstream oss;
-        switch (format.renderableType()) {
-        case QSurfaceFormat::OpenGL:
-            oss << "GL";
-            break;
-        case QSurfaceFormat::OpenGLES:
-            oss << "ES";
-            break;
-        case QSurfaceFormat::OpenVG:
-            oss << "VG";
-            break;
-        case QSurfaceFormat::DefaultRenderableType:
-        default:
-            oss << "UN";
-            break;
+        if (auto *const ctxt = QOpenGLContext::currentContext()) {
+            const QSurfaceFormat &format = ctxt->format();
+            switch (format.renderableType()) {
+            case QSurfaceFormat::OpenGL:
+                oss << "GL";
+                break;
+            case QSurfaceFormat::OpenGLES:
+                oss << "ES";
+                break;
+            case QSurfaceFormat::OpenVG:
+                oss << "VG";
+                break;
+            case QSurfaceFormat::DefaultRenderableType:
+            default:
+                oss << "UN";
+                break;
+            }
+            oss << format.majorVersion() << "." << format.minorVersion();
+        } else {
+            oss << "UNKNOWN";
         }
-        oss << format.majorVersion() << "." << format.minorVersion();
         return std::move(oss).str();
     });
 
@@ -267,7 +250,10 @@ void MapCanvas::reportGLVersion()
            QString("%1 (%2)")
                .arg(version.c_str())
                // FIXME: This is a bit late to report an invalid context.
-               .arg(context()->isValid() ? "valid" : "invalid")
+               .arg((QOpenGLContext::currentContext() != nullptr
+                     && QOpenGLContext::currentContext()->isValid())
+                        ? "valid"
+                        : "invalid")
                .toUtf8());
     if constexpr (!NO_OPENGL) {
         logMsg("Highest OpenGL:", mmqt::toQByteArrayUtf8(OpenGLConfig::getGLVersionString()));
@@ -276,7 +262,11 @@ void MapCanvas::reportGLVersion()
         logMsg("Highest GLES:", mmqt::toQByteArrayUtf8(OpenGLConfig::getESVersionString()));
     }
 
-    logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
+    logMsg("Display:",
+           QString("%1 DPI, render scale %2%")
+               .arg(currentDpr())
+               .arg(getConfig().canvas.renderScale.get())
+               .toUtf8());
 }
 
 bool MapCanvas::isBlacklistedDriver()
@@ -297,7 +287,7 @@ bool MapCanvas::isBlacklistedDriver()
     return false;
 }
 
-void MapCanvas::initializeGL()
+bool MapCanvas::hostInitializeGL()
 {
     OpenGL &gl = getOpenGL();
     try {
@@ -307,18 +297,12 @@ void MapCanvas::initializeGL()
         if (isBlacklistedDriver()) {
             throw std::runtime_error("unsupported driver");
         }
-    } catch (const std::exception &) {
-        hide();
-        doneCurrent();
-        mmqt::showCritical(QApplication::activeWindow(),
-                           "Unable to initialize OpenGL",
-                           "Upgrade your video card drivers");
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-            // Link to Microsoft OpenGL Compatibility Pack
-            QDesktopServices::openUrl(
-                QUrl(QStringLiteral("ms-windows-store://pdp/?productid=9nqpsl29bfff")));
-        }
-        return;
+    } catch (const std::exception &ex) {
+        // The core stays QtWidgets-free, so it can't show the message box or
+        // hide the host window itself; the host facade does that in response
+        // to this signal.
+        emit sig_glInitFailed(QString::fromUtf8(ex.what()));
+        return false;
     }
 
     reportGLVersion();
@@ -328,7 +312,8 @@ void MapCanvas::initializeGL()
     // because the logger purposely calls std::abort() when it receives an error.
     initLogger();
 
-    gl.initializeRenderer(static_cast<float>(QPaintDevice::devicePixelRatioF()));
+    gl.initializeRenderer(static_cast<float>(currentDpr()));
+    gl.setRenderScale(configuredRenderScale());
 
     gl.getUboManager()
         .registerRebuildFunction(Legacy::SharedVboEnum::NamedColorsBlock,
@@ -370,19 +355,19 @@ void MapCanvas::initializeGL()
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
             && m_diff.highlight->highlights.empty()) {
-            this->forceUpdateMeshes();
+            this->requestForceUpdateMeshes();
         }
     });
 
     setConfig().canvas.showMissingMapId.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showMissingMapId.get() && m_diff.highlight.has_value()
             && m_diff.highlight->highlights.empty()) {
-            this->forceUpdateMeshes();
+            this->requestForceUpdateMeshes();
         }
     });
 
     setConfig().canvas.showUnmappedExits.registerChangeCallback(m_lifetime, [this]() {
-        this->forceUpdateMeshes();
+        this->requestForceUpdateMeshes();
     });
 
     setConfig().canvas.antialiasingSamples.registerChangeCallback(m_lifetime, [this]() {
@@ -390,18 +375,21 @@ void MapCanvas::initializeGL()
         m_frameManager.requestUpdate();
     });
 
-    setConfig().canvas.trilinearFiltering.registerChangeCallback(m_lifetime, [this]() {
-        this->updateTextures();
+    setConfig().canvas.renderScale.registerChangeCallback(m_lifetime, [this]() {
+        // Deferred like m_pendingDpr: the FBO is reconfigured at the top of
+        // the next paint, where the GL context is current.
+        m_pendingRenderScale = configuredRenderScale();
         m_frameManager.requestUpdate();
     });
 
-    // Clean up GL resources while the context is still current.
-    // The destructor is too late — Qt destroys the context before ~MapCanvas() runs.
-    connect(context(),
-            &QOpenGLContext::aboutToBeDestroyed,
-            this,
-            &MapCanvas::cleanupOpenGL,
-            Qt::DirectConnection);
+    setConfig().canvas.trilinearFiltering.registerChangeCallback(m_lifetime, [this]() {
+        this->requestUpdateTextures();
+    });
+
+    // NOTE: The host facade is responsible for connecting to
+    // QOpenGLContext::aboutToBeDestroyed (see MapCanvas::initializeGL()); the
+    // core has no notion of a QOpenGLContext or its lifetime.
+    return true;
 }
 
 /* Direct means it is always called from the emitter's thread */
@@ -427,12 +415,11 @@ void MapCanvas::slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message)
 
     qCritical() << message;
 
-    QMessageBox box;
-    box.setWindowTitle("Fatal OpenGL error");
-    box.setText(message.message());
-    box.exec();
-
-    std::abort();
+    // The core stays QtWidgets-free, so it can't show the blocking message
+    // box itself; the host facade does that (and calls std::abort()) in
+    // response to this signal, using a direct connection so the abort still
+    // happens synchronously from here.
+    emit sig_glFatalError(message.message());
 }
 
 void MapCanvas::initLogger()
@@ -467,8 +454,14 @@ void MapCanvas::setMvp(const glm::mat4 &viewProj)
     gl.setProjectionMatrix(viewProj);
 }
 
-void MapCanvas::setViewportAndMvp(int width, int height)
+void MapCanvas::setViewportAndMvp(const int width, const int height, const qreal dpr)
 {
+    // Refresh the cached viewport geometry (and DPR) every time; this is called
+    // once per paint (from actuallyPaintGL()) as well as from hostResize(), so it
+    // also acts as the "first frame" safety net, since nothing else queries
+    // the live host size on every access.
+    setViewportSize(width, height, dpr);
+
     if (width != m_lastWidth || height != m_lastHeight) {
         m_lastWidth = width;
         m_lastHeight = height;
@@ -490,14 +483,14 @@ void MapCanvas::onViewProjDirty() const
     m_opengl.getUboManager().invalidate(Legacy::SharedVboEnum::CameraBlock);
 }
 
-void MapCanvas::resizeGL(int width, int height)
+void MapCanvas::hostResize(const int width, const int height, const qreal dpr)
 {
     if (m_textures.room_highlight == nullptr) {
-        // resizeGL called but initializeGL was not called yet
+        // hostResize called but hostInitializeGL was not called yet
         return;
     }
 
-    setViewportAndMvp(width, height);
+    setViewportAndMvp(width, height, dpr);
     markMultisamplingDirty();
     m_frameManager.requestUpdate();
 }
@@ -604,10 +597,50 @@ void MapCanvas::finishPendingMapBatches()
 #undef LOG
 }
 
+void MapCanvas::applyPendingGLWork()
+{
+    // Deferred (defer-to-next-render) GL work relies on the host's GL context
+    // being current, so it is applied at the top of the paint, before the
+    // batches are (re)built: a forced remesh must not discard the remesh
+    // that updateBatches() just started, and glyph meshes must use the
+    // font metrics of the new DPI / render scale.
+    if (m_pendingDpr.has_value()) {
+        const float newDpi = *m_pendingDpr;
+        m_pendingDpr.reset();
+        getOpenGL().setDevicePixelRatio(newDpi);
+        auto &font = getGLFont();
+        font.cleanup();
+        font.init();
+    }
+    if (m_pendingRenderScale.has_value()) {
+        const float newScale = *m_pendingRenderScale;
+        m_pendingRenderScale.reset();
+        if (!utils::isSameFloat(newScale, getOpenGL().getRenderScale())) {
+            log(QString("Render scale: %1%").arg(static_cast<double>(newScale) * 100.0));
+            getOpenGL().setRenderScale(newScale);
+            // Glyphs are rasterized for the render target's pixel density,
+            // and the FBO is sized from it.
+            auto &font = getGLFont();
+            font.cleanup();
+            font.init();
+            m_batches.resetExistingMeshesButKeepPendingRemesh();
+            markMultisamplingDirty();
+        }
+    }
+    if (std::exchange(m_pendingUpdateTextures, false)) {
+        updateTextures();
+    }
+    if (std::exchange(m_pendingForceUpdateMeshes, false)) {
+        forceUpdateMeshes();
+    }
+}
+
 void MapCanvas::actuallyPaintGL()
 {
     // DECL_TIMER(t, __FUNCTION__);
-    setViewportAndMvp(width(), height());
+
+    const QSize hostSizeNow = currentHostSize();
+    setViewportAndMvp(hostSizeNow.width(), hostSizeNow.height(), currentDpr());
     if (takeMultisamplingDirty()) {
         updateMultisampling();
     }
@@ -666,6 +699,7 @@ void MapCanvas::actuallyPaintGL()
     }
 
     if (paintSucceeded) {
+        m_host.applyPresentViewport();
         gl.blitFboToDefault();
     }
 }
@@ -831,11 +865,12 @@ void MapCanvas::paintSelections()
     paintSelectedInfomarks();
 }
 
-void MapCanvas::paintGL()
+void MapCanvas::hostPaintGL()
 {
     auto frame = m_frameManager.beginFrame();
     if (!frame) {
         // Blit the existing FBO on resize or expose
+        m_host.applyPresentViewport();
         getOpenGL().blitFboToDefault();
         return;
     }
@@ -853,6 +888,7 @@ void MapCanvas::paintGL()
     }
 
     {
+        applyPendingGLWork();
         if (showPerfStats) {
             optAfterTextures = Clock::now();
         }
@@ -881,14 +917,13 @@ void MapCanvas::paintGL()
     const auto &afterTextures = optAfterTextures.value();
     const auto &afterBatches = optAfterBatches.value();
     const auto afterPaint = Clock::now();
-    const bool calledFinish = std::invoke([this]() -> bool {
-        if (auto *const ctxt = QOpenGLWindow::context()) {
-            if (auto *const func = ctxt->functions()) {
-                func->glFinish();
-                return true;
-            }
+    auto &gl = getOpenGL();
+    const bool calledFinish = std::invoke([&gl]() -> bool {
+        if (!gl.isRendererInitialized()) {
+            return false;
         }
-        return false;
+        gl.glFinish();
+        return true;
     });
 
     const auto end = Clock::now();
@@ -939,6 +974,29 @@ void MapCanvas::paintGL()
 
     longestBatchMs = std::max(batchTime, longestBatchMs);
     print(QString::asprintf("Worst updateBatches: %.1f ms", longestBatchMs));
+
+#ifdef Q_OS_WASM
+    {
+        // Browser memory is what limits the map on tablets; show the wasm
+        // heap and the offscreen framebuffer's footprint next to the timings.
+        const size_t heapSize = emscripten_get_heap_size();
+        const size_t heapMax = emscripten_get_heap_max();
+        const Viewport fbo = getOpenGL().getPhysicalViewport();
+        const int samples = std::max(1, getConfig().canvas.antialiasingSamples.get());
+        const double fboMegabytes = static_cast<double>(fbo.size.x)
+                                    * static_cast<double>(fbo.size.y)
+                                    * 8.0 /* RGBA8 color + 32-bit depth */
+                                    * static_cast<double>(samples) / (1024.0 * 1024.0);
+        print(QString::asprintf("WASM heap: %zu MB of %zu MB",
+                                heapSize / (1024 * 1024),
+                                heapMax / (1024 * 1024)));
+        print(QString::asprintf("FBO: %dx%d at %d%% (~%.1f MB)",
+                                fbo.size.x,
+                                fbo.size.y,
+                                getConfig().canvas.renderScale.get(),
+                                fboMegabytes));
+    }
+#endif
 
     const auto &advanced = getConfig().canvas.advanced;
     const float zoom = getTotalScaleFactor();
@@ -1036,8 +1094,17 @@ void MapCanvas::paintSelectionArea()
 
 void MapCanvas::updateMultisampling()
 {
-    const int wantMultisampling = getConfig().canvas.antialiasingSamples.get();
+    // MSAA multiplies the FBO's memory, which a reduced render scale exists
+    // to save, so the two are exclusive (the Graphics page enforces the same).
+    const int wantMultisampling = (getConfig().canvas.renderScale.get() < 100)
+                                      ? 0
+                                      : getConfig().canvas.antialiasingSamples.get();
     getOpenGL().configureFbo(wantMultisampling);
+}
+
+float MapCanvas::configuredRenderScale()
+{
+    return std::clamp(static_cast<float>(getConfig().canvas.renderScale.get()) / 100.f, 0.25f, 1.f);
 }
 
 void MapCanvas::renderMapBatches()

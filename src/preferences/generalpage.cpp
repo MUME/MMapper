@@ -91,6 +91,11 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::slot_displayMumeClockStateChanged);
 
+    connect(ui->uiFontScaleSpinBox,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this,
+            [](const double value) { setConfig().general.uiFontScale = value; });
+
     connect(ui->displayXPStatusCheckBox,
             &QCheckBox::stateChanged,
             this,
@@ -323,6 +328,7 @@ void GeneralPage::slot_loadConfig()
     ui->displayMumeClockCheckBox->setChecked(config.mumeClock.display);
 
     ui->displayXPStatusCheckBox->setChecked(config.adventurePanel.getDisplayXPStatus());
+    ui->uiFontScaleSpinBox->setValue(general.uiFontScale);
 
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 

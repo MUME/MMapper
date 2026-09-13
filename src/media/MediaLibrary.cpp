@@ -241,21 +241,30 @@ void MediaLibrary::scanDirectories()
 
     // Scan resources in increasing order of priority: QRC < Sideloaded Assets < User Resources.
     // Duplicate keys encountered later will overwrite earlier ones.
+    const qsizetype qrcImagesBefore = m_imageFiles.size();
     scanPath(QLatin1String(":/areas"), QLatin1String(":/"));
     scanPath(QLatin1String(":/rooms"), QLatin1String(":/"));
     scanPath(QLatin1String(":/sounds"), QLatin1String(":/"));
+    qInfo() << "[description] scanned :/ (qrc):" << (m_imageFiles.size() - qrcImagesBefore)
+            << "image files.";
 
     if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
         const QString &assetsDir = getAssetsPath();
+        const qsizetype assetsImagesBefore = m_imageFiles.size();
         scanPath(assetsDir + "areas", assetsDir);
         scanPath(assetsDir + "rooms", assetsDir);
         scanPath(assetsDir + "sounds", assetsDir);
+        qInfo() << "[description] scanned" << assetsDir << ":"
+                << (m_imageFiles.size() - assetsImagesBefore) << "image files.";
     }
 
     const auto &resourcesDir = getConfig().canvas.resourcesDirectory;
+    const qsizetype resourcesImagesBefore = m_imageFiles.size();
     scanPath(resourcesDir + "/areas", resourcesDir);
     scanPath(resourcesDir + "/rooms", resourcesDir);
     scanPath(resourcesDir + "/sounds", resourcesDir);
+    qInfo() << "[description] scanned" << resourcesDir << ":"
+            << (m_imageFiles.size() - resourcesImagesBefore) << "image files.";
 
     qInfo() << "Scanned media directories. Found" << m_audioFiles.size() << "audio files and"
             << m_imageFiles.size() << "image files.";
