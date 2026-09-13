@@ -133,4 +133,6 @@ extern void report_status(AnsiOstream &aos);
 NODISCARD extern bool report_status(AnsiOstream &aos, uint32_t id);
 NODISCARD extern bool cancel(uint32_t id);
 NODISCARD extern bool discard(uint32_t id);
+/// Testing aid: behaves exactly as if MUME had sent MUME.Client.Edit.
+extern void simulate_edit(const QString &title);
 } // namespace remote_edit

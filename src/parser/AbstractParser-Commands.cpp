@@ -1545,7 +1545,23 @@ void AbstractParser::doEditsCommand(StringView rest)
         "permanently delete a recovered draft's file, or cancel a live edit and discard its "
         "draft");
 
+    const auto doEditSimulate = syntax::Accept(
+        [](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto v = getAnyVectorReversed(args);
+            assert(v.size() == 2);
+            assert(v[0].getString() == "simulate");
+            const std::string title = concatenate_unquoted(v[1].getVector());
+            if (title.empty()) {
+                aos << "Error: a title is required.\n";
+                return;
+            }
+            remote_edit::simulate_edit(mmqt::toQStringUtf8(title));
+        },
+        "(testing) open an editor as if MUME had requested an edit with this title");
+
     const auto editSyntax = syn(syn("list", doEditList),
+                                syn("simulate", syntax::TokenMatcher::alloc<syntax::ArgRest>(), doEditSimulate),
                                 syn(argInt, //
                                     syn("status", doEditStatus),
                                     syn("cancel", doEditCancel),

@@ -612,4 +612,17 @@ bool discard(const uint32_t id)
     return true;
 }
 
+void simulate_edit(const QString &title)
+{
+    if (g_instance == nullptr) {
+        return;
+    }
+    // Large ids keep the fake session clear of anything MUME hands out.
+    static int32_t nextFakeId = 1000000;
+    g_instance->slot_remoteEdit(RemoteSessionId{nextFakeId++},
+                                title,
+                                QString("Simulated edit \"%1\".\nType here; nothing is sent to MUME.\n")
+                                    .arg(title));
+}
+
 } // namespace remote_edit
