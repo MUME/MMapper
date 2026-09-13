@@ -1561,7 +1561,9 @@ void AbstractParser::doEditsCommand(StringView rest)
         "(testing) open an editor as if MUME had requested an edit with this title");
 
     const auto editSyntax = syn(syn("list", doEditList),
-                                syn("simulate", syntax::TokenMatcher::alloc<syntax::ArgRest>(), doEditSimulate),
+                                syn("simulate",
+                                    syntax::TokenMatcher::alloc<syntax::ArgRest>(),
+                                    doEditSimulate),
                                 syn(argInt, //
                                     syn("status", doEditStatus),
                                     syn("cancel", doEditCancel),
