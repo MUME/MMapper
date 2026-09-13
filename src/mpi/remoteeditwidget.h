@@ -167,6 +167,7 @@ protected:
 
 private:
     NODISCARD Editor *createTextEdit();
+    void promptDiscardChanges();
     NODISCARD GotoWidget *createGotoWidget();
     NODISCARD FindReplaceWidget *createFindReplaceWidget();
 
@@ -186,7 +187,6 @@ signals:
 protected slots:
     void slot_cancelEdit();
     void slot_finishEdit();
-    NODISCARD bool slot_maybeCancel();
     NODISCARD bool slot_contentsChanged() const;
     void slot_updateStatusBar();
     void slot_updateStatus(const QString &message);

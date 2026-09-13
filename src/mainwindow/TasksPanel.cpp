@@ -8,9 +8,11 @@
 #include "../global/PrintUtils.h"
 #include "../global/SendToUser.h"
 #include "../global/thread_utils.h"
+#include "../global/window_utils.h"
 #include "AsyncTypes.h"
 #include "mainwindow.h"
 
+#include <memory>
 #include <utility>
 
 #include <QTimer>
@@ -226,20 +228,22 @@ void TasksPanel::contextMenuClick(const QPoint &pos)
     QWidget *const parent = use_this_as_parent ? static_cast<QWidget *>(this)
                                                : static_cast<QWidget *>(&m_mainWindow);
 
-    QMenu contextMenu{parent};
+    auto contextMenu = std::make_unique<QMenu>(parent);
     auto add_entry = [this, &contextMenu, task_id](const auto &name, auto callback) {
-        contextMenu.addAction(name,
-                              this,
-                              // note: QPointer becomes null if we're deleted
-                              [pw = QPointer<TasksPanel>{this}, task_id, cb = std::move(callback)]() {
-                                  if (pw) {
-                                      std::invoke(cb, deref(pw), task_id);
-                                  }
-                              });
+        contextMenu->addAction(name,
+                               this,
+                               // note: QPointer becomes null if we're deleted
+                               [pw = QPointer<TasksPanel>{this},
+                                task_id,
+                                cb = std::move(callback)]() {
+                                   if (pw) {
+                                       std::invoke(cb, deref(pw), task_id);
+                                   }
+                               });
     };
 
     add_entry(QString("Cancel task %1").arg(task_id), &TasksPanel::try_cancel_by_key);
-    contextMenu.exec(getScrollArea().viewport()->mapToGlobal(pos));
+    mmqt::popupMenu(std::move(contextMenu), getScrollArea().viewport()->mapToGlobal(pos));
 }
 
 TasksPanel::ListItem *TasksPanel::lookup_by_key(const size_t task_id) const

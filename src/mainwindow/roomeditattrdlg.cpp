@@ -15,6 +15,7 @@
 #include "../global/PrintUtils.h"
 #include "../global/SignalBlocker.h"
 #include "../global/utils.h"
+#include "../global/window_utils.h"
 #include "../map/Changes.h"
 #include "../map/Diff.h"
 #include "../map/ExitFieldVariant.h"
@@ -1282,14 +1283,14 @@ void RoomEditAttrDlg::onRevertDiffClicked()
     setAnsiText(roomDiffTextEdit, oss.str());
 
     if (!pResult) {
-        QMessageBox::warning(this, "Revert Room Failed", "Failed to build revert plan");
+        mmqt::showWarning(this, "Revert Room Failed", "Failed to build revert plan");
         return;
     }
 
     const room_revert::RevertPlan &plan = deref(pResult);
     const ChangeList &changes = plan.changes;
     if (changes.empty() || !md.applyChanges(changes)) {
-        QMessageBox::warning(this, "Revert Room Failed", "Failed to apply revert changes");
+        mmqt::showWarning(this, "Revert Room Failed", "Failed to apply revert changes");
         return;
     }
 

@@ -5,6 +5,9 @@
 
 #include "utils.h"
 
+#include <QMenu>
+#include <QMessageBox>
+#include <QPoint>
 #include <QString>
 #include <QWidget>
 
@@ -40,4 +43,39 @@ void mmqt::setWindowTitle2(QWidget &widget, const QString &program, const QStrin
         // "View text... - MMapper Viewer"
         widget.setWindowTitle(QString("%1 - %2").arg(title, program));
     }
+}
+
+namespace {
+QMessageBox &showMessageBox(QWidget *const parent,
+                            const QMessageBox::Icon icon,
+                            const QString &title,
+                            const QString &text)
+{
+    auto *const box = new QMessageBox(icon, title, text, QMessageBox::Ok, parent);
+    box->setAttribute(Qt::WA_DeleteOnClose);
+    box->open();
+    return *box;
+}
+} // namespace
+
+QMessageBox &mmqt::showInformation(QWidget *const parent, const QString &title, const QString &text)
+{
+    return showMessageBox(parent, QMessageBox::Information, title, text);
+}
+
+QMessageBox &mmqt::showWarning(QWidget *const parent, const QString &title, const QString &text)
+{
+    return showMessageBox(parent, QMessageBox::Warning, title, text);
+}
+
+QMessageBox &mmqt::showCritical(QWidget *const parent, const QString &title, const QString &text)
+{
+    return showMessageBox(parent, QMessageBox::Critical, title, text);
+}
+
+void mmqt::popupMenu(std::unique_ptr<QMenu> menu, const QPoint &globalPos)
+{
+    QMenu *const raw = menu.release();
+    raw->setAttribute(Qt::WA_DeleteOnClose);
+    raw->popup(globalPos);
 }

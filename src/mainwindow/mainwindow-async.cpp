@@ -13,6 +13,7 @@
 #include "../global/macros.h"
 #include "../global/thread_utils.h"
 #include "../global/utils.h"
+#include "../global/window_utils.h"
 #include "../mapstorage/MapDestination.h"
 #include "../mapstorage/MmpMapStorage.h"
 #include "../mapstorage/PandoraMapStorage.h"
@@ -182,9 +183,9 @@ NODISCARD std::optional<T> extract(std::future<std::optional<T>> &future, MainWi
     try {
         return future.get();
     } catch (const MapStorageError &ex) {
-        QMessageBox::critical(&mainWindow,
-                              MainWindow::tr("MapStorage Error"),
-                              mmqt::toQStringUtf8(ex.what()));
+        mmqt::showCritical(&mainWindow,
+                           MainWindow::tr("MapStorage Error"),
+                           mmqt::toQStringUtf8(ex.what()));
     } catch (const ProgressCanceledException &) {
         const auto msg = "IO operation canceled.";
         mainWindow.slot_log("AbstractMapStorage", msg);

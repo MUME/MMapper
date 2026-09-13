@@ -7,6 +7,7 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/random.h"
+#include "../global/window_utils.h"
 
 #include <algorithm>
 #include <sstream>
@@ -86,9 +87,9 @@ bool AutoLogger::writeLine(const QString &str)
     }
     if (!created) {
         setConfig().autoLog.autoLog = false;
-        QMessageBox::warning(checked_dynamic_downcast<QWidget *>(parent()), // MainWindow
-                             "MMapper AutoLogger",
-                             "Unable to create log file.\n\nLogging has been disabled.");
+        mmqt::showWarning(checked_dynamic_downcast<QWidget *>(parent()), // MainWindow
+                          "MMapper AutoLogger",
+                          "Unable to create log file.\n\nLogging has been disabled.");
         return false;
     }
 
