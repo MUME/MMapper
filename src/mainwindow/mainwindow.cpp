@@ -1339,6 +1339,26 @@ void MainWindow::setupMenuBar()
     if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
         helpMenu->addAction(aboutQtAct);
     }
+
+    // Qt activates a menu action's shortcut only through a visible menu bar,
+    // which "Always Show Menubar" can hide; held by the window as well, the
+    // shortcuts always work.
+    for (QMenu *const topLevel : {fileMenu, editMenu, viewMenu, settingsMenu, helpMenu}) {
+        addActions(collectActions(*topLevel));
+    }
+}
+
+QList<QAction *> MainWindow::collectActions(const QMenu &menu)
+{
+    QList<QAction *> result;
+    for (QAction *const action : menu.actions()) {
+        if (QMenu *const sub = action->menu()) {
+            result += collectActions(*sub);
+        } else if (!action->isSeparator()) {
+            result += action;
+        }
+    }
+    return result;
 }
 
 void MainWindow::slot_showContextMenu(const QPoint &pos)
