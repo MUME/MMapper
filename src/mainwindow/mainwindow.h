@@ -298,7 +298,14 @@ private:
     void readSettings();
     void writeSettings();
 
-    NODISCARD bool maybeSave();
+    // Prompts to save a modified map, then runs onProceed unless the user
+    // cancels (or saving fails). Non-blocking: the prompt uses
+    // QMessageBox::open(), since nested event loops are unavailable on wasm.
+    void maybeSave(std::function<void()> onProceed);
+    // Blocking variant for closeEvent(), which cannot be deferred. Desktop only.
+    NODISCARD bool maybeSaveBlocking();
+    NODISCARD bool handleMaybeSaveResult(int result);
+    void promptOpenFile();
 
     struct ActionDisabler;
     void disableActions(bool value);

@@ -11,6 +11,7 @@
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
 #include "../global/utils.h"
+#include "../global/window_utils.h"
 #include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
@@ -309,9 +310,9 @@ void MapCanvas::initializeGL()
     } catch (const std::exception &) {
         hide();
         doneCurrent();
-        QMessageBox::critical(QApplication::activeWindow(),
-                              "Unable to initialize OpenGL",
-                              "Upgrade your video card drivers");
+        mmqt::showCritical(QApplication::activeWindow(),
+                           "Unable to initialize OpenGL",
+                           "Upgrade your video card drivers");
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
             // Link to Microsoft OpenGL Compatibility Pack
             QDesktopServices::openUrl(

@@ -5,6 +5,7 @@
 #include "adventurewidget.h"
 
 #include "../configuration/configuration.h"
+#include "../global/window_utils.h"
 #include "adventuresession.h"
 
 #include <memory>
@@ -153,7 +154,7 @@ void AdventureWidget::slot_contextMenuRequested(const QPoint &pos)
     std::unique_ptr<QMenu> contextMenu{m_textEdit->createStandardContextMenu()};
     contextMenu->addSeparator();
     contextMenu->addAction(m_clearContentAction);
-    contextMenu->exec(m_textEdit->mapToGlobal(pos));
+    mmqt::popupMenu(std::move(contextMenu), m_textEdit->mapToGlobal(pos));
 }
 
 void AdventureWidget::slot_actionClearContent([[maybe_unused]] bool checked)

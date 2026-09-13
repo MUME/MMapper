@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/Consts.h"
+#include "../global/window_utils.h"
 #include "remoteeditsession.h"
 
 #include <cassert>
@@ -58,9 +59,9 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               body,
                                                               this);
 #else
-        QMessageBox::information(nullptr,
-                                 "External Editor Not Supported",
-                                 "Editing in an external editor is not supported on this platform.");
+        mmqt::showInformation(nullptr,
+                              "External Editor Not Supported",
+                              "Editing in an external editor is not supported on this platform.");
         return;
 #endif
     }

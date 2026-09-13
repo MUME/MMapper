@@ -762,7 +762,6 @@ if(EMSCRIPTEN)
         -sMAX_WEBGL_VERSION=2
         -sMIN_WEBGL_VERSION=2
 	#-sASSERTIONS
-        -sASYNCIFY
         -Os
     )
     target_link_libraries(mmapper PUBLIC z)

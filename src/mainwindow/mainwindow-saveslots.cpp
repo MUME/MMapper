@@ -2,10 +2,12 @@
 // Copyright (C) 2024 The MMapper Authors
 
 #include "../configuration/configuration.h"
+#include "../global/ConfigConsts-Computed.h"
 #include "../mapdata/mapdata.h"
 #include "../mapstorage/MapDestination.h"
 #include "mainwindow.h"
 
+#include <cassert>
 #include <memory>
 
 #include <QBuffer>
@@ -80,33 +82,70 @@ NODISCARD std::unique_ptr<QFileDialog> createDefaultSaveDialog(MainWindow &mainW
     return save;
 }
 
+NODISCARD std::unique_ptr<QMessageBox> createMaybeSaveDialog(MainWindow &mainWindow,
+                                                             const QString &changes)
+{
+    auto dlg = std::make_unique<QMessageBox>(&mainWindow);
+    dlg->setIcon(QMessageBox::Warning);
+    dlg->setWindowTitle(MainWindow::tr("mmapper"));
+    dlg->setText(MainWindow::tr("The current map has been modified:\n\n") + changes
+                 + MainWindow::tr("\nDo you want to save the changes?"));
+    dlg->setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    dlg->setDefaultButton(QMessageBox::Discard);
+    dlg->setEscapeButton(QMessageBox::Cancel);
+    return dlg;
+}
+
 } // namespace mwss_detail
 } // namespace
 
-bool MainWindow::maybeSave()
+bool MainWindow::handleMaybeSaveResult(const int result)
 {
+    switch (result) {
+    case QMessageBox::Save:
+        return slot_save();
+    case QMessageBox::Discard:
+        return true;
+    default:
+        // Cancel, Escape, or the window's close button.
+        return false;
+    }
+}
+
+void MainWindow::maybeSave(std::function<void()> onProceed)
+{
+    auto &mapData = deref(m_mapData);
+    if (!mapData.dataChanged()) {
+        onProceed();
+        return;
+    }
+
+    const QString changes = mmqt::toQStringUtf8(mapData.describeChanges());
+    // Ownership passes to Qt: the box deletes itself on close.
+    auto *const dlg = mwss_detail::createMaybeSaveDialog(*this, changes).release();
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dlg,
+            &QMessageBox::finished,
+            this,
+            [this, proceed = std::move(onProceed)](const int result) {
+                if (handleMaybeSaveResult(result)) {
+                    proceed();
+                }
+            });
+    dlg->open();
+}
+
+bool MainWindow::maybeSaveBlocking()
+{
+    assert(CURRENT_PLATFORM != PlatformEnum::Wasm);
     auto &mapData = deref(m_mapData);
     if (!mapData.dataChanged()) {
         return true;
     }
 
     const QString changes = mmqt::toQStringUtf8(mapData.describeChanges());
-
-    QMessageBox dlg(this);
-    dlg.setIcon(QMessageBox::Warning);
-    dlg.setWindowTitle(tr("mmapper"));
-    dlg.setText(tr("The current map has been modified:\n\n") + changes
-                + tr("\nDo you want to save the changes?"));
-    dlg.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    dlg.setDefaultButton(QMessageBox::Discard);
-    dlg.setEscapeButton(QMessageBox::Cancel);
-    const int ret = dlg.exec();
-    if (ret == QMessageBox::Save) {
-        return slot_save();
-    }
-
-    // REVISIT: is it a bug if this returns true? (Shouldn't this always be false?)
-    return ret != QMessageBox::Cancel;
+    const auto dlg = mwss_detail::createMaybeSaveDialog(*this, changes);
+    return handleMaybeSaveResult(dlg->exec());
 }
 
 bool MainWindow::slot_save()

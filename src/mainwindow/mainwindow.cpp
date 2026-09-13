@@ -413,7 +413,7 @@ void MainWindow::startServices()
         const QString errorMsg = QString(
                                      "Unable to start the server (switching to offline mode): %1.")
                                      .arg(QString::fromUtf8(e.what()));
-        QMessageBox::critical(this, tr("mmapper"), errorMsg);
+        mmqt::showCritical(this, tr("mmapper"), errorMsg);
     }
 
     if constexpr (!NO_UPDATER) {
@@ -1681,9 +1681,14 @@ void MainWindow::closeEvent(QCloseEvent *const event)
         }
     }
 
-    if (!asyncIO.isClosedForBusiness() && !asyncIO.isWaitingForSaveAtShutdown() && !maybeSave()) {
-        event->ignore();
-        return;
+    if constexpr (CURRENT_PLATFORM != PlatformEnum::Wasm) {
+        // closeEvent() cannot be deferred, so this prompt has to block.
+        // On wasm the browser owns the tab's lifetime, so there is no prompt.
+        if (!asyncIO.isClosedForBusiness() && !asyncIO.isWaitingForSaveAtShutdown()
+            && !maybeSaveBlocking()) {
+            event->ignore();
+            return;
+        }
     }
 
     asyncIO.setClosedForBusiness();
@@ -1749,9 +1754,7 @@ void MainWindow::showEvent(QShowEvent *const event)
 
 void MainWindow::slot_newFile()
 {
-    if (maybeSave()) {
-        forceNewFile();
-    }
+    maybeSave([this]() { forceNewFile(); });
 }
 
 void MainWindow::forceNewFile()
@@ -1777,10 +1780,11 @@ void MainWindow::forceNewFile()
 
 void MainWindow::slot_open()
 {
-    if (!maybeSave()) {
-        return;
-    }
+    maybeSave([this]() { promptOpenFile(); });
+}
 
+void MainWindow::promptOpenFile()
+{
     auto openFile = [this](const QString &fileName, std::optional<QByteArray> fileContent) {
         if (fileName.isEmpty()) {
             showStatusShort(tr("No filename provided"));
@@ -1815,16 +1819,15 @@ void MainWindow::slot_open()
 
 void MainWindow::slot_reload()
 {
-    if (maybeSave()) {
+    maybeSave([this]() {
         // make a copy of the filename, since it will be modified by loadFile().
         const QString filename = m_mapData->getFileName();
         try {
             loadFile(MapSource::alloc(filename));
         } catch (const std::runtime_error &e) {
             showWarning(tr("Cannot open file %1:\n%2.").arg(filename, e.what()));
-            return;
         }
-    }
+    });
 }
 
 void MainWindow::slot_about()
@@ -1853,7 +1856,7 @@ void MainWindow::showWarning(const QString &s)
 {
     // REVISIT: shouldn't the warning have "this" as parent?
     // REVISIT: shouldn't this also say MMapper?
-    QMessageBox::warning(nullptr, tr("Application"), s);
+    mmqt::showWarning(nullptr, tr("Application"), s);
 }
 
 void MainWindow::showAsyncFailure(const QString &fileName,

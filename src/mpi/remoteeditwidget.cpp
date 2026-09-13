@@ -1466,37 +1466,35 @@ void RemoteEditWidget::closeEvent(QCloseEvent *event)
         return;
     }
 
-    if (m_editSession) {
-        if (slot_maybeCancel()) {
-            event->accept();
-        } else {
-            event->ignore();
-        }
-    } else {
-        slot_cancelEdit();
-        event->accept();
-    }
-}
-
-bool RemoteEditWidget::slot_maybeCancel()
-{
-    if (slot_contentsChanged()) {
-        QMessageBox dlg(this);
-        dlg.setIcon(QMessageBox::Warning);
-        dlg.setWindowTitle(m_title);
-        dlg.setText(tr("You have edited the document.\n"
-                       "Are you sure you want to discard all changes?"));
-        dlg.setStandardButtons(QMessageBox::Discard | QMessageBox::Cancel);
-        dlg.setDefaultButton(QMessageBox::Cancel);
-        dlg.setEscapeButton(QMessageBox::Cancel);
-        const int ret = dlg.exec();
-        if (ret != QMessageBox::Discard) {
-            return false;
-        }
+    if (m_editSession && slot_contentsChanged()) {
+        // Ask first; if the user discards, slot_cancelEdit() closes again.
+        event->ignore();
+        promptDiscardChanges();
+        return;
     }
 
     slot_cancelEdit();
-    return true;
+    event->accept();
+}
+
+void RemoteEditWidget::promptDiscardChanges()
+{
+    // Non-blocking: nested event loops are unavailable on wasm.
+    auto *const dlg = new QMessageBox(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setIcon(QMessageBox::Warning);
+    dlg->setWindowTitle(m_title);
+    dlg->setText(tr("You have edited the document.\n"
+                    "Are you sure you want to discard all changes?"));
+    dlg->setStandardButtons(QMessageBox::Discard | QMessageBox::Cancel);
+    dlg->setDefaultButton(QMessageBox::Cancel);
+    dlg->setEscapeButton(QMessageBox::Cancel);
+    connect(dlg, &QMessageBox::finished, this, [this](const int result) {
+        if (result == QMessageBox::Discard) {
+            slot_cancelEdit();
+        }
+    });
+    dlg->open();
 }
 
 /* Qt virtual */

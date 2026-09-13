@@ -3,11 +3,13 @@
 
 #include "ShaderUtils.h"
 
+#include "../../global/ConfigConsts-Computed.h"
 #include "../../global/ConfigConsts.h"
 #include "../../global/Consts.h"
 #include "../../global/NamedColors.h"
 #include "../../global/PrintUtils.h"
 #include "../../global/TextUtils.h"
+#include "../../global/window_utils.h"
 #include "../Weather.h"
 
 #include <array>
@@ -109,10 +111,16 @@ static void logAndPopup(const char *const file,
         warn << str.c_str();
     }
 
-    QMessageBox box;
-    box.setWindowTitle("Message from OpenGL");
-    box.setText(str.c_str());
-    box.exec();
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Wasm) {
+        // No nested event loop on wasm; the caller may still abort, in which
+        // case the message above is what the user gets (browser console).
+        mmqt::showWarning(nullptr, "Message from OpenGL", str.c_str());
+    } else {
+        QMessageBox box;
+        box.setWindowTitle("Message from OpenGL");
+        box.setText(str.c_str());
+        box.exec();
+    }
 }
 
 static void checkProgramInfo(Functions &gl, const GLuint programID)
