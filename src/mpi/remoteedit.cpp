@@ -8,43 +8,24 @@
 #include "../global/AnsiOstream.h"
 #include "../global/AnsiTextUtils.h"
 #include "../global/SendToUser.h"
-#include "../global/io.h"
-#include "../global/random.h"
 #include "../global/window_utils.h"
 #include "remoteeditsession.h"
 
 #include <cassert>
 #include <memory>
-#include <sstream>
 #include <utility>
 
-#include <QClipboard>
 #include <QDateTime>
-#include <QFileDialog>
 #include <QGuiApplication>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QMessageLogContext>
-#include <QRegularExpression>
-#include <QSaveFile>
 #include <QString>
-#include <QUrl>
 
 namespace { // anonymous
 
 const volatile bool g_prefixMessagesToUser = true;
 constexpr const auto whiteOnCyan = getRawAnsi(AnsiColor16Enum::white, AnsiColor16Enum::cyan);
-constexpr const std::string_view VALID_RANDOM_CHARS
-    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-NODISCARD std::string randomString(const int length)
-{
-    std::ostringstream os;
-    for (int i = 0; i < length; ++i) {
-        os << VALID_RANDOM_CHARS[getRandom(VALID_RANDOM_CHARS.length())];
-    }
-    return os.str();
-}
-
 void notifyUserOfNewSession(const std::string_view article,
                             const std::string_view what,
                             const QString &title)
@@ -78,7 +59,7 @@ void notifyUserOfSubmissionFailure(const QString &title, const QString &errorMsg
         aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(title));
         aos.writeWithColor(color, "\" to MUME failed: ");
         aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(errorMsg));
-        aos.writeWithColor(color, ". The draft is preserved under Tools > Remote Edits.");
+        aos.writeWithColor(color, ". It was kept as an unsent draft (Sidepanels > Remote Edits Panel).");
         aos.write("\n");
     });
 }
@@ -87,7 +68,10 @@ void notifyUserOfSubmissionFailure(const QString &title, const QString &errorMsg
 
 RemoteEdit::RemoteEdit(QObject *const parent)
     : QObject(parent)
+    , m_store(RemoteEditDraftStore::makeDefault())
 {}
+
+RemoteEdit::~RemoteEdit() = default;
 
 void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {
@@ -105,24 +89,65 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                             const QString &title,
                             const QString &body)
 {
-    const auto internalId = RemoteInternalId{getInternalIdCount()};
     const bool isEdit = (sessionId != REMOTE_VIEW_SESSION_ID);
-    std::unique_ptr<RemoteEditSession> session;
-
     if (isEdit) {
         notifyUserOfNewSession("an", "Editor", title);
     } else {
         notifyUserOfNewSession("a", "Viewer", title);
     }
 
-    const QString draftFileName = isEdit ? provisionDraftFile(sessionId, title, body) : QString();
+    const auto offeredDraft = isEdit ? findPendingDraft(title) : std::nullopt;
+
+#ifndef Q_OS_WASM
+    if (offeredDraft && !getConfig().mumeClientProtocol.internalRemoteEditor) {
+        // An external editor can't show a restore banner, so ask before
+        // launching it, and seed its file with whichever text was chosen.
+        auto *const dlg = new QMessageBox(
+            QMessageBox::Question,
+            tr("Recovered draft"),
+            tr("An unsent draft of \"%1\" from %2 was recovered.\n\n"
+               "Start the editor from the recovered draft, or from the text MUME just sent?")
+                .arg(title, offeredDraft->lastModified.toString()),
+            QMessageBox::NoButton,
+            nullptr);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        QPushButton *const useDraft = dlg->addButton(tr("Recovered draft"), QMessageBox::AcceptRole);
+        dlg->addButton(tr("Text from MUME"), QMessageBox::RejectRole);
+        dlg->setDefaultButton(useDraft);
+        const DraftInfo draft = *offeredDraft;
+        connect(dlg, &QMessageBox::finished, this, [this, dlg, useDraft, sessionId, title, body, draft]() {
+            if (dlg->clickedButton() == static_cast<QAbstractButton *>(useDraft)) {
+                createSession(sessionId, title, readDraft(draft.key), std::nullopt);
+                deleteDraft(draft.key);
+            } else {
+                createSession(sessionId, title, body, std::nullopt);
+            }
+        });
+        dlg->open();
+        return;
+    }
+#endif
+
+    createSession(sessionId, title, body, offeredDraft);
+}
+
+void RemoteEdit::createSession(const RemoteSessionId sessionId,
+                               const QString &title,
+                               const QString &body,
+                               const std::optional<DraftInfo> &offeredDraft)
+{
+    const auto internalId = RemoteInternalId{getInternalIdCount()};
+    const bool isEdit = (sessionId != REMOTE_VIEW_SESSION_ID);
+    std::unique_ptr<RemoteEditSession> session;
+
+    const QString draftKey = isEdit ? deref(m_store).create(sessionId, title, body) : QString();
 
     if (getConfig().mumeClientProtocol.internalRemoteEditor) {
         session = std::make_unique<RemoteEditInternalSession>(internalId,
                                                               sessionId,
                                                               title,
                                                               body,
-                                                              draftFileName,
+                                                              draftKey,
                                                               /*draftRecovery=*/false,
                                                               this);
     } else {
@@ -131,7 +156,7 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               sessionId,
                                                               title,
                                                               body,
-                                                              draftFileName,
+                                                              draftKey,
                                                               this);
 #else
         mmqt::showInformation(nullptr,
@@ -141,10 +166,17 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
 #endif
     }
 
+    if (offeredDraft) {
+        session->offerDraft(*offeredDraft);
+    }
+
     m_sessions.insert(std::make_pair(internalId, std::move(session)));
 
     m_greatestUsedId = internalId.asUint32(); // Increment internalId counter
     emit sig_sessionsChanged();
+    if (isEdit) {
+        emit sig_draftsChanged();
+    }
 }
 
 void RemoteEdit::removeSession(const RemoteEditSession &session)
@@ -177,7 +209,7 @@ void RemoteEdit::cancelEdit(RemoteEditSession *const pSession)
         GmcpJson json{QString::fromUtf8(doc.toJson())};
         GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_CANCEL_EDIT, json};
         emit sig_sendGmcp(msg);
-        deleteDraft(session.getDraftFileName());
+        deleteDraft(session.getDraftKey());
     } else {
         session.flushDraft();
     }
@@ -187,13 +219,13 @@ void RemoteEdit::cancelEdit(RemoteEditSession *const pSession)
 void RemoteEdit::discardDraft(const RemoteEditSession *const pSession)
 {
     auto &session = deref(pSession);
-    deleteDraft(session.getDraftFileName());
+    deleteDraft(session.getDraftKey());
     removeSession(session);
 }
 
 void RemoteEdit::discardDraft(const DraftInfo &draft)
 {
-    deleteDraft(draft.fileName);
+    deleteDraft(draft.key);
 }
 
 void RemoteEdit::save(const RemoteEditSession *const pSession)
@@ -252,21 +284,23 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
 
 void RemoteEdit::trySaveLocally(const RemoteEditSession &session)
 {
-    if (!session.isEditSession()) {
-        assert(false);
-    }
-
-    auto *dlg = new QMessageBox(
-        QMessageBox::Information,
-        "MUME Disconnected",
-        "The connection to MUME was lost. Your changes have been preserved as a draft in the "
-        "MMapper/Editor directory and are available under Tools > Remote Edits for recovery.",
-        QMessageBox::StandardButtons{QMessageBox::Ok},
-        nullptr);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    const auto id = session.getInternalId().asUint32();
-    dlg->open();
-    qWarning() << "Session" << id << "marked as disconnected - draft preserved";
+    // The draft on disk already holds the latest content (auto-save for the
+    // internal editor; the editor's own save for an external one).
+    qWarning() << "Session" << session.getInternalId().asUint32()
+               << "submitted while disconnected - draft preserved";
+    global::sendToUser([&session](AnsiOstream &aos) {
+        const auto color = whiteOnCyan;
+        if (g_prefixMessagesToUser) {
+            aos.writeWithColor(color.withBold(), "Info");
+            aos.writeWithColor(color, ": ");
+        }
+        aos.writeWithColor(color, "Not connected to MUME; \"");
+        aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(session.getTitle()));
+        aos.writeWithColor(color,
+                           "\" was kept as an unsent draft. Re-run the edit command once "
+                           "reconnected to restore it.");
+        aos.write("\n");
+    });
 }
 
 void RemoteEdit::onDisconnected()
@@ -274,7 +308,7 @@ void RemoteEdit::onDisconnected()
     for (const auto &pair : m_sessions) {
         const auto &id = pair.first;
         const auto &session = pair.second;
-        if (session->isEditSession()) {
+        if (session->isEditSession() && session->isConnected()) {
             qWarning() << "Session" << id.asUint32() << "marked as disconnected";
             session->setDisconnected();
         }
@@ -331,13 +365,13 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
                 }
                 if (optResult && *optResult) {
                     qDebug() << "MUME.Client.Write success for session" << optId.value();
-                    deleteDraft(it->second->getDraftFileName());
+                    deleteDraft(it->second->getDraftKey());
                 } else {
                     const QString errorMsg = optResultMsg.value_or("unknown error");
                     qWarning() << "MUME.Client.Write failed for session" << optId.value() << ":"
                                << errorMsg;
                     notifyUserOfSubmissionFailure(it->second->getTitle(), errorMsg);
-                    // Draft is kept -- the edit remains recoverable from the Remote Edits menu.
+                    // Draft is kept so it can be restored by re-running the edit command.
                 }
                 removeSession(*(it->second));
                 break;
@@ -371,10 +405,10 @@ void RemoteEdit::slot_parseGmcpInput(const GmcpMessage &msg)
 QList<RemoteEdit::DraftInfo> RemoteEdit::pendingDrafts() const
 {
     QList<DraftInfo> pending;
-    for (const auto &draft : discoverDrafts()) {
+    for (const auto &draft : deref(m_store).list()) {
         bool active = false;
         for (const auto &pair : m_sessions) {
-            if (pair.second->getDraftFileName() == draft.fileName) {
+            if (pair.second->getDraftKey() == draft.key) {
                 active = true;
                 break;
             }
@@ -386,49 +420,57 @@ QList<RemoteEdit::DraftInfo> RemoteEdit::pendingDrafts() const
     return pending;
 }
 
-void RemoteEdit::recoverDrafts()
+std::optional<RemoteEdit::DraftInfo> RemoteEdit::findPendingDraft(const QString &title) const
+{
+    std::optional<DraftInfo> best;
+    for (const auto &draft : pendingDrafts()) {
+        if (draft.title == title && (!best || draft.lastModified > best->lastModified)) {
+            best = draft;
+        }
+    }
+    return best;
+}
+
+void RemoteEdit::announcePendingDrafts() const
 {
     const auto drafts = pendingDrafts();
     if (drafts.isEmpty()) {
         return;
     }
-    qInfo() << "Scanning for recovered drafts in" << getDraftDirectory();
-    for (const auto &draft : drafts) {
-        recoverDraft(draft);
-    }
+    global::sendToUser([&drafts](AnsiOstream &aos) {
+        const auto color = whiteOnCyan;
+        if (g_prefixMessagesToUser) {
+            aos.writeWithColor(color.withBold(), "Info");
+            aos.writeWithColor(color, ": ");
+        }
+        aos.writeWithColor(color, "MMapper has ");
+        aos.writeWithColor(color.withBold(), std::to_string(drafts.size()));
+        aos.writeWithColor(color,
+                           drafts.size() == 1 ? " unsent draft" : " unsent drafts");
+        aos.writeWithColor(color,
+                           " from a previous session (Sidepanels > Remote Edits Panel, or _edits).");
+        aos.write("\n");
+    });
 }
 
-void RemoteEdit::recoverDraft(const DraftInfo &draft)
+void RemoteEdit::viewDraft(const DraftInfo &draft)
 {
     for (const auto &pair : m_sessions) {
-        if (pair.second->getDraftFileName() == draft.fileName) {
-            // Already open (e.g. re-triggered from the Remote Edits menu) --
-            // just bring its window to the front instead of opening a
-            // duplicate.
+        if (pair.second->getDraftKey() == draft.key) {
             pair.second->focus();
             return;
         }
     }
 
-    qInfo() << "Recovering draft:" << draft.fileName << "title:" << draft.title;
-
-    QString content;
-    const QString fullPath = QDir(getDraftDirectory()).absoluteFilePath(draft.fileName);
-    if (QFile file(fullPath); file.open(QFile::ReadOnly)) {
-        content = QString::fromLatin1(file.readAll()); // MPI is always Latin1
-    } else {
-        qWarning() << "Unable to read draft" << fullPath;
-    }
-
     const auto internalId = RemoteInternalId{getInternalIdCount()};
     auto session = std::make_unique<RemoteEditInternalSession>(internalId,
-                                                               draft.sessionId,
+                                                               REMOTE_VIEW_SESSION_ID,
                                                                draft.title,
-                                                               content,
-                                                               draft.fileName,
+                                                               readDraft(draft.key),
+                                                               draft.key,
                                                                /*draftRecovery=*/true,
                                                                this);
-    session->setDisconnected(); // Recovered drafts are naturally disconnected
+    session->setDisconnected();
 
     m_sessions.insert(std::make_pair(internalId, std::move(session)));
     m_greatestUsedId = internalId.asUint32();
@@ -454,7 +496,7 @@ void RemoteEdit::reportStatus(AnsiOstream &aos) const
     for (const auto &draft : pending) {
         aos.write("  (pending) ");
         aos.write(mmqt::toStdStringUtf8(draft.title));
-        aos.write(" -- recovered draft, last modified ");
+        aos.write(" -- unsent draft, last modified ");
         aos.write(mmqt::toStdStringUtf8(draft.lastModified.toString()));
         aos.write("\n");
     }
@@ -462,7 +504,7 @@ void RemoteEdit::reportStatus(AnsiOstream &aos) const
     aos.write(m_sessions.size());
     aos.write(" open, ");
     aos.write(static_cast<size_t>(pending.size()));
-    aos.write(" pending recovered draft(s).\n");
+    aos.write(" unsent draft(s).\n");
 }
 
 bool RemoteEdit::reportStatus(AnsiOstream &aos, const RemoteInternalId id) const
@@ -479,7 +521,7 @@ bool RemoteEdit::reportStatus(AnsiOstream &aos, const RemoteInternalId id) const
     aos.write(mmqt::toStdStringUtf8(session.getTitle()));
     aos.write("\" -- ");
     if (session.isDraftRecovery()) {
-        aos.write("recovered draft");
+        aos.write("viewing unsent draft (read-only)");
     } else if (!session.isEditSession()) {
         aos.write("viewing");
     } else if (session.isConnected()) {
@@ -491,103 +533,13 @@ bool RemoteEdit::reportStatus(AnsiOstream &aos, const RemoteInternalId id) const
     return true;
 }
 
-QString RemoteEdit::getDraftDirectory()
+void RemoteEdit::deleteDraft(const QString &key)
 {
-    QString dir = getConfig().mumeClientProtocol.editorDirectory;
-    QDir().mkpath(dir);
-    return dir;
-}
-
-QString RemoteEdit::encodeMetadata(RemoteSessionId sessionId, const QString &title)
-{
-    // MUME reuses small session ids, so the timestamp -- not just the id --
-    // is needed to keep concurrent/successive drafts from colliding.
-    const QByteArray encoded = QUrl::toPercentEncoding(title);
-    QByteArray safeTitle = encoded.left(50);
-    if (safeTitle.size() < encoded.size()) {
-        // Don't split a "%XX" escape at the truncation boundary.
-        const qsizetype lastPercent = safeTitle.lastIndexOf('%');
-        if (lastPercent >= 0 && safeTitle.size() - lastPercent < 3) {
-            safeTitle.truncate(lastPercent);
-        }
-    }
-    return QString("draft_%1_%2_%3.txt")
-        .arg(sessionId.asInt32())
-        .arg(QDateTime::currentMSecsSinceEpoch())
-        .arg(QString::fromLatin1(safeTitle));
-}
-
-bool RemoteEdit::decodeMetadata(const QString &fileName, RemoteSessionId &sessionId, QString &title)
-{
-    static const QRegularExpression re("^draft_(-?\\d+)_(\\d+)_(.*)\\.txt$");
-    QRegularExpressionMatch match = re.match(fileName);
-    if (match.hasMatch()) {
-        sessionId = RemoteSessionId(match.captured(1).toInt());
-        title = QUrl::fromPercentEncoding(match.captured(3).toUtf8());
-        return true;
-    }
-    return false;
-}
-
-QString RemoteEdit::provisionDraftFile(RemoteSessionId sessionId,
-                                       const QString &title,
-                                       const QString &content)
-{
-    QString dir = getDraftDirectory();
-    QString fileName = encodeMetadata(sessionId, title);
-    QString fullPath = QDir(dir).absoluteFilePath(fileName);
-
-    if (QFile::exists(fullPath)) {
-        // Extremely unlikely (would require two provisions in the same millisecond
-        // for the same session id), but never truncate someone else's draft.
-        fileName = fileName.chopped(4) + "_" + mmqt::toQStringUtf8(randomString(5)) + ".txt";
-        fullPath = QDir(dir).absoluteFilePath(fileName);
-    }
-
-    QFile file(fullPath);
-    if (file.open(QFile::WriteOnly | QFile::Text)) {
-        file.write(mmqt::toQByteArrayLatin1(content));
-        file.flush();
-        std::ignore = io::fsyncNoexcept(file);
-        file.close();
-        return fileName;
-    }
-    return QString();
-}
-
-bool RemoteEdit::saveDraftAtomic(const QString &fileName, const QString &content)
-{
-    QString fullPath = QDir(getDraftDirectory()).absoluteFilePath(fileName);
-    QSaveFile file(fullPath);
-    if (file.open(QFile::WriteOnly | QFile::Text)) {
-        file.write(mmqt::toQByteArrayLatin1(content));
-        return file.commit();
-    }
-    return false;
-}
-
-void RemoteEdit::deleteDraft(const QString &fileName)
-{
-    if (fileName.isEmpty())
+    if (key.isEmpty()) {
         return;
-    QFile::remove(QDir(getDraftDirectory()).absoluteFilePath(fileName));
-}
-
-QList<RemoteEdit::DraftInfo> RemoteEdit::discoverDrafts()
-{
-    QList<DraftInfo> drafts;
-    QDir dir(getDraftDirectory());
-    QStringList files = dir.entryList({"draft_*.txt"}, QDir::Files);
-
-    for (const QString &fileName : files) {
-        RemoteSessionId sid;
-        QString title;
-        if (decodeMetadata(fileName, sid, title)) {
-            QFileInfo info(dir.absoluteFilePath(fileName));
-            drafts.append({fileName, title, sid, info.lastModified()});
-        }
     }
-    return drafts;
+    deref(m_store).remove(key);
+    emit sig_draftsChanged();
 }
 
 namespace remote_edit {

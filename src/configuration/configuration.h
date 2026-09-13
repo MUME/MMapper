@@ -24,6 +24,7 @@
 #include <QColor>
 #include <QMap>
 #include <QObject>
+#include <QSettings>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
@@ -491,6 +492,9 @@ void setEnteredMain();
 /// Returns a reference to the application configuration object.
 NODISCARD Configuration &setConfig();
 NODISCARD const Configuration &getConfig();
+/// A QSettings in the same organization/application scope as the
+/// configuration itself, for subsystems that persist their own small state.
+NODISCARD std::unique_ptr<QSettings> makeAppSettings();
 
 using SharedCanvasNamedColorOptions
     = std::shared_ptr<const Configuration::ResolvedCanvasNamedColorOptions>;

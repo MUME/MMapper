@@ -28,6 +28,7 @@
 #include "../media/AudioManager.h"
 #include "../media/DescriptionWidget.h"
 #include "../media/MediaLibrary.h"
+#include "../mpi/RemoteEditPanel.h"
 #include "../mpi/remoteedit.h"
 #include "../pathmachine/mmapper2pathmachine.h"
 #include "../preferences/configdialog.h"
@@ -310,6 +311,27 @@ MainWindow::MainWindow()
         m_dockDialogAsync = dock;
     });
 
+    // Remote edits (MPI editor/viewer tabs)
+    std::invoke([this] {
+        auto *const w = new RemoteEditPanel{deref(m_remoteEdit), this};
+        auto *const dock = new QDockWidget(tr("Remote Edits Panel"), this);
+        dock->setObjectName("DockWidgetRemoteEdits");
+        dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetMovable);
+        addDockWidget(Qt::RightDockWidgetArea, dock);
+        dock->setWidget(w);
+        dock->hide();
+
+        connect(w, &RemoteEditPanel::sig_showRequested, dock, [dock]() {
+            dock->show();
+            dock->raise();
+        });
+
+        w->show();
+        m_dockDialogRemoteEdits = dock;
+    });
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
@@ -419,7 +441,6 @@ MainWindow::MainWindow()
     readSettings();
     g_mainWindow = this;
 
-    QTimer::singleShot(0, this, [this]() { m_remoteEdit->recoverDrafts(); });
 }
 
 void MainWindow::startServices()
@@ -658,6 +679,10 @@ void MainWindow::wireConnections()
 
     deref(m_gameObserver).sig2_disconnected.connect(m_lifetime, [this]() {
         m_remoteEdit->onDisconnected();
+    });
+
+    deref(m_gameObserver).sig2_connected.connect(m_lifetime, [this]() {
+        m_remoteEdit->announcePendingDrafts();
     });
 }
 
@@ -1388,6 +1413,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
     sidepanels->addAction(m_dockDialogTimers->toggleViewAction());
     sidepanels->addAction(m_dockDialogAsync->toggleViewAction());
+    sidepanels->addAction(m_dockDialogRemoteEdits->toggleViewAction());
     windowMenu->addSeparator();
     windowMenu->addAction(showStatusBarAct);
     windowMenu->addAction(showScrollBarsAct);
@@ -1417,10 +1443,6 @@ void MainWindow::setupMenuBar()
     pathMachineMenu->addAction(releaseAllPathsAct);
     settingsMenu->addSeparator();
     settingsMenu->addAction(preferencesAct);
-
-    remoteEditsMenu = settingsMenu->addMenu(QIcon::fromTheme("accessories-text-editor"),
-                                            tr("Remote &Edits"));
-    connect(remoteEditsMenu, &QMenu::aboutToShow, this, &MainWindow::rebuildRemoteEditsMenu);
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(newcomerGuideAct);
@@ -1790,85 +1812,6 @@ bool MainWindow::eventFilter(QObject *const obj, QEvent *const event)
         }
     }
     return QObject::eventFilter(obj, event);
-}
-
-void MainWindow::rebuildRemoteEditsMenu()
-{
-    // QMenu::clear() does not delete the submenus it owned, so any lambda below
-    // that captured a session must not outlive them -- capture only the id and
-    // look the session back up when the action actually fires instead.
-    for (QMenu *const m : remoteEditsMenu->findChildren<QMenu *>(Qt::FindDirectChildrenOnly)) {
-        m->deleteLater();
-    }
-    remoteEditsMenu->clear();
-
-    const auto &sessions = m_remoteEdit->getSessions();
-    const auto pending = m_remoteEdit->pendingDrafts();
-
-    if (sessions.empty() && pending.isEmpty()) {
-        QAction *const none = remoteEditsMenu->addAction(tr("(no open edits)"));
-        none->setEnabled(false);
-        return;
-    }
-
-    for (const auto &[id, session] : sessions) {
-        const QString label = session->isDraftRecovery()
-                                  ? tr("%1 (recovered draft)").arg(session->getTitle())
-                                  : tr("%1 [%2%3]")
-                                        .arg(session->getTitle())
-                                        .arg(session->getEditorTypeName())
-                                        .arg(session->isConnected() ? "" : ", disconnected");
-        QMenu *const entryMenu = remoteEditsMenu->addMenu(label);
-        const RemoteInternalId internalId = id;
-        const bool isDraftRecovery = session->isDraftRecovery();
-
-        QAction *const focusAct = entryMenu->addAction(tr("Focus"));
-        connect(focusAct, &QAction::triggered, this, [this, internalId]() {
-            const auto &sess = m_remoteEdit->getSessions();
-            if (const auto it = sess.find(internalId); it != sess.end()) {
-                it->second->focus();
-            }
-        });
-
-        QAction *const cancelAct = entryMenu->addAction(isDraftRecovery ? tr("Close")
-                                                                        : tr("Cancel"));
-        connect(cancelAct, &QAction::triggered, this, [this, internalId]() {
-            const auto &sess = m_remoteEdit->getSessions();
-            if (const auto it = sess.find(internalId); it != sess.end()) {
-                m_remoteEdit->cancelEdit(it->second.get());
-            }
-        });
-
-        if (isDraftRecovery) {
-            QAction *const discardAct = entryMenu->addAction(tr("Discard"));
-            connect(discardAct, &QAction::triggered, this, [this, internalId]() {
-                const auto &sess = m_remoteEdit->getSessions();
-                if (const auto it = sess.find(internalId); it != sess.end()) {
-                    m_remoteEdit->discardDraft(it->second.get());
-                }
-            });
-        }
-    }
-
-    if (!pending.isEmpty()) {
-        if (!sessions.empty()) {
-            remoteEditsMenu->addSeparator();
-        }
-        for (const auto &draft : pending) {
-            QMenu *const entryMenu = remoteEditsMenu->addMenu(
-                tr("%1 (recovered draft)").arg(draft.title));
-
-            QAction *const recoverAct = entryMenu->addAction(tr("Recover"));
-            connect(recoverAct, &QAction::triggered, this, [this, draft]() {
-                m_remoteEdit->recoverDraft(draft);
-            });
-
-            QAction *const discardAct = entryMenu->addAction(tr("Discard"));
-            connect(discardAct, &QAction::triggered, this, [this, draft]() {
-                m_remoteEdit->discardDraft(draft);
-            });
-        }
-    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *const event)

@@ -22,7 +22,7 @@
 RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
                                      QString title,
-                                     QString draftFileName,
+                                     QString draftKey,
                                      const bool draftRecovery,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
@@ -31,7 +31,7 @@ RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
     , m_internalId(internalId)
     , m_sessionId(sessionId)
     , m_draftRecovery(draftRecovery)
-    , m_draftFileName(std::move(draftFileName))
+    , m_draftKey(std::move(draftKey))
 {
     assert(m_manager != nullptr);
 }
@@ -53,27 +53,18 @@ void RemoteEditSession::discard()
 
 QString RemoteEditSession::getFullDraftPath() const
 {
-    if (m_draftFileName.isEmpty()) {
-        return QString();
-    }
-    return QDir(RemoteEdit::getDraftDirectory()).absoluteFilePath(m_draftFileName);
+    return m_manager->getDraftStore().filePath(m_draftKey);
 }
 
 RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId internalId,
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
-                                                     const QString &draftFileName,
+                                                     const QString &draftKey,
                                                      const bool draftRecovery,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftFileName, draftRecovery, parent)
-    , m_widget(
-          new RemoteEditWidget(isEditSession(),
-                               draftRecovery,
-                               title,
-                               body,
-                               checked_dynamic_downcast<QWidget *>(parent->parent()) // MainWindow
-                               ))
+    : RemoteEditSession(internalId, sessionId, title, draftKey, draftRecovery, parent)
+    , m_widget(new RemoteEditWidget(isEditSession(), draftRecovery, title, body, nullptr))
 {
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
@@ -106,18 +97,44 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
     qDebug() << "Destructed RemoteEditInternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
     if (auto *const p = m_widget.get()) {
-        // closeSilently() (rather than close()) avoids re-entering closeEvent()'s
-        // "discard changes?" prompt: the manager is already tearing this session
-        // down for a reason unrelated to what the user clicked in this widget.
         p->closeSilently();
     }
+}
+
+RemoteEditWidget *RemoteEditInternalSession::getWidget() const
+{
+    return m_widget.data();
 }
 
 void RemoteEditInternalSession::focus()
 {
     if (auto *const p = m_widget.get()) {
-        p->raise();
-        p->activateWindow();
+        p->focus();
+    }
+}
+
+void RemoteEditInternalSession::offerDraft(const RemoteEditDraftInfo &draft)
+{
+    auto *const p = m_widget.get();
+    if (p == nullptr) {
+        return;
+    }
+    const QString key = draft.key;
+    p->offerRecoveredDraft(
+        draft.lastModified,
+        [this, key]() {
+            if (auto *const w = m_widget.get()) {
+                w->replaceText(m_manager->readDraft(key));
+            }
+            m_manager->deleteDraft(key);
+        },
+        [this, key]() { m_manager->deleteDraft(key); });
+}
+
+void RemoteEditInternalSession::virt_onDisconnected()
+{
+    if (auto *const p = m_widget.get()) {
+        p->showDisconnected();
     }
 }
 
@@ -144,16 +161,16 @@ void RemoteEditInternalSession::slot_onTextModified(const QString &content)
 
 void RemoteEditInternalSession::slot_performAutoSave()
 {
-    if (m_draftFileName.isEmpty()) {
+    if (m_draftKey.isEmpty()) {
         return;
     }
 
-    if (RemoteEdit::saveDraftAtomic(m_draftFileName, m_content)) {
-        qDebug() << "Auto-save successful for" << m_draftFileName;
+    if (m_manager->getDraftStore().save(m_draftKey, m_content)) {
+        qDebug() << "Auto-save successful for" << m_draftKey;
         m_debounceTimer->stop();
         m_throttleTimer->stop();
     } else {
-        qWarning() << "Auto-save failed for" << m_draftFileName;
+        qWarning() << "Auto-save failed for" << m_draftKey;
     }
 }
 
@@ -162,9 +179,9 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
-                                                     const QString &draftFileName,
+                                                     const QString &draftKey,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, title, draftFileName, /*draftRecovery=*/false, parent)
+    : RemoteEditSession(internalId, sessionId, title, draftKey, /*draftRecovery=*/false, parent)
 {
     m_process = new RemoteEditProcess(isEditSession(), title, body, getFullDraftPath(), this);
     const auto proc = m_process.data();

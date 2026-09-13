@@ -67,6 +67,12 @@ NODISCARD const char *getPlatformEditor()
 ConstString SETTINGS_ORGANIZATION = "MUME";
 ConstString OLD_SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
+
+std::unique_ptr<QSettings> makeAppSettings()
+{
+    return std::make_unique<QSettings>(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+}
+
 ConstString SETTINGS_FIRST_TIME_KEY = "General/Run first time";
 
 class NODISCARD Settings final

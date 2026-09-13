@@ -4,12 +4,15 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "../global/utils.h"
 #include "../proxy/GmcpMessage.h"
 #include "../proxy/TaggedBytes.h"
+#include "RemoteEditDraftStore.h"
 #include "remoteeditsession.h"
 
 #include <climits>
 #include <map>
+#include <optional>
 #include <memory>
 
 #include <QByteArray>
@@ -29,36 +32,28 @@ private:
     friend class RemoteEditSession;
 
 public:
-    struct DraftInfo
-    {
-        QString fileName;
-        QString title;
-        RemoteSessionId sessionId;
-        QDateTime lastModified;
-    };
+    using DraftInfo = RemoteEditDraftInfo;
 
 private:
+    std::unique_ptr<RemoteEditDraftStore> m_store;
     std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> m_sessions;
     uint32_t m_greatestUsedId = 0;
 
 public:
     explicit RemoteEdit(QObject *parent);
-    ~RemoteEdit() final = default;
+    ~RemoteEdit() final;
 
 public:
     void onDisconnected();
-    /// Called once at startup: auto-opens every persisted draft not already
-    /// backed by an active session as a live recovery window.
-    void recoverDrafts();
+    /// One line in the game output if unsent drafts exist; called when a
+    /// connection comes up, since nothing can hear it before then.
+    void announcePendingDrafts() const;
     void slot_parseGmcpInput(const GmcpMessage &msg);
 
-    static QString getDraftDirectory();
-    static QString provisionDraftFile(RemoteSessionId sessionId,
-                                      const QString &title,
-                                      const QString &content);
-    static bool saveDraftAtomic(const QString &fileName, const QString &content);
-    static void deleteDraft(const QString &fileName);
-    static QList<DraftInfo> discoverDrafts();
+    NODISCARD RemoteEditDraftStore &getDraftStore() { return deref(m_store); }
+    NODISCARD QString readDraft(const QString &key) const { return deref(m_store).read(key); }
+    /// Removes the draft and tells listeners.
+    void deleteDraft(const QString &key);
 
 public:
     /// Abort a session: sends a GMCP cancel if it's a live connected edit,
@@ -72,10 +67,11 @@ public:
     void discardDraft(const RemoteEditSession *session);
     /// Same, for a pending draft with no in-memory session backing it.
     void discardDraft(const DraftInfo &draft);
-    /// Reopens a persisted draft (read from disk) as a live
-    /// RemoteEditInternalSession window, regardless of the
-    /// internalRemoteEditor setting.
-    void recoverDraft(const DraftInfo &draft);
+    /// Opens a pending draft as a read-only page (always internal, whatever
+    /// the internalRemoteEditor setting). MUME no longer has the edit open,
+    /// so the only way to send it is to re-run the edit command and accept
+    /// the restore offer that a matching title then triggers.
+    void viewDraft(const DraftInfo &draft);
     /// Called once from MainWindow::closeEvent(): synchronously tears down
     /// every session (this is what actually stops any live external editor
     /// process and closes any open widget) without sending any GMCP message
@@ -83,9 +79,10 @@ public:
     /// recoverable draft across a restart.
     void shutdown();
 
-    /// Sessions/drafts not backed by an active session, for `_edits`/the
-    /// "Remote Edits" menu.
+    /// Drafts on disk not backed by an active session.
     NODISCARD QList<DraftInfo> pendingDrafts() const;
+    /// Most recently modified pending draft with this title, if any.
+    NODISCARD std::optional<DraftInfo> findPendingDraft(const QString &title) const;
     NODISCARD const std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> &getSessions()
         const
     {
@@ -104,6 +101,10 @@ private:
         return m_greatestUsedId == UINT_MAX ? 0 : m_greatestUsedId + 1;
     }
     void addSession(const RemoteSessionId, const QString &, const QString &);
+    void createSession(RemoteSessionId sessionId,
+                       const QString &title,
+                       const QString &body,
+                       const std::optional<DraftInfo> &offeredDraft);
     void removeSession(const RemoteEditSession &session);
 
 private:
@@ -111,14 +112,12 @@ private:
     void sendToMume(const RemoteEditSession &session);
     void trySaveLocally(const RemoteEditSession &session);
 
-    static QString encodeMetadata(RemoteSessionId sessionId, const QString &title);
-    static bool decodeMetadata(const QString &fileName, RemoteSessionId &sessionId, QString &title);
-
 signals:
     void sig_sendGmcp(const GmcpMessage &msg);
-    /// Emitted whenever a session is added or removed, so UI (the "Remote
-    /// Edits" menu) can stay current without polling.
+    /// Emitted whenever a session is added or removed.
     void sig_sessionsChanged();
+    /// Emitted whenever a draft file is created or deleted.
+    void sig_draftsChanged();
 
 public slots:
     void slot_remoteView(const QString &, const QString &);

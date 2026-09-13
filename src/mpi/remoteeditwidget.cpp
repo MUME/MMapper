@@ -10,7 +10,6 @@
 #include "../global/Consts.h"
 #include "../global/TabUtils.h"
 #include "../global/TextUtils.h"
-#include "../global/window_utils.h"
 #include "../viewers/AnsiViewWindow.h"
 #include "RemoteEditDocumentOps.h"
 #include "RemoteEditHighlighter.h"
@@ -26,7 +25,10 @@
 using namespace char_consts;
 
 #include <QAction>
+#include <QFrame>
+#include <QLabel>
 #include <QMenu>
+#include <QPushButton>
 #include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
@@ -208,18 +210,13 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
                                    QString title,
                                    QString body,
                                    QWidget *const parent)
-    : QDialog(parent)
+    : QWidget(parent)
     , m_editSession(editSession)
     , m_draftRecovery(draftRecovery)
     , m_title(std::move(title))
     , m_body(std::move(body))
+    , m_lastNotifiedText(m_body)
 {
-    setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint
-                   | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
-    mmqt::setWindowTitle2(*this,
-                          QString("MMapper %1").arg(m_editSession ? "Editor" : "Viewer"),
-                          m_title);
-
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
@@ -235,26 +232,83 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     m_findReplaceWidget.reset(createFindReplaceWidget());
     mainLayout->addWidget(m_findReplaceWidget.get(), 0);
 
+    m_banner = new QFrame(this);
+    m_banner->setFrameShape(QFrame::StyledPanel);
+    m_banner->setAutoFillBackground(true);
+    m_banner->setBackgroundRole(QPalette::ToolTipBase);
+    m_banner->setForegroundRole(QPalette::ToolTipText);
+    auto *const bannerLayout = new QHBoxLayout(m_banner);
+    bannerLayout->setContentsMargins(8, 4, 8, 4);
+    m_bannerLabel = new QLabel(m_banner);
+    m_bannerLabel->setWordWrap(true);
+    bannerLayout->addWidget(m_bannerLabel, 1);
+    m_banner->hide();
+    mainLayout->addWidget(m_banner, 0);
+
     m_textEdit.reset(createTextEdit());
     mainLayout->addWidget(m_textEdit.get(), 1);
+    setFocusProxy(m_textEdit.get());
 
     m_statusBar = new QStatusBar(this);
-    setAttribute(Qt::WA_DeleteOnClose);
+    m_statusBar->setSizeGripEnabled(false);
     mainLayout->addWidget(m_statusBar);
 
     addStatusBar(m_textEdit.get());
     addFileMenu(m_textEdit.get());
 
-    // REVISIT: Restore geometry from config?
-    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
-                                    Qt::AlignCenter,
-                                    size(),
-                                    qApp->primaryScreen()->availableGeometry()));
+    if (m_draftRecovery) {
+        showBanner(tr("Unsent draft (read-only). MUME no longer has this edit open: re-run the "
+                      "edit command in MUME and choose \"Restore\" to continue it, or copy the "
+                      "text out."),
+                   {{tr("Discard draft"), [this]() { slot_discardDraft(); }}});
+    }
 
-    show();
-    raise();
-    activateWindow();
-    m_textEdit->setFocus(); // REVISIT: can this be done in the creation function?
+    // This page shares a top-level window with MainWindow (and with every
+    // other page), whose actions use overlapping keys (Ctrl+S, Ctrl+Q,
+    // Ctrl+Z, ...). Qt fires nothing for an ambiguous QAction shortcut, so:
+    // scope this page's actions to itself, and claim their keys ahead of the
+    // shortcut map (see eventFilter) while focus is inside the page.
+    for (QAction *const action : findChildren<QAction *>()) {
+        action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    }
+    for (QWidget *const child : findChildren<QWidget *>()) {
+        child->installEventFilter(this);
+    }
+}
+
+QAction *RemoteEditWidget::findActionForKey(const QKeyEvent &key) const
+{
+    const QKeySequence seq(key.keyCombination());
+    if (seq.isEmpty() || key.modifiers() == Qt::NoModifier) {
+        return nullptr;
+    }
+    for (QAction *const action : findChildren<QAction *>()) {
+        if (action->isEnabled() && action->shortcuts().contains(seq)) {
+            return action;
+        }
+    }
+    return nullptr;
+}
+
+bool RemoteEditWidget::eventFilter(QObject *const obj, QEvent *const event)
+{
+    switch (event->type()) {
+    case QEvent::ShortcutOverride:
+        if (findActionForKey(*checked_dynamic_downcast<QKeyEvent *>(event)) != nullptr) {
+            event->accept();
+            return false;
+        }
+        break;
+    case QEvent::KeyPress:
+        if (QAction *const action = findActionForKey(*checked_dynamic_downcast<QKeyEvent *>(event))) {
+            action->trigger();
+            return true;
+        }
+        break;
+    default:
+        break;
+    }
+    return QWidget::eventFilter(obj, event);
 }
 
 auto RemoteEditWidget::createTextEdit() -> Editor *
@@ -262,14 +316,10 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
     QFont font;
     font.fromString(getConfig().integratedClient.font);
     const QFontMetrics fm(font);
-    const int x = fm.averageCharWidth() * (80 + 1);
-    const int y = fm.lineSpacing() * (24 + 1);
 
     const auto pTextEdit = new Editor(m_body, this);
     pTextEdit->setFont(font);
     pTextEdit->setReadOnly(!m_editSession);
-    pTextEdit->setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
-                                    y + contentsMargins().top() + contentsMargins().bottom()));
     pTextEdit->setLineWrapMode(Editor::LineWrapMode::NoWrap);
     pTextEdit->setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
     pTextEdit->setTabStopDistance(fm.horizontalAdvance(" ") * 8); // A tab is 8 spaces wide
@@ -339,9 +389,6 @@ void RemoteEditWidget::addFileMenu(const Editor *const pTextEdit)
         addSave(fileMenu);
     }
     addExit(fileMenu);
-    if (m_draftRecovery) {
-        addDiscard(fileMenu);
-    }
     addEditAndViewMenus(pTextEdit);
 }
 
@@ -535,6 +582,7 @@ void RemoteEditWidget::addSave(QMenu *const fileMenu)
     saveAction->setStatusTip(tr("Submit changes to MUME"));
     fileMenu->addAction(saveAction);
     connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::slot_finishEdit);
+    m_saveAction = saveAction;
 }
 
 void RemoteEditWidget::addExit(QMenu *const fileMenu)
@@ -551,21 +599,10 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
                                             tr("E&xit"),
                                             this);
     quitAction->setShortcut(tr("Ctrl+Q"));
-    quitAction->setStatusTip(m_draftRecovery
-                                 ? tr("Close and keep the draft for later")
-                                 : tr("Cancel and do not submit changes to MUME"));
+    quitAction->setStatusTip(m_draftRecovery ? tr("Close this page (the draft is kept)")
+                                             : tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
     connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::slot_cancelEdit);
-}
-
-void RemoteEditWidget::addDiscard(QMenu *const fileMenu)
-{
-    QAction *const discardAction = new QAction(QIcon::fromTheme("edit-delete"),
-                                               tr("&Discard Draft"),
-                                               this);
-    discardAction->setStatusTip(tr("Permanently delete this recovered draft"));
-    fileMenu->addAction(discardAction);
-    connect(discardAction, &QAction::triggered, this, &RemoteEditWidget::slot_discardDraft);
 }
 
 void RemoteEditWidget::addToMenu(QMenu *const menu, const EditViewCommand &cmd)
@@ -619,8 +656,10 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
             &RemoteEditWidget::slot_updateStatusBar);
     connect(pTextEdit, &QPlainTextEdit::textChanged, this, &RemoteEditWidget::slot_updateStatusBar);
     connect(pTextEdit, &QPlainTextEdit::textChanged, this, [this, pTextEdit]() {
-        if (m_editSession) {
-            emit sig_textModified(pTextEdit->toPlainText());
+        // textChanged also fires for highlighter passes, so only report real changes.
+        if (QString text = pTextEdit->toPlainText(); m_editSession && text != m_lastNotifiedText) {
+            m_lastNotifiedText = std::move(text);
+            emit sig_textModified(m_lastNotifiedText);
         }
     });
 }
@@ -833,25 +872,84 @@ QSize RemoteEditWidget::minimumSizeHint() const
 
 QSize RemoteEditWidget::sizeHint() const
 {
-    return QSize{640, 480};
+    const QFontMetrics fm(m_textEdit->font());
+    return QSize{fm.averageCharWidth() * (80 + 1), fm.lineSpacing() * (24 + 1)};
 }
 
-void RemoteEditWidget::closeEvent(QCloseEvent *event)
+void RemoteEditWidget::requestClose()
 {
     if (m_submitted) {
-        event->accept();
         return;
     }
 
-    if (m_editSession && slot_contentsChanged()) {
-        // Ask first; if the user discards, slot_cancelEdit() closes again.
-        event->ignore();
+    // Only a connected live edit loses anything on close; a disconnected one
+    // is auto-saved as a draft, and a draft page is read-only.
+    if (m_editSession && m_connected && isModified()) {
         promptDiscardChanges();
         return;
     }
 
     slot_cancelEdit();
-    event->accept();
+}
+
+void RemoteEditWidget::showBanner(const QString &text,
+                                  const std::vector<std::pair<QString, std::function<void()>>> &buttons)
+{
+    for (QPushButton *const old : m_banner->findChildren<QPushButton *>()) {
+        delete old;
+    }
+    m_bannerLabel->setText(text);
+    auto *const layout = checked_dynamic_downcast<QHBoxLayout *>(m_banner->layout());
+    for (const auto &[label, fn] : buttons) {
+        auto *const button = new QPushButton(label, m_banner);
+        button->setAutoDefault(false);
+        connect(button, &QPushButton::clicked, this, fn);
+        layout->addWidget(button, 0);
+    }
+    m_banner->show();
+}
+
+void RemoteEditWidget::hideBanner()
+{
+    m_banner->hide();
+}
+
+void RemoteEditWidget::offerRecoveredDraft(const QDateTime &lastModified,
+                                           std::function<void()> restore,
+                                           std::function<void()> discard)
+{
+    showBanner(tr("An unsent draft of this text from %1 was recovered.")
+                   .arg(lastModified.toString()),
+               {{tr("Restore draft"),
+                 [this, doRestore = std::move(restore)]() {
+                     doRestore();
+                     hideBanner();
+                 }},
+                {tr("Discard draft"),
+                 [this, doDiscard = std::move(discard)]() {
+                     doDiscard();
+                     hideBanner();
+                 }},
+                {tr("Keep for later"), [this]() { hideBanner(); }}});
+}
+
+void RemoteEditWidget::showDisconnected()
+{
+    m_connected = false;
+    if (m_saveAction != nullptr) {
+        m_saveAction->setEnabled(false);
+    }
+    if (!m_editSession) {
+        return;
+    }
+    showBanner(tr("Connection to MUME lost. Your changes are being saved as a draft; re-run the "
+                  "edit command once reconnected to restore them."),
+               {});
+}
+
+void RemoteEditWidget::replaceText(const QString &text)
+{
+    m_textEdit->replaceAll(text);
 }
 
 void RemoteEditWidget::promptDiscardChanges()
@@ -877,11 +975,11 @@ void RemoteEditWidget::promptDiscardChanges()
 /* Qt virtual */
 void RemoteEditWidget::showEvent(QShowEvent *event)
 {
-    QDialog::showEvent(event);
+    QWidget::showEvent(event);
     slot_updateStatusBar();
 }
 
-bool RemoteEditWidget::slot_contentsChanged() const
+bool RemoteEditWidget::isModified() const
 {
     const QString text = m_textEdit->toPlainText();
     return QString::compare(text, m_body, Qt::CaseSensitive) != 0;
@@ -891,25 +989,29 @@ void RemoteEditWidget::slot_cancelEdit()
 {
     m_submitted = true;
     emit sig_cancel();
-    close();
+    closeSilently();
 }
 
 void RemoteEditWidget::slot_finishEdit()
 {
     m_submitted = true;
     emit sig_save(m_textEdit->toPlainText());
-    close();
+    closeSilently();
 }
 
 void RemoteEditWidget::slot_discardDraft()
 {
     m_submitted = true;
     emit sig_discard();
-    close();
+    closeSilently();
 }
 
 void RemoteEditWidget::closeSilently()
 {
+    // deleteLater() rather than delete: this is frequently reached from
+    // inside one of this widget's own slots (via the session the signal
+    // reached), so a synchronous delete would destroy the emitter mid-signal.
     m_submitted = true;
-    close();
+    hide();
+    deleteLater();
 }

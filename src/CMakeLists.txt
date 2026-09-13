@@ -428,6 +428,10 @@ set(mmapper_SRCS
     mpi/remoteedit.h
     mpi/remoteeditsession.cpp
     mpi/remoteeditsession.h
+    mpi/RemoteEditDraftStore.cpp
+    mpi/RemoteEditDraftStore.h
+    mpi/RemoteEditPanel.cpp
+    mpi/RemoteEditPanel.h
     mpi/RemoteEditDocumentOps.cpp
     mpi/RemoteEditDocumentOps.h
     mpi/RemoteEditHighlighter.cpp
