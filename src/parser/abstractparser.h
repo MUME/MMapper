@@ -414,6 +414,7 @@ private:
     void doBackCommand();
     void doConfig(StringView view);
     void doTasksCommand(StringView args);
+    void doEditsCommand(StringView args);
 
     NODISCARD bool isConnected();
     void doConnectToHost();

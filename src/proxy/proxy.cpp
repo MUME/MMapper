@@ -19,9 +19,6 @@
 #include "../global/io.h"
 #include "../group/mmapper2group.h"
 #include "../map/parseevent.h"
-#include "../mpi/mpifilter.h"
-#include "../mpi/remoteedit.h"
-#include "../mpi/remoteeditwidget.h"
 #include "../observer/gameobserver.h"
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
@@ -205,12 +202,7 @@ Proxy::~Proxy()
         getUserSocket().disconnectFromHost();
     }
 
-    {
-        auto &remoteEdit = deref(m_remoteEdit);
-        remoteEdit.onDisconnected();
-        remoteEdit.disconnect(); // disconnect all signals
-        remoteEdit.deleteLater();
-    }
+    getGameObserver().observeDisconnected();
 
     destroyPipelineObjects();
 }
@@ -234,11 +226,7 @@ void Proxy::allocPipelineObjects()
 
     // Two main paths:
     // UserSocket -> UserTelnet -> UserTelnetFilter -> (User)Parser
-    // MudSocket -> MudTelnet -> MudTelnetFilter -> MpiFilter -> { RemoteEdit or (Mud)Parser }
-    //
-    // Technically MudTelnetFilter 100% required for MpiFilter, because its protocol
-    // is based on newlines, and it's sensitive to the difference between "\n" and "\r\n",
-    // but UserTelnetFilter is just a buffer for Parser.
+    // MudSocket -> MudTelnet -> MudTelnetFilter -> (Mud)Parser
     //
     // TODO: refactor the Parser into UserParser and MudParser.
     // The distinction is already partly in place for AbstractParser (User)
@@ -249,9 +237,6 @@ void Proxy::allocPipelineObjects()
 
     allocUserTelnet();
     allocMudTelnet();
-
-    allocMpiFilter();
-    allocRemoteEdit();
 
     allocParser();
 
@@ -314,7 +299,6 @@ void Proxy::allocMudSocket()
         NODISCARD Proxy &getProxy() { return m_proxy; }
         NODISCARD MudTelnet &getMudTelnet() { return getProxy().getMudTelnet(); }
         NODISCARD MumeXmlParser &getMudParser() { return getProxy().getMudParser(); }
-        NODISCARD RemoteEdit &getRemoteEdit() { return getProxy().getRemoteEdit(); }
         NODISCARD UserTelnet &getUserTelnet() { return getProxy().getUserTelnet(); }
         NODISCARD Mmapper2Group &getGroupManager() { return getProxy().getGroupManager(); }
         NODISCARD ProxyHost &getHost() { return getProxy().getHost(); }
@@ -344,7 +328,7 @@ void Proxy::allocMudSocket()
 
         void virt_onSocketStatus(const QString &msg) final
         {
-            getProxy().sendStatusToUser(msg.toUtf8().toStdString());
+            getProxy().sendStatusToUser(mmqt::toStdStringUtf8(msg));
         }
 
         void virt_onDisconnected() final
@@ -354,7 +338,6 @@ void Proxy::allocMudSocket()
             getMudParser().onReset();
             getGroupManager().onReset();
             getProxy().mudTerminatedConnection();
-            getRemoteEdit().onDisconnected();
         }
 
         void virt_onProcessMudStream(const TelnetIacBytes &bytes) final
@@ -493,15 +476,14 @@ void Proxy::allocMudTelnet()
 
         void virt_onRelayGmcpFromMudToUser(const GmcpMessage &msg) final
         {
-            if (msg.isMumeClientView() || msg.isMumeClientEdit() || msg.isMumeClientCancelEdit()
-                || msg.isMumeClientError() || msg.isMumeClientWrite() || msg.isMumeClientXml()) {
-                // this is a private message between MUME and mmapper.
-                qWarning() << "MUME.Client message was almost sent to the user.";
-                return;
-            }
+            const bool isMumeClient = msg.isMumeClientView() || msg.isMumeClientEdit()
+                                      || msg.isMumeClientCancelEdit() || msg.isMumeClientError()
+                                      || msg.isMumeClientWrite() || msg.isMumeClientXml();
 
-            // forwarded (to user)
-            getUserTelnet().onGmcpToUser(msg);
+            if (!isMumeClient) {
+                // forwarded (to user)
+                getUserTelnet().onGmcpToUser(msg);
+            }
 
             // REVISIT: should parser be first?
             getGroupManager().slot_parseGmcpInput(msg);
@@ -530,16 +512,6 @@ void Proxy::allocMudTelnet()
             }
         }
 
-        void virt_onMumeClientView(const QString &title, const QString &body) final
-        {
-            getProxy().getMpiFilterFromMud().receiveMpiView(title, body);
-        }
-        void virt_onMumeClientEdit(const RemoteSessionId id,
-                                   const QString &title,
-                                   const QString &body) final
-        {
-            getProxy().getMpiFilterFromMud().receiveMpiEdit(id, title, body);
-        }
         void virt_onMumeClientError(const QString &errmsg) final
         {
             qInfo() << errmsg;
@@ -769,107 +741,6 @@ void Proxy::allocParser()
                      });
 }
 
-void Proxy::allocMpiFilter()
-{
-    struct NODISCARD LocalMpiFilterOutputs final : public MpiFilterOutputs
-    {
-    private:
-        Proxy &m_proxy;
-
-    public:
-        explicit LocalMpiFilterOutputs(Proxy &proxy)
-            : m_proxy{proxy}
-        {}
-
-    private:
-        NODISCARD Proxy &getProxy() { return m_proxy; }
-        NODISCARD MumeXmlParser &getMudParser() { return getProxy().getMudParser(); }
-        NODISCARD RemoteEdit &getRemoteEdit() { return getProxy().getRemoteEdit(); }
-
-    private:
-        void notifyUser(const std::string_view article,
-                        const std::string_view what,
-                        const QString &title)
-        {
-            const auto color = whiteOnCyan;
-            auto aos = getProxy().getSendToUserAnsiOstream();
-            if (g_prefixMessagesToUser) {
-                aos.writeWithColor(color.withBold(), "Info");
-                aos.writeWithColor(color, ": ");
-            }
-            aos.writeWithColor(color, "MMapper is opening ");
-            aos.writeWithColor(color, article);
-            aos.writeWithColor(color, " ");
-            aos.writeWithColor(color.withBold(), what);
-            aos.writeWithColor(color, " window with title \"");
-            aos.writeWithColor(color.withBold(), mmqt::toStdStringUtf8(title));
-            aos.writeWithColor(color, "\"");
-            aos.write("\n");
-        }
-
-    private:
-        void virt_onEditMessage(const RemoteSessionId id,
-                                const QString &title,
-                                const QString &body) final
-        {
-            notifyUser("an", "Editor", title);
-            getRemoteEdit().slot_remoteEdit(id, title, body);
-        }
-        void virt_onViewMessage(const QString &title, const QString &body) final
-        {
-            notifyUser("a", "Viewer", title);
-            getRemoteEdit().slot_remoteView(title, body);
-        }
-        void virt_onParseNewMudInput(const TelnetData &data) final
-        {
-            getMudParser().slot_parseNewMudInput(data);
-        }
-    };
-
-    auto &pipe = getPipeline();
-    auto &out = pipe.outputs.mud.mpiFilterOutputs = std::make_unique<LocalMpiFilterOutputs>(*this);
-    pipe.mud.mpiFilterFromMud = std::make_unique<MpiFilter>(deref(out));
-}
-
-void Proxy::allocRemoteEdit()
-{
-    // Caution: RemoteEdit outlives the proxy, since it manages windows.
-    m_remoteEdit = mmqt::makeQPointer<RemoteEdit>(&m_host.asQObject());
-
-    struct NODISCARD LocalMpiFilterToMud final : public MpiFilterToMud
-    {
-    private:
-        Proxy &m_proxy;
-
-    public:
-        explicit LocalMpiFilterToMud(Proxy &proxy)
-            : m_proxy{proxy}
-        {}
-
-    private:
-        void virt_submitGmcp(const GmcpMessage &gmcpMessage) final
-        {
-            m_proxy.getMudTelnet().onSubmitGmcpMumeClient(gmcpMessage);
-        }
-    };
-
-    auto &pipe = getPipeline();
-    pipe.mud.mpiFilterToMud = std::make_unique<LocalMpiFilterToMud>(*this);
-
-    auto &remoteEdit = deref(m_remoteEdit);
-    QObject::connect(&remoteEdit,
-                     &RemoteEdit::sig_remoteEditCancel,
-                     this,
-                     [this](const RemoteSessionId id) { getMpiFilterToMud().cancelRemoteEdit(id); });
-
-    QObject::connect(&remoteEdit,
-                     &RemoteEdit::sig_remoteEditSave,
-                     this,
-                     [this](const RemoteSessionId id, const Latin1Bytes &content) {
-                         getMpiFilterToMud().saveRemoteEdit(id, content);
-                     });
-}
-
 void Proxy::init()
 {
     auto initMisc = [this]() {
@@ -965,6 +836,7 @@ void Proxy::mudTerminatedConnection()
     getUserTelnet().onRelayEchoMode(true);
 
     log("Mud terminated connection ...");
+    getGameObserver().observeDisconnected();
 
     sendNewlineToUser();
     sendStatusToUser("MUME closed the connection.");
@@ -1197,7 +1069,7 @@ void Proxy::log(const QString &msg)
     getHost().log("Proxy", msg);
 }
 
-RemoteEdit &Proxy::getRemoteEdit()
+void Proxy::slot_sendGmcp(const GmcpMessage &msg)
 {
-    return deref(m_remoteEdit);
+    getMudTelnet().onSubmitGmcpMumeClient(msg);
 }

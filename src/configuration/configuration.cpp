@@ -67,6 +67,12 @@ NODISCARD const char *getPlatformEditor()
 ConstString SETTINGS_ORGANIZATION = "MUME";
 ConstString OLD_SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
+
+std::unique_ptr<QSettings> makeAppSettings()
+{
+    return std::make_unique<QSettings>(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+}
+
 ConstString SETTINGS_FIRST_TIME_KEY = "General/Run first time";
 
 class NODISCARD Settings final
@@ -301,6 +307,7 @@ ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size
 ConstString KEY_THEME = "Theme";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
+ConstString KEY_EDITOR_DIRECTORY = "Editor directory";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
 ConstString KEY_WEATHER_ATMOSPHERE_INTENSITY = "weather.atmosphereIntensity";
 ConstString KEY_WEATHER_PRECIPITATION_INTENSITY = "weather.precipitationIntensity";
@@ -599,6 +606,7 @@ void Configuration::reset()
 
 ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
 ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
+ConstString DEFAULT_EDITOR_SUBDIR = "/Editor";
 ConstString DEFAULT_RESOURCES_SUBDIR = "/Resources";
 
 NODISCARD static QString getDefaultDirectory()
@@ -770,6 +778,11 @@ void Configuration::MumeClientProtocolSettings::read(const QSettings &conf)
     internalRemoteEditor = conf.value(KEY_USE_INTERNAL_EDITOR, true).toBool();
     externalRemoteEditorCommand = conf.value(KEY_EXTERNAL_EDITOR_COMMAND, getPlatformEditor())
                                       .toString();
+    editorDirectory = conf.value(KEY_EDITOR_DIRECTORY,
+                                 getDefaultDirectory()
+                                     .append(DEFAULT_MMAPPER_SUBDIR)
+                                     .append(DEFAULT_EDITOR_SUBDIR))
+                          .toString();
 }
 
 void Configuration::MumeNativeSettings::read(const QSettings &conf)
@@ -968,6 +981,7 @@ void Configuration::MumeClientProtocolSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_USE_INTERNAL_EDITOR, internalRemoteEditor);
     conf.setValue(KEY_EXTERNAL_EDITOR_COMMAND, externalRemoteEditorCommand);
+    conf.setValue(KEY_EDITOR_DIRECTORY, editorDirectory);
 }
 
 void Configuration::PathMachineSettings::write(QSettings &conf) const

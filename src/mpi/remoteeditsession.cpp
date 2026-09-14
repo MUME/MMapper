@@ -21,11 +21,17 @@
 
 RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
                                      const RemoteSessionId sessionId,
+                                     QString title,
+                                     QString draftKey,
+                                     const bool draftRecovery,
                                      RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
     , m_manager(remoteEdit)
+    , m_title(std::move(title))
     , m_internalId(internalId)
     , m_sessionId(sessionId)
+    , m_draftRecovery(draftRecovery)
+    , m_draftKey(std::move(draftKey))
 {
     assert(m_manager != nullptr);
 }
@@ -37,25 +43,53 @@ void RemoteEditSession::save()
 
 void RemoteEditSession::cancel()
 {
-    m_manager->cancel(this);
+    m_manager->cancelEdit(this);
+}
+
+void RemoteEditSession::discard()
+{
+    m_manager->discardDraft(this);
+}
+
+QString RemoteEditSession::getFullDraftPath() const
+{
+    return m_manager->getDraftStore().filePath(m_draftKey);
 }
 
 RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId internalId,
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const QString &draftKey,
+                                                     const bool draftRecovery,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, parent)
-    , m_widget(
-          new RemoteEditWidget(isEditSession(),
-                               title,
-                               body,
-                               checked_dynamic_downcast<QWidget *>(parent->parent()) // MainWindow
-                               ))
+    : RemoteEditSession(internalId, sessionId, title, draftKey, draftRecovery, parent)
+    , m_widget(new RemoteEditWidget(isEditSession(), draftRecovery, title, body, nullptr))
 {
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
     connect(widget, &RemoteEditWidget::sig_cancel, this, &RemoteEditSession::slot_onCancel);
+    connect(widget, &RemoteEditWidget::sig_discard, this, &RemoteEditSession::slot_onDiscard);
+    connect(widget,
+            &RemoteEditWidget::sig_textModified,
+            this,
+            &RemoteEditInternalSession::slot_onTextModified);
+
+    if (isEditSession()) {
+        m_debounceTimer = new QTimer(this);
+        m_debounceTimer->setSingleShot(true);
+        connect(m_debounceTimer,
+                &QTimer::timeout,
+                this,
+                &RemoteEditInternalSession::slot_performAutoSave);
+
+        m_throttleTimer = new QTimer(this);
+        m_throttleTimer->setSingleShot(true);
+        connect(m_throttleTimer,
+                &QTimer::timeout,
+                this,
+                &RemoteEditInternalSession::slot_performAutoSave);
+    }
 }
 
 RemoteEditInternalSession::~RemoteEditInternalSession()
@@ -63,7 +97,80 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
     qDebug() << "Destructed RemoteEditInternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
     if (auto *const p = m_widget.get()) {
-        p->close();
+        p->closeSilently();
+    }
+}
+
+RemoteEditWidget *RemoteEditInternalSession::getWidget() const
+{
+    return m_widget.data();
+}
+
+void RemoteEditInternalSession::focus()
+{
+    if (auto *const p = m_widget.get()) {
+        p->focus();
+    }
+}
+
+void RemoteEditInternalSession::offerDraft(const RemoteEditDraftInfo &draft)
+{
+    auto *const p = m_widget.get();
+    if (p == nullptr) {
+        return;
+    }
+    const QString key = draft.key;
+    p->offerRecoveredDraft(
+        draft.lastModified,
+        [this, key]() {
+            if (auto *const w = m_widget.get()) {
+                w->replaceText(m_manager->readDraft(key));
+            }
+            m_manager->deleteDraft(key);
+        },
+        [this, key]() { m_manager->deleteDraft(key); });
+}
+
+void RemoteEditInternalSession::virt_onDisconnected()
+{
+    if (auto *const p = m_widget.get()) {
+        p->showDisconnected();
+    }
+}
+
+void RemoteEditInternalSession::flushDraft()
+{
+    if ((m_debounceTimer != nullptr && m_debounceTimer->isActive())
+        || (m_throttleTimer != nullptr && m_throttleTimer->isActive())) {
+        slot_performAutoSave();
+    }
+}
+
+void RemoteEditInternalSession::slot_onTextModified(const QString &content)
+{
+    m_content = content;
+
+    // FR-3.2: 2000ms debounce
+    m_debounceTimer->start(2000);
+
+    // FR-3.3: 15000ms max throttle
+    if (!m_throttleTimer->isActive()) {
+        m_throttleTimer->start(15000);
+    }
+}
+
+void RemoteEditInternalSession::slot_performAutoSave()
+{
+    if (m_draftKey.isEmpty()) {
+        return;
+    }
+
+    if (m_manager->getDraftStore().save(m_draftKey, m_content)) {
+        qDebug() << "Auto-save successful for" << m_draftKey;
+        m_debounceTimer->stop();
+        m_throttleTimer->stop();
+    } else {
+        qWarning() << "Auto-save failed for" << m_draftKey;
     }
 }
 
@@ -72,10 +179,11 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const QString &draftKey,
                                                      RemoteEdit *const parent)
-    : RemoteEditSession(internalId, sessionId, parent)
-    , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
+    : RemoteEditSession(internalId, sessionId, title, draftKey, /*draftRecovery=*/false, parent)
 {
+    m_process = new RemoteEditProcess(isEditSession(), title, body, getFullDraftPath(), this);
     const auto proc = m_process.data();
     connect(proc, &RemoteEditProcess::sig_save, this, &RemoteEditExternalSession::slot_onSave);
     connect(proc, &RemoteEditProcess::sig_cancel, this, &RemoteEditExternalSession::slot_onCancel);
@@ -85,8 +193,12 @@ RemoteEditExternalSession::~RemoteEditExternalSession()
 {
     qDebug() << "Destructed RemoteEditExternalSession" << getInternalId().asUint32()
              << getSessionId().asInt32();
-    if (auto *const p = m_process.get()) {
-        p->deleteLater();
-    }
+    // m_process is a QObject child of `this`, so QObject's own destructor
+    // deletes it synchronously right after this body runs -- which in turn
+    // synchronously terminates the child process (RemoteEditProcess::~RemoteEditProcess()
+    // calls terminateSynchronously()). Deliberately not deleteLater(): that
+    // defers to the event loop, which never runs again if this destructor
+    // fires after QApplication::exec() has already returned (see
+    // RemoteEdit::shutdown()).
 }
 #endif
