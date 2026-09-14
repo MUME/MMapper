@@ -6,6 +6,7 @@
 
 #include "Charset.h"
 #include "Consts.h"
+#include "RAII.h"
 #include "tests.h"
 
 #include <clocale>
@@ -230,7 +231,8 @@ void testTrim()
 void testFormatFloatClassic()
 {
     const char *oldLocale = std::setlocale(LC_ALL, nullptr);
-    std::string savedLocale = oldLocale ? oldLocale : "C";
+    const std::string savedLocale = oldLocale ? oldLocale : "C";
+    RAIICallback restoreLocale{[savedLocale]() { std::setlocale(LC_ALL, savedLocale.c_str()); }};
 
     std::setlocale(LC_ALL, "de_DE.UTF-8");
 
@@ -241,8 +243,6 @@ void testFormatFloatClassic()
     const std::string extStr = text_utils::formatFloatClassic(28.5f);
     TEST_ASSERT(extStr.find(',') == std::string::npos);
     TEST_ASSERT(extStr.find('.') != std::string::npos);
-
-    std::setlocale(LC_ALL, savedLocale.c_str());
 }
 
 } // namespace
