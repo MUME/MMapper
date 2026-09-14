@@ -544,9 +544,7 @@ void Proxy::allocMudTelnet()
         }
         void virt_onMumeClientError(const QString &errmsg) final
         {
-            qInfo() << errmsg;
-            getProxy().sendToUser(SendToUserSourceEnum::FromMMapper,
-                                  QString("MUME.Client protocol error: %1").arg(errmsg));
+            qWarning() << "MUME.Client protocol error:" << errmsg;
         }
     };
 
