@@ -27,10 +27,7 @@ void main()
     //  |\ |    triangle 012 is CCW order, but triangle 123 is CW order (backwards).
     //  | \|  Keep in mind that OpenGL does not actually draw the triangle backwards,
     //  0--1    so it does not affect glFrontFace() or the gl_FrontFacing variable.
-    const ivec3 ioffsets[4] = ivec3[4](ivec3(0, 0, 0),
-                                       ivec3(1, 0, 0),
-                                       ivec3(0, 1, 0),
-                                       ivec3(1, 1, 0)); // strip
+    const ivec3 ioffsets[4] = ivec3[4](ivec3(0, 0, 0), ivec3(1, 0, 0), ivec3(0, 1, 0), ivec3(1, 1, 0)); // strip
 #endif
     ivec3 ioffset = ioffsets[gl_VertexID];
 
