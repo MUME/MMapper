@@ -64,4 +64,30 @@ document.addEventListener('DOMContentLoaded', function() {
             addRecommendation(link);
         }
     });
+
+    // --- Touch / Mobile Device Detection for Keyboard Notice ---
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+    const keyboardNotice = document.getElementById('keyboard-notice');
+    if (keyboardNotice && isTouchDevice) {
+        keyboardNotice.style.border = '2px solid #cc9933';
+    }
+
+    // --- PWA Instructions Platform Detection & Focus ---
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+
+    const iosBlock = document.getElementById('pwa-ios');
+    const androidBlock = document.getElementById('pwa-android');
+
+    if (isIOS && iosBlock && androidBlock) {
+        // Move iOS block above Android block and highlight
+        iosBlock.parentNode.insertBefore(iosBlock, androidBlock);
+        iosBlock.style.borderLeft = '3px solid #5cb85c';
+        iosBlock.style.paddingLeft = '0.5em';
+    } else if (isAndroid && androidBlock && iosBlock) {
+        // Highlight Android block
+        androidBlock.style.borderLeft = '3px solid #5cb85c';
+        androidBlock.style.paddingLeft = '0.5em';
+    }
 });

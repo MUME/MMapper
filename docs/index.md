@@ -14,7 +14,7 @@ title: Play MUME with MMapper
 Choose your preferred platform to start using MMapper {{ site.github.latest_release.tag_name }}:
 
 <div class="platform-links">
-    <a href="{{ '/demo/' | relative_url }}" class="platform-link" aria-label="Use MMapper in your Web Browser" data-platform="web">
+    <a href="{{ '/web.html' | relative_url }}" class="platform-link" aria-label="Get MMapper for Web">
         <i class="fas fa-globe" aria-hidden="true"></i>
         <span>Web</span>
     </a>
