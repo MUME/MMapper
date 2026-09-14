@@ -20,14 +20,17 @@ void main()
     //  | /|  Triangles 012 and 023 both use CCW order.
     //  |/ |  Notice that the four vertices are in CCW order.
     //  0--1
-    const ivec3 ioffsets[4] = ivec3[4](ivec3(0, 0, 0), ivec3(1, 0, 0), ivec3(1, 1, 0), ivec3(0, 1, 0)); // fan
+    const ivec3[4] ioffsets = ivec3[4](ivec3(0, 0, 0), ivec3(1, 0, 0), ivec3(1, 1, 0), ivec3(0, 1, 0)); // fan
 #else
     // GL_TRIANGLE_STRIP
     //  2--3  Note: Triangle strips alternate CCW/CW winding on every other triangle. This means...
     //  |\ |    triangle 012 is CCW order, but triangle 123 is CW order (backwards).
     //  | \|  Keep in mind that OpenGL does not actually draw the triangle backwards,
     //  0--1    so it does not affect glFrontFace() or the gl_FrontFacing variable.
-    const ivec3 ioffsets[4] = ivec3[4](ivec3(0, 0, 0), ivec3(1, 0, 0), ivec3(0, 1, 0), ivec3(1, 1, 0)); // strip
+    const ivec3[4] ioffsets = ivec3[4](ivec3(0, 0, 0),
+                                       ivec3(1, 0, 0),
+                                       ivec3(0, 1, 0),
+                                       ivec3(1, 1, 0)); // strip
 #endif
     ivec3 ioffset = ioffsets[gl_VertexID];
 

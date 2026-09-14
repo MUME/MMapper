@@ -27,7 +27,6 @@
 #include "../src/global/unquote.h"
 #include "../src/global/utils.h"
 
-#include <clocale>
 #include <tuple>
 
 #include <QDebug>
@@ -498,24 +497,6 @@ void sig2_test_recursion()
 }
 
 } // namespace
-
-void TestGlobal::shaderUtilsTest()
-{
-    const char *oldLocale = std::setlocale(LC_ALL, nullptr);
-    std::string savedLocale = oldLocale ? oldLocale : "C";
-
-    std::setlocale(LC_ALL, "de_DE.UTF-8");
-
-    const std::string radStr = text_utils::formatFloatClassic(14.0f);
-    QCOMPARE(radStr.find(','), std::string::npos);
-    QVERIFY(radStr.find('.') != std::string::npos);
-
-    const std::string extStr = text_utils::formatFloatClassic(28.5f);
-    QCOMPARE(extStr.find(','), std::string::npos);
-    QVERIFY(extStr.find('.') != std::string::npos);
-
-    std::setlocale(LC_ALL, savedLocale.c_str());
-}
 
 void TestGlobal::signal2Test()
 {

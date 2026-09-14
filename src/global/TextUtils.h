@@ -19,8 +19,6 @@ NODISCARD extern bool isAbbrev(std::string_view abbr, std::string_view fullText)
 
 namespace text_utils {
 
-NODISCARD std::string formatFloatClassic(float val);
-
 template<typename T>
 struct NODISCARD SplitResult final
 {

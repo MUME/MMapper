@@ -8,10 +8,8 @@
 #include "Consts.h"
 #include "tests.h"
 
-#include <clocale>
 #include <cstring>
 #include <iostream>
-#include <sstream>
 
 #include <QRegularExpression>
 #include <QString>
@@ -41,15 +39,6 @@ bool isAbbrev(const std::string_view abbr, const std::string_view fullText)
 }
 
 namespace text_utils {
-
-std::string formatFloatClassic(const float val)
-{
-    std::ostringstream ss;
-    ss.imbue(std::locale::classic());
-    ss << std::showpoint << val;
-    return ss.str();
-}
-
 SplitResult<std::string_view> split_at(const std::string_view sv, const size_t pos)
 {
     assert(pos <= sv.size());
@@ -227,24 +216,6 @@ void testTrim()
     }
 }
 
-void testFormatFloatClassic()
-{
-    const char *oldLocale = std::setlocale(LC_ALL, nullptr);
-    std::string savedLocale = oldLocale ? oldLocale : "C";
-
-    std::setlocale(LC_ALL, "de_DE.UTF-8");
-
-    const std::string radStr = text_utils::formatFloatClassic(14.0f);
-    TEST_ASSERT(radStr.find(',') == std::string::npos);
-    TEST_ASSERT(radStr.find('.') != std::string::npos);
-
-    const std::string extStr = text_utils::formatFloatClassic(28.5f);
-    TEST_ASSERT(extStr.find(',') == std::string::npos);
-    TEST_ASSERT(extStr.find('.') != std::string::npos);
-
-    std::setlocale(LC_ALL, savedLocale.c_str());
-}
-
 } // namespace
 
 namespace test {
@@ -252,6 +223,5 @@ void testTextUtils()
 {
     testPrefixSuffix();
     testTrim();
-    testFormatFloatClassic();
 }
 } // namespace test

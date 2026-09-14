@@ -224,19 +224,15 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     std::string defineNamedColors = "#define MAX_NAMED_COLORS " + std::to_string(MAX_NAMED_COLORS)
                                     + "\n";
     std::string defineWeatherRadius = "#define WEATHER_RADIUS "
-                                      + text_utils::formatFloatClassic(
-                                          WeatherConstants::WEATHER_RADIUS)
-                                      + "\n";
+                                      + std::to_string(WeatherConstants::WEATHER_RADIUS) + "\n";
     std::string defineWeatherExtent = "#define WEATHER_EXTENT "
-                                      + text_utils::formatFloatClassic(
-                                          WeatherConstants::WEATHER_EXTENT)
-                                      + "\n";
+                                      + std::to_string(WeatherConstants::WEATHER_EXTENT) + "\n";
     std::string defineWeatherMaskOuter = "#define WEATHER_MASK_RADIUS_OUTER "
-                                         + text_utils::formatFloatClassic(
+                                         + std::to_string(
                                              WeatherConstants::WEATHER_MASK_RADIUS_OUTER)
                                          + "\n";
     std::string defineWeatherMaskInner = "#define WEATHER_MASK_RADIUS_INNER "
-                                         + text_utils::formatFloatClassic(
+                                         + std::to_string(
                                              WeatherConstants::WEATHER_MASK_RADIUS_INNER)
                                          + "\n";
 
