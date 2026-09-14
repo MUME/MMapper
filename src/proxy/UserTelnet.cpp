@@ -164,11 +164,6 @@ void UserTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
         return;
     }
 
-    // Eat External.Discord.Get as MUME does not support it and would return a MUME.Client.Error
-    if (msg.isExternalDiscordGet()) {
-        return;
-    }
-
     const bool requiresRewrite = msg.getJson()
                                  && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet()
                                      || msg.isCoreSupportsRemove())
