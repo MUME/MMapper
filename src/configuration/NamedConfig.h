@@ -15,7 +15,7 @@ class NODISCARD NamedConfig final
 private:
     std::string m_name;
     ChangeMonitor m_changeMonitor;
-    T m_value = 0;
+    T m_value{};
     bool m_notifying = false;
 
 public:

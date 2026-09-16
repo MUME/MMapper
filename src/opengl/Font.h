@@ -55,6 +55,7 @@ private:
     SharedMMTexture m_texture;
     MMTextureId m_id = INVALID_MM_TEXTURE_ID;
     std::shared_ptr<const FontMetrics> m_fontMetrics;
+    float m_logicalDpi = 0.f;
 
 public:
     explicit GLFont(OpenGL &gl);
@@ -77,8 +78,14 @@ public:
         assert(m_id == INVALID_MM_TEXTURE_ID);
         m_id = id;
     }
-    void init();
+    // NOTE: call cleanup() + init() again if the font, DPI, or DPR changes.
+    void init(float logicalDpi);
     void cleanup();
+    NODISCARD float getLogicalDpi() const { return m_logicalDpi; }
+
+private:
+    // GL thread only
+    void syncTexture();
 
 public:
     NODISCARD int getFontHeight() const;

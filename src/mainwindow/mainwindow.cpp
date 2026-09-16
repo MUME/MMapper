@@ -88,6 +88,11 @@ NODISCARD static const char *basic_plural(size_t n)
 
 static void addApplicationFont()
 {
+    // the map's default font (see GLFont::init)
+    if (QFontDatabase::addApplicationFont(":/fonts/Cantarell-Regular.ttf") == -1) {
+        qWarning() << "Unable to load bundled Cantarell font";
+    }
+
     const auto id = QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
     const auto family = QFontDatabase::applicationFontFamilies(id);
     if (family.isEmpty()) {
@@ -96,12 +101,9 @@ static void addApplicationFont()
         // Use the application font here because we can guarantee that resources have been loaded.
         // REVISIT: Move this to the configuration?
         if (getConfig().integratedClient.font.isEmpty()) {
-            // TODO: Explain why mac is 20% larger.
-            static constinit int defaultFontSize = (CURRENT_PLATFORM == PlatformEnum::Mac) ? 12
-                                                                                           : 10;
             QFont defaultClientFont;
             defaultClientFont.setFamily(family.front());
-            defaultClientFont.setPointSize(defaultFontSize);
+            defaultClientFont.setPointSize(platformPointSize(10));
             defaultClientFont.setStyleStrategy(QFont::PreferAntialias);
             setConfig().integratedClient.font = defaultClientFont.toString();
         }

@@ -24,6 +24,7 @@
 
 #include <QOpenGLDebugMessage>
 #include <QOpenGLWindow>
+#include <QScreen>
 #include <QtCore>
 
 class ConnectionSelection;
@@ -63,6 +64,11 @@ private:
     // MapCanvasHost
     void virt_requestCanvasUpdate() final { update(); }
     NODISCARD qreal virt_hostDevicePixelRatio() const final { return devicePixelRatioF(); }
+    NODISCARD qreal virt_hostLogicalDpi() const final
+    {
+        const QScreen *const s = screen();
+        return (s != nullptr) ? s->logicalDotsPerInchY() : 96.0;
+    }
     NODISCARD QSize virt_hostSize() const final
     {
         return QSize(QOpenGLWindow::width(), QOpenGLWindow::height());

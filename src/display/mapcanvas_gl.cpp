@@ -341,7 +341,7 @@ bool MapCanvas::hostInitializeGL()
     initTextures();
     auto &font = getGLFont();
     font.setTextureId(allocateTextureId());
-    font.init();
+    font.init(currentLogicalDpi());
     updateTextures();
 
     // compile all shaders
@@ -385,6 +385,14 @@ bool MapCanvas::hostInitializeGL()
     setConfig().canvas.trilinearFiltering.registerChangeCallback(m_lifetime, [this]() {
         this->requestUpdateTextures();
     });
+
+    const auto requestFontReload = [this]() {
+        // Deferred like m_pendingRenderScale: needs the GL context.
+        m_pendingFontReload = true;
+        m_frameManager.requestUpdate();
+    };
+    setConfig().canvas.mapFontFamily.registerChangeCallback(m_lifetime, requestFontReload);
+    setConfig().canvas.mapFontPointSize.registerChangeCallback(m_lifetime, requestFontReload);
 
     // NOTE: The host facade is responsible for connecting to
     // QOpenGLContext::aboutToBeDestroyed (see MapCanvas::initializeGL()); the
@@ -610,7 +618,7 @@ void MapCanvas::applyPendingGLWork()
         getOpenGL().setDevicePixelRatio(newDpi);
         auto &font = getGLFont();
         font.cleanup();
-        font.init();
+        font.init(currentLogicalDpi());
     }
     if (m_pendingRenderScale.has_value()) {
         const float newScale = *m_pendingRenderScale;
@@ -622,13 +630,20 @@ void MapCanvas::applyPendingGLWork()
             // and the FBO is sized from it.
             auto &font = getGLFont();
             font.cleanup();
-            font.init();
+            font.init(currentLogicalDpi());
             m_batches.resetExistingMeshesButKeepPendingRemesh();
             markMultisamplingDirty();
         }
     }
     if (std::exchange(m_pendingUpdateTextures, false)) {
         updateTextures();
+    }
+    if (std::exchange(m_pendingFontReload, false)) {
+        auto &font = getGLFont();
+        font.cleanup();
+        font.init(currentLogicalDpi());
+        // existing text meshes reference the old atlas
+        m_pendingForceUpdateMeshes = true;
     }
     if (std::exchange(m_pendingForceUpdateMeshes, false)) {
         forceUpdateMeshes();
@@ -948,7 +963,7 @@ void MapCanvas::hostPaintGL()
     auto y = lineHeight;
     const auto print = [lineHeight, rightMargin, &text, &y](const QString &msg) {
         text.emplace_back(glm::vec3(rightMargin, y, 0),
-                          mmqt::toStdStringLatin1(msg), // GL font is latin1
+                          mmqt::toStdStringUtf8(msg),
                           Colors::white,
                           Colors::black.withAlpha(0.4f),
                           FontFormatFlags{FontFormatFlagEnum::HALIGN_RIGHT});

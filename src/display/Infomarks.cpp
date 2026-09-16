@@ -263,9 +263,8 @@ void MapCanvas::drawInfomark(InfomarksBatch &batch,
     switch (infoMarkType) {
     case InfomarkTypeEnum::TEXT: {
         const auto utf8 = marker.getText().getStdStringViewUtf8();
-        const auto latin1_to_render = charset::conversion::utf8ToLatin1(utf8); // GL font is latin1
         batch.renderText(pos,
-                         latin1_to_render,
+                         std::string{utf8},
                          textColor(bgColor),
                          bgColor,
                          fontFormatFlag,

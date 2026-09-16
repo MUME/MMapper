@@ -116,15 +116,20 @@ struct NODISCARD FontVert3d final
     Color color;
     glm::vec2 tex{};
     glm::vec2 vert{}; // screen space
+    // 0 = monochrome signed-distance-field glyph (tinted by `color`),
+    // 1 = full-color glyph (e.g. an emoji, sampled as-is from the texture).
+    float isColor = 0.f;
 
     explicit FontVert3d(const glm::vec3 base_,
                         const Color color_,
                         const glm::vec2 tex_,
-                        const glm::vec2 vert_)
+                        const glm::vec2 vert_,
+                        const float isColor_ = 0.f)
         : base{base_}
         , color{color_}
         , tex{tex_}
         , vert{vert_}
+        , isColor{isColor_}
     {}
 };
 

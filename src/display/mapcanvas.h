@@ -73,6 +73,9 @@ public:
     // The host's current device pixel ratio.
     NODISCARD qreal hostDevicePixelRatio() const { return virt_hostDevicePixelRatio(); }
 
+    // The logical DPI of the host's current screen.
+    NODISCARD qreal hostLogicalDpi() const { return virt_hostLogicalDpi(); }
+
     // The host's current size in logical pixels.
     NODISCARD QSize hostSize() const { return virt_hostSize(); }
 
@@ -92,6 +95,7 @@ public:
 private:
     virtual void virt_requestCanvasUpdate() = 0;
     NODISCARD virtual qreal virt_hostDevicePixelRatio() const = 0;
+    NODISCARD virtual qreal virt_hostLogicalDpi() const = 0;
     NODISCARD virtual QSize virt_hostSize() const = 0;
     virtual void virt_setHostCursor(Qt::CursorShape shape) = 0;
     virtual void virt_applyPresentViewport() {}
@@ -204,6 +208,8 @@ private:
     bool m_pendingUpdateTextures = false;
     std::optional<float> m_pendingDpr;
     std::optional<float> m_pendingRenderScale;
+    // font preference or logical DPI changed; applied like m_pendingRenderScale
+    bool m_pendingFontReload = false;
 
     // Touch long-press -> context menu. A left press synthesized from touch
     // arms the timer; moving past the drag threshold or releasing disarms it
@@ -236,6 +242,10 @@ public:
 
 private:
     NODISCARD qreal currentDpr() const { return m_host.hostDevicePixelRatio(); }
+    NODISCARD float currentLogicalDpi() const
+    {
+        return static_cast<float>(m_host.hostLogicalDpi());
+    }
     // Configuration::canvas.renderScale (a percentage) as the factor the
     // offscreen FBO is rendered at; see Legacy::Functions::setRenderScale().
     NODISCARD static float configuredRenderScale();

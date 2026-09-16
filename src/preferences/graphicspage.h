@@ -32,6 +32,7 @@ public:
 private:
     void changeColorClicked(XNamedColor &color, QPushButton *pushButton);
     void syncAntialiasingSamplesComboBox();
+    void syncMapFontButton();
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
     Ui::GraphicsPage *const ui;
     std::unique_ptr<AdvancedGraphicsGroupBox> m_advanced;

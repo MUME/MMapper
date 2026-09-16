@@ -7,6 +7,7 @@
 #include "../configuration/configuration.h"
 #include "../global/ConfigConsts-Computed.h"
 #include "../global/macros.h"
+#include "../global/window_utils.h"
 #include "ui_clientpage.h"
 
 #include <QFont>
@@ -210,20 +211,17 @@ void ClientPage::updateFontAndColors()
 
 void ClientPage::slot_onChangeFont()
 {
-    auto &fontDescription = setConfig().integratedClient.font;
     QFont oldFont;
-    oldFont.fromString(fontDescription);
+    oldFont.fromString(getConfig().integratedClient.font);
 
-    bool ok = false;
-    const QFont newFont = QFontDialog::getFont(&ok,
-                                               oldFont,
-                                               this,
-                                               "Select Font",
-                                               QFontDialog::MonospacedFonts);
-    if (ok) {
-        fontDescription = newFont.toString();
-        updateFontAndColors();
-    }
+    mmqt::showFontDialog(this,
+                         oldFont,
+                         "Select Font",
+                         QFontDialog::MonospacedFonts,
+                         [this](const QFont &newFont) {
+                             setConfig().integratedClient.font = newFont.toString();
+                             updateFontAndColors();
+                         });
 }
 
 void ClientPage::slot_onChangeBackgroundColor()

@@ -182,6 +182,8 @@ public:
         NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
         NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
         NamedConfig<bool> showUnmappedExits{"SHOW_UNMAPPED_EXITS", false};
+        NamedConfig<QString> mapFontFamily{"MAP_FONT_FAMILY", QStringLiteral("Cantarell")};
+        NamedConfig<int> mapFontPointSize{"MAP_FONT_POINT_SIZE", platformPointSize(11)};
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
         bool softwareOpenGL = false;
