@@ -6,12 +6,7 @@
         <file>LICENSE.OPENSSL</file>
         <file>LICENSE.QTKEYCHAIN</file>
         <file>emojis/short-codes.json</file>
-        <file>fonts/Cantarell18.fnt</file>
-        <file>fonts/Cantarell18_0.png</file>
-        <file>fonts/Cantarell27.fnt</file>
-        <file>fonts/Cantarell27_0.png</file>
-        <file>fonts/Cantarell36.fnt</file>
-        <file>fonts/Cantarell36_0.png</file>
+        <file>fonts/Cantarell-Regular.ttf</file>
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
         <file>icons/affect-bashed.png</file>

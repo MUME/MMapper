@@ -23,6 +23,30 @@ if(MMAPPER_IS_DEBUG)
     endif()
 endif()
 
+# Glyph atlas
+set(font_SRCS
+    ../src/font/GlyphAtlas.cpp
+    ../src/font/GlyphAtlas.h
+)
+set(TestFont_SRCS TestFont.cpp)
+add_executable(TestFont ${TestFont_SRCS} ${font_SRCS})
+add_dependencies(TestFont mm_test mm_global)
+target_link_libraries(TestFont
+        mm_test
+        mm_global
+        Qt6::Gui
+        Qt6::Test
+        Qt6::Widgets
+        coverage_config)
+set_target_properties(
+  TestFont PROPERTIES
+  CXX_STANDARD 20
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+add_test(NAME TestFont COMMAND TestFont)
+
 # Common test library
 add_library(mm_test STATIC
     ../src/configuration/configuration.cpp

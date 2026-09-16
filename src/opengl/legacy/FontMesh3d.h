@@ -44,17 +44,20 @@ private:
         static_assert(sizeof(std::declval<VertexType_>().color) == 4 * sizeof(uint8_t));
         static_assert(sizeof(std::declval<VertexType_>().tex) == 2 * sizeof(GLfloat));
         static_assert(sizeof(std::declval<VertexType_>().vert) == 2 * sizeof(GLfloat));
+        static_assert(sizeof(std::declval<VertexType_>().isColor) == 1 * sizeof(GLfloat));
 
         Functions &gl = Base::m_functions;
         CHECK_ATTR_LOC(0, "aBase");
         CHECK_ATTR_LOC(1, "aColor");
         CHECK_ATTR_LOC(2, "aTexCoord");
         CHECK_ATTR_LOC(3, "aVert");
+        CHECK_ATTR_LOC(4, "aIsColor");
 
         gl.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, vertSize, VPO(base));
         gl.enableAttrib(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertSize, VPO(color));
         gl.enableAttrib(2, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(tex));
         gl.enableAttrib(3, 2, GL_FLOAT, GL_FALSE, vertSize, VPO(vert));
+        gl.enableAttrib(4, 1, GL_FLOAT, GL_FALSE, vertSize, VPO(isColor));
     }
 };
 

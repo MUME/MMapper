@@ -3,14 +3,19 @@
 
 uniform mat4 uMVP3D;
 uniform ivec4 uPhysViewport;
+// Only used for its size: texture coordinates arrive in atlas texels so
+// the atlas can grow without invalidating meshes built earlier.
+uniform sampler2D uFontTexture;
 
 layout(location = 0) in vec3 aBase; // address in world space
 layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
+layout(location = 2) in vec2 aTexCoord; // atlas texels, upper-left origin
 layout(location = 3) in vec2 aVert; // offset in raw pixels
+layout(location = 4) in float aIsColor;
 
 out vec4 vColor;
 out vec2 vTexCoord;
+flat out float vIsColor;
 
 // [0, 1]^2 to pixels
 vec2 convertScreen01toPhysPixels(vec2 pos)
@@ -87,6 +92,7 @@ vec4 computePosition()
 void main()
 {
     vColor = aColor;
-    vTexCoord = aTexCoord;
+    vTexCoord = aTexCoord / vec2(textureSize(uFontTexture, 0));
+    vIsColor = aIsColor;
     gl_Position = computePosition();
 }

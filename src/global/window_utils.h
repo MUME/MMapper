@@ -2,8 +2,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 The MMapper Authors
 
+#include <functional>
 #include <memory>
 
+#include <QFontDialog>
+
+class QFont;
 class QMenu;
 class QMessageBox;
 class QObject;
@@ -28,4 +32,12 @@ extern QMessageBox &showCritical(QWidget *parent, const QString &title, const QS
 // Non-blocking replacement for QMenu::exec(): the menu is shown at a global
 // position and deletes itself when closed.
 extern void popupMenu(std::unique_ptr<QMenu> menu, const QPoint &globalPos);
+// Non-blocking replacement for QFontDialog::getFont(): onAccepted is only
+// called if the user picks a font. Always uses Qt's own dialog, because the
+// native mac font panel doesn't list fonts added with addApplicationFont().
+extern QFontDialog &showFontDialog(QWidget *parent,
+                                   const QFont &initial,
+                                   const QString &title,
+                                   QFontDialog::FontDialogOptions options,
+                                   std::function<void(const QFont &)> onAccepted);
 } // namespace mmqt

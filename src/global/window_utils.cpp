@@ -5,6 +5,8 @@
 
 #include "utils.h"
 
+#include <QFont>
+#include <QFontDialog>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPoint>
@@ -93,4 +95,19 @@ void mmqt::popupMenu(std::unique_ptr<QMenu> menu, const QPoint &globalPos)
     QMenu *const raw = menu.release();
     raw->setAttribute(Qt::WA_DeleteOnClose);
     raw->popup(globalPos);
+}
+
+QFontDialog &mmqt::showFontDialog(QWidget *const parent,
+                                  const QFont &initial,
+                                  const QString &title,
+                                  const QFontDialog::FontDialogOptions options,
+                                  std::function<void(const QFont &)> onAccepted)
+{
+    auto *const dialog = new QFontDialog(initial, parent);
+    dialog->setWindowTitle(title);
+    dialog->setOptions(options | QFontDialog::DontUseNativeDialog);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    QObject::connect(dialog, &QFontDialog::fontSelected, dialog, std::move(onAccepted));
+    dialog->open();
+    return *dialog;
 }

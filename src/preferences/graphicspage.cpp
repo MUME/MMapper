@@ -6,6 +6,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
+#include "../global/window_utils.h"
 #include "../opengl/OpenGLConfig.h"
 #include "AdvancedGraphics.h"
 #include "ui_graphicspage.h"
@@ -100,6 +101,21 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             this,
             &GraphicsPage::slot_drawUpperLayersTexturedStateChanged);
 
+    connect(ui->mapFontPushButton, &QAbstractButton::clicked, this, [this]() {
+        const auto &canvas = getConfig().canvas;
+        const QFont currentFont(canvas.mapFontFamily.get(), canvas.mapFontPointSize.get());
+        mmqt::showFontDialog(this,
+                             currentFont,
+                             QStringLiteral("Select Map Font"),
+                             {},
+                             [this](const QFont &newFont) {
+                                 setConfig().canvas.mapFontFamily.set(newFont.family());
+                                 setConfig().canvas.mapFontPointSize.set(newFont.pointSize());
+                                 syncMapFontButton();
+                                 graphicsSettingsChanged();
+                             });
+    });
+
     connect(ui->weatherAtmosphereSlider, &QSlider::valueChanged, this, [this](const int value) {
         setConfig().canvas.weatherAtmosphereIntensity.set(value);
         graphicsSettingsChanged();
@@ -172,6 +188,8 @@ void GraphicsPage::slot_loadConfig()
     ui->drawNotMappedExits->setChecked(settings.showUnmappedExits.get());
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
 
+    syncMapFontButton();
+
     ui->weatherAtmosphereSlider->setValue(settings.weatherAtmosphereIntensity.get());
     ui->weatherPrecipitationSlider->setValue(settings.weatherPrecipitationIntensity.get());
     ui->weatherTimeOfDaySlider->setValue(settings.weatherTimeOfDayIntensity.get());
@@ -193,6 +211,13 @@ void GraphicsPage::syncAntialiasingSamplesComboBox()
     combo.setEnabled(!scaled);
     combo.setToolTip(scaled ? "Anti-aliasing (MSAA) is disabled when Render Scale is below 100%."
                             : "");
+}
+
+void GraphicsPage::syncMapFontButton()
+{
+    const auto &canvas = getConfig().canvas;
+    ui->mapFontPushButton->setText(
+        QString("%1 %2pt").arg(canvas.mapFontFamily.get()).arg(canvas.mapFontPointSize.get()));
 }
 
 void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *const pushButton)

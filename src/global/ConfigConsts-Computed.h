@@ -59,6 +59,17 @@ static inline constexpr PlatformEnum CURRENT_PLATFORM = std::invoke([]() constex
 #endif
 });
 
+// NOTE: Qt reports 72 dpi on mac but 96 everywhere else, so the same point
+// size renders 3/4 as large on mac. Use this for default font sizes.
+NODISCARD static inline constexpr int platformPointSize(const int pointSizeAt96Dpi)
+{
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
+        return (pointSizeAt96Dpi * 4 + 1) / 3; // rounded
+    } else {
+        return pointSizeAt96Dpi;
+    }
+}
+
 static inline constexpr EnvironmentEnum CURRENT_ENVIRONMENT = std::invoke(
     []() constexpr -> EnvironmentEnum {
 #if Q_PROCESSOR_WORDSIZE == 4

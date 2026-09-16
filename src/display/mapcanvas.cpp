@@ -1420,6 +1420,13 @@ void MapCanvas::screenChanged()
     const auto newDpi = static_cast<float>(currentDpr());
     const auto oldDpi = gl.getHostDevicePixelRatio();
 
+    // same DPR but different logical DPI (e.g. per-monitor font scaling)
+    if (utils::isSameFloat(newDpi, oldDpi)
+        && !utils::isSameFloat(currentLogicalDpi(), getGLFont().getLogicalDpi())) {
+        m_pendingFontReload = true;
+        m_frameManager.requestUpdate();
+    }
+
     if (!utils::isSameFloat(newDpi, oldDpi)) {
         log(QString("Display: %1 DPI").arg(static_cast<double>(newDpi)));
 

@@ -544,7 +544,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch, ServerRoomId yourServ
             QString name = character.getLabel().isEmpty() ? character.getName().toQString()
                                                           : character.getLabel().toQString();
             if (!name.isEmpty()) {
-                batch.drawName(pos, mmqt::toStdStringLatin1(name), color);
+                batch.drawName(pos, mmqt::toStdStringUtf8(name), color);
             }
         }
 
