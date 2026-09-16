@@ -25,7 +25,7 @@ class Mmapper2PathMachine;
 class MumeClock;
 class CTimers;
 class PrespammedPath;
-class Proxy;
+#include "proxy.h"
 class QObject;
 class RoomManager;
 
@@ -80,6 +80,7 @@ public:
 
 public:
     void listen();
+    NODISCARD Proxy *getProxy() const { return m_proxy.data(); }
 
 private:
     void log(const QString &msg) { emit sig_log("Listener", msg); }
@@ -87,6 +88,7 @@ private:
 signals:
     void sig_log(const QString &, const QString &);
     void sig_clientSuccessfullyConnected();
+    void sig_proxyCreated(QPointer<Proxy> proxy);
 
 protected slots:
     void slot_onIncomingConnection(qintptr socketDescriptor);

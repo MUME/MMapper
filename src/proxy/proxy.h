@@ -35,8 +35,6 @@ class MapCanvas;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
-class MpiFilter;
-class MpiFilterToMud;
 class MudTelnet;
 class MumeClock;
 class MumeFallbackSocket;
@@ -55,7 +53,6 @@ class AbstractSocket;
 struct AbstractParserOutputs;
 struct AnsiWarningMessage;
 struct GameTime;
-struct MpiFilterOutputs;
 struct MudTelnetOutputs;
 struct MumeSocketOutputs;
 struct ParserCommonData;
@@ -97,7 +94,6 @@ private:
             {
                 std::unique_ptr<MumeSocketOutputs> mudSocketOutputs;
                 std::unique_ptr<MudTelnetOutputs> mudTelnetOutputs;
-                std::unique_ptr<MpiFilterOutputs> mpiFilterOutputs;
             };
             std::unique_ptr<AbstractParserOutputs> parserXmlOutputs;
             User user;
@@ -134,8 +130,6 @@ private:
             std::unique_ptr<MumeFallbackSocket> mudSocket;
             std::unique_ptr<MudTelnet> mudTelnet;
             std::unique_ptr<TelnetLineFilter> mudTelnetFilter;
-            std::unique_ptr<MpiFilter> mpiFilterFromMud;
-            std::unique_ptr<MpiFilterToMud> mpiFilterToMud;
             std::unique_ptr<MumeXmlParser> mudParser;
             std::unique_ptr<PasswordConfig> passwordConfig;
         };
@@ -149,10 +143,6 @@ private:
     // REVISIT: This might be in the wrong spot; it's not part of the pipeline
     // because it's intended for sendXXX within the lifetime of this object.
     Signal2Lifetime m_lifetime;
-
-    // Technically we create this, but we don't "own" it;
-    // it outlives this object when the connection closes.
-    QPointer<RemoteEdit> m_remoteEdit;
 
     enum class NODISCARD ServerStateEnum {
         Initialized,
@@ -204,8 +194,6 @@ private:
     void allocUserTelnet();
     void allocMudTelnet();
     void allocParser();
-    void allocMpiFilter();
-    void allocRemoteEdit();
 
 private:
     void processUserStream();
@@ -299,19 +287,12 @@ private:
     {
         return deref(getPipeline().mud.mudTelnetFilter);
     }
-    NODISCARD MpiFilter &getMpiFilterFromMud() { return deref(getPipeline().mud.mpiFilterFromMud); }
-    NODISCARD MpiFilterToMud &getMpiFilterToMud()
-    {
-        return deref(getPipeline().mud.mpiFilterToMud);
-    }
-
     NODISCARD UserSocket &getUserSocket() { return deref(getPipeline().user.userSocket); }
     NODISCARD UserTelnet &getUserTelnet() { return deref(getPipeline().user.userTelnet); }
     NODISCARD TelnetLineFilter &getUserTelnetFilter()
     {
         return deref(getPipeline().user.userTelnetFilter);
     }
-    NODISCARD RemoteEdit &getRemoteEdit();
     NODISCARD MumeXmlParser &getMudParser() { return deref(getPipeline().mud.mudParser); }
     NODISCARD AbstractParser &getUserParser() { return deref(getPipeline().user.userParser); }
     NODISCARD PasswordConfig &getPasswordConfig()
@@ -326,4 +307,7 @@ private:
     {
         return deref(getPipeline().user.userTelnet);
     }
+
+public slots:
+    void slot_sendGmcp(const GmcpMessage &msg);
 };

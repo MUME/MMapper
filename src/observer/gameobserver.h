@@ -12,6 +12,7 @@ class NODISCARD GameObserver final
 {
 public:
     Signal2<> sig2_connected;
+    Signal2<> sig2_disconnected;
 
     Signal2<QString> sig2_sentToMudString;  // removes ANSI
     Signal2<QString> sig2_sentToUserString; // removes ANSI
@@ -39,6 +40,7 @@ private:
 
 public:
     void observeConnected();
+    void observeDisconnected();
     void observeSentToMud(const QString &ba);
     void observeSentToUser(const QString &ba);
     void observeSentToUserGmcp(const GmcpMessage &m);

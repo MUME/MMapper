@@ -401,6 +401,7 @@ void AbstractParser::doConfig(const StringView cmd)
                         };
 
                         auto *editor = new RemoteEditWidget(true,
+                                                            false,
                                                             "MMapper Client Configuration",
                                                             content,
                                                             nullptr);

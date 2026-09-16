@@ -6,9 +6,13 @@
 #include "../global/macros.h"
 #include "remoteeditsession.h"
 
+#include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include <QAction>
+#include <QDateTime>
 #include <QDialog>
 #include <QPlainTextEdit>
 #include <QScopedPointer>
@@ -19,7 +23,9 @@
 struct EditViewCommand;
 struct EditCommand2;
 
-class QCloseEvent;
+class QFrame;
+class QKeyEvent;
+class QLabel;
 class QMenu;
 class QMenuBar;
 class QObject;
@@ -130,23 +136,32 @@ private:
     void handle_toolTip(QEvent *event) const;
 };
 
-class NODISCARD_QOBJECT RemoteEditWidget : public QDialog
+/// One editor/viewer page; hosted as a tab by RemoteEditPanel. Its lifetime
+/// belongs to the owning RemoteEditInternalSession, which deletes it (via
+/// closeSilently()) when the session ends, and the hosting tab disappears with it.
+class NODISCARD_QOBJECT RemoteEditWidget : public QWidget
 {
     Q_OBJECT
 
 private:
-    QMenuBar *m_menuBar;
-    QStatusBar *m_statusBar;
+    QMenuBar *m_menuBar = nullptr;
+    QStatusBar *m_statusBar = nullptr;
+    QFrame *m_banner = nullptr;
+    QLabel *m_bannerLabel = nullptr;
+    QAction *m_saveAction = nullptr;
 
 public:
     using Editor = RemoteTextEdit;
 
 private:
     const bool m_editSession;
+    const bool m_draftView;
     const QString m_title;
     const QString m_body;
+    QString m_lastNotifiedText;
 
     bool m_submitted = false;
+    bool m_connected = true;
     QScopedPointer<Editor> m_textEdit;
     QScopedPointer<GotoWidget> m_gotoWidget;
     QScopedPointer<FindReplaceWidget> m_findReplaceWidget;
@@ -155,16 +170,40 @@ private:
     std::unique_ptr<QDialog> m_preview;
 
 public:
-    explicit RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent);
+    explicit RemoteEditWidget(
+        bool editSession, bool draftView, QString title, QString body, QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:
     NODISCARD QSize minimumSizeHint() const override;
     NODISCARD QSize sizeHint() const override;
-    void closeEvent(QCloseEvent *event) override;
+    NODISCARD const QString &getTitle() const { return m_title; }
+    NODISCARD bool isEditSession() const { return m_editSession; }
+    NODISCARD bool isDraftView() const { return m_draftView; }
+    NODISCARD bool isModified() const;
+    /// What the tab's close button does: prompts if there are unsaved edits,
+    /// otherwise cancels the session.
+    void requestClose();
+    /// Asks the hosting panel to bring this page to the front.
+    void focus() { emit sig_focusRequested(); }
+    /// Offers to replace the text with an unsent draft of the same title.
+    void offerRecoveredDraft(const QDateTime &lastModified,
+                             std::function<void()> restore,
+                             std::function<void()> discard);
+    /// MUME went away: Submit is disabled and the page explains where the text goes.
+    void showDisconnected();
+    void replaceText(const QString &text);
+    /// Schedules deletion without the "discard changes?" prompt; used when the
+    /// manager is tearing down the session for reasons other than the user
+    /// choosing Submit/Exit/Discard in this widget.
+    void closeSilently();
 
 protected:
     void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
+private:
+    NODISCARD QAction *findActionForKey(const QKeyEvent &key) const;
 
 private:
     NODISCARD Editor *createTextEdit();
@@ -180,15 +219,21 @@ private:
     void addExit(QMenu *fileMenu);
     void addStatusBar(const Editor *pTextEdit);
     void promptDiscardChanges();
+    void showBanner(const QString &text,
+                    const std::vector<std::pair<QString, std::function<void()>>> &buttons);
+    void hideBanner();
 
 signals:
     void sig_cancel();
     void sig_save(const QString &);
+    void sig_textModified(const QString &);
+    void sig_discard();
+    void sig_focusRequested();
 
 protected slots:
     void slot_cancelEdit();
     void slot_finishEdit();
-    NODISCARD bool slot_contentsChanged() const;
+    void slot_discardDraft();
     void slot_updateStatusBar();
     void slot_updateStatus(const QString &message);
     void slot_handleFindRequested(const QString &term, QTextDocument::FindFlags flags);

@@ -5,6 +5,7 @@
 #include "random.h"
 
 #include <functional>
+#include <string>
 
 NODISCARD static auto expensiveSeed()
 {
@@ -25,4 +26,16 @@ size_t getRandom(const size_t max)
 {
     std::uniform_int_distribution<size_t> dist{0u, max}; // inclusive
     return dist(RandomEngine::getSingleton());
+}
+
+std::string getRandomString(const size_t length)
+{
+    static constexpr const std::string_view chars
+        = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    std::string result;
+    result.reserve(length);
+    for (size_t i = 0; i < length; ++i) {
+        result += chars[getRandom(chars.size() - 1u)];
+    }
+    return result;
 }
