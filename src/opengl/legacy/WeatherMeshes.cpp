@@ -174,10 +174,11 @@ void WeatherParticleMesh::virt_render(const GLRenderState &renderState)
     if (m_intensity > 0.0f) {
         // Thinning: use precipitation intensity to drive instance count.
         const auto maxCount = static_cast<GLsizei>(m_numParticles);
-        const auto count = std::clamp<GLsizei>(static_cast<GLsizei>(m_intensity
-                                                                    * static_cast<float>(maxCount)),
-                                               1,
-                                               maxCount);
+        const auto count = (m_intensity >= 1.0f)
+                               ? maxCount
+                               : std::max<GLsizei>(1,
+                                                   static_cast<GLsizei>(
+                                                       m_intensity * static_cast<float>(maxCount)));
 
         const glm::mat4 mvp = renderState.mvp.value_or(m_functions.getProjectionMatrix());
         auto &prog = deref(m_renderProgram);
