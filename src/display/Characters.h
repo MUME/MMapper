@@ -19,6 +19,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <QColor>
+#include <QString>
 
 class MapScreen;
 class OpenGL;
@@ -102,6 +103,8 @@ private:
         MatrixStack m_stack;
         std::vector<ColorVert> m_charTris;
         std::vector<ColorVert> m_charBeaconQuads;
+        std::vector<ColoredTexVert> m_charTokenQuads;
+        std::vector<QString> m_charTokenKeys;
         std::vector<ColorVert> m_charLines;
         std::vector<ColoredTexVert> m_charRoomQuads;
         std::vector<ColorVert> m_pathPoints;
@@ -152,7 +155,7 @@ private:
             m = glm::translate(m, v);
         }
         void drawArrow(bool fill, bool beacon);
-        void drawBox(Coordinate coord, bool fill, bool beacon, bool isFar);
+        void drawBox(Coordinate coord, bool fill, bool beacon, bool isFar, const QString &dispName);
         void addScreenSpaceArrow(glm::vec3 pos, float degrees, Color color, bool fill);
         void addName(Coordinate c, const std::string &name, Color color, const MapScreen &mapScreen);
         void drawPathSegment(glm::vec3 p1, glm::vec3 p2, Color color);
@@ -194,7 +197,10 @@ public:
     NODISCARD bool isVisible(Coordinate c, float margin) const;
 
 public:
-    void drawCharacter(Coordinate coordinate, Color color, bool fill = true);
+    void drawCharacter(Coordinate coordinate,
+                       Color color,
+                       bool fill = true,
+                       const QString &dispName = QString());
 
     void drawName(const Coordinate c, const std::string &name, const Color color)
     {

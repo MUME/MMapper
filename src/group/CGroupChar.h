@@ -154,4 +154,6 @@ public:
         m_server.mp = _moves;
         m_server.maxmp = _maxmoves;
     }
+
+    QString getDisplayName() const;
 };

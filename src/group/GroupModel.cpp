@@ -409,6 +409,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
     switch (role) {
     case Qt::DisplayRole:
         switch (column) {
+        case ColumnTypeEnum::CHARACTER_TOKEN:
+            return QString();
         case ColumnTypeEnum::NAME:
             if (character.getLabel().isEmpty()
                 || character.getName().getStdStringViewUtf8()
@@ -480,6 +482,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &pCharacter,
             }
             return prettyName;
         }
+        case ColumnTypeEnum::CHARACTER_TOKEN:
         case ColumnTypeEnum::NAME:
             break;
         case ColumnTypeEnum::ROOM_NAME:

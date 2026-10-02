@@ -24,6 +24,7 @@
 #include "../global/Version.h"
 #include "../global/window_utils.h"
 #include "../group/groupwidget.h"
+#include "../group/tokenmanager.h"
 #include "../logger/autologger.h"
 #include "../media/AudioManager.h"
 #include "../media/DescriptionWidget.h"
@@ -195,6 +196,17 @@ MainWindow::MainWindow()
         addDockWidget(Qt::TopDockWidgetArea, dock);
         dock->setWidget(w);
         connect(w, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
+        auto *const canvas = getCanvas();
+        connect(w, &GroupWidget::sig_characterUpdated, canvas, [canvas](SharedGroupChar) {
+            canvas->slot_requestUpdate();
+        });
+        connect(&tokenManager(),
+                &TokenManager::sig_tokensChanged,
+                w,
+                &GroupWidget::slot_tokensChanged);
+        connect(&tokenManager(), &TokenManager::sig_tokensChanged, canvas, [canvas]() {
+            canvas->slot_requestUpdate();
+        });
 
         m_groupWidget = w;
         m_dockDialogGroup = dock;
@@ -1696,6 +1708,10 @@ void MainWindow::slot_onPreferences()
                 &ConfigDialog::sig_groupSettingsChanged,
                 m_groupManager,
                 &Mmapper2Group::slot_groupSettingsChanged);
+        connect(configDialog,
+                &ConfigDialog::sig_groupSettingsChanged,
+                m_groupWidget,
+                &GroupWidget::slot_groupSettingsChanged);
         connect(configDialog, &QDialog::finished, this, [this](MAYBE_UNUSED int result) {
             m_configDialog.reset();
         });
