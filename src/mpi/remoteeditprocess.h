@@ -28,15 +28,23 @@ private:
     const bool m_editSession;
 
     QProcess m_process;
-    QString m_fileName;
+    QString m_fullPath;
     QDateTime m_previousTime;
 
 public:
     explicit RemoteEditProcess(bool editSession,
                                const QString &title,
                                const QString &body,
+                               const QString &fullPath,
                                QObject *parent);
     ~RemoteEditProcess() final;
+
+    NODISCARD bool isRunning() const { return m_process.state() == QProcess::Running; }
+
+    /// Synchronously stops the child process (terminate(), then kill() if it
+    /// doesn't exit promptly) and disconnects its signals first, so tearing
+    /// down mid-edit never emits a stray sig_cancel()/sig_save().
+    void terminateSynchronously();
 
 private:
     virtual void virt_onError(QProcess::ProcessError);

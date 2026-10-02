@@ -37,6 +37,8 @@ std::string get_type_name(const AsyncTaskTypeEnum type)
         return "IO Task";
     case Task:
         return "Task";
+    case RemoteEdit:
+        return "RemoteEdit";
     }
     return "(error)";
 }

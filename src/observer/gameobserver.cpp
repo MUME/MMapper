@@ -11,6 +11,11 @@ void GameObserver::observeConnected()
     sig2_connected.invoke();
 }
 
+void GameObserver::observeDisconnected()
+{
+    sig2_disconnected.invoke();
+}
+
 void GameObserver::observeSentToMud(const QString &input)
 {
     auto str = input;

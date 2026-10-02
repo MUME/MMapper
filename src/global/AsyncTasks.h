@@ -10,7 +10,7 @@
 
 class AnsiOstream;
 
-enum class NODISCARD AsyncTaskTypeEnum : uint8_t { IO, Task };
+enum class NODISCARD AsyncTaskTypeEnum : uint8_t { IO, Task, RemoteEdit };
 
 namespace async_tasks {
 

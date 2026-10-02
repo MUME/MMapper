@@ -24,6 +24,8 @@ public:
 
 // returns a uniformly-distributed random number in [0..max], inclusive
 NODISCARD extern size_t getRandom(size_t max);
+// returns `length` random ASCII alphanumerics
+NODISCARD extern std::string getRandomString(size_t length);
 
 template<typename T>
 NODISCARD decltype(auto) chooseRandomElement(T &&container)
