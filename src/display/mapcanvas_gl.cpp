@@ -11,6 +11,7 @@
 #include "../global/logging.h"
 #include "../global/progresscounter.h"
 #include "../global/utils.h"
+#include "../group/tokenmanager.h"
 #include "../map/coordinate.h"
 #include "../mapdata/mapdata.h"
 #include "../opengl/Font.h"
@@ -131,6 +132,7 @@ void MapCanvas::hostCleanupGL()
     // and it also owns the lifetime of some OpenGL objects (e.g. VBOs).
     m_batches.resetExistingMeshesAndIgnorePendingRemesh();
     m_weather.cleanup();
+    TokenManager::cleanupOpenGLTexturesIfCreated(getOpenGL());
     m_textures.destroyAll();
     getGLFont().cleanup();
     getOpenGL().cleanup();

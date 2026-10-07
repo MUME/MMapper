@@ -326,3 +326,8 @@ bool CGroupChar::setScore(const QString &textHP, const QString &textMana, const 
 #undef X_SCORE
     return updated;
 }
+
+QString CGroupChar::getDisplayName() const
+{
+    return getName().toQString();
+}
