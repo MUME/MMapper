@@ -17,7 +17,6 @@
 class MMTexture; // forward
 class OpenGL;
 using SharedMMTexture = std::shared_ptr<MMTexture>; // …
-QString canonicalTokenKey(const QString &name);
 
 class NODISCARD_QOBJECT TokenManager final : public QObject
 {
@@ -35,6 +34,9 @@ public:
     void processPendingTextureChanges(OpenGL &gl);
 
     static void cleanupOpenGLTexturesIfCreated(OpenGL &gl);
+
+public slots:
+    void slot_resourcesDirectoryChanged();
 
 signals:
     void sig_tokensChanged();

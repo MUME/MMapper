@@ -143,6 +143,10 @@ ConfigDialog::ConfigDialog(QWidget *const parent)
             &ConfigDialog::slot_onResultSelected);
 
     connect(generalPage, &GeneralPage::sig_reloadConfig, this, [this]() { emit sig_loadConfig(); });
+    connect(generalPage,
+            &GeneralPage::sig_resourcesDirectoryChanged,
+            this,
+            &ConfigDialog::sig_resourcesDirectoryChanged);
 
     connect(this, &ConfigDialog::sig_loadConfig, generalPage, &GeneralPage::slot_loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::slot_loadConfig);

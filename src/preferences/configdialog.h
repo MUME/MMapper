@@ -64,5 +64,6 @@ private slots:
 signals:
     void sig_graphicsSettingsChanged();
     void sig_groupSettingsChanged();
+    void sig_resourcesDirectoryChanged();
     void sig_loadConfig();
 };

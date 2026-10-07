@@ -14,7 +14,6 @@
 #include <QOpenGLContext>
 #include <QPixmapCache>
 #include <QSet>
-#include <QStandardPaths>
 
 namespace {
 TokenManager *g_tokenManager = nullptr;
@@ -95,6 +94,11 @@ TokenManager::~TokenManager()
 void TokenManager::scheduleDirectoryScan()
 {
     m_rescanTimer.start(100);
+}
+
+void TokenManager::slot_resourcesDirectoryChanged()
+{
+    scheduleDirectoryScan();
 }
 
 void TokenManager::scanDirectories()
@@ -237,15 +241,6 @@ QPixmap TokenManager::getToken(const QString &key)
         qWarning() << "TokenManager: No match found for key:" << resolvedKey;
     }
 
-    // Fallback: user-defined blank_character.png in tokens folder
-    const QString userFallback
-        = QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
-              .filePath(QStringLiteral("tokens/blank_character.png"));
-    if (QFile::exists(userFallback)) {
-        m_tokenPathCache[resolvedKey] = userFallback; // ✅ Cache fallback
-        return QPixmap(userFallback);
-    }
-
     // Final fallback: built-in resource image
     QString finalFallback = ":/pixmaps/char-room-sel.png";
     m_tokenPathCache[resolvedKey] = finalFallback; // ✅ Cache fallback
@@ -264,11 +259,6 @@ MMTextureId TokenManager::textureIdFor(const QString &key)
         return m_textureCache.value(key);
 
     return INVALID_MM_TEXTURE_ID;
-}
-
-QString canonicalTokenKey(const QString &name)
-{
-    return normalizeKey(name); // reuse the existing static helper
 }
 
 MMTextureId TokenManager::uploadNow(const QString &key, const QPixmap &px)

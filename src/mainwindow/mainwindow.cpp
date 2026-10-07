@@ -1712,6 +1712,10 @@ void MainWindow::slot_onPreferences()
                 &ConfigDialog::sig_groupSettingsChanged,
                 m_groupWidget,
                 &GroupWidget::slot_groupSettingsChanged);
+        connect(configDialog,
+                &ConfigDialog::sig_resourcesDirectoryChanged,
+                &tokenManager(),
+                &TokenManager::slot_resourcesDirectoryChanged);
         connect(configDialog, &QDialog::finished, this, [this](MAYBE_UNUSED int result) {
             m_configDialog.reset();
         });

@@ -298,50 +298,40 @@ void CharacterBatch::CharFakeGL::drawBox(
         addTransformed(c);
         addTransformed(d);
 
-        if (!dispName.isEmpty() && getConfig().groupManager.showMapTokens && numAlreadyInRoom == 0) {
-            const Color tokenColor{1.f, 1.f, 1.f, 1.f};
-            const auto &mtx = m_stack.top().modelView;
-
-            auto pushVert = [this, &tokenColor, &mtx](const glm::vec2 &roomPos,
-                                                      const glm::vec2 &uv) {
-                const auto tmp = mtx * glm::vec4(roomPos, 0.f, 1.f);
-                m_charTokenQuads.emplace_back(tokenColor,
-                                              glm::vec3{uv, 0.f},
-                                              glm::vec3{tmp / tmp.w});
-            };
-
-            // Scale the room quad around its center to 80%
-            static constexpr float kTokenScale = 0.80f;
-
-            const glm::vec2 center = 0.5f * (a + c);
-
-            const auto scaleAround = [&](const glm::vec2 &p) {
-                return center + (p - center) * kTokenScale;
-            };
-
-            const glm::vec2 sa = scaleAround(a);
-            const glm::vec2 sb = scaleAround(b);
-            const glm::vec2 sc = scaleAround(c);
-            const glm::vec2 sd = scaleAround(d);
-
-            // Keep full UVs so the whole texture shows on the smaller quad
-            pushVert(sa, {0.f, 0.f});
-            pushVert(sb, {1.f, 0.f});
-            pushVert(sc, {1.f, 1.f});
-            pushVert(sd, {0.f, 1.f});
-
-            QString key = TokenManager::overrideFor(dispName);
-            if (key.isEmpty())
-                key = canonicalTokenKey(dispName);
-            else
-                key = canonicalTokenKey(key);
-
-            m_charTokenKeys.emplace_back(key);
-        }
-
         if (beacon) {
             drawQuadCommon(a, b, c, d, QuadOptsEnum::BEACON);
         }
+    }
+
+    if (!dispName.isEmpty() && getConfig().groupManager.showMapTokens && numAlreadyInRoom == 0) {
+        const Color tokenColor{1.f, 1.f, 1.f, 1.f};
+        const auto &mtx = m_stack.top().modelView;
+
+        auto pushVert = [this, &tokenColor, &mtx](const glm::vec2 &roomPos, const glm::vec2 &uv) {
+            const auto tmp = mtx * glm::vec4(roomPos, 0.f, 1.f);
+            m_charTokenQuads.emplace_back(tokenColor, glm::vec3{uv, 0.f}, glm::vec3{tmp / tmp.w});
+        };
+
+        // Scale the room quad around its center to 80% so the character square remains visible.
+        static constexpr float kTokenScale = 0.80f;
+        const glm::vec2 center = 0.5f * (a + c);
+        const auto scaleAround = [&](const glm::vec2 &p) {
+            return center + (p - center) * kTokenScale;
+        };
+
+        const glm::vec2 sa = scaleAround(a);
+        const glm::vec2 sb = scaleAround(b);
+        const glm::vec2 sc = scaleAround(c);
+        const glm::vec2 sd = scaleAround(d);
+
+        // Keep full UVs so the whole texture shows on the smaller quad.
+        pushVert(sa, {0.f, 0.f});
+        pushVert(sb, {1.f, 0.f});
+        pushVert(sc, {1.f, 1.f});
+        pushVert(sd, {0.f, 1.f});
+
+        // Resolve the override once in TokenManager, using the display name as the key.
+        m_charTokenKeys.emplace_back(dispName);
     }
 
     glPopMatrix();
@@ -384,6 +374,10 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
                                           textures.char_room_sel->getArrayPosition().array));
     }
 
+    if (!m_charTris.empty()) {
+        gl.renderColoredTris(m_charTris, blended_noDepth);
+    }
+
     if (!m_charTokenQuads.empty() && !m_charTokenKeys.empty()) {
         size_t base = 0;
 
@@ -424,10 +418,6 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
 
             base += 4;
         }
-    }
-
-    if (!m_charTris.empty()) {
-        gl.renderColoredTris(m_charTris, blended_noDepth);
     }
 
     if (!m_charLines.empty()) {
@@ -650,6 +640,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch, ServerRoomId yourServ
         const bool fill = !drawnRoomIds.contains(id);
 
         const bool showToken = (id != playerRoomId);
+        // Use the player's token for their room; don't stack group-member tokens there.
         const QString tokenKey = showToken ? character.getDisplayName() : QString();
 
         batch.drawCharacter(pos, color, fill, tokenKey);
