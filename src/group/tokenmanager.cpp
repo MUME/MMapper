@@ -50,8 +50,7 @@ static SharedMMTexture makeTextureFromPixmap(const QPixmap &px)
             tex.setMipLevels(1);
             tex.setWrapMode(QOpenGLTexture::WrapMode::MirroredRepeat);
             tex.setMinMagFilters(QOpenGLTexture::Filter::Linear, QOpenGLTexture::Filter::Linear);
-            tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA,
-                                QOpenGLTexture::PixelType::UInt8);
+            tex.allocateStorage(QOpenGLTexture::PixelFormat::RGBA, QOpenGLTexture::PixelType::UInt8);
 
             tex.setData(0,
                         0,
@@ -120,8 +119,8 @@ void TokenManager::scanDirectories()
         m_watcher.removePaths(watchedDirectories);
     }
 
-    const QString userTokensDir
-        = QDir(getConfig().canvas.resourcesDirectory).filePath(QStringLiteral("tokens"));
+    const QString userTokensDir = QDir(getConfig().canvas.resourcesDirectory)
+                                      .filePath(QStringLiteral("tokens"));
     const QString assetTokensDir = QDir(getAssetsPath()).filePath(QStringLiteral("tokens"));
 
     const QList<QByteArray> supportedFormats = QImageReader::supportedImageFormats();
