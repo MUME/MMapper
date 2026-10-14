@@ -12,8 +12,8 @@
 #include "CGroupChar.h"
 #include "enums.h"
 #include "mmapper2group.h"
-#include "tokenpickerdialog.h"
 #include "tokenmanager.h"
+#include "tokenpickerdialog.h"
 
 #include <algorithm>
 #include <cmath>
