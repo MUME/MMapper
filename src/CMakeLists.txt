@@ -254,6 +254,8 @@ set(mmapper_SRCS
     group/GroupManagerApi.h
     group/tokenmanager.cpp
     group/tokenmanager.h
+    group/tokenpickerdialog.cpp
+    group/tokenpickerdialog.h
     group/GroupModel.cpp
     group/GroupModel.h
     group/groupwidget.cpp

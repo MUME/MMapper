@@ -12,6 +12,7 @@
 #include "CGroupChar.h"
 #include "enums.h"
 #include "mmapper2group.h"
+#include "tokenpickerdialog.h"
 #include "tokenmanager.h"
 
 #include <algorithm>
@@ -23,9 +24,6 @@
 #include <QColorDialog>
 #include <QDateTime>
 #include <QDebug>
-#include <QDir>
-#include <QFileDialog>
-#include <QFileInfo>
 #include <QHeaderView>
 #include <QIcon>
 #include <QMenu>
@@ -418,22 +416,20 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             return;
         }
         const QString charName = selectedCharacter->getDisplayName().trimmed();
-        const QString tokensDir = QDir(getConfig().canvas.resourcesDirectory).filePath("tokens");
-        if (!QDir(tokensDir).exists()) {
-            QMessageBox::information(this,
-                                     tr("No tokens folder"),
-                                     tr("The tokens folder does not exist:\n%1").arg(tokensDir));
+        TokenPickerDialog dialog(tokenManager().availableFiles(), this);
+        dialog.setWindowTitle(tr("Choose token for %1").arg(charName));
+        if (dialog.exec() != QDialog::Accepted) {
             return;
         }
-        const QString file
-            = QFileDialog::getOpenFileName(this,
-                                           tr("Choose icon for %1").arg(charName),
-                                           tokensDir,
-                                           tr("Images (*.png *.jpg *.jpeg *.bmp *.webp)"));
-        if (file.isEmpty()) {
+        if (dialog.useDefault()) {
+            setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+        } else if (!dialog.selectedToken().isEmpty()) {
+            setConfig().groupManager.tokenOverrides[charName] = dialog.selectedToken();
+        } else {
             return;
         }
-        setConfig().groupManager.tokenOverrides[charName] = QFileInfo(file).completeBaseName();
+        getConfig().write();
+        tokenManager().invalidateTextures();
         slot_updateLabels();
         emit sig_characterUpdated(selectedCharacter);
     });
@@ -447,6 +443,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
         const QString charName = selectedCharacter->getDisplayName().trimmed();
         setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+        getConfig().write();
+        tokenManager().invalidateTextures();
         slot_updateLabels();
         emit sig_characterUpdated(selectedCharacter);
     });

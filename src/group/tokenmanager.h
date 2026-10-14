@@ -18,6 +18,8 @@ class MMTexture; // forward
 class OpenGL;
 using SharedMMTexture = std::shared_ptr<MMTexture>; // …
 
+enum class NODISCARD TokenImportResultEnum { IMPORTED, ALREADY_EXISTS, FAILED };
+
 class NODISCARD_QOBJECT TokenManager final : public QObject
 {
     Q_OBJECT
@@ -27,10 +29,16 @@ public:
     ~TokenManager() final;
 
     QPixmap getToken(const QString &key);
+    const QMap<QString, QString> &availableFiles() const { return m_availableFiles; }
+    TokenImportResultEnum importTokenImage(const QString &sourcePath,
+                                           bool replaceExisting,
+                                           QString &tokenName,
+                                           QString &errorMessage);
     static QString overrideFor(const QString &displayName);
     MMTextureId textureIdFor(const QString &key); // ← per-token cache
     MMTextureId uploadNow(const QString &key, const QPixmap &px);
     SharedMMTexture textureById(MMTextureId id) const;
+    void invalidateTextures();
     void processPendingTextureChanges(OpenGL &gl);
 
     static void cleanupOpenGLTexturesIfCreated(OpenGL &gl);

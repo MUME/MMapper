@@ -9,10 +9,12 @@
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
 #include <QImageReader>
 #include <QOpenGLContext>
 #include <QPixmapCache>
+#include <QSaveFile>
 #include <QSet>
 
 namespace {
@@ -100,6 +102,102 @@ void TokenManager::slot_resourcesDirectoryChanged()
     scheduleDirectoryScan();
 }
 
+TokenImportResultEnum TokenManager::importTokenImage(const QString &sourcePath,
+                                                     const bool replaceExisting,
+                                                     QString &tokenName,
+                                                     QString &errorMessage)
+{
+    const QFileInfo sourceInfo(sourcePath);
+    if (!sourceInfo.isFile()) {
+        errorMessage = tr("The selected image file could not be found.");
+        return TokenImportResultEnum::FAILED;
+    }
+
+    const QString resourcesDirectory = getConfig().canvas.resourcesDirectory;
+    if (resourcesDirectory.isEmpty()) {
+        errorMessage = tr("No resource directory has been configured.");
+        return TokenImportResultEnum::FAILED;
+    }
+
+    const QString tokensDirectory = QDir(resourcesDirectory).filePath(QStringLiteral("tokens"));
+    if (!QDir().mkpath(tokensDirectory)) {
+        errorMessage = tr("The tokens folder could not be created:\n%1").arg(tokensDirectory);
+        return TokenImportResultEnum::FAILED;
+    }
+
+    const QString destinationPath = QDir(tokensDirectory).filePath(sourceInfo.fileName());
+    const QFileInfo destinationInfo(destinationPath);
+    tokenName = sourceInfo.completeBaseName();
+
+    if (sourceInfo.canonicalFilePath() == destinationInfo.canonicalFilePath()) {
+        scheduleDirectoryScan();
+        return TokenImportResultEnum::IMPORTED;
+    }
+
+    if (destinationInfo.exists() && !replaceExisting) {
+        return TokenImportResultEnum::ALREADY_EXISTS;
+    }
+
+    const auto existingToken = m_availableFiles.constFind(normalizeKey(tokenName));
+    if (existingToken != m_availableFiles.cend()) {
+        const QFileInfo existingInfo(existingToken.value());
+        const QString existingPath = existingInfo.absoluteFilePath();
+        const QString relativePath = QDir(tokensDirectory).relativeFilePath(existingPath);
+        const bool existingIsUserToken = relativePath != QStringLiteral("..")
+                                         && !relativePath.startsWith(QStringLiteral("../"))
+                                         && !QDir::isAbsolutePath(relativePath);
+        if (existingIsUserToken
+            && existingInfo.fileName().compare(sourceInfo.fileName(), Qt::CaseInsensitive) != 0) {
+            errorMessage
+                = tr("A token with the same selectable name already exists as %1. Rename the new "
+                     "image or remove the existing file before importing it.")
+                      .arg(existingInfo.fileName());
+            return TokenImportResultEnum::FAILED;
+        }
+    }
+
+    QFile sourceFile(sourcePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        errorMessage = tr("The selected image could not be read:\n%1").arg(sourceFile.errorString());
+        return TokenImportResultEnum::FAILED;
+    }
+
+    QSaveFile destinationFile(destinationPath);
+    if (!destinationFile.open(QIODevice::WriteOnly)) {
+        errorMessage = tr("The image could not be saved to:\n%1\n%2")
+                           .arg(destinationPath, destinationFile.errorString());
+        return TokenImportResultEnum::FAILED;
+    }
+
+    while (!sourceFile.atEnd()) {
+        const QByteArray chunk = sourceFile.read(64 * 1024);
+        if (chunk.isEmpty()) {
+            if (sourceFile.error() != QFileDevice::NoError) {
+                errorMessage = tr("The selected image could not be read:\n%1")
+                                   .arg(sourceFile.errorString());
+                destinationFile.cancelWriting();
+                return TokenImportResultEnum::FAILED;
+            }
+            break;
+        }
+        if (destinationFile.write(chunk) != chunk.size()) {
+            errorMessage = tr("The image could not be saved to:\n%1\n%2")
+                               .arg(destinationPath, destinationFile.errorString());
+            destinationFile.cancelWriting();
+            return TokenImportResultEnum::FAILED;
+        }
+    }
+
+    if (!destinationFile.commit()) {
+        errorMessage = tr("The image could not be saved to:\n%1\n%2")
+                           .arg(destinationPath, destinationFile.errorString());
+        return TokenImportResultEnum::FAILED;
+    }
+
+    scheduleDirectoryScan();
+    return TokenImportResultEnum::IMPORTED;
+}
+
 void TokenManager::scanDirectories()
 {
     for (const QString &path : m_availableFiles) {
@@ -156,7 +254,7 @@ void TokenManager::scanDirectories()
                 continue;
             }
 
-            const QString key = normalizeKey(info.baseName());
+            const QString key = normalizeKey(info.completeBaseName());
             if (!key.isEmpty() && !m_availableFiles.contains(key)) {
                 m_availableFiles.insert(key, filePath);
                 if (watch) {
@@ -288,6 +386,11 @@ void TokenManager::processPendingTextureChanges(OpenGL &gl)
     if (m_pendingTextureChanges && QOpenGLContext::currentContext()) {
         clearOpenGLTextures(gl);
     }
+}
+
+void TokenManager::invalidateTextures()
+{
+    m_pendingTextureChanges = true;
 }
 
 void TokenManager::cleanupOpenGLTexturesIfCreated(OpenGL &gl)
