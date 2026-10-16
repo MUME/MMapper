@@ -813,6 +813,13 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     for (auto it = overridesMap.constBegin(); it != overridesMap.constEnd(); ++it) {
         tokenOverrides.insert(it.key(), it.value().toString());
     }
+
+    bearTokenOverrides.clear();
+    const QVariantMap bearOverridesMap = conf.value("group/bearTokenOverrides").toMap();
+    for (auto it = bearOverridesMap.constBegin(); it != bearOverridesMap.constEnd(); ++it) {
+        bearTokenOverrides.insert(it.key(), it.value().toString());
+    }
+    defaultBearToken = conf.value("group/defaultBearToken").toString();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -1017,6 +1024,13 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
         overridesMap.insert(it.key(), it.value());
     }
     conf.setValue("group/tokenOverrides", overridesMap);
+
+    QVariantMap bearOverridesMap;
+    for (auto it = bearTokenOverrides.constBegin(); it != bearTokenOverrides.constEnd(); ++it) {
+        bearOverridesMap.insert(it.key(), it.value());
+    }
+    conf.setValue("group/bearTokenOverrides", bearOverridesMap);
+    conf.setValue("group/defaultBearToken", defaultBearToken);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

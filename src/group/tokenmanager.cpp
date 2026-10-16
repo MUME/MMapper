@@ -32,11 +32,37 @@ static QString normalizeKey(QString key)
     return key;
 }
 
+static QString findOverride(const QMap<QString, QString> &overrides, const QString &displayName)
+{
+    const QString name = displayName.trimmed();
+    const auto exactMatch = overrides.constFind(name);
+    if (exactMatch != overrides.constEnd()) {
+        return exactMatch.value();
+    }
+    for (auto it = overrides.cbegin(); it != overrides.cend(); ++it) {
+        if (it.key().trimmed().compare(name, Qt::CaseInsensitive) == 0) {
+            return it.value();
+        }
+    }
+    return {};
+}
+
 QString TokenManager::overrideFor(const QString &displayName)
 {
     const auto &over = getConfig().groupManager.tokenOverrides;
-    auto it = over.constFind(displayName.trimmed());
+    const auto it = over.constFind(displayName.trimmed());
     return (it != over.constEnd()) ? it.value() : QString();
+}
+
+QString TokenManager::bearOverrideFor(const QString &displayName)
+{
+    return findOverride(getConfig().groupManager.bearTokenOverrides, displayName);
+}
+
+static QString textureCacheKey(const QString &key, const bool bearForm)
+{
+    return QStringLiteral("%1:%2").arg(bearForm ? QStringLiteral("bear") : QStringLiteral("normal"),
+                                       key);
 }
 
 static SharedMMTexture makeTextureFromPixmap(const QPixmap &px)
@@ -278,25 +304,8 @@ void TokenManager::scanDirectories()
     emit sig_tokensChanged();
 }
 
-QPixmap TokenManager::getToken(const QString &key)
+QPixmap TokenManager::loadToken(const QString &lookup)
 {
-    if (m_fallbackPixmap.isNull())
-        m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
-
-    if (key == kForceFallback) {
-        return m_fallbackPixmap;
-    }
-
-    const QString ov = overrideFor(key);
-    if (ov == kForceFallback) {
-        return m_fallbackPixmap;
-    }
-
-    QString lookup = key;
-    if (!ov.isEmpty()) {
-        lookup = ov; // use the user-chosen icon basename
-    }
-
     QString resolvedKey = normalizeKey(lookup);
     if (resolvedKey.isEmpty()) {
         resolvedKey = QStringLiteral("blank_character");
@@ -335,13 +344,56 @@ QPixmap TokenManager::getToken(const QString &key)
             qWarning() << "TokenManager: Failed to load image from path:" << path;
         }
     } else {
-        qWarning() << "TokenManager: No match found for key:" << resolvedKey;
+        return {};
     }
 
-    // Final fallback: built-in resource image
-    QString finalFallback = ":/pixmaps/char-room-sel.png";
-    m_tokenPathCache[resolvedKey] = finalFallback; // ✅ Cache fallback
-    return QPixmap(finalFallback);
+    return {};
+}
+
+QPixmap TokenManager::getToken(const QString &key, const bool bearForm)
+{
+    if (m_fallbackPixmap.isNull()) {
+        m_fallbackPixmap.load(":/pixmaps/char-room-sel.png");
+    }
+
+    if (key == kForceFallback) {
+        return m_fallbackPixmap;
+    }
+
+    if (bearForm) {
+        const QString bearOverride = bearOverrideFor(key);
+        if (!bearOverride.isEmpty() && bearOverride != kForceFallback) {
+            if (QPixmap selected = loadToken(bearOverride); !selected.isNull()) {
+                return selected;
+            }
+        }
+
+        const QString defaultBearName = getConfig().groupManager.defaultBearToken;
+        if (!defaultBearName.isEmpty()) {
+            if (QPixmap defaultBear = loadToken(defaultBearName); !defaultBear.isNull()) {
+                return defaultBear;
+            }
+        }
+        if (QPixmap builtInBear = loadToken(QStringLiteral("Bear-M")); !builtInBear.isNull()) {
+            return builtInBear;
+        }
+
+        // Keep self visible even if neither the selected image nor Bear-M.png is available.
+        return getToken(key, false);
+    }
+
+    const QString tokenOverride = overrideFor(key);
+    if (tokenOverride == kForceFallback) {
+        return m_fallbackPixmap;
+    }
+
+    const QString lookup = tokenOverride.isEmpty() ? key : tokenOverride;
+    if (QPixmap token = loadToken(lookup); !token.isNull()) {
+        return token;
+    }
+
+    qWarning() << "TokenManager: No match found for key:" << normalizeKey(lookup);
+    return m_fallbackPixmap;
 }
 
 TokenManager &tokenManager()
@@ -350,15 +402,16 @@ TokenManager &tokenManager()
     return instance;
 }
 
-MMTextureId TokenManager::textureIdFor(const QString &key)
+MMTextureId TokenManager::textureIdFor(const QString &key, const bool bearForm)
 {
-    if (m_textureCache.contains(key))
-        return m_textureCache.value(key);
+    const QString cacheKey = textureCacheKey(key, bearForm);
+    if (m_textureCache.contains(cacheKey))
+        return m_textureCache.value(cacheKey);
 
     return INVALID_MM_TEXTURE_ID;
 }
 
-MMTextureId TokenManager::uploadNow(const QString &key, const QPixmap &px)
+MMTextureId TokenManager::uploadNow(const QString &key, const bool bearForm, const QPixmap &px)
 {
     SharedMMTexture tex = makeTextureFromPixmap(px);
     MMTextureId id = tex->getId();
@@ -367,7 +420,7 @@ MMTextureId TokenManager::uploadNow(const QString &key, const QPixmap &px)
         return id;
 
     m_ownedTextures.push_back(std::move(tex));
-    m_textureCache.insert(key, id);
+    m_textureCache.insert(textureCacheKey(key, bearForm), id);
     return id;
 }
 

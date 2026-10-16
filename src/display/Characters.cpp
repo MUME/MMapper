@@ -51,10 +51,8 @@ bool CharacterBatch::isVisible(const Coordinate c, float margin) const
     return m_mapScreen.isRoomVisible(c, margin);
 }
 
-void CharacterBatch::drawCharacter(const Coordinate c,
-                                   const Color color,
-                                   bool fill,
-                                   const QString &dispName)
+void CharacterBatch::drawCharacter(
+    const Coordinate c, const Color color, bool fill, const QString &dispName, const bool bearForm)
 {
     const Configuration::CanvasSettings &settings = getConfig().canvas;
 
@@ -105,7 +103,7 @@ void CharacterBatch::drawCharacter(const Coordinate c,
     }
 
     const bool beacon = visible && !differentLayer && wantBeacons;
-    gl.drawBox(c, fill, beacon, isFar, dispName);
+    gl.drawBox(c, fill, beacon, isFar, dispName, bearForm);
 }
 
 void CharacterBatch::CharFakeGL::drawPathSegment(const glm::vec3 p1,
@@ -237,8 +235,12 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 in_a,
     }
 }
 
-void CharacterBatch::CharFakeGL::drawBox(
-    const Coordinate coord, bool fill, bool beacon, const bool isFar, const QString &dispName)
+void CharacterBatch::CharFakeGL::drawBox(const Coordinate coord,
+                                         bool fill,
+                                         bool beacon,
+                                         const bool isFar,
+                                         const QString &dispName,
+                                         const bool bearForm)
 {
     const bool dontFillRotatedQuads = true;
     const bool shrinkRotatedQuads = false; // REVISIT: make this a user option?
@@ -332,6 +334,7 @@ void CharacterBatch::CharFakeGL::drawBox(
 
         // Resolve the override once in TokenManager, using the display name as the key.
         m_charTokenKeys.emplace_back(dispName);
+        m_charTokenBearForms.emplace_back(bearForm);
     }
 
     glPopMatrix();
@@ -381,11 +384,13 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
     if (!m_charTokenQuads.empty() && !m_charTokenKeys.empty()) {
         size_t base = 0;
 
-        for (const QString &key : m_charTokenKeys) {
+        for (size_t tokenIndex = 0; tokenIndex < m_charTokenKeys.size(); ++tokenIndex) {
             if (base + 3 >= m_charTokenQuads.size())
                 break;
 
-            MMTextureId id = tokenManager().textureIdFor(key);
+            const QString &key = m_charTokenKeys[tokenIndex];
+            const bool bearForm = m_charTokenBearForms[tokenIndex];
+            MMTextureId id = tokenManager().textureIdFor(key, bearForm);
 
             if (id == INVALID_MM_TEXTURE_ID) {
                 if (!QOpenGLContext::currentContext()) {
@@ -393,10 +398,10 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
                     continue;
                 }
 
-                const QPixmap px = tokenManager().getToken(key);
+                const QPixmap px = tokenManager().getToken(key, bearForm);
 
                 if (!px.isNull()) {
-                    id = tokenManager().uploadNow(key, px);
+                    id = tokenManager().uploadNow(key, bearForm, px);
                 }
             }
 
@@ -437,6 +442,7 @@ void CharacterBatch::CharFakeGL::reallyDrawCharacters(OpenGL &gl, const MapCanva
 
     m_charTokenQuads.clear();
     m_charTokenKeys.clear();
+    m_charTokenBearForms.clear();
 }
 
 void CharacterBatch::CharFakeGL::reallyDrawPaths(OpenGL &gl)
@@ -575,7 +581,8 @@ void MapCanvas::paintCharacters()
                 characterBatch.drawCharacter(pos,
                                              color,
                                              true,
-                                             playerChar ? playerChar->getDisplayName() : QString());
+                                             playerChar ? playerChar->getDisplayName() : QString(),
+                                             playerChar && playerChar->isBearForm());
                 // paint prespam
                 const auto prespam = m_data.getPath(id, m_prespammedPath.getQueue());
                 characterBatch.drawPreSpammedPath(pos, prespam, color);

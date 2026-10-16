@@ -83,6 +83,7 @@ private:
         CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
         CharacterTypeEnum type = CharacterTypeEnum::UNDEFINED;
         CharacterAffectFlags affects;
+        bool bearForm = false;
 
         void reset() { *this = Server{}; }
     };
@@ -134,6 +135,15 @@ public:
     NODISCARD CharacterTypeEnum getType() const { return m_server.type; }
     NODISCARD CharacterPositionEnum getPosition() const { return m_server.position; }
     NODISCARD const CharacterAffectFlags &getAffects() const { return m_server.affects; }
+    NODISCARD bool isBearForm() const { return m_server.bearForm; }
+    bool setBearForm(const bool bearForm)
+    {
+        if (m_server.bearForm == bearForm) {
+            return false;
+        }
+        m_server.bearForm = bearForm;
+        return true;
+    }
     NODISCARD int getHits() const { return m_server.hp; }
     NODISCARD int getMaxHits() const { return m_server.maxhp; }
     NODISCARD int getMana() const { return m_server.mana; }

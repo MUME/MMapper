@@ -28,15 +28,16 @@ public:
     explicit TokenManager(QObject *parent = nullptr);
     ~TokenManager() final;
 
-    QPixmap getToken(const QString &key);
+    QPixmap getToken(const QString &key, bool bearForm = false);
     const QMap<QString, QString> &availableFiles() const { return m_availableFiles; }
     TokenImportResultEnum importTokenImage(const QString &sourcePath,
                                            bool replaceExisting,
                                            QString &tokenName,
                                            QString &errorMessage);
     static QString overrideFor(const QString &displayName);
-    MMTextureId textureIdFor(const QString &key); // ← per-token cache
-    MMTextureId uploadNow(const QString &key, const QPixmap &px);
+    static QString bearOverrideFor(const QString &displayName);
+    MMTextureId textureIdFor(const QString &key, bool bearForm = false); // ← per-token cache
+    MMTextureId uploadNow(const QString &key, bool bearForm, const QPixmap &px);
     SharedMMTexture textureById(MMTextureId id) const;
     void invalidateTextures();
     void processPendingTextureChanges(OpenGL &gl);
@@ -53,6 +54,7 @@ private:
     void scanDirectories();
     void scheduleDirectoryScan();
     void clearOpenGLTextures(OpenGL &gl);
+    QPixmap loadToken(const QString &lookup);
 
     QMap<QString, QString> m_availableFiles;
     QFileSystemWatcher m_watcher;

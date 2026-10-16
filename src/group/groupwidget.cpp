@@ -154,7 +154,8 @@ void GroupDelegate::paint(QPainter *const pPainter,
             selectColor.setAlpha(60);
             painter.fillRect(rect, selectColor);
         }
-        const QPixmap token = tokenManager().getToken(character->getDisplayName());
+        const QPixmap token = tokenManager().getToken(character->getDisplayName(),
+                                                      character->isBearForm());
         if (!token.isNull()) {
             QIcon(token).paint(&painter, rect, Qt::AlignCenter);
         }
@@ -416,15 +417,35 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             return;
         }
         const QString charName = selectedCharacter->getDisplayName().trimmed();
+        const bool selectingBearToken = selectedCharacter->isYou()
+                                        && selectedCharacter->isBearForm();
         TokenPickerDialog dialog(tokenManager().availableFiles(), this);
-        dialog.setWindowTitle(tr("Choose token for %1").arg(charName));
+        dialog.setWindowTitle(selectingBearToken ? tr("Choose bear-form token for %1").arg(charName)
+                                                 : tr("Choose token for %1").arg(charName));
         if (dialog.exec() != QDialog::Accepted) {
             return;
         }
         if (dialog.useDefault()) {
-            setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+            if (selectingBearToken) {
+                setConfig().groupManager.bearTokenOverrides[charName] = kForceFallback;
+            } else {
+                setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+            }
         } else if (!dialog.selectedToken().isEmpty()) {
-            setConfig().groupManager.tokenOverrides[charName] = dialog.selectedToken();
+            if (selectingBearToken) {
+                setConfig().groupManager.bearTokenOverrides[charName] = dialog.selectedToken();
+                const auto answer = QMessageBox::question(
+                    this,
+                    tr("Default bear image"),
+                    tr("Use this as the default bear image for characters without their own bear image?"),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No);
+                if (answer == QMessageBox::Yes) {
+                    setConfig().groupManager.defaultBearToken = dialog.selectedToken();
+                }
+            } else {
+                setConfig().groupManager.tokenOverrides[charName] = dialog.selectedToken();
+            }
         } else {
             return;
         }
@@ -442,7 +463,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             return;
         }
         const QString charName = selectedCharacter->getDisplayName().trimmed();
-        setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+        if (selectedCharacter->isYou() && selectedCharacter->isBearForm()) {
+            setConfig().groupManager.bearTokenOverrides[charName] = kForceFallback;
+        } else {
+            setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+        }
         getConfig().write();
         tokenManager().invalidateTextures();
         slot_updateLabels();
@@ -474,6 +499,9 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             contextMenu->addAction(m_center);
             contextMenu->addAction(m_recolor);
             contextMenu->addAction(m_setIcon);
+            m_useDefaultIcon->setText(selectedCharacter->isYou() && selectedCharacter->isBearForm()
+                                          ? tr("Use default bear icon")
+                                          : tr("Use default icon"));
             contextMenu->addAction(m_useDefaultIcon);
             contextMenu->popup(QCursor::pos());
         }
