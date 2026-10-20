@@ -239,13 +239,18 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
                                          + text_utils::formatFloatClassic(
                                              WeatherConstants::WEATHER_MASK_RADIUS_INNER)
                                          + "\n";
+    std::string defineWeatherInvNoiseSize = "#define WEATHER_INV_NOISE_SIZE "
+                                            + text_utils::formatFloatClassic(
+                                                WeatherConstants::WEATHER_INV_NOISE_SIZE)
+                                            + "\n";
 
-    std::array<const char *, 8> ptrs = {gl.getShaderVersion(),
+    std::array<const char *, 9> ptrs = {gl.getShaderVersion(),
                                         defineNamedColors.c_str(),
                                         defineWeatherRadius.c_str(),
                                         defineWeatherExtent.c_str(),
                                         defineWeatherMaskOuter.c_str(),
                                         defineWeatherMaskInner.c_str(),
+                                        defineWeatherInvNoiseSize.c_str(),
                                         "#line 1\n",
                                         source.source.c_str()};
     gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
