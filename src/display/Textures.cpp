@@ -480,8 +480,8 @@ void MapCanvas::initTextures()
         textures.white_pixel = MMTexture::alloc(std::vector<QImage>{whitePixel}, true);
     }
     {
-        // weather noise is 256
-        QImage noiseImage = createTileableValueNoiseImage(256);
+        // weather noise texture
+        QImage noiseImage = createTileableValueNoiseImage(WeatherConstants::WEATHER_NOISE_SIZE);
         textures.noise = MMTexture::alloc(std::vector<QImage>{noiseImage}, false);
     }
 

@@ -40,6 +40,8 @@ constexpr float WEATHER_EXTENT = 28.0f;
 constexpr float WEATHER_MASK_RADIUS_OUTER = 12.0f;
 constexpr float WEATHER_MASK_RADIUS_INNER = 8.0f;
 constexpr float TRANSITION_DURATION = 2.0f;
+constexpr int WEATHER_NOISE_SIZE = 256;
+constexpr float WEATHER_INV_NOISE_SIZE = 1.0f / static_cast<float>(WEATHER_NOISE_SIZE);
 } // namespace WeatherConstants
 
 /**

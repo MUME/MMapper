@@ -11,7 +11,7 @@ layout(std140) uniform NamedColorsBlock
 layout(std140) uniform CameraBlock
 {
     mat4 uViewProj;
-    vec4 uPlayerPos;        // xyz, w=zScale
+    vec4 uPlayerPos; // xyz, w=zScale
 };
 
 layout(std140) uniform TimeBlock
@@ -32,22 +32,22 @@ uniform sampler2D uTexture;
 in vec3 vWorldPos;
 out vec4 vFragmentColor;
 
+// Avoid dynamic textureSize queries in fragment loop on Intel GPUs; WEATHER_INV_NOISE_SIZE is injected at shader compile time
 float get_noise(vec2 p)
 {
-    vec2 size = vec2(textureSize(uTexture, 0));
-    return texture(uTexture, p / size).r;
+    return texture(uTexture, p * WEATHER_INV_NOISE_SIZE).r;
 }
 
 float fbm(vec2 p)
 {
-    float v = 0.0;
-    float a = 0.5;
     vec2 shift = vec2(100.0);
-    for (int i = 0; i < 4; ++i) {
-        v += a * get_noise(p);
-        p = p * 2.0 + shift;
-        a *= 0.5;
-    }
+    float v = 0.5 * get_noise(p);
+    p = p * 2.0 + shift;
+    v += 0.25 * get_noise(p);
+    p = p * 2.0 + shift;
+    v += 0.125 * get_noise(p);
+    p = p * 2.0 + shift;
+    v += 0.0625 * get_noise(p);
     return v;
 }
 
@@ -56,7 +56,10 @@ void main()
     vec3 worldPos = vWorldPos;
 
     float distToPlayer = distance(worldPos.xy, uPlayerPos.xy);
-    float localMask = 1.0 - smoothstep(WEATHER_MASK_RADIUS_INNER, WEATHER_MASK_RADIUS_OUTER, distToPlayer);
+    float localMask = 1.0
+                      - smoothstep(WEATHER_MASK_RADIUS_INNER,
+                                   WEATHER_MASK_RADIUS_OUTER,
+                                   distToPlayer);
 
     float uCurrentTime = uTime.x;
     float uWeatherStartTime = uConfig.x;
