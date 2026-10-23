@@ -55,10 +55,12 @@ public:
 public:
     void paint(QPainter *pPainter, const QRect &rect);
     NODISCARD int getWidth() const { return static_cast<int>(m_count) * m_height; }
+    NODISCARD int getWidthForHeight(int height) const { return static_cast<int>(m_count) * height; }
 };
 Q_DECLARE_METATYPE(GroupStateData)
 
 #define XFOREACH_COLUMNTYPE(X) \
+    X(CHARACTER_TOKEN, character_token, CharacterToken, "Token") \
     X(NAME, name, Name, "Name") \
     X(HP, hp, Hp, "HP") \
     X(MANA, mana, Mana, "Mana") \

@@ -48,11 +48,14 @@ private:
     QTimer *m_pulseTimer = nullptr;
 
     void updateColumnVisibility();
+    void updateTokenSizing();
     void updatePulseTimer();
 
 private:
     QAction *m_center = nullptr;
     QAction *m_recolor = nullptr;
+    QAction *m_setIcon = nullptr;
+    QAction *m_useDefaultIcon = nullptr;
     SharedGroupChar selectedCharacter;
 
 public:
@@ -65,14 +68,18 @@ protected:
 signals:
     void sig_kickCharacter(const QString &);
     void sig_center(glm::vec2);
+    void sig_characterUpdated(SharedGroupChar character);
 
 public slots:
     void slot_mapUnloaded() { deref(m_model).setMapLoaded(false); }
     void slot_mapLoaded() { deref(m_model).setMapLoaded(true); }
+    void slot_groupSettingsChanged();
+    void slot_tokensChanged();
 
 private slots:
     void slot_onCharacterAdded(SharedGroupChar character);
     void slot_onCharacterRemoved(GroupId characterId);
     void slot_onCharacterUpdated(SharedGroupChar character);
     void slot_onGroupReset(const GroupVector &newCharacterList);
+    void slot_updateLabels();
 };

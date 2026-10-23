@@ -8,6 +8,7 @@
 
 #include <QCheckBox>
 #include <QColorDialog>
+#include <QComboBox>
 #include <QPixmap>
 #include <QPushButton>
 
@@ -37,6 +38,28 @@ GroupPage::GroupPage(QWidget *const parent)
         emit sig_groupSettingsChanged();
     });
 
+    connect(ui->showTokensCheckBox, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showTokens = checked;
+        emit sig_groupSettingsChanged();
+    });
+
+    connect(ui->showMapTokensCheckBox, &QCheckBox::stateChanged, this, [this](int checked) {
+        setConfig().groupManager.showMapTokens = checked;
+        emit sig_groupSettingsChanged();
+    });
+
+    const QString tokenSizeText = QString::number(getConfig().groupManager.tokenIconSize) + " px";
+    const int tokenSizeIndex = ui->tokenSizeComboBox->findText(tokenSizeText);
+    if (tokenSizeIndex >= 0) {
+        ui->tokenSizeComboBox->setCurrentIndex(tokenSizeIndex);
+    }
+
+    connect(ui->tokenSizeComboBox, &QComboBox::currentTextChanged, this, [this](const QString &txt) {
+        const int value = txt.section(' ', 0, 0).toInt();
+        setConfig().groupManager.tokenIconSize = value;
+        emit sig_groupSettingsChanged();
+    });
+
     slot_loadConfig();
 }
 
@@ -54,12 +77,21 @@ void GroupPage::slot_loadConfig()
     ui->yourColorPushButton->setIcon(QIcon(yourPix));
 
     ui->npcOverrideColorCheckBox->setChecked(settings.npcColorOverride);
+
     QPixmap npcOverridePix(16, 16);
     npcOverridePix.fill(settings.npcColor);
     ui->npcOverrideColorPushButton->setIcon(QIcon(npcOverridePix));
 
     ui->npcSortBottomCheckbox->setChecked(settings.npcSortBottom);
     ui->npcHideCheckbox->setChecked(settings.npcHide);
+
+    ui->showTokensCheckBox->setChecked(settings.showTokens);
+    ui->showMapTokensCheckBox->setChecked(settings.showMapTokens);
+    const QString tokenSizeText = QString::number(settings.tokenIconSize) + " px";
+    const int tokenSizeIndex = ui->tokenSizeComboBox->findText(tokenSizeText);
+    if (tokenSizeIndex >= 0) {
+        ui->tokenSizeComboBox->setCurrentIndex(tokenSizeIndex);
+    }
 }
 
 void GroupPage::slot_chooseColor()
