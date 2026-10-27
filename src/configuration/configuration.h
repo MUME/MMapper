@@ -181,6 +181,8 @@ public:
         NamedConfig<bool> trilinearFiltering{"TRILINEAR_FILTERING", true};
         NamedConfig<bool> showMissingMapId{"SHOW_MISSING_MAPID", false};
         NamedConfig<bool> showUnsavedChanges{"SHOW_UNSAVED_CHANGES", false};
+        NamedConfig<bool> showUndiscoveredRooms{"SHOW_UNDISCOVERED_ROOMS", false};
+        NamedConfig<bool> showUndiscoveredRoomsWarning{"SHOW_UNDISCOVERED_ROOMS_WARNING", true};
         NamedConfig<bool> showUnmappedExits{"SHOW_UNMAPPED_EXITS", false};
         NamedConfig<QString> mapFontFamily{"MAP_FONT_FAMILY", QStringLiteral("Cantarell")};
         NamedConfig<int> mapFontPointSize{"MAP_FONT_POINT_SIZE", platformPointSize(11)};
