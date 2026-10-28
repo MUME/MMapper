@@ -21,10 +21,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, macos-15, ubuntu-latest]
+        os: [windows-2022, macos-15, ubuntu-24.04]
         compiler: ['clang', 'gcc', 'msvc']
         exclude:
-        - os: ubuntu-latest
+        - os: ubuntu-24.04
           compiler: 'msvc'
         - os: macos-15
           compiler: 'gcc'
