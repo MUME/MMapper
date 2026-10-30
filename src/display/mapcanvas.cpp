@@ -1372,7 +1372,7 @@ void MapCanvas::layerChanged()
 void MapCanvas::forceUpdateMeshes()
 {
     m_batches.resetExistingMeshesAndIgnorePendingRemesh();
-    m_diff.resetExistingMeshesAndIgnorePendingRemesh();
+    m_diff.clearMeshes();
     m_frameManager.requestUpdate();
 }
 

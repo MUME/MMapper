@@ -20,4 +20,5 @@ private Q_SLOTS:
     void audioToolbarTest();
     void mapScrollerScrollMath();
     void compactLayoutPolicy();
+    void undiscoveredRoomsDialog();
 };

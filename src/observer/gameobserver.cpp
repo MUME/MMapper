@@ -8,6 +8,7 @@
 
 void GameObserver::observeConnected()
 {
+    resetKnownRooms();
     sig2_connected.invoke();
 }
 
@@ -27,6 +28,9 @@ void GameObserver::observeSentToUser(const QString &input)
 
 void GameObserver::observeSentToUserGmcp(const GmcpMessage &m)
 {
+    const auto revision = getKnownRooms().revision;
+    const bool request = m_knownRooms.receive(m);
+    knownRoomsChanged(revision, request);
     sig2_sentToUserGmcp.invoke(m);
 }
 
@@ -81,4 +85,39 @@ void GameObserver::observeSeason(MumeSeasonEnum season)
         m_season = season;
         sig2_seasonChanged.invoke(m_season);
     }
+}
+
+void GameObserver::knownRoomsChanged(const uint64_t previousRevision, const bool request)
+{
+    if (previousRevision != getKnownRooms().revision) {
+        sig2_knownRoomsChanged.invoke();
+    }
+    if (request) {
+        sig2_requestKnownRooms.invoke();
+    }
+}
+
+void GameObserver::resetKnownRooms()
+{
+    const auto revision = getKnownRooms().revision;
+    m_knownRooms.reset();
+    knownRoomsChanged(revision, false);
+}
+
+void GameObserver::enableKnownRooms(const bool enabled)
+{
+    const auto revision = getKnownRooms().revision;
+    const bool request = m_knownRooms.setEnabled(enabled);
+    knownRoomsChanged(revision, request);
+}
+
+void GameObserver::configureKnownRoomsCache(const QString &directory, const QString &server)
+{
+    const auto revision = getKnownRooms().revision;
+    m_knownRooms.configureCache(
+        directory,
+        server,
+        [this]() { sig2_knownRoomsChanged.invoke(); },
+        [this]() { sig2_knownRoomsCacheMissing.invoke(); });
+    knownRoomsChanged(revision, false);
 }

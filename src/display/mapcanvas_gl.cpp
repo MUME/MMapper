@@ -352,6 +352,12 @@ bool MapCanvas::hostInitializeGL()
         programs.early_init();
     }
 
+    m_observer.sig2_knownRoomsChanged.connect(m_lifetime,
+                                              [this]() { m_frameManager.requestUpdate(); });
+    setConfig().canvas.showUndiscoveredRooms.registerChangeCallback(m_lifetime, [this]() {
+        m_frameManager.requestUpdate();
+    });
+
     setConfig().canvas.showUnsavedChanges.registerChangeCallback(m_lifetime, [this]() {
         if (getConfig().canvas.showUnsavedChanges.get() && m_diff.highlight.has_value()
             && m_diff.highlight->highlights.empty()) {
@@ -719,10 +725,12 @@ void MapCanvas::actuallyPaintGL()
     }
 }
 
-NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved, const Map &current) const
+NODISCARD bool MapCanvas::Diff::isUpToDate(const Map &saved,
+                                           const Map &current,
+                                           const Options &options) const
 {
     return highlight && highlight->saved.isSamePointer(saved)
-           && highlight->current.isSamePointer(current);
+           && highlight->current.isSamePointer(current) && highlight->options == options;
 }
 
 // this differs from isUpToDate in that it allows display of a diff based on the current saved map,
@@ -734,7 +742,9 @@ NODISCARD bool MapCanvas::Diff::hasRelatedDiff(const Map &saved) const
 
 void MapCanvas::Diff::cancelUpdates(const Map &saved)
 {
-    futureHighlight.reset();
+    // Keep an in-flight job rather than joining its worker on the GUI thread.
+    // hasRelatedDiff() and the options check reject obsolete results, and the
+    // next update coalesces all intervening changes into a fresh snapshot.
     if (highlight) {
         if (!hasRelatedDiff(saved)) {
             highlight.reset();
@@ -742,13 +752,15 @@ void MapCanvas::Diff::cancelUpdates(const Map &saved)
     }
 }
 
-void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
+void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved,
+                                       const Map &current,
+                                       const KnownRooms::Snapshot &known,
+                                       const Options &options)
 {
     auto &diff = *this;
 
-    // Pending takes precedence. This also usually guarantees at most one pending update at a time,
-    // but calling resetExistingMeshesAndIgnorePendingRemesh() could result in more than one diff
-    // mesh thread executing concurrently, where the old one will be ignored.
+    // At most one highlight worker runs at a time, including across invalidation.
+    // Only release its future after it is ready, so invalidation never waits for it.
     if (diff.futureHighlight) {
         constexpr auto immediate = std::chrono::milliseconds(0);
         if (diff.futureHighlight->wait_for(immediate) != std::future_status::timeout) {
@@ -763,24 +775,25 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
     }
 
     // no change necessary
-    if (isUpToDate(saved, current)) {
+    if (isUpToDate(saved, current, options)) {
         return;
     }
 
-    const auto &config = getConfig();
-    const auto &canvas = config.canvas;
-    const bool showNeedsServerId = canvas.showMissingMapId.get();
-    const bool showChanged = canvas.showUnsavedChanges.get();
+    const bool showNeedsServerId = options.missingId;
+    const bool showChanged = options.changed;
+    const bool showUndiscovered = options.undiscovered;
 
     diff.futureHighlight = std::async(
         std::launch::async,
-        [saved, current, showNeedsServerId, showChanged]() -> Diff::HighlightDiff {
+        [saved, current, known, options, showNeedsServerId, showChanged, showUndiscovered]()
+            -> Diff::HighlightDiff {
             DECL_TIMER(t2,
                        "[async] actuallyPaintGL: highlight changes, temporary, and needs update");
 
             auto getHighlights =
-                [&saved, &current, showChanged, showNeedsServerId]() -> Diff::MaybeDataOrMesh {
-                if (!showChanged && !showNeedsServerId) {
+                [&saved, &current, &known, showChanged, showNeedsServerId, showUndiscovered]()
+                -> Diff::MaybeDataOrMesh {
+                if (!showChanged && !showNeedsServerId && !showUndiscovered) {
                     return Diff::MaybeDataOrMesh{};
                 }
 
@@ -815,13 +828,25 @@ void MapCanvas::Diff::maybeAsyncUpdate(const Map &saved, const Map &current)
                                             });
                 }
 
+                // Red takes precedence over the existing mapping dots in the same corner.
+                // Missing IDs and temporary rooms cannot establish discovery status.
+                if (showUndiscovered) {
+                    current.getRooms().for_each([&current, &known, &drawQuad](auto id) {
+                        if (const auto room = current.getRoomHandle(id)) {
+                            if (!room.isTemporary() && known.isUndiscovered(room.getServerId())) {
+                                drawQuad(room.getRaw(), NamedColorEnum::HIGHLIGHT_UNDISCOVERED);
+                            }
+                        }
+                    });
+                }
+
                 if (highlights.empty()) {
                     return Diff::MaybeDataOrMesh{};
                 }
                 return Diff::MaybeDataOrMesh{std::move(highlights)};
             };
 
-            return Diff::HighlightDiff{saved, current, getHighlights()};
+            return Diff::HighlightDiff{saved, current, getHighlights(), options};
         });
 }
 
@@ -831,8 +856,20 @@ void MapCanvas::paintDifferences()
     const auto &saved = m_data.getSavedMap();
     const auto &current = m_data.getCurrentMap();
 
-    diff.maybeAsyncUpdate(saved, current);
-    if (!diff.hasRelatedDiff(saved)) {
+    const auto &known = m_observer.getKnownRooms();
+    const auto &canvas = getConfig().canvas;
+    const bool undiscovered = canvas.showUndiscoveredRooms.get() && known.complete;
+    const Diff::Options options{canvas.showMissingMapId.get(),
+                                canvas.showUnsavedChanges.get(),
+                                undiscovered,
+                                undiscovered ? known.revision : 0,
+                                undiscovered ? known.generation : 0};
+    diff.maybeAsyncUpdate(saved, current, known, options);
+    if (diff.futureHighlight || !diff.isUpToDate(saved, current, options)) {
+        // Finish or replace the pending batch even when the map is otherwise idle.
+        m_frameManager.requestUpdate();
+    }
+    if (!diff.hasRelatedDiff(saved) || !diff.highlight->options.sameVisibility(options)) {
         return;
     }
 

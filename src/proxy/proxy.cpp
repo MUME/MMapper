@@ -40,10 +40,12 @@
 #include <tuple>
 
 #include <QByteArray>
+#include <QDir>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QScopedPointer>
 #include <QSslSocket>
+#include <QStandardPaths>
 #include <QTcpSocket>
 
 using mmqt::makeQPointer;
@@ -191,6 +193,7 @@ Proxy::Proxy(Badge<Proxy>,
 
 Proxy::~Proxy()
 {
+    m_gameObserver.resetKnownRooms();
     // This can happen as a result of the user hitting Alt-F4 to close the MMapper window.
     sendNewlineToUser();
     sendStatusToUser("MMapper proxy is shutting down.");
@@ -883,6 +886,14 @@ void Proxy::init()
 
     initMisc();
 
+    m_gameObserver.sig2_requestKnownRooms.connect(m_lifetime, [this]() {
+        getMudTelnet().onGmcpToMud(GmcpMessage{GmcpMessageTypeEnum::ROOM_KNOWN_LIST});
+    });
+    setConfig().canvas.showUndiscoveredRooms.registerChangeCallback(m_lifetime, [this]() {
+        m_gameObserver.enableKnownRooms(getConfig().canvas.showUndiscoveredRooms.get());
+    });
+    m_gameObserver.enableKnownRooms(getConfig().canvas.showUndiscoveredRooms.get());
+
     log("Connection to client established ...");
     sendWelcomeToUser();
     sendSyntaxHintToUser("Type", "help", "for help.");
@@ -923,6 +934,7 @@ void Proxy::onMudConnected()
 
 void Proxy::onMudError(const QString &errorStr)
 {
+    m_gameObserver.resetKnownRooms();
     m_serverState = ServerStateEnum::Error;
 
     qWarning() << "Mud socket error" << errorStr;
@@ -956,6 +968,7 @@ void Proxy::userTerminatedConnection()
 
 void Proxy::mudTerminatedConnection()
 {
+    m_gameObserver.resetKnownRooms();
     if (!isConnected()) {
         return;
     }
@@ -1042,6 +1055,15 @@ void Proxy::connectToMud()
             getUserParser().doMove(CommandEnum::LOOK);
             m_serverState = ServerStateEnum::Offline;
             break;
+        }
+
+        const auto &connection = getConfig().connection;
+        const auto server = connection.remoteServerName.trimmed().toCaseFolded() + ":"
+                            + QString::number(static_cast<unsigned int>(connection.remotePort));
+        const auto dataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        if (!dataDirectory.isEmpty()) {
+            m_gameObserver.configureKnownRoomsCache(QDir(dataDirectory).filePath("known-rooms"),
+                                                    server);
         }
 
         sendStatusToUser("Connecting...");

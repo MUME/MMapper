@@ -29,6 +29,7 @@
 #include "../media/DescriptionWidget.h"
 #include "../media/MediaLibrary.h"
 #include "../pathmachine/mmapper2pathmachine.h"
+#include "../preferences/UndiscoveredRoomsDialog.h"
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
 #include "../roompanel/RoomManager.h"
@@ -317,6 +318,24 @@ MainWindow::MainWindow()
     // TODO move this connect() wiring into AutoLogger::ctor ?
     std::invoke([this] {
         GameObserver &observer = deref(m_gameObserver);
+        observer.sig2_knownRoomsCacheMissing.connect(m_lifetime, [this]() {
+            if (!getConfig().canvas.showUndiscoveredRooms.get()
+                || !getConfig().canvas.showUndiscoveredRoomsWarning.get()) {
+                return;
+            }
+            const auto generation = deref(m_gameObserver).getKnownRooms().generation;
+            auto &message = showUndiscoveredRoomsDialog(this);
+            connect(&message, &QDialog::finished, this, [this, generation](const int answer) {
+                // A delayed answer must not change another character's display settings.
+                if (generation != deref(m_gameObserver).getKnownRooms().generation) {
+                    return;
+                }
+                if (answer != QMessageBox::Ok) {
+                    setConfig().canvas.showUndiscoveredRooms.set(false);
+                    deref(m_mapWindow).slot_graphicsSettingsChanged();
+                }
+            });
+        });
         observer.sig2_connected.connect(m_lifetime, [this]() {
             //
             deref(m_logger).slot_onConnected();

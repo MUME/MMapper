@@ -10,8 +10,13 @@
 #include "../src/mainwindow/CompactLayout.h"
 #include "../src/mainwindow/UpdateChecker.h"
 #include "../src/map/coordinate.h"
+#include "../src/preferences/UndiscoveredRoomsDialog.h"
 
+#include <QCheckBox>
 #include <QDebug>
+#include <QMessageBox>
+#include <QPointer>
+#include <QPushButton>
 #include <QScopeGuard>
 #include <QSignalSpy>
 #include <QtTest/QtTest>
@@ -166,6 +171,34 @@ void TestMainWindow::compactLayoutPolicy()
     QCOMPARE(probeSize(QSize(600, 420), QSize(1920, 1080)), QSize(600, 420));
     // No screen: the window size stands.
     QCOMPARE(probeSize(QSize(1080, 900), QSize()), QSize(1080, 900));
+}
+
+void TestMainWindow::undiscoveredRoomsDialog()
+{
+    const bool previous = getConfig().canvas.showUndiscoveredRoomsWarning.get();
+    const auto restore = qScopeGuard(
+        [previous]() { setConfig().canvas.showUndiscoveredRoomsWarning.set(previous); });
+    setConfig().canvas.showUndiscoveredRoomsWarning.set(true);
+    QPointer<QMessageBox> cancelled = &showUndiscoveredRoomsDialog(nullptr);
+    QCOMPARE(cancelled->text(), QStringLiteral("Loading undiscovered rooms."));
+    QCOMPARE(
+        cancelled->informativeText(),
+        QStringLiteral(
+            "This may take about a minute in the background the first time you use it for each character."));
+    QCOMPARE(cancelled->standardButtons(), QMessageBox::Ok | QMessageBox::Cancel);
+    QCOMPARE(cancelled->defaultButton(), cancelled->button(QMessageBox::Ok));
+    cancelled->checkBox()->setChecked(true);
+    cancelled->done(QMessageBox::Cancel);
+    QVERIFY(getConfig().canvas.showUndiscoveredRoomsWarning.get());
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(cancelled.isNull());
+
+    QPointer<QMessageBox> accepted = &showUndiscoveredRoomsDialog(nullptr);
+    accepted->checkBox()->setChecked(true);
+    accepted->done(QMessageBox::Ok);
+    QVERIFY(!getConfig().canvas.showUndiscoveredRoomsWarning.get());
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(accepted.isNull());
 }
 
 QTEST_MAIN(TestMainWindow)
