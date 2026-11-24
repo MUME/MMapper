@@ -116,7 +116,8 @@ public:
     void resetExtraBlockers();
 
 private:
-    void reset();
+    enum class NODISCARD NotifyEnum : uint8_t { No, Yes };
+    void reset(NotifyEnum notify = NotifyEnum::Yes);
     void updateStatus();
     void createNewProgressDialog(const QString &text, bool allow_cancel);
     void endProgressDialog() { m_progressDlg.reset(); }

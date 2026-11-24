@@ -31,6 +31,7 @@
 #include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include <QString>
 #include <QXmlStreamReader>
@@ -157,8 +158,8 @@ MainWindow::AsyncBase::~AsyncBase()
     if (!m_isFinished) {
         qWarning() << "Failed to call finish for task " << taskName;
     }
-    // FIXME: how can mainWindow be expired here?
-    m_mainWindow.asyncTaskEnded(taskName);
+    // NOTE: MainWindow::asyncTaskEnded() is intentionally not called from here;
+    // see AsyncIO::reset().
 }
 
 MainWindow::AsyncIO::AsyncIO(MainWindow *mainWindow)
@@ -170,7 +171,8 @@ MainWindow::AsyncIO::~AsyncIO()
 {
     if (isRunningOnBackgroundThread()) {
         qWarning() << "Abandoning task" << *this << " in progress.";
-        reset();
+        // The main window is being destroyed, so don't ask it to close.
+        reset(NotifyEnum::No);
     }
 }
 
@@ -338,13 +340,30 @@ void MainWindow::AsyncIO::resetExtraBlockers()
     m_extraBlockers.reset();
 }
 
-void MainWindow::AsyncIO::reset()
+void MainWindow::AsyncIO::reset(const NotifyEnum notify)
 {
     m_progressDlg.reset();
     m_progressData.reset();
-    m_asyncData.reset();
+
+    // Disengage m_asyncData *before* destroying the task. std::optional::reset() in libc++
+    // destroys the value first and clears the engaged flag afterwards, so anything that
+    // re-enters while the task is being destroyed would see hasCurrentTask() == true and
+    // use a half-destroyed AsyncData (see MUME/MMapper#563).
+    auto old = std::exchange(m_asyncData, std::nullopt);
+    QString taskName;
+    if (old) {
+        taskName = deref(old->asyncIo).taskName;
+    }
+    old.reset();
+
     resetExtraBlockers();
     assert(!hasCurrentTask());
+
+    // Notify only after the task is fully destroyed (not from ~AsyncBase), because this
+    // may close the main window when we're waiting for a save at shutdown.
+    if (notify == NotifyEnum::Yes && !taskName.isNull()) {
+        m_mainWindow.asyncTaskEnded(taskName);
+    }
 }
 
 void MainWindow::asyncTaskEnded(const QString &taskName)
