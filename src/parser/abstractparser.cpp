@@ -344,49 +344,31 @@ static void compressDirections(AnsiOstream &aos,
                                const std::string_view original,
                                const bool wantDelta)
 {
-    int curnum = 0;
-    char curval = C_NUL;
     Coordinate delta;
-    const auto addDirs = [&aos, &curnum, &curval, &delta]() {
-        assert(curnum >= 1);
-        assert(curval != C_NUL);
-        if (curnum > 1) {
+    const auto addDirs = [&aos, &delta](const char dir, const int count) {
+        assert(count >= 1);
+        if (count > 1) {
             // should the number and letter be different colors?
             // or perhaps should the coloring alternate? as if (2e)(5n)
-            aos << ColoredValue{green, curnum};
+            aos << ColoredValue{green, count};
         }
-        aos << ColoredValue{green, curval};
+        aos << ColoredValue{green, dir};
 
-        const auto dir = Mmapper2Exit::dirForChar(curval);
-        delta += ::exitDir(dir) * curnum;
+        delta += ::exitDir(Mmapper2Exit::dirForChar(dir)) * count;
     };
 
-    for (const char c : original) {
-        if (curnum != 0 && curval == c) {
-            ++curnum;
-        } else {
-            if (curnum != 0) {
-                addDirs();
-            }
-            curnum = 1;
-            curval = c;
-        }
-    }
-    if (curnum != 0) {
-        addDirs();
+    for (const DirRun &run : getDirRuns(original)) {
+        addDirs(run.dir, run.count);
     }
 
     if (wantDelta) {
-        auto addNumber =
-            [&curnum, &curval, &addDirs, &aos](const int n, const char pos, const char neg) {
-                if (n == 0) {
-                    return;
-                }
-                curnum = std::abs(n);
-                curval = (n < 0) ? neg : pos;
-                aos << C_SPACE;
-                addDirs();
-            };
+        auto addNumber = [&addDirs, &aos](const int n, const char pos, const char neg) {
+            if (n == 0) {
+                return;
+            }
+            aos << C_SPACE;
+            addDirs((n < 0) ? neg : pos, std::abs(n));
+        };
 
         if (delta.isNull()) {
             aos << " (here)";
@@ -472,16 +454,7 @@ private:
         format_map_delta(m_aos, m_from.getPosition(), pos); // map space
         m_aos << AnsiOstream::endl;
 
-        std::string dirs;
-        while (deref(spnode).parent >= 0) {
-            if (&spnodes[spnode->parent] == spnode) {
-                m_aos << ColoredValue{red, "ERROR"} << ": loop" << AnsiOstream::endl;
-                break;
-            }
-            dirs += Mmapper2Exit::charForDir(spnode->lastdir);
-            spnode = &spnodes[spnode->parent]; // spnode now points to a new node.
-        }
-        std::reverse(dirs.begin(), dirs.end());
+        const std::string dirs = getPathDirections(spnodes, endpoint);
 
         // REVISIT: it might look nicer to indent the arrow, but some users' clients may trigger on
         // /^-> dirs: /, so we probably can't change this?

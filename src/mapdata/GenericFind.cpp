@@ -10,6 +10,12 @@
 
 RoomIdSet genericFind(const Map &map, const RoomFilter &f)
 {
+    ProgressCounter pc;
+    return genericFind(map, f, pc);
+}
+
+RoomIdSet genericFind(const Map &map, const RoomFilter &f, ProgressCounter &pc)
+{
     DECL_TIMER(t, "genericFind");
 
     struct NODISCARD TlFinder
@@ -17,7 +23,6 @@ RoomIdSet genericFind(const Map &map, const RoomFilter &f)
         RoomIdSet result;
     };
 
-    ProgressCounter pc;
     TlFinder data;
 
     thread_utils::parallel_for_each_tl<TlFinder>(

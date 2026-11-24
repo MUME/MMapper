@@ -282,6 +282,8 @@ set(mmapper_SRCS
     mainwindow/UpdateChecker.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
+    mainwindow/FindRoomTreeWidgetItem.cpp
+    mainwindow/FindRoomTreeWidgetItem.h
     mainwindow/findroomsdlg.cpp
     mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.cpp
