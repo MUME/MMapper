@@ -114,7 +114,10 @@ bool RemoteEditFileDraftStore::save(const QString &key, const QString &content)
 
 QString RemoteEditFileDraftStore::read(const QString &key) const
 {
-    if (QFile file(filePath(key)); file.open(QFile::ReadOnly)) {
+    // Text mode on both sides: create() and save() write with QFile::Text, which turns "\n" into
+    // "\r\n" on Windows, so reading must turn it back (this also normalizes drafts that an
+    // external editor saved with CRLF).
+    if (QFile file(filePath(key)); file.open(QFile::ReadOnly | QFile::Text)) {
         // An external editor edits the draft in place and may have saved Latin-1.
         return mmqt::decodeUtf8OrLatin1(file.readAll());
     }
