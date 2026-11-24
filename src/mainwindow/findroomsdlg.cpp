@@ -7,6 +7,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/AsyncTasks.h"
+#include "../global/TextUtils.h"
 #include "../global/parserutils.h"
 #include "../global/progresscounter.h"
 #include "../global/window_utils.h"
@@ -301,7 +302,7 @@ void FindRoomsDlg::findRooms(SearchResult &result,
         if (const auto it = reach.find(id); it != reach.end()) {
             row.steps = it->second.steps;
             row.cost = it->second.cost;
-            row.path = QString::fromStdString(it->second.path);
+            row.path = mmqt::toQStringLatin1(it->second.path);
             row.deathtrap = it->second.deathtrap;
         }
         result.rows.push_back(std::move(row));
