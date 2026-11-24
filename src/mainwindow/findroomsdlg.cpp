@@ -6,17 +6,27 @@
 #include "findroomsdlg.h"
 
 #include "../configuration/configuration.h"
+#include "../global/AsyncTasks.h"
 #include "../global/parserutils.h"
+#include "../global/progresscounter.h"
 #include "../global/window_utils.h"
 #include "../map/ExitDirection.h"
 #include "../map/coordinate.h"
 #include "../map/roomid.h"
+#include "../mapdata/GenericFind.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
+#include "../mapdata/shortestpath.h"
+#include "FindRoomTreeWidgetItem.h"
 
 #include <memory>
+#include <optional>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
+#include <QPointer>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
@@ -49,6 +59,20 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
             &QShortcut::activated,
             this,
             &FindRoomsDlg::slot_showSelectedRoom);
+    connect(resultTable, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos) {
+        if (resultTable->itemAt(pos) == nullptr) {
+            return;
+        }
+        // Not QMenu::exec(): its nested event loop is unavailable on wasm.
+        auto menu = std::make_unique<QMenu>(this);
+        QAction *const copyPathAction = menu->addAction(tr("Copy &Path"));
+        copyPathAction->setEnabled(!selectedPaths().isEmpty());
+        connect(copyPathAction, &QAction::triggered, this, &FindRoomsDlg::slot_copyPaths);
+        mmqt::popupMenu(std::move(menu), resultTable->viewport()->mapToGlobal(pos));
+    });
+    m_copyPaths = std::make_unique<QShortcut>(QKeySequence::Copy, resultTable);
+    m_copyPaths->setContext(Qt::WidgetShortcut);
+    connect(m_copyPaths.get(), &QShortcut::activated, this, &FindRoomsDlg::slot_copyPaths);
     connect(resultTable, &QTreeWidget::itemSelectionChanged, this, [this]() {
         const bool enabled = !resultTable->selectedItems().isEmpty();
         selectButton->setEnabled(enabled);
@@ -98,6 +122,10 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
 
 FindRoomsDlg::~FindRoomsDlg()
 {
+    if (m_currentTask) {
+        m_currentTask->requestCancel();
+        m_currentTask.reset();
+    }
     resultTable->clear();
 }
 
@@ -125,8 +153,16 @@ void FindRoomsDlg::slot_findClicked()
 
     const std::string text = mmqt::toStdStringUtf8(lineEdit->text());
 
+    if (m_currentTask) {
+        m_currentTask->requestCancel();
+        m_currentTask.reset();
+    }
+    const uint64_t gen = ++m_searchGeneration;
+
     resultTable->clear();
-    roomsFoundLabel->clear();
+    roomsFoundLabel->setText(tr("Searching..."));
+    selectButton->setEnabled(false);
+    editButton->setEnabled(false);
 
     auto kind = PatternKindsEnum::ALL;
     if (nameRadioButton->isChecked()) {
@@ -147,35 +183,185 @@ void FindRoomsDlg::slot_findClicked()
 
     try {
         RoomFilter filter(text, cs, regex, kind);
-        const Map &map = m_mapData.getCurrentMap();
-        auto found = m_mapData.genericFind(filter);
-        for (const auto roomId : found) {
-            const auto &room = map.getRoomHandle(roomId);
-            QString id = QString("%1").arg(room.getIdExternal().asUint32());
-            QString roomName = room.getName().toQString();
-            QString toolTip = constructToolTip(room);
+        const Map map = m_mapData.getCurrentMap();
+        // Derive the origin from the same snapshot so the RoomIds are consistent.
+        const RoomHandle current = m_mapData.getCurrentRoom();
+        const RoomHandle origin = current.exists() ? map.findRoomHandle(current.getId())
+                                                   : RoomHandle{};
 
-            item = new QTreeWidgetItem(resultTable);
-            item->setText(0, id);
-            item->setText(1, roomName);
-            item->setToolTip(0, toolTip);
-            item->setToolTip(1, toolTip);
-        }
+        auto result = std::make_shared<SearchResult>(SearchResult{map, {}, {}});
+
+        auto backgroundWorker =
+            [filter, origin, result](const std::shared_ptr<ProgressCounter> &pc) {
+                try {
+                    findRooms(*result, origin, filter, *pc);
+                } catch (const ProgressCanceledException &) {
+                    throw; // the task framework handles cancellation
+                } catch (const std::exception &ex) {
+                    // onSuccess still runs, so the dialog can report the failure instead of
+                    // staying on "Searching...".
+                    result->rows.clear();
+                    result->error = QString::fromUtf8(ex.what());
+                }
+            };
+
+        // Runs on the main thread.
+        auto onSuccess = [self = QPointer<FindRoomsDlg>(this), gen, result](
+                             const std::shared_ptr<ProgressCounter> &) {
+            if (self != nullptr && self->m_searchGeneration == gen) {
+                self->showResults(result);
+            }
+        };
+
+        m_currentTask = async_tasks::startAsyncTask2(AsyncTaskTypeEnum::Task,
+                                                     AllowCancelEnum::Allow,
+                                                     "Find Rooms",
+                                                     std::move(backgroundWorker),
+                                                     std::move(onSuccess));
     } catch (const std::exception &ex) {
         qWarning() << "Exception: " << ex.what();
         mmqt::showCritical(this,
                            "Internal Error",
                            QString::asprintf("An exception occurred: %s\n", ex.what()));
+        roomsFoundLabel->clear();
     }
-    roomsFoundLabel->setText(tr("%1 room%2 found")
-                                 .arg(resultTable->topLevelItemCount())
-                                 .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
+}
+
+// Runs on a background thread: it must not touch widgets or the config.
+void FindRoomsDlg::findRooms(SearchResult &result,
+                             const RoomHandle &origin,
+                             const RoomFilter &filter,
+                             ProgressCounter &pc)
+{
+    const Map &map = result.map;
+    const auto foundSet = ::genericFind(map, filter);
+    pc.step(0); // throws if canceled
+
+    // The search below re-applies the filter to reachable rooms. That's intentional: it lets
+    // us stop early, while genericFind() still lists rooms that cannot be reached.
+    struct NODISCARD Reach final
+    {
+        int steps = 0;
+        double cost = 0.0;
+        std::string path;       // compact form, e.g. "2n3eu"
+        bool deathtrap = false; // a room on the route (including the destination) is a deathtrap
+    };
+    std::unordered_map<RoomId, Reach> reach;
+
+    if (origin.exists() && !foundSet.empty()) {
+        class NODISCARD Recipient final : public ShortestPathRecipient
+        {
+        private:
+            std::unordered_map<RoomId, Reach> &m_reach;
+
+        public:
+            explicit Recipient(std::unordered_map<RoomId, Reach> &reach)
+                : m_reach{reach}
+            {}
+
+        private:
+            void virt_receiveShortestPath(QVector<SPNode> spnodes, const int endpoint) final
+            {
+                const std::string dirs = getPathDirections(spnodes, endpoint);
+                bool deathtrap = false;
+                for (int i = endpoint; i >= 0; i = spnodes[i].parent) {
+                    const auto flags = spnodes[i].r.getLoadFlags();
+                    deathtrap |= flags.contains(RoomLoadFlagEnum::DEATHTRAP);
+                }
+                m_reach.emplace(spnodes[endpoint].r.getId(),
+                                Reach{static_cast<int>(dirs.size()),
+                                      spnodes[endpoint].dist,
+                                      formatDirRuns(dirs),
+                                      deathtrap});
+            }
+        };
+
+        Recipient recipient{reach};
+        // Stop as soon as every match has been reached.
+        MapData::shortestPathSearch(pc,
+                                    origin,
+                                    recipient,
+                                    filter,
+                                    static_cast<int>(foundSet.size()),
+                                    0);
+    }
+
+    result.hasOrigin = origin.exists();
+    result.rows.reserve(foundSet.size());
+    for (const RoomId id : foundSet) {
+        const auto room = map.getRoomHandle(id);
+        FoundRoom row{id, room.getIdExternal(), room.getName().toQString(), std::nullopt, 0.0, {}};
+        if (const auto it = reach.find(id); it != reach.end()) {
+            row.steps = it->second.steps;
+            row.cost = it->second.cost;
+            row.path = QString::fromStdString(it->second.path);
+            row.deathtrap = it->second.deathtrap;
+        }
+        result.rows.push_back(std::move(row));
+    }
+}
+
+void FindRoomsDlg::showResults(const std::shared_ptr<const SearchResult> &result)
+{
+    resultTable->setSortingEnabled(false);
+    resultTable->clear();
+
+    if (!result->error.isEmpty()) {
+        roomsFoundLabel->setText(tr("Search failed: %1").arg(result->error));
+        resultTable->setSortingEnabled(true);
+        return;
+    }
+
+    QList<QTreeWidgetItem *> items;
+    items.reserve(static_cast<qsizetype>(result->rows.size()));
+    for (const FoundRoom &row : result->rows) {
+        auto *const treeItem = new FindRoomTreeWidgetItem();
+        treeItem->setText(0, QString::number(row.extId.asUint32()));
+        treeItem->setText(1, row.name);
+        treeItem->setSteps(row.steps, row.cost);
+        treeItem->setPath(row.path, row.deathtrap);
+        // previewRoom() reads the config, so it must run on the main thread, and only when
+        // a tooltip is actually requested.
+        treeItem->setToolTipProvider(
+            [result, id = row.id]() { return constructToolTip(result->map.getRoomHandle(id)); });
+        items.push_back(treeItem);
+    }
+    resultTable->addTopLevelItems(items);
+
+    const int count = resultTable->topLevelItemCount();
+    roomsFoundLabel->setText(tr("%1 room%2 found").arg(count).arg((count == 1) ? "" : "s"));
+
+    // Nearest rooms first; without a current room there are no distances, so use the name.
+    // (Set the indicator before enabling sorting so the table is sorted only once.)
+    resultTable->header()->setSortIndicator(result->hasOrigin ? 2 : 1, Qt::AscendingOrder);
+    resultTable->setSortingEnabled(true);
 }
 
 QString FindRoomsDlg::constructToolTip(const RoomHandle &room)
 {
     // Tooltip doesn't support ANSI, and there's no way to add formatted text.
     return mmqt::previewRoom(room, mmqt::StripAnsiEnum::Yes, mmqt::PreviewStyleEnum::ForDisplay);
+}
+
+QStringList FindRoomsDlg::selectedPaths() const
+{
+    QStringList paths;
+    for (const QTreeWidgetItem *const item : resultTable->selectedItems()) {
+        if (const auto *const row = dynamic_cast<const FindRoomTreeWidgetItem *>(item)) {
+            if (!row->path().isEmpty()) {
+                paths << row->path();
+            }
+        }
+    }
+    return paths;
+}
+
+void FindRoomsDlg::slot_copyPaths()
+{
+    const QStringList paths = selectedPaths();
+    if (!paths.isEmpty()) {
+        QGuiApplication::clipboard()->setText(paths.join('\n'));
+    }
 }
 
 void FindRoomsDlg::slot_showSelectedRoom()
@@ -205,8 +391,12 @@ void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
 
 void FindRoomsDlg::adjustResultTable()
 {
-    resultTable->setColumnCount(2);
-    resultTable->setHeaderLabels(QStringList() << tr("Room ID") << tr("Room Name"));
+    resultTable->setColumnCount(4);
+    resultTable->setHeaderLabels(QStringList()
+                                 << tr("Room ID") << tr("Room Name") << tr("Steps") << tr("Path"));
+    // The ID is only the lookup key for double-click/select/edit, not useful to players.
+    resultTable->setColumnHidden(0, true);
+    resultTable->setContextMenuPolicy(Qt::CustomContextMenu);
     resultTable->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     resultTable->setRootIsDecorated(false);
     resultTable->setAlternatingRowColors(true);
@@ -221,6 +411,12 @@ void FindRoomsDlg::slot_enableFindButton(const QString &text)
 
 void FindRoomsDlg::closeEvent(QCloseEvent *event)
 {
+    if (m_currentTask) {
+        m_currentTask->requestCancel();
+        m_currentTask.reset();
+    }
+    ++m_searchGeneration;
+
     writeSettings();
     resultTable->clear();
     roomsFoundLabel->clear();

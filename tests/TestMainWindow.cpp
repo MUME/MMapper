@@ -8,8 +8,12 @@
 #include "../src/display/MapScroller.h"
 #include "../src/mainwindow/AudioVolumeSlider.h"
 #include "../src/mainwindow/CompactLayout.h"
+#include "../src/mainwindow/FindRoomTreeWidgetItem.h"
 #include "../src/mainwindow/UpdateChecker.h"
+#include "../src/map/ExitDirection.h"
 #include "../src/map/coordinate.h"
+
+#include <optional>
 
 #include <QDebug>
 #include <QScopeGuard>
@@ -166,6 +170,45 @@ void TestMainWindow::compactLayoutPolicy()
     QCOMPARE(probeSize(QSize(600, 420), QSize(1920, 1080)), QSize(600, 420));
     // No screen: the window size stands.
     QCOMPARE(probeSize(QSize(1080, 900), QSize()), QSize(1080, 900));
+}
+
+void TestMainWindow::findRoomsTest()
+{
+    QTreeWidget treeWidget;
+    treeWidget.setColumnCount(3);
+
+    auto add = [&](const char *id, const std::optional<int> steps, const double cost) {
+        auto *item = new FindRoomTreeWidgetItem(&treeWidget);
+        item->setText(0, id);
+        item->setSteps(steps, cost);
+    };
+    add("10", 12, 20.0);
+    add("2", 2, 5.0);
+    add("100", std::nullopt, 0.0);
+    add("7", 2, 3.0); // same steps as "2", cheaper
+
+    auto ids = [&]() {
+        QStringList out;
+        for (int i = 0; i < treeWidget.topLevelItemCount(); ++i) {
+            out << treeWidget.topLevelItem(i)->text(0);
+        }
+        return out;
+    };
+
+    treeWidget.sortItems(0, Qt::AscendingOrder);
+    QCOMPARE(ids(), (QStringList{"2", "7", "10", "100"}));
+
+    treeWidget.sortItems(2, Qt::AscendingOrder);
+    QCOMPARE(ids(), (QStringList{"7", "2", "10", "100"}));
+
+    // N/A stays last when descending.
+    treeWidget.sortItems(2, Qt::DescendingOrder);
+    QCOMPARE(ids(), (QStringList{"10", "2", "7", "100"}));
+
+    // The pasteable path is run-length compressed, like the "_dirs" command prints it.
+    QCOMPARE(formatDirRuns(""), std::string{});
+    QCOMPARE(formatDirRuns("nneeu"), std::string{"2n2eu"});
+    QCOMPARE(formatDirRuns("nenenn"), std::string{"nene2n"});
 }
 
 QTEST_MAIN(TestMainWindow)
