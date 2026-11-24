@@ -9,6 +9,8 @@
 #include "../map/ExitFlags.h"
 #include "../parser/abstractparser.h"
 
+#include <string>
+
 #include <QSet>
 #include <QVector>
 
@@ -19,6 +21,10 @@ struct NODISCARD SPNode final
     double dist = 0.0;
     ExitDirEnum lastdir = ExitDirEnum::NONE;
 };
+
+// Direction characters (see Mmapper2Exit::charForDir) leading from the search origin to
+// spnodes[endpoint], in walking order.
+NODISCARD extern std::string getPathDirections(const QVector<SPNode> &spnodes, int endpoint);
 
 class NODISCARD ShortestPathRecipient
 {

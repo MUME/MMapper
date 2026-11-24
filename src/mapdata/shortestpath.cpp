@@ -16,6 +16,7 @@
 #include "mapdata.h"
 #include "roomfilter.h"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <type_traits>
@@ -31,6 +32,17 @@
 // Values taken from https://github.com/nstockton/tintin-mume/blob/master/mapperproxy/mapper/constants.py
 
 ShortestPathRecipient::~ShortestPathRecipient() = default;
+
+std::string getPathDirections(const QVector<SPNode> &spnodes, const int endpoint)
+{
+    std::string dirs;
+    // Parents are always created before their children, so this terminates at the origin.
+    for (int i = endpoint; spnodes[i].parent >= 0; i = spnodes[i].parent) {
+        dirs += Mmapper2Exit::charForDir(spnodes[i].lastdir);
+    }
+    std::reverse(dirs.begin(), dirs.end());
+    return dirs;
+}
 
 NODISCARD static double terrain_cost(const RoomTerrainEnum type)
 {

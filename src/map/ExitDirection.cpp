@@ -200,3 +200,28 @@ std::string_view to_string_view(const ExitDirEnum dir)
 {
     return lowercaseDirection(dir);
 }
+
+std::vector<DirRun> getDirRuns(const std::string_view dirs)
+{
+    std::vector<DirRun> runs;
+    for (const char c : dirs) {
+        if (!runs.empty() && runs.back().dir == c) {
+            ++runs.back().count;
+        } else {
+            runs.push_back(DirRun{c, 1});
+        }
+    }
+    return runs;
+}
+
+std::string formatDirRuns(const std::string_view dirs)
+{
+    std::string result;
+    for (const DirRun &run : getDirRuns(dirs)) {
+        if (run.count > 1) {
+            result += std::to_string(run.count);
+        }
+        result += run.dir;
+    }
+    return result;
+}

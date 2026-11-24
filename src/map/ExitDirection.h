@@ -7,6 +7,9 @@
 #include "ExitFlags.h"
 
 #include <cstdint>
+#include <string>
+#include <string_view>
+#include <vector>
 
 class Coordinate;
 
@@ -62,3 +65,15 @@ NODISCARD char charForDir(ExitDirEnum dir);
 
 NODISCARD extern Coordinate exitDir(ExitDirEnum dir);
 NODISCARD extern std::string_view to_string_view(ExitDirEnum dir);
+
+struct NODISCARD DirRun final
+{
+    char dir = '\0';
+    int count = 0;
+};
+
+// "nneeu" -> {n,2} {e,2} {u,1}
+NODISCARD extern std::vector<DirRun> getDirRuns(std::string_view dirs);
+
+// "nneeu" -> "2n2eu": the compact, pasteable form that the "_dirs" command prints.
+NODISCARD extern std::string formatDirRuns(std::string_view dirs);
