@@ -21,9 +21,12 @@ public:
 
 public:
     void onParseNewMudInput(const TelnetData &data) { virt_onParseNewMudInput(data); }
-    void onEditMessage(const RemoteSessionId id, const QString &title, const QString &body)
+    void onEditMessage(const RemoteSessionId id,
+                       const QString &title,
+                       const QString &body,
+                       const MumeEditOptions &options = {})
     {
-        virt_onEditMessage(id, title, body);
+        virt_onEditMessage(id, title, body, options);
     }
     void onViewMessage(const QString &title, const QString &body)
     {
@@ -32,7 +35,11 @@ public:
 
 private:
     virtual void virt_onParseNewMudInput(const TelnetData &) = 0;
-    virtual void virt_onEditMessage(const RemoteSessionId, const QString &, const QString &) = 0;
+    virtual void virt_onEditMessage(const RemoteSessionId,
+                                    const QString &,
+                                    const QString &,
+                                    const MumeEditOptions &options)
+        = 0;
     virtual void virt_onViewMessage(const QString &, const QString &) = 0;
 };
 
@@ -54,7 +61,10 @@ private:
 
 public:
     void receiveMpiView(const QString &title, const QString body);
-    void receiveMpiEdit(const RemoteSessionId id, const QString &title, const QString body);
+    void receiveMpiEdit(const RemoteSessionId id,
+                        const QString &title,
+                        const QString body,
+                        const MumeEditOptions &options = {});
 };
 
 // toMud
@@ -66,7 +76,7 @@ public:
 
 public:
     void cancelRemoteEdit(const RemoteSessionId id);
-    void saveRemoteEdit(const RemoteSessionId id, const Latin1Bytes &content);
+    void saveRemoteEdit(const RemoteSessionId id, const QString &text);
 
 private:
     void sendRemoteEditMessage(GmcpMessageTypeEnum type,

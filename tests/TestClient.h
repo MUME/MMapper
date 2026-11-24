@@ -35,4 +35,6 @@ private Q_SLOTS:
     void remoteEditFindWrapsAround();
     void remoteEditReplaceAllReplacesEveryOccurrence();
     void remoteEditStatusReportsTabsLongLinesAndTrailingSpace();
+    void defaultCharacterEncodingIsUtf8();
+    void mumeEditOptionsAllowedRangesValidation();
 };

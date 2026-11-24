@@ -5,6 +5,7 @@
 
 #include "../src/client/InputHistory.h"
 #include "../src/configuration/configuration.h"
+#include "../src/mpi/MumeEditOptions.h"
 #include "../src/mpi/RemoteEditDocumentOps.h"
 
 #include <QTextCursor>
@@ -365,6 +366,107 @@ void TestClient::remoteEditStatusReportsTabsLongLinesAndTrailingSpace()
     QVERIFY(info.hasTabs);
     QVERIFY(info.hasLongLines);
     QVERIFY(info.hasTrailingSpace);
+}
+
+void TestClient::defaultCharacterEncodingIsUtf8()
+{
+    QCOMPARE(getConfig().general.characterEncoding, CharacterEncodingEnum::UTF8);
+}
+
+void TestClient::mumeEditOptionsAllowedRangesValidation()
+{
+    MumeEditOptions opts;
+    // Unrestricted by default
+    QVERIFY(opts.isCodepointAllowed(U'A'));
+    QVERIFY(opts.isCodepointAllowed(U'é'));
+    QVERIFY(opts.isCodepointAllowed(U'界'));
+    QVERIFY(opts.isCodepointAllowed(0x1F600)); // emoji
+
+    // Restricted ranges
+    opts.allowed.emplace();
+    opts.allowed->ranges.push_back({32, 126}); // ASCII printable
+
+    QVERIFY(opts.isCodepointAllowed(U'A'));
+    QVERIFY(opts.isCodepointAllowed(U' '));
+    QVERIFY(!opts.isCodepointAllowed(U'é')); // 0xE9 = 233
+    QVERIFY(!opts.isCodepointAllowed(0x1F600));
+
+    // The "emoji" token is parsed but never widens what is accepted: MUME rewrites emoji
+    // modifiers (U+FE0F, U+200D, U+20E3) and emoji outside its numeric ranges to '?'.
+    opts.allowed->emoji = true;
+    QVERIFY(!opts.isCodepointAllowed(0x200D));
+    QVERIFY(!opts.isCodepointAllowed(0xFE0F));
+    QVERIFY(!opts.isCodepointAllowed(0x20E3));
+    QVERIFY(!opts.isCodepointAllowed(0x1F600));
+    QVERIFY(!opts.isCodepointAllowed(U'é'));
+    QVERIFY(MumeEditOptions::isInvisibleEmojiModifier(0xFE0F));
+    QVERIFY(MumeEditOptions::isInvisibleEmojiModifier(0xE0067));
+    QVERIFY(!MumeEditOptions::isInvisibleEmojiModifier(0x1F329));
+
+    // Multiple ranges
+    opts.allowed->ranges.push_back({160, 255}); // Latin-1 supplement
+    QVERIFY(opts.isCodepointAllowed(U'é'));
+
+    // Ranges as advertised by MUME in MUME.Client.Edit (subset): the lightning cloud
+    // U+1F329 is inside [127744,128511], so the editor must not flag it.
+    MumeEditOptions mume;
+    mume.allowed.emplace();
+    mume.allowed->ansiSgr = true;
+    mume.allowed->ranges = {{9, 13}, {32, 126}, {160, 172}, {174, 591}, {127744, 128511}};
+    // emoji token off: the numeric range alone must allow it.
+    QVERIFY(mume.isCodepointAllowed(0x1F329));
+    QVERIFY(!mume.isCodepointAllowed(0x1F600)); // outside the numeric ranges
+    QVERIFY(mume.isCodepointAllowed(U'A'));
+    QVERIFY(!mume.isCodepointAllowed(U'界'));
+
+    // Malformed ranges from the server are ignored, never widened.
+    MumeEditOptions bad;
+    bad.allowed.emplace(); // the server sent the key, so it restricts even if nothing is usable
+    bad.allowed->tryAddRange(32, -1);
+    bad.allowed->tryAddRange(-5, 10);
+    bad.allowed->tryAddRange(5, 3);
+    bad.allowed->tryAddRange(0, 0x110000);
+    QVERIFY(bad.allowed->ranges.empty());
+    // If every range is malformed, everything is flagged (warn rather than silently accept).
+    QVERIFY(!bad.isCodepointAllowed(U'A'));
+    bad.allowed->tryAddRange(9, 13);
+    QCOMPARE(bad.allowed->ranges.size(), size_t{1});
+    QVERIFY(bad.isCodepointAllowed(U'\n'));
+
+    // Non-positive size limits mean "no limit".
+    MumeEditOptions size;
+    size.trySetMaxSize(-1);
+    QVERIFY(!size.maxSize.has_value());
+    size.trySetMaxSize(0);
+    QVERIFY(!size.maxSize.has_value());
+    size.trySetMaxSize(204799);
+    QCOMPARE(size.maxSize.value(), 204799);
+
+    // Text-level checks shared by the internal and external editors (surrogate pairs included).
+    QVERIFY(!mume.hasDisallowedCodepoints(QString::fromUtf8("Orlanth \xF0\x9F\x8C\xA9")));
+    QVERIFY(mume.hasDisallowedCodepoints(QString::fromUtf8("\xE7\x95\x8C")));
+    MumeEditOptions limit;
+    limit.maxSize = 4;
+    QVERIFY(!limit.exceedsMaxSize(QString::fromUtf8("\xF0\x9F\x8C\xA9"))); // 4 UTF-8 bytes
+    QVERIFY(limit.describeIssues(QString::fromUtf8("\xF0\x9F\x8C\xA9")).isEmpty());
+    QVERIFY(!mume.describeIssues(QString::fromUtf8("\xE7\x95\x8C")).isEmpty());
+    // The message names invisible offenders, once each.
+    const QString keycap = mume.describeIssues(
+        QString::fromUtf8("1\xEF\xB8\x8F\xE2\x83\xA3 1\xEF\xB8\x8F"));
+    QVERIFY(keycap.contains(QStringLiteral("U+FE0F")));
+    QVERIFY(keycap.contains(QStringLiteral("U+20E3")));
+    QCOMPARE(keycap.count(QStringLiteral("U+FE0F")), 1);
+    {
+        // An empty restriction (e.g. only the "emoji" token) still restricts plain text.
+        MumeEditOptions restricted;
+        restricted.allowed.emplace();
+        restricted.allowed->emoji = true;
+        QVERIFY(!restricted.isCodepointAllowed(U'A'));
+        QVERIFY(!restricted.isCodepointAllowed(0x1F600));
+    }
+    limit.maxSize = 3;
+    QVERIFY(limit.exceedsMaxSize(QString::fromUtf8("\xF0\x9F\x8C\xA9")));
+    QVERIFY(!MumeEditOptions{}.exceedsMaxSize(QString(100000, QChar(u'x'))));
 }
 
 QTEST_MAIN(TestClient)

@@ -5,7 +5,7 @@
 #include "macros.h"
 
 enum class NODISCARD AutoLoggerEnum { KeepForever, DeleteDays, DeleteSize };
-enum class NODISCARD CharacterEncodingEnum { LATIN1, UTF8, ASCII };
+enum class NODISCARD CharacterEncodingEnum { LATIN1 = 0, UTF8 = 1, ASCII = 2 };
 enum class NODISCARD EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
 enum class NODISCARD MapModeEnum { PLAY, MAP, OFFLINE };
 // How the game is played: the Client Panel asks each time, connects its

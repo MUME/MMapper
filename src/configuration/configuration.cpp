@@ -469,7 +469,7 @@ NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t 
     }
 
     qWarning() << "invalid CharacterEncodingEnum:" << input;
-    return CharacterEncodingEnum::LATIN1;
+    return CharacterEncodingEnum::UTF8;
 }
 
 NODISCARD static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
@@ -639,7 +639,7 @@ void Configuration::GeneralSettings::read(const QSettings &conf)
     checkForUpdate = conf.value(KEY_CHECK_FOR_UPDATE, true).toBool();
     uiFontScale = std::clamp(conf.value(KEY_UI_FONT_SCALE, 1.0).toDouble(), 0.5, 3.0);
     characterEncoding = sanitizeCharacterEncoding(
-        conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncodingEnum::LATIN1))
+        conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncodingEnum::UTF8))
             .toUInt());
     m_theme = sanitizeTheme(
         conf.value(KEY_THEME, static_cast<uint32_t>(ThemeEnum::System)).toUInt());

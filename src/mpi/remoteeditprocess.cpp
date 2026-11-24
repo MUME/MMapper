@@ -5,6 +5,7 @@
 #include "remoteeditprocess.h"
 
 #include "../configuration/configuration.h"
+#include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/TextUtils.h"
 #include "../global/io.h"
@@ -20,6 +21,19 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
+
+// Editors normally save UTF-8, but fall back to Latin-1 for editors that still save legacy bytes.
+NODISCARD static QString decodeEditorFile(const QByteArray &bytes)
+{
+    QString result = charset::isValidUtf8(
+                         std::string_view{bytes.constData(), static_cast<size_t>(bytes.size())})
+                         ? QString::fromUtf8(bytes)
+                         : QString::fromLatin1(bytes);
+    if (result.startsWith(QChar(0xFEFF))) { // some editors add a byte-order mark
+        result.remove(0, 1);
+    }
+    return result;
+}
 
 static constexpr const std::string_view VALID
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -68,7 +82,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     m_fileName = file.fileName();
     qDebug() << "View session file template" << m_fileName;
-    file.write(mmqt::toQByteArrayLatin1(m_body)); // MPI is always Latin1
+    file.write(m_body.toUtf8());
     file.flush();
 
     // REVISIT: check return value?
@@ -133,7 +147,7 @@ void RemoteEditProcess::virt_onFinished(int exitCode, QProcess::ExitStatus statu
     }
 
     // Read the file
-    QString content = QString::fromLatin1(file.readAll()); // MPI is always Latin1
+    QString content = decodeEditorFile(file.readAll());
     file.close();
 
     // Submit it to MUME

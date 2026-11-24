@@ -28,19 +28,21 @@ RemoteEdit::RemoteEdit(QObject *const parent)
 
 void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {
-    addSession(REMOTE_VIEW_SESSION_ID, title, body);
+    addSession(REMOTE_VIEW_SESSION_ID, title, body, {});
 }
 
 void RemoteEdit::slot_remoteEdit(const RemoteSessionId sessionId,
                                  const QString &title,
-                                 const QString &body)
+                                 const QString &body,
+                                 const MumeEditOptions &options)
 {
-    addSession(sessionId, title, body);
+    addSession(sessionId, title, body, options);
 }
 
 void RemoteEdit::addSession(const RemoteSessionId sessionId,
                             const QString &title,
-                            const QString &body)
+                            const QString &body,
+                            const MumeEditOptions &options)
 {
     const auto internalId = RemoteInternalId{getInternalIdCount()};
     std::unique_ptr<RemoteEditSession> session;
@@ -50,6 +52,7 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               sessionId,
                                                               title,
                                                               body,
+                                                              options,
                                                               this);
     } else {
 #ifndef Q_OS_WASM
@@ -57,6 +60,7 @@ void RemoteEdit::addSession(const RemoteSessionId sessionId,
                                                               sessionId,
                                                               title,
                                                               body,
+                                                              options,
                                                               this);
 #else
         mmqt::showInformation(nullptr,
@@ -126,11 +130,7 @@ void RemoteEdit::sendToMume(const RemoteEditSession &session)
     }
 
     qDebug() << "Saving session" << session.getSessionId().asInt32();
-    // REVISIT: should we warn if this transformation modifies the content
-    // (e.g. unicode transliteration, etc).
-    auto latin1 = Latin1Bytes{
-        mmqt::toQByteArrayLatin1(session.getContent())}; // MPI is always Latin1
-    emit sig_remoteEditSave(session.getSessionId(), latin1);
+    emit sig_remoteEditSave(session.getSessionId(), session.getContent());
 }
 
 void RemoteEdit::trySaveLocally(const RemoteEditSession &session)

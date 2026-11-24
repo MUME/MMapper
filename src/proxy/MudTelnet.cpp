@@ -11,6 +11,7 @@
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "../global/emojis.h"
+#include "../mpi/MumeEditOptions.h"
 #include "../opengl/OpenGLConfig.h"
 #include "GmcpUtils.h"
 
@@ -20,6 +21,7 @@
 #include <optional>
 #include <sstream>
 #include <string_view>
+#include <utility>
 
 #include <QByteArray>
 #include <QJsonDocument>
@@ -468,9 +470,43 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
             m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
         } else if (msg.isMumeClientEdit()) {
             if (auto optId = obj.getInt("id")) {
+                MumeEditOptions options;
+                auto optMaxSize = obj.getInt("max-size");
+                if (!optMaxSize) {
+                    optMaxSize = obj.getInt("max_size");
+                }
+                if (optMaxSize) {
+                    options.trySetMaxSize(optMaxSize.value());
+                }
+
+                if (auto optAllowed = obj.getArray("allowed-ranges")) {
+                    MumeEditOptions::AllowedRanges allowed;
+                    for (const auto &elem : optAllowed.value()) {
+                        if (auto optArr = elem.getArray()) {
+                            const auto &arr = optArr.value();
+                            if (arr.size() >= 2) {
+                                if (auto startOpt = arr[0].getInt()) {
+                                    if (auto endOpt = arr[1].getInt()) {
+                                        allowed.tryAddRange(startOpt.value(), endOpt.value());
+                                    }
+                                }
+                            }
+                        } else if (auto optStr = elem.getString()) {
+                            const QString str = optStr.value();
+                            if (str == QStringLiteral("ansi-sgr")) {
+                                allowed.ansiSgr = true;
+                            } else if (str == QStringLiteral("emoji")) {
+                                allowed.emoji = true;
+                            }
+                        }
+                    }
+                    options.allowed = std::move(allowed);
+                }
+
                 m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
                                            optTitle.value_or("Edit text..."),
-                                           optText.value_or(""));
+                                           optText.value_or(""),
+                                           options);
             }
         }
         return;

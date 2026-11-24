@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "MumeEditOptions.h"
 #include "remoteeditsession.h"
 
 #include <memory>
@@ -45,6 +46,11 @@ enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
       "Justify &Selection", \
       "Justify selection to 80 characters", \
       "Ctrl+J") \
+    X(transliterateText, \
+      EditViewCmdEnum::EDIT_WHITESPACE, \
+      "&Transliterate Unicode", \
+      "Convert special Unicode characters to simple ASCII equivalents", \
+      "Ctrl+T") \
     X(expandTabs, \
       EditViewCmdEnum::EDIT_WHITESPACE, \
       "&Expand Tabs", \
@@ -145,6 +151,7 @@ private:
     const bool m_editSession;
     const QString m_title;
     const QString m_body;
+    const MumeEditOptions m_options;
 
     bool m_submitted = false;
     QScopedPointer<Editor> m_textEdit;
@@ -155,7 +162,11 @@ private:
     std::unique_ptr<QDialog> m_preview;
 
 public:
-    explicit RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent);
+    explicit RemoteEditWidget(bool editSession,
+                              QString title,
+                              QString body,
+                              QWidget *parent = nullptr,
+                              const MumeEditOptions &options = {});
     ~RemoteEditWidget() override;
 
 public:

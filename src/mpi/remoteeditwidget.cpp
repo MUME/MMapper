@@ -7,6 +7,7 @@
 #include "../client/displaywidget.h"
 #include "../configuration/configuration.h"
 #include "../global/AnsiTextUtils.h"
+#include "../global/Charset.h"
 #include "../global/Consts.h"
 #include "../global/TabUtils.h"
 #include "../global/TextUtils.h"
@@ -206,11 +207,13 @@ void RemoteTextEdit::toggleWhitespace()
 RemoteEditWidget::RemoteEditWidget(const bool editSession,
                                    QString title,
                                    QString body,
-                                   QWidget *const parent)
+                                   QWidget *const parent,
+                                   const MumeEditOptions &options)
     : QDialog(parent)
     , m_editSession(editSession)
     , m_title(std::move(title))
     , m_body(std::move(body))
+    , m_options(options)
 {
     setWindowFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowMinimizeButtonHint
                    | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint);
@@ -274,7 +277,7 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
     pTextEdit->showWhitespace(false);
 
     auto *const doc = pTextEdit->document();
-    new RemoteEditHighlighter(doc, mmqt::REMOTE_EDIT_MAX_LENGTH);
+    new RemoteEditHighlighter(doc, mmqt::REMOTE_EDIT_MAX_LENGTH, m_options);
     return pTextEdit;
 }
 
@@ -730,7 +733,67 @@ void RemoteEditWidget::slot_updateStatusBar()
         status.append(hasSelection ? ", Selected-Lines: Ok" : ", Document: Ok");
     }
 
+    if (m_options.maxSize.has_value()) {
+        const int maxSize = m_options.maxSize.value();
+        const int byteCount = static_cast<int>(m_textEdit->toPlainText().toUtf8().size());
+        const int pct = maxSize > 0 ? (byteCount * 100) / maxSize : 0;
+        if (byteCount > maxSize) {
+            status.append(
+                QString(", Bytes: %1/%2 OVER LIMIT (%3%)").arg(byteCount).arg(maxSize).arg(pct));
+        } else {
+            status.append(QString(", Bytes: %1/%2 (%3%)").arg(byteCount).arg(maxSize).arg(pct));
+        }
+    }
+
     m_statusBar->showMessage(status);
+}
+
+// Replaces special characters with plain ones, and drops the invisible emoji modifiers
+// (joiner, variation selectors, keycap, tags) that the session does not allow.
+NODISCARD static QString transliterateString(const QString &old, const MumeEditOptions &options)
+{
+    QString result;
+    result.reserve(old.size());
+    int i = 0;
+    const int len = static_cast<int>(old.length());
+    while (i < len) {
+        const QChar qc = old.at(i);
+        if (qc.isHighSurrogate() && i + 1 < len && old.at(i + 1).isLowSurrogate()) {
+            const char32_t cp = QChar::surrogateToUcs4(qc, old.at(i + 1));
+            if (MumeEditOptions::isInvisibleEmojiModifier(cp) && !options.isCodepointAllowed(cp)) {
+                i += 2;
+                continue;
+            }
+            const char32_t translited = charset::simple_unicode_translit(cp);
+            if (translited <= 0xFFFF) {
+                result.append(QChar(static_cast<ushort>(translited)));
+            } else {
+                result.append(QChar::fromUcs4(translited));
+            }
+            i += 2;
+        } else {
+            if (MumeEditOptions::isInvisibleEmojiModifier(qc.unicode())
+                && !options.isCodepointAllowed(qc.unicode())) {
+                i += 1;
+                continue;
+            }
+            result.append(mmqt::simple_unicode_translit(qc));
+            i += 1;
+        }
+    }
+    return result;
+}
+
+void RemoteEditWidget::slot_transliterateText()
+{
+    const QString old = m_textEdit->toPlainText();
+    const QString result = transliterateString(old, m_options);
+    if (result != old) {
+        m_textEdit->replaceAll(result);
+        slot_updateStatus(tr("Transliterated special Unicode characters."));
+    } else {
+        slot_updateStatus(tr("No characters needed transliteration."));
+    }
 }
 
 void RemoteEditWidget::slot_justifyText()
@@ -874,7 +937,47 @@ void RemoteEditWidget::slot_cancelEdit()
 
 void RemoteEditWidget::slot_finishEdit()
 {
+    const QString text = m_textEdit->toPlainText();
+    const bool hasDisallowed = m_options.hasDisallowedCodepoints(text);
+
+    if (const QString issues = m_options.describeIssues(text); !issues.isEmpty()) {
+        auto *const dlg = new QMessageBox(this);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        dlg->setIcon(QMessageBox::Warning);
+        dlg->setWindowTitle(m_title);
+
+        dlg->setText(issues + tr("\nWhat would you like to do?"));
+
+        QPushButton *transliterateBtn = nullptr;
+        // Only offer this if transliteration actually clears every disallowed character;
+        // otherwise the dialog would reappear unchanged.
+        if (hasDisallowed
+            && !m_options.hasDisallowedCodepoints(transliterateString(text, m_options))) {
+            transliterateBtn = dlg->addButton(tr("Transliterate && Submit"),
+                                              QMessageBox::AcceptRole);
+        }
+        QPushButton *submitAnywayBtn = dlg->addButton(tr("Submit Anyway"), QMessageBox::AcceptRole);
+        dlg->addButton(QMessageBox::Cancel);
+
+        connect(dlg, &QMessageBox::finished, this, [this, transliterateBtn, submitAnywayBtn](int) {
+            QAbstractButton *clicked = nullptr;
+            if (auto *box = qobject_cast<QMessageBox *>(sender())) {
+                clicked = box->clickedButton();
+            }
+            if (transliterateBtn && clicked == transliterateBtn) {
+                slot_transliterateText();
+                slot_finishEdit();
+            } else if (clicked == submitAnywayBtn) {
+                m_submitted = true;
+                emit sig_save(m_textEdit->toPlainText());
+                close();
+            }
+        });
+        dlg->open();
+        return;
+    }
+
     m_submitted = true;
-    emit sig_save(m_textEdit->toPlainText());
+    emit sig_save(text);
     close();
 }

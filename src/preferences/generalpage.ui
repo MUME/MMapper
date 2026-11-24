@@ -279,12 +279,12 @@
         </property>
         <item>
          <property name="text">
-          <string extracomment="Default encoding">Latin-1</string>
+          <string extracomment="Default encoding">UTF-8</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string extracomment="Modern clients only">UTF-8</string>
+          <string extracomment="Legacy encoding">Latin-1</string>
          </property>
         </item>
         <item>

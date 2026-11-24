@@ -46,7 +46,10 @@ private:
     {
         return m_greatestUsedId == UINT_MAX ? 0 : m_greatestUsedId + 1;
     }
-    void addSession(const RemoteSessionId, const QString &, const QString &);
+    void addSession(const RemoteSessionId,
+                    const QString &,
+                    const QString &,
+                    const MumeEditOptions &options = {});
     void removeSession(const RemoteEditSession &session);
 
 private:
@@ -56,9 +59,12 @@ private:
 
 signals:
     void sig_remoteEditCancel(const RemoteSessionId sessionId);
-    void sig_remoteEditSave(const RemoteSessionId sessionId, const Latin1Bytes &content);
+    void sig_remoteEditSave(const RemoteSessionId sessionId, const QString &content);
 
 public slots:
     void slot_remoteView(const QString &, const QString &);
-    void slot_remoteEdit(const RemoteSessionId, const QString &, const QString &);
+    void slot_remoteEdit(const RemoteSessionId,
+                         const QString &,
+                         const QString &,
+                         const MumeEditOptions &options = {});
 };
