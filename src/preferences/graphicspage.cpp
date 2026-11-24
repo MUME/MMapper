@@ -9,10 +9,12 @@
 #include "../global/window_utils.h"
 #include "../opengl/OpenGLConfig.h"
 #include "AdvancedGraphics.h"
+#include "UndiscoveredRoomsDialog.h"
 #include "ui_graphicspage.h"
 
 #include <memory>
 
+#include <QSignalBlocker>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
@@ -78,6 +80,26 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     connect(ui->trilinearFilteringCheckBox, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
         setConfig().canvas.trilinearFiltering.set(ui->trilinearFilteringCheckBox->isChecked());
         graphicsSettingsChanged();
+    });
+
+    connect(ui->drawUndiscoveredRooms, &QAbstractButton::clicked, this, [this](const bool checked) {
+        // User clicks only: loading the saved preferences must not open a dialog.
+        if (!checked || !getConfig().canvas.showUndiscoveredRoomsWarning.get()) {
+            setConfig().canvas.showUndiscoveredRooms.set(checked);
+            graphicsSettingsChanged();
+            return;
+        }
+        auto &message = showUndiscoveredRoomsDialog(this);
+        connect(&message, &QDialog::finished, this, [this](const int answer) {
+            if (answer != QMessageBox::Ok) {
+                const QSignalBlocker blocker(ui->drawUndiscoveredRooms);
+                ui->drawUndiscoveredRooms->setChecked(
+                    getConfig().canvas.showUndiscoveredRooms.get());
+                return;
+            }
+            setConfig().canvas.showUndiscoveredRooms.set(true);
+            graphicsSettingsChanged();
+        });
     });
 
     connect(ui->drawUnsavedChanges, &QCheckBox::stateChanged, this, [this](int /*unused*/) {
@@ -184,6 +206,7 @@ void GraphicsPage::slot_loadConfig()
     ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering.get());
 
     ui->drawUnsavedChanges->setChecked(settings.showUnsavedChanges.get());
+    ui->drawUndiscoveredRooms->setChecked(settings.showUndiscoveredRooms.get());
     ui->drawNeedsUpdate->setChecked(settings.showMissingMapId.get());
     ui->drawNotMappedExits->setChecked(settings.showUnmappedExits.get());
     ui->drawDoorNames->setChecked(settings.drawDoorNames);

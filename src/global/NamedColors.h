@@ -21,6 +21,7 @@ struct NamedColorsBlock;
     X(CONNECTION_NORMAL, "connection-normal") \
     X(HIGHLIGHT_NEEDS_SERVER_ID, "highlight-needs-server-id") \
     X(HIGHLIGHT_UNSAVED, "highlight-unsaved") \
+    X(HIGHLIGHT_UNDISCOVERED, "highlight-undiscovered") \
     X(HIGHLIGHT_TEMPORARY, "highlight-temporary") \
     X(INFOMARK_COMMENT, "infomark-comment") \
     X(INFOMARK_HERB, "infomark-herb") \
@@ -56,7 +57,7 @@ enum class NODISCARD NamedColorEnum : uint8_t { DEFAULT = 0, XFOREACH_NAMED_COLO
 static inline constexpr size_t NUM_NAMED_COLORS = XFOREACH_NAMED_COLOR_OPTIONS(X_COUNT) + 1;
 #undef X_COUNT
 
-static inline constexpr size_t MAX_NAMED_COLORS = 32;
+static inline constexpr size_t MAX_NAMED_COLORS = 64;
 static_assert(MAX_NAMED_COLORS >= NUM_NAMED_COLORS);
 
 // TODO: rename this, but to what? NamedColorHandle?

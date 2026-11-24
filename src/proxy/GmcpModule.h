@@ -22,6 +22,7 @@
     X(EXTERNAL_DISCORD, ExternalDiscord, "external.discord", "External.Discord") \
     X(MUME_CLIENT, MumeClient, "mume.client", "MUME.Client") \
     X(ROOM_CHARS, RoomChars, "room.chars", "Room.Chars") \
+    X(ROOM_KNOWN, RoomKnown, "room.known", "Room.Known") \
     X(ROOM, Room, "room", "Room") \
     /* define gmcp module types above */
 
@@ -35,7 +36,7 @@ enum class NODISCARD GmcpModuleTypeEnum : uint8_t {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MODULES = XFOREACH_GMCP_MODULE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MODULES == 7);
+static_assert(NUM_GMCP_MODULES == 8);
 static_assert(NUM_GMCP_MODULES == enums::to_underlying(GmcpModuleTypeEnum::UNKNOWN));
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 

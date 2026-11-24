@@ -10,6 +10,7 @@
 #include "../global/Signal2.h"
 #include "../map/PromptFlags.h"
 #include "../mapdata/roomselection.h"
+#include "../observer/KnownRooms.h"
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
@@ -157,24 +158,50 @@ private:
             }
         };
 
+        struct NODISCARD Options final
+        {
+            bool missingId = false;
+            bool changed = false;
+            bool undiscovered = false;
+            uint64_t knownRevision = 0;
+            uint64_t knownGeneration = 0;
+            bool operator==(const Options &) const = default;
+
+            // Live additions can retain the previous batch for a frame. Invalidated
+            // histories and other characters must never retain their old red dots.
+            NODISCARD bool sameVisibility(const Options &other) const
+            {
+                auto copy = *this;
+                copy.knownRevision = other.knownRevision;
+                return copy == other;
+            }
+        };
+
         struct NODISCARD HighlightDiff final
         {
             Map saved;
             Map current;
             MaybeDataOrMesh highlights;
+            Options options;
         };
 
         std::optional<std::future<HighlightDiff>> futureHighlight;
         std::optional<HighlightDiff> highlight;
 
-        NODISCARD bool isUpToDate(const Map &saved, const Map &current) const;
+        NODISCARD bool isUpToDate(const Map &saved,
+                                  const Map &current,
+                                  const Options &options) const;
         NODISCARD bool hasRelatedDiff(const Map &save) const;
         void cancelUpdates(const Map &saved);
-        void maybeAsyncUpdate(const Map &saved, const Map &current);
+        void maybeAsyncUpdate(const Map &saved,
+                              const Map &current,
+                              const KnownRooms::Snapshot &known,
+                              const Options &options);
 
-        void resetExistingMeshesAndIgnorePendingRemesh()
+        void clearMeshes()
         {
-            futureHighlight.reset();
+            // Destroying a future from std::async can wait for its worker. Keep
+            // that worker alive; its immutable result is checked before rendering.
             highlight.reset();
         }
     };

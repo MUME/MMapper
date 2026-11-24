@@ -235,6 +235,16 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="drawUndiscoveredRooms">
+        <property name="toolTip">
+         <string>Show red dots on rooms this character does not know. Rooms seen in exits count as known. Uses a saved list for this character while GMCP refreshes it in the background. Requires room server IDs.</string>
+        </property>
+        <property name="text">
+         <string>Show undiscovered rooms</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0">
        <widget class="QCheckBox" name="drawNotMappedExits">
         <property name="text">
@@ -449,6 +459,7 @@
   <tabstop>drawUnsavedChanges</tabstop>
   <tabstop>drawNeedsUpdate</tabstop>
   <tabstop>drawNotMappedExits</tabstop>
+  <tabstop>drawUndiscoveredRooms</tabstop>
   <tabstop>bgChangeColor</tabstop>
   <tabstop>darkPushButton</tabstop>
   <tabstop>darkLitPushButton</tabstop>

@@ -53,6 +53,9 @@ class ParseEvent;
     X(ROOM_CHARS_SET, RoomCharsSet, "room.chars.set", "Room.Chars.Set") \
     X(ROOM_CHARS_UPDATE, RoomCharsUpdate, "room.chars.update", "Room.Chars.Update") \
     X(ROOM_INFO, RoomInfo, "room.info", "Room.Info") \
+    X(ROOM_KNOWN_ADD, RoomKnownAdd, "room.known.add", "Room.Known.Add") \
+    X(ROOM_KNOWN_LIST, RoomKnownList, "room.known.list", "Room.Known.List") \
+    X(ROOM_KNOWN_UPDATED, RoomKnownUpdated, "room.known.updated", "Room.Known.Updated") \
     X(ROOM_UPDATE_EXITS, RoomUpdateExits, "room.update.exits", "Room.Update.Exits") \
     /* define gmcp message types above */
 
@@ -66,7 +69,7 @@ enum class NODISCARD GmcpMessageTypeEnum {
 #define X_COUNT(...) +1
 static constexpr const size_t NUM_GMCP_MESSAGES = XFOREACH_GMCP_MESSAGE_TYPE(X_COUNT);
 #undef X_COUNT
-static_assert(NUM_GMCP_MESSAGES == 30);
+static_assert(NUM_GMCP_MESSAGES == 33);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {

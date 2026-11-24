@@ -53,6 +53,10 @@ add_library(mm_test STATIC
     ../src/configuration/configuration.h
     ../src/configuration/GroupConfig.cpp
     ../src/configuration/GroupConfig.h
+    ../src/observer/KnownRoomsCache.cpp
+    ../src/observer/KnownRoomsCache.h
+    ../src/observer/KnownRooms.cpp
+    ../src/observer/KnownRooms.h
     ../src/observer/gameobserver.cpp
     ../src/observer/gameobserver.h
     ../src/proxy/GmcpMessage.cpp
@@ -179,6 +183,8 @@ set(map_scroller_SRCS
 )
 # MainWindow
 set(mainwindow_SRCS
+    ../src/preferences/UndiscoveredRoomsDialog.cpp
+    ../src/preferences/UndiscoveredRoomsDialog.h
     ../src/global/Version.h
     ../src/mainwindow/AudioVolumeSlider.cpp
     ../src/mainwindow/AudioVolumeSlider.h

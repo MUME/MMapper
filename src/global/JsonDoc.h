@@ -26,7 +26,10 @@ public:
     explicit JsonDoc(const TaggedStringUtf8<Tag> &json)
         : m_doc{QJsonDocument::fromJson(json.toQByteArray())}
         , m_int{std::invoke([this, &json]() -> OptJsonInt {
-            if (m_doc.isArray() || m_doc.isObject() || json.isEmpty())
+            if (m_doc.isArray() || m_doc.isObject() || json.isEmpty()
+                || json.toQByteArray().trimmed() == "null"
+                || json.toQByteArray().trimmed() == "false"
+                || json.toQByteArray().trimmed() == "true")
                 return std::nullopt;
 
             // Qt's Json parser doesn't support integers at the top level of a document

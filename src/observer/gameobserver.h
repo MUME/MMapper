@@ -7,6 +7,7 @@
 #include "../global/Signal2.h"
 #include "../map/PromptFlags.h"
 #include "../proxy/GmcpMessage.h"
+#include "KnownRooms.h"
 
 class NODISCARD GameObserver final
 {
@@ -28,8 +29,14 @@ public:
     Signal2<MumeMoment> sig2_tick;
 
     Signal2<> sig2_gainedLevel;
+    Signal2<> sig2_knownRoomsChanged;
+    Signal2<> sig2_requestKnownRooms;
+    Signal2<> sig2_knownRoomsCacheMissing;
 
 private:
+    KnownRooms m_knownRooms;
+    void knownRoomsChanged(uint64_t previousRevision, bool request);
+
     MumeTimeEnum m_timeOfDay = MumeTimeEnum::UNKNOWN;
     MumeMoonPhaseEnum m_moonPhase = MumeMoonPhaseEnum::UNKNOWN;
     MumeMoonVisibilityEnum m_moonVisibility = MumeMoonVisibilityEnum::UNKNOWN;
@@ -39,6 +46,13 @@ private:
 
 public:
     void observeConnected();
+    void resetKnownRooms();
+    void configureKnownRoomsCache(const QString &directory, const QString &server);
+    void enableKnownRooms(bool enabled);
+    NODISCARD const KnownRooms::Snapshot &getKnownRooms() const
+    {
+        return m_knownRooms.getSnapshot();
+    }
     void observeSentToMud(const QString &ba);
     void observeSentToUser(const QString &ba);
     void observeSentToUserGmcp(const GmcpMessage &m);
