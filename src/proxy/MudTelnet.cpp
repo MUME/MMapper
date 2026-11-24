@@ -7,11 +7,9 @@
 #include "../clock/mumeclock.h"
 #include "../global/Consts.h"
 #include "../global/LineUtils.h"
-#include "../global/SendToUser.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "../global/emojis.h"
-#include "../mpi/MumeEditOptions.h"
 #include "../opengl/OpenGLConfig.h"
 #include "GmcpUtils.h"
 
@@ -449,92 +447,6 @@ void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
     if (msg.isMumeClientError()) {
         if (auto optJson = msg.getJson()) {
             m_outputs.onMumeClientError(optJson->toQString());
-        }
-        return;
-    }
-
-    if (msg.isMumeClientView() || msg.isMumeClientEdit()) {
-        if (!msg.getJsonDocument()) {
-            return;
-        }
-        auto optObj = msg.getJsonDocument()->getObject();
-        if (!optObj) {
-            return;
-        }
-        auto &obj = optObj.value();
-
-        const auto optTitle = obj.getString("title");
-        const auto optText = obj.getString("text");
-
-        if (msg.isMumeClientView()) {
-            m_outputs.onMumeClientView(optTitle.value_or("View text..."), optText.value_or(""));
-        } else if (msg.isMumeClientEdit()) {
-            if (auto optId = obj.getInt("id")) {
-                MumeEditOptions options;
-                auto optMaxSize = obj.getInt("max-size");
-                if (!optMaxSize) {
-                    optMaxSize = obj.getInt("max_size");
-                }
-                if (optMaxSize) {
-                    options.trySetMaxSize(optMaxSize.value());
-                }
-
-                if (auto optAllowed = obj.getArray("allowed-ranges")) {
-                    MumeEditOptions::AllowedRanges allowed;
-                    for (const auto &elem : optAllowed.value()) {
-                        if (auto optArr = elem.getArray()) {
-                            const auto &arr = optArr.value();
-                            if (arr.size() >= 2) {
-                                if (auto startOpt = arr[0].getInt()) {
-                                    if (auto endOpt = arr[1].getInt()) {
-                                        allowed.tryAddRange(startOpt.value(), endOpt.value());
-                                    }
-                                }
-                            }
-                        } else if (auto optStr = elem.getString()) {
-                            const QString str = optStr.value();
-                            if (str == QStringLiteral("ansi-sgr")) {
-                                allowed.ansiSgr = true;
-                            } else if (str == QStringLiteral("emoji")) {
-                                allowed.emoji = true;
-                            }
-                        }
-                    }
-                    options.allowed = std::move(allowed);
-                }
-
-                m_outputs.onMumeClientEdit(RemoteSessionId{optId.value()},
-                                           optTitle.value_or("Edit text..."),
-                                           optText.value_or(""),
-                                           options);
-            }
-        }
-        return;
-    }
-
-    if (msg.isMumeClientWrite() || msg.isMumeClientCancelEdit()) {
-        if (!msg.getJsonDocument()) {
-            return;
-        }
-        auto optObj = msg.getJsonDocument()->getObject();
-        if (!optObj) {
-            return;
-        }
-        auto &obj = optObj.value();
-
-        const auto id = obj.getInt("id").value_or(REMOTE_VIEW_SESSION_ID.asInt32());
-        const auto optBool = obj.getBool("result");
-        const auto optString = obj.getString("result");
-
-        if (optBool && optBool.value()) {
-            qDebug() << "[success] Successfully" << (msg.isMumeClientWrite() ? "sent" : "cancelled")
-                     << "remote edit" << id;
-        } else {
-            const auto action = (msg.isMumeClientWrite() ? "sending" : "canceling");
-            const auto result = optString.value_or("missing text");
-            qDebug() << "Failure" << action << "remote message" << id << result;
-            // Mume doesn't send anything, so we have to make our own message.
-            global::sendToUser(QString("Failure %1 remote message: %2\n").arg(action, result));
         }
         return;
     }

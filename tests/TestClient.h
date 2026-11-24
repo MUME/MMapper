@@ -37,4 +37,6 @@ private Q_SLOTS:
     void remoteEditStatusReportsTabsLongLinesAndTrailingSpace();
     void defaultCharacterEncodingIsUtf8();
     void mumeEditOptionsAllowedRangesValidation();
+    void parseMumeEditOptionsFromGmcp();
+    void decodeUtf8OrLatin1Test();
 };

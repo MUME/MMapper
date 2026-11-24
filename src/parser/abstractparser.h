@@ -48,6 +48,7 @@
 class CTimers;
 class Coordinate;
 class GameObserver;
+class RemoteEditApi;
 class HotkeyManager;
 class MapData;
 class MumeClock;
@@ -357,6 +358,7 @@ private:
 private:
     QTimer m_offlineCommandTimer;
     GameObserver &m_gameObserver;
+    RemoteEditApi &m_remoteEditApi;
 
 public:
     explicit AbstractParser(MapData &,
@@ -368,7 +370,8 @@ public:
                             QObject *parent,
                             AbstractParserOutputs &outputs,
                             ParserCommonData &commonData,
-                            GameObserver &gameObserver);
+                            GameObserver &gameObserver,
+                            RemoteEditApi &remoteEditApi);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
@@ -414,6 +417,7 @@ private:
     void doBackCommand();
     void doConfig(StringView view);
     void doTasksCommand(StringView args);
+    void doEditsCommand(StringView args);
 
     NODISCARD bool isConnected();
     void doConnectToHost();

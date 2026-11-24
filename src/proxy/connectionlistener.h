@@ -21,6 +21,7 @@ class ConnectionListener;
 class MapCanvas;
 class MapData;
 class Mmapper2Group;
+class RemoteEdit;
 class Mmapper2PathMachine;
 class MumeClock;
 class CTimers;
@@ -58,6 +59,7 @@ private:
     Mmapper2PathMachine &m_pathMachine;
     PrespammedPath &m_prespammedPath;
     Mmapper2Group &m_groupManager;
+    RemoteEdit &m_remoteEdit;
     MumeClock &m_mumeClock;
     CTimers &m_timers;
     MapCanvas &m_mapCanvas;
@@ -71,6 +73,7 @@ public:
                                 Mmapper2PathMachine &,
                                 PrespammedPath &,
                                 Mmapper2Group &,
+                                RemoteEdit &,
                                 MumeClock &,
                                 CTimers &,
                                 MapCanvas &,

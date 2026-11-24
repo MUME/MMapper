@@ -120,6 +120,18 @@ QByteArray toQByteArrayLatin1(const QString &qs)
     return mmqt::toLatin1ByteArray(qs);
 }
 
+QString decodeUtf8OrLatin1(const QByteArray &bytes)
+{
+    QString result = charset::isValidUtf8(
+                         std::string_view{bytes.constData(), static_cast<size_t>(bytes.size())})
+                         ? QString::fromUtf8(bytes)
+                         : QString::fromLatin1(bytes);
+    if (result.startsWith(QChar(0xFEFF))) {
+        result.remove(0, 1);
+    }
+    return result;
+}
+
 std::string toStdStringLatin1(const QString &qs)
 {
     return toQByteArrayLatin1(qs).toStdString();

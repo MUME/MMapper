@@ -6,7 +6,9 @@
 #include "../src/client/InputHistory.h"
 #include "../src/configuration/configuration.h"
 #include "../src/mpi/MumeEditOptions.h"
+#include "../src/mpi/MumeEditOptionsJson.h"
 #include "../src/mpi/RemoteEditDocumentOps.h"
+#include "../src/proxy/GmcpMessage.h"
 
 #include <QTextCursor>
 #include <QTextDocument>
@@ -371,6 +373,53 @@ void TestClient::remoteEditStatusReportsTabsLongLinesAndTrailingSpace()
 void TestClient::defaultCharacterEncodingIsUtf8()
 {
     QCOMPARE(getConfig().general.characterEncoding, CharacterEncodingEnum::UTF8);
+}
+
+namespace {
+NODISCARD MumeEditOptions parseOptions(const char *json)
+{
+    const GmcpMessage msg{GmcpMessageTypeEnum::MUME_CLIENT_EDIT, GmcpJson{QString::fromUtf8(json)}};
+    return parseMumeEditOptions(msg.getJsonDocument()->getObject().value());
+}
+} // namespace
+
+void TestClient::parseMumeEditOptionsFromGmcp()
+{
+    // No keys: everything is allowed and size is unlimited.
+    const auto none = parseOptions(R"({"id":1})");
+    QVERIFY(!none.allowed.has_value());
+    QVERIFY(!none.maxSize.has_value());
+    QVERIFY(none.isCodepointAllowed(0x1F600));
+
+    // A present "allowed-ranges" key always restricts, even when empty.
+    const auto empty = parseOptions(R"({"id":1,"allowed-ranges":[]})");
+    QVERIFY(empty.allowed.has_value());
+    QVERIFY(!empty.isCodepointAllowed(U'A'));
+
+    const auto latin1 = parseOptions(
+        R"({"id":1,"max-size":100,"allowed-ranges":[[0,255],"ansi-sgr"]})");
+    QCOMPARE(latin1.maxSize.value(), 100);
+    QVERIFY(latin1.isCodepointAllowed(0xE9));
+    QVERIFY(!latin1.isCodepointAllowed(0x20AC));
+    QVERIFY(latin1.allowed->ansiSgr);
+
+    // Malformed entries and non-positive sizes are ignored.
+    const auto bad = parseOptions(
+        R"({"id":1,"max-size":0,"allowed-ranges":[[5],"bogus",[10,"x"]]})");
+    QVERIFY(!bad.maxSize.has_value());
+    QVERIFY(bad.allowed.has_value());
+
+    // The legacy underscore spelling is still accepted.
+    QCOMPARE(parseOptions(R"({"max_size":7})").maxSize.value(), 7);
+}
+
+void TestClient::decodeUtf8OrLatin1Test()
+{
+    QCOMPARE(mmqt::decodeUtf8OrLatin1("caf\xc3\xa9"), QString::fromUtf8("caf\xc3\xa9"));
+    QCOMPARE(mmqt::decodeUtf8OrLatin1("caf\xe9"), QString::fromUtf8("caf\xc3\xa9"));
+    QCOMPARE(mmqt::decodeUtf8OrLatin1("\xef\xbb\xbf"
+                                      "hi"),
+             QString("hi"));
 }
 
 void TestClient::mumeEditOptionsAllowedRangesValidation()

@@ -11,6 +11,7 @@
 #include "../global/Charset.h"
 #include "../global/MakeQPointer.h"
 #include "../global/TextUtils.h"
+#include "../mpi/remoteedit.h"
 #include "TcpSocket.h"
 #include "proxy.h"
 
@@ -35,6 +36,7 @@ ConnectionListener::ConnectionListener(MapData &md,
                                        Mmapper2PathMachine &pm,
                                        PrespammedPath &pp,
                                        Mmapper2Group &gm,
+                                       RemoteEdit &re,
                                        MumeClock &mc,
                                        CTimers &ct,
                                        MapCanvas &mca,
@@ -45,6 +47,7 @@ ConnectionListener::ConnectionListener(MapData &md,
     , m_pathMachine{pm}
     , m_prespammedPath{pp}
     , m_groupManager{gm}
+    , m_remoteEdit{re}
     , m_mumeClock{mc}
     , m_timers{ct}
     , m_mapCanvas{mca}
@@ -122,6 +125,7 @@ void ConnectionListener::startClient(std::unique_ptr<AbstractSocket> socket)
                                    m_pathMachine,
                                    m_prespammedPath,
                                    m_groupManager,
+                                   m_remoteEdit,
                                    m_mumeClock,
                                    m_timers,
                                    m_mapCanvas,
