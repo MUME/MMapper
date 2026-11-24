@@ -78,6 +78,10 @@ NODISCARD extern QByteArray toQByteArrayRaw(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayLatin1(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayUtf8(std::string_view sv);
 NODISCARD extern QByteArray toQByteArrayLatin1(const QString &qs);
+
+/// Decodes text that is normally UTF-8 but may be legacy Latin-1 (e.g. saved by an older
+/// external editor), and strips a leading byte-order mark.
+NODISCARD extern QString decodeUtf8OrLatin1(const QByteArray &bytes);
 NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
 NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);

@@ -9,11 +9,10 @@
 #endif
 
 #include "../global/TaggedInt.h"
-#include "../global/TaggedString.h"
 #include "../global/macros.h"
-#include "../proxy/TaggedBytes.h"
 #include "MumeEditOptions.h"
 
+#include <QDateTime>
 #include <QObject>
 #include <QPointer>
 #include <QString>
@@ -59,16 +58,27 @@ struct NODISCARD RemoteSessionId final
 // Internally shared across all view sessions
 static inline const RemoteSessionId REMOTE_VIEW_SESSION_ID = RemoteSessionId(-1);
 
+struct NODISCARD RemoteEditDraftInfo final
+{
+    QString key;
+    QString title;
+    RemoteSessionId sessionId;
+    QDateTime lastModified;
+};
+
 class NODISCARD_QOBJECT RemoteEditSession : public QObject
 {
     Q_OBJECT
 
-private:
+protected:
     RemoteEdit *m_manager = nullptr;
     QString m_content;
+    QString m_title;
     const RemoteInternalId m_internalId{};
     const RemoteSessionId m_sessionId = REMOTE_VIEW_SESSION_ID;
+    const bool m_draftView = false;
     bool m_connected = true;
+    QString m_draftKey;
 
 private:
 #ifndef Q_OS_WASM
@@ -79,23 +89,60 @@ private:
 public:
     explicit RemoteEditSession(RemoteInternalId internalId,
                                RemoteSessionId sessionId,
+                               QString title,
+                               QString draftKey,
+                               bool draftView,
                                RemoteEdit *remoteEdit);
 
 public:
     NODISCARD auto getInternalId() const { return m_internalId; }
     NODISCARD auto getSessionId() const { return m_sessionId; }
     NODISCARD bool isEditSession() const { return m_sessionId != REMOTE_VIEW_SESSION_ID; }
+    /// True for a read-only page showing an unsent draft, as opposed to a
+    /// live session originating from a MUME GMCP edit/view request.
+    NODISCARD bool isDraftView() const { return m_draftView; }
     NODISCARD const QString &getContent() const { return m_content; }
+    NODISCARD const QString &getTitle() const { return m_title; }
     void setContent(QString content) { m_content = std::move(content); }
     void cancel();
+    /// Closes the session but keeps its draft on disk (MUME is told to cancel if connected).
+    void keepAsDraft();
     void save();
+    void discard();
+    /// Brings this session's editor page to the front, if it has one (no-op otherwise).
+    void focus() { virt_focus(); }
+    /// A pending draft with this session's title exists; let the user restore it.
+    void offerDraft(const RemoteEditDraftInfo &draft) { virt_offerDraft(draft); }
+    /// The editor page hosted by RemoteEditPanel, or nullptr for sessions without one.
+    NODISCARD RemoteEditWidget *getWidget() const { return virt_getWidget(); }
+    /// Flushes any pending debounced auto-save immediately.
+    void flushDraft() { virt_flushDraft(); }
+    /// Short label for UI, e.g. "Internal" / "External".
+    NODISCARD const char *getEditorTypeName() const { return virt_getEditorTypeName(); }
 
 public:
     NODISCARD bool isConnected() const { return m_connected; }
-    void setDisconnected() { m_connected = false; }
+    /// An edit MUME is still waiting on (not a recovered draft, not disconnected).
+    NODISCARD bool isLiveEdit() const { return isEditSession() && isConnected() && !isDraftView(); }
+    void setDisconnected()
+    {
+        m_connected = false;
+        virt_onDisconnected();
+    }
+    NODISCARD const QString &getDraftKey() const { return m_draftKey; }
+    NODISCARD QString getFullDraftPath() const;
+
+private:
+    virtual void virt_focus() {}
+    virtual void virt_offerDraft(const RemoteEditDraftInfo & /*draft*/) {}
+    virtual void virt_flushDraft() {}
+    NODISCARD virtual const char *virt_getEditorTypeName() const { return "Internal"; }
+    NODISCARD virtual RemoteEditWidget *virt_getWidget() const { return nullptr; }
+    virtual void virt_onDisconnected() {}
 
 protected slots:
     void slot_onCancel() { cancel(); }
+    void slot_onDiscard() { discard(); }
     void slot_onSave(const QString &content)
     {
         setContent(content);
@@ -109,6 +156,8 @@ class NODISCARD_QOBJECT RemoteEditInternalSession final : public RemoteEditSessi
 
 private:
     QPointer<RemoteEditWidget> m_widget;
+    QTimer *m_debounceTimer = nullptr;
+    QTimer *m_throttleTimer = nullptr;
 
 public:
     explicit RemoteEditInternalSession(RemoteInternalId internalId,
@@ -116,8 +165,21 @@ public:
                                        const QString &title,
                                        const QString &body,
                                        const MumeEditOptions &options,
+                                       const QString &draftKey,
+                                       bool draftView,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
+
+private:
+    void virt_focus() override;
+    void virt_offerDraft(const RemoteEditDraftInfo &draft) override;
+    void virt_flushDraft() override;
+    NODISCARD RemoteEditWidget *virt_getWidget() const override;
+    void virt_onDisconnected() override;
+
+private slots:
+    void slot_onTextModified(const QString &content);
+    void slot_performAutoSave();
 };
 
 #ifndef Q_OS_WASM
@@ -128,6 +190,12 @@ class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSessi
 private:
     QPointer<RemoteEditProcess> m_process;
     MumeEditOptions m_options;
+    // Set once the editor was relaunched on the draft: from then on the draft
+    // holds the user's edits, so an editor that exits unchanged must not delete it.
+    bool m_relaunched = false;
+
+private:
+    void launchProcess(const QString &body);
 
 public:
     explicit RemoteEditExternalSession(RemoteInternalId internalId,
@@ -135,10 +203,15 @@ public:
                                        const QString &title,
                                        const QString &body,
                                        const MumeEditOptions &options,
+                                       const QString &draftKey,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
 
 private slots:
     void slot_onExternalSave(const QString &content);
+    void slot_onExternalCancel();
+
+private:
+    NODISCARD const char *virt_getEditorTypeName() const override { return "External"; }
 };
 #endif

@@ -4,12 +4,15 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
-#include "../proxy/TaggedBytes.h"
+#include "../global/utils.h"
+#include "../proxy/GmcpMessage.h"
+#include "RemoteEditDraftStore.h"
 #include "remoteeditsession.h"
 
 #include <climits>
 #include <map>
 #include <memory>
+#include <optional>
 
 #include <QByteArray>
 #include <QObject>
@@ -17,7 +20,9 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class RemoteEditApi;
 class RemoteEditSession;
+class AnsiOstream;
 
 class NODISCARD_QOBJECT RemoteEdit final : public QObject
 {
@@ -26,19 +31,70 @@ class NODISCARD_QOBJECT RemoteEdit final : public QObject
 private:
     friend class RemoteEditSession;
 
+public:
+    using DraftInfo = RemoteEditDraftInfo;
+
 private:
+    std::unique_ptr<RemoteEditDraftStore> m_store;
+    std::unique_ptr<RemoteEditApi> m_api;
     std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> m_sessions;
     uint32_t m_greatestUsedId = 0;
 
 public:
     explicit RemoteEdit(QObject *parent);
-    ~RemoteEdit() final = default;
+    ~RemoteEdit() final;
 
 public:
     void onDisconnected();
+    /// One line in the game output if unsent drafts exist; called when a
+    /// connection comes up, since nothing can hear it before then.
+    void announcePendingDrafts() const;
+    void slot_parseGmcpInput(const GmcpMessage &msg);
+
+    NODISCARD RemoteEditDraftStore &getDraftStore() { return deref(m_store); }
+    NODISCARD RemoteEditApi &getApi() { return deref(m_api); }
+    NODISCARD QString readDraft(const QString &key) const { return deref(m_store).read(key); }
+    /// Removes the draft and tells listeners.
+    void deleteDraft(const QString &key);
+
+public:
+    /// Abort a session: sends a GMCP cancel if it's a live connected edit,
+    /// then removes the in-memory session. Deletes the draft file for a
+    /// live edit being cancelled (the user is explicitly abandoning it);
+    /// a draft-recovery window's draft is left on disk so it can be
+    /// recovered again later.
+    void cancelEdit(RemoteEditSession *session);
+    void keepDraft(RemoteEditSession *session);
+    /// Explicit, user-requested, irreversible deletion of a draft's file,
+    /// plus removal of the in-memory session if one exists.
+    void discardDraft(const RemoteEditSession *session);
+    /// Same, for a pending draft with no in-memory session backing it.
+    void discardDraft(const DraftInfo &draft);
+    /// Opens a pending draft as a read-only page (always internal, whatever
+    /// the internalRemoteEditor setting). MUME no longer has the edit open,
+    /// so the only way to send it is to re-run the edit command and accept
+    /// the restore offer that a matching title then triggers.
+    void viewDraft(const DraftInfo &draft);
+    /// Called once from MainWindow::closeEvent(): synchronously tears down
+    /// every session (this is what actually stops any live external editor
+    /// process and closes any open widget) without sending any GMCP message
+    /// or deleting any draft file, so every open edit survives as a
+    /// recoverable draft across a restart.
+    void shutdown();
+
+    /// Drafts on disk not backed by an active session.
+    NODISCARD QList<DraftInfo> pendingDrafts() const;
+    /// Most recently modified pending draft with this title, if any.
+    NODISCARD std::optional<DraftInfo> findPendingDraft(const QString &title) const;
+    NODISCARD const std::map<RemoteInternalId, std::unique_ptr<RemoteEditSession>> &getSessions() const
+    {
+        return m_sessions;
+    }
+
+    void reportStatus(AnsiOstream &aos) const;
+    NODISCARD bool reportStatus(AnsiOstream &aos, RemoteInternalId id) const;
 
 protected:
-    void cancel(const RemoteEditSession *);
     void save(const RemoteEditSession *);
 
 private:
@@ -50,16 +106,29 @@ private:
                     const QString &,
                     const QString &,
                     const MumeEditOptions &options = {});
+    void createSession(RemoteSessionId sessionId,
+                       const QString &title,
+                       const QString &body,
+                       const MumeEditOptions &options,
+                       const std::optional<DraftInfo> &offeredDraft);
     void removeSession(const RemoteEditSession &session);
 
 private:
     void trySave(const RemoteEditSession &session);
     void sendToMume(const RemoteEditSession &session);
+    void sendCancelToMume(const RemoteEditSession &session);
+    void supersedeDisconnectedSessions(const QString &title);
+    void sendRemoteEditMessage(GmcpMessageTypeEnum type,
+                               RemoteSessionId id,
+                               const QString &text = QString());
     void trySaveLocally(const RemoteEditSession &session);
 
 signals:
-    void sig_remoteEditCancel(const RemoteSessionId sessionId);
-    void sig_remoteEditSave(const RemoteSessionId sessionId, const QString &content);
+    void sig_sendGmcp(const GmcpMessage &msg);
+    /// Emitted whenever a session is added or removed.
+    void sig_sessionsChanged();
+    /// Emitted whenever a draft file is created or deleted.
+    void sig_draftsChanged();
 
 public slots:
     void slot_remoteView(const QString &, const QString &);

@@ -28,6 +28,8 @@
 #include "../media/AudioManager.h"
 #include "../media/DescriptionWidget.h"
 #include "../media/MediaLibrary.h"
+#include "../mpi/RemoteEditPanel.h"
+#include "../mpi/remoteedit.h"
 #include "../pathmachine/mmapper2pathmachine.h"
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
@@ -140,6 +142,8 @@ MainWindow::MainWindow()
     setCurrentFile("");
 
     m_prespammedPath = new PrespammedPath(this);
+
+    m_remoteEdit = new RemoteEdit(this);
 
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
@@ -307,6 +311,27 @@ MainWindow::MainWindow()
         m_dockDialogAsync = dock;
     });
 
+    // Remote edits (MPI editor/viewer tabs)
+    std::invoke([this] {
+        auto *const w = new RemoteEditPanel{deref(m_remoteEdit), this};
+        auto *const dock = new QDockWidget(tr("Remote Edits Panel"), this);
+        dock->setObjectName("DockWidgetRemoteEdits");
+        dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+        dock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable
+                          | QDockWidget::DockWidgetMovable);
+        addDockWidget(Qt::RightDockWidgetArea, dock);
+        dock->setWidget(w);
+        dock->hide();
+
+        connect(w, &RemoteEditPanel::sig_showRequested, dock, [dock]() {
+            dock->show();
+            dock->raise();
+        });
+
+        w->show();
+        m_dockDialogRemoteEdits = dock;
+    });
+
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, deref(m_gameObserver), this);
     if constexpr (!NO_UPDATER) {
         m_updateDialog = new UpdateDialog(this);
@@ -341,6 +366,7 @@ MainWindow::MainWindow()
                                                       deref(m_pathMachine),
                                                       deref(m_prespammedPath),
                                                       deref(m_groupManager),
+                                                      deref(m_remoteEdit),
                                                       deref(m_mumeClock),
                                                       deref(m_timers),
                                                       deref(getCanvas()).getCore(),
@@ -639,6 +665,18 @@ void MainWindow::wireConnections()
             &FindRoomsDlg::sig_editSelection,
             this,
             &MainWindow::slot_onEditRoomSelection);
+
+    deref(m_gameObserver).sig2_sentToUserGmcp.connect(m_lifetime, [this](const GmcpMessage &msg) {
+        m_remoteEdit->slot_parseGmcpInput(msg);
+    });
+
+    deref(m_gameObserver).sig2_disconnected.connect(m_lifetime, [this]() {
+        m_remoteEdit->onDisconnected();
+    });
+
+    deref(m_gameObserver).sig2_connected.connect(m_lifetime, [this]() {
+        m_remoteEdit->announcePendingDrafts();
+    });
 }
 
 void MainWindow::slot_log(const QString &mod, const QString &message)
@@ -1368,6 +1406,7 @@ void MainWindow::setupMenuBar()
     sidepanels->addAction(m_dockDialogDescription->toggleViewAction());
     sidepanels->addAction(m_dockDialogTimers->toggleViewAction());
     sidepanels->addAction(m_dockDialogAsync->toggleViewAction());
+    sidepanels->addAction(m_dockDialogRemoteEdits->toggleViewAction());
     windowMenu->addSeparator();
     windowMenu->addAction(showStatusBarAct);
     windowMenu->addAction(showScrollBarsAct);
@@ -1795,6 +1834,10 @@ void MainWindow::closeEvent(QCloseEvent *const event)
     }
 
     asyncIO.setClosedForBusiness();
+    // RemoteEdit sessions aren't registered with async_tasks (see RemoteEdit::shutdown()
+    // for why); tear them down here, synchronously, so no GMCP cancel is sent and every
+    // open edit/draft survives on disk for recovery on next launch.
+    m_remoteEdit->shutdown();
     async_tasks::cancel_all(); /* note: this can only cancel tasks that allow it */
 
     if (asyncIO.isRunningOnBackgroundThread()) {

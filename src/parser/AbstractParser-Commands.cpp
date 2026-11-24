@@ -20,6 +20,7 @@
 #include "../map/enums.h"
 #include "../map/infomark.h"
 #include "../mapdata/mapdata.h"
+#include "../mpi/RemoteEditApi.h"
 #include "../observer/gameobserver.h"
 #include "../syntax/Sublist.h"
 #include "../syntax/SyntaxArgs.h"
@@ -199,6 +200,7 @@ const Abbrev cmdConfig{"config", 4};
 const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
+const Abbrev cmdEdits{"edits", 3};
 // TODO: move this to a sub-command of _map
 const Abbrev cmdGenerateBaseMap{"generate-base-map"};
 const Abbrev cmdGroup{"group", 2};
@@ -1172,6 +1174,14 @@ void AbstractParser::initSpecialCommandMap()
         makeSimpleHelp("List or manage background tasks."));
 
     add(
+        cmdEdits,
+        [this](const View<StringView> /*s*/, StringView rest) -> bool {
+            this->doEditsCommand(rest);
+            return true;
+        },
+        makeSimpleHelp("List or manage remote (MPI) edit/view sessions."));
+
+    add(
         cmdBack,
         [this](const View<StringView> /*s*/, StringView rest) {
             if (!rest.isEmpty()) {
@@ -1470,4 +1480,94 @@ void AbstractParser::doTasksCommand(StringView rest)
                                     syn("cancel", doTaskCancel)));
 
     eval("async", taskSyntax, rest);
+}
+
+void AbstractParser::doEditsCommand(StringView rest)
+{
+    const auto argInt = syntax::TokenMatcher::alloc<syntax::ArgInt>();
+
+    const auto doEditList = syntax::Accept(
+        [this](User &user, const Pair * /*args*/) {
+            AnsiOstream &aos = user.getOstream();
+            m_remoteEditApi.reportStatus(aos);
+        },
+        "list remote edit/view sessions and recovered drafts");
+
+    const auto doEditStatus = syntax::Accept(
+        [this](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[1].getString() == "status");
+
+            const auto id = argv[0].getInt();
+            if (id < 0) {
+                aos << "Error: cannot show status for invalid remote edit id: "
+                    << ColoredValue{red, id} << ".\n";
+                return;
+            }
+            std::ignore = m_remoteEditApi.reportStatus(aos, static_cast<uint32_t>(id));
+        },
+        "show status for a remote edit session");
+
+    const auto doEditCancel = syntax::Accept(
+        [this](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[1].getString() == "cancel");
+
+            const auto id = argv[0].getInt();
+            if (id < 0 || !m_remoteEditApi.cancel(static_cast<uint32_t>(id))) {
+                aos << "Error: cannot cancel invalid remote edit id: " << ColoredValue{red, id}
+                    << ".\n";
+                return;
+            }
+            aos << "Cancelled remote edit " << id << ".\n";
+        },
+        "cancel a remote edit session (draft is preserved)");
+
+    const auto doEditDiscard = syntax::Accept(
+        [this](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto argv = getAnyVectorReversed(args);
+            assert(argv.size() == 2);
+            assert(argv[1].getString() == "discard");
+
+            const auto id = argv[0].getInt();
+            if (id < 0 || !m_remoteEditApi.discard(static_cast<uint32_t>(id))) {
+                aos << "Error: cannot discard invalid remote edit id: " << ColoredValue{red, id}
+                    << ".\n";
+                return;
+            }
+            aos << "Discarded draft for remote edit " << id << ".\n";
+        },
+        "permanently delete a recovered draft's file, or cancel a live edit and discard its "
+        "draft");
+
+    const auto doEditSimulate = syntax::Accept(
+        [this](User &user, const Pair *args) {
+            AnsiOstream &aos = user.getOstream();
+            const auto v = getAnyVectorReversed(args);
+            assert(v.size() == 2);
+            assert(v[0].getString() == "simulate");
+            const std::string title = concatenate_unquoted(v[1].getVector());
+            if (title.empty()) {
+                aos << "Error: a title is required.\n";
+                return;
+            }
+            m_remoteEditApi.simulateEdit(mmqt::toQStringUtf8(title));
+        },
+        "(testing) open an editor as if MUME had requested an edit with this title (limited to Latin-1, like legacy MUME, to exercise the character warning)");
+
+    const auto editSyntax = syn(syn("list", doEditList),
+                                syn("simulate",
+                                    syntax::TokenMatcher::alloc<syntax::ArgRest>(),
+                                    doEditSimulate),
+                                syn(argInt, //
+                                    syn("status", doEditStatus),
+                                    syn("cancel", doEditCancel),
+                                    syn("discard", doEditDiscard)));
+
+    eval("edits", editSyntax, rest);
 }

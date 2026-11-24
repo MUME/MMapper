@@ -428,12 +428,18 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mpi/mpifilter.cpp
-    mpi/mpifilter.h
     mpi/remoteedit.cpp
     mpi/remoteedit.h
     mpi/remoteeditsession.cpp
     mpi/remoteeditsession.h
+    mpi/MumeEditOptionsJson.cpp
+    mpi/MumeEditOptionsJson.h
+    mpi/RemoteEditApi.cpp
+    mpi/RemoteEditApi.h
+    mpi/RemoteEditDraftStore.cpp
+    mpi/RemoteEditDraftStore.h
+    mpi/RemoteEditPanel.cpp
+    mpi/RemoteEditPanel.h
     mpi/RemoteEditDocumentOps.cpp
     mpi/RemoteEditDocumentOps.h
     mpi/RemoteEditHighlighter.cpp
@@ -875,6 +881,10 @@ target_link_libraries(mm_global PUBLIC
     Qt6::Widgets
     coverage_config
 )
+if(WIN32)
+    # global/io.cpp uses WinSock, so everything linking mm_global needs it
+    target_link_libraries(mm_global PUBLIC ws2_32)
+endif()
 target_link_libraries(mm_map PUBLIC
     Qt6::Core
     Qt6::Widgets
@@ -892,10 +902,6 @@ if(NOT IMMER_FOUND)
     add_dependencies(mmapper immer)
     add_dependencies(mm_map immer)
     add_dependencies(mm_global immer)
-endif()
-
-if(WIN32)
-    target_link_libraries(mmapper PRIVATE ws2_32)
 endif()
 
 if(EMSCRIPTEN)
