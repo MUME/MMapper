@@ -14,9 +14,13 @@
 
 #include <cassert>
 
+#include <QClipboard>
+#include <QGuiApplication>
+#include <QMessageBox>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QPointer>
+#include <QPushButton>
 #include <QString>
 
 RemoteEditSession::RemoteEditSession(const RemoteInternalId internalId,
@@ -44,14 +48,15 @@ RemoteEditInternalSession::RemoteEditInternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const MumeEditOptions &options,
                                                      RemoteEdit *const parent)
     : RemoteEditSession(internalId, sessionId, parent)
     , m_widget(
           new RemoteEditWidget(isEditSession(),
                                title,
                                body,
-                               checked_dynamic_downcast<QWidget *>(parent->parent()) // MainWindow
-                               ))
+                               checked_dynamic_downcast<QWidget *>(parent->parent()), // MainWindow
+                               options))
 {
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
@@ -72,13 +77,49 @@ RemoteEditExternalSession::RemoteEditExternalSession(const RemoteInternalId inte
                                                      const RemoteSessionId sessionId,
                                                      const QString &title,
                                                      const QString &body,
+                                                     const MumeEditOptions &options,
                                                      RemoteEdit *const parent)
     : RemoteEditSession(internalId, sessionId, parent)
     , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
+    , m_options(options)
 {
     const auto proc = m_process.data();
-    connect(proc, &RemoteEditProcess::sig_save, this, &RemoteEditExternalSession::slot_onSave);
+    connect(proc,
+            &RemoteEditProcess::sig_save,
+            this,
+            &RemoteEditExternalSession::slot_onExternalSave);
     connect(proc, &RemoteEditProcess::sig_cancel, this, &RemoteEditExternalSession::slot_onCancel);
+}
+
+void RemoteEditExternalSession::slot_onExternalSave(const QString &content)
+{
+    const QString issues = m_options.describeIssues(content);
+    if (issues.isEmpty()) {
+        slot_onSave(content);
+        return;
+    }
+
+    // The external editor has already exited, so there is nothing to go back to:
+    // the choices are to submit anyway, or to cancel and keep the text on the clipboard.
+    const QString msg = issues + tr("\nCancelling copies your text to the clipboard.");
+
+    auto *const dlg = new QMessageBox(QMessageBox::Warning,
+                                      tr("MMapper Editor"),
+                                      msg,
+                                      QMessageBox::NoButton,
+                                      qobject_cast<QWidget *>(m_manager->parent()));
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    auto *const submitAnywayBtn = dlg->addButton(tr("Submit Anyway"), QMessageBox::AcceptRole);
+    dlg->addButton(QMessageBox::Cancel);
+    connect(dlg, &QMessageBox::finished, this, [this, dlg, submitAnywayBtn, content](int) {
+        if (dlg->clickedButton() == submitAnywayBtn) {
+            slot_onSave(content);
+        } else {
+            QGuiApplication::clipboard()->setText(content);
+            slot_onCancel();
+        }
+    });
+    dlg->open();
 }
 
 RemoteEditExternalSession::~RemoteEditExternalSession()

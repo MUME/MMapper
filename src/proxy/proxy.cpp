@@ -536,9 +536,10 @@ void Proxy::allocMudTelnet()
         }
         void virt_onMumeClientEdit(const RemoteSessionId id,
                                    const QString &title,
-                                   const QString &body) final
+                                   const QString &body,
+                                   const MumeEditOptions &options) final
         {
-            getProxy().getMpiFilterFromMud().receiveMpiEdit(id, title, body);
+            getProxy().getMpiFilterFromMud().receiveMpiEdit(id, title, body, options);
         }
         void virt_onMumeClientError(const QString &errmsg) final
         {
@@ -810,10 +811,11 @@ void Proxy::allocMpiFilter()
     private:
         void virt_onEditMessage(const RemoteSessionId id,
                                 const QString &title,
-                                const QString &body) final
+                                const QString &body,
+                                const MumeEditOptions &options) final
         {
             notifyUser("an", "Editor", title);
-            getRemoteEdit().slot_remoteEdit(id, title, body);
+            getRemoteEdit().slot_remoteEdit(id, title, body, options);
         }
         void virt_onViewMessage(const QString &title, const QString &body) final
         {
@@ -865,7 +867,7 @@ void Proxy::allocRemoteEdit()
     QObject::connect(&remoteEdit,
                      &RemoteEdit::sig_remoteEditSave,
                      this,
-                     [this](const RemoteSessionId id, const Latin1Bytes &content) {
+                     [this](const RemoteSessionId id, const QString &content) {
                          getMpiFilterToMud().saveRemoteEdit(id, content);
                      });
 }

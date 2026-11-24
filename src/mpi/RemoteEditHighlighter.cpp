@@ -24,9 +24,12 @@ constexpr QColor darkOrangeQColor{0xFF, 0x8C, 0x00};
 constexpr bool USE_TOOLTIPS = false;
 } // namespace
 
-RemoteEditHighlighter::RemoteEditHighlighter(QTextDocument *const document, const int maxLength)
+RemoteEditHighlighter::RemoteEditHighlighter(QTextDocument *const document,
+                                             const int maxLength,
+                                             const MumeEditOptions &options)
     : QSyntaxHighlighter(document)
     , m_maxLength{maxLength}
+    , m_options{options}
 {}
 
 RemoteEditHighlighter::~RemoteEditHighlighter() = default;
@@ -162,52 +165,38 @@ void RemoteEditHighlighter::highlightEncodingErrors(const QString &line)
         } \
         return opt.value(); \
     }
-    DECL_FMT(unicode, red, "Unicode");
+    DECL_FMT(unicode, red, "Disallowed Unicode");
     DECL_FMT(nbsp, cyan, "NBSP");
-    DECL_FMT(utf8, yellow, "UTF-8");
     DECL_FMT(unprintable, darkOrange, "(unprintable)");
 
 #undef DECL_FMT
 
     int pos = 0;
-    QChar last;
-    bool hasLast = false;
-    for (const auto &qc : line) {
-        if (qc.unicode() > 0xFF) {
-            // no valid representation
-            // TODO: add a means of transliterating things like special quotes
-            // Does Qt offer this feature somewhere?
-            // If not, consider iconv -t LATIN1//TRANSLIT
-
-            setFormat(pos, 1, get_unicode_fmt());
+    const int len = static_cast<int>(line.length());
+    while (pos < len) {
+        char32_t cp = 0;
+        int charLen = 1;
+        const QChar qc = line.at(pos);
+        if (qc.isHighSurrogate() && pos + 1 < len && line.at(pos + 1).isLowSurrogate()) {
+            cp = QChar::surrogateToUcs4(qc, line.at(pos + 1));
+            charLen = 2;
         } else {
-            const char c = mmqt::toLatin1(qc);
-            switch (c) {
-            case C_NBSP:
+            cp = qc.unicode();
+        }
+
+        if (!m_options.isCodepointAllowed(cp)) {
+            setFormat(pos, charLen, get_unicode_fmt());
+        } else if (cp <= 0xFF) {
+            const char c = static_cast<char>(cp);
+            if (c == C_NBSP) {
                 setFormat(pos, 1, get_nbsp_fmt());
-                break;
-            case C_ESC:
-            case C_TAB: // REVISIT: move tab handler to here?
-                /* handled elsewhere */
-                break;
-            default: {
-                const auto uc = static_cast<uint8_t>(c);
-                if (hasLast
-                    && (isClamped<int>(uc, 0x80, 0xBF)
-                        && (last == char16_t(0xC2) || last == char16_t(0xC3)))) {
-                    // Sometimes these are UTF-8 encoded Latin1 values,
-                    // but they could also be intended, so they're not errors.
-                    // TODO: add a feature to fix these on a case-by-case basis?
-                    setFormat(pos - 1, 2, get_utf8_fmt());
-                } else if (ascii::isCntrl(c) || !::isPrintLatin1(c)) {
+            } else if (c != C_ESC && c != C_TAB) {
+                if (ascii::isCntrl(c) || !::isPrintLatin1(c)) {
                     setFormat(pos, 1, get_unprintable_fmt());
                 }
             }
-            }
         }
 
-        last = qc;
-        hasLast = true;
-        ++pos;
+        pos += charLen;
     }
 }

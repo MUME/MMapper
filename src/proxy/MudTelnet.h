@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/Signal2.h"
+#include "../mpi/MumeEditOptions.h"
 #include "../mpi/remoteeditsession.h"
 #include "AbstractTelnet.h"
 
@@ -37,9 +38,12 @@ public:
     {
         virt_onMumeClientView(title, body);
     }
-    void onMumeClientEdit(const RemoteSessionId id, const QString &title, const QString &body)
+    void onMumeClientEdit(const RemoteSessionId id,
+                          const QString &title,
+                          const QString &body,
+                          const MumeEditOptions &options = {})
     {
-        virt_onMumeClientEdit(id, title, body);
+        virt_onMumeClientEdit(id, title, body, options);
     }
     void onMumeClientError(const QString &errmsg) { virt_onMumeClientError(errmsg); }
 
@@ -54,7 +58,8 @@ private:
     virtual void virt_onMumeClientView(const QString &title, const QString &body) = 0;
     virtual void virt_onMumeClientEdit(const RemoteSessionId id,
                                        const QString &title,
-                                       const QString &body)
+                                       const QString &body,
+                                       const MumeEditOptions &options)
         = 0;
     virtual void virt_onMumeClientError(const QString &errmsg) = 0;
 };

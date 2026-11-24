@@ -13,11 +13,6 @@
 #include <QString>
 #include <QtWidgets>
 
-// Order of entries in charsetComboBox drop down
-static_assert(static_cast<int>(CharacterEncodingEnum::LATIN1) == 0);
-static_assert(static_cast<int>(CharacterEncodingEnum::UTF8) == 1);
-static_assert(static_cast<int>(CharacterEncodingEnum::ASCII) == 2);
-
 // Order of entries in themeComboBox drop down
 static_assert(static_cast<int>(ThemeEnum::System) == 0);
 static_assert(static_cast<int>(ThemeEnum::Dark) == 1);
@@ -46,11 +41,16 @@ GeneralPage::GeneralPage(QWidget *parent)
         setConfig().connection.proxyListensOnAnyInterface = ui->proxyListensOnAnyInterfaceCheckBox
                                                                 ->isChecked();
     });
+    ui->charsetComboBox->setItemData(0, static_cast<int>(CharacterEncodingEnum::UTF8));
+    ui->charsetComboBox->setItemData(1, static_cast<int>(CharacterEncodingEnum::LATIN1));
+    ui->charsetComboBox->setItemData(2, static_cast<int>(CharacterEncodingEnum::ASCII));
+
     connect(ui->charsetComboBox,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
-            [](const int index) {
-                setConfig().general.characterEncoding = static_cast<CharacterEncodingEnum>(index);
+            [this](const int index) {
+                const auto val = ui->charsetComboBox->itemData(index).toInt();
+                setConfig().general.characterEncoding = static_cast<CharacterEncodingEnum>(val);
             });
     connect(ui->themeComboBox,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -306,7 +306,11 @@ void GeneralPage::slot_loadConfig()
     }
 #endif
     ui->proxyListensOnAnyInterfaceCheckBox->setChecked(connection.proxyListensOnAnyInterface);
-    ui->charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
+    const int charsetIndex = ui->charsetComboBox->findData(
+        static_cast<int>(general.characterEncoding));
+    if (charsetIndex >= 0) {
+        ui->charsetComboBox->setCurrentIndex(charsetIndex);
+    }
     ui->themeComboBox->setCurrentIndex(static_cast<int>(general.getTheme()));
 
     ui->emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);

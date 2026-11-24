@@ -90,7 +90,7 @@ public:
         // Global multiplier applied to the application's default font point
         // size at startup; 1.0 = unchanged (byte-for-byte no-op).
         double uiFontScale = 1.0;
-        CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::LATIN1;
+        CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::UTF8;
 
     private:
         SUBGROUP();

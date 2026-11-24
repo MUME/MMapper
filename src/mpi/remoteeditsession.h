@@ -12,6 +12,7 @@
 #include "../global/TaggedString.h"
 #include "../global/macros.h"
 #include "../proxy/TaggedBytes.h"
+#include "MumeEditOptions.h"
 
 #include <QObject>
 #include <QPointer>
@@ -114,6 +115,7 @@ public:
                                        RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
+                                       const MumeEditOptions &options,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession() final;
 };
@@ -125,13 +127,18 @@ class NODISCARD_QOBJECT RemoteEditExternalSession final : public RemoteEditSessi
 
 private:
     QPointer<RemoteEditProcess> m_process;
+    MumeEditOptions m_options;
 
 public:
     explicit RemoteEditExternalSession(RemoteInternalId internalId,
                                        RemoteSessionId sessionId,
                                        const QString &title,
                                        const QString &body,
+                                       const MumeEditOptions &options,
                                        RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession() final;
+
+private slots:
+    void slot_onExternalSave(const QString &content);
 };
 #endif

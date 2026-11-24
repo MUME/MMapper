@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/macros.h"
+#include "MumeEditOptions.h"
 #include "RemoteEditDocumentOps.h"
 
 #include <QColor>
@@ -20,10 +21,12 @@ class NODISCARD RemoteEditHighlighter final : public QSyntaxHighlighter
 {
 private:
     const int m_maxLength;
+    const MumeEditOptions m_options;
 
 public:
     explicit RemoteEditHighlighter(QTextDocument *document,
-                                   int maxLength = mmqt::REMOTE_EDIT_MAX_LENGTH);
+                                   int maxLength = mmqt::REMOTE_EDIT_MAX_LENGTH,
+                                   const MumeEditOptions &options = {});
     ~RemoteEditHighlighter() final;
 
 protected:

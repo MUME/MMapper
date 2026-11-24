@@ -450,6 +450,7 @@ set(TestClient_SRCS
     TestClient.h
     ../src/client/InputHistory.cpp
     ../src/client/InputHistory.h
+    ../src/mpi/MumeEditOptions.h
     ../src/mpi/RemoteEditDocumentOps.cpp
     ../src/mpi/RemoteEditDocumentOps.h
 )
