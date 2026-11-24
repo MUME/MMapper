@@ -66,7 +66,7 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
         // Not QMenu::exec(): its nested event loop is unavailable on wasm.
         auto menu = std::make_unique<QMenu>(this);
         QAction *const copyPathAction = menu->addAction(tr("Copy &Path"));
-        copyPathAction->setEnabled(!selectedPaths().isEmpty());
+        copyPathAction->setEnabled(!selectedPaths().isEmpty() && !hasMovedSinceSearch());
         connect(copyPathAction, &QAction::triggered, this, &FindRoomsDlg::slot_copyPaths);
         mmqt::popupMenu(std::move(menu), resultTable->viewport()->mapToGlobal(pos));
     });
@@ -115,6 +115,16 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
         emit sig_editSelection();
     });
 
+    // A new, cleared or reverted map invalidates the results: their ids belong to the old map.
+    connect(&m_mapData, &MapFrontend::sig_clearingMap, this, [this]() {
+        invalidateSearch();
+        resultTable->clear();
+        roomsFoundLabel->clear();
+        selectButton->setEnabled(false);
+        editButton->setEnabled(false);
+    });
+    connect(&m_mapData, &MapData::sig_onPositionChange, this, &FindRoomsDlg::updateResultsLabel);
+
     label->setFocusProxy(lineEdit);
 
     readSettings();
@@ -122,10 +132,7 @@ FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
 
 FindRoomsDlg::~FindRoomsDlg()
 {
-    if (m_currentTask) {
-        m_currentTask->requestCancel();
-        m_currentTask.reset();
-    }
+    invalidateSearch();
     resultTable->clear();
 }
 
@@ -153,11 +160,8 @@ void FindRoomsDlg::slot_findClicked()
 
     const std::string text = mmqt::toStdStringUtf8(lineEdit->text());
 
-    if (m_currentTask) {
-        m_currentTask->requestCancel();
-        m_currentTask.reset();
-    }
-    const uint64_t gen = ++m_searchGeneration;
+    invalidateSearch();
+    const uint64_t gen = m_searchGeneration;
 
     resultTable->clear();
     roomsFoundLabel->setText(tr("Searching..."));
@@ -189,7 +193,7 @@ void FindRoomsDlg::slot_findClicked()
         const RoomHandle origin = current.exists() ? map.findRoomHandle(current.getId())
                                                    : RoomHandle{};
 
-        auto result = std::make_shared<SearchResult>(SearchResult{map, {}, {}});
+        auto result = std::make_shared<SearchResult>(map);
 
         auto backgroundWorker =
             [filter, origin, result](const std::shared_ptr<ProgressCounter> &pc) {
@@ -234,8 +238,8 @@ void FindRoomsDlg::findRooms(SearchResult &result,
                              ProgressCounter &pc)
 {
     const Map &map = result.map;
-    const auto foundSet = ::genericFind(map, filter);
-    pc.step(0); // throws if canceled
+    pc.setNewTask(ProgressMsg("Searching rooms"), map.getRoomsCount());
+    const auto foundSet = ::genericFind(map, filter, pc); // throws if canceled
 
     // The search below re-applies the filter to reachable rooms. That's intentional: it lets
     // us stop early, while genericFind() still lists rooms that cannot be reached.
@@ -286,7 +290,10 @@ void FindRoomsDlg::findRooms(SearchResult &result,
                                     0);
     }
 
-    result.hasOrigin = origin.exists();
+    if (origin.exists()) {
+        result.originId = origin.getIdExternal();
+        result.originName = origin.getName().toQString();
+    }
     result.rows.reserve(foundSet.size());
     for (const RoomId id : foundSet) {
         const auto room = map.getRoomHandle(id);
@@ -305,9 +312,11 @@ void FindRoomsDlg::showResults(const std::shared_ptr<const SearchResult> &result
 {
     resultTable->setSortingEnabled(false);
     resultTable->clear();
+    m_lastResult.reset();
 
-    if (!result->error.isEmpty()) {
-        roomsFoundLabel->setText(tr("Search failed: %1").arg(result->error));
+    if (result->canceled || !result->error.isEmpty()) {
+        roomsFoundLabel->setText(result->canceled ? tr("Search canceled")
+                                                  : tr("Search failed: %1").arg(result->error));
         resultTable->setSortingEnabled(true);
         return;
     }
@@ -328,12 +337,12 @@ void FindRoomsDlg::showResults(const std::shared_ptr<const SearchResult> &result
     }
     resultTable->addTopLevelItems(items);
 
-    const int count = resultTable->topLevelItemCount();
-    roomsFoundLabel->setText(tr("%1 room%2 found").arg(count).arg((count == 1) ? "" : "s"));
+    m_lastResult = result;
+    updateResultsLabel();
 
     // Nearest rooms first; without a current room there are no distances, so use the name.
     // (Set the indicator before enabling sorting so the table is sorted only once.)
-    resultTable->header()->setSortIndicator(result->hasOrigin ? 2 : 1, Qt::AscendingOrder);
+    resultTable->header()->setSortIndicator(result->originId ? 2 : 1, Qt::AscendingOrder);
     resultTable->setSortingEnabled(true);
 }
 
@@ -356,8 +365,48 @@ QStringList FindRoomsDlg::selectedPaths() const
     return paths;
 }
 
+bool FindRoomsDlg::hasMovedSinceSearch() const
+{
+    if (!m_lastResult || !m_lastResult->originId) {
+        return false;
+    }
+    const RoomHandle current = m_mapData.getCurrentRoom();
+    return !current.exists() || !(current.getIdExternal() == *m_lastResult->originId);
+}
+
+void FindRoomsDlg::updateResultsLabel()
+{
+    if (!m_lastResult) {
+        return;
+    }
+    const auto count = m_lastResult->rows.size();
+    QString text = tr("%1 room%2 found").arg(count).arg((count == 1) ? "" : "s");
+    if (m_lastResult->originId) {
+        text += tr(" from %1").arg(m_lastResult->originName);
+        if (hasMovedSinceSearch()) {
+            text += tr(" (you moved: search again to update steps and paths)");
+        }
+    }
+    roomsFoundLabel->setText(text);
+}
+
+void FindRoomsDlg::invalidateSearch()
+{
+    if (m_currentTask) {
+        m_currentTask->requestCancel();
+        m_currentTask.reset();
+    }
+    ++m_searchGeneration; // late results from the canceled search are ignored
+    m_lastResult.reset();
+}
+
 void FindRoomsDlg::slot_copyPaths()
 {
+    if (hasMovedSinceSearch()) {
+        // The paths start at the room we searched from, so they would be wrong now.
+        updateResultsLabel();
+        return;
+    }
     const QStringList paths = selectedPaths();
     if (!paths.isEmpty()) {
         QGuiApplication::clipboard()->setText(paths.join('\n'));
@@ -411,11 +460,7 @@ void FindRoomsDlg::slot_enableFindButton(const QString &text)
 
 void FindRoomsDlg::closeEvent(QCloseEvent *event)
 {
-    if (m_currentTask) {
-        m_currentTask->requestCancel();
-        m_currentTask.reset();
-    }
-    ++m_searchGeneration;
+    invalidateSearch();
 
     writeSettings();
     resultTable->clear();

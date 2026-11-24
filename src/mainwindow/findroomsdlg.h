@@ -77,13 +77,27 @@ private:
     {
         Map map; // snapshot the rows (and their lazy tooltips) refer to
         std::vector<FoundRoom> rows;
-        QString error;          // non-empty if the search failed
-        bool hasOrigin = false; // whether steps/paths were computed
+        QString error;                          // non-empty if the search failed
+        bool canceled = false;                  // canceled, e.g. from the tasks panel
+        std::optional<ExternalRoomId> originId; // room the steps/paths are relative to
+        QString originName;
+
+        explicit SearchResult(Map m)
+            : map{std::move(m)}
+        {}
     };
+
+private:
+    std::shared_ptr<const SearchResult> m_lastResult; // shown results; null if none
 
 private:
     NODISCARD static QString constructToolTip(const RoomHandle &);
     NODISCARD QStringList selectedPaths() const;
+    // Steps and paths are relative to the room the search started from.
+    NODISCARD bool hasMovedSinceSearch() const;
+    void updateResultsLabel();
+    // Cancels any running search and drops results/callbacks that belong to it.
+    void invalidateSearch();
     static void findRooms(SearchResult &,
                           const RoomHandle &origin,
                           const RoomFilter &,

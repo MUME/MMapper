@@ -6,6 +6,9 @@
 #include "../map/RoomIdSet.h"
 
 class Map;
+class ProgressCounter;
 class RoomFilter;
 
+// Cancelable: throws ProgressCanceledException if pc is canceled while scanning.
+NODISCARD RoomIdSet genericFind(const Map &map, const RoomFilter &f, ProgressCounter &pc);
 NODISCARD RoomIdSet genericFind(const Map &map, const RoomFilter &f);
