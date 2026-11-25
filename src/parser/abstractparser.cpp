@@ -421,7 +421,8 @@ private:
 private:
     void virt_receiveShortestPath(QVector<SPNode> spnodes, const int endpoint) final
     {
-        assert(0 < endpoint && endpoint < spnodes.size());
+        // endpoint 0 is the origin itself, which is a valid match (reported as "here").
+        assert(0 <= endpoint && endpoint < spnodes.size());
 
         DECL_TIMER(t, "receiveShortestPath");
 
