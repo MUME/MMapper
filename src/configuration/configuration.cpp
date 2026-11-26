@@ -802,6 +802,24 @@ void Configuration::GroupManagerSettings::read(const QSettings &conf)
     npcColorOverride = conf.value(KEY_GROUP_NPC_COLOR_OVERRIDE, false).toBool();
     npcHide = conf.value(KEY_GROUP_NPC_HIDE, false).toBool();
     npcSortBottom = conf.value(KEY_GROUP_NPC_SORT_BOTTOM, false).toBool();
+
+    // TODO: Replace string keys with KEY_GROUP_* constants for consistency
+    showTokens = conf.value("group/showTokens", false).toBool();
+    showMapTokens = conf.value("group/showMapTokens", false).toBool();
+    tokenIconSize = conf.value("group/tokenIconSize", 32).toInt();
+
+    tokenOverrides.clear();
+    const QVariantMap overridesMap = conf.value("group/tokenOverrides").toMap();
+    for (auto it = overridesMap.constBegin(); it != overridesMap.constEnd(); ++it) {
+        tokenOverrides.insert(it.key(), it.value().toString());
+    }
+
+    bearTokenOverrides.clear();
+    const QVariantMap bearOverridesMap = conf.value("group/bearTokenOverrides").toMap();
+    for (auto it = bearOverridesMap.constBegin(); it != bearOverridesMap.constEnd(); ++it) {
+        bearTokenOverrides.insert(it.key(), it.value().toString());
+    }
+    defaultBearToken = conf.value("group/defaultBearToken").toString();
 }
 
 void Configuration::MumeClockSettings::read(const QSettings &conf)
@@ -995,6 +1013,24 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_GROUP_NPC_COLOR_OVERRIDE, npcColorOverride);
     conf.setValue(KEY_GROUP_NPC_HIDE, npcHide);
     conf.setValue(KEY_GROUP_NPC_SORT_BOTTOM, npcSortBottom);
+
+    // TODO: Replace string keys with KEY_GROUP_* constants for consistency
+    conf.setValue("group/showTokens", showTokens);
+    conf.setValue("group/showMapTokens", showMapTokens);
+    conf.setValue("group/tokenIconSize", tokenIconSize);
+
+    QVariantMap overridesMap;
+    for (auto it = tokenOverrides.constBegin(); it != tokenOverrides.constEnd(); ++it) {
+        overridesMap.insert(it.key(), it.value());
+    }
+    conf.setValue("group/tokenOverrides", overridesMap);
+
+    QVariantMap bearOverridesMap;
+    for (auto it = bearTokenOverrides.constBegin(); it != bearTokenOverrides.constEnd(); ++it) {
+        bearOverridesMap.insert(it.key(), it.value());
+    }
+    conf.setValue("group/bearTokenOverrides", bearOverridesMap);
+    conf.setValue("group/defaultBearToken", defaultBearToken);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

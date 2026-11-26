@@ -12,6 +12,8 @@
 #include "CGroupChar.h"
 #include "enums.h"
 #include "mmapper2group.h"
+#include "tokenmanager.h"
+#include "tokenpickerdialog.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,7 +25,9 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QHeaderView>
+#include <QIcon>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPainter>
 #include <QString>
@@ -143,6 +147,21 @@ void GroupDelegate::paint(QPainter *const pPainter,
     const QRect rect = option.rect;
     const QColor charColor = character->getColor();
 
+    if (column == ColumnTypeEnum::CHARACTER_TOKEN) {
+        painter.fillRect(rect, charColor);
+        if (option.state & QStyle::State_Selected) {
+            QColor selectColor = option.palette.color(QPalette::Highlight);
+            selectColor.setAlpha(60);
+            painter.fillRect(rect, selectColor);
+        }
+        const QPixmap token = tokenManager().getToken(character->getDisplayName(),
+                                                      character->isBearForm());
+        if (!token.isNull()) {
+            QIcon(token).paint(&painter, rect, Qt::AlignCenter);
+        }
+        return;
+    }
+
     // Layer 0: Background
     painter.fillRect(rect, charColor);
 
@@ -155,7 +174,12 @@ void GroupDelegate::paint(QPainter *const pPainter,
 
     if (index.data().canConvert<GroupStateData>()) {
         GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
-        stateData.paint(pPainter, option.rect);
+        const int contentWidth = stateData.getWidthForHeight(rect.height());
+        const QRect centeredRect(rect.x() + (rect.width() - contentWidth) / 2,
+                                 rect.y(),
+                                 contentWidth,
+                                 rect.height());
+        stateData.paint(pPainter, centeredRect);
         return;
     }
 
@@ -282,13 +306,21 @@ QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIn
     if (index.data().canConvert<GroupStateData>()) {
         GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
         QSize size = QStyledItemDelegate::sizeHint(option, index);
-        const int padding = size.width() / 2;
-        const int content = stateData.getWidth();
-        size.setWidth(padding + content);
+        const int rowHeight = std::max(getConfig().groupManager.tokenIconSize,
+                                       option.fontMetrics.height() + 4);
+        size.setWidth(size.width() / 2 + stateData.getWidthForHeight(rowHeight));
         return size;
     }
 
     const auto column = static_cast<ColumnTypeEnum>(index.column());
+    if (column == ColumnTypeEnum::CHARACTER_TOKEN) {
+        const int tokenSize = getConfig().groupManager.tokenIconSize;
+        QSize size = QStyledItemDelegate::sizeHint(option, index);
+        size.setWidth(std::max(size.width(), tokenSize));
+        size.setHeight(std::max(size.height(), tokenSize));
+        return size;
+    }
+
     if (column == ColumnTypeEnum::HP || column == ColumnTypeEnum::MANA
         || column == ColumnTypeEnum::MOVES) {
         QFont monoFont = option.font;
@@ -379,6 +411,69 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         }
     });
 
+    m_setIcon = new QAction(QIcon(":/icons/group-set-icon.png"), tr("Set &Icon…"), this);
+    connect(m_setIcon, &QAction::triggered, this, [this]() {
+        if (!selectedCharacter) {
+            return;
+        }
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+        const bool selectingBearToken = selectedCharacter->isYou()
+                                        && selectedCharacter->isBearForm();
+        TokenPickerDialog dialog(tokenManager().availableFiles(), this);
+        dialog.setWindowTitle(selectingBearToken ? tr("Choose bear-form token for %1").arg(charName)
+                                                 : tr("Choose token for %1").arg(charName));
+        if (dialog.exec() != QDialog::Accepted) {
+            return;
+        }
+        if (dialog.useDefault()) {
+            if (selectingBearToken) {
+                setConfig().groupManager.bearTokenOverrides[charName] = kForceFallback;
+            } else {
+                setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+            }
+        } else if (!dialog.selectedToken().isEmpty()) {
+            if (selectingBearToken) {
+                setConfig().groupManager.bearTokenOverrides[charName] = dialog.selectedToken();
+                const auto answer = QMessageBox::question(
+                    this,
+                    tr("Default bear image"),
+                    tr("Use this as the default bear image for characters without their own bear image?"),
+                    QMessageBox::Yes | QMessageBox::No,
+                    QMessageBox::No);
+                if (answer == QMessageBox::Yes) {
+                    setConfig().groupManager.defaultBearToken = dialog.selectedToken();
+                }
+            } else {
+                setConfig().groupManager.tokenOverrides[charName] = dialog.selectedToken();
+            }
+        } else {
+            return;
+        }
+        getConfig().write();
+        tokenManager().invalidateTextures();
+        slot_updateLabels();
+        emit sig_characterUpdated(selectedCharacter);
+    });
+
+    m_useDefaultIcon = new QAction(QIcon(":/icons/group-clear-icon.png"),
+                                   tr("&Use default icon"),
+                                   this);
+    connect(m_useDefaultIcon, &QAction::triggered, this, [this]() {
+        if (!selectedCharacter) {
+            return;
+        }
+        const QString charName = selectedCharacter->getDisplayName().trimmed();
+        if (selectedCharacter->isYou() && selectedCharacter->isBearForm()) {
+            setConfig().groupManager.bearTokenOverrides[charName] = kForceFallback;
+        } else {
+            setConfig().groupManager.tokenOverrides[charName] = kForceFallback;
+        }
+        getConfig().write();
+        tokenManager().invalidateTextures();
+        slot_updateLabels();
+        emit sig_characterUpdated(selectedCharacter);
+    });
+
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &proxyIndex) {
         if (!proxyIndex.isValid()) {
             return;
@@ -403,6 +498,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             contextMenu->setAttribute(Qt::WA_DeleteOnClose);
             contextMenu->addAction(m_center);
             contextMenu->addAction(m_recolor);
+            contextMenu->addAction(m_setIcon);
+            m_useDefaultIcon->setText(selectedCharacter->isYou() && selectedCharacter->isBearForm()
+                                          ? tr("Use default bear icon")
+                                          : tr("Use default icon"));
+            contextMenu->addAction(m_useDefaultIcon);
             contextMenu->popup(QCursor::pos());
         }
     });
@@ -420,6 +520,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     connect(m_model, &GroupModel::sig_anyManaChanged, this, &GroupWidget::updateColumnVisibility);
 
     updateColumnVisibility();
+    updateTokenSizing();
     updatePulseTimer();
 }
 
@@ -441,6 +542,33 @@ void GroupWidget::updateColumnVisibility()
 {
     // Hide unnecessary columns like mana if everyone is a zorc/troll
     m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::MANA), !deref(m_model).getAnyMana());
+
+    const bool hide_tokens = !getConfig().groupManager.showTokens;
+    m_table->setColumnHidden(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN), hide_tokens);
+    m_table->viewport()->update();
+}
+
+void GroupWidget::updateTokenSizing()
+{
+    const int iconSize = getConfig().groupManager.tokenIconSize;
+    m_table->setIconSize(QSize(iconSize, iconSize));
+    m_table->verticalHeader()->setDefaultSectionSize(
+        std::max(iconSize, m_table->fontMetrics().height() + 4));
+    m_table->resizeRowsToContents();
+    m_table->resizeColumnToContents(static_cast<int>(ColumnTypeEnum::CHARACTER_TOKEN));
+    m_table->resizeColumnToContents(static_cast<int>(ColumnTypeEnum::STATE));
+    m_table->viewport()->update();
+}
+
+void GroupWidget::slot_groupSettingsChanged()
+{
+    updateColumnVisibility();
+    updateTokenSizing();
+}
+
+void GroupWidget::slot_tokensChanged()
+{
+    m_table->viewport()->update();
 }
 
 void GroupWidget::updatePulseTimer()
@@ -481,6 +609,7 @@ void GroupWidget::slot_onCharacterAdded(SharedGroupChar character)
 {
     assert(character);
     deref(m_model).insertCharacter(character);
+    updateTokenSizing();
     updatePulseTimer();
 }
 
@@ -501,5 +630,11 @@ void GroupWidget::slot_onCharacterUpdated(SharedGroupChar character)
 void GroupWidget::slot_onGroupReset(const GroupVector &newCharacterList)
 {
     deref(m_model).setCharacters(newCharacterList);
+    updateTokenSizing();
     updatePulseTimer();
+}
+
+void GroupWidget::slot_updateLabels()
+{
+    deref(m_model).resetModel();
 }

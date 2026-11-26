@@ -72,6 +72,14 @@ void Mmapper2Group::parseGmcpCharName(const JsonObj &obj)
 void Mmapper2Group::parseGmcpCharStatusVars(const JsonObj &obj)
 {
     parseGmcpCharName(obj);
+
+    // Char.StatusVars updates may be partial. Only an explicit race field changes form.
+    if (const auto race = obj.getString("race")) {
+        SharedGroupChar self = getSelf();
+        if (self->setBearForm(race->compare(QStringLiteral("Bear"), Qt::CaseInsensitive) == 0)) {
+            characterChanged();
+        }
+    }
 }
 
 void Mmapper2Group::parseGmcpCharVitals(const JsonObj &obj)
@@ -195,9 +203,12 @@ void Mmapper2Group::slot_parseGmcpInput(const GmcpMessage &msg)
     if (msg.isCharVitals()) {
         debug();
         parseGmcpCharVitals(obj);
-    } else if (msg.isCharName() || msg.isCharStatusVars()) {
+    } else if (msg.isCharName()) {
         debug();
         parseGmcpCharName(obj);
+    } else if (msg.isCharStatusVars()) {
+        debug();
+        parseGmcpCharStatusVars(obj);
     } else if (msg.isGroupAdd()) {
         debug();
         parseGmcpGroupAdd(obj);

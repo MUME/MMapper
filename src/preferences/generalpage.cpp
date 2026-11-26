@@ -252,8 +252,14 @@ GeneralPage::GeneralPage(QWidget *parent)
 
     connect(ui->remoteName, &QLineEdit::textChanged, this, [this]() { updateAutoLoginEnabled(); });
 
-    connect(ui->resourceLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
-        setConfig().canvas.resourcesDirectory = text;
+    connect(ui->resourceLineEdit, &QLineEdit::textChanged, this, [this](const QString &text) {
+        auto &resourcesDirectory = setConfig().canvas.resourcesDirectory;
+        if (resourcesDirectory == text) {
+            return;
+        }
+
+        resourcesDirectory = text;
+        emit sig_resourcesDirectoryChanged();
     });
     connect(ui->resourcePushButton, &QAbstractButton::clicked, this, [this](bool /*unused*/) {
         const auto &resourceDir = getConfig().canvas.resourcesDirectory;

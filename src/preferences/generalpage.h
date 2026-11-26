@@ -31,6 +31,7 @@ public:
 
 signals:
     void sig_reloadConfig();
+    void sig_resourcesDirectoryChanged();
 
 public slots:
     void slot_loadConfig();
